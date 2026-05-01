@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.181.0 — Place tree picker: virtual-mount orphan DB places under their gazetteer parent
+
+- feat(ui): orphan DB places (`parent_place_id IS NULL`) whose name resolves to a deeper gazetteer node now appear nested under their gazetteer parent instead of cluttering the root level. E.g. an unparented "Solna" DB row now shows up under Sverige → Stockholms län when you expand into the gazetteer hierarchy, paired with its real `dbId` so selection commits the correct row. This is a render-time decision — the DB still has `parent_place_id = NULL` (data-fidelity prime directive); we just present the place where the gazetteer suggests it belongs. `findPathTo` follows the gazetteer parent chain when pre-selecting an orphan with a known mount, expanding each level so the orphan is visible.
+
 ## v0.180.0 — Place tree picker: filter is server-paged, infinite-scroll search
 
 - feat(ui): the place-tree picker now switches between two modes — empty filter renders the lazy-expand tree, ≥2-char filter swaps to a flat `usePagedList` of search results backed by `places.listPage`. Same `.list-filter` wrapper, same `.list-filter-input`, sentinel-driven infinite scroll, `count-label` showing "Visar X av Y platser". The previous walking-the-tree filter would have fanned out into thousands of IPC calls across all 27 bundled gazetteers — that's now gone.

@@ -72,6 +72,45 @@ describe('usePlaceTree', () => {
     expect(sv.childrenLoaded).toBe(true);
   });
 
+  it('moves orphan DB roots that resolve to a deeper gazetteer node off the top level and onto the gazetteer parent', async () => {
+    // "Solna" is a DB row at parent_place_id=NULL, but the gazetteer says it
+    // belongs under Sverige → Stockholm. We expect:
+    //   - root level shows only "Sverige" (the gazetteer root + DB-merged
+    //     "Sverige" if there is one — here just gazetteer);
+    //   - expanding Sverige shows "Stockholm";
+    //   - expanding Stockholm exposes the orphan "Solna" with its real dbId.
+    setupApiMock([
+      { id: 'db-orphan-solna', name: 'Solna', parent_place_id: null, place_type: 'parish', hasChildren: false },
+    ]);
+    const gazetteers: Gaz[] = [
+      makeGaz('sv-geo', {
+        name: 'Sverige',
+        type: 'country',
+        children: [
+          { name: 'Stockholm', type: 'county', children: [{ name: 'Solna', type: 'city' }] },
+        ],
+      }),
+    ];
+    const tree = usePlaceTree({ getGazetteers: () => gazetteers });
+    await tree.loadRoots();
+
+    // Root level no longer contains the orphan.
+    expect(tree.roots.value.map(n => n.name)).toEqual(['Sverige']);
+
+    const sv = tree.roots.value.find(n => n.name === 'Sverige')!;
+    await tree.expandNode(sv);
+    const sthlm = sv.children.find(c => c.name === 'Stockholm')!;
+    expect(sthlm).toBeDefined();
+
+    await tree.expandNode(sthlm);
+    const solna = sthlm.children.find(c => c.name === 'Solna')!;
+    expect(solna).toBeDefined();
+    // Merged: gazetteer entry paired with the orphan DB id, ready for
+    // selection without inventing a parent in the DB.
+    expect(solna.dbId).toBe('db-orphan-solna');
+    expect(solna.source).toBe('merged');
+  });
+
   it('findPathTo returns the chain of node keys for a DB place id', async () => {
     setupApiMock([
       { id: 'db-sv', name: 'Sverige', parent_place_id: null, place_type: null, hasChildren: true },
