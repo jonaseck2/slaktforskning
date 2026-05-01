@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.179.1 — Place tree picker: button inside the input
+
+- fix(ui): the tree-picker button now sits flush inside the place-picker input field (transparent background, no border, absolutely positioned on the right) instead of as a separate boxed button next to it. Matches the calendar-button pattern on `SimpleDateInput`. Input gets right-padding to make room.
+
 ## v0.179.0 — Place tree picker
 
 - feat(ui): the place picker (used in event modals, citation modals, person modal addresses, settings, etc.) now has a tree-button next to the input, mirroring the calendar-button pattern on `SimpleDateInput`. Clicking it opens `PlaceTreePickerModal` — a `BaseSubPanel` modal showing a hierarchical browse-and-select tree that merges the user's database places with the bundled gazetteers (deduped by name). Each row has a chevron for expand/collapse and a `+ Add child` button that opens an inline form to create a new place under that node. Selecting a gazetteer-only node materializes its parent chain via `findOrCreatePlaceWithChain` (only authored names + structural parent links are persisted; coordinates and `place_type` remain inferred at render time, per the data-fidelity prime directive). The modal pre-populates from the picker: if a place is already selected it scrolls and expands to that node; otherwise the current input text seeds the filter. Filter input narrows the visible tree (≥2 chars, ancestor-keeping) using the same diacritic-stripped substring match the autocomplete uses. New composable `usePlaceTree` builds the merged tree lazily; new recursive `PlaceTreeNode.vue` renders rows; new read-only api functions `listPlaceChildren(db, parentId|null)` and `getPlaceAncestors(db, id)` (also exposed via `window.api.places.listChildren` / `getAncestors` and as MCP tools `list_place_children` / `get_place_ancestors`).

@@ -405,7 +405,7 @@ function onBlur() {
 
 <style scoped>
 .place-picker { position: relative; width: 100%; box-sizing: border-box; }
-.place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
+.place-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 32px 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
 .place-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
 /* Teleported to <body>; position is set inline from inputRef's bounding rect.
    Scoped styles still apply because Vue keeps the data-v-* attribute. */
@@ -464,18 +464,21 @@ function onBlur() {
   white-space: nowrap;
   border: 0;
 }
-.picker-input-row {
-  display: flex; align-items: center; gap: 4px;
-  width: 100%;
-}
-.picker-input-row input { flex: 1; }
+.picker-input-row { position: relative; width: 100%; }
 .tree-picker-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; padding: 0;
-  border: 1px solid var(--surface-border);
+  width: 24px; height: 24px;
+  padding: 0;
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--surface-bg); color: var(--text-secondary);
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
+  font-family: inherit;
 }
 .tree-picker-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
 .tree-picker-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
