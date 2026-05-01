@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.174.4 — Simplify horizontal nav header
+
+- fix(ui): the horizontal navigation layout went from two rows to one. Removed the always-empty meta row at the top (which had held the title and a search input), inlined the title at the start of the nav row, and dropped the now-unused `.topbar-row--meta` and `.topbar-focus-spacer` CSS rules.
+- fix(ui): removed the `PersonPicker` global search from both the sidebar (vertical layout) and the topbar (horizontal layout) headers along with the `searchPickerRef` / `onSidebarPersonSelected` machinery and the `useSelectedPersonStore` import that supported them. Search is reachable via the People view; the header was carrying a redundant entry point.
+
 ## v0.174.3 — Remove the InstructionsLoaded hook (zero signal)
 
 - fix(agent): removed `.claude/hooks/log-instructions-loaded.py`, `.claude/hooks/audit-rule-firing.py`, the `hooks.InstructionsLoaded` block in `.claude/settings.json`, and the `.claude/instructions-loaded.log` gitignore line. The hook fired correctly for `CLAUDE.md` `session_start` events but never fired for `.claude/rules/*.md` files even when matching paths were read. Either Claude Code's harness has a quirk in our setup or path-scoped rule loading just doesn't surface this event for us; either way, instrumentation that produces zero useful signal isn't worth the carrying cost. Path-scoped rules themselves remain in place — they're auto-discoverable; we just can't observe their firing through the hook.

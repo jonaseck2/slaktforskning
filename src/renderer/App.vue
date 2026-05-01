@@ -5,14 +5,6 @@
       <div class="sidebar-header">
         <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
       </div>
-      <div class="sidebar-search">
-        <PersonPicker
-          ref="searchPickerRef"
-          :model-value="null"
-          :placeholder="$t('app.search')"
-          @select="onSidebarPersonSelected"
-        />
-      </div>
       <h2 class="nav-section-label">{{ $t('nav.research') }}</h2>
       <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
         <span class="nav-icon" aria-hidden="true">👤</span>
@@ -128,19 +120,8 @@
 
     <!-- ── Horizontal top-bar layout ───────────────────────────────── -->
     <header v-else class="topbar" aria-label="App header">
-      <div class="topbar-row topbar-row--meta">
-        <span class="topbar-title">🌿 {{ $t('app.title') }}</span>
-        <div class="topbar-search">
-          <PersonPicker
-            ref="searchPickerRef"
-            :model-value="null"
-            :placeholder="$t('app.search')"
-            @select="onSidebarPersonSelected"
-          />
-        </div>
-        <div class="topbar-focus-spacer"></div>
-      </div>
       <nav class="topbar-row topbar-row--nav" aria-label="Main navigation" @click.stop>
+        <span class="topbar-title">🌿 {{ $t('app.title') }}</span>
         <template v-for="sec in navSections" :key="sec.key">
           <!-- Flat section: items inline, no dropdown -->
           <div v-if="sec.flat" class="nav-flat-group">
@@ -269,9 +250,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
-import { useSelectedPersonStore } from './stores/selectedPerson';
 import { useDataVersionStore } from './stores/dataVersion';
-import PersonPicker from './components/PersonPicker.vue';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
@@ -281,7 +260,6 @@ import { useToast } from './composables/useToast';
 const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
-const selectedStore = useSelectedPersonStore();
 const dataVersionStore = useDataVersionStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
@@ -404,7 +382,6 @@ watch(() => route.path, () => {
 const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks', '/website'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
-const searchPickerRef = ref<{ focus?: () => void; $el?: HTMLElement } | null>(null);
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
 
@@ -491,12 +468,6 @@ function setLocale(val: SupportedLocale) {
 }
 
 function handleGlobalKey(e: KeyboardEvent) {
-  if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    const el = searchPickerRef.value?.$el?.querySelector?.('input') as HTMLInputElement | null;
-    el?.focus();
-    el?.select();
-  }
   if (e.key === 'Escape') openSection.value = null;
 }
 
@@ -578,22 +549,6 @@ onUnmounted(() => {
   window.removeEventListener('click', handleDocClick);
 });
 
-async function onSidebarPersonSelected(person: { id: string }) {
-  // Set as the selected person (panel target) without changing the tree
-  // subject. If the user is on /persons the panel reacts via the store;
-  // if not, route there so the panel becomes visible. Use the saved
-  // default person as the tree subject when present, otherwise the
-  // clicked person becomes both subject and selected.
-  selectedStore.set(person.id);
-  if (!route.path.startsWith('/persons')) {
-    let subjectId: string | null = null;
-    try {
-      subjectId = await window.api.db.getSetting('default_person_id') as string | null;
-    } catch { /* ignore */ }
-    await router.push('/persons/' + (subjectId ?? person.id));
-  }
-}
-
 </script>
 
 <style>
@@ -637,30 +592,14 @@ body {
   gap: var(--space-md);
   padding: 8px 16px;
 }
-.topbar-row--meta { border-bottom: 1px solid var(--sidebar-border); }
 .topbar-row--nav { flex-wrap: wrap; gap: 8px; padding: 4px 12px; }
 .topbar-title {
   font-size: var(--font-base);
   font-weight: 600;
   color: var(--sidebar-active-text);
   flex-shrink: 0;
+  margin-right: var(--space-md);
 }
-.topbar-search { flex: 1; max-width: 420px; }
-.topbar-search .person-picker input {
-  width: 100%;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--sidebar-border);
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  font-size: var(--font-sm);
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.topbar-search .person-picker input::placeholder { color: var(--sidebar-text-muted); }
-.topbar-search .person-picker input:focus { background: var(--sidebar-border); }
-.topbar-focus-spacer { flex: 1; }
 
 .topbar-settings { position: relative; flex-shrink: 0; }
 .topbar-settings-toggle {
@@ -797,29 +736,6 @@ body {
   font-size: var(--font-sm);
   font-weight: 600;
   color: var(--sidebar-active-text);
-}
-
-.sidebar-search {
-  margin-bottom: 10px;
-  flex-shrink: 0;
-}
-.sidebar-search .person-picker input {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--sidebar-border);
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-  font-size: var(--font-sm);
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.sidebar-search .person-picker input::placeholder {
-  color: var(--sidebar-text-muted);
-}
-.sidebar-search .person-picker input:focus {
-  background: var(--sidebar-border);
 }
 
 .nav-section-label {
