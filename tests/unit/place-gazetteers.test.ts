@@ -127,6 +127,13 @@ describe('resolvePlace', () => {
     expect(result!.matchQuality).toBe('exact');
   });
 
+  it('strips trailing punctuation so abbreviated/typo inputs still match', () => {
+    // "Vallsjö." with a stray period is otherwise the same input as "Vallsjö".
+    const result = resolvePlace('Vallsjö., Sverige', [svGazetteer]);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toEqual(['Sverige', 'Jönköpings län', 'Sävsjö', 'Vallsjö']);
+  });
+
   it('returns null for empty gazetteers array', () => {
     expect(resolvePlace('Vallsjö, Sverige', [])).toBeNull();
   });

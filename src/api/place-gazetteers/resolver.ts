@@ -2,9 +2,11 @@ import type { Gazetteer, GazetteerNode, PlaceResolveResult, BoundaryResolveResul
 
 /**
  * Universal normalization — language-agnostic. Lowercase, trim, collapse
- * whitespace, strip parens (replace `(`/`)` with space), and treat hyphens
+ * whitespace, strip parens (replace `(`/`)` with space), treat hyphens
  * as equivalent to spaces so `Husby-Rekarne` and `Husby Rekarne` compare
- * equal. No language-specific suffix/prefix vocabulary lives here — that
+ * equal, and strip trailing punctuation (`.,:;`) so abbreviated/typo
+ * inputs like `Åkersbera.` still match `Åkersberga`-derived index entries.
+ * No language-specific suffix/prefix vocabulary lives here — that
  * belongs to per-gazetteer rules (see `normalizeForGazetteer`).
  */
 function normalizeUniversal(s: string): string {
@@ -13,6 +15,8 @@ function normalizeUniversal(s: string): string {
     .replace(/[()]/g, ' ')
     .replace(/-/g, ' ')
     .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.,:;]+$/, '')
     .trim();
 }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.182.1 — Resolver: strip trailing punctuation in normalize
+
+- fix(gazetteers): `normalizeUniversal` now strips trailing `.,:;` from the input before matching, so abbreviated/typo entries like `Åkersbera.` or `Vallsjö., Sverige` resolve the same way as their clean form. Fixes a class of "no match" results that came purely from a stray period the user typed at the end of a place name.
+
 ## v0.182.0 — Place tree picker: stage selection, OK to confirm
 
 - feat(ui): clicking a row in the place tree picker no longer commits-and-closes immediately. It stages the selection (highlighted row, the modal stays open) and the OK button in the footer commits when pressed. Cancel / ✕ discards. The pattern matches every other selection modal in the app — gives the user a chance to glance at the result of their pick (filter, ancestor chain, gazetteer badge) before confirming. Inline `+ Add child` still materializes the new place but now also stages it for OK rather than committing on the spot.
