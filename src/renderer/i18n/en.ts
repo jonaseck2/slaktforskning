@@ -633,6 +633,7 @@ export default {
     country: 'Country',
     admin1: 'State/Region',
     province: 'Province',
+    landskap: 'Province',
     county: 'County',
     härad: 'Härad',
     parish: 'Parish',
