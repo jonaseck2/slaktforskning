@@ -666,7 +666,6 @@ export default {
     treeSubject: 'Tree subject',
     treeSubjectHint: 'The tree subject when opening the database. Exported as GEDCOM SUBM.',
     treeSubjectNone: 'No tree subject set.',
-    treeSubjectCleared: 'Tree subject cleared.',
   },
   quality: {
     nav: 'Quality',
@@ -1346,6 +1345,7 @@ export default {
     collapseRow: 'Collapse {item}',
     openTasks: '{count} open task | {count} open tasks',
     qualityIssues: '{count} quality issue | {count} quality issues',
+    duplicates: '{count} possible duplicate | {count} possible duplicates',
     pedigreeChart: 'Pedigree chart',
     pedigreeChartDesc: 'Pedigree chart showing {count} generations for {name}',
     fanChart: 'Fan chart',

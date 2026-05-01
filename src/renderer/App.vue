@@ -42,9 +42,10 @@
         <span class="nav-label">{{ $t('nav.quality') }}</span>
         <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
       </router-link>
-      <router-link to="/duplicates" class="nav-item" :aria-label="$t('nav.duplicates')">
+      <router-link to="/duplicates" class="nav-item" :aria-label="duplicateCount > 0 ? $t('nav.duplicates') + ', ' + duplicateCount + ' ' + $t('a11y.duplicates', { count: duplicateCount }) : $t('nav.duplicates')">
         <span class="nav-icon" aria-hidden="true">👥</span>
         <span class="nav-label">{{ $t('nav.duplicates') }}</span>
+        <span v-if="duplicateCount > 0" class="error-badge">{{ duplicateCount }}</span>
       </router-link>
       <h2 class="nav-section-label">{{ $t('nav.present') }}</h2>
       <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
@@ -384,6 +385,7 @@ const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', 
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
+const duplicateCount = ref(0);
 
 // Section dropdowns (horizontal mode). The same items as the vertical
 // sidebar's section labels, just grouped behind toggle buttons.
@@ -415,7 +417,7 @@ const navSections = computed<NavSectionDef[]>(() => [
       { to: '/sources', icon: '📚', labelKey: 'nav.sources' },
       { to: '/relationships', icon: '🔗', labelKey: 'nav.relationships' },
       { to: '/quality', icon: '⚠️', labelKey: 'nav.quality', badge: qualityErrorCount },
-      { to: '/duplicates', icon: '👥', labelKey: 'nav.duplicates' },
+      { to: '/duplicates', icon: '👥', labelKey: 'nav.duplicates', badge: duplicateCount },
     ],
   },
   {
@@ -498,6 +500,14 @@ async function loadQualityBadge() {
   } catch { /* ignore */ }
 }
 
+async function loadDuplicatesBadge() {
+  if (!window.api?.duplicates) return;
+  try {
+    const results = await window.api.duplicates.find(100);
+    duplicateCount.value = results.length;
+  } catch { /* ignore */ }
+}
+
 onMounted(() => {
   setTheme(currentTheme.value);
   setAppearance(appearance.value);
@@ -508,12 +518,14 @@ onMounted(() => {
   loadDefaultPerson();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
   setTimeout(loadQualityBadge, 5000);
+  setTimeout(loadDuplicatesBadge, 5000);
   setTimeout(loadResearchBadge, 1000);
   window.api?.db?.onSwitched?.(() => {
     window.location.reload();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
   let researchDebounce: ReturnType<typeof setTimeout> | null = null;
+  let duplicatesDebounce: ReturnType<typeof setTimeout> | null = null;
   // Undo/redo: show toast and refresh data
   window.api?.undo?.onPerformed?.((data: { type: string; label: string }) => {
     const actionLabel = t(data.label);
@@ -526,6 +538,8 @@ onMounted(() => {
     qualityDebounce = setTimeout(loadQualityBadge, 800);
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
+    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
+    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
   });
   window.addEventListener('data-imported', () => {
     dataVersionStore.increment();
@@ -534,6 +548,8 @@ onMounted(() => {
     qualityDebounce = setTimeout(loadQualityBadge, 2000);
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
+    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
+    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 2000);
   });
   window.api?.onDataChanged?.(() => {
     dataVersionStore.increment();
@@ -541,6 +557,8 @@ onMounted(() => {
     qualityDebounce = setTimeout(loadQualityBadge, 800);
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
+    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
+    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
   });
 });
 

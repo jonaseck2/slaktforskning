@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.175.0 — Duplicates nav badge
+
+- feat(ui): the Duplicates nav entry now shows a count badge (same `.error-badge` style as Quality and Research Tasks). `App.vue` adds a `duplicateCount` ref backed by `loadDuplicatesBadge()` (calls `window.api.duplicates.find(100)` and counts the result), wired into the same lifecycle as the quality badge — initial 5 s delay, plus debounced reloads on undo/redo, `data-imported`, and `onDataChanged`. The `aria-label` switches to a count-aware variant via the new `a11y.duplicates` plural i18n key (sv: "{count} möjlig dubblett | {count} möjliga dubbletter", en: "{count} possible duplicate | {count} possible duplicates").
+
 ## v0.174.4 — Simplify horizontal nav header
 
 - fix(ui): the horizontal navigation layout went from two rows to one. Removed the always-empty meta row at the top (which had held the title and a search input), inlined the title at the start of the nav row, and dropped the now-unused `.topbar-row--meta` and `.topbar-focus-spacer` CSS rules.

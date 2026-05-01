@@ -666,7 +666,6 @@ export default {
     treeSubject: 'Trädets huvudperson',
     treeSubjectHint: 'Trädsubjektet när databasen öppnas. Exporteras som GEDCOM SUBM.',
     treeSubjectNone: 'Ingen huvudperson vald.',
-    treeSubjectCleared: 'Huvudperson borttagen.',
   },
   quality: {
     nav: 'Kvalitet',
@@ -1346,6 +1345,7 @@ export default {
     collapseRow: 'Stäng {item}',
     openTasks: '{count} öppen uppgift | {count} öppna uppgifter',
     qualityIssues: '{count} kvalitetsproblem',
+    duplicates: '{count} möjlig dubblett | {count} möjliga dubbletter',
     pedigreeChart: 'Antavla',
     pedigreeChartDesc: 'Antavla med {count} generationer för {name}',
     fanChart: 'Solfjäder',
