@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.185.0 — Filter the media library
+
+- feat: media library has filter chips for Type (image/document/audio/video), Status (missing on disk, orphaned), and Face tags
+
 ## v0.184.1 — Filter chips wrap instead of scrolling
 
 - fix: filter chip rows wrap to a second line when full instead of hiding overflow behind a scroll

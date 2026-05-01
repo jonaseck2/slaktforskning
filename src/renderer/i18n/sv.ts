@@ -1312,6 +1312,23 @@ export default {
     filter: {
       search: 'Sök media',
       person: 'filtrerad på {name}',
+      type: {
+        all: 'Alla typer',
+        image: 'Bild',
+        document: 'Dokument',
+        audio: 'Ljud',
+        video: 'Video',
+      },
+      status: {
+        all: 'Alla',
+        missing: 'Saknas på disk',
+        orphan: 'Olänkade',
+      },
+      faceTag: {
+        all: 'Alla',
+        tagged: 'Med ansiktsmarkering',
+        untagged: 'Utan ansiktsmarkering',
+      },
     },
     galleryView: 'Galleri',
     listView: 'Lista',

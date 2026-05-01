@@ -254,14 +254,47 @@ function filterAndSortSources(rows: Source[], sortBy?: string, sortDir?: string,
   return out;
 }
 
-function filterAndSortMedia(rows: Media[], sortBy?: string, sortDir?: string, query?: string): Media[] {
+type MediaListFiltersStub = {
+  type?: 'image' | 'document' | 'audio' | 'video';
+  status?: 'missing' | 'orphan';
+  faceTag?: 'tagged' | 'untagged';
+};
+
+const STATIC_MEDIA_TYPE_FORMATS: Record<NonNullable<MediaListFiltersStub['type']>, Set<string>> = {
+  image: new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif', 'heic', 'heif']),
+  document: new Set(['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'md']),
+  audio: new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a']),
+  video: new Set(['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv']),
+};
+
+function filterAndSortMedia(
+  rows: Media[],
+  sortBy: string | undefined,
+  sortDir: string | undefined,
+  query: string | undefined,
+  filters: MediaListFiltersStub | undefined,
+  ctx: { linkCounts: Map<string, number>; faceTagged: Set<string> },
+): Media[] {
   const q = (query ?? '').trim().toLowerCase();
-  const filtered = !q ? rows : rows.filter(m =>
+  let filtered = !q ? rows : rows.filter(m =>
     (m.title ?? '').toLowerCase().includes(q) ||
     ((m as unknown as { notes?: string }).notes ?? '').toLowerCase().includes(q) ||
     (m.format ?? '').toLowerCase().includes(q) ||
     (m.file_ref ?? '').toLowerCase().includes(q)
   );
+  if (filters?.type) {
+    const exts = STATIC_MEDIA_TYPE_FORMATS[filters.type];
+    filtered = filtered.filter(m => exts.has((m.format ?? '').toLowerCase()));
+  }
+  if (filters?.status === 'orphan') {
+    filtered = filtered.filter(m => (ctx.linkCounts.get(m.id) ?? 0) === 0);
+  }
+  // 'missing' is a no-op in static mode (snapshot has no is_missing flag).
+  if (filters?.faceTag === 'tagged') {
+    filtered = filtered.filter(m => ctx.faceTagged.has(m.id));
+  } else if (filters?.faceTag === 'untagged') {
+    filtered = filtered.filter(m => !ctx.faceTagged.has(m.id));
+  }
   const dir = sortDir === 'desc' ? -1 : 1;
   const key = (sortBy as 'title' | 'format' | 'created_at') ?? 'title';
   const out = [...filtered];
@@ -485,13 +518,18 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const media = {
     list: async () => snapshot.media,
-    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string) => {
-      const filtered = filterAndSortMedia(snapshot.media, sortBy, sortDir, query);
+    listPage: async (limit: number, offset: number, sortBy?: string, sortDir?: string, query?: string, filters?: MediaListFiltersStub) => {
+      const faceTagged = new Set(idx.regionsByMedia.keys());
+      const filtered = filterAndSortMedia(snapshot.media, sortBy, sortDir, query, filters, {
+        linkCounts: idx.mediaLinkCounts,
+        faceTagged,
+      });
       return {
         items: filtered.slice(offset, offset + limit).map(m => ({
           ...m,
           is_missing: 0,
           link_count: idx.mediaLinkCounts.get(m.id) ?? 0,
+          face_tag_count: idx.regionsByMedia.get(m.id)?.length ?? 0,
         })),
         total: filtered.length,
         total_missing: 0,

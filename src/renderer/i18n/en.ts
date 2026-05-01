@@ -1312,6 +1312,23 @@ export default {
     filter: {
       search: 'Search media',
       person: 'filtered on {name}',
+      type: {
+        all: 'All types',
+        image: 'Image',
+        document: 'Document',
+        audio: 'Audio',
+        video: 'Video',
+      },
+      status: {
+        all: 'All',
+        missing: 'Missing on disk',
+        orphan: 'Orphaned',
+      },
+      faceTag: {
+        all: 'All',
+        tagged: 'Face-tagged',
+        untagged: 'No face tags',
+      },
     },
     galleryView: 'Gallery',
     listView: 'List',

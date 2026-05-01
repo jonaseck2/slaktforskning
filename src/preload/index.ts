@@ -188,7 +188,7 @@ const api = {
   },
   media: {
     list: () => ipcRenderer.invoke('media:list'),
-    listPage: (limit: number, offset: number, sortBy?: 'title' | 'format' | 'created_at', sortDir?: 'asc' | 'desc', query?: string) => ipcRenderer.invoke('media:listPage', limit, offset, sortBy, sortDir, query),
+    listPage: (limit: number, offset: number, sortBy?: 'title' | 'format' | 'created_at', sortDir?: 'asc' | 'desc', query?: string, filters?: { type?: 'image' | 'document' | 'audio' | 'video'; status?: 'missing' | 'orphan'; faceTag?: 'tagged' | 'untagged' }) => ipcRenderer.invoke('media:listPage', limit, offset, sortBy, sortDir, query, filters),
     get: (id: string) => ipcRenderer.invoke('media:get', id),
     create: mutating((data: unknown) => ipcRenderer.invoke('media:create', data)),
     delete: mutating((id: string) => ipcRenderer.invoke('media:delete', id)),

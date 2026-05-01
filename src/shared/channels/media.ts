@@ -18,10 +18,10 @@ defineChannel({
 defineChannel({
   name: 'media:listPage',
   thread: 'worker',
-  handler: (db, limit: number, offset: number, sortBy?: media.ListMediaSortBy, sortDir?: media.ListMediaSortDir, query?: string) => ({
-    items: media.listMediaPage(db, limit, offset, sortBy, sortDir, query),
-    total: media.countMedia(db, query),
-    total_missing: media.countMissingMedia(db, query),
+  handler: (db, limit: number, offset: number, sortBy?: media.ListMediaSortBy, sortDir?: media.ListMediaSortDir, query?: string, filters?: media.MediaListFilters) => ({
+    items: media.listMediaPage(db, limit, offset, sortBy, sortDir, query, filters),
+    total: media.countMedia(db, query, filters),
+    total_missing: media.countMissingMedia(db, query, filters),
   }),
 });
 

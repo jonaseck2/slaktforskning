@@ -98,6 +98,11 @@
     <template v-else>
 
     <div class="media-list-content">
+    <div v-if="!isStaticMode && !personFilterId" class="media-filter-row">
+      <FilterChips :options="typeOptions" :model-value="typeFilter" @update:model-value="(v: string) => typeFilter = v as MediaTypeFilter" />
+      <FilterChips :options="statusOptions" :model-value="statusFilter" @update:model-value="(v: string) => statusFilter = v as MediaStatusFilter" />
+      <FilterChips :options="faceTagOptions" :model-value="faceTagFilter" @update:model-value="(v: string) => faceTagFilter = v as MediaFaceTagFilter" />
+    </div>
     <p v-if="!loading && items.length > 0" class="count-label">
       <template v-if="isMediaPreviewTruncated">
         {{ $t('htmlSite.preview.mediaLimited', { limit: previewMediaLimit, total: previewMediaTotalLinked }) }}
@@ -211,6 +216,7 @@ import MediaPanel from '../components/MediaPanel.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
+import FilterChips from '../components/ui/FilterChips.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
@@ -259,7 +265,42 @@ interface MediaItem {
   is_missing: number;
   created_at: string;
   linkCount: number;
+  faceTagCount: number;
 }
+
+type MediaTypeFilter = 'all' | 'image' | 'document' | 'audio' | 'video';
+type MediaStatusFilter = 'all' | 'missing' | 'orphan';
+type MediaFaceTagFilter = 'all' | 'tagged' | 'untagged';
+
+const typeFilter = ref<MediaTypeFilter>('all');
+const statusFilter = ref<MediaStatusFilter>('all');
+const faceTagFilter = ref<MediaFaceTagFilter>('all');
+
+function buildListFilters(): { type?: 'image' | 'document' | 'audio' | 'video'; status?: 'missing' | 'orphan'; faceTag?: 'tagged' | 'untagged' } | undefined {
+  const out: { type?: 'image' | 'document' | 'audio' | 'video'; status?: 'missing' | 'orphan'; faceTag?: 'tagged' | 'untagged' } = {};
+  if (typeFilter.value !== 'all') out.type = typeFilter.value;
+  if (statusFilter.value !== 'all') out.status = statusFilter.value;
+  if (faceTagFilter.value !== 'all') out.faceTag = faceTagFilter.value;
+  return Object.keys(out).length === 0 ? undefined : out;
+}
+
+const typeOptions = computed(() => [
+  { value: 'all',      label: t('media.filter.type.all') },
+  { value: 'image',    label: t('media.filter.type.image') },
+  { value: 'document', label: t('media.filter.type.document') },
+  { value: 'audio',    label: t('media.filter.type.audio') },
+  { value: 'video',    label: t('media.filter.type.video') },
+]);
+const statusOptions = computed(() => [
+  { value: 'all',     label: t('media.filter.status.all') },
+  { value: 'missing', label: t('media.filter.status.missing') },
+  { value: 'orphan',  label: t('media.filter.status.orphan') },
+]);
+const faceTagOptions = computed(() => [
+  { value: 'all',      label: t('media.filter.faceTag.all') },
+  { value: 'tagged',   label: t('media.filter.faceTag.tagged') },
+  { value: 'untagged', label: t('media.filter.faceTag.untagged') },
+]);
 
 const mediaBodyRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({ storageKey: 'media-panel-width', maxWidthRatio: 0.5 });
@@ -294,8 +335,8 @@ const personName = ref('');
 
 const missingCount = ref(0);
 
-function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>): MediaItem[] {
-  return raw.map(r => ({ ...r, linkCount: r.link_count }));
+function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number; face_tag_count?: number }>): MediaItem[] {
+  return raw.map(r => ({ ...r, linkCount: r.link_count, faceTagCount: r.face_tag_count ?? 0 }));
 }
 
 type MediaSortBy = 'title' | 'format';
@@ -319,7 +360,7 @@ const {
     if (personFilterId.value) {
       if (offset > 0) return { items: [], total: 0 };
       const raw = await window.api.media.forEntity('person', personFilterId.value) as Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; created_at: string }>;
-      let rows: MediaItem[] = raw.map(r => ({ ...r, notes: r.notes ?? '', is_missing: 0, linkCount: 0 }));
+      let rows: MediaItem[] = raw.map(r => ({ ...r, notes: r.notes ?? '', is_missing: 0, linkCount: 0, faceTagCount: 0 }));
       const q = (query ?? '').trim().toLowerCase();
       if (q) {
         rows = rows.filter(i =>
@@ -341,7 +382,7 @@ const {
       missingCount.value = 0;
       return { items: rows, total: rows.length };
     }
-    const result = await window.api.media.listPage(limit, offset, sortBy, sortDir, query) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number; total_missing: number };
+    const result = await window.api.media.listPage(limit, offset, sortBy, sortDir, query, buildListFilters()) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number; face_tag_count: number }>; total: number; total_missing: number };
     missingCount.value = result.total_missing;
     return { items: mapPageItems(result.items), total: result.total };
   },
@@ -355,6 +396,7 @@ const {
 });
 watch(sentinel, (el) => attachSentinel(el));
 watch([listSentinel, listScrollRef], ([el, root]) => attachSentinel(el, root));
+watch([typeFilter, statusFilter, faceTagFilter], () => { void reload(); });
 
 async function maybeAutoSelect(loaded: MediaItem[]) {
   if (!pendingAutoSelect) return;
@@ -434,6 +476,7 @@ async function openViewerById(mediaId: string) {
     is_missing: (media as MediaItem).is_missing ?? 0,
     created_at: (media as MediaItem).created_at ?? '',
     linkCount: (media as MediaItem).linkCount ?? 0,
+    faceTagCount: (media as MediaItem).faceTagCount ?? 0,
   };
   if (isImageMedia(normalized.format, normalized.file_ref) && !thumbnails.value[normalized.id]) {
     const url = await window.api.media.readAsDataUrl(normalized.id) as string | null;
@@ -807,6 +850,12 @@ watch(selectedMediaId, async (id) => {
   background: var(--surface-hover);
 }
 
+.media-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
 .list-filter {
   flex-shrink: 0;
   padding: 0 0 var(--space-sm);
