@@ -43,7 +43,7 @@ function buildMediaFilterClause(query: string | undefined): { where: string; par
   if (!q) return { where: '', params: [] };
   const like = `%${q}%`;
   return {
-    where: `WHERE m.title LIKE ? OR COALESCE(m.notes,'') LIKE ? OR COALESCE(m.format,'') LIKE ? OR COALESCE(m.file_ref,'') LIKE ?`,
+    where: `WHERE (m.title LIKE ? OR COALESCE(m.notes,'') LIKE ? OR COALESCE(m.format,'') LIKE ? OR COALESCE(m.file_ref,'') LIKE ?)`,
     params: [like, like, like, like],
   };
 }
@@ -76,6 +76,14 @@ export function countMedia(db: Database, query?: string): number {
     return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
   }
   return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${filter.where}`, filter.params)?.n ?? 0;
+}
+
+export function countMissingMedia(db: Database, query?: string): number {
+  const filter = buildMediaFilterClause(query);
+  const missingClause = filter.where
+    ? `${filter.where} AND m.is_missing = 1`
+    : 'WHERE m.is_missing = 1';
+  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${missingClause}`, filter.params)?.n ?? 0;
 }
 
 export function deleteMedia(db: Database, id: string): boolean {

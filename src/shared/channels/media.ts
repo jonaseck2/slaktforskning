@@ -21,6 +21,7 @@ defineChannel({
   handler: (db, limit: number, offset: number, sortBy?: media.ListMediaSortBy, sortDir?: media.ListMediaSortDir, query?: string) => ({
     items: media.listMediaPage(db, limit, offset, sortBy, sortDir, query),
     total: media.countMedia(db, query),
+    total_missing: media.countMissingMedia(db, query),
   }),
 });
 

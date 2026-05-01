@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.175.1 — Media: missing-file count from DB, not from loaded page
+
+- fix(media): the Media library footer ("The media register contains 11982 files · N missing") was deriving `N` from the in-memory paginated `items.value` array, so missing files were only counted as the user scrolled through them. Now the database returns the total missing count alongside `total` for the same query (new `countMissingMedia(db, query?)` in `src/api/media.ts` + `total_missing` field on the `media:listPage` IPC response). `MediaView.vue` reads it from each fetch instead of computing client-side. Also fixes a latent operator-precedence bug in `buildMediaFilterClause` — the OR group needed parentheses so future combined `AND` predicates bind correctly (e.g. `… AND m.is_missing = 1` now filters within the search result instead of widening it).
+
 ## v0.175.0 — Duplicates nav badge
 
 - feat(ui): the Duplicates nav entry now shows a count badge (same `.error-badge` style as Quality and Research Tasks). `App.vue` adds a `duplicateCount` ref backed by `loadDuplicatesBadge()` (calls `window.api.duplicates.find(100)` and counts the result), wired into the same lifecycle as the quality badge — initial 5 s delay, plus debounced reloads on undo/redo, `data-imported`, and `onDataChanged`. The `aria-label` switches to a count-aware variant via the new `a11y.duplicates` plural i18n key (sv: "{count} möjlig dubblett | {count} möjliga dubbletter", en: "{count} possible duplicate | {count} possible duplicates").

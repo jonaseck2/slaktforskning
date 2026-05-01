@@ -292,7 +292,7 @@ const personFilterId = computed(() => {
 });
 const personName = ref('');
 
-const missingCount = computed(() => items.value.filter(i => i.is_missing).length);
+const missingCount = ref(0);
 
 function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>): MediaItem[] {
   return raw.map(r => ({ ...r, linkCount: r.link_count }));
@@ -338,9 +338,11 @@ const {
         if (av > bv) return 1 * dir;
         return 0;
       });
+      missingCount.value = 0;
       return { items: rows, total: rows.length };
     }
-    const result = await window.api.media.listPage(limit, offset, sortBy, sortDir, query) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number };
+    const result = await window.api.media.listPage(limit, offset, sortBy, sortDir, query) as { items: Array<{ id: string; title: string; file_ref: string | null; format: string | null; notes: string; is_printable: boolean; is_missing: number; created_at: string; link_count: number }>; total: number; total_missing: number };
+    missingCount.value = result.total_missing;
     return { items: mapPageItems(result.items), total: result.total };
   },
   onLoaded: (loaded) => {

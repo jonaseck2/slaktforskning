@@ -7,6 +7,7 @@ import {
   listMedia,
   listMediaPage,
   countMedia,
+  countMissingMedia,
   deleteMedia,
   addMediaLink,
   getMediaForEntity,
@@ -246,6 +247,17 @@ describe('media links', () => {
     createMedia(db, { title: 'A' });
     createMedia(db, { title: 'B' });
     expect(countMedia(db)).toBe(2);
+  });
+
+  it('countMissingMedia counts only is_missing rows across the entire table', () => {
+    expect(countMissingMedia(db)).toBe(0);
+    createMedia(db, { title: 'Present A' });
+    createMedia(db, { title: 'Present B' });
+    createMedia(db, { title: 'Lost wedding photo', is_missing: true });
+    createMedia(db, { title: 'Lost letter', is_missing: true });
+    expect(countMissingMedia(db)).toBe(2);
+    expect(countMissingMedia(db, 'wedding')).toBe(1);
+    expect(countMissingMedia(db, 'present')).toBe(0);
   });
 
   it('filters by query across title, notes, format, file_ref', () => {

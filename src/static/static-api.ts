@@ -470,6 +470,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
           link_count: idx.mediaLinkCounts.get(m.id) ?? 0,
         })),
         total: filtered.length,
+        total_missing: 0,
       };
     },
     get: async (id: string) => idx.mediaById.get(id) ?? null,
