@@ -7,12 +7,12 @@ import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 27 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(27);
+  it('loads all 28 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(28);
   });
 
   const dataIds = [
-    'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-sockenstad-boundaries',
+    'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-landskap', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
@@ -316,5 +316,96 @@ describe('per-gazetteer normalization rules', () => {
     // the unstripped form must fail: contrived non-country.
     const result = resolvePlace('Atlantis kommun', gazetteers);
     expect(result).toBeNull();
+  });
+});
+
+describe('sv-landskap resolution', () => {
+  it('has 25 landskap', () => {
+    const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
+    expect(gaz).toBeDefined();
+    expect(gaz.root.children).toHaveLength(25);
+  });
+
+  it('every landskap has lat/lon and type=landskap', () => {
+    const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
+    for (const c of gaz.root.children!) {
+      expect(c.type).toBe('landskap');
+      expect(typeof c.lat).toBe('number');
+      expect(typeof c.lon).toBe('number');
+      expect(c.lat).toBeGreaterThan(54);
+      expect(c.lat).toBeLessThan(70);
+      expect(c.lon).toBeGreaterThan(10);
+      expect(c.lon).toBeLessThan(25);
+    }
+  });
+
+  it('resolves "Ångermanland" to sv-landskap', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Ångermanland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+    expect(result!.matchedNode.name).toBe('Ångermanland');
+  });
+
+  it('resolves "Bohuslän" to the landskap gazetteer', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Bohuslän', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+    expect(result!.matchedNode.name).toBe('Bohuslän');
+  });
+
+  it('strips "landskap" suffix — "Skåne landskap" matches the same as "Skåne"', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const a = resolvePlace('Skåne landskap', gazetteers);
+    const b = resolvePlace('Skåne', gazetteers);
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    expect(a!.matchedNode.name).toBe(b!.matchedNode.name);
+    expect(a!.lat).toBe(b!.lat);
+    expect(a!.lon).toBe(b!.lon);
+  });
+
+  it('"Skåne län" still resolves to the modern Skåne (via sv-orter) and not the landskap', () => {
+    // sv-orter has SV_RULES which strips "län"; sv-landskap children don't
+    // include "Skåne län" as a name. The landskap node name is just "Skåne".
+    // With both gazetteers enabled, the one that can specifically match "Skåne"
+    // after stripping "län" wins; sv-orter has Skåne as a region tree.
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne län', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-orter');
+  });
+
+  it('"Skåne" (bare) resolves from sv-landskap when only sv-landskap is enabled', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+  });
+
+  it('"Skåne" (bare) also resolves from sv-orter when only sv-orter is enabled', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-orter');
   });
 });
