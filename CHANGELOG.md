@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.179.8 — Test coverage tier 4: Vue composables
+
+- test: brought six composable / util files to ≥80% line coverage (most at 100%): `usePanelSections.ts` (0% → 100%, 18 tests), `usePersonProfilePic.ts` (0% → 100%, 16 tests including 2 regression guards for v0.179.7), `mediaProfile.ts` (0% → 100%, 10 tests), `useDeleteConfirm.ts` (27% → 100%, 32 tests), `useSelectedParentInfo.ts` (21% → 100%, 17 tests), `usePanelResize.ts` (49% → 100%, 28 tests). All use the `mount` + host-component pattern from `usePagedList.test.ts`. Total tests in suite: 2651 → 2772 (+121).
+- finding (not fixed): `usePanelResize.ts` attaches mousemove/mouseup listeners to `document`, but `.claude/rules/renderer.md` says "Window listeners for drag, never element listeners." In practice document-level listeners catch the same events; flagged for future cleanup.
+
 ## v0.179.7 — Profile pic store stuck on 'loading' after IPC failure
 
 - fix(stores): `profilePicStore.ensureLoaded()` now sets the entry to `{ status: 'error', src: null }` if `window.api.media.profilePicRef(personId)` itself throws. Previously only the inner `resolveOne()` had a catch — if `profilePicRef` rejected (e.g. IPC error before media data was reached), the outer try only had a `finally`, leaving the entry pinned at `'loading'` forever for that person. Subsequent `ensureLoaded` calls also wouldn't retry because the dedup-guard reads `'loading'` as in-progress. Caught while writing coverage tests for `usePersonProfilePic`.
