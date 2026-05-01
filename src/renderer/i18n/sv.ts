@@ -616,6 +616,10 @@ export default {
   panel: {
     managePerson: 'Hantera person',
     managePlace: 'Hantera plats',
+    manageSource: 'Hantera källa',
+    manageRelationship: 'Hantera relation',
+    manageGroup: 'Hantera grupp',
+    manageTask: 'Hantera uppgift',
     noPersonSelected: 'Klicka på en person i trädet',
     selectToView: 'Välj för att visa',
     showInTree: 'Visa i träd',
