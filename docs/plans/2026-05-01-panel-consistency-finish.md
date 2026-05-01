@@ -1,31 +1,70 @@
 # Panel Consistency — Finish the Job
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` with `subagent-handoff` (project-local prompt templates) to implement this plan. Plan format follows `.claude/rules/plans.md` (User goal first, full pattern scope, verification by user-observable outcome, RCA footer).
 
-**Goal:** Complete the panel-composables refactor with full UX consistency across **every** right-side panel in the app. The previous plan (`docs/plans/archive/2026-04-28-panel-composables.md`) migrated 6 of 10 panels and left a class-name collision that locked the migrated panels at `width: 320px`. This plan: (1) finishes the remaining 4 panel migrations, (2) adds the rules that should have prevented the collision and the half-migration, (3) adds the styling-consistency test that would have caught the regression in CI.
+## User goal
 
-**Why this matters (read this first, in the user's words):**
+Every right-side panel in the app — Person, Place, Source, Relationship, Group, Research Task, Media, Report, Website, Export Options — looks identical, behaves identically, and updates instantly when data changes anywhere in the app. *In the user's own words:*
+
 - *"You do reusable components for things to make the user experience consistent everywhere. not because it's fewer lines of code or some technical metric i don't care about. CONSISTENCY THROUGH ALIGNMENT IS KEY."*
 - *"You do not do half a migration, or suggest half a change. you do it consistently across the app."*
 - *"I want fewer components working more consistently, not more components behaving in a similar way."*
 
-The previous plan optimized for "ship the refactor" instead of "every paneled route looks identical, forever." This one fixes that.
+The previous plan (archived) optimized for "ship the refactor" — 6 of 10 panels migrated, 4 left as-is. This plan finishes the consistency work so every paneled route looks the same, forever.
 
----
+## Scope
+
+**Pattern: every `*Panel.vue` in `src/renderer/components/` uses the `EntityPanel` shell.** Full target list with state:
+
+| Panel | State | Notes |
+|---|---|---|
+| PersonPanel.vue        | ✅ migrated (v0.190.0) | |
+| PlacePanel.vue         | ✅ migrated (v0.190.0) | |
+| SourcePanel.vue        | ✅ migrated (v0.190.0) | |
+| RelationshipPanel.vue  | ✅ migrated (v0.190.0) | |
+| GroupPanel.vue         | ✅ migrated (v0.190.0) | |
+| ResearchTaskPanel.vue  | ✅ migrated (v0.190.0) | |
+| MediaPanel.vue         | ❌ pending             | This plan, Task 4 |
+| ReportPanel.vue        | ❌ pending             | This plan, Task 5 |
+| WebsitePanel.vue       | ❌ pending             | This plan, Task 5 |
+| ExportOptionsPanel.vue | ❌ pending             | This plan, Task 5 |
+
+**Scope deviations:** none. If any pending panel turns out to be structurally incompatible with EntityPanel (genuinely different shape, e.g. not viewing a single entity), document why with a code comment AND propose an extension to the shell rather than excluding the panel. "It's awkward to migrate" doesn't count.
+
+## Verification (user-observable, per `.claude/rules/plans.md` Rule A3)
+
+1. **Smoke test (mandatory before marking done):** open every paneled route in the running app — `/persons`, `/places`, `/sources`, `/relationships`, `/groups`, `/research-tasks`, `/media`, `/reports`, `/website`, plus the Export Options panel wherever it surfaces. Visually confirm identical width / height / border-radius / shadow behavior across all of them. The dispatcher (per `subagent-handoff` Rule B3) does NOT mark Task 7 done on subagent reports alone.
+2. **Class-collision regression test (Task 3):** mounts each `*Panel.vue` and asserts root has `.side-panel` class and does NOT have `.entity-panel` (collision class).
+3. **Reactivity smoke test:** edit a name in any panel; the corresponding row in the list AND the chart/map updates without view-switch.
+
+`vitest passes` and `lint clean` are hygiene, not verification of the user goal — they don't count toward the bar above.
+
+## Failure modes / RCA reference (per `.claude/rules/plans.md` Rule A4)
+
+The mistakes this plan exists to prevent — read before executing:
+
+1. **Class-name collision (`.entity-panel` vs `shared.css:1253`):** v0.190.0 EntityPanel chose a root class already in use by BaseSubPanel modal chrome. Migrated panels silently inherited `width: 320px; max-height: calc(100vh - 64px)`. Caught only by user inspecting computed styles. Task 1 adds the renderer-level class-collision check rule. The `dom-first-debugging` skill exists so the next layout bug starts with DOM inspection, not CSS reasoning.
+2. **Half-migration (6 of 10 panels):** previous plan scope was tactical when user goal was "every panel." `.claude/rules/plans.md` Rule A2 (all-or-nothing pattern migrations) now exists. This plan covers all remaining panels.
+3. **Reviewers verified spec compliance, not user goal:** `.claude/skills/subagent-handoff/spec-reviewer-prompt.md` now flips this. Spec reviewer's first question is user-goal alignment.
+4. **No styling consistency test:** Task 3 of this plan adds it.
+
+If any of these failure modes resurface during execution, pause — the plan or the rules are wrong, iterate before continuing.
 
 ## Out of scope
 
-- Restructuring the data-loading composables (`useEntityData`, `useEditableFields`, `usePagedList`) — they're working as intended.
-- Restructuring `EntityPanel`'s template — the slot/header/empty structure is correct.
-- The `Afrika`-as-continent gazetteer issue (separate plan).
+- Restructuring data-loading composables (`useEntityData`, `useEditableFields`, `usePagedList`) — working as intended.
+- Restructuring `EntityPanel`'s template — slot/header/empty structure is correct.
+- The `Afrika`-as-continent gazetteer issue — separate plan.
 
 ## Prerequisites
 
-The previous panel-composables plan landed in v0.190.0–v0.190.2. Foundation is on `main`:
-- [src/renderer/components/EntityPanel.vue](src/renderer/components/EntityPanel.vue) — shell component with `#empty`, `#header`, default slot.
+Foundation on `main` (v0.190.0–v0.190.2):
+- [src/renderer/components/EntityPanel.vue](src/renderer/components/EntityPanel.vue) — shell with `#empty` / `#header` / default slots.
 - [src/renderer/composables/useEntityData.ts](src/renderer/composables/useEntityData.ts) — auto-subscribes to `onDataChanged`.
 - [src/renderer/composables/useEditableFields.ts](src/renderer/composables/useEditableFields.ts) — race-safe field saves.
-- 6 panels already migrated (Person, Place, Source, Relationship, Group, ResearchTask).
+- [.claude/rules/plans.md](.claude/rules/plans.md) — plan-authoring rules (already exists; Task 1 of this plan no longer adds it).
+- [.claude/skills/subagent-handoff/](.claude/skills/subagent-handoff/) — subagent prompt templates (already exists).
+- [.claude/skills/dom-first-debugging/](.claude/skills/dom-first-debugging/) — debug-first-on-DOM (already exists).
 
 ---
 
@@ -57,36 +96,36 @@ If any hit returns from `shared.css`, **rename your class**. Hits in scoped bloc
 
 ---
 
-## Task 2: Add all-or-nothing migration rule (the #2 RCA item)
+## Task 2: Reinforce all-or-nothing migration at renderer + add-feature level
 
-The previous plan covered 6 of 10 panels. Media/Reports/Website/ExportOptions were "out of plan scope" but in-app the user saw an inconsistent set of panels. Plans must enforce "every same-shaped component migrates together, full stop."
+The plan-authoring version of "all-or-nothing" already exists in [`.claude/rules/plans.md`](.claude/rules/plans.md) Rule A2 (every plan that introduces a reusable pattern enumerates all instances). This task adds the **component-level** counterpart in renderer.md (so it fires when you're writing the component, not just the plan) and links it from the add-feature skill.
 
 **Files:**
 - Modify: `.claude/rules/renderer.md`
 - Modify: `.claude/skills/add-feature/SKILL.md`
 
-- [ ] **Step 1:** Add to `.claude/rules/renderer.md` after the new collision rule:
+- [ ] **Step 1:** Add to `.claude/rules/renderer.md` after the new collision rule (Task 1):
 
 ```markdown
-## Pattern migrations are all-or-nothing
+## Pattern migrations are all-or-nothing (component level)
 
-If you change how *one* component of a kind works (a side panel, a list view, a modal, a chart), you change all of them at once or you don't ship. Half-migrations create UX inconsistency, which is the thing reusable components are supposed to prevent.
+This is the component-level companion to `.claude/rules/plans.md` Rule A2 (plan level). When a refactor touches a reusable pattern (a side panel, a list view, a modal, a chart), every instance migrates in the same change or it doesn't ship. Half-migrations are anti-consistency.
 
-Before merging a refactor that touches a pattern:
-1. Enumerate every same-shaped component in the codebase. For panels: every `src/renderer/components/*Panel.vue`. For list views: every entity-list view in `src/renderer/views/`. For modals: every consumer of `BaseSubPanel`.
-2. Migrate every one. Plans must list the full target set in their preamble. The plan's checklist must include a row per target.
-3. If a target genuinely doesn't fit the new pattern, document why in the plan AND add a comment in the unmigrated file (`/* Not migrated to <pattern>: <reason> */`) so the next refactor doesn't get confused.
+Before merging:
+1. Enumerate every same-shaped component. Panels: `src/renderer/components/*Panel.vue`. List views: every entity-list in `src/renderer/views/`. Modals: every consumer of `BaseSubPanel`.
+2. Migrate every one. The plan's "Scope" section lists them with state per `.claude/rules/plans.md` Rule A2.
+3. If a target genuinely can't adopt the new pattern, document why in the plan AND in a code comment in the unmigrated file (`/* Not migrated to <pattern>: <specific reason> */`). "Awkward" is not a reason. "The pattern doesn't fit because <constraint>" is.
 
-**Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." The user's mental model is "every right-side panel works the same." Plans must match that model.
+**Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." User's mental model is "every right-side panel works the same."
 ```
 
-- [ ] **Step 2:** In `.claude/skills/add-feature/SKILL.md`, add a one-line rule at the top of the file under the existing intro:
+- [ ] **Step 2:** In `.claude/skills/add-feature/SKILL.md`, add at the top under the existing intro:
 
 ```markdown
-**Pattern enforcement:** if you build/refactor a reusable shell (panel, list, modal), every same-shaped component in the codebase must adopt it in the same change. See `.claude/rules/renderer.md` "Pattern migrations are all-or-nothing".
+**Pattern enforcement:** if you build/refactor a reusable shell (panel, list, modal), every same-shaped component must adopt it in the same change. See `.claude/rules/renderer.md` "Pattern migrations are all-or-nothing" and `.claude/rules/plans.md` Rule A2.
 ```
 
-- [ ] **Step 3:** Commit `docs(rules): pattern migrations are all-or-nothing`.
+- [ ] **Step 3:** Commit `docs(rules): component-level all-or-nothing migration rule`.
 
 ---
 
