@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.183.0 — Test coverage push (81% → 90%) + 2 production bug fixes
+
+- test: 454 new tests added across 17 new test files, lifting global coverage from lines 81%/functions 74%/statements 79%/branches 70% to **lines 90%, functions 90%, statements 87%, branches 76%**. Per-file highlights: `src/import/holger/index.ts` 2% → 100%, `src/import/genney/index.ts` 31% → 86%, `src/mcp/tools/prod/{media,research,places}.ts` all to 100%, `src/api/html_site/preview.ts` 0% → 92%, `src/renderer/composables/{usePanelSections,usePersonProfilePic,useDeleteConfirm,useSelectedParentInfo,usePanelResize}.ts` and `src/renderer/utils/{qualityIgnore,mediaProfile,useChartZoom}.ts` all to 100%, `src/renderer/utils/chart-layout/{hourglass-tree,pedigree}.ts` to 100%/81%.
+- test: locked in the global coverage floor in `vitest.config.mts` at lines/functions/statements 80%, branches 70% — future regressions below these thresholds will fail the coverage build.
+- test: added `src/shared/channels/**` to the coverage exclude list (per-channel `defineChannel()` wrappers run in the IPC worker thread, parity tested by `registry.test.ts` / `preload-coverage.test.ts`). Excluded `src/renderer/utils/cropImage.ts` (DOM-canvas-dependent; the pure math export `computeSquareCropRectPx` is tested directly).
+- test: added `tests/unit/helpers/mcpHarness.ts` to capture anonymous MCP-tool handlers so prod tools can be unit-tested without refactoring source files. Added `tests/unit/vitestSetup.ts` and `tests/components/vitestSetup.ts` for shared mocks.
+- fix(mcp): `run_checks` MCP tool was missing `await` on `runAllChecks` / `runChecksForPerson`. Both return `Promise<CheckResult[]>`, so `JSON.stringify(Promise)` serialized to `{}` and the tool always returned an empty object instead of the actual results array. Caught while writing coverage tests for `src/mcp/tools/prod/research.ts`.
+- fix(stores): `profilePicStore.ensureLoaded()` now sets `{ status: 'error', src: null }` when `window.api.media.profilePicRef()` itself rejects. Previously only `resolveOne()` had a catch — an early IPC failure left the entry pinned at `'loading'` forever and the dedup guard blocked retries. Caught while writing coverage tests for `usePersonProfilePic`.
+- findings (documented, not fixed): `chart-layout/descendant.ts` (~94 lines) and `pedigree.ts` (~15 lines) contain dead post-injection code — the outline-placeholder feature was disabled via `void injectOutlines` but the consumer code was left in place and is now unreachable. `usePanelResize.ts` uses `document.addEventListener` instead of `window` per `.claude/rules/renderer.md` (cosmetic; document-level listeners catch the same events).
+
 ## v0.182.1 — Resolver: strip trailing punctuation in normalize
 
 - fix(gazetteers): `normalizeUniversal` now strips trailing `.,:;` from the input before matching, so abbreviated/typo entries like `Åkersbera.` or `Vallsjö., Sverige` resolve the same way as their clean form. Fixes a class of "no match" results that came purely from a stray period the user typed at the end of a place name.

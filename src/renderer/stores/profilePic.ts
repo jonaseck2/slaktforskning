@@ -84,6 +84,8 @@ export const useProfilePicStore = defineStore('profilePic', () => {
           ? (window.api.media.readAsDataUrl(mediaRef.mediaId) as Promise<string | null>)
           : null;
         await resolveOne(personId, gen, mediaRef, urlPromise);
+      } catch {
+        setEntry(personId, gen, { status: 'error', src: null });
       } finally {
         inFlight.delete(personId);
       }

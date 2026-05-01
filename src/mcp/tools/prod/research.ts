@@ -68,8 +68,8 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
   }, async (args) => {
     const db = getDb();
     const results = args.person_id
-      ? runChecksForPerson(db, args.person_id)
-      : runAllChecks(db);
+      ? await runChecksForPerson(db, args.person_id)
+      : await runAllChecks(db);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 }
