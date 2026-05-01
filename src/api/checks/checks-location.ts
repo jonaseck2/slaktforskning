@@ -5,13 +5,19 @@ import type { Gazetteer, GazetteerNode } from '../place-gazetteers/types';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { haversineKm } from './check-utils';
 
-// Yield to the event loop every N iterations of a hot loop so that other IPC
-// messages queued on the worker (list queries, db_settings reads) get a chance
-// to run between batches. Place-resolution loops walk thousands of places at
-// ~1 ms each — without yielding, the worker would block lists for seconds.
-const YIELD_EVERY = 200;
-function yieldNow(): Promise<void> {
-  return new Promise(resolve => setImmediate(resolve));
+/**
+ * Returns a function that yields to the event loop when more than
+ * `budgetMs` of wall-clock time has elapsed since the last yield. Use one
+ * instance per loop so each loop gets its own timer.
+ */
+function makeYieldBudget(budgetMs = 75): () => Promise<void> {
+  let last = Date.now();
+  return async () => {
+    if (Date.now() - last >= budgetMs) {
+      await new Promise<void>(resolve => setImmediate(resolve));
+      last = Date.now();
+    }
+  };
 }
 
 export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
@@ -109,10 +115,10 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
   // Cache resolutions by name to avoid re-resolving duplicates
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
 
-  let processed = 0;
+  const yieldIfNeeded = makeYieldBudget();
   for (const place of places) {
     if (!placesInUse.has(place.id)) continue;
-    if (++processed % YIELD_EVERY === 0) await yieldNow();
+    await yieldIfNeeded();
 
     // Build full place path from in-memory map
     const fullPath = buildPlacePath(place.id);
@@ -283,9 +289,9 @@ export async function checkPlaceMissingComma(
   const nameDepth = buildNameDepthIndex(gazetteers);
   const results: CheckResult[] = [];
 
-  let processed = 0;
+  const yieldIfNeeded = makeYieldBudget();
   for (const place of places) {
-    if (++processed % YIELD_EVERY === 0) await yieldNow();
+    await yieldIfNeeded();
     const components = (place.name ?? '').split(',').map(s => s.trim()).filter(Boolean);
     let suggestionForPlace: string | null = null;
 
@@ -363,9 +369,9 @@ export async function checkPlaceNameNoRegion(
 
   const results: CheckResult[] = [];
   const cache = new Map<string, ReturnType<typeof resolvePlace>>();
-  let processed = 0;
+  const yieldIfNeeded = makeYieldBudget();
   for (const place of places) {
-    if (++processed % YIELD_EVERY === 0) await yieldNow();
+    await yieldIfNeeded();
     const name = (place.name ?? '').trim();
     if (!name) continue;
     if (!cache.has(name)) cache.set(name, resolvePlace(name, gazetteers));
