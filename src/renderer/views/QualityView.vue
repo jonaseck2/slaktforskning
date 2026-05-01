@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, onActivated } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQualityStore, type QualityResult } from '../stores/quality';
@@ -45,15 +45,12 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import QualityIssuesTable from '../components/QualityIssuesTable.vue';
 import { isIgnored, resetIgnored } from '../utils/qualityIgnore';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
 const toast = useToast();
 const router = useRouter();
 const qualityStore = useQualityStore();
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 const activeFilter = ref<'all' | 'error' | 'warning' | 'notice' | 'ignored'>('all');
 const activeTypeFilter = ref('all');
@@ -238,8 +235,14 @@ onMounted(() => {
   isMounted = true;
   resetIgnored();
   runChecks();
-  loadedVersion = dataVersionStore.version;
 
+  // Quality is the documented exception to the "composables own onDataChanged"
+  // rule (renderer.md): running checks is expensive (full DB scan), so we
+  // can't auto-rerun on every mutation via useEntityData/usePagedList.
+  // Instead we keep a single direct onDataChanged subscription with an
+  // 800ms debounce — long enough to coalesce a burst of writes (import,
+  // bulk MCP edits) into one re-check. The dataVersionStore.version watch
+  // would be redundant on top of this.
   let debounce: ReturnType<typeof setTimeout> | null = null;
   (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
     if (debounce) clearTimeout(debounce);
@@ -249,12 +252,5 @@ onMounted(() => {
 
 onUnmounted(() => {
   isMounted = false;
-});
-
-onActivated(() => {
-  if (dataVersionStore.version !== loadedVersion) {
-    runChecks();
-    loadedVersion = dataVersionStore.version;
-  }
 });
 </script>
