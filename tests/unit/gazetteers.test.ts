@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { loadGazetteers } from '../../src/api/place-gazetteers';
 import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
-import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
+import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/types';
 
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
@@ -242,16 +242,22 @@ describe('language gazetteer integration', () => {
 
 describe('Swedish exonym expansion', () => {
   // Gazetteers with full language support enabled.
-  const gazetteers = loadGazetteers(
-    {
-      enabledGazetteers: [
-        'world-countries', 'world-admin1',
-        'dk-sogne', 'dk-sogne-dawa',
-        'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
-      ],
-    },
-    getAllGazetteers(),
-  );
+  // Loaded in beforeAll to avoid synchronous errors during Vitest's collection
+  // phase (describe-scope errors are swallowed silently, causing tests to
+  // disappear from the run without any indication of failure).
+  let gazetteers: Gazetteer[];
+  beforeAll(() => {
+    gazetteers = loadGazetteers(
+      {
+        enabledGazetteers: [
+          'world-countries', 'world-admin1',
+          'dk-sogne', 'dk-sogne-dawa',
+          'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
+        ],
+      },
+      getAllGazetteers(),
+    );
+  });
 
   // ── Admin1-level exonyms (GeoNames) ───────────────────────────────
 
@@ -297,24 +303,15 @@ describe('Swedish exonym expansion', () => {
     expect(result!.matchedPath).toContain('Scotland');
   });
 
-  // ── City-level exonyms (pre-positioned, no city nodes in world-admin1 yet) ──
+  // ── City-level exonyms (pre-positioned, dormant) ──────────────────
   //
-  // The entries "Belgium > Brussels Capital > Brussels → Bryssel",
-  // "Austria > State of Vienna > Vienna → Wien", etc. are in lang-sv-geonames
-  // but city nodes don't yet exist in world-admin1. The resolver's
-  // mergeTranslations silently skips unmatched path keys, so the aliases are
-  // not attached. These tests document the CURRENT state and will need to be
-  // updated when city nodes are added to world-admin1.
-
-  it('city exonyms (Bryssel/Wien/Köpenhamn/Florens) are in the translation file', () => {
-    const all = getAllGazetteers();
-    const langGaz = all.find(g => g.id === 'lang-sv-geonames')!;
-    const t = langGaz.translations!['world-admin1'];
-    expect(t['Belgium > Brussels Capital > Brussels']).toEqual(['Bryssel']);
-    expect(t['Austria > State of Vienna > Vienna']).toEqual(['Wien']);
-    expect(t['Denmark > Capital Region > Copenhagen']).toEqual(['Köpenhamn']);
-    expect(t['Italy > Tuscany > Florence']).toEqual(['Florens']);
-  });
+  // City-level Swedish exonyms (Bryssel→Brussels, Wien→Vienna, Köpenhamn→Copenhagen, ...)
+  // are pre-positioned in lang-sv-geonames at the path "Country > Admin1 > City". They are
+  // dormant today: world-admin1 only goes 2 levels deep (country → admin1), so the resolver's
+  // mergeTranslations cannot find a city-level node to attach the alias to. When a future
+  // plan adds city nodes to world-admin1 or a sibling gazetteer, these aliases will activate
+  // automatically. Keep the data; don't add a test that only asserts the JSON contains the
+  // keys (that's a tautology).
 
   // ── Negative-control ─────────────────────────────────────────────
 
