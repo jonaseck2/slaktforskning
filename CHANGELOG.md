@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.186.0 — Entity panel foundation
+## v0.190.0 — Entity panel foundation
 
 - feat: panel composables refactor — useEntityData and usePagedList now bake in cross-view reactivity, new EntityPanel shell component, useEditableFields composable, centralized localStorage key registry; all 7 entity panels migrated
 
