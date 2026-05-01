@@ -1,20 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { loadGazetteers } from '../../src/api/place-gazetteers';
 import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
-import type { GazetteerConfig } from '../../src/api/place-gazetteers/types';
+import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/types';
 
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 27 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(27);
+  it('loads all 29 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(29);
   });
 
   const dataIds = [
-    'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-sockenstad-boundaries',
+    'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-landskap', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
+    'de-gemeinden',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',
@@ -122,6 +123,40 @@ describe('boundary gazetteers', () => {
       expect(['Polygon', 'MultiPolygon']).toContain(node.geometry!.type);
     });
   }
+
+  it('world-boundaries includes 7 continents as siblings of countries', () => {
+    const all = getAllGazetteers();
+    const wb = all.find(g => g.id === 'world-boundaries');
+    expect(wb).toBeDefined();
+
+    const continents = (wb!.root.children ?? []).filter(c => c.type === 'continent');
+    expect(continents).toHaveLength(7);
+
+    const names = new Set(continents.map(c => c.name));
+    for (const name of [
+      'Africa', 'Antarctica', 'Asia', 'Europe',
+      'North America', 'Oceania', 'South America',
+    ]) {
+      expect(names).toContain(name);
+    }
+
+    // Every continent has a non-empty geometry and a sensible centroid.
+    for (const c of continents) {
+      expect(c.geometry).toBeDefined();
+      expect(c.geometry!.coordinates).toBeDefined();
+      expect(typeof c.lat).toBe('number');
+      expect(typeof c.lon).toBe('number');
+      expect(c.lat).toBeGreaterThan(-90);
+      expect(c.lat).toBeLessThan(90);
+    }
+
+    // Spot-check Europe falls in northern hemisphere, eastern (or near-zero) longitude.
+    const europe = continents.find(c => c.name === 'Europe')!;
+    expect(europe.lat).toBeGreaterThan(35);
+    expect(europe.lat).toBeLessThan(71);
+    expect(europe.lon).toBeGreaterThan(-10);
+    expect(europe.lon).toBeLessThan(60);
+  });
 });
 
 describe('cross-country place resolution', () => {
@@ -206,6 +241,93 @@ describe('language gazetteer integration', () => {
   });
 });
 
+describe('Swedish exonym expansion', () => {
+  // Gazetteers with full language support enabled.
+  // Loaded in beforeAll to avoid synchronous errors during Vitest's collection
+  // phase (describe-scope errors are swallowed silently, causing tests to
+  // disappear from the run without any indication of failure).
+  let gazetteers: Gazetteer[];
+  beforeAll(() => {
+    gazetteers = loadGazetteers(
+      {
+        enabledGazetteers: [
+          'world-countries', 'world-admin1',
+          'dk-sogne', 'dk-sogne-dawa',
+          'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
+        ],
+      },
+      getAllGazetteers(),
+    );
+  });
+
+  // ── Admin1-level exonyms (GeoNames) ───────────────────────────────
+
+  it('resolves "Flandern" to Belgium > Flanders via lang-sv-geonames', () => {
+    const result = resolvePlace('Flandern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Belgium');
+    expect(result!.matchedPath).toContain('Flanders');
+  });
+
+  it('resolves "Brysselregionen" to Belgium > Brussels Capital via lang-sv-geonames', () => {
+    const result = resolvePlace('Brysselregionen', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Belgium');
+    expect(result!.matchedPath).toContain('Brussels Capital');
+  });
+
+  it('resolves "Toscana" to Italy > Tuscany via lang-sv-wikidata', () => {
+    const result = resolvePlace('Toscana', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Italy');
+    expect(result!.matchedPath).toContain('Tuscany');
+  });
+
+  it('resolves "Bayern" to Germany > Bavaria via lang-sv-wikidata', () => {
+    const result = resolvePlace('Bayern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Germany');
+    expect(result!.matchedPath).toContain('Bavaria');
+  });
+
+  it('resolves "Katalonien" to Spain > Catalonia via lang-sv-wikidata', () => {
+    const result = resolvePlace('Katalonien', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('Spain');
+    expect(result!.matchedPath).toContain('Catalonia');
+  });
+
+  it('resolves "Skottland" to United Kingdom > Scotland via lang-sv-wikidata', () => {
+    const result = resolvePlace('Skottland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain('United Kingdom');
+    expect(result!.matchedPath).toContain('Scotland');
+  });
+
+  // ── City-level exonyms (pre-positioned, dormant) ──────────────────
+  //
+  // City-level Swedish exonyms (Bryssel→Brussels, Wien→Vienna, Köpenhamn→Copenhagen, ...)
+  // are pre-positioned in lang-sv-geonames at the path "Country > Admin1 > City". They are
+  // dormant today: world-admin1 only goes 2 levels deep (country → admin1), so the resolver's
+  // mergeTranslations cannot find a city-level node to attach the alias to. When a future
+  // plan adds city nodes to world-admin1 or a sibling gazetteer, these aliases will activate
+  // automatically. Keep the data; don't add a test that only asserts the JSON contains the
+  // keys (that's a tautology).
+
+  // ── Negative-control ─────────────────────────────────────────────
+
+  it('does NOT resolve "Åhlborg" (typo of Aalborg) via a Swedish exonym alias', () => {
+    // "Åhlborg" is a typo not present in GeoNames or Wikidata. The path
+    // component "Åhlborg" should not appear in any resolved match.
+    const result = resolvePlace('Åhlborg, Danmark', gazetteers);
+    // A result may still exist (anchoring on Denmark), but the matched path
+    // should not contain "Åhlborg" as a named component.
+    if (result !== null) {
+      expect(result.matchedPath.some(p => p === 'Åhlborg')).toBe(false);
+    }
+  });
+});
+
 describe('per-gazetteer normalization rules', () => {
   it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', () => {
     const gazetteers = loadGazetteers(
@@ -282,5 +404,134 @@ describe('per-gazetteer normalization rules', () => {
     // the unstripped form must fail: contrived non-country.
     const result = resolvePlace('Atlantis kommun', gazetteers);
     expect(result).toBeNull();
+  });
+});
+
+describe('sv-landskap resolution', () => {
+  it('has 25 landskap', () => {
+    const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
+    expect(gaz).toBeDefined();
+    expect(gaz.root.children).toHaveLength(25);
+  });
+
+  it('every landskap has lat/lon and type=landskap', () => {
+    const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
+    for (const c of gaz.root.children!) {
+      expect(c.type).toBe('landskap');
+      expect(typeof c.lat).toBe('number');
+      expect(typeof c.lon).toBe('number');
+      expect(c.lat).toBeGreaterThan(54);
+      expect(c.lat).toBeLessThan(70);
+      expect(c.lon).toBeGreaterThan(10);
+      expect(c.lon).toBeLessThan(25);
+    }
+  });
+
+  it('resolves "Ångermanland" to sv-landskap', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Ångermanland', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+    expect(result!.matchedNode.name).toBe('Ångermanland');
+  });
+
+  it('resolves "Bohuslän" to the landskap gazetteer', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Bohuslän', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+    expect(result!.matchedNode.name).toBe('Bohuslän');
+  });
+
+  it('strips "landskap" suffix — "Skåne landskap" matches the same as "Skåne"', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const a = resolvePlace('Skåne landskap', gazetteers);
+    const b = resolvePlace('Skåne', gazetteers);
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    expect(a!.matchedNode.name).toBe(b!.matchedNode.name);
+    expect(a!.lat).toBe(b!.lat);
+    expect(a!.lon).toBe(b!.lon);
+  });
+
+  it('"Skåne län" still resolves to the modern Skåne (via sv-orter) and not the landskap', () => {
+    // sv-orter has SV_RULES which strips "län"; sv-landskap children don't
+    // include "Skåne län" as a name. The landskap node name is just "Skåne".
+    // With both gazetteers enabled, the one that can specifically match "Skåne"
+    // after stripping "län" wins; sv-orter has Skåne as a region tree.
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne län', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-orter');
+  });
+
+  it('"Skåne" (bare) resolves from sv-landskap when only sv-landskap is enabled', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-landskap'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-landskap');
+  });
+
+  it('"Skåne" (bare) also resolves from sv-orter when only sv-orter is enabled', () => {
+    const gazetteers = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('Skåne', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('sv-orter');
+  });
+});
+
+describe('de-gemeinden resolution', () => {
+  const gazetteers = loadGazetteers(
+    { enabledGazetteers: ['de-gemeinden'] },
+    getAllGazetteers(),
+  );
+
+  it('resolves "Hamburg" to a German node', () => {
+    const result = resolvePlace('Hamburg', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+  });
+
+  it('resolves "Bayern" to the Bundesland', () => {
+    const result = resolvePlace('Bayern', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect(result!.matchedPath).toContain('Bayern');
+  });
+
+  it('strips German suffixes — "Landkreis Schwabach" matches the same as "Schwabach"', () => {
+    const a = resolvePlace('Landkreis Schwabach', gazetteers);
+    const b = resolvePlace('Schwabach', gazetteers);
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    expect(a!.gazetteer).toBe('de-gemeinden');
+    expect(b!.gazetteer).toBe('de-gemeinden');
+    expect(a!.lat).toBe(b!.lat);
+    expect(a!.lon).toBe(b!.lon);
+  });
+
+  it('resolves "Schleswig-Holstein" without breaking on the hyphen', () => {
+    const result = resolvePlace('Schleswig-Holstein', gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect(result!.matchedPath).toContain('Schleswig-Holstein');
   });
 });

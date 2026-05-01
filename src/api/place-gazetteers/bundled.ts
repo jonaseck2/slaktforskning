@@ -1,5 +1,5 @@
 import {
-  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES,
+  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES,
 } from '../../gazetteer-build/normalize-rules';
 import type { Gazetteer, GazetteerNode, GazetteerNormalizeRules } from './types';
 // Swedish
@@ -8,6 +8,7 @@ import svForsamlingar from './data/sv-forsamlingar.json';
 import svOrter from './data/sv-orter.json';
 import svGardar from './data/sv-gardar.json';
 import svKyrkor from './data/sv-kyrkor.json';
+import svLandskap from './data/sv-landskap.json';
 import svSockenstadBoundaries from './data/sv-sockenstad-boundaries.json';
 // Danish
 import dkSogne from './data/dk-sogne.json';
@@ -18,6 +19,8 @@ import noKommuner from './data/no-kommuner.json';
 import fiKunnat from './data/fi-kunnat.json';
 // Icelandic
 import isSveitarfelog from './data/is-sveitarfelog.json';
+// German
+import deGemeinden from './data/de-gemeinden.json';
 // North American
 import usImmigrationStates from './data/us-immigration-states.json';
 import usAllStates from './data/us-all-states.json';
@@ -89,6 +92,7 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'sv-orter': SV_RULES,
   'sv-gardar': SV_RULES,
   'sv-kyrkor': SV_RULES,
+  'sv-landskap': SV_RULES,
   'sv-sockenstad-boundaries': SV_RULES,
   // Danish
   'dk-sogne': DK_RULES,
@@ -103,6 +107,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   // Icelandic
   'is-sveitarfelog': IS_RULES,
   'is-sveitarfelog-boundaries': IS_RULES,
+  // German
+  'de-gemeinden': DE_RULES,
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,
@@ -144,6 +150,7 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   svOrter as Gazetteer,
   svGardar as Gazetteer,
   svKyrkor as Gazetteer,
+  svLandskap as Gazetteer,
   svSockenstadBoundaries as Gazetteer,
   // Danish
   dkSogne as Gazetteer,
@@ -154,6 +161,8 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = [
   fiKunnat as Gazetteer,
   // Icelandic
   isSveitarfelog as Gazetteer,
+  // German
+  deGemeinden as Gazetteer,
   // North American
   usImmigrationStates as Gazetteer,
   usAllStates as Gazetteer,

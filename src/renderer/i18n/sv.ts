@@ -634,9 +634,11 @@ export default {
     personSection: 'Person',
   },
   placeTypes: {
+    continent: 'Kontinent',
     country: 'Land',
     admin1: 'Delstat/Region',
     province: 'Landskap',
+    landskap: 'Landskap',
     county: 'Län',
     härad: 'Härad',
     parish: 'Socken',

@@ -10,6 +10,7 @@ import type { GazetteerNormalizeRules } from '../api/place-gazetteers/types';
 export const SV_RULES: GazetteerNormalizeRules = {
   stripSuffixes: [
     'församling', 'socken', 'kommun', 'stad', 'härad', 'län', 'distrikt', 'pastorat',
+    'landskap',
     'kn', 'sn', 'fs',
   ],
 };
@@ -33,4 +34,11 @@ export const IS_RULES: GazetteerNormalizeRules = {
 export const EN_RULES: GazetteerNormalizeRules = {
   stripSuffixes: ['county', 'parish', 'township', 'borough', 'province', 'state'],
   stripPrefixes: ['county of', 'province of', 'state of'],
+};
+
+export const DE_RULES: GazetteerNormalizeRules = {
+  stripSuffixes: [
+    'Land', 'Bezirk', 'Kreis', 'Landkreis', 'Stadtkreis',
+    'Gemeinde', 'Stadt', 'Markt', 'Ortsteil',
+  ],
 };
