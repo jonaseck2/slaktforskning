@@ -787,6 +787,8 @@ export default {
     title: 'Möjliga dubbletter',
     hint: 'Personer med liknande namn och födelseår som kan vara registrerade dubbelt. Klicka "Slå ihop" för att flytta data från person 2 till person 1 och ta bort person 2.',
     filterDuplicates: 'Dubbletter',
+    showingOf: 'Visar {shown} av {total} möjliga dubblettpar',
+    totalPairs: '{count} möjligt dubblettpar | {count} möjliga dubblettpar',
     score: 'Poäng',
     mergeTitle: 'Slå ihop personer',
     keepPerson: 'Behåll (mål)',

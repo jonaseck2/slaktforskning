@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.178.0 — Duplicates: infinite scroll, summary line, label cleanup
+
+- feat(ui): the Duplicates view now uses `usePagedList` with a scroll sentinel, sticky table header, and a `count-label` summary above the table — same pattern as Sources/Places/Media/Relationships. Previously the view called `find(100)` and stopped, hiding the rest of the candidates with no signal to the user.
+- feat(api): new `findDuplicatesPage(db, limit, offset) → { items, total }` returns the slice and total in a single scan, so the view doesn't pay the O(N²) candidate-collection cost twice. Wired through as the worker channel `duplicates:findPage`, exposed on `window.api.duplicates.findPage`, with a matching stub in the static SPA api.
+- fix(i18n): the row-action button now reads "Merge" instead of "Merge Persons" (English; Swedish was already "Slå ihop").
+- docs: added a project-wide rule to `.claude/rules/renderer.md` and `.claude/skills/frontend-design/SKILL.md` requiring every list/table view (entity registries, derived lists, search results) to drive rows through `usePagedList` with a sentinel and a `count-label` summary — never a hardcoded slice.
+
 ## v0.177.0 — Duplicates: ignore a pair from the list
 
 - feat(ui): each row in the Duplicates view gained a small ✕ button next to "Merge". Clicking it persists the pair in a new `ignored_duplicates` table and removes the row optimistically — `findDuplicates` now LEFT-checks against that table so the same two persons won't reappear on the next scan, and the Duplicates nav-badge count drops with them. New API `ignoreDuplicate(db, a, b)` stores the pair canonically (lower id first, enforced by a `CHECK (person1_id < person2_id)` constraint) so insertion order doesn't matter and re-ignoring is a no-op (`INSERT OR IGNORE`). Both FK columns CASCADE on persons, so deleting or merging a person automatically cleans up its ignored-pair rows. Wired through as `duplicates:ignore` (mutating worker channel), exposed on `window.api.duplicates.ignore`, with a stub in the static SPA api. New i18n keys: `duplicates.ignore`, `duplicates.ignoreTooltip`, `duplicates.ignored`.

@@ -5,41 +5,47 @@
       <p class="duplicates-hint">{{ $t('duplicates.hint') }}</p>
     </div>
 
-    <AppLoadingState v-if="loading" :rows="5" />
+    <AppLoadingState v-if="loading && duplicates.length === 0" :rows="5" />
     <AppEmptyState v-else-if="duplicates.length === 0" icon="✅" :title="$t('empty.duplicates')" />
-    <table v-else class="data-table">
-      <thead>
-        <tr>
-          <th>{{ $t('duplicates.keepPerson') }}</th>
-          <th>{{ $t('duplicates.mergePerson') }}</th>
-          <th>{{ $t('duplicates.score') }}</th>
-          <th class="actions-cell">{{ $t('common.actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
-          <td>
-            <router-link :to="'/persons/' + d.person1_id" class="person-link">{{ d.person1_name }}</router-link>
-            <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
-          </td>
-          <td>
-            <router-link :to="'/persons/' + d.person2_id" class="person-link">{{ d.person2_name }}</router-link>
-            <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
-          </td>
-          <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
-          <td class="actions-cell">
-            <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
-            <button
-              type="button"
-              class="btn-sm btn-delete btn-ignore-pair"
-              :title="$t('duplicates.ignoreTooltip')"
-              :aria-label="$t('duplicates.ignore')"
-              @click="ignorePair(d)"
-            >✕</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <template v-else>
+      <p class="count-label">{{ summaryText }}</p>
+      <div class="duplicates-list-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ $t('duplicates.keepPerson') }}</th>
+              <th>{{ $t('duplicates.mergePerson') }}</th>
+              <th>{{ $t('duplicates.score') }}</th>
+              <th class="actions-cell">{{ $t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
+              <td>
+                <router-link :to="'/persons/' + d.person1_id" class="person-link">{{ d.person1_name }}</router-link>
+                <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
+              </td>
+              <td>
+                <router-link :to="'/persons/' + d.person2_id" class="person-link">{{ d.person2_name }}</router-link>
+                <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
+              </td>
+              <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
+              <td class="actions-cell">
+                <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
+                <button
+                  type="button"
+                  class="btn-sm btn-delete btn-ignore-pair"
+                  :title="$t('duplicates.ignoreTooltip')"
+                  :aria-label="$t('duplicates.ignore')"
+                  @click="ignorePair(d)"
+                >✕</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div ref="sentinel" class="scroll-sentinel"></div>
+      </div>
+    </template>
 
     <MergePersonsModal
       v-if="mergeCandidate"
@@ -57,24 +63,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import MergePersonsModal from '../components/MergePersonsModal.vue';
 import { useToast } from '../composables/useToast';
+import { usePagedList } from '../composables/usePagedList';
 
 defineOptions({ name: 'DuplicatesView' });
-
-declare const window: Window & {
-  api: {
-    duplicates: {
-      find: (limit?: number) => Promise<DuplicateCandidate[]>;
-      ignore: (personAId: string, personBId: string) => Promise<void>;
-    };
-  };
-};
 
 interface DuplicateCandidate {
   person1_id: string;
@@ -90,22 +88,38 @@ interface DuplicateCandidate {
 const { t } = useI18n();
 const toast = useToast();
 
-const duplicates = ref<DuplicateCandidate[]>([]);
-const loading = ref(false);
 const mergeCandidate = ref<DuplicateCandidate | null>(null);
 
-async function load() {
-  if (!window.api) return;
-  loading.value = true;
-  try {
-    duplicates.value = (await window.api.duplicates.find(100)) as DuplicateCandidate[];
-  } catch (err) {
-    console.error('[DuplicatesView] load failed:', err);
-    toast.error(t('errors.loadFailed'));
-  } finally {
-    loading.value = false;
+const {
+  items: duplicates,
+  total,
+  loading,
+  reload: load,
+  attachSentinel,
+} = usePagedList<DuplicateCandidate, 'score'>({
+  defaultSortBy: 'score',
+  defaultSortDir: 'desc',
+  fetchPage: async (limit, offset) => {
+    try {
+      return await window.api.duplicates.findPage(limit, offset) as { items: DuplicateCandidate[]; total: number };
+    } catch (err) {
+      console.error('[DuplicatesView] fetchPage failed:', err);
+      toast.error(t('errors.loadFailed'));
+      return { items: [], total: 0 };
+    }
+  },
+});
+
+const sentinel = ref<HTMLElement | null>(null);
+watch(sentinel, (el) => attachSentinel(el));
+
+const summaryText = computed(() => {
+  const shown = duplicates.value.length;
+  if (total.value > shown) {
+    return t('duplicates.showingOf', { shown, total: total.value });
   }
-}
+  return t('duplicates.totalPairs', { count: shown }, shown);
+});
 
 function scoreLevel(score: number): string {
   if (score >= 80) return 'high';
@@ -121,6 +135,7 @@ async function ignorePair(d: DuplicateCandidate) {
   // Optimistic remove — same pair can't reappear because it's now persisted in
   // ignored_duplicates, so no need to round-trip the whole list.
   duplicates.value = duplicates.value.filter(x => !(x.person1_id === d.person1_id && x.person2_id === d.person2_id));
+  if (total.value > 0) total.value -= 1;
   try {
     await window.api.duplicates.ignore(d.person1_id, d.person2_id);
     toast.success(t('duplicates.ignored'));
@@ -143,11 +158,27 @@ onActivated(load);
 <style scoped>
 .duplicates-view {
   padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 .duplicates-hint {
   color: var(--text-muted);
   font-size: var(--font-sm);
   margin-top: var(--space-xs);
+}
+.duplicates-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.duplicates-list-scroll :deep(.data-table thead th) {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
 }
 .birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
 .score-badge {

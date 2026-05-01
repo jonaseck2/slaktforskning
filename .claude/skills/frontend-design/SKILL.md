@@ -74,6 +74,63 @@ This applies `.content-paneled` which removes outer padding/background so the vi
 
 Reference views: PersonsView, PlacesView, MediaView. Do not invent a new padding scheme.
 
+**Infinite scroll is mandatory — never a hardcoded slice.** Every list/table view (entity registries, derived lists like duplicates and quality issues, search results, anything tabular) drives its rows through `usePagedList` and renders a sentinel `<div>` after the table that triggers `loadMore`. A view that calls `find(100)` and stops, or `list()` and renders the whole array, is a bug — the second the dataset grows past one screen the user has no way to see the rest, and there's no signal that data is hidden.
+
+The wiring is the same every time:
+
+```vue
+<template>
+  <p v-if="total > 0" class="count-label">
+    {{ $t('myEntity.showingOf', { shown: items.length, total }) }}
+  </p>
+  <div class="my-list-scroll">
+    <table class="data-table"> … </table>
+    <div ref="sentinel" class="scroll-sentinel"></div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { usePagedList } from '../composables/usePagedList';
+
+type SortBy = 'name' | 'created_at';
+const { items, total, loading, searchQuery, sortBy, sortDir, reload, toggleSort, attachSentinel } =
+  usePagedList<MyRow, SortBy>({
+    defaultSortBy: 'name',
+    storageKey: 'my-entity',
+    fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+      try {
+        return await window.api.myEntity.listPage(limit, offset, sortBy, sortDir, query)
+          as { items: MyRow[]; total: number };
+      } catch (err) {
+        console.error('[MyView] fetchPage failed:', err);
+        toast.error(t('errors.loadFailed'));
+        return { items: [], total: 0 };
+      }
+    },
+  });
+
+const sentinel = ref<HTMLElement | null>(null);
+watch(sentinel, (el) => attachSentinel(el));
+</script>
+
+<style scoped>
+.my-list-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.my-list-scroll :deep(.data-table thead th) {
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
+}
+</style>
+```
+
+**API contract for paged lists:** the IPC must accept `(limit, offset, ...)` and return `{ items, total }` in a single call (single DB scan). If the existing API only returns rows, add a `*Page` variant before building the view — don't call `findX(big_limit)` and slice client-side. For O(N²) derived lists like duplicates, returning `items` and `total` from the same scan also avoids running the heavy computation twice (once for the rows, once for the badge count).
+
+**Summary line is mandatory.** Above the scrollable container, render `<p class="count-label">{{ $t('entity.showingOf', { shown: items.length, total }) }}</p>` (e.g. "Showing 100 of 247 places"). The shown/total split tells the user there's more below the fold and roughly how much. When `total === items.length`, swap to a singular/plural total (`{count} place | {count} places`).
+
+**Reset on filter/sort.** `usePagedList` already does this — when `searchQuery`, `sortBy`, or `sortDir` change, it re-fetches from offset 0 with the new params. Do not reimplement filtering/sorting client-side over a partial slice; the whole point is that the server filters and sorts the full set.
+
+Reference: SourcesView, PlacesView, MediaView, RelationshipsView, DuplicatesView.
+
 **Step 4 — Drag handle + resizable panel** (always RIGHT side, always resizable):
 
 Script setup:

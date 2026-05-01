@@ -10,7 +10,7 @@ describe('reports & duplicates channel registry', () => {
 
   it('registers all duplicates:* channels', () => {
     const dupChannels = listChannels().filter(c => c.startsWith('duplicates:'));
-    expect(dupChannels.length).toBe(4);
+    expect(dupChannels.length).toBe(5);
   });
 
   it('reports:personSummary is a worker channel', () => {

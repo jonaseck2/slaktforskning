@@ -56,6 +56,12 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'duplicates:findPage',
+  thread: 'worker',
+  handler: (db, limit?: number, offset?: number) => duplicates.findDuplicatesPage(db, limit, offset),
+});
+
+defineChannel({
   name: 'duplicates:count',
   thread: 'worker',
   handler: (db) => duplicates.countDuplicates(db),

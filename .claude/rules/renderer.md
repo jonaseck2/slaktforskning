@@ -77,8 +77,10 @@ Every entity (persons, relationships, sources, places, groups, research tasks) f
 - **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
 - **Cross-entity navigation:** clicking a related entity inside a panel routes to that entity's list view (which auto-opens its panel) — never inline-edit across entity types.
 - **Editing:** all create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel. Inline auto-save fields are limited; most edits go through the modal.
+- **Infinite scroll is the default — never a hardcoded slice.** Every list/table view drives its rows through `usePagedList` with a server-paged `fetchPage(limit, offset, sortBy, sortDir, query)`, a `<div ref="sentinel" class="scroll-sentinel"></div>` after the table, and `attachSentinel(el)` wired in a `watch`. The scroll container has `flex: 1; min-height: 0; overflow-y: auto`. A view that returns the first N rows and stops (the old `find(100)` shape) is a bug — it hides data without telling the user. If the underlying API doesn't yet support paging, add `findPage(limit, offset) → { items, total }` (single scan, returns both) before building the view. Even small/derived lists (duplicates, quality issues, search results) follow this rule — what's small today grows.
+- **Summary line is mandatory.** Every list view shows a `<p class="count-label">` above the table: `"Showing {shown} of {total} <entities>"` when paged, falling back to the singular/plural total when fully loaded. Drive it from `usePagedList`'s `items.length` and `total`.
 
-The `/frontend-design` skill has the full step-by-step layout checklist (PANELED_ROUTES registration, sheet padding, drag handle wiring).
+The `/frontend-design` skill has the full step-by-step layout checklist (PANELED_ROUTES registration, sheet padding, drag handle wiring, paged-list wiring).
 
 ### Person Section Component Pattern
 

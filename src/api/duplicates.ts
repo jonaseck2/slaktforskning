@@ -25,6 +25,21 @@ export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] 
 }
 
 /**
+ * Paged variant — returns a single slice plus the total count in one scan,
+ * so callers can drive infinite-scroll UIs without re-running the O(N²)
+ * candidate collection twice (once for `findDuplicates`, once for `count`).
+ */
+export function findDuplicatesPage(
+  db: Database,
+  limit = 100,
+  offset = 0,
+): { items: DuplicateCandidate[]; total: number } {
+  const candidates = collectDuplicateCandidates(db);
+  candidates.sort((a, b) => b.score - a.score);
+  return { items: candidates.slice(offset, offset + limit), total: candidates.length };
+}
+
+/**
  * Count all duplicate candidates without slicing or sorting — used by the
  * nav badge so the displayed count reflects the true total instead of being
  * pinned at the `findDuplicates` page-size limit.
