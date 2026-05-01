@@ -5,6 +5,7 @@ import {
   getPersonsForPlace,
   listPlacesPage, countPlaces,
   listPlaceChildren,
+  getPlaceAncestors,
 } from '../../src/api/places';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -297,5 +298,38 @@ describe('listPlaceChildren', () => {
   it('returns empty array when parent has no children', () => {
     const p = createPlace(db, { name: 'Solo' });
     expect(listPlaceChildren(db, p.id)).toEqual([]);
+  });
+});
+
+describe('getPlaceAncestors', () => {
+  it('returns the chain from root to the given place inclusive', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    const stockholm = createPlace(db, { name: 'Stockholm', parent_place_id: sweden.id });
+    const solna = createPlace(db, { name: 'Solna', parent_place_id: stockholm.id });
+
+    const chain = getPlaceAncestors(db, solna.id);
+
+    expect(chain.map(p => p.name)).toEqual(['Sverige', 'Stockholm', 'Solna']);
+  });
+
+  it('returns single-element array for a root place', () => {
+    const sweden = createPlace(db, { name: 'Sverige' });
+    expect(getPlaceAncestors(db, sweden.id).map(p => p.name)).toEqual(['Sverige']);
+  });
+
+  it('returns empty array for unknown id', () => {
+    expect(getPlaceAncestors(db, 'nonexistent')).toEqual([]);
+  });
+
+  it('caps depth at 32 to defend against cycles', () => {
+    let parentId: string | null = null;
+    let lastId = '';
+    for (let i = 0; i < 40; i++) {
+      const p = createPlace(db, { name: `L${i}`, parent_place_id: parentId });
+      parentId = p.id;
+      lastId = p.id;
+    }
+    const chain = getPlaceAncestors(db, lastId);
+    expect(chain.length).toBeLessThanOrEqual(32);
   });
 });

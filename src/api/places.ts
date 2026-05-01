@@ -238,6 +238,25 @@ export function listPlaceChildren(
   `, [parentId]);
 }
 
+const MAX_PLACE_ANCESTOR_DEPTH = 32;
+
+/**
+ * Chain from root to `id` (inclusive). Walks `parent_place_id` upward then
+ * reverses. Capped at MAX_PLACE_ANCESTOR_DEPTH to defend against accidental
+ * cycles in user data.
+ */
+export function getPlaceAncestors(db: Database, id: string): Place[] {
+  const reverseChain: Place[] = [];
+  let currentId: string | null = id;
+  for (let i = 0; i < MAX_PLACE_ANCESTOR_DEPTH && currentId; i++) {
+    const row = queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [currentId]);
+    if (!row) break;
+    reverseChain.push(row);
+    currentId = row.parent_place_id ?? null;
+  }
+  return reverseChain.reverse();
+}
+
 export function getPersonsForPlace(
   db: Database,
   placeId: string
