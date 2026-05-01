@@ -211,6 +211,33 @@ export function findOrCreatePlaceWithChain(
   return createPlace(db, { name: name.trim(), parent_place_id: parentId });
 }
 
+/**
+ * Direct children of a place node. Pass `null` for root places (no parent).
+ * `hasChildren` is computed via EXISTS so the tree picker can render chevrons
+ * without N+1 queries when expanding.
+ */
+export function listPlaceChildren(
+  db: Database,
+  parentId: string | null,
+): (Place & { hasChildren: boolean })[] {
+  if (parentId === null) {
+    return queryAll<Place & { hasChildren: boolean }>(db, `
+      SELECT p.*,
+        EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
+      FROM places p
+      WHERE p.parent_place_id IS NULL
+      ORDER BY p.name ASC
+    `);
+  }
+  return queryAll<Place & { hasChildren: boolean }>(db, `
+    SELECT p.*,
+      EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
+    FROM places p
+    WHERE p.parent_place_id = ?
+    ORDER BY p.name ASC
+  `, [parentId]);
+}
+
 export function getPersonsForPlace(
   db: Database,
   placeId: string
