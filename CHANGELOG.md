@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.179.3 — MCP `run_checks` tool returned an empty object
+
+- fix(mcp): the `run_checks` prod-MCP tool handler was missing `await` on both `runChecksForPerson(db, personId)` and `runAllChecks(db)`. Both functions are async and return `Promise<CheckResult[]>`, so `JSON.stringify(Promise)` serialized them as `{}` — every call to the tool returned an empty object instead of the actual check results array. Caught while writing coverage tests for `src/mcp/tools/prod/research.ts`. One-line fix: `await` both calls.
+
 ## v0.179.2 — Place tree picker: load resilience + filter style
 
 - fix(ui): wrap the `PlaceTreePickerModal` `onMounted` bootstrap in try/catch with a `errors.loadFailed` toast, and a `finally` clearing the loading flag. Without this, any throw during init (e.g. an undefined IPC channel after a stale preload bundle) left the modal stuck on "Loading…" with no recovery. Also tightened the optional chains in `usePlaceTree` (`window.api?.places?.listChildren?.(...)`) so a missing channel returns undefined instead of throwing TypeError mid-await.
