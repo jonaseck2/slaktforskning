@@ -10,6 +10,7 @@ import type { GazetteerNormalizeRules } from '../api/place-gazetteers/types';
 export const SV_RULES: GazetteerNormalizeRules = {
   stripSuffixes: [
     'församling', 'socken', 'kommun', 'stad', 'härad', 'län', 'distrikt', 'pastorat',
+    'landskap',
     'kn', 'sn', 'fs',
   ],
 };
