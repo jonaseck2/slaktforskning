@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.186.0 — Entity panel foundation
+
+- feat: panel composables refactor — useEntityData and usePagedList now bake in cross-view reactivity, new EntityPanel shell component, useEditableFields composable, centralized localStorage key registry; all 7 entity panels migrated
+
 ## v0.185.3 — Media filters actually filter
 
 - fix: Type / Status / Face-tag chips in the media library now filter results — were being ignored server-side
