@@ -8,7 +8,7 @@
     "name": "Wikidata",
     "url": "https://www.wikidata.org/",
     "license": "CC0 1.0",
-    "fetched": "2026-04-18"
+    "fetched": "2026-05-01"
   },
   "root": {
     "name": "sv",
@@ -18,63 +18,51 @@
   },
   "translations": {
     "dk-sogne": {
+      "Region Midtjylland": [
+        "Region Mittjylland"
+      ],
       "Region Østdanmark": [
         "Region Östdanmark"
       ],
       "Region Sjælland": [
         "Region Själland"
-      ],
-      "Region Midtjylland": [
-        "Region Mittjylland"
       ]
     },
     "dk-sogne-dawa": {
-      "Region Sjælland": [
-        "Region Själland"
-      ],
       "Region Midtjylland": [
         "Region Mittjylland"
+      ],
+      "Region Sjælland": [
+        "Region Själland"
       ]
     },
     "no-kommuner": {
       "Agder fylke > Birkenes": [
         "Birkenes kommun"
       ],
-      "Møre og Romsdal fylke > Sykkylven": [
-        "Sykkylvens kommun"
-      ],
-      "Agder fylke > Grimstad": [
-        "Grimstads kommun"
-      ],
-      "Møre og Romsdal fylke > Averøy": [
-        "Averøy kommun"
-      ],
-      "Telemark fylke > Seljord": [
-        "Seljords kommun"
-      ],
-      "Telemark fylke > Notodden": [
-        "Notoddens kommun"
-      ],
       "Nordland fylke > Hadsel": [
         "Hadsels kommun"
-      ],
-      "Telemark fylke > Tokke": [
-        "Tokke kommun"
       ],
       "Telemark fylke > Bamble": [
         "Bamble kommun"
       ],
+      "Buskerud fylke > Hol": [
+        "Hols kommun"
+      ],
+      "Telemark fylke > Notodden": [
+        "Notoddens kommun"
+      ],
+      "Nordland fylke > Gildeskål": [
+        "Gildeskåls kommun"
+      ],
       "Rogaland fylke > Suldal": [
         "Suldals kommun"
       ],
-      "Agder fylke > Froland kommune": [
-        "Frolands kommun"
+      "Innlandet fylke > Skjåk": [
+        "Skjåks kommun"
       ],
       "Telemark fylke > Porsgrunn": [
         "Porsgrunns kommun"
-      ],
-      "Telemark fylke > Kragerø": [
-        "Kragerø kommun"
       ],
       "Telemark fylke > Fyresdal": [
         "Fyresdals kommun"
@@ -85,47 +73,29 @@
       "Telemark fylke > Nissedal": [
         "Nissedals kommun"
       ],
-      "Buskerud fylke > Hol": [
-        "Hols kommun"
+      "Agder fylke > Froland kommune": [
+        "Frolands kommun"
       ],
-      "Rogaland fylke > Hå kommune": [
-        "Hå kommun"
+      "Agder fylke > Grimstad": [
+        "Grimstads kommun"
+      ],
+      "Møre og Romsdal fylke > Averøy": [
+        "Averøy kommun"
       ],
       "Møre og Romsdal fylke > Surnadal": [
         "Surnadals kommun"
       ],
+      "Buskerud fylke > Flesberg": [
+        "Flesbergs kommun"
+      ],
+      "Nordland fylke > Træna": [
+        "Træna kommun"
+      ],
       "Innlandet fylke > Stange": [
         "Stange kommun"
       ],
-      "Agder fylke > Kristiansand": [
-        "Kristiansands kommun"
-      ],
-      "Troms fylke > Tjeldsund": [
-        "Tjeldsunds kommun"
-      ],
-      "Trøndelag fylke > Meråker": [
-        "Meråkers kommun"
-      ],
-      "Nordland fylke > Hamarøy": [
-        "Hamarøy kommun"
-      ],
-      "Vestland fylke > Kvam": [
-        "Kvams kommun"
-      ],
-      "Nordland fylke > Rødøy": [
-        "Rødøy kommun"
-      ],
-      "Innlandet fylke > Hamar": [
-        "Hamars kommun"
-      ],
-      "Finnmark fylke > Kautokeino": [
-        "Kautokeino kommun"
-      ],
-      "Akershus fylke > Nes": [
-        "Nes kommun"
-      ],
-      "Vestland fylke > Austrheim": [
-        "Austrheims kommun"
+      "Agder fylke > Tvedestrand": [
+        "Tvedestrands kommun"
       ],
       "Vestland fylke > Fedje": [
         "Fedje kommun"
@@ -133,56 +103,77 @@
       "Telemark fylke > Drangedal": [
         "Drangedals kommun"
       ],
-      "Trøndelag fylke > Holtålen": [
-        "Holtålens kommun"
-      ],
-      "Nordland fylke > Træna": [
-        "Træna kommun"
-      ],
-      "Agder fylke > Tvedestrand": [
-        "Tvedestrands kommun"
-      ],
-      "Troms fylke > Balsfjord": [
-        "Balsfjords kommun"
-      ],
       "Innlandet fylke > Lillehammer": [
         "Lillehammers kommun"
       ],
-      "Innlandet fylke > Gausdal": [
-        "Gausdals kommun"
+      "Møre og Romsdal fylke > Molde": [
+        "Molde kommun"
       ],
-      "Innlandet fylke > Alvdal": [
-        "Alvdals kommun"
+      "Telemark fylke > Seljord": [
+        "Seljords kommun"
       ],
-      "Buskerud fylke > Flesberg": [
-        "Flesbergs kommun"
+      "Vestland fylke > Austrheim": [
+        "Austrheims kommun"
       ],
-      "Innlandet fylke > Vestre Toten": [
-        "Vestre Totens kommun"
+      "Møre og Romsdal fylke > Sykkylven": [
+        "Sykkylvens kommun"
       ],
-      "Nordland fylke > Beiarn": [
-        "Beiarns kommun"
+      "Trøndelag fylke > Holtålen": [
+        "Holtålens kommun"
+      ],
+      "Telemark fylke > Tokke": [
+        "Tokke kommun"
+      ],
+      "Finnmark fylke > Kautokeino": [
+        "Kautokeino kommun"
+      ],
+      "Vestland fylke > Solund": [
+        "Solunds kommun"
+      ],
+      "Vestland fylke > Stord": [
+        "Stords kommun"
+      ],
+      "Agder fylke > Kristiansand": [
+        "Kristiansands kommun"
+      ],
+      "Telemark fylke > Kragerø": [
+        "Kragerø kommun"
+      ],
+      "Trøndelag fylke > Meråker": [
+        "Meråkers kommun"
+      ],
+      "Innlandet fylke > Dovre": [
+        "Dovre kommun"
+      ],
+      "Rogaland fylke > Hå kommune": [
+        "Hå kommun"
       ],
       "Troms fylke > Karlsøy": [
         "Karlsøy kommun"
       ],
-      "Trøndelag fylke > Rindal": [
-        "Rindals kommun"
+      "Innlandet fylke > Hamar": [
+        "Hamars kommun"
       ],
-      "Finnmark fylke > Loppa": [
-        "Loppa kommun"
+      "Buskerud fylke > Drammen": [
+        "Drammens kommun"
       ],
-      "Nordland fylke > Sortland": [
-        "Sortlands kommun"
+      "Troms fylke > Tromsø": [
+        "Tromsø kommun"
       ],
-      "Trøndelag fylke > Flatanger": [
-        "Flatangers kommun"
+      "Innlandet fylke > Alvdal": [
+        "Alvdals kommun"
+      ],
+      "Innlandet fylke > Vestre Toten": [
+        "Vestre Totens kommun"
       ],
       "Finnmark fylke > Sør-Varanger": [
         "Sør-Varangers kommun"
       ],
-      "Buskerud fylke > Nore og Uvdal": [
-        "Nore og Uvdals kommun"
+      "Troms fylke > Lyngen": [
+        "Lyngens kommun"
+      ],
+      "Innlandet fylke > Sør-Aurdal": [
+        "Sør-Aurdals kommun"
       ],
       "Nordland fylke > Leirfjord": [
         "Leirfjords kommun"
@@ -190,62 +181,107 @@
       "Nordland fylke > Saltdal": [
         "Saltdals kommun"
       ],
+      "Rogaland fylke > Haugesund": [
+        "Haugesunds kommun"
+      ],
       "Buskerud fylke > Kongsberg": [
         "Kongsbergs kommun"
+      ],
+      "Østfold fylke > Moss": [
+        "Moss kommun"
       ],
       "Vestfold fylke > Sandefjord": [
         "Sandefjords kommun"
       ],
-      "Troms fylke > Tromsø": [
-        "Tromsø kommun"
+      "Troms fylke > Tjeldsund": [
+        "Tjeldsunds kommun"
+      ],
+      "Troms fylke > Balsfjord": [
+        "Balsfjords kommun"
+      ],
+      "Nordland fylke > Meløy": [
+        "Meløy kommun"
+      ],
+      "Nordland fylke > Sortland": [
+        "Sortlands kommun"
       ],
       "Vestland fylke > Etne": [
         "Etne kommun"
       ],
-      "Østfold fylke > Sarpsborg": [
-        "Sarpsborgs kommun"
+      "Møre og Romsdal fylke > Hareid": [
+        "Hareids kommun"
       ],
-      "Vestland fylke > Samnanger": [
-        "Samnangers kommun"
-      ],
-      "Vestland fylke > Stord": [
-        "Stords kommun"
-      ],
-      "Innlandet fylke > Dovre": [
-        "Dovre kommun"
-      ],
-      "Nordland fylke > Gildeskål": [
-        "Gildeskåls kommun"
-      ],
-      "Vestland fylke > Solund": [
-        "Solunds kommun"
+      "Østfold fylke > Aremark": [
+        "Aremarks kommun"
       ],
       "Buskerud fylke > Sigdal": [
         "Sigdals kommun"
       ],
-      "Innlandet fylke > Skjåk": [
-        "Skjåks kommun"
+      "Østfold fylke > Sarpsborg": [
+        "Sarpsborgs kommun"
+      ],
+      "Vestland fylke > Hyllestad kommune": [
+        "Hyllestads kommun"
+      ],
+      "Rogaland fylke > Kvitsøy": [
+        "Kvitsøy kommun"
+      ],
+      "Finnmark fylke > Loppa": [
+        "Loppa kommun"
+      ],
+      "Vestland fylke > Voss": [
+        "Voss kommun"
+      ],
+      "Vestfold fylke > Horten": [
+        "Hortens kommun"
+      ],
+      "Østfold fylke > Halden": [
+        "Haldens kommun"
+      ],
+      "Vestland fylke > Vaksdal": [
+        "Vaksdals kommun"
+      ],
+      "Trøndelag fylke > Tydal": [
+        "Tydals kommun"
+      ],
+      "Nordland fylke > Hamarøy": [
+        "Hamarøy kommun"
+      ],
+      "Vestland fylke > Kvam": [
+        "Kvams kommun"
+      ],
+      "Finnmark fylke > Berlevåg": [
+        "Berlevågs kommun"
+      ],
+      "Innlandet fylke > Kongsvinger": [
+        "Kongsvingers kommun"
+      ],
+      "Buskerud fylke > Nore og Uvdal": [
+        "Nore og Uvdals kommun"
+      ],
+      "Nordland fylke > Beiarn": [
+        "Beiarns kommun"
       ],
       "Østfold fylke > Marker": [
         "Markers kommun"
       ],
-      "Møre og Romsdal fylke > Molde": [
-        "Molde kommun"
-      ],
-      "Nordland fylke > Vega": [
-        "Vega kommun"
-      ],
-      "Nordland fylke > Hattfjelldal": [
-        "Hattfjelldals kommun"
-      ],
-      "Møre og Romsdal fylke > Vestnes": [
-        "Vestnes kommun"
-      ],
-      "Troms fylke > Ibestad": [
-        "Ibestads kommun"
-      ],
       "Innlandet fylke > Engerdal kommune": [
         "Engerdals kommun"
+      ],
+      "Troms fylke > Nordreisa": [
+        "Nordreisa kommun"
+      ],
+      "Nordland fylke > Vevelstad": [
+        "Vevelstads kommun"
+      ],
+      "Møre og Romsdal fylke > Giske": [
+        "Giske kommun"
+      ],
+      "Nordland fylke > Flakstad": [
+        "Flakstads kommun"
+      ],
+      "Trøndelag fylke > Flatanger": [
+        "Flatangers kommun"
       ],
       "Vestland fylke > Tysnes": [
         "Tysnes kommun"
@@ -253,146 +289,38 @@
       "Vestland fylke > Masfjorden kommune": [
         "Masfjordens kommun"
       ],
-      "Vestland fylke > Vaksdal": [
-        "Vaksdals kommun"
-      ],
-      "Møre og Romsdal fylke > Volda": [
-        "Volda kommun"
-      ],
-      "Østfold fylke > Aremark": [
-        "Aremarks kommun"
-      ],
-      "Innlandet fylke > Sør-Aurdal": [
-        "Sør-Aurdals kommun"
-      ],
-      "Vestfold fylke > Horten": [
-        "Hortens kommun"
-      ],
-      "Troms fylke > Lyngen": [
-        "Lyngens kommun"
-      ],
-      "Innlandet fylke > Vestre Slidre": [
-        "Vestre Slidre kommun"
-      ],
-      "Rogaland fylke > Kvitsøy": [
-        "Kvitsøy kommun"
-      ],
-      "Vestland fylke > Voss": [
-        "Voss kommun"
-      ],
-      "Buskerud fylke > Drammen": [
-        "Drammens kommun"
-      ],
-      "Østfold fylke > Moss": [
-        "Moss kommun"
-      ],
-      "Finnmark fylke > Berlevåg": [
-        "Berlevågs kommun"
-      ],
-      "Nordland fylke > Meløy": [
-        "Meløy kommun"
-      ],
-      "Akershus fylke > Enebakk": [
-        "Enebakks kommun"
-      ],
-      "Akershus fylke > Frogn": [
-        "Frogns kommun"
-      ],
-      "Møre og Romsdal fylke > Hareid": [
-        "Hareids kommun"
-      ],
-      "Vestland fylke > Hyllestad kommune": [
-        "Hyllestads kommun"
-      ],
-      "Møre og Romsdal fylke > Gjemnes": [
-        "Gjemnes kommun"
-      ],
-      "Trøndelag fylke > Midtre Gauldal": [
-        "Midtre Gauldals kommun"
-      ],
-      "Østfold fylke > Halden": [
-        "Haldens kommun"
-      ],
-      "Innlandet fylke > Tynset": [
-        "Tynsets kommun"
-      ],
-      "Møre og Romsdal fylke > Aukra": [
-        "Aukra kommun"
-      ],
-      "Innlandet fylke > Kongsvinger": [
-        "Kongsvingers kommun"
-      ],
-      "Akershus fylke > Nannestad": [
-        "Nannestads kommun"
-      ],
-      "Nordland fylke > Flakstad": [
-        "Flakstads kommun"
-      ],
-      "Akershus fylke > Gjerdrum kommune": [
-        "Gjerdrums kommun"
-      ],
-      "Rogaland fylke > Haugesund": [
-        "Haugesunds kommun"
-      ],
-      "Finnmark fylke > Hasvik": [
-        "Hasviks kommun"
-      ],
-      "Agder fylke > Hægebostad": [
-        "Hægebostads kommun"
-      ],
-      "Møre og Romsdal fylke > Haram": [
-        "Harams kommun"
-      ],
-      "Møre og Romsdal fylke > Ørsta": [
-        "Ørsta kommun"
-      ],
       "Trøndelag fylke > Skaun": [
         "Skauns kommun"
       ],
       "Østfold fylke > Våler": [
         "Vålers kommun"
       ],
-      "Troms fylke > Skjervøy": [
-        "Skjervøy kommun"
+      "Buskerud fylke > Ringerike": [
+        "Ringerike kommun"
       ],
-      "Rogaland fylke > Klepp": [
-        "Klepps kommun"
-      ],
-      "Nordland fylke > Grane": [
-        "Grane kommun"
-      ],
-      "Buskerud fylke > Gol": [
-        "Gols kommun"
+      "Nordland fylke > Brønnøy": [
+        "Brønnøy kommun"
       ],
       "Vestland fylke > Bømlo": [
         "Bømlo kommun"
       ],
-      "Nordland fylke > Andøy": [
-        "Andøy kommun"
-      ],
-      "Finnmark fylke > Måsøy": [
-        "Måsøy kommun"
-      ],
-      "Rogaland fylke > Utsira": [
-        "Utsira kommun"
-      ],
-      "Vestland fylke > Høyanger": [
-        "Høyangers kommun"
-      ],
       "Troms fylke > Salangen": [
         "Salangens kommun"
+      ],
+      "Innlandet fylke > Gausdal": [
+        "Gausdals kommun"
       ],
       "Møre og Romsdal fylke > Aure": [
         "Aure kommun"
       ],
-      "Nordland fylke > Herøy": [
-        "Herøy kommun"
+      "Finnmark fylke > Hasvik": [
+        "Hasviks kommun"
       ],
-      "Vestfold fylke > Larvik": [
-        "Larviks kommun"
+      "Møre og Romsdal fylke > Vestnes": [
+        "Vestnes kommun"
       ],
-      "Rogaland fylke > Bjerkreim": [
-        "Bjerkreims kommun"
+      "Vestland fylke > Bremanger": [
+        "Bremangers kommun"
       ],
       "Vestland fylke > Fjaler": [
         "Fjalers kommun"
@@ -400,83 +328,74 @@
       "Trøndelag fylke > Overhalla": [
         "Overhalla kommun"
       ],
-      "Møre og Romsdal fylke > Sande": [
-        "Sande kommun"
+      "Møre og Romsdal fylke > Haram": [
+        "Harams kommun"
       ],
-      "Trøndelag fylke > Tydal": [
-        "Tydals kommun"
+      "Nordland fylke > Vega": [
+        "Vega kommun"
       ],
-      "Troms fylke > Nordreisa": [
-        "Nordreisa kommun"
+      "Trøndelag fylke > Rindal": [
+        "Rindals kommun"
       ],
-      "Akershus fylke > Nesodden": [
-        "Nesoddens kommun"
+      "Nordland fylke > Rødøy": [
+        "Rødøy kommun"
+      ],
+      "Rogaland fylke > Utsira": [
+        "Utsira kommun"
+      ],
+      "Nordland fylke > Hattfjelldal": [
+        "Hattfjelldals kommun"
+      ],
+      "Vestland fylke > Samnanger": [
+        "Samnangers kommun"
+      ],
+      "Troms fylke > Ibestad": [
+        "Ibestads kommun"
+      ],
+      "Akershus fylke > Nes": [
+        "Nes kommun"
+      ],
+      "Møre og Romsdal fylke > Volda": [
+        "Volda kommun"
       ],
       "Trøndelag fylke > Namsos": [
         "Namsos kommun"
       ],
-      "Nordland fylke > Brønnøy": [
-        "Brønnøy kommun"
+      "Rogaland fylke > Klepp": [
+        "Klepps kommun"
       ],
-      "Trøndelag fylke > Selbu": [
-        "Selbu kommun"
+      "Akershus fylke > Gjerdrum kommune": [
+        "Gjerdrums kommun"
       ],
-      "Rogaland fylke > Randaberg": [
-        "Randabergs kommun"
+      "Vestland fylke > Høyanger": [
+        "Høyangers kommun"
       ],
-      "Troms fylke > Målselv": [
-        "Målselvs kommun"
+      "Akershus fylke > Enebakk": [
+        "Enebakks kommun"
       ],
-      "Troms fylke > Kvænangen": [
-        "Kvænangens kommun"
+      "Akershus fylke > Frogn": [
+        "Frogns kommun"
       ],
-      "Møre og Romsdal fylke > Giske": [
-        "Giske kommun"
+      "Innlandet fylke > Vestre Slidre": [
+        "Vestre Slidre kommun"
       ],
-      "Nordland fylke > Vågan": [
-        "Vågans kommun"
+      "Innlandet fylke > Vang": [
+        "Vangs kommun"
       ],
-      "Akershus fylke > Ullensaker": [
-        "Ullensakers kommun"
+      "Nordland fylke > Vefsn": [
+        "Vefsns kommun"
       ],
-      "Trøndelag fylke > Frosta": [
-        "Frosta kommun"
+      "Nordland fylke > Andøy": [
+        "Andøy kommun"
       ],
-      "Nordland fylke > Bindal": [
-        "Bindals kommun"
+      "Finnmark fylke > Måsøy": [
+        "Måsøy kommun"
       ],
-      "Vestland fylke > Bremanger": [
-        "Bremangers kommun"
-      ],
-      "Møre og Romsdal fylke > Ålesund": [
-        "Ålesunds kommun"
-      ],
-      "Rogaland fylke > Bokn": [
-        "Bokns kommun"
-      ],
-      "Nordland fylke > Dønna": [
-        "Dønna kommun"
-      ],
-      "Nordland fylke > Vevelstad": [
-        "Vevelstads kommun"
-      ],
-      "Vestland fylke > Askøy": [
-        "Askøy kommun"
-      ],
-      "Vestland fylke > Modalen": [
-        "Modalens kommun"
-      ],
-      "Troms fylke > Dyrøy": [
-        "Dyrøy kommun"
+      "Vestfold fylke > Larvik": [
+        "Larviks kommun"
       ],
       "Nordland fylke > Vestvågøy": [
         "Vestvågøy kommun"
-      ],
-      "Buskerud fylke > Ringerike": [
-        "Ringerike kommun"
-      ],
-      "Troms fylke > Harstad": [
-        "Harstads kommun"
       ],
       "Innlandet fylke > Sel": [
         "Sels kommun"
@@ -484,29 +403,119 @@
       "Trøndelag fylke > Verdal": [
         "Verdals kommun"
       ],
-      "Trøndelag fylke > Nærøysund": [
-        "Nærøysunds kommun"
+      "Møre og Romsdal fylke > Aukra": [
+        "Aukra kommun"
       ],
-      "Oslo fylke > Oslo kommune": [
-        "Oslo kommun"
+      "Troms fylke > Skjervøy": [
+        "Skjervøy kommun"
       ],
-      "Trøndelag fylke > Indre Fosen": [
-        "Indre Fosens kommun"
+      "Vestland fylke > Askvoll": [
+        "Askvolls kommun"
       ],
-      "Troms fylke > Kvæfjord": [
-        "Kvæfjords kommun"
+      "Nordland fylke > Dønna": [
+        "Dønna kommun"
       ],
-      "Trøndelag fylke > Trondheim": [
-        "Trondheims kommun"
+      "Troms fylke > Målselv": [
+        "Målselvs kommun"
+      ],
+      "Nordland fylke > Bindal": [
+        "Bindals kommun"
+      ],
+      "Agder fylke > Hægebostad": [
+        "Hægebostads kommun"
+      ],
+      "Rogaland fylke > Bokn": [
+        "Bokns kommun"
+      ],
+      "Troms fylke > Kvænangen": [
+        "Kvænangens kommun"
+      ],
+      "Innlandet fylke > Gran kommune": [
+        "Grans kommun"
+      ],
+      "Møre og Romsdal fylke > Sande": [
+        "Sande kommun"
+      ],
+      "Møre og Romsdal fylke > Ørsta": [
+        "Ørsta kommun"
+      ],
+      "Akershus fylke > Ullensaker": [
+        "Ullensakers kommun"
       ],
       "Møre og Romsdal fylke > Sula": [
         "Sula kommun"
       ],
+      "Akershus fylke > Nannestad": [
+        "Nannestads kommun"
+      ],
+      "Vestland fylke > Modalen": [
+        "Modalens kommun"
+      ],
+      "Akershus fylke > Nesodden": [
+        "Nesoddens kommun"
+      ],
+      "Troms fylke > Kvæfjord": [
+        "Kvæfjords kommun"
+      ],
       "Nordland fylke > Narvik": [
         "Narviks kommun"
       ],
-      "Vestland fylke > Alver": [
-        "Alvers kommun"
+      "Innlandet fylke > Tynset": [
+        "Tynsets kommun"
+      ],
+      "Nordland fylke > Vågan": [
+        "Vågans kommun"
+      ],
+      "Rogaland fylke > Lund": [
+        "Lunds kommun"
+      ],
+      "Trøndelag fylke > Frosta": [
+        "Frosta kommun"
+      ],
+      "Innlandet fylke > Os": [
+        "Os kommun"
+      ],
+      "Trøndelag fylke > Selbu": [
+        "Selbu kommun"
+      ],
+      "Rogaland fylke > Randaberg": [
+        "Randabergs kommun"
+      ],
+      "Vestland fylke > Askøy": [
+        "Askøy kommun"
+      ],
+      "Troms fylke > Harstad": [
+        "Harstads kommun"
+      ],
+      "Trøndelag fylke > Midtre Gauldal": [
+        "Midtre Gauldals kommun"
+      ],
+      "Møre og Romsdal fylke > Gjemnes": [
+        "Gjemnes kommun"
+      ],
+      "Buskerud fylke > Gol": [
+        "Gols kommun"
+      ],
+      "Nordland fylke > Bodø": [
+        "Bodø kommun"
+      ],
+      "Vestland fylke > Luster": [
+        "Lusters kommun"
+      ],
+      "Møre og Romsdal fylke > Ålesund": [
+        "Ålesunds kommun"
+      ],
+      "Oslo fylke > Oslo kommune": [
+        "Oslo kommun"
+      ],
+      "Trøndelag fylke > Trondheim": [
+        "Trondheims kommun"
+      ],
+      "Rogaland fylke > Vindafjord": [
+        "Vindafjords kommun"
+      ],
+      "Trøndelag fylke > Indre Fosen": [
+        "Indre Fosens kommun"
       ],
       "Østfold fylke > Indre Østfold": [
         "Indre Østfolds kommun"
@@ -514,74 +523,35 @@
       "Trøndelag fylke > Orkland": [
         "Orklands kommun"
       ],
-      "Trøndelag fylke > Heim": [
-        "Heims kommun"
+      "Nordland fylke > Grane": [
+        "Grane kommun"
       ],
-      "Nordland fylke > Bodø": [
-        "Bodø kommun"
-      ],
-      "Rogaland fylke > Lund": [
-        "Lunds kommun"
-      ],
-      "Akershus fylke > Nordre Follo": [
-        "Nordre Follo kommun"
-      ],
-      "Vestland fylke > Luster": [
-        "Lusters kommun"
-      ],
-      "Vestfold fylke > Færder": [
-        "Færders kommun"
-      ],
-      "Vestland fylke > Askvoll": [
-        "Askvolls kommun"
-      ],
-      "Innlandet fylke > Vang": [
-        "Vangs kommun"
-      ],
-      "Troms fylke > Senja": [
-        "Senja kommun"
+      "Rogaland fylke > Bjerkreim": [
+        "Bjerkreims kommun"
       ],
       "Agder fylke > Flekkefjord": [
         "Flekkefjords kommun"
       ],
-      "Nordland fylke > Vefsn": [
-        "Vefsns kommun"
-      ],
-      "Innlandet fylke > Gran kommune": [
-        "Grans kommun"
-      ],
-      "Rogaland fylke > Vindafjord": [
-        "Vindafjords kommun"
-      ],
-      "Innlandet fylke > Os": [
-        "Os kommun"
-      ],
-      "Agder fylke > Sirdal": [
-        "Sirdals kommun"
-      ],
-      "Agder fylke > Åseral": [
-        "Åserals kommun"
-      ],
-      "Vestland fylke > Årdal": [
-        "Årdals kommun"
-      ],
-      "Nordland fylke > Steigen": [
-        "Steigens kommun"
-      ],
-      "Nordland fylke > Øksnes": [
-        "Øksnes kommun"
-      ],
-      "Møre og Romsdal fylke > Smøla": [
-        "Smøla kommun"
-      ],
       "Trøndelag fylke > Grong": [
         "Grongs kommun"
       ],
-      "Vestland fylke > Ullensvang": [
-        "Ullensvangs kommun"
+      "Troms fylke > Dyrøy": [
+        "Dyrøy kommun"
       ],
-      "Innlandet fylke > Øystre Slidre": [
-        "Øystre Slidre kommun"
+      "Nordland fylke > Herøy": [
+        "Herøy kommun"
+      ],
+      "Trøndelag fylke > Nærøysund": [
+        "Nærøysunds kommun"
+      ],
+      "Trøndelag fylke > Heim": [
+        "Heims kommun"
+      ],
+      "Akershus fylke > Nordre Follo": [
+        "Nordre Follo kommun"
+      ],
+      "Vestfold fylke > Færder": [
+        "Færders kommun"
       ],
       "Vestland fylke > Kinn": [
         "Kinns kommun"
@@ -589,14 +559,14 @@
       "Vestland fylke > Bjørnafjorden": [
         "Bjørnafjordens kommun"
       ],
+      "Nordland fylke > Øksnes": [
+        "Øksnes kommun"
+      ],
       "Akershus fylke > Lillestrøm": [
         "Lillestrøms kommun"
       ],
-      "Telemark fylke > Midt-Telemark": [
-        "Midt-Telemarks kommun"
-      ],
-      "Møre og Romsdal fylke > Fjord": [
-        "Fjords kommun"
+      "Nordland fylke > Steigen": [
+        "Steigens kommun"
       ],
       "Vestland fylke > Sunnfjord": [
         "Sunnfjords kommun"
@@ -604,11 +574,44 @@
       "Møre og Romsdal fylke > Hustadvika": [
         "Hustadvika kommun"
       ],
+      "Vestland fylke > Årdal": [
+        "Årdals kommun"
+      ],
+      "Vestland fylke > Alver": [
+        "Alvers kommun"
+      ],
+      "Vestland fylke > Ullensvang": [
+        "Ullensvangs kommun"
+      ],
+      "Innlandet fylke > Øystre Slidre": [
+        "Øystre Slidre kommun"
+      ],
+      "Agder fylke > Sirdal": [
+        "Sirdals kommun"
+      ],
+      "Telemark fylke > Midt-Telemark": [
+        "Midt-Telemarks kommun"
+      ],
+      "Møre og Romsdal fylke > Fjord": [
+        "Fjords kommun"
+      ],
+      "Troms fylke > Senja": [
+        "Senja kommun"
+      ],
+      "Agder fylke > Åseral": [
+        "Åserals kommun"
+      ],
+      "Møre og Romsdal fylke > Smøla": [
+        "Smøla kommun"
+      ],
       "Rogaland fylke > Karmøy": [
         "Karmøy kommun"
       ],
       "Vestland fylke > Eidfjord kommune": [
         "Eidfjords kommun"
+      ],
+      "Buskerud fylke > Nesbyen": [
+        "Nesbyens kommun"
       ],
       "Vestland fylke > Austevoll": [
         "Austevolls kommun"
@@ -616,46 +619,37 @@
       "Nordland fylke > Bø": [
         "Bø kommun"
       ],
-      "Buskerud fylke > Nesbyen": [
-        "Nesbyens kommun"
-      ],
       "Akershus fylke > Ås kommune": [
         "Ås kommun"
       ]
     },
     "fi-kunnat": {
-      "Uusimaa > Espoo": [
-        "Esbo"
-      ],
-      "Pohjois-Pohjanmaa > Oulu": [
-        "Uleåborg"
-      ],
-      "Uusimaa > Vantaa": [
-        "Vanda"
-      ],
-      "Pirkanmaa > Tampere": [
-        "Tammerfors"
-      ],
-      "Pohjanmaa > Vaasa": [
-        "Vasa"
-      ],
       "Varsinais-Suomi > Turku": [
         "Åbo"
       ],
       "Satakunta > Rauma": [
         "Raumo"
       ],
+      "Pohjanmaa > Vaasa": [
+        "Vasa"
+      ],
+      "Pirkanmaa > Tampere": [
+        "Tammerfors"
+      ],
+      "Uusimaa > Espoo": [
+        "Esbo"
+      ],
+      "Uusimaa > Vantaa": [
+        "Vanda"
+      ],
       "Uusimaa > Helsinki": [
         "Helsingfors"
       ],
-      "Keski-Pohjanmaa > Veteli": [
-        "Vetil"
+      "Pohjois-Pohjanmaa > Oulu": [
+        "Uleåborg"
       ],
-      "Etelä-Savo > Savonlinna": [
-        "Nyslott"
-      ],
-      "Varsinais-Suomi > Marttila": [
-        "S:t Mårtens"
+      "Etelä-Pohjanmaa > Alavus": [
+        "Alavo"
       ],
       "Etelä-Pohjanmaa > Isojoki": [
         "Storå"
@@ -663,44 +657,11 @@
       "Etelä-Pohjanmaa > Ilmajoki": [
         "Ilmola"
       ],
-      "Etelä-Pohjanmaa > Alavus": [
-        "Alavo"
-      ],
-      "Pirkanmaa > Ikaalinen": [
-        "Ikalis"
-      ],
       "Etelä-Pohjanmaa > Karijoki": [
         "Bötom"
       ],
-      "Satakunta > Huittinen": [
-        "Vittis"
-      ],
       "Etelä-Pohjanmaa > Lapua": [
         "Lappo"
-      ],
-      "Varsinais-Suomi > Kaarina": [
-        "S:t Karins"
-      ],
-      "Pohjois-Karjala > Kontiolahti": [
-        "Kontiolax"
-      ],
-      "Keski-Suomi > Keuruu": [
-        "Keuru"
-      ],
-      "Etelä-Pohjanmaa > Ähtäri": [
-        "Etseri"
-      ],
-      "Päijät-Häme > Lahti": [
-        "Lahtis"
-      ],
-      "Etelä-Pohjanmaa > Teuva": [
-        "Östermark"
-      ],
-      "Etelä-Pohjanmaa > Vimpeli": [
-        "Vindala"
-      ],
-      "Satakunta > Pomarkku": [
-        "Påmark"
       ],
       "Uusimaa > Loviisa": [
         "Lovisa"
@@ -708,11 +669,53 @@
       "Uusimaa > Kirkkonummi": [
         "Kyrkslätt"
       ],
+      "Varsinais-Suomi > Kaarina": [
+        "S:t Karins"
+      ],
+      "Satakunta > Pomarkku": [
+        "Påmark"
+      ],
+      "Satakunta > Huittinen": [
+        "Vittis"
+      ],
+      "Pirkanmaa > Lempäälä": [
+        "Lembois"
+      ],
       "Lappi > Inari": [
         "Enare"
       ],
       "Pohjois-Savo > Iisalmi": [
         "Idensalmi"
+      ],
+      "Keski-Pohjanmaa > Veteli": [
+        "Vetil"
+      ],
+      "Varsinais-Suomi > Taivassalo": [
+        "Tövsala"
+      ],
+      "Etelä-Savo > Savonlinna": [
+        "Nyslott"
+      ],
+      "Varsinais-Suomi > Marttila": [
+        "S:t Mårtens"
+      ],
+      "Pirkanmaa > Ikaalinen": [
+        "Ikalis"
+      ],
+      "Etelä-Pohjanmaa > Teuva": [
+        "Östermark"
+      ],
+      "Keski-Suomi > Keuruu": [
+        "Keuru"
+      ],
+      "Pohjois-Karjala > Kontiolahti": [
+        "Kontiolax"
+      ],
+      "Etelä-Pohjanmaa > Vimpeli": [
+        "Vindala"
+      ],
+      "Etelä-Pohjanmaa > Ähtäri": [
+        "Etseri"
       ],
       "Varsinais-Suomi > Kustavi": [
         "Gustavs"
@@ -720,23 +723,11 @@
       "Varsinais-Suomi > Laitila": [
         "Letala"
       ],
-      "Varsinais-Suomi > Taivassalo": [
-        "Tövsala"
+      "Päijät-Häme > Lahti": [
+        "Lahtis"
       ],
       "Varsinais-Suomi > Vehmaa": [
         "Vemo"
-      ],
-      "Satakunta > Pori": [
-        "Björneborg"
-      ],
-      "Etelä-Karjala > Lappeenranta": [
-        "Villmanstrand"
-      ],
-      "Pirkanmaa > Hämeenkyrö": [
-        "Tavastkyro"
-      ],
-      "Pirkanmaa > Lempäälä": [
-        "Lembois"
       ],
       "Kanta-Häme > Jokioinen": [
         "Jockis"
@@ -744,26 +735,41 @@
       "Pohjois-Pohjanmaa > Ii": [
         "Ijo"
       ],
+      "Satakunta > Siikainen": [
+        "Siikais"
+      ],
       "Päijät-Häme > Iitti": [
         "Itis"
       ],
-      "Pirkanmaa > Pirkkala": [
-        "Birkala"
+      "Pohjois-Karjala > Juuka": [
+        "Juga"
       ],
-      "Uusimaa > Pornainen": [
-        "Borgnäs"
-      ],
-      "Keski-Pohjanmaa > Halsua": [
-        "Halso"
-      ],
-      "Satakunta > Siikainen": [
-        "Siikais"
+      "Etelä-Karjala > Lappeenranta": [
+        "Villmanstrand"
       ],
       "Satakunta > Eurajoki": [
         "Euraåminne"
       ],
-      "Etelä-Savo > Mikkeli": [
-        "S:t Michel"
+      "Pirkanmaa > Pirkkala": [
+        "Birkala"
+      ],
+      "Uusimaa > Vihti": [
+        "Vichtis"
+      ],
+      "Uusimaa > Pornainen": [
+        "Borgnäs"
+      ],
+      "Pirkanmaa > Virrat": [
+        "Virdois"
+      ],
+      "Satakunta > Pori": [
+        "Björneborg"
+      ],
+      "Pirkanmaa > Hämeenkyrö": [
+        "Tavastkyro"
+      ],
+      "Keski-Pohjanmaa > Halsua": [
+        "Halso"
       ],
       "Uusimaa > Porvoo": [
         "Borgå"
@@ -771,29 +777,17 @@
       "Kainuu > Kajaani": [
         "Kajana"
       ],
-      "Pohjois-Karjala > Juuka": [
-        "Juga"
-      ],
-      "Uusimaa > Vihti": [
-        "Vichtis"
-      ],
       "Kanta-Häme > Hämeenlinna": [
         "Tavastehus"
-      ],
-      "Uusimaa > Järvenpää": [
-        "Träskända"
-      ],
-      "Satakunta > Merikarvia": [
-        "Sastmola"
       ],
       "Uusimaa > Hyvinkää": [
         "Hyvinge"
       ],
-      "Uusimaa > Kauniainen": [
-        "Grankulla"
+      "Etelä-Savo > Mikkeli": [
+        "S:t Michel"
       ],
-      "Pirkanmaa > Virrat": [
-        "Virdois"
+      "Lappi > Enontekiö": [
+        "Enontekis"
       ],
       "Varsinais-Suomi > Uusikaupunki": [
         "Nystad"
@@ -801,17 +795,17 @@
       "Keski-Pohjanmaa > Kokkola": [
         "Karleby"
       ],
-      "Keski-Pohjanmaa > Kaustinen": [
-        "Kaustby"
+      "Uusimaa > Järvenpää": [
+        "Träskända"
       ],
-      "Etelä-Karjala > Ruokolahti": [
-        "Ruokolax"
-      ],
-      "Lappi > Tornio": [
-        "Torneå"
+      "Uusimaa > Kauniainen": [
+        "Grankulla"
       ],
       "Uusimaa > Lohja": [
         "Lojo"
+      ],
+      "Lappi > Tornio": [
+        "Torneå"
       ],
       "Uusimaa > Tuusula": [
         "Tusby"
@@ -819,17 +813,26 @@
       "Uusimaa > Siuntio": [
         "Sjundeå"
       ],
-      "Lappi > Enontekiö": [
-        "Enontekis"
-      ],
       "Lappi > Ylitornio": [
         "Övertorneå"
       ],
       "Uusimaa > Hanko": [
         "Hangö"
       ],
-      "Päijät-Häme > Hartola": [
-        "Gustav Adolfs"
+      "Uusimaa > Kerava": [
+        "Kervo"
+      ],
+      "Satakunta > Ulvila": [
+        "Ulvsby"
+      ],
+      "Pohjois-Karjala > Ilomantsi": [
+        "Ilomants"
+      ],
+      "Pohjois-Pohjanmaa > Liminka": [
+        "Limingo"
+      ],
+      "Satakunta > Kokemäki": [
+        "Kumo"
       ],
       "Pirkanmaa > Mänttä-Vilppula": [
         "Mänttä-Filpula"
@@ -837,11 +840,35 @@
       "Varsinais-Suomi > Nousiainen": [
         "Nousis"
       ],
-      "Satakunta > Ulvila": [
-        "Ulvsby"
+      "Varsinais-Suomi > Raisio": [
+        "Reso"
       ],
-      "Uusimaa > Kerava": [
-        "Kervo"
+      "Satakunta > Merikarvia": [
+        "Sastmola"
+      ],
+      "Keski-Pohjanmaa > Kaustinen": [
+        "Kaustby"
+      ],
+      "Etelä-Karjala > Ruokolahti": [
+        "Ruokolax"
+      ],
+      "Uusimaa > Sipoo": [
+        "Sibbo"
+      ],
+      "Kymenlaakso > Hamina": [
+        "Fredrikshamn"
+      ],
+      "Keski-Suomi > Luhanka": [
+        "Luhango"
+      ],
+      "Pirkanmaa > Akaa": [
+        "Ackas"
+      ],
+      "Etelä-Pohjanmaa > Isokyrö": [
+        "Storkyro"
+      ],
+      "Varsinais-Suomi > Naantali": [
+        "Nådendal"
       ],
       "Varsinais-Suomi > Koski Tl": [
         "Koskis"
@@ -852,23 +879,14 @@
       "Varsinais-Suomi > Sauvo": [
         "Sagu"
       ],
-      "Pohjois-Karjala > Ilomantsi": [
-        "Ilomants"
+      "Kymenlaakso > Virolahti": [
+        "Vederlax"
       ],
-      "Varsinais-Suomi > Lieto": [
-        "Lundo"
+      "Pirkanmaa > Kuhmoinen": [
+        "Kuhmois"
       ],
-      "Varsinais-Suomi > Mynämäki": [
-        "Virmo"
-      ],
-      "Pohjois-Pohjanmaa > Liminka": [
-        "Limingo"
-      ],
-      "Kymenlaakso > Hamina": [
-        "Fredrikshamn"
-      ],
-      "Uusimaa > Sipoo": [
-        "Sibbo"
+      "Pohjois-Karjala > Kitee": [
+        "Kides"
       ],
       "Pohjois-Pohjanmaa > Hailuoto": [
         "Karlö"
@@ -876,32 +894,23 @@
       "Pohjanmaa > Laihia": [
         "Laihela"
       ],
-      "Varsinais-Suomi > Raisio": [
-        "Reso"
+      "Päijät-Häme > Hartola": [
+        "Gustav Adolfs"
       ],
-      "Satakunta > Kokemäki": [
-        "Kumo"
+      "Varsinais-Suomi > Lieto": [
+        "Lundo"
+      ],
+      "Varsinais-Suomi > Mynämäki": [
+        "Virmo"
       ],
       "Keski-Suomi > Laukaa": [
         "Laukas"
       ],
-      "Pohjois-Savo > Joroinen": [
-        "Jorois"
+      "Pohjois-Pohjanmaa > Raahe": [
+        "Brahestad"
       ],
-      "Keski-Suomi > Luhanka": [
-        "Luhango"
-      ],
-      "Pirkanmaa > Akaa": [
-        "Ackas"
-      ],
-      "Pohjanmaa > Kaskinen": [
-        "Kaskö"
-      ],
-      "Pohjois-Karjala > Kitee": [
-        "Kides"
-      ],
-      "Varsinais-Suomi > Naantali": [
-        "Nådendal"
+      "Pohjois-Karjala > Liperi": [
+        "Libelits"
       ],
       "Pohjois-Savo > Lapinlahti": [
         "Lapinlax"
@@ -909,20 +918,11 @@
       "Uusimaa > Karkkila": [
         "Högfors"
       ],
-      "Kymenlaakso > Virolahti": [
-        "Vederlax"
+      "Pohjois-Savo > Joroinen": [
+        "Jorois"
       ],
-      "Etelä-Pohjanmaa > Isokyrö": [
-        "Storkyro"
-      ],
-      "Pirkanmaa > Kuhmoinen": [
-        "Kuhmois"
-      ],
-      "Pohjois-Karjala > Liperi": [
-        "Libelits"
-      ],
-      "Pohjois-Pohjanmaa > Raahe": [
-        "Brahestad"
+      "Pohjanmaa > Kaskinen": [
+        "Kaskö"
       ]
     },
     "is-sveitarfelog": {
@@ -937,6 +937,648 @@
       ],
       "Höfuðborgarsvæði > Reykjavíkurborg": [
         "Reykjaviks stad"
+      ]
+    },
+    "world-admin1": {
+      "Russia > Moscow": [
+        "Moskva"
+      ],
+      "Russia > Karelia": [
+        "Karelska republiken"
+      ],
+      "Kazakhstan > Pavlodar Region": [
+        "Pavlodar"
+      ],
+      "Russia > Chechnya": [
+        "Tjetjenien"
+      ],
+      "Kazakhstan > Almaty Region": [
+        "Almaty"
+      ],
+      "Russia > North Ossetia–Alania": [
+        "Nordossetien-Alenien"
+      ],
+      "French Guiana": [
+        "Franska Guyana"
+      ],
+      "Russia > Jewish Autonomous Oblast": [
+        "Judiska autonoma länet"
+      ],
+      "Kazakhstan > Baikonur": [
+        "Bajkonur"
+      ],
+      "Russia > Vologda Oblast": [
+        "Vologda oblast"
+      ],
+      "Italy > Lombardy": [
+        "Lombardiet"
+      ],
+      "Russia > Samara Oblast": [
+        "Samara oblast"
+      ],
+      "Italy > Piedmont": [
+        "Piemonte"
+      ],
+      "Russia > Moscow Oblast": [
+        "Moskva oblast"
+      ],
+      "Russia > Sakha": [
+        "Sacha"
+      ],
+      "Italy > Liguria": [
+        "Ligurien"
+      ],
+      "Italy > Tuscany": [
+        "Toscana"
+      ],
+      "Italy > Campania": [
+        "Kampanien"
+      ],
+      "Russia > Kaliningrad Oblast": [
+        "Kaliningrad oblast"
+      ],
+      "Italy > Umbria": [
+        "Umbrien"
+      ],
+      "Russia > Kostroma Oblast": [
+        "Kostroma oblast"
+      ],
+      "Russia > Pskov Oblast": [
+        "Pskov oblast"
+      ],
+      "Russia > Novgorod Oblast": [
+        "Novgorod oblast"
+      ],
+      "Russia > Smolensk Oblast": [
+        "Smolensk oblast"
+      ],
+      "Italy > Calabria": [
+        "Kalabrien"
+      ],
+      "Italy > Apulia": [
+        "Apulien"
+      ],
+      "Russia > Nizhny Novgorod Oblast": [
+        "Nizjnij Novgorod oblast"
+      ],
+      "The Netherlands > North Holland": [
+        "Nordholland"
+      ],
+      "Russia > Ivanovo Oblast": [
+        "Ivanovo oblast"
+      ],
+      "Russia > Yaroslavl Oblast": [
+        "Jaroslavl oblast"
+      ],
+      "Russia > Tver Oblast": [
+        "Tver oblast"
+      ],
+      "The Netherlands > South Holland": [
+        "Zuid-Holland"
+      ],
+      "Russia > Vladimir Oblast": [
+        "Vladimir oblast"
+      ],
+      "Spain > Basque Country": [
+        "Regionen Baskien"
+      ],
+      "Russia > Ryazan Oblast": [
+        "Rjazan oblast"
+      ],
+      "Spain > Galicia": [
+        "Galicien"
+      ],
+      "Russia > Kaluga Oblast": [
+        "Kaluga oblast"
+      ],
+      "Spain > Asturias": [
+        "Asturien"
+      ],
+      "Croatia > Zagreb County": [
+        "Zagrebs län"
+      ],
+      "Spain > Aragon": [
+        "Aragonien"
+      ],
+      "Russia > Tula Oblast": [
+        "Tula oblast"
+      ],
+      "Russia > Bryansk Oblast": [
+        "Brjansk oblast"
+      ],
+      "Russia > Oryol oblast": [
+        "Orjol oblast"
+      ],
+      "Russia > Saratov Oblast": [
+        "Saratov oblast"
+      ],
+      "Russia > Orenburg Oblast": [
+        "Orenburg oblast"
+      ],
+      "Spain > Navarre": [
+        "Navarra"
+      ],
+      "Spain > Cantabria": [
+        "Kantabrien"
+      ],
+      "Russia > Belgorod Oblast": [
+        "Belgorod oblast"
+      ],
+      "Spain > Catalonia": [
+        "Katalonien"
+      ],
+      "Russia > Tambov Oblast": [
+        "Tambov oblast"
+      ],
+      "Russia > Sverdlovsk Oblast": [
+        "Sverdlovsk oblast"
+      ],
+      "Russia > Perm Krai": [
+        "Perm kraj"
+      ],
+      "Russia > Kursk Oblast": [
+        "Kursk oblast"
+      ],
+      "Russia > Voronezh Oblast": [
+        "Voronezj oblast"
+      ],
+      "Russia > Kirov Oblast": [
+        "Kirov oblast"
+      ],
+      "Russia > Lipetsk Oblast": [
+        "Lipetsk oblast"
+      ],
+      "Spain > Andalusia": [
+        "Andalusien"
+      ],
+      "Russia > Tyumen Oblast": [
+        "Tiumen oblast"
+      ],
+      "Spain > Canary Islands": [
+        "Kanarieöarna"
+      ],
+      "Russia > Penza Oblast": [
+        "Penza oblast"
+      ],
+      "Romania > Bucharest": [
+        "Bukarest"
+      ],
+      "Russia > Kurgan Oblast": [
+        "Kurgan oblast"
+      ],
+      "Russia > Omsk Oblast": [
+        "Omsk oblast"
+      ],
+      "Russia > Krasnodar Krai": [
+        "Krasnodar kraj"
+      ],
+      "Russia > Astrakhan Oblast": [
+        "Astrachan oblast"
+      ],
+      "Kazakhstan > Shymkent": [
+        "Sjymkent"
+      ],
+      "Russia > Novosibirsk Oblast": [
+        "Novosibirsk oblast"
+      ],
+      "Russia > Altai Krai": [
+        "Altaj kraj"
+      ],
+      "Saint Helena > Saint Helena": [
+        "Sankta Helena"
+      ],
+      "Spain > Balearic Islands": [
+        "Balearerna"
+      ],
+      "France > Brittany": [
+        "Bretagne"
+      ],
+      "Russia > Volgograd Oblast": [
+        "Volgograd oblast"
+      ],
+      "Russia > Tomsk Oblast": [
+        "Tomsk oblast"
+      ],
+      "Germany > Bavaria": [
+        "Bayern"
+      ],
+      "Russia > Sakhalin Oblast": [
+        "Sachalin oblast"
+      ],
+      "Russia > Magadan Oblast": [
+        "Magadan oblast"
+      ],
+      "Russia > Krasnoyarsk Krai": [
+        "Krasnojarsk kraj"
+      ],
+      "Czechia > Central Bohemia": [
+        "Mellersta Böhmen"
+      ],
+      "France > Corsica": [
+        "Korsika"
+      ],
+      "Russia > Irkutsk Oblast": [
+        "Irkutsk oblast"
+      ],
+      "Russia > Amur Oblast": [
+        "Amur oblast"
+      ],
+      "Germany > Hesse": [
+        "Hessen"
+      ],
+      "Germany > North Rhine-Westphalia": [
+        "Nordrhein-Westfalen"
+      ],
+      "Germany > Thuringia": [
+        "Thüringen"
+      ],
+      "Germany > Lower Saxony": [
+        "Niedersachsen"
+      ],
+      "The Netherlands > North Brabant": [
+        "Noord-Brabant"
+      ],
+      "Georgia > Kakheti": [
+        "Kachetien"
+      ],
+      "Georgia > Imereti": [
+        "Imeretien"
+      ],
+      "Poland > Opole Voivodeship": [
+        "Opole vojvodskap",
+        "Opoles vojvodskap (1975–1998)"
+      ],
+      "Germany > Saxony-Anhalt": [
+        "Sachsen-Anhalt"
+      ],
+      "Germany > Saxony": [
+        "Sachsen"
+      ],
+      "Moldova > Gagauzia": [
+        "Gagauzien"
+      ],
+      "Albania > Vlorë County": [
+        "Vlorë prefektur"
+      ],
+      "Albania > Durrës County": [
+        "Durrës prefektur"
+      ],
+      "United Kingdom > Scotland": [
+        "Skottland"
+      ],
+      "Poland > Łódź Voivodeship": [
+        "Łódź vojvodskap (1975–1998)",
+        "Łódź vojvodskap"
+      ],
+      "Albania > Gjirokastër County": [
+        "Gjirokastër prefektur"
+      ],
+      "Albania > Berat County": [
+        "Beratprefekturen"
+      ],
+      "Georgia > Shida Kartli": [
+        "Inre Kartlien"
+      ],
+      "Georgia > Kvemo Kartli": [
+        "Nedre Kartlien"
+      ],
+      "Albania > Lezhë County": [
+        "Lezhë prefektur"
+      ],
+      "France > Normandy": [
+        "Normandie"
+      ],
+      "Albania > Korçë County": [
+        "Korçë prefektur"
+      ],
+      "Albania > Shkodër County": [
+        "Shkodër prefektur"
+      ],
+      "Albania > Elbasan County": [
+        "Elbasan prefektur"
+      ],
+      "Albania > Fier County": [
+        "Fier prefektur"
+      ],
+      "United Kingdom > Northern Ireland": [
+        "Nordirland"
+      ],
+      "Latvia > Jēkabpils Municipality": [
+        "Jēkabpils novads",
+        "Jēkabpils kommun"
+      ],
+      "Albania > Kukës County": [
+        "Kukës prefektur"
+      ],
+      "Portugal > Azores": [
+        "Azorerna"
+      ],
+      "United States > Georgia": [
+        "Georgien"
+      ],
+      "Portugal > Lisbon": [
+        "Lissabon"
+      ],
+      "Latvia > Cēsis Municipality": [
+        "Cēsu novads",
+        "Cēsis kommun"
+      ],
+      "Latvia > Salaspils Municipality": [
+        "Salaspils kommun"
+      ],
+      "Bulgaria > Haskovo": [
+        "Chaskovo"
+      ],
+      "Bulgaria > Shumen": [
+        "Sjumen"
+      ],
+      "Romania > Giurgiu County": [
+        "Giurgiu"
+      ],
+      "Romania > Mehedinți County": [
+        "Mehedinți"
+      ],
+      "Slovakia > Trenčín Region": [
+        "Trenčín"
+      ],
+      "Slovakia > Banská Bystrica Region": [
+        "Banská Bystrica"
+      ],
+      "Slovakia > Bratislava Region": [
+        "Bratislava"
+      ],
+      "Slovakia > Trnava Region": [
+        "Trnava"
+      ],
+      "Bulgaria > Yambol": [
+        "Jambol"
+      ],
+      "Slovakia > Nitra Region": [
+        "Nitra"
+      ],
+      "Latvia > Tukums Municipality": [
+        "Tukums kommun"
+      ],
+      "French Polynesia": [
+        "Franska Polynesien"
+      ],
+      "Slovakia > Žilina Region": [
+        "Žilina"
+      ],
+      "Romania > Ialomița County": [
+        "Ialomița"
+      ],
+      "Slovakia > Košice Region": [
+        "Košice"
+      ],
+      "Azerbaijan > Salyan District": [
+        "Saljan"
+      ],
+      "Slovakia > Prešov Region": [
+        "Prešov"
+      ],
+      "Moldova > Strășeni": [
+        "Straşeni"
+      ],
+      "Saint Pierre and Miquelon": [
+        "Saint-Pierre och Miquelon"
+      ],
+      "Wallis and Futuna": [
+        "Wallis- och Futunaöarna"
+      ],
+      "New Caledonia": [
+        "Nya Kaledonien"
+      ],
+      "Austria > Upper Austria": [
+        "Oberösterreich"
+      ],
+      "Romania > Vaslui County": [
+        "Vaslui"
+      ],
+      "Romania > Arad County": [
+        "Arad"
+      ],
+      "Moldova > Bender Municipality": [
+        "Bender"
+      ],
+      "Romania > Alba County": [
+        "Alba"
+      ],
+      "Austria > Carinthia": [
+        "Kärnten"
+      ],
+      "Romania > Bistrița-Năsăud County": [
+        "Bistrița-Năsăud"
+      ],
+      "Romania > Brașov County": [
+        "Brașov"
+      ],
+      "Austria > Lower Austria": [
+        "Niederösterreich"
+      ],
+      "Austria > Styria": [
+        "Steiermark"
+      ],
+      "Romania > Botoșani County": [
+        "Botoșani"
+      ],
+      "Romania > Bacău County": [
+        "Bacău"
+      ],
+      "Romania > Caraș-Severin County": [
+        "Caraș-Severin"
+      ],
+      "Romania > Bihor County": [
+        "Bihor"
+      ],
+      "Austria > Tyrol": [
+        "Tyrolen"
+      ],
+      "Romania > Sibiu County": [
+        "Sibiu"
+      ],
+      "Bulgaria > Kardzhali": [
+        "Kardzjali"
+      ],
+      "Romania > Cluj County": [
+        "Cluj"
+      ],
+      "Bulgaria > Kyustendil": [
+        "Kjustendil (region)"
+      ],
+      "Bulgaria > Gabrovo": [
+        "Gabrovo (region)"
+      ],
+      "Romania > Satu Mare County": [
+        "Satu Mare"
+      ],
+      "Romania > Brăila County": [
+        "Brăila"
+      ],
+      "Romania > Iași County": [
+        "Iași"
+      ],
+      "Czechia > Prague": [
+        "Prag"
+      ],
+      "Romania > Neamț County": [
+        "Neamț"
+      ],
+      "Bulgaria > Targovishte": [
+        "Targovisjte (region)"
+      ],
+      "Romania > Galați County": [
+        "Galați"
+      ],
+      "Romania > Dâmbovița County": [
+        "Dâmbovița"
+      ],
+      "Bulgaria > Pazardzhik": [
+        "Pazardzjik"
+      ],
+      "Romania > Constanța County": [
+        "Constanța"
+      ],
+      "Bulgaria > Pleven": [
+        "Pleven (region)"
+      ],
+      "Bulgaria > Lovech": [
+        "Lovetj"
+      ],
+      "Bulgaria > Dobrich": [
+        "Dobritj"
+      ],
+      "Romania > Covasna County": [
+        "Covasna"
+      ],
+      "Romania > Buzău County": [
+        "Buzău"
+      ],
+      "Bulgaria > Veliko Tarnovo": [
+        "Veliko Tarnovo (region)"
+      ],
+      "Bulgaria > Smolyan": [
+        "Smoljan (region)"
+      ],
+      "Romania > Gorj County": [
+        "Gorj"
+      ],
+      "Romania > Călărași County": [
+        "Călărași"
+      ],
+      "Romania > Timiș County": [
+        "Timiș"
+      ],
+      "Romania > Vâlcea County": [
+        "Vâlcea"
+      ],
+      "Italy > Aosta Valley": [
+        "Aostadalen"
+      ],
+      "Italy > Friuli Venezia Giulia": [
+        "Friuli-Venezia Giulia"
+      ],
+      "Italy > Sicily": [
+        "Sicilien"
+      ],
+      "Italy > Sardinia": [
+        "Sardinien"
+      ],
+      "Cayman Islands": [
+        "Caymanöarna"
+      ],
+      "Czechia > South Bohemian Region": [
+        "Södra Böhmen"
+      ],
+      "Czechia > Ústí nad Labem Region": [
+        "Ústí nad Labem"
+      ],
+      "Czechia > Moravian-Silesian Region": [
+        "Mähren-Schlesien"
+      ],
+      "Czechia > Hradec Králové Region": [
+        "Hradec Králové"
+      ],
+      "Czechia > Liberec Region": [
+        "Liberec"
+      ],
+      "Moldova > Soroca District": [
+        "Soroca rajon"
+      ],
+      "Romania > Harghita County": [
+        "Harghita"
+      ],
+      "Turks and Caicos Islands": [
+        "Turks- och Caicosöarna"
+      ],
+      "Czechia > Olomouc Region": [
+        "Olomouc"
+      ],
+      "Czechia > Pardubice Region": [
+        "Pardubice"
+      ],
+      "Romania > Mureș County": [
+        "Mureș"
+      ],
+      "Czechia > Plzeň Region": [
+        "Plzeň"
+      ],
+      "Romania > Hunedoara County": [
+        "Hunedoara"
+      ],
+      "British Virgin Islands": [
+        "Brittiska Jungfruöarna"
+      ],
+      "Romania > Tulcea County": [
+        "Tulcea"
+      ],
+      "Falkland Islands": [
+        "Falklandsöarna"
+      ],
+      "Romania > Teleorman County": [
+        "Teleorman"
+      ],
+      "Romania > Sălaj County": [
+        "Sălaj"
+      ],
+      "South Georgia and the South Sandwich Islands": [
+        "Sydgeorgien och Sydsandwichöarna"
+      ],
+      "Slovenia > Municipality of Trbovlje": [
+        "Trbovlje"
+      ],
+      "Hungary > Zala County": [
+        "Zala"
+      ],
+      "Hungary > Vas County": [
+        "Vas"
+      ],
+      "Hungary > Somogy County": [
+        "Somogy"
+      ],
+      "Hungary > Heves County": [
+        "Heves"
+      ],
+      "Hungary > Tolna County": [
+        "Tolna"
+      ],
+      "Hungary > Pest County": [
+        "Pest"
+      ],
+      "Switzerland > Zurich": [
+        "Zürich"
+      ],
+      "Russia > Ulyanovsk": [
+        "Uljanovsk"
+      ],
+      "Luxembourg > Luxembourg": [
+        "Luxemburg"
+      ],
+      "Ukraine > Kyiv": [
+        "Kiev"
+      ],
+      "Ecuador > Loja": [
+        "Loja (kommunhuvudort)"
       ]
     }
   }
