@@ -564,7 +564,7 @@ export default {
       empty: 'Inga platser än. Skapa din första genom att skriva i fältet.',
       noResults: 'Inga träffar.',
       loading: 'Laddar…',
-      fromGazetteerBadge: 'gazetteer',
+      fromGazetteerBadge: 'ortsregister',
     },
   },
   placePanel: {

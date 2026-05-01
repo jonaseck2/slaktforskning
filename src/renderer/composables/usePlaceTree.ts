@@ -44,7 +44,7 @@ interface UsePlaceTreeOptions {
 }
 
 function normalize(s: string): string {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
 
 function gazKeyFor(gazId: string, path: string[]): string {
@@ -120,11 +120,24 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
     roots.value = Array.from(merged.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  // In-flight expandNode promises, keyed by node.key. Coalesces concurrent
+  // expand calls (e.g. user clicks a chevron while a filter walk is mid-load)
+  // so the same children aren't fetched and merged twice.
+  const expandInflight = new Map<string, Promise<void>>();
+
   async function expandNode(node: PlaceTreeNode): Promise<void> {
     if (node.childrenLoaded) {
       node.expanded = true;
       return;
     }
+    const existing = expandInflight.get(node.key);
+    if (existing) return existing;
+    const promise = expandNodeInner(node).finally(() => expandInflight.delete(node.key));
+    expandInflight.set(node.key, promise);
+    return promise;
+  }
+
+  async function expandNodeInner(node: PlaceTreeNode): Promise<void> {
     const merged = new Map<string, PlaceTreeNode>();
 
     if (node.dbId) {
@@ -246,7 +259,12 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
     let level = roots.value;
     let parent: PlaceTreeNode | null = null;
     for (const a of ancestors) {
-      const next = level.find(n => normalize(n.name) === normalize(a.name) || n.dbId === a.id);
+      // Prefer matching by dbId — when a gazetteer root shares its name with a
+      // DB root (e.g. both "Sverige"), name-only match would lock onto the
+      // gazetteer node and the descent into next.children would skip the DB
+      // ancestors that the user actually has.
+      const byId = level.find(n => n.dbId === a.id);
+      const next = byId ?? level.find(n => normalize(n.name) === normalize(a.name));
       if (!next) break;
       path.push(next);
       if (!next.expanded) await expandNode(next);
