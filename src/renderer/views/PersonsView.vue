@@ -185,6 +185,7 @@ import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useChartNavigation } from '../composables/useChartNavigation';
 import { fetchPedigreeTree, fetchHourglassTree } from '../utils/chartData';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 import type { Hotkey } from '../composables/useHotkeyRegistry';
 
 defineOptions({ name: 'PersonsView' });
@@ -204,14 +205,14 @@ const noPersonsExist = ref(false);
 
 // Persistent left list column. The list and tree are always visible
 // side-by-side, with the list collapsible via a ▶/◀ button.
-const listOpen = ref(localStorage.getItem('persons-list-open') !== 'false');
+const listOpen = ref(localStorage.getItem(STORAGE_KEYS.personsListOpen) !== 'false');
 function openList() {
   listOpen.value = true;
-  localStorage.setItem('persons-list-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.personsListOpen, 'true');
 }
 function closeList() {
   listOpen.value = false;
-  localStorage.setItem('persons-list-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.personsListOpen, 'false');
 }
 
 // Add person modal
@@ -248,24 +249,24 @@ const chartBoxes = computed<BoxLayout[]>(() => {
 
 type TabName = 'pedigree' | 'hourglass' | 'descendants' | 'fan' | 'timeline';
 const VALID_TABS: readonly TabName[] = ['pedigree', 'hourglass', 'descendants', 'fan', 'timeline'];
-const stored = localStorage.getItem('viz-tab');
+const stored = localStorage.getItem(STORAGE_KEYS.vizTab);
 const initialTab: TabName = stored && (VALID_TABS as readonly string[]).includes(stored) ? (stored as TabName) : 'hourglass';
 const activeTab = ref<TabName>(initialTab);
 
 // Panel open/closed
-const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.vizPanelOpen) !== 'false');
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('viz-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.vizPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('viz-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.vizPanelOpen, 'false');
 }
 
 const { panelWidth, startResize } = usePanelResize();
 const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
-  storageKey: 'persons-list-width',
+  storageKey: STORAGE_KEYS.personsListWidth,
   side: 'left',
   defaultWidth: 280,
   minWidth: 200,
@@ -276,7 +277,7 @@ const personId = computed(() => route.params.personId as string | undefined);
 
 function setTab(tab: TabName) {
   activeTab.value = tab;
-  localStorage.setItem('viz-tab', tab);
+  localStorage.setItem(STORAGE_KEYS.vizTab, tab);
 }
 
 function selectNode(id: string) {
