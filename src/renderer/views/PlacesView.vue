@@ -122,15 +122,11 @@ import MapView from './MapView.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { usePagedList } from '../composables/usePagedList';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'PlacesView' });
-
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_place_id?: string | null; }
 
@@ -328,19 +324,20 @@ watch(() => route.query.place, (id) => {
 });
 
 onMounted(async () => {
+  // The paged list (left column) and `places` full list (map / chip counts)
+  // both load here. usePagedList auto-subscribes to onDataChanged so the
+  // left list refreshes after any mutation on its own; the full `places`
+  // list is refreshed via reloadAll() on user-driven save flows
+  // (`place-updated` from PlacePanel, `onPlaceSaved` from add modal) which
+  // is enough for the chip counts and map.
   await reloadAll();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectPlace(id);
   // selectedPlaceId was pre-set from query/params in setup; just ensure panel is open
   if (selectedPlaceId.value) openPanel();
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await reloadAll();
-    loadedVersion = dataVersionStore.version;
-  }
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectPlace(id);
 });
