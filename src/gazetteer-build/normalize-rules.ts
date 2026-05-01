@@ -35,3 +35,10 @@ export const EN_RULES: GazetteerNormalizeRules = {
   stripSuffixes: ['county', 'parish', 'township', 'borough', 'province', 'state'],
   stripPrefixes: ['county of', 'province of', 'state of'],
 };
+
+export const DE_RULES: GazetteerNormalizeRules = {
+  stripSuffixes: [
+    'Land', 'Bezirk', 'Kreis', 'Landkreis', 'Stadtkreis',
+    'Gemeinde', 'Stadt', 'Markt', 'Ortsteil',
+  ],
+};
