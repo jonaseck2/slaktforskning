@@ -106,8 +106,6 @@
           :show-tree-btn="true"
           :tree-subject-id="personId ?? null"
           :readonly="isStaticMode"
-          @relative-added="reloadChart"
-          @person-changed="reloadChart"
           @set-tree-subject="setTreeSubject((selectedPersonId ?? personId)!)"
           @close="closePanel"
         />
