@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.185.1 — Avatars show your photos again
+
+- fix: avatars and tree boxes show the linked profile photo, not just initials, when no face has been tagged
+- fix: relationship rows and the duplicates list now use the same avatar as everywhere else
+
 ## v0.185.0 — Filter the media library
 
 - feat: media library has filter chips for Type (image/document/audio/video), Status (missing on disk, orphaned), and Face tags

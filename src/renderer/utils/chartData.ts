@@ -73,12 +73,11 @@ function pickDisplayedNameLocal(names: RawName[], events: RawEvent[]): RawName |
 async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
   if (personPhotoCache.has(personId)) return personPhotoCache.get(personId) ?? null;
   const ref = (await window.api.media.profilePicRef(personId)) as ProfilePicRef | null;
-  // Trees show the *tagged face* — the square crop centred on the face region.
-  // A media link with no face tag would fall through to the center-crop path
-  // inside cropImageToDataUrl and end up looking like "the whole media zoomed
-  // in", which is exactly what we don't want. Treat untagged media as no
-  // profile pic so the tree box renders the initials placeholder instead.
-  if (!ref || !ref.region) {
+  // Avatar fallback chain (shared with profilePic store):
+  //   1. Face-tagged region (any media) → cropped face
+  //   2. Starred linked media (first by sort_order) → raw image
+  //   3. Else null → initials placeholder
+  if (!ref) {
     personPhotoCache.set(personId, null);
     return null;
   }
@@ -91,11 +90,10 @@ async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
     // Don't poison the cache permanently — a missing file may come back later.
     return null;
   }
-  // Trees must show the tagged face, never the raw media. If cropping fails
-  // (canvas/decode error, image 404, tainted canvas), fall through to the
-  // initials placeholder rather than letting the rejection bubble up as an
-  // uncaught promise — a silent raw-media fallback is exactly the bug we're
-  // trying to remove.
+  if (!ref.region) {
+    personPhotoCache.set(personId, raw);
+    return raw;
+  }
   try {
     const cropped = await cropImageToDataUrl(raw, ref.region);
     personPhotoCache.set(personId, cropped);

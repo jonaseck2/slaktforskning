@@ -444,7 +444,7 @@ Shared classes include: `.header`, `.data-table`, `.clickable-row`, `.btn-add`, 
 
 ## Avatars and profile pictures
 
-Person profile pictures use **one** component everywhere outside MediaView/MediaViewer: `<AppAvatar>` ([`src/renderer/components/ui/AppAvatar.vue`](../../../src/renderer/components/ui/AppAvatar.vue)). It's used in list rows, panel headers, mini cards, the Person panel's Linked Persons / Members tables, MediaPanel's face-tag list, etc. **MediaView and MediaViewer are the only places that render the raw media** — everywhere else shows the cropped tagged face.
+Person profile pictures use **one** component everywhere outside MediaView/MediaViewer: `<AppAvatar>` ([`src/renderer/components/ui/AppAvatar.vue`](../../../src/renderer/components/ui/AppAvatar.vue)). It's used in list rows, panel headers, mini cards, the Person panel's Linked Persons / Members tables, MediaPanel's face-tag list, etc.
 
 **Avatars are square, not round.** The component uses `border-radius: var(--radius-sm)` and `aspect-ratio: 1 / 1`. The same shape applies whether the avatar shows a photo or the sex-coloured initials placeholder, so list rows align cleanly with the rounded-square portrait area inside chart boxes. Don't override `border-radius` in scoped styles to make a "round version" — if a layout needs a circle, push back on the design instead of forking the avatar.
 
@@ -452,11 +452,21 @@ Person profile pictures use **one** component everywhere outside MediaView/Media
 <AppAvatar :person-id="p.id" :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
 ```
 
-**Sizes:** `sm`=20, `md`=28, `lg`=36, `xl`=56, `2xl`=64, plus `auto` (parent controls width/height — use this when embedding in a container with its own dimensions, e.g. a print frame).
+**Sizes:** `sm`=20, `md`=28, `lg`=36, `xl`=56, `2xl`=64, plus `auto` (parent controls width/height — use this when embedding in a container with its own dimensions, e.g. a print frame). Default is `md`.
 
-**Photo source:** when `personId` is set, the photo comes from `useProfilePicStore` ([`src/renderer/stores/profilePic.ts`](../../../src/renderer/stores/profilePic.ts)), which calls `media.profilePicRef(personId)` and crops the result to a 128×128 jpeg via `cropImageToDataUrl(raw, region)`. The store dedupes per-photo IPC fetches inside a batch (3 people in 1 photo = 1 read), and invalidates per person on profile-pic changes. Tree boxes pull the same cropped data URL via `chartData.fetchPersonNode` so the avatar and the chart portrait are always in sync.
+### Avatar resolution (single, shared rule — no exceptions)
 
-**No face tag → no photo.** If a person has a media link without a face region, both the avatar store and `chartData` return `null` and the avatar/chart box falls through to the initials placeholder. Don't add a "centre-crop the whole image" fallback — that path renders as "show the whole photo zoomed in" and was the bug v0.157.7 fixed. To get an avatar/chart photo, the user must tag the face in the media item.
+Every avatar in the app — list rows, panel headers, mini cards, tree boxes, report frames — resolves its image through the same chain. There is **no per-surface override**. Trees, list rows, and the duplicates list all use it. Adding a new avatar surface? It already follows this chain by going through `<AppAvatar>` (or `chartData.fetchPersonNode` for SVG charts).
+
+The chain (priority order):
+
+1. **Face-tagged region (any media)** → cropped face. The DB is queried for any `media_regions` row tagging this person; the first match wins, regardless of which media it lives in. Cropped to a 128×128 jpeg via `cropImageToDataUrl(raw, region)`.
+2. **Starred linked media** → raw image. The "star" in the Person panel's media table and in MediaPanel's link list marks the first‑sort‑order link. Used as-is, no cropping.
+3. **Initials placeholder** → sex‑tinted square with the person's initials.
+
+Implementation: `getPersonProfilePicRef` in [`src/api/media.ts`](../../../src/api/media.ts) returns either `{ mediaId, region }` (step 1), `{ mediaId, region: null }` (step 2), or `null` (step 3). Both `useProfilePicStore` ([`src/renderer/stores/profilePic.ts`](../../../src/renderer/stores/profilePic.ts)) and `chartData.resolvePersonPhotoUrl` ([`src/renderer/utils/chartData.ts`](../../../src/renderer/utils/chartData.ts)) consume that ref and produce the final data URL — they crop when `region` is set, otherwise pass the raw URL through. The store dedupes per-photo IPC fetches inside a batch (3 people in 1 photo = 1 read).
+
+**MediaView and MediaViewer are the only places that bypass this chain** — they render the raw media directly because that's the point of those views.
 
 **Cache invalidation.** When code mutates a person's profile pic (reorder media, set as profile, add/remove a face tag), call `useProfilePicStore().invalidatePerson(personId)`. The store automatically propagates that into the chart-data photo cache (`chartData.invalidatePersonPhoto`), so list/panel avatars and tree boxes refresh together. There is no need to call the chart invalidator directly.
 

@@ -22,12 +22,22 @@
           <tbody>
             <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
               <td>
-                <router-link :to="'/persons/' + d.person1_id" class="person-link">{{ d.person1_name }}</router-link>
-                <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
+                <div class="person-cell">
+                  <AppAvatar :person-id="d.person1_id" :given-name="d.person1_name" />
+                  <div>
+                    <router-link :to="'/persons/' + d.person1_id" class="person-link">{{ d.person1_name }}</router-link>
+                    <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
+                  </div>
+                </div>
               </td>
               <td>
-                <router-link :to="'/persons/' + d.person2_id" class="person-link">{{ d.person2_name }}</router-link>
-                <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
+                <div class="person-cell">
+                  <AppAvatar :person-id="d.person2_id" :given-name="d.person2_name" />
+                  <div>
+                    <router-link :to="'/persons/' + d.person2_id" class="person-link">{{ d.person2_name }}</router-link>
+                    <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
+                  </div>
+                </div>
               </td>
               <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
               <td class="actions-cell">
@@ -65,6 +75,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
@@ -180,6 +191,7 @@ onActivated(load);
   z-index: 1;
   box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
 }
+.person-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
 .score-badge {
   display: inline-block;

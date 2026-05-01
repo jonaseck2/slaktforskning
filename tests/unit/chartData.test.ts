@@ -59,12 +59,12 @@ describe('fetchPersonNode — photoUrl', () => {
     expect(node.photoUrl).toBe('cropped:data:image/jpeg;base64,AAAA');
   });
 
-  it('returns null photoUrl when the profile media has no face tag (trees should show initials, not a center-crop of the raw photo)', async () => {
+  it('falls back to the raw linked media when no face tag exists (avatar chain: tagged → starred linked → initials)', async () => {
     const api = installMockApi();
     api.media.profilePicRef.mockResolvedValue({ mediaId: 'm1', region: null });
+    api.media.readAsDataUrl.mockResolvedValue('data:image/jpeg;base64,AAAA');
     const node = await fetchPersonNode('p1');
-    expect(node.photoUrl).toBeNull();
-    expect(api.media.readAsDataUrl).not.toHaveBeenCalled();
+    expect(node.photoUrl).toBe('data:image/jpeg;base64,AAAA');
     expect(cropImageToDataUrl).not.toHaveBeenCalled();
   });
 

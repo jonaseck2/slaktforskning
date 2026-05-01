@@ -172,6 +172,22 @@ export interface ProfilePicRef {
 }
 
 export function getPersonProfilePicRef(db: Database, personId: string): ProfilePicRef | null {
+  // Avatar fallback chain:
+  //   1. Any face-tagged region for this person  → cropped face wins
+  //   2. Else the starred linked media (first by sort_order) → raw image
+  //   3. Else null → initials placeholder
+  const tagged = queryOne<{ media_id: string; x: number; y: number; width: number; height: number }>(db, `
+    SELECT media_id, x, y, width, height FROM media_regions
+    WHERE person_id = ?
+    ORDER BY created_at
+    LIMIT 1
+  `, [personId]);
+  if (tagged) {
+    return {
+      mediaId: tagged.media_id,
+      region: { x: tagged.x, y: tagged.y, width: tagged.width, height: tagged.height },
+    };
+  }
   const link = queryOne<{ media_id: string }>(db, `
     SELECT media_id FROM media_links
     WHERE entity_type = 'person' AND entity_id = ?
@@ -179,13 +195,7 @@ export function getPersonProfilePicRef(db: Database, personId: string): ProfileP
     LIMIT 1
   `, [personId]);
   if (!link) return null;
-  const region = queryOne<{ x: number; y: number; width: number; height: number }>(db, `
-    SELECT x, y, width, height FROM media_regions
-    WHERE media_id = ? AND person_id = ?
-    ORDER BY created_at
-    LIMIT 1
-  `, [link.media_id, personId]);
-  return { mediaId: link.media_id, region: region ?? null };
+  return { mediaId: link.media_id, region: null };
 }
 
 export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {

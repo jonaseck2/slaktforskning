@@ -30,7 +30,6 @@
                 :surname="p.surname"
                 :preferred-name="p.preferredName ?? null"
                 :sex="p.sex ?? 'U'"
-                size="sm"
               />
               <span v-if="p.roleLabel" class="role-label">{{ p.roleLabel }}</span>
               <router-link

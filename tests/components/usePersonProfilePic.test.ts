@@ -148,14 +148,14 @@ describe('usePersonProfilePic — api returns a region-tagged profile pic', () =
 });
 
 describe('usePersonProfilePic — api returns mediaRef without region (no face tag)', () => {
-  it('src stays null when mediaRef has no region', async () => {
+  it('falls back to raw media url when mediaRef has no region', async () => {
     installWindowApi({
       profilePicRef: vi.fn().mockResolvedValue({ mediaId: 'm1', region: null }),
     });
     const id = ref<string | null>('p1');
     const { src } = usePersonProfilePic(id);
     await flushAll();
-    expect(src.value).toBeNull();
+    expect(src.value).toBe('data:image/jpeg;base64,FAKE');
     expect(cropImageToDataUrl).not.toHaveBeenCalled();
   });
 });

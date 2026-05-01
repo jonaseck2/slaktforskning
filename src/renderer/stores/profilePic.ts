@@ -46,11 +46,9 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     mediaRef: MediaRef | null,
     urlPromise: Promise<string | null> | null,
   ): Promise<void> {
-    // Avatars must mirror what trees render: only the tagged face. Without a
-    // face tag we'd center-crop the raw media, which reads as "showing the
-    // whole picture" — show the initials placeholder instead so list rows,
-    // panel headers, mini cards and tree boxes stay consistent.
-    if (!mediaRef || !mediaRef.region || !urlPromise) {
+    // Avatar fallback chain: face-tagged region (cropped face) → first linked
+    // media (raw image) → initials placeholder.
+    if (!mediaRef || !urlPromise) {
       setEntry(personId, gen, { status: 'none', src: null });
       return;
     }
@@ -61,8 +59,8 @@ export const useProfilePicStore = defineStore('profilePic', () => {
         setEntry(personId, gen, { status: 'none', src: null });
         return;
       }
-      const cropped = await cropImageToDataUrl(url, mediaRef.region);
-      setEntry(personId, gen, { status: 'ready', src: cropped });
+      const src = mediaRef.region ? await cropImageToDataUrl(url, mediaRef.region) : url;
+      setEntry(personId, gen, { status: 'ready', src });
     } catch {
       setEntry(personId, gen, { status: 'error', src: null });
     }
