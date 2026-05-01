@@ -123,6 +123,8 @@ const api = {
     findOrCreateWithChain: mutating((name: string, chain: unknown) =>
       ipcRenderer.invoke('places:findOrCreateWithChain', name, chain)),
     getPath: (id: string) => ipcRenderer.invoke('places:getPath', id),
+    listChildren: (parentId: string | null) => ipcRenderer.invoke('places:listChildren', parentId),
+    getAncestors: (id: string) => ipcRenderer.invoke('places:getAncestors', id),
     getPersons: (placeId: string) => ipcRenderer.invoke('places:getPersons', placeId),
   },
   groups: {

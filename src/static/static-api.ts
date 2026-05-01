@@ -341,6 +341,30 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
       }
       return path;
     },
+    listChildren: async (parentId: string | null) => {
+      const all = parentId === null
+        ? snapshot.places.filter(p => !p.parent_place_id)
+        : snapshot.places.filter(p => p.parent_place_id === parentId);
+      const childMap = new Map<string | null, number>();
+      for (const p of snapshot.places) {
+        const k = p.parent_place_id ?? null;
+        childMap.set(k, (childMap.get(k) ?? 0) + 1);
+      }
+      return all
+        .map(p => ({ ...p, hasChildren: (childMap.get(p.id) ?? 0) > 0 }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    },
+    getAncestors: async (id: string) => {
+      const out: Place[] = [];
+      let cur = idx.placeById.get(id);
+      let depth = 0;
+      while (cur && depth < 32) {
+        out.push(cur);
+        cur = cur.parent_place_id ? idx.placeById.get(cur.parent_place_id) : undefined;
+        depth++;
+      }
+      return out.reverse();
+    },
     getPersons: async (placeId: string) => {
       const events = idx.eventsByPlace.get(placeId) ?? [];
       const out: { person_id: string; given_name: string; surname: string; event_type: string; event_date: string | null }[] = [];
