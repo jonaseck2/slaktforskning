@@ -52,7 +52,6 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import { useDataVersionStore } from '../stores/dataVersion';
 import GroupsTable from '../components/GroupsTable.vue';
 import GroupModal from '../components/modals/GroupModal.vue';
 import GroupPanel from '../components/GroupPanel.vue';
@@ -62,9 +61,6 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'GroupsView' });
-
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 interface GroupRow {
   id: string;
@@ -126,17 +122,12 @@ function closePanel() {
 
 onMounted(async () => {
   await load();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectGroup(id);
   else if (selectedGroupId.value) openPanel();
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await load();
-    loadedVersion = dataVersionStore.version;
-  }
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectGroup(id);
 });
