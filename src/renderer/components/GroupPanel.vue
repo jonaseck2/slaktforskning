@@ -1,23 +1,19 @@
 <template>
-  <div class="group-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!groupId" class="panel-empty">
-      {{ $t('groupPanel.noGroupSelected') }}
-    </div>
-
-    <template v-else-if="group">
-      <!-- Collapse arrow on the panel's left edge. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Header -->
-      <div class="panel-header">
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">{{ group.name || $t('common.unknown') }}</div>
-            <span class="member-count-badge">{{ links.length }}</span>
-          </div>
-        </div>
+  <EntityPanel
+    entity-type="group"
+    :entity="group"
+    :label="$t('panel.manageGroup')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('groupPanel.noGroupSelected') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ group?.name || $t('common.unknown') }}</div>
+        <span class="member-count-badge">{{ links.length }}</span>
       </div>
+    </template>
 
+    <template v-if="group">
       <!-- Group info section -->
       <div class="panel-section">
         <SectionHeader :title="$t('groups.title')" :collapsed="!sections.info" @toggle="toggleSection('info')" />
@@ -28,9 +24,9 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.name"
-                @input="editFields.name = ($event.target as HTMLInputElement).value"
-                @blur="saveField('name')"
+                :value="fields.name ?? ''"
+                @input="(fields as GroupData).name = ($event.target as HTMLInputElement).value"
+                @blur="save('name')"
               />
             </div>
             <div class="compact-field">
@@ -38,9 +34,9 @@
               <textarea
                 class="compact-control"
                 rows="3"
-                :value="editFields.notes"
-                @input="editFields.notes = ($event.target as HTMLTextAreaElement).value"
-                @blur="saveField('notes')"
+                :value="fields.notes ?? ''"
+                @input="(fields as GroupData).notes = ($event.target as HTMLTextAreaElement).value"
+                @blur="save('notes')"
               />
             </div>
           </div>
@@ -110,19 +106,22 @@
         </div>
       </div>
     </template>
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { reactive, computed, toRef } from 'vue';
+import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LinkedPersonsSection from './LinkedPersonsSection.vue';
 import LinkedPlacesSection from './LinkedPlacesSection.vue';
 import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import EntityPanel from './EntityPanel.vue';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useEntityData } from '../composables/useEntityData';
+import { useEditableFields } from '../composables/useEditableFields';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -156,7 +155,6 @@ const { sections, toggleSection } = usePanelSections(
 // ── State ───────────────────────────────────────────────────────────────────
 
 const showPicker = reactive({ person: false, place: false, media: false });
-const editFields = reactive({ name: '', notes: '' });
 
 // ── Data (race-safe load) ────────────────────────────────────────────────────
 
@@ -165,7 +163,7 @@ interface GroupPanelData {
   links: Link[];
 }
 
-const idRef = computed(() => props.groupId ?? null);
+const idRef = toRef(props, 'groupId');
 const { data: panelData, reload } = useEntityData<GroupPanelData>(idRef, async (id) => {
   try {
     const g = await window.api.groups.get(id) as GroupData | null;
@@ -186,27 +184,23 @@ const personLinks = computed(() => links.value.filter(l => l.entity_type === 'pe
 const placeLinks = computed(() => links.value.filter(l => l.entity_type === 'place'));
 const mediaLinks = computed(() => links.value.filter(l => l.entity_type === 'media'));
 
-// Keep editFields in sync when group data changes
-watch(group, (g) => {
-  if (!g) return;
-  editFields.name = g.name ?? '';
-  editFields.notes = g.notes ?? '';
-}, { immediate: true });
+// ── Editable fields ──────────────────────────────────────────────────────────
 
-// ── Field updates ───────────────────────────────────────────────────────────
-
-async function saveField(field: keyof typeof editFields) {
-  if (!props.groupId || !group.value) return;
-  const val = editFields[field];
-  if (val === (group.value as Record<string, unknown>)[field]) return;
+const persistGroup = async (id: string, patch: Partial<GroupData>) => {
   try {
-    await window.api.groups.update(props.groupId, { [field]: val });
-    (group.value as Record<string, unknown>)[field] = val;
+    await window.api.groups.update(id, patch);
   } catch (err) {
-    console.error(`[GroupPanel] saveField(${field}) failed:`, err);
+    console.error('[GroupPanel] persist failed:', err);
     toast.error(t('errors.saveFailed'));
+    throw err;
   }
-}
+};
+
+const { fields, save } = useEditableFields<GroupData & Record<string, unknown>>(
+  idRef,
+  group as unknown as Ref<(GroupData & Record<string, unknown>) | null>,
+  persistGroup,
+);
 
 // ── Link actions ────────────────────────────────────────────────────────────
 
@@ -241,51 +235,7 @@ async function removeLink(linkId: string) {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.group-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-.panel-header {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header-content {
-  padding: var(--space-md) var(--space-lg);
-  flex: 1;
-  min-width: 0;
-}
+/* Header slot content */
 .panel-name-row {
   display: flex;
   align-items: center;
