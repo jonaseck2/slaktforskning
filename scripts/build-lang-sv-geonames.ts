@@ -2,7 +2,8 @@
  * Build Swedish language gazetteer from GeoNames alternate names.
  *
  * Produces ONE gazetteer:
- *   lang-sv-geonames — Swedish translations for countries and admin1 divisions
+ *   lang-sv-geonames — Swedish translations for countries, admin1 divisions,
+ *                      and major cities (population >= 100,000)
  *
  * Only entries that DIFFER from the English canonical name in world-countries.json
  * and world-admin1.json are included.
@@ -16,6 +17,8 @@
  *   unzip -o /tmp/alternateNamesV2.zip -d /tmp/geonames_altnames/
  *   curl -o /tmp/countryInfo.txt https://download.geonames.org/export/dump/countryInfo.txt
  *   curl -o /tmp/admin1CodesASCII.txt https://download.geonames.org/export/dump/admin1CodesASCII.txt
+ *   curl -o /tmp/cities15000.zip https://download.geonames.org/export/dump/cities15000.zip
+ *   unzip -o /tmp/cities15000.zip -d /tmp/
  */
 
 import * as fs from 'fs';
@@ -28,6 +31,8 @@ const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'd
 const ALTNAMES_FILE = '/tmp/geonames_altnames/alternateNamesV2.txt';
 const COUNTRY_INFO_FILE = '/tmp/countryInfo.txt';
 const ADMIN1_FILE = '/tmp/admin1CodesASCII.txt';
+const CITIES_FILE = '/tmp/cities15000.txt';
+const CITY_MIN_POPULATION = 100_000;
 
 const WORLD_COUNTRIES_FILE = path.join(DATA_DIR, 'world-countries.json');
 const WORLD_ADMIN1_FILE = path.join(DATA_DIR, 'world-admin1.json');
@@ -84,6 +89,36 @@ function parseAdmin1Codes(filePath: string): Map<string, string> {
   }
 
   return geonameIdToCode;
+}
+
+/**
+ * Parse cities15000.txt and return cities with population >= threshold.
+ * Returns: geonameId -> { name, iso2, admin1Code, population }
+ */
+function parseCities(filePath: string, minPopulation: number): Map<string, {
+  name: string; iso2: string; admin1Code: string; population: number;
+}> {
+  const result = new Map<string, { name: string; iso2: string; admin1Code: string; population: number }>();
+  const content = fs.readFileSync(filePath, 'utf-8');
+  for (const line of content.split('\n')) {
+    if (!line.trim()) continue;
+    const cols = line.split('\t');
+    // cities15000 columns:
+    // 0=geonameId, 1=name, 2=asciiName, 3=altNames, 4=lat, 5=lon, 6=featureClass,
+    // 7=featureCode, 8=countryCode, 9=cc2, 10=admin1Code, 11=admin2, 12=admin3,
+    // 13=admin4, 14=population, ...
+    const geonameId = cols[0];
+    const name = cols[1];
+    const featureClass = cols[6];
+    const iso2 = cols[8];
+    const admin1Code = cols[10];
+    const population = parseInt(cols[14] ?? '0', 10) || 0;
+    if (featureClass !== 'P') continue;
+    if (population < minPopulation) continue;
+    if (!geonameId || !name || !iso2) continue;
+    result.set(geonameId, { name, iso2, admin1Code: admin1Code ?? '', population });
+  }
+  return result;
 }
 
 /**
@@ -149,7 +184,7 @@ function readGazetteers(
 
 async function main() {
   // Check prerequisites
-  for (const file of [ALTNAMES_FILE, COUNTRY_INFO_FILE, ADMIN1_FILE, WORLD_COUNTRIES_FILE, WORLD_ADMIN1_FILE]) {
+  for (const file of [ALTNAMES_FILE, COUNTRY_INFO_FILE, ADMIN1_FILE, CITIES_FILE, WORLD_COUNTRIES_FILE, WORLD_ADMIN1_FILE]) {
     if (!fs.existsSync(file)) {
       console.error(`Required file not found: ${file}`);
       if (file === ALTNAMES_FILE) {
@@ -159,6 +194,9 @@ async function main() {
         console.error('  Run: curl -o /tmp/countryInfo.txt https://download.geonames.org/export/dump/countryInfo.txt');
       } else if (file === ADMIN1_FILE) {
         console.error('  Run: curl -o /tmp/admin1CodesASCII.txt https://download.geonames.org/export/dump/admin1CodesASCII.txt');
+      } else if (file === CITIES_FILE) {
+        console.error('  Run: curl -o /tmp/cities15000.zip https://download.geonames.org/export/dump/cities15000.zip');
+        console.error('       unzip -o /tmp/cities15000.zip -d /tmp/');
       } else {
         console.error('  Run build-world.ts first to generate world-countries.json and world-admin1.json');
       }
@@ -239,10 +277,18 @@ async function main() {
 
   console.log(`  Admin1 codes matched to canonical paths: ${admin1CodeToPathKey.size}`);
 
+  console.log('Parsing cities15000.txt for cities >= 100k population...');
+  const citiesByGeonameId = parseCities(CITIES_FILE, CITY_MIN_POPULATION);
+  console.log(`  Cities: ${citiesByGeonameId.size}`);
+
   // Build set of all geonameIds we care about
   const countryGeonameIds = new Set(geonameIdToIso2.keys());
   const admin1GeonameIds = new Set(geonameIdToAdmin1Code.keys());
-  const allRelevantIds = new Set([...countryGeonameIds, ...admin1GeonameIds]);
+  const allRelevantIds = new Set([
+    ...countryGeonameIds,
+    ...admin1GeonameIds,
+    ...citiesByGeonameId.keys(),
+  ]);
 
   console.log(`\nParsing alternateNamesV2.txt for Swedish names (this may take a minute)...`);
 
@@ -250,6 +296,7 @@ async function main() {
   // geonameId → best Swedish name (prefer isPreferredName=1, then isShortName=1)
   const svCountryNames = new Map<string, { name: string; preferred: boolean; short: boolean }[]>();
   const svAdmin1Names = new Map<string, { name: string; preferred: boolean; short: boolean }[]>();
+  const svCityNames = new Map<string, { name: string; preferred: boolean; short: boolean }[]>();
 
   let linesRead = 0;
   let svEntriesFound = 0;
@@ -303,9 +350,12 @@ async function main() {
     if (countryGeonameIds.has(geonameId)) {
       if (!svCountryNames.has(geonameId)) svCountryNames.set(geonameId, []);
       svCountryNames.get(geonameId)!.push(entry);
-    } else {
+    } else if (admin1GeonameIds.has(geonameId)) {
       if (!svAdmin1Names.has(geonameId)) svAdmin1Names.set(geonameId, []);
       svAdmin1Names.get(geonameId)!.push(entry);
+    } else if (citiesByGeonameId.has(geonameId)) {
+      if (!svCityNames.has(geonameId)) svCityNames.set(geonameId, []);
+      svCityNames.get(geonameId)!.push(entry);
     }
   }
 
@@ -314,6 +364,7 @@ async function main() {
   console.log(`  Relevant Swedish entries: ${relevantSvEntries.toLocaleString()}`);
   console.log(`  Countries with sv names: ${svCountryNames.size}`);
   console.log(`  Admin1 divisions with sv names: ${svAdmin1Names.size}`);
+  console.log(`  Cities with sv names: ${svCityNames.size}`);
 
   // Pick best name from multiple entries:
   // Priority: isPreferred=1 first, then isShort=1, then first found
@@ -360,9 +411,43 @@ async function main() {
     admin1Translations[pathKey] = [svName];
   }
 
+  // Cities — build entries keyed as "Country > Admin1 > City" (or "Country > City"
+  // when admin1 is not found). These keys may not match any current node in
+  // world-admin1 (cities aren't in that gazetteer yet), but the resolver's
+  // mergeTranslations silently skips unmatched keys — so they're harmless now
+  // and will auto-activate if/when city nodes are added to world-admin1.
+  const cityTranslations: Record<string, string[]> = {};
+  for (const [geonameId, entries] of svCityNames) {
+    const city = citiesByGeonameId.get(geonameId);
+    if (!city) continue;
+
+    const canonicalCountryName = iso2ToCountryName.get(city.iso2);
+    if (!canonicalCountryName) continue;
+
+    const admin1Lookup = `${city.iso2}.${city.admin1Code}`;
+    const admin1Info = admin1CodeToPathKey.get(admin1Lookup);
+
+    const svName = pickBestName(entries);
+    if (svName === city.name) continue; // no exonym — skip
+
+    // Path key: "Country > Admin1 > City" if admin1 known, else "Country > City"
+    const pathKey = admin1Info
+      ? `${canonicalCountryName} > ${admin1Info.admin1Name} > ${city.name}`
+      : `${canonicalCountryName} > ${city.name}`;
+
+    cityTranslations[pathKey] = [svName];
+  }
+
+  console.log(`  Cities with exonyms: ${Object.keys(cityTranslations).length}`);
+
+  // Merge city translations into admin1Translations (same target gazetteer)
+  for (const [key, values] of Object.entries(cityTranslations)) {
+    admin1Translations[key] = values;
+  }
+
   console.log(`\nTranslations:`);
   console.log(`  Countries: ${Object.keys(countryTranslations).length}`);
-  console.log(`  Admin1 divisions: ${Object.keys(admin1Translations).length}`);
+  console.log(`  Admin1 divisions + cities: ${Object.keys(admin1Translations).length}`);
 
   // Spot-check
   const checks = [
@@ -374,8 +459,8 @@ async function main() {
     const dict = check.type === 'country' ? countryTranslations : admin1Translations;
     const val = dict[check.key];
     const found = val ? val[0] : '(missing)';
-    const ok = val && val[0] === check.expected ? '✓' : '✗';
-    console.log(`  ${ok} ${check.key} → ${found} (expected: ${check.expected})`);
+    const ok = val && val[0] === check.expected ? 'ok' : 'FAIL';
+    console.log(`  ${ok} ${check.key} -> ${found} (expected: ${check.expected})`);
   }
 
   // Also add country translations to world-admin1 — its country parent nodes
@@ -392,7 +477,7 @@ async function main() {
     name: 'Swedish place names (GeoNames)',
     locale: 'sv',
     kind: 'language',
-    description: 'Swedish translations for countries and admin1 divisions',
+    description: 'Swedish translations for countries, admin1 divisions, and major cities',
     source: {
       name: 'GeoNames',
       url: 'https://www.geonames.org/',

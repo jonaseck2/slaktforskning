@@ -3,12 +3,12 @@
   "name": "Swedish place names (GeoNames)",
   "locale": "sv",
   "kind": "language",
-  "description": "Swedish translations for countries and admin1 divisions",
+  "description": "Swedish translations for countries, admin1 divisions, and major cities",
   "source": {
     "name": "GeoNames",
     "url": "https://www.geonames.org/",
     "license": "CC BY 4.0",
-    "fetched": "2026-04-18"
+    "fetched": "2026-05-01"
   },
   "root": {
     "name": "sv",
@@ -419,6 +419,9 @@
       ]
     },
     "world-admin1": {
+      "Afghanistan > Balkh > Mazār-e Sharīf": [
+        "Mazar-e Sharif"
+      ],
       "Afghanistan > Bamyan": [
         "Bamiyan"
       ],
@@ -428,8 +431,17 @@
       "Afghanistan > Ghowr": [
         "Ghor"
       ],
+      "Afghanistan > Herat > Herāt": [
+        "Herat"
+      ],
+      "Afghanistan > Kandahar > Kandahār": [
+        "Kandahar"
+      ],
       "Afghanistan > Khowst": [
         "Khost"
+      ],
+      "Afghanistan > Nangarhar > Jalālābād": [
+        "Jalalabad"
       ],
       "Afghanistan > Sar-e Pol Province": [
         "Sar-e Pol"
@@ -446,7 +458,16 @@
       "Algeria > Algiers": [
         "Alger"
       ],
+      "Algeria > Algiers > Algiers": [
+        "Alger"
+      ],
+      "Algeria > Béjaïa > Béjaïa": [
+        "Bejaïa"
+      ],
       "Algeria > Mascara": [
+        "Muaskar"
+      ],
+      "Algeria > Mascara > Mascara": [
         "Muaskar"
       ],
       "Algeria > Naama": [
@@ -464,11 +485,17 @@
       "Angola > Luanda Norte": [
         "Lunda Norte"
       ],
+      "Angola > Namibe > Mossamedes": [
+        "Namibe"
+      ],
       "Antigua and Barbuda": [
         "Antigua och Barbuda"
       ],
       "Antigua and Barbuda > Saint John Parish": [
         "Parish of Saint John"
+      ],
+      "Argentina > Buenos Aires F.D. > Belgrano": [
+        "Barrio Belgrano"
       ],
       "Argentina > Cordoba": [
         "Córdoba"
@@ -497,6 +524,9 @@
       "Armenia > Shirak": [
         "Sjirak"
       ],
+      "Armenia > Shirak > Gyumri": [
+        "Gjumri"
+      ],
       "Armenia > Syunik": [
         "Siunik"
       ],
@@ -504,6 +534,9 @@
         "Tavusj"
       ],
       "Armenia > Yerevan": [
+        "Jerevan"
+      ],
+      "Armenia > Yerevan > Yerevan": [
         "Jerevan"
       ],
       "Australia": [
@@ -518,6 +551,9 @@
       "Austria > Carinthia": [
         "Kärnten"
       ],
+      "Austria > Carinthia > Klagenfurt am Wörthersee": [
+        "Klagenfurt"
+      ],
       "Austria > Lower Austria": [
         "Niederösterreich"
       ],
@@ -525,6 +561,9 @@
         "Salzburg"
       ],
       "Austria > State of Vienna": [
+        "Wien"
+      ],
+      "Austria > State of Vienna > Vienna": [
         "Wien"
       ],
       "Austria > Styria": [
@@ -550,6 +589,9 @@
       ],
       "Azerbaijan > Fuzuli District": [
         "Füzuli Rayonu"
+      ],
+      "Azerbaijan > Gǝncǝ > Ganja": [
+        "Gändzjä"
       ],
       "Azerbaijan > Ismayilli District": [
         "Ismajylly"
@@ -578,6 +620,9 @@
       "Azerbaijan > Shabran": [
         "Shabran Rayon"
       ],
+      "Azerbaijan > Sumqayit > Sumqayıt": [
+        "Sumgjajet"
+      ],
       "Azerbaijan > Tartar District": [
         "Tärtär"
       ],
@@ -596,11 +641,20 @@
       "Bahrain > Northern": [
         "Northern Governorate"
       ],
+      "Bahrain > Southern Governorate > Ar Rifā‘": [
+        "ar-Rifā‘"
+      ],
       "Bangladesh > Barisal Division": [
         "Barisal"
       ],
+      "Bangladesh > Chittagong > Chattogram": [
+        "Chittagong"
+      ],
       "Bangladesh > Dhaka Division": [
         "Dhaka"
+      ],
+      "Bangladesh > Dhaka Division > Tungi": [
+        "Tongi"
       ],
       "Bangladesh > Khulna Division": [
         "Khulna"
@@ -614,14 +668,29 @@
       "Barbados > Saint Michael": [
         "St. Michael"
       ],
+      "Belarus > Homyel’ Voblasc’ > Homyel'": [
+        "Homel"
+      ],
+      "Belarus > Homyel’ Voblasc’ > Mazyr": [
+        "Mazir"
+      ],
       "Belarus > Minsk": [
         "Minsk voblast"
       ],
       "Belarus > Minsk City": [
         "Minsk"
       ],
+      "Belarus > Mogilev > Mahilyow": [
+        "Mahiljoŭ"
+      ],
       "Belarus > Vitebsk": [
         "Vitsebsks voblast"
+      ],
+      "Belarus > Vitebsk > Orsha": [
+        "Vorsja"
+      ],
+      "Belarus > Vitebsk > Vitebsk": [
+        "Vitsebsk"
       ],
       "Belgium": [
         "Belgien"
@@ -629,8 +698,14 @@
       "Belgium > Brussels Capital": [
         "Brysselregionen"
       ],
+      "Belgium > Brussels Capital > Brussels": [
+        "Bryssel"
+      ],
       "Belgium > Flanders": [
         "Flandern"
+      ],
+      "Belgium > Flanders > Brugge": [
+        "Brygge"
       ],
       "Belgium > Wallonia": [
         "Vallonien"
@@ -685,6 +760,9 @@
       ],
       "Brazil > Federal District": [
         "Federala distrikt"
+      ],
+      "Brazil > Maranhão > São Luís": [
+        "São Luis"
       ],
       "British Virgin Islands": [
         "Brittiska Jungfruöarna"
@@ -752,6 +830,9 @@
       "Canada > Prince Edward Island": [
         "Prins Edwards ö"
       ],
+      "Canada > Quebec > Montréal": [
+        "Montreal"
+      ],
       "Cayman Islands": [
         "Caymanöarna"
       ],
@@ -788,11 +869,26 @@
       "Chile > Santiago Metropolitan": [
         "Región Metropolitana de Santiago"
       ],
+      "Chile > Santiago Metropolitan > Santiago": [
+        "Santiago de Chile"
+      ],
       "Chile > Tarapacá": [
         "Región de Tarapacá"
       ],
       "China": [
         "Kina"
+      ],
+      "China > Beijing > Beijing": [
+        "Peking"
+      ],
+      "China > Shaanxi > Xi’an": [
+        "Xi'an"
+      ],
+      "China > Xinjiang > Aqsu": [
+        "Aksu"
+      ],
+      "China > Xinjiang > Gujangbagh": [
+        "Khotan"
       ],
       "Christmas Island": [
         "Julön"
@@ -926,6 +1022,9 @@
       "Cuba > Guantánamo Province": [
         "Provincia de Guantánamo"
       ],
+      "Cuba > Havana > Havana": [
+        "Havanna"
+      ],
       "Cuba > Holguín Province": [
         "Provincia de Holguín"
       ],
@@ -977,6 +1076,12 @@
       "Czechia > Central Bohemia": [
         "Mellersta Böhmen"
       ],
+      "Czechia > Plzeň Region > Pilsen": [
+        "Plzeň"
+      ],
+      "Czechia > Prague > Prague": [
+        "Prag"
+      ],
       "Czechia > South Bohemian Region": [
         "Södra Böhmen"
       ],
@@ -1001,11 +1106,17 @@
       "Denmark > Capital Region": [
         "Huvudstadsregionen"
       ],
+      "Denmark > Capital Region > Copenhagen": [
+        "Köpenhamn"
+      ],
       "Denmark > Central Jutland": [
         "Mittjylland"
       ],
       "Denmark > North Denmark": [
         "Nordjylland"
+      ],
+      "Denmark > North Denmark > Aalborg": [
+        "Ålborg"
       ],
       "Denmark > South Denmark": [
         "Syddanmark"
@@ -1079,14 +1190,23 @@
       "Egypt > Aswan": [
         "Assuan"
       ],
+      "Egypt > Aswan > Aswān": [
+        "Assuan"
+      ],
       "Egypt > Beheira": [
         "Guvernementet Beheira"
       ],
       "Egypt > Cairo": [
         "Guvernementet Kairo"
       ],
+      "Egypt > Cairo > Cairo": [
+        "Kairo"
+      ],
       "Egypt > Dakahlia": [
         "Ad-Daqahliyya"
+      ],
+      "Egypt > Dakahlia > Dikirnis": [
+        "Markaz Dikirnis"
       ],
       "Egypt > Damietta": [
         "Guvernementet Damietta"
@@ -1094,11 +1214,17 @@
       "Egypt > Faiyum": [
         "Faijum"
       ],
+      "Egypt > Faiyum > Al Fayyum": [
+        "Faijum"
+      ],
       "Egypt > Gharbia": [
         "Al-Gharbiyya"
       ],
       "Egypt > Ismailia": [
         "Guvernementet Ismailia"
+      ],
+      "Egypt > Ismailia > Ismailia": [
+        "Ismaïlia"
       ],
       "Egypt > Matruh": [
         "Guvernementet Matruh"
@@ -1109,17 +1235,29 @@
       "Egypt > Monufia": [
         "Guvernementet Al-Minufiyya"
       ],
+      "Egypt > Monufia > Munūf": [
+        "Minuf"
+      ],
       "Egypt > New Valley": [
         "Al-Wadi al-Jadid"
       ],
       "Egypt > North Sinai": [
         "Sina ash-Shamaliyya"
       ],
+      "Egypt > North Sinai > Arīsh": [
+        "Al-Arish"
+      ],
       "Egypt > Qalyubia": [
         "Al-Qalyubiyya"
       ],
       "Egypt > Red Sea": [
         "Guvernementet Al-Bahr al-Ahmar"
+      ],
+      "Egypt > Sharqia > Al ‘Āshir min Ramaḑān": [
+        "Madinat al-Ashir min Ramadân"
+      ],
+      "Egypt > Sharqia > Bilbeis": [
+        "Bilbays"
       ],
       "Egypt > South Sinai": [
         "Sina al-Janubiyya"
@@ -1184,8 +1322,14 @@
       "Ethiopia": [
         "Etiopien"
       ],
+      "Ethiopia > Addis Ababa > Addis Ababa": [
+        "Addis Abeba"
+      ],
       "Ethiopia > Āfar": [
         "Afar"
+      ],
+      "Ethiopia > Amhara > Dessie": [
+        "Dese"
       ],
       "Ethiopia > Bīnshangul Gumuz": [
         "Benishangul-Gumuz"
@@ -1195,6 +1339,9 @@
       ],
       "Ethiopia > Oromiya": [
         "Oromia"
+      ],
+      "Ethiopia > Oromiya > Jimma": [
+        "Jima"
       ],
       "Falkland Islands": [
         "Falklandsöarna"
@@ -1235,6 +1382,9 @@
       "Finland > North Ostrobothnia": [
         "Norra Österbotten"
       ],
+      "Finland > North Ostrobothnia > Oulu": [
+        "Uleåborg"
+      ],
       "Finland > North Savo": [
         "Landskapet Norra Savolax"
       ],
@@ -1244,8 +1394,14 @@
       "Finland > Paijat-Hame": [
         "Päijänne-Tavastland"
       ],
+      "Finland > Paijat-Hame > Lahti": [
+        "Lahtis"
+      ],
       "Finland > Pirkanmaa": [
         "Birkaland"
+      ],
+      "Finland > Pirkanmaa > Tampere": [
+        "Tammerfors"
       ],
       "Finland > South Karelia": [
         "Södra Karelen"
@@ -1259,8 +1415,23 @@
       "Finland > Southwest Finland": [
         "Egentliga Finland"
       ],
+      "Finland > Southwest Finland > Turku": [
+        "Åbo"
+      ],
       "Finland > Uusimaa": [
         "Nyland"
+      ],
+      "Finland > Uusimaa > East Helsinki": [
+        "Östra Helsingfors"
+      ],
+      "Finland > Uusimaa > Espoo": [
+        "Esbo"
+      ],
+      "Finland > Uusimaa > Helsinki": [
+        "Helsingfors"
+      ],
+      "Finland > Uusimaa > Vantaa": [
+        "Vanda"
       ],
       "France": [
         "Frankrike"
@@ -1288,6 +1459,9 @@
       ],
       "French Southern Territories": [
         "Franska Sydterritorierna"
+      ],
+      "Gambia > Banjul > Serekunda": [
+        "Serrekunda"
       ],
       "Gambia > Lower River": [
         "Lower River Division"
@@ -1334,6 +1508,9 @@
       "Germany > Bavaria": [
         "Bayern"
       ],
+      "Germany > Bavaria > Munich": [
+        "München"
+      ],
       "Germany > Free and Hanseatic City of Hamburg": [
         "Hamburg"
       ],
@@ -1346,14 +1523,38 @@
       "Germany > North Rhine-Westphalia": [
         "Nordrhein-Westfalen"
       ],
+      "Germany > North Rhine-Westphalia > Mülheim": [
+        "Mülheim an der Ruhr"
+      ],
+      "Germany > Rheinland-Pfalz > Ludwigshafen am Rhein": [
+        "Ludwigshafen"
+      ],
       "Germany > Saxony": [
         "Sachsen"
       ],
       "Germany > Saxony-Anhalt": [
         "Sachsen-Anhalt"
       ],
+      "Germany > Saxony-Anhalt > Halle (Saale)": [
+        "Halle an der Saale"
+      ],
+      "Ghana > Ashanti > Obuase": [
+        "Obuasi"
+      ],
+      "Ghana > Greater Accra > Atsiaman": [
+        "Ashaiman"
+      ],
       "Greece": [
         "Grekland"
+      ],
+      "Greece > Attica > Athens": [
+        "Aten"
+      ],
+      "Greece > Attica > Kallithéa": [
+        "Kallithea"
+      ],
+      "Greece > Attica > Piraeus": [
+        "Pireus"
       ],
       "Greece > Central Macedonia": [
         "Mellersta Makedonien"
@@ -1361,8 +1562,14 @@
       "Greece > Crete": [
         "Kreta"
       ],
+      "Greece > Crete > Irákleion": [
+        "Heraklion"
+      ],
       "Greece > East Macedonia and Thrace": [
         "Östra Makedonien och Thrakien"
+      ],
+      "Greece > West Greece > Pátra": [
+        "Patra"
       ],
       "Greece > West Macedonia": [
         "Västra Makedonien"
@@ -1487,6 +1694,9 @@
       "Iceland > Capital Region": [
         "Huvudstadsregion"
       ],
+      "Iceland > Capital Region > Reykjavík": [
+        "Reykjavik"
+      ],
       "Iceland > Northeast": [
         "Nordöst"
       ],
@@ -1499,8 +1709,125 @@
       "India > Andaman and Nicobar": [
         "Andaman & Nicobar"
       ],
+      "India > Andhra Pradesh > Kadapa": [
+        "Cuddapah"
+      ],
+      "India > Andhra Pradesh > Machilīpatnam": [
+        "Machilipatnam"
+      ],
+      "India > Chhattisgarh > Bhilai": [
+        "Bhilai Nagar"
+      ],
+      "India > Gujarat > Rājkot": [
+        "Rajkot"
+      ],
+      "India > Haryana > Gurugram": [
+        "Gurgaon"
+      ],
+      "India > Haryana > Yamuna Nagar": [
+        "Yamunanagar"
+      ],
+      "India > Jharkhand > Hazāribāgh": [
+        "Hazaribagh"
+      ],
+      "India > Karnataka > Kalaburagi": [
+        "Kalaburgi"
+      ],
+      "India > Karnataka > Mysuru": [
+        "Mysore"
+      ],
+      "India > Karnataka > Robertsonpet": [
+        "Robertson Pet"
+      ],
+      "India > Karnataka > Vijayapura": [
+        "Vijapura"
+      ],
+      "India > Kerala > Kollam": [
+        "Quilon"
+      ],
+      "India > Madhya Pradesh > Chhatarpur": [
+        "Chhattarpur"
+      ],
+      "India > Madhya Pradesh > Narmadapuram": [
+        "Hoshangabad"
+      ],
+      "India > Maharashtra > Chānda": [
+        "Chandrapur"
+      ],
+      "India > Maharashtra > Dombivali": [
+        "Dombivli"
+      ],
+      "India > Maharashtra > Sholapur": [
+        "Solapur"
+      ],
+      "India > Maharashtra > Yavatmāl": [
+        "Yavatmal"
+      ],
+      "India > Odisha > Balasore": [
+        "Baleshwar"
+      ],
+      "India > Puducherry > Puducherry": [
+        "Pondicherry"
+      ],
+      "India > Punjab > Pathānkot": [
+        "Pathankot"
+      ],
+      "India > Tamil Nadu > Nāgercoil": [
+        "Nagercoil"
+      ],
+      "India > Tamil Nadu > Ooty": [
+        "Utakamand"
+      ],
+      "India > Tamil Nadu > Thoothukudi": [
+        "Thoothukkudi"
+      ],
+      "India > Telangana > Ādilābād": [
+        "Adilabad"
+      ],
+      "India > Telangana > Kukatpally": [
+        "Kūkatpalli"
+      ],
+      "India > Uttar Pradesh > Alīgarh": [
+        "Aligarh"
+      ],
+      "India > Uttar Pradesh > Bahraigh": [
+        "Bahraich"
+      ],
+      "India > Uttar Pradesh > Bastī": [
+        "Basti"
+      ],
+      "India > Uttar Pradesh > Fīrozābād": [
+        "Firozabad"
+      ],
+      "India > Uttar Pradesh > Ghāziābād": [
+        "Ghaziabad"
+      ],
+      "India > Uttar Pradesh > Prayagraj": [
+        "Allahabad"
+      ],
+      "India > Uttar Pradesh > Raebareli": [
+        "Rae Bareli"
+      ],
+      "India > Uttarakhand > Haldwani": [
+        "Haldwani-cum-Kathgodam"
+      ],
+      "India > Uttarakhand > Haridwar": [
+        "Hardwar"
+      ],
       "India > West Bengal": [
         "Bengalen"
+      ],
+      "India > West Bengal > Āsansol": [
+        "Asansol"
+      ],
+      "India > West Bengal > Dārjiling": [
+        "Darjeeling"
+      ],
+      "India > West Bengal > Howrah": [
+        "Haora"
+      ],
+      "India > West Bengal > Shrīrāmpur": [
+        "Serampore"
       ],
       "Indonesia": [
         "Indonesien"
@@ -1517,8 +1844,14 @@
       "Indonesia > East Java": [
         "Jawa Timur"
       ],
+      "Indonesia > East Java > Surabaya": [
+        "Surabaja"
+      ],
       "Indonesia > East Kalimantan": [
         "Kalimantan Timur"
+      ],
+      "Indonesia > Jambi > Jambi City": [
+        "Jambi"
       ],
       "Indonesia > North Sulawesi": [
         "Sulawesi Utara"
@@ -1547,7 +1880,13 @@
       "Iran > Alborz Province": [
         "Alborz"
       ],
+      "Iran > Alborz Province > Naz̧arābād": [
+        "Nazarabad"
+      ],
       "Iran > Ardabil Province": [
+        "Ardabil"
+      ],
+      "Iran > Ardabil Province > Ardabīl": [
         "Ardabil"
       ],
       "Iran > Chaharmahal and Bakhtiari": [
@@ -1559,6 +1898,9 @@
       "Iran > Gilan Province": [
         "Gilan"
       ],
+      "Iran > Golestan > Gorgān": [
+        "Gorgan"
+      ],
       "Iran > Hamadan Province": [
         "Hamadan"
       ],
@@ -1566,6 +1908,9 @@
         "Ilam"
       ],
       "Iran > Isfahan": [
+        "Esfahan"
+      ],
+      "Iran > Isfahan > Isfahan": [
         "Esfahan"
       ],
       "Iran > Kermanshah Province": [
@@ -1579,6 +1924,9 @@
       ],
       "Iran > Lorestan Province": [
         "Lorestan"
+      ],
+      "Iran > Markazi > Arāk": [
+        "Arak"
       ],
       "Iran > Māzandarān": [
         "Mazandaran"
@@ -1604,8 +1952,17 @@
       "Iran > Tehran": [
         "Teheran"
       ],
+      "Iran > Tehran > Tehran": [
+        "Teheran"
+      ],
       "Iran > West Azerbaijan": [
         "Västazarbaijan"
+      ],
+      "Iran > West Azerbaijan > Mahābād": [
+        "Mahabad"
+      ],
+      "Iran > West Azerbaijan > Orūmīyeh": [
+        "Urmia"
       ],
       "Iran > Yazd Province": [
         "Yazd"
@@ -1616,11 +1973,29 @@
       "Iraq > Anbar": [
         "al-Anbar"
       ],
+      "Iraq > Anbar > Al Fallūjah": [
+        "Al-Falluja"
+      ],
+      "Iraq > Anbar > Ramadi": [
+        "Al-Ramadi"
+      ],
       "Iraq > Baghdad": [
         "Guvernementet Bagdad"
       ],
+      "Iraq > Baghdad > Baghdad": [
+        "Bagdad"
+      ],
+      "Iraq > Basra > Basrah": [
+        "Basra"
+      ],
+      "Iraq > Dhi Qar > Nasiriyah": [
+        "An-Nasiriya"
+      ],
       "Iraq > Duhok": [
         "Dahuk"
+      ],
+      "Iraq > Duhok > Dihok": [
+        "Duhok"
       ],
       "Iraq > Muthanna": [
         "Al-Muthanna"
@@ -1628,17 +2003,32 @@
       "Iraq > Salah ad Din": [
         "Saladin"
       ],
+      "Iraq > Sulaymaniyah > Sulaymaniyah": [
+        "Sulaymaniyya"
+      ],
       "Ireland": [
         "Irland"
       ],
       "Israel > Central District": [
         "Centrala distriktet"
       ],
+      "Israel > Central District > Petaẖ Tiqva": [
+        "Petaẖ Tiqwa"
+      ],
+      "Israel > Jerusalem > West Jerusalem": [
+        "Västra Jerusalem"
+      ],
       "Israel > Northern District": [
         "Norra distriktet"
       ],
       "Israel > Southern District": [
         "Södra distriktet"
+      ],
+      "Israel > Southern District > Beersheba": [
+        "Beer Sheba"
+      ],
+      "Israel > Tel Aviv > H̱olon": [
+        "Holon"
       ],
       "Italy": [
         "Italien"
@@ -1652,14 +2042,29 @@
       "Italy > Calabria": [
         "Kalabrien"
       ],
+      "Italy > Calabria > Reggio Calabria": [
+        "Reggio di Calabria"
+      ],
       "Italy > Campania": [
         "Kampanien"
+      ],
+      "Italy > Campania > Naples": [
+        "Neapel"
+      ],
+      "Italy > Lazio > Rome": [
+        "Rom"
       ],
       "Italy > Liguria": [
         "Ligurien"
       ],
+      "Italy > Liguria > Genoa": [
+        "Genua"
+      ],
       "Italy > Lombardy": [
         "Lombardiet"
+      ],
+      "Italy > Lombardy > Milan": [
+        "Milano"
       ],
       "Italy > Sardinia": [
         "Sardinien"
@@ -1667,11 +2072,17 @@
       "Italy > Sicily": [
         "Sicilien"
       ],
+      "Italy > Sicily > Siracusa": [
+        "Syrakusa"
+      ],
       "Italy > Trentino-Alto Adige": [
         "Sydtyrolen"
       ],
       "Italy > Tuscany": [
         "Toscana"
+      ],
+      "Italy > Tuscany > Florence": [
+        "Florens"
       ],
       "Italy > Umbria": [
         "Umbrien"
@@ -1715,6 +2126,9 @@
       "Japan > Aichi": [
         "Aichi prefektur"
       ],
+      "Japan > Aichi > Anjō": [
+        "Anjo"
+      ],
       "Japan > Akita": [
         "Akita prefektur"
       ],
@@ -1724,8 +2138,14 @@
       "Japan > Chiba": [
         "Chiba prefektur"
       ],
+      "Japan > Chiba > Honchō": [
+        "Funabashi"
+      ],
       "Japan > Ehime": [
         "Ehime prefektur"
+      ],
+      "Japan > Ehime > Saijō": [
+        "Saijo"
       ],
       "Japan > Fukui": [
         "Fukui prefektur"
@@ -1793,6 +2213,9 @@
       "Japan > Nara": [
         "Nara prefektur"
       ],
+      "Japan > Nara > Nara-shi": [
+        "Nara"
+      ],
       "Japan > Niigata": [
         "Niigata prefektur"
       ],
@@ -1816,6 +2239,9 @@
       ],
       "Japan > Shiga": [
         "Shiga prefektur"
+      ],
+      "Japan > Shiga > Ōtsu": [
+        "Otsu"
       ],
       "Japan > Shimane": [
         "Shimane prefektur"
@@ -1865,14 +2291,35 @@
       "Kazakhstan": [
         "Kazakstan"
       ],
+      "Kazakhstan > Abai Region > Semey": [
+        "Semej"
+      ],
+      "Kazakhstan > Aktobe > Aktobe": [
+        "Aqtöbe"
+      ],
+      "Kazakhstan > Aqmola > Kokshetau": [
+        "Köksjetau"
+      ],
+      "Kazakhstan > Atyrau Oblisi > Atyrau": [
+        "Atyraw"
+      ],
       "Kazakhstan > East Kazakhstan": [
         "Östkazakstan"
       ],
       "Kazakhstan > Karaganda": [
         "Qaraghandy oblysy"
       ],
+      "Kazakhstan > Kostanay > Kostanay": [
+        "Qostanaj"
+      ],
+      "Kazakhstan > Kyzylorda > Kyzylorda": [
+        "Qyzylorda"
+      ],
       "Kazakhstan > Pavlodar Region": [
         "Pavlodar"
+      ],
+      "Kazakhstan > Shymkent > Shymkent": [
+        "Sjymkent"
       ],
       "Kazakhstan > West Kazakhstan": [
         "Västkazakstan"
@@ -1988,6 +2435,9 @@
       "Kyrgyzstan": [
         "Kirgizistan"
       ],
+      "Kyrgyzstan > Bishkek > Bishkek": [
+        "Bisjkek"
+      ],
       "Kyrgyzstan > Chuy Region": [
         "Tjüj"
       ],
@@ -1997,10 +2447,16 @@
       "Kyrgyzstan > Jalal-Abad Region": [
         "Dzjalal-Abad"
       ],
+      "Kyrgyzstan > Jalal-Abad Region > Manas": [
+        "Dzjalal-Abad"
+      ],
       "Kyrgyzstan > Naryn Region": [
         "Naryn"
       ],
       "Kyrgyzstan > Osh Region": [
+        "Osj"
+      ],
+      "Kyrgyzstan > Osh Region > Osh": [
         "Osj"
       ],
       "Kyrgyzstan > Talas Region": [
@@ -2042,6 +2498,12 @@
       "Lebanon > South Governorate": [
         "Mohafazat Liban-Sud"
       ],
+      "Lebanon > South Governorate > Sidon": [
+        "Saida"
+      ],
+      "Lebanon > South Governorate > Tyre": [
+        "Tyros"
+      ],
       "Lesotho > Leribe": [
         "Leribe District"
       ],
@@ -2056,6 +2518,9 @@
       ],
       "Libya": [
         "Libyen"
+      ],
+      "Libya > Al Marqab > Al Khums": [
+        "Al-Khums"
       ],
       "Libya > Jabal al Gharbi": [
         "Al Jabal al Gharbi"
@@ -2087,14 +2552,26 @@
       "Luxembourg": [
         "Luxemburg"
       ],
+      "Macao > Macau": [
+        "Macao"
+      ],
       "Madagascar": [
         "Madagaskar"
+      ],
+      "Malaysia > Johor > Johor Bahru": [
+        "Johor Baharu"
       ],
       "Malaysia > Penang": [
         "Pinang"
       ],
+      "Malaysia > Selangor > Kuala Kubu Baharu": [
+        "Kuala Kubu Bharu"
+      ],
       "Maldives": [
         "Maldiverna"
+      ],
+      "Maldives > Kaafu Atoll > Male": [
+        "Malé"
       ],
       "Marshall Islands": [
         "Marshallöarna"
@@ -2108,14 +2585,53 @@
       "Mexico": [
         "Mexiko"
       ],
+      "Mexico > Chiapas > Tuxtla": [
+        "Tuxtla Gutiérrez"
+      ],
+      "Mexico > Chihuahua > Ciudad Delicias": [
+        "Delicias"
+      ],
+      "Mexico > Chihuahua > Ciudad Juárez": [
+        "Juárez"
+      ],
+      "Mexico > Durango > Victoria de Durango": [
+        "Durango"
+      ],
+      "Mexico > Guerrero > Acapulco de Juárez": [
+        "Acapulco"
+      ],
+      "Mexico > Guerrero > Chilpancingo": [
+        "Chilpancingo de los Bravo"
+      ],
       "Mexico > México": [
         "Mexiko"
+      ],
+      "Mexico > México > Ciudad Nezahualcoyotl": [
+        "Ciudad Nezahualcóyotl"
       ],
       "Mexico > Michoacán": [
         "Michoacán de Ocampo"
       ],
+      "Mexico > Nuevo León > Guadalupe": [
+        "Ciudad Guadalupe"
+      ],
+      "Mexico > Oaxaca > Oaxaca": [
+        "Oaxaca de Juárez"
+      ],
+      "Mexico > Oaxaca > Tuxtepec": [
+        "San Juan Bautista Tuxtepec"
+      ],
+      "Mexico > Puebla > Puebla": [
+        "Puebla de Zaragoza"
+      ],
       "Mexico > Querétaro": [
         "Querétaro Arteaga"
+      ],
+      "Mexico > Sonora > Heroica Guaymas": [
+        "Guaymas"
+      ],
+      "Mexico > Veracruz > Xalapa de Enríquez": [
+        "Xalapa"
       ],
       "Micronesia": [
         "Mikronesien"
@@ -2123,8 +2639,14 @@
       "Moldova": [
         "Moldavien"
       ],
+      "Moldova > Bender Municipality > Bender": [
+        "Tighina"
+      ],
       "Moldova > Cahul": [
         "Cahul rajon"
+      ],
+      "Moldova > Chișinău Municipality > Chisinau": [
+        "Chișinău"
       ],
       "Moldova > Floreşti": [
         "Florești"
@@ -2168,11 +2690,35 @@
       "Mongolia > Selenge Province": [
         "Selenga"
       ],
+      "Mongolia > Ulaanbaatar > Ulan Bator": [
+        "Ulaanbaatar"
+      ],
       "Mongolia > Uvs Province": [
         "Uvs"
       ],
       "Morocco": [
         "Marocko"
+      ],
+      "Morocco > Beni Mellal-Khenifra > Beni Mellal": [
+        "Béni Mellal"
+      ],
+      "Morocco > Beni Mellal-Khenifra > Khenifra": [
+        "Khénifra"
+      ],
+      "Morocco > Casablanca-Settat > El Jadida": [
+        "El-Jadida"
+      ],
+      "Morocco > Fes-Meknes > Fes": [
+        "Fez"
+      ],
+      "Morocco > Marrakesh-Safi > Marrakesh": [
+        "Marrakech"
+      ],
+      "Morocco > Rabat-Salé-Kénitra > Kenitra": [
+        "Kénitra"
+      ],
+      "Morocco > Tanger-Tetouan-Al Hoceima > Tangier": [
+        "Tanger"
       ],
       "Mozambique": [
         "Moçambique"
@@ -2222,6 +2768,9 @@
       "Myanmar > Rakhine": [
         "Rakhinestaten"
       ],
+      "Myanmar > Rakhine > Sittwe": [
+        "Akyab"
+      ],
       "Myanmar > Sagaing Region": [
         "Sagaingregionen"
       ],
@@ -2233,6 +2782,9 @@
       ],
       "Myanmar > Yangon": [
         "Yangonregionen"
+      ],
+      "Myanmar > Yangon > Yangon": [
+        "Rangoon"
       ],
       "Namibia > Erongo Region": [
         "Erongo"
@@ -2263,6 +2815,9 @@
       ],
       "Nauru > Yaren District": [
         "Yaren"
+      ],
+      "Nepal > Bagmati Province > Kathmandu": [
+        "Katmandu"
       ],
       "New Caledonia": [
         "Nya Kaledonien"
@@ -2444,6 +2999,18 @@
       "North Korea": [
         "Nordkorea"
       ],
+      "North Korea > Kaesong > Kaesŏng": [
+        "Kaesong"
+      ],
+      "North Korea > Kangwŏn-do > Wŏnsan": [
+        "Wonsan"
+      ],
+      "North Korea > P'yŏngan-bukto > Sinŭiju": [
+        "Sinuiju"
+      ],
+      "North Korea > South Hamgyong > Hamhŭng": [
+        "Hamhung"
+      ],
       "North Macedonia": [
         "Nordmakedonien"
       ],
@@ -2492,11 +3059,20 @@
       "Oman > Al Batinah South": [
         "Södra Al Barinah"
       ],
+      "Oman > Dhofar > Şalālah": [
+        "Salalah"
+      ],
       "Oman > Musandam Governorate": [
         "Musandam"
       ],
       "Oman > Muscat": [
         "Muskat"
+      ],
+      "Oman > Muscat > Muscat": [
+        "Muskat"
+      ],
+      "Oman > Muscat > Seeb": [
+        "As-Sib"
       ],
       "Oman > Northeastern Governorate": [
         "Nord-Ash Sharqiyah"
@@ -2510,20 +3086,35 @@
       "Pakistan > Khyber Pakhtunkhwa": [
         "Nordvästra gränsprovinsen"
       ],
+      "Pakistan > Punjab > Bahawalnagar": [
+        "Bahawalpur"
+      ],
+      "Pakistan > Punjab > Jhang Sadr": [
+        "Jhang Sadar"
+      ],
       "Palestinian Territory": [
         "Palestina"
       ],
       "Palestinian Territory > Gaza Strip": [
         "Gazaremsan"
       ],
+      "Palestinian Territory > Gaza Strip > Rafaḩ": [
+        "Rafah"
+      ],
       "Palestinian Territory > West Bank": [
         "Västbanken"
+      ],
+      "Palestinian Territory > West Bank > East Jerusalem": [
+        "Östra Jerusalem"
       ],
       "Panama > Bocas del Toro Province": [
         "Bocas del Toro"
       ],
       "Panama > Chiriquí Province": [
         "Chiriquí"
+      ],
+      "Panama > Panamá > Panamá": [
+        "Panama City"
       ],
       "Panama > Veraguas Province": [
         "Veraguas"
@@ -2609,6 +3200,12 @@
       "Philippines > Cagayan Valley": [
         "Cagayandalen"
       ],
+      "Philippines > Calabarzon > San Pablo": [
+        "San Pablo City"
+      ],
+      "Philippines > Caraga > Butuan": [
+        "Butuan City"
+      ],
       "Philippines > Central Luzon": [
         "Centrala Luzon"
       ],
@@ -2621,11 +3218,17 @@
       "Philippines > Davao Region": [
         "Davaoregionen"
       ],
+      "Philippines > Davao Region > Magugpo Poblacion": [
+        "Tagum"
+      ],
       "Philippines > Eastern Visayas": [
         "Östra Visayas"
       ],
       "Philippines > Ilocos": [
         "Ilocosregionen"
+      ],
+      "Philippines > National Capital Region > Mandaluyong City": [
+        "Mandaluyong"
       ],
       "Philippines > Northern Mindanao": [
         "Norra Mindanao"
@@ -2663,6 +3266,9 @@
       "Poland > Mazovia": [
         "Masoviens vojvodskap"
       ],
+      "Poland > Mazovia > Warsaw": [
+        "Warszawa"
+      ],
       "Poland > Opole Voivodeship": [
         "Opole vojvodskap"
       ],
@@ -2684,11 +3290,17 @@
       "Poland > West Pomerania": [
         "Västpommerns vojvodskap"
       ],
+      "Poland > West Pomerania > Szczecin": [
+        "Stettin"
+      ],
       "Portugal > Azores": [
         "Azorerna"
       ],
       "Portugal > Lisbon": [
         "Lissabon distrikt"
+      ],
+      "Portugal > Lisbon > Lisbon": [
+        "Lissabon"
       ],
       "Qatar > Al Daayen": [
         "Al Dayeen"
@@ -2732,6 +3344,9 @@
       "Romania > Brașov County": [
         "Brașov"
       ],
+      "Romania > Bucharest > Bucharest": [
+        "Bukarest"
+      ],
       "Romania > Buzău County": [
         "Buzău"
       ],
@@ -2747,6 +3362,9 @@
       "Romania > Constanța County": [
         "Constanța"
       ],
+      "Romania > Constanța County > Constanţa": [
+        "Constanța"
+      ],
       "Romania > Covasna County": [
         "Covasna"
       ],
@@ -2754,6 +3372,9 @@
         "Dâmbovița"
       ],
       "Romania > Galați County": [
+        "Galați"
+      ],
+      "Romania > Galați County > Galaţi": [
         "Galați"
       ],
       "Romania > Giurgiu County": [
@@ -2810,6 +3431,9 @@
       "Russia > Adygeya Republic": [
         "Adygeiska republiken"
       ],
+      "Russia > Adygeya Republic > Maykop": [
+        "Majkop"
+      ],
       "Russia > Altai": [
         "Altajrepubliken"
       ],
@@ -2819,11 +3443,17 @@
       "Russia > Amur Oblast": [
         "Amur"
       ],
+      "Russia > Amur Oblast > Blagoveshchensk": [
+        "Blagovesjtjensk"
+      ],
       "Russia > Arkhangelskaya": [
         "Archangelsk"
       ],
       "Russia > Astrakhan Oblast": [
         "Astrakan"
+      ],
+      "Russia > Astrakhan Oblast > Astrakhan": [
+        "Astrachan"
       ],
       "Russia > Bashkortostan Republic": [
         "Basjkirien"
@@ -2840,7 +3470,13 @@
       "Russia > Chechnya": [
         "Tjetjenien"
       ],
+      "Russia > Chechnya > Grozny": [
+        "Groznyj"
+      ],
       "Russia > Chelyabinsk": [
+        "Tjeljabinsk"
+      ],
+      "Russia > Chelyabinsk > Chelyabinsk": [
         "Tjeljabinsk"
       ],
       "Russia > Chukotka": [
@@ -2848,6 +3484,12 @@
       ],
       "Russia > Chuvash Republic": [
         "Tjuvasjien"
+      ],
+      "Russia > Chuvash Republic > Cheboksary": [
+        "Tjeboksary"
+      ],
+      "Russia > Dagestan > Makhachkala": [
+        "Machatjkala"
       ],
       "Russia > Ingushetiya Republic": [
         "Ingusjien"
@@ -2876,13 +3518,22 @@
       "Russia > Kamchatka": [
         "Kamtjatka"
       ],
+      "Russia > Kamchatka > Petropavlovsk-Kamchatsky": [
+        "Petropavlovsk-Kamtjatskij"
+      ],
       "Russia > Karachayevo-Cherkesiya Republic": [
         "Karatjajen-Tjerkessien"
       ],
       "Russia > Karelia": [
         "Karelska republiken"
       ],
+      "Russia > Karelia > Petrozavodsk": [
+        "Petroskoj"
+      ],
       "Russia > Khabarovsk": [
+        "Chabarovsk"
+      ],
+      "Russia > Khabarovsk > Khabarovsk": [
         "Chabarovsk"
       ],
       "Russia > Khakasiya Republic": [
@@ -2891,8 +3542,17 @@
       "Russia > Khanty-Mansia": [
         "Chantien-Mansien"
       ],
+      "Russia > Khanty-Mansia > Khanty-Mansiysk": [
+        "Chanty-Mansijsk"
+      ],
+      "Russia > Khanty-Mansia > Nizhnevartovsk": [
+        "Nizjnevartovsk"
+      ],
       "Russia > Kirov Oblast": [
         "Kirov"
+      ],
+      "Russia > Komi > Ukhta": [
+        "Uchta"
       ],
       "Russia > Kostroma Oblast": [
         "Kostroma"
@@ -2900,7 +3560,16 @@
       "Russia > Krasnodar Krai": [
         "Krasnodar"
       ],
+      "Russia > Krasnodar Krai > Sochi": [
+        "Sotji"
+      ],
       "Russia > Krasnoyarsk Krai": [
+        "Krasnojarsk"
+      ],
+      "Russia > Krasnoyarsk Krai > Achinsk": [
+        "Atjinsk"
+      ],
+      "Russia > Krasnoyarsk Krai > Krasnoyarsk": [
         "Krasnojarsk"
       ],
       "Russia > Kurgan Oblast": [
@@ -2912,11 +3581,20 @@
       "Russia > Kuzbass": [
         "Kemerovo"
       ],
+      "Russia > Kuzbass > Leninsk-Kuznetsky": [
+        "Leninsk-Kuznetskij"
+      ],
+      "Russia > Kuzbass > Mezhdurechensk": [
+        "Mezjduretjensk"
+      ],
       "Russia > Leningradskaya Oblast'": [
         "Leningrad oblast"
       ],
       "Russia > Lipetsk Oblast": [
         "Lipetsk"
+      ],
+      "Russia > Lipetsk Oblast > Yelets": [
+        "Jelets"
       ],
       "Russia > Magadan Oblast": [
         "Magadan"
@@ -2924,14 +3602,41 @@
       "Russia > Mariy-El Republic": [
         "Marij El"
       ],
+      "Russia > Mariy-El Republic > Yoshkar-Ola": [
+        "Josjkar-Ola"
+      ],
       "Russia > Mordoviya Republic": [
         "Mordvinien"
       ],
       "Russia > Moscow": [
         "Moskva"
       ],
+      "Russia > Moscow > Moscow": [
+        "Moskva"
+      ],
       "Russia > Moscow Oblast": [
         "Moskva oblast"
+      ],
+      "Russia > Moscow Oblast > Balashikha": [
+        "Balasjicha"
+      ],
+      "Russia > Moscow Oblast > Khimki": [
+        "Chimki"
+      ],
+      "Russia > Moscow Oblast > Korolev": [
+        "Koroljov"
+      ],
+      "Russia > Moscow Oblast > Lyubertsy": [
+        "Ljubertsy"
+      ],
+      "Russia > Moscow Oblast > Mytishchi": [
+        "Mytisjtji"
+      ],
+      "Russia > Moscow Oblast > Orekhovo-Zuyevo": [
+        "Orechovo-Zujevo"
+      ],
+      "Russia > Moscow Oblast > Pushkino": [
+        "Pusjkino"
       ],
       "Russia > Murmansk": [
         "Murmansk oblast"
@@ -2942,10 +3647,19 @@
       "Russia > Nizhny Novgorod Oblast": [
         "Nizjnij Novgorod"
       ],
+      "Russia > Nizhny Novgorod Oblast > Dzerzhinsk": [
+        "Dzerzjinsk"
+      ],
+      "Russia > Nizhny Novgorod Oblast > Nizhniy Novgorod": [
+        "Nizjnij Novgorod"
+      ],
       "Russia > North Ossetia–Alania": [
         "Nordossetien-Alanien"
       ],
       "Russia > Novgorod Oblast": [
+        "Novgorod"
+      ],
+      "Russia > Novgorod Oblast > Velikiy Novgorod": [
         "Novgorod"
       ],
       "Russia > Novosibirsk Oblast": [
@@ -2960,6 +3674,9 @@
       "Russia > Oryol oblast": [
         "Orjol"
       ],
+      "Russia > Oryol oblast > Orël": [
+        "Orjol"
+      ],
       "Russia > Penza Oblast": [
         "Penza"
       ],
@@ -2968,6 +3685,9 @@
       ],
       "Russia > Primorye": [
         "Primorje"
+      ],
+      "Russia > Primorye > Nakhodka": [
+        "Nachodka"
       ],
       "Russia > Pskov Oblast": [
         "Pskov"
@@ -2978,14 +3698,32 @@
       "Russia > Rostov": [
         "Rostov oblast"
       ],
+      "Russia > Rostov > Novocherkassk": [
+        "Novotjerkassk"
+      ],
+      "Russia > Rostov > Rostov-on-Don": [
+        "Rostov-na-Donu"
+      ],
+      "Russia > Rostov > Shakhty": [
+        "Sjachty"
+      ],
       "Russia > Ryazan Oblast": [
         "Rjazan"
       ],
       "Russia > Sakhalin Oblast": [
         "Sachalin"
       ],
+      "Russia > Sakhalin Oblast > Yuzhno-Sakhalinsk": [
+        "Juzjno-Sachalinsk"
+      ],
       "Russia > Samara Oblast": [
         "Samara"
+      ],
+      "Russia > Samara Oblast > Novokuybyshevsk": [
+        "Novokujbysjevsk"
+      ],
+      "Russia > Samara Oblast > Tolyatti": [
+        "Toljatti"
       ],
       "Russia > Saratov Oblast": [
         "Saratov"
@@ -2996,17 +3734,26 @@
       "Russia > St.-Petersburg": [
         "Sankt Petersburg"
       ],
+      "Russia > St.-Petersburg > Saint Petersburg": [
+        "Sankt Petersburg"
+      ],
       "Russia > Stavropol Kray": [
         "Stavropol"
       ],
       "Russia > Sverdlovsk Oblast": [
         "Sverdlovsk"
       ],
+      "Russia > Sverdlovsk Oblast > Yekaterinburg": [
+        "Jekaterinburg"
+      ],
       "Russia > Tambov Oblast": [
         "Stavropol"
       ],
       "Russia > Tatarstan Republic": [
         "Tatarstan"
+      ],
+      "Russia > Tatarstan Republic > Nizhnekamsk": [
+        "Nizjnekamsk"
       ],
       "Russia > Tomsk Oblast": [
         "Tomsk"
@@ -3020,10 +3767,19 @@
       "Russia > Tyumen Oblast": [
         "Tiumen"
       ],
+      "Russia > Tyumen Oblast > Tyumen": [
+        "Tiumen"
+      ],
       "Russia > Udmurtiya Republic": [
         "Udmurtien"
       ],
+      "Russia > Udmurtiya Republic > Izhevsk": [
+        "Izjevsk"
+      ],
       "Russia > Ulyanovsk": [
+        "Uljanovsk"
+      ],
+      "Russia > Ulyanovsk > Ulyanovsk": [
         "Uljanovsk"
       ],
       "Russia > Vladimir Oblast": [
@@ -3032,8 +3788,14 @@
       "Russia > Volgograd Oblast": [
         "Volgograd"
       ],
+      "Russia > Volgograd Oblast > Kamyshin": [
+        "Kamysjin"
+      ],
       "Russia > Vologda Oblast": [
         "Vologda"
+      ],
+      "Russia > Vologda Oblast > Cherepovets": [
+        "Tjerepovets"
       ],
       "Russia > Voronezh Oblast": [
         "Voronezj"
@@ -3042,6 +3804,9 @@
         "Jamalo-Nentsien"
       ],
       "Russia > Yaroslavl Oblast": [
+        "Jaroslavl"
+      ],
+      "Russia > Yaroslavl Oblast > Yaroslavl": [
         "Jaroslavl"
       ],
       "Rwanda > Northern Province": [
@@ -3089,6 +3854,15 @@
       "Saudi Arabia > Mecca Region": [
         "Mekka"
       ],
+      "Saudi Arabia > Mecca Region > Makkah": [
+        "Mecka"
+      ],
+      "Saudi Arabia > Mecca Region > Ta’if": [
+        "Taif"
+      ],
+      "Saudi Arabia > Medina Region > Madinah": [
+        "Medina"
+      ],
       "Saudi Arabia > Najran Region": [
         "Najran"
       ],
@@ -3101,8 +3875,14 @@
       "Senegal > Diourbel Region": [
         "Diourbel"
       ],
+      "Senegal > Diourbel Region > Mbaké": [
+        "Mbacké"
+      ],
       "Serbia": [
         "Serbien"
+      ],
+      "Serbia > Central Serbia > Belgrade": [
+        "Belgrad"
       ],
       "Seychelles": [
         "Seychellerna"
@@ -3112,6 +3892,9 @@
       ],
       "Sierra Leone > Eastern Province": [
         "Östra provinsen"
+      ],
+      "Sierra Leone > Eastern Province > Koidu": [
+        "Koidu-Sefadu"
       ],
       "Sierra Leone > Northern Province": [
         "Nord"
@@ -3167,6 +3950,9 @@
       "South Africa > Eastern Cape": [
         "Östra Kapprovinsen"
       ],
+      "South Africa > Eastern Cape > Gqeberha": [
+        "Port Elizabeth"
+      ],
       "South Africa > Free State": [
         "Fristaten"
       ],
@@ -3179,11 +3965,29 @@
       "South Africa > Western Cape": [
         "Västra Kapprovinsen"
       ],
+      "South Africa > Western Cape > Cape Town": [
+        "Kapstaden"
+      ],
       "South Georgia and the South Sandwich Islands": [
         "Sydgeorgien och Sydsandwichöarna"
       ],
       "South Korea": [
         "Sydkorea"
+      ],
+      "South Korea > Busan > Busan": [
+        "Pusan"
+      ],
+      "South Korea > Daegu > Daegu": [
+        "Taegu"
+      ],
+      "South Korea > Gyeongsangnam-do > Chinju": [
+        "Jinju"
+      ],
+      "South Korea > Incheon > Incheon": [
+        "Inchon"
+      ],
+      "South Korea > Seoul > Seoul": [
+        "Söul"
       ],
       "South Sudan": [
         "Sydsudan"
@@ -3203,6 +4007,9 @@
       "Spain > Andalusia": [
         "Andalusien"
       ],
+      "Spain > Andalusia > Cadiz": [
+        "Cádiz"
+      ],
       "Spain > Aragon": [
         "Aragonien"
       ],
@@ -3212,8 +4019,17 @@
       "Spain > Balearic Islands": [
         "Balearerna"
       ],
+      "Spain > Balearic Islands > Palma": [
+        "Palma de Mallorca"
+      ],
       "Spain > Basque Country": [
         "Baskien"
+      ],
+      "Spain > Basque Country > Donostia / San Sebastián": [
+        "San Sebastián"
+      ],
+      "Spain > Basque Country > Gasteiz / Vitoria": [
+        "Vitoria"
       ],
       "Spain > Canary Islands": [
         "Kanarieöarna"
@@ -3230,6 +4046,12 @@
       "Spain > Catalonia": [
         "Katalonien"
       ],
+      "Spain > Catalonia > Lleida": [
+        "Lérida"
+      ],
+      "Spain > Catalonia > Sants-Montjuïc": [
+        "Sants-Montjuїc"
+      ],
       "Spain > Galicia": [
         "Galicien"
       ],
@@ -3238,6 +4060,9 @@
       ],
       "Spain > Navarre": [
         "Navarra"
+      ],
+      "Spain > Valencia > Castelló de la Plana": [
+        "Castellón de la Plana"
       ],
       "Sri Lanka > Central Province": [
         "Centralprovinsen"
@@ -3266,10 +4091,16 @@
       "Sri Lanka > Western Province": [
         "Västprovinsen"
       ],
+      "Sri Lanka > Western Province > Sri Jayewardenepura Kotte": [
+        "Sri Jayawardenapura"
+      ],
       "Sudan > Al Jazirah": [
         "Al-Jazirah"
       ],
       "Sudan > Al Qaḑārif": [
+        "Al-Qadarif"
+      ],
+      "Sudan > Al Qaḑārif > Al Qadarif": [
         "Al-Qadarif"
       ],
       "Sudan > Blue Nile": [
@@ -3301,6 +4132,9 @@
       ],
       "Sudan > Southern Kordofan": [
         "Janub Kurdufan"
+      ],
+      "Sudan > West Kordofan > An Nuhūd": [
+        "En Nahud"
       ],
       "Sudan > Western Darfur": [
         "Gharb Darfur"
@@ -3407,10 +4241,19 @@
       "Syria": [
         "Syrien"
       ],
+      "Syria > Al-Hasakah > Al Qāmishlī": [
+        "Al-Qamishli"
+      ],
+      "Syria > Damascus Governorate > Damascus": [
+        "Damaskus"
+      ],
       "Syria > Daraa": [
         "Dar'a"
       ],
       "Syria > Deir ez-Zor": [
+        "Dayr az-Zawr"
+      ],
+      "Syria > Deir ez-Zor > Deir ez-Zor": [
         "Dayr az-Zawr"
       ],
       "Syria > Hama": [
@@ -3425,14 +4268,29 @@
       "Syria > Suwayda": [
         "As-Suwayda'"
       ],
+      "Taiwan > Taiwan > Keelung": [
+        "Chilung"
+      ],
       "Tajikistan": [
         "Tadzjikistan"
+      ],
+      "Tajikistan > Dushanbe > Dushanbe": [
+        "Dusjanbe"
       ],
       "Tajikistan > Khatlon Province": [
         "Chatlon"
       ],
+      "Tajikistan > Sughd > Istaravshan": [
+        "Istaravsjan"
+      ],
+      "Tajikistan > Sughd > Khujand": [
+        "Chudzjand"
+      ],
       "Tanzania > Dar es Salaam Region": [
         "Dar-es-Salaam"
+      ],
+      "Tanzania > Dar es Salaam Region > Dar es Salaam": [
+        "Dar es-Salaam"
       ],
       "Thailand > Buriram": [
         "Buri Ram"
@@ -3469,6 +4327,9 @@
       ],
       "The Netherlands > South Holland": [
         "Sydholland"
+      ],
+      "The Netherlands > South Holland > The Hague": [
+        "Haag"
       ],
       "Timor Leste": [
         "Östtimor"
@@ -3566,17 +4427,26 @@
       "Turkey > Diyarbakır Province": [
         "Diyarbakır"
       ],
+      "Turkey > Elazığ > Elazığ": [
+        "Elâzığ"
+      ],
       "Turkey > Gümüşhane Province": [
         "Gümüşhane"
       ],
       "Turkey > Hakkâri": [
         "Hakkari"
       ],
+      "Turkey > Hatay > Antakya": [
+        "Antiochia vid Orontes"
+      ],
       "Turkey > Istanbul": [
         "İstanbul"
       ],
       "Turkey > İzmir Province": [
         "İzmir"
+      ],
+      "Turkey > İzmir Province > İzmir": [
+        "Izmir"
       ],
       "Turkey > Karabük Province": [
         "Karabük"
@@ -3602,6 +4472,12 @@
       "Turkmenistan > Ahal": [
         "Achal"
       ],
+      "Turkmenistan > Ashgabat > Ashgabat": [
+        "Asjchabad"
+      ],
+      "Turkmenistan > Dasoguz > Daşoguz": [
+        "Tasjauz"
+      ],
       "Turks and Caicos Islands": [
         "Turks- och Caicosöarna"
       ],
@@ -3614,20 +4490,44 @@
       "Ukraine > Cherkasy": [
         "Tjerkasy oblast"
       ],
+      "Ukraine > Cherkasy > Cherkasy": [
+        "Tjerkasy"
+      ],
       "Ukraine > Chernihiv": [
         "Tjernihiv oblast"
+      ],
+      "Ukraine > Chernihiv > Chernihiv": [
+        "Tjernihiv"
+      ],
+      "Ukraine > Chernivtsi > Chernivtsi": [
+        "Tjernivtsi"
       ],
       "Ukraine > Crimea": [
         "Autonoma republiken Krim"
       ],
+      "Ukraine > Crimea > Kerch": [
+        "Kertj"
+      ],
+      "Ukraine > Crimea > Yevpatoriya": [
+        "Jevpatorija"
+      ],
+      "Ukraine > Dnipropetrovsk > Kryvyy Rih": [
+        "Kryvyj Rih"
+      ],
       "Ukraine > Donetsk": [
         "Donetsk oblast"
+      ],
+      "Ukraine > Donetsk > Slovyansk": [
+        "Slovjansk"
       ],
       "Ukraine > Ivano-Frankivsk": [
         "Ivano-Frankivsk oblast"
       ],
       "Ukraine > Kharkivs’ka Oblast’": [
         "Charkiv oblast"
+      ],
+      "Ukraine > Kharkivs’ka Oblast’ > Kharkiv": [
+        "Charkiv"
       ],
       "Ukraine > Khmelnytskyi": [
         "Chmelnytskyj oblast"
@@ -3647,8 +4547,14 @@
       "Ukraine > Odesa": [
         "Odessa oblast"
       ],
+      "Ukraine > Odesa > Odesa": [
+        "Odessa"
+      ],
       "Ukraine > Poltava": [
         "Poltava oblast"
+      ],
+      "Ukraine > Poltava > Kremenchuk": [
+        "Krementjuk"
       ],
       "Ukraine > Sumy": [
         "Sumy oblast"
@@ -3665,8 +4571,14 @@
       "Ukraine > Zakarpattia": [
         "Transkarpatiens oblast"
       ],
+      "Ukraine > Zakarpattia > Uzhhorod": [
+        "Uzjhorod"
+      ],
       "Ukraine > Zaporizhzhia": [
         "Zaporizjzja oblast"
+      ],
+      "Ukraine > Zhytomyr > Zhytomyr": [
+        "Zjytomyr"
       ],
       "United Arab Emirates": [
         "Förenade Arabemiraten"
@@ -3674,8 +4586,20 @@
       "United Arab Emirates > Abu Dhabi": [
         "Emiratet Abu Dhabi"
       ],
+      "United Arab Emirates > Ras Al Khaimah > Ras Al Khaimah": [
+        "Ras al Khaimah"
+      ],
       "United Kingdom": [
         "Storbritannien"
+      ],
+      "United Kingdom > England > Kingston upon Hull": [
+        "Hull"
+      ],
+      "United Kingdom > England > Newcastle upon Tyne": [
+        "Newcastle-upon-Tyne"
+      ],
+      "United Kingdom > England > Sutton Coldfield": [
+        "Royal Sutton Coldfield"
       ],
       "United Kingdom > Northern Ireland": [
         "Nordirland"
@@ -3688,6 +4612,15 @@
       ],
       "United States > California": [
         "Kalifornien"
+      ],
+      "United States > Missouri > St. Louis": [
+        "Saint Louis"
+      ],
+      "United States > New York > New York City": [
+        "New York"
+      ],
+      "United States > New York > The Bronx": [
+        "Bronx"
       ],
       "Uruguay > Durazno Department": [
         "Durazno"
@@ -3722,17 +4655,41 @@
       "Uzbekistan > Andijan Region": [
         "Andizjan"
       ],
+      "Uzbekistan > Andijan Region > Andijon": [
+        "Andizjan"
+      ],
       "Uzbekistan > Bukhara": [
         "Buchara"
+      ],
+      "Uzbekistan > Bukhara > Bukhara": [
+        "Buchara"
+      ],
+      "Uzbekistan > Fergana > Marg‘ilon": [
+        "Margilan"
+      ],
+      "Uzbekistan > Fergana > Qo‘qon": [
+        "Kokand"
       ],
       "Uzbekistan > Jizzakh Region": [
         "Jizzax viloyati"
       ],
+      "Uzbekistan > Jizzakh Region > Jizzax": [
+        "Dzjizak"
+      ],
       "Uzbekistan > Navoiy Region": [
         "Navoiy viloyati"
       ],
+      "Uzbekistan > Navoiy Region > Navoiy": [
+        "Navoi"
+      ],
       "Uzbekistan > Qashqadaryo": [
         "Qasjqadarja"
+      ],
+      "Uzbekistan > Qashqadaryo > Qarshi": [
+        "Karsji"
+      ],
+      "Uzbekistan > Qashqadaryo > Shahrisabz": [
+        "Sjachrisabz"
       ],
       "Uzbekistan > Samarqand Region": [
         "Samarkand"
@@ -3743,23 +4700,80 @@
       "Uzbekistan > Surxondaryo Region": [
         "Surchondarja"
       ],
+      "Uzbekistan > Tashkent > Tashkent": [
+        "Tasjkent"
+      ],
       "Uzbekistan > Tashkent Region": [
         "Tasjkent"
+      ],
+      "Uzbekistan > Tashkent Region > Chirchiq": [
+        "Tjirtjik"
+      ],
+      "Uzbekistan > Tashkent Region > Olmaliq": [
+        "Almalyk"
       ],
       "Uzbekistan > Xorazm Region": [
         "Khwarezm"
       ],
+      "Uzbekistan > Xorazm Region > Urganch": [
+        "Urgentj"
+      ],
+      "Uzbekistan > Xorazm Region > Xiva": [
+        "Chiva"
+      ],
       "Vatican": [
         "Heliga stolen (Vatikanstaten)"
+      ],
+      "Venezuela > Anzoátegui > Puerto La Cruz": [
+        "Puerto la Cruz"
+      ],
+      "Venezuela > Bolívar > Ciudad Guayana": [
+        "Guayana"
       ],
       "Venezuela > Distrito Federal": [
         "Venezuelas huvudstadsdistrikt"
       ],
+      "Vietnam > An Giang > Rạch Giá": [
+        "Rach Gia"
+      ],
+      "Vietnam > Bac Ninh > Bắc Giang": [
+        "Bac Giang"
+      ],
+      "Vietnam > Can Tho City > Cần Thơ": [
+        "Can Tho"
+      ],
       "Vietnam > Cao Bằng Province": [
         "Cao Bang"
       ],
+      "Vietnam > Dak Lak > Buôn Ma Thuột": [
+        "Buon Ma Thuot"
+      ],
+      "Vietnam > Dong Nai > Đồng Xoài": [
+        "Dong Xoai"
+      ],
+      "Vietnam > Dong Thap > Cao Lãnh": [
+        "Cao Lanh"
+      ],
       "Vietnam > Hà Tĩnh Province": [
         "Ha Tinh"
+      ],
+      "Vietnam > Hà Tĩnh Province > Hà Tĩnh": [
+        "Ha Tinh"
+      ],
+      "Vietnam > Hai Phong > Haiphong": [
+        "Hai Phong"
+      ],
+      "Vietnam > Ho Chi Minh City (HCMC) > Ho Chi Minh City": [
+        "Ho Chi Minh"
+      ],
+      "Vietnam > Ho Chi Minh City (HCMC) > Thủ Dầu Một": [
+        "Thu Dau Mot"
+      ],
+      "Vietnam > Ho Chi Minh City (HCMC) > Vũng Tàu": [
+        "Vung Tau"
+      ],
+      "Vietnam > Khanh Hoa > Phan Rang-Tháp Chàm": [
+        "Phan Rang-Thap Cham"
       ],
       "Vietnam > Lai Châu Province": [
         "Lai Chau"
@@ -3767,20 +4781,44 @@
       "Vietnam > Lạng Sơn Province": [
         "Lang Son"
       ],
+      "Vietnam > Lao Cai > Lào Cai": [
+        "Lao Cai"
+      ],
+      "Vietnam > Quang Ngai > Quảng Ngãi": [
+        "Quang Ngai"
+      ],
       "Vietnam > Quảng Ninh": [
         "Quang Ninh"
+      ],
+      "Vietnam > Quảng Ninh > Hạ Long": [
+        "Ha Long"
+      ],
+      "Vietnam > Quang Tri > Ðông Hà": [
+        "Dong Ha"
+      ],
+      "Vietnam > Quang Tri > Đồng Hới": [
+        "Dong Hoi"
       ],
       "Vietnam > Sơn La Province": [
         "Son La"
       ],
+      "Vietnam > Tay Ninh > Tây Ninh": [
+        "Tay Ninh"
+      ],
       "Vietnam > Thanh Hóa Province": [
         "Thanh Hoa"
+      ],
+      "Vietnam > Thừa Thiên Huế Province > Huế": [
+        "Hué"
       ],
       "Wallis and Futuna": [
         "Wallis- och Futunaöarna"
       ],
       "Western Sahara": [
         "Västsahara"
+      ],
+      "Western Sahara > Laayoune": [
+        "Al-Ayun"
       ],
       "Yemen": [
         "Jemen"
