@@ -152,3 +152,71 @@ describe('resolver name-depth cache', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Invariant 3: resolver does NOT re-normalize node names on every inner-loop
+// iteration after the index is built.
+//
+// Wraps the gazetteer tree in getter-based proxies that count every `name`
+// access. After a warm (second) call, zero name reads must occur — all
+// comparisons should go through pre-normalized index entries.
+// ---------------------------------------------------------------------------
+
+describe('resolver findMatches — name-normalization call count', () => {
+  function makeGaz() {
+    // 3-level tree: 1 root → 5 countries → 8 regions each = 40 leaves.
+    // Each leaf has one alias. Two leaves share the name "Springfield"
+    // to force multiple anchor candidates per resolvePlace.
+    const countries = ['SE', 'DE', 'DK', 'NO', 'FI'].map((c, ci) => ({
+      name: c,
+      lat: 0, lon: 0,
+      children: Array.from({ length: 8 }, (_, ri) => ({
+        name: ri === 0 ? 'Springfield' : `${c}-region-${ri}`,
+        aliases: [`${c}-alias-${ri}`],
+        lat: 0, lon: 0,
+      })),
+    }));
+    return {
+      id: 'synthetic',
+      name: 'Synthetic',
+      kind: 'data' as const,
+      root: { name: 'WORLD', children: countries, lat: 0, lon: 0 },
+    };
+  }
+
+  it('does not re-normalize the same node name on every iteration', async () => {
+    const { resolvePlace } = await import('../../src/api/place-gazetteers/resolver');
+    const gaz = makeGaz();
+
+    // Count reads of node.name during resolvePlace by wrapping the tree in
+    // proxies that increment a counter on every `name` access AFTER the
+    // index is built.
+    let nameReads = 0;
+    function wrap(node: any): any {
+      const wrapped: any = {
+        get name() { nameReads++; return node.name; },
+        get aliases() { return node.aliases; },
+        get lat() { return node.lat; },
+        get lon() { return node.lon; },
+      };
+      if (node.children) {
+        const wrappedChildren = node.children.map(wrap);
+        Object.defineProperty(wrapped, 'children', { get: () => wrappedChildren });
+      }
+      return wrapped;
+    }
+
+    const wrappedGaz = { ...gaz, root: wrap(gaz.root) };
+    // Prime the index — this read pass is allowed to be expensive.
+    resolvePlace('Springfield, SE', [wrappedGaz as any]);
+
+    // Now measure a SECOND call. With pre-normalized index entries, this
+    // call should NOT touch node.name at all (everything compared via the
+    // cached normName/normAliases).
+    nameReads = 0;
+    resolvePlace('Springfield, SE', [wrappedGaz as any]);
+
+    // Lock in the post-fix invariant: zero name re-reads on a cached path.
+    expect(nameReads).toBe(0);
+  });
+});
+
