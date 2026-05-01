@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.179.5 — Test coverage tier 2: importer orchestrators
+
+- test: brought `src/import/holger/index.ts` (1.96% → 100% lines) and `src/import/genney/index.ts` (31% → 86%) to coverage. Tests synthesize zip archives, folder layouts, and tmp `.ged` files in `os.tmpdir()` via `fflate` + `fs.mkdtempSync` — no checked-in binaries. New tests: `import-holger-orchestrator.test.ts` (15) and `import-genney-orchestrator.test.ts` (34). Total tests in suite: 2432 → 2481 (+49).
+
 ## v0.179.4 — Test coverage tier 1: MCP wrappers, utils, html_site preview
 
 - test: brought six previously sub-80% files to ≥80% line coverage. Added `tests/unit/helpers/mcpHarness.ts` to capture anonymous MCP tool handlers (so the prod tools could be unit-tested without refactoring the source files), and `tests/unit/vitestSetup.ts` to provide a localStorage mock for the unit-test environment. New tests: `mcp-prod-{media,research,places}.test.ts` (16 + 27 + 30 tests), `qualityIgnore.test.ts` (22), `html_site-preview.test.ts` (19). `cropImage.ts` is added to the coverage `exclude` list — its testable math (`computeSquareCropRectPx`) already has 10 tests in `cropImage.test.ts`, but the `loadImage` / `cropImageToDataUrl` exports require HTMLCanvasElement / HTMLImageElement which aren't available in the Node test environment, so the file would never reach 80% line coverage.
