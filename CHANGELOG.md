@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.179.6 — Test coverage tier 3: chart layouts + useChartZoom
+
+- test: brought four chart-layout files to high line coverage. New tests: `hourglass-tree.test.ts` (50, 25% → 100%), `chart-layout-descendant.test.ts` (61, 48% → 68%), `chart-layout-pedigree.test.ts` (26, 60% → 81%), `useChartZoom.test.ts` (33, 13% → 100%). All assert position invariants (parent above child, sibling spacing, lane separation) rather than pixel-perfect snapshots, so they don't rot when spacing constants are tuned. Total tests in suite: 2481 → 2651 (+170).
+- finding (not fixed in this commit): `src/renderer/utils/chart-layout/descendant.ts` and `pedigree.ts` each contain a `void selectedPersonId; void selectedParentInfo; void injectOutlines;` line that intentionally disables the outline-placeholder feature ("the + button on every person box covers all add-relative shortcuts"), but the post-injection consumer code (~94 lines in descendant.ts, ~15 lines in pedigree.ts) was left in place and is now unreachable. This caps `descendant.ts` line coverage at ~68% via the public API. Documented for future cleanup.
+
 ## v0.179.5 — Test coverage tier 2: importer orchestrators
 
 - test: brought `src/import/holger/index.ts` (1.96% → 100% lines) and `src/import/genney/index.ts` (31% → 86%) to coverage. Tests synthesize zip archives, folder layouts, and tmp `.ged` files in `os.tmpdir()` via `fflate` + `fs.mkdtempSync` — no checked-in binaries. New tests: `import-holger-orchestrator.test.ts` (15) and `import-genney-orchestrator.test.ts` (34). Total tests in suite: 2432 → 2481 (+49).
