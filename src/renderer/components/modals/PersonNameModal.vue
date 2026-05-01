@@ -153,8 +153,7 @@ import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
-import { parseAsteriskNotation } from '../../utils/nameUtils';
-import { pickDisplayedName } from '../../composables/usePersonPanelData';
+import { parseAsteriskNotation, pickDisplayedName } from '../../utils/nameUtils';
 import type { NameRow } from '../PersonNamesTable.vue';
 
 declare const window: Window & {

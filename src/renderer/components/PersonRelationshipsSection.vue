@@ -20,8 +20,7 @@ import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
-import { formatFullName } from '../utils/nameUtils';
-import { pickDisplayedName } from '../composables/usePersonPanelData';
+import { formatFullName, pickDisplayedName } from '../utils/nameUtils';
 import { useEntityData } from '../composables/useEntityData';
 
 interface PersonRelRow {

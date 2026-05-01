@@ -5,6 +5,78 @@ export interface NamePart {
   underline: boolean;
 }
 
+/**
+ * Person-name record shape used by `pickDisplayedName` / `sortNamesBySortOrder`
+ * and by the panel's Name table. Mirrors `person_names` row plus the optional
+ * fields rendered in the panel.
+ */
+export interface NameData {
+  id: string;
+  given_name: string | null;
+  surname: string | null;
+  preferred_name: string | null;
+  nickname: string | null;
+  sort_order: number;
+  name_type: string;
+  date_from?: string | null;
+  date_to?: string | null;
+  name_prefix?: string | null;
+  name_suffix?: string | null;
+  name_qualifier?: string | null;
+  patronymic_base?: string | null;
+}
+
+/**
+ * Earliest birth event `date_value` for the person, or null if none.
+ */
+export function birthDateValue(events: Array<{ event_type: string; date_value: string | null }>): string | null {
+  const dated = events.filter(e => e.event_type === 'birth' && e.date_value && e.date_value.length > 0);
+  if (dated.length === 0) return null;
+  dated.sort((a, b) => (a.date_value ?? '').localeCompare(b.date_value ?? ''));
+  return dated[0].date_value;
+}
+
+/**
+ * Sort names ascending by sort_order — used for the panel's "Names" table
+ * presentation order.
+ */
+export function sortNamesBySortOrder<T extends { sort_order: number }>(names: T[]): T[] {
+  return [...names].sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/**
+ * Pick the displayed name. Mirrors `displayedNameIdSql` in src/api/persons.ts:
+ *   1. Latest non-null effective `date_from` wins.
+ *   2. For `birth` names the effective date is the birth event's date_value
+ *      if any, otherwise the stored date_from.
+ *   3. Tie-break by highest sort_order, then by id for stability.
+ */
+export function pickDisplayedName<T extends NameData>(
+  names: T[],
+  events: Array<{ event_type: string; date_value: string | null }>,
+): T | null {
+  if (names.length === 0) return null;
+  const birthDate = birthDateValue(events);
+  function effective(n: T): string | null {
+    if (n.name_type === 'birth') return birthDate ?? n.date_from ?? null;
+    return n.date_from ?? null;
+  }
+  const ranked = [...names].sort((a, b) => {
+    const ea = effective(a);
+    const eb = effective(b);
+    if (ea && eb) {
+      if (ea !== eb) return eb.localeCompare(ea); // DESC
+    } else if (ea && !eb) {
+      return -1;
+    } else if (!ea && eb) {
+      return 1;
+    }
+    if (a.sort_order !== b.sort_order) return b.sort_order - a.sort_order;
+    return a.id.localeCompare(b.id);
+  });
+  return ranked[0];
+}
+
 /** Splits given name into tokens; marks the one matching preferredName for underlining. */
 export function givenNameParts(givenName: string | null, preferredName: string | null): NamePart[] {
   const parts: NamePart[] = [];

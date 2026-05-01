@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import PersonPicker from './PersonPicker.vue';
-import { pickDisplayedName } from '../composables/usePersonPanelData';
+import { pickDisplayedName } from '../utils/nameUtils';
 import PersonName from './PersonName.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
