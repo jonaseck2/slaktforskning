@@ -1,6 +1,6 @@
 # Swedish-Language Exonyms Expansion Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Broaden the two existing Swedish-language gazetteers (`lang-sv-geonames`, `lang-sv-wikidata`) to cover Swedish exonyms for European capitals and major cities, so inputs like "Bryssel", "Köpenhamn", "Wien", "Florens" actually resolve. Pure data work — no new files, no new schema, no resolver changes.
 
@@ -55,7 +55,7 @@ No changes to `bundled.ts`, `world-countries.json`, `world-admin1.json`, or the 
 **Files:**
 - (read-only inspection)
 
-- [ ] **Step 1: Read `mergeTranslations` (or whatever the lang-merge step is called)**
+- [x] **Step 1: Read `mergeTranslations` (or whatever the lang-merge step is called)**
 
 ```bash
 grep -RIn "lang-sv\|translations\[" src/api/place-gazetteers/resolver.ts | head -20
@@ -65,7 +65,7 @@ Look at how the resolver consumes the `translations` map. Specifically: when the
 - (a) silently skip the entry (good — option (a) above is safe), or
 - (b) crash / emit a warning?
 
-- [ ] **Step 2: Decide**
+- [x] **Step 2: Decide**
 
 If the resolver silently ignores unmatched keys, proceed with this plan as written.
 
@@ -75,7 +75,7 @@ If the resolver crashes, log a warning, or accumulates the unmatched keys in a w
 
 If a patch is needed, it becomes Task 1.5 of this plan and you write it before continuing. The patch should be a single-line: skip-if-not-found in `mergeTranslations`.
 
-- [ ] **Step 3: No commit — informational**
+- [x] **Step 3: No commit — informational**
 
 ---
 
@@ -84,7 +84,7 @@ If a patch is needed, it becomes Task 1.5 of this plan and you write it before c
 **Files:**
 - Modify: `scripts/build-lang-sv-geonames.ts`
 
-- [ ] **Step 1: Download the prerequisites**
+- [x] **Step 1: Download the prerequisites**
 
 The script already documents these in its header comment, but run them now if not already cached:
 
@@ -103,7 +103,7 @@ The script already documents these in its header comment, but run them now if no
 
 Total disk: ~4 GB unzipped. cities15000.txt is ~30 MB. The bulk altnames is the heavy file.
 
-- [ ] **Step 2: Add city loading to the script**
+- [x] **Step 2: Add city loading to the script**
 
 In `scripts/build-lang-sv-geonames.ts`, add a constant near the top:
 
@@ -164,7 +164,7 @@ const allRelevantIds = new Set([
 ]);
 ```
 
-- [ ] **Step 3: Add a `svCityNames` collector to the altname loop**
+- [x] **Step 3: Add a `svCityNames` collector to the altname loop**
 
 Same shape as `svCountryNames` and `svAdmin1Names`. After the existing `if (countryGeonameIds.has(geonameId))` / `if (admin1GeonameIds.has(geonameId))` branches, add:
 
@@ -181,7 +181,7 @@ Declare `svCityNames` next to the others:
 const svCityNames = new Map<string, { name: string; preferred: boolean; short: boolean }[]>();
 ```
 
-- [ ] **Step 4: Build city translations and merge into the output**
+- [x] **Step 4: Build city translations and merge into the output**
 
 After the existing `// Admin1` block, add:
 
@@ -220,7 +220,7 @@ for (const [key, values] of Object.entries(cityTranslations)) {
 }
 ```
 
-- [ ] **Step 5: Run the script**
+- [x] **Step 5: Run the script**
 
 ```bash
 npx tsx scripts/build-lang-sv-geonames.ts
@@ -228,7 +228,7 @@ npx tsx scripts/build-lang-sv-geonames.ts
 
 Expected runtime: 2–4 minutes (the altnames file is 700+ MB and gets streamed line-by-line). Output should report `Cities with exonyms: NNN` (ballpark 100–500 — depends on how many European cities have Swedish altnames in GeoNames).
 
-- [ ] **Step 6: Spot-check the output**
+- [x] **Step 6: Spot-check the output**
 
 ```bash
 node -e "
@@ -244,7 +244,7 @@ Expected: at least Brussels resolves to "Bryssel" under one of the probed keys, 
 - GeoNames doesn\'t have a `sv` altname for Brussels (unlikely — verify by `grep "geonameId" /tmp/geonames_altnames/alternateNamesV2.txt | grep -P "\\t2800866\\t" | grep -P "\\tsv\\t"` where 2800866 is Brussels\' geonameId), or
 - the path key shape doesn\'t match what we wrote (admin1 missing or named differently). Inspect with `console.log(Object.keys(cityTranslations).filter(k => k.includes(\'Belgium\')))` and adjust.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/build-lang-sv-geonames.ts \
@@ -259,7 +259,7 @@ git commit -m "feat(gazetteer): include major-city exonyms in lang-sv-geonames"
 **Files:**
 - Modify: `scripts/build-lang-sv-wikidata.ts`
 
-- [ ] **Step 1: Add a "European admin1 outside Nordic" SPARQL query**
+- [x] **Step 1: Add a "European admin1 outside Nordic" SPARQL query**
 
 Append after the existing IS_SVEITARFELOG_QUERY constant (around the same area as the other queries):
 
@@ -313,7 +313,7 @@ LIMIT 1000
 
 (Adjust the language filter list as needed — these are the languages most likely to appear as `nativeLabel`.)
 
-- [ ] **Step 2: Fetch the new queries**
+- [x] **Step 2: Fetch the new queries**
 
 In `main()`, after the existing `await fetchWithRetry(IS_SVEITARFELOG_QUERY, ...)` line, append:
 
@@ -324,7 +324,7 @@ In `main()`, after the existing `await fetchWithRetry(IS_SVEITARFELOG_QUERY, ...
   const euCapitalRows = await fetchWithRetry(EU_CAPITAL_CITIES_QUERY, \'EU capital cities\');
 ```
 
-- [ ] **Step 3: Map the new rows against `world-admin1` index**
+- [x] **Step 3: Map the new rows against `world-admin1` index**
 
 The Wikidata script\'s existing approach is to load each Nordic gazetteer (`dk-sogne`, `no-kommuner`, etc.) and build per-gazetteer name indices. For the new European data, we want to attach to `world-admin1` (the same target the GeoNames script uses for its admin1 / city merge).
 
@@ -362,7 +362,7 @@ const euAdmin1Translations = buildTranslationMap(
 console.log(`  EU admin1 + capitals translations: ${Object.keys(euAdmin1Translations).length}`);
 ```
 
-- [ ] **Step 4: Add the new entries to the output\'s `translations` map**
+- [x] **Step 4: Add the new entries to the output\'s `translations` map**
 
 Find the existing `translations: { ... }` block in the output gazetteer near the bottom of `main()`. Add a new entry:
 
@@ -377,7 +377,7 @@ Find the existing `translations: { ... }` block in the output gazetteer near the
     },
 ```
 
-- [ ] **Step 5: Run the script**
+- [x] **Step 5: Run the script**
 
 ```bash
 npx tsx scripts/build-lang-sv-wikidata.ts
@@ -387,7 +387,7 @@ Expected: queries fetch 200–800 rows each. Final translation count: 100–500 
 
 If a query times out (Wikidata SPARQL has a 60s limit), tighten the LIMIT or split the query by sub-region (e.g. one for Western Europe, one for Eastern). Watch for the `Error fetching` log — when those appear with empty rows, we silently lose data.
 
-- [ ] **Step 6: Spot-check**
+- [x] **Step 6: Spot-check**
 
 ```bash
 node -e "
@@ -404,7 +404,7 @@ for (const c of probes) {
 
 Expected: each probed country has at least one admin1 or capital entry.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/build-lang-sv-wikidata.ts \
@@ -419,7 +419,7 @@ git commit -m "feat(gazetteer): include EU admin1 + capitals in lang-sv-wikidata
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Re-run both scripts and diff**
+- [x] **Step 1: Re-run both scripts and diff**
 
 ```bash
 cp src/api/place-gazetteers/data/lang-sv-geonames.json /tmp/lsg-before.json
@@ -449,7 +449,7 @@ git commit -m "fix(gazetteer): sort lang-sv translation outputs"
 **Files:**
 - Modify: `tests/unit/gazetteers.test.ts`
 
-- [ ] **Step 1: Add the design-spec\'s required probes as tests**
+- [x] **Step 1: Add the design-spec\'s required probes as tests**
 
 Inside the existing `describe(\'language gazetteer integration\', ...)` block (around line 173) or a new sibling block:
 
@@ -509,7 +509,7 @@ describe(\'Swedish exonym expansion\', () => {
 
 The exact `result.matches[i].path` / `country` shape depends on `resolvePlace`\'s return type — adjust the assertions to match the existing language-gazetteer tests around `gazetteers.test.ts:178-208`.
 
-- [ ] **Step 2: Run the new tests**
+- [x] **Step 2: Run the new tests**
 
 ```bash
 npx vitest run tests/unit/gazetteers.test.ts
@@ -521,7 +521,7 @@ If a positive test fails (Bryssel doesn\'t resolve), the data is missing — go 
 
 If the negative-control test fails (Åhlborg DOES resolve to "Åhlborg" through some mechanism), some upstream source actually has it — the test should be relaxed or removed. Verify with `grep -i "åhlborg" /tmp/geonames_altnames/alternateNamesV2.txt`; if it\'s genuinely there, the user gets a free correction and the test was wrong.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/gazetteers.test.ts
@@ -535,7 +535,7 @@ git commit -m "test(gazetteer): cover Swedish exonym resolution"
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Compare bundle sizes**
+- [x] **Step 1: Compare bundle sizes**
 
 ```bash
 ls -la src/api/place-gazetteers/data/lang-sv-*.json
@@ -555,7 +555,7 @@ If the size is reasonable, no commit needed for this task.
 **Files:**
 - (read-only inspection)
 
-- [ ] **Step 1: Confirm both files\' `source` blocks are correct**
+- [x] **Step 1: Confirm both files\' `source` blocks are correct**
 
 ```bash
 node -e "
@@ -568,19 +568,19 @@ console.log(\'lang-sv-wikidata source:\', lsw.source);
 
 Expected: GeoNames file shows `license: \'CC BY 4.0\'`; Wikidata file shows `license: \'CC0 1.0\'`. Both have `fetched` set to today.
 
-- [ ] **Step 2: No commit — informational**
+- [x] **Step 2: No commit — informational**
 
 ---
 
 ## Self-review checklist
 
-- [ ] Both build scripts run end-to-end without error.
-- [ ] `lang-sv-geonames.json` and `lang-sv-wikidata.json` are larger than they were on `main` (more entries) but not absurdly so.
-- [ ] Re-running both scripts produces only a date-line diff.
-- [ ] `npx vitest run tests/unit/gazetteers.test.ts` passes including the new exonym tests.
-- [ ] No new files in `src/api/place-gazetteers/data/`. `bundled.ts` unchanged. `BUNDLED_GAZETTEERS` count unchanged.
-- [ ] Source/license blocks in both JSON files are correct.
-- [ ] `npm run lint` passes.
+- [x] Both build scripts run end-to-end without error.
+- [x] `lang-sv-geonames.json` and `lang-sv-wikidata.json` are larger than they were on `main` (more entries) but not absurdly so.
+- [x] Re-running both scripts produces only a date-line diff.
+- [x] `npx vitest run tests/unit/gazetteers.test.ts` passes including the new exonym tests.
+- [x] No new files in `src/api/place-gazetteers/data/`. `bundled.ts` unchanged. `BUNDLED_GAZETTEERS` count unchanged.
+- [x] Source/license blocks in both JSON files are correct.
+- [x] `npm run lint` passes.
 
 ## Out of scope
 
