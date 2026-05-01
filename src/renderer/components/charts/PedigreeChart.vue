@@ -228,6 +228,7 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chart-layout';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
@@ -403,7 +404,7 @@ async function handleCollapseButton(btn: CollapseButton) {
   }
 }
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-pedigree');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomPedigree);
 
 const outerRef = ref<HTMLElement | null>(null);
 const baseColors = useChartColors(true, outerRef);

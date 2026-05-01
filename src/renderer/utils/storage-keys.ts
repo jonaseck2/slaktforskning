@@ -80,6 +80,13 @@ export const STORAGE_KEYS = {
   // Fan chart settings
   fanArcSpan: 'fan-arc-span',
   fanColorMode: 'fan-color-mode',
+
+  // Chart zoom (per chart type)
+  vizZoomFan: 'viz-zoom-fan',
+  vizZoomHourglass: 'viz-zoom-hourglass',
+  vizZoomPedigree: 'viz-zoom-pedigree',
+  vizZoomTimeline: 'viz-zoom-timeline',
+  vizZoomDescendant: 'viz-zoom-descendant',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

@@ -219,6 +219,7 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchDescendantTree, loadChildrenForNode } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { BoxLayout, CollapseButton, DescendantNode, PlaceholderBox } from '../../utils/chart-layout';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
 import type { ColorMode } from '../../../api/chart-export';
@@ -340,7 +341,7 @@ async function handleCollapseButton(btn: CollapseButton) {
   }
 }
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-descendant');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomDescendant);
 
 const outerRef = ref<HTMLElement | null>(null);
 const baseColors = useChartColors(true, outerRef);
