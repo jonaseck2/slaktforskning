@@ -85,7 +85,7 @@ This app uses a GEDCOM-X-inspired model. Here is how GEDCOM 5.5.1 maps to it:
 |---|---|
 | `REPO` record | Repository is just a text field on `sources.repository` |
 | `SUBM` record | No submitter concept in app |
-| `OBJE` / multimedia | No media attachments (planned v0.6.0) |
+| `OBJE` / multimedia | Imported; refs normalised by `consolidateMediaFolder` to `<dbname>-media/...`. See `.claude/rules/media.md` |
 | `ASSO` associations | No general association concept |
 | `ALIA` | No identity alias linking |
 | LDS ordinances (`BAPL`, `SLGC`, `CONL`, `ENDL`, `SLGS`) | Not relevant for Swedish genealogy |
