@@ -1,5 +1,5 @@
 <template>
-  <div class="entity-panel side-panel">
+  <div class="side-panel">
     <div v-if="!entity" class="panel-empty">
       <slot name="empty">{{ $t('panel.selectToView') }}</slot>
     </div>
@@ -45,7 +45,6 @@ defineEmits<{ close: []; edit: [] }>();
 <style scoped>
 /* Layout, surface, and 28px left padding for the collapse tab come from
    `.side-panel` in shared.css. */
-.entity-panel { overflow-y: auto; }
 
 /* Collapse arrow on the panel's left edge — mirrors the
    `list-collapse-btn` / `list-open-btn` pattern on entity lists. */

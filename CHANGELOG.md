@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.190.2 — Right side panels fill width and height again
+
+- fix: the new EntityPanel root class collided with `.entity-panel` in `shared.css` (the BaseSubPanel modal-chrome class), which forced `width: 320px`, `max-height: calc(100vh - 64px)`, `flex-shrink: 0`, and `overflow: hidden` on every migrated side panel — making them fixed-width, height-clipped, and unable to fill the app. The collision is removed; panels now use `.side-panel` alone.
+
 ## v0.190.1 — Tree no longer remounts on name save
 
 - fix: editing a non-focal person's name in the side panel now updates that one box in place instead of remounting the entire tree (lost zoom/scroll). The chart's `useEntityData` already auto-refreshes on mutation; the redundant `@person-changed="reloadChart"` and `@relative-added="reloadChart"` event bindings on PersonsView's PersonPanel are removed. `reloadChart` (full remount) is reserved for focal-person change and context-menu add/delete.
