@@ -74,6 +74,10 @@ export const STORAGE_KEYS = {
   // Website export view
   websitePanelWidth: 'website-panel-width',
 
+  // Screen reader / TTS mode (with legacy key for migration)
+  ttsMode: 'slaktforskning-tts-mode',
+  ttsLegacy: 'slaktforskning-tts',
+
   // Fan chart settings
   fanArcSpan: 'fan-arc-span',
   fanColorMode: 'fan-color-mode',
