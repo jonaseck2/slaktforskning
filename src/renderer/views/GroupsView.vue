@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated } from 'vue';
+import { ref, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppButton from '../components/ui/AppButton.vue';
@@ -120,11 +120,28 @@ function closePanel() {
   localStorage.setItem(STORAGE_KEYS.groupsPanelOpen, 'false');
 }
 
+// GroupsView doesn't yet use usePagedList (it loads everything in one shot).
+// Until it does, subscribe directly to onDataChanged so the list refreshes
+// after any mutation. Debounced to coalesce bursts. This is the documented
+// "list view that hasn't been migrated to usePagedList yet" exception to the
+// composable-owns-reactivity rule (see .claude/rules/renderer.md).
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { void load(); }, 200);
+};
+
 onMounted(async () => {
   await load();
   const id = route.params.id as string | undefined;
   if (id) selectGroup(id);
   else if (selectedGroupId.value) openPanel();
+  window.api?.onDataChanged?.(onMutation);
+});
+
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  window.api?.offDataChanged?.(onMutation);
 });
 
 onActivated(() => {

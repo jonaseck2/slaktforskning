@@ -205,11 +205,27 @@ function closePanel() {
   localStorage.setItem(STORAGE_KEYS.relsPanelOpen, 'false');
 }
 
+// RelationshipsView doesn't yet use usePagedList (see GroupsView for the
+// same pattern). Until it does, subscribe directly to onDataChanged so the
+// list refreshes after any mutation. Documented exception to the
+// composable-owns-reactivity rule.
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { void load(); }, 200);
+};
+
 onMounted(async () => {
   await load();
   const id = route.params.id as string | undefined;
   if (id) selectRelationship(id);
   else if (selectedRelationshipId.value) openPanel();
+  window.api?.onDataChanged?.(onMutation);
+});
+
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  window.api?.offDataChanged?.(onMutation);
 });
 
 onActivated(() => {
