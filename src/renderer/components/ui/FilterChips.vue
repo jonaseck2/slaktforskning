@@ -1,16 +1,18 @@
 <template>
-  <div class="filter-chips-bar">
-    <button
-      v-for="option in options"
-      :key="option.value"
-      type="button"
-      class="chip-btn"
-      :class="{ 'chip-btn--active': option.value === modelValue }"
-      @click="$emit('update:modelValue', option.value)"
-    >
-      {{ option.label }}
-      <span v-if="option.count !== undefined" class="chip-count">{{ option.count }}</span>
-    </button>
+  <div class="filter-chips">
+    <div class="filter-chips-bar">
+      <button
+        v-for="option in options"
+        :key="option.value"
+        type="button"
+        class="chip-btn"
+        :class="{ 'chip-btn--active': option.value === modelValue }"
+        @click="$emit('update:modelValue', option.value)"
+      >
+        {{ option.label }}
+        <span v-if="option.count !== undefined" class="chip-count">{{ option.count }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -24,12 +26,22 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
 </script>
 
 <style scoped>
+/* `.filter-chips` is the outer positioning hook for callers — it carries any
+   external class (e.g. `viz-tabs`, `map-type-filter`) so margins/padding from
+   parent layouts never leak onto the pill itself. The pill's intrinsic shape
+   is owned by `.filter-chips-bar`, which spans the wrapper's content width so
+   the bar reads as a full-width filter strip rather than a shrink-to-fit pill. */
+.filter-chips {
+  display: flex;
+}
 .filter-chips-bar {
+  flex: 1;
   display: flex;
   gap: 2px;
   background: var(--surface-border-subtle);
   border-radius: var(--radius-md);
   padding: 2px;
+  overflow-x: auto;
 }
 
 .chip-btn {
@@ -42,6 +54,8 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
   color: var(--text-secondary);
   transition: all 0.15s;
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .chip-btn:hover {

@@ -529,6 +529,7 @@ export default {
     title: 'Platser',
     listTitle: 'Platslista',
     filterSearch: 'Sök platser',
+    unresolvedCountry: 'Okänt land',
     addTitle: 'Plats',
     name: 'Namn',
     type: 'Typ',

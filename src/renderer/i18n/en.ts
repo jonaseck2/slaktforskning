@@ -529,6 +529,7 @@ export default {
     title: 'Places',
     listTitle: 'Place list',
     filterSearch: 'Search places',
+    unresolvedCountry: 'Unknown country',
     addTitle: 'Place',
     name: 'Name',
     type: 'Type',

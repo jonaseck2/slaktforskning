@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.184.0 — Filter places by country
+
+- feat: places filter is now country-based with live counts (Sverige 4657, USA 463, …) instead of the unhelpful place-type chips
+- fix: filter chip pill no longer drifts visually between views — same look in Persons, Places, Settings
+
 ## v0.183.1 — Places list shows the resolved gazetteer path
 
 - feat: each row in the places list now shows the gazetteer-matched path under the name

@@ -70,7 +70,7 @@
     <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
 
     <!-- Map (always shown in center) -->
-    <MapView no-panel :search-text="searchQuery" :type-filter="activeTypeFilter" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
+    <MapView no-panel :search-text="searchQuery" :country-filter="activeCountryFilter" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
@@ -81,9 +81,9 @@
         <FilterChips
           v-if="places.length > 0"
           class="map-type-filter"
-          :options="typeFilters"
-          :model-value="activeTypeFilter"
-          @update:model-value="activeTypeFilter = $event"
+          :options="countryFilters"
+          :model-value="activeCountryFilter"
+          @update:model-value="activeCountryFilter = $event"
         />
       </template>
     </MapView>
@@ -121,7 +121,6 @@ import FilterChips from '../components/ui/FilterChips.vue';
 import MapView from './MapView.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import { usePanelResize } from '../composables/usePanelResize';
-import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { useDataVersionStore } from '../stores/dataVersion';
 import { usePagedList } from '../composables/usePagedList';
@@ -151,7 +150,7 @@ function closeList() {
   listOpen.value = false;
   localStorage.setItem('places-list-open', 'false');
 }
-const activeTypeFilter = ref<string>('all');
+const activeCountryFilter = ref<string>('all');
 
 // The left list column is server-paged; the map keeps a separate full list
 // (see `places` below) since the map needs every pin and the chip counts
@@ -252,25 +251,48 @@ function resolvedPathFor(id: string): string | null {
   return match.matchedPath.join(' › ');
 }
 
-const typeCounts = computed(() => {
+// Country filter — derived at render time from gazetteer resolution. The DB
+// only stores user-authored hierarchy (name + parent_place_id); country is
+// recomputed every render against the current gazetteers (Prime Directive).
+function countryFor(id: string): string | null {
+  if (!resolverReady.value) return null;
+  const path = pathString(id);
+  if (!path) return null;
+  return resolve(path)?.matchedPath[0] ?? null;
+}
+
+const countryCounts = computed<Record<string, number>>(() => {
   const counts: Record<string, number> = {};
+  if (!resolverReady.value) return counts;
   for (const place of places.value) {
-    const key = place.place_type ?? 'other';
+    const key = countryFor(place.id) ?? '__unresolved__';
     counts[key] = (counts[key] ?? 0) + 1;
   }
   return counts;
 });
 
-const typeFilters = computed(() => [
-  { value: 'all', label: t('common.all'), count: places.value.length },
-  ...PLACE_TYPE_VALUES
-    .filter(type => (typeCounts.value[type] ?? 0) > 0)
-    .map(type => ({
-      value: type,
-      label: t('placeTypes.' + type),
-      count: typeCounts.value[type] ?? 0,
+const UNRESOLVED = '__unresolved__';
+
+const countryFilters = computed(() => {
+  const total = places.value.length;
+  if (!resolverReady.value) {
+    return [{ value: 'all', label: t('common.loading'), count: total }];
+  }
+  const entries = Object.entries(countryCounts.value);
+  entries.sort((a, b) => {
+    if (a[0] === UNRESOLVED) return 1;
+    if (b[0] === UNRESOLVED) return -1;
+    return b[1] - a[1] || a[0].localeCompare(b[0]);
+  });
+  return [
+    { value: 'all', label: t('common.all'), count: total },
+    ...entries.map(([country, count]) => ({
+      value: country,
+      label: country === UNRESOLVED ? t('places.unresolvedCountry') : country,
+      count,
     })),
-]);
+  ];
+});
 
 const showAddForm = ref(false);
 

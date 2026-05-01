@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 
-const props = defineProps<{ noPanel?: boolean; searchText?: string; typeFilter?: string }>();
+const props = defineProps<{ noPanel?: boolean; searchText?: string; countryFilter?: string }>();
 const emit = defineEmits<{ 'select-place': [id: string]; 'reopen-panel': [] }>();
 import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
@@ -349,11 +349,35 @@ const placesWithoutCoords = computed(() => {
   return places.value.filter(p => !displayIds.has(p.id)).length;
 });
 
+// Country lookup — derived from gazetteer resolution. Places with explicit
+// lat/lon don't carry `resolved` (their pin doesn't need it), so we resolve
+// the hierarchy once for filtering. Places without any resolution are
+// classified as unresolved.
+const UNRESOLVED_COUNTRY = '__unresolved__';
+const placeCountry = computed<Map<string, string>>(() => {
+  const map = new Map<string, string>();
+  if (!resolverReady.value) return map;
+  const byId = new Map(places.value.map(p => [p.id, p]));
+  for (const p of places.value) {
+    const parts: string[] = [p.name];
+    let cur = p.parent_place_id;
+    while (cur) {
+      const parent = byId.get(cur);
+      if (!parent) break;
+      parts.push(parent.name);
+      cur = parent.parent_place_id;
+    }
+    const r = resolve(parts.join(', '));
+    map.set(p.id, r?.matchedPath[0] ?? UNRESOLVED_COUNTRY);
+  }
+  return map;
+});
+
 const filteredPlaces = computed(() => {
   const q = filterText.value.trim().toLowerCase();
-  const type = props.typeFilter && props.typeFilter !== 'all' ? props.typeFilter : null;
+  const country = props.countryFilter && props.countryFilter !== 'all' ? props.countryFilter : null;
   return allDisplayPlaces.value.filter(p => {
-    if (type && p.place_type !== type) return false;
+    if (country && placeCountry.value.get(p.id) !== country) return false;
     if (q && !p.name.toLowerCase().includes(q)) return false;
     return true;
   });
