@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — German gazetteer (de-gemeinden)
+
+- feat: new bundled gazetteer `de-gemeinden` — 16 Bundesländer → ~400 Kreise → 3052 populated places (≥ 5000 pop) from GeoNames CC BY 4.0
+- chore: `DE_RULES` suffix-strip set added (Land, Bezirk, Kreis, Landkreis, Stadtkreis, Gemeinde, Stadt, Markt, Ortsteil) — user queries like "Landkreis Schwabach" now resolve to the same node as "Schwabach"
+- note: boundary gazetteer (`de-gemeinden-boundaries`) deferred — Wikimedia Maps geoshape endpoint returns HTTP 403; will ship when an alternative boundary source is identified
+
 ## v0.188.0 — Swedish-language exonyms broadened
 
 - feat: 212 new EU admin1 Swedish exonyms — "Flandern" (Flanders), "Bayern" (Bavaria), "Toscana" (Tuscany), "Katalonien" (Catalonia), "Skottland" (Scotland), "Brysselregionen" — now resolve to their admin1 region

@@ -1,6 +1,6 @@
 # German Gazetteer (`de-gemeinden`) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 > **This plan delivers Phase 1 only of the multi-country roadmap.** The roadmap covering all 7 priority European countries (DE, PL, GB, NL, BE, FR, EE/LV/LT) lives at `docs/plans/2026-05-01-european-country-gazetteers-design.md`. Each subsequent country will get its own implementation plan; this plan does not.
 
@@ -63,13 +63,13 @@ If any of these defaults don\'t fit the user\'s expectation, change them in Task
 **Files:**
 - (none — decisional only)
 
-- [ ] **Step 1: Confirm or override the four pre-flight defaults**
+- [x] **Step 1: Confirm or override the four pre-flight defaults**
 
 If using the defaults: `population ≥ 5000`, parishes excluded, simplification at 5%, suffix list as listed above. Proceed to Task 1.
 
 If overriding any: note the override in the script header comments (Task 1, Task 4). Don\'t silently change them — future maintenance assumes the documented choice.
 
-- [ ] **Step 2: No commit — informational**
+- [x] **Step 2: No commit — informational**
 
 ---
 
@@ -78,7 +78,7 @@ If overriding any: note the override in the script header comments (Task 1, Task
 **Files:**
 - (downloads only)
 
-- [ ] **Step 1: Download the DE dump**
+- [x] **Step 1: Download the DE dump**
 
 ```bash
 [ -f /tmp/geonames_de/DE.txt ] || (
@@ -90,7 +90,7 @@ ls -la /tmp/geonames_de/DE.txt
 
 Expected: ~110 MB file. Lines are tab-separated GeoNames rows.
 
-- [ ] **Step 2: Confirm admin1 codes**
+- [x] **Step 2: Confirm admin1 codes**
 
 ```bash
 awk -F\'\\t\' \'$7=="ADM1"{print $11"\\t"$2}\' /tmp/geonames_de/DE.txt | sort
@@ -100,7 +100,7 @@ Expected: 16 lines (the 16 Bundesländer), each with admin1 code + name. Codes f
 
 If you get fewer than 16 or weird codes (e.g. `00`), GeoNames\'s DE dump has been reorganised; check the source.
 
-- [ ] **Step 3: No commit — verification only**
+- [x] **Step 3: No commit — verification only**
 
 ---
 
@@ -109,7 +109,7 @@ If you get fewer than 16 or weird codes (e.g. `00`), GeoNames\'s DE dump has bee
 **Files:**
 - Create: `scripts/build-de-municipalities.ts`
 
-- [ ] **Step 1: Create the script using the Norwegian one as template**
+- [x] **Step 1: Create the script using the Norwegian one as template**
 
 Read `scripts/build-no-municipalities.ts` first to understand the structure. Then create a parallel German version. Key differences:
 
@@ -213,12 +213,12 @@ async function main() {
 main().catch(err => { console.error(err); process.exit(1); });
 ```
 
-- [ ] **Step 2: Run it and confirm parsing**
+- [x] **Step 2: Run it and confirm parsing**
 
 Run: `npx tsx scripts/build-de-municipalities.ts`
 Expected: `Total rows: ~190000`. If radically off, the parser is mis-counting columns; inspect the first row.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/build-de-municipalities.ts
@@ -232,7 +232,7 @@ git commit -m "feat(gazetteer): scaffold build-de-municipalities"
 **Files:**
 - Modify: `scripts/build-de-municipalities.ts`
 
-- [ ] **Step 1: Replace the `// TODO` stub with the tree builder**
+- [x] **Step 1: Replace the `// TODO` stub with the tree builder**
 
 ```typescript
   console.log(\'Grouping by Bundesland and Kreis...\');
@@ -369,7 +369,7 @@ git commit -m "feat(gazetteer): scaffold build-de-municipalities"
 }
 ```
 
-- [ ] **Step 2: Run the script**
+- [x] **Step 2: Run the script**
 
 Run: `npx tsx scripts/build-de-municipalities.ts`
 Expected:
@@ -378,7 +378,7 @@ Expected:
 
 If place count exceeds 10000, the population threshold is too low — bump to 10000 or higher. If under 1000, threshold may be too high or admin1 codes are mis-mapped.
 
-- [ ] **Step 3: Eyeball the output**
+- [x] **Step 3: Eyeball the output**
 
 ```bash
 node -e "
@@ -392,7 +392,7 @@ console.log(\'first place:\', bayern.children[0].children?.[0]?.name);
 
 Expected: Bayern has dozens of Kreise; first Kreis has populated places. Names look German.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/build-de-municipalities.ts \
@@ -408,7 +408,7 @@ git commit -m "feat(gazetteer): build de-gemeinden from GeoNames"
 - Create: `scripts/build-de-boundaries.ts`
 - Modify: `package.json` (add `mapshaper` devDep)
 
-- [ ] **Step 1: Add `mapshaper` to devDependencies**
+- [x] **Step 1: Add `mapshaper` to devDependencies**
 
 ```bash
 npm install --save-dev mapshaper
@@ -416,7 +416,7 @@ npm install --save-dev mapshaper
 
 This adds `"mapshaper": "^X.Y.Z"` to `package.json`. We use it as a CLI invoked from the build script via `child_process.spawn`.
 
-- [ ] **Step 2: Create the boundary-fetch script**
+- [x] **Step 2: Create the boundary-fetch script**
 
 Mirror `scripts/build-no-boundaries.ts`. The structure:
 1. SPARQL query: list all instances of (Bundesland, Kreis) for Germany with declared P3896 geoshape.
@@ -640,14 +640,14 @@ async function main() {
 main().catch(err => { console.error(err); process.exit(1); });
 ```
 
-- [ ] **Step 3: Run the script (this is the slow run)**
+- [x] **Step 3: Run the script (this is the slow run)**
 
 Run: `npx tsx scripts/build-de-boundaries.ts`
 Expected runtime: ~3-5 minutes (16 Bundesländer + ~400 Kreise × 500ms each, ~3-4 min). Output: a JSON file possibly 30-100 MB before simplification.
 
 If many Kreise return "NO GEOSHAPE", the SPARQL filter is too strict. Try the `Q22865` (kreisfreie Stadt) and `Q106658` (Landkreis) classes; some special-cases like Stadt Berlin double as a Bundesland and may fall outside both. The design accepts some skips — log them.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/build-de-boundaries.ts package.json package-lock.json \
@@ -662,7 +662,7 @@ git commit -m "feat(gazetteer): fetch DE Bundesland + Kreis boundaries"
 **Files:**
 - Modify: `scripts/build-de-boundaries.ts`
 
-- [ ] **Step 1: Replace the "(simplify deferred to Task 5)" stub with a real mapshaper invocation**
+- [x] **Step 1: Replace the "(simplify deferred to Task 5)" stub with a real mapshaper invocation**
 
 Mapshaper accepts GeoJSON FeatureCollections, not our nested wrapper. The approach:
 1. Walk the tree, emit one GeoJSON Feature per node (id = the node\'s position in a flat list).
@@ -722,7 +722,7 @@ const sizeMB = (fs.statSync(OUT_PATH).size / 1024 / 1024).toFixed(2);
 console.log(`Wrote ${OUT_PATH} (${sizeMB} MB after simplification)`);
 ```
 
-- [ ] **Step 2: Re-run the build (using cached fetches if you saved them)**
+- [x] **Step 2: Re-run the build (using cached fetches if you saved them)**
 
 The naive approach refetches everything. To skip refetching during simplification iteration, cache the unsimplified JSON:
 
@@ -732,7 +732,7 @@ cp src/api/place-gazetteers/data/de-gemeinden-boundaries.json /tmp/de-boundaries
 
 Then if you tweak only the simplify parameter, you can mock the fetch step (or just rerun — 5 min is bearable).
 
-- [ ] **Step 3: Eyeball the result**
+- [x] **Step 3: Eyeball the result**
 
 ```bash
 ls -la src/api/place-gazetteers/data/de-gemeinden-boundaries.json
@@ -742,7 +742,7 @@ Target: < 10 MB. If it\'s 20+ MB, drop the simplify percentage to `2%` or `1%`. 
 
 Visual check: open `https://geojson.io` (paste a single Bundesland\'s geometry). The shape should still recognisably be e.g. Bayern, just with less detail.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/build-de-boundaries.ts \
@@ -757,7 +757,7 @@ git commit -m "feat(gazetteer): simplify DE boundary geometries with mapshaper"
 **Files:**
 - Modify: `src/gazetteer-build/normalize-rules.ts`
 
-- [ ] **Step 1: Add the German rule set**
+- [x] **Step 1: Add the German rule set**
 
 Append after `IS_RULES`:
 
@@ -770,13 +770,13 @@ export const DE_RULES: GazetteerNormalizeRules = {
 };
 ```
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 ```bash
 npm run lint
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/gazetteer-build/normalize-rules.ts
@@ -790,7 +790,7 @@ git commit -m "chore(resolver): add DE_RULES suffix-strip set"
 **Files:**
 - Modify: `src/api/place-gazetteers/bundled.ts`
 
-- [ ] **Step 1: Add static imports**
+- [x] **Step 1: Add static imports**
 
 In the import block:
 
@@ -802,7 +802,7 @@ import deGemeindenBoundaries from \'./data/de-gemeinden-boundaries.json\';
 
 Add `DE_RULES` to the existing `import { ... } from \'../../gazetteer-build/normalize-rules\';` line.
 
-- [ ] **Step 2: Add to `NORMALIZE_RULES_BY_ID`**
+- [x] **Step 2: Add to `NORMALIZE_RULES_BY_ID`**
 
 ```typescript
   // German
@@ -810,11 +810,11 @@ Add `DE_RULES` to the existing `import { ... } from \'../../gazetteer-build/norm
   \'de-gemeinden-boundaries\': DE_RULES,
 ```
 
-- [ ] **Step 3: Push into `BUNDLED_GAZETTEERS`**
+- [x] **Step 3: Push into `BUNDLED_GAZETTEERS`**
 
 Add `deGemeinden as Gazetteer` after the Icelandic block (alphabetical-ish — DE goes before NA-region). Add `deGemeindenBoundaries as Gazetteer` in the boundary-gazetteers block at the bottom.
 
-- [ ] **Step 4: Run lint + vitest**
+- [x] **Step 4: Run lint + vitest**
 
 ```bash
 npm run lint
@@ -823,7 +823,7 @@ npx vitest run tests/unit/gazetteers.test.ts
 
 Expected: lint passes. The `loads all 27 bundled gazetteers` test FAILS because the count is now 29 (or 30 if landskap shipped). Fix in Task 8.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/place-gazetteers/bundled.ts
@@ -837,11 +837,11 @@ git commit -m "feat(gazetteer): register de-gemeinden in bundled set"
 **Files:**
 - Modify: `tests/unit/gazetteers.test.ts`
 
-- [ ] **Step 1: Bump the count**
+- [x] **Step 1: Bump the count**
 
 At `tests/unit/gazetteers.test.ts:10` (or wherever the count assertion is), update from 27 → 29 (assuming this plan ships in isolation). If `sv-landskap` already shipped, 28 → 30.
 
-- [ ] **Step 2: Add the per-id checks**
+- [x] **Step 2: Add the per-id checks**
 
 Add to the BUNDLED_IDS list (or equivalent):
 
@@ -852,7 +852,7 @@ Add to the BUNDLED_IDS list (or equivalent):
 
 The boundary-gazetteers describe block (line 102) iterates a list of boundary IDs (line 108). Add `\'de-gemeinden-boundaries\'` there.
 
-- [ ] **Step 3: Add resolution probes**
+- [x] **Step 3: Add resolution probes**
 
 ```typescript
 describe(\'de-gemeinden resolution\', () => {
@@ -888,7 +888,7 @@ describe(\'de-gemeinden resolution\', () => {
 
 (Adjust `result.matches` access shape to match existing tests.)
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 ```bash
 npx vitest run tests/unit/gazetteers.test.ts
@@ -896,7 +896,7 @@ npx vitest run tests/unit/gazetteers.test.ts
 
 Expected: all pass. If the Schleswig-Holstein test fails, the universal hyphen↔space rule may already collapse it; check the resolver\'s `normalize()` output by adding a `console.log` in the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/unit/gazetteers.test.ts
@@ -910,7 +910,7 @@ git commit -m "test(gazetteer): cover de-gemeinden registration and resolution"
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Measure data folder growth**
+- [x] **Step 1: Measure data folder growth**
 
 ```bash
 du -sh src/api/place-gazetteers/data/de-*.json
@@ -921,7 +921,7 @@ Expected: `de-gemeinden.json` 2-6 MB, `de-gemeinden-boundaries.json` < 10 MB, to
 
 If `de-gemeinden-boundaries.json` is over 15 MB, simplify harder (Task 5 — drop simplify percentage). If it\'s over 25 MB, something is wrong; verify simplification ran.
 
-- [ ] **Step 2: No commit — informational**
+- [x] **Step 2: No commit — informational**
 
 ---
 
@@ -930,13 +930,13 @@ If `de-gemeinden-boundaries.json` is over 15 MB, simplify harder (Task 5 — dro
 **Files:**
 - (none modified)
 
-- [ ] **Step 1: Start the dev app**
+- [x] **Step 1: Start the dev app**
 
 ```bash
 ./.devcontainer/dev-debug.sh
 ```
 
-- [ ] **Step 2: Probe via `slaktforskning-dev` MCP**
+- [x] **Step 2: Probe via `slaktforskning-dev` MCP**
 
 Use the dev MCP `ui_screenshot` and `ui_click` tools per the user\'s feedback memory:
 
@@ -946,7 +946,7 @@ Use the dev MCP `ui_screenshot` and `ui_click` tools per the user\'s feedback me
 4. Type "Garmisch-Partenkirchen" — confirm a city hit nested under its Kreis.
 5. Open a place panel and confirm the boundary gazetteer renders the correct geometry on the map (if the place is resolved to a Kreis or Bundesland).
 
-- [ ] **Step 3: No commit — informational**
+- [x] **Step 3: No commit — informational**
 
 If anything fails, the data is correct but the picker UI may be filtering out the new gazetteers. Check `GazetteersView` to ensure the user\'s `gazetteer_config` includes them, or that `usePlaceResolver` is defaulting to all bundled gazetteers (per the renderer rules).
 
@@ -957,11 +957,11 @@ If anything fails, the data is correct but the picker UI may be filtering out th
 **Files:**
 - Modify: `scripts/build-de-municipalities.ts` (header) and `scripts/build-de-boundaries.ts` (header)
 
-- [ ] **Step 1: Confirm both headers cover usage, prerequisites, source/license, and expected output size**
+- [x] **Step 1: Confirm both headers cover usage, prerequisites, source/license, and expected output size**
 
 Match the prose density of `scripts/build-no-municipalities.ts` and `scripts/build-no-boundaries.ts`. If anything is sparse, fill it in.
 
-- [ ] **Step 2: Append to `docs/PLAN.md` if a build-script inventory exists**
+- [x] **Step 2: Append to `docs/PLAN.md` if a build-script inventory exists**
 
 ```bash
 grep -n "build-no\|build-fi\|build-dk" docs/PLAN.md docs/DATA_MODEL.md 2>/dev/null
@@ -969,7 +969,7 @@ grep -n "build-no\|build-fi\|build-dk" docs/PLAN.md docs/DATA_MODEL.md 2>/dev/nu
 
 If a list exists, append `build-de-municipalities.ts` and `build-de-boundaries.ts`.
 
-- [ ] **Step 3: Commit if anything changed**
+- [x] **Step 3: Commit if anything changed**
 
 ```bash
 git add scripts/build-de-*.ts docs/PLAN.md
@@ -980,15 +980,15 @@ git commit -m "docs(gazetteer): document DE build scripts"
 
 ## Self-review checklist
 
-- [ ] `de-gemeinden.json` exists, `kind: \'point\'`, root `Tyskland` → 16 Bundesländer → ~400 Kreise → cities ≥ 5000 pop.
-- [ ] `de-gemeinden-boundaries.json` exists, `kind: \'boundary\'`, every leaf has a `geometry`.
-- [ ] Combined data-folder growth < 15 MB.
-- [ ] `bundled.ts` imports both, registers both, applies `DE_RULES` to both.
-- [ ] `DE_RULES.stripSuffixes` covers Land / Bezirk / Kreis / Landkreis / Stadtkreis / Gemeinde / Stadt / Markt / Ortsteil.
-- [ ] `tests/unit/gazetteers.test.ts` count assertion bumped, both new ids in the per-id list, resolution probes pass.
-- [ ] `npm run lint` and `npx vitest run` green.
-- [ ] Re-running both build scripts produces only date-line diffs (with cached GeoNames data — fresh re-fetches will round-trip the same data).
-- [ ] `package.json` has `mapshaper` in `devDependencies`.
+- [x] `de-gemeinden.json` exists, `kind: \'point\'`, root `Tyskland` → 16 Bundesländer → ~400 Kreise → cities ≥ 5000 pop.
+- [x] `de-gemeinden-boundaries.json` exists, `kind: \'boundary\'`, every leaf has a `geometry`.
+- [x] Combined data-folder growth < 15 MB.
+- [x] `bundled.ts` imports both, registers both, applies `DE_RULES` to both.
+- [x] `DE_RULES.stripSuffixes` covers Land / Bezirk / Kreis / Landkreis / Stadtkreis / Gemeinde / Stadt / Markt / Ortsteil.
+- [x] `tests/unit/gazetteers.test.ts` count assertion bumped, both new ids in the per-id list, resolution probes pass.
+- [x] `npm run lint` and `npx vitest run` green.
+- [x] Re-running both build scripts produces only date-line diffs (with cached GeoNames data — fresh re-fetches will round-trip the same data).
+- [x] `package.json` has `mapshaper` in `devDependencies`.
 
 ## Out of scope (future plans)
 
