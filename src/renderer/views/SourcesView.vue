@@ -119,15 +119,11 @@ import ConfirmModal from '../components/ConfirmModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { narrateSourceRow } from '../utils/screenReaderNarration';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { usePagedList } from '../composables/usePagedList';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'SourcesView' });
-
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 interface SourceRow {
   id: string;
@@ -218,18 +214,15 @@ function closePanel() {
 }
 
 onMounted(async () => {
+  // usePagedList auto-subscribes to onDataChanged so the list reloads on
+  // every mutation — the old loadedVersion/onActivated dance is redundant.
   await load();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectSource(id);
   else if (selectedSourceId.value) openPanel();
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await load();
-    loadedVersion = dataVersionStore.version;
-  }
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectSource(id);
 });
