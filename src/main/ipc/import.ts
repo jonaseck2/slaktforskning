@@ -13,6 +13,7 @@ import { importArchive } from '../../api/archive_import';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
+import * as media from '../../api/media';
 import { notifyWorkerImportStart, notifyWorkerImportEnd } from './worker-client';
 
 let importInProgress = false;
@@ -191,7 +192,7 @@ export function registerImportHandlers(
     // .backup archives bundle a media/ dir — copy it alongside the DB so file_refs survive
     const isBackup = options.sourcePath.toLowerCase().endsWith('.backup');
     const destMediaDir = isBackup
-      ? path.join(path.dirname(getCurrentDatabasePath()), 'genney-media')
+      ? media.getMediaDir(getCurrentDatabasePath())
       : undefined;
     const result = await importFromGenney(getDb(), options.sourcePath, {
       schema: options.schema,
