@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.181.1 — Place tree picker: kill the dual scrollbar
+
+- fix(ui): `BaseSubPanel`'s `.ep-body` is already `flex: 1; overflow-y: auto`, so the modal's inner `.tree-scroll` (also `overflow-y: auto`) was stacking a second scrollbar on top of the first. Override `:deep(.ep-body)` for this modal to `overflow: hidden; display: flex; flex-direction: column` so the inner tree-scroll owns the single scroll axis, and the filter input + count-label stay pinned at top/bottom.
+
 ## v0.181.0 — Place tree picker: virtual-mount orphan DB places under their gazetteer parent
 
 - feat(ui): orphan DB places (`parent_place_id IS NULL`) whose name resolves to a deeper gazetteer node now appear nested under their gazetteer parent instead of cluttering the root level. E.g. an unparented "Solna" DB row now shows up under Sverige → Stockholms län when you expand into the gazetteer hierarchy, paired with its real `dbId` so selection commits the correct row. This is a render-time decision — the DB still has `parent_place_id = NULL` (data-fidelity prime directive); we just present the place where the gazetteer suggests it belongs. `findPathTo` follows the gazetteer parent chain when pre-selecting an orphan with a known mount, expanding each level so the orphan is visible.

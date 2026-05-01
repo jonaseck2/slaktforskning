@@ -202,15 +202,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* BaseSubPanel's `.ep-body` is `flex: 1; overflow-y: auto`. We want the
+   filter input pinned at the top and the count-label at the bottom while
+   only the middle (tree / search results) scrolls — so kill the body-level
+   scroll and let `.tree-scroll` own the single scroll axis. */
+:deep(.ep-body) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .tree-picker {
   display: flex;
   flex-direction: column;
   gap: 0;
   min-width: 480px;
-  /* Cap height so the scroll container can be flex:1 within. The modal body
-     itself is already constrained by BaseSubPanel; we just need a stable
-     ceiling for the inner scrolling area. */
-  max-height: min(70vh, 640px);
+  flex: 1;
+  min-height: 0;
 }
 /* Mirror the canonical .list-filter / .list-filter-input wrapper used across
    PersonsListTab, SourcesView, PlacesView, MediaView. The wrapper provides
