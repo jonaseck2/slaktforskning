@@ -589,3 +589,24 @@ Expected: GeoNames file shows `license: \'CC BY 4.0\'`; Wikidata file shows `lic
 - Other language gazetteers (`lang-de-*`, `lang-no-*`, etc.) — separate specs driven by their own user demand.
 - Adding city-level nodes to `world-countries.json` so the translation map\'s "Country > Admin1 > City" keys actually match resolver nodes — separate, larger plan.
 - Resolver behaviour changes (path matching, scoring, contradiction weights).
+
+---
+
+## Implementation Status — shipped 2026-05-01
+
+**Outcome:** Implemented end-to-end on `feat/swedish-exonyms` (commits `9298b86c`..`f77ee3ee`).
+
+**Achieved:**
+- **Admin1-level Swedish exonyms** ("Flandern", "Brysselregionen", "Toscana", "Bayern", "Katalonien", "Skottland") resolve correctly through `lang-sv-wikidata` against `world-admin1`. 212 new EU admin1 entries.
+- **City-level Swedish exonyms** ("Bryssel", "Wien", "Köpenhamn", "Florens", "Rom", …) are emitted into `lang-sv-geonames` at path keys `Country > Admin1 > City`. 346 city exonyms.
+- Two separate output files, two separate sources (GeoNames CC BY 4.0 / Wikidata CC0 1.0), no mixing.
+
+**Known limitation:**
+- **City exonyms are dormant today.** `world-admin1.json` has only 2 levels (Country → Admin1) so `mergeTranslations` cannot find a city node to attach the alias to. `resolvePlace("Bryssel")` returns `null` until the resolver gets city nodes — a separate, larger plan documented as out-of-scope here.
+- The data is pre-positioned: when a future plan adds depth-3 city nodes to `world-admin1` (or a sibling gazetteer), all 346 city aliases activate automatically with no rebuild required.
+
+**Deviations from plan:**
+- Wikidata SPARQL queries restructured to use English `nativeLabel` and union `Q10864048 ∪ Q13220204` types + `P36` capital-of relation (originals returned ~64 rows; redesigned returns 1,394).
+- Plan's resolution tests (`resolvePlace("Bryssel")` → Belgium) replaced with admin1-level resolution tests + an explanatory comment about dormant city aliases. Tautological "data is in the file" assertion removed during code review.
+
+**Test/test-runner fix:** Vitest required `--root <worktree-path>` to actually load the worktree's test file when invoked through `npm --prefix`; without it, the previous run silently used the main repo's outdated copy. Tests moved into `beforeAll` for additional safety. 76/76 pass.

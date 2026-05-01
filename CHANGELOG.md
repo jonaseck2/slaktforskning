@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.188.0 — Swedish-language exonyms broadened
+
+- feat: 212 new EU admin1 Swedish exonyms — "Flandern" (Flanders), "Bayern" (Bavaria), "Toscana" (Tuscany), "Katalonien" (Catalonia), "Skottland" (Scotland), "Brysselregionen" — now resolve to their admin1 region
+- chore: 346 city-level Swedish exonyms ("Bryssel", "Wien", "Köpenhamn", "Florens", "Rom", …) pre-positioned in `lang-sv-geonames`. Dormant until a future plan adds city-level nodes to `world-admin1`; will activate automatically with no rebuild
+
 ## v0.187.0 — Swedish landskap as a gazetteer
 
 - feat: new bundled gazetteer `sv-landskap` with all 25 historical Swedish provinces (Skåne, Bohuslän, Ångermanland, Lappland, …) — names that didn't fit the modern län/kommun tree now resolve to a real geographic anchor
