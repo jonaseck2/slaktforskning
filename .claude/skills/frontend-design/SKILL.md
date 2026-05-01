@@ -72,7 +72,14 @@ This applies `.content-paneled` which removes outer padding/background so the vi
 - Spacing between header → filter row → body comes from the shared `.header { margin-bottom: 16px }` and `.count-label { margin: 0 0 8px }` defaults — do not redefine them in the view.
 - `<FilterChips>` is dropped in directly. **Never wrap it in another div** — the chip pill is the bar.
 
-Reference views: PersonsView, PlacesView, MediaView. Do not invent a new padding scheme.
+**Every center list view has a `<FilterChips>` row.** Persons, Places, Media, Sources, Relationships, Groups, Research Tasks, Quality, Duplicates — all of them. The chip row sits between header and table; it is part of the standard layout, not an optional extra. If a view feels like it has "nothing to filter on", that's a sign you haven't looked at the data — pick the next-most-useful split.
+
+- Derive the chip set **from the data, not from a hardcoded enum.** Iterate the loaded entities, bucket them by the chosen dimension, and emit a chip per non-empty bucket with `count`. Buckets with zero rows must not show. The `place_type` chips were a cautionary tale: a hardcoded enum produced an "All / Other" pair on every database because nobody had typed types — a derived split (country) is immediately meaningful instead.
+- Lead with `{ value: 'all', label: t('common.all'), count: total }`, sort the rest by count desc, push any `unresolved` / `unknown` / `none` bucket to the end.
+- For derived/computed dimensions (gazetteer-resolved country, has-coordinates, has-events, missing-on-disk), compute at render — never persist the bucket key. Show a single placeholder chip (`{ value: 'all', label: t('common.loading'), count: total }`) while the resolver/loader warms up.
+- Pick the dimension by **what genealogists actually want to slice on**, not what's easiest. Country / decade / period for places, event type for events, status for tasks, source type for sources, missing-file / orphaned / face-tagged for media. When in doubt, look at the panel sections — the same facets that earn a section header usually earn a filter chip.
+
+Reference views: PersonsView, PlacesView (country), MediaView (type/status/face-tags), ResearchTasksView (status), QualityView (severity), DuplicatesView. Do not invent a new padding scheme.
 
 **Infinite scroll is mandatory — never a hardcoded slice.** Every list/table view (entity registries, derived lists like duplicates and quality issues, search results, anything tabular) drives its rows through `usePagedList` and renders a sentinel `<div>` after the table that triggers `loadMore`. A view that calls `find(100)` and stops, or `list()` and renders the whole array, is a bug — the second the dataset grows past one screen the user has no way to see the rest, and there's no signal that data is hidden.
 

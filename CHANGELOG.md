@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.185.2 — Skill rules: filter chips on every center view
+
+- chore: internal only
+
 ## v0.185.1 — Avatars show your photos again
 
 - fix: avatars and tree boxes show the linked profile photo, not just initials, when no face has been tagged
