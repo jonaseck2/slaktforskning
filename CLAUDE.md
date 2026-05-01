@@ -109,6 +109,13 @@ Reference docs (load on demand): `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`,
 
 **Plan-driven work → worktree + subagents.** After `writing-plans` finishes, create a git worktree (`superpowers:using-git-worktrees`) and then invoke `superpowers:subagent-driven-development`. Do not present the execution-approach choice to the user. Plans are by definition multi-task work that benefits from isolation and fresh-context subagents.
 
+**Finishing a plan (do every time, not optional):** when the last task's spec + quality reviews pass, run this checklist before invoking `superpowers:finishing-a-development-branch`:
+1. Mark every checkbox in the plan file as `[x]` (Self-review checklist included). Skill / rule updates the plan called for must already have landed in commits.
+2. Move the plan file (and its `-design.md` sibling if any) to `docs/plans/archive/` via `git mv`.
+3. Final version bump in `package.json` matching the largest change shipped (any feature → minor; fix-only refactor → patch) and add a `## Unreleased` line in `CHANGELOG.md` summarising the plan.
+4. Commit `chore: archive completed <plan-name>` + the bump.
+5. Merge worktree → `main` (`finishing-a-development-branch` Option 1), delete the branch, remove the worktree.
+
 **Small fixes → main is fine.** One-off typo fixes, i18n tweaks, single-file bug fixes, or any change that doesn't warrant a plan file can be done directly on `main` without a worktree.
 
 **Plan + spec path convention (overrides superpowers defaults):** All plan and design-spec files live under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`. Design spec → `-design.md` suffix; implementation plan → no suffix; both archive to `docs/plans/archive/` when done. `superpowers:brainstorming` and `superpowers:writing-plans` default to `docs/superpowers/specs/`; **always override** with an explicit `docs/plans/` path. Before committing, if any file lives under `docs/superpowers/` or `.claude/plans/`, move it to `docs/plans/` first.
