@@ -85,7 +85,8 @@ function nodeMatches(node: GazetteerNode, component: string, gaz: Gazetteer): bo
 
 interface MatchCandidate {
   path: GazetteerNode[];
-  matched: string[];
+  /** Read-only — references the cache's `NodeEntry.pathNames` directly. Mutation would corrupt the cache. */
+  matched: readonly string[];
   unmatched: string[];
   depth: number;
   /**
