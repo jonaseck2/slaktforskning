@@ -7,6 +7,7 @@ import './styles/shared.css';
 import App from './App.vue';
 import { vNarrate } from './directives/narrate';
 import { installComponentInspector } from './dev/component-inspector';
+import { STORAGE_KEYS } from './utils/storage-keys';
 
 const app = createApp(App);
 app.use(createPinia());
@@ -16,7 +17,7 @@ app.directive('narrate', vNarrate);
 
 installComponentInspector(i18n);
 
-const lastRoute = localStorage.getItem('slaktforskning-last-route');
+const lastRoute = localStorage.getItem(STORAGE_KEYS.lastRoute);
 const hasHashRoute = window.location.hash && window.location.hash !== '#/';
 if (lastRoute && lastRoute !== '/' && !hasHashRoute) {
   router.push(lastRoute).catch(() => router.push('/'));

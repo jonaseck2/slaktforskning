@@ -2,8 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import RelationshipsView from './views/RelationshipsView.vue';
 import SourcesView from './views/SourcesView.vue';
 import SearchView from './views/SearchView.vue';
-
-const LAST_ROUTE_KEY = 'slaktforskning-last-route';
+import { STORAGE_KEYS } from './utils/storage-keys';
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -40,5 +39,5 @@ export const router = createRouter({
 });
 
 router.afterEach((to) => {
-  localStorage.setItem(LAST_ROUTE_KEY, to.fullPath);
+  localStorage.setItem(STORAGE_KEYS.lastRoute, to.fullPath);
 });
