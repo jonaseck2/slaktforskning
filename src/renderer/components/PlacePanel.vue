@@ -5,6 +5,7 @@
     :label="$t('panel.managePlace')"
     @close="emit('close')"
   >
+    <template #empty>{{ $t('placePanel.noPlaceSelected') }}</template>
     <template #header>
       <div class="panel-name-row">
         <div class="panel-name">{{ place?.name }}</div>

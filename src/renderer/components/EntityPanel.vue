@@ -1,6 +1,8 @@
 <template>
   <div class="entity-panel side-panel">
-    <div v-if="!entity" class="panel-empty">{{ $t('panel.selectToView') }}</div>
+    <div v-if="!entity" class="panel-empty">
+      <slot name="empty">{{ $t('panel.selectToView') }}</slot>
+    </div>
     <template v-else>
       <button
         class="panel-collapse-btn"
