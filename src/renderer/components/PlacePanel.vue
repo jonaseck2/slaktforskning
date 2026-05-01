@@ -1,26 +1,19 @@
 <template>
-  <div class="place-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!placeId" class="panel-empty">
-      {{ $t('placePanel.noPlaceSelected') }}
-    </div>
-
-    <template v-else-if="place">
-      <!-- Collapse arrow on the panel's left edge — same pattern as the
-           places-list ◀/▶ buttons. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Panel role label -->
-      <h3 class="panel-role-label">{{ $t('panel.managePlace') }}</h3>
-      <!-- Header -->
-      <div class="panel-header">
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">{{ place.name }}</div>
-            <span v-if="place.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
-          </div>
-        </div>
+  <EntityPanel
+    entity-type="place"
+    :entity="place"
+    :label="$t('panel.managePlace')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('placePanel.noPlaceSelected') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ place?.name }}</div>
+        <span v-if="place?.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
       </div>
+    </template>
 
+    <template v-if="place">
       <!-- Place section -->
       <div class="panel-section">
         <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" @toggle="toggleSection('place')" />
@@ -296,11 +289,11 @@
       @cancel="showAddPersonForm = false"
       @saved="onPersonSaved"
     />
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import EventList from './EventList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonModal from './modals/PersonModal.vue';
@@ -311,7 +304,8 @@ import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import CitationModal from './modals/CitationModal.vue';
-import type { ComponentPublicInstance } from 'vue';
+import EntityPanel from './EntityPanel.vue';
+import type { ComponentPublicInstance, Ref } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -319,6 +313,7 @@ import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
+import { useEditableFields } from '../composables/useEditableFields';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
 
@@ -462,11 +457,20 @@ const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 
 // ── Field updates ────────────────────────────────────────────────────────────
 
+const persistPlace = async (id: string, patch: Partial<Place>) => {
+  await window.api.places.update(id, patch);
+  emit('place-updated', id);
+};
+const { fields, save } = useEditableFields<Place & Record<string, unknown>>(
+  idRef,
+  place as unknown as Ref<(Place & Record<string, unknown>) | null>,
+  persistPlace,
+);
+
 async function saveField(field: string, value: unknown) {
   if (!props.placeId || !place.value || props.readonly) return;
-  await window.api.places.update(props.placeId, { [field]: value });
-  (place.value as Record<string, unknown>)[field] = value;
-  emit('place-updated', props.placeId);
+  (fields as Record<string, unknown>)[field] = value;
+  await save(field as keyof Place);
 }
 
 async function onPersonSaved() {
@@ -493,75 +497,8 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.place-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge — mirrors the
-   `list-collapse-btn` / `list-open-btn` pattern on the places list. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-/* Role label above the place header (states what the panel does) —
-   mirrors PersonsView's "Personlista" / "Hantera person" headings.
-   Sticky at the top of the scrollable panel so the heading stays visible. */
-.panel-role-label {
-  margin: 0;
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: var(--space-md) var(--space-lg) var(--space-sm);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border-bottom: 1px solid var(--surface-border-subtle);
-  background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-.panel-role-label + .panel-header {
-  border-radius: 0;
-}
-
-/* Header */
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header-content {
-  padding: var(--space-md) var(--space-lg);
-  flex: 1;
-  min-width: 0;
-}
+/* Header slot content — rendered in EntityPanel's `<slot name="header">`
+   but owned by this template, so PlacePanel's scope hash applies. */
 .panel-name-row {
   display: flex;
   align-items: center;

@@ -214,6 +214,7 @@ import { useI18n } from 'vue-i18n';
 import { computeTimelineLayout } from '../../utils/chart-layout';
 import { fetchTimelineEntries } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { TimelineLayout, TimelineEntry, BarLayout, PersonNode, EventMarker } from '../../utils/chart-layout';
 import { fullNameParts, truncateNameParts } from '../../utils/nameUtils';
 import { yearFromDate } from '../../utils/chart-layout/utils';
@@ -286,7 +287,7 @@ const containerWidth = ref(800);
 const genTarget = timelineGenerations;
 watch(genTarget, () => load());
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-timeline');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, STORAGE_KEYS.vizZoomTimeline);
 
 // Responsive width via ResizeObserver
 let resizeObserver: ResizeObserver | null = null;

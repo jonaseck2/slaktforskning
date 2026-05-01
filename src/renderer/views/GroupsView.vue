@@ -47,23 +47,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated } from 'vue';
+import { ref, onMounted, onActivated, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import { useDataVersionStore } from '../stores/dataVersion';
 import GroupsTable from '../components/GroupsTable.vue';
 import GroupModal from '../components/modals/GroupModal.vue';
 import GroupPanel from '../components/GroupPanel.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'GroupsView' });
-
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 interface GroupRow {
   id: string;
@@ -78,9 +75,9 @@ const groups = ref<GroupRow[]>([]);
 const showAddForm = ref(false);
 
 const groupsBodyRef = ref<HTMLElement | null>(null);
-const selectedGroupId = ref<string | null>(localStorage.getItem('groups-selected-id'));
-const panelOpen = ref(localStorage.getItem('groups-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'groups-panel-width', maxWidthRatio: 0.5 });
+const selectedGroupId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.groupsSelectedId));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.groupsPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.groupsPanelWidth, maxWidthRatio: 0.5 });
 
 async function load() {
   if (!window.api) return;
@@ -103,7 +100,7 @@ const del = useDeleteConfirm<string>(async (id) => {
   await window.api.groups.delete(id);
   if (selectedGroupId.value === id) {
     selectedGroupId.value = null;
-    localStorage.removeItem('groups-selected-id');
+    localStorage.removeItem(STORAGE_KEYS.groupsSelectedId);
   }
   await load();
 });
@@ -111,31 +108,43 @@ function deleteGroup(id: string) { del.ask(id); }
 
 function selectGroup(id: string) {
   selectedGroupId.value = id;
-  localStorage.setItem('groups-selected-id', id);
+  localStorage.setItem(STORAGE_KEYS.groupsSelectedId, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('groups-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.groupsPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('groups-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.groupsPanelOpen, 'false');
 }
+
+// GroupsView doesn't yet use usePagedList (it loads everything in one shot).
+// Until it does, subscribe directly to onDataChanged so the list refreshes
+// after any mutation. Debounced to coalesce bursts. This is the documented
+// "list view that hasn't been migrated to usePagedList yet" exception to the
+// composable-owns-reactivity rule (see .claude/rules/renderer.md).
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { void load(); }, 200);
+};
 
 onMounted(async () => {
   await load();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectGroup(id);
   else if (selectedGroupId.value) openPanel();
+  window.api?.onDataChanged?.(onMutation);
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await load();
-    loadedVersion = dataVersionStore.version;
-  }
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  window.api?.offDataChanged?.(onMutation);
+});
+
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectGroup(id);
 });

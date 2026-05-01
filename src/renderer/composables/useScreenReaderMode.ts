@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { resolveNarration } from '../directives/narrate';
 import { narratePageEntry } from '../utils/screenReaderNarration';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 import { HotkeyRegistry } from './useHotkeyRegistry';
 import type { Hotkey } from './useHotkeyRegistry';
 import { useTTS } from './useTTS';
@@ -14,8 +15,8 @@ import { useTTS } from './useTTS';
 
 export type TtsMode = 'off' | 'narrate' | 'screenReader';
 
-const LS_MODE_KEY = 'slaktforskning-tts-mode';
-const LS_LEGACY_KEY = 'slaktforskning-tts';
+const LS_MODE_KEY = STORAGE_KEYS.ttsMode;
+const LS_LEGACY_KEY = STORAGE_KEYS.ttsLegacy;
 
 // ---------------------------------------------------------------------------
 // Singleton module-level state

@@ -1,28 +1,20 @@
 <template>
-  <div class="person-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!personId" class="panel-empty">
-      {{ $t('panel.noPersonSelected') }}
-    </div>
-
-    <template v-else-if="person">
-      <!-- Collapse arrow on the panel's left edge — same pattern as the
-           persons-list ◀/▶ buttons. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Pinned header: role label + identity card never scroll. The
-           scrollbar belongs to the .panel-scroll-area below them. -->
-      <div class="panel-sticky-top">
-      <!-- Panel role label -->
-      <h3 class="panel-role-label">{{ $t('panel.managePerson') }}</h3>
-      <!-- Person summary card: name + always-rendered birth/death rows -->
+  <EntityPanel
+    entity-type="person"
+    :entity="person"
+    :label="$t('panel.managePerson')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('panel.noPersonSelected') }}</template>
+    <template #header>
       <div class="person-summary-card">
         <div class="person-summary-top">
           <AppAvatar
-            :person-id="personId"
+            :person-id="personId!"
             :given-name="primaryName?.given_name ?? ''"
             :surname="primaryName?.surname ?? ''"
             :preferred-name="primaryName?.preferred_name ?? null"
-            :sex="person.sex"
+            :sex="person?.sex ?? 'U'"
             size="lg"
           />
           <div class="person-summary-header">
@@ -41,23 +33,21 @@
         <dl class="person-summary-life">
           <div class="person-summary-row">
             <dt class="person-summary-marker" aria-label="Birth">*</dt>
-            <dd class="person-summary-value" :class="{ 'is-empty': !person.birthLine }">
-              {{ person.birthLine || '—' }}
+            <dd class="person-summary-value" :class="{ 'is-empty': !person?.birthLine }">
+              {{ person?.birthLine || '—' }}
             </dd>
           </div>
           <div class="person-summary-row">
             <dt class="person-summary-marker" aria-label="Death">†</dt>
-            <dd class="person-summary-value" :class="{ 'is-empty': !person.deathLine }">
-              {{ person.deathLine || '—' }}
+            <dd class="person-summary-value" :class="{ 'is-empty': !person?.deathLine }">
+              {{ person?.deathLine || '—' }}
             </dd>
           </div>
         </dl>
       </div>
-      </div>
+    </template>
 
-      <!-- Scrollable area: everything below the pinned header scrolls in
-           its own region so the scrollbar can't pass over the card. -->
-      <div class="panel-scroll-area">
+    <template v-if="person">
       <!-- Add-relative shortcuts, sitting below the summary card -->
       <div v-if="!props.readonly" class="panel-add-relative-section">
         <div class="panel-add-relative-label">{{ $t('personDetail.addRelativeLabel') ?? $t('relationships.addRelationship') }}</div>
@@ -91,7 +81,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('events')" @action="triggerAddEvent" />
         <div v-if="sections.events" class="panel-section-body">
-          <EventList ref="eventListRef" :person-id="personId" :readonly="props.readonly" hide-header />
+          <EventList ref="eventListRef" :person-id="personId!" :readonly="props.readonly" hide-header />
         </div>
       </div>
 
@@ -165,7 +155,7 @@
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="loadResearchTasks(personId!)" @select="goToTask" />
+          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="goToTask" />
         </div>
       </div>
 
@@ -189,7 +179,6 @@
           </svg>
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
-      </div>
       </div>
     </template>
 
@@ -235,7 +224,7 @@
       :default-surname="primaryName?.surname ?? ''"
       @cancel="cancelNameForm"
       @close="cancelNameForm"
-      @saved="reloadNames(personId!)"
+      @saved="onNameSaved"
     />
 
     <!-- Add research task modal -->
@@ -257,11 +246,11 @@
       @cancel="showAddRelative = false"
       @saved="onRelativeSaved"
     />
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, toRef, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
@@ -287,14 +276,63 @@ import PersonTimeline from './PersonTimeline.vue';
 import PersonMap from './PersonMap.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
+import EntityPanel from './EntityPanel.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
-import { usePersonPanelData, type NameData } from '../composables/usePersonPanelData';
+import { useEntityData } from '../composables/useEntityData';
 import { usePanelSections } from '../composables/usePanelSections';
+import {
+  pickDisplayedName,
+  sortNamesBySortOrder,
+  birthDateValue,
+  type NameData,
+} from '../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
+
+interface PersonData {
+  id: string;
+  sex: 'M' | 'F' | 'U';
+  living: boolean;
+  birthLine: string | null;
+  deathLine: string | null;
+}
+
+interface GroupData {
+  id: string;
+  name: string;
+  notes: string | null;
+}
+
+interface ResearchTaskRow {
+  id: string;
+  task: string;
+  notes: string | null;
+  result: string | null;
+  status: string;
+  priority: number;
+  person_id?: string | null;
+  person_given_name?: string | null;
+  person_surname?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PersonPanelData {
+  person: PersonData | null;
+  primaryName: NameData | null;
+  names: NameData[];
+  birthEventDate: string | null;
+  groups: GroupData[];
+  researchTasks: ResearchTaskRow[];
+  eventCount: number;
+  mapPointCount: number;
+  relationshipCount: number;
+  identifierCount: number;
+  mediaCount: number;
+}
 
 const props = defineProps<{ personId: string | null; showTreeBtn?: boolean; treeSubjectId?: string | null; readonly?: boolean }>();
 const emit = defineEmits<{
@@ -309,27 +347,120 @@ const isTreeSubject = computed(() => !!props.personId && props.personId === prop
 const { t } = useI18n();
 const toast = useToast();
 
-// ── Data (composable) ───────────────────────────────────────────────────────
+// ── Data ────────────────────────────────────────────────────────────────────
+// Single combined loader. The previous bespoke composable had a 2-wave pattern
+// (identity first, then lifelines/counts) to avoid flicker on the avatar+name
+// while place lookups for birth/death lines completed. With useEntityData's
+// generation guard, switching person never overwrites the new entity with a
+// stale loader's payload — and a single Promise.all keeps the network round
+// trips parallel, so the brief "no data → all data" flicker is sub-frame in
+// practice. This trade-off matches the migrated PlacePanel/SourcePanel.
 
-const personIdRef = toRef(props, 'personId');
-const {
-  person,
-  primaryName,
-  names,
-  birthEventDate,
-  groups,
-  researchTasks,
-  loadPerson,
-  loadNames,
-  loadGroups,
-  loadResearchTasks,
-  eventCount,
-  mapPointCount,
-  relationshipCount,
-  identifierCount,
-  mediaCount,
-  checkCount,
-} = usePersonPanelData(personIdRef);
+async function buildDateLine(event: {
+  date_original: string | null;
+  date_value: string | null;
+  place_id: string | null;
+  place_address: string | null;
+} | undefined): Promise<string | null> {
+  if (!event) return null;
+
+  const datePart = (event.date_original && event.date_original.trim())
+    ? event.date_original.trim()
+    : (event.date_value ?? null);
+
+  if (!datePart) return null;
+
+  let placePart: string | null = null;
+  if (event.place_id) {
+    try {
+      const place = (await window.api.places.get(event.place_id)) as { name?: string; city?: string } | null;
+      if (place) placePart = place.city ?? place.name ?? null;
+    } catch {
+      // ignore place fetch errors
+    }
+  } else if (event.place_address && event.place_address.trim()) {
+    placePart = event.place_address.trim();
+  }
+
+  return placePart ? `${datePart}, ${placePart}` : datePart;
+}
+
+const idRef = computed(() => props.personId ?? null);
+const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async (id) => {
+  const [raw, fetchedNames, events] = await Promise.all([
+    window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean } | null>,
+    window.api.persons.getNames(id) as Promise<NameData[]>,
+    window.api.events.forPerson(id) as Promise<Array<{
+      event_type: string;
+      date_value: string | null;
+      date_original: string | null;
+      place_id: string | null;
+      place_address: string | null;
+    }>>,
+  ]);
+
+  if (!raw) {
+    return {
+      person: null,
+      primaryName: null,
+      names: [],
+      birthEventDate: null,
+      groups: [],
+      researchTasks: [],
+      eventCount: 0,
+      mapPointCount: 0,
+      relationshipCount: 0,
+      identifierCount: 0,
+      mediaCount: 0,
+    };
+  }
+
+  const birth = events.find(e => e.event_type === 'birth');
+  const death = events.find(e => e.event_type === 'death');
+
+  const [birthLine, deathLine, grps, tasks, rels, ids, media] = await Promise.all([
+    buildDateLine(birth),
+    buildDateLine(death),
+    window.api.groups.forPerson(id) as Promise<GroupData[]>,
+    window.api.researchTasks.forPerson(id) as Promise<ResearchTaskRow[]>,
+    window.api.relationships.getForPerson(id) as Promise<unknown[]>,
+    window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
+    window.api.media.forEntity('person', id) as Promise<unknown[]>,
+  ]);
+
+  return {
+    person: {
+      id: raw.id,
+      sex: raw.sex as 'M' | 'F' | 'U',
+      living: raw.living,
+      birthLine,
+      deathLine,
+    },
+    primaryName: pickDisplayedName(fetchedNames, events),
+    names: sortNamesBySortOrder(fetchedNames),
+    birthEventDate: birthDateValue(events),
+    groups: grps,
+    researchTasks: tasks,
+    eventCount: events.length,
+    mapPointCount: events.filter(e => e.place_id).length,
+    relationshipCount: rels.length,
+    identifierCount: ids.length,
+    mediaCount: media.length,
+  };
+});
+
+const person = computed(() => panelData.value?.person ?? null);
+const primaryName = computed(() => panelData.value?.primaryName ?? null);
+const names = computed(() => panelData.value?.names ?? []);
+const birthEventDate = computed(() => panelData.value?.birthEventDate ?? null);
+const groups = computed(() => panelData.value?.groups ?? []);
+const researchTasks = computed(() => panelData.value?.researchTasks ?? []);
+const eventCount = computed(() => panelData.value?.eventCount ?? 0);
+const mapPointCount = computed(() => panelData.value?.mapPointCount ?? 0);
+const relationshipCount = computed(() => panelData.value?.relationshipCount ?? 0);
+const identifierCount = computed(() => panelData.value?.identifierCount ?? 0);
+const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
+const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 
 // ── Section state (composable) ──────────────────────────────────────────────
 
@@ -358,10 +489,10 @@ const { sections, toggleSection } = usePanelSections(
 
 // ── Template refs ───────────────────────────────────────────────────────────
 
-const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
+const eventListRef = ref<(ComponentPublicInstance & { openAddForm: (eventType?: string) => void }) | null>(null);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
-const checksSectionRef = ref<InstanceType<typeof PersonChecksSection> | null>(null);
+const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count: number; reload: () => void }) | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 
 // ── Cross-section add actions ───────────────────────────────────────────────
@@ -423,9 +554,7 @@ function openAddRelative(mode: AddRelativeMode) {
 async function onRelativeSaved() {
   showAddRelative.value = false;
   relSectionRef.value?.reload();
-  if (props.personId) {
-    await loadPerson(props.personId);
-  }
+  await reload();
   emit('relative-added');
 }
 
@@ -456,9 +585,13 @@ function handleCheckFix(action: string) {
 
 // ── Person field updates ────────────────────────────────────────────────────
 
-function onDetailUpdated(field: string, value: unknown) {
-  if (!person.value) return;
-  if (field === 'sex') person.value.sex = value as string;
+function onDetailUpdated(field: string, _value: unknown) {
+  // Mutating IPC fans out via `onDataChanged`; useEntityData reloads on its own.
+  // Just emit the parent event so chart/list views can re-render.
+  if (field === 'sex') {
+    // Optimistic update: trigger an immediate reload to refresh the avatar tint.
+    reload();
+  }
   emit('person-changed');
 }
 
@@ -480,13 +613,13 @@ function cancelNameForm() {
 const delName = useDeleteConfirm<string>(async (nameId) => {
   if (!props.personId) return;
   await window.api.persons.deleteName(nameId);
-  await loadNames(props.personId);
+  await reload();
   emit('person-changed');
 });
 function deleteName(nameId: string) { delName.ask(nameId); }
 
-async function reloadNames(id: string) {
-  await loadNames(id);
+async function onNameSaved() {
+  await reload();
   emit('person-changed');
 }
 
@@ -501,7 +634,7 @@ async function reorderNames(orderedIds: string[]) {
   for (let i = 0; i < total; i++) {
     await window.api.persons.updateName(orderedIds[i], { sort_order: total - i });
   }
-  await loadNames(props.personId);
+  await reload();
   emit('person-changed');
 }
 
@@ -512,13 +645,13 @@ const showGroupPicker = ref(false);
 const delGroup = useDeleteConfirm<string>(async (groupId) => {
   if (!props.personId) return;
   await window.api.groups.removeLinkByEntity(groupId, 'person', props.personId);
-  await loadGroups(props.personId);
+  await reload();
 });
 function removeFromGroup(groupId: string) { delGroup.ask(groupId); }
 
 async function onGroupAdded() {
   showGroupPicker.value = false;
-  if (props.personId) await loadGroups(props.personId);
+  await reload();
 }
 
 // ── Research tasks ──────────────────────────────────────────────────────────
@@ -531,39 +664,13 @@ function openTaskForm() {
 }
 
 async function onTaskSaved() {
-  if (props.personId) await loadResearchTasks(props.personId);
+  showTaskForm.value = false;
+  await reload();
 }
 
 function goToTask(id: string) {
   router.push('/research-tasks/' + id);
 }
-
-// ── Derived ─────────────────────────────────────────────────────────────────
-
-// ── Data change listener ────────────────────────────────────────────────────
-// Counts (events / relationships / identifiers / media) are refreshed inside
-// usePersonPanelData via its own onDataChanged listener. This listener only
-// covers the quality-checks section, which is heavier and stays collapsed by
-// default — debounced 400ms so a burst of mutations runs the checks once.
-
-let checksDebounce: ReturnType<typeof setTimeout> | null = null;
-function onDataMutation() {
-  if (checksDebounce) clearTimeout(checksDebounce);
-  checksDebounce = setTimeout(() => checksSectionRef.value?.reload(), 400);
-}
-
-onMounted(() => {
-  (window.api as unknown as {
-    onDataChanged: (cb: () => void) => void;
-  }).onDataChanged(onDataMutation);
-});
-
-onUnmounted(() => {
-  if (checksDebounce) clearTimeout(checksDebounce);
-  (window.api as unknown as {
-    offDataChanged: (cb: () => void) => void;
-  }).offDataChanged(onDataMutation);
-});
 </script>
 
 <style scoped>
@@ -595,102 +702,13 @@ onUnmounted(() => {
   color: var(--text-primary);
 }
 
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. Person uses `overflow: hidden` (not
-   `overflow-y: auto`) because scrolling is delegated to the inner
-   `.panel-scroll-area` so the pinned header card stays fixed. */
-.person-panel { overflow: hidden; }
-
-/* Scrollable region below the pinned header. */
-.panel-scroll-area {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  /* Breathing room between the pinned identity card and the first
-     section below it. */
-  padding-top: var(--space-lg);
-}
-
-/* Collapse arrow on the panel's left edge — mirrors the
-   `list-collapse-btn` / `list-open-btn` pattern on the persons list. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-/* Role label above the person header — mirrors "Personlista" on the
-   list column. Sticky so it stays visible while panel scrolls. */
-/* Pinned stack: role label + identity card live outside the scroll
-   region so the scrollbar starts below them and can't paint over the
-   card. No sticky needed any more — flexbox keeps them at top. */
-.panel-sticky-top {
-  background: var(--surface);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  position: relative;
-  z-index: 2;
-}
-.panel-role-label {
-  margin: 0;
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: var(--space-md) var(--space-lg) var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border-bottom: 1px solid var(--surface-border-subtle);
-  background: var(--surface);
-}
-.panel-role-label + .panel-header,
-.panel-role-label + .person-summary-card {
-  border-radius: 0;
-  padding-top: var(--space-md);
-}
-/* When inside the sticky stack the card needs a bottom border so it
-   reads as a header block once the rest of the panel scrolls under it. */
-.panel-sticky-top .person-summary-card {
-  margin-bottom: 0;
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-  border-bottom: 1px solid var(--surface-border-subtle);
-}
-
-/* Person summary card — compact identity panel under "Hantera person".
-   Always renders a row for birth and death even when missing, so the
-   layout stays predictable. */
+/* Person summary card — compact identity panel rendered into EntityPanel's
+   #header slot. Always renders a row for birth and death even when missing,
+   so the layout stays predictable. */
 .person-summary-card {
-  margin: var(--space-md) var(--space-md) 0;
-  padding: var(--space-md);
-  background: var(--surface);
-  border: 1px solid var(--surface-border-subtle);
-  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  flex-shrink: 0;
 }
 .person-summary-top {
   display: flex;
@@ -744,8 +762,7 @@ onUnmounted(() => {
   font-style: italic;
 }
 
-/* Add-relative shortcuts — moved out of the header so they sit a bit
-   below the identity card. */
+/* Add-relative shortcuts — sit a bit below the identity card. */
 .panel-add-relative-section {
   padding: var(--space-md) var(--space-md) var(--space-sm);
   flex-shrink: 0;
@@ -757,66 +774,12 @@ onUnmounted(() => {
   letter-spacing: 0.05em;
   margin-bottom: var(--space-xs);
 }
-
-/* Header */
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  padding: 0 0 0 var(--space-lg);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header > .app-avatar {
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-.panel-header-content {
-  padding: var(--space-md) 0;
-  flex: 1;
-  min-width: 0;
-}
-.panel-name-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
-}
-.panel-name-spacer {
-  flex: 1;
-}
-.panel-name {
-  min-width: 0;
-  font-size: var(--font-base);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-.panel-lifelines {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
-}
-.panel-lifeline-dates {
-  min-width: 0;
-}
-.panel-lifeline {
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  line-height: 1.5;
-}
 .panel-add-relative-btns {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
 }
+
 .tree-subject-chip {
   display: inline-flex;
   align-items: center;
@@ -839,11 +802,9 @@ onUnmounted(() => {
 }
 .panel-section-body { padding: var(--space-xs) 0 var(--space-sm); }
 
-/* Compact form */
 /* Groups */
 .panel-group-picker-wrap {
   padding: var(--space-xs) 0;
   border-bottom: 1px solid var(--surface-border);
 }
-
 </style>

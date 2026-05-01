@@ -257,6 +257,7 @@ import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
 import AboutModal from './components/AboutModal.vue';
 import { useToast } from './composables/useToast';
+import { STORAGE_KEYS } from './utils/storage-keys';
 
 const router = useRouter();
 const route = useRoute();
@@ -268,28 +269,28 @@ const toast = useToast();
 
 type Appearance = 'light' | 'dark' | 'contrast';
 const appearance = ref<Appearance>(
-  (localStorage.getItem('slaktforskning-appearance') as Appearance) ||
-  (localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light')
+  (localStorage.getItem(STORAGE_KEYS.appearance) as Appearance) ||
+  (localStorage.getItem(STORAGE_KEYS.darkMode) === 'true' ? 'dark' : 'light')
 );
 
 const THEME_CLASSES = ['theme-forest', 'theme-nordic', 'theme-twilight'] as const;
 type Theme = 'forest' | 'nordic' | 'twilight';
 const currentTheme = ref<Theme>(
-  (localStorage.getItem('slaktforskning-theme') as Theme) || 'forest'
+  (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'forest'
 );
 
 function setTheme(theme: Theme) {
   currentTheme.value = theme;
   document.documentElement.classList.remove(...THEME_CLASSES);
   document.documentElement.classList.add(`theme-${theme}`);
-  localStorage.setItem('slaktforskning-theme', theme);
+  localStorage.setItem(STORAGE_KEYS.theme, theme);
 }
 
 const APPEARANCE_I18N = { light: 'settings.lightMode', dark: 'settings.darkMode', contrast: 'settings.contrastMode' } as const;
 
 function setAppearance(value: Appearance) {
   appearance.value = value;
-  localStorage.setItem('slaktforskning-appearance', value);
+  localStorage.setItem(STORAGE_KEYS.appearance, value);
   document.documentElement.classList.remove('dark', 'high-contrast');
   if (value === 'dark') document.documentElement.classList.add('dark');
   if (value === 'contrast') document.documentElement.classList.add('high-contrast');
@@ -319,11 +320,11 @@ if (typeof window !== 'undefined' && window.api?.app?.onOpenAbout) {
 // dropdowns). Persisted in localStorage; UI preference, not db_settings.
 type NavOrientation = 'vertical' | 'horizontal';
 const navOrientation = ref<NavOrientation>(
-  (localStorage.getItem('slaktforskning-nav-orientation') as NavOrientation) || 'vertical'
+  (localStorage.getItem(STORAGE_KEYS.navOrientation) as NavOrientation) || 'vertical'
 );
 function setNavOrientation(value: NavOrientation) {
   navOrientation.value = value;
-  localStorage.setItem('slaktforskning-nav-orientation', value);
+  localStorage.setItem(STORAGE_KEYS.navOrientation, value);
 }
 
 // Add-family-member button style — controls whether the badge in each
@@ -332,11 +333,11 @@ function setNavOrientation(value: NavOrientation) {
 // reactively.
 type AddBtnStyle = 'plus' | 'leaf';
 const addBtnStyle = ref<AddBtnStyle>(
-  (localStorage.getItem('slaktforskning-add-btn-style') as AddBtnStyle) || 'plus'
+  (localStorage.getItem(STORAGE_KEYS.addBtnStyle) as AddBtnStyle) || 'plus'
 );
 function setAddBtnStyle(value: AddBtnStyle) {
   addBtnStyle.value = value;
-  localStorage.setItem('slaktforskning-add-btn-style', value);
+  localStorage.setItem(STORAGE_KEYS.addBtnStyle, value);
 }
 
 provide('ttsEnabled', screenReader.isTtsEnabled);
@@ -442,7 +443,7 @@ function isSectionActive(sec: NavSectionDef): boolean {
 }
 function handleDocClick() { openSection.value = null; }
 
-const RAW_TEXT_SIZE = localStorage.getItem('textSize');
+const RAW_TEXT_SIZE = localStorage.getItem(STORAGE_KEYS.textSize);
 const textSize = ref<'small' | 'medium' | 'large'>(
   (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
 );
@@ -457,7 +458,7 @@ const TEXT_SIZE_I18N = { small: 'settings.textSizeSmall', medium: 'settings.text
 
 function setTextSize(size: 'small' | 'medium' | 'large') {
   textSize.value = size;
-  localStorage.setItem('textSize', size);
+  localStorage.setItem(STORAGE_KEYS.textSize, size);
   applyTextSize();
   if (screenReader.isTtsEnabled.value) {
     tts.speak(t(TEXT_SIZE_I18N[size]), locale.value);

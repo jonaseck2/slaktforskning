@@ -212,15 +212,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick, toRef, inject } from 'vue';
+import { ref, computed, watch, nextTick, toRef, inject } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W, ADD_BTN_AREA_W, BOX_PAD_X_RIGHT } from '../../utils/chart-layout';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { BoxLayout, CollapseButton, TreePerson, PlaceholderBox } from '../../utils/chart-layout';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
+import { useEntityData } from '../../composables/useEntityData';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
@@ -240,9 +242,7 @@ const emit = defineEmits<{
   'person-context-menu': [payload: { personId: string; x: number; y: number }];
 }>();
 
-const loading = ref(true);
 const loadingMore = ref(false);
-const tree = ref<TreePerson | null>(null);
 const collapsed = ref(new Set<string>());
 const genTarget = hourglassGenerations;
 const loadedGens = ref(3);
@@ -296,25 +296,7 @@ function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParen
 }
 
 function applyGenerationDepth(n: number) {
-  if (!tree.value) return;
-  const next = new Set<string>();
-  for (const k of collapsed.value) {
-    if (k.endsWith(':up') || k.endsWith(':down')) continue;
-    next.add(k);
-  }
-  function walk(node: TreePerson, depth: number, dir: 'up' | 'down', seen: Set<string>) {
-    if (seen.has(node.person.id)) return;
-    seen.add(node.person.id);
-    if (depth >= n) {
-      next.add(`${node.person.id}:${dir}`);
-      return;
-    }
-    const children = dir === 'up' ? node.parents : node.children;
-    for (const c of children) walk(c, depth + 1, dir, seen);
-  }
-  for (const p of tree.value.parents) walk(p, 1, 'up', new Set());
-  for (const c of tree.value.children) walk(c, 1, 'down', new Set());
-  collapsed.value = next;
+  applyGenerationDepthFor(tree.value, n);
 }
 
 function decrGens() {
@@ -350,7 +332,7 @@ async function handleCollapseButton(btn: CollapseButton) {
   }
 }
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-hourglass');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomHourglass);
 
 const outerRef = ref<HTMLElement | null>(null);
 const baseColors = useChartColors(true, outerRef);
@@ -462,31 +444,77 @@ function onRelativeSaved() {
   emit('reload');
 }
 
-async function load(opts: { keepView?: boolean } = {}) {
-  if (!props.personId) return;
-  loading.value = true;
-  try {
-    const gens = Math.max(3, genTarget.value);
-    tree.value = await fetchHourglassTreePerson(props.personId, gens, gens);
-    loadedGens.value = gens;
-    if (!opts.keepView) collapsed.value = new Set();
-    applyGenerationDepth(genTarget.value);
-  } finally {
-    loading.value = false;
+// useEntityData drives both the initial load and reload-on-mutation. The
+// composable subscribes to onDataChanged and reloads automatically — we no
+// longer register a listener ourselves.
+//
+// `keepViewOnNextLoad` lets callers preserve scroll/collapsed state across a
+// reload (used by mutation-driven auto-refresh). The default is to reset
+// (used when the focal person changes). The first load sets `prevId` so any
+// subsequent reload for the same id is treated as in-place.
+let keepViewOnNextLoad = false;
+let prevId: string | null = null;
+const idRef = computed(() => props.personId ?? null);
+const { data: tree, loading, reload } = useEntityData<TreePerson | null>(idRef, async (id) => {
+  // Treat same-id reloads as in-place by default (mutation broadcasts) so
+  // scroll / collapsed state survive. id-change resets unless an explicit
+  // keepView was requested before reload().
+  const keepView = keepViewOnNextLoad || id === prevId;
+  keepViewOnNextLoad = false;
+  prevId = id;
+  const gens = Math.max(3, genTarget.value);
+  const fetched = await fetchHourglassTreePerson(id, gens, gens);
+  loadedGens.value = gens;
+  if (!keepView) collapsed.value = new Set();
+  // applyGenerationDepth needs `tree.value` to be set — but the composable
+  // only assigns the loader's return value after we resolve. So queue the
+  // collapsed-set adjustment using the freshly fetched tree directly.
+  applyGenerationDepthFor(fetched, genTarget.value);
+  // Defer recenter until layout is computed against the new tree.
+  if (!keepView) {
+    nextTick(() => centerOnFocal());
   }
-  await nextTick();
-  // Initial loads recenter on the focal person; refetch() preserves the
-  // current scroll position so users editing data don't lose their place
-  // (BENGT #37 / Phase 3). Zoom is already preserved automatically by
-  // useChartZoom, which persists to localStorage.
-  if (!opts.keepView) centerOnFocal();
+  return fetched;
+});
+
+// applyGenerationDepth originally read tree.value. Provide a tree-explicit
+// variant so we can call it with the freshly fetched value before the
+// composable has assigned it.
+function applyGenerationDepthFor(t: TreePerson | null, n: number) {
+  if (!t) return;
+  const next = new Set<string>();
+  for (const k of collapsed.value) {
+    if (k.endsWith(':up') || k.endsWith(':down')) continue;
+    next.add(k);
+  }
+  function walk(node: TreePerson, depth: number, dir: 'up' | 'down', seen: Set<string>) {
+    if (seen.has(node.person.id)) return;
+    seen.add(node.person.id);
+    if (depth >= n) {
+      next.add(`${node.person.id}:${dir}`);
+      return;
+    }
+    const children = dir === 'up' ? node.parents : node.children;
+    for (const c of children) walk(c, depth + 1, dir, seen);
+  }
+  for (const p of t.parents) walk(p, 1, 'up', new Set());
+  for (const c of t.children) walk(c, 1, 'down', new Set());
+  collapsed.value = next;
+}
+
+// Imperative reload helper — used internally for genTarget changes and load
+// more, and exposed as `refetch` for PersonsView.
+function load() {
+  return reload();
 }
 
 // Reload data in place without remounting the component. Preserves scroll,
 // zoom, and collapse state — used by PersonsView when an unrelated mutation
-// fires onDataChanged.
+// fires onDataChanged. Zoom is already preserved automatically by
+// useChartZoom, which persists to localStorage.
 function refetch() {
-  return load({ keepView: true });
+  keepViewOnNextLoad = true;
+  return reload();
 }
 
 function centerOnFocal() {
@@ -496,11 +524,6 @@ function centerOnFocal() {
   const viewportW = (scrollRef.value as HTMLElement).clientWidth;
   (scrollRef.value as HTMLElement).scrollLeft = Math.max(0, focalCenterX - viewportW / 2);
 }
-
-watch(() => props.personId, load);
-onMounted(() => {
-  load();
-});
 
 defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>

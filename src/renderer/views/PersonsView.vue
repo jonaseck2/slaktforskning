@@ -185,6 +185,7 @@ import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useScreenReaderMode } from '../composables/useScreenReaderMode';
 import { useChartNavigation } from '../composables/useChartNavigation';
 import { fetchPedigreeTree, fetchHourglassTree } from '../utils/chartData';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 import type { Hotkey } from '../composables/useHotkeyRegistry';
 
 defineOptions({ name: 'PersonsView' });
@@ -204,14 +205,14 @@ const noPersonsExist = ref(false);
 
 // Persistent left list column. The list and tree are always visible
 // side-by-side, with the list collapsible via a ▶/◀ button.
-const listOpen = ref(localStorage.getItem('persons-list-open') !== 'false');
+const listOpen = ref(localStorage.getItem(STORAGE_KEYS.personsListOpen) !== 'false');
 function openList() {
   listOpen.value = true;
-  localStorage.setItem('persons-list-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.personsListOpen, 'true');
 }
 function closeList() {
   listOpen.value = false;
-  localStorage.setItem('persons-list-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.personsListOpen, 'false');
 }
 
 // Add person modal
@@ -232,7 +233,8 @@ const selectedStore = useSelectedPersonStore();
 const selectedPersonId = computed(() => selectedStore.personId);
 
 // Template refs for chart components — used by useChartBridge to read layout
-// boxes and by refreshChart() to reload data in place without remounting.
+// boxes. Charts auto-subscribe to onDataChanged via useEntityData and handle
+// in-place refresh themselves, so this view no longer needs a refetch hook.
 type ChartHandle = { boxes: BoxLayout[]; refetch: () => Promise<void> };
 const pedigreeChartRef = ref<ChartHandle | null>(null);
 const hourglassChartRef = ref<ChartHandle | null>(null);
@@ -248,24 +250,24 @@ const chartBoxes = computed<BoxLayout[]>(() => {
 
 type TabName = 'pedigree' | 'hourglass' | 'descendants' | 'fan' | 'timeline';
 const VALID_TABS: readonly TabName[] = ['pedigree', 'hourglass', 'descendants', 'fan', 'timeline'];
-const stored = localStorage.getItem('viz-tab');
+const stored = localStorage.getItem(STORAGE_KEYS.vizTab);
 const initialTab: TabName = stored && (VALID_TABS as readonly string[]).includes(stored) ? (stored as TabName) : 'hourglass';
 const activeTab = ref<TabName>(initialTab);
 
 // Panel open/closed
-const panelOpen = ref(localStorage.getItem('viz-panel-open') !== 'false');
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.vizPanelOpen) !== 'false');
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('viz-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.vizPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('viz-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.vizPanelOpen, 'false');
 }
 
 const { panelWidth, startResize } = usePanelResize();
 const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
-  storageKey: 'persons-list-width',
+  storageKey: STORAGE_KEYS.personsListWidth,
   side: 'left',
   defaultWidth: 280,
   minWidth: 200,
@@ -276,7 +278,7 @@ const personId = computed(() => route.params.personId as string | undefined);
 
 function setTab(tab: TabName) {
   activeTab.value = tab;
-  localStorage.setItem('viz-tab', tab);
+  localStorage.setItem(STORAGE_KEYS.vizTab, tab);
 }
 
 function selectNode(id: string) {
@@ -392,22 +394,6 @@ async function reloadChart() {
   await load();
 }
 
-// In-place chart refresh: refetches data and re-runs layout without bumping
-// chartKey, so scroll/zoom/collapse state survive. Used for ambient
-// onDataChanged broadcasts; reloadChart() stays for cases that need a full
-// remount (focal person change, focal-person deletion).
-async function refreshChart() {
-  if (!route.path.startsWith('/persons') || !personId.value) return;
-  // Always refresh the focal-person header data alongside the chart so the
-  // empty/loading states stay accurate, but skip the chartKey bump.
-  await load();
-  if (activeTab.value === 'pedigree') await pedigreeChartRef.value?.refetch();
-  else if (activeTab.value === 'hourglass') await hourglassChartRef.value?.refetch();
-  else if (activeTab.value === 'descendants') await descendantChartRef.value?.refetch();
-  // FanChart and TimelineChart don't expose refetch yet — they remain on the
-  // old chartKey-driven path via reloadChart() if needed.
-}
-
 async function load() {
   if (!route.path.startsWith('/persons')) return;
   const id = personId.value;
@@ -509,32 +495,6 @@ watch([() => activeTab.value, () => personId.value, () => screenReader.isScreenR
 
 onUnmounted(() => {
   unregisterChartNav();
-});
-
-// Refresh the chart whenever any mutation lands. Without this, editing the
-// focal person's events (or any related mutation) leaves the rendered tree
-// stale until the user switches person or re-activates the view (BENGT #37).
-// Debounced ~250ms so a burst of mutations triggers one reload, not a flood.
-//
-// Phase 3: this uses refreshChart() (in-place refetch) rather than
-// reloadChart() (remount via chartKey++) so users keep their zoom and
-// scroll position while data updates. reloadChart() is reserved for
-// structural changes — focal person change, focal-person deletion, etc.
-let chartReloadDebounce: ReturnType<typeof setTimeout> | null = null;
-function onChartDataChanged() {
-  if (chartReloadDebounce) clearTimeout(chartReloadDebounce);
-  chartReloadDebounce = setTimeout(() => { refreshChart(); }, 250);
-}
-onMounted(() => {
-  (window.api as unknown as {
-    onDataChanged: (cb: () => void) => void;
-  }).onDataChanged(onChartDataChanged);
-});
-onUnmounted(() => {
-  if (chartReloadDebounce) clearTimeout(chartReloadDebounce);
-  (window.api as unknown as {
-    offDataChanged: (cb: () => void) => void;
-  }).offDataChanged(onChartDataChanged);
 });
 
 // Chart inspection bridge — wires Vue state to HTTP endpoints via IPC

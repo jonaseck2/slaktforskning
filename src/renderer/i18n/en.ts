@@ -616,7 +616,12 @@ export default {
   panel: {
     managePerson: 'Manage person',
     managePlace: 'Manage place',
+    manageSource: 'Manage source',
+    manageRelationship: 'Manage relationship',
+    manageGroup: 'Manage group',
+    manageTask: 'Manage task',
     noPersonSelected: 'Click a person in the tree',
+    selectToView: 'Select to view',
     showInTree: 'Show in tree',
     setAsTreeSubject: '🌳 Set as tree subject',
     treeSubject: '🌳 Tree subject',

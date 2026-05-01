@@ -224,6 +224,7 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
 import { usePagedList } from '../composables/usePagedList';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 const selectedStore = useSelectedPersonStore();
 const profilePicStore = useProfilePicStore();
 
@@ -236,23 +237,23 @@ const route = useRoute();
 const router = useRouter();
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 
-const listOpen = ref(localStorage.getItem('media-list-open') !== 'false');
+const listOpen = ref(localStorage.getItem(STORAGE_KEYS.mediaListOpen) !== 'false');
 function openList() {
   listOpen.value = true;
-  localStorage.setItem('media-list-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.mediaListOpen, 'true');
 }
 function closeList() {
   listOpen.value = false;
-  localStorage.setItem('media-list-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.mediaListOpen, 'false');
 }
-const panelOpen = ref(localStorage.getItem('media-panel-open') !== 'false');
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.mediaPanelOpen) !== 'false');
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('media-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.mediaPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('media-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.mediaPanelOpen, 'false');
 }
 
 interface MediaItem {
@@ -303,9 +304,9 @@ const faceTagOptions = computed(() => [
 ]);
 
 const mediaBodyRef = ref<HTMLElement | null>(null);
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'media-panel-width', maxWidthRatio: 0.5 });
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.mediaPanelWidth, maxWidthRatio: 0.5 });
 const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
-  storageKey: 'media-list-width',
+  storageKey: STORAGE_KEYS.mediaListWidth,
   side: 'left',
   defaultWidth: 280,
   minWidth: 200,

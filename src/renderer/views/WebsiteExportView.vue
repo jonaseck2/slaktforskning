@@ -44,6 +44,7 @@ import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import WebsitePanel from '../components/WebsitePanel.vue';
 import WebsitePreview, { type PreviewSnapshot } from '../components/WebsitePreview.vue';
 import { usePanelResize } from '../composables/usePanelResize';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -82,7 +83,7 @@ onBeforeUnmount(() => {
 
 const rootRef = ref<HTMLElement | null>(null);
 const { panelWidth, startResize } = usePanelResize({
-  storageKey: 'website-panel-width',
+  storageKey: STORAGE_KEYS.websitePanelWidth,
   defaultWidth: 280,
   minWidth: 220,
 });

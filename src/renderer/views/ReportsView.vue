@@ -278,6 +278,7 @@ import {
   fanGenerations,
 } from '../composables/useChartGenerations';
 import { buildExportSvgString } from '../composables/useChartExport';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 interface RelationshipOption { id: string; label: string; }
 
@@ -292,15 +293,15 @@ const store = useReportConfigStore();
 
 const activeTab = ref<'yourAncestors' | 'alife' | 'onePage' | 'familyInYear' | 'photoAlbum' | 'placeChronicle' | 'amarriage' | 'pedigreePrint' | 'hourglassChart' | 'descendantChart' | 'fanChart' | 'timeline'>(mode.value === 'framable' ? 'pedigreePrint' : 'alife');
 const reportsViewRef = ref<HTMLElement | null>(null);
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'reports-panel-width', defaultWidth: 240, minWidth: 180 });
-const panelOpen = ref(localStorage.getItem('reports-panel-open') !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.reportsPanelWidth, defaultWidth: 240, minWidth: 180 });
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.reportsPanelOpen) !== 'false');
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('reports-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.reportsPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('reports-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.reportsPanelOpen, 'false');
 }
 
 const reportLoading = ref(false);

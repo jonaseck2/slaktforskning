@@ -220,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, toRef, inject } from 'vue';
+import { ref, computed, watch, onUnmounted, toRef, inject } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { computePedigreeLayout, BOX_W, MIN_BOX_H, H_GAP, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, BOX_PAD_Y, PORTRAIT_GAP, TEXT_AREA_W, ADD_BTN_AREA_W, BOX_PAD_X_RIGHT } from '../../utils/chart-layout';
@@ -228,8 +228,10 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 import { wrapFullNameSegments, truncateToWidth } from '../../utils/chart-layout/measure';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 import type { BoxLayout, CollapseButton, PedigreeTree, PlaceholderBox } from '../../utils/chart-layout';
 import { useChartColors, applyColorMode } from '../../composables/useChartColors';
+import { useEntityData } from '../../composables/useEntityData';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
@@ -248,9 +250,7 @@ const emit = defineEmits<{
   'person-context-menu': [payload: { personId: string; x: number; y: number }];
 }>();
 
-const loading = ref(true);
 const loadingMore = ref(false);
-const tree = ref<PedigreeTree | null>(null);
 const collapsed = ref(new Set<string>());
 const genTarget = pedigreeGenerations;
 const loadedGens = ref(5);
@@ -362,14 +362,18 @@ function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right') {
   collapsed.value = next;
 }
 
-function applyGenerationDepth(n: number) {
-  if (!tree.value) return;
+function applyGenerationDepthFor(t: PedigreeTree | null, n: number) {
+  if (!t) return;
   const next = new Set<string>();
   for (const k of collapsed.value) if (!k.endsWith(':right')) next.add(k);
-  for (const [ahn, person] of tree.value.nodes) {
+  for (const [ahn, person] of t.nodes) {
     if (Math.floor(Math.log2(ahn)) === n) next.add(`${person.id}:right`);
   }
   collapsed.value = next;
+}
+
+function applyGenerationDepth(n: number) {
+  applyGenerationDepthFor(tree.value, n);
 }
 
 function decrGens() {
@@ -403,7 +407,7 @@ async function handleCollapseButton(btn: CollapseButton) {
   }
 }
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, 'viz-zoom-pedigree');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomPedigree);
 
 const outerRef = ref<HTMLElement | null>(null);
 const baseColors = useChartColors(true, outerRef);
@@ -527,18 +531,28 @@ function onRelativeSaved() {
   emit('reload');
 }
 
-async function load(opts: { keepView?: boolean } = {}) {
-  if (!props.personId) return;
-  loading.value = true;
-  if (!opts.keepView) collapsed.value = new Set();
-  try {
-    const gens = Math.max(5, genTarget.value);
-    tree.value = await fetchPedigreeTree(props.personId, gens);
-    loadedGens.value = gens;
-    applyGenerationDepth(genTarget.value);
-  } finally {
-    loading.value = false;
-  }
+// useEntityData drives both the initial load and reload-on-mutation. The
+// composable subscribes to onDataChanged and reloads automatically — we no
+// longer register a listener ourselves. `keepViewOnNextLoad` lets refetch()
+// preserve collapsed state across a reload; same-id reloads default to that
+// behaviour too (mutation broadcasts) so the user's view doesn't reset.
+let keepViewOnNextLoad = false;
+let prevId: string | null = null;
+const idRef = computed(() => props.personId ?? null);
+const { data: tree, loading, reload } = useEntityData<PedigreeTree | null>(idRef, async (id) => {
+  const keepView = keepViewOnNextLoad || id === prevId;
+  keepViewOnNextLoad = false;
+  prevId = id;
+  if (!keepView) collapsed.value = new Set();
+  const gens = Math.max(5, genTarget.value);
+  const fetched = await fetchPedigreeTree(id, gens);
+  loadedGens.value = gens;
+  applyGenerationDepthFor(fetched, genTarget.value);
+  return fetched;
+});
+
+function load() {
+  return reload();
 }
 
 // Reload data in place without remounting the component. Preserves scroll,
@@ -546,17 +560,13 @@ async function load(opts: { keepView?: boolean } = {}) {
 // fires onDataChanged. Zoom is already preserved automatically by
 // useChartZoom, which persists to localStorage.
 function refetch() {
-  return load({ keepView: true });
+  keepViewOnNextLoad = true;
+  return reload();
 }
 
 // Sync focused box with parent-controlled focusedPerson prop (screen reader nav)
 watch(() => props.focusedPerson, (pid) => {
   if (pid) focusedBoxId.value = pid;
-});
-
-watch(() => props.personId, load);
-onMounted(() => {
-  load();
 });
 
 defineExpose({ boxes: computed(() => layout.value.boxes), refetch });

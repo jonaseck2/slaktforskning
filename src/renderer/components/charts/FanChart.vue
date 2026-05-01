@@ -60,6 +60,7 @@ import { useFanThemeColors } from '../../composables/useFanThemeColors';
 import FanChartSvg from './FanChartSvg.vue';
 import ZoomControls from '../ZoomControls.vue';
 import { fanGenerations } from '../../composables/useChartGenerations';
+import { STORAGE_KEYS } from '../../utils/storage-keys';
 
 const { t } = useI18n();
 
@@ -70,10 +71,10 @@ const loading = ref(true);
 const tree = ref<PedigreeTree | null>(null);
 const selectedGens = fanGenerations;
 const selectedArc = ref<ArcSpan>(
-  (parseInt(localStorage.getItem('fan-arc-span') ?? '') || 180) as ArcSpan
+  (parseInt(localStorage.getItem(STORAGE_KEYS.fanArcSpan) ?? '') || 180) as ArcSpan
 );
 const colorMode = ref<FanColorMode>(
-  (localStorage.getItem('fan-color-mode') as FanColorMode) || 'branch',
+  (localStorage.getItem(STORAGE_KEYS.fanColorMode) as FanColorMode) || 'branch',
 );
 const outerRef = ref<HTMLElement | null>(null);
 const containerWidth = ref(700);
@@ -81,10 +82,10 @@ const containerHeight = ref(500);
 
 const arcOptions: ArcSpan[] = [180, 210, 240, 270, 360];
 
-const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, 'viz-zoom-fan');
+const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom } = useChartZoom(1, STORAGE_KEYS.vizZoomFan);
 
-watch(selectedArc, (v) => localStorage.setItem('fan-arc-span', String(v)));
-watch(colorMode, (v) => localStorage.setItem('fan-color-mode', v));
+watch(selectedArc, (v) => localStorage.setItem(STORAGE_KEYS.fanArcSpan, String(v)));
+watch(colorMode, (v) => localStorage.setItem(STORAGE_KEYS.fanColorMode, v));
 
 function cycleColorMode() {
   const order: FanColorMode[] = ['branch', 'sex', 'bw'];

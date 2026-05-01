@@ -78,6 +78,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { useThemeSignal } from '../composables/useThemeSignal';
 import { useI18n } from 'vue-i18n';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 const { t } = useI18n();
 
@@ -209,13 +210,13 @@ const boundaryStyle = () => ({
 });
 
 // Panel state
-const selectedPlaceId = ref<string | null>(localStorage.getItem('map-selected-place'));
-const panelOpen = ref(localStorage.getItem('map-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'map-panel-width' });
+const selectedPlaceId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.mapSelectedPlace));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.mapPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.mapPanelWidth });
 
 function selectPlace(id: string) {
   selectedPlaceId.value = id;
-  localStorage.setItem('map-selected-place', id);
+  localStorage.setItem(STORAGE_KEYS.mapSelectedPlace, id);
   if (props.noPanel) {
     emit('select-place', id);
   } else {
@@ -225,12 +226,12 @@ function selectPlace(id: string) {
 
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('map-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.mapPanelOpen, 'true');
 }
 
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('map-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.mapPanelOpen, 'false');
   boundaryGeojson.value = null;
 }
 

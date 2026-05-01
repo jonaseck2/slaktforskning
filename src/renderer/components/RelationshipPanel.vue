@@ -1,23 +1,19 @@
 <template>
-  <div class="relationship-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!relationshipId" class="panel-empty">
-      {{ $t('relationshipPanel.noRelationshipSelected') }}
-    </div>
-
-    <template v-else-if="relationship">
-      <!-- Collapse arrow on the panel's left edge. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Header -->
-      <div class="panel-header">
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">{{ $t('relTypes.' + relationship.type) }}</div>
-            <span v-if="relationship.subtype" class="rel-subtype-badge">{{ subtypeBadgeLabel }}</span>
-          </div>
-        </div>
+  <EntityPanel
+    entity-type="relationship"
+    :entity="relationship"
+    :label="$t('panel.manageRelationship')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('relationshipPanel.noRelationshipSelected') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ relationship ? $t('relTypes.' + relationship.type) : '' }}</div>
+        <span v-if="relationship?.subtype" class="rel-subtype-badge">{{ subtypeBadgeLabel }}</span>
       </div>
+    </template>
 
+    <template v-if="relationship">
       <!-- Relationship section -->
       <div class="panel-section">
         <SectionHeader :title="$t('relationshipDetail.title')" :collapsed="!sections.relationship" @toggle="toggleSection('relationship')" />
@@ -27,7 +23,7 @@
               <label class="compact-label">{{ $t('common.type') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.type"
+                :value="fields.type ?? ''"
                 @change="onTypeChange(($event.target as HTMLSelectElement).value)"
               >
                 <option v-for="rt in RELATIONSHIP_TYPE_VALUES" :key="rt" :value="rt">
@@ -35,12 +31,12 @@
                 </option>
               </select>
             </div>
-            <div v-if="editFields.type === 'couple'" class="compact-field">
+            <div v-if="fields.type === 'couple'" class="compact-field">
               <label class="compact-label">{{ $t('relationshipDetail.subtype') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.subtype"
-                @change="editFields.subtype = ($event.target as HTMLSelectElement).value; saveField('subtype')"
+                :value="fields.subtype ?? ''"
+                @change="saveField('subtype', ($event.target as HTMLSelectElement).value || null)"
               >
                 <option value="">—</option>
                 <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">
@@ -48,12 +44,12 @@
                 </option>
               </select>
             </div>
-            <div v-else-if="editFields.type === 'parent_child'" class="compact-field">
+            <div v-else-if="fields.type === 'parent_child'" class="compact-field">
               <label class="compact-label">{{ $t('relationshipDetail.subtype') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.subtype"
-                @change="editFields.subtype = ($event.target as HTMLSelectElement).value; saveField('subtype')"
+                :value="fields.subtype ?? ''"
+                @change="saveField('subtype', ($event.target as HTMLSelectElement).value || null)"
               >
                 <option value="">—</option>
                 <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">
@@ -64,17 +60,17 @@
             <div class="compact-field">
               <label class="compact-label">{{ person1Label }}</label>
               <PersonPicker
-                :model-value="editFields.person1_id"
+                :model-value="fields.person1_id ?? null"
                 :placeholder="$t('relationshipDetail.selectPerson')"
-                @update:model-value="onPerson1Change"
+                @update:model-value="saveField('person1_id', $event)"
               />
             </div>
             <div class="compact-field">
               <label class="compact-label">{{ person2Label }}</label>
               <PersonPicker
-                :model-value="editFields.person2_id"
+                :model-value="fields.person2_id ?? null"
                 :placeholder="$t('relationshipDetail.selectPerson')"
-                @update:model-value="onPerson2Change"
+                @update:model-value="saveField('person2_id', $event)"
               />
             </div>
             <div class="compact-field">
@@ -82,28 +78,28 @@
               <textarea
                 class="compact-control"
                 rows="3"
-                :value="editFields.notes"
-                @input="editFields.notes = ($event.target as HTMLTextAreaElement).value"
-                @blur="saveField('notes')"
+                :value="fields.notes ?? ''"
+                @input="(fields as RelData).notes = ($event.target as HTMLTextAreaElement).value"
+                @blur="save('notes')"
               />
             </div>
           </div>
           <div v-else class="compact-form">
             <div class="compact-field">
               <span class="compact-label">{{ $t('common.type') }}</span>
-              <span class="readonly-value">{{ $t('relTypes.' + editFields.type) }}</span>
+              <span class="readonly-value">{{ $t('relTypes.' + relationship.type) }}</span>
             </div>
-            <div v-if="editFields.subtype" class="compact-field">
+            <div v-if="relationship.subtype" class="compact-field">
               <span class="compact-label">{{ $t('relationshipDetail.subtype') }}</span>
               <span class="readonly-value">
-                <template v-if="editFields.type === 'couple'">{{ $t('coupleSubtypes.' + editFields.subtype) }}</template>
-                <template v-else-if="editFields.type === 'parent_child'">{{ $t('parentChildSubtypes.' + editFields.subtype) }}</template>
-                <template v-else>{{ editFields.subtype }}</template>
+                <template v-if="relationship.type === 'couple'">{{ $t('coupleSubtypes.' + relationship.subtype) }}</template>
+                <template v-else-if="relationship.type === 'parent_child'">{{ $t('parentChildSubtypes.' + relationship.subtype) }}</template>
+                <template v-else>{{ relationship.subtype }}</template>
               </span>
             </div>
-            <div v-if="editFields.notes" class="compact-field">
+            <div v-if="relationship.notes" class="compact-field">
               <span class="compact-label">{{ $t('common.notes') }}</span>
-              <span class="readonly-value">{{ editFields.notes }}</span>
+              <span class="readonly-value">{{ relationship.notes }}</span>
             </div>
           </div>
         </div>
@@ -201,17 +197,18 @@
       @cancel="delCitation.cancel"
       @confirm="delCitation.confirm"
     />
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, computed, toRef } from 'vue';
+import type { ComponentPublicInstance, Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import type { ComponentPublicInstance } from 'vue';
 import PersonPicker from './PersonPicker.vue';
 import EventList from './EventList.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import EntityPanel from './EntityPanel.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import CitationModal from './modals/CitationModal.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
@@ -222,6 +219,7 @@ import { RELATIONSHIP_TYPE_VALUES, COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_V
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useEntityData } from '../composables/useEntityData';
+import { useEditableFields } from '../composables/useEditableFields';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -265,41 +263,6 @@ const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void })
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
 const showCitationForm = ref(false);
 
-const editFields = reactive({
-  type: '',
-  subtype: '',
-  person1_id: null as string | null,
-  person2_id: null as string | null,
-  notes: '',
-});
-
-// ── Computed labels ─────────────────────────────────────────────────────────
-
-const person1Label = computed(() => {
-  const type = editFields.type;
-  if (type === 'parent_child') return t('relTypes.parent');
-  if (type === 'couple') return t('relTypes.partner');
-  if (type === 'sibling') return t('relTypes.sibling');
-  if (type === 'godparent') return t('relTypes.godparent');
-  return t('relationships.person1');
-});
-
-const person2Label = computed(() => {
-  const type = editFields.type;
-  if (type === 'parent_child') return t('relTypes.child');
-  if (type === 'couple') return t('relTypes.partner');
-  if (type === 'sibling') return t('relTypes.sibling');
-  if (type === 'godparent') return t('relTypes.godchild');
-  return t('relationships.person2');
-});
-
-const subtypeBadgeLabel = computed(() => {
-  if (!relationship.value?.subtype) return '';
-  if (relationship.value.type === 'couple') return t('coupleSubtypes.' + relationship.value.subtype);
-  if (relationship.value.type === 'parent_child') return t('parentChildSubtypes.' + relationship.value.subtype);
-  return relationship.value.subtype;
-});
-
 // ── Data (race-safe load) ────────────────────────────────────────────────────
 
 interface RelationshipPanelData {
@@ -307,7 +270,7 @@ interface RelationshipPanelData {
   citations: CitationRow[];
 }
 
-const idRef = computed(() => props.relationshipId ?? null);
+const idRef = toRef(props, 'relationshipId');
 const { data: panelData, reload } = useEntityData<RelationshipPanelData>(idRef, async (id) => {
   try {
     const r = await window.api.relationships.get(id) as RelData | null;
@@ -334,49 +297,67 @@ const { data: panelData, reload } = useEntityData<RelationshipPanelData>(idRef, 
 const relationship = computed(() => panelData.value?.relationship ?? null);
 const citations = computed(() => panelData.value?.citations ?? []);
 
-// Keep editFields in sync when relationship data changes
-watch(relationship, (r) => {
-  if (!r) return;
-  editFields.type = r.type ?? '';
-  editFields.subtype = r.subtype ?? '';
-  editFields.person1_id = r.person1_id;
-  editFields.person2_id = r.person2_id;
-  editFields.notes = r.notes ?? '';
-}, { immediate: true });
+// ── Computed labels ─────────────────────────────────────────────────────────
 
-// ── Field updates ───────────────────────────────────────────────────────────
+const person1Label = computed(() => {
+  const type = fields.type;
+  if (type === 'parent_child') return t('relTypes.parent');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godparent');
+  return t('relationships.person1');
+});
 
-async function saveField(field: keyof typeof editFields) {
-  if (!props.relationshipId || !relationship.value || props.readonly) return;
-  const val = editFields[field];
-  if (val === (relationship.value as Record<string, unknown>)[field]) return;
+const person2Label = computed(() => {
+  const type = fields.type;
+  if (type === 'parent_child') return t('relTypes.child');
+  if (type === 'couple') return t('relTypes.partner');
+  if (type === 'sibling') return t('relTypes.sibling');
+  if (type === 'godparent') return t('relTypes.godchild');
+  return t('relationships.person2');
+});
+
+const subtypeBadgeLabel = computed(() => {
+  if (!relationship.value?.subtype) return '';
+  if (relationship.value.type === 'couple') return t('coupleSubtypes.' + relationship.value.subtype);
+  if (relationship.value.type === 'parent_child') return t('parentChildSubtypes.' + relationship.value.subtype);
+  return relationship.value.subtype;
+});
+
+// ── Editable fields ──────────────────────────────────────────────────────────
+
+const persistRelationship = async (id: string, patch: Partial<RelData>) => {
   try {
-    await window.api.relationships.update(props.relationshipId, { [field]: val });
-    (relationship.value as Record<string, unknown>)[field] = val;
+    await window.api.relationships.update(id, patch);
   } catch (err) {
-    console.error(`[RelationshipPanel] saveField(${field}) failed:`, err);
+    console.error('[RelationshipPanel] persist failed:', err);
     toast.error(t('errors.saveFailed'));
+    throw err;
   }
+};
+
+const { fields, save } = useEditableFields<RelData & Record<string, unknown>>(
+  idRef,
+  relationship as unknown as Ref<(RelData & Record<string, unknown>) | null>,
+  persistRelationship,
+);
+
+async function saveField<K extends keyof RelData>(field: K, value: RelData[K]) {
+  if (!props.relationshipId || !relationship.value || props.readonly) return;
+  (fields as RelData)[field] = value;
+  await save(field);
 }
 
-function onTypeChange(newType: string) {
-  editFields.type = newType;
-  // Clear subtype when switching to a type that doesn't support it
-  if (newType !== 'couple' && newType !== 'parent_child') {
-    editFields.subtype = '';
-    saveField('subtype');
+async function onTypeChange(newType: string) {
+  if (props.readonly) return;
+  // Clear subtype when switching to a type that doesn't support it; do this
+  // before the type save so the persisted state stays self-consistent.
+  if (newType !== 'couple' && newType !== 'parent_child' && fields.subtype) {
+    (fields as RelData).subtype = null;
+    await save('subtype');
   }
-  saveField('type');
-}
-
-function onPerson1Change(val: string | null) {
-  editFields.person1_id = val;
-  saveField('person1_id');
-}
-
-function onPerson2Change(val: string | null) {
-  editFields.person2_id = val;
-  saveField('person2_id');
+  (fields as RelData).type = newType;
+  await save('type');
 }
 
 // ── Citations ───────────────────────────────────────────────────────────────
@@ -399,52 +380,7 @@ function onCitationSaved() {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.relationship-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-/* Header */
-.panel-header {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header-content {
-  padding: var(--space-md) var(--space-lg);
-  flex: 1;
-  min-width: 0;
-}
+/* Header slot content */
 .panel-name-row {
   display: flex;
   align-items: center;

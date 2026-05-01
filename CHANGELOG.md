@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.190.0 — Entity panel foundation
+
+- feat: panel composables refactor — useEntityData and usePagedList now bake in cross-view reactivity (left list + right panel + center view all auto-update on any mutation), new EntityPanel shell component, useEditableFields composable, centralized localStorage key registry; all 7 entity panels migrated
+
 ## v0.189.0 — German gazetteer (de-gemeinden)
 
 - feat: new bundled gazetteer `de-gemeinden` — 16 Bundesländer → ~400 Kreise → 3052 populated places (≥ 5000 pop) from GeoNames CC BY 4.0

@@ -120,10 +120,12 @@ The full list of UI primitives, modals, pickers, panels, composables, Pinia stor
 
 - `src/renderer/components/ui/` — primitives (`AppAvatar`, `AppBadge`, `AppButton`, `AppEmptyState`, `AppInput`, `AppLoadingState`, `FilterChips`, `SectionHeader`)
 - `src/renderer/components/modals/` — every modal extends `BaseSubPanel` (`PersonModal`, `EventModal`, `CitationModal`, etc.)
+- `src/renderer/components/EntityPanel.vue` — shared shell for the 7 side panels: `panel-collapse-btn` (▶), `panel-role-label`, `#empty` slot, `#header` slot, default body slot, optional `editable` Edit button. All `{Person,Place,Source,Relationship,Group,ResearchTask,Media}Panel` use it.
 - `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask,Media}Panel.vue` — side panels, one per entity, hosted by their list view
 - `src/renderer/components/reports/` — 7 keepsake reports + 5 chart prints; primitives shared across reports in `reports/primitives/`
-- `src/renderer/composables/` — `usePanelResize`, `usePanelSections`, `usePersonProfilePic`, `useLifeMap`, `useMediaChronological`, `usePagedList`, etc.
-- `src/renderer/stores/` — Pinia stores (`sourceSession`, `profilePic`, `reportConfig`)
+- `src/renderer/composables/` — **canonical reactive loaders:** `useEntityData(idRef, loader)` (single-entity, auto-subscribes to `onDataChanged`) and `usePagedList({ defaultSortBy, fetchPage })` (server-paged list, auto-subscribes too). Also: `useEditableFields(idRef, dataRef, persist)` (race-safe per-field saves), `usePanelResize`, `usePanelSections`, `usePersonProfilePic`, `useLifeMap`, `useMediaChronological`.
+- `src/renderer/utils/storage-keys.ts` — typed `STORAGE_KEYS` registry. Every `localStorage.{get,set,remove}Item('...')` call site uses an entry from here. Helpers: `getJSON(key, fallback)`, `setJSON(key, value)`, `removeKey(key)`.
+- `src/renderer/stores/` — Pinia stores (`sourceSession`, `profilePic`, `reportConfig`, `dataVersion` — incremented by `App.vue` for badge debouncing only; views use `useEntityData`/`usePagedList`).
 
 ### Project-wide UI rules
 

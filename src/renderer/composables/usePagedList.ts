@@ -1,4 +1,11 @@
-import { ref, computed, watch, onUnmounted, type Ref } from 'vue';
+import { ref, computed, watch, onUnmounted, onScopeDispose, type Ref } from 'vue';
+
+declare const window: Window & {
+  api?: {
+    onDataChanged?: (cb: () => void) => void;
+    offDataChanged?: (cb: () => void) => void;
+  };
+};
 
 export interface PagedListOptions<T, SortBy extends string> {
   /** Number of items per page. Default 100. */
@@ -26,6 +33,11 @@ export interface PagedListOptions<T, SortBy extends string> {
   onLoaded?: (items: T[]) => void;
   /** Optional callback after a loadMore appends new items. */
   onAppended?: (newItems: T[]) => void;
+  /**
+   * Auto-reload on `window.api.onDataChanged` (debounced). Default: true.
+   * Set false for snapshot views where stale data is intentional.
+   */
+  subscribe?: boolean;
 }
 
 export interface PagedListApi<T, SortBy extends string> {
@@ -161,6 +173,24 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
     if (observer) observer.disconnect();
     if (debounceTimer) clearTimeout(debounceTimer);
   });
+
+  // Auto-subscribe to mutation events so the list refreshes after any
+  // create/update/delete (own view, sibling section, modal, MCP call,
+  // undo, import). Mirrors useEntityData — composables own the
+  // subscription, views never call `onDataChanged` directly.
+  const subscribe = opts.subscribe ?? true;
+  if (subscribe && typeof window !== 'undefined' && window.api?.onDataChanged) {
+    let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+    const onMutation = () => {
+      if (mutationDebounce) clearTimeout(mutationDebounce);
+      mutationDebounce = setTimeout(() => { void reload(); }, 200);
+    };
+    window.api.onDataChanged(onMutation);
+    onScopeDispose(() => {
+      if (mutationDebounce) clearTimeout(mutationDebounce);
+      window.api?.offDataChanged?.(onMutation);
+    });
+  }
 
   return {
     items,

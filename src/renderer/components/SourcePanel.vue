@@ -1,23 +1,19 @@
 <template>
-  <div class="source-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!sourceId" class="panel-empty">
-      {{ $t('sourcePanel.noSourceSelected') }}
-    </div>
-
-    <template v-else-if="source">
-      <!-- Collapse arrow on the panel's left edge. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Header -->
-      <div class="panel-header">
-        <div class="panel-header-content">
-          <div class="panel-name-row">
-            <div class="panel-name">{{ source.title || $t('common.unknown') }}</div>
-            <span v-if="source.source_type" class="source-type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span>
-          </div>
-        </div>
+  <EntityPanel
+    entity-type="source"
+    :entity="source"
+    :label="$t('panel.manageSource')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('sourcePanel.noSourceSelected') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ source?.title || $t('common.unknown') }}</div>
+        <span v-if="source?.source_type" class="source-type-badge">{{ $t('sourceTypes.' + source.source_type) }}</span>
       </div>
+    </template>
 
+    <template v-if="source">
       <!-- Source section -->
       <div class="panel-section">
         <SectionHeader :title="$t('sourceDetail.title')" :collapsed="!sections.source" @toggle="toggleSection('source')" />
@@ -28,9 +24,9 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.title"
-                @input="editFields.title = ($event.target as HTMLInputElement).value"
-                @blur="saveField('title')"
+                :value="fields.title ?? ''"
+                @input="(fields as SourceData).title = ($event.target as HTMLInputElement).value"
+                @blur="save('title')"
               />
             </div>
             <div class="compact-field">
@@ -38,17 +34,17 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.author"
-                @input="editFields.author = ($event.target as HTMLInputElement).value"
-                @blur="saveField('author')"
+                :value="fields.author ?? ''"
+                @input="(fields as SourceData).author = ($event.target as HTMLInputElement).value"
+                @blur="save('author')"
               />
             </div>
             <div class="compact-field">
               <label class="compact-label">{{ $t('sources.sourceType') }}</label>
               <select
                 class="compact-control"
-                :value="editFields.source_type"
-                @change="editFields.source_type = ($event.target as HTMLSelectElement).value; saveField('source_type')"
+                :value="fields.source_type ?? ''"
+                @change="saveField('source_type', ($event.target as HTMLSelectElement).value)"
               >
                 <option value="">{{ $t('sourceDetail.noType') }}</option>
                 <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
@@ -61,9 +57,9 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.publication_info"
-                @input="editFields.publication_info = ($event.target as HTMLInputElement).value"
-                @blur="saveField('publication_info')"
+                :value="fields.publication_info ?? ''"
+                @input="(fields as SourceData).publication_info = ($event.target as HTMLInputElement).value"
+                @blur="save('publication_info')"
               />
             </div>
             <div class="compact-field">
@@ -71,9 +67,9 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.repository"
-                @input="editFields.repository = ($event.target as HTMLInputElement).value"
-                @blur="saveField('repository')"
+                :value="fields.repository ?? ''"
+                @input="(fields as SourceData).repository = ($event.target as HTMLInputElement).value"
+                @blur="save('repository')"
               />
             </div>
             <div class="compact-field">
@@ -81,9 +77,9 @@
               <input
                 class="compact-control"
                 type="url"
-                :value="editFields.url"
-                @input="editFields.url = ($event.target as HTMLInputElement).value"
-                @blur="saveField('url')"
+                :value="fields.url ?? ''"
+                @input="(fields as SourceData).url = ($event.target as HTMLInputElement).value"
+                @blur="save('url')"
               />
             </div>
             <div class="compact-field">
@@ -91,9 +87,9 @@
               <input
                 class="compact-control"
                 type="text"
-                :value="editFields.call_number"
-                @input="editFields.call_number = ($event.target as HTMLInputElement).value"
-                @blur="saveField('call_number')"
+                :value="fields.call_number ?? ''"
+                @input="(fields as SourceData).call_number = ($event.target as HTMLInputElement).value"
+                @blur="save('call_number')"
               />
             </div>
             <div class="compact-field">
@@ -101,9 +97,9 @@
               <textarea
                 class="compact-control"
                 rows="3"
-                :value="editFields.abstract"
-                @input="editFields.abstract = ($event.target as HTMLTextAreaElement).value"
-                @blur="saveField('abstract')"
+                :value="fields.abstract ?? ''"
+                @input="(fields as SourceData).abstract = ($event.target as HTMLTextAreaElement).value"
+                @blur="save('abstract')"
               />
             </div>
           </div>
@@ -202,7 +198,7 @@
           @action="mediaSectionRef?.attach()"
         />
         <div v-if="sections.media" class="panel-section-body">
-          <EntityMediaSection ref="mediaSectionRef" entity-type="source" :entity-id="sourceId" />
+          <EntityMediaSection ref="mediaSectionRef" entity-type="source" :entity-id="sourceId!" />
         </div>
       </div>
 
@@ -246,15 +242,17 @@
       @cancel="delCitation.cancel"
       @confirm="delCitation.confirm"
     />
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, toRef } from 'vue';
+import type { Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import CitationModal from './modals/CitationModal.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import EntityPanel from './EntityPanel.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -265,6 +263,7 @@ import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useEntityData } from '../composables/useEntityData';
+import { useEditableFields } from '../composables/useEditableFields';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -325,17 +324,6 @@ const editingCitation = ref<CitationRow | null>(null);
 const showRepoPicker = ref(false);
 const repoToAdd = ref<string>('');
 
-const editFields = reactive({
-  title: '',
-  author: '',
-  source_type: '',
-  publication_info: '',
-  repository: '',
-  url: '',
-  call_number: '',
-  abstract: '',
-});
-
 // ── Data (race-safe load) ────────────────────────────────────────────────────
 
 interface SourcePanelData {
@@ -345,7 +333,7 @@ interface SourcePanelData {
   allRepositories: RepositoryRow[];
 }
 
-const idRef = computed(() => props.sourceId ?? null);
+const idRef = toRef(props, 'sourceId');
 const { data: panelData, reload } = useEntityData<SourcePanelData>(idRef, async (id) => {
   const s = await window.api.sources.get(id) as SourceData | null;
   if (!s) return { source: null, citations: [], linkedRepositories: [], allRepositories: [] };
@@ -377,6 +365,30 @@ const unlinkedRepositories = computed(() => {
   return allRepositories.value.filter(r => !linkedIds.has(r.id));
 });
 
+// ── Editable fields ──────────────────────────────────────────────────────────
+
+const persistSource = async (id: string, patch: Partial<SourceData>) => {
+  try {
+    await window.api.sources.update(id, patch);
+  } catch (err) {
+    console.error('[SourcePanel] persist failed:', err);
+    toast.error(t('errors.saveFailed'));
+    throw err;
+  }
+};
+
+const { fields, save } = useEditableFields<SourceData & Record<string, unknown>>(
+  idRef,
+  source as unknown as Ref<(SourceData & Record<string, unknown>) | null>,
+  persistSource,
+);
+
+async function saveField<K extends keyof SourceData>(field: K, value: SourceData[K]) {
+  if (!props.sourceId || !source.value) return;
+  (fields as SourceData)[field] = value;
+  await save(field);
+}
+
 // ── Resolve citation entity labels ───────────────────────────────────────────
 
 async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; route: string } | null> {
@@ -407,34 +419,6 @@ async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; ro
     }
   } catch { /* ignore */ }
   return null;
-}
-
-// editFields are kept in sync when source changes
-watch(source, (s) => {
-  if (!s) return;
-  editFields.title = s.title ?? '';
-  editFields.author = s.author ?? '';
-  editFields.source_type = s.source_type ?? '';
-  editFields.publication_info = s.publication_info ?? '';
-  editFields.repository = s.repository ?? '';
-  editFields.url = s.url ?? '';
-  editFields.call_number = s.call_number ?? '';
-  editFields.abstract = s.abstract ?? '';
-}, { immediate: true });
-
-// ── Field updates ───────────────────────────────────────────────────────────
-
-async function saveField(field: keyof typeof editFields) {
-  if (!props.sourceId || !source.value) return;
-  const val = editFields[field];
-  if (val === (source.value as Record<string, unknown>)[field]) return;
-  try {
-    await window.api.sources.update(props.sourceId, { [field]: val });
-    (source.value as Record<string, unknown>)[field] = val;
-  } catch (err) {
-    console.error(`[SourcePanel] saveField(${field}) failed:`, err);
-    toast.error(t('errors.saveFailed'));
-  }
 }
 
 // ── Citations ───────────────────────────────────────────────────────────────
@@ -495,52 +479,7 @@ async function removeRepository(repoId: string) {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.source-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-/* Header */
-.panel-header {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.panel-header-content {
-  padding: var(--space-md) var(--space-lg);
-  flex: 1;
-  min-width: 0;
-}
+/* Header slot content */
 .panel-name-row {
   display: flex;
   align-items: center;

@@ -70,4 +70,25 @@ describe('EventList', () => {
 
     expect(wrapper.find('.event-badge').exists()).toBe(true);
   });
+
+  it('discards stale results when personId changes mid-fetch', async () => {
+    let resolveA: (v: unknown) => void = () => {};
+    mockForPerson.mockImplementation((id: string) => {
+      if (id === 'person-A') return new Promise((r) => { resolveA = r; });
+      return Promise.resolve([{ ...sampleEvent, id: 'event-B', event_type: 'birth' }]);
+    });
+
+    const wrapper = mount(EventList, {
+      global: { plugins: [i18n] },
+      props: { personId: 'person-A' },
+    });
+    await flushPromises();
+
+    await wrapper.setProps({ personId: 'person-B' });
+    await flushPromises();
+    resolveA([{ ...sampleEvent, id: 'event-A-stale', event_type: 'death' }]);
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('event-A-stale');
+  });
 });

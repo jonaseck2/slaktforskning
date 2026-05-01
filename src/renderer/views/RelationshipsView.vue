@@ -65,13 +65,11 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import type { RelRow } from '../components/RelationshipsTable.vue';
 import { RELATIONSHIP_TYPE_VALUES } from '../constants/eventTypes';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { usePanelResize } from '../composables/usePanelResize';
+import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'RelationshipsView' });
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 
 const PAGE_SIZE = 100;
@@ -90,9 +88,9 @@ const activeTypeFilter = ref<string>('all');
 
 // Panel state
 const relsBodyRef = ref<HTMLElement | null>(null);
-const selectedRelationshipId = ref<string | null>(localStorage.getItem('rels-selected-id'));
-const panelOpen = ref(localStorage.getItem('rels-panel-open') !== 'false');
-const { panelWidth, startResize } = usePanelResize({ storageKey: 'rels-panel-width', maxWidthRatio: 0.5 });
+const selectedRelationshipId = ref<string | null>(localStorage.getItem(STORAGE_KEYS.relsSelectedId));
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.relsPanelOpen) !== 'false');
+const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.relsPanelWidth, maxWidthRatio: 0.5 });
 
 const typeCounts = computed(() => {
   const counts: Record<string, number> = {};
@@ -183,7 +181,7 @@ const del = useDeleteConfirm<string>(async (id) => {
     await window.api.relationships.delete(id);
     if (selectedRelationshipId.value === id) {
       selectedRelationshipId.value = null;
-      localStorage.removeItem('rels-selected-id');
+      localStorage.removeItem(STORAGE_KEYS.relsSelectedId);
     }
     await load();
   } catch (err) {
@@ -195,31 +193,42 @@ function removeRelationship(id: string) { del.ask(id); }
 
 function selectRelationship(id: string) {
   selectedRelationshipId.value = id;
-  localStorage.setItem('rels-selected-id', id);
+  localStorage.setItem(STORAGE_KEYS.relsSelectedId, id);
   if (!panelOpen.value) openPanel();
 }
 function openPanel() {
   panelOpen.value = true;
-  localStorage.setItem('rels-panel-open', 'true');
+  localStorage.setItem(STORAGE_KEYS.relsPanelOpen, 'true');
 }
 function closePanel() {
   panelOpen.value = false;
-  localStorage.setItem('rels-panel-open', 'false');
+  localStorage.setItem(STORAGE_KEYS.relsPanelOpen, 'false');
 }
+
+// RelationshipsView doesn't yet use usePagedList (see GroupsView for the
+// same pattern). Until it does, subscribe directly to onDataChanged so the
+// list refreshes after any mutation. Documented exception to the
+// composable-owns-reactivity rule.
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { void load(); }, 200);
+};
 
 onMounted(async () => {
   await load();
-  loadedVersion = dataVersionStore.version;
   const id = route.params.id as string | undefined;
   if (id) selectRelationship(id);
   else if (selectedRelationshipId.value) openPanel();
+  window.api?.onDataChanged?.(onMutation);
 });
 
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await load();
-    loadedVersion = dataVersionStore.version;
-  }
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  window.api?.offDataChanged?.(onMutation);
+});
+
+onActivated(() => {
   const id = route.params.id as string | undefined;
   if (id) selectRelationship(id);
 });

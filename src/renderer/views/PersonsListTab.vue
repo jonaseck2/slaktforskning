@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onActivated } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
@@ -109,12 +109,9 @@ import AppAvatar from '../components/ui/AppAvatar.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
-import { useDataVersionStore } from '../stores/dataVersion';
 import { useToast } from '../composables/useToast';
 import { usePagedList } from '../composables/usePagedList';
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
-const dataVersionStore = useDataVersionStore();
-let loadedVersion = -1;
 
 interface PersonListItem {
   id: string;
@@ -172,6 +169,10 @@ async function onPersonAdded() {
   await reload();
 }
 
+// usePagedList auto-subscribes to onDataChanged so the list reloads on
+// every mutation — the old loadedVersion/onActivated dance is redundant.
+onMounted(reload);
+
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
   if (row?.matches('tr[tabindex]')) row.focus();
@@ -190,17 +191,6 @@ function goToDetail(person: PersonListItem) {
   router.push(`/persons/${person.id}`);
 }
 
-onMounted(async () => {
-  await reload();
-  loadedVersion = dataVersionStore.version;
-});
-
-onActivated(async () => {
-  if (dataVersionStore.version !== loadedVersion) {
-    await reload();
-    loadedVersion = dataVersionStore.version;
-  }
-});
 </script>
 
 <style scoped>

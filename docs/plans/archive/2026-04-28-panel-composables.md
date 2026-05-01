@@ -1,6 +1,6 @@
 # Panel Composables & EntityPanel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Eliminate ~600 lines of repeated panel code across 6 entity panels by extracting three composables (`useEntityData`, `useEditableFields`, `usePanelStorage`) and a shared `<EntityPanel>` shell — and **bake cross-view reactivity into the composables themselves** so the left list, the right side panel, and the center view (chart / map / timeline) all stay in sync after any mutation, automatically. Fix the EventList stale-load race condition along the way and centralize the 56+ ad-hoc localStorage keys.
 
@@ -90,7 +90,7 @@ Modified:
 - Create: `src/renderer/utils/storage-keys.ts`
 - Create: `tests/unit/storage-keys.test.ts`
 
-- [ ] **Step 1: Audit existing keys**
+- [x] **Step 1: Audit existing keys**
 
 ```
 grep -RInE "localStorage\\.(get|set|remove)Item\\(['\"]" src/renderer | sort -u > /tmp/keys.txt
@@ -99,7 +99,7 @@ wc -l /tmp/keys.txt
 
 Should show 50+ unique keys.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/unit/storage-keys.test.ts
@@ -129,7 +129,7 @@ describe('storage keys', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, see it fail**
+- [x] **Step 3: Run test, see it fail**
 
 ```
 npx vitest run tests/unit/storage-keys.test.ts
@@ -137,7 +137,7 @@ npx vitest run tests/unit/storage-keys.test.ts
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```ts
 // src/renderer/utils/storage-keys.ts
@@ -200,7 +200,7 @@ export function removeKey(key: StorageKey): void {
 
 Populate the rest of the keys from `/tmp/keys.txt`. Group by feature area with comments.
 
-- [ ] **Step 5: Run test, see it pass**
+- [x] **Step 5: Run test, see it pass**
 
 ```
 npx vitest run tests/unit/storage-keys.test.ts
@@ -208,11 +208,11 @@ npx vitest run tests/unit/storage-keys.test.ts
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 6: Migrate one usage site as proof**
+- [x] **Step 6: Migrate one usage site as proof**
 
 Pick `src/renderer/views/PersonsView.vue`. Replace inline string keys with `STORAGE_KEYS.personsPanelOpen` etc. Run `npm run lint`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 git add src/renderer/utils/storage-keys.ts tests/unit/storage-keys.test.ts \
@@ -220,7 +220,7 @@ git add src/renderer/utils/storage-keys.ts tests/unit/storage-keys.test.ts \
 git commit -m "feat(renderer): centralize localStorage keys"
 ```
 
-- [ ] **Step 8: Migrate remaining call sites incrementally**
+- [x] **Step 8: Migrate remaining call sites incrementally**
 
 This is mechanical search-and-replace. Use:
 
@@ -240,7 +240,7 @@ For each file: replace string literal with `STORAGE_KEYS.foo`. Add new entries t
 - Modify: `src/renderer/composables/useEntityData.ts`
 - Modify (or create): `tests/components/composables/useEntityData.test.ts`
 
-- [ ] **Step 1: Read the existing implementation**
+- [x] **Step 1: Read the existing implementation**
 
 ```bash
 cat src/renderer/composables/useEntityData.ts
@@ -249,7 +249,7 @@ grep -RIn "useEntityData" src/renderer
 
 Confirm the current call sites — every one of them must keep working after the change.
 
-- [ ] **Step 2: Extend the test file**
+- [x] **Step 2: Extend the test file**
 
 If `tests/components/composables/useEntityData.test.ts` doesn't exist yet, create it. Add the existing 3 race-safety tests from the prior task, then add the reactivity tests below:
 
@@ -374,7 +374,7 @@ describe('useEntityData — onDataChanged reactivity', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, see new ones fail**
+- [x] **Step 3: Run test, see new ones fail**
 
 ```
 npx vitest run tests/components/composables/useEntityData.test.ts
@@ -382,7 +382,7 @@ npx vitest run tests/components/composables/useEntityData.test.ts
 
 Expected: 3 race tests PASS, 4 reactivity tests FAIL (`onDataChanged` not subscribed yet).
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```ts
 // src/renderer/composables/useEntityData.ts
@@ -481,7 +481,7 @@ export function useEntityData<T>(
 }
 ```
 
-- [ ] **Step 5: Run test, see it pass**
+- [x] **Step 5: Run test, see it pass**
 
 ```
 npx vitest run tests/components/composables/useEntityData.test.ts
@@ -489,7 +489,7 @@ npx vitest run tests/components/composables/useEntityData.test.ts
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 6: Verify existing call sites still work**
+- [x] **Step 6: Verify existing call sites still work**
 
 ```bash
 npx vitest run tests/components
@@ -498,7 +498,7 @@ npm run lint
 
 The 10+ components already calling `useEntityData(idRef, loader)` keep working — they just gain mutation reactivity for free.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```
 git add src/renderer/composables/useEntityData.ts tests/components/composables/useEntityData.test.ts
@@ -513,7 +513,7 @@ git commit -m "feat(renderer): useEntityData auto-subscribes to onDataChanged"
 - Create: `src/renderer/composables/useEditableFields.ts`
 - Create: `tests/components/composables/useEditableFields.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/components/composables/useEditableFields.test.ts
@@ -558,9 +558,9 @@ describe('useEditableFields', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, see it fail**
+- [x] **Step 2: Run test, see it fail**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/renderer/composables/useEditableFields.ts
@@ -601,9 +601,9 @@ export function useEditableFields<T extends Record<string, unknown>>(
 }
 ```
 
-- [ ] **Step 4: Run test, see it pass**
+- [x] **Step 4: Run test, see it pass**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/renderer/composables/useEditableFields.ts tests/components/composables/useEditableFields.test.ts
@@ -618,7 +618,7 @@ git commit -m "feat(renderer): add useEditableFields composable"
 - Create: `src/renderer/components/EntityPanel.vue`
 - Create: `tests/components/EntityPanel.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/components/EntityPanel.test.ts
@@ -653,9 +653,9 @@ describe('EntityPanel', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, see it fail**
+- [x] **Step 2: Run test, see it fail**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```vue
 <!-- src/renderer/components/EntityPanel.vue -->
@@ -691,9 +691,9 @@ defineEmits<{ close: []; edit: [] }>();
 </script>
 ```
 
-- [ ] **Step 4: Run test, see it pass**
+- [x] **Step 4: Run test, see it pass**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/renderer/components/EntityPanel.vue tests/components/EntityPanel.test.ts
@@ -709,12 +709,12 @@ PlacePanel is the simplest non-trivial panel. Use it as the migration template.
 **Files:**
 - Modify: `src/renderer/components/PlacePanel.vue`
 
-- [ ] **Step 1: Read the current PlacePanel** (`src/renderer/components/PlacePanel.vue`) and inventory:
+- [x] **Step 1: Read the current PlacePanel** (`src/renderer/components/PlacePanel.vue`) and inventory:
   - Loaders called in `load(id)` (likely: `place`, `events`, `persons`, `media`, `citations`, `child_places`, `groups`, `tasks`)
   - Editable fields (e.g. name, place_type, notes, latitude, longitude, dates, address parts)
   - Stale-load guards at lines ~414+
 
-- [ ] **Step 2: Refactor data loading**
+- [x] **Step 2: Refactor data loading**
 
 Replace the manual `place = ref(null)` + `load(id)` with:
 
@@ -739,7 +739,7 @@ const allData = useEntityData(toRef(props, 'placeId'), async id => ({
 }));
 ```
 
-- [ ] **Step 3: Refactor field editing**
+- [x] **Step 3: Refactor field editing**
 
 ```ts
 const placeData = computed(() => allData.data.value?.place ?? null);
@@ -752,7 +752,7 @@ const { fields, save } = useEditableFields(
 
 Replace every `<input v-model="editFields.name" @blur="saveField('name')" />` with `<input v-model="fields.name" @blur="save('name')" />`.
 
-- [ ] **Step 4: Wrap in EntityPanel**
+- [x] **Step 4: Wrap in EntityPanel**
 
 ```vue
 <EntityPanel
@@ -769,7 +769,7 @@ Replace every `<input v-model="editFields.name" @blur="saveField('name')" />` wi
 
 Delete the old header markup and the `if (!props.placeId) return` empty-state branch — `EntityPanel` handles both.
 
-- [ ] **Step 5: Lint, run app, smoke test**
+- [x] **Step 5: Lint, run app, smoke test**
 
 ```
 npm run lint
@@ -778,7 +778,7 @@ npm run lint
 
 In another terminal, use `slaktforskning-dev` MCP `ui_screenshot` after navigating to `/places/<id>`. Compare against `main`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```
 git add src/renderer/components/PlacePanel.vue
@@ -823,7 +823,7 @@ PersonPanel already uses `usePersonPanelData` — it is the existing manual impl
 - Modify: `src/renderer/components/EventList.vue`
 - Create: `tests/components/EventList.race.test.ts`
 
-- [ ] **Step 1: Reproduce the race in a test**
+- [x] **Step 1: Reproduce the race in a test**
 
 ```ts
 // tests/components/EventList.race.test.ts
@@ -857,9 +857,9 @@ describe('EventList race', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, see it fail**
+- [x] **Step 2: Run test, see it fail**
 
-- [ ] **Step 3: Refactor `EventList.vue:133-200` to use `useEntityData`**
+- [x] **Step 3: Refactor `EventList.vue:133-200` to use `useEntityData`**
 
 Replace the manual `watch(props, load)` + `events.value = ...` with:
 
@@ -873,9 +873,9 @@ const { data: events } = useEntityData(idRef, async id => {
 });
 ```
 
-- [ ] **Step 4: Run test, see it pass**
+- [x] **Step 4: Run test, see it pass**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```
 git add src/renderer/components/EventList.vue tests/components/EventList.race.test.ts
@@ -889,9 +889,9 @@ git commit -m "fix(panel): close stale-load race in EventList"
 `PersonMediaSection`, `PersonChecksSection`, `PersonIdentifiersSection` all have the same pattern: `watch(() => props.personId, load, { immediate: true })`. Replace with `useEntityData(toRef(props, 'personId'), loader)`.
 
 For each section:
-- [ ] Refactor.
-- [ ] Smoke-check by clicking rapidly between persons in the running app.
-- [ ] Commit `refactor(panel): migrate <Section> to useEntityData`.
+- [x] Refactor.
+- [x] Smoke-check by clicking rapidly between persons in the running app.
+- [x] Commit `refactor(panel): migrate <Section> to useEntityData`.
 
 ---
 
@@ -903,7 +903,7 @@ The left-side list views (`PersonsListTab`, `PlacesView`, `SourcesView`, `MediaV
 - Modify: `src/renderer/composables/usePagedList.ts`
 - Modify (or create): `tests/components/composables/usePagedList.test.ts`
 
-- [ ] **Step 1: Extend the test**
+- [x] **Step 1: Extend the test**
 
 ```ts
 // tests/components/composables/usePagedList.test.ts (append)
@@ -945,7 +945,7 @@ describe('usePagedList — onDataChanged reactivity', () => {
 });
 ```
 
-- [ ] **Step 2: Implement the subscription**
+- [x] **Step 2: Implement the subscription**
 
 In `src/renderer/composables/usePagedList.ts`:
 
@@ -974,14 +974,14 @@ if (subscribe && typeof window !== 'undefined' && window.api?.onDataChanged) {
 
 (Use `onScopeDispose` not `onUnmounted` so the existing `onUnmounted` for the IntersectionObserver stays untouched, and so the subscription works for any composable that wraps `usePagedList`.)
 
-- [ ] **Step 3: Run tests, lint, smoke-check**
+- [x] **Step 3: Run tests, lint, smoke-check**
 
 ```
 npx vitest run tests/components/composables/usePagedList.test.ts
 npm run lint
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```
 git add src/renderer/composables/usePagedList.ts tests/components/composables/usePagedList.test.ts
@@ -1000,11 +1000,11 @@ The center column of each list+panel view holds a chart, map, or timeline. Today
 - `src/renderer/components/PersonTimeline.vue`, `PersonMap.vue` — already use `watch(() => props.personId, load, { immediate: true })`. Migrate to `useEntityData` so they refetch on event/relationship mutation, not just person change.
 
 **Per-component checklist:**
-- [ ] Replace the bespoke loader with `useEntityData`.
-- [ ] If the component exposes `refetch()` via `defineExpose`, keep the export, return the composable's `reload`.
-- [ ] Verify no manual `window.api.onDataChanged(...)` call remains in the component.
-- [ ] Smoke-check by editing an event for the focal person and watching the chart / timeline / map update without view-switch.
-- [ ] Commit per component: `refactor(chart): HourglassChart uses useEntityData`, etc.
+- [x] Replace the bespoke loader with `useEntityData`.
+- [x] If the component exposes `refetch()` via `defineExpose`, keep the export, return the composable's `reload`.
+- [x] Verify no manual `window.api.onDataChanged(...)` call remains in the component.
+- [x] Smoke-check by editing an event for the focal person and watching the chart / timeline / map update without view-switch.
+- [x] Commit per component: `refactor(chart): HourglassChart uses useEntityData`, etc.
 
 ---
 
@@ -1012,13 +1012,13 @@ The center column of each list+panel view holds a chart, map, or timeline. Today
 
 Composables now own the subscription. The remaining ad-hoc registrations should disappear or be reduced to the few cases that genuinely need cross-component fan-out (e.g., the badge debouncing in `App.vue`, which intentionally watches everything).
 
-- [ ] **Step 1: Audit**
+- [x] **Step 1: Audit**
 
 ```bash
 grep -RIn "onDataChanged\|offDataChanged\|dataVersionStore\.version" src/renderer | grep -v "composables/useEntityData.ts\|composables/usePagedList.ts\|App.vue\|preload"
 ```
 
-- [ ] **Step 2:** For each hit:
+- [x] **Step 2:** For each hit:
   - If it's calling `composable.reload()` to react to mutations → DELETE (the composable now auto-reloads).
   - If it's doing something the composable can't (cross-entity fan-out, badge counts in `App.vue`, undo toast) → KEEP and add a comment explaining why.
 
@@ -1027,39 +1027,39 @@ Expected high-confidence deletions:
 - `PersonsView.vue` — the direct `onDataChanged(onChartDataChanged)` call (chart components now self-subscribe via `useEntityData`).
 - `PlacesView.vue`, `SourcesView.vue` — the `dataVersionStore.version` watch wrappers (`usePagedList` now self-subscribes).
 
-- [ ] **Step 3:** `npm run lint && npx vitest run && npm run test:e2e`. Smoke-check each list+panel+center triple by editing data via a modal and watching all three update.
+- [x] **Step 3:** `npm run lint && npx vitest run && npm run test:e2e`. Smoke-check each list+panel+center triple by editing data via a modal and watching all three update.
 
-- [ ] **Step 4:** Commit `refactor(renderer): drop ad-hoc onDataChanged listeners now that composables own reactivity`.
+- [x] **Step 4:** Commit `refactor(renderer): drop ad-hoc onDataChanged listeners now that composables own reactivity`.
 
 ---
 
 ## Task 16: Document the pattern in CLAUDE.md + skills
 
-- [ ] **Step 1:** Update `.claude/rules/renderer.md` "Person Section Component Pattern" section to:
+- [x] **Step 1:** Update `.claude/rules/renderer.md` "Person Section Component Pattern" section to:
   - Mark `useEntityData` as the canonical self-loading-section pattern.
   - Add explicit guidance that `useEntityData` and `usePagedList` auto-react to `onDataChanged` and that **components must NOT register `window.api.onDataChanged(...)` directly**.
   - Add a short "Cross-view reactivity" subsection summarising the contract from the plan header.
-- [ ] **Step 2:** Update `.claude/skills/frontend-design/SKILL.md`:
+- [x] **Step 2:** Update `.claude/skills/frontend-design/SKILL.md`:
   - Replace the "Refreshing Views on Data Changes" section's three-pattern explanation with one rule: "lean on `useEntityData` / `usePagedList`; the composables own the subscription. Use Pattern-1 panel-emits-refresh only when you need a targeted single-row update without a full reload (e.g., map pin)."
   - Add `EntityPanel` to the components catalog.
-- [ ] **Step 3:** Update `.claude/skills/add-feature/SKILL.md`:
+- [x] **Step 3:** Update `.claude/skills/add-feature/SKILL.md`:
   - In the renderer section, point to `useEntityData` for any new self-loading section component, and `usePagedList` for any new list view.
   - Note that `mutating: true` on a `defineChannel` is what makes downstream reactivity work — the composable side is automatic.
-- [ ] **Step 4:** Update `CLAUDE.md` "Vue Component Patterns" section if present, otherwise just point to the skill.
-- [ ] **Step 5:** Commit `docs: document panel composables + cross-view reactivity rule`.
+- [x] **Step 4:** Update `CLAUDE.md` "Vue Component Patterns" section if present, otherwise just point to the skill.
+- [x] **Step 5:** Commit `docs: document panel composables + cross-view reactivity rule`.
 
 ---
 
 ## Self-review checklist
 
-- [ ] No panel file contains a manual `if (props.id !== id) return` guard.
-- [ ] No panel file declares its own `editFields` reactive + `saveField` function.
-- [ ] `grep -RIn "localStorage.setItem('" src/renderer` returns 0 — every key goes through `STORAGE_KEYS`.
-- [ ] `EventList.race.test.ts` is green.
-- [ ] `grep -RIn "onDataChanged\|dataVersionStore" src/renderer/{views,components}` returns ONLY justified cases (App.vue badge debouncing, panel-emits Pattern-1 in MapView, the targeted `refreshPlace`). Every other site reaches reactivity through `useEntityData` / `usePagedList`.
-- [ ] **Reactivity smoke test**: with the app running, open `/persons/:id` (left list + right panel + center chart all visible). Edit an event for the focal person via the panel's EventList → all three update without view-switch. Repeat for `/places/:id` (left list + right panel + center map): rename a place via the panel → list row, panel header, and map pin all update. Repeat for `/sources/:id`.
-- [ ] `npm run test:e2e` passes (CRUD round-trip exercises every panel via `/persons/:id` etc.).
-- [ ] CLAUDE.md / `.claude/rules/renderer.md` / frontend-design + add-feature skills updated to mark `useEntityData` and `usePagedList` as the canonical reactive loaders.
+- [x] No panel file contains a manual `if (props.id !== id) return` guard.
+- [x] No panel file declares its own `editFields` reactive + `saveField` function.
+- [x] `grep -RIn "localStorage.setItem('" src/renderer` returns 0 — every key goes through `STORAGE_KEYS`.
+- [x] `EventList.race.test.ts` is green.
+- [x] `grep -RIn "onDataChanged\|dataVersionStore" src/renderer/{views,components}` returns ONLY justified cases (App.vue badge debouncing, panel-emits Pattern-1 in MapView, the targeted `refreshPlace`). Every other site reaches reactivity through `useEntityData` / `usePagedList`.
+- [x] **Reactivity smoke test**: with the app running, open `/persons/:id` (left list + right panel + center chart all visible). Edit an event for the focal person via the panel's EventList → all three update without view-switch. Repeat for `/places/:id` (left list + right panel + center map): rename a place via the panel → list row, panel header, and map pin all update. Repeat for `/sources/:id`.
+- [x] `npm run test:e2e` passes (CRUD round-trip exercises every panel via `/persons/:id` etc.).
+- [x] CLAUDE.md / `.claude/rules/renderer.md` / frontend-design + add-feature skills updated to mark `useEntityData` and `usePagedList` as the canonical reactive loaders.
 
 ## Out of scope (for follow-up plans)
 
