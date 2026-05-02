@@ -122,25 +122,7 @@ export function registerWebsiteExportHandlers(): void {
     };
     _outputDir?: string;
   }) => {
-    let out: string;
-    if ((opts as { _outputDir?: string })._outputDir) {
-      out = (opts as { _outputDir?: string })._outputDir!;
-    } else {
-      const dir = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
-      if (dir.canceled || !dir.filePaths[0]) return { canceled: true };
-      out = dir.filePaths[0];
-    }
-
-    // 1. Copy dist-static bundle
-    const bundleSrc = app.isPackaged
-      ? path.join(process.resourcesPath, 'dist-static')
-      : path.join(__dirname, '../..', 'dist-static');
-    if (!fs.existsSync(bundleSrc)) {
-      return { bundleMissing: true };
-    }
-    await fsp.cp(bundleSrc, out, { recursive: true });
-
-    // 2. Build snapshot via worker thread
+    // 1. Build snapshot FIRST (before any dialog) so we know if there's media
     const snapshot = await callWorker('website:buildSnapshot', {
       siteTitle: opts.siteTitle,
       focusPersonId: opts.focusPersonId ?? '',
@@ -152,62 +134,145 @@ export function registerWebsiteExportHandlers(): void {
       mediaRegions: Array<{ media_id: string }>;
     };
 
-    // 3. Copy media first so we know which files actually made it. Items
-    //    with no file_ref or whose source file has gone missing get dropped
-    //    from the snapshot below — otherwise the static SPA happily builds
-    //    `./media/full/<id>.<ext>` URLs for them and the gallery shows broken
-    //    images. Async with periodic yields so the main thread stays
-    //    responsive on large libraries (7000+ images would otherwise lock
-    //    the app for minutes and trigger Electron's unresponsive-app kill).
-    //    No thumbnails: the static site reads from media/full/ directly via
-    //    static-api.readAsDataUrl; the browser handles scaling.
-    const exportedMediaIds = new Set<string>();
-    if (opts.options.includeMedia) {
-      const fullDir = path.join(out, 'media', 'full');
-      await fsp.mkdir(fullDir, { recursive: true });
-      let copied = 0;
-      for (const m of snapshot.media) {
-        if (!m.file_ref) continue;
-        try {
-          await fsp.access(m.file_ref);
-        } catch {
-          continue;
-        }
-        const ext = path.extname(m.file_ref);
-        const filename = `${m.id}${ext}`;
-        try {
-          await fsp.copyFile(m.file_ref, path.join(fullDir, filename));
-        } catch {
-          // Skip individual file failures rather than aborting the export
-          continue;
-        }
-        exportedMediaIds.add(m.id);
-        copied++;
-        // Yield every 25 files so IPC and renderer events can process
-        if (copied % 25 === 0) {
-          await new Promise(resolve => setImmediate(resolve));
-        }
+    // 2. Determine if we have media to export
+    const hasMedia = opts.options.includeMedia && snapshot.media.some(m => !!m.file_ref);
+
+    if (!hasMedia) {
+      // === SINGLE-FILE PATH ===
+      // No media → produce a single self-contained HTML file
+      let outputPath: string;
+      if (opts._outputDir) {
+        // Test mode: write index.html inside the provided directory
+        outputPath = path.join(opts._outputDir, 'index.html');
+      } else {
+        const result = await dialog.showSaveDialog({
+          defaultPath: `${opts.siteTitle || 'family-tree'}.html`,
+          filters: [{ name: 'HTML', extensions: ['html'] }],
+        });
+        if (result.canceled || !result.filePath) return { canceled: true };
+        outputPath = result.filePath;
       }
 
+      // Strip media from snapshot
+      snapshot.media = [];
+      snapshot.mediaLinks = [];
+      snapshot.mediaRegions = [];
+
+      // Build self-contained HTML
+      const html = await buildPreviewHtml(snapshot);
+      await fsp.writeFile(outputPath, html, 'utf-8');
+
+      return { canceled: false, outputDir: opts._outputDir || outputPath };
+    }
+
+    // === FOLDER PATH (has media to export) ===
+    let out: string;
+    if (opts._outputDir) {
+      out = opts._outputDir;
+    } else {
+      const dir = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
+      if (dir.canceled || !dir.filePaths[0]) return { canceled: true };
+      out = dir.filePaths[0];
+    }
+
+    // Copy dist-static bundle
+    const bundleSrc = app.isPackaged
+      ? path.join(process.resourcesPath, 'dist-static')
+      : path.join(__dirname, '../..', 'dist-static');
+    if (!fs.existsSync(bundleSrc)) {
+      return { bundleMissing: true };
+    }
+    await fsp.cp(bundleSrc, out, { recursive: true });
+
+    // Copy media with DEFERRED mkdir — only create media/full/ when the
+    // first file passes the access() check. If all files are missing, no
+    // directory is created and the snapshot media arrays are emptied.
+    const exportedMediaIds = new Set<string>();
+    let fullDirCreated = false;
+    let copied = 0;
+    for (const m of snapshot.media) {
+      if (!m.file_ref) continue;
+      try {
+        await fsp.access(m.file_ref);
+      } catch {
+        continue;
+      }
+      if (!fullDirCreated) {
+        await fsp.mkdir(path.join(out, 'media', 'full'), { recursive: true });
+        fullDirCreated = true;
+      }
+      const ext = path.extname(m.file_ref);
+      const filename = `${m.id}${ext}`;
+      try {
+        await fsp.copyFile(m.file_ref, path.join(out, 'media', 'full', filename));
+      } catch {
+        // Skip individual file failures rather than aborting the export
+        continue;
+      }
+      exportedMediaIds.add(m.id);
+      copied++;
+      // Yield every 25 files so IPC and renderer events can process
+      if (copied % 25 === 0) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+    }
+
+    // If no files were actually copied, empty the snapshot media arrays
+    if (exportedMediaIds.size === 0) {
+      snapshot.media = [];
+      snapshot.mediaLinks = [];
+      snapshot.mediaRegions = [];
+    } else {
       // Drop any media (and dependent links/regions) whose file didn't
       // make it. Keeps the static gallery lean and free of broken images.
       snapshot.media = snapshot.media.filter(m => exportedMediaIds.has(m.id));
       snapshot.mediaLinks = snapshot.mediaLinks.filter(ml => exportedMediaIds.has(ml.media_id));
       snapshot.mediaRegions = snapshot.mediaRegions.filter(r => exportedMediaIds.has(r.media_id));
-    } else {
-      // includeMedia=false: drop all media metadata so we don't ship dead
-      // references the static SPA would try to render.
-      snapshot.media = [];
-      snapshot.mediaLinks = [];
-      snapshot.mediaRegions = [];
     }
 
-    // 4. Write data.js (script tag, works from file:// — JSON would need fetch
-    //    which is blocked from file://). Done after the copy pass so the
-    //    snapshot only references media that actually shipped.
+    // Write data.js (script tag, works from file:// — JSON would need fetch
+    // which is blocked from file://). Done after the copy pass so the
+    // snapshot only references media that actually shipped.
     const json = JSON.stringify(snapshot);
     await fsp.writeFile(path.join(out, 'data.js'), `window.__SNAPSHOT__=${json};`);
 
     return { canceled: false, outputDir: out };
+  });
+
+  wrapHandler('website:exportSingleFile', async (opts: {
+    siteTitle: string;
+    focusPersonId: string | null;
+    scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
+    options: {
+      excludeLiving: boolean;
+      redactLiving: boolean;
+      mediaPersonOnly: boolean;
+    };
+  }) => {
+    // 1. Prompt user for save location
+    const result = await dialog.showSaveDialog({
+      defaultPath: 'family-tree.html',
+      filters: [{ name: 'HTML', extensions: ['html'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+
+    // 2. Build snapshot (no media)
+    const snapshot = await callWorker('website:buildSnapshot', {
+      siteTitle: opts.siteTitle,
+      focusPersonId: opts.focusPersonId ?? '',
+      scope: opts.scope,
+      options: {
+        ...opts.options,
+        includeMedia: false,
+      },
+    });
+
+    // 3. Build self-contained HTML (reuses buildPreviewHtml)
+    const html = await buildPreviewHtml(snapshot);
+
+    // 4. Write single file
+    await fsp.writeFile(result.filePath, html, 'utf-8');
+
+    return { canceled: false, outputPath: result.filePath };
   });
 }

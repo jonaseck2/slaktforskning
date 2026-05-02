@@ -34,9 +34,12 @@
           v-model:includeMedia="includeMedia"
           v-model:siteTitle="siteTitle"
           :exporting="exporting"
+          :exporting-single-file="exportingSingleFile"
+          :media-count="mediaCount"
           :last-output="lastOutput"
           :bundle-missing="bundleMissing"
           @export="exportSite"
+          @export-single-file="exportSingleFile"
           @close="closePanel"
         />
       </div>
@@ -66,8 +69,11 @@ const mediaPersonOnly = ref(true);
 const includeMedia = ref(true);
 const siteTitle = ref('Family Tree');
 const exporting = ref(false);
+const exportingSingleFile = ref(false);
 const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
+
+const mediaCount = computed(() => snapshot.value?.totals?.media ?? null);
 
 const snapshot = ref<PreviewSnapshot | null>(null);
 const snapshotLoading = ref(false);
@@ -190,6 +196,32 @@ onMounted(async () => {
   }
   if (canPreview.value) refreshPreview();
 });
+
+async function exportSingleFile() {
+  exportingSingleFile.value = true;
+  lastOutput.value = null;
+  try {
+    const res = await window.api.website.exportSingleFile({
+      siteTitle: siteTitle.value,
+      focusPersonId: focusPersonId.value,
+      scope: scopeMode.value === 'everyone'
+        ? { everyone: true }
+        : { focusId: focusPersonId.value, ancestors: ancestors.value, descendants: descendants.value },
+      options: {
+        excludeLiving: excludeLiving.value,
+        redactLiving: redactLiving.value,
+        mediaPersonOnly: mediaPersonOnly.value,
+      },
+    }) as { canceled?: boolean; outputPath?: string } | null;
+    if (res && !res.canceled && res.outputPath) {
+      lastOutput.value = res.outputPath;
+    }
+  } catch (e) {
+    console.error('Single-file export failed', e);
+  } finally {
+    exportingSingleFile.value = false;
+  }
+}
 
 async function exportSite() {
   exporting.value = true;

@@ -4,6 +4,7 @@
       {{ collapsed ? '►' : '▼' }}
     </button>
     <span class="section-title">{{ title }}</span>
+    <span v-if="valid === true" class="section-valid-icon">✓</span>
     <span v-if="count !== undefined" class="section-count">({{ count }})</span>
     <span class="spacer" />
     <AppButton
@@ -23,10 +24,12 @@ import AppButton from './AppButton.vue';
 withDefaults(defineProps<{
   title: string;
   count?: number;
+  valid?: boolean;
   collapsed?: boolean;
   collapsible?: boolean;
   actionLabel?: string;
 }>(), {
+  valid: undefined,
   collapsed: false,
   collapsible: true,
   actionLabel: '',
@@ -71,6 +74,12 @@ defineEmits<{ toggle: []; action: [] }>();
 .section-count {
   font-weight: var(--font-weight-normal);
   color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+.section-valid-icon {
+  color: var(--success-text);
+  margin-left: 4px;
   font-size: var(--font-sm);
 }
 

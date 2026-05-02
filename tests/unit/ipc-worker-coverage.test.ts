@@ -30,7 +30,7 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'shell:open-external',
   'export:openFolder',
   'app:getVersion', 'app:openExternal',
-  'website:export', 'website:previewSnapshot', 'website:buildPreviewHtml',
+  'website:export', 'website:exportSingleFile', 'website:previewSnapshot', 'website:buildPreviewHtml',
   'print:print', 'print:exportPdf',
   'chart:saveSvg', 'chart:savePdf',
   'csv:export',

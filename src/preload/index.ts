@@ -224,6 +224,7 @@ const api = {
   },
   website: {
     export: (opts: unknown) => ipcRenderer.invoke('website:export', opts),
+    exportSingleFile: (opts: unknown) => ipcRenderer.invoke('website:exportSingleFile', opts),
     previewSnapshot: (opts: unknown) => ipcRenderer.invoke('website:previewSnapshot', opts),
     buildPreviewHtml: (opts: unknown) => ipcRenderer.invoke('website:buildPreviewHtml', opts),
   },

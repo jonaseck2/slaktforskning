@@ -15,11 +15,11 @@
     <div class="panel-body">
 
       <!-- Subject -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('htmlSite.subject')" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
+      <div class="panel-section" :class="{ 'section-highlight': subjectHighlight }">
+        <SectionHeader :title="$t('htmlSite.focusPerson')" :valid="!!focusPersonId" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
         <div v-if="open.subject" class="panel-section-body">
           <PersonPicker :model-value="focusPersonId ?? null" @update:model-value="focusPersonId = $event" />
-          <p class="panel-hint">{{ $t('htmlSite.subjectHint') }}</p>
+          <p class="panel-hint">{{ $t('htmlSite.focusPersonHint') }}</p>
         </div>
       </div>
 
@@ -64,7 +64,12 @@
       <div class="panel-section">
         <SectionHeader :title="$t('htmlSite.include')" :collapsed="!open.include" @toggle="toggleSection('include')" />
         <div v-if="open.include" class="panel-section-body">
-          <label class="panel-checkbox"><input type="checkbox" v-model="includeMedia"> {{ $t('htmlSite.includeMedia') }}</label>
+          <label class="panel-checkbox">
+            <input type="checkbox" v-model="includeMedia"> {{ $t('htmlSite.includeMedia') }}
+            <span v-if="includeMedia && props.mediaCount !== null" class="media-count">
+              ({{ $t('htmlSite.mediaCount', { count: props.mediaCount }) }})
+            </span>
+          </label>
         </div>
       </div>
 
@@ -85,10 +90,18 @@
       <AppButton
         variant="primary"
         class="panel-action-btn"
-        :disabled="exporting || !focusPersonId"
-        @click="emit('export')"
+        :disabled="exporting || props.exportingSingleFile || !focusPersonId"
+        @click="handleExportClick()"
       >
         {{ exporting ? $t('htmlSite.exporting') : $t('htmlSite.export') }}
+      </AppButton>
+      <AppButton
+        variant="secondary"
+        class="panel-action-btn"
+        :disabled="exporting || props.exportingSingleFile || !focusPersonId"
+        @click="emit('export-single-file')"
+      >
+        {{ props.exportingSingleFile ? $t('htmlSite.exportingSingleFile') : $t('htmlSite.exportSingleFile') }}
       </AppButton>
       <p v-if="lastOutput" class="panel-success-hint">
         {{ $t('htmlSite.exportedTo') }} <code>{{ lastOutput }}</code>
@@ -101,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import EntityPanel from './EntityPanel.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
@@ -117,18 +131,38 @@ const mediaPersonOnly = defineModel<boolean>('mediaPersonOnly', { required: true
 const includeMedia = defineModel<boolean>('includeMedia', { required: true });
 const siteTitle = defineModel<string>('siteTitle', { required: true });
 
-defineProps<{
+const props = withDefaults(defineProps<{
   exporting: boolean;
   lastOutput: string | null;
   bundleMissing: boolean;
-}>();
+  mediaCount?: number | null;
+  exportingSingleFile?: boolean;
+}>(), {
+  mediaCount: null,
+  exportingSingleFile: false,
+});
 
-const emit = defineEmits<{ export: []; close: [] }>();
+const emit = defineEmits<{ export: []; close: []; 'export-single-file': [] }>();
 
 const { sections: open, toggleSection } = usePanelSections(
   'website-panel-section-',
   { subject: true, scope: true, privacy: true, include: true, site: true },
 );
+
+const subjectHighlight = ref(false);
+
+function handleExportClick() {
+  if (!focusPersonId.value) {
+    subjectHighlight.value = true;
+    open.subject = true;
+    return;
+  }
+  emit('export');
+}
+
+watch(focusPersonId, (val) => {
+  if (val) subjectHighlight.value = false;
+});
 </script>
 
 <style scoped>
@@ -213,5 +247,18 @@ const { sections: open, toggleSection } = usePanelSections(
   font-size: var(--font-xs);
   color: var(--error-text);
   margin: 0;
+}
+.media-count {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-xs);
+}
+.section-highlight {
+  animation: highlight-pulse 1.5s ease-in-out;
+}
+@keyframes highlight-pulse {
+  0% { border-color: var(--warning-border); }
+  50% { border-color: var(--warning-border); }
+  100% { border-color: var(--surface-border-subtle); }
 }
 </style>

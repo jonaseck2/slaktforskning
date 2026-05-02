@@ -17,3 +17,4 @@ coverage/
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 .env*
+.kiro/
