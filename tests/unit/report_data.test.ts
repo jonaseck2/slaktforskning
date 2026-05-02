@@ -359,6 +359,8 @@ describe('getTimeline', () => {
   });
 
   it('returns person events and family events merged chronologically', () => {
+    // After Task 6: spouse births are excluded (only spouse deaths emitted).
+    // After Task 4: child events get sex-typed labels.
     const person = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
     const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
     createRelationship(db, { type: 'couple', person1_id: person.id, person2_id: spouse.id });
@@ -367,11 +369,11 @@ describe('getTimeline', () => {
     const personBirth = createEvent(db, { event_type: 'birth', date_value: '1840-01-01', date_original: '1840' });
     addEventParticipant(db, { event_id: personBirth.id, person_id: person.id });
 
-    // Spouse birth
+    // Spouse birth (excluded post-Task-6 — spouse only emits deaths)
     const spouseBirth = createEvent(db, { event_type: 'birth', date_value: '1845-06-15', date_original: '1845' });
     addEventParticipant(db, { event_id: spouseBirth.id, person_id: spouse.id });
 
-    // Child
+    // Child (sex M → 'son' post-Task-4)
     const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
     createRelationship(db, { type: 'parent_child', person1_id: person.id, person2_id: child.id });
 
@@ -380,18 +382,17 @@ describe('getTimeline', () => {
 
     const timeline = getTimeline(db, person.id);
     expect(timeline).not.toBeNull();
-    expect(timeline!.length).toBeGreaterThanOrEqual(3);
+
+    // Spouse birth is excluded; expect own birth + child birth.
+    expect(timeline!.length).toBe(2);
+    expect(timeline!.find(e => e.person_id === spouse.id)).toBeUndefined();
 
     // Should be sorted chronologically
     expect(timeline![0].event.date_value).toBe('1840-01-01');
     expect(timeline![0].relationship_label).toBe('self'); // own event
 
-    expect(timeline![1].event.date_value).toBe('1845-06-15');
-    expect(timeline![1].relationship_label).toBe('spouse');
-
-    expect(timeline![2].event.date_value).toBe('1870-03-20');
-    // Task 4: child sex 'M' → 'son'.
-    expect(timeline![2].relationship_label).toBe('son');
+    expect(timeline![1].event.date_value).toBe('1870-03-20');
+    expect(timeline![1].relationship_label).toBe('son');
   });
 
   describe('getTimeline relationship_label vocabulary', () => {
@@ -792,6 +793,66 @@ describe('getTimeline', () => {
       );
       expect(fosterEntry).toBeDefined();
       expect(fosterEntry!.relationship_label).toBe('daughter');
+    });
+  });
+
+  describe('getTimeline spouse death', () => {
+    it('emits spouse death only, within subject lifetime; spouse birth excluded', () => {
+      // Task 6: per the user goal "the deaths of their … spouse," spouse
+      // events are narrowed to 'death' only.
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Spouse birth (within subject lifetime by date) — must STILL be excluded
+      // by type narrowing.
+      const spouseBirth = createEvent(db, { event_type: 'birth', date_value: '1855-06-15', date_original: '1855' });
+      addEventParticipant(db, { event_id: spouseBirth.id, person_id: spouse.id });
+      const spouseDeath = createEvent(db, { event_type: 'death', date_value: '1880-04-10', date_original: '1880' });
+      addEventParticipant(db, { event_id: spouseDeath.id, person_id: spouse.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      // Spouse birth excluded by Task 6's relevantTypes narrowing.
+      const spouseBirthEntry = timeline!.find(
+        e => e.person_id === spouse.id && e.event.event_type === 'birth',
+      );
+      expect(spouseBirthEntry).toBeUndefined();
+
+      // Spouse death is on the timeline as 'spouse'.
+      const spouseDeathEntry = timeline!.find(
+        e => e.person_id === spouse.id && e.event.event_type === 'death',
+      );
+      expect(spouseDeathEntry).toBeDefined();
+      expect(spouseDeathEntry!.relationship_label).toBe('spouse');
+    });
+
+    it('excludes spouse christening and burial events (narrowed to death only)', () => {
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Both during subject's lifetime by date — but type is narrowed to 'death' only.
+      const spouseChristening = createEvent(db, { event_type: 'christening', date_value: '1860-02-01', date_original: '1860' });
+      addEventParticipant(db, { event_id: spouseChristening.id, person_id: spouse.id });
+      const spouseBurial = createEvent(db, { event_type: 'burial', date_value: '1880-04-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: spouseBurial.id, person_id: spouse.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      expect(timeline!.find(e => e.person_id === spouse.id && e.event.event_type === 'christening')).toBeUndefined();
+      expect(timeline!.find(e => e.person_id === spouse.id && e.event.event_type === 'burial')).toBeUndefined();
     });
   });
 });

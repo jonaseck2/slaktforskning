@@ -555,9 +555,11 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     let subjectIsParent = false;
     let relevantTypes: string[];
     if (r.type === 'couple') {
+      // Task 6: narrow to death only — per the user goal "the deaths of their
+      // … spouse." Spouse births/christenings/burials are not part of the
+      // subject's life story for timeline purposes.
       label = 'spouse';
-      // Task 6 will narrow spouse emissions.
-      relevantTypes = ['birth', 'death', 'christening', 'burial'];
+      relevantTypes = ['death'];
     } else if (r.type === 'parent_child') {
       // Convention: person1 = parent, person2 = child.
       subjectIsParent = r.person1_id === personId;
