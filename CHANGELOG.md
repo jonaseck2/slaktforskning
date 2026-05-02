@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+- feat: persons with both a current and a birth-name record render as `Anna Andersson (f. Svensson)` (sv) / `(b. Svensson)` (en) across the panel header, persons list, search, person picker, relationships list, person timeline, linked-persons sections, and HTML site export.
+- feat: 7 keepsake reports (A Life, A Marriage, Life on One Page, Photo Album, Your Ancestors, Place Chronicle, Family in Year) each get a per-report "Show birth name in parenthesis" toggle, inheriting the global default and overridable per-report.
+- feat: Settings → Defaults gains a "Visning / Display" section with a global toggle for the birth-name parenthetical (defaults to on). Toggle re-renders open views immediately.
+- feat: low-importance quality check `LIKELY_INLINE_BIRTH_NAME` flags name records like `"Andersson (f. Svensson)"` packed into a single field. The user splits them by hand via the existing name-edit modal — no auto-splitting (Prime Directive).
+- fix: GEDCOM importer now maps `2 TYPE NAME_CHANGE` to `name_change` (was silently falling back to `birth`). Round-trip regression test covers all five `name_type` values via export → re-import.
 - fix: MCP server survives Electron app restarts without forcing a manual reconnect
+- chore: CSV export gains a comment explicitly forbidding baking the parenthetical form into surname cells (would round-trip as a literal string and trip the new quality check).
 
 ## v0.196.0 — Name changes on the timeline
 

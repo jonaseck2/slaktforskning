@@ -112,17 +112,17 @@ User-observable verification, in this order. None of these are "vitest passes" a
 - [x] **T6 — Per-report toggles in `reportConfig.ts`.** Add one boolean ref per keepsake report (see Pattern 0 table). Initialize each from the `personNameOptions` store value at first read. Expose them in the store's return object. Add the corresponding option-panel checkbox (shared i18n key) to each keepsake report's option panel template, matching the existing `redactLiving`/`showHeaderFooter` pattern.
 - [x] **T7 — Migrate Pattern 1 surfaces.** For each of the 13 "Yes" rows in Pattern 1, swap `formatFullName` / `<PersonName>` for the new variant. Call sites in non-report contexts pass `personNameOptions.showBirthNameParenthetical`. Call sites in reports pass the per-report ref from `reportConfig`. HTML site snapshot reads the global setting at render time. Expand component prop interfaces to receive the full `names` array where they currently only get the displayed name. Add `/* Display only — see plan birth-name-display-and-quality-check */` at non-obvious sites.
 - [x] **T8 — Quality check.** Add `checkLikelyInlineBirthName` in `src/api/checks/checks-quality.ts`, register in `checks/index.ts`. Severity `notice`. Returns one row per offending `person_names.id`. Unit-test against: `"Andersson (f. Svensson)"`, `"Andersson (b. Svensson)"`, `"Anna (född Svensson)"`, `"Anna (born Svensson)"`, `"Anderson"` (no match), `"O'Connor (Boston)"` (no match — parenthetical without trigger word), `"(f. Svensson) Andersson"` (no match — trigger only valid when preceded by name token).
-- [ ] **T9 — Quality row routing.** Verify clicking the new check row in `/quality` opens the person panel with names section expanded (existing routing should already cover this; smoke-check only).
+- [x] **T9 — Quality row routing.** Verify clicking the new check row in `/quality` opens the person panel with names section expanded (existing routing should already cover this; smoke-check only).
 - [x] **T10 — GEDCOM importer `name_change` mapping.** In `src/import/gedcom/phases.ts`, extend rawType mapping to include `NAME_CHANGE → 'name_change'`. (Currently falls back to `'birth'`, which would lose the type on re-import.)
 - [x] **T11 — Round-trip test.** Add `tests/unit/gedcomMultiNameRoundTrip.test.ts`. Build a person with two `person_names` rows in an in-memory DB, run the GEDCOM exporter, parse the output through the importer into a second in-memory DB, assert both rows reappear with matching `name_type` and `surname`. Cover all five `name_type` values.
 - [x] **T12 — CSV intent comment.** Add a one-line comment near the top of `src/api/csv_export.ts` documenting that CSV emits only the displayed name by design, and that the parenthetical birth-name form must NOT be baked into the CSV cell.
-- [ ] **T13 — Self-review checklist.**
-  - [ ] All 13 Pattern 1 surfaces migrated; the four "No" surfaces have explanatory comments.
-  - [ ] Settings toggle flips behavior across all in-app surfaces immediately.
-  - [ ] Each keepsake report has its own toggle and inherits the global default at session start.
-  - [ ] No new `class=` names in `shared.css`'s reserved namespace.
-  - [ ] No code path writes the parenthetical form back to `person_names.given_name` or `person_names.surname`.
-  - [ ] No code path auto-splits a name on save or import.
-  - [ ] No store, composable, or util reads `db_settings` outside the dedicated `personNameOptions` store (no scattered `getSetting('display_birth_name_parenthetical')` calls).
-  - [ ] `npm run lint`, `npm test`, `tests/components/panel-layout-consistency.test.ts`, and the new `gedcomMultiNameRoundTrip.test.ts` pass.
-  - [ ] Smoke-checks 1, 2, 3 above performed in the running app.
+- [x] **T13 — Self-review checklist.**
+  - [x] All 13 Pattern 1 surfaces migrated; the four "No" surfaces have explanatory comments.
+  - [x] Settings toggle flips behavior across all in-app surfaces immediately.
+  - [x] Each keepsake report has its own toggle and inherits the global default at session start.
+  - [x] No new `class=` names in `shared.css`'s reserved namespace.
+  - [x] No code path writes the parenthetical form back to `person_names.given_name` or `person_names.surname`.
+  - [x] No code path auto-splits a name on save or import.
+  - [x] No store, composable, or util reads `db_settings` outside the dedicated `personNameOptions` store (no scattered `getSetting('display_birth_name_parenthetical')` calls).
+  - [x] `npm run lint`, `npm test`, `tests/components/panel-layout-consistency.test.ts`, and the new `gedcomMultiNameRoundTrip.test.ts` pass.
+  - [x] Smoke-checks 1, 2, 3 above performed in the running app.
