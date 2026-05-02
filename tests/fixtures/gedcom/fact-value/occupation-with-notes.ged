@@ -1,0 +1,14 @@
+0 HEAD
+1 SOUR ManualFixture
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Anders /Andersson/
+1 SEX M
+1 OCCU Carpenter
+2 DATE 1885
+2 PLAC Stockholm
+2 NOTE Worked at the Stockholm shipyard
+0 TRLR

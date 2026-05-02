@@ -1,0 +1,23 @@
+0 HEAD
+1 SOUR ManualFixture
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Eva /Eriksson/
+1 SEX F
+1 OCCU Schoolteacher
+2 DATE 1900
+1 EDUC Bachelor of Arts
+2 DATE 1898
+2 PLAC Uppsala
+1 RELI Lutheran
+1 TITL Doctor
+1 DSCR Tall, dark hair
+1 FACT Volunteer firefighter 1905-1920
+2 TYPE Volunteer
+1 EVEN Joined Masonic Lodge
+2 TYPE Membership
+2 DATE 1905
+0 TRLR

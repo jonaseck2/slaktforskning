@@ -36,7 +36,10 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   residence: 'RESI', education: 'EDUC', emigration: 'EMIG',
   immigration: 'IMMI', naturalization: 'NATU', census: 'CENS',
   probate: 'PROB', will: 'WILL', graduation: 'GRAD', retirement: 'RETI',
-  marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP', other: 'EVEN',
+  marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP',
+  // Fact-shaped event types — line value is emitted on the same line as the tag.
+  title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
+  other: 'EVEN',
 };
 
 function capitalizeFirst(s: string): string {

@@ -11,6 +11,8 @@ export const EVENT_TYPE_TO_GEDCOM_TAG: Record<string, string> = {
   marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP',
   ordination: 'ORDN', military: '_MILT', mention: 'EVEN',
   wedding: 'MARR', foster_placement: 'EVEN', travel: 'EVEN',
+  // Fact-shaped event types — value lives in events.value, round-trips as line value.
+  title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
   other: 'EVEN',
 };
 

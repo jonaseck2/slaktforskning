@@ -887,7 +887,7 @@ describe('GEDCOM import completeness', () => {
     expect(adop).toBeTruthy();
   });
 
-  it('TITL on INDI imported as occupation event', () => {
+  it('TITL on INDI imported as title event with line value preserved', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -898,9 +898,12 @@ describe('GEDCOM import completeness', () => {
     importGedcom(db, parseGedcom(ged));
     const persons = listPersons(db);
     const events = getEventsForPerson(db, persons[0].id);
-    const occu = events.find(e => e.event_type === 'occupation');
-    expect(occu).toBeTruthy();
-    expect(occu?.notes).toBe('Sömmerska, bondmora');
+    // TITL is now a fact-shaped event_type 'title' so the line value
+    // round-trips back as `1 TITL Sömmerska, bondmora` on export.
+    const titl = events.find(e => e.event_type === 'title');
+    expect(titl).toBeTruthy();
+    expect(titl?.value).toBe('Sömmerska, bondmora');
+    expect(titl?.notes).toBe('');
   });
 
   it('top-level NOTE xref resolved to content in person.notes', () => {
