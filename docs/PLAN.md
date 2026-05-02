@@ -27,6 +27,9 @@ First-run experience: welcome screen, getting started guidance, empty tree with 
 Extend the existing `/duplicates` view (persons-only today) to cover places, sources, and media. Reuse the `MergePersonsModal` compare-and-merge pattern. API needs `findDuplicate*` + `merge*` per entity. Make the duplicates view the landing target for all `DUPLICATE_*` quality rows.
 - Plan: TBD — needs a design pass (see brainstorming).
 
+#### media_links.sort_order — preserve absolute integer on round-trip [backlog]
+After the GEDCOM fidelity audit, `media_links.sort_order` is documented as lossy: the importer always renumbers OBJE blocks from 0..n-1 by emit position. Relative ordering survives, but a user-authored sort_order of 42 on a single OBJE comes back as 0. To promote this back to lossless, the importer needs to honor an explicit sort hint (custom `_SORT` sub-tag or use the OBJE block's emit position only when no hint is present). Low priority — relative ordering is what users actually observe in the UI.
+
 ---
 
 ## Considered, not now

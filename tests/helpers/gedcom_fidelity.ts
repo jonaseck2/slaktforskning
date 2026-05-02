@@ -65,7 +65,32 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   'task_links.entity_type': 'place',
   'media_links.entity_type': 'event',
   'research_tasks.status': 'in_progress',
-  // event_participants.role has no CHECK in schema (free TEXT) — leave as default.
+  // events.event_type sentinel must be a value the EVENT_TYPE_TO_TAG map knows
+  // — a free-form string would round-trip to 'other'. 'occupation' is a stable
+  // mapped type distinguishable from the other-event default.
+  'events.event_type': 'occupation',
+  // event_participants.role has no CHECK in schema (free TEXT) but the export
+  // path encodes role 'primary' as "the INDI owns the event" while non-primary
+  // roles emit as ASSO RELA on a separate participant. To exercise round-trip
+  // for the role column we must seed a non-primary role plus a primary owner;
+  // a recognisable real role (witness) keeps the GEDCOM output well-formed.
+  'event_participants.role': 'witness',
+  // events.date_value / date_value_end must be GEDCOM-formatted dates so the
+  // exporter emits them and the importer round-trips them. A sentinel string
+  // would not parse and reset to null. ISO 8601 (YYYY-MM-DD) round-trips via
+  // formatGedcomDate / parseGedcomDate.
+  'events.date_value': '1789-05-12',
+  'events.date_value_end': '1799-08-23',
+  // citations.confidence is clamped to 0..3 by QUAY emitter. The default INTEGER
+  // sentinel 42 would clamp to 3 and the test would assert literal-equal failure.
+  // The user's authored values are always in [0, 3] anyway — use a representative
+  // in-range value (3 = direct/primary evidence) so the round-trip is meaningful.
+  'citations.confidence': 3,
+  // preferred_name encodes as an asterisk after the matching token in given_name.
+  // The sentinel must therefore be a substring of given_name; the seeder picks
+  // 'Sentinel' as given_name for the row under test, so the preferred-name
+  // sentinel must be 'Sentinel'.
+  'person_names.preferred_name': 'Sentinel',
 };
 
 export function makeSentinelValue(table: string, col: string, colType: string): unknown {
@@ -240,6 +265,10 @@ function seedPlaces(db: Database, col: string, value: unknown): string {
   } else if (col !== 'id' && col !== 'normalized_name') {
     overrides[col] = value;
   }
+  // GEDCOM MAP/LATI/LONG must be emitted as a pair; export skips both if either
+  // is missing. Seed the partner coordinate so the column under test survives.
+  if (col === 'latitude') overrides.longitude = -3.5;
+  if (col === 'longitude') overrides.latitude = -3.5;
   if (col === 'name') {
     // Re-normalise to keep DEFAULT-equivalence; name is the sentinel but normalized_name
     // is filled by the importer at read time.
@@ -251,6 +280,21 @@ function seedPlaces(db: Database, col: string, value: unknown): string {
     db,
     `INSERT INTO places (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
     params,
+  );
+  // Places are only emitted to GEDCOM when attached to an event (PLAC sub-tag)
+  // or when they have a citation (custom _PLAC top-level record). Attach this
+  // place to a birth event on a synthetic person so it survives round-trip.
+  const personId = insertPersonWithDefaultName(db);
+  const eventId = crypto.randomUUID();
+  runSql(
+    db,
+    `INSERT INTO events (id, event_type, date_type, date_original, notes, place_id) VALUES (?, 'birth', 'unknown', '', '', ?)`,
+    [eventId, id],
+  );
+  runSql(
+    db,
+    `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, 'primary')`,
+    [crypto.randomUUID(), eventId, personId],
   );
   return id;
 }
@@ -292,18 +336,20 @@ function seedEvents(db: Database, col: string, value: unknown): string {
   }
   // For specific date_type values, ensure the sentinel is a valid CHECK value.
   if (col === 'date_type') {
-    // CHECK: ('exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown')
-    // Default sentinel is "S_..." which fails the CHECK. Use 'about' as a stable value.
-    overrides.date_type = 'about';
-    // The test asserts equality against the seeded value — but since the sentinel can't
-    // be used (CHECK violation), we override the seeded value too. Caller's sentinel
-    // string is replaced with 'about'. The per-field test still validates round-trip
-    // for this constrained column.
-    // Note: this means makeSentinelValue is overridden for this column; we can't
-    // change the test's sentinel — leave overrides.date_type as 'about' and the test
-    // will compare against the original sentinel and fail. Instead, we keep the
-    // sentinel string and let the INSERT fail visibly so Task 7 can address.
+    // The CONSTRAINED_SENTINELS entry returns 'about'. The exporter only emits
+    // the DATE line if there's an actual date value to format, so add one too.
     overrides.date_type = String(value);
+    overrides.date_value = '1789-05-12';
+  }
+  if (col === 'date_value') {
+    // Pair the date_value sentinel (a real ISO date) with date_type='exact'
+    // so the exporter emits it and the importer parses it back.
+    overrides.date_type = 'exact';
+  }
+  if (col === 'date_value_end') {
+    // BET..AND ranges need date_type='between' and a starting date_value too.
+    overrides.date_type = 'between';
+    overrides.date_value = '1789-05-12';
   }
   const cols = ['id', ...Object.keys(overrides)];
   const params = [id, ...Object.values(overrides)];
@@ -333,10 +379,23 @@ function seedEventParticipants(db: Database, col: string, value: unknown): strin
     `INSERT INTO events (id, event_type, date_type, date_original, notes) VALUES (?, 'birth', 'unknown', '', '')`,
     [eventId],
   );
+  // For non-primary role tests, the INDI owning the event must be SOMEONE ELSE
+  // (a primary participant), and our row-under-test is the ASSO target.
+  // The post-roundtrip event_participants table will contain BOTH rows; the
+  // per-field reader filters to the non-primary one for `role` tests.
+  if (col === 'role' && value !== 'primary') {
+    runSql(
+      db,
+      `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, 'primary')`,
+      [crypto.randomUUID(), eventId, personId],
+    );
+  }
   const id = col === 'id' ? String(value) : crypto.randomUUID();
   const overrides: Record<string, unknown> = {
     event_id: eventId,
-    person_id: personId,
+    person_id: col === 'role' && value !== 'primary'
+      ? insertPersonWithDefaultName(db)
+      : personId,
     role: 'primary',
   };
   // FK columns: keep real ids; XREF preservation is the round-trip mechanism.
@@ -686,6 +745,20 @@ export function roundTrip(db: Database, version: RegistryVersion): Database {
  * Per-field tests seed exactly one row, so this is straightforward.
  */
 export function readColumnFromOnlyRow(db: Database, table: string, col: string): unknown {
+  // Special case: event_participants.role for non-primary roles requires a
+  // primary participant in the seed too (so the event survives export). After
+  // round-trip the table contains 2 rows; pick the non-primary one.
+  if (table === 'event_participants' && col === 'role') {
+    const rows = queryAll<{ role: string }>(
+      db,
+      `SELECT role FROM event_participants WHERE role != 'primary'`,
+    );
+    if (rows.length === 0) return null;
+    if (rows.length > 1) {
+      throw new Error(`readColumnFromOnlyRow: expected 1 non-primary row in event_participants, got ${rows.length}`);
+    }
+    return rows[0].role;
+  }
   const rows = queryAll<Record<string, unknown>>(db, `SELECT ${col} FROM ${table}`);
   if (rows.length === 0) return null;
   if (rows.length > 1) {
