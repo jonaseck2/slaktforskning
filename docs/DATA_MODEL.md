@@ -104,7 +104,8 @@ Events belong to **one or more persons** via `event_participants`. An event can 
 | place_id | TEXT FK | → places, SET NULL |
 | place_address | TEXT | Verbatim address text from source (e.g. "Tvärgatan 5, Nyköping") — not linked to a Place row |
 | cause | TEXT | Cause of event (e.g. "cholera", "accident") — applicable to any event type |
-| description | TEXT | |
+| value | TEXT | GEDCOM-X `Fact.value` / GEDCOM 5.5.1 line value. The primary value of fact-shaped events: occupation name (`OCCU "Carpenter"`), religion (`RELI "Lutheran"`), education degree (`EDUC "Bachelor of Arts"`), title (`TITL "Doctor"`), etc. Null for non-fact-shaped events (BIRT/DEAT/MARR/etc.). |
+| notes | TEXT | Free-form notes about the event. Round-trips through GEDCOM as `2 NOTE`. Replaces the legacy `description` column. |
 | relationship_id | TEXT FK | → relationships, SET NULL. Optional: links a marriage event to the couple relationship. |
 | created_at | TEXT | datetime |
 | updated_at | TEXT | datetime |

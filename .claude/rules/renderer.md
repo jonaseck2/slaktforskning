@@ -256,7 +256,7 @@ See `/tree-layout` for the full layout pipeline (measurement, placement, collisi
 ## Constants (`src/renderer/constants/eventTypes.ts`)
 
 ```typescript
-EVENT_TYPE_VALUES              // 26 event types: birth, death, marriage, divorce, ..., wedding, foster_placement, other
+EVENT_TYPE_VALUES              // 30 event types: birth, death, marriage, ..., foster_placement, travel, title, religion, description, fact, other
 PERSON_EVENT_TYPE_VALUES       // EVENT_TYPES minus marriage/divorce/wedding
 RELATIONSHIP_EVENT_TYPE_VALUES // marriage, divorce, wedding, census, other
 DATE_TYPE_VALUES               // exact, about, before, after, between, calculated, unknown
