@@ -361,3 +361,15 @@ Use the `ImportReport` fields for import, and a pre-export warning for export:
 - **Large files:** Some GEDCOM files are 100MB+. Stream-parse; don't load into memory.
 - **CONT at level 2+:** CONT applies to the immediately preceding sibling at the same depth, not just level-1 values.
 - **Empty PLAC values:** Many apps export `2 PLAC` with no value. Skip these; don't call `findOrCreatePlace('')`.
+
+## Round-trip fidelity registry
+
+Every column in every non-exempt table has an entry in `src/api/gedcom_fidelity_registry.ts` declaring its round-trip status under GEDCOM 5.5.1 and 7.0. Three tests enforce the contract:
+
+- `tests/unit/gedcom-fidelity-registry-coverage.test.ts` — schema-introspection guard. Adding a column without a registry entry fails CI.
+- `tests/unit/gedcom-fidelity-per-field.test.ts` — per-`(table, column, version)` round-trip.
+- `tests/unit/gedcom-fidelity-golden.test.ts` — comprehensive multi-table seed → round-trip.
+
+When you change anything in `src/import/gedcom/` or `src/gedcom/exporter.ts`, run those three tests. When you add a schema column, the coverage test will tell you to register it.
+
+See `CLAUDE.md` "⚠️ Prime Directive (cont.): Round-Trip Fidelity" for the why.
