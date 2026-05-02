@@ -48,11 +48,12 @@
           @click.stop="moveDown(idx)"
         >&#9660;</button>
         <button
-          v-if="row.name_type !== 'birth' && !readonly"
+          v-if="!readonly"
           class="btn-sm btn-delete"
-          :aria-label="$t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
-          :title="$t('common.deleteTooltip')"
-          @click.stop="$emit('delete', row.id)"
+          :disabled="row.name_type === 'birth'"
+          :aria-label="row.name_type === 'birth' ? $t('persons.birthNameNotDeletable') : $t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
+          :title="row.name_type === 'birth' ? $t('persons.birthNameNotDeletable') : $t('common.deleteTooltip')"
+          @click.stop="row.name_type !== 'birth' && $emit('delete', row.id)"
         >
           <IconTrash :size="14" />
         </button>
@@ -258,6 +259,14 @@ function moveDown(idx: number) {
 .btn-order:disabled {
   opacity: 0.3;
   cursor: default;
+}
+.btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-delete:disabled:hover {
+  background: transparent;
+  color: inherit;
 }
 .name-prefix,
 .name-suffix {

@@ -449,7 +449,7 @@ const { sections, toggleSection } = usePanelSections(
   'person-panel-section-',
   {
     person: false,
-    names: false,
+    names: true,
     events: true,
     timeline: false,
     map: false,

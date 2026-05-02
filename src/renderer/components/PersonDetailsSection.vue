@@ -10,7 +10,11 @@
       <option value="F">{{ $t('sex.F') }}</option>
       <option value="U">{{ $t('sex.U') }}</option>
     </select>
-    <span class="living-status" :class="{ 'living-status--deceased': !living }">
+    <span
+      class="living-status"
+      :class="{ 'living-status--deceased': !living }"
+      :title="$t('persons.livingTooltip')"
+    >
       {{ living ? $t('personDetail.statusLiving') : $t('personDetail.statusDeceased') }}
     </span>
   </div>

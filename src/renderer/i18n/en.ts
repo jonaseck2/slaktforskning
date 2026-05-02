@@ -131,6 +131,8 @@ export default {
     surname: 'Surname',
     sex: 'Sex',
     living: 'Living',
+    livingTooltip: 'Living/deceased is set automatically by the death event. To change it, add or remove a death event.',
+    birthNameNotDeletable: 'A birth name cannot be removed — edit it instead.',
     male: 'Male',
     female: 'Female',
     sexUnknown: 'Unknown',

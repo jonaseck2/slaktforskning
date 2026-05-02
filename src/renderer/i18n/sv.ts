@@ -131,6 +131,8 @@ export default {
     surname: 'Efternamn',
     sex: 'Kön',
     living: 'Levande',
+    livingTooltip: 'Levande/avliden bestäms automatiskt av dödshändelsen. Lägg till eller ta bort en dödshändelse för att ändra.',
+    birthNameNotDeletable: 'Födelsenamn kan inte tas bort — redigera det istället.',
     male: 'Man',
     female: 'Kvinna',
     sexUnknown: 'Okänt',
