@@ -3,6 +3,15 @@ import { queryAll } from './db';
 import { livingSqlExpr } from './personLiving';
 import { displayedNameIdSql } from './persons';
 
+// CSV exports the displayed name only — by design.
+// CSV is a single-row-per-person flat format and cannot represent multiple
+// person_names records (birth + married + alias …). Do NOT bake the
+// "Anna (f. Svensson)" parenthetical form into the surname/given_name cells:
+// re-importing that CSV would round-trip the parenthetical as a literal
+// string, immediately tripping the LIKELY_INLINE_BIRTH_NAME quality check
+// against our own export. For lossless multi-name round-trip use GEDCOM
+// or the .zip archive (see plan birth-name-display-and-quality-check.md).
+
 export interface CsvOptions {
   delimiter?: string;
   encoding?: 'utf-8' | 'utf-8-bom';
