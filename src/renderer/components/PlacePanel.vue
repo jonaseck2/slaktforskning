@@ -212,6 +212,28 @@
         </div>
       </div>
 
+      <!-- Research Tasks section -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('researchTasks.nav')"
+          :count="researchTasks.length"
+          :collapsed="!sections.tasks"
+          :action-label="!props.readonly ? '+ ' + $t('researchTasks.addTask') : undefined"
+          @toggle="toggleSection('tasks')"
+          @action="openTaskForm()"
+        />
+        <div v-if="sections.tasks" class="panel-section-body">
+          <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
+          <ResearchTasksTable
+            v-else
+            :tasks="researchTasks"
+            :readonly="props.readonly"
+            @updated="loadTasks"
+            @select="goToTask"
+          />
+        </div>
+      </div>
+
       <!-- Quality section -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -229,14 +251,28 @@
       @cancel="showAddPersonForm = false"
       @saved="onPersonSaved"
     />
+
+    <!-- Research task form modal -->
+    <ResearchTaskModal
+      v-if="!props.readonly && showTaskForm && placeId"
+      mode="standalone"
+      :place-id="placeId"
+      :editing-task="editingTask"
+      @cancel="closeTaskForm"
+      @close="closeTaskForm"
+      @saved="onTaskSaved"
+    />
   </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import EventList from './EventList.vue';
 import PersonModal from './modals/PersonModal.vue';
+import ResearchTaskModal from './modals/ResearchTaskModal.vue';
+import ResearchTasksTable from './ResearchTasksTable.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
@@ -246,6 +282,7 @@ import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
 import type { ComponentPublicInstance, Ref } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import AppButton from './ui/AppButton.vue';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
@@ -255,6 +292,7 @@ import { useEntityData } from '../composables/useEntityData';
 import { useEditableFields } from '../composables/useEditableFields';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+import type { ResearchTask } from '../../api/types';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -297,11 +335,11 @@ const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
     place: true, persons: true, events: true, timeline: false,
-    media: false, mediaTimeline: false, quality: false,
+    media: false, mediaTimeline: false, tasks: false, quality: false,
   },
   {
     place: true, persons: true, events: true, timeline: true,
-    media: true, mediaTimeline: true, quality: false,
+    media: true, mediaTimeline: true, tasks: true, quality: false,
   },
 );
 
@@ -468,6 +506,47 @@ function onPickCoordsClick() {
 function formatCoord(n: number): string {
   return n.toFixed(5);
 }
+
+// ── Research tasks ──────────────────────────────────────────────────────────
+
+const router = useRouter();
+const researchTasks = ref<ResearchTask[]>([]);
+const showTaskForm = ref(false);
+const editingTask = ref<ResearchTask | null>(null);
+
+async function loadTasks() {
+  if (!props.placeId) {
+    researchTasks.value = [];
+    return;
+  }
+  try {
+    researchTasks.value = (await window.api.researchTasks.forPlace(props.placeId)) as ResearchTask[];
+  } catch (err) {
+    console.error('[PlacePanel] loadTasks failed:', err);
+    researchTasks.value = [];
+  }
+}
+
+function openTaskForm(task: ResearchTask | null = null) {
+  editingTask.value = task;
+  showTaskForm.value = true;
+}
+
+function closeTaskForm() {
+  showTaskForm.value = false;
+  editingTask.value = null;
+}
+
+async function onTaskSaved() {
+  closeTaskForm();
+  await loadTasks();
+}
+
+function goToTask(id: string) {
+  router.push('/research-tasks/' + id);
+}
+
+watch(() => props.placeId, () => { void loadTasks(); }, { immediate: true });
 </script>
 
 <style scoped>
