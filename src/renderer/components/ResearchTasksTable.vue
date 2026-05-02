@@ -40,7 +40,7 @@
         <td v-if="!props.readonly" class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('common.delete')"
+            :aria-label="$t('a11y.deleteItem', { item: task.task })"
             :title="$t('common.deleteTooltip')"
             @click.stop="handleDelete(task.id)"
           >

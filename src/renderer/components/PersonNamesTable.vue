@@ -50,7 +50,7 @@
         <button
           v-if="row.name_type !== 'birth' && !readonly"
           class="btn-sm btn-delete"
-          :aria-label="$t('common.delete')"
+          :aria-label="$t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
           :title="$t('common.deleteTooltip')"
           @click.stop="$emit('delete', row.id)"
         >

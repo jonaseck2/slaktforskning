@@ -39,7 +39,7 @@
             <button
               type="button"
               class="btn-sm btn-delete"
-              :aria-label="$t('common.delete')"
+              :aria-label="$t('a11y.deleteItem', { item: $t('eventTypes.' + event.event_type) })"
               :title="$t('common.deleteTooltip')"
               @click.stop="removeEvent(event.id)"
             >
