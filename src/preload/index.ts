@@ -170,7 +170,7 @@ const api = {
     ancestorTree: (personId: string, generations?: number) => ipcRenderer.invoke('reports:ancestorTree', personId, generations),
     placeHistory: (placeId: string) => ipcRenderer.invoke('reports:placeHistory', placeId),
     researchGaps: (personId: string) => ipcRenderer.invoke('reports:researchGaps', personId),
-    timeline: (personId: string) => ipcRenderer.invoke('reports:timeline', personId),
+    timeline: (personId: string, options?: { includeChildrenMarriages?: boolean; includeSiblingDeaths?: boolean }) => ipcRenderer.invoke('reports:timeline', personId, options),
     aliveInYear: (year: number) => ipcRenderer.invoke('reports:aliveInYear', year),
   },
   duplicates: {

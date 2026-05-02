@@ -15,6 +15,7 @@ import {
   getTimeline,
   getAliveInYear,
 } from '../../src/api/report_data';
+import type { TimelineRelationshipLabel } from '../../src/api/report_data';
 import { createTestDb } from './helpers';
 
 let db: any;
@@ -272,22 +273,32 @@ describe('getTimeline', () => {
     expect(getTimeline(db, 'no-such-id')).toBeNull();
   });
 
-  it('includes sibling relationship events with correct label', () => {
+  it('includes sibling death event with correct label when includeSiblingDeaths is set', () => {
+    // Task 7: siblings are excluded from the default timeline. Only sibling
+    // deaths within the subject's lifetime appear, and only when the option is
+    // explicitly set.
     const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
     const sibling = createPerson(db, { given_name: 'Lars', surname: 'Test', sex: 'M' });
     createRelationship(db, { type: 'sibling', person1_id: person.id, person2_id: sibling.id });
 
-    const siblingBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
-    addEventParticipant(db, { event_id: siblingBirth.id, person_id: sibling.id });
+    // Subject lifetime so the sibling death qualifies.
+    const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1840-01-01', date_original: '1840' });
+    addEventParticipant(db, { event_id: subjectBirth.id, person_id: person.id });
+    const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+    addEventParticipant(db, { event_id: subjectDeath.id, person_id: person.id });
 
-    const timeline = getTimeline(db, person.id);
+    const siblingDeath = createEvent(db, { event_type: 'death', date_value: '1880-01-01', date_original: '1880' });
+    addEventParticipant(db, { event_id: siblingDeath.id, person_id: sibling.id });
+
+    const timeline = getTimeline(db, person.id, { includeSiblingDeaths: true });
     expect(timeline).not.toBeNull();
     const siblingEntry = timeline!.find(e => e.relationship_label === 'sibling');
     expect(siblingEntry).toBeDefined();
     expect(siblingEntry!.person_given_name).toBe('Lars');
+    expect(siblingEntry!.event.event_type).toBe('death');
   });
 
-  it('uses relationship type as label for non-standard types', () => {
+  it('omits non-family relationship types (godparent / other) from the life timeline', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
     const other = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
     createRelationship(db, { type: 'godparent', person1_id: person.id, person2_id: other.id });
@@ -297,11 +308,14 @@ describe('getTimeline', () => {
 
     const timeline = getTimeline(db, person.id);
     expect(timeline).not.toBeNull();
-    const godparentEntry = timeline!.find(e => e.relationship_label === 'godparent');
-    expect(godparentEntry).toBeDefined();
+    // Godparent relationships are not part of the subject's life story — Erik's
+    // events should not appear in Anna's timeline.
+    const otherEntry = timeline!.find(e => e.person_id === other.id);
+    expect(otherEntry).toBeUndefined();
   });
 
   it('labels parent_child correctly when person is the parent', () => {
+    // Task 4: child sex 'M' → label 'son'.
     const parent = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
     const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
     createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
@@ -311,24 +325,32 @@ describe('getTimeline', () => {
 
     const timeline = getTimeline(db, parent.id);
     expect(timeline).not.toBeNull();
-    const childEntry = timeline!.find(e => e.relationship_label === 'child');
+    const childEntry = timeline!.find(e => e.relationship_label === 'son');
     expect(childEntry).toBeDefined();
     expect(childEntry!.person_given_name).toBe('Erik');
   });
 
-  it('labels parent_child correctly when person is the child', () => {
-    const parent = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+  it('emits sex-derived parent label when person is the child (parent dies during lifetime)', () => {
+    // Task 3: parents emit only 'death' events with label derived from sex.
+    // Use sex 'U' here so the label falls through to the generic 'parent'.
+    const parent = createPerson(db, { given_name: 'Pat', surname: 'Eriksson', sex: 'U' });
     const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
     createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
 
-    const parentBirth = createEvent(db, { event_type: 'birth', date_value: '1840-01-01', date_original: '1840' });
-    addEventParticipant(db, { event_id: parentBirth.id, person_id: parent.id });
+    // Child lifetime: 1870 → 1940. Parent dies 1880 (during lifetime).
+    const childBirth = createEvent(db, { event_type: 'birth', date_value: '1870-01-01', date_original: '1870' });
+    addEventParticipant(db, { event_id: childBirth.id, person_id: child.id });
+    const childDeath = createEvent(db, { event_type: 'death', date_value: '1940-01-01', date_original: '1940' });
+    addEventParticipant(db, { event_id: childDeath.id, person_id: child.id });
+    const parentDeath = createEvent(db, { event_type: 'death', date_value: '1880-05-15', date_original: '1880' });
+    addEventParticipant(db, { event_id: parentDeath.id, person_id: parent.id });
 
     const timeline = getTimeline(db, child.id);
     expect(timeline).not.toBeNull();
     const parentEntry = timeline!.find(e => e.relationship_label === 'parent');
     expect(parentEntry).toBeDefined();
-    expect(parentEntry!.person_given_name).toBe('Per');
+    expect(parentEntry!.person_given_name).toBe('Pat');
+    expect(parentEntry!.event.event_type).toBe('death');
   });
 
   it('sorts entries with null date_value using empty string fallback', () => {
@@ -347,6 +369,8 @@ describe('getTimeline', () => {
   });
 
   it('returns person events and family events merged chronologically', () => {
+    // After Task 6: spouse births are excluded (only spouse deaths emitted).
+    // After Task 4: child events get sex-typed labels.
     const person = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
     const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
     createRelationship(db, { type: 'couple', person1_id: person.id, person2_id: spouse.id });
@@ -355,11 +379,11 @@ describe('getTimeline', () => {
     const personBirth = createEvent(db, { event_type: 'birth', date_value: '1840-01-01', date_original: '1840' });
     addEventParticipant(db, { event_id: personBirth.id, person_id: person.id });
 
-    // Spouse birth
+    // Spouse birth (excluded post-Task-6 — spouse only emits deaths)
     const spouseBirth = createEvent(db, { event_type: 'birth', date_value: '1845-06-15', date_original: '1845' });
     addEventParticipant(db, { event_id: spouseBirth.id, person_id: spouse.id });
 
-    // Child
+    // Child (sex M → 'son' post-Task-4)
     const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
     createRelationship(db, { type: 'parent_child', person1_id: person.id, person2_id: child.id });
 
@@ -368,17 +392,665 @@ describe('getTimeline', () => {
 
     const timeline = getTimeline(db, person.id);
     expect(timeline).not.toBeNull();
-    expect(timeline!.length).toBeGreaterThanOrEqual(3);
+
+    // Spouse birth is excluded; expect own birth + child birth.
+    expect(timeline!.length).toBe(2);
+    expect(timeline!.find(e => e.person_id === spouse.id)).toBeUndefined();
 
     // Should be sorted chronologically
     expect(timeline![0].event.date_value).toBe('1840-01-01');
-    expect(timeline![0].relationship_label).toBeNull(); // own event
+    expect(timeline![0].relationship_label).toBe('self'); // own event
 
-    expect(timeline![1].event.date_value).toBe('1845-06-15');
-    expect(timeline![1].relationship_label).toBe('spouse');
+    expect(timeline![1].event.date_value).toBe('1870-03-20');
+    expect(timeline![1].relationship_label).toBe('son');
+  });
 
-    expect(timeline![2].event.date_value).toBe('1870-03-20');
-    expect(timeline![2].relationship_label).toBe('child');
+  describe('getTimeline relationship_label vocabulary', () => {
+    it('emits stable labels for parent/spouse/child/sibling and own', () => {
+      const subject = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+      const father = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      const mother = createPerson(db, { given_name: 'Maja', surname: 'Test', sex: 'F' });
+      const spouse = createPerson(db, { given_name: 'Erik', surname: 'Other', sex: 'M' });
+      const child = createPerson(db, { given_name: 'Lars', surname: 'Other', sex: 'M' });
+      const sibling = createPerson(db, { given_name: 'Karin', surname: 'Test', sex: 'F' });
+
+      // father / mother → parent_child where SUBJECT is person2_id (i.e. parent is "other")
+      createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: subject.id });
+      createRelationship(db, { type: 'parent_child', person1_id: mother.id, person2_id: subject.id });
+      // spouse
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+      // child → parent_child where SUBJECT is person1_id
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: child.id });
+      // sibling
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: sibling.id });
+
+      // own event
+      const ownBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: ownBirth.id, person_id: subject.id });
+      // father death (within subject's lifetime — relevant family event)
+      const fatherDeath = createEvent(db, { event_type: 'death', date_value: '1880-04-10', date_original: '1880' });
+      addEventParticipant(db, { event_id: fatherDeath.id, person_id: father.id });
+      // mother death (within subject's lifetime)
+      const motherDeath = createEvent(db, { event_type: 'death', date_value: '1885-08-22', date_original: '1885' });
+      addEventParticipant(db, { event_id: motherDeath.id, person_id: mother.id });
+      // spouse death (within subject's lifetime)
+      const spouseDeath = createEvent(db, { event_type: 'death', date_value: '1890-02-14', date_original: '1890' });
+      addEventParticipant(db, { event_id: spouseDeath.id, person_id: spouse.id });
+      // child birth (within subject's lifetime)
+      const childBirth = createEvent(db, { event_type: 'birth', date_value: '1875-01-01', date_original: '1875' });
+      addEventParticipant(db, { event_id: childBirth.id, person_id: child.id });
+      // sibling death (within subject's lifetime) — Task 7: siblings only
+      // appear at all when includeSiblingDeaths is set, and only deaths.
+      const siblingDeath = createEvent(db, { event_type: 'death', date_value: '1880-01-01', date_original: '1880' });
+      addEventParticipant(db, { event_id: siblingDeath.id, person_id: sibling.id });
+
+      const timeline = getTimeline(db, subject.id, { includeSiblingDeaths: true });
+      expect(timeline).not.toBeNull();
+
+      const allowed: Array<TimelineRelationshipLabel> = [
+        'self',
+        'father',
+        'mother',
+        'parent',
+        'spouse',
+        'son',
+        'daughter',
+        'child',
+        'sibling',
+      ];
+      for (const entry of timeline!) {
+        expect(allowed).toContain(entry.relationship_label);
+      }
+
+      // Self
+      const selfEntry = timeline!.find(e => e.person_id === subject.id);
+      expect(selfEntry).toBeDefined();
+      expect(selfEntry!.relationship_label).toBe('self');
+
+      // Spouse
+      const spouseEntry = timeline!.find(e => e.person_id === spouse.id);
+      expect(spouseEntry!.relationship_label).toBe('spouse');
+
+      // Sibling
+      const siblingEntry = timeline!.find(e => e.person_id === sibling.id);
+      expect(siblingEntry!.relationship_label).toBe('sibling');
+
+      // Parent + child labels are within the allowed vocabulary (Tasks 3 & 4 will
+      // narrow them to father/mother/son/daughter; for now the existing emissions
+      // 'parent' / 'child' must still be members of the typed union).
+      const parentEntries = timeline!.filter(e => e.person_id === father.id || e.person_id === mother.id);
+      expect(parentEntries.length).toBe(2);
+      for (const e of parentEntries) {
+        expect(['parent', 'father', 'mother']).toContain(e.relationship_label);
+      }
+      const childEntry = timeline!.find(e => e.person_id === child.id);
+      expect(['child', 'son', 'daughter']).toContain(childEntry!.relationship_label);
+    });
+  });
+
+  describe('getTimeline lifetime filtering', () => {
+    it('drops parent death that occurred before subject birth', () => {
+      // subject born 1900; father died 1899 → father death NOT in timeline
+      const subject = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+      const father = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: subject.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+
+      const fatherDeath = createEvent(db, { event_type: 'death', date_value: '1899-06-15', date_original: '1899' });
+      addEventParticipant(db, { event_id: fatherDeath.id, person_id: father.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const fatherDeathEntry = timeline!.find(
+        e => e.person_id === father.id && e.event.event_type === 'death'
+      );
+      expect(fatherDeathEntry).toBeUndefined();
+    });
+
+    it('keeps child birth up to 9 months after subject death', () => {
+      // subject died 1880-03-15; child born 1880-12-10 → child birth IS in timeline
+      // subject died 1880-03-15; child born 1881-01-15 → child birth NOT in timeline
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      const childInWindow = createPerson(db, { given_name: 'InWindow', surname: 'Test', sex: 'M' });
+      const childOutsideWindow = createPerson(db, { given_name: 'Outside', surname: 'Test', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: childInWindow.id });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: childOutsideWindow.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1830-01-01', date_original: '1830' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      const inBirth = createEvent(db, { event_type: 'birth', date_value: '1880-12-10', date_original: '1880' });
+      addEventParticipant(db, { event_id: inBirth.id, person_id: childInWindow.id });
+
+      const outBirth = createEvent(db, { event_type: 'birth', date_value: '1881-01-15', date_original: '1881' });
+      addEventParticipant(db, { event_id: outBirth.id, person_id: childOutsideWindow.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      const inWindowEntry = timeline!.find(
+        e => e.person_id === childInWindow.id && e.event.event_type === 'birth'
+      );
+      expect(inWindowEntry).toBeDefined();
+
+      const outsideWindowEntry = timeline!.find(
+        e => e.person_id === childOutsideWindow.id && e.event.event_type === 'birth'
+      );
+      expect(outsideWindowEntry).toBeUndefined();
+    });
+
+    it('drops spouse death that occurred after subject death', () => {
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      const spouse = createPerson(db, { given_name: 'Maja', surname: 'Test', sex: 'F' });
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1830-01-01', date_original: '1830' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      const spouseDeath = createEvent(db, { event_type: 'death', date_value: '1890-05-20', date_original: '1890' });
+      addEventParticipant(db, { event_id: spouseDeath.id, person_id: spouse.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const spouseDeathEntry = timeline!.find(
+        e => e.person_id === spouse.id && e.event.event_type === 'death'
+      );
+      expect(spouseDeathEntry).toBeUndefined();
+    });
+
+    it('drops child death that occurred after subject death', () => {
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      const child = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: child.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1830-01-01', date_original: '1830' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      const childDeath = createEvent(db, { event_type: 'death', date_value: '1900-07-04', date_original: '1900' });
+      addEventParticipant(db, { event_id: childDeath.id, person_id: child.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const childDeathEntry = timeline!.find(
+        e => e.person_id === child.id && e.event.event_type === 'death'
+      );
+      expect(childDeathEntry).toBeUndefined();
+    });
+  });
+
+  describe('getTimeline parent deaths', () => {
+    it('emits father/mother labels and parent deaths within subject lifetime', () => {
+      // Subject (child) with two parents — one male, one female.
+      // Subject lifetime: 1870-01-01 → 1940-12-31.
+      const subject = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+      const father = createPerson(db, { given_name: 'Per', surname: 'Andersson', sex: 'M' });
+      const mother = createPerson(db, { given_name: 'Maria', surname: 'Larsdotter', sex: 'F' });
+      createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: subject.id });
+      createRelationship(db, { type: 'parent_child', person1_id: mother.id, person2_id: subject.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1870-01-01', date_original: '1870' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1940-12-31', date_original: '1940' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Both parents die during subject's lifetime.
+      const fatherDeath = createEvent(db, { event_type: 'death', date_value: '1900-06-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: fatherDeath.id, person_id: father.id });
+      const motherDeath = createEvent(db, { event_type: 'death', date_value: '1910-08-15', date_original: '1910' });
+      addEventParticipant(db, { event_id: motherDeath.id, person_id: mother.id });
+
+      // Father has a birth event during lifetime — must NOT appear (narrowed to death only).
+      // Note: lifetime constraint requires the event to be within subject's life,
+      // so use a birth date that falls within 1870-1940.
+      const fatherBirthDuringLifetime = createEvent(db, {
+        event_type: 'birth',
+        date_value: '1875-03-03',
+        date_original: '1875',
+      });
+      addEventParticipant(db, { event_id: fatherBirthDuringLifetime.id, person_id: father.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      const fatherEntry = timeline!.find(e => e.person_id === father.id);
+      expect(fatherEntry).toBeDefined();
+      expect(fatherEntry!.relationship_label).toBe('father');
+      expect(fatherEntry!.event.event_type).toBe('death');
+
+      const motherEntry = timeline!.find(e => e.person_id === mother.id);
+      expect(motherEntry).toBeDefined();
+      expect(motherEntry!.relationship_label).toBe('mother');
+      expect(motherEntry!.event.event_type).toBe('death');
+
+      // Parent BIRTH event within subject's lifetime must NOT be on the timeline.
+      const fatherBirthEntry = timeline!.find(
+        e => e.person_id === father.id && e.event.event_type === 'birth',
+      );
+      expect(fatherBirthEntry).toBeUndefined();
+    });
+
+    it('labels parent with sex U as "parent" when they die during subject lifetime', () => {
+      const subject = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+      const unknownParent = createPerson(db, { given_name: 'Pat', surname: 'Test', sex: 'U' });
+      createRelationship(db, {
+        type: 'parent_child',
+        person1_id: unknownParent.id,
+        person2_id: subject.id,
+      });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1880-01-01', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1950-01-01', date_original: '1950' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+      const parentDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: parentDeath.id, person_id: unknownParent.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const parentEntry = timeline!.find(e => e.person_id === unknownParent.id);
+      expect(parentEntry).toBeDefined();
+      expect(parentEntry!.relationship_label).toBe('parent');
+      expect(parentEntry!.event.event_type).toBe('death');
+    });
+  });
+
+  describe('getTimeline children events', () => {
+    it('emits child birth with sex-typed label and posthumous window', () => {
+      // Subject: born 1850-01-01, died 1880-03-15
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Child A (son, M): born 1875-06-01 → IN timeline, label 'son'
+      const son = createPerson(db, { given_name: 'Anders', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: son.id });
+      const sonBirth = createEvent(db, { event_type: 'birth', date_value: '1875-06-01', date_original: '1875' });
+      addEventParticipant(db, { event_id: sonBirth.id, person_id: son.id });
+
+      // Child B (daughter, F): born 1880-12-10 (within +9mo of subject death) → IN, 'daughter'
+      const daughter = createPerson(db, { given_name: 'Sara', surname: 'Persdotter', sex: 'F' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: daughter.id });
+      const daughterBirth = createEvent(db, { event_type: 'birth', date_value: '1880-12-10', date_original: '1880' });
+      addEventParticipant(db, { event_id: daughterBirth.id, person_id: daughter.id });
+
+      // Child C (sex U): born 1881-01-15 (>9mo posthumous) → NOT in timeline
+      const childU = createPerson(db, { given_name: 'Pat', surname: 'Persson', sex: 'U' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: childU.id });
+      const childUBirth = createEvent(db, { event_type: 'birth', date_value: '1881-01-15', date_original: '1881' });
+      addEventParticipant(db, { event_id: childUBirth.id, person_id: childU.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      const sonEntry = timeline!.find(e => e.person_id === son.id);
+      expect(sonEntry).toBeDefined();
+      expect(sonEntry!.relationship_label).toBe('son');
+      expect(sonEntry!.event.event_type).toBe('birth');
+
+      const daughterEntry = timeline!.find(e => e.person_id === daughter.id);
+      expect(daughterEntry).toBeDefined();
+      expect(daughterEntry!.relationship_label).toBe('daughter');
+      expect(daughterEntry!.event.event_type).toBe('birth');
+
+      const childUEntry = timeline!.find(e => e.person_id === childU.id);
+      expect(childUEntry).toBeUndefined();
+    });
+
+    it('emits child death within subject lifetime, NOT in posthumous window', () => {
+      // Task 5: child deaths use the STRICT death upper bound — the +9mo
+      // posthumous window applies only to births and foster_placements.
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Child A (son): died 1879 → IN timeline, label 'son'
+      const sonInLifetime = createPerson(db, { given_name: 'Anders', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: sonInLifetime.id });
+      const sonInLifetimeBirth = createEvent(db, { event_type: 'birth', date_value: '1872-01-01', date_original: '1872' });
+      addEventParticipant(db, { event_id: sonInLifetimeBirth.id, person_id: sonInLifetime.id });
+      const sonInLifetimeDeath = createEvent(db, { event_type: 'death', date_value: '1879-08-12', date_original: '1879' });
+      addEventParticipant(db, { event_id: sonInLifetimeDeath.id, person_id: sonInLifetime.id });
+
+      // Child B (daughter): died 1880-06-01 (after subject death, within +9mo) → NOT in timeline
+      const daughterPosthumous = createPerson(db, { given_name: 'Sara', surname: 'Persdotter', sex: 'F' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: daughterPosthumous.id });
+      const daughterPosthumousBirth = createEvent(db, { event_type: 'birth', date_value: '1875-01-01', date_original: '1875' });
+      addEventParticipant(db, { event_id: daughterPosthumousBirth.id, person_id: daughterPosthumous.id });
+      const daughterPosthumousDeath = createEvent(db, { event_type: 'death', date_value: '1880-06-01', date_original: '1880' });
+      addEventParticipant(db, { event_id: daughterPosthumousDeath.id, person_id: daughterPosthumous.id });
+
+      // Child C: died 1882 → NOT in timeline
+      const sonAfter = createPerson(db, { given_name: 'Lars', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: sonAfter.id });
+      const sonAfterBirth = createEvent(db, { event_type: 'birth', date_value: '1876-01-01', date_original: '1876' });
+      addEventParticipant(db, { event_id: sonAfterBirth.id, person_id: sonAfter.id });
+      const sonAfterDeath = createEvent(db, { event_type: 'death', date_value: '1882-04-04', date_original: '1882' });
+      addEventParticipant(db, { event_id: sonAfterDeath.id, person_id: sonAfter.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      const inLifetimeDeathEntry = timeline!.find(
+        e => e.person_id === sonInLifetime.id && e.event.event_type === 'death',
+      );
+      expect(inLifetimeDeathEntry).toBeDefined();
+      expect(inLifetimeDeathEntry!.relationship_label).toBe('son');
+
+      const posthumousDeathEntry = timeline!.find(
+        e => e.person_id === daughterPosthumous.id && e.event.event_type === 'death',
+      );
+      expect(posthumousDeathEntry).toBeUndefined();
+
+      const afterDeathEntry = timeline!.find(
+        e => e.person_id === sonAfter.id && e.event.event_type === 'death',
+      );
+      expect(afterDeathEntry).toBeUndefined();
+    });
+
+    it('excludes child christening and burial events (narrowed to birth + foster_placement + death)', () => {
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-12-31', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: child.id });
+
+      const childChristening = createEvent(db, { event_type: 'christening', date_value: '1875-02-01', date_original: '1875' });
+      addEventParticipant(db, { event_id: childChristening.id, person_id: child.id });
+      const childBurial = createEvent(db, { event_type: 'burial', date_value: '1880-09-09', date_original: '1880' });
+      addEventParticipant(db, { event_id: childBurial.id, person_id: child.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      expect(timeline!.find(e => e.person_id === child.id && e.event.event_type === 'christening')).toBeUndefined();
+      expect(timeline!.find(e => e.person_id === child.id && e.event.event_type === 'burial')).toBeUndefined();
+    });
+
+    it('emits foster_placement as a child birth-equivalent within posthumous window', () => {
+      // Subject alive (born 1850, died 1880-03-15); foster_placement during lifetime → IN timeline.
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1880-03-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      const fosterDaughter = createPerson(db, { given_name: 'Lina', surname: 'Persdotter', sex: 'F' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: fosterDaughter.id });
+      const fosterEvent = createEvent(db, {
+        event_type: 'foster_placement',
+        date_value: '1875-04-01',
+        date_original: '1875',
+      });
+      addEventParticipant(db, { event_id: fosterEvent.id, person_id: fosterDaughter.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const fosterEntry = timeline!.find(
+        e => e.person_id === fosterDaughter.id && e.event.event_type === 'foster_placement',
+      );
+      expect(fosterEntry).toBeDefined();
+      expect(fosterEntry!.relationship_label).toBe('daughter');
+    });
+  });
+
+  describe('getTimeline spouse death', () => {
+    it('emits spouse death only, within subject lifetime; spouse birth excluded', () => {
+      // Task 6: per the user goal "the deaths of their … spouse," spouse
+      // events are narrowed to 'death' only.
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Spouse birth (within subject lifetime by date) — must STILL be excluded
+      // by type narrowing.
+      const spouseBirth = createEvent(db, { event_type: 'birth', date_value: '1855-06-15', date_original: '1855' });
+      addEventParticipant(db, { event_id: spouseBirth.id, person_id: spouse.id });
+      const spouseDeath = createEvent(db, { event_type: 'death', date_value: '1880-04-10', date_original: '1880' });
+      addEventParticipant(db, { event_id: spouseDeath.id, person_id: spouse.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      // Spouse birth excluded by Task 6's relevantTypes narrowing.
+      const spouseBirthEntry = timeline!.find(
+        e => e.person_id === spouse.id && e.event.event_type === 'birth',
+      );
+      expect(spouseBirthEntry).toBeUndefined();
+
+      // Spouse death is on the timeline as 'spouse'.
+      const spouseDeathEntry = timeline!.find(
+        e => e.person_id === spouse.id && e.event.event_type === 'death',
+      );
+      expect(spouseDeathEntry).toBeDefined();
+      expect(spouseDeathEntry!.relationship_label).toBe('spouse');
+    });
+
+    it('excludes spouse christening and burial events (narrowed to death only)', () => {
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const spouse = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+
+      // Both during subject's lifetime by date — but type is narrowed to 'death' only.
+      const spouseChristening = createEvent(db, { event_type: 'christening', date_value: '1860-02-01', date_original: '1860' });
+      addEventParticipant(db, { event_id: spouseChristening.id, person_id: spouse.id });
+      const spouseBurial = createEvent(db, { event_type: 'burial', date_value: '1880-04-15', date_original: '1880' });
+      addEventParticipant(db, { event_id: spouseBurial.id, person_id: spouse.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      expect(timeline!.find(e => e.person_id === spouse.id && e.event.event_type === 'christening')).toBeUndefined();
+      expect(timeline!.find(e => e.person_id === spouse.id && e.event.event_type === 'burial')).toBeUndefined();
+    });
+  });
+
+  describe('getTimeline optional categories', () => {
+    function buildSubjectWithLifetime() {
+      // Subject lifetime: 1850-01-01 → 1900-12-31
+      const subject = createPerson(db, { given_name: 'Per', surname: 'Eriksson', sex: 'M' });
+      const subjectBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: subjectBirth.id, person_id: subject.id });
+      const subjectDeath = createEvent(db, { event_type: 'death', date_value: '1900-12-31', date_original: '1900' });
+      addEventParticipant(db, { event_id: subjectDeath.id, person_id: subject.id });
+      return subject;
+    }
+
+    it('excludes children\'s marriages and sibling deaths by default', () => {
+      const subject = buildSubjectWithLifetime();
+
+      // Child with a marriage during subject's lifetime
+      const child = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: child.id });
+      const spouseOfChild = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      const childCouple = createRelationship(db, {
+        type: 'couple',
+        person1_id: child.id,
+        person2_id: spouseOfChild.id,
+      });
+      const childMarriage = createEvent(db, {
+        event_type: 'marriage',
+        date_value: '1880-06-12',
+        date_original: '1880',
+        relationship_id: childCouple.id,
+      });
+      addEventParticipant(db, { event_id: childMarriage.id, person_id: child.id });
+      addEventParticipant(db, { event_id: childMarriage.id, person_id: spouseOfChild.id });
+
+      // Sibling who dies during subject's lifetime
+      const sibling = createPerson(db, { given_name: 'Karin', surname: 'Test', sex: 'F' });
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: sibling.id });
+      const siblingDeath = createEvent(db, { event_type: 'death', date_value: '1880-08-08', date_original: '1880' });
+      addEventParticipant(db, { event_id: siblingDeath.id, person_id: sibling.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      // Child marriage NOT in default timeline.
+      const marriageEntry = timeline!.find(e => e.event.event_type === 'marriage');
+      expect(marriageEntry).toBeUndefined();
+
+      // Sibling death NOT in default timeline.
+      const siblingEntry = timeline!.find(e => e.relationship_label === 'sibling');
+      expect(siblingEntry).toBeUndefined();
+    });
+
+    it('includes children\'s marriages when includeChildrenMarriages is set', () => {
+      const subject = buildSubjectWithLifetime();
+
+      const son = createPerson(db, { given_name: 'Erik', surname: 'Persson', sex: 'M' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: son.id });
+      const sonsWife = createPerson(db, { given_name: 'Maja', surname: 'Larsdotter', sex: 'F' });
+      const sonCouple = createRelationship(db, {
+        type: 'couple',
+        person1_id: son.id,
+        person2_id: sonsWife.id,
+      });
+      // Marriage during subject lifetime
+      const inLifetime = createEvent(db, {
+        event_type: 'marriage',
+        date_value: '1880-06-12',
+        date_original: '1880',
+        relationship_id: sonCouple.id,
+      });
+      addEventParticipant(db, { event_id: inLifetime.id, person_id: son.id });
+      addEventParticipant(db, { event_id: inLifetime.id, person_id: sonsWife.id });
+
+      // Daughter with marriage AFTER subject's death — must be excluded.
+      const daughter = createPerson(db, { given_name: 'Sara', surname: 'Persdotter', sex: 'F' });
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: daughter.id });
+      const daughterHusband = createPerson(db, { given_name: 'Anders', surname: 'Other', sex: 'M' });
+      const daughterCouple = createRelationship(db, {
+        type: 'couple',
+        person1_id: daughter.id,
+        person2_id: daughterHusband.id,
+      });
+      const afterDeath = createEvent(db, {
+        event_type: 'marriage',
+        date_value: '1905-04-04',
+        date_original: '1905',
+        relationship_id: daughterCouple.id,
+      });
+      addEventParticipant(db, { event_id: afterDeath.id, person_id: daughter.id });
+      addEventParticipant(db, { event_id: afterDeath.id, person_id: daughterHusband.id });
+
+      const timeline = getTimeline(db, subject.id, { includeChildrenMarriages: true });
+      expect(timeline).not.toBeNull();
+
+      // Son's marriage during subject's lifetime → IN, label 'son'.
+      const sonMarriage = timeline!.find(
+        e => e.person_id === son.id && e.event.event_type === 'marriage',
+      );
+      expect(sonMarriage).toBeDefined();
+      expect(sonMarriage!.relationship_label).toBe('son');
+      expect(sonMarriage!.event.date_value).toBe('1880-06-12');
+
+      // Daughter's marriage after subject's death → NOT in timeline.
+      const daughterMarriage = timeline!.find(
+        e => e.person_id === daughter.id && e.event.event_type === 'marriage',
+      );
+      expect(daughterMarriage).toBeUndefined();
+    });
+
+    it('includes sibling deaths when includeSiblingDeaths is set', () => {
+      const subject = buildSubjectWithLifetime();
+
+      // Sibling who dies during subject's lifetime
+      const siblingInLife = createPerson(db, { given_name: 'Karin', surname: 'Test', sex: 'F' });
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: siblingInLife.id });
+      const inLifetimeDeath = createEvent(db, {
+        event_type: 'death',
+        date_value: '1880-08-08',
+        date_original: '1880',
+      });
+      addEventParticipant(db, { event_id: inLifetimeDeath.id, person_id: siblingInLife.id });
+      // Sibling birth + christening + burial during lifetime — must NOT appear
+      // even with the option set (sibling emission is narrowed to death only).
+      const inLifetimeBirth = createEvent(db, {
+        event_type: 'birth',
+        date_value: '1855-01-01',
+        date_original: '1855',
+      });
+      addEventParticipant(db, { event_id: inLifetimeBirth.id, person_id: siblingInLife.id });
+      const inLifetimeChristening = createEvent(db, {
+        event_type: 'christening',
+        date_value: '1855-02-01',
+        date_original: '1855',
+      });
+      addEventParticipant(db, { event_id: inLifetimeChristening.id, person_id: siblingInLife.id });
+      const inLifetimeBurial = createEvent(db, {
+        event_type: 'burial',
+        date_value: '1880-08-15',
+        date_original: '1880',
+      });
+      addEventParticipant(db, { event_id: inLifetimeBurial.id, person_id: siblingInLife.id });
+
+      // Sibling who dies AFTER subject's death — must NOT appear.
+      const siblingAfter = createPerson(db, { given_name: 'Lars', surname: 'Test', sex: 'M' });
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: siblingAfter.id });
+      const afterDeath = createEvent(db, {
+        event_type: 'death',
+        date_value: '1910-05-05',
+        date_original: '1910',
+      });
+      addEventParticipant(db, { event_id: afterDeath.id, person_id: siblingAfter.id });
+
+      const timeline = getTimeline(db, subject.id, { includeSiblingDeaths: true });
+      expect(timeline).not.toBeNull();
+
+      const inLifeEntry = timeline!.find(
+        e => e.person_id === siblingInLife.id && e.event.event_type === 'death',
+      );
+      expect(inLifeEntry).toBeDefined();
+      expect(inLifeEntry!.relationship_label).toBe('sibling');
+
+      // Sibling births / christenings / burials are excluded even with the option on.
+      expect(timeline!.find(e => e.person_id === siblingInLife.id && e.event.event_type === 'birth')).toBeUndefined();
+      expect(timeline!.find(e => e.person_id === siblingInLife.id && e.event.event_type === 'christening')).toBeUndefined();
+      expect(timeline!.find(e => e.person_id === siblingInLife.id && e.event.event_type === 'burial')).toBeUndefined();
+
+      // Sibling who died after subject is excluded by lifetime filter.
+      expect(timeline!.find(e => e.person_id === siblingAfter.id)).toBeUndefined();
+    });
+
+    it('omits siblings entirely from the default emission', () => {
+      const subject = buildSubjectWithLifetime();
+      const sibling = createPerson(db, { given_name: 'Karin', surname: 'Test', sex: 'F' });
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: sibling.id });
+
+      // Sibling birth and death during subject's lifetime
+      const siblingBirth = createEvent(db, { event_type: 'birth', date_value: '1855-01-01', date_original: '1855' });
+      addEventParticipant(db, { event_id: siblingBirth.id, person_id: sibling.id });
+      const siblingDeath = createEvent(db, { event_type: 'death', date_value: '1880-08-08', date_original: '1880' });
+      addEventParticipant(db, { event_id: siblingDeath.id, person_id: sibling.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+      const siblingEntries = timeline!.filter(e => e.relationship_label === 'sibling');
+      expect(siblingEntries.length).toBe(0);
+    });
   });
 });
 

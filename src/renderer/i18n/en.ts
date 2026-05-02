@@ -400,6 +400,17 @@ export default {
     travel: 'Travel',
     other: 'Other',
   },
+  timelineLabels: {
+    self: '',
+    father: 'father',
+    mother: 'mother',
+    parent: 'parent',
+    spouse: 'spouse',
+    son: 'son',
+    daughter: 'daughter',
+    child: 'child',
+    sibling: 'sibling',
+  },
   dateTypes: {
     exact: 'Exact',
     about: 'About',
@@ -950,6 +961,8 @@ export default {
       family: 'Family',
       events: 'Events',
       biography: 'Biography',
+      includeChildrenMarriages: "Include children's marriages",
+      includeSiblingDeaths: "Include sibling deaths",
     },
     onePage: {
       title: 'Life on One Page',

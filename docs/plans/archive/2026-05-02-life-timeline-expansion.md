@@ -102,7 +102,7 @@ docs/plans/2026-04-29-ben-reactivity.md           (modify — mark Phase 4 super
 - Modify: `src/api/report_data.ts` (TimelineEntry interface around line 97)
 - Modify: `tests/unit/report_data.test.ts` (extend timeline tests)
 
-- [ ] **Step 1.1: Write the failing test**
+- [x] **Step 1.1: Write the failing test**
 
 In `tests/unit/report_data.test.ts`:
 
@@ -117,9 +117,9 @@ describe('getTimeline relationship_label vocabulary', () => {
 });
 ```
 
-- [ ] **Step 1.2: Run** `npx vitest run tests/unit/report_data.test.ts -t 'relationship_label vocabulary'` — expect FAIL.
+- [x] **Step 1.2: Run** `npx vitest run tests/unit/report_data.test.ts -t 'relationship_label vocabulary'` — expect FAIL.
 
-- [ ] **Step 1.3: Implement** — change `relationship_label: string | null` to a typed union:
+- [x] **Step 1.3: Implement** — change `relationship_label: string | null` to a typed union:
 
 ```typescript
 export type TimelineRelationshipLabel =
@@ -144,9 +144,9 @@ export interface TimelineEntry {
 
 In `getTimeline()` body, where it currently sets `relationship_label: null`, set `'self'`. Where it sets `'spouse'` / `'parent'` / `'child'` / `'sibling'` strings, narrow them to the new vocabulary.
 
-- [ ] **Step 1.4: Run test** — expect PASS.
+- [x] **Step 1.4: Run test** — expect PASS.
 
-- [ ] **Step 1.5: Commit**
+- [x] **Step 1.5: Commit**
 
 ```bash
 git add src/api/report_data.ts tests/unit/report_data.test.ts
@@ -161,7 +161,7 @@ git commit -m "refactor(timeline): typed relationship_label vocabulary"
 - Modify: `src/api/report_data.ts`
 - Modify: `tests/unit/report_data.test.ts`
 
-- [ ] **Step 2.1: Write failing test** — assert that a private helper exposed through `getTimeline` filters family events by lifetime:
+- [x] **Step 2.1: Write failing test** — assert that a private helper exposed through `getTimeline` filters family events by lifetime:
 
 ```typescript
 it('drops parent death that occurred before subject birth', () => {
@@ -175,9 +175,9 @@ it('drops spouse death that occurred after subject death', () => {});
 it('drops child death that occurred after subject death', () => {});
 ```
 
-- [ ] **Step 2.2: Run** — expect FAIL.
+- [x] **Step 2.2: Run** — expect FAIL.
 
-- [ ] **Step 2.3: Implement** in `src/api/report_data.ts`:
+- [x] **Step 2.3: Implement** in `src/api/report_data.ts`:
 
 ```typescript
 function extractYearMonthDay(dateValue: string | null): { y: number; m: number; d: number } | null {
@@ -218,9 +218,9 @@ function readSubjectLifetime(subjectEvents: EventWithPlace[]): SubjectLifetime {
 
 Filter callers: a relative's event qualifies when its date is **after subject's birth** AND **on or before** subject's death (plus 9-month window for child births only).
 
-- [ ] **Step 2.4: Run** — expect PASS.
+- [x] **Step 2.4: Run** — expect PASS.
 
-- [ ] **Step 2.5: Commit**
+- [x] **Step 2.5: Commit**
 
 ```bash
 git add src/api/report_data.ts tests/unit/report_data.test.ts
@@ -233,15 +233,15 @@ git commit -m "feat(timeline): lifetime-constraint helper for family events"
 
 **Files:** `src/api/report_data.ts`, `tests/unit/report_data.test.ts`
 
-- [ ] **Step 3.1: Test** — subject with two parents linked via `parent_child` (subject is `person2_id`); both die during lifetime. Assert two entries with `relationship_label: 'father' | 'mother'` (mapped from parent's `sex`; `'U'` → `'father'` placeholder is wrong → use a single `'parent'` label? Re-decision: keep `'father'` / `'mother'`; if sex is `U`, fall back to `'parent'`). Update `TimelineRelationshipLabel` to add `'parent'`.
+- [x] **Step 3.1: Test** — subject with two parents linked via `parent_child` (subject is `person2_id`); both die during lifetime. Assert two entries with `relationship_label: 'father' | 'mother'` (mapped from parent's `sex`; `'U'` → `'father'` placeholder is wrong → use a single `'parent'` label? Re-decision: keep `'father'` / `'mother'`; if sex is `U`, fall back to `'parent'`). Update `TimelineRelationshipLabel` to add `'parent'`.
 
-- [ ] **Step 3.2: Run** — FAIL.
+- [x] **Step 3.2: Run** — FAIL.
 
-- [ ] **Step 3.3: Implement** in `getTimeline()` — within the `for (const r of rels)` loop, when `r.type === 'parent_child'` and the OTHER person is the parent (i.e. `r.person2_id === personId`), fetch other-person death event, apply lifetime filter, push entry with sex-derived label (`father`/`mother`/`parent`).
+- [x] **Step 3.3: Implement** in `getTimeline()` — within the `for (const r of rels)` loop, when `r.type === 'parent_child'` and the OTHER person is the parent (i.e. `r.person2_id === personId`), fetch other-person death event, apply lifetime filter, push entry with sex-derived label (`father`/`mother`/`parent`).
 
-- [ ] **Step 3.4: Run** — PASS.
+- [x] **Step 3.4: Run** — PASS.
 
-- [ ] **Step 3.5: Commit** — `feat(timeline): include parent deaths within subject lifetime`
+- [x] **Step 3.5: Commit** — `feat(timeline): include parent deaths within subject lifetime`
 
 ---
 
@@ -249,15 +249,15 @@ git commit -m "feat(timeline): lifetime-constraint helper for family events"
 
 **Files:** `src/api/report_data.ts`, `tests/unit/report_data.test.ts`
 
-- [ ] **Step 4.1: Test** — three children: one born during lifetime, one 6 months posthumous, one 18 months posthumous. Assert first two are in timeline, third is not.
+- [x] **Step 4.1: Test** — three children: one born during lifetime, one 6 months posthumous, one 18 months posthumous. Assert first two are in timeline, third is not.
 
-- [ ] **Step 4.2: Run** — FAIL.
+- [x] **Step 4.2: Run** — FAIL.
 
-- [ ] **Step 4.3: Implement** — in the same loop where `r.type === 'parent_child'` and SUBJECT is `person1_id` (parent), fetch child's events, include `birth` and `foster_placement`, apply `<= deathPlus9Mo` rule. Label: `'son' | 'daughter' | 'child'` from child's `sex`.
+- [x] **Step 4.3: Implement** — in the same loop where `r.type === 'parent_child'` and SUBJECT is `person1_id` (parent), fetch child's events, include `birth` and `foster_placement`, apply `<= deathPlus9Mo` rule. Label: `'son' | 'daughter' | 'child'` from child's `sex`.
 
-- [ ] **Step 4.4: Run** — PASS.
+- [x] **Step 4.4: Run** — PASS.
 
-- [ ] **Step 4.5: Commit** — `feat(timeline): include children's births with posthumous window`
+- [x] **Step 4.5: Commit** — `feat(timeline): include children's births with posthumous window`
 
 ---
 
@@ -265,11 +265,11 @@ git commit -m "feat(timeline): lifetime-constraint helper for family events"
 
 **Files:** `src/api/report_data.ts`, `tests/unit/report_data.test.ts`
 
-- [ ] **Step 5.1: Test** — child death year before subject's death year → included. Child death after → excluded.
+- [x] **Step 5.1: Test** — child death year before subject's death year → included. Child death after → excluded.
 
-- [ ] **Step 5.2: Implement** — in the same parent_child branch, fetch child's `death` events, filter `<= subject.death`, push.
+- [x] **Step 5.2: Implement** — in the same parent_child branch, fetch child's `death` events, filter `<= subject.death`, push.
 
-- [ ] **Step 5.3: Run + commit** — `feat(timeline): include children's deaths within subject lifetime`
+- [x] **Step 5.3: Run + commit** — `feat(timeline): include children's deaths within subject lifetime`
 
 ---
 
@@ -277,11 +277,11 @@ git commit -m "feat(timeline): lifetime-constraint helper for family events"
 
 **Files:** `src/api/report_data.ts`, `tests/unit/report_data.test.ts`
 
-- [ ] **Step 6.1: Test** — couple where spouse died before subject → spouse death entry. Couple where spouse died after subject → no spouse death entry.
+- [x] **Step 6.1: Test** — couple where spouse died before subject → spouse death entry. Couple where spouse died after subject → no spouse death entry.
 
-- [ ] **Step 6.2: Implement** — in the `r.type === 'couple'` branch, fetch other-person `death` event, filter `<= subject.death`, label `'spouse'`. (Current code already includes 'birth'/'death'/'christening'/'burial' for couple — narrow to **only** death + apply lifetime filter.)
+- [x] **Step 6.2: Implement** — in the `r.type === 'couple'` branch, fetch other-person `death` event, filter `<= subject.death`, label `'spouse'`. (Current code already includes 'birth'/'death'/'christening'/'burial' for couple — narrow to **only** death + apply lifetime filter.)
 
-- [ ] **Step 6.3: Run + commit** — `feat(timeline): spouse death only within subject lifetime`
+- [x] **Step 6.3: Run + commit** — `feat(timeline): spouse death only within subject lifetime`
 
 ---
 
@@ -289,9 +289,9 @@ git commit -m "feat(timeline): lifetime-constraint helper for family events"
 
 **Files:** `src/api/report_data.ts`, `src/shared/channels/reports.ts`, `src/preload/index.ts`, `src/static/static-api.ts`, `tests/unit/report_data.test.ts`
 
-- [ ] **Step 7.1: Test** — assert default call (no options) excludes child marriages and sibling deaths. Assert call with `{ includeChildrenMarriages: true }` includes them.
+- [x] **Step 7.1: Test** — assert default call (no options) excludes child marriages and sibling deaths. Assert call with `{ includeChildrenMarriages: true }` includes them.
 
-- [ ] **Step 7.2: Implement signature**:
+- [x] **Step 7.2: Implement signature**:
 
 ```typescript
 export interface TimelineOptions {
@@ -304,11 +304,11 @@ export function getTimeline(db: Database, personId: string, options: TimelineOpt
 }
 ```
 
-- [ ] **Step 7.3: Children's marriages** — when `includeChildrenMarriages`, find child's `couple` relationships, then their `marriage`-type events; filter to subject's lifetime.
+- [x] **Step 7.3: Children's marriages** — when `includeChildrenMarriages`, find child's `couple` relationships, then their `marriage`-type events; filter to subject's lifetime.
 
-- [ ] **Step 7.4: Sibling deaths** — when `includeSiblingDeaths`, find sibling-of-subject via shared parent in `parent_child` rels (or via `r.type === 'sibling'` direct rels), fetch their death events, filter to subject's lifetime.
+- [x] **Step 7.4: Sibling deaths** — when `includeSiblingDeaths`, find sibling-of-subject via shared parent in `parent_child` rels (or via `r.type === 'sibling'` direct rels), fetch their death events, filter to subject's lifetime.
 
-- [ ] **Step 7.5: Channel** — update `src/shared/channels/reports.ts`:
+- [x] **Step 7.5: Channel** — update `src/shared/channels/reports.ts`:
 
 ```typescript
 defineChannel({
@@ -319,18 +319,18 @@ defineChannel({
 });
 ```
 
-- [ ] **Step 7.6: Preload** — update `src/preload/index.ts`:
+- [x] **Step 7.6: Preload** — update `src/preload/index.ts`:
 
 ```typescript
 timeline: (personId: string, options?: { includeChildrenMarriages?: boolean; includeSiblingDeaths?: boolean }) =>
   ipcRenderer.invoke('reports:timeline', personId, options),
 ```
 
-- [ ] **Step 7.7: Static stub** — update `src/static/static-api.ts` `timeline` to accept and ignore options; still returns `[]`.
+- [x] **Step 7.7: Static stub** — update `src/static/static-api.ts` `timeline` to accept and ignore options; still returns `[]`.
 
-- [ ] **Step 7.8: Run** preload + static-api coverage tests — expect PASS.
+- [x] **Step 7.8: Run** preload + static-api coverage tests — expect PASS.
 
-- [ ] **Step 7.9: Commit** — `feat(timeline): optional children's marriages + sibling deaths`
+- [x] **Step 7.9: Commit** — `feat(timeline): optional children's marriages + sibling deaths`
 
 ---
 
@@ -338,7 +338,7 @@ timeline: (personId: string, options?: { includeChildrenMarriages?: boolean; inc
 
 **Files:** `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts`
 
-- [ ] **Step 8.1: Add keys to both files** under a new `timelineLabels` namespace:
+- [x] **Step 8.1: Add keys to both files** under a new `timelineLabels` namespace:
 
 ```typescript
 // sv.ts
@@ -368,7 +368,7 @@ timelineLabels: {
 }
 ```
 
-- [ ] **Step 8.2: Commit** — `feat(i18n): timeline relationship labels`
+- [x] **Step 8.2: Commit** — `feat(i18n): timeline relationship labels`
 
 ---
 
@@ -376,9 +376,9 @@ timelineLabels: {
 
 **Files:** `src/renderer/components/reports/ALifeReport.vue`
 
-- [ ] **Step 9.1: Remove the bespoke `childBirthItems` ref + the child-birth fetch block** in `load()` (lines ~490–517 — `childRels` walk and `childEventArrays` Promise.all).
+- [x] **Step 9.1: Remove the bespoke `childBirthItems` ref + the child-birth fetch block** in `load()` (lines ~490–517 — `childRels` walk and `childEventArrays` Promise.all).
 
-- [ ] **Step 9.2: Replace `timelineItems` computed** to call the new API. Add a parallel fetch in `load()`:
+- [x] **Step 9.2: Replace `timelineItems` computed** to call the new API. Add a parallel fetch in `load()`:
 
 ```typescript
 const [summary, researcher, timelineEntries] = await Promise.all([
@@ -424,11 +424,11 @@ const timelineItems = computed<TimelineItem[]>(() => {
 });
 ```
 
-- [ ] **Step 9.3: Verify no lint errors**: `npm run lint -- src/renderer/components/reports/ALifeReport.vue`.
+- [x] **Step 9.3: Verify no lint errors**: `npm run lint -- src/renderer/components/reports/ALifeReport.vue`.
 
-- [ ] **Step 9.4: Smoke check** — `npm start`, open A Life Report for someone with deceased parent and child, confirm markers appear.
+- [x] **Step 9.4: Smoke check** — `npm start`, open A Life Report for someone with deceased parent and child, confirm markers appear.
 
-- [ ] **Step 9.5: Commit** — `feat(reports): ALifeReport timeline uses canonical getTimeline + relationship suffixes`
+- [x] **Step 9.5: Commit** — `feat(reports): ALifeReport timeline uses canonical getTimeline + relationship suffixes`
 
 ---
 
@@ -436,7 +436,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
 **Files:** `src/renderer/components/ReportPanel.vue`, `src/renderer/i18n/{sv,en}.ts`
 
-- [ ] **Step 10.1: Add two checkboxes** to ReportPanel under a new "Tidslinje" subsection (only visible when active report is `aLife`):
+- [x] **Step 10.1: Add two checkboxes** to ReportPanel under a new "Tidslinje" subsection (only visible when active report is `aLife`):
 
 ```vue
 <label class="ep-field">
@@ -451,11 +451,11 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
 (Wire through whatever store / prop ALifeReport reads its options from — likely the `reportConfig` Pinia store. Check the store and add the two fields.)
 
-- [ ] **Step 10.2: i18n keys** — `reports.alife.includeChildrenMarriages` ("Inkludera barns äktenskap" / "Include children's marriages"), `reports.alife.includeSiblingDeaths` ("Inkludera syskons bortgång" / "Include sibling deaths").
+- [x] **Step 10.2: i18n keys** — `reports.alife.includeChildrenMarriages` ("Inkludera barns äktenskap" / "Include children's marriages"), `reports.alife.includeSiblingDeaths` ("Inkludera syskons bortgång" / "Include sibling deaths").
 
-- [ ] **Step 10.3: Smoke check** — toggle both, verify markers appear/disappear without a manual reload.
+- [x] **Step 10.3: Smoke check** — toggle both, verify markers appear/disappear without a manual reload.
 
-- [ ] **Step 10.4: Commit** — `feat(reports): toggles for optional life-timeline categories`
+- [x] **Step 10.4: Commit** — `feat(reports): toggles for optional life-timeline categories`
 
 ---
 
@@ -463,7 +463,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
 **Files:** `src/renderer/components/PersonTimeline.vue`
 
-- [ ] **Step 11.1: Replace the `useEntityData` loader** to call `window.api.reports.timeline(id)` instead of `events.forPerson(id)`. The existing template renders one entry per event — keep the layout but emit a relationship suffix on family entries.
+- [x] **Step 11.1: Replace the `useEntityData` loader** to call `window.api.reports.timeline(id)` instead of `events.forPerson(id)`. The existing template renders one entry per event — keep the layout but emit a relationship suffix on family entries.
 
 ```typescript
 const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, async (id) => {
@@ -473,15 +473,15 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
 });
 ```
 
-- [ ] **Step 11.2: Update template** to render the relationship suffix near the event-type badge for non-`self` entries.
+- [x] **Step 11.2: Update template** to render the relationship suffix near the event-type badge for non-`self` entries.
 
-- [ ] **Step 11.3: Confirm visual difference** vs. the EventList rendered above it in PersonPanel. The two MUST show distinct content (PersonTimeline is family-aware; EventList is own-events-only).
+- [x] **Step 11.3: Confirm visual difference** vs. the EventList rendered above it in PersonPanel. The two MUST show distinct content (PersonTimeline is family-aware; EventList is own-events-only).
 
-- [ ] **Step 11.4: Confirm clicks** still open `EventModal` for own events. For family events, change the click target to navigate to that person's panel (`router.push({ name: 'persons', params: { personId: entry.person_id } })`) instead of opening the editor — editing a child's birth event from the parent's timeline is confusing.
+- [x] **Step 11.4: Confirm clicks** still open `EventModal` for own events. For family events, change the click target to navigate to that person's panel (`router.push({ name: 'persons', params: { personId: entry.person_id } })`) instead of opening the editor — editing a child's birth event from the parent's timeline is confusing.
 
-- [ ] **Step 11.5: Smoke check** — open PersonPanel for the same subject as Task 9; confirm panel timeline now matches the report timeline shape.
+- [x] **Step 11.5: Smoke check** — open PersonPanel for the same subject as Task 9; confirm panel timeline now matches the report timeline shape.
 
-- [ ] **Step 11.6: Commit** — `feat(panel): PersonTimeline shows family events instead of duplicating EventList`
+- [x] **Step 11.6: Commit** — `feat(panel): PersonTimeline shows family events instead of duplicating EventList`
 
 ---
 
@@ -489,11 +489,11 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
 
 **Files:** none (verification only)
 
-- [ ] **Step 12.1: Run** `npx tsx src/mcp/server.ts` against a test database (or use the dev MCP). Call `get_timeline` for the same subjects from Task 9 verifications. Confirm new categories appear with relationship_label values.
+- [x] **Step 12.1: Run** `npx tsx src/mcp/server.ts` against a test database (or use the dev MCP). Call `get_timeline` for the same subjects from Task 9 verifications. Confirm new categories appear with relationship_label values.
 
-- [ ] **Step 12.2: Update** `src/mcp/tools/prod/events.ts` `get_timeline` only if the tool description mentions specific event categories — don't promise more than the tool returns. (Likely no change needed; review.)
+- [x] **Step 12.2: Update** `src/mcp/tools/prod/events.ts` `get_timeline` only if the tool description mentions specific event categories — don't promise more than the tool returns. (Likely no change needed; review.)
 
-- [ ] **Step 12.3: Commit if any change** — `docs(mcp): describe new timeline event categories`
+- [x] **Step 12.3: Commit if any change** — `docs(mcp): describe new timeline event categories`
 
 ---
 
@@ -501,7 +501,7 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
 
 **Files:** `docs/plans/2026-04-29-ben-reactivity.md`
 
-- [ ] **Step 13.1: Edit Phase 4 checkboxes** to:
+- [x] **Step 13.1: Edit Phase 4 checkboxes** to:
 
 ```markdown
 ### Phase 4 — Indirect events on timelines (#31)
@@ -510,22 +510,22 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
 - [x] Constraint: only include events that fell within the subject's lifetime — superseded; full settlement of "significant events" lives in the new plan.
 ```
 
-- [ ] **Step 13.2: Commit** — `docs(plan): supersede ben-reactivity Phase 4 by life-timeline-expansion`
+- [x] **Step 13.2: Commit** — `docs(plan): supersede ben-reactivity Phase 4 by life-timeline-expansion`
 
 ---
 
 ### Task 14: Self-review checklist
 
-- [ ] All 7 verification scenarios in §"Verification" pass against a real database in `npm start`
-- [ ] `npm run lint` clean
-- [ ] `npx vitest run tests/unit/report_data.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts` all green
-- [ ] `npx vitest run` full suite green
-- [ ] No persisted-inference violations introduced (search the diff for any `INSERT` / `UPDATE` writing computed birth/death years or "is alive" flags — none should exist)
-- [ ] All checkboxes in this plan ticked, plan moved to `docs/plans/archive/` via `git mv`
-- [ ] `package.json` minor version bump (this is a feature)
-- [ ] `CHANGELOG.md` `## Unreleased` line summarising the timeline expansion
-- [ ] Commit `chore: archive completed life-timeline-expansion + bump vX.Y.Z`
-- [ ] Merge worktree → `main`, delete branch, remove worktree
+- [x] All 7 verification scenarios in §"Verification" pass against a real database in `npm start`
+- [x] `npm run lint` clean
+- [x] `npx vitest run tests/unit/report_data.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts` all green
+- [x] `npx vitest run` full suite green
+- [x] No persisted-inference violations introduced (search the diff for any `INSERT` / `UPDATE` writing computed birth/death years or "is alive" flags — none should exist)
+- [x] All checkboxes in this plan ticked, plan moved to `docs/plans/archive/` via `git mv`
+- [x] `package.json` minor version bump (this is a feature)
+- [x] `CHANGELOG.md` `## Unreleased` line summarising the timeline expansion
+- [x] Commit `chore: archive completed life-timeline-expansion + bump vX.Y.Z`
+- [x] Merge worktree → `main`, delete branch, remove worktree
 
 ## Out of scope (revisit later if needed)
 

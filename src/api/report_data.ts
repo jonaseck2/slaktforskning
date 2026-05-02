@@ -94,12 +94,56 @@ export interface ResearchGaps {
   events_without_places: EventWithPlace[];
 }
 
+/**
+ * Stable vocabulary for `TimelineEntry.relationship_label`.
+ *
+ * - `'self'`     — the subject's own event (replaces the old `null`).
+ * - `'father'` / `'mother'` — sex-known parent (Task 3 will start emitting these;
+ *                              Task 1 only adds them to the union).
+ * - `'parent'`   — parent with sex unknown (current emission for parent_child where
+ *                  the subject is `person2_id`; Task 3 narrows to father/mother).
+ * - `'spouse'`   — couple-relationship partner.
+ * - `'son'` / `'daughter'` — sex-known child (Task 4 will start emitting these).
+ * - `'child'`    — child with sex unknown (current emission for parent_child where
+ *                  the subject is `person1_id`).
+ * - `'sibling'`  — sibling relationship.
+ */
+export type TimelineRelationshipLabel =
+  | 'self'
+  | 'father'
+  | 'mother'
+  | 'parent'
+  | 'spouse'
+  | 'son'
+  | 'daughter'
+  | 'child'
+  | 'sibling';
+
 export interface TimelineEntry {
   event: EventWithPlace;
   person_id: string;
   person_given_name: string;
   person_surname: string;
-  relationship_label: string | null;
+  relationship_label: TimelineRelationshipLabel;
+}
+
+/**
+ * Optional categories on top of the default life timeline. Both default to
+ * false — by default the timeline emits only the subject's own events, parent
+ * deaths, spouse death, and children's births / foster_placements / deaths.
+ *
+ * - `includeChildrenMarriages`: include each child's `marriage` events
+ *   (sourced from the child's couple-relationship events) that happened during
+ *   the subject's lifetime. Labelled with the child's sex-typed label
+ *   (`'son'` / `'daughter'` / `'child'`).
+ * - `includeSiblingDeaths`: include the subject's siblings' `death` events
+ *   that happened during the subject's lifetime. Labelled `'sibling'`. When
+ *   this is false (the default), siblings are completely excluded from the
+ *   timeline.
+ */
+export interface TimelineOptions {
+  includeChildrenMarriages?: boolean;
+  includeSiblingDeaths?: boolean;
 }
 
 // ── Helpers ──
@@ -139,6 +183,99 @@ function getPrimaryName(names: PersonName[]): { given_name: string; surname: str
 
 function findEventByType(events: EventWithPlace[], type: string): EventWithPlace | null {
   return events.find(e => e.event_type === type) ?? null;
+}
+
+// ── Lifetime-constraint helpers (Task 2 — life timeline expansion) ──
+// These are internal to getTimeline; not exported. They compute, at read time,
+// which family events fall within the subject's lifetime so the timeline tells
+// "the story of their life" rather than a flat list of every family event.
+
+function extractYearMonthDay(dateValue: string | null): { y: number; m: number; d: number } | null {
+  if (!dateValue) return null;
+  const m = dateValue.match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/);
+  if (!m) return null;
+  return {
+    y: parseInt(m[1], 10),
+    m: m[2] ? parseInt(m[2], 10) : 1,
+    d: m[3] ? parseInt(m[3], 10) : 1,
+  };
+}
+
+function eventDateOnOrBefore(event: EventWithPlace, year: number, month: number, day: number): boolean {
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return false;
+  if (ev.y !== year) return ev.y < year;
+  if (ev.m !== month) return ev.m < month;
+  return ev.d <= day;
+}
+
+function eventDateOnOrAfter(event: EventWithPlace, year: number, month: number, day: number): boolean {
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return false;
+  if (ev.y !== year) return ev.y > year;
+  if (ev.m !== month) return ev.m > month;
+  return ev.d >= day;
+}
+
+function plusMonths(y: number, m: number, d: number, addMonths: number): { y: number; m: number; d: number } {
+  const total = y * 12 + (m - 1) + addMonths;
+  return { y: Math.floor(total / 12), m: (total % 12) + 1, d };
+}
+
+interface SubjectLifetime {
+  birth: { y: number; m: number; d: number } | null;
+  death: { y: number; m: number; d: number } | null;
+  deathPlus9Mo: { y: number; m: number; d: number } | null;
+}
+
+function readSubjectLifetime(subjectEvents: EventWithPlace[]): SubjectLifetime {
+  const birthEv = subjectEvents.find(e => e.event_type === 'birth');
+  const deathEv = subjectEvents.find(e => e.event_type === 'death');
+  const birth = birthEv ? extractYearMonthDay(birthEv.date_value) : null;
+  const death = deathEv ? extractYearMonthDay(deathEv.date_value) : null;
+  const deathPlus9Mo = death ? plusMonths(death.y, death.m, death.d, 9) : null;
+  return { birth, death, deathPlus9Mo };
+}
+
+/**
+ * Returns true if this family event falls within the subject's lifetime
+ * (or, when `applyPosthumousWindow` is true — used for child births and
+ * foster_placements — within 9 months after the subject's death, to capture
+ * posthumous births fathered/borne by the subject).
+ *
+ * Per CLAUDE.md "events without a date_value pass through unchanged" — we only
+ * filter events with parseable dates that fail the lifetime test. Undated
+ * events appear in the timeline at the empty-string sort position; the display
+ * layer can drop them if it wants.
+ */
+function familyEventWithinLifetime(
+  event: EventWithPlace,
+  lifetime: SubjectLifetime,
+  applyPosthumousWindow: boolean,
+): boolean {
+  // Undated events pass through — see comment above.
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return true;
+
+  // Lower bound: after subject's birth (if known).
+  if (lifetime.birth) {
+    if (!eventDateOnOrAfter(event, lifetime.birth.y, lifetime.birth.m, lifetime.birth.d)) {
+      return false;
+    }
+  }
+
+  // Upper bound: on or before subject's death — extended by 9 months only when
+  // `applyPosthumousWindow` is true (i.e. for child birth / foster_placement, so
+  // a baby born just after the subject's death still counts as "their" child).
+  // Child deaths and all other family events use the strict death upper bound.
+  // If subject has no death, they're still alive → no upper bound.
+  if (applyPosthumousWindow && lifetime.deathPlus9Mo) {
+    return eventDateOnOrBefore(event, lifetime.deathPlus9Mo.y, lifetime.deathPlus9Mo.m, lifetime.deathPlus9Mo.d);
+  }
+  if (lifetime.death) {
+    return eventDateOnOrBefore(event, lifetime.death.y, lifetime.death.m, lifetime.death.d);
+  }
+  return true;
 }
 
 function buildFamilyMember(db: Database, personId: string): FamilyMember | null {
@@ -398,7 +535,11 @@ export function getResearchGaps(db: Database, personId: string): ResearchGaps | 
  * Returns a merged chronological timeline of a person's events plus family events
  * (spouse's birth/death, children's births/deaths).
  */
-export function getTimeline(db: Database, personId: string): TimelineEntry[] | null {
+export function getTimeline(
+  db: Database,
+  personId: string,
+  options: TimelineOptions = {},
+): TimelineEntry[] | null {
   const person = getPerson(db, personId);
   if (!person) return null;
 
@@ -415,9 +556,14 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
       person_id: personId,
       person_given_name: primaryName.given_name,
       person_surname: primaryName.surname,
-      relationship_label: null,
+      relationship_label: 'self',
     });
   }
+
+  // Compute the subject's lifetime once — used to filter family events so the
+  // timeline tells the story of THIS person's life (events that happened during
+  // their lifetime), not a flat list of every family member's life events.
+  const lifetime = readSubjectLifetime(ownEvents);
 
   // Family events
   const rels = getRelationshipsOfPerson(db, personId);
@@ -428,29 +574,110 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     const otherNames = getPersonNames(db, otherId);
     const otherPrimary = getPrimaryName(otherNames);
 
-    let label: string;
+    let label: TimelineRelationshipLabel;
+    let subjectIsParent = false;
+    let relevantTypes: string[];
     if (r.type === 'couple') {
+      // Task 6: narrow to death only — per the user goal "the deaths of their
+      // … spouse." Spouse births/christenings/burials are not part of the
+      // subject's life story for timeline purposes.
       label = 'spouse';
+      relevantTypes = ['death'];
     } else if (r.type === 'parent_child') {
-      label = r.person1_id === personId ? 'child' : 'parent';
+      // Convention: person1 = parent, person2 = child.
+      subjectIsParent = r.person1_id === personId;
+      if (subjectIsParent) {
+        // Task 4 + 5: subject is the parent of `other`. Emit child birth (so
+        // the user sees "what they built"), foster_placement (a parent_child
+        // birth-equivalent), and child death (a loss during the subject's
+        // lifetime — "this is who they lost"). Christenings and burials are
+        // excluded — they're a redundant copy of the EventList sitting next to
+        // the panel.
+        const childPerson = getPerson(db, otherId);
+        const childSex = childPerson?.sex ?? 'U';
+        label = childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+        relevantTypes = ['birth', 'foster_placement', 'death'];
+      } else {
+        // Subject is the child of `other` — emit only the parent's death,
+        // labelled by the parent's sex (per the user goal: "the deaths of their parents").
+        const parentPerson = getPerson(db, otherId);
+        const parentSex = parentPerson?.sex ?? 'U';
+        label = parentSex === 'M' ? 'father' : parentSex === 'F' ? 'mother' : 'parent';
+        relevantTypes = ['death'];
+      }
     } else if (r.type === 'sibling') {
+      // Task 7: siblings are completely excluded from the default timeline —
+      // they're a redundant copy of relationships the user can already see.
+      // Only sibling DEATHS are emitted, gated behind `includeSiblingDeaths`.
+      if (!options.includeSiblingDeaths) continue;
       label = 'sibling';
+      relevantTypes = ['death'];
     } else {
-      label = r.type;
+      // 'godparent' / 'other' relationships are not part of the subject's life story
+      // for timeline purposes — skip them.
+      continue;
     }
 
     const otherEvents = resolveEventsPlaces(db, getEventsForPerson(db, otherId));
-    // Only include key life events for family members
-    const relevantTypes = ['birth', 'death', 'christening', 'burial'];
     for (const event of otherEvents) {
-      if (relevantTypes.includes(event.event_type)) {
-        entries.push({
-          event,
-          person_id: otherId,
-          person_given_name: otherPrimary.given_name,
-          person_surname: otherPrimary.surname,
-          relationship_label: label,
-        });
+      if (!relevantTypes.includes(event.event_type)) continue;
+
+      // Lifetime constraint: a family event qualifies only if it happened
+      // during the subject's life. The +9-month posthumous window applies ONLY
+      // to child births and foster_placements (so a baby born just after the
+      // subject's death still counts as "their" child).
+      const applyPosthumousWindow =
+        subjectIsParent &&
+        (event.event_type === 'birth' || event.event_type === 'foster_placement');
+      if (!familyEventWithinLifetime(event, lifetime, applyPosthumousWindow)) continue;
+
+      entries.push({
+        event,
+        person_id: otherId,
+        person_given_name: otherPrimary.given_name,
+        person_surname: otherPrimary.surname,
+        relationship_label: label,
+      });
+    }
+  }
+
+  // Task 7: optional — children's marriages during subject's lifetime. Sourced
+  // from each child's couple-relationship events (marriage events live on
+  // `events.relationship_id` keyed to the couple relationship, NOT on the
+  // child as an event participant). Labelled with the child's sex-typed label.
+  if (options.includeChildrenMarriages) {
+    for (const r of rels) {
+      if (r.type !== 'parent_child') continue;
+      // Convention: person1 = parent, person2 = child. Subject must be parent.
+      if (r.person1_id !== personId) continue;
+      const childId = r.person2_id;
+      if (!childId) continue;
+
+      const childPerson = getPerson(db, childId);
+      const childSex = childPerson?.sex ?? 'U';
+      const childLabel: TimelineRelationshipLabel =
+        childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+      const childNames = getPersonNames(db, childId);
+      const childPrimary = getPrimaryName(childNames);
+
+      const childRels = getRelationshipsOfPerson(db, childId);
+      for (const cr of childRels) {
+        if (cr.type !== 'couple') continue;
+        const coupleEvents = resolveEventsPlaces(db, getEventsForRelationship(db, cr.id));
+        for (const event of coupleEvents) {
+          if (event.event_type !== 'marriage') continue;
+          // Strict lifetime: a child's marriage after the subject's death is
+          // not part of the subject's life story (no posthumous window — the
+          // +9mo only applies to births / foster_placements).
+          if (!familyEventWithinLifetime(event, lifetime, false)) continue;
+          entries.push({
+            event,
+            person_id: childId,
+            person_given_name: childPrimary.given_name,
+            person_surname: childPrimary.surname,
+            relationship_label: childLabel,
+          });
+        }
       }
     }
   }

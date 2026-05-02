@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.192.0 — Life timeline tells the story of a life
+
+- feat(reports): A Life Report's timeline now shows the **story of the subject's life** — own events plus parent deaths, spouse death, and each child's birth/foster_placement/death that fell within the subject's lifetime. Family events render with a sex-typed relationship suffix ("Maria (mor)", "Lars (son)") so multiple Bortgång/Födelse markers in the same year stay readable.
+- feat(reports): two opt-in toggles in ReportPanel — "Inkludera barns äktenskap" and "Inkludera syskons bortgång" — surface children's marriages and sibling deaths during the subject's lifetime when enabled.
+- feat(panel): PersonTimeline (the timeline section in PersonPanel) now consumes the same canonical `getTimeline()` API. Previously it duplicated the EventList sitting next to it; now it tells the life story too. Clicking a family entry navigates to that person's panel; clicking a self entry still opens EventModal for editing.
+- feat(api): `getTimeline(db, personId, options?)` is now the single source of truth for life timelines. Lifetime constraint is applied server-side (events outside the subject's birth–death window are dropped; child births get a +9-month posthumous extension to capture postpartum births).
+- feat(mcp): `get_timeline` MCP tool exposes the new categories with a typed `relationship_label` ("self" | "father" | "mother" | "parent" | "spouse" | "son" | "daughter" | "child" | "sibling") and `include_children_marriages` / `include_sibling_deaths` parameters for AI-driven research.
+- Supersedes Phase 4 of `docs/plans/2026-04-29-ben-reactivity.md` (BEN #31).
+
 ## v0.191.1 — Swedish continent names resolve
 
 - fix(gazetteer): "Afrika", "Europa", "Asien", "Nordamerika", "Sydamerika", "Antarktis", and "Oceanien" now resolve to the corresponding continent in `world-boundaries`. The continents-in-world-boundaries plan added the geometries with English-only names; the Swedish-exonyms-expansion plan stopped at admin1 + capitals. The continents fell through the gap. `scripts/build-lang-sv-wikidata.ts` now also queries the 7 continent QIDs (Q15/Q51/Q48/Q46/Q49/Q538/Q18) and emits a `world-boundaries` translation block (Q538's English label is "Insular Oceania", so we key by QID and map QID → our gazetteer's continent name).

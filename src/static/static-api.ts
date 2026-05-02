@@ -505,7 +505,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     ancestorTree: noop,
     placeHistory: noop,
     researchGaps: noop,
-    timeline: async () => [],
+    timeline: async (_personId: string, _options?: { includeChildrenMarriages?: boolean; includeSiblingDeaths?: boolean }) => [],
     aliveInYear: async (year: number) => ({ year, persons: [] }),
   };
 

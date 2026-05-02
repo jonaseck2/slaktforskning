@@ -400,6 +400,17 @@ export default {
     travel: 'Resa',
     other: 'Övrigt',
   },
+  timelineLabels: {
+    self: '',
+    father: 'far',
+    mother: 'mor',
+    parent: 'förälder',
+    spouse: 'make/maka',
+    son: 'son',
+    daughter: 'dotter',
+    child: 'barn',
+    sibling: 'syskon',
+  },
   dateTypes: {
     exact: 'Exakt',
     about: 'Ungefär',
@@ -950,6 +961,8 @@ export default {
       family: 'Familj',
       events: 'Händelser',
       biography: 'Biografi',
+      includeChildrenMarriages: 'Inkludera barns äktenskap',
+      includeSiblingDeaths: 'Inkludera syskons bortgång',
     },
     onePage: {
       title: 'Ett liv på en sida',

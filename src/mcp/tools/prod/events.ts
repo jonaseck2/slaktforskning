@@ -124,12 +124,17 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('get_timeline', {
-    description: 'Get a chronological timeline of events for a person, including family events',
+    description: 'Get a chronological life-story timeline for a person: their own events plus parent deaths, spouse death, and children\'s births / foster_placements / deaths that happened during their lifetime. Each entry has a relationship_label ("self" | "father" | "mother" | "parent" | "spouse" | "son" | "daughter" | "child" | "sibling"). Spouse births / christenings / burials are excluded; only spouse deaths qualify. Child births include up to 9 months posthumous (to capture postpartum births). Siblings are excluded by default.',
     inputSchema: {
       person_id: z.string().describe('Person ID'),
+      include_children_marriages: z.boolean().optional().describe('When true, include each child\'s marriage events that occurred during the subject\'s lifetime. Default false.'),
+      include_sibling_deaths: z.boolean().optional().describe('When true, include each sibling\'s death events that occurred during the subject\'s lifetime. Default false.'),
     },
   }, async (args) => {
-    const timeline = reportData.getTimeline(getDb(), args.person_id);
+    const timeline = reportData.getTimeline(getDb(), args.person_id, {
+      includeChildrenMarriages: args.include_children_marriages,
+      includeSiblingDeaths: args.include_sibling_deaths,
+    });
     return { content: [{ type: 'text', text: timeline ? JSON.stringify(timeline, null, 2) : 'Person not found' }] };
   });
 
