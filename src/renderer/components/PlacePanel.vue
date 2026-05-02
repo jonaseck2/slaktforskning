@@ -438,12 +438,26 @@ const resolvedMatch = computed<PlaceResolveResult | null>(() => {
   return resolve(parts.join(', '));
 });
 
+// Did the user's leaf token (first comma-component of `place.name`) actually
+// match a node in the gazetteer? If yes, the gazetteer's matched leaf == the
+// user's place, so its type/parents apply directly. If no, the matched node
+// is an ancestor — its type doesn't describe the user's place, and the matched
+// "leaf" IS the user's place's parent.
+const leafMatched = computed<boolean>(() => {
+  const m = resolvedMatch.value;
+  const p = place.value;
+  if (!m || !p) return false;
+  const leafToken = p.name.split(/,|\.(?=[A-Z])/)[0].trim().toLowerCase();
+  return !m.unmatchedComponents.some(u => u.trim().toLowerCase() === leafToken);
+});
+
 // Resolved Type fallback — the gazetteer node's `type` (e.g. "country", "city").
 // If it overlaps with PLACE_TYPE_VALUES we render the localized label; otherwise
-// we render the raw string from the gazetteer.
+// we render the raw string from the gazetteer. Only meaningful when the user's
+// leaf actually matched; otherwise the type describes an ancestor, not this place.
 const resolvedTypeLabel = computed<string | null>(() => {
   const m = resolvedMatch.value;
-  if (!m) return null;
+  if (!m || !leafMatched.value) return null;
   const raw = m.matchedNode?.type ?? null;
   if (!raw) return null;
   const key = `placeTypes.${raw}`;
@@ -452,10 +466,16 @@ const resolvedTypeLabel = computed<string | null>(() => {
 
 // Resolved Parent path fallback — everything in the matched gazetteer path
 // before the leaf, joined with ›. Empty when the leaf matched at root level.
+//
+// Edge case: when the user's leaf token did NOT match the gazetteer, the
+// matched gazetteer "leaf" is actually the parent of the user's place — keep
+// the full path instead of slicing it off. Example: "Uvira, Belgiska Kongo" →
+// "Uvira" is unmatched, gazetteer matched "Belgiska Kongo" → "Kingdom of
+// Kongo" — that's the parent of Uvira.
 const resolvedParentPath = computed<string | null>(() => {
   const m = resolvedMatch.value;
   if (!m) return null;
-  const path = m.matchedPath.slice(0, -1);
+  const path = leafMatched.value ? m.matchedPath.slice(0, -1) : m.matchedPath;
   return path.length > 0 ? path.join(' › ') : null;
 });
 

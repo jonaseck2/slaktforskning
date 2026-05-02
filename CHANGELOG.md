@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.202.1
+
+- fix: PlacePanel resolved-parent placeholder now shows the correct parent when the user's leaf token isn't in the gazetteer. For places like "Uvira, Belgiska Kongo" where the gazetteer matches only at parent level (→ "Kingdom of Kongo"), the matched node IS the parent — keep the full path instead of slicing it off. Resolved-type placeholder is also nulled in this case, since the gazetteer's type describes an ancestor, not the user's place.
+
 ## v0.202.0 — Place-as-biography
 
 - feat: PlacePanel reshaped to read like a place's biography. Hero photo above the place name (first attached image by `media_links.sort_order`; click → MediaPanel; falls back to text-only when no qualifying media). Persons section now shows year ranges (`first_year–last_year`) per resident, sorted earliest-first, and excludes witnesses/godparents/officiants — only primary-role events count someone as a resident. New Research Tasks section linked to the place via the existing polymorphic `task_links` schema (no migration). Section order rewritten to biography flow: Place → Events → Timeline → Persons → Media → Media Timeline → Research Tasks → Quality. No new database schema; everything derives from data the user already authored.
