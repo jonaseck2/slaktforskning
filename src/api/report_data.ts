@@ -220,7 +220,8 @@ function readSubjectLifetime(subjectEvents: EventWithPlace[]): SubjectLifetime {
 
 /**
  * Returns true if this family event falls within the subject's lifetime
- * (or, for child births, within 9 months after the subject's death — to capture
+ * (or, when `applyPosthumousWindow` is true — used for child births and
+ * foster_placements — within 9 months after the subject's death, to capture
  * posthumous births fathered/borne by the subject).
  *
  * Per CLAUDE.md "events without a date_value pass through unchanged" — we only
@@ -231,7 +232,7 @@ function readSubjectLifetime(subjectEvents: EventWithPlace[]): SubjectLifetime {
 function familyEventWithinLifetime(
   event: EventWithPlace,
   lifetime: SubjectLifetime,
-  isChildBirth: boolean,
+  applyPosthumousWindow: boolean,
 ): boolean {
   // Undated events pass through — see comment above.
   const ev = extractYearMonthDay(event.date_value);
@@ -244,10 +245,12 @@ function familyEventWithinLifetime(
     }
   }
 
-  // Upper bound: on or before subject's death — extended by 9 months for child
-  // births specifically. If subject has no death, they're still alive → no upper
-  // bound.
-  if (isChildBirth && lifetime.deathPlus9Mo) {
+  // Upper bound: on or before subject's death — extended by 9 months only when
+  // `applyPosthumousWindow` is true (i.e. for child birth / foster_placement, so
+  // a baby born just after the subject's death still counts as "their" child).
+  // Child deaths and all other family events use the strict death upper bound.
+  // If subject has no death, they're still alive → no upper bound.
+  if (applyPosthumousWindow && lifetime.deathPlus9Mo) {
     return eventDateOnOrBefore(event, lifetime.deathPlus9Mo.y, lifetime.deathPlus9Mo.m, lifetime.deathPlus9Mo.d);
   }
   if (lifetime.death) {
@@ -559,9 +562,15 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
       // Convention: person1 = parent, person2 = child.
       subjectIsParent = r.person1_id === personId;
       if (subjectIsParent) {
-        // Subject is the parent of `other` — emit child events. Tasks 4 & 5 narrow this.
-        label = 'child';
-        relevantTypes = ['birth', 'death', 'christening', 'burial'];
+        // Task 4: subject is the parent of `other`. Emit child birth (so the
+        // user sees "what they built") and foster_placement (a parent_child
+        // birth-equivalent). Christenings and burials are excluded — they're a
+        // redundant copy of the EventList sitting next to the panel. Task 5
+        // will add child deaths.
+        const childPerson = getPerson(db, otherId);
+        const childSex = childPerson?.sex ?? 'U';
+        label = childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+        relevantTypes = ['birth', 'foster_placement'];
       } else {
         // Subject is the child of `other` — emit only the parent's death,
         // labelled by the parent's sex (per the user goal: "the deaths of their parents").
@@ -585,11 +594,13 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
       if (!relevantTypes.includes(event.event_type)) continue;
 
       // Lifetime constraint: a family event qualifies only if it happened
-      // during the subject's life. Child births get a 9-month posthumous
-      // window so a baby born after the subject's death still counts as
-      // "their" child on the timeline. Undated events pass through.
-      const isChildBirth = subjectIsParent && event.event_type === 'birth';
-      if (!familyEventWithinLifetime(event, lifetime, isChildBirth)) continue;
+      // during the subject's life. The +9-month posthumous window applies ONLY
+      // to child births and foster_placements (so a baby born just after the
+      // subject's death still counts as "their" child).
+      const applyPosthumousWindow =
+        subjectIsParent &&
+        (event.event_type === 'birth' || event.event_type === 'foster_placement');
+      if (!familyEventWithinLifetime(event, lifetime, applyPosthumousWindow)) continue;
 
       entries.push({
         event,
