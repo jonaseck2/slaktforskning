@@ -6,6 +6,7 @@
         <tr>
           <th>{{ $t('persons.givenName') }}</th>
           <th>{{ $t('persons.sex') }}</th>
+          <th>{{ $t('places.yearsHeader') }}</th>
           <th>{{ $t('places.eventCount') }}</th>
         </tr>
       </thead>
@@ -18,6 +19,7 @@
             </router-link>
           </td>
           <td><span :class="['sex-badge', 'sex-' + p.sex]">{{ p.sex }}</span></td>
+          <td class="years-cell">{{ formatYears(p.first_year, p.last_year) }}</td>
           <td>{{ p.event_count }}</td>
         </tr>
       </tbody>
@@ -41,6 +43,8 @@ interface PersonAtPlace {
   given_name: string;
   surname: string;
   event_count: number;
+  first_year: string | null;
+  last_year: string | null;
 }
 
 const props = defineProps<{ placeId: string }>();
@@ -51,9 +55,16 @@ const { data, reload } = useEntityData<PersonAtPlace[]>(idRef, async (id) => {
 });
 const persons = computed(() => data.value ?? []);
 
+function formatYears(first: string | null, last: string | null): string {
+  if (!first && !last) return '';
+  if (first === last) return first ?? '';
+  return `${first ?? '?'}–${last ?? '?'}`;
+}
+
 defineExpose({ reload });
 </script>
 
 <style scoped>
 .person-cell { display: flex; align-items: center; gap: var(--space-xs); }
+.years-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
 </style>

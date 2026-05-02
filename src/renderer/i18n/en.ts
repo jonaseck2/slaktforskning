@@ -550,6 +550,7 @@ export default {
     city: 'City',
     country: 'Country',
     eventCount: 'Events',
+    yearsHeader: 'Years',
     hierarchy: 'Hierarchy',
     showingOf: 'Showing {shown} of {total} places',
     resolvedBadge: 'Resolved',

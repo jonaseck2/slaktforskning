@@ -550,6 +550,7 @@ export default {
     city: 'Stad',
     country: 'Land',
     eventCount: 'Händelser',
+    yearsHeader: 'År',
     hierarchy: 'Hierarki',
     showingOf: 'Visar {shown} av {total} platser',
     resolvedBadge: 'Härlett',
