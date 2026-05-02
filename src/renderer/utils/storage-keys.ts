@@ -72,6 +72,7 @@ export const STORAGE_KEYS = {
   reportsPanelWidth: 'reports-panel-width',
 
   // Website export view
+  websitePanelOpen: 'website-panel-open',
   websitePanelWidth: 'website-panel-width',
 
   // Screen reader / TTS mode (with legacy key for migration)

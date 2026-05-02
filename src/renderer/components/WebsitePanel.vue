@@ -1,9 +1,16 @@
 <template>
-  <div class="website-panel">
-
-    <div class="panel-header">
-      <div class="panel-title">{{ $t('htmlSite.title') }}</div>
-    </div>
+  <EntityPanel
+    entity-type="website"
+    :entity="{ id: 'website' }"
+    :label="$t('panel.manageWebsite')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('panel.selectToView') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ $t('htmlSite.title') }}</div>
+      </div>
+    </template>
 
     <div class="panel-body">
 
@@ -79,7 +86,7 @@
         variant="primary"
         class="panel-action-btn"
         :disabled="exporting || !focusPersonId"
-        @click="$emit('export')"
+        @click="emit('export')"
       >
         {{ exporting ? $t('htmlSite.exporting') : $t('htmlSite.export') }}
       </AppButton>
@@ -90,11 +97,11 @@
         {{ $t('htmlSite.bundleMissing') }}
       </p>
     </div>
-
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
+import EntityPanel from './EntityPanel.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import PersonPicker from './PersonPicker.vue';
@@ -116,7 +123,7 @@ defineProps<{
   bundleMissing: boolean;
 }>();
 
-defineEmits<{ export: [] }>();
+const emit = defineEmits<{ export: []; close: [] }>();
 
 const { sections: open, toggleSection } = usePanelSections(
   'website-panel-section-',
@@ -125,27 +132,6 @@ const { sections: open, toggleSection } = usePanelSections(
 </script>
 
 <style scoped>
-.website-panel {
-  width: 100%;
-  height: 100%;
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
-  font-size: var(--font-sm);
-  overflow: hidden;
-}
-.panel-header {
-  padding: var(--space-lg) var(--space-lg) var(--space-md);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  flex-shrink: 0;
-}
-.panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
 .panel-body {
   flex: 1;
   min-height: 0;
@@ -196,6 +182,16 @@ const { sections: open, toggleSection } = usePanelSections(
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin: 0;
+}
+.panel-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.panel-name {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 .panel-actions {
   flex-shrink: 0;

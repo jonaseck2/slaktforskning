@@ -17,24 +17,30 @@
       </div>
     </div>
 
-    <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, rootRef!)"></div>
-    <div class="export-panel" :style="{ width: panelWidth + 'px' }">
-      <WebsitePanel
-        v-model:focusPersonId="focusPersonId"
-        v-model:scopeMode="scopeMode"
-        v-model:ancestors="ancestors"
-        v-model:descendants="descendants"
-        v-model:excludeLiving="excludeLiving"
-        v-model:redactLiving="redactLiving"
-        v-model:mediaPersonOnly="mediaPersonOnly"
-        v-model:includeMedia="includeMedia"
-        v-model:siteTitle="siteTitle"
-        :exporting="exporting"
-        :last-output="lastOutput"
-        :bundle-missing="bundleMissing"
-        @export="exportSite"
-      />
-    </div>
+    <!-- Reopen panel button when panel is closed -->
+    <button v-if="!panelOpen" class="panel-open-btn" :aria-label="$t('panel.open') ?? 'Open'" @click="openPanel">◀</button>
+
+    <template v-if="panelOpen">
+      <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, rootRef!)"></div>
+      <div class="export-panel" :style="{ width: panelWidth + 'px' }">
+        <WebsitePanel
+          v-model:focusPersonId="focusPersonId"
+          v-model:scopeMode="scopeMode"
+          v-model:ancestors="ancestors"
+          v-model:descendants="descendants"
+          v-model:excludeLiving="excludeLiving"
+          v-model:redactLiving="redactLiving"
+          v-model:mediaPersonOnly="mediaPersonOnly"
+          v-model:includeMedia="includeMedia"
+          v-model:siteTitle="siteTitle"
+          :exporting="exporting"
+          :last-output="lastOutput"
+          :bundle-missing="bundleMissing"
+          @export="exportSite"
+          @close="closePanel"
+        />
+      </div>
+    </template>
 
   </div>
 </template>
@@ -87,6 +93,16 @@ const { panelWidth, startResize } = usePanelResize({
   defaultWidth: 280,
   minWidth: 220,
 });
+
+const panelOpen = ref(localStorage.getItem(STORAGE_KEYS.websitePanelOpen) !== 'false');
+function openPanel() {
+  panelOpen.value = true;
+  localStorage.setItem(STORAGE_KEYS.websitePanelOpen, 'true');
+}
+function closePanel() {
+  panelOpen.value = false;
+  localStorage.setItem(STORAGE_KEYS.websitePanelOpen, 'false');
+}
 
 const canPreview = computed(() => scopeMode.value === 'everyone' || !!focusPersonId.value);
 
@@ -212,7 +228,24 @@ async function exportSite() {
   flex-direction: row;
   height: 100%;
   gap: var(--space-xs);
+  position: relative;
 }
+.panel-open-btn {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: 6px 5px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+  z-index: 10;
+}
+.panel-open-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
 .export-main {
   flex: 1;
   min-width: 0;
