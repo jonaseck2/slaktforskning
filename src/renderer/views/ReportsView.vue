@@ -67,6 +67,8 @@
               :show-notes="store.aLifeShowNotes"
               :show-media-captions="store.aLifeShowMediaCaptions"
               :show-media-notes="store.aLifeShowMediaNotes"
+              :include-children-marriages="store.aLifeIncludeChildrenMarriages"
+              :include-sibling-deaths="store.aLifeIncludeSiblingDeaths"
               :redact-living="store.redactLiving"
             />
           </div>

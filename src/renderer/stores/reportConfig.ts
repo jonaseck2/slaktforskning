@@ -12,14 +12,16 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   const personId = ref<string | null>(null);
 
   // A Life
-  const aLifeShowLifeMap        = ref(true);
-  const aLifeShowMapCaption     = ref(true);
-  const aLifeShowPhotos         = ref(true);
-  const aLifeShowDocuments      = ref(false);
-  const aLifeShowSources        = ref(false);
-  const aLifeShowNotes          = ref(true);
-  const aLifeShowMediaCaptions  = ref(true);
-  const aLifeShowMediaNotes     = ref(true);
+  const aLifeShowLifeMap                = ref(true);
+  const aLifeShowMapCaption             = ref(true);
+  const aLifeShowPhotos                 = ref(true);
+  const aLifeShowDocuments              = ref(false);
+  const aLifeShowSources                = ref(false);
+  const aLifeShowNotes                  = ref(true);
+  const aLifeShowMediaCaptions          = ref(true);
+  const aLifeShowMediaNotes             = ref(true);
+  const aLifeIncludeChildrenMarriages   = ref(false);
+  const aLifeIncludeSiblingDeaths       = ref(false);
 
   // Life on One Page
   const onePageOrientation    = ref<'portrait' | 'landscape'>('portrait');
@@ -107,6 +109,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     personId,
     aLifeShowLifeMap, aLifeShowMapCaption, aLifeShowPhotos, aLifeShowDocuments, aLifeShowSources,
     aLifeShowNotes, aLifeShowMediaCaptions, aLifeShowMediaNotes,
+    aLifeIncludeChildrenMarriages, aLifeIncludeSiblingDeaths,
     onePageOrientation, onePageShowLifeMap, onePageShowMapCaption,
     yourAncestorsGenerations, yourAncestorsColorMode, yourAncestorsDensity,
     yourAncestorsShowEvents, yourAncestorsShowLifeMap, yourAncestorsShowMapCaption, yourAncestorsShowExtraPhotos,

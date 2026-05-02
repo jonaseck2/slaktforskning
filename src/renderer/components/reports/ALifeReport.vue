@@ -116,6 +116,7 @@ import { formatFullName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
+import type { TimelineEntry } from '../../../api/report_data';
 
 const props = withDefaults(defineProps<{
   personId: string;
@@ -128,6 +129,8 @@ const props = withDefaults(defineProps<{
   redactLiving?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  includeChildrenMarriages?: boolean;
+  includeSiblingDeaths?: boolean;
 }>(), {
   showLifeMap: true,
   showMapCaption: true,
@@ -138,6 +141,8 @@ const props = withDefaults(defineProps<{
   redactLiving: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  includeChildrenMarriages: false,
+  includeSiblingDeaths: false,
 });
 
 const { t } = useI18n();
@@ -199,7 +204,7 @@ interface PersonSummary {
 const loading = ref(false);
 const error = ref<string | null>(null);
 const data = ref<PersonSummary | null>(null);
-const childBirthItems = ref<TimelineItem[]>([]);
+const timelineEntries = ref<TimelineEntry[]>([]);
 const researcherName = ref<string | null>(null);
 const profileImageUrl = ref<string | null>(null);
 
@@ -356,19 +361,27 @@ function eventTypeLabel(type: string): string {
 }
 
 const timelineItems = computed<TimelineItem[]>(() => {
-  if (!data.value) return [];
   const items: TimelineItem[] = [];
-  for (const ev of data.value.events) {
-    const year = extractYear(ev.date_value);
+  for (const entry of timelineEntries.value) {
+    const year = extractYear(entry.event.date_value);
     if (year == null) continue;
-    const place = ev.place_name;
-    const label = place
-      ? `${eventTypeLabel(ev.event_type)} · ${place}`
-      : eventTypeLabel(ev.event_type);
-    items.push({ id: ev.id, year, eventType: ev.event_type, label });
-  }
-  for (const item of childBirthItems.value) {
-    items.push(item);
+    const place = entry.event.place_name;
+    const typeLabel = eventTypeLabel(entry.event.event_type);
+
+    if (entry.relationship_label === 'self') {
+      const label = place ? `${typeLabel} · ${place}` : typeLabel;
+      items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
+    } else {
+      const namePart = formatFullName({
+        given_name: entry.person_given_name,
+        surname: entry.person_surname,
+      }) || t('common.unknown');
+      const relSuffix = ` (${t(`timelineLabels.${entry.relationship_label}`)})`;
+      const label = place
+        ? `${typeLabel}: ${namePart}${relSuffix} · ${place}`
+        : `${typeLabel}: ${namePart}${relSuffix}`;
+      items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
+    }
   }
   items.sort((a, b) => a.year - b.year);
   return items;
@@ -468,17 +481,21 @@ watch(
 async function load() {
   if (!props.personId) {
     data.value = null;
-    childBirthItems.value = [];
+    timelineEntries.value = [];
     return;
   }
   loading.value = true;
   error.value = null;
   data.value = null;
-  childBirthItems.value = [];
+  timelineEntries.value = [];
   try {
-    const [summary, researcher] = await Promise.all([
+    const [summary, researcher, timelineRes] = await Promise.all([
       window.api.reports.personSummary(props.personId) as Promise<PersonSummary | null>,
       window.api.db.getSetting('researcher_name') as Promise<string | null>,
+      window.api.reports.timeline(props.personId, {
+        includeChildrenMarriages: props.includeChildrenMarriages ?? false,
+        includeSiblingDeaths: props.includeSiblingDeaths ?? false,
+      }) as Promise<TimelineEntry[] | null>,
     ]);
     if (!summary) {
       error.value = t('reports.personNotFound');
@@ -486,35 +503,7 @@ async function load() {
     }
     data.value = summary;
     researcherName.value = researcher || null;
-
-    // Fetch birth/adoption events for each child to show on this person's timeline
-    const childRels = summary.relationships.filter(
-      (r: RawRelSummary) => r.type === 'parent_child' && r.person1_id === props.personId && !!r.other_person_id,
-    );
-    if (childRels.length > 0) {
-      type ChildEvent = { id: string; event_type: string; date_value: string | null; place_name: string | null };
-      const childEventArrays = await Promise.all(
-        childRels.map((r: RawRelSummary) =>
-          (window.api.events.forPerson(r.other_person_id!) as Promise<ChildEvent[]>).catch(() => [] as ChildEvent[]),
-        ),
-      );
-      const items: TimelineItem[] = [];
-      for (let i = 0; i < childRels.length; i++) {
-        const r = childRels[i];
-        const childName = personNameFrom(r.other_person_names);
-        const events = childEventArrays[i];
-        const birthEv = events.find(e => e.event_type === 'birth' || e.event_type === 'foster_placement');
-        if (!birthEv) continue;
-        const year = extractYear(birthEv.date_value);
-        if (year == null) continue;
-        const place = birthEv.place_name;
-        const typeLabel = eventTypeLabel(birthEv.event_type);
-        const namePart = childName || t('common.unknown');
-        const label = place ? `${typeLabel}: ${namePart} · ${place}` : `${typeLabel}: ${namePart}`;
-        items.push({ id: birthEv.id, year, eventType: birthEv.event_type, label });
-      }
-      childBirthItems.value = items;
-    }
+    timelineEntries.value = timelineRes ?? [];
   } catch (err) {
     console.error('[ALifeReport] load failed:', err);
     toast.error(t('errors.loadFailed'));
@@ -525,6 +514,13 @@ async function load() {
 }
 
 watch(() => props.personId, load, { immediate: true });
+watch(
+  () => [props.includeChildrenMarriages, props.includeSiblingDeaths] as const,
+  () => {
+    if (!props.personId) return;
+    void load();
+  },
+);
 </script>
 
 <style scoped>
