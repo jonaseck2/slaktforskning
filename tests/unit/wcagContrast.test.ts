@@ -171,7 +171,7 @@ const UI_PAIRS: UiPair[] = [
 
 const ENTITIES = [
   'person', 'event', 'source', 'citation', 'place', 'media',
-  'relationship', 'task', 'group', 'name', 'identifier', 'neutral',
+  'relationship', 'task', 'group', 'name', 'neutral',
 ] as const;
 
 const ENTITY_TEXT_PAIRS: TextPair[] = ENTITIES.map(e => ({

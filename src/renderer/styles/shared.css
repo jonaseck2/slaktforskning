@@ -830,9 +830,6 @@
     --entity-name-text:         #cbd5e1;
     --entity-name-bg:           #1a1f2a;
 
-    --entity-identifier-text:   #cbd5e1;
-    --entity-identifier-bg:     #1a1f2a;
-
     --entity-neutral-text:      #d1d5db;
     --entity-neutral-bg:        #1a1f2a;
   }
@@ -1083,9 +1080,6 @@
     --entity-name-text:         #e6ecf5;
     --entity-name-bg:           #14182a;
 
-    --entity-identifier-text:   #e6ecf5;
-    --entity-identifier-bg:     #14182a;
-
     --entity-neutral-text:      #e8eaee;
     --entity-neutral-bg:        #15171f;
   }
@@ -1245,7 +1239,6 @@ html.screen-reader h1:focus {
 [data-entity="task"]         { --entity-text: var(--entity-task-text);         --entity-bg: var(--entity-task-bg);         --entity-border: var(--entity-task-border); }
 [data-entity="group"]        { --entity-text: var(--entity-group-text);        --entity-bg: var(--entity-group-bg);        --entity-border: var(--entity-group-border); }
 [data-entity="name"]         { --entity-text: var(--entity-name-text);         --entity-bg: var(--entity-name-bg);         --entity-border: var(--entity-name-border); }
-[data-entity="identifier"]   { --entity-text: var(--entity-identifier-text);   --entity-bg: var(--entity-identifier-bg);   --entity-border: var(--entity-identifier-border); }
 [data-entity="neutral"]      { --entity-text: var(--entity-neutral-text);      --entity-bg: var(--entity-neutral-bg);      --entity-border: var(--entity-neutral-border); }
 
 .entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }
