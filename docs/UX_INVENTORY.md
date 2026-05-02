@@ -785,7 +785,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 |---|---|---|---|---|
 | Task (required textarea) · priority segmented (1/2/3) · status segmented (open / in_progress / done / stopped) · notes textarea · result textarea (only when status = done or stopped). | Direct inline inputs. | Direct inline inputs (same form, prefilled from `editingTask`). | Not offered (deletion lives in ResearchTasksTable rows on host panel). | (No further nesting) |
 
-**Notes:** When created from a PersonPanel, auto-links via `researchTasks.addLink(id, 'person', personId)`. **Inconsistency to fix:** row click on a research task in PersonPanel/PlacePanel currently navigates to `/research-tasks/:id` instead of opening this modal in-place. Names and events open their respective modals on row click; research tasks should follow suit (`PersonPanel.goToTask` should open `ResearchTaskModal` in edit mode, not `router.push`).
+**Notes:** When created from a PersonPanel, auto-links via `researchTasks.addLink(id, 'person', personId)`. Row click on a research task in PersonPanel/PlacePanel opens this modal in-place in edit mode (consistent with names and events).
 
 ---
 

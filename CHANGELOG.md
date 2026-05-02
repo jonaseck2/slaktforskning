@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.202.4 — Research task row click opens the editor in place
+
+- fix: clicking a research task in PersonPanel or PlacePanel now opens ResearchTaskModal in edit mode in the panel, matching how names and events behave. Was navigating to `/research-tasks/:id` and yanking you out of the person/place you were on.
+
 ## v0.202.3 — UX_INVENTORY surface walk complete
 
 - chore: filled in the last 4 modal Purposes (ResearchTaskModal, MergePersonsModal, LinkRuleModal, ConfirmModal). Every bounded UI surface in the renderer now has a user-stated Purpose sentence. Recorded the row-click inconsistency on ResearchTaskModal (panels navigate to /research-tasks instead of opening the modal in-place — names/events open in-place) for a future fix.

@@ -112,6 +112,22 @@
         </div>
       </div>
 
+      <!-- Media section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
+        <div v-if="sections.media" class="panel-section-body">
+          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" :readonly="props.readonly" />
+        </div>
+      </div>
+
+      <!-- Media Timeline section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <div v-if="sections.mediaTimeline" class="panel-section-body">
+          <MediaTimeline entity-type="person" :entity-id="personId!" />
+        </div>
+      </div>
+
       <!-- Grupper section -->
       <div class="panel-section">
         <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('groups.addGroupShort') }" @toggle="toggleSection('groups')" @action="showGroupPicker = !showGroupPicker" />
@@ -126,22 +142,6 @@
           </div>
           <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
           <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
-        </div>
-      </div>
-
-      <!-- Media section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
-        <div v-if="sections.media" class="panel-section-body">
-          <PersonMediaSection ref="mediaSectionRef" :person-id="personId!" :readonly="props.readonly" />
-        </div>
-      </div>
-
-      <!-- Media Timeline section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
-        <div v-if="sections.mediaTimeline" class="panel-section-body">
-          <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>
       </div>
 
@@ -216,13 +216,14 @@
       @saved="onNameSaved"
     />
 
-    <!-- Add research task modal -->
+    <!-- Research task add/edit modal -->
     <ResearchTaskModal
       v-if="showTaskForm && personId"
       mode="standalone"
       :person-id="personId"
-      @cancel="showTaskForm = false"
-      @close="showTaskForm = false"
+      :editing-task="editingTask"
+      @cancel="closeTaskForm"
+      @close="closeTaskForm"
       @saved="onTaskSaved"
     />
 
@@ -240,7 +241,6 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -646,20 +646,27 @@ async function onGroupAdded() {
 
 // ── Research tasks ──────────────────────────────────────────────────────────
 
-const router = useRouter();
 const showTaskForm = ref(false);
+const editingTask = ref<ResearchTaskRow | null>(null);
 
-function openTaskForm() {
+function openTaskForm(task: ResearchTaskRow | null = null) {
+  editingTask.value = task;
   showTaskForm.value = true;
 }
 
-async function onTaskSaved() {
+function closeTaskForm() {
   showTaskForm.value = false;
+  editingTask.value = null;
+}
+
+async function onTaskSaved() {
+  closeTaskForm();
   await reload();
 }
 
 function goToTask(id: string) {
-  router.push('/research-tasks/' + id);
+  const task = researchTasks.value.find(t => t.id === id);
+  if (task) openTaskForm(task);
 }
 </script>
 

@@ -279,7 +279,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import EventList from './EventList.vue';
 import PersonModal from './modals/PersonModal.vue';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
@@ -540,7 +539,6 @@ function formatCoord(n: number): string {
 
 // ── Research tasks ──────────────────────────────────────────────────────────
 
-const router = useRouter();
 const researchTasks = ref<ResearchTask[]>([]);
 const showTaskForm = ref(false);
 const editingTask = ref<ResearchTask | null>(null);
@@ -574,7 +572,8 @@ async function onTaskSaved() {
 }
 
 function goToTask(id: string) {
-  router.push('/research-tasks/' + id);
+  const task = researchTasks.value.find(t => t.id === id);
+  if (task) openTaskForm(task);
 }
 
 const heroMediaId = ref<string | null>(null);
