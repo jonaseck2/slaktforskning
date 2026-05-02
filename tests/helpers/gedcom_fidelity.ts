@@ -14,7 +14,7 @@ import { queryAll } from '../../src/api/db';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
-import { createTestDb } from '../helpers';
+import { createTestDb } from '../unit/helpers';
 
 export type RegistryVersion = 'v551' | 'v70';
 
