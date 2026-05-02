@@ -38,7 +38,8 @@ defineChannel({
 defineChannel({
   name: 'reports:timeline',
   thread: 'worker',
-  handler: (db, personId: string) => reportData.getTimeline(db, personId),
+  handler: (db, personId: string, options?: import('../../api/report_data').TimelineOptions) =>
+    reportData.getTimeline(db, personId, options),
 });
 
 defineChannel({

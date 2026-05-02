@@ -127,6 +127,25 @@ export interface TimelineEntry {
   relationship_label: TimelineRelationshipLabel;
 }
 
+/**
+ * Optional categories on top of the default life timeline. Both default to
+ * false — by default the timeline emits only the subject's own events, parent
+ * deaths, spouse death, and children's births / foster_placements / deaths.
+ *
+ * - `includeChildrenMarriages`: include each child's `marriage` events
+ *   (sourced from the child's couple-relationship events) that happened during
+ *   the subject's lifetime. Labelled with the child's sex-typed label
+ *   (`'son'` / `'daughter'` / `'child'`).
+ * - `includeSiblingDeaths`: include the subject's siblings' `death` events
+ *   that happened during the subject's lifetime. Labelled `'sibling'`. When
+ *   this is false (the default), siblings are completely excluded from the
+ *   timeline.
+ */
+export interface TimelineOptions {
+  includeChildrenMarriages?: boolean;
+  includeSiblingDeaths?: boolean;
+}
+
 // ── Helpers ──
 
 function resolveEventPlace(db: Database, event: GenealogyEvent): EventWithPlace {
@@ -516,7 +535,11 @@ export function getResearchGaps(db: Database, personId: string): ResearchGaps | 
  * Returns a merged chronological timeline of a person's events plus family events
  * (spouse's birth/death, children's births/deaths).
  */
-export function getTimeline(db: Database, personId: string): TimelineEntry[] | null {
+export function getTimeline(
+  db: Database,
+  personId: string,
+  options: TimelineOptions = {},
+): TimelineEntry[] | null {
   const person = getPerson(db, personId);
   if (!person) return null;
 
@@ -583,9 +606,12 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
         relevantTypes = ['death'];
       }
     } else if (r.type === 'sibling') {
+      // Task 7: siblings are completely excluded from the default timeline —
+      // they're a redundant copy of relationships the user can already see.
+      // Only sibling DEATHS are emitted, gated behind `includeSiblingDeaths`.
+      if (!options.includeSiblingDeaths) continue;
       label = 'sibling';
-      // Task 7 will narrow / remove sibling emissions.
-      relevantTypes = ['birth', 'death', 'christening', 'burial'];
+      relevantTypes = ['death'];
     } else {
       // 'godparent' / 'other' relationships are not part of the subject's life story
       // for timeline purposes — skip them.
@@ -612,6 +638,47 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
         person_surname: otherPrimary.surname,
         relationship_label: label,
       });
+    }
+  }
+
+  // Task 7: optional — children's marriages during subject's lifetime. Sourced
+  // from each child's couple-relationship events (marriage events live on
+  // `events.relationship_id` keyed to the couple relationship, NOT on the
+  // child as an event participant). Labelled with the child's sex-typed label.
+  if (options.includeChildrenMarriages) {
+    for (const r of rels) {
+      if (r.type !== 'parent_child') continue;
+      // Convention: person1 = parent, person2 = child. Subject must be parent.
+      if (r.person1_id !== personId) continue;
+      const childId = r.person2_id;
+      if (!childId) continue;
+
+      const childPerson = getPerson(db, childId);
+      const childSex = childPerson?.sex ?? 'U';
+      const childLabel: TimelineRelationshipLabel =
+        childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+      const childNames = getPersonNames(db, childId);
+      const childPrimary = getPrimaryName(childNames);
+
+      const childRels = getRelationshipsOfPerson(db, childId);
+      for (const cr of childRels) {
+        if (cr.type !== 'couple') continue;
+        const coupleEvents = resolveEventsPlaces(db, getEventsForRelationship(db, cr.id));
+        for (const event of coupleEvents) {
+          if (event.event_type !== 'marriage') continue;
+          // Strict lifetime: a child's marriage after the subject's death is
+          // not part of the subject's life story (no posthumous window — the
+          // +9mo only applies to births / foster_placements).
+          if (!familyEventWithinLifetime(event, lifetime, false)) continue;
+          entries.push({
+            event,
+            person_id: childId,
+            person_given_name: childPrimary.given_name,
+            person_surname: childPrimary.surname,
+            relationship_label: childLabel,
+          });
+        }
+      }
     }
   }
 
