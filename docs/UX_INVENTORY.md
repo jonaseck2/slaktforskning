@@ -87,6 +87,16 @@ The `repositories` table + `source_repositories` join exist to round-trip GEDCOM
 
 A user does not reach for "manage a relationship as a thing in its own right" — they reach for "see who this person is related to and how" via `PersonPanel → Relations`. The standalone `/relationships` browsing surface (RelationshipsView + RelationshipPanel + nav entry) was removed; the route now redirects to `/persons`. Relationships data, the `relationships` table, `RelationshipModal` (for inline edit from PersonPanel), GEDCOM FAM round-trip, and MCP tools are all preserved — relationships still exist as a first-class data primitive, they just don't have a browsable list view. The `relationships.search` API stays but the SearchView results section was removed alongside the panel.
 
+### 10. Modals that create a referenceable entity should also offer "find existing" in the same flow
+
+Cross-cutting design principle: any modal that creates an entity which could already exist in the database (a person, a place, a source, a relationship between two known persons) should let the user pick *create new* OR *link existing* without leaving the modal — the modal-level mirror of finding #3's gold-standard combobox `+ Add` pattern. PersonModal exemplifies this with its entry-mode toggle (new / existing) and the inline picker for the existing path.
+
+Modals that already comply: PersonModal, GroupModal (members section uses gold-standard combobox), CitationModal (SourcePicker is canonical link-or-create).
+
+Modals to review: PlaceModal (could surface "merge from existing place" the way the Place section's name field does), RelationshipModal (the relationship itself is always created — could check whether a relationship between the two picked persons already exists and offer to open that one instead).
+
+Not applicable: PersonNameModal (a name is owned by one person, never shared), ResearchTaskModal (a task is owned by one researcher's plan, not shared), LinkRuleModal (configuration), ConfirmModal (destructive confirmation), MergePersonsModal (destructive merge), PlaceTreePickerModal (pure picker — its job IS find-existing).
+
 ---
 
 ## Cross-cutting conventions: row icons
@@ -673,7 +683,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/ExportOptionsPanel.vue` lines 1–194 (embedded form, **not** an EntityPanel)
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this form to *narrow* what a GEDCOM export will contain — privacy filtering of living people, optional notes/sources/media, and an optional ancestor or descendant branch starting from a chosen person — before triggering the export from the surrounding section.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -687,7 +697,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/PersonModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *create* a new person — either standalone, or as a relative of someone they're already viewing (father/mother/spouse/son/daughter) — or to *find* an existing person and link them in that role, recording sex and the first name(s) needed to keep building the tree from there.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -701,7 +711,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/PersonNameModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *record* a name a person was known by — given names, surname, the type of name (birth, married, alias, aka), and when they started carrying it — capturing enough detail (preferred-name, nickname, patronymic, prefix/suffix) that the name renders correctly across every surface that shows the person.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -715,7 +725,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/PlaceModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *create* a new place from the places list view, or to *amend* an existing one — its name, what kind of place it is, where it sits in the world (coordinates) and inside the place hierarchy (parent place), and any free-form notes.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -727,7 +737,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/PlaceTreePickerModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *find* the place they want to point at — by browsing the hierarchy as a tree or searching by name — and to *create* a new place inline when the one they need doesn't exist yet, without losing the form they were filling in when they reached for the picker.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -741,7 +751,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/RelationshipModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *record* how two persons are related — what kind of bond it is (couple, parent–child, sibling, godparent), the subtype that nuances it (marriage vs cohabitation, biological vs adopted), who the two persons are, and any notes — and once saved, to *attach* events that mark its arc (the marriage, the divorce, the adoption).
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -755,7 +765,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/GroupModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *name* a group and *describe* what makes it a group, then *gather* the persons who belong in it — adding existing persons in one keystroke flow or creating new ones inline when they're not in the tree yet — so the cluster (a household, a parish, an emigrant cohort) can be referred to by name from anywhere it matters.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|

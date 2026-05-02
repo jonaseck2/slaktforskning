@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.202.2 — UX_INVENTORY purposes for modals + finding #10
+
+- chore: filled in user-stated Purpose sentences for 7 more surfaces in docs/UX_INVENTORY.md (ExportOptionsPanel, PersonModal, PersonNameModal, PlaceModal, PlaceTreePickerModal, RelationshipModal, GroupModal). Added cross-cutting finding #10 capturing the design principle that creation modals for referenceable entities should also offer "find existing" in the same flow. Internal docs only.
+
 ## v0.202.1
 
 - fix: PlacePanel resolved-parent placeholder now shows the correct parent when the user's leaf token isn't in the gazetteer. For places like "Uvira, Belgiska Kongo" where the gazetteer matches only at parent level (→ "Kingdom of Kongo"), the matched node IS the parent — keep the full path instead of slicing it off. Resolved-type placeholder is also nulled in this case, since the gazetteer's type describes an ancestor, not the user's place.
