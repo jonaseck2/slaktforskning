@@ -17,7 +17,7 @@
     { "id": "r1", "type": "couple", "person1_id": "p1", "person2_id": "p2", "subtype": "marriage", "notes": "", "created_at": "", "updated_at": "" }
   ],
   "events": [
-    { "id": "e1", "event_type": "birth", "date_type": "exact", "date_value": "1800-01-01", "date_value_end": null, "date_original": "1 januari 1800", "place_id": null, "place_address": null, "cause": null, "description": "", "relationship_id": null, "created_at": "", "updated_at": "" }
+    { "id": "e1", "event_type": "birth", "date_type": "exact", "date_value": "1800-01-01", "date_value_end": null, "date_original": "1 januari 1800", "place_id": null, "place_address": null, "cause": null, "value": null, "notes": "", "relationship_id": null, "created_at": "", "updated_at": "" }
   ],
   "eventParticipants": [
     { "id": "ep1", "event_id": "e1", "person_id": "p1", "role": "primary" }
