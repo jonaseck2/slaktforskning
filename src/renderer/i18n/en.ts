@@ -503,6 +503,7 @@ export default {
     patronymicBase: "Parent's given name",
     patronymicBasePlaceholder: 'e.g. Erik (if surname is Eriksson)',
     dateFrom: 'Valid from',
+    dateFromHint: 'Shows on the person’s timeline when a date is set.',
     dateTo: 'Valid to',
     dateFromBirthEvent: 'Date taken from the birth event',
     reorderInversionBlocked: 'A more recent date cannot be placed before an older one',

@@ -503,6 +503,7 @@ export default {
     patronymicBase: 'Faders/moders förnamn',
     patronymicBasePlaceholder: 't.ex. Erik (om efternamnet är Eriksson)',
     dateFrom: 'Giltigt från',
+    dateFromHint: 'Visas på personens tidslinje när datum anges.',
     dateTo: 'Giltigt till',
     dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
