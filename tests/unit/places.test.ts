@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, test, expect, beforeEach } from 'vitest';
 import {
   createPlace, getPlace, listPlaces, searchPlaces,
   updatePlace, deletePlace, findOrCreatePlace, findOrCreatePlaceWithChain,
@@ -331,5 +331,85 @@ describe('getPlaceAncestors', () => {
     }
     const chain = getPlaceAncestors(db, lastId);
     expect(chain.length).toBeLessThanOrEqual(32);
+  });
+});
+
+describe('getPersonsForPlace - biography fields', () => {
+  test('returns first_year and last_year per person from primary-role events', () => {
+    const db = createTestDb();
+    const place = createPlace(db, { name: 'Vienna' });
+    const alice = createPerson(db, { sex: 'F' });
+    addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
+    const birth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1842-03-01', date_original: '1842-03-01', place_id: place.id });
+    addEventParticipant(db, { event_id: birth.id, person_id: alice.id, role: 'primary' });
+    const death = createEvent(db, { event_type: 'death', date_type: 'exact', date_value: '1879-11-04', date_original: '1879-11-04', place_id: place.id });
+    addEventParticipant(db, { event_id: death.id, person_id: alice.id, role: 'primary' });
+    const rows = getPersonsForPlace(db, place.id);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].first_year).toBe('1842');
+    expect(rows[0].last_year).toBe('1879');
+    expect(rows[0].event_count).toBe(2);
+  });
+
+  test('excludes persons whose only role at the place is non-primary', () => {
+    const db = createTestDb();
+    const place = createPlace(db, { name: 'Vienna' });
+    const alice = createPerson(db, { sex: 'F' });
+    addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
+    const bob = createPerson(db, { sex: 'M' });
+    addPersonName(db, bob.id, { given_name: 'Bob', surname: 'B', name_type: 'birth' });
+    const wedding = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1860-06-01', date_original: '1860-06-01', place_id: place.id });
+    addEventParticipant(db, { event_id: wedding.id, person_id: alice.id, role: 'primary' });
+    addEventParticipant(db, { event_id: wedding.id, person_id: bob.id, role: 'witness' });
+    const rows = getPersonsForPlace(db, place.id);
+    expect(rows.map(r => r.id)).toEqual([alice.id]);
+  });
+
+  test('includes person with primary AND witness roles (counts only primary events)', () => {
+    const db = createTestDb();
+    const place = createPlace(db, { name: 'Vienna' });
+    const alice = createPerson(db, { sex: 'F' });
+    addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
+    const ownBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1842-03-01', date_original: '1842-03-01', place_id: place.id });
+    addEventParticipant(db, { event_id: ownBirth.id, person_id: alice.id, role: 'primary' });
+    const witnessed = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1900-01-01', date_original: '1900-01-01', place_id: place.id });
+    addEventParticipant(db, { event_id: witnessed.id, person_id: alice.id, role: 'witness' });
+    const rows = getPersonsForPlace(db, place.id);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].event_count).toBe(1);
+    expect(rows[0].first_year).toBe('1842');
+    expect(rows[0].last_year).toBe('1842');
+  });
+
+  test('returns null first_year/last_year for primary-role events without dates', () => {
+    const db = createTestDb();
+    const place = createPlace(db, { name: 'Vienna' });
+    const alice = createPerson(db, { sex: 'F' });
+    addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
+    const undated = createEvent(db, { event_type: 'residence', date_type: 'unknown', date_value: null, date_original: '', place_id: place.id });
+    addEventParticipant(db, { event_id: undated.id, person_id: alice.id, role: 'primary' });
+    const rows = getPersonsForPlace(db, place.id);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].first_year).toBeNull();
+    expect(rows[0].last_year).toBeNull();
+  });
+
+  test('sorts by first_year ascending, undated last, then by surname/given_name', () => {
+    const db = createTestDb();
+    const place = createPlace(db, { name: 'Vienna' });
+    const carl = createPerson(db, { sex: 'M' });
+    addPersonName(db, carl.id, { given_name: 'Carl', surname: 'C', name_type: 'birth' });
+    const carlBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1830-01-01', date_original: '1830-01-01', place_id: place.id });
+    addEventParticipant(db, { event_id: carlBirth.id, person_id: carl.id, role: 'primary' });
+    const alice = createPerson(db, { sex: 'F' });
+    addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
+    const aliceBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1850-01-01', date_original: '1850-01-01', place_id: place.id });
+    addEventParticipant(db, { event_id: aliceBirth.id, person_id: alice.id, role: 'primary' });
+    const zoe = createPerson(db, { sex: 'F' });
+    addPersonName(db, zoe.id, { given_name: 'Zoe', surname: 'Z', name_type: 'birth' });
+    const zoeUndated = createEvent(db, { event_type: 'residence', date_type: 'unknown', date_value: null, date_original: '', place_id: place.id });
+    addEventParticipant(db, { event_id: zoeUndated.id, person_id: zoe.id, role: 'primary' });
+    const rows = getPersonsForPlace(db, place.id);
+    expect(rows.map(r => r.given_name)).toEqual(['Carl', 'Alice', 'Zoe']);
   });
 });

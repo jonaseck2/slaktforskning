@@ -260,18 +260,20 @@ export function getPlaceAncestors(db: Database, id: string): Place[] {
 export function getPersonsForPlace(
   db: Database,
   placeId: string
-): { id: string; sex: string; given_name: string; surname: string; event_count: number }[] {
+): { id: string; sex: string; given_name: string; surname: string; event_count: number; first_year: string | null; last_year: string | null }[] {
   return queryAll(db, `
     SELECT p.id, p.sex,
       COALESCE(pn.given_name, '') AS given_name,
       COALESCE(pn.surname, '') AS surname,
-      COUNT(DISTINCT e.id) AS event_count
+      COUNT(DISTINCT e.id) AS event_count,
+      MIN(substr(e.date_value, 1, 4)) AS first_year,
+      MAX(substr(e.date_value, 1, 4)) AS last_year
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
     JOIN persons p ON p.id = ep.person_id
     LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
-    WHERE e.place_id = ?
+    WHERE e.place_id = ? AND ep.role = 'primary'
     GROUP BY p.id
-    ORDER BY pn.surname, pn.given_name
+    ORDER BY (first_year IS NULL), first_year, pn.surname, pn.given_name
   `, [placeId]);
 }
