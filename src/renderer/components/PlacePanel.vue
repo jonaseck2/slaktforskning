@@ -181,6 +181,21 @@
         </div>
       </div>
 
+      <!-- Timeline section -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('placeTimeline.title')"
+          :count="eventCount"
+          :collapsed="!sections.timeline"
+          :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined"
+          @toggle="toggleSection('timeline')"
+          @action="eventListRef?.openAddForm()"
+        />
+        <div v-if="sections.timeline" class="panel-section-body">
+          <PlaceTimeline :place-id="placeId!" />
+        </div>
+      </div>
+
 <!-- Media section -->
       <div class="panel-section">
         <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
@@ -225,6 +240,7 @@ import PersonModal from './modals/PersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
+import PlaceTimeline from './PlaceTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
@@ -280,11 +296,11 @@ const { t, te } = useI18n();
 const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
-    place: true, persons: true, events: true,
+    place: true, persons: true, events: true, timeline: false,
     media: false, mediaTimeline: false, quality: false,
   },
   {
-    place: true, persons: true, events: true,
+    place: true, persons: true, events: true, timeline: true,
     media: true, mediaTimeline: true, quality: false,
   },
 );
