@@ -851,7 +851,7 @@ describe('GEDCOM import completeness', () => {
     expect(death?.cause).toBe('Skelettcancer');
   });
 
-  it('ENGA imported as engagement event, TYPE prepended to description', () => {
+  it('ENGA imported as engagement event, TYPE prepended to notes', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -866,7 +866,7 @@ describe('GEDCOM import completeness', () => {
     const events = getEventsForPerson(db, persons[0].id);
     const enga = events.find(e => e.event_type === 'engagement');
     expect(enga).toBeTruthy();
-    expect(enga?.description).toBe('Sambo');
+    expect(enga?.notes).toBe('Sambo');
   });
 
   it('ADOP imported as adoption event', () => {
@@ -898,7 +898,7 @@ describe('GEDCOM import completeness', () => {
     const events = getEventsForPerson(db, persons[0].id);
     const occu = events.find(e => e.event_type === 'occupation');
     expect(occu).toBeTruthy();
-    expect(occu?.description).toBe('Sömmerska, bondmora');
+    expect(occu?.notes).toBe('Sömmerska, bondmora');
   });
 
   it('top-level NOTE xref resolved to content in person.notes', () => {

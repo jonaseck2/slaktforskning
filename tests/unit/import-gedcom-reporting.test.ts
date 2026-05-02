@@ -356,13 +356,13 @@ const EVEN_TYPE_GED = `
 `.trim();
 
 describe('GEDCOM import - EVEN TYPE preservation', () => {
-  it('stores EVEN TYPE value in event description', () => {
+  it('stores EVEN TYPE value in event notes', () => {
     const db = createTestDb();
     importGedcom(db, parseGedcom(EVEN_TYPE_GED));
-    const stmt = db.prepare("SELECT description FROM events WHERE event_type = 'other'");
-    const row = stmt.get([]) as { description: string } | undefined;
+    const stmt = db.prepare("SELECT notes FROM events WHERE event_type = 'other'");
+    const row = stmt.get([]) as { notes: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
-    expect(row?.description).toBe('Efternamnsbyte');
+    expect(row?.notes).toBe('Efternamnsbyte');
   });
 
   it('maps EVEN to event_type other', () => {

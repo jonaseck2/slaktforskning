@@ -538,9 +538,9 @@ describe('TEXT_CONTROL_CHARS', () => {
     expect(hit.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('fires for control characters in event descriptions', async () => {
+  it('fires for control characters in event notes', async () => {
     const p = createPerson(db, { given_name: 'Erik', surname: 'Test' });
-    const e = createEvent(db, { event_type: 'birth', description: 'Born\x03here' });
+    const e = createEvent(db, { event_type: 'birth', notes: 'Born\x03here' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.eventIds?.includes(e.id));
