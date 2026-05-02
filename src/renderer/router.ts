@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import RelationshipsView from './views/RelationshipsView.vue';
 import SourcesView from './views/SourcesView.vue';
 import SearchView from './views/SearchView.vue';
 import { STORAGE_KEYS } from './utils/storage-keys';
@@ -12,8 +11,8 @@ export const router = createRouter({
     { path: '/visualisering/:personId', redirect: to => `/persons/${to.params.personId}` },
     { path: '/persons', component: () => import('./views/PersonsView.vue') },
     { path: '/persons/:personId', component: () => import('./views/PersonsView.vue') },
-    { path: '/relationships', component: RelationshipsView },
-    { path: '/relationships/:id', component: RelationshipsView },
+    { path: '/relationships', redirect: '/persons' },
+    { path: '/relationships/:id', redirect: '/persons' },
     { path: '/sources', component: SourcesView },
     { path: '/sources/:id', component: SourcesView },
     { path: '/search', component: SearchView },

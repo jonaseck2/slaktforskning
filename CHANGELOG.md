@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.200.0 — Relationships are managed per-person, not as a standalone view
+
+- feat: removed the Relationships nav entry, list view, and side panel. Relationships are managed per-person from PersonPanel → Relations (which already does what users actually reach for). The data, MCP tools, GEDCOM FAM round-trip, and RelationshipModal (for editing relationships inline from PersonPanel) all stay.
+- fix: search results no longer show a Relationships section — the rows had no canonical destination. Persons and sources sections still work; searching still finds people involved in relationships.
+- fix: bookmarks to `/relationships` and `/relationships/:id` redirect to `/persons` instead of breaking.
+
 ## v0.199.1 — Trim Repositories section from SourcePanel
 
 - chore: removed the Repositories section from SourcePanel — structured GEDCOM REPO records had no real authoring path here (no /repositories view, no RepositoryModal). The free-text `repository` field on the source covers the "what archive" question for hand-typed sources. Importers and exporters keep round-tripping REPO records as before.

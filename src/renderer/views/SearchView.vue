@@ -59,48 +59,6 @@
         </table>
       </section>
 
-      <!-- Relationships -->
-      <section v-if="relationships.length > 0" class="result-section">
-        <h3>{{ $t('nav.relationships') }} <span class="count">{{ relationships.length }}</span></h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ $t('common.type') }}</th>
-              <th>{{ $t('relationships.person1') }}</th>
-              <th>{{ $t('relationships.person2') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="r in relationships"
-              :key="r.id"
-              v-narrate="() => narrateRelationshipRow({
-                type: r.type,
-                person1_given_name: r.person1_given_name || '',
-                person1_surname: r.person1_surname || '',
-                person2_given_name: r.person2_given_name || '',
-                person2_surname: r.person2_surname || '',
-                event_summary: '',
-              }, t)"
-              class="clickable-row"
-              tabindex="0"
-              role="button"
-              :aria-label="$t('a11y.editItem', { item: $t('relTypes.' + r.type) })"
-              @click="router.push(`/relationships/${r.id}`)"
-              @keydown.enter="router.push(`/relationships/${r.id}`)"
-              @keydown.space.prevent="router.push(`/relationships/${r.id}`)"
-              @keydown.down.prevent="focusNextRow($event)"
-              @keydown.up.prevent="focusPrevRow($event)"
-            >
-              <td>{{ $t('relTypes.' + r.type) }}</td>
-              <!-- Display only — see plan birth-name-display-and-quality-check. -->
-              <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" :birth-surname="r.person1_birth_surname ?? null" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
-              <td><PersonName :given-name="r.person2_given_name" :surname="r.person2_surname" :preferred-name="r.person2_preferred_name ?? null" :nickname="r.person2_nickname ?? null" :birth-surname="r.person2_birth_surname ?? null" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
       <!-- Sources -->
       <section v-if="sources.length > 0" class="result-section">
         <h3>{{ $t('nav.sources') }} <span class="count">{{ sources.length }}</span></h3>
@@ -150,7 +108,7 @@ import PersonName from '../components/PersonName.vue';
 import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
-import { narratePersonRow, narrateRelationshipRow, narrateSourceRow } from '../utils/screenReaderNarration';
+import { narratePersonRow, narrateSourceRow } from '../utils/screenReaderNarration';
 import { usePersonNameOptions } from '../stores/personNameOptions';
 
 // Display only — see plan birth-name-display-and-quality-check.
@@ -166,23 +124,6 @@ interface PersonResult {
   birth_surname: string | null;
   sex: string;
   living: boolean;
-}
-
-interface RelationshipResult {
-  id: string;
-  type: string;
-  person1_given_name: string;
-  person1_surname: string;
-  person1_preferred_name?: string | null;
-  person1_nickname?: string | null;
-  /** Display only — see plan birth-name-display-and-quality-check. */
-  person1_birth_surname?: string | null;
-  person2_given_name: string;
-  person2_surname: string;
-  person2_preferred_name?: string | null;
-  person2_nickname?: string | null;
-  /** Display only — see plan birth-name-display-and-quality-check. */
-  person2_birth_surname?: string | null;
 }
 
 interface SourceResult {
@@ -201,10 +142,9 @@ const inputQuery = ref('');
 const displayedQuery = ref('');
 const searched = ref(false);
 const persons = ref<PersonResult[]>([]);
-const relationships = ref<RelationshipResult[]>([]);
 const sources = ref<SourceResult[]>([]);
 
-const totalResults = computed(() => persons.value.length + relationships.value.length + sources.value.length);
+const totalResults = computed(() => persons.value.length + sources.value.length);
 
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
@@ -231,13 +171,11 @@ async function search(q: string) {
   if (!q || !window.api) return;
   displayedQuery.value = q;
   searched.value = true;
-  const [p, r, s] = await Promise.all([
+  const [p, s] = await Promise.all([
     window.api.persons.search(q) as Promise<PersonResult[]>,
-    window.api.relationships.search(q) as Promise<RelationshipResult[]>,
     window.api.sources.search(q) as Promise<SourceResult[]>,
   ]);
   persons.value = p;
-  relationships.value = r;
   sources.value = s;
 }
 

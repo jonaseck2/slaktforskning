@@ -358,7 +358,12 @@ async function resolveEntityLabel(cit: CitationRow): Promise<{ label: string; ro
       return { label: personName, route: `/persons/${cit.person_id}` };
     }
     if (cit.relationship_id) {
-      return { label: t('nav.relationships'), route: `/relationships/${cit.relationship_id}` };
+      const rel = await window.api.relationships.get(cit.relationship_id) as { person1_id: string | null } | null;
+      if (rel?.person1_id) {
+        const personName = await resolvePersonDisplayName(rel.person1_id, '?');
+        return { label: personName, route: `/persons/${rel.person1_id}` };
+      }
+      return null;
     }
     if (cit.place_id) {
       const place = await window.api.places.get(cit.place_id) as { name: string } | null;

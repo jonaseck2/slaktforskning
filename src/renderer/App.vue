@@ -33,10 +33,6 @@
         <span class="nav-icon" aria-hidden="true">📚</span>
         <span class="nav-label">{{ $t('nav.sources') }}</span>
       </router-link>
-      <router-link to="/relationships" class="nav-item" :aria-label="$t('nav.relationships')">
-        <span class="nav-icon" aria-hidden="true">🔗</span>
-        <span class="nav-label">{{ $t('nav.relationships') }}</span>
-      </router-link>
       <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('nav.quality') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('nav.quality')">
         <span class="nav-icon" aria-hidden="true">⚠️</span>
         <span class="nav-label">{{ $t('nav.quality') }}</span>
@@ -359,7 +355,6 @@ watch(() => route.path, () => {
     const routeMap: Record<string, string> = {
       '/': 'persons',
       '/persons': 'persons',
-      '/relationships': 'relationships',
       '/sources': 'sources',
       '/places': 'places',
       '/map': 'map',
@@ -383,8 +378,8 @@ watch(() => route.path, () => {
     screenReader.announceRoute(name);
   }
 });
-const CACHED_VIEWS = ['PersonsView', 'RelationshipsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
-const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/relationships', '/groups', '/research-tasks', '/website'];
+const CACHED_VIEWS = ['PersonsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
+const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/groups', '/research-tasks', '/website'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
@@ -418,7 +413,6 @@ const navSections = computed<NavSectionDef[]>(() => [
     labelKey: 'nav.review',
     items: [
       { to: '/sources', icon: '📚', labelKey: 'nav.sources' },
-      { to: '/relationships', icon: '🔗', labelKey: 'nav.relationships' },
       { to: '/quality', icon: '⚠️', labelKey: 'nav.quality', badge: qualityErrorCount },
       { to: '/duplicates', icon: '👥', labelKey: 'nav.duplicates', badge: duplicateCount },
     ],

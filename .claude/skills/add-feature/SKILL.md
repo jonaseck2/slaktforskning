@@ -253,7 +253,7 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 |-----------|-------------|---------|---------|
 | `PersonNamesTable` | No (parent passes `names`) | — | PersonPanel |
 | `PersonNameModal` | No | — | PersonPanel |
-| `EventList` | Yes (`personId` / `relationshipId` / `placeId` prop) | `openAddForm()` | PersonPanel, RelationshipPanel, PlacePanel |
+| `EventList` | Yes (`personId` / `relationshipId` / `placeId` prop) | `openAddForm()` | PersonPanel, PlacePanel |
 | `ResearchTasksTable` | No (parent passes `tasks`) | — | PersonPanel, ResearchTasksView |
 | `GroupsTable` | No (parent passes `groups`) | — | PersonPanel, GroupsView |
 | `PersonIdentifiersSection` | Yes | `openAddForm()` | PersonPanel |
@@ -341,7 +341,7 @@ Add `things: loadSection('things', false)` to the `sections` reactive object.
 
 ### UI consistency rules
 - **Picker inputs fill their container** — `PersonPicker` and `PlacePicker` both have `width: 100%` on their root. Place them inside a `<label>` or grid cell and they will fill it. Never wrap them in a `class="full-width"` override.
-- **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`. This applies to events, persons, relationships, sources, and places.
+- **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`. This applies to events, persons, sources, and places.
 - **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Only use `grid-column: 1 / -1` for a field that genuinely needs extra width (e.g. a long textarea). Never use it for picker inputs.
 - **Always use `formatFullName()` for plain-text name rendering** — Any code that renders a person name as a string (report headings, ahnentafel lists, relationship lists, dropdown labels, log strings) MUST import and call `formatFullName()` from `src/renderer/utils/nameUtils.ts`. Never use inline logic like `preferred_name ?? given_name?.split(' ')[0]` or a local `primaryName()` function. This ensures all given names, the nickname in quotes, and any prefix/suffix are always shown. For Vue template rendering (PersonName component contexts), use `<PersonName>` instead.
 

@@ -83,6 +83,10 @@ The `places.{street, postal_code, city, country}` columns exist to round-trip GE
 
 The `repositories` table + `source_repositories` join exist to round-trip GEDCOM 5.5.1 `0 @id@ REPO` records and the `1 REPO @id@` references that sources carry (importer at [import-core.ts:293](../src/import/gedcom/import-core.ts#L293), exporter at [exporter.ts:186](../src/gedcom/exporter.ts#L186)). The SourcePanel surfaced this as a Repositories section that could *link* and *unlink* existing imported repositories, but the app has no `/repositories` route, no `RepositoryPanel`, no `RepositoryModal` — there's no way to author a new repository or edit a repo's name/address from the UI. The free-text `sources.repository` field on the Source section already covers the "what archive holds this" question for hand-typed sources. Same pattern as findings #5–#7: round-trip-only data; section removed; tables, schema, importer, and exporter preserved (existing structured links survive but become invisible until a user opens the file in another genealogy app or runs MCP tools).
 
+### 9. Relationships are not browsable as a standalone entity — UI removed
+
+A user does not reach for "manage a relationship as a thing in its own right" — they reach for "see who this person is related to and how" via `PersonPanel → Relations`. The standalone `/relationships` browsing surface (RelationshipsView + RelationshipPanel + nav entry) was removed; the route now redirects to `/persons`. Relationships data, the `relationships` table, `RelationshipModal` (for inline edit from PersonPanel), GEDCOM FAM round-trip, and MCP tools are all preserved — relationships still exist as a first-class data primitive, they just don't have a browsable list view. The `relationships.search` API stays but the SearchView results section was removed alongside the panel.
+
 ---
 
 ## Cross-cutting conventions: row icons
@@ -143,7 +147,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 | Surface | Verified |
 |---|---|
-| RelationshipPanel | 2026-05-02 |
 | GroupPanel | 2026-05-02 |
 | ResearchTaskPanel | 2026-05-02 |
 | MediaPanel | 2026-05-02 |
@@ -534,7 +537,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/SourcePanel.vue` lines 191–203, `EntityMediaSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *attach* scans of the source itself — a photo of the parish-book page, a screenshot from ArkivDigital, a digitised newspaper clipping — so the citation isn't just text but is backed by the visible record, and to *order* them so the most representative scan leads as the source's "face".
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -546,29 +549,13 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/SourcePanel.vue` lines 205–211
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *see* what's missing or shaky about how this source is described — no title, no source type, dangling citations with no transcription, no scans of the record — so they know where to direct their next bit of cleanup work to make this source defensible.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | SectionEmpty placeholder: "No checks configured" (i18n: `sourcePanel.noChecks`). | Not offered. | Not offered. | Not offered. | Not offered. |
 
 **Notes:** Stub. No source-level checks are defined yet.
-
----
-
-### RelationshipPanel
-**File:** `src/renderer/components/RelationshipPanel.vue` lines 1–380, `EventList.vue`, `CitationModal.vue`, `EntityMediaSection.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-**Subsections (expand into their own entries when touched):** Relationship details · Events · Citations · Media.
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Relationship details (type · subtype · person 1 · person 2 · notes); EventList; CitationModal-fed citations table; EntityMediaSection. | Events: `+ Add event` → EventModal. Citations: `+ Add citation` → CitationModal (standalone). Media: `+ Attach` → file picker. | Inline blur-to-save on relationship fields; events and citations edit via their modals. | Events: ✕ → ConfirmModal → delete. Citations: ✕ → ConfirmModal → delete (source kept). Media: ✕ → unlinks. | Source title in citation row → SourcesView. (Person 1 / Person 2 links — verify.) |
-
-**Notes:** Mirrors PersonPanel structure (details + events + citations + media). Subsection entries should be split out individually next time someone edits this surface.
 
 ---
 

@@ -22,12 +22,12 @@ Every entity-list view hosts its own resizable side panel. All `:id` routes navi
 |------|-----------|-------------|
 | `/` | redirect | Redirects to `/persons` |
 | `/persons`, `/persons/:personId` | `PersonsView` | Tree + list tabs + PersonPanel |
-| `/relationships`, `/relationships/:id` | `RelationshipsView` | Relationship list + RelationshipPanel |
 | `/sources`, `/sources/:id` | `SourcesView` | Source list + SourcePanel |
 | `/places`, `/places/:id` | `PlacesView` | Map + list tabs + PlacePanel |
 | `/groups`, `/groups/:id` | `GroupsView` | Group list + GroupPanel |
 | `/research-tasks`, `/research-tasks/:id` | `ResearchTasksView` | Task list + ResearchTaskPanel |
-| `/search` | `SearchView` | Global search across persons, relationships, sources |
+| `/search` | `SearchView` | Global search across persons and sources |
+| `/relationships`, `/relationships/:id` | redirect | Redirects to `/persons` (relationships are managed per-person via PersonPanel → Relations) |
 | `/settings` | `SettingsView` | Theme, appearance, text size, language, database, import/export |
 | `/quality` | `QualityView` | Data quality checks — row click navigates to entity panel with quality section expanded |
 | `/reports` | `ReportsView` | Print-ready reports + framable charts |
@@ -72,7 +72,7 @@ For nested modal flows (e.g. picking a source from inside an event), set `mode="
 
 ### List View + Side Panel Pattern
 
-Every entity (persons, relationships, sources, places, groups, research tasks) follows this pattern. The `:id` route opens the same list view with the panel pre-selected — never a separate page.
+Every entity (persons, sources, places, groups, research tasks) follows this pattern. The `:id` route opens the same list view with the panel pre-selected — never a separate page. (Relationships are intentionally not browsable as a standalone entity — they're managed per-person via `PersonPanel → Relations`. See cross-cutting finding #9 in `docs/UX_INVENTORY.md`.)
 
 - **Left pane:** list/table/map/tree of entities with `selectedId` highlighted
 - **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`

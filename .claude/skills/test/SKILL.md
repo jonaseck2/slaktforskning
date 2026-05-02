@@ -393,9 +393,9 @@ Assertions after `navigate('/')` should expect `currentRoute.value.path === '/pe
 
 #### 8b. No back buttons anywhere
 
-There are **no `DetailView` components** in the codebase — every entity is a list/tree view that hosts its own resizable side panel (`PersonPanel`, `RelationshipPanel`, `SourcePanel`, `PlacePanel`, `GroupPanel`, `ResearchTaskPanel`). The `:id` route opens the same list view with the panel pre-selected (e.g. `/sources/abc123` opens `SourcesView` with `SourcePanel` showing source `abc123`).
+There are **no `DetailView` components** in the codebase — every entity is a list/tree view that hosts its own resizable side panel (`PersonPanel`, `SourcePanel`, `PlacePanel`, `GroupPanel`, `ResearchTaskPanel`). The `:id` route opens the same list view with the panel pre-selected (e.g. `/sources/abc123` opens `SourcesView` with `SourcePanel` showing source `abc123`). Relationships are intentionally not browsable as a standalone entity — they're managed per-person via `PersonPanel → Relations` (see UX_INVENTORY finding #9).
 
-There are no back buttons on any view. To "leave" a paneled view, either close the panel via its `✕` button or navigate via the sidebar: `await app.navigate('/relationships')`. Side-panel state lives in localStorage:
+There are no back buttons on any view. To "leave" a paneled view, either close the panel via its `✕` button or navigate via the sidebar: `await app.navigate('/persons')`. Side-panel state lives in localStorage:
 - `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`
 - Section open/close: `<entity>-section-<name>-open`
 

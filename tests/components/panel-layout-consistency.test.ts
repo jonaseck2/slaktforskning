@@ -4,7 +4,6 @@ import { i18n } from './setup';
 import PersonPanel from '../../src/renderer/components/PersonPanel.vue';
 import PlacePanel from '../../src/renderer/components/PlacePanel.vue';
 import SourcePanel from '../../src/renderer/components/SourcePanel.vue';
-import RelationshipPanel from '../../src/renderer/components/RelationshipPanel.vue';
 import GroupPanel from '../../src/renderer/components/GroupPanel.vue';
 import ResearchTaskPanel from '../../src/renderer/components/ResearchTaskPanel.vue';
 import MediaPanel from '../../src/renderer/components/MediaPanel.vue';
@@ -21,7 +20,6 @@ const PANELS = [
   { name: 'PersonPanel',       comp: PersonPanel,       props: { personId: null } },
   { name: 'PlacePanel',        comp: PlacePanel,        props: { placeId: null } },
   { name: 'SourcePanel',       comp: SourcePanel,       props: { sourceId: null } },
-  { name: 'RelationshipPanel', comp: RelationshipPanel, props: { relationshipId: null } },
   { name: 'GroupPanel',        comp: GroupPanel,        props: { groupId: null } },
   { name: 'ResearchTaskPanel', comp: ResearchTaskPanel, props: { taskId: null } },
   { name: 'MediaPanel',        comp: MediaPanel,        props: { mediaId: null } },

@@ -4,7 +4,7 @@ import { reactive, watch, type Ref } from 'vue';
  * Race-safe per-field editor for panel forms.
  *
  * Replaces the hand-rolled `editFields` + `saveField(field)` pattern that
- * appears across `SourcePanel`, `RelationshipPanel`, `PlacePanel`, etc.
+ * appears across `SourcePanel`, `PlacePanel`, etc.
  *
  * Behaviour:
  *   1. Whenever `idRef` or `dataRef` changes, `fields` is re-seeded from
