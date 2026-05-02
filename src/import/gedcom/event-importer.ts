@@ -10,6 +10,7 @@ import { createEvent } from '../../api/events';
 import { createCitation } from '../../api/sources';
 import { updatePlace } from '../../api/places';
 import { addMediaLink } from '../../api/media';
+import { FACT_VALUE_GEDCOM_TAGS } from '../../api/events_gedcom';
 import type { ImportOptions } from './import-core';
 import { getChild, getChildren, resolveNote } from './node-utils';
 import { resolvePlace } from './place-resolver';
@@ -67,9 +68,32 @@ export function importEventNode(
   const causeValue = getChild(evNode, 'CAUS')?.value ?? null;
   const typeValue = getChild(evNode, 'TYPE')?.value ?? '';
   const noteRaw = resolveNote(evNode, noteMap);
-  const noteValue = typeValue && noteRaw
-    ? `${typeValue}: ${noteRaw}`
-    : typeValue || noteRaw;
+
+  // GEDCOM 5.5.1 line value: for fact-shaped tags (OCCU/RELI/EDUC/etc.) this
+  // is the Fact.value (occupation name, religion, etc.). For other event tags
+  // any non-empty line value is non-standard input — append to notes with a
+  // marker rather than dropping silently (Prime Directive: never drop authored data).
+  const gedcomTag = evNode.tag;
+  const lineValue = evNode.value?.trim() || null;
+  const isFactTag = FACT_VALUE_GEDCOM_TAGS.has(gedcomTag);
+  const value = isFactTag ? lineValue : null;
+
+  // Notes assembly (Prime Directive: never drop authored data):
+  //  - GEDCOM TYPE sub-tags are stored as `TYPE: <value>` on their own line at
+  //    the start of notes. This lets the exporter recover the TYPE and emit it
+  //    as a `2 TYPE` sub-tag on round-trip.
+  //  - User-authored NOTE content follows after a blank line.
+  //  - For non-fact tags with a stray line value (non-standard input), append
+  //    it with a marker rather than dropping silently.
+  const noteParts: string[] = [];
+  if (typeValue) {
+    noteParts.push(`TYPE: ${typeValue}`);
+  }
+  if (noteRaw) noteParts.push(noteRaw);
+  if (!isFactTag && lineValue) {
+    noteParts.push(`[unmapped line value: ${lineValue}]`);
+  }
+  const notes = noteParts.join('\n\n') || '';
 
   const event = createEvent(db, {
     event_type: appType,
@@ -80,7 +104,8 @@ export function importEventNode(
     place_id: place?.id ?? null,
     relationship_id: opts.relationship_id ?? null,
     cause: causeValue,
-    notes: noteValue,
+    value,
+    notes,
   });
 
   // Track old→new event ID so ASSO _EVID references resolve across databases

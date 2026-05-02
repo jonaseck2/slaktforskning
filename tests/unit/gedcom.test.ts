@@ -851,7 +851,7 @@ describe('GEDCOM import completeness', () => {
     expect(death?.cause).toBe('Skelettcancer');
   });
 
-  it('ENGA imported as engagement event, TYPE prepended to notes', () => {
+  it('ENGA imported as engagement event, TYPE preserved with marker for round-trip', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -866,7 +866,9 @@ describe('GEDCOM import completeness', () => {
     const events = getEventsForPerson(db, persons[0].id);
     const enga = events.find(e => e.event_type === 'engagement');
     expect(enga).toBeTruthy();
-    expect(enga?.notes).toBe('Sambo');
+    // GEDCOM TYPE sub-tag is preserved as a `TYPE: <value>` marker so the
+    // exporter can recover it as a `2 TYPE` sub-tag on round-trip.
+    expect(enga?.notes).toBe('TYPE: Sambo');
   });
 
   it('ADOP imported as adoption event', () => {

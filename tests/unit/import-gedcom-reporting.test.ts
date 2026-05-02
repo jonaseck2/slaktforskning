@@ -356,13 +356,15 @@ const EVEN_TYPE_GED = `
 `.trim();
 
 describe('GEDCOM import - EVEN TYPE preservation', () => {
-  it('stores EVEN TYPE value in event notes', () => {
+  it('stores EVEN TYPE value in event notes (with marker for round-trip)', () => {
     const db = createTestDb();
     importGedcom(db, parseGedcom(EVEN_TYPE_GED));
     const stmt = db.prepare("SELECT notes FROM events WHERE event_type = 'other'");
     const row = stmt.get([]) as { notes: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
-    expect(row?.notes).toBe('Efternamnsbyte');
+    // GEDCOM TYPE sub-tag is preserved as a `TYPE: <value>` marker so the
+    // exporter can re-emit it as `2 TYPE Efternamnsbyte` on round-trip.
+    expect(row?.notes).toBe('TYPE: Efternamnsbyte');
   });
 
   it('maps EVEN to event_type other', () => {
