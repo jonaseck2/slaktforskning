@@ -1,26 +1,17 @@
 <template>
-  <div class="media-panel side-panel">
-    <!-- Empty state -->
-    <div v-if="!mediaId" class="panel-empty">
-      {{ $t('media.selectMedia') }}
-    </div>
-
-    <template v-else-if="loading">
-      <div class="panel-loading">
-        <AppLoadingState :rows="3" />
-      </div>
-    </template>
-
-    <template v-else-if="media">
-      <!-- Collapse arrow on the panel's left edge — same pattern as the
-           media-list ◀/▶ buttons. -->
-      <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-      <!-- Header: thumbnail + title -->
-      <div class="panel-header">
+  <EntityPanel
+    entity-type="media"
+    :entity="media"
+    :label="$t('panel.manageMedia')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('media.selectMedia') }}</template>
+    <template #header>
+      <div class="media-header-row">
         <div class="media-thumbnail">
-          <img v-if="thumbnailSrc" :src="thumbnailSrc" :alt="media.title || ''" class="media-thumb-img" />
+          <img v-if="thumbnailSrc" :src="thumbnailSrc" :alt="media?.title || ''" class="media-thumb-img" />
           <div v-else class="media-placeholder">
-            <span class="media-placeholder-ext">{{ (media.format || '?').toUpperCase() }}</span>
+            <span class="media-placeholder-ext">{{ (media?.format || '?').toUpperCase() }}</span>
           </div>
         </div>
         <div class="media-info">
@@ -37,12 +28,14 @@
             />
           </div>
           <div class="media-meta">
-            <span v-if="media.format" class="media-format">{{ media.format.toUpperCase() }}</span>
+            <span v-if="media?.format" class="media-format">{{ media.format.toUpperCase() }}</span>
             <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.view') }}</AppButton>
           </div>
         </div>
       </div>
+    </template>
 
+    <template v-if="media">
       <!-- Notes -->
       <div class="panel-section">
         <SectionHeader
@@ -238,18 +231,18 @@
       @cancel="delLink.cancel"
       @confirm="delLink.confirm"
     />
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
-import AppLoadingState from './ui/AppLoadingState.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonPicker from './PersonPicker.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import EntityPanel from './EntityPanel.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';
@@ -342,7 +335,7 @@ interface MediaPanelData {
 }
 
 const idRef = computed(() => props.mediaId ?? null);
-const { data: panelData, loading, reload } = useEntityData<MediaPanelData>(idRef, async (id) => {
+const { data: panelData, reload } = useEntityData<MediaPanelData>(idRef, async (id) => {
   const m = await window.api.media.get(id) as MediaData | null;
   if (!m) return { media: null, thumbnailSrc: null, linkedPersons: [], linkedPlaces: [], linkedEvents: [], regions: [], regionIsProfile: {} };
 
@@ -584,53 +577,12 @@ defineExpose({ reload, expandFaceTags });
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.media-panel { overflow-y: auto; }
-
-/* Collapse arrow on the panel's left edge — mirrors the
-   `list-collapse-btn` / `list-open-btn` pattern on the media list. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
-}
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-
-.panel-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: var(--font-sm);
-  padding: var(--space-xl);
-  text-align: center;
-}
-
-.panel-loading {
-  padding: var(--space-lg);
-}
-
-/* Header */
-.panel-header {
+/* Header slot content — rendered in EntityPanel's `<slot name="header">`
+   but owned by this template, so MediaPanel's scope hash applies. */
+.media-header-row {
   display: flex;
   align-items: flex-start;
   gap: var(--space-sm);
-  padding: 0 0 0 var(--space-lg);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  flex-shrink: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .media-thumbnail {
@@ -643,8 +595,6 @@ defineExpose({ reload, expandFaceTags });
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-md);
 }
 
 .media-thumb-img {
@@ -670,7 +620,6 @@ defineExpose({ reload, expandFaceTags });
 .media-info {
   flex: 1;
   min-width: 0;
-  padding: var(--space-md) 0;
 }
 
 .media-title-row {
