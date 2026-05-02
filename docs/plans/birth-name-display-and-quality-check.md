@@ -2,19 +2,44 @@
 
 ## User goal
 
-Two user-observable outcomes:
+Four user-observable outcomes:
 
 1. **Display.** When a person has both a current name (e.g. married) and a separate birth name with a different surname, every name-rendering surface in the app shows them together as `Anna Andersson (f. Svensson)` in Swedish or `Anna Andersson (b. Svensson)` in English. The user never has to click into the name table to see what someone was born as — it's part of how their name reads.
 
-2. **Inline-string detection.** When a user has typed `"Anna Andersson (f. Svensson)"` (or any equivalent — `(born …)`, `(b. …)`, `(född …)`, `(f. …)`) into a single given-name or surname field, a low-importance quality notice surfaces in `/quality` saying "This name appears to contain an inline birth name — consider splitting into separate name records." The user fixes it by hand via the existing name-edit modal. Nothing splits automatically.
+2. **Configurable.** A global per-database toggle in Settings ("Show birth-name parenthetical in name displays") controls the default for every in-app surface. A per-report toggle in each keepsake report's option panel inherits the global default and lets the user override per print/export. Defaults to **on**.
 
-3. **Round-trip.** A person with multiple `person_names` rows (birth + married, birth + alias, …) survives every export → re-import path with all rows intact. We verify with regression tests; we do not introduce any export that flattens the parenthetical `(f. ...)` form into a single string and then loses the structure on re-import.
+3. **Inline-string detection.** When a user has typed `"Anna Andersson (f. Svensson)"` (or any equivalent — `(born …)`, `(b. …)`, `(född …)`, `(f. …)`) into a single given-name or surname field, a low-importance quality notice surfaces in `/quality` saying "This name appears to contain an inline birth name — consider splitting into separate name records." The user fixes it by hand via the existing name-edit modal. Nothing splits automatically.
+
+4. **Round-trip.** A person with multiple `person_names` rows (birth + married, birth + alias, …) survives every export → re-import path with all rows intact. We verify with regression tests; we do not introduce any export that flattens the parenthetical `(f. ...)` form into a single string and then loses the structure on re-import.
 
 ## Scope
 
+### Pattern 0 — option layer (Configurable goal)
+
+The display behavior in Pattern 1 is **toggleable**, not hard-coded. Two layers, with the report layer inheriting from the global layer at mount time but free to override.
+
+| Layer | Storage | Default | Where it's read |
+|---|---|---|---|
+| Global per-DB | `db_settings` key `display_birth_name_parenthetical` (`'1'` / `'0'`, treated as boolean) | `true` (i.e. row absent → on) | A `usePersonNameOptions()` composable backed by a Pinia store (`personNameOptions`) — initialized once on app boot via `window.api.db.getSetting`. Settings view writes via `window.api.db.setSetting` and updates the store synchronously. |
+| Per-report | `reportConfig` Pinia store: one ref per keepsake report (`aLifeShowBirthNameParenthetical`, `aMarriageShowBirthNameParenthetical`, `lifeOnOnePageShowBirthNameParenthetical`, `photoAlbumShowBirthNameParenthetical`, `yourAncestorsShowBirthNameParenthetical`, `placeChronicleShowBirthNameParenthetical`, `familyInYearShowBirthNameParenthetical`) | Initialized to the global default at store creation; user overrides per report session | Each report's option panel; passed into `formatFullNameWithBirthName(...)` / `<PersonName>` as a prop in the report's templates. |
+
+The name util signature accepts an explicit boolean — never reaches into a store itself:
+
+```ts
+formatFullNameWithBirthName(
+  displayed: NameData,
+  allNames: NameData[],
+  options: { showBirthNameParenthetical: boolean; bornAbbrev: string }
+): string
+```
+
+`<PersonName>` accepts `showBirthNameParenthetical?: boolean` (default `true`); it reads the i18n `bornAbbrev` itself via `useI18n`.
+
+Settings UI: one checkbox row in `SettingsView.vue`'s "Defaults" tab labeled `settings.display.showBirthNameParenthetical` (sv: "Visa födelsenamn i parentes vid namn", en: "Show birth name in parenthesis after current name"). One sentence of helper text.
+
 ### Pattern 1 — name-display surfaces (Display goal)
 
-Every call site that renders a person's full name today switches to a birth-name-aware variant when that person has a separate `birth` record with a different surname. Full enumeration based on `grep formatFullName | formatPersonName | <PersonName`:
+Every call site that renders a person's full name today switches to a birth-name-aware variant when that person has a separate `birth` record with a different surname **and** the active option (global or per-report, per Pattern 0) is on. Full enumeration based on `grep formatFullName | formatPersonName | <PersonName`:
 
 | Surface | File | Migrate? |
 |---|---|---|
@@ -26,8 +51,8 @@ Every call site that renders a person's full name today switches to a birth-name
 | Relationships list | `src/renderer/components/RelationshipsList.vue` | Yes |
 | Person timeline | `src/renderer/components/PersonTimeline.vue` | Yes |
 | Person picker (combobox) | `src/renderer/components/PersonPicker.vue` | Yes |
-| HTML site export (renders) | `src/api/html_site/snapshot.ts` | Yes |
-| Reports — A Life, A Marriage, Life on One Page, Photo Album, Your Ancestors | `src/renderer/components/reports/*.vue` | Yes |
+| HTML site export (renders) | `src/api/html_site/snapshot.ts` | Yes — driven by global toggle (HTML site export has no per-export form yet) |
+| Reports — A Life, A Marriage, Life on One Page, Photo Album, Your Ancestors, Place Chronicle, Family in Year | `src/renderer/components/reports/*.vue` | Yes — each gets its own per-report toggle inherited from the global default (Pattern 0) |
 | `<PersonName>` component | `src/renderer/components/PersonName.vue` | Yes — extend with optional `birthSurname` prop |
 | Person names table (edit grid) | `src/renderer/components/PersonNamesTable.vue` | **No.** This view IS the per-record table; it must show each name verbatim, never compose them. |
 | Chart boxes | `src/renderer/utils/chart-layout/measure.ts` | **No.** Space-constrained; `formatChartName` stays single-line. |
@@ -63,11 +88,12 @@ The four export paths and their expected behavior:
 
 User-observable verification, in this order. None of these are "vitest passes" alone.
 
-1. **Display, smoke-check by user.** Open a database with a person who has separate birth + married names with different surnames. Confirm in: persons list, person panel header, relationships list, person picker, search results, a generated A-Life report, and a generated HTML site preview — all render `Anna Andersson (f. Svensson)` in Swedish, `Anna Andersson (b. Svensson)` in English. Person names table still shows two separate rows.
-2. **Quality check, smoke-check by user.** Create or import a person whose `surname` is literally `"Andersson (f. Svensson)"`. Open `/quality` — see one notice-severity row with the new code. Click it — lands on the person panel with the names section expanded. Edit the name through the modal — notice clears.
-3. **Round-trip regression test.** New unit test in `tests/unit/`: create a person with birth + married name records, export to GEDCOM, parse back through the importer into a fresh DB, assert both `person_names` rows are present with correct `name_type` and `surname`. Same person via archive export (`.zip` round-trip) covered transitively.
-4. **Class-name collision check.** Per `.claude/rules/renderer.md`, grep `shared.css` for any new class names introduced in this plan before merge. (Likely no new classes — we only extend the existing `<PersonName>` template.)
-5. **Lint, type-check, vitest, panel-layout-consistency** — hygiene only, do not count toward the user goal.
+1. **Display + global toggle, smoke-check by user.** Open a database with a person who has separate birth + married names with different surnames. With the global toggle on (default), confirm in: persons list, person panel header, relationships list, person picker, search results, and a generated HTML site preview — all render `Anna Andersson (f. Svensson)` in sv / `Anna Andersson (b. Svensson)` in en. Person names table still shows two separate rows. Open Settings → Defaults, turn the toggle off — every surface above re-renders without the parenthetical, immediately, without a view switch. Turn it back on — parenthetical reappears.
+2. **Per-report toggle, smoke-check by user.** Open ReportsView → A Life Report. With the global toggle on, the report's own checkbox is on by default and the name in the report header reads with parenthetical. Toggle the report-local checkbox off — name re-renders without parenthetical, but Settings global toggle is unchanged. Switch to A Marriage Report — its toggle is independent, still inherits the global default.
+3. **Quality check, smoke-check by user.** Create or import a person whose `surname` is literally `"Andersson (f. Svensson)"`. Open `/quality` — see one notice-severity row with the new code. Click it — lands on the person panel with the names section expanded. Edit the name through the modal — notice clears.
+4. **Round-trip regression test.** New unit test in `tests/unit/`: create a person with birth + married name records, export to GEDCOM, parse back through the importer into a fresh DB, assert both `person_names` rows are present with correct `name_type` and `surname`. Same person via archive export (`.zip` round-trip) covered transitively.
+5. **Class-name collision check.** Per `.claude/rules/renderer.md`, grep `shared.css` for any new class names introduced in this plan before merge. (Likely no new classes — we only extend the existing `<PersonName>` template.)
+6. **Lint, type-check, vitest, panel-layout-consistency** — hygiene only, do not count toward the user goal.
 
 ## Failure modes / RCA reference
 
@@ -78,19 +104,25 @@ User-observable verification, in this order. None of these are "vitest passes" a
 
 ## Tasks
 
-- [ ] **T1 — i18n keys.** Add `common.bornAbbrev` (sv: `f.`, en: `b.`) and `checks.LIKELY_INLINE_BIRTH_NAME` (sv + en) to `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts`.
-- [ ] **T2 — name-display helper.** Add `formatFullNameWithBirthName(displayed, allNames, t)` to `src/renderer/utils/nameUtils.ts`. Returns the existing `formatFullName(displayed)` plus, when applicable, a trailing ` (${t('common.bornAbbrev')} ${birth.surname})`. Pure function. Unit-tested for: same surname (no parenthetical), different surname (parenthetical), no birth record (no parenthetical), displayed name IS the birth name (no parenthetical), Swedish vs English locale.
-- [ ] **T3 — `<PersonName>` extension.** Add an optional `birthSurname?: string | null` prop. When set and different from the displayed surname, append a non-underlined ` (f. <birthSurname>)` suffix using the i18n key.
-- [ ] **T4 — Migrate Pattern 1 surfaces.** For each of the 13 "Yes" rows in Pattern 1, swap `formatFullName` / `<PersonName>` for the new variant. The call site needs the displayed name AND the full names array — expand the prop interface where missing. Add a `/* Display only — see plan birth-name-display-and-quality-check */` comment at non-obvious sites.
-- [ ] **T5 — Quality check.** Add `checkLikelyInlineBirthName` in `src/api/checks/checks-quality.ts`, register it in `checks/index.ts`. Severity `notice`. Returns one row per offending `person_names.id`. Unit-test against fixtures: `"Andersson (f. Svensson)"`, `"Andersson (b. Svensson)"`, `"Anna (född Svensson)"`, `"Anderson"` (no match), `"O'Connor (Boston)"` (no match — parenthetical without trigger word).
-- [ ] **T6 — Quality row routing.** Verify clicking the new check row in `/quality` opens the person panel with names section expanded (existing behavior should already cover this; smoke-check only).
-- [ ] **T7 — GEDCOM importer `name_change` mapping.** In `src/import/gedcom/phases.ts`, extend the rawType mapping to include `NAME_CHANGE → 'name_change'`. (Currently falls back to `'birth'`, which would lose the type on re-import.)
-- [ ] **T8 — Round-trip test.** Add `tests/unit/gedcomMultiNameRoundTrip.test.ts`. Build a person with two `person_names` rows in an in-memory DB, run the GEDCOM exporter, parse the output through the importer into a second in-memory DB, assert both rows reappear with matching `name_type` and `surname`. Cover all five `name_type` values.
-- [ ] **T9 — CSV intent comment.** Add a one-line comment near the top of `src/api/csv_export.ts` documenting that CSV emits only the displayed name by design, and that the parenthetical birth-name form must NOT be baked into the CSV cell.
-- [ ] **T10 — Self-review checklist.**
+- [ ] **T1 — i18n keys.** Add `common.bornAbbrev` (sv: `f.`, en: `b.`), `settings.display.showBirthNameParenthetical` (label + helper text, sv + en), `reports.options.showBirthNameParenthetical` (sv + en — single shared key reused across keepsake reports), and `checks.LIKELY_INLINE_BIRTH_NAME` (sv + en).
+- [ ] **T2 — name-display helper.** Add `formatFullNameWithBirthName(displayed, allNames, options: { showBirthNameParenthetical: boolean; bornAbbrev: string })` to `src/renderer/utils/nameUtils.ts`. Returns the existing `formatFullName(displayed)` plus, when the toggle is on AND a separate `birth`-type record with a different non-empty surname exists, a trailing ` (${bornAbbrev} ${birth.surname})`. Pure function. Unit-tested for: toggle off (no parenthetical), same surname (no parenthetical), different surname + toggle on (parenthetical), no birth record (no parenthetical), displayed name IS the birth name (no parenthetical), sv vs en `bornAbbrev`.
+- [ ] **T3 — `<PersonName>` extension.** Add optional `birthSurname?: string | null` and `showBirthNameParenthetical?: boolean` (default `true`) props. When toggle is on, `birthSurname` is set, and differs from displayed surname, append a non-underlined ` (b./f. <birthSurname>)` suffix using the i18n `bornAbbrev` key resolved via `useI18n` inside the component.
+- [ ] **T4 — Pinia store `personNameOptions`.** New file `src/renderer/stores/personNameOptions.ts`. Holds `showBirthNameParenthetical: ref<boolean>(true)`. Exports an `init()` that reads `window.api.db.getSetting('display_birth_name_parenthetical')` once on app boot (default true if absent). Exports a `setShowBirthNameParenthetical(value)` that writes via `window.api.db.setSetting` AND updates the ref synchronously. Re-init on `db.onSwitched`. Wire `init()` into `src/renderer/main.ts` or `App.vue` `onMounted` (mirroring how other DB-scoped state is bootstrapped).
+- [ ] **T5 — Settings UI.** Add a checkbox row to `SettingsView.vue`'s "Defaults" tab using the store. Label and helper text use the i18n keys from T1. Acceptance: toggling instantly re-renders affected surfaces in other open views (verify via the smoke-check in Verification §1).
+- [ ] **T6 — Per-report toggles in `reportConfig.ts`.** Add one boolean ref per keepsake report (see Pattern 0 table). Initialize each from the `personNameOptions` store value at first read. Expose them in the store's return object. Add the corresponding option-panel checkbox (shared i18n key) to each keepsake report's option panel template, matching the existing `redactLiving`/`showHeaderFooter` pattern.
+- [ ] **T7 — Migrate Pattern 1 surfaces.** For each of the 13 "Yes" rows in Pattern 1, swap `formatFullName` / `<PersonName>` for the new variant. Call sites in non-report contexts pass `personNameOptions.showBirthNameParenthetical`. Call sites in reports pass the per-report ref from `reportConfig`. HTML site snapshot reads the global setting at render time. Expand component prop interfaces to receive the full `names` array where they currently only get the displayed name. Add `/* Display only — see plan birth-name-display-and-quality-check */` at non-obvious sites.
+- [ ] **T8 — Quality check.** Add `checkLikelyInlineBirthName` in `src/api/checks/checks-quality.ts`, register in `checks/index.ts`. Severity `notice`. Returns one row per offending `person_names.id`. Unit-test against: `"Andersson (f. Svensson)"`, `"Andersson (b. Svensson)"`, `"Anna (född Svensson)"`, `"Anna (born Svensson)"`, `"Anderson"` (no match), `"O'Connor (Boston)"` (no match — parenthetical without trigger word), `"(f. Svensson) Andersson"` (no match — trigger only valid when preceded by name token).
+- [ ] **T9 — Quality row routing.** Verify clicking the new check row in `/quality` opens the person panel with names section expanded (existing routing should already cover this; smoke-check only).
+- [ ] **T10 — GEDCOM importer `name_change` mapping.** In `src/import/gedcom/phases.ts`, extend rawType mapping to include `NAME_CHANGE → 'name_change'`. (Currently falls back to `'birth'`, which would lose the type on re-import.)
+- [ ] **T11 — Round-trip test.** Add `tests/unit/gedcomMultiNameRoundTrip.test.ts`. Build a person with two `person_names` rows in an in-memory DB, run the GEDCOM exporter, parse the output through the importer into a second in-memory DB, assert both rows reappear with matching `name_type` and `surname`. Cover all five `name_type` values.
+- [ ] **T12 — CSV intent comment.** Add a one-line comment near the top of `src/api/csv_export.ts` documenting that CSV emits only the displayed name by design, and that the parenthetical birth-name form must NOT be baked into the CSV cell.
+- [ ] **T13 — Self-review checklist.**
   - [ ] All 13 Pattern 1 surfaces migrated; the four "No" surfaces have explanatory comments.
+  - [ ] Settings toggle flips behavior across all in-app surfaces immediately.
+  - [ ] Each keepsake report has its own toggle and inherits the global default at session start.
   - [ ] No new `class=` names in `shared.css`'s reserved namespace.
   - [ ] No code path writes the parenthetical form back to `person_names.given_name` or `person_names.surname`.
   - [ ] No code path auto-splits a name on save or import.
+  - [ ] No store, composable, or util reads `db_settings` outside the dedicated `personNameOptions` store (no scattered `getSetting('display_birth_name_parenthetical')` calls).
   - [ ] `npm run lint`, `npm test`, `tests/components/panel-layout-consistency.test.ts`, and the new `gedcomMultiNameRoundTrip.test.ts` pass.
-  - [ ] Smoke-checks 1, 2 above performed in the running app.
+  - [ ] Smoke-checks 1, 2, 3 above performed in the running app.
