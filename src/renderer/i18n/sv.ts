@@ -110,6 +110,9 @@ export default {
     monospacedTooltip: 'Visa anteckningar med fast bredd för ASCII-tabeller och justerad text',
     clearFilter: 'Rensa filter',
     more: 'Mer',
+    unlink: 'Koppla bort',
+    unlinkTooltip: 'Koppla bort — båda objekten finns kvar',
+    deleteTooltip: 'Radera permanent',
   },
   persons: {
     title: 'Personer',

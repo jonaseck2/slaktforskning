@@ -110,6 +110,9 @@ export default {
     monospacedTooltip: 'Show notes in monospaced font for ASCII tables and aligned text',
     clearFilter: 'Clear filter',
     more: 'More',
+    unlink: 'Unlink',
+    unlinkTooltip: 'Unlink — both entities are kept',
+    deleteTooltip: 'Delete permanently',
   },
   persons: {
     title: 'People',
