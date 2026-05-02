@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.201.0 — Inline media picker across entity panels
+
+- feat: every right-side entity panel media section (Person, Place, Relationship, Source, Group, ResearchTask) now hosts the same inline `[picker | Add | Cancel]` add-row. The `+ Attach` action no longer jumps straight to the OS file dialog — type to autocomplete against existing media (already-linked items filtered out), or click the in-field 📎 icon / dropdown footer "Attach file…" to upload a new file. Same shape across all three section flavors (PersonMediaSection, EntityMediaSection, LinkedMediaSection).
+- feat: new `media:createFromFile` IPC creates a media row without linking — lets `MediaAddRow` stay link-table agnostic across `media_links` / `group_links` / `task_links`.
+- fix: MediaPicker `aria-expanded` now reflects the dropdown's always-on footer item (was stale when only the footer was visible).
+
 ## v0.199.1 — Trim Repositories section from SourcePanel
 
 - chore: removed the Repositories section from SourcePanel — structured GEDCOM REPO records had no real authoring path here (no /repositories view, no RepositoryModal). The free-text `repository` field on the source covers the "what archive" question for hand-typed sources. Importers and exporters keep round-tripping REPO records as before.
