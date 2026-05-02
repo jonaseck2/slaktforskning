@@ -97,6 +97,8 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowNotes">         {{ $t('reports.alife.biography') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeIncludeChildrenMarriages"> {{ $t('reports.alife.includeChildrenMarriages') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeIncludeSiblingDeaths">     {{ $t('reports.alife.includeSiblingDeaths') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">           {{ $t('reports.common.redactLiving') }}</label>
         </template>
 

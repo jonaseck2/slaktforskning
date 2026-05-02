@@ -961,6 +961,8 @@ export default {
       family: 'Family',
       events: 'Events',
       biography: 'Biography',
+      includeChildrenMarriages: "Include children's marriages",
+      includeSiblingDeaths: "Include sibling deaths",
     },
     onePage: {
       title: 'Life on One Page',

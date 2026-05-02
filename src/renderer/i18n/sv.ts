@@ -961,6 +961,8 @@ export default {
       family: 'Familj',
       events: 'Händelser',
       biography: 'Biografi',
+      includeChildrenMarriages: 'Inkludera barns äktenskap',
+      includeSiblingDeaths: 'Inkludera syskons bortgång',
     },
     onePage: {
       title: 'Ett liv på en sida',
