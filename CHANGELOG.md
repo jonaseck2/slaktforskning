@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.204.0 — GEDCOM round-trip fidelity registry + coverage guard
+
+- **feat:** Every column in every non-exempt schema table now has an explicit round-trip status under GEDCOM 5.5.1 and 7.0, declared in `src/api/gedcom_fidelity_registry.ts`. A schema-introspection unit test asserts the registry covers every column — adding a new column to `src/api/schema.ts` without registering it fails CI immediately with the column name and a pointer to the registry. The user's choice to use this app remains reversible: the data they hand us comes back out, with documented `lossy` / `excluded` exceptions instead of silent loss.
+- **test:** Three new tests enforce the contract — `tests/unit/gedcom-fidelity-registry-coverage.test.ts` (schema gate), `tests/unit/gedcom-fidelity-per-field.test.ts` (per-(table, column, version) round-trip, 187 cases + 100 documented exclusions), `tests/unit/gedcom-fidelity-golden.test.ts` (multi-row, multi-table seed → round-trip → canonical equality).
+- **fix(gedcom):** `formatGedcomDate` was emitting the start of `BET..AND` through ISO→GEDCOM but the end raw, breaking `events.date_value_end` round-trip. Both ends now go through the converter.
+- **fix(gedcom):** Repository address sub-fields (`CITY`/`POST`/`STAE`/`CTRY`) were attaching as orphans to the preceding `1 NAME` line when address itself was empty; the importer dropped them. Now emits a `1 ADDR` parent (with empty value if needed) whenever any address sub-field is present.
+- **docs:** New "⚠️ Prime Directive (cont.): Round-Trip Fidelity" section in `CLAUDE.md` codifies the directive as co-equal with authored-data preservation. Lifecycle direction is GEDCOM → DB → user → DB → GEDCOM end-to-end.
+
 ## v0.203.0 — GEDCOM round-trip fidelity for fact-shaped events
 
 - **feat:** Occupation, education, religion, title, and other GEDCOM-X fact-shaped events now preserve the line value (e.g. `OCCU "Carpenter"`) end-to-end. Previously the importer silently dropped the value; now it lands in a dedicated `events.value` column and round-trips back through GEDCOM export byte-for-byte.

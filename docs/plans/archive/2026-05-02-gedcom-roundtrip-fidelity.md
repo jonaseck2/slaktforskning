@@ -88,7 +88,7 @@ If a future regression re-introduces drop-on-import for `OCCU` value, the per-fi
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Verify the events fact-value implementation has landed**
+- [x] **Step 1: Verify the events fact-value implementation has landed**
 
 Run:
 ```bash
@@ -103,7 +103,7 @@ Expected: NO match for `events.description` (it has been renamed to `notes`).
 
 If either check fails, **STOP**. The events fact-value plan must land first. Re-read this plan's "Depends on" section. Do not proceed; the registry built later would record stale schema state.
 
-- [ ] **Step 2: No commit** — verification only.
+- [x] **Step 2: No commit** — verification only.
 
 ---
 
@@ -112,7 +112,7 @@ If either check fails, **STOP**. The events fact-value plan must land first. Re-
 **Files:**
 - Create: `src/api/gedcom_fidelity_registry.ts`
 
-- [ ] **Step 1: Write the registry file with types and an empty `GEDCOM_FIDELITY` map**
+- [x] **Step 1: Write the registry file with types and an empty `GEDCOM_FIDELITY` map**
 
 ```typescript
 /**
@@ -164,12 +164,12 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
 };
 ```
 
-- [ ] **Step 2: Type-check**
+- [x] **Step 2: Type-check**
 
 Run: `npx tsc --noEmit`
 Expected: clean (no errors from the new file).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/api/gedcom_fidelity_registry.ts
@@ -183,7 +183,7 @@ git commit -m "feat(api): GEDCOM fidelity registry types (empty)"
 **Files:**
 - Create: `tests/helpers/gedcom_fidelity.ts`
 
-- [ ] **Step 1: Write the helper file**
+- [x] **Step 1: Write the helper file**
 
 ```typescript
 /**
@@ -338,12 +338,12 @@ function stableRowSort(a: Record<string, unknown>, b: Record<string, unknown>): 
 }
 ```
 
-- [ ] **Step 2: Type-check**
+- [x] **Step 2: Type-check**
 
 Run: `npx tsc --noEmit`
 Expected: clean.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/helpers/gedcom_fidelity.ts
@@ -357,7 +357,7 @@ git commit -m "test: GEDCOM fidelity test helpers (skeleton)"
 **Files:**
 - Create: `tests/unit/gedcom-fidelity-registry-coverage.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 /**
@@ -434,7 +434,7 @@ describe(\'GEDCOM fidelity registry coverage\', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to confirm it FAILS**
+- [x] **Step 2: Run the test to confirm it FAILS**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-registry-coverage.test.ts`
 
@@ -443,7 +443,7 @@ Expected: the first test fails with a long list of missing entries (every column
 The second test passes (registry is empty, so no stale entries).
 The third test passes (no overlap because registry is empty).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/gedcom-fidelity-registry-coverage.test.ts
@@ -459,7 +459,7 @@ git commit -m "test: GEDCOM fidelity coverage guard (red)"
 
 This is the largest task in the plan. It is mechanical but careful work. ~80–120 entries.
 
-- [ ] **Step 1: List every column to register**
+- [x] **Step 1: List every column to register**
 
 Run:
 ```bash
@@ -484,7 +484,7 @@ Expected output: ~80–120 lines of `tablename.colname (TYPE)`.
 
 Save the output — you will work through it row-by-row.
 
-- [ ] **Step 2: Populate `GEDCOM_FIDELITY` entries**
+- [x] **Step 2: Populate `GEDCOM_FIDELITY` entries**
 
 Replace the empty `GEDCOM_FIDELITY` object in `src/api/gedcom_fidelity_registry.ts` with one entry per column from Step 1. Use this decision tree per column:
 
@@ -550,13 +550,13 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
 
 **Discovery during this task:** if you discover a column whose round-trip behaviour is unclear from reading the importer/exporter, mark it `lossy` with reason `\'TODO: Task 6 will reveal the actual round-trip behaviour\'` and the per-field test in Task 6 will tell you the truth. Then return here and update.
 
-- [ ] **Step 3: Run coverage guard — should now pass**
+- [x] **Step 3: Run coverage guard — should now pass**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-registry-coverage.test.ts`
 
 Expected: all three tests pass. If the first test still reports missing keys, add them. If the second reports stale keys, you have a typo in a key (most likely a table name with a typo).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/gedcom_fidelity_registry.ts
@@ -571,7 +571,7 @@ git commit -m "feat(api): populate GEDCOM fidelity registry — audit pass"
 - Create: `tests/unit/gedcom-fidelity-per-field.test.ts`
 - Modify: `tests/helpers/gedcom_fidelity.ts` (implement `seedByTable` for every non-exempt table)
 
-- [ ] **Step 1: Implement `seedByTable` for every non-exempt table**
+- [x] **Step 1: Implement `seedByTable` for every non-exempt table**
 
 Add per-table seeding logic. Open `tests/helpers/gedcom_fidelity.ts` and replace the throw-only `seedByTable` stub:
 
@@ -628,7 +628,7 @@ function seedPerson(db: Database, col: string, value: unknown): string {
 
 **Note for the implementer:** the seeders are tedious but mechanical. Read each table\'s `CREATE TABLE` in `src/api/schema.ts` and the matching `create*` function in `src/api/<table>.ts` for the canonical insert shape. When in doubt, mirror what the matching API function does — it already handles FK setup correctly.
 
-- [ ] **Step 2: Write the per-field round-trip test**
+- [x] **Step 2: Write the per-field round-trip test**
 
 ```typescript
 /**
@@ -704,7 +704,7 @@ describe(\'GEDCOM fidelity per-field round-trip\', () => {
 });
 ```
 
-- [ ] **Step 3: Run the per-field test**
+- [x] **Step 3: Run the per-field test**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts`
 
@@ -714,7 +714,7 @@ Expected: many tests pass (the `lossless` defaults you set in Task 5 that are ac
 - A seeder bug (FK error, NOT NULL violation) → fix the seeder.
 - A round-trip bug in the importer or exporter → fix in Task 7.
 
-- [ ] **Step 4: Commit (red — failing tests are expected)**
+- [x] **Step 4: Commit (red — failing tests are expected)**
 
 ```bash
 git add tests/unit/gedcom-fidelity-per-field.test.ts tests/helpers/gedcom_fidelity.ts
@@ -729,7 +729,7 @@ git commit -m "test: GEDCOM per-field round-trip (failures pending triage)"
 
 This is open-ended discovery work. Process each failing test from Task 6:
 
-- [ ] **Step 1: For each failing test, decide**
+- [x] **Step 1: For each failing test, decide**
 
 For each failure, decide one of:
 1. **Tiny fix in the importer or exporter** — under ~30 lines, no schema change. Make the fix; per-field test goes green; promote registry entry from `lossy` placeholder to `lossless` (or simply leave `lossless` if you started optimistic). Commit per fix.
@@ -737,18 +737,18 @@ For each failure, decide one of:
 
 The judgement call: if the fix would take longer than ~1 hour or touches more than one file, it goes to follow-up. The point of this plan is to lock down the *current truth*, not to chase every fix.
 
-- [ ] **Step 2: Apply each fix or registry demotion, committing per change**
+- [x] **Step 2: Apply each fix or registry demotion, committing per change**
 
 Example commit messages:
 - `fix(gedcom-export): emit OBJE.FORM for media format` (tiny fix)
 - `chore(fidelity): record places.parent_place_id as lossy under v551` (registry demotion + follow-up entry)
 
-- [ ] **Step 3: Re-run the per-field test until green**
+- [x] **Step 3: Re-run the per-field test until green**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts`
 Expected: all tests green. Any remaining failure means the registry entry does not match reality — fix the registry expectation.
 
-- [ ] **Step 4: Final commit if registry was further updated**
+- [x] **Step 4: Final commit if registry was further updated**
 
 ```bash
 git add src/api/gedcom_fidelity_registry.ts docs/PLAN.md
@@ -762,7 +762,7 @@ git commit -m "chore(fidelity): triage per-field round-trip failures"
 **Files:**
 - Create: `tests/unit/gedcom-fidelity-golden.test.ts`
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```typescript
 /**
@@ -930,19 +930,19 @@ describe(\'GEDCOM fidelity golden-DB-seed round-trip\', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test**
+- [x] **Step 2: Run the test**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-golden.test.ts`
 
 Expected: tests run; failures are likely (real multi-field round-trip bugs). For each failure, the diff in vitest output will show which table/row/column diverged.
 
-- [ ] **Step 3: Triage failures**
+- [x] **Step 3: Triage failures**
 
 Same triage rule as Task 7:
 - Tiny fix → land in this plan; commit per fix.
 - Larger fix → adjust `canonicaliseDb` to drop the offending column for golden (with a code comment citing the registry `lossy` entry that justifies it), or extend the lossy expectation. Add follow-up to `docs/PLAN.md`.
 
-- [ ] **Step 4: Commit when green**
+- [x] **Step 4: Commit when green**
 
 ```bash
 git add tests/unit/gedcom-fidelity-golden.test.ts tests/helpers/gedcom_fidelity.ts src/api/gedcom_fidelity_registry.ts docs/PLAN.md
@@ -956,7 +956,7 @@ git commit -m "test: GEDCOM golden-DB-seed round-trip"
 **Files:**
 - Modify: `CLAUDE.md`
 
-- [ ] **Step 1: Insert the new sub-section directly below the existing "⚠️ Prime Directive: Data Fidelity" section**
+- [x] **Step 1: Insert the new sub-section directly below the existing "⚠️ Prime Directive: Data Fidelity" section**
 
 The existing section ends with: `This rule applies to: import paths, MCP tools, IPC handlers, Vue components, AI agents, scripts, migrations. Everywhere. No exceptions.`
 
@@ -994,14 +994,14 @@ The data lifecycle includes offboarding. A user who exports their database to GE
 **Why this matters:** the user\'s choice to use this app must remain reversible. If our schema evolves in a way that strands their data inside our format, we have failed them — even if everything works perfectly while they stay.
 ```
 
-- [ ] **Step 2: Verify markdown renders cleanly**
+- [x] **Step 2: Verify markdown renders cleanly**
 
 ```bash
 grep -c "⚠️ Prime Directive" CLAUDE.md
 ```
 Expected: `2` (original + new section).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add CLAUDE.md
@@ -1015,7 +1015,7 @@ git commit -m "docs(claude.md): add Prime Directive (cont.) — Round-Trip Fidel
 **Files:**
 - Modify: `.claude/skills/gedcom/SKILL.md`
 
-- [ ] **Step 1: Append a "Round-trip fidelity registry" section**
+- [x] **Step 1: Append a "Round-trip fidelity registry" section**
 
 Append to the end of `.claude/skills/gedcom/SKILL.md`:
 
@@ -1033,7 +1033,7 @@ When you change anything in `src/import/gedcom/` or `src/gedcom/exporter.ts`, ru
 See `CLAUDE.md` "⚠️ Prime Directive (cont.): Round-Trip Fidelity" for the why.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .claude/skills/gedcom/SKILL.md
@@ -1047,7 +1047,7 @@ git commit -m "docs(skill/gedcom): point at the fidelity registry"
 **Files:**
 - Modify: `docs/PLAN.md`
 
-- [ ] **Step 1: Append the audit milestone and per-`lossy` follow-ups**
+- [x] **Step 1: Append the audit milestone and per-`lossy` follow-ups**
 
 Open `docs/PLAN.md`. Add a new entry under the active list summarising this plan as completed (per the close-out workflow in CLAUDE.md, this happens at archive time — see Task 13). For now, add follow-up entries for every `lossy` registry entry that should ideally be promoted to `lossless` in a future plan.
 
@@ -1065,7 +1065,7 @@ Also add:
 Mirror `src/api/gedcom_fidelity_registry.ts` for the .zip archive export/import path. Share the helper infrastructure in `tests/helpers/gedcom_fidelity.ts`. Spec: derived from `docs/plans/2026-05-02-gedcom-roundtrip-fidelity-design.md` Scope deviations.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/PLAN.md
@@ -1081,7 +1081,7 @@ git commit -m "docs(plan): log fidelity follow-ups (lossy → lossless promotion
 
 This is the user-observable proof that the guard works. **The plan is not done until this fires.**
 
-- [ ] **Step 1: Introduce a fake migration that adds a new column**
+- [x] **Step 1: Introduce a fake migration that adds a new column**
 
 Open `src/api/schema.ts`. Add at the very end of `initializeSchema`, just before the closing `}`:
 
@@ -1093,7 +1093,7 @@ if (!personsCols2.includes(\'scratch\')) {
 }
 ```
 
-- [ ] **Step 2: Run the coverage guard test**
+- [x] **Step 2: Run the coverage guard test**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-registry-coverage.test.ts`
 
@@ -1101,23 +1101,23 @@ Expected: the first test FAILS with an error message including `persons.scratch`
 
 If the test passes, the guard is broken — debug and fix the test before reverting.
 
-- [ ] **Step 3: Capture the failure output for the user**
+- [x] **Step 3: Capture the failure output for the user**
 
 Save the failing test output (paste into the PR description or commit message body). The user wants to see the actual failure message, not just hear that it exists.
 
-- [ ] **Step 4: Revert the scratch migration**
+- [x] **Step 4: Revert the scratch migration**
 
 Remove the SCRATCH block from `src/api/schema.ts`.
 
 Run: `git diff src/api/schema.ts`
 Expected: empty (clean revert).
 
-- [ ] **Step 5: Re-run all three fidelity tests to confirm green**
+- [x] **Step 5: Re-run all three fidelity tests to confirm green**
 
 Run: `npx vitest run tests/unit/gedcom-fidelity-`
 Expected: all three test files pass.
 
-- [ ] **Step 6: No commit for this task** — the demonstration is the deliverable; the schema is reverted.
+- [x] **Step 6: No commit for this task** — the demonstration is the deliverable; the schema is reverted.
 
 ---
 
@@ -1130,7 +1130,7 @@ Expected: all three test files pass.
 
 This task implements the "Finishing a plan" checklist from `CLAUDE.md`. Follow it exactly.
 
-- [ ] **Step 1: Tick every checkbox in this plan file**
+- [x] **Step 1: Tick every checkbox in this plan file**
 
 Open `docs/plans/2026-05-02-gedcom-roundtrip-fidelity.md`. Replace every `- [ ]` with `- [x]`. Verify by:
 ```bash
@@ -1138,14 +1138,14 @@ grep -c "^- \[ \]" docs/plans/2026-05-02-gedcom-roundtrip-fidelity.md
 ```
 Expected: `0`.
 
-- [ ] **Step 2: Move plan + design spec to archive**
+- [x] **Step 2: Move plan + design spec to archive**
 
 ```bash
 git mv docs/plans/2026-05-02-gedcom-roundtrip-fidelity.md docs/plans/archive/
 git mv docs/plans/2026-05-02-gedcom-roundtrip-fidelity-design.md docs/plans/archive/
 ```
 
-- [ ] **Step 3: Bump version (minor — this plan adds new features: registry + tests + Prime Directive amendment)**
+- [x] **Step 3: Bump version (minor — this plan adds new features: registry + tests + Prime Directive amendment)**
 
 Open `package.json`. Bump the minor version (e.g. `0.202.0` → `0.203.0`).
 
@@ -1156,7 +1156,7 @@ Open `CHANGELOG.md`. Add a `## Unreleased` block (if not present) with one bulle
 - GEDCOM round-trip fidelity registry + coverage guard. Every schema column now has an explicit round-trip status under GEDCOM 5.5.1 and 7.0; adding a new column without registering it fails CI.
 ```
 
-- [ ] **Step 4: Update docs/PLAN.md and docs/plans/archive/PLAN.md**
+- [x] **Step 4: Update docs/PLAN.md and docs/plans/archive/PLAN.md**
 
 Remove this milestone\'s `[planned]` / `[in-progress]` block from `docs/PLAN.md` (the entries you added in Task 11 about *follow-ups* stay; only the entry about *this plan* is removed).
 
@@ -1172,7 +1172,7 @@ grep -c "\[done\]" docs/PLAN.md
 ```
 Expected: `0`.
 
-- [ ] **Step 5: Commit close-out**
+- [x] **Step 5: Commit close-out**
 
 ```bash
 git add docs/plans/archive/2026-05-02-gedcom-roundtrip-fidelity.md \\
@@ -1181,6 +1181,6 @@ git add docs/plans/archive/2026-05-02-gedcom-roundtrip-fidelity.md \\
 git commit -m "chore: archive completed gedcom-roundtrip-fidelity"
 ```
 
-- [ ] **Step 6: Hand off to `superpowers:finishing-a-development-branch`**
+- [x] **Step 6: Hand off to `superpowers:finishing-a-development-branch`**
 
 Per CLAUDE.md workflow, invoke the finishing skill to merge → main, delete the branch, remove the worktree.
