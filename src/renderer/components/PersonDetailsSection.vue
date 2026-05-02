@@ -1,6 +1,8 @@
 <template>
   <div class="details-row">
+    <label class="details-label" :for="sexSelectId">{{ $t('persons.sex') }}</label>
     <select
+      :id="sexSelectId"
       class="details-select"
       :value="sex"
       :disabled="props.readonly"
@@ -10,9 +12,6 @@
       <option value="F">{{ $t('sex.F') }}</option>
       <option value="U">{{ $t('sex.U') }}</option>
     </select>
-    <span class="living-status" :class="{ 'living-status--deceased': !living }">
-      {{ living ? $t('personDetail.statusLiving') : $t('personDetail.statusDeceased') }}
-    </span>
   </div>
   <div class="notes-block">
     <div class="notes-heading-row">
@@ -32,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import PersonNotesSection from './PersonNotesSection.vue';
 import AppButton from './ui/AppButton.vue';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
@@ -43,9 +43,10 @@ declare const window: Window & {
 const props = defineProps<{
   personId: string;
   sex: string;
-  living: boolean | number;
   readonly?: boolean;
 }>();
+
+const sexSelectId = computed(() => `person-sex-${props.personId}`);
 
 const emit = defineEmits<{
   updated: [field: string, value: unknown];
@@ -82,12 +83,10 @@ async function updateSex(value: string) {
   background: var(--surface);
 }
 
-.living-status {
+.details-label {
   font-size: var(--font-sm);
+  font-weight: 600;
   color: var(--text-secondary);
-}
-.living-status--deceased {
-  color: var(--text-muted);
 }
 
 .notes-block {

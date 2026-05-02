@@ -188,9 +188,6 @@ export default {
     addAndLink: 'Skapa och koppla',
     linkExisting: 'Koppla',
     detailsTitle: 'Personuppgifter',
-    statusLabel: 'Status',
-    statusLiving: 'Levande',
-    statusDeceased: 'Avliden',
     viewInTree: 'Visa i träd',
   },
   relationships: {

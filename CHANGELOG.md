@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.194.2 — Person panel cleanup
+
+- fix: name list reads chronologically — oldest at top, current/at-death name at the bottom
+- fix: removed misleading "Living/Deceased" badge — death events already speak for themselves
+- chore: UX inventory captures CTA shape for every panel section and modal (internal docs)
+
 ## v0.194.1 — Event-type change preserves authored data
 
 - fix: changing event type no longer silently nulls cause-of-death or end date — authored values stay until you clear them

@@ -70,62 +70,62 @@ Citations on a Person are nested two clicks deep (Event row → EventModal → C
 
 ## Surface index
 
-Verification status as of the dates listed. Italicised entries are **TBD** (not yet audited).
+Verification status as of the dates listed. Entries dated 2026-05-02 with a Purpose marked _TBD — needs user-stated intent_ have their CTA inventory and code references audited but still need a one-sentence Purpose written by the user (per the [`ux-intent-mapping`](../.claude/skills/ux-intent-mapping/SKILL.md) skill, the Purpose comes from the user, not from inferred code reading).
 
 ### Persons view (`PersonsView` + `PersonPanel`)
 
 | Surface | Verified |
 |---|---|
-| PersonPanel — Header & add-relative shortcuts | _TBD_ |
-| PersonPanel — Person section (name/sex/notes summary) | _TBD_ |
-| PersonPanel — Names section | _TBD_ |
+| PersonPanel — Header & add-relative shortcuts | 2026-05-02 |
+| PersonPanel — Person section (name/sex/notes summary) | 2026-05-02 |
+| PersonPanel — Names section | 2026-05-02 |
 | PersonPanel — Events section | 2026-05-02 |
-| PersonPanel — Timeline section | _TBD_ |
-| PersonPanel — Life Map section | _TBD_ |
-| PersonPanel — Identifiers section | _TBD_ |
+| PersonPanel — Timeline section | 2026-05-02 |
+| PersonPanel — Life Map section | 2026-05-02 |
+| PersonPanel — Identifiers section | 2026-05-02 |
 | PersonPanel — Relations section | 2026-05-02 |
 | PersonPanel — Groups section | 2026-05-02 |
-| PersonPanel — Media section | _TBD_ |
-| PersonPanel — Media Timeline section | _TBD_ |
+| PersonPanel — Media section | 2026-05-02 |
+| PersonPanel — Media Timeline section | 2026-05-02 |
 | PersonPanel — Research tasks section | 2026-05-02 |
-| PersonPanel — Quality section | _TBD_ |
-| PersonPanel — Danger zone (delete person) | _TBD_ |
+| PersonPanel — Quality section | 2026-05-02 |
+| PersonPanel — Danger zone (delete person) | 2026-05-02 |
 
 ### Places view (`PlacesView` + `PlacePanel`)
 
 | Surface | Verified |
 |---|---|
-| PlacePanel — Place section | _TBD_ |
+| PlacePanel — Place section | 2026-05-02 |
 | PlacePanel — Persons section | 2026-05-02 |
-| PlacePanel — Events section | _TBD_ |
-| PlacePanel — Citations section | _TBD_ |
-| PlacePanel — Media section | _TBD_ |
-| PlacePanel — Media Timeline section | _TBD_ |
-| PlacePanel — Quality section | _TBD_ |
-| PlacePanel — Address section | _TBD_ |
-| PlacePanel — Hierarchy section | _TBD_ |
+| PlacePanel — Events section | 2026-05-02 |
+| PlacePanel — Citations section | 2026-05-02 |
+| PlacePanel — Media section | 2026-05-02 |
+| PlacePanel — Media Timeline section | 2026-05-02 |
+| PlacePanel — Quality section | 2026-05-02 |
+| PlacePanel — Address section | 2026-05-02 |
+| PlacePanel — Hierarchy section | 2026-05-02 |
 
 ### Sources view (`SourcesView` + `SourcePanel`)
 
 | Surface | Verified |
 |---|---|
-| SourcePanel — Source section | _TBD_ |
-| SourcePanel — Citations section | _TBD_ |
-| SourcePanel — Repositories section | _TBD_ |
-| SourcePanel — Media section | _TBD_ |
-| SourcePanel — Quality section | _TBD_ |
+| SourcePanel — Source section | 2026-05-02 |
+| SourcePanel — Citations section | 2026-05-02 |
+| SourcePanel — Repositories section | 2026-05-02 |
+| SourcePanel — Media section | 2026-05-02 |
+| SourcePanel — Quality section | 2026-05-02 |
 
 ### Other panels
 
 | Surface | Verified |
 |---|---|
-| RelationshipPanel | _TBD_ |
-| GroupPanel | _TBD_ |
-| ResearchTaskPanel | _TBD_ |
-| MediaPanel | _TBD_ |
-| ReportPanel | _TBD_ |
-| WebsitePanel | _TBD_ |
-| ExportOptionsPanel | _TBD_ |
+| RelationshipPanel | 2026-05-02 |
+| GroupPanel | 2026-05-02 |
+| ResearchTaskPanel | 2026-05-02 |
+| MediaPanel | 2026-05-02 |
+| ReportPanel | 2026-05-02 |
+| WebsitePanel | 2026-05-02 |
+| ExportOptionsPanel | 2026-05-02 |
 
 ### Modals (live in `src/renderer/components/modals/`)
 
@@ -134,17 +134,17 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 | EventModal | 2026-05-02 |
 | CitationModal | 2026-05-02 |
 | SourceModal | 2026-05-02 |
-| PersonModal | _TBD_ |
-| PersonNameModal | _TBD_ |
-| PersonIdentifierModal | _TBD_ |
-| PlaceModal | _TBD_ |
-| PlaceTreePickerModal | _TBD_ |
-| RelationshipModal | _TBD_ |
-| GroupModal | _TBD_ |
-| ResearchTaskModal | _TBD_ |
-| MergePersonsModal | _TBD_ |
-| LinkRuleModal | _TBD_ |
-| ConfirmModal (generic destructive confirm) | _TBD_ |
+| PersonModal | 2026-05-02 |
+| PersonNameModal | 2026-05-02 |
+| PersonIdentifierModal | 2026-05-02 |
+| PlaceModal | 2026-05-02 |
+| PlaceTreePickerModal | 2026-05-02 |
+| RelationshipModal | 2026-05-02 |
+| GroupModal | 2026-05-02 |
+| ResearchTaskModal | 2026-05-02 |
+| MergePersonsModal | 2026-05-02 |
+| LinkRuleModal | 2026-05-02 |
+| ConfirmModal (generic destructive confirm) | 2026-05-02 |
 
 ---
 
@@ -268,11 +268,587 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 
 ---
 
-## TBD surfaces
+## Surfaces with CTA inventory but no user-stated Purpose
 
-The remaining ~30 surfaces in the index above haven't been audited under this lens yet. As you touch them, fill in their entries here following the format of the verified ones, and bump their entry in the index above.
+These surfaces have had their code read and their CTA inventory + cross-cutting findings filled in, but their **Purpose** sentence is still pending — it must come from the user (per the `ux-intent-mapping` skill: *"Ask the user, don't pre-fill"*). Fill in Purpose as you touch each surface. Order roughly matches the index above.
 
-When in doubt about format, use the **Format reference card** at the bottom of `.claude/skills/ux-intent-mapping/SKILL.md`.
+### PersonPanel → Header & add-relative shortcuts
+**File:** `src/renderer/components/PersonPanel.vue` lines 9–61
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this header to *recognise* who the panel is about (avatar + name + sex + life dates), *anchor* the chart on this person ("Set as tree subject"), and *grow* the tree from this person by adding a father, mother, spouse, son, or daughter in one click.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Person avatar · name · sex/living badge · optional "Set as tree subject" button · birth line ("*" date, place) · death line ("†" date, place) | Five `+ Add relative` quick buttons (father, mother, spouse, son, daughter) — each opens **PersonModal in standalone mode** with `addRelatedTo` mode preset. Creates new person + relationship. | Not offered in header (person details edit lives in Person section). Tree-subject toggle via dedicated button (emit `set-tree-subject`). | Not offered | Header has no Open affordance; entity details open in the Person section below. |
+
+**Notes:** Birth/death lines call `buildDateLine()` which resolves places asynchronously to show city names. Add-relative buttons reuse PersonModal in addRelatedTo mode.
+
+---
+
+### PersonPanel → Person section
+**File:** `src/renderer/components/PersonPanel.vue` lines 63–69, `PersonDetailsSection.vue`, `PersonNotesSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *record* basic biographical attributes about the person that don't belong on a specific event — sex (the only such attribute today) and free-form notes.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| "Sex" label + dropdown (M/F/U) · Notes textarea with monospace toggle | Not offered | Sex: dropdown onChange → `persons.update()` (inline). Notes: inline textarea (PersonNotesSection self-loading, rich-text editor with monospace toggle). | Not offered | Not offered |
+
+**Notes:** Readonly prop disables interaction when panel is in view-only mode. Living/deceased status is intentionally *not* shown here — it's derived from the presence of a death event (see `livingSqlExpr` in `src/api/personLiving.ts`), and per the prime directive, derived values are computed at render time, not surfaced as if authored. Death context is conveyed by the Events section / header life dates.
+
+---
+
+### PersonPanel → Names section
+**File:** `src/renderer/components/PersonPanel.vue` lines 71–78, `PersonNamesTable.vue`, `PersonNameModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *catalogue* every name a person carried through life — birth name, married names, aliases, aka's — and to *date* each one, so the list reads chronologically (oldest at top, the name they were known by today or at death at the bottom) and the user can see at a glance how their name evolved.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| PersonNamesTable rows (sorted ASC by effective_date_from, tying on sort_order): name · type badge (birth/married/alias/aka) · effective date (with "●" if sourced from birth event) | `+ Add name` → opens **PersonNameModal in standalone add mode** | Row click → **opens PersonNameModal with name prefilled**. No inline editing. | ✕ on non-birth names → ConfirmModal → deletes name. Birth name cannot be deleted. | Not offered (names have no own panel) |
+
+**Notes:** Names sort ASC by effective date, then by sort_order ASC. Move-up/down arrows reorder within same-dated cohort only (inversion blocking — different-dated rows can't be swapped manually because the sort would re-sort them back). Birth names derive their effective date from the birth event when present.
+
+---
+
+### PersonPanel → Timeline section
+**File:** `src/renderer/components/PersonPanel.vue` lines 88–94, `PersonTimeline.vue`, `EventModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *read* a person's life as a single chronological story — their own events interleaved with the events of close family that shaped their life — and to *jump* into any of those events to edit them or to that family member's panel to follow the thread.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only chronological timeline: date column (year, with `~` / `<` / `>` for approximate/before/after) · dot colored by event type · event badge + family-relation label (if not self) + place + age (if self) + description + citation count badge. Undated section below. | `+ Add event` → opens **EventModal in standalone add mode** (prefilled to a specific event type when triggered from a Quality fix-action) | Dated self-events: row click → **opens EventModal with event prefilled**. Family events (parent/spouse/child): row click → navigates to that person's panel. Undated events: row click → opens EventModal. | Not offered here (deletion lives in Events section or inside EventModal). | (Edit covers it) |
+
+**Notes:** Loads via `reports.timeline()`. Family events slightly de-emphasised visually (opacity 0.95). Gap indicator shows for >20-year gaps.
+
+---
+
+### PersonPanel → Life Map section
+**File:** `src/renderer/components/PersonPanel.vue` lines 96–102, `PersonMap.vue`, `BaseMap.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Leaflet map (350 px high) with circle markers colour-coded by event type (birth=green, death=red, marriage=pink, etc.). Polyline connects events chronologically. Marker popup shows event type · date · place name (as router-link). Empty state if no places. | `+ Add event` → same as Timeline (opens EventModal). | Not offered (map is read-only; edit via Events or Timeline sections). | Not offered | Marker popup place name is a router-link to `/places?place={placeId}`. |
+
+**Notes:** Only events with a `place_id` are shown. Places resolved to coordinates via `usePlaceResolver()`. Resolved (gazetteer-matched) markers at 50 % opacity; unresolved at 85 %.
+
+---
+
+### PersonPanel → Identifiers section
+**File:** `src/renderer/components/PersonPanel.vue` lines 104–110, `PersonIdentifiersSection.vue`, `PersonIdentifierModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table: type badge (e.g. "CEK", "ArkivDigital ID") · value | `+ Add identifier` → opens **PersonIdentifierModal in standalone add mode** | Not offered inline; modal has no edit path either (identifier values are write-once — see PersonIdentifierModal entry below). To change a value, delete + re-add. | ✕ → ConfirmModal → deletes identifier | Not offered |
+
+**Notes:** PersonIdentifiersSection is self-loading. Header button calls `identifiersSectionRef?.openAddForm()` to open modal.
+**Cross-cutting:** Edit-by-delete-and-re-add is a usability gap — no other entity in the app behaves this way.
+
+---
+
+### PersonPanel → Media section
+**File:** `src/renderer/components/PersonPanel.vue` lines 137–143, `PersonMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table: thumbnail (or format icon if not image) · reorder controls (star to set profile, ↑↓ buttons) · title/filename · format. First row carries the "profile" indicator. | `+ Attach media` → opens OS file picker (`window.api.media.attach`) → attaches media to person. **Link-only**; no create-new-media path here. | Not offered inline. Reorder via star (set profile) + ↑↓ buttons → `media.reorder()`. | ✕ → ConfirmModal → unlinks media (media kept; link deleted). Unlinking changes profile picture if it was the linked one. | Row click → navigates to `/media?open={mediaId}&person={personId}` (MediaPanel). |
+
+**Notes:** Thumbnails lazy-loaded as data URLs. Unlinking invalidates `profilePicStore` and emits `profileChanged`.
+
+---
+
+### PersonPanel → Media Timeline section
+**File:** `src/renderer/components/PersonPanel.vue` lines 145–151, `MediaTimeline.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Horizontal timeline: year column (with `~` / `<` / `>` prefix or dash–dash range) · thumbnail (or format placeholder) · event-type label (optional, if media linked to event). Undated section below separator. | `+ Attach media` → same as Media section (file picker). | Not offered (timeline is read-only; edit via Media section). | Not offered here (unlinking lives in Media section above). | Card click → navigates to `/media?open={mediaId}`. |
+
+**Cross-cutting:** Two `+ Attach media` buttons live on the same panel (Media + Media Timeline). Possible finding #3 candidate.
+
+---
+
+### PersonPanel → Quality section
+**File:** `src/renderer/components/PersonPanel.vue` lines 162–168, `PersonChecksSection.vue`, `QualityIssuesTable.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only QualityIssuesTable: code · severity badge · description. Clickable rows (if issue has a fix action) emit `fix` event. | Not offered (issues are derived). | Not offered. | Not offered. | Row click on actionable issue → emits `fix` with action key (`add-birth-event`, `add-death-event`, `add-name`, `add-father`, `add-mother`, `add-event`). PersonPanel handles by opening the relevant section's add form. |
+
+**Notes:** Section debounces by 1.5 s on person change to avoid hammering checks during rapid edits.
+
+---
+
+### PersonPanel → Danger zone (delete person)
+**File:** `src/renderer/components/PersonPanel.vue` lines 170–182
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| `Delete person` button (trash icon + label) | Not offered | Not offered | Click → **ConfirmModal** (danger tone). Message includes person name and relationship count. On confirm: `persons.delete()` cascades events, citations, relationships. Emits `person-changed` and `close`. | Not offered |
+
+**Notes:** Renders only when `!props.readonly`.
+
+---
+
+### PlacePanel → Place section
+**File:** `src/renderer/components/PlacePanel.vue` lines 18–122
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Inline editable fields: name (via PlacePicker merge) · type dropdown · parent-place picker · latitude/longitude · resolved gazetteer match (if any) · notes textarea with monospace toggle | Not applicable (place is the host entity) | All fields edit inline on blur (`saveField` → `places.update`). Name field uses PlacePicker to **merge** another place's name (copies its coords, type, parent_place_id into the current place). | Not offered (lives in Danger zone, not yet audited). | Parent-place picker → opens **PlaceTreePickerModal** as subpanel. |
+
+**Notes:** Resolved gazetteer display is read-only and informational (per the data-fidelity directive — it is recomputed every render from current gazetteers, never persisted).
+
+---
+
+### PlacePanel → Events section
+**File:** `src/renderer/components/PlacePanel.vue` lines 140–146, `EventList.vue`, `EventModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| EventList rows: event type · date · place · person names (with `showPersons=true` here) · description · cause · citation count badge | `+ Add event` → opens **EventModal in standalone add mode** | Row click → **opens EventModal with event prefilled** (standalone). | ✕ → ConfirmModal → deletes event entirely (citations cascade-deleted). | Place-name link in row → navigates to PlacesView. (Event has no own panel.) |
+
+**Notes:** EventList is reusable; `showPersons` adds person names here vs omitted in PersonPanel.
+
+---
+
+### PlacePanel → Citations section
+**File:** `src/renderer/components/PlacePanel.vue` lines 148–154, `PlaceCitationsSection.vue`, `CitationModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table: source title (linked) · page/location · confidence badge | `+ Add citation` → **opens CitationModal in standalone mode** (citation is attached to the place directly, not via an event). | Row click → **opens CitationModal with citation prefilled**. | ✕ → ConfirmModal → deletes citation (source kept). | Source-title link → navigates to SourcePanel. |
+
+**Cross-cutting:** This is the place-side mirror of finding #4. Places get a direct "all citations" surface; persons don't (citations on a person are still nested two clicks deep per event).
+
+---
+
+### PlacePanel → Media section
+**File:** `src/renderer/components/PlacePanel.vue` lines 156–162, `EntityMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| EntityMediaSection table: thumbnail · reorder buttons (↑/↓) · title · format · open & delete actions. First media shows "profile" badge. | `+ Attach` → OS file picker (`media.attach`). Link-only. | Reorder only (↑/↓). Title/format don't edit here. | ✕ → ConfirmModal → `removeLink` (media kept; link deleted) ✅ | "Open" button → `media.openFile` (external app). Row click → `/media?open={id}`. |
+
+---
+
+### PlacePanel → Media Timeline section
+**File:** `src/renderer/components/PlacePanel.vue` lines 164–170, `MediaTimeline.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Horizontal scrolling timeline: dated cards with year/year-range · thumbnail · event-type label; undated section below separator. Approximate dates show `~year` and dashed border; range dates show year span and thick border. | `+ Attach` → OS file picker (same as Media section). | Not offered (read-only). | Not offered (delete lives in Media section). | Card click → `/media?open={id}`. |
+
+**Cross-cutting:** Same duplicate `+ Attach` pattern as PersonPanel — finding #3 candidate.
+
+---
+
+### PlacePanel → Quality section
+**File:** `src/renderer/components/PlacePanel.vue` lines 172–178, `PlaceChecksSection.vue`, `QualityIssuesTable.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| QualityIssuesTable: check code · severity · description, derived from `checks.forPlace`. | Not offered. | Not offered. | Not offered. | Issues may emit fix actions to host (none currently wired up for place — verify). |
+
+**Notes:** Section debounces 1.5 s on place change.
+
+---
+
+### PlacePanel → Address section
+**File:** `src/renderer/components/PlacePanel.vue` lines 180–241
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Inline editable fields: street · postal code · city · country | Not applicable (fields are on the place entity). | All fields edit inline on blur (`saveField` → `places.update`). Each is an `<input type="text">` with independent blur handler. | Blur with empty string clears the field. | Not offered |
+
+**Notes:** Collapsed by default. Postal-address fields are independent from latitude/longitude in Place section.
+
+---
+
+### PlacePanel → Hierarchy section
+**File:** `src/renderer/components/PlacePanel.vue` lines 243–271
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only ancestor chain (root first, indented down to current place in bold) and child-places list (unindented). Both render as nested `<ul>`s with clickable links. | Not offered (the relationship is encoded by `parent_place_id` on the Place section). | Not offered (ancestor/child relations derived from `parent_place_id`). | Not offered (clearing parent in Place section detaches). | Each ancestor/child link → `emit('select-place', id)` → navigates to that place's panel in-place. |
+
+**Notes:** Ancestors computed by walking `parent_place_id` to root. Children derived from filtered all-places query. Empty state when both ancestors and children are absent.
+
+---
+
+### SourcePanel → Source section
+**File:** `src/renderer/components/SourcePanel.vue` lines 18–107
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Inline form: title · author · type · publication_info · repository · url · call_number · abstract | Not offered (sources are added in CitationModal or standalone via SourceModal). | All fields edit in place with @blur save via `useEditableFields`. Type field saves on @change. | Not offered (lives on Danger zone, not yet audited). | Not offered |
+
+---
+
+### SourcePanel → Citations section
+**File:** `src/renderer/components/SourcePanel.vue` lines 109–150, `CitationModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table: host entity (person / event / relationship / place — clickable when extant) · confidence badge · actions. Empty message if no citations. | `+ Add citation` → **opens CitationModal in standalone mode** (creates a new citation against this source, host entity picked inside). | Row click → **opens CitationModal with citation prefilled** (standalone). | ✕ → ConfirmModal → deletes citation (source kept). | Host-entity link → routes to that entity's panel. |
+
+**Notes:** This is the inverse roll-up of finding #4 — a derived "all citations for this source" surface.
+
+---
+
+### SourcePanel → Repositories section
+**File:** `src/renderer/components/SourcePanel.vue` lines 152–189
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table (when rows exist): repository name. Empty message otherwise. Derived from `repositories.forSource()`. | `+ Add repository` → expands an inline select dropdown of unlinked repositories (filtered set: all repos minus already-linked). Three-button UX: select + Add + Cancel. | Not offered (repository edit happens on its own panel, when one exists). | ✕ → unlinks repository (`repositories.unlinkSource`); repository preserved ✅ | Not offered |
+
+**Cross-cutting:** Three-button select pattern is the only place in the app that does Add this way — not the gold-standard combobox. Finding #3 candidate.
+
+---
+
+### SourcePanel → Media section
+**File:** `src/renderer/components/SourcePanel.vue` lines 191–203, `EntityMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| EntityMediaSection table: thumbnail · reorder buttons · title · format. First row shows "profile" badge. | `+ Attach` → OS file picker. Link-only. | Reorder only via ↑/↓. | ✕ → unlinks media (media kept). | Row click → MediaPanel. |
+
+---
+
+### SourcePanel → Quality section
+**File:** `src/renderer/components/SourcePanel.vue` lines 205–211
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| SectionEmpty placeholder: "No checks configured" (i18n: `sourcePanel.noChecks`). | Not offered. | Not offered. | Not offered. | Not offered. |
+
+**Notes:** Stub. No source-level checks are defined yet.
+
+---
+
+### RelationshipPanel
+**File:** `src/renderer/components/RelationshipPanel.vue` lines 1–380, `EventList.vue`, `CitationModal.vue`, `EntityMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections (expand into their own entries when touched):** Relationship details · Events · Citations · Media.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Relationship details (type · subtype · person 1 · person 2 · notes); EventList; CitationModal-fed citations table; EntityMediaSection. | Events: `+ Add event` → EventModal. Citations: `+ Add citation` → CitationModal (standalone). Media: `+ Attach` → file picker. | Inline blur-to-save on relationship fields; events and citations edit via their modals. | Events: ✕ → ConfirmModal → delete. Citations: ✕ → ConfirmModal → delete (source kept). Media: ✕ → unlinks. | Source title in citation row → SourcesView. (Person 1 / Person 2 links — verify.) |
+
+**Notes:** Mirrors PersonPanel structure (details + events + citations + media). Subsection entries should be split out individually next time someone edits this surface.
+
+---
+
+### GroupPanel
+**File:** `src/renderer/components/GroupPanel.vue` lines 1–304, `LinkedPersonsSection.vue`, `LinkedPlacesSection.vue`, `LinkedMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections:** Group info · Persons · Places · Media.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Info: name · notes. Persons: avatar · name · sex badge. Places: place name. Media: title/type. | Info: not applicable. Persons/Places/Media: `+ Add` → expands picker (link-existing only? — verify combobox vs select pattern per section). | Info: inline blur-to-save. Linked sections: not offered (managed on the linked entity's own panel). | Linked sections: ✕ → unlinks (group kept) ✅. | Persons row → PersonPanel. Places row → PlacesView. Media: not offered. |
+
+**Notes:** Persons subsection uses GroupPicker as its peer (PersonPanel → Groups uses GroupPicker; here the inverse — verify whether the picker pattern is symmetric).
+
+---
+
+### ResearchTaskPanel
+**File:** `src/renderer/components/ResearchTaskPanel.vue` lines 1–357, `LinkedPersonsSection.vue`, `LinkedPlacesSection.vue`, `LinkedMediaSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections:** Task · Persons · Places · Media.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Task (text · status chip · priority · notes · result); Linked Persons / Places / Media as in GroupPanel. | Task fields: not applicable. Linked sections: `+ Add` → expands picker. | Task fields: inline blur-to-save (status via select). Linked sections: not offered. | Linked sections: ✕ → unlinks (entity kept) ✅. | Persons row → PersonPanel. Places row → PlacesView. |
+
+**Notes:** Status field has full select here vs click-to-cycle on PersonPanel → Research tasks.
+
+---
+
+### MediaPanel
+**File:** `src/renderer/components/MediaPanel.vue` lines 1–822, `EntityMediaSection.vue`, `MediaChecksSection.vue`, `PersonPicker.vue`, `PlacePicker.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections:** Notes · Linked Persons · Face Tags · Linked Places · Linked Events · Quality.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Notes textarea (monospace toggle); Linked Persons (avatar · name); Face Tags (region avatar · person · star button for profile); Linked Places (name); Linked Events (type · date); Quality (MediaChecksSection). | Notes: not applicable. Persons: `+ Link person` → PersonPicker combobox. Face Tags: `+ Draw tag` toggles region editor in viewer. Places: `+ Link place` → PlacePicker combobox. Events: not offered (derived). | Notes: inline blur-to-save. Persons/Places: not offered. Face Tags: click name → PersonPicker in row. | Persons: ✕ → unlinks (person kept; profile pic cache invalidated). Face Tags: ✕ → ConfirmModal → deletes region & assignment. Places: ✕ → unlinks. Events: ✕ → unlinks. | Persons row → PersonPanel. Places row → PlacesView. |
+
+**Notes:** Largest panel. Tagging a person on a region adds a person link if missing. Profile-pic store invalidates on link/unlink/tag changes. Title edits via header inline input.
+
+---
+
+### ReportPanel
+**File:** `src/renderer/components/ReportPanel.vue` lines 1–473, `PersonPicker.vue`, `PlacePicker.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections:** Subject · Header/Footer · Options · Appearance · sticky actions.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Subject (PersonPicker / couple select / PlacePicker / year input — depends on report type). Header/Footer toggles. Options checkboxes (life map, photos, sources, redact living, etc.). Appearance: orientation · density · generations sliders · per-page select. | Configuration only — not applicable. | All inputs update Pinia store reactively. | Not applicable. | Sticky bar: primary `Print` (emits `print`) and secondary `Export PDF` / `Save SVG` / `Save chart PDF` (emits `export-pdf` / `save-svg` / `save-chart-pdf`). |
+
+**Notes:** Configuration-only panel. Subject UI depends on `activeTab`. Appearance section is context-sensitive (chart vs keepsake).
+
+---
+
+### WebsitePanel
+**File:** `src/renderer/components/WebsitePanel.vue` lines 1–218, `PersonPicker.vue`, `PlacePicker.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+**Subsections:** Subject · Scope · Privacy · Include · Site · sticky actions.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Subject: PersonPicker (focus person). Scope: focus / everyone radios + ancestors (1–10) / descendants (1–6) when focus. Privacy: exclude living · redact living · media person-only checkboxes. Include: include media checkbox. Site: site title input. | Configuration only — not applicable. | Inputs update v-models reactively. | Not applicable. | Sticky `Export` button (emits `export`); disabled if `focusPersonId` is null. Surfaces `lastOutput` path on success or `bundleMissing` error hint. |
+
+**Notes:** Configuration-only panel.
+
+---
+
+### ExportOptionsPanel
+**File:** `src/renderer/components/ExportOptionsPanel.vue` lines 1–194 (embedded form, **not** an EntityPanel)
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Title field · checkboxes (exclude living · include notes · include sources · include media) · expandable branch filter (PersonPicker + direction radios + generations number). | Configuration only. | Inputs update `opts` and emit `update:options`. | Not applicable. | No CTA here; parent (`GedcomExportSection` on Settings → Export) owns the export button. |
+
+**Notes:** Embedded form, not a side panel — uses unique class `.export-options-panel` (not in `shared.css`). Branch filter is an optional `<details>` collapsible.
+
+---
+
+### PersonModal
+**File:** `src/renderer/components/modals/PersonModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Entry-mode toggle (new/existing) · optional other-parent picker · new-person fields (sex · given/surname) · post-save Events & Relationships sections. | Direct inline inputs when creating new; existing-person path uses PersonPicker + subtype picker. Child mode prompts for sex first. | Edit mode (after first save): sex field + sections below. Relationships/events created in nested EventModal subpanel. | Event/relationship deletes happen in nested context; person-level delete lives on PersonPanel → Danger zone. | Opens **EventModal as subpanel** for event add/edit when `savedPersonId` exists. |
+
+**Cross-cutting:** Implements the link-existing pattern via the entry-mode toggle (new vs existing) — a sibling to the GroupPicker / SourcePicker combobox approach.
+
+---
+
+### PersonNameModal
+**File:** `src/renderer/components/modals/PersonNameModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Given/surname (required) · name type (birth/married/alias/aka) · conditional date fields (married/name_change) · preferred-name flag (birth only) · nickname · advanced rare fields (qualifier, patronymic base, prefix, suffix, date range — collapsed in `<details>`). | Direct inline inputs; switching to married/name_change on an empty add form prefills given/surname from current displayed name. | Direct inline inputs (same form). | Not offered (deletion lives in PersonPanel → Names section). | (No further nesting) |
+
+**Notes:** Asterisk notation in given_name triggers preferred-name parsing.
+
+---
+
+### PersonIdentifierModal
+**File:** `src/renderer/components/modals/PersonIdentifierModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Identifier type dropdown (familysearch · ancestry · riksarkivet · personnummer · refn · rin · other) · value field. | Direct inline inputs. | **Not offered** — modal is add-only. To change a value, delete + re-add via the PersonPanel section. | Managed at the PersonPanel section (✕ button), not here. | (No further nesting) |
+
+**Cross-cutting:** Edit-by-delete-and-re-add — usability gap (unique to identifiers).
+
+---
+
+### PlaceModal
+**File:** `src/renderer/components/modals/PlaceModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Name (required) · type dropdown · parent-place picker · latitude/longitude (decimal inputs) · notes textarea. | Direct inline inputs. Parent-place resolved via PlacePicker (link-or-create). | Direct inline inputs (same form, prefilled from `editingPlace`). | Not offered (PlacePanel owns delete). | Parent-place picker → opens **PlaceTreePickerModal** as subpanel. |
+
+---
+
+### PlaceTreePickerModal
+**File:** `src/renderer/components/modals/PlaceTreePickerModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Search filter input + dual-mode body: browse-tree (lazy-expand TreeNode components) or flat search-results list (when filter ≥ 1 char). Selected place highlighted. Count label "Showing X of Y". | Browse mode: inline "Add child" form on a parent node (creates + stages). Search mode: no inline-add at root level. | Not offered (picker is read-only selection). | Not offered. | Opens PlaceModal as subpanel for the inline new-place creation. |
+
+**Notes:** Picker, not editor — its CTA is "OK" (confirm selection), not "Save". Teleports into parent BaseSubPanel when nested in another modal, else standalone overlay. Server-paged search with sentinel; selection is staged and only emitted on OK.
+
+---
+
+### RelationshipModal
+**File:** `src/renderer/components/modals/RelationshipModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Type segmented (couple / parent_child / sibling / godparent / other) · conditional subtype dropdown · person 1 picker (label depends on type) · person 2 picker · notes textarea · post-save Events section. | Direct inline inputs; person pickers resolve link-or-create via PersonPicker. | Direct inline inputs (same form). | Event deletes in nested EventModal; relationship-level delete lives on RelationshipPanel. | Opens **EventModal as subpanel** for event add/edit when `savedRelationshipId` exists. |
+
+**Notes:** Type selector auto-resets subtype when switching type. Events section only visible after first save.
+
+---
+
+### GroupModal
+**File:** `src/renderer/components/modals/GroupModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Name field · notes textarea · post-save Members section: search input (dropdown shows "Add new person" + filtered existing persons, excluding already-added members) + member rows with ✕ remove. | Direct inline inputs (name, notes). Members: search-dropdown combobox — "Add new" at top, existing matches below ⭐ (gold-standard pattern). | Direct inline inputs (name, notes). | ✕ on member row → unlinks (person preserved) ✅ | "Add new person" in members dropdown → opens **PersonModal as subpanel**. |
+
+**Cross-cutting:** Exemplifies the gold-standard combobox add pattern (finding #3 reference).
+
+---
+
+### ResearchTaskModal
+**File:** `src/renderer/components/modals/ResearchTaskModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Task (required textarea) · priority segmented (1/2/3) · status segmented (open / in_progress / done / stopped) · notes textarea · result textarea (only when status = done or stopped). | Direct inline inputs. | Direct inline inputs (same form, prefilled from `editingTask`). | Not offered (deletion lives in ResearchTasksTable rows on host panel). | (No further nesting) |
+
+**Notes:** When created from a PersonPanel, auto-links via `researchTasks.addLink(id, 'person', personId)`.
+
+---
+
+### MergePersonsModal
+**File:** `src/renderer/components/MergePersonsModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Target (keep) and source (merge) person cards side-by-side: names, birth dates, ID snippets, merge explanation + reasons list, warning text. Read-only preview. | Not offered (merge direction is predetermined: target ← source). | Not offered (preview only). | OK button performs the merge — destructive. Source person is deleted; all its data moves to target; both persons may be renumbered. Save button label flips to "Merging…" during the async call. | (No further nesting) |
+
+**Notes:** Emits `merged` on success, `close` on cancel.
+
+---
+
+### LinkRuleModal
+**File:** `src/renderer/components/modals/LinkRuleModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Name · pattern (regex, mono) with inline error · `urlTemplate` (mono) · example input · live preview (✓ Example matches / ✗ No match / ✗ Bad regex) + generated URL · priority. View mode is fully readonly. | Direct inline inputs in `add` mode; live regex validation + URL preview. | Not offered — link rules are managed at SettingsView level with view/add/delete only. | Not offered (delete at SettingsView). | (No further nesting) |
+
+**Notes:** Two modes: `add` (interactive) and `view` (readonly; save button no-ops).
+
+---
+
+### ConfirmModal (generic destructive confirm)
+**File:** `src/renderer/components/ConfirmModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** _TBD — needs user-stated intent_
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Title + optional icon · message (single paragraph) or messages array (multi-paragraph rendered as `<p>` per item) · tone-styled button (danger=red / warning=yellow / info=blue). Confirm-button label customisable via `confirmLabel`. | Not applicable. | Not applicable. | Confirm button emits `confirm` to host; modal itself doesn't mutate data — host owns the API call. | (No further nesting) |
+
+**Notes:** Generic destruction-confirm modal, reused across most delete paths (EventModal citation rows, PersonPanel event rows, ResearchTasksTable rows, etc.). Visibility controlled by `visible` prop. Tone defaults to `danger` but accepts `info` / `warning` / `danger`.
+**Cross-cutting:** Shared across all deletion confirmations; the wording each host passes in is what makes finding #1 (✕ ambiguity) visible — alignment lives in the host's `messages` array, not here.
 
 ---
 

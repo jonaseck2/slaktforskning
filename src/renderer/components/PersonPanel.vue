@@ -64,7 +64,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('panel.personSection')" :collapsed="!sections.person" @toggle="toggleSection('person')" />
         <div v-if="sections.person" class="panel-section-body">
-          <PersonDetailsSection :person-id="personId!" :sex="person.sex" :living="person.living" :readonly="props.readonly" @updated="onDetailUpdated" />
+          <PersonDetailsSection :person-id="personId!" :sex="person.sex" :readonly="props.readonly" @updated="onDetailUpdated" />
         </div>
       </div>
 

@@ -121,28 +121,28 @@ const sortedRows = computed<DisplayRow[]>(() => {
   decorated.sort((a, b) => {
     if (a.effective_date_from && b.effective_date_from) {
       if (a.effective_date_from !== b.effective_date_from) {
-        return b.effective_date_from.localeCompare(a.effective_date_from); // DESC
+        return a.effective_date_from.localeCompare(b.effective_date_from); // ASC: oldest first, current/at-death name at bottom
       }
     } else if (a.effective_date_from && !b.effective_date_from) {
       return -1;
     } else if (!a.effective_date_from && b.effective_date_from) {
       return 1;
     }
-    if (a.sort_order !== b.sort_order) return b.sort_order - a.sort_order;
+    if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
     return a.id.localeCompare(b.id);
   });
   return decorated;
 });
 
 /**
- * Block reorders that would create a younger-before-older inversion among
- * dated rows. Returns true when the proposed swap is allowed.
+ * Block reorders that would create an out-of-chronological-order inversion
+ * among dated rows. Returns true when the proposed swap is allowed.
  */
 function canSwap(a: DisplayRow, b: DisplayRow): boolean {
   // Allow when at least one row is undated — manual ordering only matters for ties.
   if (!a.effective_date_from || !b.effective_date_from) return true;
   // Both dated: only allow if they share the same date. Otherwise the
-  // rule (table sorted DESC by date) would re-sort them back.
+  // rule (table sorted ASC by date) would re-sort them back.
   return a.effective_date_from === b.effective_date_from;
 }
 

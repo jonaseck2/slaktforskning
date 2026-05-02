@@ -188,9 +188,6 @@ export default {
     addAndLink: 'Create and Link',
     linkExisting: 'Link',
     detailsTitle: 'Person Details',
-    statusLabel: 'Status',
-    statusLiving: 'Living',
-    statusDeceased: 'Deceased',
     viewInTree: 'Show in tree',
   },
   relationships: {
