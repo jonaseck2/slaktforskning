@@ -38,19 +38,25 @@
                 class="person-link"
                 @click.stop
               >
+                <!-- Display only — see plan birth-name-display-and-quality-check. -->
                 <PersonName
                   :given-name="p.givenName"
                   :surname="p.surname"
                   :preferred-name="p.preferredName ?? null"
                   :nickname="p.nickname ?? null"
+                  :birth-surname="p.birthSurname ?? null"
+                  :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical"
                 />
               </router-link>
               <span v-else-if="p.givenName || p.surname">
+                <!-- Display only — see plan birth-name-display-and-quality-check. -->
                 <PersonName
                   :given-name="p.givenName"
                   :surname="p.surname"
                   :preferred-name="p.preferredName ?? null"
                   :nickname="p.nickname ?? null"
+                  :birth-surname="p.birthSurname ?? null"
+                  :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical"
                 />
               </span>
               <span v-else>—</span>
@@ -76,6 +82,10 @@
 import AppAvatar from './ui/AppAvatar.vue';
 import PersonName from './PersonName.vue';
 import IconUnlink from './ui/IconUnlink.vue';
+import { usePersonNameOptions } from '../stores/personNameOptions';
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
 
 export interface RelationshipListPerson {
   id: string | null;
@@ -83,6 +93,8 @@ export interface RelationshipListPerson {
   surname: string;
   preferredName?: string | null;
   nickname?: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  birthSurname?: string | null;
   sex?: 'M' | 'F' | 'U';
   roleLabel?: string;
 }

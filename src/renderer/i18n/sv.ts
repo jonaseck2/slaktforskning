@@ -1647,6 +1647,7 @@ export default {
   defaults: {
     title: 'Standardval',
     eventsSection: 'Händelser',
+    displaySection: 'Visning',
     smartEventType: 'Föreslå händelsetyp utifrån befintliga händelser',
     smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt lämnas fältet tomt.',
     eventTypeSortLabel: 'Sorteringsordning för händelsetyper',

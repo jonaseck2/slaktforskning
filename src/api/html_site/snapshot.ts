@@ -223,6 +223,15 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     settings.default_person_id = opts.focusPersonId;
   }
 
+  // Display only — see plan birth-name-display-and-quality-check. The static
+  // SPA reads this via the `personNameOptions` store; absent → defaults to
+  // ON (matching renderer behaviour). We pass through the explicit author
+  // choice when set so the exported site matches what the editor sees.
+  const birthNameRaw = getDbSetting(db, 'display_birth_name_parenthetical');
+  if (birthNameRaw === '1' || birthNameRaw === '0') {
+    settings.display_birth_name_parenthetical = birthNameRaw;
+  }
+
   return {
     meta: {
       siteTitle: opts.siteTitle,

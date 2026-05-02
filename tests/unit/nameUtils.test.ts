@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fullNameParts, givenNameParts, parseAsteriskNotation, getDisplayName, chartNameParts, formatChartName, formatFullNameWithBirthName, type NameData } from '../../src/renderer/utils/nameUtils';
+import { fullNameParts, givenNameParts, parseAsteriskNotation, getDisplayName, chartNameParts, formatChartName, formatFullNameWithBirthName, pickBirthSurnameForDisplay, type NameData } from '../../src/renderer/utils/nameUtils';
 
 describe('givenNameParts', () => {
   it('marks preferred name token for underline', () => {
@@ -256,5 +256,72 @@ describe('formatFullNameWithBirthName', () => {
     const birthHigh = mkName({ id: 'birth-high', given_name: 'Anna', surname: 'Karlsson', sort_order: 5, name_type: 'birth' });
     const out = formatFullNameWithBirthName(married, [married, birthHigh, birthLow], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
     expect(out).toBe('Anna Andersson (f. Svensson)');
+  });
+});
+
+describe('pickBirthSurnameForDisplay', () => {
+  function mkName(overrides: Partial<NameData>): NameData {
+    return {
+      id: 'name-1',
+      given_name: null,
+      surname: null,
+      preferred_name: null,
+      nickname: null,
+      sort_order: 0,
+      name_type: 'birth',
+      ...overrides,
+    };
+  }
+
+  const married = mkName({
+    id: 'married-1',
+    given_name: 'Anna',
+    surname: 'Andersson',
+    sort_order: 1,
+    name_type: 'married',
+  });
+  const birth = mkName({
+    id: 'birth-1',
+    given_name: 'Anna',
+    surname: 'Svensson',
+    sort_order: 0,
+    name_type: 'birth',
+  });
+
+  it('returns null when displayed is null', () => {
+    expect(pickBirthSurnameForDisplay(null, [birth])).toBeNull();
+  });
+
+  it('returns null when no birth record exists', () => {
+    const aliasOnly = mkName({ id: 'alias-1', given_name: 'Anna', surname: 'Andersson', sort_order: 1, name_type: 'alias' });
+    expect(pickBirthSurnameForDisplay(married, [married, aliasOnly])).toBeNull();
+  });
+
+  it('returns null when displayed IS the birth record (matched by id)', () => {
+    expect(pickBirthSurnameForDisplay(birth, [birth, married])).toBeNull();
+  });
+
+  it('returns null when birth surname matches displayed surname', () => {
+    const sameSurname = mkName({ id: 'birth-2', given_name: 'Anna', surname: 'Andersson', sort_order: 0, name_type: 'birth' });
+    expect(pickBirthSurnameForDisplay(married, [married, sameSurname])).toBeNull();
+  });
+
+  it('returns null when birth surname is empty/whitespace', () => {
+    const emptyBirth = mkName({ id: 'birth-3', given_name: 'Anna', surname: '   ', sort_order: 0, name_type: 'birth' });
+    expect(pickBirthSurnameForDisplay(married, [married, emptyBirth])).toBeNull();
+  });
+
+  it('returns the birth surname when distinct from displayed', () => {
+    expect(pickBirthSurnameForDisplay(married, [married, birth])).toBe('Svensson');
+  });
+
+  it('uses lowest sort_order when multiple birth records exist', () => {
+    const birthLow = mkName({ id: 'birth-low', given_name: 'Anna', surname: 'Svensson', sort_order: 0, name_type: 'birth' });
+    const birthHigh = mkName({ id: 'birth-high', given_name: 'Anna', surname: 'Karlsson', sort_order: 5, name_type: 'birth' });
+    expect(pickBirthSurnameForDisplay(married, [married, birthHigh, birthLow])).toBe('Svensson');
+  });
+
+  it('works with a partial displayed shape (no id supplied)', () => {
+    expect(pickBirthSurnameForDisplay({ surname: 'Andersson' }, [birth])).toBe('Svensson');
   });
 });

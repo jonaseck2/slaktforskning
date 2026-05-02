@@ -37,7 +37,8 @@
         v-narrate="narratePerson(person)"
         @mousedown.prevent="select(person)"
       >
-        <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" /></span>
+        <!-- Display only — see plan birth-name-display-and-quality-check. -->
+        <span class="picker-name"><PersonName :given-name="person.given_name" :surname="person.surname" :preferred-name="person.preferred_name" :nickname="person.nickname" :birth-surname="person.birth_surname" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></span>
         <span v-if="formatHint(person)" class="picker-hint">{{ formatHint(person) }}</span>
         <span class="picker-sex">{{ person.sex }}</span>
       </li>
@@ -56,6 +57,10 @@ import { getDefaultPersonId } from '../composables/useDefaultPerson';
 
 const pickerId = 'person-picker-' + Math.random().toString(36).slice(2, 8);
 import PersonName from './PersonName.vue';
+import { usePersonNameOptions } from '../stores/personNameOptions';
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
 
 const { t } = useI18n();
 const screenReader = inject('screenReader', null) as any;
@@ -66,6 +71,8 @@ interface PersonResult {
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  birth_surname: string | null;
   sex: string;
   relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
   birth_year: string | null;

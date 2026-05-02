@@ -199,6 +199,39 @@ export function formatFullName(name: {
 }
 
 /**
+ * Returns the birth surname to display in a parenthetical, or null when no
+ * parenthetical should be shown.
+ *
+ * Pure function. Used by every Pattern 1 surface (PersonsListTab,
+ * PersonPanel, RelationshipsList, …) to derive a single `birthSurname` value
+ * to pass to `<PersonName :birth-surname="…">` from the displayed name +
+ * the full `person_names` list.
+ *
+ * Returns null when:
+ *   - no separate `birth`-type record exists
+ *   - the only `birth` record IS the displayed record
+ *   - the birth record's surname is empty or equal to the displayed surname
+ *
+ * Otherwise returns the birth record's surname (lowest `sort_order` wins).
+ */
+export function pickBirthSurnameForDisplay(
+  displayed: { id?: string | null; surname?: string | null } | null,
+  allNames: NameData[],
+): string | null {
+  if (!displayed) return null;
+  const births = allNames
+    .filter(n => n.name_type === 'birth')
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const birth = births[0];
+  if (!birth) return null;
+  if (displayed.id != null && birth.id === displayed.id) return null;
+  const birthSurname = (birth.surname ?? '').trim();
+  if (!birthSurname) return null;
+  if (birthSurname === (displayed.surname ?? '').trim()) return null;
+  return birthSurname;
+}
+
+/**
  * Plain-string full name plus a trailing birth-surname parenthetical when the
  * displayed record is not the birth record AND the person has a separate
  * `birth`-type name record with a non-empty surname that differs from the

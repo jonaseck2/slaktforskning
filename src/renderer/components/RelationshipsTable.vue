@@ -19,11 +19,15 @@ export interface RelRow {
   person1_surname: string;
   person1_preferred_name: string | null;
   person1_nickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  person1_birth_surname: string | null;
   person1_sex: 'M' | 'F' | 'U' | null;
   person2_given_name: string;
   person2_surname: string;
   person2_preferred_name: string | null;
   person2_nickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  person2_birth_surname: string | null;
   person2_sex: 'M' | 'F' | 'U' | null;
 }
 
@@ -66,6 +70,8 @@ const rows = computed<RelationshipListRow[]>(() =>
         surname: rel.person1_surname,
         preferredName: rel.person1_preferred_name,
         nickname: rel.person1_nickname,
+        // Display only — see plan birth-name-display-and-quality-check.
+        birthSurname: rel.person1_birth_surname,
         sex: rel.person1_sex ?? 'U',
         roleLabel: roleLabel1(rel.type),
       },
@@ -75,6 +81,8 @@ const rows = computed<RelationshipListRow[]>(() =>
         surname: rel.person2_surname,
         preferredName: rel.person2_preferred_name,
         nickname: rel.person2_nickname,
+        // Display only — see plan birth-name-display-and-quality-check.
+        birthSurname: rel.person2_birth_surname,
         sex: rel.person2_sex ?? 'U',
         roleLabel: roleLabel2(rel.type),
       },

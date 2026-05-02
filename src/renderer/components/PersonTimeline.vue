@@ -29,7 +29,8 @@
             <div class="timeline-content">
               <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
               <template v-if="item.relationshipLabel !== 'self'">
-                <span class="timeline-family-name">{{ item.personName || $t('common.unknown') }}</span>
+                <!-- Display only — see plan birth-name-display-and-quality-check. -->
+                <span class="timeline-family-name">{{ displayPersonName(item) || $t('common.unknown') }}</span>
                 <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
               </template>
               <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
@@ -61,7 +62,8 @@
           <div class="timeline-content">
             <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
             <template v-if="item.relationshipLabel !== 'self'">
-              <span class="timeline-family-name">{{ item.personName || $t('common.unknown') }}</span>
+              <!-- Display only — see plan birth-name-display-and-quality-check. -->
+              <span class="timeline-family-name">{{ displayPersonName(item) || $t('common.unknown') }}</span>
               <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
             </template>
             <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
@@ -104,6 +106,7 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
 import { formatFullName } from '../utils/nameUtils';
+import { usePersonNameOptions } from '../stores/personNameOptions';
 import type { TimelineEntry, TimelineRelationshipLabel } from '../../api/report_data';
 import type { NameRow } from './PersonNamesTable.vue';
 
@@ -128,7 +131,14 @@ interface TimelineItem {
   event: EventRow;
   relationshipLabel: TimelineRelationshipLabel;
   personId: string;
+  /**
+   * Plain "Given Surname" — birth-name parenthetical is appended at render
+   * time in `displayPersonName(item)` so the global toggle re-renders the
+   * timeline without a data reload.
+   */
   personName: string;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  personBirthSurname: string | null;
   dateDisplay: string;
   placeName: string | null;
   isApproximate: boolean;
@@ -140,6 +150,8 @@ interface TimelineItem {
 const props = defineProps<{ personId: string }>();
 const { t } = useI18n();
 const router = useRouter();
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
 
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
@@ -191,8 +203,22 @@ function entryAriaLabel(item: TimelineItem): string {
   }
   // Family entries: read out as "<event> – <person> (<relationship>)"
   const rel = t('timelineLabels.' + item.relationshipLabel);
-  const name = item.personName || t('common.unknown');
+  const name = displayPersonName(item) || t('common.unknown');
   return `${eventLabel} – ${name} (${rel})`;
+}
+
+/**
+ * Plain-string display name with optional birth-surname parenthetical.
+ * Reads `personNameOptions.showBirthNameParenthetical` at call time so the
+ * global toggle re-renders the timeline without a data reload.
+ * Display only — see plan birth-name-display-and-quality-check.
+ */
+function displayPersonName(item: TimelineItem): string {
+  const base = item.personName;
+  if (!personNameOptions.showBirthNameParenthetical) return base;
+  const b = (item.personBirthSurname ?? '').trim();
+  if (!b) return base;
+  return `${base} (${t('common.bornAbbrev')} ${b})`;
 }
 
 const idRef = computed(() => props.personId ?? null);
@@ -226,14 +252,19 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
       ? year - birthYear
       : null;
 
+    // Display only — see plan birth-name-display-and-quality-check.
+    // Birth-name parenthetical is appended at render time so toggling the
+    // global setting re-renders the timeline without a data reload.
+    const baseName = formatFullName({
+      given_name: entry.person_given_name,
+      surname: entry.person_surname,
+    });
     const item: TimelineItem = {
       event,
       relationshipLabel: entry.relationship_label,
       personId: entry.person_id,
-      personName: formatFullName({
-        given_name: entry.person_given_name,
-        surname: entry.person_surname,
-      }),
+      personName: baseName,
+      personBirthSurname: entry.person_birth_surname ?? null,
       dateDisplay: formatDate(event),
       placeName: resolvePlaceName(event),
       isApproximate,

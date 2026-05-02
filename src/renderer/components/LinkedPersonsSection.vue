@@ -26,11 +26,14 @@
                 size="sm"
               />
               <router-link :to="'/persons/' + r.personId" class="person-link" @click.stop>
+                <!-- Display only — see plan birth-name-display-and-quality-check. -->
                 <PersonName
                   :given-name="r.given_name"
                   :surname="r.surname"
                   :preferred-name="r.preferred_name"
                   :nickname="r.nickname"
+                  :birth-surname="r.birth_surname"
+                  :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical"
                 />
               </router-link>
             </span>
@@ -55,8 +58,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import PersonPicker from './PersonPicker.vue';
-import { pickDisplayedName } from '../utils/nameUtils';
+import { pickDisplayedName, pickBirthSurnameForDisplay } from '../utils/nameUtils';
 import PersonName from './PersonName.vue';
+import { usePersonNameOptions } from '../stores/personNameOptions';
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import IconUnlink from './ui/IconUnlink.vue';
@@ -71,6 +78,8 @@ interface Row {
   surname: string | null;
   preferred_name: string | null;
   nickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  birth_surname: string | null;
   sex: string;
 }
 
@@ -100,8 +109,9 @@ watch(() => props.links, async (links) => {
       window.api.persons.get(l.entity_id) as Promise<{ sex: string } | null>,
       window.api.events.forPerson(l.entity_id) as Promise<Array<{ event_type: string; date_value: string | null }>>,
     ]);
-    const n = pickDisplayedName(names, events) ?? { given_name: null, surname: null, preferred_name: null, nickname: null };
-    out.push({ linkId: l.id, personId: l.entity_id, given_name: n.given_name, surname: n.surname, preferred_name: n.preferred_name, nickname: n.nickname, sex: p?.sex ?? '' });
+    const n = pickDisplayedName(names, events) ?? { id: null, given_name: null, surname: null, preferred_name: null, nickname: null };
+    const birthSurname = pickBirthSurnameForDisplay(n as { id?: string | null; surname?: string | null }, names as Parameters<typeof pickBirthSurnameForDisplay>[1]);
+    out.push({ linkId: l.id, personId: l.entity_id, given_name: n.given_name, surname: n.surname, preferred_name: n.preferred_name, nickname: n.nickname, birth_surname: birthSurname, sex: p?.sex ?? '' });
   }
   rows.value = out;
 }, { immediate: true, deep: true });

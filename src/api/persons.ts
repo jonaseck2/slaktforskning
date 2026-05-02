@@ -154,6 +154,12 @@ export function searchPersons(
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
+  /**
+   * Lowest-`sort_order` `birth`-type record's surname. Display-only — never
+   * persisted. Renderer composes "(f. …)" / "(b. …)" parenthetical when the
+   * global toggle is on AND this differs from `surname`.
+   */
+  birth_surname: string | null;
   relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
   birth_year: string | null;
   death_year: string | null;
@@ -184,6 +190,7 @@ export function searchPersons(
     surname: string;
     preferred_name: string | null;
     nickname: string | null;
+    birth_surname: string | null;
     relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
     birth_year: string | null;
     death_year: string | null;
@@ -191,6 +198,7 @@ export function searchPersons(
   const rows = queryAll<Row>(db, `
     SELECT p.*, ${livingSqlExpr('p')} AS living,
       pn.given_name, pn.surname, pn.preferred_name, pn.nickname,
+      ${birthSurnameSql('p.id')} AS birth_surname,
       (SELECT
           CASE
             WHEN r.type = 'parent_child' AND r.person1_id = p.id THEN 'parent'
@@ -353,11 +361,37 @@ export type PersonListItem = {
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
+  /**
+   * Lowest-`sort_order` `birth`-type record's surname when distinct from
+   * `surname` (the displayed surname). Used by name-rendering surfaces to
+   * append a "(f. …)" / "(b. …)" parenthetical when the global toggle is on.
+   * Display-only — never written back to the DB.
+   */
+  birth_surname: string | null;
   birth_date: string | null;
   birth_place: string | null;
   death_date: string | null;
   death_place: string | null;
 };
+
+/**
+ * SQL fragment yielding the surname of the lowest-`sort_order` `birth`-type
+ * `person_names` row for the given person id expression. Returns NULL when no
+ * birth record exists. Display-only: see plan birth-name-display-and-quality-check.
+ *
+ * `personIdRef` is interpolated directly — caller is responsible for ensuring
+ * it is an SQL expression (e.g. `p.id`, `r.person1_id`), never user input.
+ */
+export function birthSurnameSql(personIdRef: string): string {
+  return `(
+    SELECT pn_b.surname
+    FROM person_names pn_b
+    WHERE pn_b.person_id = ${personIdRef}
+      AND pn_b.name_type = 'birth'
+    ORDER BY pn_b.sort_order ASC, pn_b.id ASC
+    LIMIT 1
+  )`;
+}
 
 const PERSON_LIST_BASE_QUERY = `
   SELECT
@@ -365,6 +399,9 @@ const PERSON_LIST_BASE_QUERY = `
     p.sex,
     COALESCE(pn.given_name, '') AS given_name,
     COALESCE(pn.surname, '')    AS surname,
+    pn.preferred_name           AS preferred_name,
+    pn.nickname                 AS nickname,
+    ${birthSurnameSql('p.id')}  AS birth_surname,
     (
       SELECT e.date_original
       FROM event_participants ep
@@ -436,12 +473,16 @@ export function listPersonsPage(
     ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
   const filter = buildPersonsFilterClause(query);
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
+  // `birth_surname` is a display-only correlated subquery — see
+  // plan birth-name-display-and-quality-check. Computed at read time;
+  // never persisted.
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname,
            pn.preferred_name           AS preferred_name,
-           pn.nickname                 AS nickname
+           pn.nickname                 AS nickname,
+           ${birthSurnameSql('p.id')}  AS birth_surname
     FROM persons p
     LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     LEFT JOIN (
@@ -501,6 +542,7 @@ export function listPersonsPage(
       surname: p.surname,
       preferred_name: p.preferred_name,
       nickname: p.nickname,
+      birth_surname: p.birth_surname,
       ...events,
     };
   });
@@ -528,12 +570,16 @@ const UNSOURCED_FILTER = `
 `;
 
 export function listUnsourcedPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null }>(db, `
+  // `birth_surname` is a display-only correlated subquery — see
+  // plan birth-name-display-and-quality-check. Computed at read time;
+  // never persisted.
+  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname,
            pn.preferred_name           AS preferred_name,
-           pn.nickname                 AS nickname
+           pn.nickname                 AS nickname,
+           ${birthSurnameSql('p.id')}  AS birth_surname
     FROM persons p
     LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     WHERE ${UNSOURCED_FILTER}
@@ -585,6 +631,7 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
       surname: p.surname,
       preferred_name: p.preferred_name,
       nickname: p.nickname,
+      birth_surname: p.birth_surname,
       ...events,
     };
   });

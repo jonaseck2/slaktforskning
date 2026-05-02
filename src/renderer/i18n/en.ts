@@ -1668,6 +1668,7 @@ export default {
   defaults: {
     title: 'Defaults',
     eventsSection: 'Events',
+    displaySection: 'Display',
     smartEventType: 'Suggest event type based on existing events',
     smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, leaves the picker blank.',
     eventTypeSortLabel: 'Event type sort order',

@@ -34,12 +34,28 @@
         <p class="defaults-hint">{{ $t('defaults.eventTypeSortHint') }}</p>
       </fieldset>
     </section>
+
+    <section class="defaults-section">
+      <h3>{{ $t('defaults.displaySection') }}</h3>
+      <label class="toggle-label">
+        <input
+          type="checkbox"
+          :checked="personNameOptions.showBirthNameParenthetical"
+          @change="onBirthNameParentheticalToggle"
+        />
+        {{ $t('settings.display.showBirthNameParenthetical') }}
+      </label>
+      <p class="defaults-hint">{{ $t('settings.display.showBirthNameParentheticalHelp') }}</p>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { isEventTypeSortMode, type EventTypeSortMode } from '../utils/eventTypeSort';
+import { usePersonNameOptions } from '../stores/personNameOptions';
+
+const personNameOptions = usePersonNameOptions();
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -71,6 +87,13 @@ async function toggle(e: Event) {
 async function setSort(mode: EventTypeSortMode) {
   eventTypeSort.value = mode;
   await window.api.db.setSetting('event_type_sort', mode);
+}
+
+async function onBirthNameParentheticalToggle(e: Event) {
+  const on = (e.target as HTMLInputElement).checked;
+  // The store updates its ref synchronously and persists in the background,
+  // so every open view reading from the store re-renders immediately.
+  await personNameOptions.setShowBirthNameParenthetical(on);
 }
 
 onMounted(load);
