@@ -145,15 +145,7 @@
         </div>
       </div>
 
-      <!-- Citations section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('sourceDetail.citations')" :count="citationCount" :collapsed="!sections.citations" :action-label="!props.readonly ? '+ ' + $t('sourceDetail.addCitation') : undefined" @toggle="toggleSection('citations')" @action="showCitationForm = true" />
-        <div v-if="sections.citations" class="panel-section-body">
-          <PlaceCitationsSection ref="citationsSectionRef" :place-id="placeId!" />
-        </div>
-      </div>
-
-      <!-- Media section -->
+<!-- Media section -->
       <div class="panel-section">
         <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
@@ -271,16 +263,6 @@
       </div>
     </template>
 
-    <!-- Citation form modal -->
-    <CitationModal
-      v-if="!props.readonly && showCitationForm && placeId"
-      mode="standalone"
-      :place-id="placeId"
-      @cancel="showCitationForm = false"
-      @close="showCitationForm = false"
-      @saved="showCitationForm = false; citationsSectionRef?.reload(); reload()"
-    />
-
     <!-- Add person modal -->
     <PersonModal
       v-if="!props.readonly && showAddPersonForm && placeId"
@@ -298,12 +280,10 @@ import EventList from './EventList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonModal from './modals/PersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
-import PlaceCitationsSection from './PlaceCitationsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
-import CitationModal from './modals/CitationModal.vue';
 import EntityPanel from './EntityPanel.vue';
 import type { ComponentPublicInstance, Ref } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
@@ -349,11 +329,11 @@ const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-upd
 const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
-    place: true, persons: true, events: true, citations: false,
+    place: true, persons: true, events: true,
     media: false, mediaTimeline: false, address: false, children: false, quality: false,
   },
   {
-    place: true, persons: true, events: true, citations: true,
+    place: true, persons: true, events: true,
     media: true, mediaTimeline: true, address: true, children: true, quality: false,
   },
 );
@@ -361,12 +341,10 @@ const { sections, toggleSection } = usePanelSections(
 // ── Template refs ───────────────────────────────────────────────────────────
 
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: () => void }) | null>(null);
-const citationsSectionRef = ref<InstanceType<typeof PlaceCitationsSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
 const checksSectionRef = ref<InstanceType<typeof PlaceChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
-const showCitationForm = ref(false);
 const showAddPersonForm = ref(false);
 
 async function triggerAttachMedia() {
@@ -385,7 +363,6 @@ interface PlacePanelData {
   childPlaces: ChildPlace[];
   personCount: number;
   eventCount: number;
-  citationCount: number;
   mediaCount: number;
 }
 
@@ -412,24 +389,21 @@ const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (
   // Load counts for collapsed section headers
   let personCount = 0;
   let eventCount = 0;
-  let citationCount = 0;
   let mediaCount = 0;
   try {
-    const [persons, events, citations, media] = await Promise.all([
+    const [persons, events, media] = await Promise.all([
       window.api.places.getPersons(id) as Promise<unknown[]>,
       window.api.events.forPlace(id) as Promise<unknown[]>,
-      window.api.citations.forPlace(id) as Promise<unknown[]>,
       window.api.media.forEntity('place', id) as Promise<unknown[]>,
     ]);
     personCount = persons.length;
     eventCount = events.length;
-    citationCount = citations.length;
     mediaCount = media.length;
   } catch {
     // counts are non-critical
   }
 
-  return { place: p, ancestors: chain, childPlaces, personCount, eventCount, citationCount, mediaCount };
+  return { place: p, ancestors: chain, childPlaces, personCount, eventCount, mediaCount };
 });
 
 const place = computed(() => panelData.value?.place ?? null);
@@ -452,7 +426,6 @@ const resolvedMatch = computed<PlaceResolveResult | null>(() => {
 });
 const personCount = computed(() => panelData.value?.personCount ?? 0);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
-const citationCount = computed(() => panelData.value?.citationCount ?? 0);
 const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 
 // ── Field updates ────────────────────────────────────────────────────────────

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.197.1 — Trim place-level citations from PlacePanel
+
+- chore: removed the Citations section from PlacePanel — citing a place directly (vs an event at the place) didn't earn a section. Existing data and the underlying API are preserved.
+
 ## Unreleased
 
 - feat: persons with both a current and a birth-name record render as `Anna Andersson (f. Svensson)` (sv) / `(b. Svensson)` (en) across the panel header, persons list, search, person picker, relationships list, person timeline, linked-persons sections, and HTML site export.

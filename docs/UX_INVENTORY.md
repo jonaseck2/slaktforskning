@@ -71,6 +71,10 @@ Citations on a Person are nested two clicks deep (Event row → EventModal → C
 
 External identifiers (FamilySearch ID, Geni ID, etc.) are not surfaced in any panel. They round-trip through GEDCOM/Holger/Genney import and export only. The data layer (`person_identifiers` table + API/IPC/MCP) is fully wired so importers and exporters preserve them; nothing in the UI reads or writes them.
 
+### 6. Place-level citations are a data-model primitive without a strong user need — UI removed
+
+The schema supports `citation.place_id` (citing the place itself, distinct from citing events that happen at it), and the API + MCP layer still expose `citations.forPlace`. The PlacePanel surfaced this in a Citations section, but in practice genealogists cite events at a place, not the place itself. The section was removed from PlacePanel to keep the panel focused on the verbs users actually reach for. The column and API stay (existing data is preserved; bulk imports / MCP can still create such citations); only the UI affordance is gone.
+
 ---
 
 ## Cross-cutting conventions: row icons
@@ -113,7 +117,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | PlacePanel — Place section | 2026-05-02 |
 | PlacePanel — Persons section | 2026-05-02 |
 | PlacePanel — Events section | 2026-05-02 |
-| PlacePanel — Citations section | 2026-05-02 |
 | PlacePanel — Media section | 2026-05-02 |
 | PlacePanel — Media Timeline section | 2026-05-02 |
 | PlacePanel — Quality section | 2026-05-02 |
@@ -412,152 +415,12 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 These surfaces have had their code read and their CTA inventory + cross-cutting findings filled in, but their **Purpose** sentence is still pending — it must come from the user (per the `ux-intent-mapping` skill: *"Ask the user, don't pre-fill"*). Fill in Purpose as you touch each surface. Order roughly matches the index above.
 
-### PersonPanel → Header & add-relative shortcuts
-**File:** `src/renderer/components/PersonPanel.vue` lines 9–61
-**Verified:** 2026-05-02
-
-> **Purpose:** A user would use this header to *recognise* who the panel is about (avatar + name + sex + life dates), *anchor* the chart on this person ("Set as tree subject"), and *grow* the tree from this person by adding a father, mother, spouse, son, or daughter in one click.
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Person avatar · name · sex/living badge · optional "Set as tree subject" button · birth line ("*" date, place) · death line ("†" date, place) | Five `+ Add relative` quick buttons (father, mother, spouse, son, daughter) — each opens **PersonModal in standalone mode** with `addRelatedTo` mode preset. Creates new person + relationship. | Not offered in header (person details edit lives in Person section). Tree-subject toggle via dedicated button (emit `set-tree-subject`). | Not offered | Header has no Open affordance; entity details open in the Person section below. |
-
-**Notes:** Birth/death lines call `buildDateLine()` which resolves places asynchronously to show city names. Add-relative buttons reuse PersonModal in addRelatedTo mode.
-
----
-
-### PersonPanel → Person section
-**File:** `src/renderer/components/PersonPanel.vue` lines 63–69, `PersonDetailsSection.vue`, `PersonNotesSection.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** A user would use this section to *record* basic biographical attributes about the person that don't belong on a specific event — sex (the only such attribute today) and free-form notes.
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| "Sex" label + dropdown (M/F/U) · Notes textarea with monospace toggle | Not offered | Sex: dropdown onChange → `persons.update()` (inline). Notes: inline textarea (PersonNotesSection self-loading, rich-text editor with monospace toggle). | Not offered | Not offered |
-
-**Notes:** Readonly prop disables interaction when panel is in view-only mode. Living/deceased status is intentionally *not* shown here — it's derived from the presence of a death event (see `livingSqlExpr` in `src/api/personLiving.ts`), and per the prime directive, derived values are computed at render time, not surfaced as if authored. Death context is conveyed by the Events section / header life dates.
-
----
-
-### PersonPanel → Names section
-**File:** `src/renderer/components/PersonPanel.vue` lines 71–78, `PersonNamesTable.vue`, `PersonNameModal.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** A user would use this section to *catalogue* every name a person carried through life — birth name, married names, aliases, aka's — and to *date* each one, so the list reads chronologically (oldest at top, the name they were known by today or at death at the bottom) and the user can see at a glance how their name evolved.
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| PersonNamesTable rows (sorted ASC by effective_date_from, tying on sort_order): name · type badge (birth/married/alias/aka) · effective date (with "●" if sourced from birth event) | `+ Add name` → opens **PersonNameModal in standalone add mode** | Row click → **opens PersonNameModal with name prefilled**. No inline editing. | ✕ on non-birth names → ConfirmModal → deletes name. Birth name cannot be deleted. | Not offered (names have no own panel) |
-
-**Notes:** Names sort ASC by effective date, then by sort_order ASC. Move-up/down arrows reorder within same-dated cohort only (inversion blocking — different-dated rows can't be swapped manually because the sort would re-sort them back). Birth names derive their effective date from the birth event when present.
-
----
-
-### PersonPanel → Timeline section
-**File:** `src/renderer/components/PersonPanel.vue` lines 88–94, `PersonTimeline.vue`, `EventModal.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** A user would use this section to *read* a person's life as a single chronological story — their own events interleaved with the events of close family that shaped their life — and to *jump* into any of those events to edit them or to that family member's panel to follow the thread.
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Read-only chronological timeline: date column (year, with `~` / `<` / `>` for approximate/before/after) · dot colored by event type · event badge + family-relation label (if not self) + place + age (if self) + description + citation count badge. Undated section below. | `+ Add event` → opens **EventModal in standalone add mode** (prefilled to a specific event type when triggered from a Quality fix-action) | Dated self-events: row click → **opens EventModal with event prefilled**. Family events (parent/spouse/child): row click → navigates to that person's panel. Undated events: row click → opens EventModal. | Not offered here (deletion lives in Events section or inside EventModal). | (Edit covers it) |
-
-**Notes:** Loads via `reports.timeline()`. Family events slightly de-emphasised visually (opacity 0.95). Gap indicator shows for >20-year gaps.
-
----
-
-### PersonPanel → Life Map section
-**File:** `src/renderer/components/PersonPanel.vue` lines 96–102, `PersonMap.vue`, `BaseMap.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Leaflet map (350 px high) with circle markers colour-coded by event type (birth=green, death=red, marriage=pink, etc.). Polyline connects events chronologically. Marker popup shows event type · date · place name (as router-link). Empty state if no places. | `+ Add event` → same as Timeline (opens EventModal). | Not offered (map is read-only; edit via Events or Timeline sections). | Not offered | Marker popup place name is a router-link to `/places?place={placeId}`. |
-
-**Notes:** Only events with a `place_id` are shown. Places resolved to coordinates via `usePlaceResolver()`. Resolved (gazetteer-matched) markers at 50 % opacity; unresolved at 85 %.
-
----
-
-### PersonPanel → Identifiers section
-**File:** `src/renderer/components/PersonPanel.vue` lines 104–110, `PersonIdentifiersSection.vue`, `PersonIdentifierModal.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Table: type badge (e.g. "CEK", "ArkivDigital ID") · value | `+ Add identifier` → opens **PersonIdentifierModal in standalone add mode** | Not offered inline; modal has no edit path either (identifier values are write-once — see PersonIdentifierModal entry below). To change a value, delete + re-add. | ✕ → ConfirmModal → deletes identifier | Not offered |
-
-**Notes:** PersonIdentifiersSection is self-loading. Header button calls `identifiersSectionRef?.openAddForm()` to open modal.
-**Cross-cutting:** Edit-by-delete-and-re-add is a usability gap — no other entity in the app behaves this way.
-
----
-
-### PersonPanel → Media section
-**File:** `src/renderer/components/PersonPanel.vue` lines 137–143, `PersonMediaSection.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Table: thumbnail (or format icon if not image) · reorder controls (star to set profile, ↑↓ buttons) · title/filename · format. First row carries the "profile" indicator. | `+ Attach media` → opens OS file picker (`window.api.media.attach`) → attaches media to person. **Link-only**; no create-new-media path here. | Not offered inline. Reorder via star (set profile) + ↑↓ buttons → `media.reorder()`. | ✕ → ConfirmModal → unlinks media (media kept; link deleted). Unlinking changes profile picture if it was the linked one. | Row click → navigates to `/media?open={mediaId}&person={personId}` (MediaPanel). |
-
-**Notes:** Thumbnails lazy-loaded as data URLs. Unlinking invalidates `profilePicStore` and emits `profileChanged`.
-
----
-
-### PersonPanel → Media Timeline section
-**File:** `src/renderer/components/PersonPanel.vue` lines 145–151, `MediaTimeline.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Horizontal timeline: year column (with `~` / `<` / `>` prefix or dash–dash range) · thumbnail (or format placeholder) · event-type label (optional, if media linked to event). Undated section below separator. | `+ Attach media` → same as Media section (file picker). | Not offered (timeline is read-only; edit via Media section). | Not offered here (unlinking lives in Media section above). | Card click → navigates to `/media?open={mediaId}`. |
-
-**Cross-cutting:** Two `+ Attach media` buttons live on the same panel (Media + Media Timeline). Possible finding #3 candidate.
-
----
-
-### PersonPanel → Quality section
-**File:** `src/renderer/components/PersonPanel.vue` lines 162–168, `PersonChecksSection.vue`, `QualityIssuesTable.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Read-only QualityIssuesTable: code · severity badge · description. Clickable rows (if issue has a fix action) emit `fix` event. | Not offered (issues are derived). | Not offered. | Not offered. | Row click on actionable issue → emits `fix` with action key (`add-birth-event`, `add-death-event`, `add-name`, `add-father`, `add-mother`, `add-event`). PersonPanel handles by opening the relevant section's add form. |
-
-**Notes:** Section debounces by 1.5 s on person change to avoid hammering checks during rapid edits.
-
----
-
-### PersonPanel → Danger zone (delete person)
-**File:** `src/renderer/components/PersonPanel.vue` lines 170–182
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| `Delete person` button (trash icon + label) | Not offered | Not offered | Click → **ConfirmModal** (danger tone). Message includes person name and relationship count. On confirm: `persons.delete()` cascades events, citations, relationships. Emits `person-changed` and `close`. | Not offered |
-
-**Notes:** Renders only when `!props.readonly`.
-
----
 
 ### PlacePanel → Place section
 **File:** `src/renderer/components/PlacePanel.vue` lines 18–122
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *describe* what a place is — its name, what kind of place it is (city, parish, farm, cottage, building), where it sits in the world (coordinates), and how it nests inside the larger place hierarchy (parent place) — plus free-form notes about it.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -571,27 +434,13 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/PlacePanel.vue` lines 140–146, `EventList.vue`, `EventModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *see* every recorded event at this place — births, deaths, marriages, censuses — with the people involved, and to *add* new events here when they discover one in a record.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | EventList rows: event type · date · place · person names (with `showPersons=true` here) · description · cause · citation count badge | `+ Add event` → opens **EventModal in standalone add mode** | Row click → **opens EventModal with event prefilled** (standalone). | ✕ → ConfirmModal → deletes event entirely (citations cascade-deleted). | Place-name link in row → navigates to PlacesView. (Event has no own panel.) |
 
 **Notes:** EventList is reusable; `showPersons` adds person names here vs omitted in PersonPanel.
-
----
-
-### PlacePanel → Citations section
-**File:** `src/renderer/components/PlacePanel.vue` lines 148–154, `PlaceCitationsSection.vue`, `CitationModal.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Table: source title (linked) · page/location · confidence badge | `+ Add citation` → **opens CitationModal in standalone mode** (citation is attached to the place directly, not via an event). | Row click → **opens CitationModal with citation prefilled**. | ✕ → ConfirmModal → deletes citation (source kept). | Source-title link → navigates to SourcePanel. |
-
-**Cross-cutting:** This is the place-side mirror of finding #4. Places get a direct "all citations" surface; persons don't (citations on a person are still nested two clicks deep per event).
 
 ---
 
@@ -864,20 +713,6 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 | Given/surname (required) · name type (birth/married/alias/aka) · conditional date fields (married/name_change) · preferred-name flag (birth only) · nickname · advanced rare fields (qualifier, patronymic base, prefix, suffix, date range — collapsed in `<details>`). | Direct inline inputs; switching to married/name_change on an empty add form prefills given/surname from current displayed name. | Direct inline inputs (same form). | Not offered (deletion lives in PersonPanel → Names section). | (No further nesting) |
 
 **Notes:** Asterisk notation in given_name triggers preferred-name parsing.
-
----
-
-### PersonIdentifierModal
-**File:** `src/renderer/components/modals/PersonIdentifierModal.vue`
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Identifier type dropdown (familysearch · ancestry · riksarkivet · personnummer · refn · rin · other) · value field. | Direct inline inputs. | **Not offered** — modal is add-only. To change a value, delete + re-add via the PersonPanel section. | Managed at the PersonPanel section (✕ button), not here. | (No further nesting) |
-
-**Cross-cutting:** Edit-by-delete-and-re-add — usability gap (unique to identifiers).
 
 ---
 
