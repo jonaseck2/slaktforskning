@@ -6,10 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-#### API Polymorphic Link Helpers [planned]
-Collapse 15 near-identical `getXFor<EntityType>` queries (citations, groups, tasks, media) into `getLinkedEntities` + `getCitationsByOwner`. Public per-entity functions stay as wrappers — no MCP/IPC churn.
-- Plan: [plans/2026-04-28-api-link-helpers.md](plans/2026-04-28-api-link-helpers.md)
-
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
