@@ -132,6 +132,31 @@ The full list of UI primitives, modals, pickers, panels, composables, Pinia stor
 - `src/renderer/utils/storage-keys.ts` — typed `STORAGE_KEYS` registry. Every `localStorage.{get,set,remove}Item('...')` call site uses an entry from here. Helpers: `getJSON(key, fallback)`, `setJSON(key, value)`, `removeKey(key)`.
 - `src/renderer/stores/` — Pinia stores (`sourceSession`, `profilePic`, `reportConfig`, `dataVersion` — incremented by `App.vue` for badge debouncing only; views use `useEntityData`/`usePagedList`).
 
+### Class-name collision check (mandatory before naming a new component class)
+
+Before introducing a new CSS class name on any element in `src/renderer/`, grep `shared.css` and every existing `<style scoped>` block for the name. **Class names in `shared.css` are the project's reserved namespace** — picking a name that's already used silently inherits whatever rules `shared.css` set on it.
+
+Required check:
+
+```bash
+grep -RIn '\.<new-class-name>\b' src/renderer/styles/ src/renderer/components/ src/renderer/views/ | grep -v ':// '
+```
+
+If any hit returns from `shared.css`, **rename your class**. Hits in scoped blocks of unrelated components are usually fine (Vue scoping isolates them) but inspect them first.
+
+**Why:** the panel-composables refactor introduced `EntityPanel` whose root used `class="entity-panel side-panel"`. `.entity-panel` was already in `shared.css:1253` (BaseSubPanel modal chrome — `width: 320px; max-height: calc(100vh - 64px); flex-shrink: 0; overflow: hidden`). Every migrated side panel silently inherited those rules. Tests passed, lint passed, two-stage review approved. The user found it by inspecting computed styles in the running app. This rule exists so the next refactor doesn't repeat that.
+
+### Pattern migrations are all-or-nothing (component level)
+
+This is the component-level companion to `.claude/rules/plans.md` Rule A2 (plan level). When a refactor touches a reusable pattern (a side panel, a list view, a modal, a chart), every instance migrates in the same change or it doesn't ship. Half-migrations are anti-consistency.
+
+Before merging:
+1. Enumerate every same-shaped component. Panels: `src/renderer/components/*Panel.vue`. List views: every entity-list in `src/renderer/views/`. Modals: every consumer of `BaseSubPanel`.
+2. Migrate every one. The plan's "Scope" section lists them with state per `.claude/rules/plans.md` Rule A2.
+3. If a target genuinely can't adopt the new pattern, document why in the plan AND in a code comment in the unmigrated file (`/* Not migrated to <pattern>: <specific reason> */`). "Awkward" is not a reason. "The pattern doesn't fit because <constraint>" is.
+
+**Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." User's mental model is "every right-side panel works the same."
+
 ### Project-wide UI rules
 
 - **Every modal uses `BaseSubPanel`** — never `BaseModal` directly (it's the internal overlay).

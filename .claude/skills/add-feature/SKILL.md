@@ -7,6 +7,8 @@ description: Add a new feature, entity type, or field to the Släktforskning cod
 
 This codebase has a strict layered architecture. Every data feature touches all layers in order. Skipping a layer means the feature is unreachable from either the UI or MCP agents.
 
+**Pattern enforcement:** if you build/refactor a reusable shell (panel, list, modal), every same-shaped component must adopt it in the same change. See `.claude/rules/renderer.md` "Pattern migrations are all-or-nothing" and `.claude/rules/plans.md` Rule A2.
+
 ## ⚠️ Prime Directive: Data Fidelity
 
 **Before writing any code that mutates the DB, re-read the prime-directive section of `CLAUDE.md`.**
