@@ -134,13 +134,16 @@ const {
   fetchPage: async (limit, offset, sortBy, sortDir, query) => {
     // Below threshold: empty result, skip the IPC entirely. The template
     // shows tree-mode in that case, so this never renders.
-    if (query.trim().length < 2) return { items: [], total: 0 };
+    if (query.trim().length < 1) return { items: [], total: 0 };
     const result = await window.api.places.listPage(limit, offset, sortBy, sortDir, query) as { items: PlaceRow[]; total: number };
     return result;
   },
 });
 
-const searchActive = computed(() => searchQuery.value.trim().length >= 2);
+// Any non-empty query switches the modal into search mode — the search runs
+// server-side via places.listPage and is paged with a sentinel, so it covers
+// every row in the DB (not just the loaded tree roots).
+const searchActive = computed(() => searchQuery.value.trim().length >= 1);
 
 // Re-attach the sentinel each time the search-mode list mounts (the v-if
 // destroys the scroll container when switching back to browse mode).
@@ -217,7 +220,7 @@ onMounted(async () => {
       if (path.length > 0) {
         selectedKey.value = path[path.length - 1].key;
       }
-    } else if (props.initialQuery && props.initialQuery.trim().length >= 2) {
+    } else if (props.initialQuery && props.initialQuery.trim().length >= 1) {
       // Seed the filter — usePagedList's internal debounce will fire the
       // first fetch automatically, no manual applyFilter call needed.
       searchQuery.value = props.initialQuery;
@@ -242,6 +245,12 @@ onMounted(async () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+/* The default `.entity-panel` sizes itself to `min-content`, which collapses
+   when our content is `flex: 1; min-height: 0`. Force a real height so the
+   inner `.tree-scroll` actually has space to scroll within. */
+:deep(.entity-panel) {
+  height: clamp(420px, 70vh, 800px);
 }
 .tree-picker {
   display: flex;
@@ -283,9 +292,6 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  padding: 4px;
 }
 .tree-root {
   list-style: none;

@@ -1,21 +1,33 @@
 <template>
   <div class="source-picker">
-    <input
-      ref="inputRef"
-      type="text"
-      v-model="query"
-      :placeholder="placeholder || $t('citations.selectSource')"
-      role="combobox"
-      :aria-expanded="showDropdown && totalOptions() > 0"
-      aria-autocomplete="list"
-      :aria-controls="pickerId + '-listbox'"
-      :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + highlightIndex : undefined"
-      @input="onInput"
-      @focus="onFocus"
-      @blur="onBlur"
-      @keydown="onKeydown"
-      autocomplete="off"
-    />
+    <div class="picker-input-row">
+      <input
+        ref="inputRef"
+        type="text"
+        v-model="query"
+        :placeholder="placeholder || $t('citations.selectSource')"
+        :disabled="disabled"
+        role="combobox"
+        :aria-expanded="showDropdown && totalOptions() > 0"
+        aria-autocomplete="list"
+        :aria-controls="pickerId + '-listbox'"
+        :aria-activedescendant="highlightIndex >= 0 ? pickerId + '-option-' + highlightIndex : undefined"
+        @input="onInput"
+        @focus="onFocus"
+        @blur="onBlur"
+        @keydown="onKeydown"
+        autocomplete="off"
+        :class="{ 'has-edit-btn': modelValue }"
+      />
+      <button
+        v-if="modelValue"
+        type="button"
+        class="edit-source-btn"
+        :aria-label="$t('common.edit')"
+        :title="$t('common.edit')"
+        @click="$emit('edit-source')"
+      >✎</button>
+    </div>
     <Teleport to="body">
     <ul
       v-if="showDropdown && totalOptions() > 0"
@@ -42,7 +54,7 @@
         <div v-if="source.author" class="source-subtitle">{{ source.author }}</div>
       </li>
       <li
-        v-if="query.length > 1 && results.every(r => r.title.toLowerCase() !== query.toLowerCase())"
+        v-if="showCreateNew"
         :id="pickerId + '-option-' + results.length"
         role="option"
         :aria-selected="results.length === highlightIndex"
@@ -58,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { narrateSource, narrationLabelsFromI18n } from '../utils/narration';
 
@@ -69,11 +81,13 @@ interface SourceRow { id: string; title: string; author: string | null; source_t
 const props = defineProps<{
   modelValue: string | null;
   placeholder?: string;
+  disabled?: boolean;
 }>();
 const emit = defineEmits<{
   'update:modelValue': [value: string | null];
   'select': [source: SourceRow];
   'create-new': [title: string];
+  'edit-source': [];
 }>();
 
 const { t } = useI18n();
@@ -117,36 +131,57 @@ watch(results, () => {
   if (showDropdown.value) nextTick(updateDropdownPosition);
 });
 
+// Tracks the title set after a successful select. When the user edits the
+// input so it no longer matches, we drop the resolved modelValue so the
+// query becomes a clean search again (mirrors PlacePicker's behaviour).
+const lastResolvedTitle = ref('');
+
 watch(() => props.modelValue, async (id) => {
-  if (!id) { query.value = ''; return; }
+  if (!id) { query.value = ''; lastResolvedTitle.value = ''; return; }
   const source = (await window.api.sources.get(id)) as SourceRow | null;
-  if (source) query.value = source.title;
+  if (source) {
+    query.value = source.title;
+    lastResolvedTitle.value = source.title;
+  }
 }, { immediate: true });
 
 function onInput() {
   clearTimeout(debounceTimer);
+  // Editing away from the resolved title clears the previously picked source
+  // so the user can search/create against the new query freely.
+  if (props.modelValue && query.value !== lastResolvedTitle.value) {
+    emit('update:modelValue', null);
+    lastResolvedTitle.value = '';
+  }
   if (query.value.length < 1) { results.value = []; return; }
   debounceTimer = setTimeout(async () => {
     results.value = (await window.api.sources.search(query.value)) as SourceRow[];
   }, 150);
 }
 
-function onFocus() {
+async function onFocus() {
   showDropdown.value = true;
-  // Show all sources if the field is empty or short
+  // Always populate results on focus so the dropdown is useful even when the
+  // input shows a pre-selected source title.
   if (query.value.length < 2) {
-    (async () => {
-      results.value = (await window.api.sources.list()) as SourceRow[];
-    })();
+    results.value = (await window.api.sources.list()) as SourceRow[];
+  } else {
+    results.value = (await window.api.sources.search(query.value)) as SourceRow[];
   }
 }
 
-function hasCreateNew(): boolean {
-  return query.value.length > 1 && results.value.every(r => r.title.toLowerCase() !== query.value.toLowerCase());
-}
+// Suppress the "create new" affordance when (a) input is too short, or (b) a
+// source is already resolved (modelValue is set), or (c) the query exactly
+// matches an existing result.
+const showCreateNew = computed(() => {
+  if (query.value.length <= 1) return false;
+  if (props.modelValue) return false;
+  const q = query.value.toLowerCase();
+  return results.value.every(r => r.title.toLowerCase() !== q);
+});
 
 function totalOptions(): number {
-  return results.value.length + (hasCreateNew() ? 1 : 0);
+  return results.value.length + (showCreateNew.value ? 1 : 0);
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -173,6 +208,7 @@ function onKeydown(e: KeyboardEvent) {
 
 function select(source: SourceRow) {
   query.value = source.title;
+  lastResolvedTitle.value = source.title;
   showDropdown.value = false;
   emit('update:modelValue', source.id);
   emit('select', source);
@@ -190,8 +226,30 @@ function onBlur() {
 
 <style scoped>
 .source-picker { position: relative; width: 100%; box-sizing: border-box; }
+.picker-input-row { position: relative; width: 100%; }
 .source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
+.source-picker input.has-edit-btn { padding-right: 32px; }
 .source-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
+.source-picker input:disabled { background: var(--surface); cursor: default; opacity: 0.85; }
+.edit-source-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+}
+.edit-source-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+.edit-source-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Position is set inline (computed from input's bounding rect) since the
    dropdown is teleported to <body>. Scoped styles still reach the teleported
    element because Vue keeps the data-v-* attribute on it. */

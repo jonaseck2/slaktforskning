@@ -13,6 +13,7 @@ coverage/
 /src/import/genney/lib/
 /genney-media/
 .claude/worktrees/
+.superpowers/
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 .env*

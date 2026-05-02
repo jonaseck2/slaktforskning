@@ -39,9 +39,9 @@
             {{ $t('eventTypes.' + et) }}
           </option>
         </select>
-        <p v-if="showTypeChangeWarning" class="ep-type-warning">
-          {{ $t('events.typeChangeWarning') }}
-        </p>
+        <ul v-if="typeChangeWarnings.length" class="ep-type-warning">
+          <li v-for="w in typeChangeWarnings" :key="w">{{ w }}</li>
+        </ul>
       </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('events.date') }}</span>
@@ -58,7 +58,17 @@
       </div>
       <div v-if="showSpanEndDate" class="ep-field">
         <span class="ep-field-label">{{ $t('events.endDateOptional') }}</span>
-        <SimpleDateInput v-model="spanEndDate" />
+        <DateInput
+          simple
+          :date-type="endDateType"
+          :date-value="form.date_value_end ?? ''"
+          :date-value-end="''"
+          :date-original="''"
+          @update:date-type="onEndDateTypeChange"
+          @update:date-value="form.date_value_end = $event || null"
+          @update:date-value-end="() => {}"
+          @update:date-original="() => {}"
+        />
         <p class="ep-field-hint">{{ $t('events.endDateHint') }}</p>
       </div>
       <div class="ep-field">
@@ -301,20 +311,56 @@ const eventTitle = computed(() => {
 const showSpanEndDate = computed(
   () => isSpanEventType(form.event_type) && form.date_type !== 'between'
 );
-// Proxy for SimpleDateInput which expects a non-null string. Reads/writes
-// form.date_value_end so the existing save path persists it unchanged.
-const spanEndDate = computed<string>({
-  get: () => form.date_value_end ?? '',
-  set: (val) => { form.date_value_end = val || null; },
-});
+// Local end-date type (the schema only has date_value_end as a string, no
+// matching `date_type_end` column). Defaults to 'unknown' so a span event
+// stays open-ended unless the user explicitly picks a real end date.
+const endDateType = ref<string>(form.date_value_end ? 'exact' : 'unknown');
+function onEndDateTypeChange(t: string) {
+  endDateType.value = t;
+  if (t === 'unknown') form.date_value_end = null;
+}
 const showTypeDropdown = ref(false);
 
-// Soft warning when changing type on an existing event. We don't block — some
-// users genuinely correct a mis-categorized event — but we flag the risk that
-// citations and type-specific fields may now be inconsistent.
-const showTypeChangeWarning = computed(
-  () => !!props.editingEvent && !!initialEventType.value && form.event_type !== initialEventType.value,
-);
+// Existing participants (only loaded when editing). Used by the type-change
+// warning to flag spouses/secondary participants that would no longer fit a
+// new type, or that are missing for a type that requires them.
+const existingParticipants = ref<Array<{ id: string; person_id: string; role: string }>>([]);
+
+async function loadExistingParticipants() {
+  if (!savedEventId.value || !window.api) return;
+  try {
+    existingParticipants.value = (await window.api.eventParticipants.getForEvent(savedEventId.value)) as Array<{
+      id: string; person_id: string; role: string;
+    }>;
+  } catch { /* ignore */ }
+}
+
+// Soft warning(s) when changing type on an existing event. We don't block — some
+// users genuinely correct a mis-categorized event — but we surface the specific
+// risks rather than a generic "may be inconsistent" line (BENGT #36 — warn,
+// don't block).
+const typeChangeWarnings = computed<string[]>(() => {
+  if (!props.editingEvent || !initialEventType.value) return [];
+  if (form.event_type === initialEventType.value) return [];
+  const warnings: string[] = [];
+  const wasCouple = COUPLE_EVENT_TYPES.has(initialEventType.value);
+  const isCouple = COUPLE_EVENT_TYPES.has(form.event_type);
+  const hasSpouseParticipant = existingParticipants.value.some((p) => p.role === 'spouse');
+  if (wasCouple && !isCouple && hasSpouseParticipant) {
+    warnings.push(t('events.typeChangeWarnSpouseOrphaned'));
+  }
+  if (!wasCouple && isCouple && !hasSpouseParticipant) {
+    warnings.push(t('events.typeChangeWarnSpouseMissing'));
+  }
+  const citationCount = citations.value.length;
+  if (citationCount > 0) {
+    warnings.push(t('events.typeChangeWarnCitations', {
+      count: citationCount,
+      oldType: t('eventTypes.' + initialEventType.value),
+    }));
+  }
+  return warnings;
+});
 
 // Birth-only baptism companion fields. Hidden when editing an existing event so we
 // don't accidentally create duplicate baptism events on every re-save.
@@ -511,6 +557,7 @@ function deleteCitation(id: string) { delCitation.ask(id); }
 onMounted(async () => {
   await loadEventTypeSort();
   await loadCitations();
+  await loadExistingParticipants();
   await reloadPartnerOptions();
   await loadContextName();
 });
@@ -544,16 +591,18 @@ async function handleSave() {
   try {
     let ev: EventData;
     if (savedEventId.value) {
+      // Preserve user-authored cause/date_value_end regardless of current
+      // event_type. The form hides those fields outside of death/span types,
+      // but hiding a field is not consent to discard its value — see Prime
+      // Directive in CLAUDE.md.
       ev = (await window.api.events.update(savedEventId.value, {
         event_type: form.event_type,
         date_type: form.date_type,
         date_value: form.date_value || null,
-        date_value_end: (form.date_type === 'between' || isSpanEventType(form.event_type))
-          ? form.date_value_end || null
-          : null,
+        date_value_end: form.date_value_end || null,
         date_original: form.date_original,
         place_id: form.place_id,
-        cause: form.event_type === 'death' ? form.cause : null,
+        cause: form.cause || null,
         description: form.description,
       })) as EventData;
     } else {
@@ -561,12 +610,10 @@ async function handleSave() {
         event_type: form.event_type,
         date_type: form.date_type,
         date_value: form.date_value || null,
-        date_value_end: (form.date_type === 'between' || isSpanEventType(form.event_type))
-          ? form.date_value_end || null
-          : null,
+        date_value_end: form.date_value_end || null,
         date_original: form.date_original,
         place_id: form.place_id,
-        cause: form.event_type === 'death' ? form.cause : null,
+        cause: form.cause || null,
         description: form.description,
         relationship_id: props.relationshipId ?? null,
       })) as EventData;

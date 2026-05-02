@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.194.0 — Citation modal redesign + span end-date + place tree polish
+
+- feat: citation source is now an autocomplete with in-field edit, changeable on existing citations
+- feat: citation modal — notes resizable, defaults to Primary evidence, save button always visible
+- feat: span event end date uses the same picker as the main date and defaults to unknown
+- fix: place tree picker scrolls properly and filter searches the whole DB from the first character
+
 ## v0.193.3 — Internal only
 
 - chore: UX intent-mapping skill + UX_INVENTORY use English consistently; UI-label Swedish stays in i18n only.

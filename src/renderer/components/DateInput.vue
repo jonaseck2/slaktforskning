@@ -7,7 +7,7 @@
         v-narrate="() => narrateFieldFocus($t('a11y.dateTypeLabel'), 'dropdown', $t('dateTypes.' + dateType), t)"
         @change="updateDateType($event)"
       >
-        <option v-for="dt in DATE_TYPE_VALUES" :key="dt" :value="dt">{{ $t('dateTypes.' + dt) }}</option>
+        <option v-for="dt in dateTypeOptions" :key="dt" :value="dt">{{ $t('dateTypes.' + dt) }}</option>
       </select>
       <template v-if="dateType !== 'unknown'">
         <div class="date-field">
@@ -77,7 +77,7 @@
         </div>
       </template>
     </div>
-    <div class="date-original-row">
+    <div v-if="!simple" class="date-original-row">
       <input
         type="text"
         :value="dateOriginal"
@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { DATE_TYPE_VALUES } from '../constants/eventTypes';
 import { narrateFieldFocus } from '../utils/screenReaderNarration';
@@ -101,7 +101,15 @@ const props = defineProps<{
   dateValue: string;
   dateValueEnd: string;
   dateOriginal: string;
+  // simple: hides the "original date" text row and the "between" range option.
+  // Used for secondary dates (e.g. span-event end dates) where there's no
+  // separate authored-text version and no inner range to capture.
+  simple?: boolean;
 }>();
+
+const dateTypeOptions = computed(() =>
+  props.simple ? DATE_TYPE_VALUES.filter(dt => dt !== 'between') : DATE_TYPE_VALUES,
+);
 
 const emit = defineEmits<{
   'update:dateType': [value: string];
