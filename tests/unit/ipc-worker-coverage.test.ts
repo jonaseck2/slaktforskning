@@ -23,7 +23,7 @@ import { listChannels, channelRegistry } from '../../src/shared/channels';
 // Note: channels that are now registered via the channel registry with thread:'main' are NOT listed here —
 // they appear in the registry's listChannels() result and are dispatched via the registry loop in index.ts.
 const MAIN_THREAD_ONLY_CHANNELS = new Set([
-  'media:attach', 'media:openFile',
+  'media:attach', 'media:createFromFile', 'media:openFile',
   'db:getCurrent', 'db:getRecent',
   // db:createNew, db:switchTo, db:openExisting use ipcMain.handle directly — not caught by wrapHandler regex
   'backup:backup', 'backup:restore',
