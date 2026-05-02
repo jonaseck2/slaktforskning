@@ -15,8 +15,15 @@
         @keydown="onKeydown"
       />
       <button v-if="modelValue" type="button" class="picker-clear" :aria-label="$t('a11y.clearSearch')" @click="clear">&times;</button>
+      <button
+        type="button"
+        class="picker-attach"
+        :aria-label="$t('media.attachFromFile')"
+        :title="$t('media.attachFromFile')"
+        @mousedown.prevent="onAttachClick"
+      >📎</button>
     </div>
-    <ul v-if="open && results.length > 0" role="listbox" class="picker-dropdown">
+    <ul v-if="open" role="listbox" class="picker-dropdown">
       <li
         v-for="(item, idx) in results"
         :key="item.id"
@@ -29,6 +36,14 @@
       >
         <span class="picker-name">{{ displayTitle(item) }}</span>
         <span v-if="item.format" class="picker-format">{{ item.format.toUpperCase() }}</span>
+      </li>
+      <li
+        role="option"
+        class="picker-option picker-option-attach"
+        :class="{ highlighted: highlightIndex === results.length }"
+        @mousedown.prevent="onAttachClick"
+      >
+        <span class="picker-name">📎 {{ searchQuery.trim() ? $t('media.attachFromFileWithQuery', { query: searchQuery.trim() }) : $t('media.attachFromFile') }}</span>
       </li>
     </ul>
   </div>
@@ -50,11 +65,13 @@ interface MediaItem {
 const props = defineProps<{
   modelValue: string | null;
   placeholder?: string;
+  excludeIds?: string[];
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | null];
   select: [item: MediaItem];
+  'attach-file': [suggestedTitle: string];
 }>();
 
 const { t } = useI18n();
@@ -91,12 +108,14 @@ async function loadAll() {
 }
 
 function filter(query: string) {
+  const excluded = new Set(props.excludeIds ?? []);
+  const pool = allMedia.value.filter(m => !excluded.has(m.id));
   const q = query.trim().toLowerCase();
   if (!q) {
-    results.value = allMedia.value.slice(0, 20);
+    results.value = pool.slice(0, 20);
     return;
   }
-  results.value = allMedia.value
+  results.value = pool
     .filter(m => displayTitle(m).toLowerCase().includes(q))
     .slice(0, 20);
 }
@@ -127,17 +146,27 @@ function clear() {
   results.value = [];
 }
 
+function onAttachClick() {
+  emit('attach-file', searchQuery.value.trim());
+  open.value = false;
+}
+
 function onKeydown(e: KeyboardEvent) {
-  if (!open.value || results.value.length === 0) return;
+  if (!open.value) return;
+  const max = results.value.length;  // last index = footer
   if (e.key === 'ArrowDown') {
     e.preventDefault();
-    highlightIndex.value = Math.min(highlightIndex.value + 1, results.value.length - 1);
+    highlightIndex.value = Math.min(highlightIndex.value + 1, max);
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     highlightIndex.value = Math.max(highlightIndex.value - 1, 0);
   } else if (e.key === 'Enter' && highlightIndex.value >= 0) {
     e.preventDefault();
-    select(results.value[highlightIndex.value]);
+    if (highlightIndex.value === max) {
+      onAttachClick();
+    } else {
+      select(results.value[highlightIndex.value]);
+    }
   } else if (e.key === 'Escape') {
     open.value = false;
   }
@@ -222,5 +251,20 @@ function onBlur() {
 .picker-format {
   font-size: var(--font-xs);
   color: var(--text-muted);
+}
+.picker-input-wrap { gap: 0; }
+.picker-attach {
+  background: none;
+  border: none;
+  font-size: var(--font-base);
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+}
+.picker-attach:hover { color: var(--accent); }
+.picker-option-attach {
+  border-top: 1px solid var(--surface-border-subtle);
+  color: var(--text-secondary);
+  font-style: italic;
 }
 </style>
