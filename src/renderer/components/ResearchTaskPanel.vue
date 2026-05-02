@@ -142,6 +142,17 @@
         </div>
       </div>
     </template>
+
+    <ConfirmModal
+      :visible="delLink.visible.value"
+      :title="$t('researchTasks.unlinkConfirmTitle')"
+      :message="$t('researchTasks.confirmUnlink')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.remove')"
+      @cancel="delLink.cancel"
+      @confirm="delLink.confirm"
+    />
   </EntityPanel>
 </template>
 
@@ -154,7 +165,9 @@ import LinkedPlacesSection from './LinkedPlacesSection.vue';
 import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import EntityPanel from './EntityPanel.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useEntityData } from '../composables/useEntityData';
 import { useEditableFields } from '../composables/useEditableFields';
@@ -269,7 +282,7 @@ async function addLink(entityType: 'person' | 'place' | 'media', entityId: strin
   }
 }
 
-async function removeLink(linkId: string) {
+const delLink = useDeleteConfirm<string>(async (linkId) => {
   if (!props.taskId) return;
   try {
     await window.api.researchTasks.removeLink(linkId);
@@ -279,7 +292,8 @@ async function removeLink(linkId: string) {
     console.error('[ResearchTaskPanel] removeLink failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeLink(linkId: string) { delLink.ask(linkId); }
 </script>
 
 <style scoped>

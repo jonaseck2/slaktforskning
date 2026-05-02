@@ -106,6 +106,17 @@
         </div>
       </div>
     </template>
+
+    <ConfirmModal
+      :visible="delLink.visible.value"
+      :title="$t('groups.unlinkConfirmTitle')"
+      :message="$t('groups.confirmUnlink')"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('common.remove')"
+      @cancel="delLink.cancel"
+      @confirm="delLink.confirm"
+    />
   </EntityPanel>
 </template>
 
@@ -118,7 +129,9 @@ import LinkedPlacesSection from './LinkedPlacesSection.vue';
 import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import EntityPanel from './EntityPanel.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { useToast } from '../composables/useToast';
+import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useEntityData } from '../composables/useEntityData';
 import { useEditableFields } from '../composables/useEditableFields';
@@ -222,7 +235,7 @@ async function addLink(entityType: 'person' | 'place' | 'media', entityId: strin
   }
 }
 
-async function removeLink(linkId: string) {
+const delLink = useDeleteConfirm<string>(async (linkId) => {
   if (!props.groupId) return;
   try {
     await window.api.groups.removeLink(linkId);
@@ -231,7 +244,8 @@ async function removeLink(linkId: string) {
     console.error('[GroupPanel] removeLink failed:', err);
     toast.error(t('errors.deleteFailed'));
   }
-}
+});
+function removeLink(linkId: string) { delLink.ask(linkId); }
 </script>
 
 <style scoped>

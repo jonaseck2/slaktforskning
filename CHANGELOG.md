@@ -55,6 +55,7 @@
 - feat: PlacePanel place section now communicates *how* a place is anchored — Type, Parent place, and Coordinates each show a "Resolved" hint with the gazetteer's value when you haven't authored one yourself.
 - ux: Resolved hints sit inside the Type, Parent place, and Coordinate fields (was below); the place name field is relabelled "Place".
 - fix: missing place-type translations (historical_state, state, region, division, church, language, root) added in en + sv.
+- fix: panel CTA cleanup — Groups row in PersonPanel now navigates to GroupsView (was a dead click), unlink buttons across MediaPanel + EntityMediaSection use `IconUnlink` instead of raw `✕` (face-tag delete uses `IconTrash`), GroupPanel + ResearchTaskPanel unlinks now show the same confirm dialog PersonPanel has, the misleading "Add relationship" header button (silently picked spouse) is gone, and face-tag rows in MediaPanel show an explicit pencil affordance for reassignment. Convention regression-tested by `tests/components/panel-cta-conventions.test.ts`.
 - feat: lat/long sit on a single row with a 📍 button — click to set coordinates by clicking on the map. A blue banner names the target place; Esc cancels.
 - feat: PlacePanel Hierarchy section removed — the place picker already exposes the place tree.
 - feat: persons with both a current and a birth-name record render as `Anna Andersson (f. Svensson)` (sv) / `(b. Svensson)` (en) across the panel header, persons list, search, person picker, relationships list, person timeline, linked-persons sections, and HTML site export.

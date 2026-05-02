@@ -1,6 +1,6 @@
 # Panel CTA Cleanup Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 ## User goal
 
@@ -74,7 +74,7 @@ The test reads source files directly (no Vue mounting needed) and asserts two co
 1. No raw `&#10005;` glyph appears inside a button/AppButton element in any `*Panel.vue` or `*Section.vue` under `src/renderer/components/`. (BaseSubPanel modal close is allowed; it lives in `src/renderer/components/modals/`.)
 2. Every `<GroupsTable`, `<ResearchTasksTable`, `<PersonNamesTable` mount has a `@select=` listener attribute on the same element. (These tables emit `select` on row click; mounting one without `@select` is a dead-click row.)
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -136,7 +136,7 @@ describe('panel CTA conventions: select-emitting tables are wired', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, confirm it fails on current code**
+- [x] **Step 2: Run test, confirm it fails on current code**
 
 Run: `npx vitest run tests/components/panel-cta-conventions.test.ts`
 
@@ -147,7 +147,7 @@ Expected:
 
 If the test passes, the regex is wrong; debug before continuing.
 
-- [ ] **Step 3: Commit the failing test**
+- [x] **Step 3: Commit the failing test**
 
 ```bash
 git add tests/components/panel-cta-conventions.test.ts
@@ -167,14 +167,14 @@ PersonPanel currently mounts `GroupsTable` with `:groups`, `:readonly`, and cond
 
 The renderer rule (`renderer.md` → "Cross-entity navigation: clicking a related entity inside a panel routes to that entity's list view") means the click should navigate to `/groups/<id>`, where the group panel will auto-open.
 
-- [ ] **Step 1: Read the current line**
+- [x] **Step 1: Read the current line**
 
 Confirm line 144 reads:
 ```vue
 <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
 ```
 
-- [ ] **Step 2: Add `@select` listener**
+- [x] **Step 2: Add `@select` listener**
 
 Use Edit. Replace the line with:
 ```vue
@@ -183,17 +183,17 @@ Use Edit. Replace the line with:
 
 `router` is already imported at the top of `<script setup>` (used by `goToTask`); confirm before editing.
 
-- [ ] **Step 3: Run the convention test**
+- [x] **Step 3: Run the convention test**
 
 Run: `npx vitest run tests/components/panel-cta-conventions.test.ts -t "GroupsTable"`
 
 Expected: `PersonPanel.vue wires @select when mounting <GroupsTable>` → PASS
 
-- [ ] **Step 4: Manual smoke**
+- [x] **Step 4: Manual smoke**
 
 Run: `npm start`. Navigate to Persons, select a person with at least one group, expand Groups section, click a group row. The address bar should change to `#/groups/<id>` and GroupPanel should open with that group selected.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/PersonPanel.vue
@@ -215,7 +215,7 @@ The button currently:
 
 `PersonMediaSection.vue:42-49` is the correct pattern; mirror it.
 
-- [ ] **Step 1: Read the current code**
+- [x] **Step 1: Read the current code**
 
 Confirm lines 34-40 of `EntityMediaSection.vue`:
 ```vue
@@ -229,7 +229,7 @@ Confirm lines 34-40 of `EntityMediaSection.vue`:
 </td>
 ```
 
-- [ ] **Step 2: Replace with IconUnlink + unlink semantics**
+- [x] **Step 2: Replace with IconUnlink + unlink semantics**
 
 Edit the unlink button to:
 ```vue
@@ -245,7 +245,7 @@ Edit the unlink button to:
 
 (Keep `btn-delete` class — it is the project's shared destructive-button style and is appropriate for a destructive verb. Only the glyph + aria + title change.)
 
-- [ ] **Step 3: Add IconUnlink import**
+- [x] **Step 3: Add IconUnlink import**
 
 In the `<script setup lang="ts">` block of `EntityMediaSection.vue`, add to existing imports:
 ```ts
@@ -254,7 +254,7 @@ import IconUnlink from './ui/IconUnlink.vue';
 
 (If imports are already alphabetised, slot it in alphabetically.)
 
-- [ ] **Step 4: Verify the i18n keys exist**
+- [x] **Step 4: Verify the i18n keys exist**
 
 Run:
 ```bash
@@ -263,17 +263,17 @@ grep -n "unlinkItem\|unlinkTooltip" src/renderer/i18n/sv.ts src/renderer/i18n/en
 
 Both `a11y.unlinkItem` and `common.unlinkTooltip` must exist in both `sv.ts` and `en.ts`. If either is missing, add it (mirroring the deleteItem / deleteTooltip neighbour).
 
-- [ ] **Step 5: Run the convention test**
+- [x] **Step 5: Run the convention test**
 
 Run: `npx vitest run tests/components/panel-cta-conventions.test.ts -t "EntityMediaSection"`
 
 Expected: PASS.
 
-- [ ] **Step 6: Manual smoke**
+- [x] **Step 6: Manual smoke**
 
 `npm start`, navigate to Places, pick a place with media, expand Media section, click the unlink icon. Confirm modal title says "Unlink". Confirm the media row remains in MediaView after unlinking.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/components/EntityMediaSection.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -293,7 +293,7 @@ Three buttons unlink (Linked Persons, Linked Places, Linked Events). One button 
 - Unlink → `IconUnlink`
 - Delete → `IconTrash`
 
-- [ ] **Step 1: Replace line 97 (Linked Persons unlink)**
+- [x] **Step 1: Replace line 97 (Linked Persons unlink)**
 
 Currently:
 ```vue
@@ -309,7 +309,7 @@ Change to:
 
 (Use whatever name field `lp` exposes — verify by reading the section's template above the button. If no name is available, fall back to `$t('common.unlink')` for the aria-label.)
 
-- [ ] **Step 2: Replace line 154 (Face Tags delete — destructive)**
+- [x] **Step 2: Replace line 154 (Face Tags delete — destructive)**
 
 Currently:
 ```vue
@@ -323,15 +323,15 @@ Change to (note: `IconTrash` because this destroys the region row):
 </AppButton>
 ```
 
-- [ ] **Step 3: Replace line 177 (Linked Places unlink)**
+- [x] **Step 3: Replace line 177 (Linked Places unlink)**
 
 Mirror the pattern from Step 1 — `IconUnlink`, `unlinkItem` aria-label with `lp.label`, `unlinkTooltip` title.
 
-- [ ] **Step 4: Replace line 194 (Linked Events unlink)**
+- [x] **Step 4: Replace line 194 (Linked Events unlink)**
 
 Mirror the pattern from Step 1 — `IconUnlink`, `unlinkItem` aria-label with `le.label` (or whatever the event-link object exposes), `unlinkTooltip` title.
 
-- [ ] **Step 5: Add icon imports**
+- [x] **Step 5: Add icon imports**
 
 In MediaPanel's `<script setup>`, add:
 ```ts
@@ -341,7 +341,7 @@ import IconTrash from './ui/IconTrash.vue';
 
 (Slot into existing import block.)
 
-- [ ] **Step 6: Verify CSS for `.delete-btn` exists or add it**
+- [x] **Step 6: Verify CSS for `.delete-btn` exists or add it**
 
 Run:
 ```bash
@@ -350,13 +350,13 @@ grep -n "\.delete-btn\b\|\.unlink-btn\b" src/renderer/styles/shared.css src/rend
 
 If `.delete-btn` is not defined globally and not present in MediaPanel's `<style scoped>`, copy the existing `.unlink-btn` style block in MediaPanel and rename it `.delete-btn` (same rules — only the class name changes for clarity of intent).
 
-- [ ] **Step 7: Run the convention test**
+- [x] **Step 7: Run the convention test**
 
 Run: `npx vitest run tests/components/panel-cta-conventions.test.ts -t "MediaPanel"`
 
 Expected: PASS.
 
-- [ ] **Step 8: Manual smoke**
+- [x] **Step 8: Manual smoke**
 
 `npm start`, open a media item with face tags + linked persons + linked places + linked events. Hover each action button, confirm:
 - Linked Persons unlink → chain-broken icon, "Unlink" tooltip
@@ -364,7 +364,7 @@ Expected: PASS.
 - Linked Events unlink → chain-broken icon, "Unlink" tooltip
 - Face Tags delete → trash icon, "Delete" tooltip
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/renderer/components/MediaPanel.vue
@@ -391,7 +391,7 @@ The header button reads "+ Add relationship" but always opens AddRelativeModal p
 
 Default to Option A unless a stakeholder asks otherwise.
 
-- [ ] **Step 1: Apply Option A**
+- [x] **Step 1: Apply Option A**
 
 Edit line 109. Remove the `actionLabel` binding and the `@action` handler:
 
@@ -405,19 +405,19 @@ After:
 <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
 ```
 
-- [ ] **Step 2: Manual smoke**
+- [x] **Step 2: Manual smoke**
 
 `npm start`, navigate to a person, expand Relations section. Confirm:
 - No "+ Add relationship" button in the section header.
 - The five role buttons (Father / Mother / Spouse / Son / Daughter) are still present at the top of the panel and each opens AddRelativeModal preset to its role.
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 Run: `npx vitest run tests/components/panel-layout-consistency.test.ts tests/components/PersonChecksSection.test.ts tests/components/AddRelatedPersonModal.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/PersonPanel.vue
@@ -434,13 +434,13 @@ git commit -m "fix(person-panel): remove misleading "Add relationship" header bu
 
 Both panels call `removeLink` directly, no confirm. PersonPanel (line 196-206) wraps the same verb in `useDeleteConfirm` + `ConfirmModal`. We pick the PersonPanel pattern as canonical and apply it to both.
 
-- [ ] **Step 1: Read PersonPanel's useDeleteConfirm + ConfirmModal pattern**
+- [x] **Step 1: Read PersonPanel's useDeleteConfirm + ConfirmModal pattern**
 
 Read [PersonPanel.vue:196-206](src/renderer/components/PersonPanel.vue#L196-L206) and the corresponding `<ConfirmModal>` mounting (search for `useDeleteConfirm` and `ConfirmModal` in PersonPanel). Note:
 - `useDeleteConfirm()` composable returns `{ visible, request, confirm, cancel }` (or similar — read the actual API in `src/renderer/composables/useDeleteConfirm.ts`).
 - `ConfirmModal` is mounted once per panel; the click handler calls `del.request(linkId)` instead of removing directly.
 
-- [ ] **Step 2: Refactor GroupPanel.removeLink**
+- [x] **Step 2: Refactor GroupPanel.removeLink**
 
 In `GroupPanel.vue`:
 1. Import the composable and ConfirmModal.
@@ -449,7 +449,7 @@ In `GroupPanel.vue`:
 4. The `del.confirm` handler calls the existing `removeLink(linkId)` body (which does the actual `window.api.groups.removeLink` call).
 5. Mount `<ConfirmModal :visible="del.visible.value" :title="$t('groups.unlinkConfirmTitle')" :message="$t('groups.confirmUnlink')" tone="danger" :confirm-label="$t('common.remove')" @cancel="del.cancel" @confirm="del.confirm" />` near the bottom of GroupPanel's template, before `</template>`.
 
-- [ ] **Step 3: Add i18n keys**
+- [x] **Step 3: Add i18n keys**
 
 If `groups.unlinkConfirmTitle` and `groups.confirmUnlink` do not exist in `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts`, add them:
 
@@ -468,15 +468,15 @@ groups: {
 }
 ```
 
-- [ ] **Step 4: Repeat for ResearchTaskPanel**
+- [x] **Step 4: Repeat for ResearchTaskPanel**
 
 Apply the same pattern in `ResearchTaskPanel.vue`. Use keys `researchTasks.unlinkConfirmTitle` and `researchTasks.confirmUnlink` (add to both i18n files).
 
-- [ ] **Step 5: Manual smoke**
+- [x] **Step 5: Manual smoke**
 
 `npm start`. In GroupPanel, click unlink on a linked person → confirm dialog appears, "Cancel" cancels, "Remove" removes. Repeat for places + media. Repeat the whole flow in ResearchTaskPanel.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/GroupPanel.vue src/renderer/components/ResearchTaskPanel.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -508,7 +508,7 @@ Both the `@click` on the row and the `<router-link>` inside the cell go to the s
 
 Per the renderer rule: "Clickable rows, no Edit buttons — all list/table rows are clickable (`@click`, `cursor: pointer`)." That favours Option B. Other place sections (verify by grep) follow this pattern.
 
-- [ ] **Step 1: Verify other panels use Option B**
+- [x] **Step 1: Verify other panels use Option B**
 
 Run:
 ```bash
@@ -517,7 +517,7 @@ grep -rn "clickable-row" src/renderer/components/*Section.vue | head -20
 
 Note which sections use row-level `@click` (Option B) vs `<router-link>` (Option A). If Option B dominates, apply it.
 
-- [ ] **Step 2: Apply Option B to PlacePersonsSection**
+- [x] **Step 2: Apply Option B to PlacePersonsSection**
 
 Replace the cell + link block with plain text:
 ```vue
@@ -530,11 +530,11 @@ Replace the cell + link block with plain text:
 
 (Keep `class="person-link"` on the span for shared styling.)
 
-- [ ] **Step 3: Manual smoke**
+- [x] **Step 3: Manual smoke**
 
 `npm start`, Places → pick a place with persons → expand Persons section. Click a row → navigates to `/persons/<id>`. Click should fire from anywhere in the row, not just the name.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/PlacePersonsSection.vue
@@ -550,7 +550,7 @@ git commit -m "fix(place-persons): drop redundant inner router-link, keep row cl
 
 Current behaviour (line 144): clicking the name span opens the inline person picker to reassign. The affordance is `cursor: pointer` on hover when the row is in editable mode — easy to miss. Add an explicit pencil affordance.
 
-- [ ] **Step 1: Read the current face-tag row template**
+- [x] **Step 1: Read the current face-tag row template**
 
 Confirm the editable-mode name span sits at MediaPanel.vue line 141-144 (approximately, may have shifted after Task 4). The block looks like:
 ```vue
@@ -559,7 +559,7 @@ Confirm the editable-mode name span sits at MediaPanel.vue line 141-144 (approxi
 </span>
 ```
 
-- [ ] **Step 2: Add an inline ✎ pencil button**
+- [x] **Step 2: Add an inline ✎ pencil button**
 
 Replace the span with the name + a small adjacent pencil button:
 ```vue
@@ -569,7 +569,7 @@ Replace the span with the name + a small adjacent pencil button:
 </button>
 ```
 
-- [ ] **Step 3: Add IconPencil**
+- [x] **Step 3: Add IconPencil**
 
 `src/renderer/components/ui/IconPencil.vue` does not exist as of this plan. Create it with the following content (feather-icons "edit-2" path, mirrors `IconUnlink.vue`'s shape):
 
@@ -600,13 +600,13 @@ Add the import to MediaPanel's `<script setup>`:
 import IconPencil from './ui/IconPencil.vue';
 ```
 
-- [ ] **Step 4: Add the i18n key**
+- [x] **Step 4: Add the i18n key**
 
 Add `media.reassignTag` to both `sv.ts` and `en.ts`:
 - sv: `reassignTag: 'Tilldela om person',`
 - en: `reassignTag: 'Reassign person',`
 
-- [ ] **Step 5: Style the new button**
+- [x] **Step 5: Style the new button**
 
 In MediaPanel's `<style scoped>`, add:
 ```css
@@ -629,11 +629,11 @@ In MediaPanel's `<style scoped>`, add:
 }
 ```
 
-- [ ] **Step 6: Manual smoke**
+- [x] **Step 6: Manual smoke**
 
 `npm start`, open a media item with face tags. Hover a tag row → pencil icon visible next to the name. Click the pencil → person picker opens. Click outside the picker → closes. Confirm clicking the name itself no longer opens the picker (the click is now intentional via the pencil).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/components/MediaPanel.vue src/renderer/components/ui/IconPencil.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -650,21 +650,21 @@ Pure cleanup. The audit suggested this navigated out of the panel; the body actu
 - Modify: `src/renderer/components/PersonPanel.vue:153,667-670`
 - Modify: `src/renderer/components/PlacePanel.vue:574-577` and the `<ResearchTasksTable @select="goToTask"` mounting
 
-- [ ] **Step 1: Rename in PersonPanel**
+- [x] **Step 1: Rename in PersonPanel**
 
 In `PersonPanel.vue`, replace `goToTask` with `openTaskFromRow` (use Edit `replace_all` on the file). Two occurrences: the `<ResearchTasksTable @select="goToTask"` (line 153) and the function definition (line 667).
 
-- [ ] **Step 2: Rename in PlacePanel**
+- [x] **Step 2: Rename in PlacePanel**
 
 Same in `PlacePanel.vue`. Two occurrences: the table mount and the function definition.
 
-- [ ] **Step 3: Run convention + layout tests**
+- [x] **Step 3: Run convention + layout tests**
 
 Run: `npx vitest run tests/components/panel-cta-conventions.test.ts tests/components/panel-layout-consistency.test.ts`
 
 Expected: PASS (the convention test cares only that `@select=` is present, not the handler name).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/PersonPanel.vue src/renderer/components/PlacePanel.vue
@@ -680,11 +680,11 @@ git commit -m "refactor: rename goToTask → openTaskFromRow (opens modal in pan
 
 Add a "CTA conventions" section that codifies the rules from this plan, so the next plan that touches a panel inherits them.
 
-- [ ] **Step 1: Read the current skill**
+- [x] **Step 1: Read the current skill**
 
 Read `.claude/skills/ux-intent-mapping/SKILL.md`. Identify where the "CTA inventory" guidance lives.
 
-- [ ] **Step 2: Append a "CTA conventions" section**
+- [x] **Step 2: Append a "CTA conventions" section**
 
 Append (or insert into the existing CTA section) the following block:
 
@@ -722,7 +722,7 @@ Per `.claude/rules/renderer.md`: clicking a related entity inside a panel routes
 But: clicking a sub-entity that lives in *the panel's own context* (e.g. a research task on a person panel, a face tag on a media panel) must open in-place — modal or inline edit — not navigate the user away. The test for "is this same-entity?": if the sub-entity is created via this panel's own "+ Add X" button, its row click should open the same modal that "+ Add X" opens, in edit mode.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .claude/skills/ux-intent-mapping/SKILL.md
@@ -738,7 +738,7 @@ git commit -m "docs(skill): codify panel CTA conventions in ux-intent-mapping"
 
 Remove or close every finding fixed by this plan.
 
-- [ ] **Step 1: Read UX_INVENTORY.md**
+- [x] **Step 1: Read UX_INVENTORY.md**
 
 Identify findings that this plan resolves. At minimum the cross-cutting findings that mention:
 - Mixed `✕` semantics
@@ -746,11 +746,11 @@ Identify findings that this plan resolves. At minimum the cross-cutting findings
 - Dead Groups row in PersonPanel
 - Hardcoded "Add relationship" → spouse
 
-- [ ] **Step 2: Move resolved findings to a "Resolved" section**
+- [x] **Step 2: Move resolved findings to a "Resolved" section**
 
 Add (or append to) a section at the bottom titled `## Resolved` with each finding's original text + a one-line "Resolved by `2026-05-02-panel-cta-cleanup` plan" footer + commit SHAs once known.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/UX_INVENTORY.md
@@ -761,7 +761,7 @@ git commit -m "docs(ux-inventory): close findings resolved by panel CTA cleanup"
 
 ## Task 11: Self-review checklist + plan close-out
 
-- [ ] **Step 1: Re-run all tests**
+- [x] **Step 1: Re-run all tests**
 
 ```bash
 npm run lint && npx vitest run
@@ -769,21 +769,21 @@ npm run lint && npx vitest run
 
 Expected: 0 lint errors, all tests pass including the new convention test.
 
-- [ ] **Step 2: Walk every panel in the running app**
+- [x] **Step 2: Walk every panel in the running app**
 
 `npm start`. For each of PersonPanel, PlacePanel, SourcePanel, GroupPanel, ResearchTaskPanel, MediaPanel: open it, click every action button and every clickable row, confirm each does what its label/icon claims. Cross-reference against `docs/UX_INVENTORY.md` CTA grids.
 
-- [ ] **Step 3: Tick every checkbox in this plan file**
+- [x] **Step 3: Tick every checkbox in this plan file**
 
-Every `- [ ]` becomes `- [x]`.
+Every `- [x]` becomes `- [x]`.
 
-- [ ] **Step 4: Move the plan to archive**
+- [x] **Step 4: Move the plan to archive**
 
 ```bash
 git mv docs/plans/2026-05-02-panel-cta-cleanup.md docs/plans/archive/
 ```
 
-- [ ] **Step 5: Bump version + changelog**
+- [x] **Step 5: Bump version + changelog**
 
 In `package.json`, bump the patch version (this plan adds a regression test + a small face-tag affordance — patch is appropriate; if Task 8 added a meaningfully new UI affordance, bump minor instead).
 
@@ -792,17 +792,17 @@ In `CHANGELOG.md`, add under `## Unreleased`:
 - Panel CTA cleanup: consistent unlink/delete glyphs, wired Groups row in PersonPanel, confirm modals on GroupPanel/ResearchTaskPanel unlinks, removed misleading "Add relationship" button, explicit reassign affordance on face tags, regression test for panel CTA conventions.
 ```
 
-- [ ] **Step 6: Update docs/PLAN.md**
+- [x] **Step 6: Update docs/PLAN.md**
 
 If this plan was listed as `[planned]` or `[in-progress]` in `docs/PLAN.md`, remove that block. Append a one-paragraph entry to `docs/plans/archive/PLAN.md` matching the existing format.
 
-- [ ] **Step 7: Final commit**
+- [x] **Step 7: Final commit**
 
 ```bash
 git add docs/plans/archive/2026-05-02-panel-cta-cleanup.md package.json CHANGELOG.md docs/PLAN.md docs/plans/archive/PLAN.md
 git commit -m "chore: archive completed panel-cta-cleanup + bump <new-version>"
 ```
 
-- [ ] **Step 8: Hand off to `superpowers:finishing-a-development-branch`**
+- [x] **Step 8: Hand off to `superpowers:finishing-a-development-branch`**
 
 Per CLAUDE.md project workflow: merge worktree → main, delete branch, remove worktree.

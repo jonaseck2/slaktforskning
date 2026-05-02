@@ -1083,6 +1083,8 @@ export default {
     summary: '{count} uppgifter · {open} aktiva',
     confirmDelete: 'Ta bort denna uppgift?',
     removeConfirmTitle: 'Ta bort uppgift?',
+    unlinkConfirmTitle: 'Ta bort koppling',
+    confirmUnlink: 'Vill du ta bort denna koppling?',
   },
   groups: {
     title: 'Grupper',
@@ -1103,6 +1105,8 @@ export default {
     newGroup: 'Ny grupp',
     searchOrAdd: 'Sök eller + lägg till medlem',
     noMembers: 'Inga medlemmar än',
+    unlinkConfirmTitle: 'Ta bort koppling',
+    confirmUnlink: 'Vill du ta bort denna koppling?',
   },
   importExport: {
     title: 'Import / Export',
@@ -1385,6 +1389,8 @@ export default {
     linkEvent: '+ Händelse',
     faceTags: 'Ansiktsmarkeringar',
     untitled: 'Namnlös',
+    faceTag: 'Ansiktsmärke',
+    reassignTag: 'Tilldela om person',
   },
   mediaTimeline: {
     title: 'Mediatidslinje',

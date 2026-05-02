@@ -106,7 +106,7 @@
 
       <!-- Relationer section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('relationships.addRelationship') }" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
+        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
         <div v-if="sections.relationships" class="panel-section-body">
           <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
         </div>
@@ -141,7 +141,7 @@
             />
           </div>
           <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
-          <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
+          <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" @select="(id) => router.push('/groups/' + id)" />
         </div>
       </div>
 
@@ -150,7 +150,7 @@
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="goToTask" />
+          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="openTaskFromRow" />
         </div>
       </div>
 
@@ -241,6 +241,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -334,6 +335,7 @@ const emit = defineEmits<{
 
 const isTreeSubject = computed(() => !!props.personId && props.personId === props.treeSubjectId);
 
+const router = useRouter();
 const { t } = useI18n();
 const toast = useToast();
 
@@ -664,7 +666,7 @@ async function onTaskSaved() {
   await reload();
 }
 
-function goToTask(id: string) {
+function openTaskFromRow(id: string) {
   const task = researchTasks.value.find(t => t.id === id);
   if (task) openTaskForm(task);
 }

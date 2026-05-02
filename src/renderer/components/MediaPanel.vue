@@ -94,7 +94,9 @@
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: lp.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(lp.linkId)">
+              <IconUnlink :size="14" />
+            </AppButton>
           </div>
         </div>
       </div>
@@ -137,10 +139,23 @@
                 class="face-tag-name"
               >{{ $t('media.untagged') || '—' }}</span>
               <span
+                v-else-if="r.person_id"
+                class="face-tag-name"
+              >{{ r.personName || $t('media.untitled') }}</span>
+              <span
                 v-else
                 class="face-tag-name face-tag-clickable"
                 @click="editingTagId = r.id"
-              >{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
+              >{{ $t('media.viewer.assignPerson') }}</span>
+              <button
+                v-if="!props.readonly && r.person_id"
+                class="face-tag-edit-btn"
+                :aria-label="$t('a11y.editItem', { item: r.personName || $t('media.untitled') })"
+                :title="$t('media.reassignTag')"
+                @click.stop="editingTagId = r.id"
+              >
+                <IconPencil :size="12" />
+              </button>
               <button
                 v-if="!props.readonly && r.person_id"
                 class="star-btn"
@@ -151,7 +166,9 @@
                 @click.stop="setProfileForRegion(r)"
               >{{ regionIsProfile[r.id] ? '★' : '☆' }}</button>
             </template>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="deleteRegion(r.id)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="delete-btn" :aria-label="$t('a11y.deleteItem', { item: r.person_id ? (r.personName || $t('media.untitled')) : $t('media.faceTag') })" :title="$t('common.deleteTooltip')" @click="deleteRegion(r.id)">
+              <IconTrash :size="14" />
+            </AppButton>
           </div>
         </div>
       </div>
@@ -174,7 +191,9 @@
           <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
             <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(lp.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: lp.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(lp.linkId)">
+              <IconUnlink :size="14" />
+            </AppButton>
           </div>
         </div>
       </div>
@@ -191,7 +210,9 @@
           <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
           <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
             <span>{{ le.label }}</span>
-            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('common.remove')" @click="unlinkEntity(le.linkId)">&#10005;</AppButton>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: le.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(le.linkId)">
+              <IconUnlink :size="14" />
+            </AppButton>
           </div>
         </div>
       </div>
@@ -254,6 +275,9 @@ import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaPro
 import { isImageMedia } from '../utils/mediaUtils';
 import { useProfilePicStore } from '../stores/profilePic';
 import { useEntityData } from '../composables/useEntityData';
+import IconUnlink from './ui/IconUnlink.vue';
+import IconTrash from './ui/IconTrash.vue';
+import IconPencil from './ui/IconPencil.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -690,6 +714,11 @@ defineExpose({ reload, expandFaceTags });
   flex-shrink: 0;
 }
 
+.delete-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 /* Picker */
 .picker-wrap {
   display: flex;
@@ -746,6 +775,23 @@ defineExpose({ reload, expandFaceTags });
 .face-tag-assign {
   flex: 1;
   min-width: 0;
+}
+.face-tag-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  margin-left: var(--space-xs);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.face-tag-edit-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--surface-border);
+  color: var(--text-primary);
 }
 
 .star-btn {
