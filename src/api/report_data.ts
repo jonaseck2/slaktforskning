@@ -166,6 +166,96 @@ function findEventByType(events: EventWithPlace[], type: string): EventWithPlace
   return events.find(e => e.event_type === type) ?? null;
 }
 
+// ── Lifetime-constraint helpers (Task 2 — life timeline expansion) ──
+// These are internal to getTimeline; not exported. They compute, at read time,
+// which family events fall within the subject's lifetime so the timeline tells
+// "the story of their life" rather than a flat list of every family event.
+
+function extractYearMonthDay(dateValue: string | null): { y: number; m: number; d: number } | null {
+  if (!dateValue) return null;
+  const m = dateValue.match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/);
+  if (!m) return null;
+  return {
+    y: parseInt(m[1], 10),
+    m: m[2] ? parseInt(m[2], 10) : 1,
+    d: m[3] ? parseInt(m[3], 10) : 1,
+  };
+}
+
+function eventDateOnOrBefore(event: EventWithPlace, year: number, month: number, day: number): boolean {
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return false;
+  if (ev.y !== year) return ev.y < year;
+  if (ev.m !== month) return ev.m < month;
+  return ev.d <= day;
+}
+
+function eventDateOnOrAfter(event: EventWithPlace, year: number, month: number, day: number): boolean {
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return false;
+  if (ev.y !== year) return ev.y > year;
+  if (ev.m !== month) return ev.m > month;
+  return ev.d >= day;
+}
+
+function plusMonths(y: number, m: number, d: number, addMonths: number): { y: number; m: number; d: number } {
+  const total = y * 12 + (m - 1) + addMonths;
+  return { y: Math.floor(total / 12), m: (total % 12) + 1, d };
+}
+
+interface SubjectLifetime {
+  birth: { y: number; m: number; d: number } | null;
+  death: { y: number; m: number; d: number } | null;
+  deathPlus9Mo: { y: number; m: number; d: number } | null;
+}
+
+function readSubjectLifetime(subjectEvents: EventWithPlace[]): SubjectLifetime {
+  const birthEv = subjectEvents.find(e => e.event_type === 'birth');
+  const deathEv = subjectEvents.find(e => e.event_type === 'death');
+  const birth = birthEv ? extractYearMonthDay(birthEv.date_value) : null;
+  const death = deathEv ? extractYearMonthDay(deathEv.date_value) : null;
+  const deathPlus9Mo = death ? plusMonths(death.y, death.m, death.d, 9) : null;
+  return { birth, death, deathPlus9Mo };
+}
+
+/**
+ * Returns true if this family event falls within the subject's lifetime
+ * (or, for child births, within 9 months after the subject's death — to capture
+ * posthumous births fathered/borne by the subject).
+ *
+ * Per CLAUDE.md "events without a date_value pass through unchanged" — we only
+ * filter events with parseable dates that fail the lifetime test. Undated
+ * events appear in the timeline at the empty-string sort position; the display
+ * layer can drop them if it wants.
+ */
+function familyEventWithinLifetime(
+  event: EventWithPlace,
+  lifetime: SubjectLifetime,
+  isChildBirth: boolean,
+): boolean {
+  // Undated events pass through — see comment above.
+  const ev = extractYearMonthDay(event.date_value);
+  if (!ev) return true;
+
+  // Lower bound: after subject's birth (if known).
+  if (lifetime.birth) {
+    if (!eventDateOnOrAfter(event, lifetime.birth.y, lifetime.birth.m, lifetime.birth.d)) {
+      return false;
+    }
+  }
+
+  // Upper bound: on or before subject's death — extended by 9 months for child
+  // births specifically. If subject has no death, they're still alive → no upper
+  // bound.
+  if (isChildBirth && lifetime.deathPlus9Mo) {
+    return eventDateOnOrBefore(event, lifetime.deathPlus9Mo.y, lifetime.deathPlus9Mo.m, lifetime.deathPlus9Mo.d);
+  }
+  if (lifetime.death) {
+    return eventDateOnOrBefore(event, lifetime.death.y, lifetime.death.m, lifetime.death.d);
+  }
+  return true;
+}
+
 function buildFamilyMember(db: Database, personId: string): FamilyMember | null {
   const person = getPerson(db, personId);
   if (!person) return null;
@@ -444,6 +534,11 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     });
   }
 
+  // Compute the subject's lifetime once — used to filter family events so the
+  // timeline tells the story of THIS person's life (events that happened during
+  // their lifetime), not a flat list of every family member's life events.
+  const lifetime = readSubjectLifetime(ownEvents);
+
   // Family events
   const rels = getRelationshipsOfPerson(db, personId);
   for (const r of rels) {
@@ -454,11 +549,14 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     const otherPrimary = getPrimaryName(otherNames);
 
     let label: TimelineRelationshipLabel;
+    let subjectIsParent = false;
     if (r.type === 'couple') {
       label = 'spouse';
     } else if (r.type === 'parent_child') {
       // Tasks 3 & 4 narrow these to father/mother and son/daughter using sex.
-      label = r.person1_id === personId ? 'child' : 'parent';
+      // Convention: person1 = parent, person2 = child.
+      subjectIsParent = r.person1_id === personId;
+      label = subjectIsParent ? 'child' : 'parent';
     } else if (r.type === 'sibling') {
       label = 'sibling';
     } else {
@@ -471,15 +569,22 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     // Only include key life events for family members
     const relevantTypes = ['birth', 'death', 'christening', 'burial'];
     for (const event of otherEvents) {
-      if (relevantTypes.includes(event.event_type)) {
-        entries.push({
-          event,
-          person_id: otherId,
-          person_given_name: otherPrimary.given_name,
-          person_surname: otherPrimary.surname,
-          relationship_label: label,
-        });
-      }
+      if (!relevantTypes.includes(event.event_type)) continue;
+
+      // Lifetime constraint: a family event qualifies only if it happened
+      // during the subject's life. Child births get a 9-month posthumous
+      // window so a baby born after the subject's death still counts as
+      // "their" child on the timeline. Undated events pass through.
+      const isChildBirth = subjectIsParent && event.event_type === 'birth';
+      if (!familyEventWithinLifetime(event, lifetime, isChildBirth)) continue;
+
+      entries.push({
+        event,
+        person_id: otherId,
+        person_given_name: otherPrimary.given_name,
+        person_surname: otherPrimary.surname,
+        relationship_label: label,
+      });
     }
   }
 
