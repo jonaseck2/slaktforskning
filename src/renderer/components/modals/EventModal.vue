@@ -357,7 +357,7 @@ const typeChangeWarnings = computed<string[]>(() => {
     warnings.push(t('events.typeChangeWarnCitations', {
       count: citationCount,
       oldType: t('eventTypes.' + initialEventType.value),
-    }));
+    }, citationCount));
   }
   return warnings;
 });
@@ -736,6 +736,10 @@ function handleCancel() {
   padding: var(--space-xs) var(--space-sm);
   margin: var(--space-xs) 0 0 0;
   line-height: 1.4;
+  list-style: none;
+}
+.ep-type-warning li + li {
+  margin-top: var(--space-xs);
 }
 .ep-link-btn {
   background: none;

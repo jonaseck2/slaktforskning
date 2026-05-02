@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.194.1 — Event-type change preserves authored data
+
+- fix: changing event type no longer silently nulls cause-of-death or end date — authored values stay until you clear them
+- fix: type-change warning now lists exactly what's at risk (orphaned spouse, missing spouse, citations written about the old type)
+
 ## v0.194.0 — Citation modal redesign + span end-date + place tree polish
 
 - feat: citation source is now an autocomplete with in-field edit, changeable on existing citations

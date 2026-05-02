@@ -316,7 +316,7 @@ export default {
     otherEvents: 'Övriga händelser',
     typeChangeWarnSpouseOrphaned: 'En make/maka är kopplad till händelsen från den tidigare typen — koppla bort eller ersätt personen så att deltagarna passar den nya typen.',
     typeChangeWarnSpouseMissing: 'Den nya typen förväntar sig en andra person (make/maka). Lägg till en deltagare när händelsen är sparad.',
-    typeChangeWarnCitations: 'Inga hänvisningar tas bort, men {count, plural, one {en hänvisning} other {{count} hänvisningar}} skrevs om en {oldType}-händelse — kontrollera transkription och tillförlitlighet.',
+    typeChangeWarnCitations: '1 hänvisning skrevs om en {oldType}-händelse — kontrollera transkription och tillförlitlighet. | {count} hänvisningar skrevs om en {oldType}-händelse — kontrollera transkription och tillförlitlighet.',
     causePlaceholder: 't.ex. hjärtinfarkt',
     saveAndAnother: 'Spara & lägg till fler',
     eventsAdded: '{count} händelse tillagd | {count} händelser tillagda',

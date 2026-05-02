@@ -317,7 +317,7 @@ export default {
     otherEvents: 'Other events',
     typeChangeWarnSpouseOrphaned: 'A spouse participant from the previous type is still attached — unlink or replace them so the participants match the new type.',
     typeChangeWarnSpouseMissing: 'The new type expects a second person (spouse). Add a participant after saving.',
-    typeChangeWarnCitations: 'No citations will be removed, but {count, plural, one {one citation was} other {{count} citations were}} written about a {oldType} event — review transcription and confidence.',
+    typeChangeWarnCitations: '1 citation was written about a {oldType} event — review transcription and confidence. | {count} citations were written about a {oldType} event — review transcription and confidence.',
     saveAndAnother: 'Save & Next',
     eventsAdded: '{count} event added | {count} events added',
     commonTypes: 'Common',

@@ -2,7 +2,7 @@
 
 ## ⚠️ Prime Directive: Data Fidelity
 
-**The user's data is sacred. Inferred data is NEVER persisted as truth. Ever.**
+**The user's data is sacred. The DB holds exactly what the user authored — nothing inferred is added, nothing authored is silently removed.**
 
 The genealogist authored what is in the database. Every other value is derived at read time from what they authored. This is non-negotiable, project-defining, never-violated.
 
@@ -17,6 +17,7 @@ The genealogist authored what is in the database. Every other value is derived a
 - The DB stores **only** what the user actively wrote (UI, modal, picker, MCP tool call) or what was in the file they imported.
 - The resolver / formatter / display layer computes inferred values **on demand**, every render, against the current gazetteers/rules. Users never see stale inference.
 - Any code path that writes inferred output back to the DB is a bug. Catch yourself at the point of `places.update`, `events.update`, `INSERT INTO`, or any mutation — if the value being written wasn't authored by a human action *in this session*, stop.
+- **Authored values are not discarded by side effect.** Hiding a field in the UI is not consent to null it out on save. If a value was written by a human action, it stays in the DB until *another* explicit human action removes it (an empty field, a "Clear" button, a delete). A mutation builder writes what the form says — it never second-guesses which fields the new entity-shape "should" have. Modal patterns like `cause: form.event_type === 'death' ? form.cause : null` discard authored data based on a UI mode change and are a Prime Directive violation.
 
 **Why this matters:**
 - Persisted inferences pin the database to a specific version of the inferring code. Improving the resolver/gazetteer/parser later doesn't fix old rows.
