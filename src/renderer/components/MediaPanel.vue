@@ -139,10 +139,23 @@
                 class="face-tag-name"
               >{{ $t('media.untagged') || '—' }}</span>
               <span
+                v-else-if="r.person_id"
+                class="face-tag-name"
+              >{{ r.personName || $t('media.untitled') }}</span>
+              <span
                 v-else
                 class="face-tag-name face-tag-clickable"
                 @click="editingTagId = r.id"
-              >{{ r.person_id ? (r.personName || $t('media.untitled')) : $t('media.viewer.assignPerson') }}</span>
+              >{{ $t('media.viewer.assignPerson') }}</span>
+              <button
+                v-if="!props.readonly && r.person_id"
+                class="face-tag-edit-btn"
+                :aria-label="$t('a11y.editItem', { item: r.personName || $t('media.untitled') })"
+                :title="$t('media.reassignTag')"
+                @click.stop="editingTagId = r.id"
+              >
+                <IconPencil :size="12" />
+              </button>
               <button
                 v-if="!props.readonly && r.person_id"
                 class="star-btn"
@@ -264,6 +277,7 @@ import { useProfilePicStore } from '../stores/profilePic';
 import { useEntityData } from '../composables/useEntityData';
 import IconUnlink from './ui/IconUnlink.vue';
 import IconTrash from './ui/IconTrash.vue';
+import IconPencil from './ui/IconPencil.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -761,6 +775,23 @@ defineExpose({ reload, expandFaceTags });
 .face-tag-assign {
   flex: 1;
   min-width: 0;
+}
+.face-tag-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  margin-left: var(--space-xs);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.face-tag-edit-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--surface-border);
+  color: var(--text-primary);
 }
 
 .star-btn {

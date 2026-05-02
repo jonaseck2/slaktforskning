@@ -1390,6 +1390,7 @@ export default {
     faceTags: 'Face Tags',
     untitled: 'Untitled',
     faceTag: 'Face tag',
+    reassignTag: 'Reassign person',
   },
   mediaTimeline: {
     title: 'Media Timeline',

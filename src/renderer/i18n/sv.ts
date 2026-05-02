@@ -1390,6 +1390,7 @@ export default {
     faceTags: 'Ansiktsmarkeringar',
     untitled: 'Namnlös',
     faceTag: 'Ansiktsmärke',
+    reassignTag: 'Tilldela om person',
   },
   mediaTimeline: {
     title: 'Mediatidslinje',
