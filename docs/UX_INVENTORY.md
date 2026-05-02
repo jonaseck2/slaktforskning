@@ -8,6 +8,10 @@ The methodology and consistency rules are owned by `.claude/skills/ux-intent-map
 
 ---
 
+## Language convention
+
+This doc is **English-only**, like all developer docs and code in the repo. UI labels visible to end users are localized via i18n (`src/renderer/i18n/sv.ts`, `en.ts`) and may render in Swedish in the running app — but the doc, the code, and the conversations about them all use English. When referring to a section, use its English name even if the live UI shows the Swedish translation.
+
 ## How to use this doc
 
 - **Before changing a surface**: read its entry. If the entry is missing or stale, fill it in by reading the current code (don't infer from memory).
@@ -37,9 +41,9 @@ These show up across multiple surfaces. Surface-level entries below reference th
 
 | Section | What `✕` does | Status |
 |---|---|---|
-| `GroupsTable` (Person → Grupper) | Unlinks the person from the group; group itself is preserved | ✅ correct |
+| `GroupsTable` (Person → Groups) | Unlinks the person from the group; group itself is preserved | ✅ correct |
 | `PersonRelationshipsSection` | Unlinks the relationship; both persons preserved (confirmation message says so) | ✅ correct |
-| `ResearchTasksTable` (Person → Forskning) | **Deletes the task entirely** | ⚠️ inconsistent — same icon, opposite blast radius |
+| `ResearchTasksTable` (Person → Research tasks) | **Deletes the task entirely** | ⚠️ inconsistent — same icon, opposite blast radius |
 
 **Fix direction (proposed, not yet applied):** either align (`✕` always = unlink; entity-level delete lives only on the entity's own panel) or differentiate visibly (`✕` for unlink + 🗑 for destroy; copy says "Remove from this person" vs "Delete task"). Genealogists fear data loss; this needs alignment.
 
@@ -48,15 +52,15 @@ These show up across multiple surfaces. Surface-level entries below reference th
 | Section | Label says | Actually does |
 |---|---|---|
 | `PlacePanel` → Persons | `+ Add person` | Creates a person *and* an event at this place — there is no link-existing-person path |
-| `PersonPanel` → Relationer | `+ Add relationship` | Creates a brand-new person + relationship — there is no link-to-existing-person path |
+| `PersonPanel` → Relations | `+ Add relationship` | Creates a brand-new person + relationship — there is no link-to-existing-person path |
 
 **Fix direction:** either rename the affordance to the actual primitive ("+ Event with a person at this place"), or add the implied verb (a real "link existing X" path) so the label doesn't lie.
 
 ### 3. The `+ Add` UX is inconsistent across siblings
 
-The gold-standard pattern is `GroupPicker` / `SourcePicker`: an inline combobox that resolves the same keystroke flow into either *link existing* or *create new*. Sections that match: Grupper (uses `GroupPicker`), CitationModal (uses `SourcePicker`).
+The gold-standard pattern is `GroupPicker` / `SourcePicker`: an inline combobox that resolves the same keystroke flow into either *link existing* or *create new*. Sections that match: Groups (uses `GroupPicker`), CitationModal (uses `SourcePicker`).
 
-Sections that *don't* match and should be reviewed: Forskning (modal-only, no link path), Relationer (modal-only, no link path), Place → Persons (form-only, no link path).
+Sections that *don't* match and should be reviewed: Research tasks (modal-only, no link path), Relations (modal-only, no link path), Place → Persons (form-only, no link path).
 
 ### 4. No "all citations for this person" surface
 
@@ -79,11 +83,11 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 | PersonPanel — Timeline section | _TBD_ |
 | PersonPanel — Life Map section | _TBD_ |
 | PersonPanel — Identifiers section | _TBD_ |
-| PersonPanel — Relationer section | 2026-05-02 |
-| PersonPanel — Grupper section | 2026-05-02 |
+| PersonPanel — Relations section | 2026-05-02 |
+| PersonPanel — Groups section | 2026-05-02 |
 | PersonPanel — Media section | _TBD_ |
 | PersonPanel — Media Timeline section | _TBD_ |
-| PersonPanel — Forskning section | 2026-05-02 |
+| PersonPanel — Research tasks section | 2026-05-02 |
 | PersonPanel — Quality section | _TBD_ |
 | PersonPanel — Danger zone (delete person) | _TBD_ |
 
@@ -160,7 +164,7 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 
 ---
 
-### PersonPanel → Relationer section
+### PersonPanel → Relations section
 **File:** `src/renderer/components/PersonPanel.vue` lines 112–118, `PersonRelationshipsSection.vue`
 **Verified:** 2026-05-02
 
@@ -174,7 +178,7 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 
 ---
 
-### PersonPanel → Grupper section
+### PersonPanel → Groups section
 **File:** `src/renderer/components/PersonPanel.vue` lines 120–135, `GroupPicker.vue`, `GroupsTable.vue`
 **Verified:** 2026-05-02
 
@@ -188,17 +192,17 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 
 ---
 
-### PersonPanel → Forskning section (Research Tasks)
+### PersonPanel → Research tasks section
 **File:** `src/renderer/components/PersonPanel.vue` lines 153–161, `ResearchTasksTable.vue`, `ResearchTaskModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* research tasks for this person, *cycle the status* of a task inline, *add* a new task (always created here; tasks aren't shared between people), and *delete* a task entirely. The same `✕` icon means "remove from this person" in Grupper but "delete the task" here.
+> **Purpose:** A user would use this section to *view* research tasks for this person, *cycle the status* of a task inline, *add* a new task (always created here; tasks aren't shared between people), and *delete* a task entirely. The same `✕` icon means "remove from this person" in Groups but "delete the task" here.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | ResearchTasksTable rows: priority badge · status chip · task text | `+ Add task` → opens **ResearchTaskFormModal** (standalone). Always create-new — no link-existing path. | **Status chip is click-to-cycle inline.** All other fields require navigating to ResearchTasksView (modal there). | ✕ → ConfirmModal → **deletes task entirely** ⚠️ | Row click → navigates to ResearchTasksView with task selected |
 
-**Cross-cutting:** Hits finding #1 (✕ ambiguity vs Grupper) and finding #3 (no combobox-link pattern, but link-existing is arguably not a real user need for tasks).
+**Cross-cutting:** Hits finding #1 (✕ ambiguity vs Groups) and finding #3 (no combobox-link pattern, but link-existing is arguably not a real user need for tasks).
 
 ---
 

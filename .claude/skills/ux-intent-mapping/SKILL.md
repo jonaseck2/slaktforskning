@@ -38,6 +38,10 @@ If writing the sentence stutters ("a person — wait, an event"), the surface is
 
 For genuinely new surfaces with no stated intent, defer to `superpowers:brainstorming` first; come back here once the user has stated intent in plain words.
 
+## Language
+
+Write the Purpose sentence, the inventory cells, and the inventory file entries in **English**. UI labels visible to end users are localized via i18n and may render in Swedish in the running app, but everything in `docs/`, `src/`, and conversation about them stays English. When referring to a section, use its English name even if the running UI shows a Swedish translation.
+
 ## Concrete objects (use these, never "data" or "items")
 
 This app's user-facing objects: **person, place, source, citation, event, name, identifier, relationship, group, research task, media**. The Purpose sentence must use one of these. If a section talks about "data" or "items", it's not been thought through.
