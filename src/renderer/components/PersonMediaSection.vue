@@ -35,9 +35,12 @@
           <td v-if="!props.readonly" class="actions-cell">
             <button
               class="btn-sm btn-delete"
-              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(m.title, m.file_ref) })"
+              :aria-label="$t('a11y.unlinkItem', { item: mediaDisplayName(m.title, m.file_ref) })"
+              :title="$t('common.unlinkTooltip')"
               @click.stop="unlink(m.link_id)"
-            >✕</button>
+            >
+              <IconUnlink :size="14" />
+            </button>
           </td>
         </tr>
       </tbody>
@@ -62,6 +65,7 @@ import { useRouter } from 'vue-router';
 import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { useProfilePicStore } from '../stores/profilePic';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import IconUnlink from './ui/IconUnlink.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useEntityData } from '../composables/useEntityData';

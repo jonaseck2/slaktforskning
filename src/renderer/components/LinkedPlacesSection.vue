@@ -24,9 +24,12 @@
             <AppButton
               variant="ghost"
               size="sm"
-              :aria-label="$t('a11y.deleteItem', { item: r.name })"
+              :aria-label="$t('a11y.unlinkItem', { item: r.name })"
+              :title="$t('common.unlinkTooltip')"
               @click="emit('remove', r.linkId)"
-            >✕</AppButton>
+            >
+              <IconUnlink :size="14" />
+            </AppButton>
           </td>
         </tr>
       </tbody>
@@ -38,6 +41,7 @@
 import { ref, watch } from 'vue';
 import PlacePicker from './PlacePicker.vue';
 import AppButton from './ui/AppButton.vue';
+import IconUnlink from './ui/IconUnlink.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface LinkInput { id: string; entity_id: string }

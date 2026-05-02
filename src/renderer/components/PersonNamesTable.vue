@@ -48,11 +48,15 @@
           @click.stop="moveDown(idx)"
         >&#9660;</button>
         <button
-          v-if="row.name_type !== 'birth' && !readonly"
+          v-if="!readonly"
           class="btn-sm btn-delete"
-          :aria-label="$t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
-          @click.stop="$emit('delete', row.id)"
-        >✕</button>
+          :disabled="row.name_type === 'birth'"
+          :aria-label="row.name_type === 'birth' ? $t('persons.birthNameNotDeletable') : $t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
+          :title="row.name_type === 'birth' ? $t('persons.birthNameNotDeletable') : $t('common.deleteTooltip')"
+          @click.stop="row.name_type !== 'birth' && $emit('delete', row.id)"
+        >
+          <IconTrash :size="14" />
+        </button>
       </div>
     </div>
   </div>
@@ -62,6 +66,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useToast } from '../composables/useToast';
 
 export interface NameRow {
@@ -255,14 +260,22 @@ function moveDown(idx: number) {
   opacity: 0.3;
   cursor: default;
 }
+.btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-delete:disabled:hover {
+  background: transparent;
+  color: inherit;
+}
 .name-prefix,
 .name-suffix {
   color: var(--text-muted);
   font-style: italic;
 }
 .name-qual-badge {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
+  background: var(--surface-bg);
+  color: var(--text-muted);
   padding: 1px 5px;
   border-radius: 8px;
   font-size: var(--font-xs);

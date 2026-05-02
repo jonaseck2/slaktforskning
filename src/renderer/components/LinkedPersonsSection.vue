@@ -39,9 +39,12 @@
             <AppButton
               variant="ghost"
               size="sm"
-              :aria-label="$t('a11y.deleteItem', { item: ((r.given_name || '') + ' ' + (r.surname || '')).trim() })"
+              :aria-label="$t('a11y.unlinkItem', { item: ((r.given_name || '') + ' ' + (r.surname || '')).trim() })"
+              :title="$t('common.unlinkTooltip')"
               @click="emit('remove', r.linkId)"
-            >✕</AppButton>
+            >
+              <IconUnlink :size="14" />
+            </AppButton>
           </td>
         </tr>
       </tbody>
@@ -56,6 +59,7 @@ import { pickDisplayedName } from '../utils/nameUtils';
 import PersonName from './PersonName.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
+import IconUnlink from './ui/IconUnlink.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 
 interface LinkInput { id: string; entity_id: string }

@@ -41,8 +41,11 @@
           <button
             class="btn-sm btn-delete"
             :aria-label="$t('a11y.deleteItem', { item: task.task })"
+            :title="$t('common.deleteTooltip')"
             @click.stop="handleDelete(task.id)"
-          >✕</button>
+          >
+            <IconTrash :size="14" />
+          </button>
         </td>
       </tr>
     </tbody>
@@ -62,6 +65,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import ConfirmModal from './ConfirmModal.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { narrateTaskRow } from '../utils/screenReaderNarration';
 
@@ -127,12 +131,11 @@ function handleDelete(id: string) { del.ask(id); }
   line-height: 24px;
   font-size: var(--font-xs);
   font-weight: 700;
-  color: white;
 }
-.priority-0 { background: #9ca3af; }
-.priority-1 { background: #60a5fa; }
-.priority-2 { background: #f59e0b; }
-.priority-3 { background: #ef4444; }
+.priority-0 { background: var(--surface-hover); color: var(--text-muted); }
+.priority-1 { background: var(--info-bg); color: var(--info-text); }
+.priority-2 { background: var(--warning-bg); color: var(--warning-text); }
+.priority-3 { background: var(--error-bg); color: var(--error-text); }
 .status-chip {
   display: inline-block;
   padding: 2px 10px;
@@ -146,10 +149,10 @@ function handleDelete(id: string) { del.ask(id); }
 }
 .status-chip:hover { opacity: 0.8; }
 .status-readonly { cursor: default; pointer-events: none; }
-.status-open { background: #dbeafe; color: #1d4ed8; }
-.status-in_progress { background: #fef3c7; color: #92400e; }
-.status-done { background: #d1fae5; color: #065f46; }
-.status-stopped { background: #f3f4f6; color: #6b7280; }
+.status-open { background: var(--info-bg); color: var(--info-text); }
+.status-in_progress { background: var(--warning-bg); color: var(--warning-text); }
+.status-done { background: var(--success-bg); color: var(--success-text); }
+.status-stopped { background: var(--surface-hover); color: var(--text-muted); }
 .task-text {
   white-space: nowrap;
   overflow: hidden;

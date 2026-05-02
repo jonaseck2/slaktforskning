@@ -37,24 +37,25 @@ When the surface is a join (e.g. Person → Citation → Source), apply the inve
 
 These show up across multiple surfaces. Surface-level entries below reference these by name.
 
-### 1. The `✕` button means different things in different sections
+### 1. The `✕` button means different things in different sections — ✅ Resolved in `docs/plans/2026-05-02-panel-action-clarity.md`
 
-| Section | What `✕` does | Status |
-|---|---|---|
-| `GroupsTable` (Person → Groups) | Unlinks the person from the group; group itself is preserved | ✅ correct |
-| `PersonRelationshipsSection` | Unlinks the relationship; both persons preserved (confirmation message says so) | ✅ correct |
-| `ResearchTasksTable` (Person → Research tasks) | **Deletes the task entirely** | ⚠️ inconsistent — same icon, opposite blast radius |
+| Section | What the icon does | Icon now | Status |
+|---|---|---|---|
+| `GroupsTable` (Person → Groups) | Unlinks the person from the group; group itself is preserved | `IconUnlink` | ✅ resolved |
+| `PersonRelationshipsSection` | Unlinks the relationship; both persons preserved | `IconUnlink` | ✅ resolved |
+| `ResearchTasksTable` (Person → Research tasks) | Deletes the task entirely | `IconTrash` | ✅ resolved |
 
-**Fix direction (proposed, not yet applied):** either align (`✕` always = unlink; entity-level delete lives only on the entity's own panel) or differentiate visibly (`✕` for unlink + 🗑 for destroy; copy says "Remove from this person" vs "Delete task"). Genealogists fear data loss; this needs alignment.
+The fix landed by splitting the verbs: destructive actions use `IconTrash` ("Delete permanently"), unlinks use `IconUnlink` ("Unlink — both entities are kept"). See **Cross-cutting conventions: row icons** below.
 
-### 2. Some `+ Add` labels hide the actual primitive
+### 2. Some `+ Add` labels hide the actual primitive — ✅ Resolved in `docs/plans/2026-05-02-panel-action-clarity.md`
 
-| Section | Label says | Actually does |
-|---|---|---|
-| `PlacePanel` → Persons | `+ Add person` | Creates a person *and* an event at this place — there is no link-existing-person path |
-| `PersonPanel` → Relations | `+ Add relationship` | Creates a brand-new person + relationship — there is no link-to-existing-person path |
+| Section | Label says | Actually does | Status |
+|---|---|---|---|
+| `PlacePanel` → Persons | `+ Add person` | Creates a person *and* an event at this place | ✅ relabeled |
+| `PersonPanel` → Header (add-relative shortcuts) | `+ Add father / mother / spouse / child / sibling` | Creates a brand-new person and links by relationship | ✅ relabeled to be explicit; duplicate row removed |
+| `PersonPanel` → Relations | `+ Add relationship` | Creates a brand-new person + relationship | ✅ relabeled / consolidated with header shortcuts |
 
-**Fix direction:** either rename the affordance to the actual primitive ("+ Event with a person at this place"), or add the implied verb (a real "link existing X" path) so the label doesn't lie.
+The fix landed by removing the duplicate add-relative row from the Relations section (the header row is the single entry point) and by tightening the labels so they describe the actual primitive.
 
 ### 3. The `+ Add` UX is inconsistent across siblings
 
@@ -65,6 +66,21 @@ Sections that *don't* match and should be reviewed: Research tasks (modal-only, 
 ### 4. No "all citations for this person" surface
 
 Citations on a Person are nested two clicks deep (Event row → EventModal → Citations subsection). A user wanting to audit every source they've cited for a person has no entry point. The model supports it; the panel doesn't surface it. Candidate: a derived read-only Citations section under PersonPanel.
+
+### 5. External identifiers are not surfaced in any panel
+
+External identifiers (FamilySearch ID, Geni ID, etc.) are not surfaced in any panel. They round-trip through GEDCOM/Holger/Genney import and export only. The data layer (`person_identifiers` table + API/IPC/MCP) is fully wired so importers and exporters preserve them; nothing in the UI reads or writes them.
+
+---
+
+## Cross-cutting conventions: row icons
+
+These conventions are enforced across every panel section that lists child entities. New sections must follow this split — picking the wrong icon is a data-fidelity hazard, not a cosmetic one.
+
+- **Trash icon** (`IconTrash`) means the action **destroys an entity permanently**. Tooltip: "Delete permanently" (`common.deleteTooltip`). Used for: Names, Events, Research tasks, Citations.
+- **Unlink icon** (`IconUnlink`) means the action **removes a connection; both entities are preserved**. Tooltip: "Unlink — both entities are kept" (`common.unlinkTooltip`). Used for: Relationships, Group memberships, Linked media, Linked persons, Linked places, Source repositories.
+- The `✕` glyph is reserved for **modal close** only.
+- `QualityIssuesTable` is an open exception: it uses `✕` for "ignore this issue" — neither destroy nor unlink. A follow-up plan should give it its own icon.
 
 ---
 
@@ -77,12 +93,11 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | Surface | Verified |
 |---|---|
 | PersonPanel — Header & add-relative shortcuts | 2026-05-02 |
-| PersonPanel — Person section (name/sex/notes summary) | 2026-05-02 |
+| PersonPanel — Person section (sex/notes) | 2026-05-02 |
 | PersonPanel — Names section | 2026-05-02 |
 | PersonPanel — Events section | 2026-05-02 |
 | PersonPanel — Timeline section | 2026-05-02 |
 | PersonPanel — Life Map section | 2026-05-02 |
-| PersonPanel — Identifiers section | 2026-05-02 |
 | PersonPanel — Relations section | 2026-05-02 |
 | PersonPanel — Groups section | 2026-05-02 |
 | PersonPanel — Media section | 2026-05-02 |
@@ -136,7 +151,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | SourceModal | 2026-05-02 |
 | PersonModal | 2026-05-02 |
 | PersonNameModal | 2026-05-02 |
-| PersonIdentifierModal | 2026-05-02 |
 | PlaceModal | 2026-05-02 |
 | PlaceTreePickerModal | 2026-05-02 |
 | RelationshipModal | 2026-05-02 |
@@ -150,59 +164,185 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 ## Verified surfaces
 
-### PersonPanel → Events section
-**File:** `src/renderer/components/PersonPanel.vue` lines 80–86, `EventList.vue`
+### PersonPanel → Header & add-relative shortcuts
+**File:** `src/renderer/components/PersonPanel.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* events that happened to this person (type · date · place), *add* a new event, *open* an event to edit it, and *remove* an event from this person.
+> **Purpose:** A user would use the header to *see* who they are looking at (name · sex · life dates · profile photo) and to *add a relative* — father, mother, spouse, child, or sibling — in one click.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| EventList rows: type · date · place · citation count badge | `+ Add event` → **opens EventModal in add mode** (standalone) | Row click → **opens EventModal with event prefilled** (standalone). No inline editing. | × on row → ConfirmModal → deletes the event entirely (citations cascade-deleted) | (Edit covers it; events have no own panel) |
+| Identity card: profile photo · primary name · sex glyph · birth–death summary. Add-relative row underneath: 5 typed buttons (`+ Father`, `+ Mother`, `+ Spouse`, `+ Child`, `+ Sibling`) | Each shortcut opens **AddRelativeModal** preset to that role. Always create-new — no link-existing path here. | Header is read-only; edit lives in the Person section (notes/sex) and Names section (names). | Not offered; entity-level delete is in Danger zone. | Click profile photo → Media section. |
 
-**Notes:** Citations show only as a count badge here; the Citations subsection lives inside EventModal (next surface).
+**Notes:** This is the single entry point for adding a relative. The Relations section no longer carries a duplicate `+ Add relationship` button — see Relations section below.
+
+---
+
+### PersonPanel → Person section
+**File:** `src/renderer/components/PersonPanel.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *set* the person's sex, *see* whether they are recorded as living or deceased (a derived read-out from death events), and *write* free-form notes about them.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Sex selector · living/deceased status (read-only chip, derived from death events) · notes textarea | Notes / sex are direct inline inputs. Status is derived — added by recording a death event in the Events section. | Sex select + notes textarea both edit in place; saves on blur/change. | Not offered (the Person itself is deleted from Danger zone). | n/a |
+
+**Notes:** Living/deceased is **derived**, never authored directly here — recording or removing a death event in the Events section flips the chip. This is by design (data fidelity).
+
+---
+
+### PersonPanel → Names section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonNamesSection.vue`, `PersonNameModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* every name this person has gone by (birth name, married names, aliases), *add* a new name, *open* a name to edit it, and *delete* a name — except the birth name, which is protected.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Names table: type chip (birth / married / alias / …) · given · surname · primary marker | `+ Add name` → opens **PersonNameModal** in add mode | Row click → opens **PersonNameModal** with name prefilled | `IconTrash` on row → ConfirmModal → deletes the name entirely. **Disabled** on the birth name (each person has exactly one). | n/a — names have no own panel |
+
+**Notes:** Trash icon (destroy verb): the row's name is gone forever. Birth name protection prevents losing the canonical identity.
+
+---
+
+### PersonPanel → Events section
+**File:** `src/renderer/components/PersonPanel.vue`, `EventList.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* events that happened to this person (type · date · place), *add* a new event, *open* an event to edit it, and *delete* an event entirely (citations on it cascade away too).
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| EventList rows: type · date · place | `+ Add event` → **opens EventModal in add mode** (standalone) | Row click → **opens EventModal with event prefilled** (standalone). No inline editing. | `IconTrash` on row → ConfirmModal → deletes the event entirely (citations cascade-deleted) | (Edit covers it; events have no own panel) |
+
+**Notes:** The Citations subsection lives inside EventModal. Trash here is destroy-verb — the event row is gone forever.
+
+---
+
+### PersonPanel → Timeline section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonTimelineSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* the same events from the Events section laid out chronologically, and to *jump* to add a new event.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only chronological list/strip of events sorted by date. Same data as Events section. | `+ Event` chip → routes/scrolls to the Events section's `+ Add event` flow (no second authoring path). | Not offered — authoring lives in the Events section. | Not offered — deletion lives in the Events section. | Row click → opens the same EventModal as the Events section. |
+
+**Notes:** Default-collapsed. Cross-section coupling: this is a derived read of the Events section. Authoring deliberately lives in one place.
+
+---
+
+### PersonPanel → Life Map section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonLifeMapSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* the places of this person's events on a map, and to *jump* to add a new event (which is how a new place ends up on the map).
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Map with pins per resolved event place. Pins computed from event places at render time (gazetteer resolution is never persisted). | `+ Event` chip → routes/scrolls to the Events section. | Not offered. | Not offered. | Pin click → focuses the event in the Events list / opens EventModal. |
+
+**Notes:** Default-collapsed. Cross-section coupling: derived read of the Events section. Pin coordinates are render-time inferences from the place — never written back.
 
 ---
 
 ### PersonPanel → Relations section
-**File:** `src/renderer/components/PersonPanel.vue` lines 112–118, `PersonRelationshipsSection.vue`
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonRelationshipsSection.vue`, `RelationshipModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* who is related to this person and how, *remove* a wrong relation (the persons are kept), and *add* a relation — currently only by creating a brand-new relative, never by linking someone already in the tree. Editing the type or subtype of an existing relation is not offered.
+> **Purpose:** A user would use this section to *view* who is related to this person and how, *open* a relationship to edit its type / subtype / dates, *unlink* a relation (both persons are kept), and *jump* to the related person.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| RelationshipsList rows: type · subtype · other person (sex badge + name) | `+ Add relationship` → opens **AddRelativeModal** preset to spouse. **Always create-new**; no link-existing path. | **Not offered.** Subtype/date can't be changed without destroy-and-recreate. | ✕ → ConfirmModal explicitly says *"the persons are kept"* — unlinks only ✅ | Click other person's name → navigates to that Person panel |
+| RelationshipsList rows: type · subtype · other person (sex badge + name) | Not offered here. Adding a relative is the header's add-relative shortcut row (`+ Father / Mother / Spouse / Child / Sibling`). | Row click → opens **RelationshipModal** in edit mode with type/subtype/dates editable. | `IconUnlink` on row → ConfirmModal: *"Unlink — both persons are kept"* — removes the relationship link only ✅ | Click other person's name → navigates to that Person panel |
 
-**Cross-cutting:** Hits finding #2 (label hides primitive) and finding #3 (no combobox-link pattern).
+**Notes:** Removing the duplicate `+ Add relationship` button (Task 2 of the action-clarity plan) consolidated all "add a relative" entry points into the header shortcuts. Edit is now first-class via row click (Task 6); previously subtype edits required destroy-and-recreate.
 
 ---
 
 ### PersonPanel → Groups section
-**File:** `src/renderer/components/PersonPanel.vue` lines 120–135, `GroupPicker.vue`, `GroupsTable.vue`
+**File:** `src/renderer/components/PersonPanel.vue`, `GroupPicker.vue`, `GroupsTable.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* which groups this person is in, *add* this person to a group (existing or new — typed in the same field), and *remove* this person from a group (the group is kept). Editing the group itself happens on the group's own panel.
+> **Purpose:** A user would use this section to *view* which groups this person is in, *add* this person to a group (existing or new — typed in the same field), and *unlink* this person from a group (the group is kept). Editing the group itself happens on the group's own panel.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| GroupsTable rows: name · members · notes | `+ Add group` → expands inline **GroupPicker** (combobox: existing match → link; no match → "+ Create new 'X'") ⭐ gold standard | Not offered inline; navigate to group's panel | ✕ → unlinks (`groups.removeLink`); group preserved ✅ | Row click → navigates to GroupsView with that group selected |
+| GroupsTable rows: name · members · notes | `+ Add group` → expands inline **GroupPicker** (combobox: existing match → link; no match → "+ Create new 'X'") ⭐ gold standard | Not offered inline; navigate to group's panel | `IconUnlink` on row → unlinks (`groups.removeLink`); group preserved ✅ | Row click → navigates to GroupsView with that group selected |
 
 **Notes:** Cleanest section in the audit. The GroupPicker pattern (link-or-create in one combobox) is the reference pattern for any "Authoring home: Partial" section.
 
 ---
 
-### PersonPanel → Research tasks section
-**File:** `src/renderer/components/PersonPanel.vue` lines 153–161, `ResearchTasksTable.vue`, `ResearchTaskModal.vue`
+### PersonPanel → Media section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonMediaSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* research tasks for this person, *cycle the status* of a task inline, *add* a new task (always created here; tasks aren't shared between people), and *delete* a task entirely. The same `✕` icon means "remove from this person" in Groups but "delete the task" here.
+> **Purpose:** A user would use this section to *view* photos and documents linked to this person, *attach* new media files, *mark* one as the profile photo, *reorder* the gallery, and *unlink* a media item from this person (the file is kept; it may still be linked to other persons or events).
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| ResearchTasksTable rows: priority badge · status chip · task text | `+ Add task` → opens **ResearchTaskFormModal** (standalone). Always create-new — no link-existing path. | **Status chip is click-to-cycle inline.** All other fields require navigating to ResearchTasksView (modal there). | ✕ → ConfirmModal → **deletes task entirely** ⚠️ | Row click → navigates to ResearchTasksView with task selected |
+| Thumbnail tiles or rows: thumbnail · filename · ★ profile-photo marker · drag handle for reorder | `+ Attach` → opens OS file picker → file is copied into `<dbname>-media/` and linked. | ★ toggle promotes a tile to profile photo; drag-reorder updates `sort_order`. Click tile → opens MediaPanel for full-size + caption editing. | `IconUnlink` on tile → unlinks the media from this person; the file and media row are preserved. | Tile click → MediaPanel for that media. |
 
-**Cross-cutting:** Hits finding #1 (✕ ambiguity vs Groups) and finding #3 (no combobox-link pattern, but link-existing is arguably not a real user need for tasks).
+**Notes:** Unlink-verb (not destroy): media outlives any one person link. Profile photo is just a per-person flag, not a separate entity.
+
+---
+
+### PersonPanel → Media Timeline section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonMediaTimelineSection.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* the same media chronologically (by media date or linked event date) — useful when scanning a life story.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only chronological strip of the same media as the Media section. | Not offered — attach lives in the Media section. | Not offered — edit lives in MediaPanel. | Not offered — unlink lives in the Media section. | Tile click → MediaPanel. |
+
+**Notes:** Default-collapsed. Cross-section coupling: derived read of the Media section.
+
+---
+
+### PersonPanel → Research tasks section
+**File:** `src/renderer/components/PersonPanel.vue`, `ResearchTasksTable.vue`, `ResearchTaskModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* research tasks for this person, *cycle the status* of a task inline, *add* a new task (tasks aren't shared between people), and *delete* a task entirely.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| ResearchTasksTable rows: priority badge · status chip · task text | `+ Add task` → opens **ResearchTaskFormModal** (standalone). Always create-new. | **Status chip is click-to-cycle inline.** All other fields require navigating to ResearchTasksView (modal there). | `IconTrash` on row → ConfirmModal → deletes task entirely ✅ | Row click → navigates to ResearchTasksView with task selected |
+
+**Notes:** Trash icon (destroy verb) is correct here: tasks are owned by the person, never shared, so "remove from this person" and "delete the task" are the same action. Finding #1 ambiguity is resolved by using `IconTrash` here vs `IconUnlink` for Groups.
+
+---
+
+### PersonPanel → Quality section
+**File:** `src/renderer/components/PersonPanel.vue`, `QualityIssuesTable.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *see* derived quality checks for this person (missing parents, contradictory dates, unsourced events, etc.) and to *jump straight* to the section that owns the issue.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| QualityIssuesTable rows: severity badge · issue label · short context. Computed at render time from the current data — never persisted. | Not offered — issues are derived. | Not offered — fix the underlying data in the section the issue points to. | `✕` per row → marks the issue as ignored for this person/issue-key (open exception, see Cross-cutting conventions). | Row click on an actionable issue → routes/expands the matching section (Names, Events, Relations, …). |
+
+**Notes:** Default-collapsed. The `✕` here is neither destroy nor unlink — it's "ignore this issue." Flagged in **Cross-cutting conventions: row icons** as an open exception pending its own icon.
+
+---
+
+### PersonPanel → Danger zone (delete person)
+**File:** `src/renderer/components/PersonPanel.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *delete* this person from the database when the record is wrong or duplicate. This is the only place the person itself can be deleted.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Single destructive button under a clearly labeled "Danger zone" header. | n/a | n/a | `Delete person` button → ConfirmModal listing what will cascade (events, names, citations, relationship rows). On confirm: person deleted. | n/a |
+
+**Notes:** Always at the bottom, default-collapsed. Trash-verb cascade: the person and its owned children (names, citations, identifiers, person-attached events with no other participants) are gone for good. Linked entities (places, sources, groups) are preserved.
 
 ---
 
@@ -216,7 +356,7 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 |---|---|---|---|---|
 | Read-only table: avatar · name · sex · event-count-at-this-place. Derived from `places.getPersons()` | `+ Add person` → opens an in-panel form. **Creates person + event** at this place. No link-existing path. | Not offered (it's a derived summary) | Not offered. Removal requires deleting events in the Events section. | Row click → navigates to person's Person panel |
 
-**Cross-cutting:** Canonical example of finding #2 (label hides primitive). The button label says "person" but the underlying primitive is "event mentioning a person".
+**Cross-cutting:** Was the canonical example of finding #2 (label hides primitive). Label was tightened in `docs/plans/2026-05-02-panel-action-clarity.md`; the underlying primitive (creates a person *and* an event) is unchanged.
 
 ---
 

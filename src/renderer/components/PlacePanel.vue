@@ -169,14 +169,6 @@
         </div>
       </div>
 
-      <!-- Quality section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
-        <div v-if="sections.quality" class="panel-section-body">
-          <PlaceChecksSection ref="checksSectionRef" :place-id="placeId!" />
-        </div>
-      </div>
-
       <!-- Address section -->
       <div class="panel-section">
         <SectionHeader :title="$t('places.address')" :collapsed="!sections.address" @toggle="toggleSection('address')" />
@@ -269,6 +261,14 @@
           </template>
         </div>
       </div>
+
+      <!-- Quality section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
+        <div v-if="sections.quality" class="panel-section-body">
+          <PlaceChecksSection ref="checksSectionRef" :place-id="placeId!" />
+        </div>
+      </div>
     </template>
 
     <!-- Citation form modal -->
@@ -349,12 +349,12 @@ const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-upd
 const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
-    place: true, address: false, children: false, persons: true,
-    events: true, citations: false, media: false, mediaTimeline: false, quality: false,
+    place: true, persons: true, events: true, citations: false,
+    media: false, mediaTimeline: false, address: false, children: false, quality: false,
   },
   {
-    place: true, address: true, children: true, persons: true,
-    events: true, citations: true, media: true, mediaTimeline: true, quality: false,
+    place: true, persons: true, events: true, citations: true,
+    media: true, mediaTimeline: true, address: true, children: true, quality: false,
   },
 );
 

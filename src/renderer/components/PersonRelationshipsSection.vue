@@ -1,6 +1,6 @@
 <template>
   <SectionEmpty v-if="rows.length === 0" :message="$t('empty.relationships')" />
-  <RelationshipsList v-else :rows="rows" @delete="askRemove" />
+  <RelationshipsList v-else :rows="rows" @delete="askRemove" @select="openEdit" />
 
   <ConfirmModal
     :visible="!!pendingDelete"
@@ -12,6 +12,15 @@
     @cancel="pendingDelete = null"
     @confirm="confirmRemove"
   />
+
+  <RelationshipModal
+    v-if="editingRelationship"
+    :editing-relationship="editingRelationship"
+    mode="standalone"
+    @cancel="closeEdit"
+    @close="closeEdit"
+    @saved="onSaved"
+  />
 </template>
 
 <script setup lang="ts">
@@ -20,6 +29,7 @@ import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import RelationshipModal from './modals/RelationshipModal.vue';
 import { formatFullName, pickDisplayedName } from '../utils/nameUtils';
 import { useEntityData } from '../composables/useEntityData';
 
@@ -174,6 +184,37 @@ async function confirmRemove() {
   await window.api.relationships.delete(r.id);
   await reload();
   emit('deleted');
+}
+
+// ── Edit relationship modal ────────────────────────────────────────────────
+
+interface EditingRelationship {
+  id: string;
+  type: string;
+  person1_id: string | null;
+  person2_id: string | null;
+  subtype: string | null;
+  notes: string | null;
+}
+
+const editingRelationship = ref<EditingRelationship | null>(null);
+
+async function openEdit(id: string) {
+  try {
+    const rel = (await window.api.relationships.get(id)) as EditingRelationship | null;
+    if (rel) editingRelationship.value = rel;
+  } catch (err) {
+    console.error('[PersonRelationshipsSection] load relationship failed:', err);
+  }
+}
+
+function closeEdit() {
+  editingRelationship.value = null;
+}
+
+async function onSaved() {
+  closeEdit();
+  await reload();
 }
 
 defineExpose({ reload, count: computed(() => rels.value.length) });

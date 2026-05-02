@@ -40,8 +40,11 @@
               type="button"
               class="btn-sm btn-delete"
               :aria-label="$t('a11y.deleteItem', { item: $t('eventTypes.' + event.event_type) })"
+              :title="$t('common.deleteTooltip')"
               @click.stop="removeEvent(event.id)"
-            >✕</button>
+            >
+              <IconTrash :size="14" />
+            </button>
           </td>
         </tr>
       </tbody>
@@ -77,6 +80,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppButton from './ui/AppButton.vue';
+import IconTrash from './ui/IconTrash.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import EventModal from './modals/EventModal.vue';
 import ConfirmModal from './ConfirmModal.vue';

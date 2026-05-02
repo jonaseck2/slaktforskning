@@ -27,9 +27,12 @@
         <td v-if="!readonly" class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('a11y.deleteItem', { item: g.name })"
+            :aria-label="$t('a11y.unlinkItem', { item: g.name })"
+            :title="$t('common.unlinkTooltip')"
             @click.stop="$emit('remove', g.id)"
-          >✕</button>
+          >
+            <IconUnlink :size="14" />
+          </button>
         </td>
       </tr>
     </tbody>
@@ -37,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import IconUnlink from './ui/IconUnlink.vue';
+
 export interface GroupRow {
   id: string;
   name: string;
@@ -57,7 +62,7 @@ defineEmits<{ remove: [id: string]; select: [id: string] }>();
 <style scoped>
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
 .notes-cell {
-  color: #777;
+  color: var(--text-muted);
   font-size: var(--font-sm);
   max-width: 300px;
   overflow: hidden;

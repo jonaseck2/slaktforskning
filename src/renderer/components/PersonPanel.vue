@@ -101,14 +101,6 @@
         </div>
       </div>
 
-      <!-- Identifiers section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('identifiers.add') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
-        <div v-if="sections.identifiers" class="panel-section-body">
-          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
-        </div>
-      </div>
-
       <!-- Relationer section -->
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('relationships.addRelationship') }" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
@@ -170,13 +162,7 @@
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
         <AppButton variant="ghost" size="sm" class="delete-person-btn" @click="showDeleteConfirm = true">
-          <!-- Filled "sheet-metal" trash can — solid silhouette instead of
-               the wire-mesh look the 🗑️ emoji has on Windows. -->
-          <svg class="trash-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M9 3a1 1 0 0 0-1 1v1H4.5a.75.75 0 0 0 0 1.5h.6l1.18 13.06A2 2 0 0 0 8.27 21.5h7.46a2 2 0 0 0 1.99-1.94L18.9 6.5h.6a.75.75 0 0 0 0-1.5H16V4a1 1 0 0 0-1-1H9zm.5 2v-.5h5V5h-5z"/>
-            <rect x="9.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
-            <rect x="13.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
-          </svg>
+          <IconTrash class="trash-icon" />
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
       </div>
@@ -266,7 +252,6 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
-import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
@@ -276,6 +261,7 @@ import PersonTimeline from './PersonTimeline.vue';
 import PersonMap from './PersonMap.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
+import IconTrash from './ui/IconTrash.vue';
 import EntityPanel from './EntityPanel.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -330,7 +316,6 @@ interface PersonPanelData {
   eventCount: number;
   mapPointCount: number;
   relationshipCount: number;
-  identifierCount: number;
   mediaCount: number;
 }
 
@@ -410,7 +395,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
       eventCount: 0,
       mapPointCount: 0,
       relationshipCount: 0,
-      identifierCount: 0,
       mediaCount: 0,
     };
   }
@@ -418,13 +402,12 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
   const birth = events.find(e => e.event_type === 'birth');
   const death = events.find(e => e.event_type === 'death');
 
-  const [birthLine, deathLine, grps, tasks, rels, ids, media] = await Promise.all([
+  const [birthLine, deathLine, grps, tasks, rels, media] = await Promise.all([
     buildDateLine(birth),
     buildDateLine(death),
     window.api.groups.forPerson(id) as Promise<GroupData[]>,
     window.api.researchTasks.forPerson(id) as Promise<ResearchTaskRow[]>,
     window.api.relationships.getForPerson(id) as Promise<unknown[]>,
-    window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
     window.api.media.forEntity('person', id) as Promise<unknown[]>,
   ]);
 
@@ -444,7 +427,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
     eventCount: events.length,
     mapPointCount: events.filter(e => e.place_id).length,
     relationshipCount: rels.length,
-    identifierCount: ids.length,
     mediaCount: media.length,
   };
 });
@@ -458,7 +440,6 @@ const researchTasks = computed(() => panelData.value?.researchTasks ?? []);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
 const mapPointCount = computed(() => panelData.value?.mapPointCount ?? 0);
 const relationshipCount = computed(() => panelData.value?.relationshipCount ?? 0);
-const identifierCount = computed(() => panelData.value?.identifierCount ?? 0);
 const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 
@@ -468,21 +449,20 @@ const { sections, toggleSection } = usePanelSections(
   'person-panel-section-',
   {
     person: false,
-    names: false,
+    names: true,
     events: true,
     timeline: false,
     map: false,
     relationships: true,
     groups: false,
     research: false,
-    identifiers: false,
     media: false,
     mediaTimeline: false,
     quality: false,
   },
   {
     person: true, names: true, events: true, timeline: true, map: true,
-    relationships: true, groups: true, research: false, identifiers: true,
+    relationships: true, groups: true, research: false,
     media: true, mediaTimeline: true, quality: false,
   },
 );
@@ -490,7 +470,6 @@ const { sections, toggleSection } = usePanelSections(
 // ── Template refs ───────────────────────────────────────────────────────────
 
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: (eventType?: string) => void }) | null>(null);
-const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count: number; reload: () => void }) | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);

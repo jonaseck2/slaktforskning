@@ -55,6 +55,13 @@ const issues = computed(() => data.value ?? []);
 
 defineExpose({ reload, count: computed(() => issues.value.length) });
 
+// Custom 1500ms debounce on personId changes (selection switches), separate
+// from useEntityData's 150ms debounce on onDataChanged mutations. Quality
+// checks run every rule against every event for a person — expensive enough
+// that we don't want to fire them while the user is arrow-keying / clicking
+// through the persons list. The 1500ms wait says "only run when the user
+// actually settled on a person." useEntityData does NOT debounce idRef
+// changes (watch fires immediately), so this guard has to live here.
 let loadTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleLoad() {
