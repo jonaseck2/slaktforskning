@@ -62,10 +62,13 @@ const eventUndatedDeath = {
 describe('PlaceTimeline', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Fixture deliberately unsorted so the chronological-order assertion
+     // proves the sort actually fires (a pre-sorted fixture would pass even
+     // if the sort were a no-op).
     (window as unknown as { api: unknown }).api = makeApi([
-      eventBirth,
       eventMarriageApprox,
       eventUndatedDeath,
+      eventBirth,
     ]);
   });
 

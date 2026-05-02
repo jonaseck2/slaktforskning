@@ -60,7 +60,6 @@
     <EventModal
       v-if="showForm"
       mode="standalone"
-      :place-id="placeId"
       :editing-event="editingEvent"
       @cancel="closeForm"
       @close="closeForm"
