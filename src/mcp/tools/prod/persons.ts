@@ -257,4 +257,39 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     const candidates = duplicates.findDuplicates(getDb(), args.limit);
     return { content: [{ type: 'text', text: JSON.stringify(candidates, null, 2) }] };
   });
+
+  server.registerTool('add_person_identifier', {
+    description: 'Attach an external identifier to a person — FamilySearch ID, Ancestry ID, Riksarkivet ref, Swedish personnummer, GEDCOM REFN/RIN, or anything else. Use this to record matches found in third-party trees and to keep cross-references for future re-imports.',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+      identifier_type: z.enum(['familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other']).describe('Identifier scheme'),
+      identifier_value: z.string().describe('The identifier value as it appears in the source system'),
+    },
+  }, async (args) => {
+    const ident = personApi.addPersonIdentifier(getDb(), args.person_id, {
+      identifier_type: args.identifier_type,
+      identifier_value: args.identifier_value,
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(ident, null, 2) }] };
+  });
+
+  server.registerTool('get_person_identifiers', {
+    description: 'List all external identifiers attached to a person.',
+    inputSchema: {
+      person_id: z.string().describe('Person ID'),
+    },
+  }, async (args) => {
+    const list = personApi.getPersonIdentifiers(getDb(), args.person_id);
+    return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+  });
+
+  server.registerTool('delete_person_identifier', {
+    description: 'Remove an external identifier from a person.',
+    inputSchema: {
+      id: z.string().describe('person_identifier ID'),
+    },
+  }, async (args) => {
+    const ok = personApi.deletePersonIdentifier(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Identifier not found' }] };
+  });
 }

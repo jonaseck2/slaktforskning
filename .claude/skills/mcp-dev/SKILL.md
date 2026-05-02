@@ -27,7 +27,7 @@ The MCP server has two entry points:
 
 | Server | Entry point | Tools |
 |--------|-------------|-------|
-| Production | `src/mcp/server.ts` | 34 workflow tools for genealogy research |
+| Production | `src/mcp/server.ts` | 77 workflow tools — full CRUD parity with the desktop app for genealogy research |
 | Development | `src/mcp/devServer.ts` | All prod tools + 15 dev-only tools |
 
 Use the **dev server** for all agent-driven development, UI testing, and chart debugging. Use the **prod server** for research sessions and narrative generation.

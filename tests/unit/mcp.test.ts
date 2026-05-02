@@ -325,3 +325,58 @@ describe('import_file', () => {
     expect(result.error).toBeDefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Coverage: every genealogy-essential tool is registered
+// ---------------------------------------------------------------------------
+
+describe('mcp prod tool registry coverage', () => {
+  it('registers every tool the agent needs to author + curate a genealogy database', async () => {
+    const tools = await client.listTools();
+    const names = new Set(tools.tools.map(t => t.name));
+
+    // The list below is the genealogy-essential set per the MCP audit.
+    // Adding/removing here is intentional and should match
+    // src/mcp/tools/prod/*.ts.
+    const required = [
+      // persons
+      'create_person', 'search_persons', 'get_person_summary', 'update_person', 'delete_person',
+      'add_person_name', 'update_person_name', 'delete_person_name',
+      'add_person_identifier', 'get_person_identifiers', 'delete_person_identifier',
+      'merge_persons', 'find_duplicates',
+      // families / relationships / participants
+      'add_relationship', 'add_child', 'get_family_unit', 'get_ancestor_tree',
+      'update_relationship', 'delete_relationship',
+      'add_event_participant', 'remove_event_participant',
+      // events
+      'record_event', 'get_timeline', 'update_event', 'delete_event',
+      // sources / citations
+      'add_source', 'search_sources', 'cite', 'get_citations_for_person',
+      'update_source', 'delete_source', 'update_citation', 'delete_citation',
+      // places
+      'add_place', 'search_places', 'get_place_history', 'resolve_place',
+      'list_place_children', 'get_place_ancestors',
+      'update_place', 'delete_place',
+      // research
+      'get_research_gaps', 'add_research_task', 'update_research_task', 'delete_research_task', 'run_checks',
+      // media
+      'attach_media', 'tag_person_in_media', 'get_media_for_person_context',
+      'update_media', 'delete_media',
+      'link_media', 'unlink_media', 'reorder_media',
+      'update_media_region', 'delete_media_region',
+      // groups
+      'add_group', 'list_groups', 'get_group', 'update_group', 'delete_group',
+      'add_group_link', 'remove_group_link',
+      // repositories
+      'add_repository', 'list_repositories', 'get_repository',
+      'update_repository', 'delete_repository',
+      'link_source_repository', 'unlink_source_repository', 'get_repositories_for_source',
+      // data management / archive
+      'import_file', 'export_gedcom', 'export_archive', 'import_archive',
+      'get_current_database', 'switch_database',
+    ];
+
+    const missing = required.filter(n => !names.has(n));
+    expect(missing).toEqual([]);
+  });
+});

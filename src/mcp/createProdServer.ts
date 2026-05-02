@@ -7,6 +7,8 @@ import { registerSourceTools } from './tools/prod/sources';
 import { registerPlaceTools } from './tools/prod/places';
 import { registerResearchTools } from './tools/prod/research';
 import { registerMediaTools } from './tools/prod/media';
+import { registerGroupTools } from './tools/prod/groups';
+import { registerRepositoryTools } from './tools/prod/repositories';
 import { registerDataManagementTools } from './tools/prod/data-management';
 
 export function createProdServer(initialDb: Database, initialDbPath?: string): McpServer {
@@ -36,6 +38,8 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
   registerPlaceTools(server, ctx);
   registerResearchTools(server, ctx);
   registerMediaTools(server, ctx);
+  registerGroupTools(server, ctx);
+  registerRepositoryTools(server, ctx);
   registerDataManagementTools(server, utilCtx);
 
   return server;

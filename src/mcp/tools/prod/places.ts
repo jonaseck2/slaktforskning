@@ -89,4 +89,37 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     const chain = placeApi.getPlaceAncestors(getDb(), args.place_id);
     return { content: [{ type: 'text', text: JSON.stringify(chain, null, 2) }] };
   });
+
+  server.registerTool('update_place', {
+    description: 'Update an existing place (name, place_type, parent_place_id, latitude/longitude, date_from/to, notes, street/postal_code/city/country). Use to fix typos, attach to a parent, or correct a misclassified place_type.',
+    inputSchema: {
+      id: z.string().describe('Place ID'),
+      name: z.string().optional(),
+      place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional(),
+      parent_place_id: z.string().optional(),
+      latitude: z.number().optional(),
+      longitude: z.number().optional(),
+      date_from: z.string().optional(),
+      date_to: z.string().optional(),
+      notes: z.string().optional(),
+      street: z.string().optional(),
+      postal_code: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const place = placeApi.updatePlace(getDb(), id, data);
+    return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
+  });
+
+  server.registerTool('delete_place', {
+    description: 'Delete a place. Events at the place have place_id set to NULL (not deleted). Children of this place become orphans (parent_place_id NULL). Use carefully — fixing the place is usually better than deleting it.',
+    inputSchema: {
+      id: z.string().describe('Place ID'),
+    },
+  }, async (args) => {
+    const ok = placeApi.deletePlace(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Place not found' }] };
+  });
 }

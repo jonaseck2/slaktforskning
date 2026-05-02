@@ -186,4 +186,14 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
     const event = eventApi.updateEvent(db, id, updates);
     return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
   });
+
+  server.registerTool('delete_event', {
+    description: 'Delete an event and all of its participant links. Use to remove an event recorded by mistake, or to clear a misattributed birth/death after a merge.',
+    inputSchema: {
+      id: z.string().describe('Event ID'),
+    },
+  }, async (args) => {
+    const ok = eventApi.deleteEvent(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Event not found' }] };
+  });
 }

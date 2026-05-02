@@ -1,10 +1,14 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { Database } from 'node-sqlite3-wasm';
+import * as nodePath from 'node:path';
 import { initializeSchema } from '../../../api/schema';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../../gedcom/index';
 import { importFromGenney } from '../../../import/genney/index';
 import { importFromHolger } from '../../../import/holger/index';
+import { exportArchive } from '../../../api/archive_export';
+import { importArchive } from '../../../api/archive_import';
+import { getMediaDir } from '../../../api/media';
 import type { UtilityToolContext } from './types';
 
 export function registerDataManagementTools(server: McpServer, ctx: UtilityToolContext): void {
@@ -79,6 +83,29 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
   }, async (args) => {
     const { ged, report } = exportGedcom(getDb(), args.version ?? '5.5.1');
     return { content: [{ type: 'text', text: JSON.stringify({ report, gedcom_length: ged.length, ged }, null, 2) }] };
+  });
+
+  server.registerTool('export_archive', {
+    description: 'Export the database as a .zip archive containing the GEDCOM file plus all linked media. Use this for full backups that round-trip both the tree and the photos. Media file_refs in the GEDCOM are rewritten to point at the archive\'s media/ folder.',
+    inputSchema: {
+      output_path: z.string().describe('Absolute path where the .zip should be written.'),
+      gedcom_version: z.enum(['5.5.1', '7.0']).optional().describe('GEDCOM version (default: 5.5.1).'),
+    },
+  }, async (args) => {
+    const dbDir = nodePath.dirname(getDbPath());
+    const report = exportArchive(getDb(), args.output_path, dbDir, { gedcomVersion: args.gedcom_version });
+    return { content: [{ type: 'text', text: JSON.stringify({ output_path: args.output_path, report }, null, 2) }] };
+  });
+
+  server.registerTool('import_archive', {
+    description: 'Import a .zip archive (GEDCOM + media/) into the active database. Media files are copied into <dbname>-media/ and file_refs are rewritten to relative paths. Pairs with export_archive for full round-trip.',
+    inputSchema: {
+      archive_path: z.string().describe('Absolute path to the .zip archive to import.'),
+    },
+  }, async (args) => {
+    const mediaDir = getMediaDir(getDbPath());
+    const report = importArchive(getDb(), args.archive_path, mediaDir);
+    return { content: [{ type: 'text', text: JSON.stringify(report, null, 2) }] };
   });
 
   server.registerTool('get_current_database', {

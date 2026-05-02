@@ -14,31 +14,33 @@ The MCP server has two entry points. DB path: `SLAKTFORSKNING_DB` env var, or pl
 
 ### Production Server (`src/mcp/createProdServer.ts`)
 
-34 workflow tools designed for genealogy research and AI narrative generation. Each tool does more in a single call — creates relationships, resolves places, records citations — so agents need fewer round-trips.
+77 workflow tools (counted via `grep -c registerTool src/mcp/tools/prod/*.ts`) designed for genealogy research and AI narrative generation. The set was sized for parity: an agent can author and curate every kind of record the renderer can — full CRUD on persons (incl. names + identifiers), relationships, event participants, events, sources, citations, places, repositories, groups, media (incl. links + regions), research tasks, plus GEDCOM and `.zip`-archive backup round-trip. Each workflow tool does more in a single call — creates relationships, resolves places, records citations — so agents need fewer round-trips. Coverage is enforced by `tests/unit/mcp.test.ts` ("registers every tool the agent needs to author + curate a genealogy database").
 
 Entry point: `npx tsx src/mcp/server.ts`
 
-**Persons (8):** `create_person` (with optional birth event + citation in one call), `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `merge_persons`, `find_duplicates`
+**Persons (13):** `create_person`, `search_persons`, `get_person_summary`, `update_person`, `delete_person`, `add_person_name`, `update_person_name`, `delete_person_name`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`, `merge_persons`, `find_duplicates`
 
-**Families (4):** `add_relationship` (couple/parent_child/sibling/godparent), `add_child` (child + parent_child relationship in one call), `get_family_unit`, `get_ancestor_tree`
+**Families / participants (8):** `add_relationship`, `add_child`, `get_family_unit`, `get_ancestor_tree`, `update_relationship`, `delete_relationship`, `add_event_participant`, `remove_event_participant`
 
-**Events (3):** `record_event` (multi-participant, place findOrCreate, citation in one call), `get_timeline`, `update_event`
+**Events (4):** `record_event` (multi-participant, place findOrCreate, citation, `date_value_end` for ranges), `get_timeline`, `update_event`, `delete_event`
 
-**Sources (4):** `add_source`, `search_sources`, `cite` (link source to event/person/relationship/place), `get_citations_for_person`
+**Sources / citations (8):** `add_source`, `search_sources`, `cite`, `get_citations_for_person`, `update_source`, `delete_source`, `update_citation`, `delete_citation`
 
-**Places (4):** `add_place`, `search_places`, `get_place_history`, `resolve_place`
+**Places (8):** `add_place`, `search_places`, `get_place_history`, `resolve_place`, `list_place_children`, `get_place_ancestors`, `update_place`, `delete_place`
 
-**Research (4):** `get_research_gaps`, `add_research_task`, `update_research_task`, `run_checks`
+**Research (5):** `get_research_gaps`, `add_research_task`, `update_research_task`, `delete_research_task`, `run_checks`
 
-**Media (3):** `attach_media` (link file to entity), `tag_person_in_media` (create face/region tag), `get_media_for_person_context`
+**Media (10):** `attach_media`, `update_media`, `delete_media`, `link_media`, `unlink_media`, `reorder_media`, `tag_person_in_media`, `update_media_region`, `delete_media_region`, `get_media_for_person_context`
 
-**Data Management (4):** `import_file` (unified — detects GEDCOM/Genney/Holger by extension and content), `export_gedcom` (version: '5.5.1' | '7.0'), `get_current_database`, `switch_database`
+**Groups (7):** `add_group`, `list_groups`, `get_group`, `update_group`, `delete_group`, `add_group_link`, `remove_group_link`
 
-**Gazetteer tools (prod server):** `get_gazetteer_schema`, `list_gazetteers`, `import_gazetteer`, `export_gazetteer`, `delete_gazetteer`, `resolve_place`, `search_gazetteer`
+**Repositories (8):** `add_repository`, `list_repositories`, `get_repository`, `update_repository`, `delete_repository`, `link_source_repository`, `unlink_source_repository`, `get_repositories_for_source`
+
+**Data Management (6):** `import_file` (unified — GEDCOM/Genney/Holger), `export_gedcom`, `import_archive` (.zip with media), `export_archive`, `get_current_database`, `switch_database`
 
 ### Development Server (`src/mcp/createDevServer.ts`)
 
-All 34 prod tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection.
+All 77 prod tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection.
 
 Entry point: `npx tsx src/mcp/devServer.ts`
 

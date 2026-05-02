@@ -60,6 +60,16 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
     return { content: [{ type: 'text', text: task ? JSON.stringify(task, null, 2) : 'Research task not found' }] };
   });
 
+  server.registerTool('delete_research_task', {
+    description: 'Delete a research task. Use to clear completed tasks or remove a task created by mistake. To preserve a finished task with its result, use update_research_task with status="done" instead.',
+    inputSchema: {
+      id: z.string().describe('Research task ID'),
+    },
+  }, async (args) => {
+    const ok = researchTasks.deleteResearchTask(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Research task not found' }] };
+  });
+
   server.registerTool('run_checks', {
     description: 'Run data quality checks. If person_id is provided, checks only that person; otherwise checks the entire database.',
     inputSchema: {

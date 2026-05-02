@@ -187,4 +187,54 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
     const tree = reportData.getAncestorTree(getDb(), args.person_id, args.generations ?? 4);
     return { content: [{ type: 'text', text: tree ? JSON.stringify(tree, null, 2) : 'Person not found' }] };
   });
+
+  server.registerTool('update_relationship', {
+    description: 'Update fields on an existing relationship (type, subtype, notes). Use to fix a wrong subtype like flipping "married" to "unmarried_partner", or to add/edit a notes entry.',
+    inputSchema: {
+      id: z.string().describe('Relationship ID'),
+      type: z.enum(['couple', 'parent_child', 'sibling', 'godparent', 'other']).optional(),
+      subtype: z.string().optional().describe('Relationship subtype (e.g. marriage, biological, adopted)'),
+      notes: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const rel = relationshipApi.updateRelationship(getDb(), id, data);
+    return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
+  });
+
+  server.registerTool('delete_relationship', {
+    description: 'Delete a relationship (and any events attached to it via relationship_id are detached but not deleted). Use for duplicate couple records or wrong sibling links.',
+    inputSchema: {
+      id: z.string().describe('Relationship ID'),
+    },
+  }, async (args) => {
+    const ok = relationshipApi.deleteRelationship(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Relationship not found' }] };
+  });
+
+  server.registerTool('add_event_participant', {
+    description: 'Add a person to an existing event with a role (witness, godparent, officiant, spouse, parent, child, primary, other). Use to add a witness to a baptism after the event was already recorded.',
+    inputSchema: {
+      event_id: z.string().describe('Event ID'),
+      person_id: z.string().describe('Person ID'),
+      role: z.enum(['primary', 'spouse', 'parent', 'child', 'witness', 'godparent', 'officiant', 'other']).optional().describe('Role in the event (default: primary)'),
+    },
+  }, async (args) => {
+    const part = relationshipApi.addEventParticipant(getDb(), {
+      event_id: args.event_id,
+      person_id: args.person_id,
+      role: args.role ?? 'primary',
+    });
+    return { content: [{ type: 'text', text: JSON.stringify(part, null, 2) }] };
+  });
+
+  server.registerTool('remove_event_participant', {
+    description: 'Remove a participant link by its participant id (NOT the person id or event id). To find the participant id, get the event from get_person_summary or get_timeline.',
+    inputSchema: {
+      id: z.string().describe('event_participant ID'),
+    },
+  }, async (args) => {
+    const ok = relationshipApi.removeEventParticipant(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Participant not found' }] };
+  });
 }

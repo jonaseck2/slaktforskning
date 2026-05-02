@@ -78,4 +78,59 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
     const list = sourceApi.getCitationsForPerson(getDb(), args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
+
+  server.registerTool('update_source', {
+    description: 'Update fields on an existing source (title, author, publication_info, repository, url, source_type, call_number, abstract). Use to fix typos, add missing fields, or change the source_type.',
+    inputSchema: {
+      id: z.string().describe('Source ID'),
+      title: z.string().optional(),
+      author: z.string().optional(),
+      publication_info: z.string().optional(),
+      repository: z.string().optional(),
+      url: z.string().optional(),
+      source_type: z.string().optional().describe('e.g. vital_record, census, church_record, newspaper, photograph, oral_history, website, video'),
+      call_number: z.string().optional(),
+      abstract: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const src = sourceApi.updateSource(getDb(), id, data);
+    return { content: [{ type: 'text', text: src ? JSON.stringify(src, null, 2) : 'Source not found' }] };
+  });
+
+  server.registerTool('delete_source', {
+    description: 'Delete a source. All citations referencing the source are deleted via CASCADE. Use only when no citation should survive — to keep citations but remove the source title, edit the source instead.',
+    inputSchema: {
+      id: z.string().describe('Source ID'),
+    },
+  }, async (args) => {
+    const ok = sourceApi.deleteSource(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Source not found' }] };
+  });
+
+  server.registerTool('update_citation', {
+    description: 'Update an existing citation (page, confidence, transcription, notes, date_accessed). Use to add a quote you found later, bump confidence after corroborating with a second source, or fix a wrong page reference.',
+    inputSchema: {
+      id: z.string().describe('Citation ID'),
+      page: z.string().optional(),
+      confidence: z.number().min(0).max(3).optional().describe('0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary'),
+      transcription: z.string().optional(),
+      notes: z.string().optional(),
+      date_accessed: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const cit = sourceApi.updateCitation(getDb(), id, data);
+    return { content: [{ type: 'text', text: cit ? JSON.stringify(cit, null, 2) : 'Citation not found' }] };
+  });
+
+  server.registerTool('delete_citation', {
+    description: 'Delete a citation (does not delete the source). Use to detach a citation from a wrong event/person without removing the underlying source record.',
+    inputSchema: {
+      id: z.string().describe('Citation ID'),
+    },
+  }, async (args) => {
+    const ok = sourceApi.deleteCitation(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Citation not found' }] };
+  });
 }

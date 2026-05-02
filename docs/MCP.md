@@ -10,7 +10,7 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 
 Entry point: `npx tsx src/mcp/server.ts`
 
-34 workflow tools designed for genealogy research and AI narrative generation. Each tool does more in one call — creates relationships, resolves places, records citations — so agents need fewer round-trips.
+77 workflow tools designed for genealogy research and AI narrative generation. The set provides full CRUD parity with the desktop app — every record type the renderer can author or curate, an agent can too. Each workflow tool does more in one call — creates relationships, resolves places, records citations — so agents need fewer round-trips. Coverage is enforced by `tests/unit/mcp.test.ts` ("registers every tool the agent needs to author + curate a genealogy database").
 
 ### Persons
 
@@ -24,6 +24,9 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `add_person_name` | Add an alternate name (birth, married, alias, aka) with optional date range. |
 | `update_person_name` | Update an existing person_name (retype primary, set date range, add nickname / preferred_name, etc.). |
 | `delete_person_name` | Delete a single person_name record without deleting the person. |
+| `add_person_identifier` | Attach an external ID (FamilySearch, Ancestry, Riksarkivet, personnummer, REFN/RIN, other). |
+| `get_person_identifiers` | List all external identifiers on a person. |
+| `delete_person_identifier` | Remove a single identifier. |
 | `merge_persons` | Merge two persons: move all relationships, events, names, citations to target, then delete source. |
 | `find_duplicates` | Find candidate duplicate persons by name similarity. Returns ranked pairs with score. |
 
@@ -35,6 +38,10 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `add_child` | Add a child to a couple: creates the person + parent_child relationships to both parents in one call. Optional birth event and citation. |
 | `get_family_unit` | Couple + both persons with birth/death events + all children with their birth/death events. |
 | `get_ancestor_tree` | Nested ancestor tree up to N generations with birth/death/marriage events per node. |
+| `update_relationship` | Update type, subtype, or notes on an existing relationship. |
+| `delete_relationship` | Delete a relationship row. Events that referenced it via `relationship_id` are detached but not deleted. |
+| `add_event_participant` | Add a person to an existing event with a role (witness, godparent, officiant, primary, spouse, parent, child, other). |
+| `remove_event_participant` | Remove a single participant link by `event_participant.id`. |
 
 ### Events
 
@@ -43,6 +50,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `record_event` | Record a life event with participants, place, and an optional citation. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. Date ranges (`date_type: "between"`) use `date_value` for the start and `date_value_end` for the end (e.g. military service 1999–2000). The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
 | `get_timeline` | Chronological timeline of a person's events merged with key family events (spouse/children births and deaths). |
 | `update_event` | Update event fields. Place can be supplied as a string (resolved to place_id via findOrCreate). Same `value` / `notes` / deprecated `description` semantics as `record_event`. |
+| `delete_event` | Delete an event and all of its participant links. |
 
 ### Sources
 
@@ -52,6 +60,10 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `search_sources` | Search sources by title, author, or publication info. |
 | `cite` | Link a source to an event, person, relationship, or place. Accepts page, confidence, transcription, notes. |
 | `get_citations_for_person` | Get all citations attached to events, relationships, and names for a person. |
+| `update_source` | Update title, author, publication_info, repository, url, source_type, call_number, abstract. |
+| `delete_source` | Delete a source. CASCADE removes all citations referencing it. |
+| `update_citation` | Update page, confidence, transcription, notes, date_accessed on an existing citation. |
+| `delete_citation` | Detach a citation without removing the underlying source. |
 
 ### Places
 
@@ -61,6 +73,10 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `search_places` | Search places by name. Returns id, name, place_type, parent name. |
 | `get_place_history` | All events at a place chronologically, with participant names and roles. |
 | `resolve_place` | Resolve a place name string against available gazetteers. Returns coordinates and matched node. |
+| `list_place_children` | Children of a place (next level down in the hierarchy). |
+| `get_place_ancestors` | Ancestor chain (root → self) for a place. |
+| `update_place` | Update a place (name, type, parent, coordinates, dates, address fields). |
+| `delete_place` | Delete a place. Events at this place have place_id NULL'd; child places become orphans. |
 
 ### Research
 
@@ -69,6 +85,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `get_research_gaps` | Analyze a person for missing data: no birth, no death (if not living), no parents, unsourced events, events without places. |
 | `add_research_task` | Create a research task optionally linked to a person. Accepts priority, status, notes. |
 | `update_research_task` | Update task text, status (open/in_progress/done/stopped), priority, notes, or result. |
+| `delete_research_task` | Delete a research task. To preserve a finished task, prefer `update_research_task` with `status="done"`. |
 | `run_checks` | Run all quality checks and return findings grouped by severity. |
 
 ### Media
@@ -78,8 +95,38 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `attach_media` | Link a media file to an entity (person, event, relationship, place, source). Creates the media record if needed. `file_ref` must be a path RELATIVE to the database directory (e.g. `claude-media/photo.jpg`); URLs and absolute paths break the renderer. |
 | `update_media` | Update an existing media record (title, notes, format, `file_ref`, is_printable). Use to repair a broken `file_ref` after relocating the file into `<dbname>-media/`. |
 | `delete_media` | Delete a media record and its links. The underlying file on disk is not removed. |
+| `link_media` | Link an existing media row to another entity (one wedding photo can document both spouses, the marriage relationship, the place, and the source). |
+| `unlink_media` | Detach a single media→entity link by link_id. |
+| `reorder_media` | Reorder media links for one entity by passing the link ids in display order. Position 0 becomes the profile picture. |
 | `tag_person_in_media` | Create a face/region tag on a media item linking it to a person. Coordinates are fractions 0.0–1.0 of image dimensions. |
+| `update_media_region` | Update an existing face/region tag (move the box, change the tagged person, rename the label). |
+| `delete_media_region` | Delete a face/region tag without affecting the underlying media record. |
 | `get_media_for_person_context` | Find media that might contain a specific person based on event and relationship links. Returns base64 thumbnails for vision processing. |
+
+### Groups
+
+| Tool | Description |
+|------|-------------|
+| `add_group` | Create a custom collection (e.g. "Photos pending review"). |
+| `list_groups` | List every group. |
+| `get_group` | Get one group with its links (persons, places, media). |
+| `update_group` | Update a group's name or notes. |
+| `delete_group` | Delete a group and all of its membership links. |
+| `add_group_link` | Add a person/place/media to a group. |
+| `remove_group_link` | Remove a single membership by link id. |
+
+### Repositories
+
+| Tool | Description |
+|------|-------------|
+| `add_repository` | Create an archive / library / collection record (e.g. "Stockholms stadsarkiv"). |
+| `list_repositories` | List every repository. |
+| `get_repository` | Get one repository by id. |
+| `update_repository` | Update any field. |
+| `delete_repository` | Delete a repository (CASCADE removes source-repository link rows; sources remain). |
+| `link_source_repository` | Attach a source to a repository (idempotent). |
+| `unlink_source_repository` | Remove a source-repository link. |
+| `get_repositories_for_source` | List all repositories that hold a given source. |
 
 ### Data Management
 
@@ -87,6 +134,8 @@ Entry point: `npx tsx src/mcp/server.ts`
 |------|-------------|
 | `import_file` | Unified import: detects GEDCOM/Genney/Holger by file extension and content. Returns ImportReport with warnings and unmapped data. |
 | `export_gedcom` | Export the current database as a GEDCOM file. Accepts `version: '5.5.1' \| '7.0'` (default `'5.5.1'`). Returns `{ ged, report }` where report lists excluded entities. |
+| `import_archive` | Import a `.zip` archive containing a GEDCOM file plus a `media/` folder. Media files are copied into `<dbname>-media/` and `file_ref` rewritten to the relative path. |
+| `export_archive` | Export the database as a `.zip` archive (GEDCOM + media). Pairs with `import_archive` for full backup round-trip. |
 | `get_current_database` | Get the path and filename of the currently open database. |
 | `switch_database` | Close the current database and open a different one (creates file if needed). All subsequent tools operate on the new database. |
 

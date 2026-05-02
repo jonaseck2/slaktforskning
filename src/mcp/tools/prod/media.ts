@@ -91,4 +91,64 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
     const list = mediaAi.getMediaForPersonContext(getDb(), args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
+
+  server.registerTool('link_media', {
+    description: 'Link an existing media record to an additional entity (one image of a wedding can link to two spouses, the marriage relationship, the place, and the source). Use after `attach_media` when the same image documents more than one entity.',
+    inputSchema: {
+      media_id: z.string().describe('Media ID'),
+      entity_type: z.enum(['person', 'event', 'relationship', 'place', 'source']).describe('Entity type to link to'),
+      entity_id: z.string().describe('Entity ID to link to'),
+      link_type: z.string().optional().describe('Link type (e.g. "portrait", "document")'),
+    },
+  }, async (args) => {
+    const link = mediaApi.addMediaLink(getDb(), args);
+    return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
+  });
+
+  server.registerTool('unlink_media', {
+    description: 'Remove one media-link by its link id (NOT the media id) — leaves the media row and any other links untouched. Use to detach an image from one wrong entity without deleting the image.',
+    inputSchema: {
+      link_id: z.string().describe('media_link ID'),
+    },
+  }, async (args) => {
+    const ok = mediaApi.removeMediaLink(getDb(), args.link_id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Link not found' }] };
+  });
+
+  server.registerTool('reorder_media', {
+    description: 'Reorder media links for one entity. Pass the link ids (not media ids) in the desired display order. Use to promote a better portrait to position 0, which makes it the chart/list profile pic.',
+    inputSchema: {
+      link_ids: z.array(z.string()).describe('Ordered list of media_link IDs (lowest sort_order first). Should be the full set of links for one entity.'),
+    },
+  }, async (args) => {
+    mediaApi.reorderMediaLinks(getDb(), args.link_ids);
+    return { content: [{ type: 'text', text: 'Reordered' }] };
+  });
+
+  server.registerTool('update_media_region', {
+    description: 'Update an existing face/region tag on a media item — adjust the box, change the tagged person, or rename the label. Coordinates are fractions 0.0–1.0.',
+    inputSchema: {
+      id: z.string().describe('media_region ID'),
+      person_id: z.string().optional().describe('Person ID to link to the region (omit to keep current; pass empty string to detach)'),
+      x: z.number().optional(),
+      y: z.number().optional(),
+      width: z.number().optional(),
+      height: z.number().optional(),
+      label: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const region = mediaRegions.updateMediaRegion(getDb(), id, data);
+    return { content: [{ type: 'text', text: region ? JSON.stringify(region, null, 2) : 'Region not found' }] };
+  });
+
+  server.registerTool('delete_media_region', {
+    description: 'Delete a face/region tag without affecting the underlying media record. Use to remove a misplaced or duplicate face box.',
+    inputSchema: {
+      id: z.string().describe('media_region ID'),
+    },
+  }, async (args) => {
+    const ok = mediaRegions.deleteMediaRegion(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Region not found' }] };
+  });
 }
