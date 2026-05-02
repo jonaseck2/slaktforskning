@@ -50,9 +50,12 @@
         <button
           v-if="row.name_type !== 'birth' && !readonly"
           class="btn-sm btn-delete"
-          :aria-label="$t('a11y.deleteItem', { item: ((row.given_name || '') + ' ' + (row.surname || '')).trim() })"
+          :aria-label="$t('common.delete')"
+          :title="$t('common.deleteTooltip')"
           @click.stop="$emit('delete', row.id)"
-        >✕</button>
+        >
+          <IconTrash :size="14" />
+        </button>
       </div>
     </div>
   </div>
@@ -62,6 +65,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useToast } from '../composables/useToast';
 
 export interface NameRow {

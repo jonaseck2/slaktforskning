@@ -40,9 +40,12 @@
         <td v-if="!props.readonly" class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('a11y.deleteItem', { item: task.task })"
+            :aria-label="$t('common.delete')"
+            :title="$t('common.deleteTooltip')"
             @click.stop="handleDelete(task.id)"
-          >✕</button>
+          >
+            <IconTrash :size="14" />
+          </button>
         </td>
       </tr>
     </tbody>
@@ -62,6 +65,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import ConfirmModal from './ConfirmModal.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { narrateTaskRow } from '../utils/screenReaderNarration';
 

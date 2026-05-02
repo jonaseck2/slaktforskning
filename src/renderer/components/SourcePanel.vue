@@ -141,7 +141,12 @@
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <AppButton variant="ghost" size="sm" :aria-label="$t('common.remove')" @click.stop="removeCitation(cit.id)">✕</AppButton>
+                  <AppButton variant="ghost" size="sm"
+                             :aria-label="$t('common.delete')"
+                             :title="$t('common.deleteTooltip')"
+                             @click.stop="removeCitation(cit.id)">
+                    <IconTrash :size="14" />
+                  </AppButton>
                 </td>
               </tr>
             </tbody>
@@ -258,6 +263,7 @@ import EntityMediaSection from './EntityMediaSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
