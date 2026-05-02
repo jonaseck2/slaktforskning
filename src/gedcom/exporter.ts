@@ -286,7 +286,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && ev.notes) lines.push(`2 NOTE ${ev.notes}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
         const citations = getCitationsForEvent(db, ev.id);
@@ -438,7 +438,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && ev.notes) lines.push(`2 NOTE ${ev.notes}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
         const citations = getCitationsForEvent(db, ev.id);

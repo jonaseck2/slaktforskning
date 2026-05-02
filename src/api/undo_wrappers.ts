@@ -98,8 +98,8 @@ export function deletePersonUndo(
         const existing = events.getEvent(db, ev.id);
         if (!existing) {
           runSql(db,
-            `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.description]
+            `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.value, ev.notes]
           );
         }
         const parts = participantsByEvent[ev.id] || [];
@@ -252,8 +252,8 @@ export function deleteEventUndo(
     label: 'undo.deleteEvent',
     undo: () => {
       runSql(db,
-        `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [old.id, old.event_type, old.relationship_id, old.date_type, old.date_value, old.date_value_end, old.date_original, old.place_id, old.place_address, old.cause, old.description]
+        `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [old.id, old.event_type, old.relationship_id, old.date_type, old.date_value, old.date_value_end, old.date_original, old.place_id, old.place_address, old.cause, old.value, old.notes]
       );
       for (const p of participants) {
         try {
@@ -367,8 +367,8 @@ export function deleteRelationshipUndo(
         const existing = events.getEvent(db, ev.id);
         if (!existing) {
           runSql(db,
-            `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.description]
+            `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.value, ev.notes]
           );
         }
       }

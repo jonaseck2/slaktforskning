@@ -87,7 +87,7 @@ export function exportPersonsCsv(db: Database, options: CsvOptions = {}): string
 
 export function exportEventsCsv(db: Database, options: CsvOptions = {}): string {
   const delimiter = options.delimiter ?? ',';
-  const headers = ['id', 'event_type', 'date_type', 'date_value', 'date_original', 'place_name', 'description', 'person_names'];
+  const headers = ['id', 'event_type', 'date_type', 'date_value', 'date_original', 'place_name', 'notes', 'person_names'];
 
   const events = queryAll<{
     id: string;
@@ -96,7 +96,7 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
     date_value: string | null;
     date_original: string | null;
     place_name: string | null;
-    description: string | null;
+    notes: string | null;
   }>(db, `
     SELECT
       e.id,
@@ -105,7 +105,7 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
       e.date_value,
       e.date_original,
       pl.name AS place_name,
-      e.description
+      e.notes
     FROM events e
     LEFT JOIN places pl ON pl.id = e.place_id
     ORDER BY e.date_value, e.event_type
@@ -138,7 +138,7 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
     const names = namesByEvent.get(e.id)?.join(', ') ?? '';
     lines.push(csvRow([
       e.id, e.event_type, e.date_type, e.date_value,
-      e.date_original, e.place_name, e.description, names,
+      e.date_original, e.place_name, e.notes, names,
     ], delimiter));
   }
 

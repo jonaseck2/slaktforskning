@@ -22,7 +22,8 @@ export interface RecordEventArgs {
   source_title?: string;
   source_page?: string;
   confidence?: number;
-  description?: string;
+  value?: string;
+  notes?: string;
   cause?: string;
 }
 
@@ -52,7 +53,8 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       date_type: args.date_type as GenealogyEvent['date_type'] | undefined,
       date_value: args.date_type ? args.date_value ?? null : null,
       place_id,
-      description: args.description,
+      value: args.value,
+      notes: args.notes,
       cause: args.cause,
     });
 
@@ -115,7 +117,8 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       source_title: z.string().optional().describe('Source document title; reuses existing source if title matches'),
       source_page: z.string().optional().describe('Page or reference within the source'),
       confidence: z.number().min(0).max(3).optional().describe('Source confidence: 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary'),
-      description: z.string().optional().describe('Event description'),
+      value: z.string().optional().describe('Fact value (e.g. occupation name "Carpenter", residence "Stockholm", religion "Lutheran"). Maps to GEDCOM 5.5.1 line value / GEDCOM-X Fact.value.'),
+      notes: z.string().optional().describe('Free-form notes about the event'),
       cause: z.string().optional().describe('Cause (e.g. cause of death)'),
     },
   }, async (args) => {
@@ -147,7 +150,8 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
       date_original: z.string().optional().describe('Original date text as it appears in the source'),
       place: z.string().optional().describe('Place name — resolved to place_id via findOrCreate'),
-      description: z.string().optional().describe('Event description'),
+      value: z.string().optional().describe('Fact value (e.g. occupation name "Carpenter", residence "Stockholm"). Maps to GEDCOM 5.5.1 line value.'),
+      notes: z.string().optional().describe('Free-form notes about the event'),
       cause: z.string().optional().describe('Cause (e.g. cause of death)'),
     },
   }, async (args) => {

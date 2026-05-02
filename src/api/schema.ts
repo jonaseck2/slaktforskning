@@ -80,7 +80,8 @@ export function initializeSchema(db: Database): void {
       date_value_end TEXT,
       date_original TEXT NOT NULL DEFAULT '',
       place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
-      description TEXT NOT NULL DEFAULT '',
+      value TEXT,
+      notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -445,5 +446,17 @@ export function initializeSchema(db: Database): void {
   // double-listing in event-type pickers (BENGT #28d). Idempotent — no-op once
   // all rows already say 'christening'.
   runSql(db, "UPDATE events SET event_type='christening' WHERE event_type='baptism'");
+
+  // v0.203.0 events: add `value` column (GEDCOM-X Fact.value / GEDCOM 5.5.1 line value)
+  // and rename `description` -> `notes` so the column name reflects what it always
+  // semantically held (free-form notes), now distinct from the fact's primary value.
+  // See docs/plans/archive/2026-05-02-events-fact-value-design.md
+  const eventColsV203 = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)').map(c => c.name);
+  if (!eventColsV203.includes('value')) {
+    runSql(db, 'ALTER TABLE events ADD COLUMN value TEXT');
+  }
+  if (eventColsV203.includes('description') && !eventColsV203.includes('notes')) {
+    runSql(db, 'ALTER TABLE events RENAME COLUMN description TO notes');
+  }
 
 }

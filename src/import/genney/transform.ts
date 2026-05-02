@@ -365,7 +365,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`
     ),
     insertEvent: db.prepare(
-      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
     insertRepository: db.prepare(
       `INSERT INTO repositories (id, name, address, city, postal_code, state, country, phone, email, web, call_number, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -589,7 +589,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     const place_id = splaceRid != null ? splaceFlatMap.get(splaceRid) ?? null : null;
 
     const descParts = [ev.DESCRIPTION, ev.NOTE].filter(Boolean);
-    const description = descParts.length > 0 ? descParts.join('\n') : '';
+    const notes = descParts.length > 0 ? descParts.join('\n') : '';
 
     // Use OWNER_EVENT as canonical source; fall back to EVENT.OWNER if missing
     const owners = ownerEventMap.get(ev.RID) ?? (ev.OWNER ? [ev.OWNER] : []);
@@ -605,7 +605,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       parsedDate?.date_value_end ?? null,
       parsedDate?.date_original ?? dateStr,
       place_id, ev.ADDRESS ?? null, ev.CAUSE ?? null,
-      description,
+      notes,
     ]);
     eventMap.set(ev.RID, id);
 

@@ -331,7 +331,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         date_original: '',
         place_id: null,
         relationship_id: null,
-        description: titlNode.value,
+        notes: titlNode.value,
       });
       addEventParticipant(ctx.db, { event_id: event.id, person_id: person.id, role: 'primary' });
     }

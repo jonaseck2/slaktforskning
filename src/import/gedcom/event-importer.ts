@@ -80,7 +80,7 @@ export function importEventNode(
     place_id: place?.id ?? null,
     relationship_id: opts.relationship_id ?? null,
     cause: causeValue,
-    description: noteValue,
+    notes: noteValue,
   });
 
   // Track old→new event ID so ASSO _EVID references resolve across databases

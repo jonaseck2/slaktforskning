@@ -15,7 +15,7 @@ export interface PersonEventInput {
   place_id: string | null;
   /** If place_id is null and place_name is provided, findOrCreatePlace is called. */
   place_name?: string | null;
-  description: string;
+  notes: string;
   cause: string | null;
 }
 
@@ -66,7 +66,7 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
       date_value_end: args.event.date_value_end ?? null,
       date_original: args.event.date_original,
       place_id,
-      description: args.event.description,
+      notes: args.event.notes,
       cause: args.event.cause,
     });
 

@@ -76,7 +76,7 @@ export function getMediaTimeline(
         dateEnd: event.date_value_end ?? undefined,
         dateType: event.date_type,
         eventType: event.event_type,
-        eventDescription: event.description || undefined,
+        eventDescription: event.notes || undefined,
         placeName,
       });
     }
