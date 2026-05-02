@@ -20,6 +20,7 @@
 
 ## Unreleased
 
+- chore: PLAN.md trimmed to active items; done milestones live only in the archive going forward.
 - feat: PlacePanel gains a Timeline section that mirrors PersonPanel's Timeline — chronological events at this place with the same dot rail, gap markers on >20-year jumps, dated/undated split, and approximate-date affordance. Read-only derived view of the Events section; clicking a row opens the same event editor; `+ Event` chip routes to the same add flow (no second authoring path).
 - feat: PlacePanel place section now communicates *how* a place is anchored — Type, Parent place, and Coordinates each show a "Resolved" hint with the gazetteer's value when you haven't authored one yourself.
 - ux: Resolved hints sit inside the Type, Parent place, and Coordinate fields (was below); the place name field is relabelled "Place".

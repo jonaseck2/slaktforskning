@@ -419,3 +419,18 @@ All print-configuration controls moved from tab headers into a right-side panel.
 CI/CD, automated releases, Claude-powered issue triage, governance files, README redesign.
 - Spec: [2026-04-18-open-source-publishing-design.md](2026-04-18-open-source-publishing-design.md)
 - Plan: [2026-04-18-open-source-publishing.md](2026-04-18-open-source-publishing.md)
+
+### IPC Channel Registry
+Replaced 3-layer string-keyed IPC boilerplate with a single typed registry in `src/shared/channels/` (~131 channels). Adding a channel is now one `defineChannel()` call. `window.api` is fully typed via `ApiSurface<typeof channelRegistry>`.
+- Plan: [2026-04-28-ipc-channel-registry.md](2026-04-28-ipc-channel-registry.md)
+
+### Panel Composables & EntityPanel
+`useEntityData` / `useEditableFields` / `usePanelStorage` composables and a shared `<EntityPanel>` shell. Removed ~600 lines of repetition across entity panels, fixed the EventList stale-load race, centralized 56+ ad-hoc localStorage keys, and baked cross-view reactivity into the data composable.
+- Plan: [2026-04-28-panel-composables.md](2026-04-28-panel-composables.md)
+
+### Ben Feedback Batch (2026-04-29)
+25 items from beta-tester Ben shipped across 8 releases (v0.162.6 → v0.169.0). Reactivity audit + fixes (panel section counts, tree refetch on data change), life-timeline expansion (parents' deaths, opt-in sibling/child events), and assorted UX polish. See CHANGELOG entries for the full list.
+- Plans: `2026-04-29-ben-*.md` in this archive directory.
+
+### Duplicate Persons View
+`/duplicates` route + `DuplicatesView.vue` listing duplicate-person candidates with a side-by-side `MergePersonsModal`. API: `findDuplicates`, `findDuplicatesPage`, `mergePersons`, `ignoreDuplicatePair`. Nav badge with live count. (Places / sources / media coverage tracked separately as a backlog item.)

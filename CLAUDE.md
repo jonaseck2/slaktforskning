@@ -116,8 +116,9 @@ Reference docs (load on demand): `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`,
 1. Mark every checkbox in the plan file as `[x]` (Self-review checklist included). Skill / rule updates the plan called for must already have landed in commits.
 2. Move the plan file (and its `-design.md` sibling if any) to `docs/plans/archive/` via `git mv`.
 3. Final version bump in `package.json` matching the largest change shipped (any feature → minor; fix-only refactor → patch) and add a `## Unreleased` line in `CHANGELOG.md` summarising the plan.
-4. Commit `chore: archive completed <plan-name>` + the bump.
-5. Merge worktree → `main` (`finishing-a-development-branch` Option 1), delete the branch, remove the worktree.
+4. Update `docs/PLAN.md`: remove the milestone's `[planned]` / `[in-progress]` block from the active list, and append a one-paragraph entry to `docs/plans/archive/PLAN.md` (matching the existing `### Title` + one-line description + spec/plan link format). `docs/PLAN.md` must contain zero `[done]` entries when you commit — done milestones live only in the archive.
+5. Commit `chore: archive completed <plan-name>` + the bump.
+6. Merge worktree → `main` (`finishing-a-development-branch` Option 1), delete the branch, remove the worktree.
 
 **Small fixes → main is fine.** One-off typo fixes, i18n tweaks, single-file bug fixes, or any change that doesn't warrant a plan file can be done directly on `main` without a worktree.
 
