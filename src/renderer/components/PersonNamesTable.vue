@@ -33,18 +33,18 @@
           v-if="!readonly"
           type="button"
           class="btn-order"
-          :disabled="idx === 0"
-          :aria-label="$t('media.moveUp')"
-          :title="$t('media.moveUp')"
+          :disabled="!canMoveUp(idx)"
+          :aria-label="moveUpTitle(idx)"
+          :title="moveUpTitle(idx)"
           @click.stop="moveUp(idx)"
         >&#9650;</button>
         <button
           v-if="!readonly"
           type="button"
           class="btn-order"
-          :disabled="idx === sortedRows.length - 1"
-          :aria-label="$t('media.moveDown')"
-          :title="$t('media.moveDown')"
+          :disabled="!canMoveDown(idx)"
+          :aria-label="moveDownTitle(idx)"
+          :title="moveDownTitle(idx)"
           @click.stop="moveDown(idx)"
         >&#9660;</button>
         <button
@@ -67,7 +67,6 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
 import IconTrash from './ui/IconTrash.vue';
-import { useToast } from '../composables/useToast';
 
 export interface NameRow {
   id: string;
@@ -103,7 +102,6 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const toast = useToast();
 
 /**
  * Effective date_from for ranking. Mirrors `displayedNameIdSql` in
@@ -151,27 +149,37 @@ function canSwap(a: DisplayRow, b: DisplayRow): boolean {
   return a.effective_date_from === b.effective_date_from;
 }
 
+function canMoveUp(idx: number): boolean {
+  if (idx === 0) return false;
+  return canSwap(sortedRows.value[idx - 1], sortedRows.value[idx]);
+}
+
+function canMoveDown(idx: number): boolean {
+  if (idx === sortedRows.value.length - 1) return false;
+  return canSwap(sortedRows.value[idx], sortedRows.value[idx + 1]);
+}
+
+function moveUpTitle(idx: number): string {
+  if (idx === 0) return t('media.moveUp');
+  if (!canMoveUp(idx)) return t('names.reorderInversionBlocked');
+  return t('media.moveUp');
+}
+
+function moveDownTitle(idx: number): string {
+  if (idx === sortedRows.value.length - 1) return t('media.moveDown');
+  if (!canMoveDown(idx)) return t('names.reorderInversionBlocked');
+  return t('media.moveDown');
+}
+
 function moveUp(idx: number) {
-  if (idx === 0) return;
-  const above = sortedRows.value[idx - 1];
-  const target = sortedRows.value[idx];
-  if (!canSwap(above, target)) {
-    toast.error(t('names.reorderInversionBlocked'));
-    return;
-  }
+  if (!canMoveUp(idx)) return;
   const newOrder = [...sortedRows.value];
   [newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]];
   emit('reorder', newOrder.map(r => r.id));
 }
 
 function moveDown(idx: number) {
-  if (idx === sortedRows.value.length - 1) return;
-  const below = sortedRows.value[idx + 1];
-  const target = sortedRows.value[idx];
-  if (!canSwap(target, below)) {
-    toast.error(t('names.reorderInversionBlocked'));
-    return;
-  }
+  if (!canMoveDown(idx)) return;
   const newOrder = [...sortedRows.value];
   [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
   emit('reorder', newOrder.map(r => r.id));
