@@ -265,8 +265,8 @@ function moveDown(idx: number) {
   font-style: italic;
 }
 .name-qual-badge {
-  background: var(--color-bg-muted);
-  color: var(--color-text-muted);
+  background: var(--surface-bg);
+  color: var(--text-muted);
   padding: 1px 5px;
   border-radius: 8px;
   font-size: var(--font-xs);
