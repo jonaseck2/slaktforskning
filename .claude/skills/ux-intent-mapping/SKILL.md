@@ -58,9 +58,9 @@ This app's gold-standard Add pattern is the inline combobox: `GroupPicker.vue` a
 
 ### The `✕` check
 
-Known violation in current code: the same `✕` button means *unlink* in `GroupsTable` but *delete* in `ResearchTasksTable`. Same icon, opposite blast radius. Genealogists fear data loss; this is exactly the surprise to prevent.
+Closed by the `2026-05-02-panel-cta-cleanup` plan and now enforced by `tests/components/panel-cta-conventions.test.ts`: raw `&#10005;` glyphs are forbidden in `*Panel.vue` / `*Section.vue`; use `IconUnlink` / `IconTrash` per verb. The `✕` glyph is reserved for modal close affordances in `src/renderer/components/modals/`.
 
-- New surfaces must either align (✕ always = unlink; entity-level delete lives only on the entity's own panel) or differentiate visibly (✕ for unlink + 🗑 for destroy; "Remove from this person" vs "Delete task").
+- New surfaces must either align (`IconUnlink` for unlink; entity-level delete lives only on the entity's own panel as `IconTrash`) or differentiate visibly (separate icons + labels: "Remove from this person" vs "Delete task").
 - The ConfirmModal copy must say what's being kept and what's being lost in concrete entity words. `PersonRelationshipsSection.vue` is the canonical example: *"the persons are kept"* is in the confirmation message.
 
 ### The label-hides-the-model check
@@ -73,6 +73,39 @@ Known violation in current code: the same `✕` button means *unlink* in `Groups
 ### The "no read across" check
 
 A user wanting to audit *all* citations on a person has no surface — citations are nested two clicks deep per event. Compute-on-render derived sections (read-only, no Add/Edit) are cheap and often missing. If the model supports a roll-up the user can't see, flag it.
+
+## CTA conventions (enforced by `tests/components/panel-cta-conventions.test.ts`)
+
+These rules survived the `2026-05-02-panel-cta-cleanup` plan and are now regression-tested by the source-level scan in `tests/components/panel-cta-conventions.test.ts`. If you add a new pattern that this test should cover, extend the test there — don't carry the rule only in this file.
+
+### Glyph → verb mapping (panels and sections, NOT modal close)
+
+| Glyph / icon | Verb | Use when |
+|---|---|---|
+| `<IconUnlink :size="14" />` | unlink | Action severs a link/relationship; the entity stays in its own list |
+| `<IconTrash :size="14" />` | delete | Action removes the row from the database |
+| `<IconPencil :size="12" />` | edit/reassign | Action opens an inline editor or picker on a row |
+| Raw `&#10005;` (✕) | **modal close only** | Only allowed inside `src/renderer/components/modals/` for the close affordance. Forbidden in `*Panel.vue` and `*Section.vue` (test asserts this). |
+
+`aria-label` and `:title` must match the verb: `a11y.unlinkItem` + `common.unlinkTooltip` for unlink; `a11y.deleteItem` + `common.deleteTooltip` for delete; `a11y.editItem` + a context-specific title for edit.
+
+### No dead clicks
+
+If a row has `cursor: pointer`, `role="button"`, `tabindex="0"`, or `class="clickable-row"`, it must have a wired click handler that does something user-visible. Tables that emit `select` (`GroupsTable`, `ResearchTasksTable`) require a `@select=` listener at every mount site (test enforces). If you add a new select-emitting table, add it to `SELECT_EMITTING_TABLES` in the test.
+
+### No hardcoded mode in section-header buttons
+
+A section-header `actionLabel` of "+ Add X" must open a picker/modal for X without preset to a sub-mode. PersonPanel's old "+ Add relationship" silently picked spouse — that pattern is forbidden. If a header button needs to open a multi-mode flow, either drop the header button (rely on per-mode buttons) or open a role/type picker first.
+
+### Confirm-modal symmetry
+
+The same verb (e.g. unlink-from-group) uses the same confirmation flow across panels. PersonPanel, GroupPanel, and ResearchTaskPanel all route their unlinks through `useDeleteConfirm` + `<ConfirmModal>`. Asymmetric flows for the same verb are a CTA bug.
+
+### Cross-entity navigation IS allowed; same-entity in-place editing is the rule
+
+Per `.claude/rules/renderer.md`: clicking a related entity inside a panel routes to that entity's list view (which auto-opens its panel) — this is the canonical pattern.
+
+But: clicking a sub-entity that lives in *the panel's own context* (e.g. a research task on a person panel, a face tag on a media panel) opens in-place — modal or inline edit — never navigates the user away. The test for "is this same-entity?": if the sub-entity is created via this panel's own "+ Add X" button, its row click must open the same modal that "+ Add X" opens, in edit mode. (See `openTaskFromRow` in PersonPanel/PlacePanel for the canonical shape.)
 
 ## Triggers
 
