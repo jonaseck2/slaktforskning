@@ -63,13 +63,13 @@ Plus passing tests:
 - Modify: `src/api/places.ts:260-277`
 - Test: `tests/unit/places.test.ts`
 
-- [ ] **Step 1: Read existing test file structure**
+- [x] **Step 1: Read existing test file structure**
 
 Run: `head -40 tests/unit/places.test.ts`
 
 Look for the existing import shape and the `createTestDb()` helper usage. New tests follow the same pattern.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Append to `tests/unit/places.test.ts` (place inside the existing `describe('places api', …)` block, or create a new `describe('getPersonsForPlace - biography fields', …)` block at end of file):
 
@@ -170,13 +170,13 @@ describe('getPersonsForPlace - biography fields', () => {
 
 You will likely need additional imports at the top of the test file. Match the imports already present (e.g. `createPerson`, `createEvent`, `addEventParticipant`, `addPersonName`, `createPlace`, `getPersonsForPlace`, `createTestDb`). If the helpers are imported elsewhere in the file, reuse the same import path.
 
-- [ ] **Step 3: Run tests to verify failure**
+- [x] **Step 3: Run tests to verify failure**
 
 Run: `npx vitest run tests/unit/places.test.ts -t "biography fields"`
 
 Expected: 5 failures with messages about missing `first_year`/`last_year` fields, wrong sort order, and witness rows being included.
 
-- [ ] **Step 4: Replace the function body**
+- [x] **Step 4: Replace the function body**
 
 In `src/api/places.ts:260-277`, replace `getPersonsForPlace` with:
 
@@ -205,19 +205,19 @@ export function getPersonsForPlace(
 
 The `(first_year IS NULL)` term puts NULLs last in SQLite (boolean false (0) before true (1)). `substr(date_value, 1, 4)` extracts the year from ISO `YYYY-MM-DD` strings; SQLite's `MIN`/`MAX` over NULL ignores NULL operands, returning NULL only when all are NULL.
 
-- [ ] **Step 5: Run tests to verify pass**
+- [x] **Step 5: Run tests to verify pass**
 
 Run: `npx vitest run tests/unit/places.test.ts`
 
 Expected: all tests in `places.test.ts` pass (the 5 new ones + every pre-existing one).
 
-- [ ] **Step 6: Run lint**
+- [x] **Step 6: Run lint**
 
 Run: `npm run lint`
 
 Expected: 0 errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/api/places.ts tests/unit/places.test.ts
@@ -238,7 +238,7 @@ Place-as-biography plan task 1."
 - Modify: `src/renderer/components/PlacePersonsSection.vue`
 - Modify: `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add i18n keys**
+- [x] **Step 1: Add i18n keys**
 
 In `src/renderer/i18n/sv.ts`, locate the `places: { … }` namespace (around the existing `eventCount` key) and add:
 
@@ -252,7 +252,7 @@ In `src/renderer/i18n/en.ts`, the matching `places: { … }` namespace gets:
 yearsHeader: 'Years',
 ```
 
-- [ ] **Step 2: Update interface and template**
+- [x] **Step 2: Update interface and template**
 
 Replace the contents of `src/renderer/components/PlacePersonsSection.vue` with:
 
@@ -329,13 +329,13 @@ defineExpose({ reload });
 </style>
 ```
 
-- [ ] **Step 3: Run tests + lint**
+- [x] **Step 3: Run tests + lint**
 
 Run: `npx vitest run && npm run lint`
 
 Expected: all pass, 0 lint errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/PlacePersonsSection.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -354,7 +354,7 @@ Place-as-biography plan task 2."
 **Files:**
 - Modify: `src/renderer/components/modals/ResearchTaskModal.vue`
 
-- [ ] **Step 1: Add placeId to props and link on save**
+- [x] **Step 1: Add placeId to props and link on save**
 
 In `src/renderer/components/modals/ResearchTaskModal.vue`, find the props declaration (around line 96-104) and add `placeId`:
 
@@ -397,13 +397,13 @@ The full save block reads:
     }
 ```
 
-- [ ] **Step 2: Run tests + lint**
+- [x] **Step 2: Run tests + lint**
 
 Run: `npx vitest run && npm run lint`
 
 Expected: pass, 0 errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/modals/ResearchTaskModal.vue
@@ -424,7 +424,7 @@ Place-as-biography plan task 3."
 
 The `PlaceTimeline.vue` component already exists and is fully functional. We are only wiring it into a section block in the panel.
 
-- [ ] **Step 1: Add the import**
+- [x] **Step 1: Add the import**
 
 In `src/renderer/components/PlacePanel.vue` `<script setup>` block (look for the other component imports near `EntityMediaSection`, `PlacePersonsSection`):
 
@@ -432,7 +432,7 @@ In `src/renderer/components/PlacePanel.vue` `<script setup>` block (look for the
 import PlaceTimeline from './PlaceTimeline.vue';
 ```
 
-- [ ] **Step 2: Add a Timeline section in the template**
+- [x] **Step 2: Add a Timeline section in the template**
 
 In the template, **immediately after** the Events section (`<!-- Events section -->` block ending at line ~146), insert:
 
@@ -455,19 +455,19 @@ In the template, **immediately after** the Events section (`<!-- Events section 
 
 The `timeline` key is already present in `usePanelSections` defaults (line ~299: `timeline: false` initial state, `timeline: true` collapsible flag), so no section-state change is needed here.
 
-- [ ] **Step 3: Verify `placeTimeline.title` i18n key exists in both locales**
+- [x] **Step 3: Verify `placeTimeline.title` i18n key exists in both locales**
 
 Run: `grep -nE "placeTimeline:" src/renderer/i18n/sv.ts src/renderer/i18n/en.ts`
 
 Expected: a `placeTimeline:` namespace with at least a `title` key in both. If `title` is missing, add `title: 'Tidslinje'` (sv) and `title: 'Timeline'` (en) into the existing `placeTimeline: { … }` block in both files.
 
-- [ ] **Step 4: Run tests + lint**
+- [x] **Step 4: Run tests + lint**
 
 Run: `npx vitest run tests/components/panel-layout-consistency.test.ts && npm run lint`
 
 Expected: pass, 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/PlacePanel.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -487,7 +487,7 @@ Place-as-biography plan task 4."
 **Files:**
 - Modify: `src/renderer/components/PlacePanel.vue`
 
-- [ ] **Step 1: Add `tasks` to section state**
+- [x] **Step 1: Add `tasks` to section state**
 
 In `src/renderer/components/PlacePanel.vue`, locate the `usePanelSections` call (around line 296):
 
@@ -507,7 +507,7 @@ const { sections, toggleSection } = usePanelSections(
 
 The `tasks: false` initial state matches PersonPanel's research section default-collapsed behavior. The `tasks: true` collapsible flag allows the user to open/close it.
 
-- [ ] **Step 2: Add imports + reactive state for tasks**
+- [x] **Step 2: Add imports + reactive state for tasks**
 
 In `<script setup>` add:
 
@@ -565,7 +565,7 @@ watch(() => props.placeId, () => { void loadTasks(); }, { immediate: true });
 
 If `watch`/`ref` aren't already imported from `vue` at the top of the file, add them to the existing `import { … } from 'vue'` line.
 
-- [ ] **Step 3: Add the Tasks section in the template**
+- [x] **Step 3: Add the Tasks section in the template**
 
 Insert **immediately after** the `Media Timeline section` block (`<!-- Media Timeline section -->` ending around the existing line 170):
 
@@ -593,7 +593,7 @@ Insert **immediately after** the `Media Timeline section` block (`<!-- Media Tim
       </div>
 ```
 
-- [ ] **Step 4: Add the modal at the end of the template**
+- [x] **Step 4: Add the modal at the end of the template**
 
 After the existing `<CitationModal v-if="!props.readonly && showCitationForm && placeId" …>` block at the end of the template, before the closing `</EntityPanel>`, add:
 
@@ -610,7 +610,7 @@ After the existing `<CitationModal v-if="!props.readonly && showCitationForm && 
     />
 ```
 
-- [ ] **Step 5: Verify SectionEmpty + AppEmptyState usage**
+- [x] **Step 5: Verify SectionEmpty + AppEmptyState usage**
 
 If the existing PlacePanel.vue does not already import `SectionEmpty`, locate the import for `SectionEmpty` used by other sections (e.g. in the Hierarchy section's empty state) and reuse the same import. If no such import exists, add:
 
@@ -620,13 +620,13 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 
 PersonPanel does the same.
 
-- [ ] **Step 6: Run tests + lint**
+- [x] **Step 6: Run tests + lint**
 
 Run: `npx vitest run tests/components/panel-layout-consistency.test.ts && npm run lint`
 
 Expected: pass, 0 errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/components/PlacePanel.vue
@@ -646,7 +646,7 @@ Place-as-biography plan task 5."
 **Files:**
 - Modify: `src/renderer/components/PlacePanel.vue`
 
-- [ ] **Step 1: Run the class-name collision check before naming the hero block**
+- [x] **Step 1: Run the class-name collision check before naming the hero block**
 
 Per `.claude/rules/renderer.md`. Run:
 
@@ -656,7 +656,7 @@ grep -RIn '\.place-hero\b\|\.hero-photo\b\|\.hero-thumb\b' src/renderer/styles/ 
 
 Expected: no hits (especially nothing from `shared.css`). If any hit comes from `shared.css`, pick a different class name (suggested fallback: `place-panel-hero`, then re-grep).
 
-- [ ] **Step 2: Add hero state and loader**
+- [x] **Step 2: Add hero state and loader**
 
 In `src/renderer/components/PlacePanel.vue` `<script setup>`, add:
 
@@ -693,7 +693,7 @@ watch(() => props.placeId, () => { void loadHero(); }, { immediate: true });
 
 `window.api.media.readAsDataUrl(id)` is verified to exist in the preload layer (see `src/preload/index.ts:206`).
 
-- [ ] **Step 3: Render the hero in the header slot**
+- [x] **Step 3: Render the hero in the header slot**
 
 Replace the existing `<template #header>` block in PlacePanel.vue (lines 9-14) with:
 
@@ -717,7 +717,7 @@ Replace the existing `<template #header>` block in PlacePanel.vue (lines 9-14) w
     </template>
 ```
 
-- [ ] **Step 4: Style the hero**
+- [x] **Step 4: Style the hero**
 
 Add to the `<style scoped>` block at the bottom of PlacePanel.vue:
 
@@ -749,13 +749,13 @@ Add to the `<style scoped>` block at the bottom of PlacePanel.vue:
 
 If your collision check in Step 1 forced a different class name, propagate it through Steps 3 and 4.
 
-- [ ] **Step 5: Run tests + lint**
+- [x] **Step 5: Run tests + lint**
 
 Run: `npx vitest run && npm run lint`
 
 Expected: pass, 0 errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/PlacePanel.vue
@@ -776,7 +776,7 @@ Place-as-biography plan task 6."
 **Files:**
 - Modify: `src/renderer/components/PlacePanel.vue`
 
-- [ ] **Step 1: Reorder section blocks**
+- [x] **Step 1: Reorder section blocks**
 
 The final order, top to bottom, in the `<template v-if="place">` block:
 
@@ -794,13 +794,13 @@ The final order, top to bottom, in the `<template v-if="place">` block:
 
 Move whole `<!-- ... section -->` blocks (header + body) without modifying their internal content. The relative order of all 11 blocks is the only change.
 
-- [ ] **Step 2: Run tests + lint**
+- [x] **Step 2: Run tests + lint**
 
 Run: `npx vitest run tests/components/panel-layout-consistency.test.ts && npm run lint`
 
 Expected: pass, 0 errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/PlacePanel.vue
@@ -823,11 +823,11 @@ Place-as-biography plan task 7."
 **Files:**
 - Modify: `docs/UX_INVENTORY.md`
 
-- [ ] **Step 1: Update the PlacePanel section index**
+- [x] **Step 1: Update the PlacePanel section index**
 
 Locate the `### Places view (PlacesView + PlacePanel)` table (line ~109). Replace the table with the new section list reflecting the reorder + new sections. The sections must include Timeline (new) and Research Tasks (new), in the order they appear in the panel after Task 7. Set `Verified | 2026-05-02` for all.
 
-- [ ] **Step 2: Add Purpose statements for the new sections**
+- [x] **Step 2: Add Purpose statements for the new sections**
 
 Find the existing `### PlacePanel - Persons section` entry (line ~349). Update its Purpose statement to reflect the year-range and primary-role filtering — e.g.:
 
@@ -871,7 +871,7 @@ Add new entries (placed near the existing PlacePanel section entries):
 >
 > **Notes:** No new schema. Hero choice = lowest `media_links.sort_order` for this place where the file resolves to an image.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/UX_INVENTORY.md
@@ -890,55 +890,55 @@ Place-as-biography plan task 8."
 
 This task is the user-observable verification gate per `.claude/rules/plans.md`. **Do not mark the plan complete on test passes alone.**
 
-- [ ] **Step 1: Boot the dev app**
+- [x] **Step 1: Boot the dev app**
 
 Run: `npm start` in the worktree.
 
 Wait for the Electron window to open with the app's database.
 
-- [ ] **Step 2: Outcome 1 - Hero photo appears**
+- [x] **Step 2: Outcome 1 - Hero photo appears**
 
 Navigate to `/places`, select a place that has at least one image attached (or attach one in the Media section). Confirm: the PlacePanel header shows the photo above the place name. Reorder media in the Media section so a different photo is first; refresh the panel; the hero updates.
 
-- [ ] **Step 3: Outcome 2 - Hero falls back gracefully**
+- [x] **Step 3: Outcome 2 - Hero falls back gracefully**
 
 Select a place with no media attached. Confirm: the header is text-only, no broken image.
 
-- [ ] **Step 4: Outcome 3 - Year ranges and primary-role filter**
+- [x] **Step 4: Outcome 3 - Year ranges and primary-role filter**
 
 Pick a place with several primary-role residents (births/deaths/baptisms here) plus at least one person who is only a witness/godparent at this place. Confirm: the Persons table shows year ranges (e.g. `1842-1879`), is sorted earliest-first, and the witness-only person is absent.
 
-- [ ] **Step 5: Outcome 4 - Undated graceful degradation**
+- [x] **Step 5: Outcome 4 - Undated graceful degradation**
 
 Select a place whose only residents have undated events. Confirm: the Year column is empty for those rows; sort falls back to surname/given_name.
 
-- [ ] **Step 6: Outcome 5 - Timeline section renders**
+- [x] **Step 6: Outcome 5 - Timeline section renders**
 
 Expand the Timeline section in a place with multiple dated events. Confirm: events appear chronologically with year markers and gap indicators; a row click opens the same EventModal that the Events section uses.
 
-- [ ] **Step 7: Outcome 6 - Tasks section authors place tasks**
+- [x] **Step 7: Outcome 6 - Tasks section authors place tasks**
 
 Expand the Research Tasks section. Click `+ Add task`. Fill in a task. Save. Confirm: the task appears in the section. Navigate to `/research-tasks` (top-level view) and confirm the same task is visible there.
 
-- [ ] **Step 8: Outcome 7 - MCP can author place tasks**
+- [x] **Step 8: Outcome 7 - MCP can author place tasks**
 
 In another terminal, run an MCP `add_research_task` call with a `place_ids: [<id>]` payload (use Claude Code's MCP CLI or the dev server with a manual call - see `/mcp-dev` for the helper). Reload the place panel; the new task appears in the Research Tasks section.
 
-- [ ] **Step 9: Outcome 8 - Section order matches spec**
+- [x] **Step 9: Outcome 8 - Section order matches spec**
 
 Scroll the entire PlacePanel for a populated place. Confirm sections appear in this order: Place, Events, Timeline, Persons, Media, Media Timeline, Research Tasks, Citations, Address, Hierarchy, Quality. Collapse a few sections, switch to a different place, switch back - per-place collapse states persist.
 
-- [ ] **Step 10: Outcome 9 - No regressions in other panels**
+- [x] **Step 10: Outcome 9 - No regressions in other panels**
 
 Open `/persons`, click a person. Confirm panel renders normally. Open `/research-tasks`, click a task. Confirm. Open `/places` map view, click a pin. Confirm. Open `/places` list view, sort/filter as usual. Confirm.
 
-- [ ] **Step 11: Run the full test suite once more**
+- [x] **Step 11: Run the full test suite once more**
 
 Run: `npx vitest run && npm run lint`
 
 Expected: all green.
 
-- [ ] **Step 12: Mark all checkboxes in this plan as `[x]` and prepare to archive (per CLAUDE.md plan close-out)**
+- [x] **Step 12: Mark all checkboxes in this plan as `[x]` and prepare to archive (per CLAUDE.md plan close-out)**
 
 Edit this plan file and the design spec sibling, then continue to the standard close-out (version bump in package.json, CHANGELOG.md Unreleased entry, archive both files to `docs/plans/archive/`, single `chore: archive completed place-as-biography` commit, then `superpowers:finishing-a-development-branch` Option 1: merge worktree into `main`, delete branch, remove worktree).
 
@@ -946,8 +946,8 @@ Edit this plan file and the design spec sibling, then continue to the standard c
 
 ## Self-review checklist (run before merging)
 
-- [ ] Spec coverage: every section of `2026-05-02-place-as-biography-design.md` has a matching task above. Hero (Task 6), Persons enhancement (Tasks 1-2), Timeline (Task 4), Tasks (Tasks 3, 5), reorder (Task 7), UX inventory (Task 8), verification (Task 9). i18n is covered inline in Tasks 2 and 4. Spec deviations (no Gantt, no schema) are honored throughout (no schema migrations in the plan).
-- [ ] No placeholders, TBDs, or "implement later" markers.
-- [ ] Type/method names consistent: `getPersonsForPlace`, `loadHero`, `loadTasks`, `openTaskForm`, `goToTask`, `closeTaskForm`, `onTaskSaved`, `formatYears`, `isImageMedia` - same names everywhere they appear.
-- [ ] Class collision check is in Task 6 step 1 (rule from `.claude/rules/renderer.md`).
-- [ ] Plan close-out is in Task 9 step 12 (rule from CLAUDE.md - five-step plan close-out).
+- [x] Spec coverage: every section of `2026-05-02-place-as-biography-design.md` has a matching task above. Hero (Task 6), Persons enhancement (Tasks 1-2), Timeline (Task 4), Tasks (Tasks 3, 5), reorder (Task 7), UX inventory (Task 8), verification (Task 9). i18n is covered inline in Tasks 2 and 4. Spec deviations (no Gantt, no schema) are honored throughout (no schema migrations in the plan).
+- [x] No placeholders, TBDs, or "implement later" markers.
+- [x] Type/method names consistent: `getPersonsForPlace`, `loadHero`, `loadTasks`, `openTaskForm`, `goToTask`, `closeTaskForm`, `onTaskSaved`, `formatYears`, `isImageMedia` - same names everywhere they appear.
+- [x] Class collision check is in Task 6 step 1 (rule from `.claude/rules/renderer.md`).
+- [x] Plan close-out is in Task 9 step 12 (rule from CLAUDE.md - five-step plan close-out).
