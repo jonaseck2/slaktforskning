@@ -7,7 +7,7 @@
         :value="searchQuery"
         :placeholder="placeholder"
         role="combobox"
-        :aria-expanded="open && results.length > 0"
+        :aria-expanded="open"
         aria-autocomplete="list"
         @input="onInput"
         @focus="onFocus"
