@@ -78,7 +78,7 @@ tests/
 ├── unit/                 # Vitest against in-memory SQLite. createTestDb() in helpers.ts.
 └── e2e/                  # Playwright against packaged binary. AppDriver in fixture.ts.
 
-docs/                     # PLAN.md (roadmap), DATA_MODEL.md, MCP.md, IPC_REFERENCE.md, plans/ (active + archive/)
+docs/                     # PLAN.md (roadmap), DATA_MODEL.md, MCP.md, IPC_REFERENCE.md, UX_INVENTORY.md (per-surface Purpose + CTA grid), plans/ (active + archive/)
 .claude/                  # napkin.md (auto-curated runbook), skills/ (auto-discovered project skills)
 .devcontainer/            # Linux dev container with Node 22 + Electron deps + Xvfb
 ```

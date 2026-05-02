@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.193.1 — Internal only
+
+- chore: UX intent-mapping skill + surface inventory for renderer panels/modals.
+
 ## v0.193.0 — Scoped DOM tools for layout debugging
 
 - feat(mcp-dev): `ui_get_dom` takes an optional `selector` so it returns one element's HTML instead of the full document.
