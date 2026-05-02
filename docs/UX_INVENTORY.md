@@ -121,6 +121,7 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | PlacePanel — Place section | 2026-05-02 |
 | PlacePanel — Persons section | 2026-05-02 |
 | PlacePanel — Events section | 2026-05-02 |
+| PlacePanel — Timeline section | 2026-05-02 |
 | PlacePanel — Media section | 2026-05-02 |
 | PlacePanel — Media Timeline section | 2026-05-02 |
 | PlacePanel — Quality section | 2026-05-02 |
@@ -443,6 +444,20 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 | EventList rows: event type · date · place · person names (with `showPersons=true` here) · description · cause · citation count badge | `+ Add event` → opens **EventModal in standalone add mode** | Row click → **opens EventModal with event prefilled** (standalone). | ✕ → ConfirmModal → deletes event entirely (citations cascade-deleted). | Place-name link in row → navigates to PlacesView. (Event has no own panel.) |
 
 **Notes:** EventList is reusable; `showPersons` adds person names here vs omitted in PersonPanel.
+
+---
+
+### PlacePanel → Timeline section
+**File:** `src/renderer/components/PlacePanel.vue`, `PlaceTimeline.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* the same events from the Events section laid out chronologically — to see clusters, gaps, and the rhythm of what happened at this place over time — and to *jump* to add a new event.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Read-only chronological list of events sorted by date, with dot-per-event-type, dashed dots for approximate dates, gap markers on >20-year jumps, and a separate undated bucket. Same data as the Events section. | `+ Event` chip → routes to the Events section's `+ Add event` flow (no second authoring path). | Not offered — authoring lives in the Events section. | Not offered — deletion lives in the Events section. | Row click → opens the same EventModal as the Events section. |
+
+**Notes:** Default-collapsed. Cross-section coupling: derived read of the Events section. Authoring deliberately lives in one place. Mirror of `PersonPanel → Timeline section` with the person ↔ place axis swapped (person-only concepts dropped: age column, family-tier rendering, birth-first sort priority).
 
 ---
 
