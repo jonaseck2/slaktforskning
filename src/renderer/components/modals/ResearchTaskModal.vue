@@ -96,10 +96,12 @@ interface ResearchTask {
 const props = withDefaults(defineProps<{
   mode?: 'standalone' | 'subpanel';
   personId?: string;
+  placeId?: string;
   editingTask?: ResearchTask | null;
 }>(), {
   mode: 'standalone',
   personId: undefined,
+  placeId: undefined,
   editingTask: null,
 });
 
@@ -163,6 +165,9 @@ async function handleSave() {
       // When opened from a person's panel, link the new task to that person.
       if (saved && props.personId) {
         await window.api.researchTasks.addLink(saved.id, 'person', props.personId);
+      }
+      if (saved && props.placeId) {
+        await window.api.researchTasks.addLink(saved.id, 'place', props.placeId);
       }
     }
     emit('saved', saved);
