@@ -509,7 +509,7 @@ export default {
     reorderInversionBlocked: 'A more recent date cannot be placed before an older one',
   },
   sex: { M: 'Male', F: 'Female', U: 'Unknown' },
-  addRelated: { newPerson: 'New person', existingPerson: 'Existing person', selectPerson: 'Select person', searchPlaceholder: 'Search name\u2026', birthDate: 'Birth date', birthPlace: 'Birth place', originalDate: 'Original date text', addSource: 'Source', sourcePlaceholder: 'Select source', page: 'Page / location', otherParent: 'Other parent', noOtherParent: 'None' },
+  addRelated: { newPerson: 'New person', existingPerson: 'Existing person', modeHelper: 'Already in your tree? Find them. Otherwise, add a new person.', selectPerson: 'Select person', searchPlaceholder: 'Search name\u2026', birthDate: 'Birth date', birthPlace: 'Birth place', originalDate: 'Original date text', addSource: 'Source', sourcePlaceholder: 'Select source', page: 'Page / location', otherParent: 'Other parent', noOtherParent: 'None' },
   map: {
     title: 'Map',
     personMap: 'Life map',

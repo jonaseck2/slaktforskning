@@ -509,7 +509,7 @@ export default {
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
   },
   sex: { M: 'Man', F: 'Kvinna', U: 'Okänd' },
-  addRelated: { newPerson: 'Ny person', existingPerson: 'Befintlig person', selectPerson: 'Välj person', searchPlaceholder: 'Sök namn\u2026', birthDate: 'Födelsedatum', birthPlace: 'Födelseort', originalDate: 'Originaldatum', addSource: 'Källa', sourcePlaceholder: 'Välj källa', page: 'Sida / plats', otherParent: 'Andra föräldern', noOtherParent: 'Ingen' },
+  addRelated: { newPerson: 'Ny person', existingPerson: 'Befintlig person', modeHelper: 'Finns hen redan i ditt träd? Hitta personen. Annars lägg till en ny.', selectPerson: 'Välj person', searchPlaceholder: 'Sök namn\u2026', birthDate: 'Födelsedatum', birthPlace: 'Födelseort', originalDate: 'Originaldatum', addSource: 'Källa', sourcePlaceholder: 'Välj källa', page: 'Sida / plats', otherParent: 'Andra föräldern', noOtherParent: 'Ingen' },
   map: {
     title: 'Karta',
     personMap: 'Livskarta',

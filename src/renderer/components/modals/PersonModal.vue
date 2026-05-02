@@ -11,19 +11,20 @@
     <!-- Entry-mode toggle (always when addRelatedTo is set, so existing-person path is reachable) -->
     <div v-if="addRelatedTo" class="ep-fields">
       <div class="ep-field">
+        <p class="entry-mode-helper">{{ $t('addRelated.modeHelper') }}</p>
         <div class="ep-seg">
-          <button
-            type="button"
-            class="ep-seg-opt"
-            :class="{ 'ep-seg-opt--on': entryMode === 'new' }"
-            @click="entryMode = 'new'; existingPersonId = null"
-          >{{ $t('addRelated.newPerson') }}</button>
           <button
             type="button"
             class="ep-seg-opt"
             :class="{ 'ep-seg-opt--on': entryMode === 'existing' }"
             @click="entryMode = 'existing'"
           >{{ $t('addRelated.existingPerson') }}</button>
+          <button
+            type="button"
+            class="ep-seg-opt"
+            :class="{ 'ep-seg-opt--on': entryMode === 'new' }"
+            @click="entryMode = 'new'; existingPersonId = null"
+          >{{ $t('addRelated.newPerson') }}</button>
         </div>
       </div>
     </div>
@@ -503,10 +504,32 @@ onMounted(async () => {
   await loadRelatedPersonName();
   nextTick(() => givenNameRef.value?.focus());
 });
+
+// Default the Add-relative entry-mode to 'existing' when the database already
+// contains other persons — this nudges the user toward "find existing" first
+// (the safe path) rather than silently creating a duplicate via "new person".
+onMounted(async () => {
+  if (props.addRelatedTo && window.api?.persons?.listPage) {
+    try {
+      const result = await window.api.persons.listPage(1, 0) as { persons: unknown[]; total: number };
+      if (result && typeof result.total === 'number' && result.total > 1) {
+        entryMode.value = 'existing';
+      }
+    } catch (err) {
+      // If anything fails, default to 'new' (current behavior).
+      console.warn('[PersonModal] entry-mode default check failed:', err);
+    }
+  }
+});
 </script>
 
 <style scoped>
 .ep-spacer {
   height: var(--space-sm);
+}
+.entry-mode-helper {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
 }
 </style>
