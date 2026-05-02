@@ -106,7 +106,7 @@
 
       <!-- Relationer section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('relationships.addRelationship') }" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
+        <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
         <div v-if="sections.relationships" class="panel-section-body">
           <PersonRelationshipsSection ref="relSectionRef" :person-id="personId!" />
         </div>
