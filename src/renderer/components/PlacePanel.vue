@@ -169,21 +169,6 @@
         </div>
       </div>
 
-      <!-- Persons section -->
-      <div class="panel-section">
-        <SectionHeader
-          :title="$t('persons.title')"
-          :count="personCount"
-          :collapsed="!sections.persons"
-          :action-label="!props.readonly ? '+ ' + $t('placePanel.addPerson') : undefined"
-          @toggle="toggleSection('persons')"
-          @action="showAddPersonForm = true"
-        />
-        <div v-if="sections.persons" class="panel-section-body">
-          <PlacePersonsSection ref="personsSectionRef" :place-id="placeId!" />
-        </div>
-      </div>
-
       <!-- Events section -->
       <div class="panel-section">
         <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
@@ -207,7 +192,22 @@
         </div>
       </div>
 
-<!-- Media section -->
+      <!-- Persons section -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('persons.title')"
+          :count="personCount"
+          :collapsed="!sections.persons"
+          :action-label="!props.readonly ? '+ ' + $t('placePanel.addPerson') : undefined"
+          @toggle="toggleSection('persons')"
+          @action="showAddPersonForm = true"
+        />
+        <div v-if="sections.persons" class="panel-section-body">
+          <PlacePersonsSection ref="personsSectionRef" :place-id="placeId!" />
+        </div>
+      </div>
+
+      <!-- Media section -->
       <div class="panel-section">
         <SectionHeader :title="$t('media.title')" :count="mediaCount" :collapsed="!sections.media" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('media')" @action="mediaSectionRef?.attach()" />
         <div v-if="sections.media" class="panel-section-body">
