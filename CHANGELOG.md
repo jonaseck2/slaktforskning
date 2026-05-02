@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.202.3 — UX_INVENTORY surface walk complete
+
+- chore: filled in the last 4 modal Purposes (ResearchTaskModal, MergePersonsModal, LinkRuleModal, ConfirmModal). Every bounded UI surface in the renderer now has a user-stated Purpose sentence. Recorded the row-click inconsistency on ResearchTaskModal (panels navigate to /research-tasks instead of opening the modal in-place — names/events open in-place) for a future fix.
+
 ## v0.202.2 — UX_INVENTORY purposes for modals + finding #10
 
 - chore: filled in user-stated Purpose sentences for 7 more surfaces in docs/UX_INVENTORY.md (ExportOptionsPanel, PersonModal, PersonNameModal, PlaceModal, PlaceTreePickerModal, RelationshipModal, GroupModal). Added cross-cutting finding #10 capturing the design principle that creation modals for referenceable entities should also offer "find existing" in the same flow. Internal docs only.

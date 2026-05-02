@@ -779,13 +779,13 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/ResearchTaskModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *capture* a research task before they forget it — what they want to find out, how important it is, and who or what it concerns (auto-linked to the person whose panel they were on) — and to *update* its progress, notes, and the result they eventually find when they come back to it later.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | Task (required textarea) · priority segmented (1/2/3) · status segmented (open / in_progress / done / stopped) · notes textarea · result textarea (only when status = done or stopped). | Direct inline inputs. | Direct inline inputs (same form, prefilled from `editingTask`). | Not offered (deletion lives in ResearchTasksTable rows on host panel). | (No further nesting) |
 
-**Notes:** When created from a PersonPanel, auto-links via `researchTasks.addLink(id, 'person', personId)`.
+**Notes:** When created from a PersonPanel, auto-links via `researchTasks.addLink(id, 'person', personId)`. **Inconsistency to fix:** row click on a research task in PersonPanel/PlacePanel currently navigates to `/research-tasks/:id` instead of opening this modal in-place. Names and events open their respective modals on row click; research tasks should follow suit (`PersonPanel.goToTask` should open `ResearchTaskModal` in edit mode, not `router.push`).
 
 ---
 
@@ -793,7 +793,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/MergePersonsModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *confirm* that two person records actually represent the same individual before merging them — seeing the two side by side with the reasons that flagged them as duplicates, the consequences spelled out (one record will disappear, all events/relationships/citations/media transfer), and a clear out if they're not sure — so the irreversible merge happens deliberately, not by accident.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -807,7 +807,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/modals/LinkRuleModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *teach* the app how to turn an external identifier (a FamilySearch ID, a Riksarkivet reference, an Ancestry record) into a clickable link by writing a regex pattern and a URL template, *test* the rule against a real example so they can see it match and produce the right URL before saving, and to *inspect* an existing rule's pattern in view mode.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -821,7 +821,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/ConfirmModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this modal to *commit* to a destructive or otherwise consequential action — deleting a person, removing a citation, unlinking a group member — by reading exactly what's about to happen in concrete entity words ("this person and their 4 events will be deleted"; "the persons are kept") and pressing the tone-coloured confirm button, or backing out if the consequence wasn't what they expected.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
