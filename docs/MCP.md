@@ -22,6 +22,8 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `update_person` | Update sex or notes. (Living/deceased status is derived from birth/death events, not stored.) |
 | `delete_person` | Delete a person and all linked data (cascade). |
 | `add_person_name` | Add an alternate name (birth, married, alias, aka) with optional date range. |
+| `update_person_name` | Update an existing person_name (retype primary, set date range, add nickname / preferred_name, etc.). |
+| `delete_person_name` | Delete a single person_name record without deleting the person. |
 | `merge_persons` | Merge two persons: move all relationships, events, names, citations to target, then delete source. |
 | `find_duplicates` | Find candidate duplicate persons by name similarity. Returns ranked pairs with score. |
 
@@ -38,7 +40,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 | Tool | Description |
 |------|-------------|
-| `record_event` | Record a life event with participants, place, and an optional citation. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
+| `record_event` | Record a life event with participants, place, and an optional citation. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. Date ranges (`date_type: "between"`) use `date_value` for the start and `date_value_end` for the end (e.g. military service 1999–2000). The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
 | `get_timeline` | Chronological timeline of a person's events merged with key family events (spouse/children births and deaths). |
 | `update_event` | Update event fields. Place can be supplied as a string (resolved to place_id via findOrCreate). Same `value` / `notes` / deprecated `description` semantics as `record_event`. |
 

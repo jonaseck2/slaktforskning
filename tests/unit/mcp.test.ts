@@ -88,6 +88,59 @@ describe('persons', () => {
   it('returns "Person not found" when deleting unknown id', async () => {
     expect(await call('delete_person', { id: 'nonexistent' })).toBe('Person not found');
   });
+
+  it('update_person_name retypes an existing person_name (the primary one)', async () => {
+    // Reproduce the original gap: create_person stamps the primary as type=birth,
+    // adding the actual birth surname as a second "birth" trips MULTIPLE_BIRTH_NAMES.
+    // With update_person_name we can retype the primary to "aka" — single birth name remains.
+    const created = await call('create_person', { given_name: 'Jonas', surname: 'Ahnstedt' }) as any;
+    const summary = await call('get_person_summary', { id: created.person.id }) as any;
+    const primaryNameId = summary.names[0].id;
+    expect(summary.names[0].name_type).toBe('birth');
+
+    const updated = await call('update_person_name', {
+      id: primaryNameId,
+      name_type: 'aka',
+    }) as any;
+    expect(updated.name_type).toBe('aka');
+
+    await call('add_person_name', {
+      person_id: created.person.id,
+      given_name: 'Jonas',
+      surname: 'Eckerström',
+      name_type: 'birth',
+    });
+
+    const after = await call('get_person_summary', { id: created.person.id }) as any;
+    const birthNames = (after.names as any[]).filter(n => n.name_type === 'birth');
+    expect(birthNames).toHaveLength(1);
+    expect(birthNames[0].surname).toBe('Eckerström');
+  });
+
+  it('update_person_name returns "person_name not found" for unknown id', async () => {
+    expect(await call('update_person_name', { id: 'nonexistent', nickname: 'X' }))
+      .toBe('person_name not found');
+  });
+
+  it('delete_person_name removes a person_name without deleting the person', async () => {
+    const created = await call('create_person', { given_name: 'Eva', surname: 'Nord' }) as any;
+    const extra = await call('add_person_name', {
+      person_id: created.person.id,
+      given_name: 'Eva',
+      surname: 'Ahnstedt',
+      name_type: 'aka',
+    }) as any;
+
+    expect(await call('delete_person_name', { id: extra.id })).toBe('Deleted');
+
+    const after = await call('get_person_summary', { id: created.person.id }) as any;
+    expect(after.names).toHaveLength(1);
+    expect(after.names[0].surname).toBe('Nord');
+  });
+
+  it('delete_person_name returns "person_name not found" for unknown id', async () => {
+    expect(await call('delete_person_name', { id: 'nonexistent' })).toBe('person_name not found');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -157,6 +210,36 @@ describe('events', () => {
     const timeline = await call('get_timeline', { person_id: personId }) as any[];
     const death = timeline.find((e: any) => e.event.event_type === 'death');
     expect(death).toBeDefined();
+  });
+
+  it('record_event accepts date_value_end for ranged "between" dates', async () => {
+    const person = await call('create_person', { given_name: 'Jonas', surname: 'Test' }) as any;
+    const result = await call('record_event', {
+      event_type: 'military',
+      person_id: person.person.id,
+      date_type: 'between',
+      date_value: '1999',
+      date_value_end: '2000',
+      date_original: '1999–2000',
+    }) as any;
+    expect(result.event.date_value).toBe('1999');
+    expect(result.event.date_value_end).toBe('2000');
+  });
+
+  it('update_event can set date_value_end on an existing event', async () => {
+    const person = await call('create_person', { given_name: 'Anna', surname: 'Test' }) as any;
+    const created = await call('record_event', {
+      event_type: 'residence',
+      person_id: person.person.id,
+      date_type: 'between',
+      date_value: '2010',
+    }) as any;
+
+    const updated = await call('update_event', {
+      id: created.event.id,
+      date_value_end: '2015',
+    }) as any;
+    expect(updated.date_value_end).toBe('2015');
   });
 });
 

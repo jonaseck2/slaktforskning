@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- feat(mcp): `record_event` and `update_event` accept `date_value_end` so range dates (`date_type: "between"`, e.g. military service 1999–2000) round-trip through the MCP — previously the field was silently dropped on the way in.
+- feat(mcp): new `update_person_name` tool — retype an existing `person_name` (e.g. flip the auto-stamped primary `birth` to `aka` when the actual birth surname differs), set `date_from`/`date_to`, attach `nickname` / `preferred_name`. Closes the gap that left the `MULTIPLE_BIRTH_NAMES` quality warning unfixable from the agent side.
+- feat(mcp): new `delete_person_name` tool — drop a single `person_name` record without deleting the person.
 - fix: name reorder arrows now disable (with tooltip) when chronological order forbids the swap, instead of clicking through to a red error
 - fix: fan chart generation 6 ring is wider so birth and death dates fit alongside the name
 - fix: dragging the side panels next to the fan chart no longer stutters — the chart re-fits once you release

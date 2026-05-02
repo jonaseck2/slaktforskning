@@ -16,6 +16,7 @@ export interface RecordEventArgs {
   person_ids?: { id: string; role?: string }[];
   relationship_id?: string;
   date_value?: string;
+  date_value_end?: string;
   date_type?: string;
   date_original?: string;
   place?: string;
@@ -58,6 +59,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       date_original: args.date_original ?? args.date_value ?? '',
       date_type: args.date_type as GenealogyEvent['date_type'] | undefined,
       date_value: args.date_type ? args.date_value ?? null : null,
+      date_value_end: args.date_type ? args.date_value_end ?? null : null,
       place_id,
       value: args.value,
       notes: notesValue,
@@ -116,7 +118,8 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
         role: z.string().optional().describe('Role: primary, spouse, parent, child, witness, godparent, officiant, other'),
       })).optional().describe('Multiple participants with roles (use instead of person_id when multiple persons are involved)'),
       relationship_id: z.string().optional().describe('Relationship ID to attach event to'),
-      date_value: z.string().optional().describe('Date value (ISO format for exact, otherwise free text)'),
+      date_value: z.string().optional().describe('Date value (ISO format for exact, otherwise free text). For range types (between/from-to) this is the start.'),
+      date_value_end: z.string().optional().describe('End-of-range date value. Required to express a range with date_type "between" (e.g. military service 1999–2000). Ignored when date_type is omitted.'),
       date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
       date_original: z.string().optional().describe('Original date text as it appears in the source'),
       place: z.string().optional().describe('Place name — creates or reuses an existing place'),
@@ -153,7 +156,8 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
     inputSchema: {
       id: z.string().describe('Event ID'),
       event_type: z.string().optional().describe('Event type'),
-      date_value: z.string().optional().describe('Date value'),
+      date_value: z.string().optional().describe('Date value (start of range for "between" types)'),
+      date_value_end: z.string().optional().describe('End-of-range date value (paired with date_type "between")'),
       date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
       date_original: z.string().optional().describe('Original date text as it appears in the source'),
       place: z.string().optional().describe('Place name — resolved to place_id via findOrCreate'),

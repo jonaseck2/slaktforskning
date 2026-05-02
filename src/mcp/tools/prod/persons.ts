@@ -205,6 +205,38 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     return { content: [{ type: 'text', text: JSON.stringify(name, null, 2) }] };
   });
 
+  server.registerTool('update_person_name', {
+    description: 'Update fields on an existing person_name record. Use this to retype the primary name (e.g. set the auto-created "birth" record to "aka" when the actual birth surname differs), to set date_from / date_to on a name period, or to attach nickname / preferred_name. To find the name id, call get_person_summary.',
+    inputSchema: {
+      id: z.string().describe('person_name ID (from get_person_summary)'),
+      given_name: z.string().optional(),
+      surname: z.string().optional(),
+      name_type: z.enum(['birth', 'married', 'alias', 'aka']).optional().describe('birth | married | alias | aka'),
+      date_from: z.string().optional().describe('Date this name became active (free text or ISO)'),
+      date_to: z.string().optional().describe('Date this name was superseded'),
+      sort_order: z.number().optional().describe('Sort order — lower = primary; the lowest sort_order is the displayed name'),
+      name_prefix: z.string().optional(),
+      name_suffix: z.string().optional(),
+      patronymic_base: z.string().optional(),
+      preferred_name: z.string().optional().describe('Single given name marked as preferred / called'),
+      nickname: z.string().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const name = personApi.updatePersonName(getDb(), id, data);
+    return { content: [{ type: 'text', text: name ? JSON.stringify(name, null, 2) : 'person_name not found' }] };
+  });
+
+  server.registerTool('delete_person_name', {
+    description: 'Delete a single person_name record (does not delete the person). Use this when an extra name was added by mistake, e.g. a duplicate "birth" entry. To find the name id, call get_person_summary.',
+    inputSchema: {
+      id: z.string().describe('person_name ID (from get_person_summary)'),
+    },
+  }, async (args) => {
+    const ok = personApi.deletePersonName(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'person_name not found' }] };
+  });
+
   server.registerTool('merge_persons', {
     description: 'Merge source person into target person. All data from source is moved to target, then source is deleted.',
     inputSchema: {

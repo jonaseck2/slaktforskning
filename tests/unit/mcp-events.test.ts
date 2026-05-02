@@ -170,4 +170,38 @@ describe('recordEventWorkflow', () => {
 
     expect(result.event.notes).toBe('real notes');
   });
+
+  it('persists date_value_end for ranged events with date_type "between"', () => {
+    const person = persons.createPerson(db, { given_name: 'Jonas', surname: 'Test' });
+
+    const result = recordEventWorkflow(db, {
+      event_type: 'military',
+      person_id: person.id,
+      date_type: 'between',
+      date_value: '1999',
+      date_value_end: '2000',
+      date_original: '1999–2000',
+    });
+
+    expect(result.event.date_type).toBe('between');
+    expect(result.event.date_value).toBe('1999');
+    expect(result.event.date_value_end).toBe('2000');
+
+    const stored = events.getEvent(db, result.event.id)!;
+    expect(stored.date_value_end).toBe('2000');
+  });
+
+  it('drops date_value_end when date_type is omitted (matches date_value behaviour)', () => {
+    const person = persons.createPerson(db, { given_name: 'Anna', surname: 'Test' });
+
+    const result = recordEventWorkflow(db, {
+      event_type: 'residence',
+      person_id: person.id,
+      date_value: '1999',
+      date_value_end: '2000',
+    });
+
+    expect(result.event.date_value).toBeNull();
+    expect(result.event.date_value_end).toBeNull();
+  });
 });
