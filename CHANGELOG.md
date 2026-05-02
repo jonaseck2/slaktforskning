@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.192.1 — Right side panels scroll again
+
+- fix: right side panels scroll when their content overflows — deep panels no longer clip below the viewport.
+
 ## v0.192.0 — Life timeline tells the story of a life
 
 - feat(reports): A Life Report's timeline now shows the **story of the subject's life** — own events plus parent deaths, spouse death, and each child's birth/foster_placement/death that fell within the subject's lifetime. Family events render with a sex-typed relationship suffix ("Maria (mor)", "Lars (son)") so multiple Bortgång/Födelse markers in the same year stay readable.

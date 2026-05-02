@@ -27,7 +27,9 @@
         data-testid="entity-edit"
         @click="$emit('edit')"
       >{{ $t('common.edit') }}</button>
-      <slot />
+      <div class="panel-body">
+        <slot />
+      </div>
     </template>
   </div>
 </template>
@@ -76,8 +78,8 @@ defineEmits<{ close: []; edit: [] }>();
   text-align: center;
 }
 
-/* Role label above the entity header (states what the panel does). Sticky so
-   the heading stays visible while the panel body scrolls. */
+/* Role label above the entity header (states what the panel does). Sits as
+   non-scrolling chrome above the scrollable .panel-body. */
 .panel-role-label {
   margin: 0;
   font-size: var(--font-md);
@@ -88,9 +90,18 @@ defineEmits<{ close: []; edit: [] }>();
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: 1px solid var(--surface-border-subtle);
   background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 5;
+}
+
+/* Scrollable region holding the panel's <slot/> content. The role label,
+   entity header, and (optional) Edit button stay outside this region as
+   non-scrolling chrome — that keeps the absolute-positioned collapse tab
+   anchored visually while the user scrolls deep panel content. */
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .panel-role-label + .panel-header {
   border-radius: 0;
