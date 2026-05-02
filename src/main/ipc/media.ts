@@ -83,6 +83,43 @@ export function registerMediaHandlers(
     return { canceled: false, media: item };
   });
 
+  wrapHandler('media:createFromFile', async (data) => {
+    const opts = data as { suggestedTitle?: string } | undefined;
+    const dbDir = path.dirname(getCurrentDatabasePath());
+    const result = await dialog.showOpenDialog({
+      title: 'Välj mediafil',
+      defaultPath: dbDir,
+      properties: ['openFile'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+
+    const srcPath = result.filePaths[0];
+    const dbPath = getCurrentDatabasePath();
+    const mediaFolder = media.getMediaFolderName(dbPath);
+    const mediaDir = path.join(dbDir, mediaFolder);
+    fs.mkdirSync(mediaDir, { recursive: true });
+
+    const filename = path.basename(srcPath);
+    let destPath = path.join(mediaDir, filename);
+    if (fs.existsSync(destPath)) {
+      const ext = path.extname(filename);
+      const base = path.basename(filename, ext);
+      destPath = path.join(mediaDir, `${base}_${Date.now()}${ext}`);
+    }
+    fs.copyFileSync(srcPath, destPath);
+
+    const fileRef = path.join(mediaFolder, path.basename(destPath));
+    const ext = path.extname(destPath).slice(1).toLowerCase();
+    const db = getDb();
+    const item = media.createMedia(db, {
+      file_ref: fileRef,
+      title: opts?.suggestedTitle?.trim() || path.basename(destPath, path.extname(destPath)),
+      format: ext || null,
+    });
+
+    return { canceled: false, media: item };
+  });
+
   wrapHandler('media:openFile', async (id) => {
     const item = media.getMedia(getDb(), id as string);
     if (!item || !item.file_ref) return { success: false, error: 'Media not found or no file_ref' };

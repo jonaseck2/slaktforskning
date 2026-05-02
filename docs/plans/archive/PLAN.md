@@ -434,3 +434,8 @@ Replaced 3-layer string-keyed IPC boilerplate with a single typed registry in `s
 
 ### Duplicate Persons View
 `/duplicates` route + `DuplicatesView.vue` listing duplicate-person candidates with a side-by-side `MergePersonsModal`. API: `findDuplicates`, `findDuplicatesPage`, `mergePersons`, `ignoreDuplicatePair`. Nav badge with live count. (Places / sources / media coverage tracked separately as a backlog item.)
+
+### Inline Media Picker across Entity Panels
+Every right-side entity panel media section (Person, Place, Relationship, Source, Group, ResearchTask) hosts the same inline `[picker | Add | Cancel]` add-row. `+ Attach` no longer jumps straight to the OS file dialog — type to autocomplete against existing media (already-linked items filtered out), or click the in-field 📎 / dropdown footer "Attach file…" to upload a new file. Three section flavors (PersonMediaSection, EntityMediaSection, LinkedMediaSection) unified on a shared `MediaAddRow` component; new `media:createFromFile` IPC keeps the wrapper agnostic of which link table the section writes to.
+- Spec: [2026-05-02-inline-media-picker-design.md](2026-05-02-inline-media-picker-design.md)
+- Plan: [2026-05-02-inline-media-picker.md](2026-05-02-inline-media-picker.md)

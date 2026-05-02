@@ -571,7 +571,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     },
     getTimeline: async () => [],
     create: noop, update: noop, delete: noopFalse,
-    addLink: noop, removeLink: noopFalse, reorder: noopVoid, attach: noop, openFile: noopVoid,
+    addLink: noop, removeLink: noopFalse, reorder: noopVoid, attach: noop, createFromFile: noop, openFile: noopVoid,
   };
 
   const mediaRegions = {

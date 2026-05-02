@@ -1,10 +1,11 @@
 <template>
   <div>
-    <div v-if="showPicker" class="add-row">
-      <MediaPicker v-model="pickedId" :placeholder="$t('media.title_label')" />
-      <AppButton variant="primary" size="sm" :disabled="!pickedId" @click="onAdd">{{ $t('common.add') }}</AppButton>
-      <AppButton variant="ghost" size="sm" @click="cancelAdd">{{ $t('common.cancel') }}</AppButton>
-    </div>
+    <MediaAddRow
+      v-if="showPicker"
+      :exclude-ids="excludeIds"
+      @committed="onCommitted"
+      @cancelled="emit('cancelPicker')"
+    />
     <SectionEmpty v-if="rows.length === 0 && !showPicker" :message="$t('empty.media')" />
     <table v-else-if="rows.length > 0" class="data-table">
       <thead>
@@ -36,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import MediaPicker from './MediaPicker.vue';
+import MediaAddRow from './MediaAddRow.vue';
 import AppButton from './ui/AppButton.vue';
 import IconUnlink from './ui/IconUnlink.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -66,7 +67,6 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const rows = ref<Row[]>([]);
-const pickedId = ref<string | null>(null);
 
 watch(() => props.links, async (links) => {
   const out: Row[] = [];
@@ -80,33 +80,18 @@ watch(() => props.links, async (links) => {
   rows.value = out;
 }, { immediate: true, deep: true });
 
-watch(() => props.showPicker, (v) => { if (!v) pickedId.value = null; });
+const excludeIds = computed(() => rows.value.map(r => r.mediaId));
 
 function openMedia(id: string) {
   router.push({ path: '/media', query: { open: id } });
 }
 
-function onAdd() {
-  if (!pickedId.value) return;
-  const id = pickedId.value;
-  pickedId.value = null;
-  emit('add', id);
-}
-
-function cancelAdd() {
-  pickedId.value = null;
-  emit('cancelPicker');
+function onCommitted({ mediaId }: { mediaId: string }) {
+  emit('add', mediaId);
 }
 </script>
 
 <style scoped>
-.add-row {
-  display: flex;
-  gap: var(--space-xs);
-  align-items: center;
-  padding: var(--space-xs) 0;
-}
-.add-row > :first-child { flex: 1; }
 .th-shrink { width: 1%; white-space: nowrap; }
 .td-shrink { width: 1%; white-space: nowrap; color: var(--text-muted); }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }

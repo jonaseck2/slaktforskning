@@ -1,6 +1,6 @@
 # Inline Media Picker — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (with the project `subagent-handoff` template) to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (with the project `subagent-handoff` template) to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 ## User goal
 
@@ -76,7 +76,7 @@ The `media_links` table has **no UNIQUE constraint** on `(media_id, entity_type,
 - Modify: `src/preload/index.ts`
 - Modify: `src/static/static-api.ts`
 
-- [ ] **Step 1: Add the handler in `src/main/ipc/media.ts`**
+- [x] **Step 1: Add the handler in `src/main/ipc/media.ts`**
 
 Add a new `wrapHandler` block right after the existing `media:attach` handler (around line 84). Reuse the same dialog + fs-copy logic but skip the `addMediaLink` call:
 
@@ -119,7 +119,7 @@ Add a new `wrapHandler` block right after the existing `media:attach` handler (a
   });
 ```
 
-- [ ] **Step 2: Register `media:createFromFile` as main-thread-only in the coverage test**
+- [x] **Step 2: Register `media:createFromFile` as main-thread-only in the coverage test**
 
 In `tests/unit/ipc-worker-coverage.test.ts`, around line 25–27, add `'media:createFromFile'` to the existing `MAIN_THREAD_ONLY_CHANNELS` set:
 
@@ -129,7 +129,7 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   // ...rest unchanged
 ```
 
-- [ ] **Step 3: Expose `createFromFile` on `window.api.media`**
+- [x] **Step 3: Expose `createFromFile` on `window.api.media`**
 
 In `src/preload/index.ts`, locate the `media:` block (around line 189) and add the new method right after `attach`:
 
@@ -138,7 +138,7 @@ In `src/preload/index.ts`, locate the `media:` block (around line 189) and add t
     createFromFile: mutating((data?: unknown) => ipcRenderer.invoke('media:createFromFile', data)),
 ```
 
-- [ ] **Step 4: Add static-api stub**
+- [x] **Step 4: Add static-api stub**
 
 In `src/static/static-api.ts`, find the line containing `attach: noop` (around line 574) and add `createFromFile: noop` next to it:
 
@@ -146,7 +146,7 @@ In `src/static/static-api.ts`, find the line containing `attach: noop` (around l
     addLink: noop, removeLink: noopFalse, reorder: noopVoid, attach: noop, createFromFile: noop, openFile: noopVoid,
 ```
 
-- [ ] **Step 5: Run the IPC coverage tests — they MUST pass**
+- [x] **Step 5: Run the IPC coverage tests — they MUST pass**
 
 ```bash
 npx vitest run tests/unit/ipc-worker-coverage.test.ts \
@@ -156,7 +156,7 @@ npx vitest run tests/unit/ipc-worker-coverage.test.ts \
 
 Expected: all three suites pass. If any fail, fix the matching layer until they're green.
 
-- [ ] **Step 6: Type-check**
+- [x] **Step 6: Type-check**
 
 ```bash
 npm run lint
@@ -164,7 +164,7 @@ npm run lint
 
 Expected: zero errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/ipc/media.ts tests/unit/ipc-worker-coverage.test.ts src/preload/index.ts src/static/static-api.ts
@@ -179,7 +179,7 @@ git commit -m "feat(media): add media:createFromFile IPC (create-only, no link)"
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add keys to `src/renderer/i18n/sv.ts`**
+- [x] **Step 1: Add keys to `src/renderer/i18n/sv.ts`**
 
 Locate the existing `media: { ... }` namespace block. Add three new keys (alphabetical placement is fine):
 
@@ -192,7 +192,7 @@ Locate the existing `media: { ... }` namespace block. Add three new keys (alphab
   },
 ```
 
-- [ ] **Step 2: Add the same keys to `src/renderer/i18n/en.ts`**
+- [x] **Step 2: Add the same keys to `src/renderer/i18n/en.ts`**
 
 ```typescript
   media: {
@@ -203,7 +203,7 @@ Locate the existing `media: { ... }` namespace block. Add three new keys (alphab
   },
 ```
 
-- [ ] **Step 3: Lint**
+- [x] **Step 3: Lint**
 
 ```bash
 npm run lint
@@ -211,7 +211,7 @@ npm run lint
 
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -225,7 +225,7 @@ git commit -m "i18n: add attachFromFile / attachFromFileWithQuery / alreadyAttac
 **Files:**
 - Modify: `src/renderer/components/MediaPicker.vue`
 
-- [ ] **Step 1: Add `excludeIds` prop and apply it in `filter()`**
+- [x] **Step 1: Add `excludeIds` prop and apply it in `filter()`**
 
 Update the `defineProps` and `filter` function. Existing structure (around lines 50–102):
 
@@ -254,7 +254,7 @@ function filter(query: string) {
 }
 ```
 
-- [ ] **Step 2: Add `attach-file` event to `defineEmits`**
+- [x] **Step 2: Add `attach-file` event to `defineEmits`**
 
 ```typescript
 const emit = defineEmits<{
@@ -264,7 +264,7 @@ const emit = defineEmits<{
 }>();
 ```
 
-- [ ] **Step 3: Add the in-field 📎 icon to the template**
+- [x] **Step 3: Add the in-field 📎 icon to the template**
 
 Right after the existing `<button v-if="modelValue" class="picker-clear" ...>` line, add the attach-file button (always visible — does not depend on `modelValue`):
 
@@ -281,7 +281,7 @@ Right after the existing `<button v-if="modelValue" class="picker-clear" ...>` l
 
 `@mousedown.prevent` is required — the input's `onBlur` would otherwise close the dropdown before the click registers (same pattern the option `<li>` rows already use).
 
-- [ ] **Step 4: Add the dropdown footer item to the template**
+- [x] **Step 4: Add the dropdown footer item to the template**
 
 Update the `<ul role="listbox">` block. The footer is **always** rendered when `open` is true, even when `results` is empty. Replace the current `<ul v-if="open && results.length > 0">` with:
 
@@ -311,7 +311,7 @@ Update the `<ul role="listbox">` block. The footer is **always** rendered when `
     </ul>
 ```
 
-- [ ] **Step 5: Add `onAttachClick` handler and update keyboard nav**
+- [x] **Step 5: Add `onAttachClick` handler and update keyboard nav**
 
 In the `<script setup>` block, add:
 
@@ -347,7 +347,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 ```
 
-- [ ] **Step 6: Add scoped styles for the new elements**
+- [x] **Step 6: Add scoped styles for the new elements**
 
 Append to the `<style scoped>` block:
 
@@ -369,7 +369,7 @@ Append to the `<style scoped>` block:
 }
 ```
 
-- [ ] **Step 7: Lint + run any picker-related tests**
+- [x] **Step 7: Lint + run any picker-related tests**
 
 ```bash
 npm run lint
@@ -378,7 +378,7 @@ npx vitest run --reporter=dot src/renderer/components/MediaPicker
 
 Expected: zero lint errors. Existing tests (if any) pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/renderer/components/MediaPicker.vue
@@ -392,7 +392,7 @@ git commit -m "feat(media-picker): add excludeIds prop, in-field attach-file ico
 **Files:**
 - Create: `src/renderer/components/MediaAddRow.vue`
 
-- [ ] **Step 1: Write the new component**
+- [x] **Step 1: Write the new component**
 
 Create `src/renderer/components/MediaAddRow.vue` with the following content (this is the full file — every line):
 
@@ -462,7 +462,7 @@ function cancel() {
 </style>
 ```
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 ```bash
 npm run lint
@@ -470,7 +470,7 @@ npm run lint
 
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/MediaAddRow.vue
@@ -484,7 +484,7 @@ git commit -m "feat(media): add MediaAddRow wrapper component"
 **Files:**
 - Modify: `src/renderer/components/PersonMediaSection.vue`
 
-- [ ] **Step 1: Replace `attach()` body with `showAddRow` toggle**
+- [x] **Step 1: Replace `attach()` body with `showAddRow` toggle**
 
 In `src/renderer/components/PersonMediaSection.vue`:
 
@@ -522,7 +522,7 @@ async function onCommitted({ mediaId }: { mediaId: string }) {
 
 (d) `defineExpose` already exposes `attach` — leave it. The parent's `+ Attach` button calls `mediaSectionRef?.attach()` and now flips the boolean.
 
-- [ ] **Step 2: Render `MediaAddRow` conditionally above the table**
+- [x] **Step 2: Render `MediaAddRow` conditionally above the table**
 
 In the `<template>`, wrap the existing content. Insert `<MediaAddRow>` before the `<SectionEmpty>` / table:
 
@@ -542,7 +542,7 @@ In the `<template>`, wrap the existing content. Insert `<MediaAddRow>` before th
 
 (Note: the existing `v-else` after `SectionEmpty` becomes `v-else-if="media.length > 0"` so the table doesn't show when only the add-row is visible on an empty list.)
 
-- [ ] **Step 3: Add the `excludeIds` computed**
+- [x] **Step 3: Add the `excludeIds` computed**
 
 In `<script setup>`:
 
@@ -550,7 +550,7 @@ In `<script setup>`:
 const excludeIds = computed(() => media.value.map(m => m.id));
 ```
 
-- [ ] **Step 4: Lint + run any existing PersonMediaSection tests**
+- [x] **Step 4: Lint + run any existing PersonMediaSection tests**
 
 ```bash
 npm run lint
@@ -559,7 +559,7 @@ npx vitest run --reporter=dot PersonMediaSection
 
 Expected: zero lint errors; existing tests still pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/PersonMediaSection.vue
@@ -573,7 +573,7 @@ git commit -m "feat(person-panel): inline MediaAddRow replaces direct file-dialo
 **Files:**
 - Modify: `src/renderer/components/EntityMediaSection.vue`
 
-- [ ] **Step 1: Apply the same migration as PersonMediaSection**
+- [x] **Step 1: Apply the same migration as PersonMediaSection**
 
 In `src/renderer/components/EntityMediaSection.vue`:
 
@@ -635,7 +635,7 @@ import { ref, watch, computed } from 'vue';
       <!-- ...rest unchanged... -->
 ```
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 ```bash
 npm run lint
@@ -643,7 +643,7 @@ npm run lint
 
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/EntityMediaSection.vue
@@ -659,7 +659,7 @@ git commit -m "feat(entity-panel): inline MediaAddRow on Place/Relationship/Sour
 **Files:**
 - Modify: `src/renderer/components/LinkedMediaSection.vue`
 
-- [ ] **Step 1: Replace the inline picker block with `MediaAddRow`**
+- [x] **Step 1: Replace the inline picker block with `MediaAddRow`**
 
 (a) Update the imports — drop `MediaPicker` and `AppButton` (if no longer used), add `MediaAddRow`:
 
@@ -701,11 +701,11 @@ import { ref, watch, computed } from 'vue';
 
 (d) Drop the `watch(() => props.showPicker, ...)` (it only existed to clear `pickedId` — `MediaAddRow` owns that ref now).
 
-- [ ] **Step 2: Drop the now-unused `.add-row` styles**
+- [x] **Step 2: Drop the now-unused `.add-row` styles**
 
 The `<style scoped>` block can keep `.th-shrink`, `.td-shrink`, `.actions-cell`. Remove the `.add-row` rule (lives in `MediaAddRow.vue` now).
 
-- [ ] **Step 3: Lint + smoke**
+- [x] **Step 3: Lint + smoke**
 
 ```bash
 npm run lint
@@ -713,7 +713,7 @@ npm run lint
 
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/LinkedMediaSection.vue
@@ -727,7 +727,7 @@ git commit -m "refactor(group/task panel): LinkedMediaSection delegates to Media
 **Files:**
 - Create: `tests/components/media-picker-add-row-consistency.test.ts`
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 Look at any existing test in `tests/components/` for the project's mount conventions (e.g. `tests/components/panel-layout-consistency.test.ts`). Reuse the same imports, i18n stub, and `window.api` stub patterns.
 
@@ -803,7 +803,7 @@ describe('media picker add-row consistency', () => {
 
 (If the project uses a different test bootstrap — e.g. a shared `mountWith()` helper or a vitest setup file that already wires `window.api` — match that convention instead. Read `tests/components/panel-layout-consistency.test.ts` first.)
 
-- [ ] **Step 2: Run the test**
+- [x] **Step 2: Run the test**
 
 ```bash
 npx vitest run tests/components/media-picker-add-row-consistency.test.ts
@@ -811,7 +811,7 @@ npx vitest run tests/components/media-picker-add-row-consistency.test.ts
 
 Expected: 3/3 passing.
 
-- [ ] **Step 3: Run the full unit suite to verify no regressions**
+- [x] **Step 3: Run the full unit suite to verify no regressions**
 
 ```bash
 npm test
@@ -819,7 +819,7 @@ npm test
 
 Expected: all green.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/components/media-picker-add-row-consistency.test.ts
@@ -832,13 +832,13 @@ git commit -m "test: media-picker-add-row-consistency across 3 section flavors"
 
 This task does **not** produce code; it is the user-goal proof step. Lint + vitest passing is necessary but not sufficient. Per `.claude/rules/plans.md`, this checklist must be exercised in the running app before the plan closes.
 
-- [ ] **Step 1: Start the app**
+- [x] **Step 1: Start the app**
 
 ```bash
 npm start
 ```
 
-- [ ] **Step 2: Verify each panel shows the same add-row shape**
+- [x] **Step 2: Verify each panel shows the same add-row shape**
 
 Open each route and click `+ Attach` in the media section. Confirm the inline `[picker | Add | Cancel]` row appears with the same visual shape:
 
@@ -849,27 +849,27 @@ Open each route and click `+ Attach` in the media section. Confirm the inline `[
 - `/groups/<some-id>` (GroupPanel)
 - `/research-tasks/<some-id>` (ResearchTaskPanel)
 
-- [ ] **Step 3: Pick existing — cross-entity sharing**
+- [x] **Step 3: Pick existing — cross-entity sharing**
 
 In a PersonPanel, click `+ Attach`, click 📎, choose a real image file. Confirm the photo appears in the list with a thumbnail. Open a second PersonPanel, click `+ Attach`, type the photo's title, select it from the dropdown, click Add. Confirm both persons' media tables now show the same image with thumbnails.
 
-- [ ] **Step 4: Already-linked filter**
+- [x] **Step 4: Already-linked filter**
 
 Back in the first PersonPanel, click `+ Attach` again and search for the same photo title. Confirm the photo does **not** appear in the dropdown (it's already linked). Now check a third PersonPanel — confirm the photo **does** appear there.
 
-- [ ] **Step 5: File upload with title prefill**
+- [x] **Step 5: File upload with title prefill**
 
 In any panel, click `+ Attach`, type "Brand New Title" (something with no match), click `📎 Attach file "Brand New Title"…` in the dropdown footer, choose a file. Confirm the new media row uses `Brand New Title` as the title.
 
-- [ ] **Step 6: Cross-view reactivity**
+- [x] **Step 6: Cross-view reactivity**
 
 Open `/media` in a second window (or switch to MediaView). Confirm the new media items appear there too without needing a manual refresh — `mutating()` IPC + `onDataChanged` should propagate.
 
-- [ ] **Step 7: GEDCOM round-trip sanity (optional but recommended)**
+- [x] **Step 7: GEDCOM round-trip sanity (optional but recommended)**
 
 Export to GEDCOM, re-import into a new database, confirm the media files are still linked to the same persons/places/etc. (No code in this plan touches GEDCOM, so this is a regression check, not a new verification.)
 
-- [ ] **Step 8: Final commit if any docs / cleanup needed**
+- [x] **Step 8: Final commit if any docs / cleanup needed**
 
 If the plan exposed any rough edges (missing i18n keys, unused exports), commit a small follow-up. Otherwise, mark this task done and proceed to the plan close-out (per CLAUDE.md "Finishing a plan" checklist).
 
@@ -877,10 +877,10 @@ If the plan exposed any rough edges (missing i18n keys, unused exports), commit 
 
 ## Self-review checklist (run before merging)
 
-- [ ] All 9 tasks above have every checkbox ticked.
-- [ ] All three section flavors (`PersonMediaSection`, `EntityMediaSection`, `LinkedMediaSection`) render `<MediaAddRow>`. None still uses the old `media:attach`-direct pattern; none still has its own bespoke picker block.
-- [ ] `tests/components/media-picker-add-row-consistency.test.ts` is green.
-- [ ] `npx vitest run tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts` is green.
-- [ ] `npm run lint` is zero errors, `npm test` is zero failures.
-- [ ] User-observable items 1–4 in the plan preamble's Verification section have been exercised in the running app (Task 9).
-- [ ] Plan file is moved to `docs/plans/archive/` along with `2026-05-02-inline-media-picker-design.md`, `package.json` minor-bumped, `CHANGELOG.md` updated, per the CLAUDE.md "Finishing a plan" checklist.
+- [x] All 9 tasks above have every checkbox ticked.
+- [x] All three section flavors (`PersonMediaSection`, `EntityMediaSection`, `LinkedMediaSection`) render `<MediaAddRow>`. None still uses the old `media:attach`-direct pattern; none still has its own bespoke picker block.
+- [x] `tests/components/media-picker-add-row-consistency.test.ts` is green.
+- [x] `npx vitest run tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts` is green.
+- [x] `npm run lint` is zero errors, `npm test` is zero failures.
+- [x] User-observable items 1–4 in the plan preamble's Verification section have been exercised in the running app (Task 9).
+- [x] Plan file is moved to `docs/plans/archive/` along with `2026-05-02-inline-media-picker-design.md`, `package.json` minor-bumped, `CHANGELOG.md` updated, per the CLAUDE.md "Finishing a plan" checklist.

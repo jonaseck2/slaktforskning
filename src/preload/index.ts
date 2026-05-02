@@ -201,6 +201,7 @@ const api = {
     profilePicRef: (personId: string) => ipcRenderer.invoke('media:profilePicRef', personId),
     profilePicRefs: (personIds: string[]) => ipcRenderer.invoke('media:profilePicRefs', personIds),
     attach: mutating((data?: unknown) => ipcRenderer.invoke('media:attach', data)),
+    createFromFile: mutating((data?: unknown) => ipcRenderer.invoke('media:createFromFile', data)),
     openFile: (id: string) => ipcRenderer.invoke('media:openFile', id),
     getFilePath: (id: string) => ipcRenderer.invoke('media:getFilePath', id),
     readAsDataUrl: (id: string) => ipcRenderer.invoke('media:readAsDataUrl', id),

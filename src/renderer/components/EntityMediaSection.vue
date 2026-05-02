@@ -1,7 +1,13 @@
 <template>
   <div>
-    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" />
-    <table v-else class="data-table">
+    <MediaAddRow
+      v-if="showAddRow"
+      :exclude-ids="excludeIds"
+      @committed="onCommitted"
+      @cancelled="showAddRow = false"
+    />
+    <SectionEmpty v-if="media.length === 0 && !showAddRow" :message="$t('empty.media')" />
+    <table v-else-if="media.length > 0" class="data-table">
       <thead>
         <tr>
           <th class="th-shrink"></th>
@@ -51,11 +57,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 
 declare const window: Window & {
@@ -81,7 +88,10 @@ const props = defineProps<{
 
 const router = useRouter();
 const media = ref<MediaItem[]>([]);
+const showAddRow = ref(false);
 const thumbnails = ref<Record<string, string>>({});
+
+const excludeIds = computed(() => media.value.map(m => m.id));
 
 defineExpose({ attach, reload: load });
 
@@ -106,10 +116,13 @@ function openMedia(id: string) {
 }
 
 async function attach() {
-  const result = await window.api.media.attach({ entityType: props.entityType, entityId: props.entityId });
-  if (!(result as { canceled: boolean }).canceled) {
-    await load();
-  }
+  showAddRow.value = true;
+}
+
+async function onCommitted({ mediaId }: { mediaId: string }) {
+  await window.api.media.addLink({ media_id: mediaId, entity_type: props.entityType, entity_id: props.entityId });
+  showAddRow.value = false;
+  await load();
 }
 
 async function openFile(id: string) {

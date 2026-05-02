@@ -1,7 +1,13 @@
 <template>
   <div>
-    <SectionEmpty v-if="media.length === 0" :message="$t('empty.media')" />
-    <table v-else class="data-table">
+    <MediaAddRow
+      v-if="showAddRow"
+      :exclude-ids="excludeIds"
+      @committed="onCommitted"
+      @cancelled="showAddRow = false"
+    />
+    <SectionEmpty v-if="media.length === 0 && !showAddRow" :message="$t('empty.media')" />
+    <table v-else-if="media.length > 0" class="data-table">
       <thead>
         <tr>
           <th class="th-shrink"></th>
@@ -67,6 +73,7 @@ import { useProfilePicStore } from '../stores/profilePic';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import IconUnlink from './ui/IconUnlink.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useEntityData } from '../composables/useEntityData';
 
@@ -90,6 +97,7 @@ const emit = defineEmits<{ profileChanged: [] }>();
 
 const router = useRouter();
 const thumbnails = ref<Record<string, string>>({});
+const showAddRow = ref(false);
 const profilePicStore = useProfilePicStore();
 
 const idRef = computed(() => props.personId ?? null);
@@ -97,6 +105,7 @@ const { data, reload } = useEntityData<MediaItem[]>(idRef, async (id) => {
   return (await window.api.media.forEntity('person', id)) as MediaItem[];
 });
 const media = computed(() => data.value ?? []);
+const excludeIds = computed(() => media.value.map(m => m.id));
 
 async function loadThumbnails() {
   for (const m of media.value) {
@@ -118,12 +127,19 @@ function openMedia(id: string) {
 }
 
 async function attach() {
-  const result = await window.api.media.attach({ entityType: 'person', entityId: props.personId });
-  if (!(result as { canceled: boolean }).canceled) {
-    profilePicStore.invalidatePerson(props.personId);
-    await reload();
-    emit('profileChanged');
-  }
+  showAddRow.value = true;
+}
+
+async function onCommitted({ mediaId }: { mediaId: string }) {
+  await window.api.media.addLink({
+    media_id: mediaId,
+    entity_type: 'person',
+    entity_id: props.personId,
+  });
+  showAddRow.value = false;
+  profilePicStore.invalidatePerson(props.personId);
+  await reload();
+  emit('profileChanged');
 }
 
 
