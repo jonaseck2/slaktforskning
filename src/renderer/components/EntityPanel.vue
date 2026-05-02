@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  entityType: 'person' | 'place' | 'source' | 'relationship' | 'group' | 'task' | 'media';
+  entityType: 'person' | 'place' | 'source' | 'relationship' | 'group' | 'task' | 'media' | 'report' | 'website';
   entity: { id: string } | null;
   label: string;
   editable?: boolean;

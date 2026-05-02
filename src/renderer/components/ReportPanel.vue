@@ -1,11 +1,16 @@
 <template>
-  <div class="report-panel side-panel">
-    <!-- Collapse arrow on the panel's left edge. -->
-    <button class="panel-collapse-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="emit('close')">▶</button>
-
-    <div class="panel-header">
-      <div class="panel-title">{{ reportTitle }}</div>
-    </div>
+  <EntityPanel
+    entity-type="report"
+    :entity="{ id: 'report' }"
+    :label="$t('panel.manageReport')"
+    @close="emit('close')"
+  >
+    <template #empty>{{ $t('panel.selectToView') }}</template>
+    <template #header>
+      <div class="panel-name-row">
+        <div class="panel-name">{{ reportTitle }}</div>
+      </div>
+    </template>
 
     <!-- Subject -->
     <div class="panel-section">
@@ -283,7 +288,7 @@
       <AppButton v-else variant="secondary" :disabled="!canPrint" @click="emit('export-pdf')" class="panel-action-btn">{{ $t('reports.exportPdf') }}</AppButton>
     </div>
 
-  </div>
+  </EntityPanel>
 </template>
 
 <script setup lang="ts">
@@ -291,6 +296,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
+import EntityPanel from './EntityPanel.vue';
 import PersonPicker from './PersonPicker.vue';
 import PlacePicker from './PlacePicker.vue';
 import { useReportConfigStore } from '../stores/reportConfig';
@@ -387,36 +393,25 @@ const subjectSectionTitle = computed(() => {
 </script>
 
 <style scoped>
-/* Layout, surface, and `padding-left: 28px` for the collapse tab come
-   from `.side-panel` in shared.css. */
-.report-panel {
-  width: 100%;
-  overflow-y: auto;
-}
+/* Layout, surface, collapse tab, role label, and panel header come from
+   EntityPanel + shared.css. This block only owns ReportPanel-specific
+   chrome (header text, sections, controls, sticky actions). */
 
-/* Collapse arrow on the panel's left edge. */
-.panel-collapse-btn {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: none;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 6px 5px;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  z-index: 10;
+/* Header slot content — rendered in EntityPanel's `<slot name="header">`. */
+.panel-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
-.panel-collapse-btn:hover { color: var(--text-secondary); background: var(--surface-hover); }
-.panel-header {
-  padding: var(--space-lg) var(--space-lg) var(--space-md);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+.panel-name {
+  font-size: var(--font-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-.panel-title { font-size: var(--font-md); font-weight: 600; color: var(--text-primary); }
 .panel-section { border-bottom: 1px solid var(--surface-border-subtle); padding: 0 var(--space-lg); }
 .panel-section-body {
   padding: var(--space-xs) 0 var(--space-sm);
