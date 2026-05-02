@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.191.0 — Every right-side panel uses the EntityPanel shell
+
+- refactor: MediaPanel, ReportPanel, and WebsitePanel now use the shared `EntityPanel` shell — same `.side-panel` root, same role-label band, same ▶ collapse button, same surface/radius/shadow chrome as Person/Place/Source/Relationship/Group/ResearchTask. The user-visible outcome: every paneled route's right pane is layout-identical and behavior-identical, no more "this one looks slightly different" drift. ExportOptionsPanel is documented as a deliberate exception (it's an embedded options form, not a list-view-hosted side panel).
+- feat(website-export): WebsitePanel can now be collapsed and reopened from the WebsiteExportView, mirroring the ReportsView pattern (◀ reopen affordance + localStorage-persisted open state).
+- test: new `tests/components/panel-layout-consistency.test.ts` mounts every right-side panel and asserts the root has `.side-panel` and rejects the `.entity-panel` collision class — catches the v0.190.0-class of bug at CI time.
+- docs(rules): renderer.md now requires a class-name collision grep before introducing a new CSS class on any element in `src/renderer/`, and codifies "pattern migrations are all-or-nothing" at the component level (companion to plans.md Rule A2). EntityPanel is documented as canonical for ALL right-side panels in the Shared component catalog. The `add-feature` skill links to both rules.
+
 ## v0.190.3 — Process capture from panel-composables RCA
 
 - chore: project-local rules + skills capturing six lessons from the panel-composables refactor. New `.claude/rules/plans.md` (every plan opens with User goal, full pattern scope, user-observable verification, RCA footer). New `.claude/skills/subagent-handoff/` with project-local prompt templates centering user goals over spec compliance + dispatcher verification rule. New `.claude/skills/dom-first-debugging/` (read truth before reasoning about CSS). The `panel-consistency-finish` plan retrofitted to comply with the new rules — proof the rules fire correctly. No upstream `superpowers:*` skills patched; everything project-local survives plugin updates.

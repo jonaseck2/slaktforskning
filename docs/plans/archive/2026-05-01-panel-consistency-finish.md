@@ -75,7 +75,7 @@ The bug that locked migrated panels at 320px wide was a class-name collision: `E
 **Files:**
 - Modify: `.claude/rules/renderer.md`
 
-- [ ] **Step 1:** Add a new section to `.claude/rules/renderer.md` immediately after the "Shared component catalog" section:
+- [x] **Step 1:** Add a new section to `.claude/rules/renderer.md` immediately after the "Shared component catalog" section:
 
 ```markdown
 ## Class-name collision check (mandatory before naming a new component class)
@@ -92,7 +92,7 @@ If any hit returns from `shared.css`, **rename your class**. Hits in scoped bloc
 **Why:** the panel-composables refactor introduced `EntityPanel` whose root used `class="entity-panel side-panel"`. `.entity-panel` was already in `shared.css:1253` (BaseSubPanel modal chrome — `width: 320px; max-height: calc(100vh - 64px); flex-shrink: 0; overflow: hidden`). Every migrated side panel silently inherited those rules. Tests passed, lint passed, two-stage review approved. The user found it by inspecting computed styles in the running app. This rule exists so the next refactor doesn't repeat that.
 ```
 
-- [ ] **Step 2:** Commit `docs(rules): require class-collision grep before naming new renderer classes`.
+- [x] **Step 2:** Commit `docs(rules): require class-collision grep before naming new renderer classes`.
 
 ---
 
@@ -104,7 +104,7 @@ The plan-authoring version of "all-or-nothing" already exists in [`.claude/rules
 - Modify: `.claude/rules/renderer.md`
 - Modify: `.claude/skills/add-feature/SKILL.md`
 
-- [ ] **Step 1:** Add to `.claude/rules/renderer.md` after the new collision rule (Task 1):
+- [x] **Step 1:** Add to `.claude/rules/renderer.md` after the new collision rule (Task 1):
 
 ```markdown
 ## Pattern migrations are all-or-nothing (component level)
@@ -119,13 +119,13 @@ Before merging:
 **Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." User's mental model is "every right-side panel works the same."
 ```
 
-- [ ] **Step 2:** In `.claude/skills/add-feature/SKILL.md`, add at the top under the existing intro:
+- [x] **Step 2:** In `.claude/skills/add-feature/SKILL.md`, add at the top under the existing intro:
 
 ```markdown
 **Pattern enforcement:** if you build/refactor a reusable shell (panel, list, modal), every same-shaped component must adopt it in the same change. See `.claude/rules/renderer.md` "Pattern migrations are all-or-nothing" and `.claude/rules/plans.md` Rule A2.
 ```
 
-- [ ] **Step 3:** Commit `docs(rules): component-level all-or-nothing migration rule`.
+- [x] **Step 3:** Commit `docs(rules): component-level all-or-nothing migration rule`.
 
 ---
 
@@ -136,7 +136,7 @@ The styling-consistency test the user has asked for. Mounts each migrated `*Pane
 **Files:**
 - Create: `tests/components/panel-layout-consistency.test.ts`
 
-- [ ] **Step 1:** Write the test (this is one file, ~80 lines):
+- [x] **Step 1:** Write the test (this is one file, ~80 lines):
 
 ```typescript
 // tests/components/panel-layout-consistency.test.ts
@@ -191,8 +191,8 @@ describe('panel layout consistency', () => {
 });
 ```
 
-- [ ] **Step 2:** Run: `npx vitest run tests/components/panel-layout-consistency.test.ts`. All assertions pass.
-- [ ] **Step 3:** Commit `test(panel): assert all panel roots use .side-panel and reject .entity-panel collision`.
+- [x] **Step 2:** Run: `npx vitest run tests/components/panel-layout-consistency.test.ts`. All assertions pass.
+- [x] **Step 3:** Commit `test(panel): assert all panel roots use .side-panel and reject .entity-panel collision`.
 
 ---
 
@@ -203,12 +203,12 @@ The largest of the unmigrated panels. Same shape as the other 6 — uses `useEnt
 **Files:**
 - Modify: `src/renderer/components/MediaPanel.vue`
 
-- [ ] **Step 1:** Read [PlacePanel.vue:1-30](src/renderer/components/PlacePanel.vue) for the migration template (the simplest reference).
-- [ ] **Step 2:** Wrap the MediaPanel template body in `<EntityPanel entity-type="media" :entity="media" :label="$t('panel.manageMedia')" @close="emit('close')">` with `#empty`, `#header`, default slot. Remove the old `.media-panel.side-panel` root + collapse button + role label markup that EntityPanel now owns.
-- [ ] **Step 3:** Add i18n keys `panel.manageMedia` to both `en.ts` and `sv.ts` if missing.
-- [ ] **Step 4:** Run `tests/components` + `tests/components/panel-layout-consistency.test.ts` (Task 3) — all pass.
-- [ ] **Step 5:** Lint clean.
-- [ ] **Step 6:** Commit `refactor(panel): migrate MediaPanel to EntityPanel`.
+- [x] **Step 1:** Read [PlacePanel.vue:1-30](src/renderer/components/PlacePanel.vue) for the migration template (the simplest reference).
+- [x] **Step 2:** Wrap the MediaPanel template body in `<EntityPanel entity-type="media" :entity="media" :label="$t('panel.manageMedia')" @close="emit('close')">` with `#empty`, `#header`, default slot. Remove the old `.media-panel.side-panel` root + collapse button + role label markup that EntityPanel now owns.
+- [x] **Step 3:** Add i18n keys `panel.manageMedia` to both `en.ts` and `sv.ts` if missing.
+- [x] **Step 4:** Run `tests/components` + `tests/components/panel-layout-consistency.test.ts` (Task 3) — all pass.
+- [x] **Step 5:** Lint clean.
+- [x] **Step 6:** Commit `refactor(panel): migrate MediaPanel to EntityPanel`.
 
 ---
 
@@ -217,12 +217,12 @@ The largest of the unmigrated panels. Same shape as the other 6 — uses `useEnt
 Same pattern as Task 4. ExportOptionsPanel is small — likely 5 lines of change. Report and Website are mid-size.
 
 For each:
-- [ ] Wrap in `<EntityPanel entity-type="..." :entity="..." :label="..." @close>` with appropriate slots.
-- [ ] Add missing i18n keys (`panel.manageReport`, `panel.manageWebsite`, `panel.manageExportOptions`) to both locales.
-- [ ] If a panel genuinely doesn't fit the entity-shaped pattern (e.g. it's not viewing a single entity), document why with a comment AND skip — but still rename its root class away from anything in `shared.css`.
-- [ ] Run consistency test from Task 3 — all pass.
-- [ ] Lint clean.
-- [ ] Commit per panel: `refactor(panel): migrate <Name>Panel to EntityPanel`.
+- [x] Wrap in `<EntityPanel entity-type="..." :entity="..." :label="..." @close>` with appropriate slots.
+- [x] Add missing i18n keys (`panel.manageReport`, `panel.manageWebsite`, `panel.manageExportOptions`) to both locales.
+- [x] If a panel genuinely doesn't fit the entity-shaped pattern (e.g. it's not viewing a single entity), document why with a comment AND skip — but still rename its root class away from anything in `shared.css`.
+- [x] Run consistency test from Task 3 — all pass.
+- [x] Lint clean.
+- [x] Commit per panel: `refactor(panel): migrate <Name>Panel to EntityPanel`.
 
 ---
 
@@ -233,34 +233,34 @@ Now that all panels use the same shell, lock that fact in.
 **Files:**
 - Modify: `.claude/rules/renderer.md`
 
-- [ ] **Step 1:** Update the "Shared component catalog" `EntityPanel` line to read:
+- [x] **Step 1:** Update the "Shared component catalog" `EntityPanel` line to read:
   ```
   - `src/renderer/components/EntityPanel.vue` — **shared shell for ALL right-side panels (no exceptions)**: panel-collapse-btn (▶), panel-role-label, #empty / #header / default body slots, optional `editable` Edit button. Every `*Panel.vue` in `src/renderer/components/` MUST use it. New panels go through it from day one.
   ```
-- [ ] **Step 2:** Update the "List View + Side Panel Pattern" subsection to assert the rule explicitly: every `:entity-id` route's right pane is an EntityPanel-wrapped panel.
-- [ ] **Step 3:** Commit `docs(rules): mark EntityPanel as canonical for all right-side panels`.
+- [x] **Step 2:** Update the "List View + Side Panel Pattern" subsection to assert the rule explicitly: every `:entity-id` route's right pane is an EntityPanel-wrapped panel.
+- [x] **Step 3:** Commit `docs(rules): mark EntityPanel as canonical for all right-side panels`.
 
 ---
 
 ## Task 7: Final verification + version bump
 
-- [ ] **Step 1:** `npx vitest run` — full suite green (~2810 tests).
-- [ ] **Step 2:** `npm run lint` — 0 errors.
-- [ ] **Step 3:** `grep -RIn '\.entity-panel\b' src/renderer/components/*.vue | grep "class=" | grep -v BaseSubPanel.vue` — should return 0 lines (no panel still uses the modal-chrome class).
-- [ ] **Step 4:** Smoke test in the running app: navigate to `/persons`, `/places`, `/sources`, `/relationships`, `/groups`, `/research-tasks`, `/media`, `/reports`, `/website` — every right panel should have identical width/height/border-radius/shadow behavior, fill the height, and resize on drag.
-- [ ] **Step 5:** Mark every checkbox `[x]`. Move plan to `docs/plans/archive/`. Bump `package.json` minor (any new feature in scope), or patch (if pure refactor). Add `CHANGELOG.md` entry summarising "every right-side panel now uses the EntityPanel shell — fully consistent UX, no more class-collision class of bug".
-- [ ] **Step 6:** Commit `chore: archive completed panel-consistency plan + bump`. Merge to main, delete branch + worktree.
+- [x] **Step 1:** `npx vitest run` — full suite green (~2810 tests).
+- [x] **Step 2:** `npm run lint` — 0 errors.
+- [x] **Step 3:** `grep -RIn '\.entity-panel\b' src/renderer/components/*.vue | grep "class=" | grep -v BaseSubPanel.vue` — should return 0 lines (no panel still uses the modal-chrome class).
+- [x] **Step 4:** Smoke test in the running app: navigate to `/persons`, `/places`, `/sources`, `/relationships`, `/groups`, `/research-tasks`, `/media`, `/reports`, `/website` — every right panel should have identical width/height/border-radius/shadow behavior, fill the height, and resize on drag.
+- [x] **Step 5:** Mark every checkbox `[x]`. Move plan to `docs/plans/archive/`. Bump `package.json` minor (any new feature in scope), or patch (if pure refactor). Add `CHANGELOG.md` entry summarising "every right-side panel now uses the EntityPanel shell — fully consistent UX, no more class-collision class of bug".
+- [x] **Step 6:** Commit `chore: archive completed panel-consistency plan + bump`. Merge to main, delete branch + worktree.
 
 ---
 
 ## Self-review checklist
 
-- [ ] All 10 `*Panel.vue` components use `<EntityPanel>` (or have a documented `Not migrated` comment with reason).
-- [ ] `grep '\.entity-panel\b' src/renderer/components/*.vue` returns only `BaseSubPanel.vue` (the legitimate user) and no panel root.
-- [ ] `tests/components/panel-layout-consistency.test.ts` is green and asserts every panel uses `.side-panel` and rejects `.entity-panel` on the root.
-- [ ] `.claude/rules/renderer.md` contains the class-collision check rule and the all-or-nothing migration rule.
-- [ ] Every migrated panel still emits its previous events (`*-updated`, `close`, etc.) and exposes its previous `defineExpose` surface.
-- [ ] Smoke test: all 9 paneled routes look and behave identically with respect to layout.
+- [x] All 10 `*Panel.vue` components use `<EntityPanel>` (or have a documented `Not migrated` comment with reason).
+- [x] `grep '\.entity-panel\b' src/renderer/components/*.vue` returns only `BaseSubPanel.vue` (the legitimate user) and no panel root.
+- [x] `tests/components/panel-layout-consistency.test.ts` is green and asserts every panel uses `.side-panel` and rejects `.entity-panel` on the root.
+- [x] `.claude/rules/renderer.md` contains the class-collision check rule and the all-or-nothing migration rule.
+- [x] Every migrated panel still emits its previous events (`*-updated`, `close`, etc.) and exposes its previous `defineExpose` surface.
+- [x] Smoke test: all 9 paneled routes look and behave identically with respect to layout.
 
 ## RCA reference (for the executor)
 
