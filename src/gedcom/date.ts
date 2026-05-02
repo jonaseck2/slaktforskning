@@ -68,13 +68,7 @@ export function parseGedcomDate(raw: string): ParsedDate {
   return { date_type: 'unknown', date_value: null, date_value_end: null, date_original: orig };
 }
 
-export function formatGedcomDate(date_type: string, date_value: string | null, date_value_end: string | null, date_original: string): string {
-  if (date_original) return date_original;
-  if (!date_value) return '';
-  if (date_type === 'about') return `ABT ${date_value}`;
-  if (date_type === 'before') return `BEF ${date_value}`;
-  if (date_type === 'after') return `AFT ${date_value}`;
-  if (date_type === 'between' && date_value_end) return `BET ${date_value} AND ${date_value_end}`;
+function isoToGedcom(date_value: string): string {
   // Convert ISO date back to GEDCOM format (YYYY-MM-DD → DD MON YYYY)
   const parts = date_value.split('-');
   if (parts.length === 3) {
@@ -88,6 +82,20 @@ export function formatGedcomDate(date_type: string, date_value: string | null, d
     return `${mon} ${parts[0]}`;
   }
   return date_value;
+}
+
+export function formatGedcomDate(date_type: string, date_value: string | null, date_value_end: string | null, date_original: string): string {
+  if (date_original) return date_original;
+  if (!date_value) return '';
+  // Always emit dates in DD MON YYYY GEDCOM format so parseGedcomDate can read
+  // them back. Storing as ISO in the DB but emitting raw ISO in BET..AND broke
+  // round-trip for date_value_end — see gedcom-fidelity-per-field test.
+  const v = isoToGedcom(date_value);
+  if (date_type === 'about') return `ABT ${v}`;
+  if (date_type === 'before') return `BEF ${v}`;
+  if (date_type === 'after') return `AFT ${v}`;
+  if (date_type === 'between' && date_value_end) return `BET ${v} AND ${isoToGedcom(date_value_end)}`;
+  return v;
 }
 
 export function isStandardGedcomDate(s: string): boolean {
