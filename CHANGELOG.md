@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.195.0 — Name changes on the timeline
+
+- feat: a name (married, name change, alias, aka) with a "from" date now appears on the person's timeline at that date — the type label reads "Name change" with the new full name beneath
+- feat: marriage / wedding / engagement event modal has an opt-in "Also record a name change for X" companion (off by default) that creates a separate `married` name with `date_from` = the event date
+- ux: the name editor surfaces the from-date field inline for any non-birth name type (no longer hidden in the "more" details), with a hint explaining timeline visibility
+- fix: clicking a name-change entry on the timeline opens the name editor (not the event editor)
+
 ## v0.194.1 — Event-type change preserves authored data
 
 - fix: changing event type no longer silently nulls cause-of-death or end date — authored values stay until you clear them
