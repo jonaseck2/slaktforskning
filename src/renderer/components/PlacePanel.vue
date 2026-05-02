@@ -197,69 +197,6 @@
         </div>
       </div>
 
-      <!-- Address section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('places.address')" :collapsed="!sections.address" @toggle="toggleSection('address')" />
-        <div v-if="sections.address" class="panel-section-body">
-          <div v-if="!props.readonly" class="compact-form">
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.street') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.street ?? ''"
-                @blur="saveField('street', ($event.target as HTMLInputElement).value || null)"
-              />
-            </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.postalCode') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.postal_code ?? ''"
-                @blur="saveField('postal_code', ($event.target as HTMLInputElement).value || null)"
-              />
-            </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.city') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.city ?? ''"
-                @blur="saveField('city', ($event.target as HTMLInputElement).value || null)"
-              />
-            </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.country') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.country ?? ''"
-                @blur="saveField('country', ($event.target as HTMLInputElement).value || null)"
-              />
-            </div>
-          </div>
-          <div v-else class="compact-form">
-            <div v-if="place.street" class="compact-field">
-              <span class="compact-label">{{ $t('places.street') }}</span>
-              <span class="readonly-value">{{ place.street }}</span>
-            </div>
-            <div v-if="place.postal_code" class="compact-field">
-              <span class="compact-label">{{ $t('places.postalCode') }}</span>
-              <span class="readonly-value">{{ place.postal_code }}</span>
-            </div>
-            <div v-if="place.city" class="compact-field">
-              <span class="compact-label">{{ $t('places.city') }}</span>
-              <span class="readonly-value">{{ place.city }}</span>
-            </div>
-            <div v-if="place.country" class="compact-field">
-              <span class="compact-label">{{ $t('places.country') }}</span>
-              <span class="readonly-value">{{ place.country }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Quality section -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -343,12 +280,12 @@ const { t, te } = useI18n();
 const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
-    place: true, persons: true, events: true, citations: false,
-    media: false, mediaTimeline: false, address: false, quality: false,
+    place: true, persons: true, events: true,
+    media: false, mediaTimeline: false, quality: false,
   },
   {
-    place: true, persons: true, events: true, citations: true,
-    media: true, mediaTimeline: true, address: true, quality: false,
+    place: true, persons: true, events: true,
+    media: true, mediaTimeline: true, quality: false,
   },
 );
 

@@ -75,6 +75,10 @@ External identifiers (FamilySearch ID, Geni ID, etc.) are not surfaced in any pa
 
 The schema supports `citation.place_id` (citing the place itself, distinct from citing events that happen at it), and the API + MCP layer still expose `citations.forPlace`. The PlacePanel surfaced this in a Citations section, but in practice genealogists cite events at a place, not the place itself. The section was removed from PlacePanel to keep the panel focused on the verbs users actually reach for. The column and API stay (existing data is preserved; bulk imports / MCP can still create such citations); only the UI affordance is gone.
 
+### 7. Postal-address fields on places exist only for GEDCOM round-trip — UI removed
+
+The `places.{street, postal_code, city, country}` columns exist to round-trip GEDCOM 5.5.1 event-level ADDR sub-tags (the importer ([event-importer.ts:38–60](../src/import/gedcom/event-importer.ts#L38)) lifts them onto the place; the exporter ([exporter.ts:55–60](../src/gedcom/exporter.ts#L55)) emits them under each event's PLAC). The PlacePanel surfaced these as an Address section, but a researcher authoring genealogy from scratch has no reason to type a modern postal address against a parish or farm. Same pattern as finding #5 (External identifiers) and #6 (Place-level citations): round-trip-only data, importers and exporters preserve it, the UI doesn't surface it. Section removed; columns and importer/exporter behavior preserved.
+
 ---
 
 ## Cross-cutting conventions: row icons
@@ -120,7 +124,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | PlacePanel — Media section | 2026-05-02 |
 | PlacePanel — Media Timeline section | 2026-05-02 |
 | PlacePanel — Quality section | 2026-05-02 |
-| PlacePanel — Address section | 2026-05-02 |
 
 ### Sources view (`SourcesView` + `SourcePanel`)
 
@@ -447,7 +450,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/PlacePanel.vue` lines 156–162, `EntityMediaSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *attach* photos and documents that depict this place — a building, a parish church, a farm — and to *order* them so the picture they want as the place's "face" leads, mirroring how each person carries a profile photo.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -459,7 +462,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/PlacePanel.vue` lines 164–170, `MediaTimeline.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *see* the media attached to this place laid out on a timeline — a parish church photographed in 1890 vs 1950, a farm before and after rebuilding — so visual change at the place is legible at a glance, separate from the unordered Media gallery above.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -473,27 +476,13 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/PlacePanel.vue` lines 172–178, `PlaceChecksSection.vue`, `QualityIssuesTable.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *see* what's missing or inconsistent about this place's record — no coordinates, no parent place, ambiguous gazetteer match — so they know where to direct their next bit of cleanup work.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | QualityIssuesTable: check code · severity · description, derived from `checks.forPlace`. | Not offered. | Not offered. | Not offered. | Issues may emit fix actions to host (none currently wired up for place — verify). |
 
 **Notes:** Section debounces 1.5 s on place change.
-
----
-
-### PlacePanel → Address section
-**File:** `src/renderer/components/PlacePanel.vue` lines 180–241
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Inline editable fields: street · postal code · city · country | Not applicable (fields are on the place entity). | All fields edit inline on blur (`saveField` → `places.update`). Each is an `<input type="text">` with independent blur handler. | Blur with empty string clears the field. | Not offered |
-
-**Notes:** Collapsed by default. Postal-address fields are independent from latitude/longitude in Place section.
 
 ---
 

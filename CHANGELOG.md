@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.198.2 — Trim place address fields from PlacePanel
+
+- chore: removed the Address section from PlacePanel — street/postal code/city/country exist only to round-trip GEDCOM event-level ADDR sub-tags, no reason for a researcher to type them by hand. Importers and exporters keep populating and emitting the columns.
+
 ## v0.197.1 — Trim place-level citations from PlacePanel
 
 - chore: removed the Citations section from PlacePanel — citing a place directly (vs an event at the place) didn't earn a section. Existing data and the underlying API are preserved.
