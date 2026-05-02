@@ -79,7 +79,16 @@
                 </span>
               </div>
             </td>
-            <td>{{ person.surname }}</td>
+            <!-- Display only — see plan birth-name-display-and-quality-check.
+                 Surname column shows "Andersson (f. Svensson)" when the
+                 person has a separate birth-name record with a different
+                 surname AND the global toggle is on. -->
+            <td>
+              {{ person.surname }}<span
+                v-if="showBirthSuffix(person)"
+                class="birth-suffix"
+              > ({{ bornAbbrev }} {{ person.birth_surname }})</span>
+            </td>
             <td class="info-cell born-col">{{ person.birth_date || '' }}</td>
           </tr>
         </tbody>
@@ -98,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonModal from '../components/modals/PersonModal.vue';
@@ -111,6 +120,7 @@ import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useToast } from '../composables/useToast';
 import { usePagedList } from '../composables/usePagedList';
+import { usePersonNameOptions } from '../stores/personNameOptions';
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 
 interface PersonListItem {
@@ -120,6 +130,7 @@ interface PersonListItem {
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
+  birth_surname: string | null;
   birth_date: string | null;
   birth_place: string | null;
   death_date: string | null;
@@ -163,6 +174,16 @@ const {
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
 watch(sentinel, (el) => attachSentinel(el));
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
+const bornAbbrev = computed(() => t('common.bornAbbrev'));
+function showBirthSuffix(p: PersonListItem): boolean {
+  if (!personNameOptions.showBirthNameParenthetical) return false;
+  const b = (p.birth_surname ?? '').trim();
+  if (!b) return false;
+  return b !== (p.surname ?? '').trim();
+}
 
 async function onPersonAdded() {
   showAddForm.value = false;
@@ -266,6 +287,10 @@ function goToDetail(person: PersonListItem) {
 .born-col {
   width: 11ch;
   white-space: nowrap;
+}
+.birth-suffix {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
 }
 .form-row-2col {
   display: grid;

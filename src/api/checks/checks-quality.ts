@@ -218,6 +218,40 @@ export function checkMultipleBirthNames(db: Database): CheckResult[] {
   }));
 }
 
+export function checkLikelyInlineBirthName(db: Database): CheckResult[] {
+  // Detects user-typed strings like "Anna Andersson (f. Svensson)" packed into
+  // a single given_name or surname field. Returns one row per matching
+  // person_names record so the user can fix each by hand via the name-edit
+  // modal.
+  //
+  // PRIME DIRECTIVE: this check FLAGS, never TRANSFORMS. Do not split the
+  // detected string back into person_names rows from any code path —
+  // the user authored the inline form and the user must split it.
+  const rows = queryAll<{ id: string; person_id: string; given_name: string | null; surname: string | null }>(db, `
+    SELECT id, person_id, given_name, surname FROM person_names
+  `);
+  // Require whitespace before the open-paren — a parenthetical at the start
+  // of the string has no preceding name token to "annotate" with a birth-name
+  // marker, so cases like "(f. Svensson) Andersson" are intentionally NOT
+  // flagged. The user goal is to detect inline annotations that follow a
+  // current name (e.g. "Anna Andersson (f. Svensson)").
+  const re = /\s\(\s*(?:born|b\.|född|f\.)\s+\S+/i;
+  const results: CheckResult[] = [];
+  for (const r of rows) {
+    const fields = [r.given_name, r.surname].filter(Boolean) as string[];
+    if (fields.some(f => re.test(f))) {
+      results.push({
+        code: 'LIKELY_INLINE_BIRTH_NAME',
+        severity: 'notice' as CheckSeverity,
+        message: 'Namnet verkar innehålla ett födelsenamn i parentes — överväg att dela upp i separata namnposter.',
+        messageParams: {},
+        personIds: [r.person_id],
+      });
+    }
+  }
+  return results;
+}
+
 export function checkPartialName(db: Database): CheckResult[] {
   const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names

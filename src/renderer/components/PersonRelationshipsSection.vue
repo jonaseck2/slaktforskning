@@ -30,7 +30,7 @@ import RelationshipsList, { type RelationshipListRow } from './RelationshipsList
 import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import RelationshipModal from './modals/RelationshipModal.vue';
-import { formatFullName, pickDisplayedName } from '../utils/nameUtils';
+import { formatFullName, pickDisplayedName, pickBirthSurnameForDisplay } from '../utils/nameUtils';
 import { useEntityData } from '../composables/useEntityData';
 
 interface PersonRelRow {
@@ -45,6 +45,8 @@ interface PersonRelRow {
   otherSurname: string;
   otherPreferredName: string | null;
   otherNickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  otherBirthSurname: string | null;
   otherSex: 'M' | 'F' | 'U';
   typeLabel: string;
   subtypeLabel: string;
@@ -79,6 +81,7 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
     let otherSurname = '';
     let otherPreferredName: string | null = null;
     let otherNickname: string | null = null;
+    let otherBirthSurname: string | null = null;
     let otherSex: 'M' | 'F' | 'U' = 'U';
     if (otherId) {
       try {
@@ -97,6 +100,8 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
           otherPreferredName = primary.preferred_name;
           otherNickname = primary.nickname;
           otherName = formatFullName(primary) || t('common.unknown');
+          // Display only — see plan birth-name-display-and-quality-check.
+          otherBirthSurname = pickBirthSurnameForDisplay(primary, names);
         }
       } catch { /* ignore */ }
     }
@@ -118,6 +123,7 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
       otherSurname,
       otherPreferredName,
       otherNickname,
+      otherBirthSurname,
       otherSex,
       typeLabel,
       subtypeLabel: getSubtypeLabel(r.type, r.subtype),
@@ -138,6 +144,8 @@ const rows = computed<RelationshipListRow[]>(() =>
         surname: r.otherSurname,
         preferredName: r.otherPreferredName,
         nickname: r.otherNickname,
+        // Display only — see plan birth-name-display-and-quality-check.
+        birthSurname: r.otherBirthSurname,
         sex: r.otherSex,
       },
     ],

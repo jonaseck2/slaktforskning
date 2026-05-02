@@ -1,10 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createI18n } from 'vue-i18n';
 import PersonMiniCard from '../../../../src/renderer/components/reports/primitives/PersonMiniCard.vue';
+
+const i18n = createI18n({
+  legacy: false,
+  locale: 'en',
+  messages: {
+    en: { common: { bornAbbrev: 'b.' } },
+  },
+});
+
+const globalPlugins = { plugins: [i18n] };
 
 describe('PersonMiniCard', () => {
   it('renders full name', () => {
     const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
       props: { givenName: 'Anna', surname: 'Andersson', sex: 'F' },
     });
     expect(wrapper.text()).toContain('Anna Andersson');
@@ -12,6 +24,7 @@ describe('PersonMiniCard', () => {
 
   it('renders years label', () => {
     const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
       props: { givenName: 'E', surname: 'A', birthYear: 1850, deathYear: 1920 },
     });
     expect(wrapper.text()).toContain('1850–1920');
@@ -19,6 +32,7 @@ describe('PersonMiniCard', () => {
 
   it('shows initials when no portrait', () => {
     const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
       props: { givenName: 'Erik', surname: 'Andersson' },
     });
     expect(wrapper.text()).toContain('EA');
@@ -26,13 +40,53 @@ describe('PersonMiniCard', () => {
 
   it('shows ahnentafel when provided', () => {
     const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
       props: { givenName: 'X', surname: 'Y', ahnentafel: 4 },
     });
     expect(wrapper.text()).toContain('#4');
   });
 
   it('renders dash when no name parts', () => {
-    const wrapper = mount(PersonMiniCard, { props: {} });
+    const wrapper = mount(PersonMiniCard, { global: globalPlugins, props: {} });
     expect(wrapper.text()).toContain('—');
+  });
+
+  it('appends "(b. …)" when birthSurname differs from surname and toggle is on', () => {
+    const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
+      props: {
+        givenName: 'Anna',
+        surname: 'Andersson',
+        birthSurname: 'Svensson',
+        showBirthNameParenthetical: true,
+      },
+    });
+    expect(wrapper.text()).toContain('(b. Svensson)');
+  });
+
+  it('omits "(b. …)" when toggle is off', () => {
+    const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
+      props: {
+        givenName: 'Anna',
+        surname: 'Andersson',
+        birthSurname: 'Svensson',
+        showBirthNameParenthetical: false,
+      },
+    });
+    expect(wrapper.text()).not.toContain('(b. Svensson)');
+  });
+
+  it('omits "(b. …)" when birthSurname matches surname', () => {
+    const wrapper = mount(PersonMiniCard, {
+      global: globalPlugins,
+      props: {
+        givenName: 'Anna',
+        surname: 'Andersson',
+        birthSurname: 'Andersson',
+        showBirthNameParenthetical: true,
+      },
+    });
+    expect(wrapper.text()).not.toContain('(b.');
   });
 });

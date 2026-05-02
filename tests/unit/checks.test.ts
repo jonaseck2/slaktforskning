@@ -249,6 +249,84 @@ describe('NO_NAME', () => {
 });
 
 // ---------------------------------------------------------------------------
+// LIKELY_INLINE_BIRTH_NAME — detection of inline (f. X) / (b. X) / (född X) / (born X)
+// ---------------------------------------------------------------------------
+
+describe('LIKELY_INLINE_BIRTH_NAME', () => {
+  it('flags surname containing "(f. Svensson)"', async () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Andersson (f. Svensson)' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].severity).toBe('notice');
+  });
+
+  it('flags surname containing "(b. Svensson)"', async () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Andersson (b. Svensson)' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('flags given_name containing "(född Svensson)"', async () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna (född Svensson)', surname: 'Andersson', name_type: 'birth' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('flags given_name containing "(born Svensson)"', async () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna (born Svensson)', surname: 'Andersson', name_type: 'birth' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(1);
+  });
+
+  it('does NOT flag a plain surname like "Anderson"', async () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: 'Anderson' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does NOT flag a parenthetical without a trigger word', async () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: "O'Connor (Boston)" });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('does NOT flag a leading parenthetical (no preceding name token)', async () => {
+    const p = createPerson(db, { given_name: 'Anna', surname: '(f. Svensson) Andersson' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(0);
+  });
+
+  it('produces two distinct rows for two flagged persons', async () => {
+    const p1 = createPerson(db, { given_name: 'Anna', surname: 'Andersson (f. Svensson)' });
+    const p2 = createPerson(db, { given_name: 'Berta', surname: 'Bengtsson (f. Karlsson)' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME');
+    const flaggedPersonIds = new Set(hits.flatMap(r => r.personIds));
+    expect(flaggedPersonIds.has(p1.id)).toBe(true);
+    expect(flaggedPersonIds.has(p2.id)).toBe(true);
+    expect(hits).toHaveLength(2);
+  });
+
+  it('does NOT flag the well-structured case (separate birth + current name rows)', async () => {
+    const p = createPerson(db, {});
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson', name_type: 'birth' });
+    addPersonName(db, p.id, { given_name: 'Anna', surname: 'Andersson', name_type: 'married' });
+    const results = await runAllChecks(db);
+    const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
+    expect(hits).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // runChecksForPerson — isolation
 // ---------------------------------------------------------------------------
 

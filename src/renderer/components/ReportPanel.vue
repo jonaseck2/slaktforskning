@@ -99,6 +99,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeIncludeChildrenMarriages"> {{ $t('reports.alife.includeChildrenMarriages') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeIncludeSiblingDeaths">     {{ $t('reports.alife.includeSiblingDeaths') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aLifeShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">           {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
@@ -110,6 +111,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowSources">        {{ $t('reports.common.sources') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowMediaCaptions">  {{ $t('reports.common.captions') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowMediaNotes">     {{ $t('reports.common.photoNotes') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.aMarriageShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">                {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
@@ -121,6 +123,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowSources">       {{ $t('reports.common.sources') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.placeChronicleShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'yourAncestors'">
@@ -131,16 +134,19 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowMediaCaptions"> {{ $t('reports.common.captions') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowMediaNotes">    {{ $t('reports.common.photoNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowSources">        {{ $t('reports.common.sources') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.yourAncestorsShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">                    {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'onePage'">
           <label class="panel-checkbox"><input type="checkbox" v-model="store.onePageShowLifeMap">    {{ $t('reports.common.lifeMap') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.onePageShowMapCaption" :disabled="!store.onePageShowLifeMap"> {{ $t('reports.common.mapCaption') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.lifeOnOnePageShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving">          {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
         <template v-else-if="activeTab === 'familyInYear'">
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.familyInYearShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.redactLiving"> {{ $t('reports.common.redactLiving') }}</label>
         </template>
 
@@ -149,6 +155,7 @@
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowNotes">          {{ $t('reports.photoAlbum.showNotes') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowIndex">          {{ $t('reports.photoAlbum.showIndex') }}</label>
           <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumIncludeDocuments">   {{ $t('reports.photoAlbum.includeDocuments') }}</label>
+          <label class="panel-checkbox"><input type="checkbox" v-model="store.photoAlbumShowBirthNameParenthetical"> {{ $t('reports.options.showBirthNameParenthetical') }}</label>
         </template>
 
       </div>

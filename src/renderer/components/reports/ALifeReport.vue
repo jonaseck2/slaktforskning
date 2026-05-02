@@ -112,7 +112,7 @@ import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import TimelineBar, { type TimelineItem } from './primitives/TimelineBar.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullName, formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
@@ -131,6 +131,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes?: boolean;
   includeChildrenMarriages?: boolean;
   includeSiblingDeaths?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   showLifeMap: true,
   showMapCaption: true,
@@ -143,6 +144,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes: true,
   includeChildrenMarriages: false,
   includeSiblingDeaths: false,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -150,6 +152,7 @@ const toast = useToast();
 
 // Types matching report_data.PersonSummary shape via IPC
 interface RawPersonName {
+  id: string;
   given_name: string | null;
   surname: string | null;
   name_prefix?: string | null;
@@ -213,16 +216,24 @@ const mediaEntityRef = computed<MediaEntityRef | null>(() =>
 );
 const { items: mediaItems } = useMediaChronological(mediaEntityRef);
 
-const primaryName = computed(() => {
-  if (!data.value?.names?.length) return '';
-  const sorted = [...data.value.names].sort((a, b) => a.sort_order - b.sort_order);
-  return formatFullName(sorted[0]);
-});
+// Display only — see plan birth-name-display-and-quality-check.
+// Picks the highest-sort_order ("displayed") name and appends the birth-name
+// parenthetical when a separate birth record exists with a different surname.
+function formatNameWithBirth(names: RawPersonName[]): string {
+  if (!names.length) return '';
+  const displayed = getDisplayName(names);
+  if (!displayed) return '';
+  return formatFullNameWithBirthName(
+    displayed,
+    names,
+    { showBirthNameParenthetical: props.showBirthNameParenthetical, bornAbbrev: t('common.bornAbbrev') },
+  );
+}
+
+const primaryName = computed(() => formatNameWithBirth(data.value?.names ?? []));
 
 function personNameFrom(names: RawPersonName[]): string {
-  if (!names.length) return '';
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  return formatFullName(sorted[0]);
+  return formatNameWithBirth(names);
 }
 
 function extractYear(dateValue: string | null): number | null {
@@ -372,10 +383,14 @@ const timelineItems = computed<TimelineItem[]>(() => {
       const label = place ? `${typeLabel} · ${place}` : typeLabel;
       items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
     } else {
-      const namePart = formatFullName({
+      const baseName = formatFullName({
         given_name: entry.person_given_name,
         surname: entry.person_surname,
-      }) || t('common.unknown');
+      });
+      const birth = entry.person_birth_surname;
+      const namePart = (baseName
+        ? (props.showBirthNameParenthetical && birth ? `${baseName} (${t('common.bornAbbrev')} ${birth})` : baseName)
+        : t('common.unknown'));
       const relSuffix = ` (${t(`timelineLabels.${entry.relationship_label}`)})`;
       const label = place
         ? `${typeLabel}: ${namePart}${relSuffix} · ${place}`

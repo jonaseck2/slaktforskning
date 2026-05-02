@@ -19,11 +19,14 @@
           />
           <div class="person-summary-header">
             <div class="person-summary-name">
+              <!-- Display only — see plan birth-name-display-and-quality-check. -->
               <PersonName
                 :given-name="primaryName?.given_name ?? null"
                 :surname="primaryName?.surname ?? null"
                 :preferred-name="primaryName?.preferred_name ?? null"
                 :nickname="primaryName?.nickname ?? null"
+                :birth-surname="primaryBirthSurname"
+                :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical"
               />
             </div>
             <span v-if="showTreeBtn && isTreeSubject" class="tree-subject-chip">{{ $t('panel.treeSubject') }}</span>
@@ -271,8 +274,10 @@ import {
   pickDisplayedName,
   sortNamesBySortOrder,
   birthDateValue,
+  pickBirthSurnameForDisplay,
   type NameData,
 } from '../utils/nameUtils';
+import { usePersonNameOptions } from '../stores/personNameOptions';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -442,6 +447,12 @@ const mapPointCount = computed(() => panelData.value?.mapPointCount ?? 0);
 const relationshipCount = computed(() => panelData.value?.relationshipCount ?? 0);
 const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
+const primaryBirthSurname = computed(() =>
+  pickBirthSurnameForDisplay(primaryName.value, names.value),
+);
 
 // ── Section state (composable) ──────────────────────────────────────────────
 

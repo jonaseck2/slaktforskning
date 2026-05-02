@@ -54,6 +54,7 @@ interface AliveInYearPerson {
   id: string;
   given_name: string | null;
   surname: string | null;
+  birth_surname: string | null;
   sex: 'M' | 'F' | 'U';
   living: boolean;
   birthYear: number | null;
@@ -80,10 +81,12 @@ const props = withDefaults(defineProps<{
   scope?: 'all' | 'ancestors' | 'descendants';
   scopePersonId?: string | null;
   redactLiving?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   scope: 'all',
   scopePersonId: null,
   redactLiving: false,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -94,8 +97,14 @@ const error = ref<string | null>(null);
 const data = ref<AliveInYearResult | null>(null);
 const researcherName = ref<string | null>(null);
 
+// Display only — see plan birth-name-display-and-quality-check.
 function personDisplayName(p: AliveInYearPerson): string {
-  return [p.given_name, p.surname].filter(Boolean).join(' ') || t('common.unknown');
+  const base = [p.given_name, p.surname].filter(Boolean).join(' ');
+  if (!base) return t('common.unknown');
+  if (props.showBirthNameParenthetical && p.birth_surname && p.birth_surname !== p.surname) {
+    return `${base} (${t('common.bornAbbrev')} ${p.birth_surname})`;
+  }
+  return base;
 }
 
 function familyLabel(f: AliveInYearFamily): string {
@@ -121,6 +130,9 @@ function cardProps(p: AliveInYearPerson) {
     personId: p.id,
     givenName: p.given_name,
     surname: p.surname,
+    // Display only — see plan birth-name-display-and-quality-check.
+    birthSurname: p.birth_surname,
+    showBirthNameParenthetical: props.showBirthNameParenthetical,
     sex: p.sex,
     birthYear: r.birthYear ?? null,
     deathYear: r.deathYear ?? null,

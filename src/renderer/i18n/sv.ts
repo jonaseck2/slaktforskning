@@ -69,6 +69,10 @@ export default {
     researcherPhonePlaceholder: 't.ex. +46 70 123 45 67',
     researcherEmail: 'E-post',
     researcherEmailPlaceholder: "t.ex. namn{'@'}exempel.se",
+    display: {
+      showBirthNameParenthetical: 'Visa födelsenamn i parentes',
+      showBirthNameParentheticalHelp: 'När en person har bytt efternamn (till exempel vid giftermål) visas det ursprungliga efternamnet inom parentes — "Anna Andersson (f. Svensson)".',
+    },
   },
   chart: {
     export: {
@@ -113,6 +117,7 @@ export default {
     unlink: 'Koppla bort',
     unlinkTooltip: 'Koppla bort — båda objekten finns kvar',
     deleteTooltip: 'Radera permanent',
+    bornAbbrev: 'f.',
   },
   persons: {
     title: 'Personer',
@@ -804,6 +809,7 @@ export default {
       DUPLICATE_PLACE: '{count} platser delar namn "{name}" under samma förälder',
       DUPLICATE_MEDIA: '{count} mediafiler delar filväg "{fileRef}"',
       DUPLICATE_SOURCE: '{count} källor matchar {label}',
+      LIKELY_INLINE_BIRTH_NAME: 'Namnet verkar innehålla ett födelsenamn i parentes — överväg att dela upp i separata namnposter.',
     },
   },
   duplicates: {
@@ -882,6 +888,9 @@ export default {
       headerFooter: 'Sidhuvud och sidfot',
       showHeaderFooter: 'Visa sidhuvud och sidfot',
       headerFooterHint: 'Forskaruppgifter visas överst och nederst på varje sida. Sidnummer skrivs alltid ut. Fyll i forskarinformation under Inställningar.',
+    },
+    options: {
+      showBirthNameParenthetical: 'Visa födelsenamn i parentes',
     },
     groups: {
       keepsake: 'Minnesrapporter',
@@ -1638,6 +1647,7 @@ export default {
   defaults: {
     title: 'Standardval',
     eventsSection: 'Händelser',
+    displaySection: 'Visning',
     smartEventType: 'Föreslå händelsetyp utifrån befintliga händelser',
     smartEventTypeHint: 'När aktiverat väljs nästa saknade typ i ordningen: födelse → död → yrke → bostad. När avstängt lämnas fältet tomt.',
     eventTypeSortLabel: 'Sorteringsordning för händelsetyper',

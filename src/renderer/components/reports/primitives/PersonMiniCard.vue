@@ -7,7 +7,9 @@
       {{ initials }}
     </div>
     <div class="identity">
-      <div class="name">{{ fullName }}</div>
+      <div class="name">
+        {{ fullName }}<span v-if="showBirthSuffix" class="birth-suffix"> ({{ bornAbbrev }} {{ props.birthSurname }})</span>
+      </div>
       <div v-if="yearsLabel" class="years">{{ yearsLabel }}</div>
       <div v-if="keyPlace" class="place">{{ keyPlace }}</div>
       <a v-if="ahnentafel && fanChartHref" :href="fanChartHref" class="ahnentafel ahnentafel-link" @click.prevent="scrollToId(fanChartHref!.replace(/^#/, ''))">#{{ ahnentafel }}</a>
@@ -18,12 +20,20 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { isImageMedia } from '../../../utils/mediaUtils';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   personId?: string | null;
   givenName?: string | null;
   surname?: string | null;
+  /**
+   * Birth surname to display in a "(f. …)" / "(b. …)" parenthetical when
+   * `showBirthNameParenthetical` is true and the value differs from `surname`.
+   * Display only — see plan birth-name-display-and-quality-check.
+   */
+  birthSurname?: string | null;
+  showBirthNameParenthetical?: boolean;
   sex?: 'M' | 'F' | 'U';
   birthYear?: number | null;
   deathYear?: number | null;
@@ -31,7 +41,21 @@ const props = defineProps<{
   portraitUrl?: string | null;
   ahnentafel?: number | null;
   fanChartHref?: string | null;
-}>();
+}>(), {
+  showBirthNameParenthetical: true,
+});
+
+const { t } = useI18n();
+const bornAbbrev = computed(() => t('common.bornAbbrev'));
+
+const showBirthSuffix = computed(() => {
+  if (props.showBirthNameParenthetical === false) return false;
+  const birth = (props.birthSurname ?? '').trim();
+  if (!birth) return false;
+  const current = (props.surname ?? '').trim();
+  if (birth === current) return false;
+  return true;
+});
 
 declare const window: Window & {
   api: {
@@ -101,6 +125,7 @@ function scrollToId(id: string) {
 .sex-F .portrait { background: var(--sex-f-bg); color: var(--sex-f-text); }
 .sex-U .portrait { background: var(--sex-u-bg); color: var(--sex-u-text); }
 .name { font-weight: 600; }
+.birth-suffix { font-weight: 600; }
 .years, .place, .ahnentafel { font-size: var(--font-sm); color: var(--text-secondary); }
 .ahnentafel-link {
   text-decoration: none;

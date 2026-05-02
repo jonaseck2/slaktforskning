@@ -50,7 +50,8 @@
               @keydown.down.prevent="focusNextRow($event)"
               @keydown.up.prevent="focusPrevRow($event)"
             >
-              <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" /></td>
+              <!-- Display only — see plan birth-name-display-and-quality-check. -->
+              <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" :birth-surname="p.birth_surname" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
               <td>{{ p.sex }}</td>
               <td>{{ p.living ? $t('common.yes') : $t('common.no') }}</td>
             </tr>
@@ -92,8 +93,9 @@
               @keydown.up.prevent="focusPrevRow($event)"
             >
               <td>{{ $t('relTypes.' + r.type) }}</td>
-              <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" /></td>
-              <td><PersonName :given-name="r.person2_given_name" :surname="r.person2_surname" :preferred-name="r.person2_preferred_name ?? null" :nickname="r.person2_nickname ?? null" /></td>
+              <!-- Display only — see plan birth-name-display-and-quality-check. -->
+              <td><PersonName :given-name="r.person1_given_name" :surname="r.person1_surname" :preferred-name="r.person1_preferred_name ?? null" :nickname="r.person1_nickname ?? null" :birth-surname="r.person1_birth_surname ?? null" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
+              <td><PersonName :given-name="r.person2_given_name" :surname="r.person2_surname" :preferred-name="r.person2_preferred_name ?? null" :nickname="r.person2_nickname ?? null" :birth-surname="r.person2_birth_surname ?? null" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
             </tr>
           </tbody>
         </table>
@@ -149,6 +151,10 @@ import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { narratePersonRow, narrateRelationshipRow, narrateSourceRow } from '../utils/screenReaderNarration';
+import { usePersonNameOptions } from '../stores/personNameOptions';
+
+// Display only — see plan birth-name-display-and-quality-check.
+const personNameOptions = usePersonNameOptions();
 
 interface PersonResult {
   id: string;
@@ -156,6 +162,8 @@ interface PersonResult {
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  birth_surname: string | null;
   sex: string;
   living: boolean;
 }
@@ -167,10 +175,14 @@ interface RelationshipResult {
   person1_surname: string;
   person1_preferred_name?: string | null;
   person1_nickname?: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  person1_birth_surname?: string | null;
   person2_given_name: string;
   person2_surname: string;
   person2_preferred_name?: string | null;
   person2_nickname?: string | null;
+  /** Display only — see plan birth-name-display-and-quality-check. */
+  person2_birth_surname?: string | null;
 }
 
 interface SourceResult {

@@ -227,7 +227,12 @@ export function phaseIndividuals(ctx: ImportContext): void {
       const prefix = getChild(nameNode, 'NPFX')?.value ?? null;
       const suffix = getChild(nameNode, 'NSFX')?.value ?? null;
       const rawType = getChild(nameNode, 'TYPE')?.value?.toUpperCase();
-      const name_type = rawType === 'MARRIED' ? 'married' : rawType === 'AKA' ? 'aka' : rawType === 'ALIAS' ? 'alias' : 'birth';
+      const name_type =
+        rawType === 'MARRIED' ? 'married'
+        : rawType === 'NAME_CHANGE' ? 'name_change'
+        : rawType === 'AKA' ? 'aka'
+        : rawType === 'ALIAS' ? 'alias'
+        : 'birth';
 
       // _PATR overrides genney patronymic detection; both can coexist
       const explicitPatr = getChild(nameNode, '_PATR')?.value ?? null;
@@ -258,7 +263,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         surname,
         name_prefix: prefix,
         name_suffix: suffix,
-        name_type: name_type as 'birth' | 'married' | 'alias' | 'aka',
+        name_type: name_type as 'birth' | 'married' | 'name_change' | 'alias' | 'aka',
         patronymic_base,
         preferred_name,
         nickname,

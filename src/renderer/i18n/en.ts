@@ -69,6 +69,10 @@ export default {
     researcherPhonePlaceholder: 'e.g. +46 70 123 45 67',
     researcherEmail: 'Email',
     researcherEmailPlaceholder: "e.g. name{'@'}example.com",
+    display: {
+      showBirthNameParenthetical: 'Show birth name in parenthesis',
+      showBirthNameParentheticalHelp: 'When a person has changed surname (e.g. at marriage), their birth surname is shown in parenthesis — "Anna Andersson (b. Svensson)".',
+    },
   },
   chart: {
     export: {
@@ -113,6 +117,7 @@ export default {
     unlink: 'Unlink',
     unlinkTooltip: 'Unlink — both entities are kept',
     deleteTooltip: 'Delete permanently',
+    bornAbbrev: 'b.',
   },
   persons: {
     title: 'People',
@@ -804,6 +809,7 @@ export default {
       DUPLICATE_PLACE: '{count} places share name "{name}" under the same parent',
       DUPLICATE_MEDIA: '{count} media files share file path "{fileRef}"',
       DUPLICATE_SOURCE: '{count} sources match {label}',
+      LIKELY_INLINE_BIRTH_NAME: 'This name appears to contain an inline birth name — consider splitting into separate name records.',
     },
   },
   duplicates: {
@@ -882,6 +888,9 @@ export default {
       headerFooter: 'Header & footer',
       showHeaderFooter: 'Show header and footer',
       headerFooterHint: 'Researcher information appears at the top and bottom of every page. Page numbers are always printed. Fill in researcher info under Settings.',
+    },
+    options: {
+      showBirthNameParenthetical: 'Show birth name in parenthesis',
     },
     groups: {
       keepsake: 'Keepsake reports',
@@ -1659,6 +1668,7 @@ export default {
   defaults: {
     title: 'Defaults',
     eventsSection: 'Events',
+    displaySection: 'Display',
     smartEventType: 'Suggest event type based on existing events',
     smartEventTypeHint: 'When enabled, picks the next missing type in the order: birth → death → occupation → residence. When off, leaves the picker blank.',
     eventTypeSortLabel: 'Event type sort order',
