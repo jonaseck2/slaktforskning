@@ -340,7 +340,6 @@ export default {
     alsoRecordNameChangeHint: 'Skapar en separat namnpost. Datum hämtas från händelsedatumet.',
     notes: 'Anteckningar',
     notesPlaceholder: 'Fri text om händelsen…',
-    factColumn: 'Uppgift',
     valuePlaceholder: 't.ex. Snickare',
     value: {
       occupation: 'Yrke',

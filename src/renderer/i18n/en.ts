@@ -340,7 +340,6 @@ export default {
     alsoRecordNameChangeHint: 'Creates a separate name record. Date comes from the event date.',
     notes: 'Notes',
     notesPlaceholder: 'Free-form notes about the event…',
-    factColumn: 'Fact',
     valuePlaceholder: 'e.g. Carpenter',
     value: {
       occupation: 'Occupation',
