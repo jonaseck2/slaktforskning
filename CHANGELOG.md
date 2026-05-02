@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.200.2 — UX_INVENTORY purposes filled in (PlacePanel, SourcePanel, side panels)
+
+- chore: filled in user-stated Purpose sentences for 14 panel and section surfaces in docs/UX_INVENTORY.md (PlacePanel sections, SourcePanel sections, GroupPanel, ResearchTaskPanel, MediaPanel, ReportPanel, WebsitePanel). Internal docs only.
+
 ## v0.200.0 — Relationships are managed per-person, not as a standalone view
 
 - feat: removed the Relationships nav entry, list view, and side panel. Relationships are managed per-person from PersonPanel → Relations (which already does what users actually reach for). The data, MCP tools, GEDCOM FAM round-trip, and RelationshipModal (for editing relationships inline from PersonPanel) all stay.

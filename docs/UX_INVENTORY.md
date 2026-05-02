@@ -563,7 +563,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/GroupPanel.vue` lines 1–304, `LinkedPersonsSection.vue`, `LinkedPlacesSection.vue`, `LinkedMediaSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this panel to *manage* a group as a named cluster of entities — a household, a parish congregation, a ship's passenger list, an emigrant cohort, a wedding party — by collecting the persons, places, and media that belong together under one heading and giving the cluster a name and notes that describe what makes them a group.
 
 **Subsections:** Group info · Persons · Places · Media.
 
@@ -579,7 +579,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/ResearchTaskPanel.vue` lines 1–357, `LinkedPersonsSection.vue`, `LinkedPlacesSection.vue`, `LinkedMediaSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this panel to *plan* a research task — what you want to find out, where the next clue might be, who or what it concerns — and to *track* its progress (open → in progress → done) and *record* what you tried and what you found, so the next time you come back to this part of the tree you can pick up where you left off instead of starting the search over.
 
 **Subsections:** Task · Persons · Places · Media.
 
@@ -595,7 +595,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/MediaPanel.vue` lines 1–822, `EntityMediaSection.vue`, `MediaChecksSection.vue`, `PersonPicker.vue`, `PlacePicker.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this panel to *describe* a single media file — a photo, scan, document, or audio clip — by titling it, adding notes, *tagging* the persons and places it depicts (with face regions for photos), and *linking* the events it documents, so the same media is reachable from every entity it touches and the cropped face becomes that person's profile photo wherever they appear.
 
 **Subsections:** Notes · Linked Persons · Face Tags · Linked Places · Linked Events · Quality.
 
@@ -611,7 +611,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/ReportPanel.vue` lines 1–473, `PersonPicker.vue`, `PlacePicker.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this panel to *configure* a report or chart they're about to print or export — picking the subject person/couple/place/year, choosing which sections and details to include, and tuning the layout — and to *trigger* the print or PDF/SVG export with the chosen settings.
 
 **Subsections:** Subject · Header/Footer · Options · Appearance · sticky actions.
 
@@ -627,7 +627,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/WebsitePanel.vue` lines 1–218, `PersonPicker.vue`, `PlacePicker.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this panel to *configure* a static HTML website export of the family tree — choosing whose story to feature (a single focus person and a scope around them, or the whole tree), what to redact for living relatives' privacy, whether to bundle media, and what to title the site — and to *trigger* the export to a folder on disk.
 
 **Subsections:** Subject · Scope · Privacy · Include · Site · sticky actions.
 
