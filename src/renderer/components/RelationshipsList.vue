@@ -60,9 +60,12 @@
         <td class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('a11y.deleteItem', { item: row.ariaLabel || row.typeLabel })"
+            :aria-label="$t('a11y.unlinkItem', { item: row.ariaLabel || row.typeLabel })"
+            :title="$t('common.unlinkTooltip')"
             @click.stop="$emit('delete', row.id)"
-          >✕</button>
+          >
+            <IconUnlink :size="14" />
+          </button>
         </td>
       </tr>
     </tbody>
@@ -72,6 +75,7 @@
 <script setup lang="ts">
 import AppAvatar from './ui/AppAvatar.vue';
 import PersonName from './PersonName.vue';
+import IconUnlink from './ui/IconUnlink.vue';
 
 export interface RelationshipListPerson {
   id: string | null;

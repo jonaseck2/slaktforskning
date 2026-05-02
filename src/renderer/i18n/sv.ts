@@ -1405,6 +1405,7 @@ export default {
     searchResults: '{count} resultat',
     noResults: 'Inga resultat',
     deleteItem: 'Ta bort {item}',
+    unlinkItem: 'Koppla bort {item}',
     editItem: 'Redigera {item}',
     expandRow: 'Expandera {item}',
     collapseRow: 'Stäng {item}',

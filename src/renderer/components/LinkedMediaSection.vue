@@ -22,9 +22,12 @@
             <AppButton
               variant="ghost"
               size="sm"
-              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(r.title, r.file_ref) })"
+              :aria-label="$t('a11y.unlinkItem', { item: mediaDisplayName(r.title, r.file_ref) })"
+              :title="$t('common.unlinkTooltip')"
               @click.stop="emit('remove', r.linkId)"
-            >✕</AppButton>
+            >
+              <IconUnlink :size="14" />
+            </AppButton>
           </td>
         </tr>
       </tbody>
@@ -37,6 +40,7 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import MediaPicker from './MediaPicker.vue';
 import AppButton from './ui/AppButton.vue';
+import IconUnlink from './ui/IconUnlink.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { mediaDisplayName } from '../utils/mediaUtils';
 

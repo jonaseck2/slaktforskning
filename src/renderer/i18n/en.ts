@@ -1405,6 +1405,7 @@ export default {
     searchResults: '{count} result | {count} results',
     noResults: 'No results',
     deleteItem: 'Delete {item}',
+    unlinkItem: 'Unlink {item}',
     editItem: 'Edit {item}',
     expandRow: 'Expand {item}',
     collapseRow: 'Collapse {item}',
