@@ -41,14 +41,14 @@
 - Modify: `src/main/ipc/media.ts` (re-export, update call site)
 - Test: `tests/unit/media.test.ts` (or new `tests/unit/media_helpers.test.ts`)
 
-- [ ] **Step 1: Read existing media helpers**
+- [x] **Step 1: Read existing media helpers**
 
 Run:
 ```bash
 grep -n "mediaFolderName\|^export" src/main/ipc/media.ts src/api/media.ts | head -30
 ```
 
-- [ ] **Step 2: Write failing test**
+- [x] **Step 2: Write failing test**
 
 Add to `tests/unit/media.test.ts` (or new file):
 
@@ -70,12 +70,12 @@ describe('media folder convention helpers', () => {
 });
 ```
 
-- [ ] **Step 3: Run test to confirm failure**
+- [x] **Step 3: Run test to confirm failure**
 
 Run: `npx vitest run tests/unit/media.test.ts -t "media folder convention helpers"`
 Expected: FAIL — `getMediaDir`/`getMediaFolderName` not exported from `src/api/media.ts`.
 
-- [ ] **Step 4: Implement helpers in `src/api/media.ts`**
+- [x] **Step 4: Implement helpers in `src/api/media.ts`**
 
 Add at top of `src/api/media.ts` (after imports):
 
@@ -94,7 +94,7 @@ export function getMediaDir(dbPath: string): string {
 }
 ```
 
-- [ ] **Step 5: Re-export from `src/main/ipc/media.ts` and remove duplicate**
+- [x] **Step 5: Re-export from `src/main/ipc/media.ts` and remove duplicate**
 
 Replace the existing `mediaFolderName` definition in `src/main/ipc/media.ts` with:
 
@@ -104,17 +104,17 @@ export { getMediaFolderName as mediaFolderName, getMediaDir } from '../../api/me
 
 (Keep the `mediaFolderName` alias for one release to avoid touching every caller — both names point at the same function.)
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/unit/media.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Run lint + typecheck on touched files**
+- [x] **Step 7: Run lint + typecheck on touched files**
 
 Run: `npm run lint -- src/api/media.ts src/main/ipc/media.ts tests/unit/media.test.ts`
 Expected: 0 errors.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/api/media.ts src/main/ipc/media.ts tests/unit/media.test.ts
@@ -129,13 +129,13 @@ git commit -m "refactor(media): centralise getMediaDir/getMediaFolderName in api
 - Modify: `src/main/ipc/import.ts:187-208`
 - Test: `tests/unit/ipc-import-genney-backup.test.ts` (new — only if a unit-testable seam exists; otherwise skip and rely on manual + integration verification)
 
-- [ ] **Step 1: Read current handler**
+- [x] **Step 1: Read current handler**
 
 ```bash
 sed -n '187,210p' src/main/ipc/import.ts
 ```
 
-- [ ] **Step 2: Replace hardcoded `genney-media`**
+- [x] **Step 2: Replace hardcoded `genney-media`**
 
 Find:
 ```typescript
@@ -157,17 +157,17 @@ import * as media from '../../api/media';
 ```
 (only if not already imported; prefer namespace import to keep call sites readable.)
 
-- [ ] **Step 3: Run typecheck**
+- [x] **Step 3: Run typecheck**
 
 Run: `npx tsc --noEmit`
 Expected: 0 errors.
 
-- [ ] **Step 4: Verify lint**
+- [x] **Step 4: Verify lint**
 
 Run: `npm run lint -- src/main/ipc/import.ts`
 Expected: 0 errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/ipc/import.ts
@@ -182,7 +182,7 @@ git commit -m "fix(import): genney .backup writes to <dbname>-media/ not genney-
 - Create: `src/api/media_consolidate.ts`
 - Create: `tests/unit/media_consolidate.test.ts`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `tests/unit/media_consolidate.test.ts`:
 
@@ -291,12 +291,12 @@ describe('consolidateMediaFolder', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to confirm failure**
+- [x] **Step 2: Run tests to confirm failure**
 
 Run: `npx vitest run tests/unit/media_consolidate.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `consolidateMediaFolder`**
+- [x] **Step 3: Implement `consolidateMediaFolder`**
 
 Create `src/api/media_consolidate.ts`:
 
@@ -375,22 +375,22 @@ function sameFile(a: string, b: string): boolean {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/unit/media_consolidate.test.ts`
 Expected: PASS (all 6).
 
-- [ ] **Step 5: Run full unit suite to catch regressions**
+- [x] **Step 5: Run full unit suite to catch regressions**
 
 Run: `npx vitest run tests/unit/media`
 Expected: PASS.
 
-- [ ] **Step 6: Lint**
+- [x] **Step 6: Lint**
 
 Run: `npm run lint -- src/api/media_consolidate.ts tests/unit/media_consolidate.test.ts`
 Expected: 0 errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/api/media_consolidate.ts tests/unit/media_consolidate.test.ts
@@ -404,7 +404,7 @@ git commit -m "feat(media): consolidateMediaFolder copies refs into <dbname>-med
 **Files:**
 - Modify: `src/main/ipc/import.ts` (add post-import call to consolidate inside `gedcom:import`, `import:holgerRun`, `import:genneyRun`, `archive:import`)
 
-- [ ] **Step 1: Verify import**
+- [x] **Step 1: Verify import**
 
 Confirm `src/main/ipc/import.ts` already imports `media` namespace (added in Task 2). If not, add:
 
@@ -413,7 +413,7 @@ import * as media from '../../api/media';
 import { consolidateMediaFolder } from '../../api/media_consolidate';
 ```
 
-- [ ] **Step 2: Add consolidation to `gedcom:import`**
+- [x] **Step 2: Add consolidation to `gedcom:import`**
 
 Find the success branch inside the `gedcom:import` handler (after `const report = importGedcom(...)`):
 
@@ -430,7 +430,7 @@ Replace with:
       return { imported: true, filePath: gedPath, report };
 ```
 
-- [ ] **Step 3: Add consolidation to `import:genneyRun`**
+- [x] **Step 3: Add consolidation to `import:genneyRun`**
 
 Find:
 ```typescript
@@ -449,7 +449,7 @@ Replace with:
     return { imported: true, summary: result.summary };
 ```
 
-- [ ] **Step 4: Add consolidation to `import:holgerRun`**
+- [x] **Step 4: Add consolidation to `import:holgerRun`**
 
 Find:
 ```typescript
@@ -462,7 +462,7 @@ Replace with:
       return { success: true, report: result.report };
 ```
 
-- [ ] **Step 5: Add consolidation to `archive:import`**
+- [x] **Step 5: Add consolidation to `archive:import`**
 
 Find:
 ```typescript
@@ -479,17 +479,17 @@ Replace with:
 
 (Archive import already places files into `<dbname>-media/`; consolidate is a cheap no-op for those rows but catches any embedded absolute refs.)
 
-- [ ] **Step 6: Run typecheck + lint**
+- [x] **Step 6: Run typecheck + lint**
 
 Run: `npx tsc --noEmit && npm run lint -- src/main/ipc/import.ts`
 Expected: 0 errors.
 
-- [ ] **Step 7: Run full test suite for regressions**
+- [x] **Step 7: Run full test suite for regressions**
 
 Run: `npx vitest run`
 Expected: PASS. If `tests/unit/import-holger.test.ts` fails because the post-import file_ref shape changed, update its assertion to expect either the relative form (after consolidate) or split the test scope so the importer-only behaviour is verified separately. Document the choice in the commit message.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/main/ipc/import.ts tests/
@@ -504,7 +504,7 @@ git commit -m "feat(import): consolidate media into <dbname>-media/ after every 
 - Create: `.claude/rules/media.md`
 - Modify: `.claude/skills/gedcom/SKILL.md` (add pointer)
 
-- [ ] **Step 1: Write `.claude/rules/media.md`**
+- [x] **Step 1: Write `.claude/rules/media.md`**
 
 Create with:
 
@@ -563,7 +563,7 @@ a deterministic relocation of an authored value, not an inference. It is the
 ONLY transformation of `file_ref` allowed outside an explicit user action.
 ```
 
-- [ ] **Step 2: Add pointer in gedcom skill**
+- [x] **Step 2: Add pointer in gedcom skill**
 
 In `.claude/skills/gedcom/SKILL.md`, find the OBJE/multimedia section and add right below the limitations table line:
 
@@ -571,7 +571,7 @@ In `.claude/skills/gedcom/SKILL.md`, find the OBJE/multimedia section and add ri
 **Media storage:** Imported OBJE FILE references are normalised to relative `<dbname>-media/...` refs by `consolidateMediaFolder`. See `.claude/rules/media.md`.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .claude/rules/media.md .claude/skills/gedcom/SKILL.md
@@ -582,7 +582,7 @@ git commit -m "docs(media): document <dbname>-media/ convention in rules + gedco
 
 ## Task 6: Final verification
 
-- [ ] **Step 1: Run full test + lint**
+- [x] **Step 1: Run full test + lint**
 
 ```bash
 npx vitest run
@@ -592,7 +592,7 @@ npx tsc --noEmit
 
 Expected: 0 failures, 0 lint errors, 0 type errors.
 
-- [ ] **Step 2: Manual smoke (electron-dev skill)**
+- [x] **Step 2: Manual smoke (electron-dev skill)**
 
 Launch the app, import a small GEDCOM with at least one OBJE FILE pointing at an existing local image. Verify:
 - The file appears in `<dbname>-media/`
@@ -600,7 +600,7 @@ Launch the app, import a small GEDCOM with at least one OBJE FILE pointing at an
 
 Skip if no test GEDCOM with media is handy — tests cover the behaviour.
 
-- [ ] **Step 3: Push branch + open PR**
+- [x] **Step 3: Push branch + open PR**
 
 ```bash
 git push -u origin fix/media-folder-convention
