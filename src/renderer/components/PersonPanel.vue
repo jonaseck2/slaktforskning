@@ -101,14 +101,6 @@
         </div>
       </div>
 
-      <!-- Identifiers section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('identifiers.title')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('identifiers.add') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
-        <div v-if="sections.identifiers" class="panel-section-body">
-          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
-        </div>
-      </div>
-
       <!-- Relationer section -->
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('relationships.addRelationship') }" @toggle="toggleSection('relationships')" @action="openAddRelative('spouse')" />
@@ -260,7 +252,6 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
-import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
@@ -325,7 +316,6 @@ interface PersonPanelData {
   eventCount: number;
   mapPointCount: number;
   relationshipCount: number;
-  identifierCount: number;
   mediaCount: number;
 }
 
@@ -405,7 +395,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
       eventCount: 0,
       mapPointCount: 0,
       relationshipCount: 0,
-      identifierCount: 0,
       mediaCount: 0,
     };
   }
@@ -413,13 +402,12 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
   const birth = events.find(e => e.event_type === 'birth');
   const death = events.find(e => e.event_type === 'death');
 
-  const [birthLine, deathLine, grps, tasks, rels, ids, media] = await Promise.all([
+  const [birthLine, deathLine, grps, tasks, rels, media] = await Promise.all([
     buildDateLine(birth),
     buildDateLine(death),
     window.api.groups.forPerson(id) as Promise<GroupData[]>,
     window.api.researchTasks.forPerson(id) as Promise<ResearchTaskRow[]>,
     window.api.relationships.getForPerson(id) as Promise<unknown[]>,
-    window.api.persons.getIdentifiers(id) as Promise<unknown[]>,
     window.api.media.forEntity('person', id) as Promise<unknown[]>,
   ]);
 
@@ -439,7 +427,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
     eventCount: events.length,
     mapPointCount: events.filter(e => e.place_id).length,
     relationshipCount: rels.length,
-    identifierCount: ids.length,
     mediaCount: media.length,
   };
 });
@@ -453,7 +440,6 @@ const researchTasks = computed(() => panelData.value?.researchTasks ?? []);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
 const mapPointCount = computed(() => panelData.value?.mapPointCount ?? 0);
 const relationshipCount = computed(() => panelData.value?.relationshipCount ?? 0);
-const identifierCount = computed(() => panelData.value?.identifierCount ?? 0);
 const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 
@@ -470,14 +456,13 @@ const { sections, toggleSection } = usePanelSections(
     relationships: true,
     groups: false,
     research: false,
-    identifiers: false,
     media: false,
     mediaTimeline: false,
     quality: false,
   },
   {
     person: true, names: true, events: true, timeline: true, map: true,
-    relationships: true, groups: true, research: false, identifiers: true,
+    relationships: true, groups: true, research: false,
     media: true, mediaTimeline: true, quality: false,
   },
 );
@@ -485,7 +470,6 @@ const { sections, toggleSection } = usePanelSections(
 // ── Template refs ───────────────────────────────────────────────────────────
 
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: (eventType?: string) => void }) | null>(null);
-const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count: number; reload: () => void }) | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);

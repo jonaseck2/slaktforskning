@@ -66,6 +66,10 @@ Sections that *don't* match and should be reviewed: Research tasks (modal-only, 
 
 Citations on a Person are nested two clicks deep (Event row → EventModal → Citations subsection). A user wanting to audit every source they've cited for a person has no entry point. The model supports it; the panel doesn't surface it. Candidate: a derived read-only Citations section under PersonPanel.
 
+### 5. External identifiers are not surfaced in any panel
+
+External identifiers (FamilySearch ID, Geni ID, Ancestry ID, Riksarkivet ID, personnummer, REFN, RIN, etc.) are not surfaced in any panel. They round-trip through GEDCOM/Holger/Genney import and export only. The data layer (`person_identifiers` table, `addIdentifier` / `getIdentifiers` / `deleteIdentifier` API, IPC, MCP) is fully wired so importers and exporters preserve them; nothing in the UI reads or writes them.
+
 ---
 
 ## Surface index
@@ -82,7 +86,6 @@ Verification status as of the dates listed. Italicised entries are **TBD** (not 
 | PersonPanel — Events section | 2026-05-02 |
 | PersonPanel — Timeline section | _TBD_ |
 | PersonPanel — Life Map section | _TBD_ |
-| PersonPanel — Identifiers section | _TBD_ |
 | PersonPanel — Relations section | 2026-05-02 |
 | PersonPanel — Groups section | 2026-05-02 |
 | PersonPanel — Media section | _TBD_ |

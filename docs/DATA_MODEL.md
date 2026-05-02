@@ -63,7 +63,7 @@ A person can have multiple names over time (birth, married, alias, aka).
 | nickname | TEXT | Smeknamn / informal name — separate from preferred_name |
 
 ### person_identifiers
-External IDs linking a person record to identifiers in other systems.
+External IDs linking a person record to identifiers in other systems. Populated and consumed by import/export paths (GEDCOM, Holger, Genney) only — they have no panel UI. The API, IPC, and MCP layers expose `addIdentifier` / `getIdentifiers` / `deleteIdentifier` for round-trip integrity.
 
 | Column | Type | Notes |
 |--------|------|-------|
