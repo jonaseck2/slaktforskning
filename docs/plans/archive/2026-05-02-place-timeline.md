@@ -1,6 +1,6 @@
 # Place Timeline section — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a chronological Timeline section to PlacePanel that mirrors PersonPanel's Timeline section, with the person ↔ place axis swapped. Read-only, derived view of the same events the Events section already shows.
 
@@ -66,7 +66,7 @@ When I open a place panel, I see every event that happened at this place laid ou
 - Modify: `src/renderer/i18n/sv.ts:1197` (the existing `personTimeline:` block)
 - Modify: `src/renderer/i18n/en.ts` (the corresponding `personTimeline:` block — find with `grep -n personTimeline src/renderer/i18n/en.ts`)
 
-- [ ] **Step 1: Add `placeTimeline` block to `sv.ts`**
+- [x] **Step 1: Add `placeTimeline` block to `sv.ts`**
 
 After the existing `personTimeline: { ... },` block in `src/renderer/i18n/sv.ts`, insert:
 
@@ -79,7 +79,7 @@ After the existing `personTimeline: { ... },` block in `src/renderer/i18n/sv.ts`
   },
 ```
 
-- [ ] **Step 2: Add `placeTimeline` block to `en.ts`**
+- [x] **Step 2: Add `placeTimeline` block to `en.ts`**
 
 In the same relative position (right after the `personTimeline: { ... },` block) in `src/renderer/i18n/en.ts`, insert:
 
@@ -92,13 +92,13 @@ In the same relative position (right after the `personTimeline: { ... },` block)
   },
 ```
 
-- [ ] **Step 3: Verify i18n parity**
+- [x] **Step 3: Verify i18n parity**
 
 Run: `npx tsx -e "const sv = require('./src/renderer/i18n/sv.ts').sv; const en = require('./src/renderer/i18n/en.ts').en; console.log('sv:', Object.keys(sv.placeTimeline)); console.log('en:', Object.keys(en.placeTimeline));"`
 
 Expected: both lists contain `title`, `gap`, `undated`, `empty`. (If the inline tsx invocation has issues, just visually inspect the two blocks side by side — they must have the same keys.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -114,7 +114,7 @@ git commit -m "feat(i18n): add placeTimeline keys (sv, en)"
 
 Mirror the structure of `tests/components/PersonTimeline.test.ts` but assert place-side behaviour: chronological ordering, gap marker, undated bucket, dot color per event type, approximate styling, participant-name rendering, empty state.
 
-- [ ] **Step 1: Create the test file**
+- [x] **Step 1: Create the test file**
 
 Write `tests/components/PlaceTimeline.test.ts`:
 
@@ -266,7 +266,7 @@ describe('PlaceTimeline', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/components/PlaceTimeline.test.ts
@@ -283,7 +283,7 @@ Expected: FAIL — `Cannot find module '../../src/renderer/components/PlaceTimel
 
 A near-mirror of `src/renderer/components/PersonTimeline.vue`. Differences listed at the top of the file as a comment for future readers; full template/script/style below.
 
-- [ ] **Step 1: Create the component file**
+- [x] **Step 1: Create the component file**
 
 Write `src/renderer/components/PlaceTimeline.vue`:
 
@@ -570,7 +570,7 @@ defineExpose({ reload });
 </style>
 ```
 
-- [ ] **Step 2: Run the component test, verify it passes**
+- [x] **Step 2: Run the component test, verify it passes**
 
 ```bash
 npx vitest run tests/components/PlaceTimeline.test.ts
@@ -578,7 +578,7 @@ npx vitest run tests/components/PlaceTimeline.test.ts
 
 Expected: 6 tests pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/PlaceTimeline.vue tests/components/PlaceTimeline.test.ts
@@ -592,7 +592,7 @@ git commit -m "feat(renderer): add PlaceTimeline component"
 **Files:**
 - Modify: `src/renderer/components/PlacePanel.vue` (insert section, register import, extend `usePanelSections` defaults)
 
-- [ ] **Step 1: Add import**
+- [x] **Step 1: Add import**
 
 In the `<script setup>` block, near the other component imports (search for `import MediaTimeline from './MediaTimeline.vue';`), add:
 
@@ -600,7 +600,7 @@ In the `<script setup>` block, near the other component imports (search for `imp
 import PlaceTimeline from './PlaceTimeline.vue';
 ```
 
-- [ ] **Step 2: Register the `timeline` section in `usePanelSections`**
+- [x] **Step 2: Register the `timeline` section in `usePanelSections`**
 
 Replace the existing `usePanelSections` call (around line 341) with:
 
@@ -620,7 +620,7 @@ const { sections, toggleSection } = usePanelSections(
 
 The two new entries: `timeline: false` (default-collapsed) in the first arg, `timeline: true` (visible) in the second.
 
-- [ ] **Step 3: Insert the Timeline section in the template**
+- [x] **Step 3: Insert the Timeline section in the template**
 
 In the template, after the Events section block (search for `<EventList ref="eventListRef" :place-id="placeId!"` — the section that contains it ends with `</div>` after a closing `</div>`) and before the Citations section (search for `<!-- Citations section -->`), insert:
 
@@ -643,7 +643,7 @@ In the template, after the Events section block (search for `<EventList ref="eve
 
 The `@action` reuses the existing `eventListRef.openAddForm()` so there is no second authoring path.
 
-- [ ] **Step 4: Run lint and component tests**
+- [x] **Step 4: Run lint and component tests**
 
 ```bash
 npm run lint
@@ -652,7 +652,7 @@ npx vitest run tests/components/
 
 Expected: lint clean, all component tests still passing (`PlaceTimeline.test.ts` plus the existing suite).
 
-- [ ] **Step 5: Smoke check in dev app**
+- [x] **Step 5: Smoke check in dev app**
 
 ```bash
 npm start
@@ -668,7 +668,7 @@ In the running app:
 
 If anything looks off, fix in `PlaceTimeline.vue` or `PlacePanel.vue` and rerun the component test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/PlacePanel.vue
@@ -682,7 +682,7 @@ git commit -m "feat(renderer): add Timeline section to PlacePanel"
 **Files:**
 - Modify: `docs/UX_INVENTORY.md`
 
-- [ ] **Step 1: Add an index row**
+- [x] **Step 1: Add an index row**
 
 In the `### Places view (PlacesView + PlacePanel)` index table (around line 109–122), insert a new row right after `PlacePanel — Events section`:
 
@@ -690,7 +690,7 @@ In the `### Places view (PlacesView + PlacePanel)` index table (around line 109�
 | PlacePanel — Timeline section | 2026-05-02 |
 ```
 
-- [ ] **Step 2: Add the full entry**
+- [x] **Step 2: Add the full entry**
 
 Insert this new section between the existing `### PlacePanel → Events section` entry and the `### PlacePanel → Citations section` entry:
 
@@ -710,7 +710,7 @@ Insert this new section between the existing `### PlacePanel → Events section`
 ---
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/UX_INVENTORY.md
@@ -721,7 +721,7 @@ git commit -m "docs(ux): document PlacePanel Timeline section"
 
 ### Task 6: Final verification
 
-- [ ] **Step 1: Run full unit + component test suite**
+- [x] **Step 1: Run full unit + component test suite**
 
 ```bash
 npm test
@@ -729,7 +729,7 @@ npm test
 
 Expected: all tests pass (no regressions; `PlaceTimeline.test.ts` is included).
 
-- [ ] **Step 2: Run lint**
+- [x] **Step 2: Run lint**
 
 ```bash
 npm run lint
@@ -737,22 +737,22 @@ npm run lint
 
 Expected: 0 errors.
 
-- [ ] **Step 3: Confirm user-observable check**
+- [x] **Step 3: Confirm user-observable check**
 
 Re-run the smoke check from Task 4, Step 5 — all eight bullets in the Verification section's user-observable check pass.
 
-- [ ] **Step 4: Tick the Self-review checklist below and proceed to plan close-out**
+- [x] **Step 4: Tick the Self-review checklist below and proceed to plan close-out**
 
 ## Self-review checklist (tick before closing the plan)
 
-- [ ] Tests assert rendered DOM structure, not just "function exists." `PlaceTimeline.test.ts` checks: order, gap marker text + count, undated bucket isolation, per-event-type dot class, approximate styling, participant-name rendering, empty state.
-- [ ] No new IPC channel was introduced — `events.forPlace` is the existing call.
-- [ ] No inferred field is persisted on the `places` row to support this view (Prime Directive in `CLAUDE.md`).
-- [ ] PersonTimeline is unchanged. (Mirror is a new component; if a future plan extracts a shared base it can deduplicate, not this one.)
-- [ ] UX_INVENTORY entry exists with `Verified: 2026-05-02` and CTA grid.
-- [ ] i18n keys exist in both `sv.ts` and `en.ts`.
-- [ ] Plan file is at `docs/plans/2026-05-02-place-timeline.md`.
-- [ ] Design spec at `docs/plans/2026-05-02-place-timeline-design.md` matches what shipped.
+- [x] Tests assert rendered DOM structure, not just "function exists." `PlaceTimeline.test.ts` checks: order, gap marker text + count, undated bucket isolation, per-event-type dot class, approximate styling, participant-name rendering, empty state.
+- [x] No new IPC channel was introduced — `events.forPlace` is the existing call.
+- [x] No inferred field is persisted on the `places` row to support this view (Prime Directive in `CLAUDE.md`).
+- [x] PersonTimeline is unchanged. (Mirror is a new component; if a future plan extracts a shared base it can deduplicate, not this one.)
+- [x] UX_INVENTORY entry exists with `Verified: 2026-05-02` and CTA grid.
+- [x] i18n keys exist in both `sv.ts` and `en.ts`.
+- [x] Plan file is at `docs/plans/2026-05-02-place-timeline.md`.
+- [x] Design spec at `docs/plans/2026-05-02-place-timeline-design.md` matches what shipped.
 
 ## Plan close-out (per CLAUDE.md "Finishing a plan")
 
