@@ -251,7 +251,7 @@ describe('Swedish exonym expansion', () => {
     gazetteers = loadGazetteers(
       {
         enabledGazetteers: [
-          'world-countries', 'world-admin1',
+          'world-countries', 'world-admin1', 'world-boundaries',
           'dk-sogne', 'dk-sogne-dawa',
           'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
         ],
@@ -313,6 +313,23 @@ describe('Swedish exonym expansion', () => {
   // plan adds city nodes to world-admin1 or a sibling gazetteer, these aliases will activate
   // automatically. Keep the data; don't add a test that only asserts the JSON contains the
   // keys (that's a tautology).
+
+  // ── Continents (lang-sv-wikidata → world-boundaries) ─────────────
+
+  it.each([
+    ['Afrika',      'Africa'],
+    ['Antarktis',   'Antarctica'],
+    ['Asien',       'Asia'],
+    ['Europa',      'Europe'],
+    ['Nordamerika', 'North America'],
+    ['Oceanien',    'Oceania'],
+    ['Sydamerika',  'South America'],
+  ])('resolves Swedish continent name "%s" to %s in world-boundaries', (sv, en) => {
+    const result = resolvePlace(sv, gazetteers);
+    expect(result).not.toBeNull();
+    expect(result!.matchedPath).toContain(en);
+    expect(result!.gazetteer).toBe('world-boundaries');
+  });
 
   // ── Negative-control ─────────────────────────────────────────────
 

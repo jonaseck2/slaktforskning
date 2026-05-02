@@ -299,6 +299,39 @@ SELECT DISTINCT ?nativeLabel ?svLabel WHERE {
 LIMIT 1000
 `;
 
+/**
+ * The 7 continents — Swedish labels, keyed by QID (not English label, because
+ * e.g. Q538's primary English label on Wikidata is "Insular Oceania" while
+ * our world-boundaries continent node is named "Oceania"). The QID list
+ * mirrors build-world-continents-boundaries.ts so continent identity stays
+ * pinned to one source of truth.
+ *
+ * QIDs:
+ *   Q15  Africa, Q51 Antarctica, Q48 Asia, Q46 Europe,
+ *   Q49  North America, Q538 Oceania, Q18 South America.
+ */
+const CONTINENTS_QUERY = `
+SELECT DISTINCT ?item ?svLabel WHERE {
+  VALUES ?item { wd:Q15 wd:Q51 wd:Q48 wd:Q46 wd:Q49 wd:Q538 wd:Q18 }
+  ?item rdfs:label ?svLabel . FILTER(LANG(?svLabel) = "sv")
+}
+`;
+
+/**
+ * Map continent QIDs to the English name used in world-boundaries.json.
+ * The English side comes from our own gazetteer (deterministic), the
+ * Swedish side comes from Wikidata (the only "translation" data added).
+ */
+const CONTINENT_QID_TO_NAME: Record<string, string> = {
+  Q15: 'Africa',
+  Q51: 'Antarctica',
+  Q48: 'Asia',
+  Q46: 'Europe',
+  Q49: 'North America',
+  Q538: 'Oceania',
+  Q18: 'South America',
+};
+
 // ── Main ─────────────────────────────────────────────────────────────────
 
 async function fetchWithRetry(query: string, label: string): Promise<WikidataTranslationRow[]> {
@@ -331,8 +364,9 @@ async function main() {
   const fiKunnat = loadGaz('fi-kunnat.json');
   const isSveitarfelog = loadGaz('is-sveitarfelog.json');
   const worldAdmin1 = loadGaz('world-admin1.json');
+  const worldBoundaries = loadGaz('world-boundaries.json');
 
-  console.log('Loaded 6 target gazetteers.');
+  console.log('Loaded 7 target gazetteers.');
   console.log('Building name indices...\n');
 
   const dkSogneIndex = buildNameIndex(dkSogne.root);
@@ -358,6 +392,15 @@ async function main() {
   }
 
   const worldAdmin1Index = buildWorldAdmin1Index(worldAdmin1.root);
+
+  // Index for world-boundaries continents (top-level children with type=continent).
+  // Keyed by lowercased English name → English name (used as path key, no parent).
+  const worldBoundariesContinentIndex = new Map<string, string>();
+  for (const child of worldBoundaries.root.children ?? []) {
+    if ((child as GazetteerNode & { type?: string }).type === 'continent') {
+      worldBoundariesContinentIndex.set(child.name.toLowerCase(), child.name);
+    }
+  }
 
   console.log(`  dk-sogne:       ${dkSogneIndex.size} names`);
   console.log(`  dk-sogne-dawa:  ${dkSogneDawaIndex.size} names`);
@@ -411,6 +454,33 @@ async function main() {
 
   // European capital cities
   const euCapitalRows = await fetchWithRetry(EU_CAPITAL_CITIES_QUERY, 'EU capital cities');
+  await sleep(1500);
+
+  // Continents (7 entries, targets world-boundaries).
+  // Custom fetch — query returns ?item (QID URI) + ?svLabel, not the standard
+  // nativeLabel/svLabel pair. Map QID → English name (per CONTINENT_QID_TO_NAME)
+  // and reshape to the WikidataTranslationRow shape so buildTranslationMap works.
+  const continentRows: WikidataTranslationRow[] = await (async () => {
+    try {
+      console.log('  Fetching Continents...');
+      type Binding = { item?: { value: string }; svLabel?: { value: string } };
+      const bindings = await sparqlFetchRaw<Binding>(SPARQL_PREFIXES + CONTINENTS_QUERY);
+      const out: WikidataTranslationRow[] = [];
+      for (const b of bindings) {
+        const uri = b.item?.value ?? '';
+        const sv = b.svLabel?.value ?? '';
+        const qid = uri.split('/').pop() ?? '';
+        const en = CONTINENT_QID_TO_NAME[qid];
+        if (!en || !sv || en === sv) continue;
+        out.push({ nativeLabel: en, svLabel: sv });
+      }
+      console.log(`    → ${out.length} rows`);
+      return out;
+    } catch (err) {
+      console.warn(`    → Error fetching Continents: ${(err as Error).message}`);
+      return [];
+    }
+  })();
 
   // ── Build translation maps ──────────────────────────────────────────
 
@@ -440,6 +510,12 @@ async function main() {
     worldAdmin1Index,
   );
 
+  // Continents: merge against world-boundaries continent index
+  const continentTranslations = buildTranslationMap(
+    continentRows,
+    worldBoundariesContinentIndex,
+  );
+
   // ── Stats ───────────────────────────────────────────────────────────
 
   console.log(`  dk-sogne:           ${Object.keys(dkSogneTranslations).length} translated nodes`);
@@ -448,6 +524,7 @@ async function main() {
   console.log(`  fi-kunnat:          ${Object.keys(fiTranslations).length} translated nodes`);
   console.log(`  is-sveitarfelog:    ${Object.keys(isTranslations).length} translated nodes`);
   console.log(`  world-admin1 (EU):  ${Object.keys(euAdmin1Translations).length} translated nodes`);
+  console.log(`  world-boundaries:   ${Object.keys(continentTranslations).length} continent translations`);
 
   // ── Spot-check ──────────────────────────────────────────────────────
 
@@ -491,6 +568,7 @@ async function main() {
       'fi-kunnat': fiTranslations,
       'is-sveitarfelog': isTranslations,
       'world-admin1': euAdmin1Translations,
+      'world-boundaries': continentTranslations,
     },
   };
 

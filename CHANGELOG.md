@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.191.1 — Swedish continent names resolve
+
+- fix(gazetteer): "Afrika", "Europa", "Asien", "Nordamerika", "Sydamerika", "Antarktis", and "Oceanien" now resolve to the corresponding continent in `world-boundaries`. The continents-in-world-boundaries plan added the geometries with English-only names; the Swedish-exonyms-expansion plan stopped at admin1 + capitals. The continents fell through the gap. `scripts/build-lang-sv-wikidata.ts` now also queries the 7 continent QIDs (Q15/Q51/Q48/Q46/Q49/Q538/Q18) and emits a `world-boundaries` translation block (Q538's English label is "Insular Oceania", so we key by QID and map QID → our gazetteer's continent name).
+
 ## v0.191.0 — Every right-side panel uses the EntityPanel shell
 
 - refactor: MediaPanel, ReportPanel, and WebsitePanel now use the shared `EntityPanel` shell — same `.side-panel` root, same role-label band, same ▶ collapse button, same surface/radius/shadow chrome as Person/Place/Source/Relationship/Group/ResearchTask. The user-visible outcome: every paneled route's right pane is layout-identical and behavior-identical, no more "this one looks slightly different" drift. ExportOptionsPanel is documented as a deliberate exception (it's an embedded options form, not a list-view-hosted side panel).
