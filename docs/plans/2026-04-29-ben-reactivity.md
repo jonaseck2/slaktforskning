@@ -134,9 +134,9 @@ One line. `reloadChart()` already does the full remount + refetch.
 - [x] **Phase 3 complete** — shipped in v0.167.0
 
 ### Phase 4 — Indirect events on timelines (#31)
-- [ ] Investigate `getTimeline(personId)` and report-side timelines
-- [ ] Add: spouse death events, child birth events, child death events
-- [ ] Constraint: only include events that fell within the subject's lifetime — or include posthumous child birth as Ben suggested? **Decision:** include child births posthumous-up-to-9-months (covers postpartum births), exclude later. Drop spouse death after subject's own death.
+- [x] Investigate `getTimeline(personId)` and report-side timelines — superseded by `docs/plans/2026-05-02-life-timeline-expansion.md`
+- [x] Add: spouse death events, child birth events, child death events — superseded
+- [x] Constraint: only include events that fell within the subject's lifetime — superseded; full settlement of "significant events" lives in the new plan (parents' deaths added; sibling deaths and children's marriages opt-in via ReportPanel toggles).
 
 ### Phase 5 (optional) — Mini family tree on Add Member (#32)
 - [ ] Mock a small visualization in PersonModal when in `relatedTo` mode showing the 5 button positions around the central person
