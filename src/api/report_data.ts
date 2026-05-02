@@ -94,12 +94,37 @@ export interface ResearchGaps {
   events_without_places: EventWithPlace[];
 }
 
+/**
+ * Stable vocabulary for `TimelineEntry.relationship_label`.
+ *
+ * - `'self'`     — the subject's own event (replaces the old `null`).
+ * - `'father'` / `'mother'` — sex-known parent (Task 3 will start emitting these;
+ *                              Task 1 only adds them to the union).
+ * - `'parent'`   — parent with sex unknown (current emission for parent_child where
+ *                  the subject is `person2_id`; Task 3 narrows to father/mother).
+ * - `'spouse'`   — couple-relationship partner.
+ * - `'son'` / `'daughter'` — sex-known child (Task 4 will start emitting these).
+ * - `'child'`    — child with sex unknown (current emission for parent_child where
+ *                  the subject is `person1_id`).
+ * - `'sibling'`  — sibling relationship.
+ */
+export type TimelineRelationshipLabel =
+  | 'self'
+  | 'father'
+  | 'mother'
+  | 'parent'
+  | 'spouse'
+  | 'son'
+  | 'daughter'
+  | 'child'
+  | 'sibling';
+
 export interface TimelineEntry {
   event: EventWithPlace;
   person_id: string;
   person_given_name: string;
   person_surname: string;
-  relationship_label: string | null;
+  relationship_label: TimelineRelationshipLabel;
 }
 
 // ── Helpers ──
@@ -415,7 +440,7 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
       person_id: personId,
       person_given_name: primaryName.given_name,
       person_surname: primaryName.surname,
-      relationship_label: null,
+      relationship_label: 'self',
     });
   }
 
@@ -428,15 +453,18 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     const otherNames = getPersonNames(db, otherId);
     const otherPrimary = getPrimaryName(otherNames);
 
-    let label: string;
+    let label: TimelineRelationshipLabel;
     if (r.type === 'couple') {
       label = 'spouse';
     } else if (r.type === 'parent_child') {
+      // Tasks 3 & 4 narrow these to father/mother and son/daughter using sex.
       label = r.person1_id === personId ? 'child' : 'parent';
     } else if (r.type === 'sibling') {
       label = 'sibling';
     } else {
-      label = r.type;
+      // 'godparent' / 'other' relationships are not part of the subject's life story
+      // for timeline purposes — skip them.
+      continue;
     }
 
     const otherEvents = resolveEventsPlaces(db, getEventsForPerson(db, otherId));

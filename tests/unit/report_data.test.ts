@@ -15,6 +15,7 @@ import {
   getTimeline,
   getAliveInYear,
 } from '../../src/api/report_data';
+import type { TimelineRelationshipLabel } from '../../src/api/report_data';
 import { createTestDb } from './helpers';
 
 let db: any;
@@ -287,7 +288,7 @@ describe('getTimeline', () => {
     expect(siblingEntry!.person_given_name).toBe('Lars');
   });
 
-  it('uses relationship type as label for non-standard types', () => {
+  it('omits non-family relationship types (godparent / other) from the life timeline', () => {
     const person = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
     const other = createPerson(db, { given_name: 'Erik', surname: 'Test', sex: 'M' });
     createRelationship(db, { type: 'godparent', person1_id: person.id, person2_id: other.id });
@@ -297,8 +298,10 @@ describe('getTimeline', () => {
 
     const timeline = getTimeline(db, person.id);
     expect(timeline).not.toBeNull();
-    const godparentEntry = timeline!.find(e => e.relationship_label === 'godparent');
-    expect(godparentEntry).toBeDefined();
+    // Godparent relationships are not part of the subject's life story — Erik's
+    // events should not appear in Anna's timeline.
+    const otherEntry = timeline!.find(e => e.person_id === other.id);
+    expect(otherEntry).toBeUndefined();
   });
 
   it('labels parent_child correctly when person is the parent', () => {
@@ -372,13 +375,95 @@ describe('getTimeline', () => {
 
     // Should be sorted chronologically
     expect(timeline![0].event.date_value).toBe('1840-01-01');
-    expect(timeline![0].relationship_label).toBeNull(); // own event
+    expect(timeline![0].relationship_label).toBe('self'); // own event
 
     expect(timeline![1].event.date_value).toBe('1845-06-15');
     expect(timeline![1].relationship_label).toBe('spouse');
 
     expect(timeline![2].event.date_value).toBe('1870-03-20');
     expect(timeline![2].relationship_label).toBe('child');
+  });
+
+  describe('getTimeline relationship_label vocabulary', () => {
+    it('emits stable labels for parent/spouse/child/sibling and own', () => {
+      const subject = createPerson(db, { given_name: 'Anna', surname: 'Test', sex: 'F' });
+      const father = createPerson(db, { given_name: 'Per', surname: 'Test', sex: 'M' });
+      const mother = createPerson(db, { given_name: 'Maja', surname: 'Test', sex: 'F' });
+      const spouse = createPerson(db, { given_name: 'Erik', surname: 'Other', sex: 'M' });
+      const child = createPerson(db, { given_name: 'Lars', surname: 'Other', sex: 'M' });
+      const sibling = createPerson(db, { given_name: 'Karin', surname: 'Test', sex: 'F' });
+
+      // father / mother → parent_child where SUBJECT is person2_id (i.e. parent is "other")
+      createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: subject.id });
+      createRelationship(db, { type: 'parent_child', person1_id: mother.id, person2_id: subject.id });
+      // spouse
+      createRelationship(db, { type: 'couple', person1_id: subject.id, person2_id: spouse.id });
+      // child → parent_child where SUBJECT is person1_id
+      createRelationship(db, { type: 'parent_child', person1_id: subject.id, person2_id: child.id });
+      // sibling
+      createRelationship(db, { type: 'sibling', person1_id: subject.id, person2_id: sibling.id });
+
+      // own event
+      const ownBirth = createEvent(db, { event_type: 'birth', date_value: '1850-01-01', date_original: '1850' });
+      addEventParticipant(db, { event_id: ownBirth.id, person_id: subject.id });
+      // father birth (relevant family event)
+      const fatherBirth = createEvent(db, { event_type: 'birth', date_value: '1820-01-01', date_original: '1820' });
+      addEventParticipant(db, { event_id: fatherBirth.id, person_id: father.id });
+      // mother birth
+      const motherBirth = createEvent(db, { event_type: 'birth', date_value: '1825-01-01', date_original: '1825' });
+      addEventParticipant(db, { event_id: motherBirth.id, person_id: mother.id });
+      // spouse birth
+      const spouseBirth = createEvent(db, { event_type: 'birth', date_value: '1849-01-01', date_original: '1849' });
+      addEventParticipant(db, { event_id: spouseBirth.id, person_id: spouse.id });
+      // child birth
+      const childBirth = createEvent(db, { event_type: 'birth', date_value: '1875-01-01', date_original: '1875' });
+      addEventParticipant(db, { event_id: childBirth.id, person_id: child.id });
+      // sibling birth
+      const siblingBirth = createEvent(db, { event_type: 'birth', date_value: '1852-01-01', date_original: '1852' });
+      addEventParticipant(db, { event_id: siblingBirth.id, person_id: sibling.id });
+
+      const timeline = getTimeline(db, subject.id);
+      expect(timeline).not.toBeNull();
+
+      const allowed: Array<TimelineRelationshipLabel> = [
+        'self',
+        'father',
+        'mother',
+        'parent',
+        'spouse',
+        'son',
+        'daughter',
+        'child',
+        'sibling',
+      ];
+      for (const entry of timeline!) {
+        expect(allowed).toContain(entry.relationship_label);
+      }
+
+      // Self
+      const selfEntry = timeline!.find(e => e.person_id === subject.id);
+      expect(selfEntry).toBeDefined();
+      expect(selfEntry!.relationship_label).toBe('self');
+
+      // Spouse
+      const spouseEntry = timeline!.find(e => e.person_id === spouse.id);
+      expect(spouseEntry!.relationship_label).toBe('spouse');
+
+      // Sibling
+      const siblingEntry = timeline!.find(e => e.person_id === sibling.id);
+      expect(siblingEntry!.relationship_label).toBe('sibling');
+
+      // Parent + child labels are within the allowed vocabulary (Tasks 3 & 4 will
+      // narrow them to father/mother/son/daughter; for now the existing emissions
+      // 'parent' / 'child' must still be members of the typed union).
+      const parentEntries = timeline!.filter(e => e.person_id === father.id || e.person_id === mother.id);
+      expect(parentEntries.length).toBe(2);
+      for (const e of parentEntries) {
+        expect(['parent', 'father', 'mother']).toContain(e.relationship_label);
+      }
+      const childEntry = timeline!.find(e => e.person_id === child.id);
+      expect(['child', 'son', 'daughter']).toContain(childEntry!.relationship_label);
+    });
   });
 });
 
