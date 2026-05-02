@@ -7,9 +7,20 @@
   >
     <template #empty>{{ $t('placePanel.noPlaceSelected') }}</template>
     <template #header>
-      <div class="panel-name-row">
-        <div class="panel-name">{{ place?.name }}</div>
-        <span v-if="place?.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+      <div class="place-panel-hero">
+        <button
+          v-if="heroSrc && heroMediaId"
+          type="button"
+          class="place-panel-hero-photo"
+          :title="$t('media.title')"
+          @click="$router.push('/media?open=' + heroMediaId)"
+        >
+          <img :src="heroSrc" :alt="place?.name ?? ''" />
+        </button>
+        <div class="panel-name-row">
+          <div class="panel-name">{{ place?.name }}</div>
+          <span v-if="place?.place_type" class="place-type-badge">{{ $t('placeTypes.' + place.place_type) }}</span>
+        </div>
       </div>
     </template>
 
@@ -546,7 +557,34 @@ function goToTask(id: string) {
   router.push('/research-tasks/' + id);
 }
 
-watch(() => props.placeId, () => { void loadTasks(); }, { immediate: true });
+const heroMediaId = ref<string | null>(null);
+const heroSrc = ref<string | null>(null);
+
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp|heic|heif)$/i;
+
+function isImageMedia(m: { format?: string | null; file_ref?: string | null }): boolean {
+  if (m.format && /^image\//i.test(m.format)) return true;
+  if (m.file_ref && IMAGE_EXT.test(m.file_ref)) return true;
+  return false;
+}
+
+async function loadHero() {
+  heroMediaId.value = null;
+  heroSrc.value = null;
+  if (!props.placeId) return;
+  try {
+    const items = (await window.api.media.forEntity('place', props.placeId)) as Array<{ id: string; format: string | null; file_ref: string | null; sort_order: number }>;
+    const sorted = [...items].sort((a, b) => a.sort_order - b.sort_order);
+    const first = sorted.find(isImageMedia);
+    if (!first) return;
+    heroMediaId.value = first.id;
+    heroSrc.value = (await window.api.media.readAsDataUrl(first.id)) as string | null;
+  } catch (err) {
+    console.error('[PlacePanel] loadHero failed:', err);
+  }
+}
+
+watch(() => props.placeId, () => { void loadTasks(); void loadHero(); }, { immediate: true });
 </script>
 
 <style scoped>
@@ -778,5 +816,28 @@ watch(() => props.placeId, () => { void loadTasks(); }, { immediate: true });
 }
 textarea.compact-control.notes-mono {
   font-family: var(--font-mono);
+}
+.place-panel-hero { display: flex; flex-direction: column; gap: var(--space-xs); }
+.place-panel-hero-photo {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.place-panel-hero-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 180px;
+  object-fit: cover;
+}
+.place-panel-hero-photo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 </style>
