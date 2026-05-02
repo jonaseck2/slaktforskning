@@ -208,11 +208,18 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     repoXref.set(repoId, xr);
     lines.push(`0 ${xr} REPO`);
     lines.push(`1 NAME ${repo.name}`);
-    if (repo.address) lines.push(`1 ADDR ${repo.address}`);
-    if (repo.city) lines.push(`2 CITY ${repo.city}`);
-    if (repo.postal_code) lines.push(`2 POST ${repo.postal_code}`);
-    if (repo.state) lines.push(`2 STAE ${repo.state}`);
-    if (repo.country) lines.push(`2 CTRY ${repo.country}`);
+    // If any address sub-field is present, emit a 1 ADDR parent line so the
+    // 2 CITY / POST / STAE / CTRY children are properly scoped (otherwise they
+    // would attach to the preceding 1 NAME and the importer would not read them
+    // back as repository address fields). When address itself is empty we emit
+    // a bare ADDR with empty value as the parent slot.
+    if (repo.address || repo.city || repo.postal_code || repo.state || repo.country) {
+      lines.push(`1 ADDR ${repo.address ?? ''}`);
+      if (repo.city) lines.push(`2 CITY ${repo.city}`);
+      if (repo.postal_code) lines.push(`2 POST ${repo.postal_code}`);
+      if (repo.state) lines.push(`2 STAE ${repo.state}`);
+      if (repo.country) lines.push(`2 CTRY ${repo.country}`);
+    }
     if (repo.phone) lines.push(`1 PHON ${repo.phone}`);
     if (repo.email) lines.push(`1 EMAIL ${repo.email}`);
     if (repo.web) lines.push(`1 WWW ${repo.web}`);

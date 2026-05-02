@@ -117,9 +117,14 @@ export function phaseRepo(ctx: ImportContext): void {
   for (const node of ctx.tree) {
     if (node.tag !== 'REPO' || !node.xref) continue;
     const addrNode = getChild(node, 'ADDR');
+    const addrValue = addrNode
+      ? (getChild(addrNode, 'ADR1')?.value ?? addrNode.value ?? undefined)
+      : undefined;
     const repo = createRepository(ctx.db, {
       name: getChild(node, 'NAME')?.value ?? '',
-      address: addrNode ? (getChild(addrNode, 'ADR1')?.value ?? addrNode.value ?? undefined) : undefined,
+      // Treat an empty ADDR line value as "no address" so ADDR-as-parent-only
+      // emit (used to scope CITY/POST/etc) doesn't fabricate an empty string.
+      address: addrValue === '' ? undefined : addrValue,
       city: addrNode ? getChild(addrNode, 'CITY')?.value ?? undefined : undefined,
       postal_code: addrNode ? getChild(addrNode, 'POST')?.value ?? undefined : undefined,
       state: addrNode ? getChild(addrNode, 'STAE')?.value ?? undefined : undefined,

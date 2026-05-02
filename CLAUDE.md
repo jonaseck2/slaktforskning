@@ -33,6 +33,36 @@ The genealogist authored what is in the database. Every other value is derived a
 
 This rule applies to: import paths, MCP tools, IPC handlers, Vue components, AI agents, scripts, migrations. Everywhere. No exceptions.
 
+## ⚠️ Prime Directive (cont.): Round-Trip Fidelity
+
+**The user must be able to leave with their data intact. Every authored field in the database must survive a GEDCOM 5.5.1 *or* 7.0 round-trip — or be explicitly, justifiably excluded.**
+
+The data lifecycle includes offboarding. A user who exports their database to GEDCOM and re-imports it (in this app, or any other) must get the same data back. This is co-equal with authored-data preservation: the first protects the user's data while it lives in our DB; this protects it as it leaves.
+
+**Lifecycle direction:** GEDCOM → DB → user edits → DB → GEDCOM. End-to-end. Two enforcement mechanisms sit under one directive: (1) the importer discloses anything it cannot model — existing `unmappedData` / import-report mechanism; (2) the DB → GEDCOM → DB round-trip is mechanically guarded by the registry below. A schema change cannot weaken either: adding a column without a registry entry breaks CI, and changing the importer to drop a field that was previously reported also fails the existing import-disclosure tests.
+
+**The contract is mechanical, not aspirational:**
+
+- Every `(table, column)` pair in the schema has an entry in `src/api/gedcom_fidelity_registry.ts` declaring its round-trip status under both GEDCOM 5.5.1 and 7.0.
+- Status values: `lossless` | `lossless-via:<mechanism>` | `lossy:<reason>` | `excluded:<reason>`.
+- A schema-introspection unit test asserts that *every* column has an entry. **Adding a column without a registry entry breaks CI.** This is by design.
+- Per-field round-trip tests exercise every non-excluded entry: seed a DB column → export to GEDCOM → re-import into a fresh DB → assert column value preserved (or matches the registry-declared lossy expectation).
+- Golden-DB-seed round-trip tests seed a comprehensive multi-table DB → export → re-import → assert DB equivalence. Catches multi-field interactions.
+
+**What "excluded" legitimately means:**
+- App-internal audit: `created_at`, `updated_at`, `id` (UUID — re-issued on import).
+- Derived/cached at render time: gazetteer rows, resolved coordinates, normalised name forms.
+- Genuinely unrepresentable in the targeted GEDCOM version. Must cite the spec section it tried to map to.
+
+**What "excluded" does NOT mean:**
+- "It would be hard to round-trip." Hard ≠ excluded. `lossy` is fine if recorded; silent drop is not.
+- "We don't use this field much." Authored data is authored data.
+- "GEDCOM 5.5.1 can't carry it but 7.0 can." That's `lossy:5.5.1-spec-limit` for v551 and `lossless` for v70 — not excluded.
+
+**Where this rule applies:** schema migrations, importer (`src/import/gedcom/`, `src/gedcom/importer.ts`), exporter (`src/gedcom/exporter.ts`), MCP tools that mutate persisted state, any new entity. Render-only and gazetteer-only code is exempt by definition (does not write authored data). Archive (`.zip`) export/import is in-scope conceptually but mechanical enforcement ships in a follow-up plan.
+
+**Why this matters:** the user's choice to use this app must remain reversible. If our schema evolves in a way that strands their data inside our format, we have failed them — even if everything works perfectly while they stay.
+
 ## Project Overview
 
 Släktforskning is a cross-platform desktop genealogy app built with Electron + Vue 3 + TypeScript. All data stays local in SQLite. A built-in MCP server lets AI agents read/write genealogy data without the UI.
