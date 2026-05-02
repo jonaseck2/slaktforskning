@@ -45,6 +45,8 @@
             :person-id="ancestor.id"
             :given-name="ancestor.givenName"
             :surname="ancestor.surname"
+            :birth-surname="ancestor.birthSurname"
+            :show-birth-name-parenthetical="props.showBirthNameParenthetical"
             :sex="ancestor.sex"
             :birth-year="ancestor.birthYear"
             :death-year="ancestor.deathYear"
@@ -125,7 +127,7 @@ import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import PersonPhotoSection from './primitives/PersonPhotoSection.vue';
 import FanChartReport from './FanChartReport.vue';
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullNameWithBirthName, getDisplayName, pickBirthSurnameForDisplay } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
@@ -145,6 +147,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   generations: 4,
   colorMode: 'branch',
@@ -159,6 +162,7 @@ const props = withDefaults(defineProps<{
   showMediaNotes: true,
   showSources: false,
   redactLiving: false,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -166,6 +170,7 @@ const toast = useToast();
 
 // --- Types matching report_data.AncestorNode shape via IPC ---
 interface RawPersonName {
+  id: string;
   given_name: string | null;
   surname: string | null;
   name_prefix?: string | null;
@@ -233,6 +238,7 @@ interface AncestorListItem {
   id: string;
   givenName: string | null;
   surname: string | null;
+  birthSurname: string | null;
   sex: 'M' | 'F' | 'U';
   birthYear: number | null;
   deathYear: number | null;
@@ -282,18 +288,29 @@ function toSex(s: string | null | undefined): 'M' | 'F' | 'U' {
   return 'U';
 }
 
+// Display only — see plan birth-name-display-and-quality-check.
+// Picks the highest-sort_order ("displayed") name and computes the bare birth
+// surname for the parenthetical separately so callers can pass them to
+// PersonMiniCard's :surname / :birth-surname props.
 function primaryNameParts(names: RawPersonName[]): {
   given: string | null;
   surname: string | null;
+  birthSurname: string | null;
   full: string;
 } {
-  if (!names.length) return { given: null, surname: null, full: '' };
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const n = sorted[0];
+  if (!names.length) return { given: null, surname: null, birthSurname: null, full: '' };
+  const displayed = getDisplayName(names);
+  if (!displayed) return { given: null, surname: null, birthSurname: null, full: '' };
+  const birthSurname = pickBirthSurnameForDisplay(displayed, names);
   return {
-    given: n.preferred_name || n.given_name || null,
-    surname: n.surname || null,
-    full: formatFullName(n) || '',
+    given: displayed.preferred_name || displayed.given_name || null,
+    surname: displayed.surname || null,
+    birthSurname,
+    full: formatFullNameWithBirthName(
+      displayed,
+      names,
+      { showBirthNameParenthetical: props.showBirthNameParenthetical, bornAbbrev: t('common.bornAbbrev') },
+    ),
   };
 }
 
@@ -361,6 +378,7 @@ function flattenAncestorTree(root: AncestorNode | null, redactLiving: boolean): 
         id: node.person.id,
         givenName: parts.given,
         surname: parts.surname,
+        birthSurname: parts.birthSurname,
         sex: toSex(node.person.sex),
         birthYear: redacted.birthYear ?? null,
         deathYear: redacted.deathYear ?? null,

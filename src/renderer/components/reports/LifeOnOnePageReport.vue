@@ -64,7 +64,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 
@@ -74,11 +74,13 @@ const props = withDefaults(defineProps<{
   showLifeMap?: boolean;
   showMapCaption?: boolean;
   redactLiving?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   orientation: 'portrait',
   showLifeMap: true,
   showMapCaption: true,
   redactLiving: false,
+  showBirthNameParenthetical: true,
 });
 
 const { t, locale } = useI18n();
@@ -86,6 +88,7 @@ const toast = useToast();
 
 // --- Types matching personSummary IPC shape ---
 interface RawPersonName {
+  id: string;
   given_name: string | null;
   surname: string | null;
   name_prefix?: string | null;
@@ -149,10 +152,16 @@ function extractYear(dateValue: string | null): number | null {
   return m ? parseInt(m[0], 10) : null;
 }
 
+// Display only — see plan birth-name-display-and-quality-check.
 function personNameFrom(names: RawPersonName[]): string {
   if (!names.length) return '';
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  return formatFullName(sorted[0]);
+  const displayed = getDisplayName(names);
+  if (!displayed) return '';
+  return formatFullNameWithBirthName(
+    displayed,
+    names,
+    { showBirthNameParenthetical: props.showBirthNameParenthetical, bornAbbrev: t('common.bornAbbrev') },
+  );
 }
 
 function eventTypeLabel(type: string): string {
@@ -160,11 +169,7 @@ function eventTypeLabel(type: string): string {
 }
 
 // --- Derived state ---
-const primaryName = computed(() => {
-  if (!data.value?.names?.length) return '';
-  const sorted = [...data.value.names].sort((a, b) => a.sort_order - b.sort_order);
-  return formatFullName(sorted[0]);
-});
+const primaryName = computed(() => personNameFrom(data.value?.names ?? []));
 
 const birthEvent = computed<RawEvent | null>(() =>
   data.value?.events.find(e => e.event_type === 'birth') ?? null,

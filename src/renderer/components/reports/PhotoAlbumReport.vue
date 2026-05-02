@@ -46,7 +46,7 @@ import {
   type ChronologicalMediaItem,
   type MediaEntityRef,
 } from '../../composables/useMediaChronological';
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { useToast } from '../../composables/useToast';
 
 const props = withDefaults(defineProps<{
@@ -57,6 +57,7 @@ const props = withDefaults(defineProps<{
   showNotes?: boolean;
   showIndex?: boolean;
   includeDocuments?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   subjectId: null,
   perPage: 1,
@@ -64,6 +65,7 @@ const props = withDefaults(defineProps<{
   showNotes: true,
   showIndex: false,
   includeDocuments: false,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -186,6 +188,7 @@ watch(
 );
 
 interface RawPersonName {
+  id: string;
   given_name: string | null;
   surname: string | null;
   name_prefix?: string | null;
@@ -196,6 +199,18 @@ interface RawPersonName {
   name_type: string;
 }
 
+// Display only — see plan birth-name-display-and-quality-check.
+function nameWithBirth(names: RawPersonName[]): string {
+  if (!names.length) return '';
+  const displayed = getDisplayName(names);
+  if (!displayed) return '';
+  return formatFullNameWithBirthName(
+    displayed,
+    names,
+    { showBirthNameParenthetical: props.showBirthNameParenthetical, bornAbbrev: t('common.bornAbbrev') },
+  );
+}
+
 async function loadSubjectLabel(): Promise<void> {
   subjectLabel.value = null;
   if (!props.subjectId || props.subjectType === 'all') return;
@@ -203,8 +218,7 @@ async function loadSubjectLabel(): Promise<void> {
     if (props.subjectType === 'person') {
       const names = (await window.api.persons.getNames(props.subjectId)) as RawPersonName[];
       if (names.length > 0) {
-        const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-        subjectLabel.value = formatFullName(sorted[0]);
+        subjectLabel.value = nameWithBirth(names);
       }
     } else if (props.subjectType === 'place') {
       const place = (await window.api.places.get(props.subjectId)) as { name: string } | null;
@@ -223,11 +237,11 @@ async function loadSubjectLabel(): Promise<void> {
             ? (window.api.persons.getNames(rel.person2_id) as Promise<RawPersonName[]>)
             : Promise.resolve<RawPersonName[]>([]),
         ]);
-        const n1 = p1Names.sort((a, b) => a.sort_order - b.sort_order)[0];
-        const n2 = p2Names.sort((a, b) => a.sort_order - b.sort_order)[0];
         const parts: string[] = [];
-        if (n1) parts.push(formatFullName(n1));
-        if (n2) parts.push(formatFullName(n2));
+        const n1Label = nameWithBirth(p1Names);
+        const n2Label = nameWithBirth(p2Names);
+        if (n1Label) parts.push(n1Label);
+        if (n2Label) parts.push(n2Label);
         subjectLabel.value = parts.length > 0 ? parts.join(' & ') : null;
       }
     }
@@ -260,6 +274,10 @@ watch(
   load,
   { immediate: true },
 );
+
+// Re-resolve the cover subject label when the birth-name toggle flips so the
+// "(f. …)" / "(b. …)" parenthetical reflects the current option.
+watch(() => props.showBirthNameParenthetical, () => { void loadSubjectLabel(); });
 
 function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });

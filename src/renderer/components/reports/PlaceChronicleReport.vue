@@ -102,6 +102,7 @@ const props = withDefaults(defineProps<{
   showSources?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   showBoundary: true,
   showChildPlaces: false,
@@ -110,6 +111,7 @@ const props = withDefaults(defineProps<{
   showSources: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -136,6 +138,11 @@ interface RawParticipant {
   person_id: string;
   given_name: string;
   surname: string;
+  /**
+   * Birth-type record's surname when distinct from `surname`. Display only —
+   * see plan birth-name-display-and-quality-check.
+   */
+  birth_surname: string | null;
   role: string;
 }
 
@@ -215,9 +222,15 @@ function eventTypeLabel(type: string): string {
   return t(`eventTypes.${type}`, type);
 }
 
+// Display only — see plan birth-name-display-and-quality-check.
 function formatParticipantName(p: RawParticipant): string {
   const parts = [p.given_name, p.surname].filter(Boolean);
-  return parts.join(' ') || t('common.unknown');
+  const base = parts.join(' ');
+  if (!base) return t('common.unknown');
+  if (props.showBirthNameParenthetical && p.birth_surname && p.birth_surname !== p.surname) {
+    return `${base} (${t('common.bornAbbrev')} ${p.birth_surname})`;
+  }
+  return base;
 }
 
 // --- Derived state ---

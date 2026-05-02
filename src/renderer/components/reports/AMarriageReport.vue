@@ -26,6 +26,8 @@
               :person-id="data.person1.person.id"
               :given-name="spouse1NameParts.given"
               :surname="spouse1NameParts.surname"
+              :birth-surname="spouse1BirthSurname"
+              :show-birth-name-parenthetical="props.showBirthNameParenthetical"
               :sex="spouse1Sex"
               :birth-year="spouse1BirthYear"
               :death-year="spouse1DeathYear"
@@ -37,6 +39,8 @@
               :person-id="data.person2.person.id"
               :given-name="spouse2NameParts.given"
               :surname="spouse2NameParts.surname"
+              :birth-surname="spouse2BirthSurname"
+              :show-birth-name-parenthetical="props.showBirthNameParenthetical"
               :sex="spouse2Sex"
               :birth-year="spouse2BirthYear"
               :death-year="spouse2DeathYear"
@@ -55,6 +59,8 @@
               :person-id="child.id"
               :given-name="child.given"
               :surname="child.surname"
+              :birth-surname="child.birthSurname"
+              :show-birth-name-parenthetical="props.showBirthNameParenthetical"
               :sex="child.sex"
               :birth-year="child.birthYear"
               :death-year="child.deathYear"
@@ -127,7 +133,7 @@ import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
 import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
-import { formatFullName } from '../../utils/nameUtils';
+import { formatFullNameWithBirthName, getDisplayName, pickBirthSurnameForDisplay } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
@@ -142,6 +148,7 @@ const props = withDefaults(defineProps<{
   redactLiving?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  showBirthNameParenthetical?: boolean;
 }>(), {
   showLifeMap: true,
   showMapCaption: true,
@@ -151,6 +158,7 @@ const props = withDefaults(defineProps<{
   redactLiving: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  showBirthNameParenthetical: true,
 });
 
 const { t } = useI18n();
@@ -159,6 +167,7 @@ const toast = useToast();
 // Types matching report_data.FamilyUnit shape via IPC
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface RawPersonName {
+  id: string;
   given_name: string | null;
   surname: string | null;
   name_prefix?: string | null;
@@ -258,19 +267,25 @@ function extractYear(dateValue: string | null): number | null {
   return m ? parseInt(m[0], 10) : null;
 }
 
+// Display only — see plan birth-name-display-and-quality-check.
 function primaryName(names: RawPersonName[]): string {
   if (!names.length) return '';
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  return formatFullName(sorted[0]);
+  const displayed = getDisplayName(names);
+  if (!displayed) return '';
+  return formatFullNameWithBirthName(
+    displayed,
+    names,
+    { showBirthNameParenthetical: props.showBirthNameParenthetical, bornAbbrev: t('common.bornAbbrev') },
+  );
 }
 
 function primaryNameParts(names: RawPersonName[]): { given: string | null; surname: string | null } {
   if (!names.length) return { given: null, surname: null };
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const n = sorted[0];
+  const displayed = getDisplayName(names);
+  if (!displayed) return { given: null, surname: null };
   return {
-    given: n.preferred_name || n.given_name || null,
-    surname: n.surname || null,
+    given: displayed.preferred_name || displayed.given_name || null,
+    surname: displayed.surname || null,
   };
 }
 
@@ -304,6 +319,18 @@ const spouse1NameParts = computed(() =>
 const spouse2NameParts = computed(() =>
   data.value?.person2 ? primaryNameParts(data.value.person2.names) : { given: null, surname: null },
 );
+
+// Display only — see plan birth-name-display-and-quality-check.
+const spouse1BirthSurname = computed<string | null>(() => {
+  if (!data.value?.person1) return null;
+  const displayed = getDisplayName(data.value.person1.names);
+  return pickBirthSurnameForDisplay(displayed, data.value.person1.names);
+});
+const spouse2BirthSurname = computed<string | null>(() => {
+  if (!data.value?.person2) return null;
+  const displayed = getDisplayName(data.value.person2.names);
+  return pickBirthSurnameForDisplay(displayed, data.value.person2.names);
+});
 
 const spouse1Sex = computed<'M' | 'F' | 'U'>(() => toSex(data.value?.person1?.person.sex));
 const spouse2Sex = computed<'M' | 'F' | 'U'>(() => toSex(data.value?.person2?.person.sex));
@@ -435,6 +462,8 @@ const childCards = computed(() => {
   if (!data.value) return [];
   return data.value.children.map(c => {
     const parts = primaryNameParts(c.names);
+    const displayedChildName = getDisplayName(c.names);
+    const childBirthSurname = pickBirthSurnameForDisplay(displayedChildName, c.names);
     const rawBirth = extractYear(c.birth_event?.date_value ?? null);
     const rawDeath = extractYear(c.death_event?.date_value ?? null);
     const r = redactPerson(
@@ -450,6 +479,7 @@ const childCards = computed(() => {
       id: c.person.id,
       given: parts.given,
       surname: parts.surname,
+      birthSurname: childBirthSurname,
       sex: toSex(c.person.sex),
       birthYear: r.birthYear ?? null,
       deathYear: r.deathYear ?? null,

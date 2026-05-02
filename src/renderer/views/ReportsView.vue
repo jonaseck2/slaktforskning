@@ -45,6 +45,7 @@
               :show-media-captions="store.yourAncestorsShowMediaCaptions"
               :show-media-notes="store.yourAncestorsShowMediaNotes"
               :show-sources="store.yourAncestorsShowSources"
+              :show-birth-name-parenthetical="store.yourAncestorsShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -69,6 +70,7 @@
               :show-media-notes="store.aLifeShowMediaNotes"
               :include-children-marriages="store.aLifeIncludeChildrenMarriages"
               :include-sibling-deaths="store.aLifeIncludeSiblingDeaths"
+              :show-birth-name-parenthetical="store.aLifeShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -86,6 +88,7 @@
               :orientation="store.onePageOrientation"
               :show-life-map="store.onePageShowLifeMap"
               :show-map-caption="store.onePageShowMapCaption"
+              :show-birth-name-parenthetical="store.lifeOnOnePageShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -102,6 +105,7 @@
               :year="store.familyInYearYear"
               :scope="store.familyInYearScope"
               :scope-person-id="store.personId"
+              :show-birth-name-parenthetical="store.familyInYearShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />
           </div>
@@ -122,6 +126,7 @@
               :show-notes="store.photoAlbumShowNotes"
               :show-index="store.photoAlbumShowIndex"
               :include-documents="store.photoAlbumIncludeDocuments"
+              :show-birth-name-parenthetical="store.photoAlbumShowBirthNameParenthetical"
             />
           </div>
           <AppEmptyState v-else-if="store.photoAlbumSubjectType === 'person'" icon="🖨️" :title="$t('reports.selectPersonFirst')" />
@@ -144,6 +149,7 @@
               :show-sources="store.placeChronicleShowSources"
               :show-media-captions="store.placeChronicleShowMediaCaptions"
               :show-media-notes="store.placeChronicleShowMediaNotes"
+              :show-birth-name-parenthetical="store.placeChronicleShowBirthNameParenthetical"
             />
           </div>
           <AppEmptyState v-else icon="🖨️" :title="$t('reports.selectPlaceFirst')" />
@@ -164,6 +170,7 @@
               :show-sources="store.aMarriageShowSources"
               :show-media-captions="store.aMarriageShowMediaCaptions"
               :show-media-notes="store.aMarriageShowMediaNotes"
+              :show-birth-name-parenthetical="store.aMarriageShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />
           </div>

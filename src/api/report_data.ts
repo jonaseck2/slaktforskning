@@ -1,5 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { getPerson, getPersonNames, displayedNameIdSql } from './persons';
+import { getPerson, getPersonNames, displayedNameIdSql, birthSurnameSql } from './persons';
 import { getRelationshipsOfPerson } from './relationships';
 import { getEventsForPerson, getEventsForRelationship } from './events';
 import { getPlace, getPlacePath } from './places';
@@ -73,6 +73,13 @@ export interface PlaceEventRecord {
     person_id: string;
     given_name: string;
     surname: string;
+    /**
+     * Birth-type record's surname when distinct from `surname`.
+     * Display-only — composed at render time as "(f. …)" / "(b. …)" when the
+     * Place Chronicle report's birth-name toggle is on. See plan
+     * birth-name-display-and-quality-check.
+     */
+    birth_surname: string | null;
     role: string;
   }>;
 }
@@ -124,6 +131,12 @@ export interface TimelineEntry {
   person_id: string;
   person_given_name: string;
   person_surname: string;
+  /**
+   * Birth-type record's surname when distinct from `person_surname`.
+   * Display-only — composed at render time as "(f. …)" / "(b. …)" when the
+   * report's birth-name toggle is on. See plan birth-name-display-and-quality-check.
+   */
+  person_birth_surname: string | null;
   relationship_label: TimelineRelationshipLabel;
 }
 
@@ -179,6 +192,28 @@ function getPrimaryName(names: PersonName[]): { given_name: string; surname: str
   if (names.length === 0) return { given_name: '', surname: '' };
   const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
   return { given_name: sorted[0].given_name ?? '', surname: sorted[0].surname ?? '' };
+}
+
+/**
+ * Display-only helper: returns the lowest-`sort_order` `birth`-type record's
+ * surname when distinct from the primary record's surname, else null.
+ * Used by `getTimeline` to populate `TimelineEntry.person_birth_surname` so
+ * the renderer can compose "(f. …)" / "(b. …)" parentheticals at render time.
+ * See plan birth-name-display-and-quality-check.
+ */
+function getBirthSurnameForDisplay(names: PersonName[]): string | null {
+  if (names.length === 0) return null;
+  const primarySorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
+  const primary = primarySorted[0];
+  const births = names.filter(n => n.name_type === 'birth')
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const birth = births[0];
+  if (!birth) return null;
+  if (birth.id === primary.id) return null;
+  const birthSurname = (birth.surname ?? '').trim();
+  if (!birthSurname) return null;
+  if (birthSurname === (primary.surname ?? '').trim()) return null;
+  return birthSurname;
 }
 
 function findEventByType(events: EventWithPlace[], type: string): EventWithPlace | null {
@@ -471,10 +506,12 @@ export function getPlaceHistory(db: Database, placeId: string): PlaceHistory | n
     const participants = rawParticipants.map(ep => {
       const names = getPersonNames(db, ep.person_id);
       const primary = getPrimaryName(names);
+      const birthSurname = getBirthSurnameForDisplay(names);
       return {
         person_id: ep.person_id,
         given_name: primary.given_name,
         surname: primary.surname,
+        birth_surname: birthSurname,
         role: ep.role,
       };
     });
@@ -545,6 +582,7 @@ export function getTimeline(
 
   const names = getPersonNames(db, personId);
   const primaryName = getPrimaryName(names);
+  const birthSurnameForDisplay = getBirthSurnameForDisplay(names);
 
   const entries: TimelineEntry[] = [];
 
@@ -556,6 +594,7 @@ export function getTimeline(
       person_id: personId,
       person_given_name: primaryName.given_name,
       person_surname: primaryName.surname,
+      person_birth_surname: birthSurnameForDisplay,
       relationship_label: 'self',
     });
   }
@@ -609,6 +648,7 @@ export function getTimeline(
 
     const otherNames = getPersonNames(db, otherId);
     const otherPrimary = getPrimaryName(otherNames);
+    const otherBirthSurname = getBirthSurnameForDisplay(otherNames);
 
     let label: TimelineRelationshipLabel;
     let subjectIsParent = false;
@@ -672,6 +712,7 @@ export function getTimeline(
         person_id: otherId,
         person_given_name: otherPrimary.given_name,
         person_surname: otherPrimary.surname,
+        person_birth_surname: otherBirthSurname,
         relationship_label: label,
       });
     }
@@ -695,6 +736,7 @@ export function getTimeline(
         childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
       const childNames = getPersonNames(db, childId);
       const childPrimary = getPrimaryName(childNames);
+      const childBirthSurname = getBirthSurnameForDisplay(childNames);
 
       const childRels = getRelationshipsOfPerson(db, childId);
       for (const cr of childRels) {
@@ -711,6 +753,7 @@ export function getTimeline(
             person_id: childId,
             person_given_name: childPrimary.given_name,
             person_surname: childPrimary.surname,
+            person_birth_surname: childBirthSurname,
             relationship_label: childLabel,
           });
         }
@@ -736,6 +779,11 @@ export interface AliveInYearPerson {
   id: string;
   given_name: string | null;
   surname: string | null;
+  /**
+   * Birth-type record's surname when distinct from `surname`. Display only —
+   * see plan birth-name-display-and-quality-check.
+   */
+  birth_surname: string | null;
   sex: 'M' | 'F' | 'U';
   living: boolean;
   birthYear: number | null;
@@ -777,6 +825,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     living: number;
     given_name: string | null;
     surname: string | null;
+    birth_surname: string | null;
     birth_year: number | null;
     death_year: number | null;
     place_name: string | null;
@@ -805,6 +854,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     )
     SELECT p.id, p.sex, ${livingSqlExpr('p')} AS living,
            pn.given_name, pn.surname,
+           ${birthSurnameSql('p.id')} AS birth_surname,
            b.birth_year, d.death_year,
            (SELECT pl.name FROM events e2
             JOIN event_participants ep2 ON ep2.event_id = e2.id
@@ -836,12 +886,19 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     else include = !!r.has_event_in_year;
 
     if (include) {
+      // Display only: filter out birth_surname when it equals surname (loader
+      // returns the bare birth surname; renderer-visible "(f. …)" suppression
+      // when equal happens here so AliveInYearPerson reads cleanly).
+      const cleanBirthSurname = r.birth_surname && r.birth_surname.trim() && r.birth_surname.trim() !== (r.surname ?? '').trim()
+        ? r.birth_surname
+        : null;
       alive.push({
         id: r.id,
         sex: r.sex,
         living: !!r.living,
         given_name: r.given_name,
         surname: r.surname,
+        birth_surname: cleanBirthSurname,
         birthYear: r.birth_year,
         deathYear: r.death_year,
         age: r.birth_year != null ? year - r.birth_year : null,
