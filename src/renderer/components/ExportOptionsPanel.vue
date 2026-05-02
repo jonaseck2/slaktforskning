@@ -1,3 +1,16 @@
+<!--
+  Not migrated to EntityPanel: ExportOptionsPanel is NOT a right-side panel.
+  It is an embedded options form rendered inline inside GedcomExportSection
+  (a card on the Settings → Export tab), not a panel hosted by a list view
+  with a drag handle. The "Panel" suffix is historical naming. EntityPanel's
+  collapse-button / role-label / surface-radius shell would be wrong here:
+  there is no entity, no close affordance, and no list-view parent.
+
+  The class `.export-options-panel` is unique (not in shared.css) so there
+  is no collision risk per .claude/rules/renderer.md "Class-name collision
+  check". Leaving as-is is the correct call per the all-or-nothing rule's
+  documented exception path.
+-->
 <template>
   <div class="export-options-panel">
     <h4>{{ $t('exportOptions.title') }}</h4>
