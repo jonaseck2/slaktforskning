@@ -6,7 +6,7 @@
 
 ## User goal
 
-A genealogist must be able to leave with their data intact. The data they have *in the database* (after import — with any import-time loss already disclosed by the import report) survives a GEDCOM 5.5.1 *or* 7.0 round-trip and comes back unchanged. This is co-equal with the existing Prime Directive: that one protects authored data while it lives in our DB; this one protects authored data as it leaves.
+A genealogist hands us decades of their family research as a GEDCOM file. We must be able to hand it back. End-to-end lifecycle: **GEDCOM → DB → user edits → DB → GEDCOM**. The data they gave us comes back out, minus only what we explicitly disclosed at import time we couldn't carry. This is co-equal with the existing Prime Directive: that one protects authored data while it lives in our DB; this one protects authored data across the full in-and-out lifecycle.
 
 The contract is mechanical, not aspirational. After this work:
 
@@ -18,14 +18,16 @@ The contract is mechanical, not aspirational. After this work:
 
 The user-observable promise: *"It is impossible for a developer (you, me, a subagent, a future maintainer) to make a schema change that quietly breaks GEDCOM round-trip."*
 
-## Scope direction (important)
+## Scope: the directive vs. this plan's enforcement
 
-The contract direction is **DB → GEDCOM → DB**, not GEDCOM → DB → GEDCOM.
+The directive covers the full lifecycle GEDCOM → DB → user → DB → GEDCOM. Two obligations sit under it, with separate mechanical enforcement:
 
-- IN scope: every column in every non-exempt table survives `export(db) → import(fresh_db)` losslessly, *or* is registered as `lossy:<reason>` / `excluded:<reason>` with a documented justification.
-- OUT of scope: enforcing that every source-file GEDCOM tag survives parse → import. That is the importer's *disclosure* responsibility — the importer's job is to report what it dropped at import time (existing `unmappedData` / import report mechanism), not this audit's job to enforce parity with the source spec.
+1. **Import disclosure (step 1: GEDCOM → DB).** The importer reports — does not silently drop — anything in the source file it cannot represent in the DB schema. *Enforced by the existing import-report / `unmappedData` mechanism.* Not added or changed by this plan; named here so the directive's scope is unambiguous.
+2. **Persistent round-trip (step 5: DB → GEDCOM, then re-import).** Every column in the DB survives `export(db) → import(fresh_db)` losslessly, *or* is registered as `lossy:<reason>` / `excluded:<reason>` with a documented justification. *Enforced by the registry + three tests this plan introduces.*
 
-**Why this direction:** the user accepts the importer's disclosed loss when they choose to import. From that point on, what's in their DB is their data, and they have a non-negotiable right to get it back. The events-fact-value bug discovered yesterday (importer dropping `OCCU` line value) is not directly caught by this audit — it's caught by the *events plan fixing the importer*. This audit guarantees that once `events.value` is `lossless` in the registry, it stays `lossless` forever.
+Together these satisfy the lifecycle. The user gets back what they put in, minus only what we told them at import time we couldn't carry. **A schema change to our data model cannot quietly break either obligation:** schema changes are mechanically forced through the registry (this plan), and importer disclosure is mechanically enforced by existing import-report tests. A new column that would silently drop source data fails one of those gates.
+
+**Why this plan focuses on obligation #2:** the events-fact-value bug discovered yesterday (importer dropping `OCCU` line value) is fixed by the events plan, which restores the column-level mapping. From that point on, `events.value` exists in the DB and obligation #2 ensures it survives DB → GEDCOM → DB forever. The combination — importer maps it (events plan), importer discloses anything it still can't (existing mechanism), and the round-trip guard locks it in (this plan) — is the full directive. No single plan ships all three; together they do.
 
 ## Scope
 
@@ -181,7 +183,7 @@ To be inserted into `CLAUDE.md` directly below the existing "⚠️ Prime Direct
 
 The data lifecycle includes offboarding. A user who exports their database to GEDCOM and re-imports it (in this app, or any other) must get the same data back. This is co-equal with authored-data preservation: the first protects the user's data while it lives in our DB; this protects it as it leaves.
 
-**Contract direction:** DB → GEDCOM → DB. Whatever the user has in their database after import (with import-time loss already disclosed by the import report) round-trips losslessly. This audit does not enforce parity with the source GEDCOM file — that is the importer's *disclosure* responsibility, not this contract.
+**Lifecycle direction:** GEDCOM → DB → user edits → DB → GEDCOM. End-to-end. Two enforcement mechanisms sit under one directive: (1) the importer discloses anything it cannot model — existing `unmappedData` / import-report mechanism; (2) the DB → GEDCOM → DB round-trip is mechanically guarded by the registry below. A schema change cannot weaken either: adding a column without a registry entry breaks CI, and changing the importer to drop a field that was previously reported also fails the existing import-disclosure tests.
 
 **The contract is mechanical, not aspirational:**
 
@@ -226,11 +228,14 @@ A field exists in the source GEDCOM file → importer parses it → throws it aw
 
 **The events fact-value bug** discovered 2026-05-01 (`OCCU Carpenter` line value silently dropped on import; design spec at `2026-05-02-events-fact-value-design.md`) is the immediate trigger. That bug is *not* directly caught by this plan's tests — its loss happens at import time, before anything is in the DB to round-trip. It is caught by the *events plan fixing the importer*. This plan's job: once `events.value` is registered as `lossless` (under v70) and `lossy` (under v551), it stays at those levels forever. Any future regression that re-introduces drop-on-import for `OCCU` value fails the per-field test for `events.value` immediately.
 
-**Class of bug NOT addressed by this plan:**
+**Class of bug addressed by a sibling obligation, not this plan:**
 
-- "Importer drops a source-file tag we don't model at all." That's importer disclosure, not round-trip. The importer must report it via the existing `unmappedData` / import report mechanism. Audited separately.
+- "Importer drops a source-file tag we don't model at all." Sits under the *same directive* as this plan — it's step 1 of the lifecycle. Enforcement mechanism is the existing `unmappedData` / import-report system, not the registry. The importer must surface dropped data to the user at import time so the user knows what they're losing before they commit to using our app. A future plan could combine the two enforcement mechanisms if importer-disclosure regressions ever happen, but for now they are tested separately under one directive.
+
+**Class of bug genuinely out of scope:**
+
 - "Exporter emits invalid GEDCOM syntax." Caught by `gedcom-validation.test.ts` already; not this plan's responsibility.
-- "Round-trip works in our app but not in another genealogy app." Out of scope — interoperability with third-party software is a wider concern than DB→GEDCOM→DB.
+- "Round-trip works in our app but not in another genealogy app." Out of scope — interoperability with third-party software is a wider concern than DB → GEDCOM → DB equivalence in our own pipeline.
 
 **Why pure golden-fixture testing (rejected Approach 3) doesn't catch the bug class:**
 
