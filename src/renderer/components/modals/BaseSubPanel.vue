@@ -41,6 +41,7 @@
         <div class="ep-resize-handle" @mousedown.stop="startResize" />
       </div>
       <slot name="subpanels" />
+      <div :id="subpanelTargetId" style="display: contents"></div>
     </div>
   </BaseModal>
 
@@ -87,11 +88,12 @@
       <div class="ep-resize-handle" @mousedown.stop="startSubResize" />
     </div>
     <slot name="subpanels" />
+    <div :id="subpanelTargetId" style="display: contents"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, provide, inject } from 'vue';
+import { computed, ref, reactive, provide, inject, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseModal from '../BaseModal.vue';
 import { ENTITY_META, type EntityType } from '../../constants/entityMeta';
@@ -226,6 +228,13 @@ function startDrag(e: MouseEvent) {
 
 // Sub-panels inject this to move the shared fixed wrapper
 provide('modalDrag', startDrag);
+
+// Teleport target for nested modals opened from non-modal descendants (e.g.
+// PlaceTreePickerModal triggered from the PlacePicker field in the body).
+// Direct subpanel children should still use the `#subpanels` slot — this is
+// only for indirect descendants that can't reach the slot.
+const subpanelTargetId = `subpanel-target-${useId()}`;
+provide('subpanelTeleportTarget', subpanelTargetId);
 
 function startResize(e: MouseEvent) {
   const startX = e.clientX;

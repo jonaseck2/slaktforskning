@@ -1,8 +1,9 @@
 <template>
+  <Teleport :to="teleportTarget || 'body'" :disabled="!teleportTarget">
   <BaseSubPanel
     entity-type="place"
     :title="$t('places.tree.title')"
-    mode="standalone"
+    :mode="teleportTarget ? 'subpanel' : 'standalone'"
     :save-label="$t('common.ok')"
     @save="onConfirm"
     @cancel="$emit('close')"
@@ -69,10 +70,11 @@
       </template>
     </div>
   </BaseSubPanel>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, nextTick, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import PlaceTreeNode from '../PlaceTreeNode.vue';
@@ -94,6 +96,14 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+
+// When opened from inside a parent BaseSubPanel (e.g. PlacePicker inside an
+// EventModal field), teleport this picker into the parent's panel-wrap so it
+// renders as a side-attached sibling instead of stacking an overlay on top.
+// When opened from a non-modal context (PlacePanel, MediaPanel, etc.) the
+// inject returns null and we keep the standalone overlay behaviour.
+const subpanelTargetId = inject<string | null>('subpanelTeleportTarget', null);
+const teleportTarget = computed(() => (subpanelTargetId ? '#' + subpanelTargetId : null));
 const filterInputRef = ref<HTMLInputElement | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
 const searchScrollRef = ref<HTMLElement | null>(null);

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.193.2 — Place tree picker attaches as side subpanel
+
+- fix(modals): the place tree picker, when opened from a `PlacePicker` field inside another modal (e.g. EventModal), now renders as a side-attached subpanel via Teleport instead of stacking an overlay on top of the parent modal — matches the CitationModal pattern.
+
 ## v0.193.1 — Internal only
 
 - chore: UX intent-mapping skill + surface inventory for renderer panels/modals.
