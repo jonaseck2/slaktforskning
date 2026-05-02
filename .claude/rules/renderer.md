@@ -76,7 +76,7 @@ Every entity (persons, relationships, sources, places, groups, research tasks) f
 
 - **Left pane:** list/table/map/tree of entities with `selectedId` highlighted
 - **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`
-- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`
+- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`. Every paneled view's right pane is an `EntityPanel`-wrapped panel — there are no exceptions. The shell owns the surface, radius, shadow, collapse button (▶), and role-label band.
 - **Reopen button:** small "▶" affordance shown when the panel is closed
 - **localStorage keys:** `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`, plus per-section `<entity>-section-<name>-open`
 - **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
@@ -125,8 +125,8 @@ The full list of UI primitives, modals, pickers, panels, composables, Pinia stor
 
 - `src/renderer/components/ui/` — primitives (`AppAvatar`, `AppBadge`, `AppButton`, `AppEmptyState`, `AppInput`, `AppLoadingState`, `FilterChips`, `SectionHeader`)
 - `src/renderer/components/modals/` — every modal extends `BaseSubPanel` (`PersonModal`, `EventModal`, `CitationModal`, etc.)
-- `src/renderer/components/EntityPanel.vue` — shared shell for the 7 side panels: `panel-collapse-btn` (▶), `panel-role-label`, `#empty` slot, `#header` slot, default body slot, optional `editable` Edit button. All `{Person,Place,Source,Relationship,Group,ResearchTask,Media}Panel` use it.
-- `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask,Media}Panel.vue` — side panels, one per entity, hosted by their list view
+- `src/renderer/components/EntityPanel.vue` — **shared shell for ALL right-side panels (no exceptions)**: `panel-collapse-btn` (▶), `panel-role-label`, `#empty` / `#header` / default body slots, optional `editable` Edit button. Every `*Panel.vue` in `src/renderer/components/` MUST use it. New panels go through it from day one. The only documented exception is `ExportOptionsPanel.vue`, which is an embedded options form inside a card (not a list-view-hosted side panel) — see the leading HTML comment in that file. Layout consistency is regression-tested by `tests/components/panel-layout-consistency.test.ts` (asserts root `.side-panel` class, rejects the `.entity-panel` collision class).
+- `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask,Media,Report,Website}Panel.vue` — side panels, hosted by their list/tab/export view
 - `src/renderer/components/reports/` — 7 keepsake reports + 5 chart prints; primitives shared across reports in `reports/primitives/`
 - `src/renderer/composables/` — **canonical reactive loaders:** `useEntityData(idRef, loader)` (single-entity, auto-subscribes to `onDataChanged`) and `usePagedList({ defaultSortBy, fetchPage })` (server-paged list, auto-subscribes too). Also: `useEditableFields(idRef, dataRef, persist)` (race-safe per-field saves), `usePanelResize`, `usePanelSections`, `usePersonProfilePic`, `useLifeMap`, `useMediaChronological`.
 - `src/renderer/utils/storage-keys.ts` — typed `STORAGE_KEYS` registry. Every `localStorage.{get,set,remove}Item('...')` call site uses an entry from here. Helpers: `getJSON(key, fallback)`, `setJSON(key, value)`, `removeKey(key)`.
