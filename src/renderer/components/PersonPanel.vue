@@ -150,7 +150,7 @@
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
           <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="goToTask" />
+          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="openTaskFromRow" />
         </div>
       </div>
 
@@ -666,7 +666,7 @@ async function onTaskSaved() {
   await reload();
 }
 
-function goToTask(id: string) {
+function openTaskFromRow(id: string) {
   const task = researchTasks.value.find(t => t.id === id);
   if (task) openTaskForm(task);
 }

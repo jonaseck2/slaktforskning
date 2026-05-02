@@ -240,7 +240,7 @@
             :tasks="researchTasks"
             :readonly="props.readonly"
             @updated="loadTasks"
-            @select="goToTask"
+            @select="openTaskFromRow"
           />
         </div>
       </div>
@@ -571,7 +571,7 @@ async function onTaskSaved() {
   await loadTasks();
 }
 
-function goToTask(id: string) {
+function openTaskFromRow(id: string) {
   const task = researchTasks.value.find(t => t.id === id);
   if (task) openTaskForm(task);
 }
