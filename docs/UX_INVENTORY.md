@@ -422,13 +422,13 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 **File:** `src/renderer/components/modals/EventModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this modal to *fill in* the details of an event (type, date, place, participants, baptism extras), *cite* sources for the event, *remove* citations, and *save* the result back into the panel's Events section.
+> **Purpose:** A user would use this modal to *fill in* the details of an event (type, date, place, fact value, notes, participants, baptism extras), *cite* sources for the event, *remove* citations, and *save* the result back into the panel's Events section.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| All event fields + a Citations subsection listing existing citations (confidence badge · page · source title) | Event fields are direct inline inputs. Citations: `+ Add citation` → **opens CitationModal as side-by-side subpanel** | Event fields edit in place. Citation row click → **reopens CitationModal with values prefilled** | × on a citation row → ConfirmModal → removes citation (source kept). Event itself is deleted from PersonPanel → Events, not from here. | "Add spouse" affordance for marriage events → opens nested PersonModal subpanel |
+| All event fields + Value field (only for fact-shaped types: occupation/religion/education/title/etc.) + Notes textarea + Citations subsection | Event fields are direct inline inputs. Citations: `+ Add citation` → **opens CitationModal as side-by-side subpanel** | Event fields edit in place. Citation row click → **reopens CitationModal with values prefilled** | × on a citation row → ConfirmModal → removes citation (source kept). Event itself is deleted from PersonPanel → Events, not from here. | "Add spouse" affordance for marriage events → opens nested PersonModal subpanel |
 
-**Notes:** Subpanel pattern (`mode="subpanel"`) renders side-by-side rather than stacking. Add-citation deferred-mode is used when the event has no id yet — citations are buffered in component state and persisted after the event is saved.
+**Notes:** Subpanel pattern (`mode="subpanel"`) renders side-by-side rather than stacking. Add-citation deferred-mode is used when the event has no id yet — citations are buffered in component state and persisted after the event is saved. **Prime Directive guard (v0.203.0):** the Value field is hidden for non-fact-shaped event types (BIRT/DEAT/MARR/etc.), but switching event_type away from a fact-shaped type and back preserves the form's `value` and `notes` — never nulled by UI mode change. Save handler always sends both fields regardless of UI visibility.
 
 ---
 

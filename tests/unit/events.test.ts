@@ -45,7 +45,7 @@ describe('events', () => {
       date_type: 'exact',
       date_value: '1845-06-12',
       date_original: '12 JUN 1845',
-      description: 'Born in Stockholm',
+      notes: 'Born in Stockholm',
     });
     expect(event.id).toBeDefined();
     expect(event.event_type).toBe('birth');
@@ -90,8 +90,8 @@ describe('events', () => {
 
   it('updates an event', () => {
     const event = createEvent(db, { event_type: 'birth' });
-    const updated = updateEvent(db, event.id, { description: 'Updated description', date_value: '1850-03-15' });
-    expect(updated!.description).toBe('Updated description');
+    const updated = updateEvent(db, event.id, { notes: 'Updated notes', date_value: '1850-03-15' });
+    expect(updated!.notes).toBe('Updated notes');
     expect(updated!.date_value).toBe('1850-03-15');
   });
 
@@ -160,5 +160,31 @@ describe('events', () => {
     const place = createPlace(db, { name: 'Empty Town' });
     const events = getEventsForPlace(db, place.id);
     expect(events).toHaveLength(0);
+  });
+
+  it('creates an occupation event with fact value', () => {
+    const event = createEvent(db, {
+      event_type: 'occupation',
+      date_value: '1885',
+      value: 'Carpenter',
+      notes: 'Worked at the Stockholm shipyard',
+    });
+    const fetched = getEvent(db, event.id);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.value).toBe('Carpenter');
+    expect(fetched!.notes).toBe('Worked at the Stockholm shipyard');
+  });
+
+  it('value defaults to null when omitted', () => {
+    const event = createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
+    expect(event.value).toBeNull();
+  });
+
+  it('updateEvent can set and clear value', () => {
+    const event = createEvent(db, { event_type: 'occupation', value: 'Smith' });
+    updateEvent(db, event.id, { value: 'Master Smith' });
+    expect(getEvent(db, event.id)!.value).toBe('Master Smith');
+    updateEvent(db, event.id, { value: null });
+    expect(getEvent(db, event.id)!.value).toBeNull();
   });
 });

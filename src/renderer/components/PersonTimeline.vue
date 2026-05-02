@@ -35,7 +35,8 @@
               </template>
               <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
               <span v-if="item.age !== null" class="timeline-age">({{ item.age }})</span>
-              <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
+              <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
+              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
               <span v-if="item.event.citation_count" class="cite-badge" :title="$t('events.citeSources')">{{ item.event.citation_count }}</span>
             </div>
           </div>
@@ -67,7 +68,8 @@
               <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
             </template>
             <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
-            <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
+            <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
+              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
           </div>
         </div>
@@ -478,6 +480,12 @@ defineExpose({ reload });
 .timeline-age {
   font-size: var(--font-xs);
   color: var(--color-text-muted, #64748b);
+}
+
+.timeline-value {
+  font-size: var(--font-xs);
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .timeline-desc {

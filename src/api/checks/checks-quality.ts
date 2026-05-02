@@ -158,9 +158,9 @@ export function checkTextControlChars(db: Database): CheckResult[] {
     }
   }
 
-  // Event descriptions
-  const eventRows = queryAll<{ id: string; description: string }>(db, `
-    SELECT id, description FROM events WHERE description IS NOT NULL AND description != ''
+  // Event notes
+  const eventRows = queryAll<{ id: string; notes: string }>(db, `
+    SELECT id, notes FROM events WHERE notes IS NOT NULL AND notes != ''
   `);
   const epMap = new Map<string, string[]>();
   const allEps = queryAll<{ event_id: string; person_id: string }>(db, `SELECT event_id, person_id FROM event_participants`);
@@ -169,7 +169,7 @@ export function checkTextControlChars(db: Database): CheckResult[] {
     epMap.get(ep.event_id)!.push(ep.person_id);
   }
   for (const r of eventRows) {
-    if (controlCharRe.test(r.description)) {
+    if (controlCharRe.test(r.notes)) {
       results.push({
         code: 'TEXT_CONTROL_CHARS',
         severity: 'warning',

@@ -22,6 +22,9 @@ export interface RecordEventArgs {
   source_title?: string;
   source_page?: string;
   confidence?: number;
+  value?: string;
+  notes?: string;
+  /** @deprecated use `notes` */
   description?: string;
   cause?: string;
 }
@@ -40,6 +43,10 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       place_id = place.id;
     }
 
+    // Backwards-compat: callers passing `description` (old field name) get
+    // routed to `notes`. Explicit `notes` always wins.
+    const notesValue = args.notes ?? args.description;
+
     // Pass through what the agent provided. Per CLAUDE.md prime directive,
     // we never infer date_type from a free-form date string — agents must
     // explicitly state `date_type` if they want a structured value. When
@@ -52,7 +59,8 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       date_type: args.date_type as GenealogyEvent['date_type'] | undefined,
       date_value: args.date_type ? args.date_value ?? null : null,
       place_id,
-      description: args.description,
+      value: args.value,
+      notes: notesValue,
       cause: args.cause,
     });
 
@@ -99,7 +107,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
   const { getDb } = ctx;
 
   server.registerTool('record_event', {
-    description: 'Record a life event for one or more persons, optionally with place and source citation in one step',
+    description: 'Record a life event for one or more persons, optionally with place and source citation in one step. For fact-shaped events (occupation, residence, religion, education, title, description), put the fact value (e.g. "Carpenter") in the `value` field — maps to GEDCOM-X Fact.value. The legacy `description` parameter is deprecated; use `notes` for free-form prose.',
     inputSchema: {
       event_type: z.string().describe('Event type (e.g. birth, death, marriage, census, baptism)'),
       person_id: z.string().optional().describe('Primary participant person ID (use this for a single person)'),
@@ -115,7 +123,9 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       source_title: z.string().optional().describe('Source document title; reuses existing source if title matches'),
       source_page: z.string().optional().describe('Page or reference within the source'),
       confidence: z.number().min(0).max(3).optional().describe('Source confidence: 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary'),
-      description: z.string().optional().describe('Event description'),
+      value: z.string().optional().describe('Fact value (e.g. occupation name "Carpenter", residence "Stockholm", religion "Lutheran"). Maps to GEDCOM 5.5.1 line value / GEDCOM-X Fact.value.'),
+      notes: z.string().optional().describe('Free-form notes about the event'),
+      description: z.string().optional().describe('DEPRECATED — use `notes`. Treated as notes if provided.'),
       cause: z.string().optional().describe('Cause (e.g. cause of death)'),
     },
   }, async (args) => {
@@ -139,7 +149,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('update_event', {
-    description: 'Update fields on an existing event. Place string is resolved to a place_id via findOrCreate.',
+    description: 'Update fields on an existing event. Place string is resolved to a place_id via findOrCreate. The legacy `description` parameter is deprecated; use `notes` for free-form prose and `value` for the GEDCOM-X Fact.value field.',
     inputSchema: {
       id: z.string().describe('Event ID'),
       event_type: z.string().optional().describe('Event type'),
@@ -147,14 +157,22 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
       date_original: z.string().optional().describe('Original date text as it appears in the source'),
       place: z.string().optional().describe('Place name — resolved to place_id via findOrCreate'),
-      description: z.string().optional().describe('Event description'),
+      value: z.string().optional().describe('Fact value (e.g. occupation name "Carpenter", residence "Stockholm"). Maps to GEDCOM 5.5.1 line value / GEDCOM-X Fact.value.'),
+      notes: z.string().optional().describe('Free-form notes about the event'),
+      description: z.string().optional().describe('DEPRECATED — use `notes`. Treated as notes if provided.'),
       cause: z.string().optional().describe('Cause (e.g. cause of death)'),
     },
   }, async (args) => {
     const db = getDb();
-    const { id, place, ...rest } = args;
+    const { id, place, description, ...rest } = args;
 
     const updates: Parameters<typeof eventApi.updateEvent>[2] = { ...rest };
+
+    // Backwards-compat: route deprecated `description` to `notes` when notes
+    // wasn't passed explicitly.
+    if (description !== undefined && updates.notes === undefined) {
+      updates.notes = description;
+    }
 
     if (place !== undefined) {
       const p = placeApi.findOrCreatePlace(db, place);

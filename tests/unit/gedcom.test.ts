@@ -851,7 +851,7 @@ describe('GEDCOM import completeness', () => {
     expect(death?.cause).toBe('Skelettcancer');
   });
 
-  it('ENGA imported as engagement event, TYPE prepended to description', () => {
+  it('ENGA imported as engagement event, TYPE preserved with marker for round-trip', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -866,7 +866,9 @@ describe('GEDCOM import completeness', () => {
     const events = getEventsForPerson(db, persons[0].id);
     const enga = events.find(e => e.event_type === 'engagement');
     expect(enga).toBeTruthy();
-    expect(enga?.description).toBe('Sambo');
+    // GEDCOM TYPE sub-tag is preserved as a `TYPE: <value>` marker so the
+    // exporter can recover it as a `2 TYPE` sub-tag on round-trip.
+    expect(enga?.notes).toBe('TYPE: Sambo');
   });
 
   it('ADOP imported as adoption event', () => {
@@ -885,7 +887,7 @@ describe('GEDCOM import completeness', () => {
     expect(adop).toBeTruthy();
   });
 
-  it('TITL on INDI imported as occupation event', () => {
+  it('TITL on INDI imported as title event with line value preserved', () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1
@@ -896,9 +898,12 @@ describe('GEDCOM import completeness', () => {
     importGedcom(db, parseGedcom(ged));
     const persons = listPersons(db);
     const events = getEventsForPerson(db, persons[0].id);
-    const occu = events.find(e => e.event_type === 'occupation');
-    expect(occu).toBeTruthy();
-    expect(occu?.description).toBe('Sömmerska, bondmora');
+    // TITL is now a fact-shaped event_type 'title' so the line value
+    // round-trips back as `1 TITL Sömmerska, bondmora` on export.
+    const titl = events.find(e => e.event_type === 'title');
+    expect(titl).toBeTruthy();
+    expect(titl?.value).toBe('Sömmerska, bondmora');
+    expect(titl?.notes).toBe('');
   });
 
   it('top-level NOTE xref resolved to content in person.notes', () => {

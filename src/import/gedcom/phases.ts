@@ -23,7 +23,6 @@ import { basename } from 'path';
 import type { Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
 import { createRelationship, updateRelationship, addEventParticipant, getRelationshipsOfPerson } from '../../api/relationships';
-import { createEvent } from '../../api/events';
 import { createSource, createCitation } from '../../api/sources';
 import { createMedia, addMediaLink } from '../../api/media';
 import { getPlace } from '../../api/places';
@@ -49,6 +48,10 @@ export const PERSON_EVENT_TAGS: Record<string, string> = {
   IMMI: 'immigration', NATU: 'naturalization', CENS: 'census',
   PROB: 'probate', WILL: 'will', GRAD: 'graduation', RETI: 'retirement',
   ENGA: 'engagement', ADOP: 'adoption',
+  // Fact-shaped tags (line value preserved in events.value, not notes).
+  // TITL routes through its own event_type rather than the legacy
+  // TITL→occupation conversion so round-trip preserves the original tag.
+  TITL: 'title', RELI: 'religion', DSCR: 'description', FACT: 'fact',
   EVEN: 'other',
 };
 
@@ -63,7 +66,7 @@ const KNOWN_INDI_TAGS = new Set([
   // PERSON_EVENT_TAGS keys:
   'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
-  'TITL', 'OBJE',
+  'TITL', 'RELI', 'DSCR', 'FACT', 'OBJE',
   // Holger custom tags imported as notes:
   'REMA', 'MISC',
 ]);
@@ -320,21 +323,8 @@ export function phaseIndividuals(ctx: ImportContext): void {
       }
     }
 
-    // TITL directly on INDI -> occupation event (standalone title/role, no date)
-    for (const titlNode of getChildren(node, 'TITL')) {
-      if (!titlNode.value) continue;
-      const event = createEvent(ctx.db, {
-        event_type: 'occupation',
-        date_type: 'unknown',
-        date_value: null,
-        date_value_end: null,
-        date_original: '',
-        place_id: null,
-        relationship_id: null,
-        description: titlNode.value,
-      });
-      addEventParticipant(ctx.db, { event_id: event.id, person_id: person.id, role: 'primary' });
-    }
+    // (TITL is now routed via PERSON_EVENT_TAGS as event_type 'title' so the
+    //  line value is preserved in events.value and round-trips through export.)
 
     // Person-level citations (SOUR directly on INDI, not under an event)
     for (const sour of getChildren(node, 'SOUR')) {

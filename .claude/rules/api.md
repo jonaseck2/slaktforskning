@@ -17,7 +17,7 @@ PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'marri
 PersonIdentifier { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
 Relationship     { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
 EventParticipant { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
-GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, place_address?, cause?, description, relationship_id?, created_at, updated_at }
+GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, place_address?, cause?, value?, notes, relationship_id?, created_at, updated_at }
 Place            { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes, street?, postal_code?, city?, country? }
 Source           { id, title, author, publication_info, repository, url, source_type, call_number?, abstract?, created_at, updated_at }
 Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
@@ -40,7 +40,7 @@ MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number
 | `persons` | id, sex, notes (living is derived from events at read time) | — |
 | `person_names` | person_id, given_name, surname, name_type, sort_order, preferred_name, nickname | person_id → CASCADE |
 | `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
-| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, description, relationship_id | relationship → SET NULL, place → SET NULL |
+| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes, relationship_id | relationship → SET NULL, place → SET NULL |
 | `event_participants` | event_id, person_id, role (UNIQUE event+person) | both → CASCADE |
 | `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes, street, postal_code, city, country | parent → SET NULL |
 | `sources` | title, author, publication_info, repository, url, source_type, call_number, abstract | — |

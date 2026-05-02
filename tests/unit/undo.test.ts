@@ -252,13 +252,13 @@ describe('Undo wrappers', () => {
     });
 
     it('undo updateEvent restores old values', () => {
-      const ev = createEventUndo(db, { event_type: 'birth', description: 'original' });
+      const ev = createEventUndo(db, { event_type: 'birth', notes: 'original' });
       undoManager.clear();
-      updateEventUndo(db, ev.id, { description: 'changed' });
-      expect(events.getEvent(db, ev.id)!.description).toBe('changed');
+      updateEventUndo(db, ev.id, { notes: 'changed' });
+      expect(events.getEvent(db, ev.id)!.notes).toBe('changed');
 
       undoManager.undo();
-      expect(events.getEvent(db, ev.id)!.description).toBe('original');
+      expect(events.getEvent(db, ev.id)!.notes).toBe('original');
     });
   });
 
@@ -492,7 +492,7 @@ describe('Undo wrappers', () => {
     });
 
     it('updateEventUndo returns null for nonexistent id', () => {
-      const result = updateEventUndo(db, 'nonexistent', { description: 'X' });
+      const result = updateEventUndo(db, 'nonexistent', { notes: 'X' });
       expect(result).toBeNull();
     });
 

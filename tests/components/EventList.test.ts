@@ -11,7 +11,7 @@ const sampleEvent = {
   date_value_end: null,
   date_original: '1850-01-01',
   place_id: null,
-  description: 'Born',
+  notes: 'Born',
 };
 
 describe('EventList', () => {

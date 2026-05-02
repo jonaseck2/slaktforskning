@@ -26,7 +26,7 @@ describe('getTimeline — name change derivation', () => {
     expect(nameChange).toBeDefined();
     expect(nameChange!.event.date_value).toBe('1962-03-15');
     expect(nameChange!.relationship_label).toBe('self');
-    expect(nameChange!.event.description).toContain('Anna Lindberg');
+    expect(nameChange!.event.notes).toContain('Anna Lindberg');
   });
 
   it('emits NO name_change entry for a name with NULL date_from', () => {

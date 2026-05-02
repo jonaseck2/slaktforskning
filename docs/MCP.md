@@ -38,9 +38,9 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 | Tool | Description |
 |------|-------------|
-| `record_event` | Record a life event with participants, place (created or resolved by name), and an optional citation. All in one call. |
+| `record_event` | Record a life event with participants, place, and an optional citation. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
 | `get_timeline` | Chronological timeline of a person's events merged with key family events (spouse/children births and deaths). |
-| `update_event` | Update event fields. Place can be supplied as a string (resolved to place_id via findOrCreate). |
+| `update_event` | Update event fields. Place can be supplied as a string (resolved to place_id via findOrCreate). Same `value` / `notes` / deprecated `description` semantics as `record_event`. |
 
 ### Sources
 

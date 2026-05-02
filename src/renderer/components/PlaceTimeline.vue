@@ -24,7 +24,8 @@
             <div class="timeline-content">
               <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
               <span v-if="item.participantNames" class="timeline-persons">{{ item.participantNames }}</span>
-              <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
+              <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
+              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
               <span v-if="item.event.citation_count" class="cite-badge" :title="$t('events.citeSources')">{{ item.event.citation_count }}</span>
             </div>
           </div>
@@ -50,7 +51,8 @@
           <div class="timeline-content">
             <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
             <span v-if="item.participantNames" class="timeline-persons">{{ item.participantNames }}</span>
-            <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
+            <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
+              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
           </div>
         </div>
@@ -247,6 +249,7 @@ defineExpose({ reload });
   padding: 1px 8px; border-radius: 10px; font-size: var(--font-xs); white-space: nowrap;
 }
 .timeline-persons { font-size: var(--font-sm); color: var(--color-text, #1e293b); }
+.timeline-value { font-size: var(--font-xs); color: var(--text-primary); font-weight: 600; }
 .timeline-desc { font-size: var(--font-xs); color: var(--color-text-subtle, #94a3b8); font-style: italic; }
 .cite-badge {
   display: inline-flex; align-items: center; justify-content: center;

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.203.0 — GEDCOM round-trip fidelity for fact-shaped events
+
+- **feat:** Occupation, education, religion, title, and other GEDCOM-X fact-shaped events now preserve the line value (e.g. `OCCU "Carpenter"`) end-to-end. Previously the importer silently dropped the value; now it lands in a dedicated `events.value` column and round-trips back through GEDCOM export byte-for-byte.
+- **feat:** EventModal shows a type-aware "Value" field (Yrke / Examen / Trossamfund / etc.) for fact-shaped event types, plus an always-visible Notes textarea. The Value field is hidden for non-fact-shaped events (BIRT/DEAT/MARR/etc.) but Save preserves authored data regardless of UI mode — Prime Directive guard.
+- **feat:** EventList renders the value bold over a muted notes line for richer at-a-glance reading.
+- **feat:** New event types `title`, `religion`, `description`, `fact` to route TITL/RELI/DSCR/FACT GEDCOM tags cleanly (previously TITL was coerced to occupation; RELI/DSCR/FACT silently dropped).
+- **feat:** MCP `record_event` / `update_event` accept `value` and `notes` fields; the legacy `description` parameter is kept as a deprecated alias that routes to `notes` for backwards compatibility with existing AI agents.
+- **feat:** CSV export adds a `value` column.
+- **fix:** Genney importer maps fact-shaped event values into `events.value` instead of concatenating into notes.
+- **fix:** PersonTimeline and PlaceTimeline rendered events.description (which no longer exists) — now render value + notes.
+- **schema:** `events.description` renamed to `events.notes`; new `events.value TEXT` column. Migration is idempotent and preserves all authored data.
+
 ## v0.202.4 — Research task row click opens the editor in place
 
 - fix: clicking a research task in PersonPanel or PlacePanel now opens ResearchTaskModal in edit mode in the panel, matching how names and events behave. Was navigating to `/research-tasks/:id` and yanking you out of the person/place you were on.

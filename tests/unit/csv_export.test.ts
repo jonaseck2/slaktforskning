@@ -82,12 +82,12 @@ describe('exportEventsCsv', () => {
     const csv = exportEventsCsv(db);
     const lines = csv.trim().split('\n');
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toBe('id,event_type,date_type,date_value,date_original,place_name,description,person_names');
+    expect(lines[0]).toBe('id,event_type,date_type,date_value,date_original,place_name,value,notes,person_names');
   });
 
   it('includes event with participant names', () => {
     const person = createPerson(db, { given_name: 'Nils', surname: 'Persson' });
-    const evt = createEvent(db, { event_type: 'birth', date_value: '1900-03-05', description: 'Born at home' });
+    const evt = createEvent(db, { event_type: 'birth', date_value: '1900-03-05', notes: 'Born at home' });
     addEventParticipant(db, { event_id: evt.id, person_id: person.id, role: 'primary' });
 
     const csv = exportEventsCsv(db);
@@ -96,6 +96,24 @@ describe('exportEventsCsv', () => {
     expect(lines[1]).toContain('birth');
     expect(lines[1]).toContain('1900-03-05');
     expect(lines[1]).toContain('Nils Persson');
+  });
+
+  it('exports value and notes as separate columns for fact-shaped events', () => {
+    const person = createPerson(db, { given_name: 'Olof', surname: 'Snickare' });
+    const evt = createEvent(db, {
+      event_type: 'occupation',
+      date_value: '1880-01-01',
+      value: 'Carpenter',
+      notes: 'shipyard',
+    });
+    addEventParticipant(db, { event_id: evt.id, person_id: person.id, role: 'primary' });
+
+    const csv = exportEventsCsv(db);
+    const lines = csv.trim().split('\n');
+    expect(lines[0]).toBe('id,event_type,date_type,date_value,date_original,place_name,value,notes,person_names');
+    expect(lines[1]).toContain('Carpenter');
+    expect(lines[1]).toContain('shipyard');
+    expect(lines[1]).toContain('occupation');
   });
 });
 

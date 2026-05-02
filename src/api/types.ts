@@ -66,7 +66,8 @@ export interface GenealogyEvent {
   place_id: string | null;
   place_address: string | null;
   cause: string | null;
-  description: string;
+  value: string | null;
+  notes: string;
   relationship_id: string | null;
   created_at: string;
   updated_at: string;

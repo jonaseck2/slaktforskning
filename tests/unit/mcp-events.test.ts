@@ -130,4 +130,44 @@ describe('recordEventWorkflow', () => {
     expect(result.event.place_id).toBe(existingPlace.id);
     expect(places.listPlaces(db)).toHaveLength(1);
   });
+
+  it('persists value and notes as separate fields', () => {
+    const person = persons.createPerson(db, { given_name: 'Olof', surname: 'Snickare' });
+
+    const result = recordEventWorkflow(db, {
+      event_type: 'occupation',
+      person_id: person.id,
+      value: 'Carpenter',
+      notes: 'shipyard',
+    });
+
+    expect(result.event.value).toBe('Carpenter');
+    expect(result.event.notes).toBe('shipyard');
+  });
+
+  it('routes deprecated `description` parameter to `notes` for backwards compat', () => {
+    const person = persons.createPerson(db, { given_name: 'Karl', surname: 'Hem' });
+
+    const result = recordEventWorkflow(db, {
+      event_type: 'birth',
+      person_id: person.id,
+      description: 'Born at home',
+    });
+
+    expect(result.event.notes).toBe('Born at home');
+    expect(result.event.value).toBeNull();
+  });
+
+  it('explicit notes wins over deprecated description', () => {
+    const person = persons.createPerson(db, { given_name: 'Per', surname: 'Test' });
+
+    const result = recordEventWorkflow(db, {
+      event_type: 'birth',
+      person_id: person.id,
+      notes: 'real notes',
+      description: 'old description',
+    });
+
+    expect(result.event.notes).toBe('real notes');
+  });
 });

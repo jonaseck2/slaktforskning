@@ -36,7 +36,10 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   residence: 'RESI', education: 'EDUC', emigration: 'EMIG',
   immigration: 'IMMI', naturalization: 'NATU', census: 'CENS',
   probate: 'PROB', will: 'WILL', graduation: 'GRAD', retirement: 'RETI',
-  marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP', other: 'EVEN',
+  marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP',
+  // Fact-shaped event types — line value is emitted on the same line as the tag.
+  title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
+  other: 'EVEN',
 };
 
 function capitalizeFirst(s: string): string {
@@ -87,6 +90,26 @@ function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | '
     if (m.title) lines.push(`${baseLevel + 1} TITL ${m.title}`);
     if (m.notes) lines.push(`${baseLevel + 1} NOTE ${m.notes}`);
   }
+}
+
+/**
+ * Notes round-trip helper. The importer prepends `TYPE: <value>` as the first
+ * line of notes when the source GEDCOM had a `2 TYPE` sub-tag, so the exporter
+ * can recover and re-emit the TYPE without a dedicated DB column. Returns the
+ * recovered TYPE (if any) and the remaining notes with the marker stripped.
+ */
+function extractGedcomTypeFromNotes(notes: string): { type: string | null; rest: string } {
+  if (!notes) return { type: null, rest: '' };
+  const lines = notes.split(/\r?\n/);
+  const first = lines[0] ?? '';
+  const m = first.match(/^TYPE: (.+)$/);
+  if (!m) return { type: null, rest: notes };
+  // Strip the TYPE line and the optional blank separator line that the
+  // importer inserts between TYPE and the user-authored note body.
+  let consumed = 1;
+  if (lines[1] === '') consumed = 2;
+  const rest = lines.slice(consumed).join('\n');
+  return { type: m[1], rest };
 }
 
 function emitDate(
@@ -275,7 +298,16 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (!isPrimary) continue;
 
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
-      lines.push(`1 ${tag}`);
+      const lineValueFirstLine = ev.value ? ev.value.split(/\r?\n/)[0] : '';
+      lines.push(`1 ${tag}${lineValueFirstLine ? ' ' + lineValueFirstLine : ''}`);
+      // Multi-line value continuation per GEDCOM 5.5.1.
+      if (ev.value && ev.value.includes('\n')) {
+        const continuationLines = ev.value.split(/\r?\n/).slice(1);
+        for (const cont of continuationLines) lines.push(`2 CONT ${cont}`);
+      }
+      // Recover the GEDCOM TYPE from the notes prefix (importer marker).
+      const { type: gedcomType, rest: notesBody } = extractGedcomTypeFromNotes(ev.notes ?? '');
+      if (gedcomType) lines.push(`2 TYPE ${gedcomType}`);
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       // Write _EVID so importer can match ASSO blocks back to this event across databases
       lines.push(`2 _EVID ${ev.id}`);
@@ -286,7 +318,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
         const citations = getCitationsForEvent(db, ev.id);
@@ -428,7 +460,14 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     const famEvents = getEventsForRelationship(db, rel.id);
     for (const ev of famEvents) {
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
-      lines.push(`1 ${tag}`);
+      const lineValueFirstLine = ev.value ? ev.value.split(/\r?\n/)[0] : '';
+      lines.push(`1 ${tag}${lineValueFirstLine ? ' ' + lineValueFirstLine : ''}`);
+      if (ev.value && ev.value.includes('\n')) {
+        const continuationLines = ev.value.split(/\r?\n/).slice(1);
+        for (const cont of continuationLines) lines.push(`2 CONT ${cont}`);
+      }
+      const { type: gedcomType, rest: notesBody } = extractGedcomTypeFromNotes(ev.notes ?? '');
+      if (gedcomType) lines.push(`2 TYPE ${gedcomType}`);
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       lines.push(`2 _EVID ${ev.id}`);
       if (ev.place_id) {
@@ -438,7 +477,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
           emitPlaceSubTags(lines, place, 3);
         }
       }
-      if (includeNotes && ev.description) lines.push(`2 NOTE ${ev.description}`);
+      if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
         const citations = getCitationsForEvent(db, ev.id);

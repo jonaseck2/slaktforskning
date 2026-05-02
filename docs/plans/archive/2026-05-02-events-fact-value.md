@@ -14,15 +14,15 @@
 
 ## Pre-flight
 
-- [ ] **Verify worktree** — work happens in a worktree off `main`. Skip if already in one.
+- [x] **Verify worktree** — work happens in a worktree off `main`. Skip if already in one.
   ```bash
   git worktree add .worktrees/events-fact-value -b events-fact-value
   cd .worktrees/events-fact-value
   ```
 
-- [ ] **Read the design spec** end-to-end. Internalize the Prime Directive callouts in §Failure Modes.
+- [x] **Read the design spec** end-to-end. Internalize the Prime Directive callouts in §Failure Modes.
 
-- [ ] **Verify clean baseline:**
+- [x] **Verify clean baseline:**
   ```bash
   npm run lint
   npx vitest run --reporter=dot 2>&1 | tail -5
@@ -39,7 +39,7 @@
 - Create: `src/api/events_gedcom.ts`
 - Test: `tests/unit/events-gedcom.test.ts`
 
-- [ ] **Step 1: Write the failing test** at `tests/unit/events-gedcom.test.ts`:
+- [x] **Step 1: Write the failing test** at `tests/unit/events-gedcom.test.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -89,14 +89,14 @@ describe('events_gedcom', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, verify failure**
+- [x] **Step 2: Run test, verify failure**
 
 ```bash
 npx vitest run tests/unit/events-gedcom.test.ts
 ```
 Expected: fails with module-not-found.
 
-- [ ] **Step 3: Create `src/api/events_gedcom.ts`:**
+- [x] **Step 3: Create `src/api/events_gedcom.ts`:**
 
 ```typescript
 // GEDCOM 5.5.1 / 7.0 tag <-> event_type bidirectional map.
@@ -152,14 +152,14 @@ export function valueFieldI18nKey(eventType: string): string {
 }
 ```
 
-- [ ] **Step 4: Run test, verify pass**
+- [x] **Step 4: Run test, verify pass**
 
 ```bash
 npx vitest run tests/unit/events-gedcom.test.ts
 ```
 Expected: 9 passing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/events_gedcom.ts tests/unit/events-gedcom.test.ts
@@ -178,7 +178,7 @@ git commit -m "feat(api): shared GEDCOM tag map for fact-value detection"
 - Modify: `src/api/events.ts` — `createEvent`, `updateEvent`, all readers
 - Modify: every other `src/api/*.ts` reading `events.description` (audit grep below)
 
-- [ ] **Step 1: Audit existing references**
+- [x] **Step 1: Audit existing references**
 
 ```bash
 grep -rn "\.description\b" src/api/ src/main/ src/preload/ src/mcp/ src/import/ src/gedcom/ src/static/ src/renderer/ \
@@ -187,7 +187,7 @@ grep -rn "\.description\b" src/api/ src/main/ src/preload/ src/mcp/ src/import/ 
 
 Make a list of every file that touches `event.description` or `events.description`. Expect ~20 files. Save the list to a scratch note — every file in the list gets its rename in this task or a later task that explicitly flags it.
 
-- [ ] **Step 2: Update `src/api/schema.ts`** — append a new migration block AFTER the existing `v0.162.6` block at the end of `initializeSchema()`:
+- [x] **Step 2: Update `src/api/schema.ts`** — append a new migration block AFTER the existing `v0.162.6` block at the end of `initializeSchema()`:
 
 ```typescript
   // v0.203.0 events: add `value` column (GEDCOM-X Fact.value / GEDCOM 5.5.1 line value)
@@ -221,7 +221,7 @@ Also update the CREATE TABLE statement (around line 75) so fresh DBs match: rena
     );
 ```
 
-- [ ] **Step 3: Update `src/api/types.ts:59-73`** — `GenealogyEvent`:
+- [x] **Step 3: Update `src/api/types.ts:59-73`** — `GenealogyEvent`:
 
 ```typescript
 export interface GenealogyEvent {
@@ -242,7 +242,7 @@ export interface GenealogyEvent {
 }
 ```
 
-- [ ] **Step 4: Update `src/api/events.ts:6-37`** — `createEvent`:
+- [x] **Step 4: Update `src/api/events.ts:6-37`** — `createEvent`:
 
 ```typescript
 export function createEvent(
@@ -283,7 +283,7 @@ export function createEvent(
 
 Note: `value` is nullable (`string | null`), `notes` retains the empty-string default to match the column's `NOT NULL DEFAULT ''`. Migrating notes to nullable is a deferred change not covered by this plan — see design spec scope deviations.
 
-- [ ] **Step 5: Update every other `src/api/*.ts`** that references `events.description`:
+- [x] **Step 5: Update every other `src/api/*.ts`** that references `events.description`:
 
 ```bash
 grep -ln "\.description" src/api/ | xargs grep -l "event\|EVENT"
@@ -297,7 +297,7 @@ For each file, replace `description` with `notes` **in event contexts only**. **
 
 For this task, a search-and-replace is OK: every `event.description` and `events.description` becomes `event.notes` / `events.notes`. Add `value` field where the consumer needs it (most don't yet — that's later tasks).
 
-- [ ] **Step 6: Run unit tests, fix until green**
+- [x] **Step 6: Run unit tests, fix until green**
 
 ```bash
 npx vitest run --reporter=dot
@@ -305,7 +305,7 @@ npx vitest run --reporter=dot
 
 Expected failures will come from `tests/unit/events.test.ts` (Task 3) and any other test asserting against `description`. For now, fix only the production code; tests are next task.
 
-- [ ] **Step 7: Run TypeScript check**
+- [x] **Step 7: Run TypeScript check**
 
 ```bash
 npx tsc --noEmit -p tsconfig.json 2>&1 | tail -20
@@ -313,7 +313,7 @@ npx tsc --noEmit -p tsconfig.json 2>&1 | tail -20
 
 Fix every error. Common fixes: rename `.description` to `.notes` on `GenealogyEvent` consumers in `src/main/`, `src/preload/`, `src/mcp/`. Renderer code is updated in later tasks but `tsc --noEmit` will flag it now — fix the ones that reference `events.description` from a `GenealogyEvent` type.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -334,13 +334,13 @@ git commit -m "feat(events): split fact value from notes (schema + types + api)
 - Modify: `tests/unit/events.test.ts`
 - Modify: any other test referencing `events.description` (audit below)
 
-- [ ] **Step 1: Audit test references**
+- [x] **Step 1: Audit test references**
 
 ```bash
 grep -ln "description" tests/ | xargs grep -l "event\|createEvent"
 ```
 
-- [ ] **Step 2: Update `tests/unit/events.test.ts`** — replace every `description:` field in `createEvent` calls with `notes:`. Also add a test for the new `value` field:
+- [x] **Step 2: Update `tests/unit/events.test.ts`** — replace every `description:` field in `createEvent` calls with `notes:`. Also add a test for the new `value` field:
 
 ```typescript
 it('creates an occupation event with fact value', () => {
@@ -370,13 +370,13 @@ it('updateEvent can set and clear value', () => {
 });
 ```
 
-- [ ] **Step 3: Update other affected tests** — apply the same `description → notes` rename. Run after each file:
+- [x] **Step 3: Update other affected tests** — apply the same `description → notes` rename. Run after each file:
 
 ```bash
 npx vitest run tests/unit/events.test.ts
 ```
 
-- [ ] **Step 4: Verify migration on a fixture DB** — write `tests/unit/events-migration.test.ts`:
+- [x] **Step 4: Verify migration on a fixture DB** — write `tests/unit/events-migration.test.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -431,13 +431,13 @@ describe('events migration v0.203.0', () => {
 });
 ```
 
-- [ ] **Step 5: Run full unit suite — must pass**
+- [x] **Step 5: Run full unit suite — must pass**
 
 ```bash
 npx vitest run --reporter=dot
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/
@@ -451,7 +451,7 @@ git commit -m "test(events): cover value field and migration idempotency"
 **Files:**
 - Modify: `src/import/gedcom/event-importer.ts:67-83`
 
-- [ ] **Step 1: Update `event-importer.ts`** — read line value when the GEDCOM tag is in `FACT_VALUE_GEDCOM_TAGS`:
+- [x] **Step 1: Update `event-importer.ts`** — read line value when the GEDCOM tag is in `FACT_VALUE_GEDCOM_TAGS`:
 
 Replace the block at lines 67-83 with:
 
@@ -504,7 +504,7 @@ import { FACT_VALUE_GEDCOM_TAGS, EVENT_TYPE_TO_GEDCOM_TAG } from '../../api/even
 
 Note: `evNode.tag` is the raw GEDCOM tag (`OCCU`, `BIRT`, etc.) — the importer already has it. `appType` is the mapped internal `event_type`. We use `evNode.tag` (raw) for fact-tag detection because it's the spec-driven decision; `appType` is for our DB.
 
-- [ ] **Step 2: Run existing import tests**
+- [x] **Step 2: Run existing import tests**
 
 ```bash
 npx vitest run tests/unit/gedcom-import.test.ts tests/unit/import-occu.test.ts 2>/dev/null
@@ -512,7 +512,7 @@ npx vitest run tests/unit/gedcom-import.test.ts tests/unit/import-occu.test.ts 2
 
 Some may fail — check whether the fixture had `1 OCCU Carpenter` style data. If yes, the test expectation needs updating in Task 5 (add round-trip test) which is the place to assert the new behavior.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/import/gedcom/event-importer.ts
@@ -534,7 +534,7 @@ Prime Directive: no authored data is dropped on import."
 **Files:**
 - Modify: `src/gedcom/exporter.ts:277-290` (person-owned events) and `:430-442` (relationship-owned events)
 
-- [ ] **Step 1: Update `exporter.ts`** — both event-emit locations.
+- [x] **Step 1: Update `exporter.ts`** — both event-emit locations.
 
 At line 277-290 (search for `const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';` first occurrence):
 
@@ -563,14 +563,14 @@ At line 277-290 (search for `const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EV
 
 Apply the same change at the second location (around line 430-442) — the relationship-owned-events code path.
 
-- [ ] **Step 2: Type-check**
+- [x] **Step 2: Type-check**
 
 ```bash
 npx tsc --noEmit 2>&1 | grep exporter
 ```
 Expected: 0 errors.
 
-- [ ] **Step 3: Run existing GEDCOM export tests**
+- [x] **Step 3: Run existing GEDCOM export tests**
 
 ```bash
 npx vitest run tests/unit/gedcom-export-70.test.ts tests/unit/gedcom-export-subm.test.ts tests/unit/export-gedcom-reporting.test.ts
@@ -578,7 +578,7 @@ npx vitest run tests/unit/gedcom-export-70.test.ts tests/unit/gedcom-export-subm
 
 Some tests likely break because they assert against the old `1 OCCU\n2 NOTE Carpenter` shape. Update each affected test to assert the new `1 OCCU Carpenter` shape — this is the expected behavior change.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/gedcom/exporter.ts tests/unit/gedcom-export*.test.ts
@@ -599,7 +599,7 @@ sub-tag continues to come from events.notes."
 - Create: `tests/fixtures/gedcom/fact-value/death-with-cause-and-notes.ged`
 - Create: `tests/unit/gedcom-roundtrip-fact-value.test.ts`
 
-- [ ] **Step 1: Create fixture `occupation-with-notes.ged`:**
+- [x] **Step 1: Create fixture `occupation-with-notes.ged`:**
 
 ```
 0 HEAD
@@ -618,7 +618,7 @@ sub-tag continues to come from events.notes."
 0 TRLR
 ```
 
-- [ ] **Step 2: Create fixture `mixed-facts.ged`:**
+- [x] **Step 2: Create fixture `mixed-facts.ged`:**
 
 ```
 0 HEAD
@@ -646,7 +646,7 @@ sub-tag continues to come from events.notes."
 0 TRLR
 ```
 
-- [ ] **Step 3: Create fixture `death-with-cause-and-notes.ged`:**
+- [x] **Step 3: Create fixture `death-with-cause-and-notes.ged`:**
 
 ```
 0 HEAD
@@ -666,7 +666,7 @@ sub-tag continues to come from events.notes."
 0 TRLR
 ```
 
-- [ ] **Step 4: Create the round-trip test** at `tests/unit/gedcom-roundtrip-fact-value.test.ts`:
+- [x] **Step 4: Create the round-trip test** at `tests/unit/gedcom-roundtrip-fact-value.test.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -769,7 +769,7 @@ describe('GEDCOM fact-value round-trip', () => {
 });
 ```
 
-- [ ] **Step 5: Run the round-trip test**
+- [x] **Step 5: Run the round-trip test**
 
 ```bash
 npx vitest run tests/unit/gedcom-roundtrip-fact-value.test.ts
@@ -777,7 +777,7 @@ npx vitest run tests/unit/gedcom-roundtrip-fact-value.test.ts
 
 If it fails: debug. The most likely cause is an importer or exporter edge case. Common: `evNode.value` having trailing whitespace, or the exporter splitting a single-line value on a `\n` that wasn't there.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/fixtures/gedcom/fact-value/ tests/unit/gedcom-roundtrip-fact-value.test.ts
@@ -796,7 +796,7 @@ The triple-trip variant guards against drift on subsequent re-exports."
 - Modify: `src/mcp/tools/prod/events.ts`
 - Modify: `tests/unit/mcp-events.test.ts` (or wherever record_event is tested)
 
-- [ ] **Step 1: Update `record_event` interface** in `src/mcp/tools/prod/events.ts:13-27`:
+- [x] **Step 1: Update `record_event` interface** in `src/mcp/tools/prod/events.ts:13-27`:
 
 ```typescript
 export interface RecordEventArgs {
@@ -819,7 +819,7 @@ export interface RecordEventArgs {
 }
 ```
 
-- [ ] **Step 2: Update `recordEventWorkflow` body (lines 34-96):**
+- [x] **Step 2: Update `recordEventWorkflow` body (lines 34-96):**
 
 ```typescript
     // Backwards-compat: callers passing `description` get treated as `notes`.
@@ -839,7 +839,7 @@ export interface RecordEventArgs {
     });
 ```
 
-- [ ] **Step 3: Update `record_event` Zod schema (lines 101-124):**
+- [x] **Step 3: Update `record_event` Zod schema (lines 101-124):**
 
 ```typescript
   server.registerTool('record_event', {
@@ -870,7 +870,7 @@ export interface RecordEventArgs {
   });
 ```
 
-- [ ] **Step 4: Update `update_event` Zod schema and handler (lines 141-166):**
+- [x] **Step 4: Update `update_event` Zod schema and handler (lines 141-166):**
 
 ```typescript
   server.registerTool('update_event', {
@@ -906,7 +906,7 @@ export interface RecordEventArgs {
   });
 ```
 
-- [ ] **Step 5: Add a test** asserting fact-value flow through MCP. Locate the existing MCP test file (likely `tests/unit/mcp.test.ts`):
+- [x] **Step 5: Add a test** asserting fact-value flow through MCP. Locate the existing MCP test file (likely `tests/unit/mcp.test.ts`):
 
 ```typescript
 it('record_event with fact value persists to value column', async () => {
@@ -940,13 +940,13 @@ it('record_event with deprecated description is mapped to notes', async () => {
 });
 ```
 
-- [ ] **Step 6: Run MCP tests**
+- [x] **Step 6: Run MCP tests**
 
 ```bash
 npx vitest run tests/unit/mcp.test.ts
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/mcp/tools/prod/events.ts tests/unit/mcp.test.ts
@@ -965,13 +965,13 @@ for backwards compatibility with existing AI agents."
 - Modify: `src/api/archive_import.ts`
 - Test: `tests/unit/archive-roundtrip.test.ts` (existing)
 
-- [ ] **Step 1: Read** `archive_export.ts` and find the events serialization. The shape is JSON; rename `description` → `notes` and add `value`. Bump archive schema version (look for a version constant near the top of `archive_export.ts`).
+- [x] **Step 1: Read** `archive_export.ts` and find the events serialization. The shape is JSON; rename `description` → `notes` and add `value`. Bump archive schema version (look for a version constant near the top of `archive_export.ts`).
 
-- [ ] **Step 2: Update** `archive_import.ts` to read both old (`description`) and new (`notes` + `value`) shapes. For old archives, route `description` → `notes`, leave `value` as null.
+- [x] **Step 2: Update** `archive_import.ts` to read both old (`description`) and new (`notes` + `value`) shapes. For old archives, route `description` → `notes`, leave `value` as null.
 
-- [ ] **Step 3: Update tests** — add an archive round-trip case asserting `value` survives.
+- [x] **Step 3: Update tests** — add an archive round-trip case asserting `value` survives.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/archive_export.ts src/api/archive_import.ts tests/unit/archive-roundtrip.test.ts
@@ -986,17 +986,17 @@ git commit -m "feat(archive): events.value and renamed notes column"
 - Modify: `src/import/holger/index.ts` (or wherever events are created)
 - Modify: `src/import/genney/index.ts`
 
-- [ ] **Step 1: Holger** — find where occupation strings are mapped onto events. Map them to `value`, not `notes`. Same for any other fact-shaped Holger field (religion, education).
+- [x] **Step 1: Holger** — find where occupation strings are mapped onto events. Map them to `value`, not `notes`. Same for any other fact-shaped Holger field (religion, education).
 
-- [ ] **Step 2: Genney** — same audit. Find the .gcc / .backup importers' event-creation paths.
+- [x] **Step 2: Genney** — same audit. Find the .gcc / .backup importers' event-creation paths.
 
-- [ ] **Step 3: Run Holger and Genney tests**
+- [x] **Step 3: Run Holger and Genney tests**
 
 ```bash
 npx vitest run tests/unit/holger.test.ts tests/unit/genney.test.ts
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/import/holger/ src/import/genney/ tests/unit/holger.test.ts tests/unit/genney.test.ts
@@ -1011,11 +1011,11 @@ git commit -m "fix(holger,genney): import occupation/religion as fact value"
 - Modify: `src/api/csv_export.ts`
 - Test: `tests/unit/csv-export.test.ts`
 
-- [ ] **Step 1: Update CSV columns** — split `description` into `value` + `notes`. Update the events CSV header and row builder.
+- [x] **Step 1: Update CSV columns** — split `description` into `value` + `notes`. Update the events CSV header and row builder.
 
-- [ ] **Step 2: Update test** — assert both columns exist with correct content.
+- [x] **Step 2: Update test** — assert both columns exist with correct content.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/api/csv_export.ts tests/unit/csv-export.test.ts
@@ -1030,17 +1030,17 @@ git commit -m "feat(csv-export): events.value and events.notes as separate colum
 - Modify: `src/api/html_site/*.ts` (whichever file renders event lists / fact lists)
 - Test: `tests/unit/html-site-export.test.ts` (or equivalent)
 
-- [ ] **Step 1: Audit** — `grep -n "description" src/api/html_site/`
+- [x] **Step 1: Audit** — `grep -n "description" src/api/html_site/`
 
-- [ ] **Step 2: Update templates** to render `value` (bold) and `notes` (regular) per event. For fact-shaped events the value is the headline; for non-fact events only notes show.
+- [x] **Step 2: Update templates** to render `value` (bold) and `notes` (regular) per event. For fact-shaped events the value is the headline; for non-fact events only notes show.
 
-- [ ] **Step 3: Run HTML site tests**
+- [x] **Step 3: Run HTML site tests**
 
 ```bash
 npx vitest run tests/unit/html-site-export.test.ts 2>/dev/null
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/html_site/ tests/unit/
@@ -1055,7 +1055,7 @@ git commit -m "feat(html-site): render events.value separately from notes"
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add `events.value.*`, `events.notes`, `events.factColumn`** in BOTH files. Keep the old `events.description` key (mark `// deprecated, removed in v0.205` in a comment) so any straggler lookups don't 500.
+- [x] **Step 1: Add `events.value.*`, `events.notes`, `events.factColumn`** in BOTH files. Keep the old `events.description` key (mark `// deprecated, removed in v0.205` in a comment) so any straggler lookups don't 500.
 
 Swedish (`sv.ts`):
 ```typescript
@@ -1105,13 +1105,13 @@ value: {
 },
 ```
 
-- [ ] **Step 2: Verify both files type-check**
+- [x] **Step 2: Verify both files type-check**
 
 ```bash
 npx tsc --noEmit -p tsconfig.json 2>&1 | grep i18n
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -1126,7 +1126,7 @@ git commit -m "i18n: add events.value.* and events.notes keys"
 - Modify: `src/renderer/components/modals/EventModal.vue`
 - Test: `tests/components/EventModal-fact-value.test.ts` (new)
 
-- [ ] **Step 1: Write failing component test** at `tests/components/EventModal-fact-value.test.ts`:
+- [x] **Step 1: Write failing component test** at `tests/components/EventModal-fact-value.test.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -1198,13 +1198,13 @@ describe('EventModal — fact-value field', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, verify failure**
+- [x] **Step 2: Run test, verify failure**
 
 ```bash
 npx vitest run tests/components/EventModal-fact-value.test.ts
 ```
 
-- [ ] **Step 3: Update `EventModal.vue`** — three changes:
+- [x] **Step 3: Update `EventModal.vue`** — three changes:
 
 1. Add a `value` field to `form` state. Initialize from `editingEvent?.value ?? null`. NEVER null on type toggle.
 2. Render the value `<input>` with `v-if="showFactValueField"` and a type-aware label using `valueFieldI18nKey(form.event_type)`.
@@ -1249,13 +1249,13 @@ const valueLabelKey = computed(() => valueFieldI18nKey(form.event_type));
 
 For the `data-event-type` attributes on the segmented control, find the existing buttons and add `:data-event-type="et"` so the test selectors work. Also add `data-testid="save-btn"` on the BaseSubPanel save button (or update test selector to match what's already there).
 
-- [ ] **Step 4: Run component test, verify pass**
+- [x] **Step 4: Run component test, verify pass**
 
 ```bash
 npx vitest run tests/components/EventModal-fact-value.test.ts
 ```
 
-- [ ] **Step 5: Manual smoke check**
+- [x] **Step 5: Manual smoke check**
 
 ```bash
 npm start
@@ -1265,7 +1265,7 @@ npm start
 # Verify value="Carpenter" still present (Prime Directive proof).
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/modals/EventModal.vue tests/components/EventModal-fact-value.test.ts
@@ -1287,7 +1287,7 @@ the value field's UI visibility."
 **Files:**
 - Modify: `src/renderer/components/EventList.vue`
 
-- [ ] **Step 1: Update `EventRow` interface** at line 93-106:
+- [x] **Step 1: Update `EventRow` interface** at line 93-106:
 
 ```typescript
 interface EventRow {
@@ -1307,7 +1307,7 @@ interface EventRow {
 }
 ```
 
-- [ ] **Step 2: Update the description column** at lines 15 and 37:
+- [x] **Step 2: Update the description column** at lines 15 and 37:
 
 ```vue
 <!-- Header (line 15): -->
@@ -1321,7 +1321,7 @@ interface EventRow {
 </td>
 ```
 
-- [ ] **Step 3: Add styles to the `<style scoped>` block:**
+- [x] **Step 3: Add styles to the `<style scoped>` block:**
 
 ```css
 .td-fact { max-width: 280px; }
@@ -1336,9 +1336,9 @@ interface EventRow {
 .fact-notes.has-value { margin-top: 2px; }
 ```
 
-- [ ] **Step 4: Manual smoke check** — open the events list on a person with mixed events; verify occupation rows show "Carpenter" bold + notes muted underneath; death rows show notes + cause inline; birth rows with empty notes look clean (no extra whitespace).
+- [x] **Step 4: Manual smoke check** — open the events list on a person with mixed events; verify occupation rows show "Carpenter" bold + notes muted underneath; death rows show notes + cause inline; birth rows with empty notes look clean (no extra whitespace).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/EventList.vue
@@ -1355,15 +1355,15 @@ git commit -m "feat(EventList): render fact value bold over muted notes line"
 - Modify: `docs/MCP.md`
 - Modify: `docs/UX_INVENTORY.md`
 
-- [ ] **Step 1: `docs/DATA_MODEL.md`** — find the events table section. Update column list to include `value TEXT` and rename `description → notes`. Add a paragraph explaining the GEDCOM-X mapping.
+- [x] **Step 1: `docs/DATA_MODEL.md`** — find the events table section. Update column list to include `value TEXT` and rename `description → notes`. Add a paragraph explaining the GEDCOM-X mapping.
 
-- [ ] **Step 2: `docs/IPC_REFERENCE.md`** — update `events.create`, `events.update`, `events.forPerson`, etc. signatures to show `value` and `notes`.
+- [x] **Step 2: `docs/IPC_REFERENCE.md`** — update `events.create`, `events.update`, `events.forPerson`, etc. signatures to show `value` and `notes`.
 
-- [ ] **Step 3: `docs/MCP.md`** — update `record_event` and `update_event` tool docs. Mark `description` parameter as deprecated.
+- [x] **Step 3: `docs/MCP.md`** — update `record_event` and `update_event` tool docs. Mark `description` parameter as deprecated.
 
-- [ ] **Step 4: `docs/UX_INVENTORY.md`** — update the EventModal entry's CTA grid to include the value field.
+- [x] **Step 4: `docs/UX_INVENTORY.md`** — update the EventModal entry's CTA grid to include the value field.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/
@@ -1376,12 +1376,12 @@ git commit -m "docs: events.value and notes column rename"
 
 Per `.claude/rules/plans.md` Rule A4:
 
-- [ ] **All design-spec scope items implemented or explicitly deferred.** Re-read the design spec scope (14 numbered items + 6 deviations). Confirm every numbered item has a corresponding task above. Deviations are unchanged.
-- [ ] **No silent data drops.** Search the diff for new `if (event_type === ...)` gates that null fields. Compare to the Prime Directive callouts — none should null `value` or `notes` based on UI mode.
-- [ ] **Round-trip golden test passes.** `npx vitest run tests/unit/gedcom-roundtrip-fact-value.test.ts` — green.
-- [ ] **Migration test passes.** `npx vitest run tests/unit/events-migration.test.ts` — green.
-- [ ] **All EventModal-fact-value tests pass.** Including the type-toggle Prime Directive test.
-- [ ] **`npm test` and `npm run lint` clean.** Zero failures, zero warnings.
+- [x] **All design-spec scope items implemented or explicitly deferred.** Re-read the design spec scope (14 numbered items + 6 deviations). Confirm every numbered item has a corresponding task above. Deviations are unchanged.
+- [x] **No silent data drops.** Search the diff for new `if (event_type === ...)` gates that null fields. Compare to the Prime Directive callouts — none should null `value` or `notes` based on UI mode.
+- [x] **Round-trip golden test passes.** `npx vitest run tests/unit/gedcom-roundtrip-fact-value.test.ts` — green.
+- [x] **Migration test passes.** `npx vitest run tests/unit/events-migration.test.ts` — green.
+- [x] **All EventModal-fact-value tests pass.** Including the type-toggle Prime Directive test.
+- [x] **`npm test` and `npm run lint` clean.** Zero failures, zero warnings.
 
 ---
 
@@ -1389,21 +1389,21 @@ Per `.claude/rules/plans.md` Rule A4:
 
 Per the design spec's Verification §2:
 
-- [ ] Start the app with a fresh test DB: `SLAKTFORSKNING_DB=/tmp/fact-value-smoke.db npm start`
-- [ ] Settings → Import → load `tests/fixtures/gedcom/fact-value/mixed-facts.ged`
-- [ ] Open Eva Eriksson; expand Events
-- [ ] Open the Occupation event
+- [x] Start the app with a fresh test DB: `SLAKTFORSKNING_DB=/tmp/fact-value-smoke.db npm start`
+- [x] Settings → Import → load `tests/fixtures/gedcom/fact-value/mixed-facts.ged`
+- [x] Open Eva Eriksson; expand Events
+- [x] Open the Occupation event
   - Expected: "Yrke" field shows "Schoolteacher"; Date 1900; Notes empty
-- [ ] Edit value to "Senior Schoolteacher", add notes "Taught for 30 years", save
-- [ ] Settings → Export → save as GEDCOM 5.5.1
-- [ ] Open exported file in editor; find the OCCU line
+- [x] Edit value to "Senior Schoolteacher", add notes "Taught for 30 years", save
+- [x] Settings → Export → save as GEDCOM 5.5.1
+- [x] Open exported file in editor; find the OCCU line
   - Expected: `1 OCCU Senior Schoolteacher` (not `1 OCCU` with the value moved to NOTE)
   - Expected: `2 NOTE Taught for 30 years` follows
-- [ ] Switch DB to a fresh one; import the exported GEDCOM
-- [ ] Open Eva Eriksson again; verify the values match what was just exported
-- [ ] In EventModal, switch event type from Occupation to Marriage
+- [x] Switch DB to a fresh one; import the exported GEDCOM
+- [x] Open Eva Eriksson again; verify the values match what was just exported
+- [x] In EventModal, switch event type from Occupation to Marriage
   - Expected: Yrke field disappears
-- [ ] Save (without changing anything else); re-open; switch type back to Occupation
+- [x] Save (without changing anything else); re-open; switch type back to Occupation
   - Expected: "Senior Schoolteacher" still in the value field (Prime Directive proof)
 
 If all checks pass, the user goal is verified end-to-end.
@@ -1414,19 +1414,19 @@ If all checks pass, the user goal is verified end-to-end.
 
 Per `CLAUDE.md` "Finishing a plan" checklist:
 
-- [ ] Mark every checkbox in this plan file as `[x]`.
-- [ ] `git mv docs/plans/2026-05-02-events-fact-value-design.md docs/plans/archive/`
-- [ ] `git mv docs/plans/2026-05-02-events-fact-value.md docs/plans/archive/`
-- [ ] Bump `package.json` version: minor bump (this is a feature) → e.g. `0.202.0 → 0.203.0`.
-- [ ] Add `## Unreleased` (or under existing) entry to `CHANGELOG.md`:
+- [x] Mark every checkbox in this plan file as `[x]`.
+- [x] `git mv docs/plans/2026-05-02-events-fact-value-design.md docs/plans/archive/`
+- [x] `git mv docs/plans/2026-05-02-events-fact-value.md docs/plans/archive/`
+- [x] Bump `package.json` version: minor bump (this is a feature) → e.g. `0.202.0 → 0.203.0`.
+- [x] Add `## Unreleased` (or under existing) entry to `CHANGELOG.md`:
   ```markdown
   ### v0.203.0
   - **GEDCOM round-trip fidelity for fact-shaped events.** Occupation, education, religion, title, etc. now preserve the line value through import/export. Added a dedicated value field to EventModal with a type-aware label (Yrke / Examen / Trossamfund / etc.). The events table column `description` is renamed to `notes`.
   ```
-- [ ] Update `docs/PLAN.md` — remove this plan from the active milestones list (if present).
-- [ ] Append entry to `docs/plans/archive/PLAN.md` matching existing format.
-- [ ] Commit: `chore: archive completed events-fact-value plan + bump v0.203.0`
-- [ ] Use `superpowers:finishing-a-development-branch` (Option 1 — merge to main): merge worktree to main, delete branch, remove worktree.
+- [x] Update `docs/PLAN.md` — remove this plan from the active milestones list (if present).
+- [x] Append entry to `docs/plans/archive/PLAN.md` matching existing format.
+- [x] Commit: `chore: archive completed events-fact-value plan + bump v0.203.0`
+- [x] Use `superpowers:finishing-a-development-branch` (Option 1 — merge to main): merge worktree to main, delete branch, remove worktree.
 
 ---
 

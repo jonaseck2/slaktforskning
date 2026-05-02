@@ -75,6 +75,10 @@
         <span class="ep-field-label">{{ $t('events.place') }}</span>
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
       </div>
+      <div v-if="showFactValueField" class="ep-field" data-testid="event-value-field">
+        <span class="ep-field-label">{{ $t(valueLabelKey) }}</span>
+        <input class="ep-input" v-model="form.value" :placeholder="$t('events.valuePlaceholder')" />
+      </div>
       <div v-if="form.event_type === 'death'" class="ep-field">
         <span class="ep-field-label">{{ $t('events.cause') }}</span>
         <input class="ep-input" v-model="form.cause" :placeholder="$t('events.causePlaceholder')" />
@@ -157,6 +161,11 @@
           {{ $t('events.baptismHint') }}
         </div>
       </template>
+
+      <div class="ep-field">
+        <span class="ep-field-label">{{ $t('events.notes') }}</span>
+        <textarea class="ep-input" v-model="form.notes" rows="3" :placeholder="$t('events.notesPlaceholder')" />
+      </div>
     </div>
 
     <!-- Citations section. In add mode (no savedEventId yet) we buffer
@@ -251,6 +260,7 @@ import PersonModal from './PersonModal.vue';
 import { EVENT_TYPE_VALUES, isSpanEventType } from '../../constants/eventTypes';
 import { isEventTypeSortMode, sortEventTypes, type EventTypeSortMode } from '../../utils/eventTypeSort';
 import { pickDisplayedName } from '../../utils/nameUtils';
+import { eventTypeHasFactValue, valueFieldI18nKey } from '../../../api/events_gedcom';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -282,7 +292,8 @@ interface EventData {
   date_original: string;
   place_id: string | null;
   cause: string | null;
-  description: string;
+  value: string | null;
+  notes: string;
 }
 
 const props = withDefaults(defineProps<{
@@ -340,8 +351,16 @@ const form = reactive<EventData>({
   date_original: props.editingEvent?.date_original ?? '',
   place_id: props.editingEvent?.place_id ?? null,
   cause: props.editingEvent?.cause ?? null,
-  description: props.editingEvent?.description ?? '',
+  value: props.editingEvent?.value ?? null,
+  notes: props.editingEvent?.notes ?? '',
 });
+
+// Fact-shape detection: GEDCOM tags whose line value carries the primary fact
+// value (OCCU "Carpenter", EDUC "BA", RELI "Lutheran"). The value field is
+// shown only for these event types — but the form retains form.value across
+// type toggles so authored data is never silently nulled (Prime Directive).
+const showFactValueField = computed(() => eventTypeHasFactValue(form.event_type));
+const valueLabelKey = computed(() => valueFieldI18nKey(form.event_type));
 
 const contextName = ref('');
 
@@ -692,6 +711,10 @@ async function handleSave() {
       // event_type. The form hides those fields outside of death/span types,
       // but hiding a field is not consent to discard its value — see Prime
       // Directive in CLAUDE.md.
+      // PRIME DIRECTIVE: send `value` and `notes` unconditionally, regardless
+      // of whether `showFactValueField` is true at this moment. Hiding the
+      // value field on a type change is not consent to discard the authored
+      // value. Same rule that protects `cause` and `date_value_end` above.
       ev = (await window.api.events.update(savedEventId.value, {
         event_type: form.event_type,
         date_type: form.date_type,
@@ -700,7 +723,8 @@ async function handleSave() {
         date_original: form.date_original,
         place_id: form.place_id,
         cause: form.cause || null,
-        description: form.description,
+        value: form.value || null,
+        notes: form.notes || '',
       })) as EventData;
     } else {
       ev = (await window.api.events.create({
@@ -711,7 +735,8 @@ async function handleSave() {
         date_original: form.date_original,
         place_id: form.place_id,
         cause: form.cause || null,
-        description: form.description,
+        value: form.value || null,
+        notes: form.notes || '',
         relationship_id: props.relationshipId ?? null,
       })) as EventData;
       savedEventId.value = ev.id!;
@@ -793,7 +818,7 @@ async function syncBaptismCompanion(birthEventId: string) {
   const fadder = godparents.value.trim();
   if (!date && !fadder) return;
 
-  const description = fadder ? `${t('events.godparents')}: ${fadder}` : '';
+  const notes = fadder ? `${t('events.godparents')}: ${fadder}` : '';
   const payload = {
     event_type: 'christening',
     date_type: 'exact',
@@ -802,7 +827,8 @@ async function syncBaptismCompanion(birthEventId: string) {
     date_original: '',
     place_id: form.place_id,
     cause: null,
-    description,
+    value: null,
+    notes,
     relationship_id: null,
   };
 

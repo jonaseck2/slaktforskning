@@ -12,7 +12,7 @@
           <th>{{ $t('common.type') }}</th>
           <th class="th-date">{{ $t('events.date') }}</th>
           <th>{{ $t('places.title') }}</th>
-          <th>{{ $t('events.description') }}</th>
+          <th>{{ $t('events.factColumn') }}</th>
           <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
         </tr>
       </thead>
@@ -34,7 +34,11 @@
           <td class="td-place">
             <router-link v-if="event.place_id" :to="{ path: '/places', query: { place: event.place_id } }" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
           </td>
-          <td>{{ event.description }}<span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span></td>
+          <td class="td-fact">
+            <div v-if="event.value" class="fact-value">{{ event.value }}</div>
+            <div v-if="event.notes" class="fact-notes" :class="{ 'has-value': !!event.value }">{{ event.notes }}</div>
+            <span v-if="event.cause" class="event-cause"> ({{ $t('events.cause') }}: {{ event.cause }})</span>
+          </td>
           <td v-if="!props.readonly" class="actions-cell">
             <button
               type="button"
@@ -99,7 +103,8 @@ interface EventRow {
   date_original: string;
   place_id: string | null;
   place_name: string | null;
-  description: string;
+  value: string | null;
+  notes: string;
   cause: string | null;
   citation_count: number;
   participant_names?: string;
@@ -268,4 +273,17 @@ tr.non-interactive:hover td { background: transparent; }
   font-style: italic;
   font-size: var(--font-xs);
 }
+.td-fact { max-width: 280px; }
+.fact-value {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+.fact-notes {
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fact-notes.has-value { margin-top: 2px; }
 </style>
