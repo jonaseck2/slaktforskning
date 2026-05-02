@@ -199,6 +199,48 @@ export function formatFullName(name: {
 }
 
 /**
+ * Plain-string full name plus a trailing birth-surname parenthetical when the
+ * displayed record is not the birth record AND the person has a separate
+ * `birth`-type name record with a non-empty surname that differs from the
+ * displayed surname.
+ *
+ * Example (sv): "Anna Andersson (f. Svensson)"
+ * Example (en): "Anna Andersson (b. Svensson)"
+ *
+ * The `bornAbbrev` is provided by the caller (resolved from the i18n key
+ * `common.bornAbbrev`) so this util stays a pure function with no store /
+ * i18n / DOM dependencies.
+ *
+ * Returns the bare `formatFullName(displayed)` when:
+ *   - `options.showBirthNameParenthetical` is false
+ *   - no separate `birth`-type record exists
+ *   - the only `birth` record IS the displayed record
+ *   - the birth record's surname is empty or equal to displayed.surname
+ */
+export function formatFullNameWithBirthName(
+  displayed: NameData,
+  allNames: NameData[],
+  options: { showBirthNameParenthetical: boolean; bornAbbrev: string },
+): string {
+  const base = formatFullName(displayed);
+  if (!options.showBirthNameParenthetical) return base;
+
+  // Pick the birth record with the lowest sort_order (deterministic).
+  const births = allNames
+    .filter(n => n.name_type === 'birth')
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const birth = births[0];
+  if (!birth) return base;
+  if (birth.id === displayed.id) return base;
+
+  const birthSurname = (birth.surname ?? '').trim();
+  if (!birthSurname) return base;
+  if (birthSurname === (displayed.surname ?? '').trim()) return base;
+
+  return `${base} (${options.bornAbbrev} ${birthSurname})`;
+}
+
+/**
  * Select the display name from a list of PersonName records.
  * Returns the record with the highest sort_order (most recent name — typically the
  * married/changed name). Falls back to the record with the lowest sort_order (primary)

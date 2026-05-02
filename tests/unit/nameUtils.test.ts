@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fullNameParts, givenNameParts, parseAsteriskNotation, getDisplayName, chartNameParts, formatChartName } from '../../src/renderer/utils/nameUtils';
+import { fullNameParts, givenNameParts, parseAsteriskNotation, getDisplayName, chartNameParts, formatChartName, formatFullNameWithBirthName, type NameData } from '../../src/renderer/utils/nameUtils';
 
 describe('givenNameParts', () => {
   it('marks preferred name token for underline', () => {
@@ -181,5 +181,80 @@ describe('parseAsteriskNotation', () => {
     const result = parseAsteriskNotation('Eva Linda! Marie');
     expect(result.given_name).toBe('Eva Linda Marie');
     expect(result.preferred_name).toBe('Linda');
+  });
+});
+
+describe('formatFullNameWithBirthName', () => {
+  function mkName(overrides: Partial<NameData>): NameData {
+    return {
+      id: 'name-1',
+      given_name: null,
+      surname: null,
+      preferred_name: null,
+      nickname: null,
+      sort_order: 0,
+      name_type: 'birth',
+      ...overrides,
+    };
+  }
+
+  const married = mkName({
+    id: 'married-1',
+    given_name: 'Anna',
+    surname: 'Andersson',
+    sort_order: 1,
+    name_type: 'married',
+  });
+  const birth = mkName({
+    id: 'birth-1',
+    given_name: 'Anna',
+    surname: 'Svensson',
+    sort_order: 0,
+    name_type: 'birth',
+  });
+
+  it('1. toggle off → no parenthetical', () => {
+    const out = formatFullNameWithBirthName(married, [married, birth], { showBirthNameParenthetical: false, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson');
+  });
+
+  it('2. same surname → no parenthetical', () => {
+    const sameSurnameBirth = mkName({ id: 'birth-2', given_name: 'Anna', surname: 'Andersson', sort_order: 0, name_type: 'birth' });
+    const out = formatFullNameWithBirthName(married, [married, sameSurnameBirth], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson');
+  });
+
+  it('3. different surname + toggle on → parenthetical present (sv)', () => {
+    const out = formatFullNameWithBirthName(married, [married, birth], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson (f. Svensson)');
+  });
+
+  it('4. no birth record → no parenthetical', () => {
+    const aliasOnly = mkName({ id: 'alias-1', given_name: 'Anna', surname: 'Andersson', sort_order: 1, name_type: 'alias' });
+    const out = formatFullNameWithBirthName(married, [married, aliasOnly], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson');
+  });
+
+  it('5. displayed name IS the birth name → no parenthetical', () => {
+    const out = formatFullNameWithBirthName(birth, [birth, married], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Svensson');
+  });
+
+  it('6. bornAbbrev "b." → English form', () => {
+    const out = formatFullNameWithBirthName(married, [married, birth], { showBirthNameParenthetical: true, bornAbbrev: 'b.' });
+    expect(out).toBe('Anna Andersson (b. Svensson)');
+  });
+
+  it('7. empty birth surname → no parenthetical', () => {
+    const emptyBirth = mkName({ id: 'birth-3', given_name: 'Anna', surname: '', sort_order: 0, name_type: 'birth' });
+    const out = formatFullNameWithBirthName(married, [married, emptyBirth], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson');
+  });
+
+  it('8. multiple birth records → uses lowest sort_order', () => {
+    const birthLow = mkName({ id: 'birth-low', given_name: 'Anna', surname: 'Svensson', sort_order: 0, name_type: 'birth' });
+    const birthHigh = mkName({ id: 'birth-high', given_name: 'Anna', surname: 'Karlsson', sort_order: 5, name_type: 'birth' });
+    const out = formatFullNameWithBirthName(married, [married, birthHigh, birthLow], { showBirthNameParenthetical: true, bornAbbrev: 'f.' });
+    expect(out).toBe('Anna Andersson (f. Svensson)');
   });
 });

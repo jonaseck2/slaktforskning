@@ -252,6 +252,7 @@ import { useI18n } from 'vue-i18n';
 import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useDataVersionStore } from './stores/dataVersion';
+import { usePersonNameOptions } from './stores/personNameOptions';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
@@ -263,6 +264,7 @@ const router = useRouter();
 const route = useRoute();
 const { locale, t } = useI18n();
 const dataVersionStore = useDataVersionStore();
+const personNameOptions = usePersonNameOptions();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
@@ -516,11 +518,14 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalKey);
   window.addEventListener('click', handleDocClick);
   loadDefaultPerson();
+  personNameOptions.init();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
   setTimeout(loadQualityBadge, 5000);
   setTimeout(loadDuplicatesBadge, 5000);
   setTimeout(loadResearchBadge, 1000);
   window.api?.db?.onSwitched?.(() => {
+    // `personNameOptions` is per-DB; the page reload re-runs onMounted,
+    // which re-invokes init() against the newly-active DB.
     window.location.reload();
   });
   let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
