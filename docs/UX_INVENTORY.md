@@ -47,6 +47,8 @@ These show up across multiple surfaces. Surface-level entries below reference th
 
 The fix landed by splitting the verbs: destructive actions use `IconTrash` ("Delete permanently"), unlinks use `IconUnlink` ("Unlink — both entities are kept"). See **Cross-cutting conventions: row icons** below.
 
+**2026-05-02-panel-cta-cleanup follow-up:** four straggler `&#10005;` glyphs in `MediaPanel` (Linked Persons / Places / Events unlinks → `IconUnlink`; Face-tag delete → `IconTrash`) and one in `EntityMediaSection` (Place + Source media unlinks → `IconUnlink`) were converted in the same wave. The convention is now regression-tested by `tests/components/panel-cta-conventions.test.ts` — any future `&#10005;` inside a button in a `*Panel.vue` or `*Section.vue` fails the build.
+
 ### 2. Some `+ Add` labels hide the actual primitive — ✅ Resolved in `docs/plans/2026-05-02-panel-action-clarity.md`
 
 | Section | Label says | Actually does | Status |
@@ -56,6 +58,8 @@ The fix landed by splitting the verbs: destructive actions use `IconTrash` ("Del
 | `PersonPanel` → Relations | `+ Add relationship` | Creates a brand-new person + relationship | ✅ relabeled / consolidated with header shortcuts |
 
 The fix landed by removing the duplicate add-relative row from the Relations section (the header row is the single entry point) and by tightening the labels so they describe the actual primitive.
+
+**2026-05-02-panel-cta-cleanup follow-up:** the Relations section header still carried a misleading `+ Add relationship` button that silently called `openAddRelative('spouse')`. The five role-specific buttons at the top of the panel cover every add path; the section header button was removed entirely. The "no hardcoded mode in section-header buttons" rule is now codified in `ux-intent-mapping`.
 
 ### 3. The `+ Add` UX is inconsistent across siblings
 
@@ -105,8 +109,10 @@ These conventions are enforced across every panel section that lists child entit
 
 - **Trash icon** (`IconTrash`) means the action **destroys an entity permanently**. Tooltip: "Delete permanently" (`common.deleteTooltip`). Used for: Names, Events, Research tasks, Citations.
 - **Unlink icon** (`IconUnlink`) means the action **removes a connection; both entities are preserved**. Tooltip: "Unlink — both entities are kept" (`common.unlinkTooltip`). Used for: Relationships, Group memberships, Linked media, Linked persons, Linked places, Source repositories.
-- The `✕` glyph is reserved for **modal close** only.
-- `QualityIssuesTable` is an open exception: it uses `✕` for "ignore this issue" — neither destroy nor unlink. A follow-up plan should give it its own icon.
+- The `✕` glyph is reserved for **modal close** only. Enforced by `tests/components/panel-cta-conventions.test.ts` (added 2026-05-02): any `&#10005;` inside a button/AppButton in `*Panel.vue` or `*Section.vue` fails the build.
+- Tables that emit `select` on row click (`GroupsTable`, `ResearchTasksTable`) must have a wired `@select=` listener at every mount site. Same test enforces this — a row that looks clickable but does nothing is a build failure.
+- Confirm-modal symmetry: PersonPanel, GroupPanel, and ResearchTaskPanel all route their unlinks through `useDeleteConfirm` + `<ConfirmModal>`. New panels with link-removal verbs follow the same shape.
+- `QualityIssuesTable` is an open exception: it uses `✕` for "ignore this issue" — neither destroy nor unlink. A follow-up plan should give it its own icon. (The convention test allows this because `QualityIssuesTable.vue` is a `*Table.vue`, not a `*Panel.vue` or `*Section.vue`.)
 
 ---
 
