@@ -550,15 +550,30 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
 
     let label: TimelineRelationshipLabel;
     let subjectIsParent = false;
+    let relevantTypes: string[];
     if (r.type === 'couple') {
       label = 'spouse';
+      // Task 6 will narrow spouse emissions.
+      relevantTypes = ['birth', 'death', 'christening', 'burial'];
     } else if (r.type === 'parent_child') {
-      // Tasks 3 & 4 narrow these to father/mother and son/daughter using sex.
       // Convention: person1 = parent, person2 = child.
       subjectIsParent = r.person1_id === personId;
-      label = subjectIsParent ? 'child' : 'parent';
+      if (subjectIsParent) {
+        // Subject is the parent of `other` — emit child events. Tasks 4 & 5 narrow this.
+        label = 'child';
+        relevantTypes = ['birth', 'death', 'christening', 'burial'];
+      } else {
+        // Subject is the child of `other` — emit only the parent's death,
+        // labelled by the parent's sex (per the user goal: "the deaths of their parents").
+        const parentPerson = getPerson(db, otherId);
+        const parentSex = parentPerson?.sex ?? 'U';
+        label = parentSex === 'M' ? 'father' : parentSex === 'F' ? 'mother' : 'parent';
+        relevantTypes = ['death'];
+      }
     } else if (r.type === 'sibling') {
       label = 'sibling';
+      // Task 7 will narrow / remove sibling emissions.
+      relevantTypes = ['birth', 'death', 'christening', 'burial'];
     } else {
       // 'godparent' / 'other' relationships are not part of the subject's life story
       // for timeline purposes — skip them.
@@ -566,8 +581,6 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
     }
 
     const otherEvents = resolveEventsPlaces(db, getEventsForPerson(db, otherId));
-    // Only include key life events for family members
-    const relevantTypes = ['birth', 'death', 'christening', 'burial'];
     for (const event of otherEvents) {
       if (!relevantTypes.includes(event.event_type)) continue;
 
