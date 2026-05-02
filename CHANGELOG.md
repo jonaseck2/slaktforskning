@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.193.0 — Scoped DOM tools for layout debugging
+
+- feat(mcp-dev): `ui_get_dom` takes an optional `selector` so it returns one element's HTML instead of the full document.
+- feat(mcp-dev): new `ui_query_styles` returns computed styles, bounding rect, and scroll metrics for matched elements.
+- feat(mcp-dev): `ui_screenshot` accepts an optional `selector` (and `padding`) to crop the PNG to a single element.
+
 ## v0.192.1 — Right side panels scroll again
 
 - fix: right side panels scroll when their content overflows — deep panels no longer clip below the viewport.

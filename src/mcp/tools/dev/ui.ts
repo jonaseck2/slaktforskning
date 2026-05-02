@@ -28,12 +28,16 @@ async function uiGet(uiBase: string, path: string): Promise<string> {
 export function registerUiTools(server: McpServer, uiBase: string): void {
   server.tool(
     'ui_screenshot',
-    'Capture a screenshot of the Electron app UI. Returns a PNG image.',
-    {},
-    async () => {
-      const result = await uiPost(uiBase, '/screenshot', {}) as { data: string; mimeType: string };
+    'Capture a PNG of the Electron renderer. Pass `selector` to crop to a single element (auto-scrolls into view) — preferred when debugging a specific component, since it avoids irrelevant context. Optional `padding` adds N CSS pixels around the element.',
+    {
+      selector: z.string().optional().describe('CSS selector to crop the screenshot to a single element. If omitted, captures the full window.'),
+      padding: z.number().optional().describe('Pixels of padding around the cropped element (default 0). Ignored when no selector.'),
+    },
+    async ({ selector, padding }) => {
+      const result = await uiPost(uiBase, '/screenshot', { selector, padding }) as { data?: string; mimeType?: string; error?: string };
+      if (result.error) throw new Error(result.error);
       return {
-        content: [{ type: 'image' as const, data: result.data, mimeType: 'image/png' }],
+        content: [{ type: 'image' as const, data: result.data!, mimeType: 'image/png' }],
       };
     }
   );
@@ -75,11 +79,27 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
 
   server.tool(
     'ui_get_dom',
-    'Get the full HTML DOM of the Electron app renderer.',
-    {},
-    async () => {
-      const html = await uiGet(uiBase, '/dom');
+    'Get HTML DOM of the Electron renderer. WITHOUT `selector` returns the full document — typically multiple MB on real views (Places returns ~12 MB) and will exceed the model output limit, forcing a file dump. Pass `selector` to scope the result to one element\'s outerHTML — that is the right default for layout/visual debugging.',
+    { selector: z.string().optional().describe('CSS selector. If omitted, returns the full document — usually too large; prefer a selector.') },
+    async ({ selector }) => {
+      const path = selector ? `/dom?selector=${encodeURIComponent(selector)}` : '/dom';
+      const html = await uiGet(uiBase, path);
       return { content: [{ type: 'text' as const, text: html }] };
+    }
+  );
+
+  server.tool(
+    'ui_query_styles',
+    'Read computed styles + bounding rect + scroll metrics for elements matching a CSS selector. The fast path for layout debugging — replaces dumping the whole DOM. Returns up to `limit` matches (default 5, max 20). Default `props` covers the common layout properties (display, position, overflow*, height/width, flex*, padding, margin, etc.); pass `props` to override.',
+    {
+      selector: z.string().describe('CSS selector to inspect'),
+      props: z.array(z.string()).optional().describe('Computed-style property names to return per element. Defaults to a curated layout-debug list.'),
+      limit: z.number().optional().describe('Maximum number of matched elements to return (default 5, max 20).'),
+    },
+    async ({ selector, props, limit }) => {
+      const result = await uiPost(uiBase, '/query_styles', { selector, props, limit }) as { matches: unknown[]; total: number; error?: string };
+      if (result.error) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
 

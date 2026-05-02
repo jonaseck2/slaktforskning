@@ -41,9 +41,24 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
 
     try {
       if (method === 'POST' && url === '/screenshot') {
-        const image = await win.webContents.capturePage();
-        const data = image.toPNG().toString('base64');
-        json(res, 200, { data, mimeType: 'image/png' });
+        const body = await readBody(req) as { selector?: string; padding?: number };
+        if (body.selector) {
+          // Element-cropped screenshot: scroll into view, capture rect.
+          const sel = JSON.stringify(body.selector);
+          const pad = Math.max(0, Number(body.padding ?? 0));
+          const rect = await win.webContents.executeJavaScript(
+            `(() => { const el = document.querySelector(${sel}); if (!el) return { error: 'Element not found: ' + ${sel} }; el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); const r = el.getBoundingClientRect(); return { x: Math.max(0, Math.floor(r.left - ${pad})), y: Math.max(0, Math.floor(r.top - ${pad})), width: Math.min(window.innerWidth, Math.ceil(r.width + ${pad} * 2)), height: Math.min(window.innerHeight, Math.ceil(r.height + ${pad} * 2)) }; })()`
+          ) as { error?: string; x?: number; y?: number; width?: number; height?: number };
+          if (rect.error) { json(res, 404, { error: rect.error }); return; }
+          if (!rect.width || !rect.height) { json(res, 400, { error: 'Element has zero size' }); return; }
+          const image = await win.webContents.capturePage({ x: rect.x!, y: rect.y!, width: rect.width, height: rect.height });
+          const data = image.toPNG().toString('base64');
+          json(res, 200, { data, mimeType: 'image/png', rect });
+        } else {
+          const image = await win.webContents.capturePage();
+          const data = image.toPNG().toString('base64');
+          json(res, 200, { data, mimeType: 'image/png' });
+        }
 
       } else if (method === 'POST' && url === '/navigate') {
         const body = await readBody(req) as { path: string };
@@ -90,12 +105,56 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
           json(res, 200, { ok: true });
         }
 
-      } else if (method === 'GET' && url === '/dom') {
-        const html = await win.webContents.executeJavaScript(
-          'document.documentElement.outerHTML'
-        );
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html);
+      } else if (method === 'GET' && url.startsWith('/dom')) {
+        const qIdx = url.indexOf('?');
+        const params = new URLSearchParams(qIdx >= 0 ? url.slice(qIdx + 1) : '');
+        const selector = params.get('selector');
+        const html = selector
+          ? await win.webContents.executeJavaScript(
+              `(() => { const el = document.querySelector(${JSON.stringify(selector)}); return el ? el.outerHTML : null; })()`
+            ) as string | null
+          : await win.webContents.executeJavaScript('document.documentElement.outerHTML') as string;
+        if (selector && html === null) {
+          json(res, 404, { error: `Element not found: ${selector}` });
+        } else {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(html);
+        }
+
+      } else if (method === 'POST' && url === '/query_styles') {
+        const body = await readBody(req) as { selector: string; props?: string[]; limit?: number };
+        if (!body.selector) { json(res, 400, { error: 'selector required' }); return; }
+        const sel = JSON.stringify(body.selector);
+        const props = JSON.stringify(body.props ?? null);
+        const limit = Math.min(20, Math.max(1, Number(body.limit ?? 5)));
+        const result = await win.webContents.executeJavaScript(
+          `(() => {
+             const DEFAULT_PROPS = ['display','position','overflow','overflowX','overflowY','height','minHeight','maxHeight','width','minWidth','maxWidth','flex','flexDirection','alignItems','justifyContent','gap','padding','margin','borderRadius','boxSizing','zIndex','top','right','bottom','left','transform','visibility','opacity'];
+             const propList = ${props} || DEFAULT_PROPS;
+             const els = [...document.querySelectorAll(${sel})].slice(0, ${limit});
+             if (els.length === 0) return { matches: [], total: 0 };
+             const total = document.querySelectorAll(${sel}).length;
+             return {
+               total,
+               matches: els.map((el, i) => {
+                 const cs = getComputedStyle(el);
+                 const r = el.getBoundingClientRect();
+                 const computed = {};
+                 for (const p of propList) computed[p] = cs[p];
+                 return {
+                   index: i,
+                   tag: el.tagName.toLowerCase(),
+                   classes: [...el.classList],
+                   id: el.id || null,
+                   rect: { x: r.x, y: r.y, width: r.width, height: r.height, top: r.top, left: r.left, bottom: r.bottom, right: r.right },
+                   scroll: { scrollHeight: el.scrollHeight, scrollWidth: el.scrollWidth, scrollTop: el.scrollTop, scrollLeft: el.scrollLeft, clientHeight: el.clientHeight, clientWidth: el.clientWidth },
+                   computed,
+                 };
+               }),
+             };
+           })()`
+        ) as { matches: unknown[]; total: number };
+        json(res, 200, result);
 
       } else if (method === 'POST' && url === '/chart/persons') {
         const replyChannel = `chart-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;

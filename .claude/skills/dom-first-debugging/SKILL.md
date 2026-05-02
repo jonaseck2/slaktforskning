@@ -31,28 +31,22 @@ The anti-pattern: "I bet it's a flex thing" → start editing flex rules → no 
 
 ### Step 1 — read the DOM and computed styles BEFORE forming a hypothesis
 
-For this Electron app, the fastest path is the project's dev MCP:
+For this Electron app, the project's dev MCP is the fastest path. **In this order:**
 
 ```
-mcp__slaktforskning-dev__ui_get_dom         // returns full HTML
-mcp__slaktforskning-dev__ui_screenshot       // visual context
+mcp__slaktforskning-dev__ui_query_styles { selector: '.side-panel' }
+  // returns computed styles + bounding rect + scroll metrics in <1 KB
+  // covers 95% of layout-debug needs (overflow, height, flex, position, ...)
+
+mcp__slaktforskning-dev__ui_screenshot { selector: '.side-panel', padding: 8 }
+  // crops the PNG to just that element — visual + dimensional truth, no bloat
+
+mcp__slaktforskning-dev__ui_get_dom { selector: '.side-panel' }
+  // outerHTML of one element — when you need to read the rendered structure
+  // (NOT the no-arg form: that dumps the full document, often 12+ MB)
 ```
 
-For computed styles specifically (the v0.190.0 bug needed this):
-
-```
-mcp__plugin_chrome-devtools-mcp_chrome-devtools__evaluate_script
-  with: () => {
-    const el = document.querySelector('<selector>');
-    return {
-      computed: getComputedStyle(el),  // serialize relevant fields
-      rect: el.getBoundingClientRect(),
-      classes: [...el.classList],
-      dataAttrs: Object.fromEntries([...el.attributes]
-        .filter(a => a.name.startsWith('data-')).map(a => [a.name, a.value])),
-    };
-  }
-```
+If you find yourself wanting `getComputedStyle` on a single element, reach for `ui_query_styles` — that *is* the tool. The legacy fall-through (`mcp__plugin_chrome-devtools-mcp_chrome-devtools__evaluate_script`) only works when the Electron app was launched under `dev-debug.sh` so CDP is exposed; if `chrome-devtools list_pages` shows only `about:blank`, the dev-MCP tools above are the right tools, not a workaround.
 
 The user will often paste DOM dumps directly — read them carefully. Note: classes, computed dimensions, data-v hashes, inline styles. Anything surprising is a clue.
 
