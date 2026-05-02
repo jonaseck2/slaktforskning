@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { Database } from 'node-sqlite3-wasm';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { getTimeline } from '../../src/api/report_data';
 import { createTestDb } from './helpers';
 
-let db: any;
+let db: Database;
 
 beforeEach(() => {
   db = createTestDb();
