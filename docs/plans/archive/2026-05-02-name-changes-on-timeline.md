@@ -1,6 +1,6 @@
 # Name changes on the timeline + opt-in name change in marriage modal — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 ## User goal
 
@@ -83,7 +83,7 @@ The user goal is user-observable; tests are not enough. Run the manual smoke che
 **Files:**
 - Create: `tests/unit/timeline-name-changes.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -136,7 +136,7 @@ describe('getTimeline — name change derivation', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/unit/timeline-name-changes.test.ts`
 Expected: FAIL — no name_change entries are emitted yet.
@@ -148,7 +148,7 @@ Expected: FAIL — no name_change entries are emitted yet.
 **Files:**
 - Modify: `src/api/report_data.ts` — add helper after `readSubjectLifetime()`, call from `getTimeline()` after the own-events block
 
-- [ ] **Step 1: Add the synthetic-entry helper**
+- [x] **Step 1: Add the synthetic-entry helper**
 
 Open `src/api/report_data.ts`. Find the spot inside `getTimeline()` immediately after the own-events block (after the loop that pushes `ownEvents` to `entries`, before the `lifetime` calculation or right after — placement doesn't matter for ordering since the timeline is sorted at render). Add:
 
@@ -191,17 +191,17 @@ for (const n of names) {
 
 The exact `EventWithPlace` shape may have additional optional fields — fill any unspecified ones with `null` to satisfy the type. If the type is strict and rejects `event_type: 'name_change'`, cast through `as unknown as EventWithPlace` (the synthetic event is exactly the kind of render-time-only shape this cast is for).
 
-- [ ] **Step 2: Re-run the test**
+- [x] **Step 2: Re-run the test**
 
 Run: `npx vitest run tests/unit/timeline-name-changes.test.ts`
 Expected: All three test cases PASS.
 
-- [ ] **Step 3: Run full vitest to check for regressions**
+- [x] **Step 3: Run full vitest to check for regressions**
 
 Run: `npm test -- --run`
 Expected: PASS. Pay attention to any existing `report_data` / timeline tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/report_data.ts tests/unit/timeline-name-changes.test.ts
@@ -217,7 +217,7 @@ git commit -m "feat(timeline): derive name-change entries from authored person_n
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add i18n keys**
+- [x] **Step 1: Add i18n keys**
 
 In `src/renderer/i18n/sv.ts`, find the `eventTypes` block and add:
 
@@ -232,7 +232,7 @@ In `src/renderer/i18n/en.ts`, mirror:
 name_change: 'Name change',
 ```
 
-- [ ] **Step 2: Add the dot CSS class**
+- [x] **Step 2: Add the dot CSS class**
 
 Open `src/renderer/components/PersonTimeline.vue`. Find the existing `.dot-birth`, `.dot-marriage`, `.dot-death` style rules. Add:
 
@@ -244,11 +244,11 @@ Open `src/renderer/components/PersonTimeline.vue`. Find the existing `.dot-birth
 
 Pick a color that visually distinguishes name changes from other event types — `var(--accent)` is fine, or a softer tone if it clashes. Verify by visual smoke check.
 
-- [ ] **Step 3: Sanity-check rendering**
+- [x] **Step 3: Sanity-check rendering**
 
 Run `npm start`. Open a person panel. With a `married` name with `date_from` already on file, confirm the entry appears in the timeline at the right date with the right label and dot. If the description doesn't read well (e.g., raw fullname), tweak the description format in `report_data.ts` to "Tog namnet {fullname}" / "Took the name {fullname}" or — better — use a dedicated i18n key resolved in PersonTimeline.vue from `event.event_type === 'name_change'` plus `event.description`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/PersonTimeline.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -262,7 +262,7 @@ git commit -m "feat(timeline): render name-change entries with dot class and i18
 **Files:**
 - Modify: `src/renderer/components/modals/PersonNameModal.vue`
 
-- [ ] **Step 1: Surface date_from for non-birth types and remove the duplicate**
+- [x] **Step 1: Surface date_from for non-birth types and remove the duplicate**
 
 Today the inline `date_from` field shows only for `married` / `name_change`. The same field also appears unconditionally in the `<details>` block. Goal: one inline `date_from` field shown for any non-birth name type; only `date_to` remains in `<details>`.
 
@@ -294,7 +294,7 @@ Inside the `<details>` block, remove the `date_from` field:
 ```
 Keep the `date_to` field in `<details>`.
 
-- [ ] **Step 2: Add the i18n hint**
+- [x] **Step 2: Add the i18n hint**
 
 In `src/renderer/i18n/sv.ts` `names`:
 ```typescript
@@ -305,11 +305,11 @@ In `src/renderer/i18n/en.ts` `names`:
 dateFromHint: 'Shows on the person’s timeline when a date is set.',
 ```
 
-- [ ] **Step 3: Smoke test**
+- [x] **Step 3: Smoke test**
 
 Run `npm start`. Open a person, add an `alias` name with a `date_from`, save, switch to the Timeline section. Confirm the alias appears as a name_change entry. Open the modal again, confirm the date_from shows inline and is no longer duplicated in `<details>`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/modals/PersonNameModal.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -325,7 +325,7 @@ git commit -m "feat(person-name-modal): surface date_from inline for non-birth n
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add reactive state for the companion section**
+- [x] **Step 1: Add reactive state for the companion section**
 
 In `<script setup>` of `EventModal.vue`, near the `COUPLE_EVENT_TYPES` set, add:
 
@@ -348,7 +348,7 @@ const showNameChangeCompanion = computed(
 );
 ```
 
-- [ ] **Step 2: Pre-fill name fields when the section becomes visible**
+- [x] **Step 2: Pre-fill name fields when the section becomes visible**
 
 Add a watcher that pre-fills `nameChangeForm` when the section first appears (or when the user toggles the checkbox on). Pre-fill from the person's current displayed name via `pickDisplayedName(names, events)`:
 
@@ -372,7 +372,7 @@ watch([showNameChangeCompanion, recordNameChange], async ([visible, on]) => {
 
 `pickDisplayedName` is already imported in `PersonNameModal.vue` from `../../utils/nameUtils` — add the same import to `EventModal.vue` if not already present.
 
-- [ ] **Step 3: Render the companion section in the template**
+- [x] **Step 3: Render the companion section in the template**
 
 Just below the second-person picker block (where the spouse-picker section lives), add:
 
@@ -409,7 +409,7 @@ Just below the second-person picker block (where the spouse-picker section lives
 
 `subjectFullName` is a `computed` that reads from `props.personId`. If EventModal already loads the subject's name for display elsewhere, reuse it; otherwise add a small `loadSubjectName()` `onMounted` that sets a `subjectFullName = ref('')` from `pickDisplayedName(names, events)`.
 
-- [ ] **Step 4: Persist the companion row after the event is saved**
+- [x] **Step 4: Persist the companion row after the event is saved**
 
 In the `handleSave` (or equivalent) flow, after the successful `events.create` call, add:
 
@@ -437,7 +437,7 @@ if (recordNameChange.value && showNameChangeCompanion.value && props.personId) {
 
 Match the actual call signature in `EventModal.vue` (it may use a different shape). The point: the name row is created via the existing `addName` IPC, with `date_from = form.date_value`.
 
-- [ ] **Step 5: i18n keys**
+- [x] **Step 5: i18n keys**
 
 Add to `src/renderer/i18n/sv.ts` under `events`:
 ```typescript
@@ -450,7 +450,7 @@ alsoRecordNameChange: 'Also record a name change for {name}',
 alsoRecordNameChangeHint: 'Creates a separate name record. Date comes from the event date.',
 ```
 
-- [ ] **Step 6: Smoke test**
+- [x] **Step 6: Smoke test**
 
 Run `npm start`. Open Anna Andersson's panel. Click Add event → marriage. Pick a partner. Tick the checkbox. Surname → "Lindberg". Date → 1962-03-15. Save.
 
@@ -461,7 +461,7 @@ Verify:
 - Edit the marriage event date → 1963-01-01. The married-name row's date_from stays at 1962-03-15. (Confirms cascade-decoupling.)
 - Delete the marriage event. The married-name row remains. (Confirms cascade-decoupling on delete.)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/components/modals/EventModal.vue src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -472,7 +472,7 @@ git commit -m "feat(event-modal): opt-in companion name change for couple events
 
 ### Task 6: Self-review and finishing
 
-- [ ] **Step 1: Run full test + lint**
+- [x] **Step 1: Run full test + lint**
 
 ```bash
 npm run lint
@@ -480,7 +480,7 @@ npm test -- --run
 ```
 Both must pass with zero errors.
 
-- [ ] **Step 2: Verify no synthetic-event leakage**
+- [x] **Step 2: Verify no synthetic-event leakage**
 
 Grep the codebase for any path that takes a `TimelineEntry.event` and writes it back. There must be none:
 ```bash
@@ -488,7 +488,7 @@ grep -rn "events.create\|INSERT INTO events" src/ | grep -i "timeline\|name_chan
 ```
 Expected: no hits inside the timeline derivation path.
 
-- [ ] **Step 3: Re-read this plan with fresh eyes**
+- [x] **Step 3: Re-read this plan with fresh eyes**
 
 Open the plan file and verify:
 - User goal is user-observable, not mechanism-named.
@@ -496,15 +496,15 @@ Open the plan file and verify:
 - Verification is by smoke check + targeted test, not lint+vitest alone.
 - Prime Directive is explicit on the EventModal companion + cascade-decoupling.
 
-- [ ] **Step 4: Tick every checkbox in this plan file as `[x]`.**
+- [x] **Step 4: Tick every checkbox in this plan file as `[x]`.**
 
-- [ ] **Step 5: Archive the plan**
+- [x] **Step 5: Archive the plan**
 
 ```bash
 git mv docs/plans/2026-05-02-name-changes-on-timeline.md docs/plans/archive/
 ```
 
-- [ ] **Step 6: Bump version**
+- [x] **Step 6: Bump version**
 
 In `package.json`, bump the minor version (this is a feature). Add an `## Unreleased` line in `CHANGELOG.md`:
 ```
@@ -513,23 +513,23 @@ In `package.json`, bump the minor version (this is a feature). Add an `## Unrele
 - Marriage event modal can optionally record a married name in the same step (off by default).
 ```
 
-- [ ] **Step 7: Final commit**
+- [x] **Step 7: Final commit**
 
 ```bash
 git add docs/plans/archive/2026-05-02-name-changes-on-timeline.md package.json CHANGELOG.md
 git commit -m "chore: archive completed name-changes-on-timeline plan"
 ```
 
-- [ ] **Step 8: Hand to `superpowers:finishing-a-development-branch`** for the worktree merge.
+- [x] **Step 8: Hand to `superpowers:finishing-a-development-branch`** for the worktree merge.
 
 ---
 
 ## Self-review checklist
 
-- [ ] Spec coverage: every section mapped to a Task
-- [ ] No placeholders / TODO markers in steps
-- [ ] Type/property names consistent across tasks
-- [ ] User goal stated user-observably
-- [ ] Scope enumerated; deviations listed with reasons
-- [ ] Verification includes a smoke check, not only Vitest
-- [ ] Prime Directive risks called out: companion checkbox defaults off; cascade-decoupling explicit; synthetic event is render-time-only
+- [x] Spec coverage: every section mapped to a Task
+- [x] No placeholders / TODO markers in steps
+- [x] Type/property names consistent across tasks
+- [x] User goal stated user-observably
+- [x] Scope enumerated; deviations listed with reasons
+- [x] Verification includes a smoke check, not only Vitest
+- [x] Prime Directive risks called out: companion checkbox defaults off; cascade-decoupling explicit; synthetic event is render-time-only
