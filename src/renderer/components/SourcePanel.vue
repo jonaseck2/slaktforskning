@@ -154,50 +154,6 @@
         </div>
       </div>
 
-      <!-- Repositories section -->
-      <div class="panel-section">
-        <SectionHeader
-          :title="$t('sourcePanel.repositories')"
-          :count="linkedRepositories.length"
-          :collapsed="!sections.repositories"
-          :action-label="'+ ' + $t('sourcePanel.addRepository')"
-          @toggle="toggleSection('repositories')"
-          @action="onAddRepositoryAction"
-        />
-        <div v-if="sections.repositories" class="panel-section-body">
-          <div v-if="showRepoPicker" class="repo-picker-row">
-            <select v-model="repoToAdd" class="compact-control">
-              <option value="">{{ $t('sourcePanel.selectRepository') }}</option>
-              <option v-for="r in unlinkedRepositories" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-            <AppButton variant="primary" size="sm" :disabled="!repoToAdd" @click="addRepository">{{ $t('common.add') }}</AppButton>
-            <AppButton variant="ghost" size="sm" @click="showRepoPicker = false; repoToAdd = ''">{{ $t('common.cancel') }}</AppButton>
-          </div>
-          <SectionEmpty v-if="linkedRepositories.length === 0 && !showRepoPicker" :message="$t('sourcePanel.noRepositories')" />
-          <table v-else-if="linkedRepositories.length > 0" class="data-table">
-            <thead>
-              <tr>
-                <th>{{ $t('sourcePanel.repositoryName') }}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="repo in linkedRepositories" :key="repo.id">
-                <td>{{ repo.name }}</td>
-                <td class="actions-cell">
-                  <AppButton variant="ghost" size="sm"
-                             :aria-label="$t('a11y.unlinkItem', { item: repo.name })"
-                             :title="$t('common.unlinkTooltip')"
-                             @click="removeRepository(repo.id)">
-                    <IconUnlink :size="14" />
-                  </AppButton>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- Media section -->
       <div class="panel-section">
         <SectionHeader
@@ -269,7 +225,6 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
 import IconTrash from './ui/IconTrash.vue';
-import IconUnlink from './ui/IconUnlink.vue';
 import { SOURCE_TYPE_VALUES } from '../constants/eventTypes';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -308,11 +263,6 @@ interface CitationRow {
   entityRoute?: string;
 }
 
-interface RepositoryRow {
-  id: string;
-  name: string;
-}
-
 const props = defineProps<{ sourceId: string | null }>();
 const emit = defineEmits<{ close: [] }>();
 
@@ -324,8 +274,8 @@ const router = useRouter();
 
 const { sections, toggleSection } = usePanelSections(
   'source-panel-section-',
-  { source: true, citations: true, repositories: false, media: false, quality: false },
-  { source: true, citations: true, repositories: true, media: true, quality: false },
+  { source: true, citations: true, media: false, quality: false },
+  { source: true, citations: true, media: true, quality: false },
 );
 
 // ── Refs / state ────────────────────────────────────────────────────────────
@@ -333,28 +283,20 @@ const { sections, toggleSection } = usePanelSections(
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
 const showCitationForm = ref(false);
 const editingCitation = ref<CitationRow | null>(null);
-const showRepoPicker = ref(false);
-const repoToAdd = ref<string>('');
 
 // ── Data (race-safe load) ────────────────────────────────────────────────────
 
 interface SourcePanelData {
   source: SourceData | null;
   citations: CitationRow[];
-  linkedRepositories: RepositoryRow[];
-  allRepositories: RepositoryRow[];
 }
 
 const idRef = toRef(props, 'sourceId');
 const { data: panelData, reload } = useEntityData<SourcePanelData>(idRef, async (id) => {
   const s = await window.api.sources.get(id) as SourceData | null;
-  if (!s) return { source: null, citations: [], linkedRepositories: [], allRepositories: [] };
+  if (!s) return { source: null, citations: [] };
 
-  const [rawCits, repos, allRepos] = await Promise.all([
-    window.api.citations.forSource(id) as Promise<CitationRow[]>,
-    window.api.repositories.forSource(id) as Promise<RepositoryRow[]>,
-    window.api.repositories.list() as Promise<RepositoryRow[]>,
-  ]);
+  const rawCits = await window.api.citations.forSource(id) as CitationRow[];
 
   await Promise.all(rawCits.map(async (cit) => {
     const resolved = await resolveEntityLabel(cit);
@@ -364,18 +306,11 @@ const { data: panelData, reload } = useEntityData<SourcePanelData>(idRef, async 
     }
   }));
 
-  return { source: s, citations: rawCits, linkedRepositories: repos, allRepositories: allRepos };
+  return { source: s, citations: rawCits };
 });
 
 const source = computed(() => panelData.value?.source ?? null);
 const citations = computed(() => panelData.value?.citations ?? []);
-const linkedRepositories = computed(() => panelData.value?.linkedRepositories ?? []);
-const allRepositories = computed(() => panelData.value?.allRepositories ?? []);
-
-const unlinkedRepositories = computed(() => {
-  const linkedIds = new Set(linkedRepositories.value.map(r => r.id));
-  return allRepositories.value.filter(r => !linkedIds.has(r.id));
-});
 
 // ── Editable fields ──────────────────────────────────────────────────────────
 
@@ -454,38 +389,6 @@ function onCitationSaved() {
 function onCitationEdited() {
   editingCitation.value = null;
   reload();
-}
-
-// ── Repositories ────────────────────────────────────────────────────────────
-
-function onAddRepositoryAction() {
-  if (!sections.repositories) toggleSection('repositories');
-  showRepoPicker.value = true;
-  repoToAdd.value = '';
-}
-
-async function addRepository() {
-  if (!props.sourceId || !repoToAdd.value) return;
-  try {
-    await window.api.repositories.linkSource(props.sourceId, repoToAdd.value);
-    showRepoPicker.value = false;
-    repoToAdd.value = '';
-    await reload();
-  } catch (err) {
-    console.error('[SourcePanel] addRepository failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
-}
-
-async function removeRepository(repoId: string) {
-  if (!props.sourceId) return;
-  try {
-    await window.api.repositories.unlinkSource(props.sourceId, repoId);
-    await reload();
-  } catch (err) {
-    console.error('[SourcePanel] removeRepository failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
 }
 
 </script>

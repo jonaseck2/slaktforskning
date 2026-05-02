@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.199.1 — Trim Repositories section from SourcePanel
+
+- chore: removed the Repositories section from SourcePanel — structured GEDCOM REPO records had no real authoring path here (no /repositories view, no RepositoryModal). The free-text `repository` field on the source covers the "what archive" question for hand-typed sources. Importers and exporters keep round-tripping REPO records as before.
+
 ## v0.198.2 — Trim place address fields from PlacePanel
 
 - chore: removed the Address section from PlacePanel — street/postal code/city/country exist only to round-trip GEDCOM event-level ADDR sub-tags, no reason for a researcher to type them by hand. Importers and exporters keep populating and emitting the columns.

@@ -79,6 +79,10 @@ The schema supports `citation.place_id` (citing the place itself, distinct from 
 
 The `places.{street, postal_code, city, country}` columns exist to round-trip GEDCOM 5.5.1 event-level ADDR sub-tags (the importer ([event-importer.ts:38–60](../src/import/gedcom/event-importer.ts#L38)) lifts them onto the place; the exporter ([exporter.ts:55–60](../src/gedcom/exporter.ts#L55)) emits them under each event's PLAC). The PlacePanel surfaced these as an Address section, but a researcher authoring genealogy from scratch has no reason to type a modern postal address against a parish or farm. Same pattern as finding #5 (External identifiers) and #6 (Place-level citations): round-trip-only data, importers and exporters preserve it, the UI doesn't surface it. Section removed; columns and importer/exporter behavior preserved.
 
+### 8. Structured GEDCOM REPO records exist only for round-trip — UI removed
+
+The `repositories` table + `source_repositories` join exist to round-trip GEDCOM 5.5.1 `0 @id@ REPO` records and the `1 REPO @id@` references that sources carry (importer at [import-core.ts:293](../src/import/gedcom/import-core.ts#L293), exporter at [exporter.ts:186](../src/gedcom/exporter.ts#L186)). The SourcePanel surfaced this as a Repositories section that could *link* and *unlink* existing imported repositories, but the app has no `/repositories` route, no `RepositoryPanel`, no `RepositoryModal` — there's no way to author a new repository or edit a repo's name/address from the UI. The free-text `sources.repository` field on the Source section already covers the "what archive holds this" question for hand-typed sources. Same pattern as findings #5–#7: round-trip-only data; section removed; tables, schema, importer, and exporter preserved (existing structured links survive but become invisible until a user opens the file in another genealogy app or runs MCP tools).
+
 ---
 
 ## Cross-cutting conventions: row icons
@@ -132,7 +136,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 |---|---|
 | SourcePanel — Source section | 2026-05-02 |
 | SourcePanel — Citations section | 2026-05-02 |
-| SourcePanel — Repositories section | 2026-05-02 |
 | SourcePanel — Media section | 2026-05-02 |
 | SourcePanel — Quality section | 2026-05-02 |
 
@@ -505,7 +508,7 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/SourcePanel.vue` lines 18–107
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *describe* a source — what record, book, archive, or website this is and how to find it again — so any citation pointing back to it has enough context for a reader (or future researcher) to verify the claim against the original.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
@@ -517,27 +520,13 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 **File:** `src/renderer/components/SourcePanel.vue` lines 109–150, `CitationModal.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** _TBD — needs user-stated intent_
+> **Purpose:** A user would use this section to *audit* every claim this source has been used to back up across the database — which persons, events, relationships, or places it underpins — so the user can spot gaps (a source they cited once but should have cited five times) and verify a single source isn't carrying more weight than its confidence allows.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
 | Table: host entity (person / event / relationship / place — clickable when extant) · confidence badge · actions. Empty message if no citations. | `+ Add citation` → **opens CitationModal in standalone mode** (creates a new citation against this source, host entity picked inside). | Row click → **opens CitationModal with citation prefilled** (standalone). | ✕ → ConfirmModal → deletes citation (source kept). | Host-entity link → routes to that entity's panel. |
 
 **Notes:** This is the inverse roll-up of finding #4 — a derived "all citations for this source" surface.
-
----
-
-### SourcePanel → Repositories section
-**File:** `src/renderer/components/SourcePanel.vue` lines 152–189
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Table (when rows exist): repository name. Empty message otherwise. Derived from `repositories.forSource()`. | `+ Add repository` → expands an inline select dropdown of unlinked repositories (filtered set: all repos minus already-linked). Three-button UX: select + Add + Cancel. | Not offered (repository edit happens on its own panel, when one exists). | ✕ → unlinks repository (`repositories.unlinkSource`); repository preserved ✅ | Not offered |
-
-**Cross-cutting:** Three-button select pattern is the only place in the app that does Add this way — not the gold-standard combobox. Finding #3 candidate.
 
 ---
 
