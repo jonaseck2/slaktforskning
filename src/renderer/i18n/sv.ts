@@ -400,6 +400,17 @@ export default {
     travel: 'Resa',
     other: 'Övrigt',
   },
+  timelineLabels: {
+    self: '',
+    father: 'far',
+    mother: 'mor',
+    parent: 'förälder',
+    spouse: 'make/maka',
+    son: 'son',
+    daughter: 'dotter',
+    child: 'barn',
+    sibling: 'syskon',
+  },
   dateTypes: {
     exact: 'Exakt',
     about: 'Ungefär',

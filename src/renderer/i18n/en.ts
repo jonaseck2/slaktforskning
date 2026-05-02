@@ -400,6 +400,17 @@ export default {
     travel: 'Travel',
     other: 'Other',
   },
+  timelineLabels: {
+    self: '',
+    father: 'father',
+    mother: 'mother',
+    parent: 'parent',
+    spouse: 'spouse',
+    son: 'son',
+    daughter: 'daughter',
+    child: 'child',
+    sibling: 'sibling',
+  },
   dateTypes: {
     exact: 'Exact',
     about: 'About',
