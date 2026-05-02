@@ -5,7 +5,7 @@
     <template v-else>
       <!-- Dated events -->
       <div class="timeline-track">
-        <template v-for="(item, idx) in datedEvents" :key="item.event.id">
+        <template v-for="(item) in datedEvents" :key="item.event.id + ':' + item.relationshipLabel + ':' + item.personId">
           <!-- Gap indicator -->
           <div v-if="item.gapYears" class="timeline-gap">
             <span class="gap-label">{{ $t('personTimeline.gap', { years: item.gapYears }) }}</span>
@@ -13,18 +13,25 @@
           <!-- Event entry -->
           <div
             class="timeline-entry"
-            :class="{ 'is-approximate': item.isApproximate }"
+            :class="{
+              'is-approximate': item.isApproximate,
+              'is-family': item.relationshipLabel !== 'self',
+            }"
             tabindex="0"
             role="button"
-            :aria-label="$t('a11y.editItem', { item: $t('eventTypes.' + item.event.event_type) })"
-            @click="editEvent(item.event)"
-            @keydown.enter="editEvent(item.event)"
-            @keydown.space.prevent="editEvent(item.event)"
+            :aria-label="entryAriaLabel(item)"
+            @click="handleEntryClick(item)"
+            @keydown.enter="handleEntryClick(item)"
+            @keydown.space.prevent="handleEntryClick(item)"
           >
             <div class="timeline-date">{{ item.dateDisplay }}</div>
             <div class="timeline-dot" :class="'dot-' + item.event.event_type"></div>
             <div class="timeline-content">
               <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
+              <template v-if="item.relationshipLabel !== 'self'">
+                <span class="timeline-family-name">{{ item.personName || $t('common.unknown') }}</span>
+                <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
+              </template>
               <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
               <span v-if="item.age !== null" class="timeline-age">({{ item.age }})</span>
               <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
@@ -39,19 +46,24 @@
         <div class="undated-label">{{ $t('personTimeline.undated') }}</div>
         <div
           v-for="item in undatedEvents"
-          :key="item.event.id"
+          :key="item.event.id + ':' + item.relationshipLabel + ':' + item.personId"
           class="timeline-entry is-undated"
+          :class="{ 'is-family': item.relationshipLabel !== 'self' }"
           tabindex="0"
           role="button"
-          :aria-label="$t('a11y.editItem', { item: $t('eventTypes.' + item.event.event_type) })"
-          @click="editEvent(item.event)"
-          @keydown.enter="editEvent(item.event)"
-          @keydown.space.prevent="editEvent(item.event)"
+          :aria-label="entryAriaLabel(item)"
+          @click="handleEntryClick(item)"
+          @keydown.enter="handleEntryClick(item)"
+          @keydown.space.prevent="handleEntryClick(item)"
         >
           <div class="timeline-date">????</div>
           <div class="timeline-dot dot-undated"></div>
           <div class="timeline-content">
             <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
+            <template v-if="item.relationshipLabel !== 'self'">
+              <span class="timeline-family-name">{{ item.personName || $t('common.unknown') }}</span>
+              <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
+            </template>
             <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
             <span v-if="item.event.description" class="timeline-desc">{{ item.event.description }}</span>
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
@@ -75,10 +87,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import EventModal from './modals/EventModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
+import { formatFullName } from '../utils/nameUtils';
+import type { TimelineEntry, TimelineRelationshipLabel } from '../../api/report_data';
 
 interface EventRow {
   id: string;
@@ -97,6 +112,9 @@ interface EventRow {
 
 interface TimelineItem {
   event: EventRow;
+  relationshipLabel: TimelineRelationshipLabel;
+  personId: string;
+  personName: string;
   dateDisplay: string;
   placeName: string | null;
   isApproximate: boolean;
@@ -107,6 +125,7 @@ interface TimelineItem {
 
 const props = defineProps<{ personId: string }>();
 const { t } = useI18n();
+const router = useRouter();
 
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
@@ -150,46 +169,70 @@ function resolvePlaceName(event: EventRow): string | null {
   return null;
 }
 
+function entryAriaLabel(item: TimelineItem): string {
+  const eventLabel = t('eventTypes.' + item.event.event_type);
+  if (item.relationshipLabel === 'self') {
+    return t('a11y.editItem', { item: eventLabel });
+  }
+  // Family entries: read out as "<event> – <person> (<relationship>)"
+  const rel = t('timelineLabels.' + item.relationshipLabel);
+  const name = item.personName || t('common.unknown');
+  return `${eventLabel} – ${name} (${rel})`;
+}
+
 const idRef = computed(() => props.personId ?? null);
 const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, async (id) => {
-  const events = (await window.api.events.forPerson(id)) as EventRow[];
+  const entries = (await window.api.reports.timeline(id)) as TimelineEntry[] | null;
+  if (!entries) return { dated: [], undated: [] };
 
-  // Place names are already included from the SQL JOIN
-  const placeNames = events.map(e => resolvePlaceName(e));
+  // Find the subject's birth year (used for age column on the subject's own
+  // events). Family events do not show an age — the age column is "this
+  // person's age at the time of the event" and only makes sense for `self`.
+  const ownBirthEntry = entries.find(
+    e => e.relationship_label === 'self' && e.event.event_type === 'birth',
+  );
+  const birthYear = extractYear(ownBirthEntry?.event.date_value ?? null);
 
-  // Find birth year for age calculation
-  const birthEvent = events.find(e => e.event_type === 'birth');
-  const birthYear = extractYear(birthEvent?.date_value ?? null);
-
-  // Build timeline items
   const dated: TimelineItem[] = [];
   const undated: TimelineItem[] = [];
 
-  events.forEach((event, i) => {
+  for (const entry of entries) {
+    // The TimelineEntry.event from reports.timeline carries every field
+    // EventRow needs (it goes through getEventsForPerson which adds
+    // citation_count, then resolveEventPlace which adds place_name). Cast.
+    const event = entry.event as unknown as EventRow;
     const year = extractYear(event.date_value);
     const isApproximate = ['about', 'before', 'after', 'between', 'calculated'].includes(event.date_type);
-    const age = (year !== null && birthYear !== null && event.event_type !== 'birth')
+    const age = (
+      year !== null && birthYear !== null
+      && entry.relationship_label === 'self'
+      && event.event_type !== 'birth'
+    )
       ? year - birthYear
       : null;
 
     const item: TimelineItem = {
       event,
+      relationshipLabel: entry.relationship_label,
+      personId: entry.person_id,
+      personName: formatFullName({
+        given_name: entry.person_given_name,
+        surname: entry.person_surname,
+      }),
       dateDisplay: formatDate(event),
-      placeName: placeNames[i],
+      placeName: resolvePlaceName(event),
       isApproximate,
       year,
       age,
       gapYears: null,
     };
 
-    if (year !== null) {
-      dated.push(item);
-    } else {
-      undated.push(item);
-    }
-  });
+    if (year !== null) dated.push(item);
+    else undated.push(item);
+  }
 
-  // Sort dated events
+  // Sort dated chronologically (server already sorts, but keep client sort
+  // + birth-first / death-last priority on same-date ties).
   dated.sort((a, b) => {
     const dateA = a.event.date_value ?? '';
     const dateB = b.event.date_value ?? '';
@@ -199,14 +242,12 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
     return prioA - prioB;
   });
 
-  // Calculate gaps
+  // Calculate gaps (>20 years between consecutive dated entries).
   for (let i = 1; i < dated.length; i++) {
     const prevYear = dated[i - 1].year!;
     const currYear = dated[i].year!;
     const gap = currYear - prevYear;
-    if (gap > 20) {
-      dated[i].gapYears = gap;
-    }
+    if (gap > 20) dated[i].gapYears = gap;
   }
 
   return { dated, undated };
@@ -219,9 +260,17 @@ watch(error, (err) => {
   if (err) console.error('[PersonTimeline] load failed:', err);
 });
 
-function editEvent(event: EventRow) {
-  editingEvent.value = event;
-  showForm.value = true;
+function handleEntryClick(item: TimelineItem) {
+  if (item.relationshipLabel === 'self') {
+    editingEvent.value = item.event;
+    showForm.value = true;
+  } else {
+    // Family event: route to that person's panel where the event can be
+    // edited in the right context. Editing a child's birth from the parent's
+    // panel is confusing — the user expects the click to take them to that
+    // person.
+    void router.push({ name: 'persons', params: { personId: item.personId } });
+  }
 }
 
 function closeForm() {
@@ -275,6 +324,13 @@ defineExpose({ reload });
 .timeline-entry:focus-visible {
   outline: 2px solid var(--color-primary, #3b82f6);
   outline-offset: -2px;
+}
+
+/* Family-context entries (parent/spouse/child events) — slightly de-emphasised
+   so the eye picks out the subject's own events first while still seeing the
+   surrounding life story. */
+.timeline-entry.is-family {
+  opacity: 0.95;
 }
 
 .timeline-date {
@@ -331,6 +387,18 @@ defineExpose({ reload });
   border-radius: 10px;
   font-size: var(--font-xs);
   white-space: nowrap;
+}
+
+.timeline-family-name {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--color-text, #1e293b);
+}
+
+.timeline-relationship {
+  font-size: var(--font-xs);
+  color: var(--color-text-muted, #64748b);
+  font-style: italic;
 }
 
 .timeline-place {
