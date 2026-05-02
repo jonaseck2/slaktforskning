@@ -126,12 +126,14 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 | Surface | Verified |
 |---|---|
+| PlacePanel — Header & hero photo | 2026-05-02 |
 | PlacePanel — Place section | 2026-05-02 |
-| PlacePanel — Persons section | 2026-05-02 |
 | PlacePanel — Events section | 2026-05-02 |
 | PlacePanel — Timeline section | 2026-05-02 |
+| PlacePanel — Persons section | 2026-05-02 |
 | PlacePanel — Media section | 2026-05-02 |
 | PlacePanel — Media Timeline section | 2026-05-02 |
+| PlacePanel — Research Tasks section | 2026-05-02 |
 | PlacePanel — Quality section | 2026-05-02 |
 
 ### Sources view (`SourcesView` + `SourcePanel`)
@@ -359,16 +361,44 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 ---
 
 ### PlacePanel → Persons section
-**File:** `src/renderer/components/PlacePanel.vue` lines 125–138, `PlacePersonsSection.vue`
+**File:** `src/renderer/components/PlacePanel.vue`, `PlacePersonsSection.vue`
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *view* persons who have at least one event at this place. The "+ Add person" button doesn't add a person to the place — it creates a new person *and* an event at this place. There is no way to add an existing person, and no way to remove a person from this list (you'd have to delete their event in the Events section).
+> **Purpose:** A user would use this section to *see* who lived at this place — name, sex, year range of their events here (`first event year–last event year`), and event count. Witnesses, godparents, and officiants of other people's events are excluded — they're not residents. The "+ Add person" button creates a new person *and* a primary-role event at this place; there is no link-existing path, and no way to remove a person from this list other than deleting their events in the Events section.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| Read-only table: avatar · name · sex · event-count-at-this-place. Derived from `places.getPersons()` | `+ Add person` → opens an in-panel form. **Creates person + event** at this place. No link-existing path. | Not offered (it's a derived summary) | Not offered. Removal requires deleting events in the Events section. | Row click → navigates to person's Person panel |
+| Read-only table: avatar · name · sex · year range · primary-role event count. Derived from `places.getPersons()` (filtered to `ep.role = 'primary'`). Sorted earliest-first by `first_year`, undated last. | `+ Add person` → opens an in-panel form. **Creates person + event** at this place. No link-existing path. | Not offered (it's a derived summary). | Not offered. Removal requires deleting events in the Events section. | Row click → navigates to person's Person panel. |
 
-**Cross-cutting:** Was the canonical example of finding #2 (label hides primitive). Label was tightened in `docs/plans/2026-05-02-panel-action-clarity.md`; the underlying primitive (creates a person *and* an event) is unchanged.
+**Cross-cutting:** Was the canonical example of finding #2 (label hides primitive). Label was tightened in `docs/plans/2026-05-02-panel-action-clarity.md`; the underlying primitive (creates a person *and* an event) is unchanged. Year range and primary-role filter added in `docs/plans/2026-05-02-place-as-biography.md` to make the section read like a residents-of-the-place biography view.
+
+---
+
+### PlacePanel → Header & hero photo
+**File:** `src/renderer/components/PlacePanel.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use the header to *see* this place visually — the first image-format media attached to the place renders as a hero photo above the place name and place-type badge. Clicking the hero opens that photo in MediaPanel. When no qualifying image is attached, the header falls back to text-only.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Hero photo (lowest `media_links.sort_order` for this place where the file resolves to an image) above the place name and place-type badge. Falls back to text-only when no qualifying media exists — no broken-image placeholder. | Not offered here. Attaching media lives in the Media section below. | Not offered here. Reordering media in the Media section changes which photo is hero. | Not offered here. Unattaching media lives in the Media section. | Click hero → navigates to `/media?open={mediaId}` (MediaPanel for that record). |
+
+**Notes:** No new schema. Hero choice = lowest `media_links.sort_order` for this place where `media.format` matches `image/*` or `media.file_ref` ends in `.jpg|.jpeg|.png|.gif|.webp|.heic|.heif`. The user controls which photo is hero by reordering media in the Media section's drag-handle UI. Per Prime Directive: hero selection is computed every render — never persisted.
+
+---
+
+### PlacePanel → Research Tasks section
+**File:** `src/renderer/components/PlacePanel.vue`, `ResearchTasksTable.vue`, `ResearchTaskModal.vue`
+**Verified:** 2026-05-02
+
+> **Purpose:** A user would use this section to *view* open research tasks linked to this place, *add* a new task (linked to this place via `task_links`), *edit* a task via the modal, and *jump* to the task's full record in the Research Tasks view.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| ResearchTasksTable rows: priority · status · task description (sorted by priority desc, then created_at). | `+ Add task` → opens **ResearchTaskModal** preset to link this place via `task_links.entity_type='place'`. Save creates the task and the link in one flow. | Row interaction inside ResearchTasksTable opens **ResearchTaskModal** with the task prefilled; save emits `updated`, panel reloads the list. | Inside the modal. | Row select → navigates to `/research-tasks/{id}` for the full task record. |
+
+**Notes:** Default-collapsed. The polymorphic `task_links` schema (`entity_type='place'`) and the `researchTasks.forPlace` API/IPC, plus the MCP tool `add_research_task { place_ids: [...] }`, all already existed before this section landed — only the renderer wiring was missing. Cross-view reactivity for this section uses a panel-local `loadTasks()` reload (triggered on `placeId` change and on the table's `@updated` emit) rather than `useEntityData`'s auto-`onDataChanged` subscription — so MCP-side mutations to a place's tasks won't refresh until the panel is reopened.
 
 ---
 
