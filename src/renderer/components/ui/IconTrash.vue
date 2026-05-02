@@ -3,11 +3,18 @@
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
     aria-hidden="true"
   >
-    <path fill="currentColor" d="M9 3a1 1 0 0 0-1 1v1H4.5a.75.75 0 0 0 0 1.5h.6l1.18 13.06A2 2 0 0 0 8.27 21.5h7.46a2 2 0 0 0 1.99-1.94L18.9 6.5h.6a.75.75 0 0 0 0-1.5H16V4a1 1 0 0 0-1-1H9zm.5 2v-.5h5V5h-5z"/>
-    <rect x="9.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
-    <rect x="13.25" y="9" width="1.5" height="9" rx="0.5" fill="var(--surface)" opacity="0.55"/>
+    <path d="M3 6h18" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" x2="10" y1="11" y2="17" />
+    <line x1="14" x2="14" y1="11" y2="17" />
   </svg>
 </template>
 
