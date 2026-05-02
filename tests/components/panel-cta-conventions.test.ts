@@ -28,7 +28,10 @@ describe('panel CTA conventions: no raw ✕ glyph in panels/sections', () => {
 });
 
 // Convention 2
-const SELECT_EMITTING_TABLES = ['GroupsTable', 'ResearchTasksTable', 'PersonNamesTable'] as const;
+// Tables that emit `select` on row click. Mounting one without @select means
+// the row announces role="button" but does nothing — a dead click.
+// To extend: verify the table actually has `select` in its defineEmits<>().
+const SELECT_EMITTING_TABLES = ['GroupsTable', 'ResearchTasksTable'] as const;
 
 describe('panel CTA conventions: select-emitting tables are wired', () => {
   for (const table of SELECT_EMITTING_TABLES) {
