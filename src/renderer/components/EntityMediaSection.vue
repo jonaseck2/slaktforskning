@@ -35,9 +35,12 @@
             <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
             <button
               class="btn-sm btn-delete"
-              :aria-label="$t('a11y.deleteItem', { item: mediaDisplayName(m.title, m.file_ref) })"
+              :aria-label="$t('a11y.unlinkItem', { item: mediaDisplayName(m.title, m.file_ref) })"
+              :title="$t('common.unlinkTooltip')"
               @click.stop="unlink(m.link_id)"
-            >&#10005;</button>
+            >
+              <IconUnlink :size="14" />
+            </button>
           </td>
         </tr>
       </tbody>
@@ -64,6 +67,7 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
+import IconUnlink from './ui/IconUnlink.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
