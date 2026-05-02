@@ -81,6 +81,16 @@
       @close="closeForm"
       @saved="onSaved"
     />
+
+    <PersonNameModal
+      v-if="editingNameRow"
+      mode="standalone"
+      :person-id="personId"
+      :editing-name="editingNameRow"
+      @cancel="closeNameForm"
+      @close="closeNameForm"
+      @saved="onNameSaved"
+    />
   </div>
 </template>
 
@@ -89,11 +99,15 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import EventModal from './modals/EventModal.vue';
+import PersonNameModal from './modals/PersonNameModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
 import { formatFullName } from '../utils/nameUtils';
 import type { TimelineEntry, TimelineRelationshipLabel } from '../../api/report_data';
+import type { NameRow } from './PersonNamesTable.vue';
+
+const SYNTHETIC_NAME_CHANGE_PREFIX = 'name-change-';
 
 interface EventRow {
   id: string;
@@ -129,6 +143,7 @@ const router = useRouter();
 
 const showForm = ref(false);
 const editingEvent = ref<EventRow | null>(null);
+const editingNameRow = ref<NameRow | null>(null);
 
 interface TimelineData {
   dated: TimelineItem[];
@@ -260,17 +275,30 @@ watch(error, (err) => {
   if (err) console.error('[PersonTimeline] load failed:', err);
 });
 
-function handleEntryClick(item: TimelineItem) {
-  if (item.relationshipLabel === 'self') {
-    editingEvent.value = item.event;
-    showForm.value = true;
-  } else {
+async function handleEntryClick(item: TimelineItem) {
+  if (item.relationshipLabel !== 'self') {
     // Family event: route to that person's panel where the event can be
     // edited in the right context. Editing a child's birth from the parent's
     // panel is confusing — the user expects the click to take them to that
     // person.
     void router.push({ name: 'persons', params: { personId: item.personId } });
+    return;
   }
+  // Synthetic name-change entry: open PersonNameModal on the underlying
+  // person_names row, NOT EventModal (the synthetic event has no real DB id).
+  if (item.event.event_type === 'name_change' && item.event.id.startsWith(SYNTHETIC_NAME_CHANGE_PREFIX)) {
+    const nameId = item.event.id.slice(SYNTHETIC_NAME_CHANGE_PREFIX.length);
+    try {
+      const names = (await window.api.persons.getNames(props.personId)) as NameRow[];
+      const match = names.find(n => n.id === nameId);
+      if (match) editingNameRow.value = match;
+    } catch (err) {
+      console.error('[PersonTimeline] failed to load name for editing:', err);
+    }
+    return;
+  }
+  editingEvent.value = item.event;
+  showForm.value = true;
 }
 
 function closeForm() {
@@ -278,8 +306,17 @@ function closeForm() {
   editingEvent.value = null;
 }
 
+function closeNameForm() {
+  editingNameRow.value = null;
+}
+
 function onSaved() {
   closeForm();
+  reload();
+}
+
+function onNameSaved() {
+  closeNameForm();
   reload();
 }
 
