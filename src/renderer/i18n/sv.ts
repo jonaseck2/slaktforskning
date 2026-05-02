@@ -1211,6 +1211,12 @@ export default {
     undated: 'Odaterade',
     empty: 'Inga händelser',
   },
+  placeTimeline: {
+    title: 'Tidslinje',
+    gap: '{years} års lucka',
+    undated: 'Odaterade',
+    empty: 'Inga händelser på denna plats',
+  },
   exportOptions: {
     title: 'Alternativ f\u00f6r exportinneh\u00e5ll',
     excludeLiving: 'Uteslut levande personer',

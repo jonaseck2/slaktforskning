@@ -1211,6 +1211,12 @@ export default {
     undated: 'Undated',
     empty: 'No events',
   },
+  placeTimeline: {
+    title: 'Timeline',
+    gap: '{years}-year gap',
+    undated: 'Undated',
+    empty: 'No events at this place yet',
+  },
   exportOptions: {
     title: 'Export content options',
     excludeLiving: 'Exclude living persons',
