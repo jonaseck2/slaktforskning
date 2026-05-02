@@ -1,9 +1,11 @@
 import path from 'node:path';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { Database } from 'node-sqlite3-wasm';
-import { initializeSchema } from '../api/schema';
 import { getDefaultDbPath } from '../shared/dbPath';
 import { createDevServer } from './createDevServer';
+import { installStdioHardening, initializeSchemaWithRetry } from './harden';
+
+installStdioHardening();
 
 async function main() {
   const dbPath = process.env.SLAKTFORSKNING_DB || getDefaultDbPath();
@@ -17,7 +19,7 @@ async function main() {
   }
 
   const db = new Database(dbPath);
-  initializeSchema(db);
+  initializeSchemaWithRetry(db);
 
   const server = createDevServer(db, dbPath);
 

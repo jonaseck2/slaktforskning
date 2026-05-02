@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: MCP server survives Electron app restarts without forcing a manual reconnect
+
 ## v0.196.0 — Name changes on the timeline
 
 - feat: a name (married, name change, alias, aka) with a "from" date now appears on the person's timeline at that date — the type label reads "Name change" with the new full name beneath
