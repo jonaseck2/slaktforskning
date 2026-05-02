@@ -141,7 +141,7 @@ This plan addresses cross-cutting findings #1 and #2 in `docs/UX_INVENTORY.md` a
 - Modify: `src/renderer/i18n/sv.ts` (add `common.unlink`, `common.unlinkTooltip`, `common.deleteTooltip`)
 - Modify: `src/renderer/i18n/en.ts` (mirror)
 
-- [ ] **Step 1: Create IconTrash.vue (extract the SVG already used in PersonPanel Danger zone)**
+- [x] **Step 1: Create IconTrash.vue (extract the SVG already used in PersonPanel Danger zone)**
 
 ```vue
 <template>
@@ -161,7 +161,7 @@ defineProps<{ size?: number | string }>();
 </script>
 ```
 
-- [ ] **Step 2: Create IconUnlink.vue (link-off SVG)**
+- [x] **Step 2: Create IconUnlink.vue (link-off SVG)**
 
 ```vue
 <template>
@@ -187,7 +187,7 @@ defineProps<{ size?: number | string }>();
 </script>
 ```
 
-- [ ] **Step 3: Add i18n keys (en.ts)**
+- [x] **Step 3: Add i18n keys (en.ts)**
 
 In `src/renderer/i18n/en.ts`, find the `common:` namespace block and add:
 
@@ -197,7 +197,7 @@ unlinkTooltip: 'Unlink — both entities are kept',
 deleteTooltip: 'Delete permanently',
 ```
 
-- [ ] **Step 4: Add i18n keys (sv.ts)**
+- [x] **Step 4: Add i18n keys (sv.ts)**
 
 Mirror in `src/renderer/i18n/sv.ts`:
 
@@ -207,14 +207,14 @@ unlinkTooltip: 'Koppla bort — båda objekten finns kvar',
 deleteTooltip: 'Radera permanent',
 ```
 
-- [ ] **Step 5: Verify the icon components render**
+- [x] **Step 5: Verify the icon components render**
 
 Run: `npm run lint`
 Expected: 0 errors.
 
 Run: `npx vitest run` (existing tests should pass — these new files have no consumers yet).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/ui/IconTrash.vue src/renderer/components/ui/IconUnlink.vue src/renderer/i18n/en.ts src/renderer/i18n/sv.ts
@@ -232,7 +232,7 @@ git commit -m "feat(ui): add IconTrash and IconUnlink + unlink/delete i18n keys"
 - Modify: `src/renderer/components/SourcePanel.vue:144`
 - Modify: `src/renderer/components/RelationshipPanel.vue:157`
 
-- [ ] **Step 1: Replace ✕ in PersonNamesTable**
+- [x] **Step 1: Replace ✕ in PersonNamesTable**
 
 Add to `<script setup>`:
 ```ts
@@ -251,15 +251,15 @@ with:
 
 (Keep the existing `@click`, `aria-label`, and class. The button's wrapping element stays.)
 
-- [ ] **Step 2: Replace ✕ in EventList**
+- [x] **Step 2: Replace ✕ in EventList**
 
 Same pattern: import `IconTrash`, replace `>✕</button>` with `:title="$t('common.deleteTooltip')"><IconTrash :size="14" /></button>`.
 
-- [ ] **Step 3: Replace ✕ in ResearchTasksTable**
+- [x] **Step 3: Replace ✕ in ResearchTasksTable**
 
 Same pattern.
 
-- [ ] **Step 4: Replace ✕ in SourcePanel (citation row)**
+- [x] **Step 4: Replace ✕ in SourcePanel (citation row)**
 
 The row uses `AppButton` not raw `<button>`. Replace the slot text:
 
@@ -276,11 +276,11 @@ The row uses `AppButton` not raw `<button>`. Replace the slot text:
 
 Add the import.
 
-- [ ] **Step 5: Replace ✕ in RelationshipPanel (citation row)**
+- [x] **Step 5: Replace ✕ in RelationshipPanel (citation row)**
 
 Same as SourcePanel; this is a citation destroy. Update `aria-label` to `common.delete` and add `:title="$t('common.deleteTooltip')"`.
 
-- [ ] **Step 6: Smoke-check the running app**
+- [x] **Step 6: Smoke-check the running app**
 
 ```bash
 npm start
@@ -290,7 +290,7 @@ Open `/persons`, select any person with names. Hover the trash icon next to a no
 
 Repeat for an event, a research task, a citation in `/sources`, a citation in `/relationships`.
 
-- [ ] **Step 7: Lint + tests**
+- [x] **Step 7: Lint + tests**
 
 ```bash
 npm run lint
@@ -299,7 +299,7 @@ npx vitest run tests/components/
 
 Expected: 0 errors. Component tests pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/renderer/components/PersonNamesTable.vue src/renderer/components/EventList.vue src/renderer/components/ResearchTasksTable.vue src/renderer/components/SourcePanel.vue src/renderer/components/RelationshipPanel.vue
@@ -318,7 +318,7 @@ git commit -m "feat(panels): trash icon for entity-destroy row actions (names, e
 - Modify: `src/renderer/components/LinkedPlacesSection.vue:29`
 - Modify: `src/renderer/components/LinkedPersonsSection.vue:44`
 
-- [ ] **Step 1: Replace ✕ in RelationshipsList**
+- [x] **Step 1: Replace ✕ in RelationshipsList**
 
 Add `import IconUnlink from './ui/IconUnlink.vue';` to script setup.
 
@@ -330,15 +330,15 @@ Replace `>✕</button>` with:
 
 The existing `aria-label` (likely `common.remove`) should change to `common.unlink`.
 
-- [ ] **Step 2: Replace ✕ in GroupsTable**
+- [x] **Step 2: Replace ✕ in GroupsTable**
 
 Same pattern. `aria-label="$t('common.unlink')"`, `:title="$t('common.unlinkTooltip')"`, body `<IconUnlink :size="14" />`.
 
-- [ ] **Step 3: Replace ✕ in PersonMediaSection**
+- [x] **Step 3: Replace ✕ in PersonMediaSection**
 
 Same pattern.
 
-- [ ] **Step 4: Replace ✕ in LinkedMediaSection (uses AppButton)**
+- [x] **Step 4: Replace ✕ in LinkedMediaSection (uses AppButton)**
 
 ```vue
 <AppButton variant="ghost" size="sm"
@@ -349,19 +349,19 @@ Same pattern.
 </AppButton>
 ```
 
-- [ ] **Step 5: Replace ✕ in LinkedPlacesSection (uses AppButton)**
+- [x] **Step 5: Replace ✕ in LinkedPlacesSection (uses AppButton)**
 
 Same as Step 4.
 
-- [ ] **Step 6: Replace ✕ in LinkedPersonsSection (uses AppButton)**
+- [x] **Step 6: Replace ✕ in LinkedPersonsSection (uses AppButton)**
 
 Same as Step 4.
 
-- [ ] **Step 7: Smoke-check the running app**
+- [x] **Step 7: Smoke-check the running app**
 
 In each section listed above, hover the icon → tooltip says "Unlink — both entities are kept". Click → confirm modal mentions both entities are preserved → confirm → row vanishes from this entity's panel; navigate to the other entity's route → it still exists.
 
-- [ ] **Step 8: Lint + tests + commit**
+- [x] **Step 8: Lint + tests + commit**
 
 ```bash
 npm run lint
@@ -382,7 +382,7 @@ git commit -m "feat(panels): unlink icon for join-row actions (relationships, gr
 - Modify: `src/renderer/components/ResearchTasksTable.vue:132–152`
 - Modify: `src/renderer/components/GroupsTable.vue:60`
 
-- [ ] **Step 1: Fix PersonNamesTable**
+- [x] **Step 1: Fix PersonNamesTable**
 
 Find the styles block. Replace:
 - `var(--color-bg-muted)` → `var(--surface-bg)`
@@ -390,7 +390,7 @@ Find the styles block. Replace:
 
 (There are two values; replace both.)
 
-- [ ] **Step 2: Fix ResearchTasksTable status + priority badges**
+- [x] **Step 2: Fix ResearchTasksTable status + priority badges**
 
 The current scoped block has hardcoded hex for four priority levels and four status states. Replace with semantic tokens. Open the file, locate the `.priority-low`, `.priority-medium`, `.priority-high`, `.priority-critical`, `.status-todo`, `.status-in-progress`, `.status-blocked`, `.status-done` (or similar) selectors, and replace as follows:
 
@@ -410,11 +410,11 @@ The current scoped block has hardcoded hex for four priority levels and four sta
 
 (Adapt class names to whatever ResearchTasksTable actually uses — read the file first.)
 
-- [ ] **Step 3: Fix GroupsTable**
+- [x] **Step 3: Fix GroupsTable**
 
 Replace `color: #777;` with `color: var(--text-muted);`.
 
-- [ ] **Step 4: WCAG check**
+- [x] **Step 4: WCAG check**
 
 ```bash
 npx vitest run tests/unit/wcag
@@ -422,11 +422,11 @@ npx vitest run tests/unit/wcag
 
 Expected: PASS in all themes / appearances. The badges in research tasks now read from theme-aware tokens, so high-contrast will adjust them.
 
-- [ ] **Step 5: Visual smoke-check**
+- [x] **Step 5: Visual smoke-check**
 
 `npm start`, open `/research-tasks`, toggle through Light → Dark → High Contrast in Settings. Priority and status badges remain readable in every theme.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/PersonNamesTable.vue src/renderer/components/ResearchTasksTable.vue src/renderer/components/GroupsTable.vue
@@ -445,7 +445,7 @@ git commit -m "fix(panels): use design tokens instead of hex colors and invented
 - Modify: `docs/UX_INVENTORY.md` (drop Identifiers row, add round-trip-only note)
 - Modify: `docs/DATA_MODEL.md` (add a one-line note that external identifiers exist on persons but are populated/consumed by import/export only)
 
-- [ ] **Step 1: Confirm identifier data layer is independent**
+- [x] **Step 1: Confirm identifier data layer is independent**
 
 ```bash
 grep -rn "addIdentifier\|getIdentifiers\|deleteIdentifier" src/api/ src/main/ipc/ src/mcp/
@@ -453,13 +453,13 @@ grep -rn "addIdentifier\|getIdentifiers\|deleteIdentifier" src/api/ src/main/ipc
 
 Expected: API + IPC + MCP layers reference the identifier methods. Renderer is the only place that surfaces them in UI. Removing the renderer section does not break import/export.
 
-- [ ] **Step 2: Delete the section component**
+- [x] **Step 2: Delete the section component**
 
 ```bash
 git rm src/renderer/components/PersonIdentifiersSection.vue
 ```
 
-- [ ] **Step 3: Remove the section from PersonPanel.vue**
+- [x] **Step 3: Remove the section from PersonPanel.vue**
 
 Open `src/renderer/components/PersonPanel.vue`. Remove:
 - The `<section>` block at lines 104–110 (the identifiers section in the template)
@@ -475,7 +475,7 @@ grep -n "Identifier\|identifiers" src/renderer/components/PersonPanel.vue
 
 Expected: 0 matches after the edit.
 
-- [ ] **Step 4: Drop unused i18n keys**
+- [x] **Step 4: Drop unused i18n keys**
 
 In both `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts`, remove keys under the `identifiers` namespace that are only used for the deleted section UI (e.g. `identifiers.add`, `identifiers.removeConfirmTitle`, `identifiers.removeConfirmMessage`, `empty.identifiers`, etc.). Keep keys that survive in modal copy or error toasts (search before deleting).
 
@@ -485,16 +485,16 @@ grep -rn "identifiers.<keyName>" src/renderer/ src/static/ tests/
 ```
 Expected: 0 hits → safe to remove. Any hit → leave the key in place.
 
-- [ ] **Step 5: Update UX_INVENTORY.md**
+- [x] **Step 5: Update UX_INVENTORY.md**
 
 Find the PersonPanel section table. Remove the Identifiers row. Add to the Cross-cutting notes section: "External identifiers (FamilySearch ID, Geni ID, etc.) are not surfaced in any panel. They round-trip through GEDCOM/Holger/Genney import and export only."
 
-- [ ] **Step 6: Update DATA_MODEL.md**
+- [x] **Step 6: Update DATA_MODEL.md**
 
 Add to the persons section a one-line note:
 > External identifiers (`person_identifiers` table) are populated and consumed by import/export paths only — they have no panel UI. The API, IPC, and MCP layers expose them for round-trip integrity.
 
-- [ ] **Step 7: Verify**
+- [x] **Step 7: Verify**
 
 ```bash
 npm run lint
@@ -507,7 +507,7 @@ Expected:
 - Tests pass.
 - Open `/persons`, select any person — no External identifiers section appears.
 
-- [ ] **Step 8: GEDCOM round-trip smoke-check**
+- [x] **Step 8: GEDCOM round-trip smoke-check**
 
 ```bash
 npm start
@@ -517,7 +517,7 @@ Import a `.ged` file containing `_FSID`, `_GENI`, or similar identifier tags (us
 - The person's `person_identifiers` rows survive (`SELECT * FROM person_identifiers WHERE person_id = '...'` from the SQLite shell or via MCP `get_person_summary`).
 - The exported GEDCOM still emits the corresponding tags.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A
@@ -532,7 +532,7 @@ git commit -m "feat(panels): remove External identifiers section from PersonPane
 - Modify: `src/renderer/components/RelationshipsList.vue`
 - Possibly Modify: `src/renderer/components/PersonRelationshipsSection.vue` (to mount RelationshipModal if it isn't already)
 
-- [ ] **Step 1: Add row click in RelationshipsList**
+- [x] **Step 1: Add row click in RelationshipsList**
 
 Read the file. Add a `cursor: pointer` style + `class="clickable-row"` to the row, and an emit:
 
@@ -555,7 +555,7 @@ const emit = defineEmits<{
 
 The unlink button must use `@click.stop="..."` to prevent bubbling to the row click.
 
-- [ ] **Step 2: Wire RelationshipModal in the parent**
+- [x] **Step 2: Wire RelationshipModal in the parent**
 
 Read `src/renderer/components/PersonRelationshipsSection.vue` (or wherever `RelationshipsList` is used in a panel context). Import `RelationshipModal`:
 
@@ -586,11 +586,11 @@ Wire the row click:
 <RelationshipsList :rows="relationships" @open="editingRelationshipId = $event" ... />
 ```
 
-- [ ] **Step 3: Smoke-check**
+- [x] **Step 3: Smoke-check**
 
 `npm start`, open PersonPanel relations section, click a relationship row → RelationshipModal opens in edit mode → change subtype → save → row reflects the new subtype without a route change.
 
-- [ ] **Step 4: Lint + commit**
+- [x] **Step 4: Lint + commit**
 
 ```bash
 npm run lint
@@ -607,7 +607,7 @@ git commit -m "feat(panels): clicking a relationship row opens RelationshipModal
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Add i18n helper text**
+- [x] **Step 1: Add i18n helper text**
 
 In `en.ts`, under `addRelated:`:
 ```ts
@@ -619,7 +619,7 @@ In `sv.ts`:
 modeHelper: 'Finns hen redan i ditt träd? Hitta personen. Annars lägg till en ny.',
 ```
 
-- [ ] **Step 2: Reorder + redefault the entry-mode toggle**
+- [x] **Step 2: Reorder + redefault the entry-mode toggle**
 
 In `src/renderer/components/modals/PersonModal.vue`, find the block at lines 11–29. Replace with:
 
@@ -648,7 +648,7 @@ In `src/renderer/components/modals/PersonModal.vue`, find the block at lines 11�
 
 (Order swapped: Existing first, New second.)
 
-- [ ] **Step 3: Default `entryMode` to `'existing'` when other persons exist**
+- [x] **Step 3: Default `entryMode` to `'existing'` when other persons exist**
 
 In the script setup, find the existing `entryMode` declaration. Replace its default with a computed initial:
 
@@ -664,7 +664,7 @@ onMounted(async () => {
 
 (If `persons.findPage` is named differently in this codebase, read `src/api/persons.ts` to confirm.)
 
-- [ ] **Step 4: Style the helper line**
+- [x] **Step 4: Style the helper line**
 
 In the same file's `<style scoped>`, add:
 
@@ -678,7 +678,7 @@ In the same file's `<style scoped>`, add:
 
 (Use the project tokens — never hardcode.)
 
-- [ ] **Step 5: Smoke-check**
+- [x] **Step 5: Smoke-check**
 
 `npm start`. Add a database with > 1 person (use any existing test DB or import one).
 - Click `+ Add father` on a person → modal opens with **Existing person** highlighted, helper text visible.
@@ -687,7 +687,7 @@ In the same file's `<style scoped>`, add:
 
 DB count check via SQLite or MCP `search_persons`: existing-path increments by 0, new-path by 1.
 
-- [ ] **Step 6: Lint + commit**
+- [x] **Step 6: Lint + commit**
 
 ```bash
 npm run lint
@@ -703,7 +703,7 @@ git commit -m "feat(modals): default Add-relative to Existing person + helper te
 - Modify: `src/renderer/components/PlacePanel.vue`
 - Audit: every other `*Panel.vue` for the same violation
 
-- [ ] **Step 1: Audit all panels**
+- [x] **Step 1: Audit all panels**
 
 ```bash
 for f in src/renderer/components/*Panel.vue; do
@@ -714,19 +714,19 @@ done
 
 Identify any panel where Quality is not the last section (excluding Danger zone). Expect to find at least PlacePanel.
 
-- [ ] **Step 2: Fix PlacePanel ordering**
+- [x] **Step 2: Fix PlacePanel ordering**
 
 Open `src/renderer/components/PlacePanel.vue`. Move the Address and Hierarchy `<section>` blocks before the Quality section. Update the section-order array in `usePanelSections` to match: Place fields → Notes → Citations → Persons → Address → Hierarchy → Media → Quality → (Danger zone if any).
 
-- [ ] **Step 3: Fix any other panel violations found in Step 1**
+- [x] **Step 3: Fix any other panel violations found in Step 1**
 
 For each, move sections so Quality is last. Update the section-order array.
 
-- [ ] **Step 4: Smoke-check**
+- [x] **Step 4: Smoke-check**
 
 `npm start`. Visit `/places`, `/sources`, `/relationships`, `/groups`, `/research-tasks`, `/media`, the report panels — scroll the right panel in each. Quality is the last section before Danger zone (or the very last) in every panel.
 
-- [ ] **Step 5: Lint + commit**
+- [x] **Step 5: Lint + commit**
 
 ```bash
 npm run lint
@@ -745,11 +745,11 @@ git commit -m "fix(panels): Quality section is consistently last across all pane
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Default-expand Names**
+- [x] **Step 1: Default-expand Names**
 
 In `PersonPanel.vue`, find the section defaults object (around line 470). Change `names: false` to `names: true`.
 
-- [ ] **Step 2: Add living/deceased tooltip i18n**
+- [x] **Step 2: Add living/deceased tooltip i18n**
 
 In `en.ts` under `persons`:
 ```ts
@@ -763,11 +763,11 @@ livingTooltip: 'Levande/avliden bestäms automatiskt av dödshändelsen. Lägg t
 birthNameNotDeletable: 'Födelsenamn kan inte tas bort — redigera det istället.',
 ```
 
-- [ ] **Step 3: Tooltip on living chip**
+- [x] **Step 3: Tooltip on living chip**
 
 In `PersonDetailsSection.vue`, find the living/deceased chip (around lines 13–15). Add `:title="$t('persons.livingTooltip')"` to the element.
 
-- [ ] **Step 4: Show disabled trash on birth-name rows with tooltip**
+- [x] **Step 4: Show disabled trash on birth-name rows with tooltip**
 
 In `PersonNamesTable.vue` around line 51, the current `v-if="row.name_type !== 'birth'"` hides the icon entirely. Replace with: render the trash icon always, but disable + tooltip when birth.
 
@@ -791,14 +791,14 @@ button[disabled] {
 }
 ```
 
-- [ ] **Step 5: Smoke-check**
+- [x] **Step 5: Smoke-check**
 
 `npm start`. Open PersonPanel:
 - Names section is open by default.
 - The living/deceased chip shows the tooltip on hover.
 - Birth name shows a dimmed trash icon with tooltip; clicking does nothing.
 
-- [ ] **Step 6: Lint + commit**
+- [x] **Step 6: Lint + commit**
 
 ```bash
 npm run lint
@@ -813,13 +813,13 @@ git commit -m "feat(panels): default-expand Names + tooltips for living chip and
 **Files:**
 - Modify: `src/renderer/components/PersonChecksSection.vue` (around line 62)
 
-- [ ] **Step 1: Read the section, identify the debounce reason**
+- [x] **Step 1: Read the section, identify the debounce reason**
 
 Open the file and read the entire script setup. Look for:
 - A comment explaining the 1500ms timing
 - Any expensive sync work in the loader that justifies it
 
-- [ ] **Step 2: Decide**
+- [x] **Step 2: Decide**
 
 If `useEntityData(idRef, loader)` already debounces (read `src/renderer/composables/useEntityData.ts` to confirm — likely 150–200ms per renderer.md), and the loader for checks is not measurably slow (run a `console.time`/`console.timeEnd` around the loader call in dev), **remove** the hand-rolled debounce and feed the raw `personId` ref into `useEntityData`. The composable's debounce takes over.
 
@@ -830,7 +830,7 @@ If the loader IS slow enough to need a longer debounce, **keep** the debounce bu
 // keystroke during inline name edits. Tune cautiously.
 ```
 
-- [ ] **Step 3: Lint + (optional) commit**
+- [x] **Step 3: Lint + (optional) commit**
 
 If you changed the file:
 ```bash
@@ -848,7 +848,7 @@ If you didn't change the file (the debounce is fine), no commit.
 **Files:**
 - Modify: `docs/UX_INVENTORY.md`
 
-- [ ] **Step 1: Read the current state**
+- [x] **Step 1: Read the current state**
 
 ```bash
 cat docs/UX_INVENTORY.md
@@ -856,7 +856,7 @@ cat docs/UX_INVENTORY.md
 
 Identify the PersonPanel section. Find the rows still marked TBD and any reference to the Identifiers section.
 
-- [ ] **Step 2: Fill in the TBD entries**
+- [x] **Step 2: Fill in the TBD entries**
 
 Use the audit findings from this session (the agent report). For each PersonPanel section, write:
 - Purpose (one sentence in user language)
@@ -865,12 +865,12 @@ Use the audit findings from this session (the agent report). For each PersonPane
 
 Sections to fill: Header, Person, Names, Timeline, Life Map, Media, Media Timeline, Quality, Danger zone.
 
-- [ ] **Step 3: Drop the Identifiers row**
+- [x] **Step 3: Drop the Identifiers row**
 
 Remove the Identifiers section row entirely. In the cross-cutting notes section add:
 > External identifiers (FamilySearch ID, Geni ID, etc.) are not surfaced in any panel. They round-trip through GEDCOM/Holger/Genney import/export only.
 
-- [ ] **Step 4: Document the new icon convention**
+- [x] **Step 4: Document the new icon convention**
 
 Add a "Cross-cutting conventions: row icons" section:
 > - **Trash icon** (`IconTrash`) means the action **destroys an entity permanently**. Tooltip: "Delete permanently". Used for: Names, Events, Research tasks, Citations.
@@ -878,11 +878,11 @@ Add a "Cross-cutting conventions: row icons" section:
 > - The `✕` glyph is reserved for **modal close** only.
 > - `QualityIssuesTable` is an open exception: it uses `✕` for "ignore this issue" — neither destroy nor unlink. A follow-up plan should give it its own icon.
 
-- [ ] **Step 5: Mark cross-cutting findings #1 and #2 as resolved**
+- [x] **Step 5: Mark cross-cutting findings #1 and #2 as resolved**
 
 If the doc has a list of cross-cutting findings, mark #1 (✕ overload) and #2 (Add-relative duplicates) as resolved with a reference to this plan's filename.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/UX_INVENTORY.md
@@ -898,11 +898,11 @@ git commit -m "docs(ux): fill PersonPanel surfaces, document icon convention, ma
 - Modify: `CHANGELOG.md`
 - Move: `docs/plans/2026-05-02-panel-action-clarity.md` → `docs/plans/archive/`
 
-- [ ] **Step 1: Bump version**
+- [x] **Step 1: Bump version**
 
 Edit `package.json`. Change `"version": "0.193.3"` to `"version": "0.194.0"`. Minor bump because this ships a UI surface removal + new behavior (per memory rule: every feature = minor).
 
-- [ ] **Step 2: Add CHANGELOG entry**
+- [x] **Step 2: Add CHANGELOG entry**
 
 Prepend to `CHANGELOG.md` (after the title, before the most recent version block):
 
@@ -920,17 +920,17 @@ Prepend to `CHANGELOG.md` (after the title, before the most recent version block
 - chore(docs): UX_INVENTORY filled out for PersonPanel surfaces; icon convention documented.
 ```
 
-- [ ] **Step 3: Tick all checkboxes in the plan file**
+- [x] **Step 3: Tick all checkboxes in the plan file**
 
 Open `docs/plans/2026-05-02-panel-action-clarity.md` and change every `- [ ]` to `- [x]`.
 
-- [ ] **Step 4: Move plan to archive**
+- [x] **Step 4: Move plan to archive**
 
 ```bash
 git mv docs/plans/2026-05-02-panel-action-clarity.md docs/plans/archive/
 ```
 
-- [ ] **Step 5: Final lint + tests**
+- [x] **Step 5: Final lint + tests**
 
 ```bash
 npm run lint
@@ -939,14 +939,14 @@ npx vitest run
 
 Expected: 0 lint errors. All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json CHANGELOG.md docs/plans/archive/2026-05-02-panel-action-clarity.md
 git commit -m "chore: archive panel-action-clarity + bump 0.194.0"
 ```
 
-- [ ] **Step 7: Hand back to the controller for merge**
+- [x] **Step 7: Hand back to the controller for merge**
 
 Use `superpowers:finishing-a-development-branch` Option 1 (merge → main, delete branch, remove worktree).
 
@@ -954,12 +954,12 @@ Use `superpowers:finishing-a-development-branch` Option 1 (merge → main, delet
 
 ## Self-review checklist
 
-- [ ] Every section in **Scope** has a corresponding Task.
-- [ ] No "TBD" or "implement later" placeholders.
-- [ ] Every code step contains the actual code, not a description.
-- [ ] Section ordering is enumerated in Section F and verified in Task 8.
-- [ ] All 11 `✕` row-icon sites are listed in Section A and migrated in Tasks 2 + 3.
-- [ ] i18n keys added in en.ts + sv.ts in the same task that introduces them.
-- [ ] Every visual change has a smoke-check step in addition to lint/test.
-- [ ] Verification section names user-observable outcomes, not lint+vitest only.
-- [ ] Plan file lives at `docs/plans/`, not `docs/superpowers/specs/` or `.claude/plans/`.
+- [x] Every section in **Scope** has a corresponding Task.
+- [x] No "TBD" or "implement later" placeholders.
+- [x] Every code step contains the actual code, not a description.
+- [x] Section ordering is enumerated in Section F and verified in Task 8.
+- [x] All 11 `✕` row-icon sites are listed in Section A and migrated in Tasks 2 + 3.
+- [x] i18n keys added in en.ts + sv.ts in the same task that introduces them.
+- [x] Every visual change has a smoke-check step in addition to lint/test.
+- [x] Verification section names user-observable outcomes, not lint+vitest only.
+- [x] Plan file lives at `docs/plans/`, not `docs/superpowers/specs/` or `.claude/plans/`.

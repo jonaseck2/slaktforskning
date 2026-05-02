@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.195.0 — Right-panel action clarity
+
+- feat: row actions in right-side panels now use distinct icons — trash for "delete entity permanently", unlink for "remove this connection". Tooltips spell out the blast radius. Replaces the overloaded `✕`.
+- feat: clicking a relationship row in PersonPanel opens RelationshipModal in edit mode (consistent with names and events).
+- feat: "Add father / mother / spouse / son / daughter" defaults to Find Existing Person when the database has more than one person, with helper text above the toggle. Prevents accidental duplicates.
+- feat: External identifiers section removed from PersonPanel (round-trip-only data, surfaced via import/export). Dead `PersonIdentifierModal` and orphaned i18n / entity-color tokens cleaned up.
+- fix: replaced hex colors and invented design-token names with real tokens in Names table, Research Tasks table, and Groups table. High-contrast and dark themes now adjust these correctly.
+- fix: Quality section is consistently the last data section across all panels (PlacePanel was the only violator).
+- fix: Names section is open by default in PersonPanel.
+- fix: birth-name shows a disabled trash icon with explanatory tooltip instead of disappearing.
+- fix: living/deceased chip now has a tooltip explaining it is driven by the death event.
+- chore: IconTrash + IconUnlink are now shared `ui/` primitives; PersonPanel Danger zone uses the shared trash too.
+- chore: hand-rolled 1500ms debounce in PersonChecksSection documented (orthogonal to useEntityData's mutation debounce — debounces selection changes during list navigation).
+- chore: UX_INVENTORY filled out for PersonPanel surfaces; cross-cutting icon convention documented; cross-cutting findings #1 (`✕` overload) and #2 (Add-relative duplicates) marked resolved.
+
 ## v0.194.0 — Citation modal redesign + span end-date + place tree polish
 
 - feat: citation source is now an autocomplete with in-field edit, changeable on existing citations
