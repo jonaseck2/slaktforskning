@@ -121,7 +121,6 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | PlacePanel — Media Timeline section | 2026-05-02 |
 | PlacePanel — Quality section | 2026-05-02 |
 | PlacePanel — Address section | 2026-05-02 |
-| PlacePanel — Hierarchy section | 2026-05-02 |
 
 ### Sources view (`SourcesView` + `SourcePanel`)
 
@@ -417,16 +416,16 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 
 
 ### PlacePanel → Place section
-**File:** `src/renderer/components/PlacePanel.vue` lines 18–122
+**File:** `src/renderer/components/PlacePanel.vue` Place section template
 **Verified:** 2026-05-02
 
-> **Purpose:** A user would use this section to *describe* what a place is — its name, what kind of place it is (city, parish, farm, cottage, building), where it sits in the world (coordinates), and how it nests inside the larger place hierarchy (parent place) — plus free-form notes about it.
+> **Purpose:** A user would use this section to see and update how a place is geographically placed — where it sits in the place hierarchy (parent place), whether placement was inferred from a gazetteer (and at what quality), and to override the inferred coordinates with a researched value when needed.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| Inline editable fields: name (via PlacePicker merge) · type dropdown · parent-place picker · latitude/longitude · resolved gazetteer match (if any) · notes textarea with monospace toggle | Not applicable (place is the host entity) | All fields edit inline on blur (`saveField` → `places.update`). Name field uses PlacePicker to **merge** another place's name (copies its coords, type, parent_place_id into the current place). | Not offered (lives in Danger zone, not yet audited). | Parent-place picker → opens **PlaceTreePickerModal** as subpanel. |
+| Inline editable fields: name (via PlacePicker merge) · type dropdown · parent-place picker · **lat + long on a single row with a 📍 map-pick button** · resolved gazetteer match (badge + gazetteer + path) · notes textarea with monospace toggle. Type / Parent place / Coordinates each show an extra "Resolved" badge with the gazetteer's value beneath the input when the user hasn't authored a value of their own. | Not applicable (place is the host entity) | All fields edit inline on blur (`saveField` → `places.update`). Name field uses PlacePicker to **merge** another place's name (copies its coords, type, parent_place_id into the current place). The 📍 button toggles a pick-mode banner over the map; the next click anywhere on the map writes lat+long to *this* place. Esc cancels. | Not offered (lives in Danger zone, not yet audited). | Parent-place picker → opens **PlaceTreePickerModal** as subpanel. |
 
-**Notes:** Resolved gazetteer display is read-only and informational (per the data-fidelity directive — it is recomputed every render from current gazetteers, never persisted).
+**Notes:** All resolved displays (the badged path AND the per-field "Resolved" hints) are read-only and informational — recomputed every render from current gazetteers, never persisted (Prime Directive). The previous separate Hierarchy section was removed; ancestor and child navigation belongs in PlaceTreePickerModal, reachable from the Parent-place picker.
 
 ---
 
@@ -495,20 +494,6 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 | Inline editable fields: street · postal code · city · country | Not applicable (fields are on the place entity). | All fields edit inline on blur (`saveField` → `places.update`). Each is an `<input type="text">` with independent blur handler. | Blur with empty string clears the field. | Not offered |
 
 **Notes:** Collapsed by default. Postal-address fields are independent from latitude/longitude in Place section.
-
----
-
-### PlacePanel → Hierarchy section
-**File:** `src/renderer/components/PlacePanel.vue` lines 243–271
-**Verified:** 2026-05-02
-
-> **Purpose:** _TBD — needs user-stated intent_
-
-| View | Add | Edit | Delete | Open |
-|---|---|---|---|---|
-| Read-only ancestor chain (root first, indented down to current place in bold) and child-places list (unindented). Both render as nested `<ul>`s with clickable links. | Not offered (the relationship is encoded by `parent_place_id` on the Place section). | Not offered (ancestor/child relations derived from `parent_place_id`). | Not offered (clearing parent in Place section detaches). | Each ancestor/child link → `emit('select-place', id)` → navigates to that place's panel in-place. |
-
-**Notes:** Ancestors computed by walking `parent_place_id` to root. Children derived from filtered all-places query. Empty state when both ancestors and children are absent.
 
 ---
 

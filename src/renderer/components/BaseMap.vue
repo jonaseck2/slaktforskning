@@ -75,6 +75,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   ready: [];
+  'map-click': [lat: number, lon: number];
 }>();
 
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
@@ -101,6 +102,9 @@ function onMapReady() {
   if (map) {
     map.on('zoomend', () => { currentZoom.value = map.getZoom(); });
     map.on('zoom', () => { currentZoom.value = map.getZoom(); });
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      emit('map-click', e.latlng.lat, e.latlng.lng);
+    });
     if (props.scrollWheelZoom) {
       setupSmoothWheel(map);
     }

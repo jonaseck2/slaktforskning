@@ -19,6 +19,7 @@
         <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" @toggle="toggleSection('place')" />
         <div v-if="sections.place" class="panel-section-body">
           <div v-if="!props.readonly" class="compact-form">
+            <!-- Place name (PlacePicker also acts as merge-from-existing) -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.name') }}</label>
               <PlacePicker
@@ -26,6 +27,8 @@
                 @select="onNamePlaceSelected"
               />
             </div>
+
+            <!-- Type -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.type') }}</label>
               <select
@@ -36,34 +39,64 @@
                 <option value="">—</option>
                 <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">{{ $t('placeTypes.' + pt) }}</option>
               </select>
+              <div v-if="!place.place_type && resolvedTypeLabel" class="resolved-fallback">
+                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
+                <span class="resolved-fallback-value">{{ resolvedTypeLabel }}</span>
+              </div>
             </div>
+
+            <!-- Parent place -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.parentPlace') }}</label>
               <PlacePicker
                 :model-value="place.parent_place_id ?? null"
                 @update:model-value="saveField('parent_place_id', $event)"
               />
+              <div v-if="!place.parent_place_id && resolvedParentPath" class="resolved-fallback">
+                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
+                <span class="resolved-fallback-value">{{ resolvedParentPath }}</span>
+              </div>
             </div>
+
+            <!-- Coordinates: lat + long on one row, with map-pick icon button -->
             <div class="compact-field">
-              <label class="compact-label">{{ $t('places.latitude') }}</label>
-              <input
-                class="compact-control"
-                type="number"
-                step="any"
-                :value="place.latitude ?? ''"
-                @blur="saveField('latitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-              />
+              <label class="compact-label">{{ $t('places.coordinates') }}</label>
+              <div class="coord-row">
+                <input
+                  class="compact-control coord-input"
+                  type="number"
+                  step="any"
+                  :placeholder="$t('places.latitude')"
+                  :aria-label="$t('places.latitude')"
+                  :value="place.latitude ?? ''"
+                  @blur="saveField('latitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
+                />
+                <input
+                  class="compact-control coord-input"
+                  type="number"
+                  step="any"
+                  :placeholder="$t('places.longitude')"
+                  :aria-label="$t('places.longitude')"
+                  :value="place.longitude ?? ''"
+                  @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
+                />
+                <button
+                  type="button"
+                  class="coord-pick-btn"
+                  :class="{ 'is-active': props.pickMode }"
+                  :title="$t('places.pickCoordsTitle')"
+                  :aria-label="$t('places.pickCoordsTitle')"
+                  :aria-pressed="props.pickMode ? 'true' : 'false'"
+                  @click="onPickCoordsClick"
+                >📍</button>
+              </div>
+              <div v-if="(place.latitude == null || place.longitude == null) && resolvedMatch" class="resolved-fallback">
+                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
+                <span class="resolved-fallback-value">{{ formatCoord(resolvedMatch.lat) }}, {{ formatCoord(resolvedMatch.lon) }}</span>
+              </div>
             </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.longitude') }}</label>
-              <input
-                class="compact-control"
-                type="number"
-                step="any"
-                :value="place.longitude ?? ''"
-                @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-              />
-            </div>
+
+            <!-- Resolved-via line: gazetteer + match quality + matched path -->
             <div v-if="resolvedMatch" class="compact-field resolved-field">
               <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
               <span class="resolved-value">
@@ -72,6 +105,8 @@
                 <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
               </span>
             </div>
+
+            <!-- Notes -->
             <div class="compact-field">
               <div class="notes-heading-row">
                 <label class="compact-label">{{ $t('panel.notes') }}</label>
@@ -103,8 +138,8 @@
               <span class="readonly-value">{{ $t('placeTypes.' + place.place_type) }}</span>
             </div>
             <div v-if="place.latitude != null || place.longitude != null" class="compact-field">
-              <span class="compact-label">{{ $t('places.latitude') }} / {{ $t('places.longitude') }}</span>
-              <span class="readonly-value">{{ place.latitude ?? '—' }} / {{ place.longitude ?? '—' }}</span>
+              <span class="compact-label">{{ $t('places.coordinates') }}</span>
+              <span class="readonly-value">{{ place.latitude ?? '—' }}, {{ place.longitude ?? '—' }}</span>
             </div>
             <div v-if="resolvedMatch" class="compact-field resolved-field">
               <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
@@ -224,36 +259,6 @@
         </div>
       </div>
 
-      <!-- Hierarchy section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('places.hierarchy')" :count="childPlaces.length" :collapsed="!sections.children" @toggle="toggleSection('children')" />
-        <div v-if="sections.children" class="panel-section-body">
-          <SectionEmpty v-if="ancestors.length === 0 && childPlaces.length === 0" :message="$t('empty.places')" />
-          <template v-else>
-            <!-- Ancestors (outermost first) -->
-            <ul v-if="ancestors.length > 0" class="hierarchy-list">
-              <li v-for="(anc, idx) in [...ancestors].reverse()" :key="anc.id" :style="{ paddingLeft: (idx * 12) + 'px' }">
-                <a class="person-link" href="#" @click.prevent="emit('select-place', anc.id)">
-                  {{ anc.name }}
-                </a>
-              </li>
-              <li class="hierarchy-current" :style="{ paddingLeft: (ancestors.length * 12) + 'px' }">
-                <strong>{{ place!.name }}</strong>
-              </li>
-            </ul>
-            <!-- Children -->
-            <div v-if="childPlaces.length > 0" class="hierarchy-children-label">{{ $t('places.childPlaces') }}</div>
-            <ul v-if="childPlaces.length > 0" class="hierarchy-list">
-              <li v-for="child in childPlaces" :key="child.id">
-                <a class="person-link" href="#" @click.prevent="emit('select-place', child.id)">
-                  {{ child.name }}
-                </a>
-              </li>
-            </ul>
-          </template>
-        </div>
-      </div>
-
       <!-- Quality section -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -276,8 +281,8 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
-import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonModal from './modals/PersonModal.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
@@ -321,20 +326,28 @@ interface ChildPlace {
   parent_place_id: string | null;
 }
 
-const props = defineProps<{ placeId: string | null; readonly?: boolean }>();
-const emit = defineEmits<{ 'select-place': [id: string]; 'close': []; 'place-updated': [id: string] }>();
+const props = defineProps<{ placeId: string | null; readonly?: boolean; pickMode?: boolean }>();
+const emit = defineEmits<{
+  'select-place': [id: string];
+  'close': [];
+  'place-updated': [id: string];
+  'pick-coords': [];
+  'cancel-pick': [];
+}>();
+
+const { t, te } = useI18n();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
 const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
-    place: true, persons: true, events: true,
-    media: false, mediaTimeline: false, address: false, children: false, quality: false,
+    place: true, persons: true, events: true, citations: false,
+    media: false, mediaTimeline: false, address: false, quality: false,
   },
   {
-    place: true, persons: true, events: true,
-    media: true, mediaTimeline: true, address: true, children: true, quality: false,
+    place: true, persons: true, events: true, citations: true,
+    media: true, mediaTimeline: true, address: true, quality: false,
   },
 );
 
@@ -360,7 +373,6 @@ const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonosp
 interface PlacePanelData {
   place: Place | null;
   ancestors: ChildPlace[];
-  childPlaces: ChildPlace[];
   personCount: number;
   eventCount: number;
   mediaCount: number;
@@ -373,9 +385,8 @@ const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (
     window.api.places.list() as Promise<ChildPlace[]>,
   ]);
 
-  const childPlaces = allPlaces.filter((pl) => pl.parent_place_id === id);
-
-  // Build ancestor chain by walking up parent_place_id
+  // Build ancestor chain by walking up parent_place_id (used to feed the gazetteer
+  // resolver with the full hierarchy, e.g. "Vienna, Austria").
   const chain: ChildPlace[] = [];
   const placeMap = new Map(allPlaces.map(pl => [pl.id, pl]));
   let parentId = p?.parent_place_id ?? null;
@@ -403,17 +414,16 @@ const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (
     // counts are non-critical
   }
 
-  return { place: p, ancestors: chain, childPlaces, personCount, eventCount, mediaCount };
+  return { place: p, ancestors: chain, personCount, eventCount, mediaCount };
 });
 
 const place = computed(() => panelData.value?.place ?? null);
 const ancestors = computed(() => panelData.value?.ancestors ?? []);
-const childPlaces = computed(() => panelData.value?.childPlaces ?? []);
 
-// Gazetteer resolution: when the place has no stored lat/lon, surface which
-// gazetteer (if any) was used to place it on the map and at what quality.
-// Also runs even when stored coords exist, so the user can spot when the
-// stored coords disagree with what the gazetteer would pick.
+// Gazetteer resolution: surface which gazetteer the resolver picked, at what
+// quality, and what the resolved values would be — so the user can fall back
+// to the gazetteer (or override with a researched coordinate). Resolved values
+// are NEVER persisted (Prime Directive); they are recomputed every render.
 const { ready: resolverReady, ensureLoaded: ensureResolverLoaded, resolve } = usePlaceResolver();
 ensureResolverLoaded();
 
@@ -424,6 +434,28 @@ const resolvedMatch = computed<PlaceResolveResult | null>(() => {
   const parts = [p.name, ...ancestors.value.map(a => a.name)];
   return resolve(parts.join(', '));
 });
+
+// Resolved Type fallback — the gazetteer node's `type` (e.g. "country", "city").
+// If it overlaps with PLACE_TYPE_VALUES we render the localized label; otherwise
+// we render the raw string from the gazetteer.
+const resolvedTypeLabel = computed<string | null>(() => {
+  const m = resolvedMatch.value;
+  if (!m) return null;
+  const raw = m.matchedNode?.type ?? null;
+  if (!raw) return null;
+  const key = `placeTypes.${raw}`;
+  return te(key) ? t(key) : raw;
+});
+
+// Resolved Parent path fallback — everything in the matched gazetteer path
+// before the leaf, joined with ›. Empty when the leaf matched at root level.
+const resolvedParentPath = computed<string | null>(() => {
+  const m = resolvedMatch.value;
+  if (!m) return null;
+  const path = m.matchedPath.slice(0, -1);
+  return path.length > 0 ? path.join(' › ') : null;
+});
+
 const personCount = computed(() => panelData.value?.personCount ?? 0);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
 const mediaCount = computed(() => panelData.value?.mediaCount ?? 0);
@@ -466,6 +498,21 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   await window.api.places.update(props.placeId, updates);
   await reload();
   emit('place-updated', props.placeId);
+}
+
+// ── Map-pick coordinates ─────────────────────────────────────────────────────
+
+function onPickCoordsClick() {
+  if (props.readonly) return;
+  if (props.pickMode) {
+    emit('cancel-pick');
+  } else {
+    emit('pick-coords');
+  }
+}
+
+function formatCoord(n: number): string {
+  return n.toFixed(5);
 }
 </script>
 
@@ -546,35 +593,69 @@ async function onNamePlaceSelected(selected: { id: string; name: string }) {
   border-color: var(--accent);
 }
 
-/* Hierarchy list */
-.hierarchy-list {
-  list-style: none;
-  padding: var(--space-xs) 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.hierarchy-list li {
-  font-size: var(--font-xs);
-}
-.hierarchy-current {
-  color: var(--text-primary);
-  font-size: var(--font-xs);
-}
-.hierarchy-children-label {
-  padding: var(--space-xs) 0 2px;
-  font-size: var(--font-xs);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
 .readonly-value {
   font-size: var(--font-xs);
   color: var(--text-primary);
   padding: var(--space-xs) 0;
+}
+
+/* Coordinates row: lat + long inputs side-by-side, with map-pin pick button */
+.coord-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: stretch;
+}
+.coord-input {
+  flex: 1 1 100px;
+  min-width: 100px;
+}
+.coord-pick-btn {
+  flex: 0 0 auto;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+  cursor: pointer;
+  line-height: 1;
+}
+.coord-pick-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.coord-pick-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text, #fff);
+}
+
+/* Resolved-fallback hint shown beneath an empty editable field. Communicates
+   "if you leave this blank, the gazetteer says X" without persisting X. */
+.resolved-fallback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: 2px;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+.resolved-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: var(--info-bg, var(--surface-hover));
+  color: var(--info-text, var(--text-secondary));
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+  line-height: 1.4;
+}
+.resolved-fallback-value {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .resolved-field {

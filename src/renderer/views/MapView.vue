@@ -11,7 +11,14 @@
 
       <AppLoadingState v-if="loading" />
 
-      <div v-else class="map-content">
+      <div v-else class="map-content" :class="{ 'pick-mode': pickMode }">
+        <!-- Coord-pick banner (overlays the map while pickMode is on) -->
+        <div v-if="pickMode" class="pick-banner" role="status">
+          <span class="pick-banner-text">{{ pickModeLabel ?? $t('places.pickCoordsBanner') }}</span>
+          <button class="pick-banner-cancel" type="button" @click="emit('cancel-pick')">
+            {{ $t('common.cancel') }}
+          </button>
+        </div>
         <BaseMap
           ref="baseMapRef"
           :initial-zoom="4"
@@ -19,6 +26,7 @@
           :scroll-wheel-zoom="true"
           :show-fit="true"
           @ready="onMapReady"
+          @map-click="onMapClick"
         >
           <!-- Markers managed imperatively via canvasMarkers for performance -->
           <!-- Only mount LGeoJson once Leaflet's canvas renderer is ready —
@@ -66,8 +74,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 
-const props = defineProps<{ noPanel?: boolean; searchText?: string; countryFilter?: string }>();
-const emit = defineEmits<{ 'select-place': [id: string]; 'reopen-panel': [] }>();
+const props = defineProps<{
+  noPanel?: boolean;
+  searchText?: string;
+  countryFilter?: string;
+  pickMode?: boolean;
+  pickModeLabel?: string;
+}>();
+const emit = defineEmits<{
+  'select-place': [id: string];
+  'reopen-panel': [];
+  'coords-picked': [lat: number, lon: number];
+  'cancel-pick': [];
+}>();
 import { LGeoJson } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
 import BaseMap from '../components/BaseMap.vue';
@@ -150,7 +169,14 @@ function syncMarkers() {
       existing.setRadius(selected ? 8 : 6);
     } else {
       const m = L.circleMarker([p.displayLat, p.displayLon], markerStyle(selected, resolved));
-      m.on('click', () => selectPlace(p.id));
+      m.on('click', () => {
+        if (props.pickMode) {
+          const ll = m.getLatLng();
+          emit('coords-picked', ll.lat, ll.lng);
+          return;
+        }
+        selectPlace(p.id);
+      });
       markerLayer.addLayer(m);
       markerMap.set(p.id, m);
     }
@@ -384,6 +410,27 @@ const filteredPlaces = computed(() => {
   });
 });
 
+function onMapClick(lat: number, lon: number) {
+  if (!props.pickMode) return;
+  emit('coords-picked', lat, lon);
+}
+
+// Esc cancels pick mode while it's active
+function onPickEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.pickMode) {
+    e.stopPropagation();
+    emit('cancel-pick');
+  }
+}
+watch(() => props.pickMode, (on) => {
+  if (on) {
+    window.addEventListener('keydown', onPickEscape, true);
+  } else {
+    window.removeEventListener('keydown', onPickEscape, true);
+  }
+});
+onUnmounted(() => window.removeEventListener('keydown', onPickEscape, true));
+
 function fitBounds() {
   nextTick(() => {
     if (filteredPlaces.value.length === 0) return;
@@ -482,6 +529,43 @@ onMounted(async () => {
   min-height: 0;
   position: relative;
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
+}
+.map-content.pick-mode :deep(.leaflet-container),
+.map-content.pick-mode :deep(.leaflet-clickable),
+.map-content.pick-mode :deep(.leaflet-interactive) {
+  cursor: crosshair !important;
+}
+.pick-banner {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--accent);
+  color: var(--accent-text, #fff);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-sm);
+  pointer-events: auto;
+  white-space: nowrap;
+  max-width: calc(100% - 2 * var(--space-md));
+}
+.pick-banner-text { font-weight: 500; }
+.pick-banner-cancel {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent-text, #fff) 60%, transparent);
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding: 2px 10px;
+  font-size: var(--font-xs);
+  cursor: pointer;
+}
+.pick-banner-cancel:hover {
+  background: color-mix(in srgb, var(--accent-text, #fff) 15%, transparent);
 }
 .map-empty-overlay {
   position: absolute;

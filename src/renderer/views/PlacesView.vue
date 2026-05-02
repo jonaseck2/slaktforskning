@@ -70,7 +70,18 @@
     <button v-else class="list-open-btn" :aria-label="$t('common.open') ?? 'Open'" title="Visa listan" @click="openList">▶</button>
 
     <!-- Map (always shown in center) -->
-    <MapView no-panel :search-text="searchQuery" :country-filter="activeCountryFilter" style="flex: 1; min-width: 0" @select-place="selectPlace" @reopen-panel="openPanel">
+    <MapView
+      no-panel
+      :search-text="searchQuery"
+      :country-filter="activeCountryFilter"
+      :pick-mode="pickMode"
+      :pick-mode-label="pickModeLabel"
+      style="flex: 1; min-width: 0"
+      @select-place="selectPlace"
+      @reopen-panel="openPanel"
+      @coords-picked="onCoordsPicked"
+      @cancel-pick="cancelPick"
+    >
       <template #header>
         <div class="header">
           <h2>{{ $t('places.title') }}</h2>
@@ -95,7 +106,16 @@
     <template v-if="panelOpen && selectedPlaceId">
       <div class="panel-drag-handle" @mousedown="(e: MouseEvent) => startResize(e, placesBodyRef!)"></div>
       <div class="places-panel" :style="{ width: panelWidth + 'px' }">
-        <PlacePanel :place-id="selectedPlaceId" :readonly="isStaticMode" @close="closePanel" @select-place="selectPlace" @place-updated="reloadAll" />
+        <PlacePanel
+          :place-id="selectedPlaceId"
+          :readonly="isStaticMode"
+          :pick-mode="pickMode"
+          @close="closePanel"
+          @select-place="selectPlace"
+          @place-updated="reloadAll"
+          @pick-coords="startPick"
+          @cancel-pick="cancelPick"
+        />
       </div>
     </template>
 
@@ -313,6 +333,36 @@ async function reloadAll() {
 function onPlaceSaved() {
   showAddForm.value = false;
   void reloadAll();
+}
+
+// Coord-pick mode: triggered by PlacePanel's "set on map" icon. While active,
+// the next map click writes lat+long to the currently selected place.
+const pickMode = ref(false);
+const pickModeLabel = computed(() => {
+  if (!pickMode.value || !selectedPlaceId.value) return undefined;
+  const row = placesById.value.get(selectedPlaceId.value);
+  return row ? t('places.pickCoordsBannerFor', { name: row.name }) : t('places.pickCoordsBanner');
+});
+function startPick() {
+  if (!selectedPlaceId.value) return;
+  pickMode.value = true;
+}
+function cancelPick() {
+  pickMode.value = false;
+}
+async function onCoordsPicked(lat: number, lon: number) {
+  const id = selectedPlaceId.value;
+  pickMode.value = false;
+  if (!id) return;
+  try {
+    await window.api.places.update(id, {
+      latitude: Number(lat.toFixed(6)),
+      longitude: Number(lon.toFixed(6)),
+    });
+    await reloadAll();
+  } catch (err) {
+    console.error('[PlacesView] failed to set coordinates from map click:', err);
+  }
 }
 
 watch(() => route.params.id, (id) => {

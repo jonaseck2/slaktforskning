@@ -6,6 +6,9 @@
 
 ## Unreleased
 
+- feat: PlacePanel place section now communicates *how* a place is anchored — Type, Parent place, and Coordinates each show a "Resolved" hint with the gazetteer's value when you haven't authored one yourself.
+- feat: lat/long sit on a single row with a 📍 button — click to set coordinates by clicking on the map. A blue banner names the target place; Esc cancels.
+- feat: PlacePanel Hierarchy section removed — the place picker already exposes the place tree.
 - feat: persons with both a current and a birth-name record render as `Anna Andersson (f. Svensson)` (sv) / `(b. Svensson)` (en) across the panel header, persons list, search, person picker, relationships list, person timeline, linked-persons sections, and HTML site export.
 - feat: 7 keepsake reports (A Life, A Marriage, Life on One Page, Photo Album, Your Ancestors, Place Chronicle, Family in Year) each get a per-report "Show birth name in parenthesis" toggle, inheriting the global default and overridable per-report.
 - feat: Settings → Defaults gains a "Visning / Display" section with a global toggle for the birth-name parenthetical (defaults to on). Toggle re-renders open views immediately.
