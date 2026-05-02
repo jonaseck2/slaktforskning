@@ -331,6 +331,8 @@ export default {
     spouseNew: 'Lägg till ny person',
     endDateOptional: 'Slutdatum (valfritt)',
     endDateHint: 'Lämna tomt om händelsen pågick under en enda tidpunkt eller saknar känt slut.',
+    alsoRecordNameChange: 'Registrera även namnändring för {name}',
+    alsoRecordNameChangeHint: 'Skapar en separat namnpost. Datum hämtas från händelsedatumet.',
   },
   citations: {
     entity: 'Hänvisning',

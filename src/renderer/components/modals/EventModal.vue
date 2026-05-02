@@ -102,6 +102,47 @@
         </div>
       </template>
 
+      <!-- Opt-in: also record a name change for the panel-owning person.
+           PRIME DIRECTIVE: a name row is only written if recordNameChange stays
+           true at save AND at least one of given/surname has content. No
+           cascade-link to the event after creation. -->
+      <template v-if="showNameChangeCompanion">
+        <div class="ep-field ep-namechange-toggle">
+          <label class="ep-checkbox">
+            <input type="checkbox" v-model="recordNameChange" />
+            <span>{{ $t('events.alsoRecordNameChange', { name: contextName }) }}</span>
+          </label>
+          <span class="ep-field-hint">{{ $t('events.alsoRecordNameChangeHint') }}</span>
+        </div>
+        <template v-if="recordNameChange">
+          <div class="ep-field">
+            <span class="ep-field-label">{{ $t('persons.givenName') }}</span>
+            <input class="ep-input" v-model="nameChangeForm.given_name" type="text" />
+          </div>
+          <div class="ep-field">
+            <span class="ep-field-label">{{ $t('persons.surname') }}</span>
+            <input class="ep-input" v-model="nameChangeForm.surname" type="text" />
+          </div>
+          <div class="ep-field">
+            <span class="ep-field-label">{{ $t('names.nameType') }}</span>
+            <div class="ep-seg">
+              <button
+                type="button"
+                class="ep-seg-opt"
+                :class="{ 'ep-seg-opt--on': nameChangeForm.name_type === 'married' }"
+                @click="nameChangeForm.name_type = 'married'"
+              >{{ $t('nameTypes.married') }}</button>
+              <button
+                type="button"
+                class="ep-seg-opt"
+                :class="{ 'ep-seg-opt--on': nameChangeForm.name_type === 'name_change' }"
+                @click="nameChangeForm.name_type = 'name_change'"
+              >{{ $t('nameTypes.name_change') }}</button>
+            </div>
+          </div>
+        </template>
+      </template>
+
       <!-- Birth-only: optional baptism details (saved as a linked baptism event) -->
       <template v-if="showBaptismFields">
         <div class="ep-field">
@@ -195,12 +236,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue';
+import { reactive, ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import { useDeleteConfirm } from '../../composables/useDeleteConfirm';
+import { useToast } from '../../composables/useToast';
 import DateInput from '../DateInput.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
@@ -208,6 +250,7 @@ import PersonPicker from '../PersonPicker.vue';
 import PersonModal from './PersonModal.vue';
 import { EVENT_TYPE_VALUES, isSpanEventType } from '../../constants/eventTypes';
 import { isEventTypeSortMode, sortEventTypes, type EventTypeSortMode } from '../../utils/eventTypeSort';
+import { pickDisplayedName } from '../../utils/nameUtils';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -263,6 +306,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const toast = useToast();
 
 // User-controlled sort order (BENGT #1, #3). Default: alphabetical.
 const eventTypeSort = ref<EventTypeSortMode>('alphabetical');
@@ -432,6 +476,59 @@ async function reloadPartnerOptions() {
     partnerOptions.value = options;
   } catch { /* ignore */ }
 }
+
+// Marriage-modal name-change companion (opt-in).
+//
+// PRIME DIRECTIVE: this checkbox is OFF by default. The fields are pre-filled
+// from the person's current displayed name as a convenience, but no name row is
+// written unless the user keeps the checkbox ticked when saving.
+//
+// CASCADE-DECOUPLING: once the companion name row is created in handleSave,
+// it is a separately authored fact. Editing or deleting the marriage event
+// later does NOT update or remove the name row. Do not add code that re-reads
+// or syncs the name row when the event is mutated.
+const NAME_CHANGE_EVENT_TYPES = new Set(['marriage', 'wedding', 'engagement']);
+const recordNameChange = ref(false);
+const nameChangeForm = reactive({
+  given_name: '',
+  surname: '',
+  name_type: 'married' as 'married' | 'name_change',
+});
+const showNameChangeCompanion = computed(
+  () => NAME_CHANGE_EVENT_TYPES.has(form.event_type)
+    && !!props.personId
+    && !props.editingEvent,
+);
+
+// Pre-fill name fields from the person's current displayed name when the
+// checkbox is first ticked. Only pre-fills when both fields are empty so we
+// never overwrite something the user typed.
+watch([showNameChangeCompanion, recordNameChange], async ([visible, on]) => {
+  if (!(visible && on)) return;
+  if (nameChangeForm.given_name || nameChangeForm.surname) return;
+  if (!props.personId || !window.api) return;
+  try {
+    const [namesResp, eventsResp] = await Promise.all([
+      window.api.persons.getNames(props.personId) as Promise<Array<{
+        id: string;
+        given_name: string | null;
+        surname: string | null;
+        preferred_name: string | null;
+        nickname: string | null;
+        sort_order: number;
+        name_type: string;
+        date_from?: string | null;
+      }>>,
+      window.api.events.forPerson(props.personId) as Promise<Array<{
+        event_type: string; date_value: string | null;
+      }>>,
+    ]);
+    const current = pickDisplayedName(namesResp, eventsResp);
+    if (!current) return;
+    nameChangeForm.given_name = current.given_name ?? '';
+    nameChangeForm.surname = current.surname ?? '';
+  } catch { /* ignore */ }
+});
 
 // Sub-panel state — citation flow delegates source picking to CitationModal itself
 const subPanel = ref<'citation' | 'person' | null>(null);
@@ -651,6 +748,34 @@ async function handleSave() {
       pendingCitations.value = [];
     }
     await syncBaptismCompanion(ev.id!);
+    // Marriage-modal name-change companion: only at create time, only when the
+    // user keeps the checkbox ticked, only when at least one field has content.
+    // PRIME DIRECTIVE: best-effort — if this fails, surface but do NOT roll
+    // back the event. The name row is a separately authored fact from this
+    // moment on (no cascade on later event edits or delete).
+    if (
+      !props.editingEvent
+      && recordNameChange.value
+      && showNameChangeCompanion.value
+      && props.personId
+    ) {
+      const given = nameChangeForm.given_name.trim();
+      const surname = nameChangeForm.surname.trim();
+      if (given || surname) {
+        try {
+          await window.api.persons.addName(props.personId, {
+            given_name: given,
+            surname: surname || null,
+            name_type: nameChangeForm.name_type,
+            date_from: form.date_value || null,
+            date_to: null,
+          });
+        } catch (nameErr) {
+          console.error('[EventModal] companion name save failed:', nameErr);
+          toast.error(t('errors.saveFailed'));
+        }
+      }
+    }
     emit('saved', ev);
   } catch (err) {
     console.error('[EventModal] save failed:', err);
@@ -747,6 +872,18 @@ function handleCancel() {
   color: var(--color-link, var(--accent));
   font-size: var(--font-sm);
   padding: var(--space-xs) 0 0 0;
+  cursor: pointer;
+}
+.ep-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  user-select: none;
+}
+.ep-checkbox input[type="checkbox"] {
+  margin: 0;
   cursor: pointer;
 }
 .ep-link-btn:hover {
