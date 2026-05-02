@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat(mcp): new `update_media` and `delete_media` MCP tools. Closes the gap that left an agent unable to repair a broken `media.file_ref` (e.g. an attached URL that should have been a relative path under `<dbname>-media/`) or remove a media row entirely. `update_media` now also accepts `file_ref` (previously only title/notes/format/is_printable were updatable).
 - feat(mcp): `record_event` and `update_event` accept `date_value_end` so range dates (`date_type: "between"`, e.g. military service 1999–2000) round-trip through the MCP — previously the field was silently dropped on the way in.
 - feat(mcp): new `update_person_name` tool — retype an existing `person_name` (e.g. flip the auto-stamped primary `birth` to `aka` when the actual birth surname differs), set `date_from`/`date_to`, attach `nickname` / `preferred_name`. Closes the gap that left the `MULTIPLE_BIRTH_NAMES` quality warning unfixable from the agent side.
 - feat(mcp): new `delete_person_name` tool — drop a single `person_name` record without deleting the person.

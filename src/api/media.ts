@@ -155,6 +155,7 @@ export function updateMedia(db: Database, id: string, data: {
   notes?: string;
   format?: string | null;
   is_printable?: boolean;
+  file_ref?: string | null;
 }): Media | null {
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -163,6 +164,7 @@ export function updateMedia(db: Database, id: string, data: {
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
   if (data.format !== undefined) { fields.push('format = ?'); values.push(data.format); }
   if (data.is_printable !== undefined) { fields.push('is_printable = ?'); values.push(data.is_printable ? 1 : 0); }
+  if (data.file_ref !== undefined) { fields.push('file_ref = ?'); values.push(data.file_ref); }
 
   if (fields.length === 0) return getMedia(db, id);
 

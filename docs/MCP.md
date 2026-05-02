@@ -75,7 +75,9 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 | Tool | Description |
 |------|-------------|
-| `attach_media` | Link a media file to an entity (person, event, relationship, place, source). Creates the media record if needed. |
+| `attach_media` | Link a media file to an entity (person, event, relationship, place, source). Creates the media record if needed. `file_ref` must be a path RELATIVE to the database directory (e.g. `claude-media/photo.jpg`); URLs and absolute paths break the renderer. |
+| `update_media` | Update an existing media record (title, notes, format, `file_ref`, is_printable). Use to repair a broken `file_ref` after relocating the file into `<dbname>-media/`. |
+| `delete_media` | Delete a media record and its links. The underlying file on disk is not removed. |
 | `tag_person_in_media` | Create a face/region tag on a media item linking it to a person. Coordinates are fractions 0.0–1.0 of image dimensions. |
 | `get_media_for_person_context` | Find media that might contain a specific person based on event and relationship links. Returns base64 thumbnails for vision processing. |
 

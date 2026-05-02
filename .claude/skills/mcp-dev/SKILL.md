@@ -91,6 +91,22 @@ During genealogy research, use the **prod server** (`src/mcp/server.ts`):
 
 **Always call `search_persons` (or the relevant search tool) before `create_person`.** Never blindly create a record that may already exist. This applies to all entity types — persons, places, sources, groups. Duplicates are expensive to clean up and confuse users.
 
+### Media file_ref rule — NEVER pass a URL or absolute path
+
+`media.file_ref` is resolved at render time by joining it to the directory containing the active database (e.g. `~/db/family.db` → `~/db/` + `file_ref`). The renderer treats `file_ref` as a path. So:
+
+- ✅ `file_ref: "claude-media/photo.jpg"` (relative to db directory, file lives at `~/db/claude-media/photo.jpg`)
+- ❌ `file_ref: "https://i.ytimg.com/vi/X/maxresdefault.jpg"` — fails to load. The renderer doesn't fetch URLs.
+- ❌ `file_ref: "/Users/.../photo.jpg"` — absolute paths must be consolidated into `<dbname>-media/` first (see `.claude/rules/media.md`).
+
+**If you have a URL pointing at an image you want to attach:**
+1. `curl -o /path/to/<dbname>-media/<filename>.jpg "<url>"` (use `getMediaDir(dbPath)` to compute the folder; create it with `mkdir -p` if missing).
+2. `attach_media({ file_ref: "<dbname>-media/<filename>.jpg", format: "jpg", ... })`.
+
+**If a URL belongs as a citation, not as a media file:** put it in a `source.url` and `cite()` the person/event — that's what sources are for. The LinkedIn/Facebook profile URL of a living person is almost always a citation, not media.
+
+**To repair a broken `file_ref` after the fact:** use `update_media({ id, file_ref: "..." })`. To drop a media row entirely (e.g. an attached URL that should have been a source): `delete_media({ id })`.
+
 ### Headless / pipeline mode
 
 If you are running as a headless agent (Kubernetes pod, CI, no window server, no `.mcp.json`):
@@ -160,6 +176,19 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 - `mcp__slaktforskning__list_persons`
 - `mcp__slaktforskning__search_persons`
 - etc.
+
+### When changing the MCP server source: full process restart required
+
+The MCP server is a long-running child process spawned by Claude Code from `.mcp.json`. **Reconnecting the MCP from Claude Code does not always respawn the underlying `npx tsx` process** — sometimes only the transport reconnects. Symptoms:
+
+- A newly added tool isn't visible via `ToolSearch`.
+- `update_event` / `record_event` reject `date_value_end` ("Input validation error: Unrecognized key").
+- `mcp__slaktforskning__update_person_name` returns "No matching deferred tools found".
+
+To force a real restart, use Claude Code's `/mcp` slash command and explicitly restart the slaktforskning server (or quit + reopen the Claude Code window). After restart:
+
+1. **The MCP server's "current database" resets to the default app data DB.** Always call `switch_database` again before continuing work.
+2. Verify the new tool appears via `ToolSearch` before calling it — if it's still missing, the restart didn't take.
 
 ## Adding a New MCP Tool
 

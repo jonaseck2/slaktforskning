@@ -323,3 +323,60 @@ describe('get_media_for_person_context', () => {
     expect(ids.filter((id: string) => id === media.id)).toHaveLength(1);
   });
 });
+
+describe('update_media', () => {
+  it('registers the tool', () => {
+    expect(tools.has('update_media')).toBe(true);
+  });
+
+  it('rewrites file_ref so a media record originally pointing at a URL can be repaired to a relative path', async () => {
+    // Reproduces the agent gap: attach_media accepted a URL as file_ref, but the
+    // renderer resolves file_ref against <dbname>-media/, so the row failed to
+    // load. With update_media we can rewrite file_ref to the relocated file.
+    const broken = createMedia(db, {
+      title: 'Forefront thumbnail',
+      file_ref: 'https://i.ytimg.com/vi/5aHeuU8DxoQ/maxresdefault.jpg',
+      format: 'jpg',
+    });
+
+    const res = await callTool<{ id: string; file_ref: string; title: string }>(
+      tools,
+      'update_media',
+      {
+        id: broken.id,
+        file_ref: 'claude-media/jonas-forefront-thumbnail.jpg',
+      }
+    );
+    expect(res.file_ref).toBe('claude-media/jonas-forefront-thumbnail.jpg');
+    expect(res.title).toBe('Forefront thumbnail');
+  });
+
+  it('returns "Media not found" for an unknown id', async () => {
+    const res = await callTool<string>(tools, 'update_media', { id: 'nonexistent', title: 'X' });
+    expect(res).toBe('Media not found');
+  });
+});
+
+describe('delete_media', () => {
+  it('registers the tool', () => {
+    expect(tools.has('delete_media')).toBe(true);
+  });
+
+  it('removes the media record (and any links) without affecting linked persons', async () => {
+    const person = createPerson(db, { sex: 'M', given_name: 'Jonas', surname: 'Test' });
+    const media = createMedia(db, { title: 'LinkedIn URL', file_ref: 'https://example.com/x' });
+    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+
+    const res = await callTool<string>(tools, 'delete_media', { id: media.id });
+    expect(res).toBe('Deleted');
+
+    // person still exists; media row gone
+    const checkRow = db.prepare('SELECT id FROM media WHERE id = ?').get([media.id]);
+    expect(checkRow).toBeFalsy();
+  });
+
+  it('returns "Media not found" for an unknown id', async () => {
+    const res = await callTool<string>(tools, 'delete_media', { id: 'nonexistent' });
+    expect(res).toBe('Media not found');
+  });
+});

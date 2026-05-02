@@ -56,6 +56,32 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
     return { content: [{ type: 'text', text: JSON.stringify(region, null, 2) }] };
   });
 
+  server.registerTool('update_media', {
+    description: 'Update fields on an existing media record. Use this to point file_ref at the actual relocated file (must be a path RELATIVE to the database directory, e.g. "claude-media/photo.jpg"; NEVER a URL or absolute path — those will fail to load in the renderer). To replace the file itself, copy the new file into the <dbname>-media/ folder first, then update file_ref.',
+    inputSchema: {
+      id: z.string().describe('Media ID'),
+      title: z.string().optional(),
+      notes: z.string().optional(),
+      format: z.string().optional().describe('File format (e.g. jpg, pdf, mp4)'),
+      file_ref: z.string().optional().describe('Path RELATIVE to the database directory, like "claude-media/photo.jpg". URLs and absolute paths break the renderer.'),
+      is_printable: z.boolean().optional(),
+    },
+  }, async (args) => {
+    const { id, ...data } = args;
+    const media = mediaApi.updateMedia(getDb(), id, data);
+    return { content: [{ type: 'text', text: media ? JSON.stringify(media, null, 2) : 'Media not found' }] };
+  });
+
+  server.registerTool('delete_media', {
+    description: 'Delete a media record (and all of its links to entities). Does not remove the underlying file from disk — that must be done separately.',
+    inputSchema: {
+      id: z.string().describe('Media ID'),
+    },
+  }, async (args) => {
+    const ok = mediaApi.deleteMedia(getDb(), args.id);
+    return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Media not found' }] };
+  });
+
   server.registerTool('get_media_for_person_context', {
     description: 'Find media that might contain a specific person, based on event and relationship links',
     inputSchema: {
