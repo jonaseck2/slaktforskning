@@ -31,30 +31,29 @@
             <!-- Type -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.type') }}</label>
-              <select
-                class="compact-control"
-                :value="place.place_type ?? ''"
-                @change="saveField('place_type', ($event.target as HTMLSelectElement).value || null)"
-              >
-                <option value="">—</option>
-                <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">{{ $t('placeTypes.' + pt) }}</option>
-              </select>
-              <div v-if="!place.place_type && resolvedTypeLabel" class="resolved-fallback">
-                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
-                <span class="resolved-fallback-value">{{ resolvedTypeLabel }}</span>
+              <div class="field-resolved-wrap" :class="{ 'has-resolved': !place.place_type && resolvedTypeLabel }">
+                <select
+                  class="compact-control"
+                  :value="place.place_type ?? ''"
+                  @change="saveField('place_type', ($event.target as HTMLSelectElement).value || null)"
+                >
+                  <option value="">{{ !place.place_type && resolvedTypeLabel ? resolvedTypeLabel : '—' }}</option>
+                  <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">{{ $t('placeTypes.' + pt) }}</option>
+                </select>
+                <span v-if="!place.place_type && resolvedTypeLabel" class="resolved-chip-inline resolved-chip-select">{{ $t('places.resolvedBadge') }}</span>
               </div>
             </div>
 
             <!-- Parent place -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.parentPlace') }}</label>
-              <PlacePicker
-                :model-value="place.parent_place_id ?? null"
-                @update:model-value="saveField('parent_place_id', $event)"
-              />
-              <div v-if="!place.parent_place_id && resolvedParentPath" class="resolved-fallback">
-                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
-                <span class="resolved-fallback-value">{{ resolvedParentPath }}</span>
+              <div class="field-resolved-wrap" :class="{ 'has-resolved': !place.parent_place_id && resolvedParentPath }">
+                <PlacePicker
+                  :model-value="place.parent_place_id ?? null"
+                  :placeholder="!place.parent_place_id && resolvedParentPath ? resolvedParentPath : undefined"
+                  @update:model-value="saveField('parent_place_id', $event)"
+                />
+                <span v-if="!place.parent_place_id && resolvedParentPath" class="resolved-chip-inline resolved-chip-picker">{{ $t('places.resolvedBadge') }}</span>
               </div>
             </div>
 
@@ -62,24 +61,30 @@
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.coordinates') }}</label>
               <div class="coord-row">
-                <input
-                  class="compact-control coord-input"
-                  type="number"
-                  step="any"
-                  :placeholder="$t('places.latitude')"
-                  :aria-label="$t('places.latitude')"
-                  :value="place.latitude ?? ''"
-                  @blur="saveField('latitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-                />
-                <input
-                  class="compact-control coord-input"
-                  type="number"
-                  step="any"
-                  :placeholder="$t('places.longitude')"
-                  :aria-label="$t('places.longitude')"
-                  :value="place.longitude ?? ''"
-                  @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-                />
+                <div class="field-resolved-wrap coord-wrap" :class="{ 'has-resolved': place.latitude == null && resolvedMatch }">
+                  <input
+                    class="compact-control coord-input"
+                    type="number"
+                    step="any"
+                    :placeholder="place.latitude == null && resolvedMatch ? formatCoord(resolvedMatch.lat) : $t('places.latitude')"
+                    :aria-label="$t('places.latitude')"
+                    :value="place.latitude ?? ''"
+                    @blur="saveField('latitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
+                  />
+                  <span v-if="place.latitude == null && resolvedMatch" class="resolved-chip-inline">{{ $t('places.resolvedBadge') }}</span>
+                </div>
+                <div class="field-resolved-wrap coord-wrap" :class="{ 'has-resolved': place.longitude == null && resolvedMatch }">
+                  <input
+                    class="compact-control coord-input"
+                    type="number"
+                    step="any"
+                    :placeholder="place.longitude == null && resolvedMatch ? formatCoord(resolvedMatch.lon) : $t('places.longitude')"
+                    :aria-label="$t('places.longitude')"
+                    :value="place.longitude ?? ''"
+                    @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
+                  />
+                  <span v-if="place.longitude == null && resolvedMatch" class="resolved-chip-inline">{{ $t('places.resolvedBadge') }}</span>
+                </div>
                 <button
                   type="button"
                   class="coord-pick-btn"
@@ -89,10 +94,6 @@
                   :aria-pressed="props.pickMode ? 'true' : 'false'"
                   @click="onPickCoordsClick"
                 >📍</button>
-              </div>
-              <div v-if="(place.latitude == null || place.longitude == null) && resolvedMatch" class="resolved-fallback">
-                <span class="resolved-badge">{{ $t('places.resolvedBadge') }}</span>
-                <span class="resolved-fallback-value">{{ formatCoord(resolvedMatch.lat) }}, {{ formatCoord(resolvedMatch.lon) }}</span>
               </div>
             </div>
 
@@ -606,10 +607,21 @@ function formatCoord(n: number): string {
   gap: var(--space-xs);
   align-items: stretch;
 }
-.coord-input {
+.coord-wrap {
   flex: 1 1 100px;
   min-width: 100px;
 }
+.coord-input {
+  width: 100%;
+}
+/* Hide native number-input spinners — they crowd the resolved chip and aren't
+   useful for free-form coordinate entry */
+.coord-input::-webkit-inner-spin-button,
+.coord-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.coord-input { -moz-appearance: textfield; }
 .coord-pick-btn {
   flex: 0 0 auto;
   padding: 0 var(--space-sm);
@@ -631,18 +643,36 @@ function formatCoord(n: number): string {
   color: var(--accent-text, #fff);
 }
 
-/* Resolved-fallback hint shown beneath an empty editable field. Communicates
-   "if you leave this blank, the gazetteer says X" without persisting X. */
-.resolved-fallback {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-top: 2px;
-  font-size: var(--font-xs);
-  color: var(--text-muted);
+/* Inline-in-field resolved fallback: ghost the placeholder text and pin a
+   small "Resolved" chip inside the field's right edge. Communicates "if you
+   leave this blank, the gazetteer says X" without persisting X. */
+.field-resolved-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
 }
-.resolved-badge {
-  display: inline-block;
+.field-resolved-wrap.has-resolved .compact-control::placeholder {
+  color: var(--text-secondary);
+  font-style: italic;
+  opacity: 1;
+}
+/* When the parent picker is showing a resolved fallback, push its inner
+   placeholder text further right so it doesn't slide under the chip. */
+.field-resolved-wrap.has-resolved :deep(.place-picker input) {
+  padding-right: 92px;
+}
+.field-resolved-wrap.has-resolved > input.compact-control {
+  padding-right: 78px;
+}
+/* Native select arrow sits at the right edge — keep the chip clear of it */
+.field-resolved-wrap.has-resolved > select.compact-control {
+  padding-right: 96px;
+}
+.resolved-chip-inline {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -652,23 +682,27 @@ function formatCoord(n: number): string {
   border-radius: var(--radius-full);
   padding: 1px 6px;
   line-height: 1.4;
+  pointer-events: none;
+  z-index: 1;
 }
-.resolved-fallback-value {
-  flex: 1 1 auto;
-  min-width: 0;
-}
+/* Clear the picker's tree-button (24px wide @ right:4px → ends at right:28px) */
+.resolved-chip-picker { right: 36px; }
+/* Clear the native select dropdown caret on the right */
+.resolved-chip-select { right: 28px; }
 
 .resolved-field {
   margin-top: var(--space-xs);
 }
 .resolved-value {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-xs);
   font-size: var(--font-xs);
   padding: var(--space-xs) 0;
+  min-width: 0;
 }
+.resolved-quality, .resolved-gaz { flex-shrink: 0; }
 .resolved-quality {
   display: inline-block;
   font-weight: 600;
@@ -698,7 +732,10 @@ function formatCoord(n: number): string {
 }
 .resolved-path {
   color: var(--text-muted);
-  flex-basis: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .notes-heading-row {
