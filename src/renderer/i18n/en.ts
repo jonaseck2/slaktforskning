@@ -1083,6 +1083,8 @@ export default {
     summary: '{count} tasks · {open} active',
     confirmDelete: 'Delete this task?',
     removeConfirmTitle: 'Delete task?',
+    unlinkConfirmTitle: 'Remove link',
+    confirmUnlink: 'Remove this link?',
   },
   groups: {
     title: 'Groups',
@@ -1103,6 +1105,8 @@ export default {
     newGroup: 'New group',
     searchOrAdd: 'Search or + add member',
     noMembers: 'No members yet',
+    unlinkConfirmTitle: 'Remove link',
+    confirmUnlink: 'Remove this link?',
   },
   importExport: {
     title: 'Import / Export',
