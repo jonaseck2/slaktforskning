@@ -143,18 +143,51 @@ const svgDisplayHeight = computed(() => {
 });
 
 let resizeObserver: ResizeObserver | null = null;
+// While a panel drag is active the chart pins to its last committed size and
+// stages incoming dimensions in pendingW/pendingH; on mouseup we commit once.
+// Re-rendering hundreds of arc paths + textPaths per frame during drag is the
+// bottleneck — this gives a snappy drag, then a single fit on release.
+let isPanelResizing = false;
+let pendingW = 0;
+let pendingH = 0;
+
+function commitPending() {
+  if (pendingW > 0) containerWidth.value = pendingW;
+  if (pendingH > 0) containerHeight.value = pendingH;
+}
+
+function onDocMouseDown(e: MouseEvent) {
+  const target = e.target as HTMLElement | null;
+  if (target?.closest?.('.panel-drag-handle')) {
+    isPanelResizing = true;
+    document.addEventListener('mouseup', onDocMouseUp, { once: true });
+  }
+}
+
+function onDocMouseUp() {
+  isPanelResizing = false;
+  commitPending();
+}
 
 onMounted(() => {
   resizeObserver = new ResizeObserver(entries => {
     for (const entry of entries) {
-      containerWidth.value = entry.contentRect.width;
-      containerHeight.value = entry.contentRect.height;
+      pendingW = entry.contentRect.width;
+      pendingH = entry.contentRect.height;
+    }
+    if (containerWidth.value === 0 || containerHeight.value === 0 || !isPanelResizing) {
+      commitPending();
     }
   });
   if (outerRef.value) resizeObserver.observe(outerRef.value);
+  document.addEventListener('mousedown', onDocMouseDown);
 });
 
-onUnmounted(() => { resizeObserver?.disconnect(); });
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+  document.removeEventListener('mousedown', onDocMouseDown);
+  document.removeEventListener('mouseup', onDocMouseUp);
+});
 
 function incrGens() { if (selectedGens.value < 8) selectedGens.value++; }
 function decrGens() { if (selectedGens.value > 1) selectedGens.value--; }
