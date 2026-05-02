@@ -796,6 +796,27 @@ function stripAuditAndIds(row: Record<string, unknown>): Record<string, unknown>
     if (k === 'created_at' || k === 'updated_at') continue;
     if (k === 'id') continue; // UUIDs re-issued on import
     if (k === 'normalized_name') continue; // derived from name
+    // Drop FK UUID columns. Per the registry every *_id column carries the
+    // UUID_FK_VIA_XREF status: the literal UUID never survives a round-trip
+    // because the importer always issues fresh UUIDs, but the XREF graph
+    // (i.e. "this row points at THAT logical row") is preserved separately
+    // via XREF cross-reference identity. The per-field test verifies XREF
+    // graph identity indirectly (any non-id column passing on the related row
+    // implicitly proves the link). For the golden test, comparing literal
+    // FK UUIDs would always fail; drop them to compare the rest of the row.
+    //
+    // The set of dropped columns matches every UUID_FK_VIA_XREF / UUID_PK_VIA_XREF
+    // entry in src/api/gedcom_fidelity_registry.ts: persons.id, person_names.id,
+    // person_names.person_id, person_identifiers.person_id, relationships.person1_id,
+    // relationships.person2_id, events.place_id, events.relationship_id,
+    // event_participants.event_id, event_participants.person_id,
+    // citations.source_id, citations.event_id, citations.person_id,
+    // citations.relationship_id, citations.place_id,
+    // source_repositories.source_id, source_repositories.repository_id,
+    // media_links.media_id, media_links.entity_id (and the polymorphic
+    // entity_id columns on group_links/task_links — those tables are skipped
+    // from the golden seed but the rule still applies if added later).
+    if (k.endsWith('_id')) continue;
     out[k] = v;
   }
   return out;
