@@ -141,7 +141,7 @@
             />
           </div>
           <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
-          <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" />
+          <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" @select="(id) => router.push('/groups/' + id)" />
         </div>
       </div>
 
@@ -241,6 +241,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import EventList from './EventList.vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -334,6 +335,7 @@ const emit = defineEmits<{
 
 const isTreeSubject = computed(() => !!props.personId && props.personId === props.treeSubjectId);
 
+const router = useRouter();
 const { t } = useI18n();
 const toast = useToast();
 
