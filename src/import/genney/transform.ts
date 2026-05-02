@@ -12,6 +12,7 @@
 
 import type { Database } from 'node-sqlite3-wasm';
 import { parseGedcomDate } from '../../gedcom/date';
+import { eventTypeHasFactValue } from '../../api/events_gedcom';
 
 // ── Genney row shapes ──────────────────────────────────────────────────────
 
@@ -365,7 +366,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`
     ),
     insertEvent: db.prepare(
-      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
     insertRepository: db.prepare(
       `INSERT INTO repositories (id, name, address, city, postal_code, state, country, phone, email, web, call_number, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -588,7 +589,15 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     const splaceRid = eventToSplace.get(ev.RID);
     const place_id = splaceRid != null ? splaceFlatMap.get(splaceRid) ?? null : null;
 
-    const descParts = [ev.DESCRIPTION, ev.NOTE].filter(Boolean);
+    // For fact-shaped events (occupation, religion, education, title, …), Genney's
+    // DESCRIPTION field carries the GEDCOM-X Fact.value (e.g. "Carpenter"). Route it
+    // to events.value so the UI can render it as the headline. For non-fact events,
+    // DESCRIPTION is prose — concatenate with NOTE and store in events.notes.
+    const isFactShaped = eventTypeHasFactValue(event_type);
+    const value = isFactShaped ? (ev.DESCRIPTION ?? null) : null;
+    const descParts = isFactShaped
+      ? [ev.NOTE].filter(Boolean)
+      : [ev.DESCRIPTION, ev.NOTE].filter(Boolean);
     const notes = descParts.length > 0 ? descParts.join('\n') : '';
 
     // Use OWNER_EVENT as canonical source; fall back to EVENT.OWNER if missing
@@ -605,6 +614,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       parsedDate?.date_value_end ?? null,
       parsedDate?.date_original ?? dateStr,
       place_id, ev.ADDRESS ?? null, ev.CAUSE ?? null,
+      value,
       notes,
     ]);
     eventMap.set(ev.RID, id);
@@ -657,7 +667,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
         const person_id = personMap.get(owner);
         if (person_id) {
           const mentionId = crypto.randomUUID();
-          stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, '']);
+          stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, null, '']);
           stmts.insertParticipant.run([crypto.randomUUID(), mentionId, person_id, 'primary']);
           event_id = mentionId;
           summary.events++;
