@@ -398,6 +398,7 @@ export default {
     adoption: 'Adoption',
     foster_placement: 'Fosterhemsplacering',
     travel: 'Resa',
+    name_change: 'Namnändring',
     other: 'Övrigt',
   },
   timelineLabels: {

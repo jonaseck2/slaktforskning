@@ -365,6 +365,7 @@ defineExpose({ reload });
 .dot-baptism { background: #60a5fa; box-shadow: 0 0 0 2px #bfdbfe; }
 .dot-burial { background: #9ca3af; box-shadow: 0 0 0 2px #e5e7eb; }
 .dot-marriage { background: #f472b6; box-shadow: 0 0 0 2px #fbcfe8; }
+.dot-name_change { background: #a78bfa; box-shadow: 0 0 0 2px #ddd6fe; }
 .dot-undated { background: transparent; border: 2px dashed var(--color-text-faint, #94a3b8); box-shadow: none; }
 
 .is-approximate .timeline-dot {
