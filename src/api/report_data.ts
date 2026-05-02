@@ -1,5 +1,5 @@
 import type { Database } from 'node-sqlite3-wasm';
-import { getPerson, getPersonNames, displayedNameIdSql, birthSurnameSql } from './persons';
+import { getPerson, getPersonNames } from './persons';
 import { getRelationshipsOfPerson } from './relationships';
 import { getEventsForPerson, getEventsForRelationship } from './events';
 import { getPlace, getPlacePath } from './places';
@@ -8,7 +8,7 @@ import { getGroupsForPerson } from './groups';
 import { getResearchTasksForPerson } from './research_tasks';
 import { getEventParticipants } from './relationships';
 import { queryAll } from './db';
-import { livingSqlExpr } from './personLiving';
+import { loadLivingDerivation, isLivingDerived } from './personLiving';
 import type { Person, PersonName, GenealogyEvent, Relationship, Citation, Group, ResearchTask } from './types';
 
 // ── Return types ──
@@ -820,92 +820,177 @@ const MAX_LIFESPAN = 110;
  * the target year that has a place_id.
  */
 export function getAliveInYear(db: Database, year: number): AliveInYearResult {
-  const rows = queryAll<{
+  // Bulk pre-load — replaces a per-person correlated-subquery storm that
+  // saturated CPU and exhausted the WASM heap on real-sized trees.
+  const livingDerivation = loadLivingDerivation(db);
+
+  const birthYearRows = queryAll<{ person_id: string; year: number }>(db, `
+    SELECT ep.person_id, MIN(CAST(substr(e.date_value, 1, 4) AS INTEGER)) AS year
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
+    GROUP BY ep.person_id
+  `);
+  const birthYearByPerson = new Map(birthYearRows.map(r => [r.person_id, r.year]));
+
+  const deathYearRows = queryAll<{ person_id: string; year: number }>(db, `
+    SELECT ep.person_id, MIN(CAST(substr(e.date_value, 1, 4) AS INTEGER)) AS year
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE e.event_type = 'death' AND e.date_value IS NOT NULL
+    GROUP BY ep.person_id
+  `);
+  const deathYearByPerson = new Map(deathYearRows.map(r => [r.person_id, r.year]));
+
+  const eventInYearRows = queryAll<{ person_id: string }>(db, `
+    SELECT DISTINCT ep.person_id
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE e.date_value IS NOT NULL
+      AND CAST(substr(e.date_value, 1, 4) AS INTEGER) = ?
+  `, [year]);
+  const personsWithEventInYear = new Set(eventInYearRows.map(r => r.person_id));
+
+  // Latest place at-or-before target year per person — single scan, JS reduce.
+  const placeRows = queryAll<{ person_id: string; date_value: string; place_name: string }>(db, `
+    SELECT ep.person_id, e.date_value, pl.name AS place_name
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    JOIN places pl ON pl.id = e.place_id
+    WHERE e.date_value IS NOT NULL
+      AND CAST(substr(e.date_value, 1, 4) AS INTEGER) <= ?
+      AND pl.name IS NOT NULL
+  `, [year]);
+  const latestPlaceByPerson = new Map<string, { date_value: string; name: string }>();
+  for (const r of placeRows) {
+    const cur = latestPlaceByPerson.get(r.person_id);
+    if (!cur || r.date_value > cur.date_value) {
+      latestPlaceByPerson.set(r.person_id, { date_value: r.date_value, name: r.place_name });
+    }
+  }
+
+  // Names: bulk-load and replicate displayedNameIdSql / birthSurnameSql in JS.
+  type NameRow = {
     id: string;
-    sex: 'M' | 'F' | 'U';
-    living: number;
+    person_id: string;
     given_name: string | null;
     surname: string | null;
-    birth_surname: string | null;
-    birth_year: number | null;
-    death_year: number | null;
-    place_name: string | null;
-    has_event_in_year: number;
-  }>(db, `
-    WITH birth AS (
-      SELECT ep.person_id AS pid,
-             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS birth_year
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE e.event_type = 'birth' AND e.date_value IS NOT NULL
-    ),
-    death AS (
-      SELECT ep.person_id AS pid,
-             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS death_year
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE e.event_type = 'death' AND e.date_value IS NOT NULL
-    ),
-    any_event AS (
-      SELECT ep.person_id AS pid,
-             CAST(substr(e.date_value, 1, 4) AS INTEGER) AS any_year
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE e.date_value IS NOT NULL
-    )
-    SELECT p.id, p.sex, ${livingSqlExpr('p')} AS living,
-           pn.given_name, pn.surname,
-           ${birthSurnameSql('p.id')} AS birth_surname,
-           b.birth_year, d.death_year,
-           (SELECT pl.name FROM events e2
-            JOIN event_participants ep2 ON ep2.event_id = e2.id
-            LEFT JOIN places pl ON pl.id = e2.place_id
-            WHERE ep2.person_id = p.id
-              AND e2.date_value IS NOT NULL
-              AND CAST(substr(e2.date_value, 1, 4) AS INTEGER) <= ?
-              AND pl.name IS NOT NULL
-            ORDER BY e2.date_value DESC LIMIT 1) AS place_name,
-           EXISTS(SELECT 1 FROM any_event a WHERE a.pid = p.id AND a.any_year = ?) AS has_event_in_year
-    FROM persons p
-    LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
-    LEFT JOIN birth b ON b.pid = p.id
-    LEFT JOIN death d ON d.pid = p.id
-  `, [year, year]);
+    name_type: string;
+    date_from: string | null;
+    sort_order: number;
+  };
+  const nameRows = queryAll<NameRow>(db, `
+    SELECT id, person_id, given_name, surname, name_type, date_from, sort_order
+    FROM person_names
+  `);
+  const namesByPerson = new Map<string, NameRow[]>();
+  for (const n of nameRows) {
+    const list = namesByPerson.get(n.person_id);
+    if (list) list.push(n);
+    else namesByPerson.set(n.person_id, [n]);
+  }
+
+  // Earliest primary-role birth event date per person — used to date 'birth' name_type.
+  const birthEventDateRows = queryAll<{ person_id: string; date_value: string }>(db, `
+    SELECT ep.person_id, MIN(e.date_value) AS date_value
+    FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE e.event_type = 'birth'
+      AND ep.role = 'primary'
+      AND e.date_value IS NOT NULL AND e.date_value <> ''
+    GROUP BY ep.person_id
+  `);
+  const birthEventDateByPerson = new Map(birthEventDateRows.map(r => [r.person_id, r.date_value]));
+
+  function effectiveDate(n: NameRow): string | null {
+    if (n.name_type === 'birth') {
+      return birthEventDateByPerson.get(n.person_id) ?? n.date_from;
+    }
+    return n.date_from;
+  }
+
+  function pickDisplayedName(personId: string): { given_name: string | null; surname: string | null } {
+    const list = namesByPerson.get(personId);
+    if (!list || list.length === 0) return { given_name: null, surname: null };
+    let best: NameRow | null = null;
+    let bestDate: string | null = null;
+    for (const n of list) {
+      const d = effectiveDate(n);
+      if (best === null) {
+        best = n; bestDate = d; continue;
+      }
+      // Mirror SQL: nulls last on effective date; then date DESC; then sort_order DESC; then id ASC.
+      const aHasDate = bestDate != null;
+      const bHasDate = d != null;
+      let bWins = false;
+      if (aHasDate !== bHasDate) {
+        bWins = bHasDate && !aHasDate;
+      } else if (aHasDate && bHasDate && bestDate !== d) {
+        bWins = (d as string) > (bestDate as string);
+      } else if (n.sort_order !== best.sort_order) {
+        bWins = n.sort_order > best.sort_order;
+      } else {
+        bWins = n.id < best.id;
+      }
+      if (bWins) { best = n; bestDate = d; }
+    }
+    return { given_name: best?.given_name ?? null, surname: best?.surname ?? null };
+  }
+
+  function pickBirthSurname(personId: string): string | null {
+    const list = namesByPerson.get(personId);
+    if (!list) return null;
+    let best: NameRow | null = null;
+    for (const n of list) {
+      if (n.name_type !== 'birth') continue;
+      if (!best
+        || n.sort_order < best.sort_order
+        || (n.sort_order === best.sort_order && n.id < best.id)) {
+        best = n;
+      }
+    }
+    return best?.surname ?? null;
+  }
+
+  const personRows = queryAll<{ id: string; sex: 'M' | 'F' | 'U' }>(db, `SELECT id, sex FROM persons`);
 
   const alive: AliveInYearPerson[] = [];
-  for (const r of rows) {
-    const notBornYet = r.birth_year != null && r.birth_year > year;
-    const diedAlready = r.death_year != null && r.death_year < year;
-    const tooOldNoBirth = r.birth_year == null && r.death_year != null && (r.death_year - year) > MAX_LIFESPAN;
-    const tooOldNoDeath = r.death_year == null && r.birth_year != null && (year - r.birth_year) > MAX_LIFESPAN;
+  for (const p of personRows) {
+    const birthYear = birthYearByPerson.get(p.id) ?? null;
+    const deathYear = deathYearByPerson.get(p.id) ?? null;
+
+    const notBornYet = birthYear != null && birthYear > year;
+    const diedAlready = deathYear != null && deathYear < year;
+    const tooOldNoBirth = birthYear == null && deathYear != null && (deathYear - year) > MAX_LIFESPAN;
+    const tooOldNoDeath = deathYear == null && birthYear != null && (year - birthYear) > MAX_LIFESPAN;
 
     let include = false;
     if (notBornYet || diedAlready) include = false;
-    else if (r.birth_year != null && r.death_year != null) include = true;
-    else if (r.birth_year != null) include = !tooOldNoDeath;
-    else if (r.death_year != null) include = !tooOldNoBirth;
-    else include = !!r.has_event_in_year;
+    else if (birthYear != null && deathYear != null) include = true;
+    else if (birthYear != null) include = !tooOldNoDeath;
+    else if (deathYear != null) include = !tooOldNoBirth;
+    else include = personsWithEventInYear.has(p.id);
 
-    if (include) {
-      // Display only: filter out birth_surname when it equals surname (loader
-      // returns the bare birth surname; renderer-visible "(f. …)" suppression
-      // when equal happens here so AliveInYearPerson reads cleanly).
-      const cleanBirthSurname = r.birth_surname && r.birth_surname.trim() && r.birth_surname.trim() !== (r.surname ?? '').trim()
-        ? r.birth_surname
-        : null;
-      alive.push({
-        id: r.id,
-        sex: r.sex,
-        living: !!r.living,
-        given_name: r.given_name,
-        surname: r.surname,
-        birth_surname: cleanBirthSurname,
-        birthYear: r.birth_year,
-        deathYear: r.death_year,
-        age: r.birth_year != null ? year - r.birth_year : null,
-        placeName: r.place_name,
-      });
-    }
+    if (!include) continue;
+
+    const { given_name, surname } = pickDisplayedName(p.id);
+    const rawBirthSurname = pickBirthSurname(p.id);
+    const cleanBirthSurname = rawBirthSurname && rawBirthSurname.trim() && rawBirthSurname.trim() !== (surname ?? '').trim()
+      ? rawBirthSurname
+      : null;
+
+    alive.push({
+      id: p.id,
+      sex: p.sex,
+      living: isLivingDerived(p.id, livingDerivation),
+      given_name,
+      surname,
+      birth_surname: cleanBirthSurname,
+      birthYear,
+      deathYear,
+      age: birthYear != null ? year - birthYear : null,
+      placeName: latestPlaceByPerson.get(p.id)?.name ?? null,
+    });
   }
 
   const coupleRows = queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db,

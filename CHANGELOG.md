@@ -4,6 +4,7 @@
 
 - fix: fan chart generation 6 ring is wider so birth and death dates fit alongside the name
 - fix: dragging the side panels next to the fan chart no longer stutters — the chart re-fits once you release
+- perf: Family in a Year report no longer pegs CPU or crashes the database worker on large trees
 
 ## v0.204.0 — GEDCOM round-trip fidelity registry + coverage guard
 
