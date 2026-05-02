@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: fan chart generation 6 ring is wider so birth and death dates fit alongside the name
+
 ## v0.204.0 — GEDCOM round-trip fidelity registry + coverage guard
 
 - **feat:** Every column in every non-exempt schema table now has an explicit round-trip status under GEDCOM 5.5.1 and 7.0, declared in `src/api/gedcom_fidelity_registry.ts`. A schema-introspection unit test asserts the registry covers every column — adding a new column to `src/api/schema.ts` without registering it fails CI immediately with the column name and a pointer to the registry. The user's choice to use this app remains reversible: the data they hand us comes back out, with documented `lossy` / `excluded` exceptions instead of silent loss.

@@ -39,8 +39,8 @@ export interface FanLayoutOptions {
 // (180°) shrink fonts and collapse gens 5-6 to 2-line compact mode, so the
 // tall rings at 360° become wasted whitespace at 180°. Values interpolate
 // linearly between 180° and 360°.
-const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 85, 72, 94, 125];
-const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 60, 52, 60, 72];
+const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 85, 87, 94, 125];
+const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 60, 63, 60, 72];
 // Gap between rings
 const RING_GAP = 2;
 
