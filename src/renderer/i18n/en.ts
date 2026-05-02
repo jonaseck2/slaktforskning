@@ -1385,6 +1385,7 @@ export default {
     linkEvent: '+ Event',
     faceTags: 'Face Tags',
     untitled: 'Untitled',
+    faceTag: 'Face tag',
   },
   mediaTimeline: {
     title: 'Media Timeline',

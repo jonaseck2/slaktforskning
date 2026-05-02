@@ -1385,6 +1385,7 @@ export default {
     linkEvent: '+ Händelse',
     faceTags: 'Ansiktsmarkeringar',
     untitled: 'Namnlös',
+    faceTag: 'Ansiktsmärke',
   },
   mediaTimeline: {
     title: 'Mediatidslinje',
