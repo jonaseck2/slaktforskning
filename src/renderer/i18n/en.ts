@@ -331,6 +331,8 @@ export default {
     spouseNew: 'Add a new person',
     endDateOptional: 'End date (optional)',
     endDateHint: 'Leave blank if the event happened at a single point in time or has no known end.',
+    alsoRecordNameChange: 'Also record a name change for {name}',
+    alsoRecordNameChangeHint: 'Creates a separate name record. Date comes from the event date.',
   },
   citations: {
     entity: 'Citation',
@@ -398,6 +400,7 @@ export default {
     adoption: 'Adoption',
     foster_placement: 'Foster Placement',
     travel: 'Travel',
+    name_change: 'Name change',
     other: 'Other',
   },
   timelineLabels: {
@@ -502,6 +505,7 @@ export default {
     patronymicBase: "Parent's given name",
     patronymicBasePlaceholder: 'e.g. Erik (if surname is Eriksson)',
     dateFrom: 'Valid from',
+    dateFromHint: 'Shows on the person’s timeline when a date is set.',
     dateTo: 'Valid to',
     dateFromBirthEvent: 'Date taken from the birth event',
     reorderInversionBlocked: 'A more recent date cannot be placed before an older one',

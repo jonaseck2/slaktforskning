@@ -331,6 +331,8 @@ export default {
     spouseNew: 'Lägg till ny person',
     endDateOptional: 'Slutdatum (valfritt)',
     endDateHint: 'Lämna tomt om händelsen pågick under en enda tidpunkt eller saknar känt slut.',
+    alsoRecordNameChange: 'Registrera även namnändring för {name}',
+    alsoRecordNameChangeHint: 'Skapar en separat namnpost. Datum hämtas från händelsedatumet.',
   },
   citations: {
     entity: 'Hänvisning',
@@ -398,6 +400,7 @@ export default {
     adoption: 'Adoption',
     foster_placement: 'Fosterhemsplacering',
     travel: 'Resa',
+    name_change: 'Namnändring',
     other: 'Övrigt',
   },
   timelineLabels: {
@@ -502,6 +505,7 @@ export default {
     patronymicBase: 'Faders/moders förnamn',
     patronymicBasePlaceholder: 't.ex. Erik (om efternamnet är Eriksson)',
     dateFrom: 'Giltigt från',
+    dateFromHint: 'Visas på personens tidslinje när datum anges.',
     dateTo: 'Giltigt till',
     dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',

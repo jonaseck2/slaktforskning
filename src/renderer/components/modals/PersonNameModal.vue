@@ -50,10 +50,11 @@
         </div>
       </div>
 
-      <!-- Date from (for dated name types) -->
-      <div v-if="form.name_type === 'married' || form.name_type === 'name_change'" class="ep-field">
+      <!-- Date from — shown for every non-birth name type -->
+      <div v-if="form.name_type !== 'birth'" class="ep-field">
         <span class="ep-field-label">{{ $t('names.dateFrom') }}</span>
         <SimpleDateInput v-model="form.date_from" />
+        <span class="ep-field-hint">{{ $t('names.dateFromHint') }}</span>
       </div>
 
       <!-- Preferred name (only for birth names) -->
@@ -131,12 +132,7 @@
           />
         </div>
 
-        <!-- Date from / to -->
-        <div class="ep-field">
-          <span class="ep-field-label">{{ $t('names.dateFrom') }}</span>
-          <SimpleDateInput v-model="form.date_from" />
-        </div>
-
+        <!-- Date to (rare; date_from is surfaced inline above for non-birth name types) -->
         <div class="ep-field">
           <span class="ep-field-label">{{ $t('names.dateTo') }}</span>
           <SimpleDateInput v-model="form.date_to" />

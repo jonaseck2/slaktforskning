@@ -560,6 +560,42 @@ export function getTimeline(
     });
   }
 
+  // Synthetic timeline entries for authored name changes.
+  // PRIME DIRECTIVE: these entries are computed from authored person_names rows
+  // (date_from + name_type !== 'birth'). Nothing is persisted; the synthetic
+  // GenealogyEvent shape lives only in this returned array.
+  for (const n of names) {
+    if (n.name_type === 'birth') continue;
+    if (!n.date_from) continue;
+    const fullName = [n.name_prefix, n.given_name, n.surname, n.name_suffix]
+      .filter(Boolean).join(' ').trim();
+    if (!fullName) continue;
+    const syntheticEvent: EventWithPlace = {
+      id: `name-change-${n.id}`,
+      event_type: 'name_change',
+      date_type: 'exact',
+      date_value: n.date_from,
+      date_value_end: null,
+      date_original: n.date_from,
+      place_id: null,
+      place_address: null,
+      cause: null,
+      description: fullName,
+      relationship_id: null,
+      created_at: '',
+      updated_at: '',
+      place_name: null,
+      place_path: null,
+    };
+    entries.push({
+      event: syntheticEvent,
+      person_id: personId,
+      person_given_name: primaryName.given_name,
+      person_surname: primaryName.surname,
+      relationship_label: 'self',
+    });
+  }
+
   // Compute the subject's lifetime once — used to filter family events so the
   // timeline tells the story of THIS person's life (events that happened during
   // their lifetime), not a flat list of every family member's life events.
