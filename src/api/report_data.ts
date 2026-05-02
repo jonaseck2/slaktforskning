@@ -562,15 +562,16 @@ export function getTimeline(db: Database, personId: string): TimelineEntry[] | n
       // Convention: person1 = parent, person2 = child.
       subjectIsParent = r.person1_id === personId;
       if (subjectIsParent) {
-        // Task 4: subject is the parent of `other`. Emit child birth (so the
-        // user sees "what they built") and foster_placement (a parent_child
-        // birth-equivalent). Christenings and burials are excluded — they're a
-        // redundant copy of the EventList sitting next to the panel. Task 5
-        // will add child deaths.
+        // Task 4 + 5: subject is the parent of `other`. Emit child birth (so
+        // the user sees "what they built"), foster_placement (a parent_child
+        // birth-equivalent), and child death (a loss during the subject's
+        // lifetime — "this is who they lost"). Christenings and burials are
+        // excluded — they're a redundant copy of the EventList sitting next to
+        // the panel.
         const childPerson = getPerson(db, otherId);
         const childSex = childPerson?.sex ?? 'U';
         label = childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
-        relevantTypes = ['birth', 'foster_placement'];
+        relevantTypes = ['birth', 'foster_placement', 'death'];
       } else {
         // Subject is the child of `other` — emit only the parent's death,
         // labelled by the parent's sex (per the user goal: "the deaths of their parents").
