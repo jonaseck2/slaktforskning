@@ -302,12 +302,14 @@ const props = withDefaults(defineProps<{
   relationshipId?: string;
   editingEvent?: EventData | null;
   defaultEventType?: string;
+  defaultPlaceId?: string | null;
 }>(), {
   mode: 'subpanel',
   editingEvent: null,
   // Empty default — never pre-select an event type for new events (BENGT #28b).
   // Callers can still pass an explicit type to pre-fill the picker.
   defaultEventType: '',
+  defaultPlaceId: null,
 });
 
 const emit = defineEmits<{
@@ -349,7 +351,7 @@ const form = reactive<EventData>({
   date_value: props.editingEvent?.date_value ?? null,
   date_value_end: props.editingEvent?.date_value_end ?? null,
   date_original: props.editingEvent?.date_original ?? '',
-  place_id: props.editingEvent?.place_id ?? null,
+  place_id: props.editingEvent ? props.editingEvent.place_id : (props.defaultPlaceId ?? null),
   cause: props.editingEvent?.cause ?? null,
   value: props.editingEvent?.value ?? null,
   notes: props.editingEvent?.notes ?? '',

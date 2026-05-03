@@ -601,7 +601,6 @@ export default {
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',
     viewFull: 'View full details',
-    addPerson: 'Add person',
   },
   visualization: {
     listView: 'List',

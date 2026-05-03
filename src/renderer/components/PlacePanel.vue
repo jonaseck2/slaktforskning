@@ -198,9 +198,9 @@
           :title="$t('persons.title')"
           :count="personCount"
           :collapsed="!sections.persons"
-          :action-label="!props.readonly ? '+ ' + $t('placePanel.addPerson') : undefined"
+          :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined"
           @toggle="toggleSection('persons')"
-          @action="showAddPersonForm = true"
+          @action="eventListRef?.openAddForm()"
         />
         <div v-if="sections.persons" class="panel-section-body">
           <PlacePersonsSection ref="personsSectionRef" :place-id="placeId!" />
@@ -217,7 +217,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" :action-label="!props.readonly ? '+ ' + $t('media.attachShort') : undefined" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="place" :entity-id="placeId!" />
         </div>
@@ -254,15 +254,6 @@
       </div>
     </template>
 
-    <!-- Add person modal -->
-    <PersonModal
-      v-if="!props.readonly && showAddPersonForm && placeId"
-      mode="standalone"
-      @close="showAddPersonForm = false"
-      @cancel="showAddPersonForm = false"
-      @saved="onPersonSaved"
-    />
-
     <!-- Research task form modal -->
     <ResearchTaskModal
       v-if="!props.readonly && showTaskForm && placeId"
@@ -280,7 +271,6 @@
 import { ref, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
-import PersonModal from './modals/PersonModal.vue';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';
@@ -360,13 +350,7 @@ const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null
 const checksSectionRef = ref<InstanceType<typeof PlaceChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
-const showAddPersonForm = ref(false);
 
-async function triggerAttachMedia() {
-  if (!sections.media) toggleSection('media');
-  await nextTick();
-  mediaSectionRef.value?.attach();
-}
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');
 
@@ -498,12 +482,6 @@ async function saveField(field: string, value: unknown) {
   if (!props.placeId || !place.value || props.readonly) return;
   (fields as Record<string, unknown>)[field] = value;
   await save(field as keyof Place);
-}
-
-async function onPersonSaved() {
-  showAddPersonForm.value = false;
-  personsSectionRef.value?.reload();
-  await reload();
 }
 
 async function onNamePlaceSelected(selected: { id: string; name: string }) {

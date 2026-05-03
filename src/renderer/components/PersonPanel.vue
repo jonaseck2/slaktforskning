@@ -122,7 +122,7 @@
 
       <!-- Media Timeline section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('media.attachShort') }" @toggle="toggleSection('mediaTimeline')" @action="triggerAttachMedia" />
+        <SectionHeader :title="$t('mediaTimeline.title')" :count="mediaCount" :collapsed="!sections.mediaTimeline" @toggle="toggleSection('mediaTimeline')" />
         <div v-if="sections.mediaTimeline" class="panel-section-body">
           <MediaTimeline entity-type="person" :entity-id="personId!" />
         </div>
@@ -493,12 +493,6 @@ async function triggerAddEvent() {
   if (!sections.events) toggleSection('events');
   await nextTick();
   eventListRef.value?.openAddForm();
-}
-
-async function triggerAttachMedia() {
-  if (!sections.media) toggleSection('media');
-  await nextTick();
-  mediaSectionRef.value?.attach();
 }
 
 // ── Delete person ───────────────────────────────────────────────────────────

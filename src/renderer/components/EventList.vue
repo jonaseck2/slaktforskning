@@ -53,6 +53,7 @@
       mode="standalone"
       :person-id="personId"
       :relationship-id="relationshipId"
+      :default-place-id="placeId"
       :editing-event="editingEvent || undefined"
       :default-event-type="defaultEventType"
       @cancel="closeForm"

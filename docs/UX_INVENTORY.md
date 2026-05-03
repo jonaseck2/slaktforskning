@@ -53,7 +53,7 @@ The fix landed by splitting the verbs: destructive actions use `IconTrash` ("Del
 
 | Section | Label says | Actually does | Status |
 |---|---|---|---|
-| `PlacePanel` → Persons | `+ Add person` | Creates a person *and* an event at this place | ✅ relabeled |
+| `PlacePanel` → Persons | (was `+ Add person`) → now `+ Event` | Opens `EventModal` pre-filled with this place; user creates or links a person inside the modal | ✅ rewired (2026-05-03 — earlier "✅ relabeled" claim was misleading: relabel only; the original handler created an orphan person with no place link) |
 | `PersonPanel` → Header (add-relative shortcuts) | `+ Add father / mother / spouse / child / sibling` | Creates a brand-new person and links by relationship | ✅ relabeled to be explicit; duplicate row removed |
 | `PersonPanel` → Relations | `+ Add relationship` | Creates a brand-new person + relationship | ✅ relabeled / consolidated with header shortcuts |
 
@@ -322,7 +322,7 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 ### PersonPanel → Media Timeline section
 **File:** `src/renderer/components/PersonPanel.vue`, `PersonMediaTimelineSection.vue`
-**Verified:** 2026-05-02
+**Verified:** 2026-05-03
 
 > **Purpose:** A user would use this section to *view* the same media chronologically (by media date or linked event date) — useful when scanning a life story.
 
@@ -330,7 +330,7 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 |---|---|---|---|---|
 | Read-only chronological strip of the same media as the Media section. | Not offered — attach lives in the Media section. | Not offered — edit lives in MediaPanel. | Not offered — unlink lives in the Media section. | Tile click → MediaPanel. |
 
-**Notes:** Default-collapsed. Cross-section coupling: derived read of the Media section.
+**Notes:** Default-collapsed. Cross-section coupling: derived read of the Media section. The section header previously rendered a `+ Media` action button that scrolled to and triggered the Media section's attach handler — a duplicate-of-sibling CTA caught by the new fulfillment check. Removed 2026-05-03 to match the doc.
 
 ---
 
@@ -378,15 +378,15 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 
 ### PlacePanel → Persons section
 **File:** `src/renderer/components/PlacePanel.vue`, `PlacePersonsSection.vue`
-**Verified:** 2026-05-02
+**Verified:** 2026-05-03
 
-> **Purpose:** A user would use this section to *see* who lived at this place — name, sex, year range of their events here (`first event year–last event year`), and event count. Witnesses, godparents, and officiants of other people's events are excluded — they're not residents. The "+ Add person" button creates a new person *and* a primary-role event at this place; there is no link-existing path, and no way to remove a person from this list other than deleting their events in the Events section.
+> **Purpose:** A user would use this section to *see* who lived at this place — name, sex, year range of their events here (`first event year–last event year`), and event count. Witnesses, godparents, and officiants of other people's events are excluded — they're not residents. The `+ Event` button opens `EventModal` pre-filled with this place; the user creates or links a person inside the modal as the event's primary participant. Removal requires deleting events in the Events section (or unlinking the primary participant).
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| Read-only table: avatar · name · sex · year range · primary-role event count. Derived from `places.getPersons()` (filtered to `ep.role = 'primary'`). Sorted earliest-first by `first_year`, undated last. | `+ Add person` → opens an in-panel form. **Creates person + event** at this place. No link-existing path. | Not offered (it's a derived summary). | Not offered. Removal requires deleting events in the Events section. | Row click → navigates to person's Person panel. |
+| Read-only table: avatar · name · sex · year range · primary-role event count. Derived from `places.getPersons()` (filtered to `ep.role = 'primary'`). Sorted earliest-first by `first_year`, undated last. | `+ Event` → opens `EventModal` with `defaultPlaceId` set. User picks an existing person or creates one inline; saving writes the event with this place attached. | Not offered (it's a derived summary). | Not offered. Removal requires deleting events in the Events section. | Row click → navigates to person's Person panel. |
 
-**Cross-cutting:** Was the canonical example of finding #2 (label hides primitive). Label was tightened in `docs/plans/2026-05-02-panel-action-clarity.md`; the underlying primitive (creates a person *and* an event) is unchanged. Year range and primary-role filter added in `docs/plans/2026-05-02-place-as-biography.md` to make the section read like a residents-of-the-place biography view.
+**Cross-cutting:** Was the canonical example of finding #2 (label hides primitive). Initial fix in `docs/plans/2026-05-02-panel-action-clarity.md` was a label tightening only — the handler still produced an orphan person with no place link. Rewired 2026-05-03 to open `EventModal` with this place pre-filled, which also closes the handler bug and the "context-blind modal" failure mode codified in `.claude/rules/renderer.md` (CTA fulfillment check). Year range and primary-role filter from `docs/plans/2026-05-02-place-as-biography.md`.
 
 ---
 
@@ -526,16 +526,16 @@ These surfaces have had their code read and their CTA inventory + cross-cutting 
 ---
 
 ### PlacePanel → Media Timeline section
-**File:** `src/renderer/components/PlacePanel.vue` lines 164–170, `MediaTimeline.vue`
-**Verified:** 2026-05-02
+**File:** `src/renderer/components/PlacePanel.vue`, `MediaTimeline.vue`
+**Verified:** 2026-05-03
 
 > **Purpose:** A user would use this section to *see* the media attached to this place laid out on a timeline — a parish church photographed in 1890 vs 1950, a farm before and after rebuilding — so visual change at the place is legible at a glance, separate from the unordered Media gallery above.
 
 | View | Add | Edit | Delete | Open |
 |---|---|---|---|---|
-| Horizontal scrolling timeline: dated cards with year/year-range · thumbnail · event-type label; undated section below separator. Approximate dates show `~year` and dashed border; range dates show year span and thick border. | `+ Attach` → OS file picker (same as Media section). | Not offered (read-only). | Not offered (delete lives in Media section). | Card click → `/media?open={id}`. |
+| Horizontal scrolling timeline: dated cards with year/year-range · thumbnail · event-type label; undated section below separator. Approximate dates show `~year` and dashed border; range dates show year span and thick border. | Not offered — attach lives in the Media section. | Not offered (read-only). | Not offered (delete lives in Media section). | Card click → `/media?open={id}`. |
 
-**Cross-cutting:** Same duplicate `+ Attach` pattern as PersonPanel — finding #3 candidate.
+**Cross-cutting:** The section header previously rendered a duplicate `+ Media` button that triggered the sibling Media section's attach handler — caught by the new CTA fulfillment check (sibling-handler duplication). Removed 2026-05-03; mirrors the equivalent fix on `PersonPanel` Media Timeline.
 
 ---
 

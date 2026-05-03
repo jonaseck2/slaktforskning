@@ -157,6 +157,22 @@ Before merging:
 
 **Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." User's mental model is "every right-side panel works the same."
 
+### CTA fulfillment check (every panel-section action button)
+
+Apply this on every section-header action you implement, modify, or review in `*Panel.vue` files and the section components they host. Label-shape review (`+ <Noun>` form, icon-vs-trash semantics — owned by `panel-cta-conventions.test.ts`) is necessary but not sufficient. The two failure modes it misses are (a) a button wired to a no-op or to the same handler as a sibling section, and (b) a modal that opens with no awareness of the panel it was opened from.
+
+For each CTA, ask all five questions before claiming the work done:
+
+1. **Promise** — what does the label literally claim? (`+ Event` promises an event is created. `+ Add person` promises a person becomes part of the surrounding context.)
+2. **Wiring** — does the handler actually perform that primitive? Anti-patterns: identical to a sibling section's handler, scroll-only, opens a modal that creates an unrelated entity. (Caught case: `MediaTimeline + Media` was identical to `Media + Media`.)
+3. **Context lift** — this section is hosted on a specific entity (place, person, media, source…). Does that entity ID flow into the action as a default prop on whatever modal/picker opens? Test: if the modal would behave identically when opened from any other entity's panel, the context wasn't lifted. (Caught case: `PlacePanel + Add person` opened a generic person form, no `place_id` passed; created an orphan person with no link to the current place.)
+4. **Lifecycle parity** — can the user also edit, view, and delete the same primitive from this surface? Add-only sections, or view-only sections with no add path, strand the user.
+5. **Reactivity** — after the mutation completes, does the section's list update without a route change or panel re-open? Usually free via `useEntityData` / `usePagedList`, but verify on first wiring of any new section.
+
+**Anti-pattern:** assuming UX_INVENTORY's "✅ resolved" status reflects functional wiring. The doc tracks intent, not delivery — the same `PlacePanel + Add person` regression was marked "✅ relabeled" in `docs/UX_INVENTORY.md` while the underlying handler still produced an orphan person. Read the *code*, run the check, then update the doc.
+
+**When reviewing PR diffs that touch panel sections:** run the 5-step check on every modified or added CTA in the diff, not just the labels.
+
 ### Project-wide UI rules
 
 - **Every modal uses `BaseSubPanel`** — never `BaseModal` directly (it's the internal overlay).

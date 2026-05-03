@@ -601,7 +601,6 @@ export default {
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
     viewFull: 'Visa alla detaljer',
-    addPerson: 'Lägg till person',
   },
   visualization: {
     listView: 'Lista',
