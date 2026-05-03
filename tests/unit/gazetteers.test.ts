@@ -49,8 +49,26 @@ describe('bundled gazetteers', () => {
 
   it('world-countries has ~250 countries', () => {
     const wc = gazetteers.find(g => g.id === 'world-countries')!;
-    expect(wc.root.children!.length).toBeGreaterThan(180);
-    expect(wc.root.children!.length).toBeLessThan(300);
+    // Countries now live one level deeper, under continent nodes.
+    const countryCount = (wc.root.children ?? []).reduce(
+      (sum, continent) => sum + (continent.children?.length ?? 0),
+      0,
+    );
+    expect(countryCount).toBeGreaterThan(180);
+    expect(countryCount).toBeLessThan(300);
+  });
+
+  it('world-countries roots at "World" with continent children', () => {
+    const wc = require('../../src/api/place-gazetteers/data/world-countries.json');
+    expect(wc.shape).toBe('scaffolding');
+    expect(wc.root.name).toBe('World');
+    expect(wc.root.type).toBe('world');
+    const continents = wc.root.children.map((c: any) => c.name).sort();
+    expect(continents).toEqual([
+      'Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America',
+    ]);
+    const europe = wc.root.children.find((c: any) => c.name === 'Europe');
+    expect(europe.children.map((c: any) => c.name)).toContain('Sweden');
   });
 
   it('us-immigration-states has 9 states', () => {
