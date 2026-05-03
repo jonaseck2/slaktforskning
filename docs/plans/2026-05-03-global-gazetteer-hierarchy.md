@@ -1,10 +1,26 @@
 # Global Gazetteer Hierarchy Implementation Plan
 
+> **PLAN STATE (2026-05-03, mid-execution).** The architecture below was significantly revised after several iteration rounds with the user. **Read the design spec for the current model** — `docs/plans/2026-05-03-global-gazetteer-hierarchy-design.md`. Summary of revisions:
+> 1. **Contract over fixture.** No "scaffolding" privilege. `world-countries.json` and `world-admin1.json` are regular contributors. No `world-admin2.json` file.
+> 2. **Structural merge by `(name, type, parent_path)`** across all gazetteers. Same key from any number of sources → one merged node. Aliases union, lat/lon first-wins (warns >0.01°), geometry first-wins. `__contributors: string[]` tracks provenance.
+> 3. **Closed type vocabulary collapsed** to admin levels only: `world | continent | country | admin{N}` (open-ended for higher levels). No leaf-type vocabulary. Build scripts pick the right admin level per country.
+> 4. **No "contributions" shape.** Every gazetteer is a self-rooted tree from `World` (or `World (Historical)`).
+>
+> **What's actually shipped (verify via `git log --oneline`):**
+> - Phase 0.1: `GazetteerNodeType` enum (final form: `world|continent|country|admin{N}`).
+> - Phase 0.2: `Gazetteer.shape` discriminator. `Contribution` interface kept as legacy stub, unused going forward.
+> - Phase 1: `mergeTree` + `buildNodeIndex` + `loadGazetteers` (structural-merge engine; commit `b9182a34`). Old attach/scaffolding logic gone.
+> - Phase 2.1, 2.2: `world-countries.json` + `world-admin1.json` rebuilt with `World > continent > country [> admin1]` shape.
+> - Phase 2.4: CI integrity test (verifies "after merge, exactly one canonical Sweden under World > Europe").
+> - Phase 3.2 in progress: sv-socknar + sv-forsamlingar migration.
+>
+> **What's stale below.** The Phase 1.2/1.3 task descriptions describing "attachContributions" and "contributions/scaffolding shape" are stale. Phase 2.3 ("world-admin2 scaffolding") is gone — admin2 names live inside per-country build scripts. Phase 3.1+ task framing is directionally correct but uses obsolete terminology ("contributions"). For new dispatches, treat each per-country task as: "rewrite the build script to emit a `World > Europe > <country> > admin1 > admin2 > admin3 > …` tree using the closed admin vocabulary; suffix-strip locale forms to canonical with originals as aliases; the merge engine handles structural dedup automatically."
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Migrate gazetteers from a forest of self-rooted trees to one canonical hierarchy, so the place picker, panel breadcrumb, resolver, and map all see the same single tree (`World > Europe > Sweden > Jönköpings län > Eksjö kommun > Eksjö`). The user-observable end state is defined in `docs/plans/2026-05-03-global-gazetteer-hierarchy-design.md`.
+**Goal:** Migrate gazetteers from a forest of self-rooted trees to one canonical hierarchy, so the place picker, panel breadcrumb, resolver, and map all see the same single tree (`World > Europe > Sweden > Jönköping > Eksjö > <parishes>`). The user-observable end state is defined in `docs/plans/2026-05-03-global-gazetteer-hierarchy-design.md`.
 
-**Architecture:** Build scripts emit `{ parentPath, nodes }` contributions instead of full self-rooted trees. Four privileged scaffolding gazetteers (`world-continents`, `world-countries`, `world-admin1`, `world-admin2`) load first and provide canonical names that every contribution must resolve into. The load-time engine **attaches** contributions as siblings — it never merges leaves across sources. Each leaf carries its single source's license and `__gazetteer` provenance. The legacy `loadGazetteers` is **replaced**, not feature-flagged — there is no parallel code path.
+**Architecture (current — revised):** Every gazetteer emits a self-rooted tree from `World`. Build scripts type each node with the closed admin vocabulary (`world | continent | country | admin{N}`), emit canonical names with locale variants in `aliases`. The loader (`mergeTree`) walks every enabled gazetteer's tree and merges by `(name, type, parent_path)` — aliases union, lat/lon first-wins, children recursive merge. `__contributors` tracks provenance. No fixtures, no privileged gazetteers, no per-country mapping tables in the loader.
 
 **Tech Stack:** TypeScript, Vitest, node-sqlite3-wasm, Vue 3 (renderer consumers).
 
