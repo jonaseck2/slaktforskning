@@ -121,7 +121,7 @@ if (simplifyIdx >= 0 && isNaN(simplifyTolerance)) {
 const ROOT = path.resolve(__dirname, '..');
 const INPUT_GPKG = path.join(ROOT, 'export-import', 'sockenstad.gpkg');
 const TMP_GEOJSON = path.join(ROOT, 'export-import', 'sockenstad_wgs84.geojson');
-const OUTPUT = path.join(ROOT, 'export-import', 'sv-sockenstad-boundaries.gazetteer.json');
+const OUTPUT = path.join(ROOT, 'src', 'api', 'place-gazetteers', 'data', 'sv-sockenstad-boundaries.json');
 
 // ── Step 1: Convert GeoPackage to GeoJSON with ogr2ogr ──────────────
 
@@ -190,32 +190,109 @@ function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
   return { type: 'MultiPolygon', coordinates: allPolygons };
 }
 
-const nodes: GazetteerNode[] = [];
+// Build parish-name → (län, kommun) lookup from sv-socknar.json (already
+// migrated to the World-rooted shape in this plan). The Wikidata-derived parish
+// data carries the canonical (län, kommun) hierarchy via P131 chains, so reading
+// it here gives us the parent-admin context that Lantmäteriet's GeoPackage doesn't
+// include. Same factual data, two redistribution paths — the merge engine
+// collapses same-named parishes from sv-socknar (point) and this gazetteer
+// (polygon) into one canonical admin3 node.
+console.log('Building parish → (län, kommun) lookup from sv-socknar.json...');
+const SV_SOCKNAR_PATH = path.join(ROOT, 'src', 'api', 'place-gazetteers', 'data', 'sv-socknar.json');
+const lanByParish: Record<string, { lan: string; kommun: string }> = {};
+if (fs.existsSync(SV_SOCKNAR_PATH)) {
+  const sv = JSON.parse(fs.readFileSync(SV_SOCKNAR_PATH, 'utf-8'));
+  // Walk World > Europe > Sweden > <län> > <kommun> > <parish>
+  const sweden = sv.root?.children?.[0]?.children?.[0];
+  for (const lan of sweden?.children ?? []) {
+    for (const kommun of lan.children ?? []) {
+      for (const parish of kommun.children ?? []) {
+        const entry = { lan: lan.name, kommun: kommun.name };
+        if (!lanByParish[parish.name]) lanByParish[parish.name] = entry;
+        // Index aliases too — sv-socknar uses formal 'X distrikt' / 'X socken' as `name`
+        // while Lantmäteriet's sockenstadnamn is the bare 'X'. Aliases include the bare form.
+        for (const alias of parish.aliases ?? []) {
+          if (!lanByParish[alias]) lanByParish[alias] = entry;
+        }
+      }
+    }
+  }
+  console.log(`  ${Object.keys(lanByParish).length} parish-name→(län, kommun) entries (incl. aliases)`);
+} else {
+  console.warn('  sv-socknar.json not found; polygons will attach directly under Sweden.');
+}
+
+// Build parish/city polygon nodes, group by (län, kommun).
+type Bucket = { lan: string; kommun: string; nodes: GazetteerNode[] };
+const buckets = new Map<string, Bucket>();
 let sockenCount = 0;
 let stadCount = 0;
+let unmappedCount = 0;
 
 for (const [_code, features] of byCode) {
   const props = features[0].properties;
   const geometry = mergeGeometries(features);
   const [lat, lon] = computeCentroid(geometry);
   const isSocken = props.sockenstadtyp === 1;
+  const name = props.sockenstadnamn;
 
-  nodes.push({
-    name: props.sockenstadnamn,
-    type: isSocken ? 'parish' : 'city',
+  // Both parishes (socknar) and historical cities (städer with stadsrättigheter)
+  // are admin3-level geographic units within their kommun. The closed admin vocab
+  // is admin-only; the parish/city distinction is captured by the source attribution
+  // (this gazetteer is sv-sockenstad-boundaries) plus the polygon's own metadata
+  // if needed.
+  const node: GazetteerNode = {
+    name,
+    type: 'admin3',
     lat: Math.round(lat * 100000) / 100000,
     lon: Math.round(lon * 100000) / 100000,
     geometry,
-  });
+  };
 
   if (isSocken) sockenCount++;
   else stadCount++;
+
+  const lookup = lanByParish[name];
+  const key = lookup ? `${lookup.lan}|${lookup.kommun}` : '__direct__';
+  if (!buckets.has(key)) {
+    buckets.set(key, { lan: lookup?.lan ?? '', kommun: lookup?.kommun ?? '', nodes: [] });
+  }
+  buckets.get(key)!.nodes.push(node);
+  if (!lookup) unmappedCount++;
 }
 
-// Sort by name for deterministic output
-nodes.sort((a, b) => a.name.localeCompare(b.name, 'sv'));
+// Build län → kommun → polygons hierarchy for matched buckets.
+const lanMap = new Map<string, Map<string, GazetteerNode[]>>();
+const directPolygons: GazetteerNode[] = [];
+for (const [key, bucket] of buckets) {
+  if (key === '__direct__') {
+    directPolygons.push(...bucket.nodes);
+    continue;
+  }
+  if (!lanMap.has(bucket.lan)) lanMap.set(bucket.lan, new Map());
+  lanMap.get(bucket.lan)!.set(bucket.kommun, bucket.nodes);
+}
 
-console.log(`  ${sockenCount} socknar, ${stadCount} städer`);
+const nodes: GazetteerNode[] = [];
+for (const [lanName, kommunMap] of [...lanMap.entries()].sort()) {
+  const kommunNodes: GazetteerNode[] = [];
+  for (const [kommunName, polygons] of [...kommunMap.entries()].sort()) {
+    polygons.sort((a, b) => a.name.localeCompare(b.name, 'sv'));
+    const lat = Math.round((polygons.reduce((s, p) => s + p.lat, 0) / polygons.length) * 100000) / 100000;
+    const lon = Math.round((polygons.reduce((s, p) => s + p.lon, 0) / polygons.length) * 100000) / 100000;
+    kommunNodes.push({ name: kommunName, type: 'admin2', lat, lon, children: polygons });
+  }
+  const lat = Math.round((kommunNodes.reduce((s, k) => s + k.lat, 0) / kommunNodes.length) * 100000) / 100000;
+  const lon = Math.round((kommunNodes.reduce((s, k) => s + k.lon, 0) / kommunNodes.length) * 100000) / 100000;
+  nodes.push({ name: lanName, type: 'admin1', lat, lon, children: kommunNodes });
+}
+if (directPolygons.length > 0) {
+  console.warn(`  ${directPolygons.length} parish/city polygon(s) with no parish→kommun match — appending under Sweden directly`);
+  directPolygons.sort((a, b) => a.name.localeCompare(b.name, 'sv'));
+  nodes.push(...directPolygons);
+}
+
+console.log(`  ${sockenCount} socknar, ${stadCount} städer (${unmappedCount} unmapped to kommun)`);
 
 // ── Step 4: Build gazetteer ──────────────────────────────────────────
 
@@ -239,11 +316,24 @@ const gazetteer: Gazetteer = {
   },
   kind: 'boundary',
   root: {
-    name: 'Sverige',
-    type: 'country',
-    lat: 62.0,
-    lon: 15.0,
-    children: nodes,
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [{
+      name: 'Europe',
+      type: 'continent',
+      lat: 54,
+      lon: 15,
+      children: [{
+        name: 'Sweden',
+        type: 'country',
+        aliases: ['Sverige'],
+        lat: 62.0,
+        lon: 15.0,
+        children: nodes,
+      }],
+    }],
   },
 };
 
