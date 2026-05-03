@@ -15,6 +15,20 @@ If you find yourself writing `places.update({ latitude: ..., longitude: ... })` 
 
 This is non-negotiable per `CLAUDE.md`. Past violations corrupted databases and pinned them to specific gazetteer versions. Don't reintroduce them.
 
+## ⚠️ Prime Directive (cont.): Sources are truth; gazetteers are build outputs
+
+The Prime Directive's shape applied a layer up: **the source datasets** (Wikidata, GeoNames, Lantmäteriet, DAWA, ok-dk/dagi, …) are canonical truth. **The build scripts** (`scripts/build-*-*.ts`, `scripts/fetch-*.ts`) are the valuable code the project owns — the transformation logic. **The gazetteer JSON files** in `src/api/place-gazetteers/data/` are derived, point-in-time snapshots; not truth, not value beyond their fetched-date utility.
+
+**What follows:**
+
+- **Gazetteer JSON is a build output**, not authored code. It happens to be checked into git for offline reproducible builds, but conceptually it's a `dist/` artifact — re-derivable from sources at any time.
+- **Never hand-edit a gazetteer JSON.** Edits belong in the script. A diff in `data/*.json` that doesn't correspond to a script or source change is a smell — investigate before merging.
+- **License lives on the source; the JSON inherits.** `source.fetched: 'YYYY-MM-DD'` is the snapshot's frozen-time marker. The license belongs to the source dataset.
+- **Build scripts must be deterministic and re-runnable.** Anyone with the sources should reproduce the JSON. Non-determinism is a script bug.
+- **Stale JSONs are not "preserved history" — they're stale outputs.** Re-deriving on migrations is hygiene, not destruction.
+
+If something feels wrong about touching a gazetteer JSON, the question is "what does the *script* need to do differently?" — not "how do I edit this JSON to be correct?" The JSON's job is to be re-derivable.
+
 ## ⚠️ Prime Directive (cont.): No cross-source merging — license & provenance are non-negotiable
 
 **Every leaf belongs to exactly one source gazetteer. The load-time engine NEVER merges leaves across sources, even when names match.**
