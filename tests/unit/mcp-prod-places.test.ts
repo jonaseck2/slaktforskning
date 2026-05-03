@@ -106,6 +106,56 @@ describe('add_place', () => {
     expect(rows[1].name).toBe('Beta');
     expect(p1.id).not.toBe(p2.id);
   });
+
+  it('rejects a comma-separated name (the "Chennai, India, World" RCA)', async () => {
+    const tool = tools.get('add_place')!;
+    await expect(
+      tool.handler({ name: 'Chennai, India, World' }),
+    ).rejects.toThrow(/comma|parent_chain/i);
+
+    // No row was written
+    const rows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(rows).toHaveLength(0);
+  });
+
+  it('parent_chain creates the full root → leaf hierarchy as separate rows', async () => {
+    const result = await callTool<{ id: string; name: string; parent_place_id: string | null }>(
+      tools,
+      'add_place',
+      { name: 'Chennai', parent_chain: ['World', 'India'] },
+    );
+
+    expect(result.name).toBe('Chennai');
+    expect(result.parent_place_id).toBeTruthy();
+
+    const rows = db.prepare('SELECT * FROM places ORDER BY name ASC').all([]) as any[];
+    expect(rows).toHaveLength(3);
+    const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
+    expect(byName['World']).toBeDefined();
+    expect(byName['India']).toBeDefined();
+    expect(byName['Chennai']).toBeDefined();
+    expect(byName['World'].parent_place_id).toBeNull();
+    expect(byName['India'].parent_place_id).toBe(byName['World'].id);
+    expect(byName['Chennai'].parent_place_id).toBe(byName['India'].id);
+  });
+
+  it('parent_chain is idempotent — re-calling reuses existing rows', async () => {
+    await callTool(tools, 'add_place', { name: 'Chennai', parent_chain: ['World', 'India'] });
+    await callTool(tools, 'add_place', { name: 'Chennai', parent_chain: ['World', 'India'] });
+
+    const rows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(rows).toHaveLength(3);
+  });
+
+  it('parent_chain rejects a comma in any link', async () => {
+    const tool = tools.get('add_place')!;
+    await expect(
+      tool.handler({ name: 'Chennai', parent_chain: ['World, Earth', 'India'] }),
+    ).rejects.toThrow(/comma|parent_chain/i);
+
+    const rows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(rows).toHaveLength(0);
+  });
 });
 
 // ── search_places ──────────────────────────────────────────────────────────
@@ -441,5 +491,42 @@ describe('get_place_ancestors', () => {
     expect(result).toHaveLength(2);
     expect(result[0].id).toBe(parent.id);
     expect(result[1].id).toBe(child.id);
+  });
+});
+
+// ── update_place ───────────────────────────────────────────────────────────
+
+describe('update_place', () => {
+  it('registers the tool', () => {
+    expect(tools.has('update_place')).toBe(true);
+  });
+
+  it('rejects a comma-separated name on update', async () => {
+    const place = createPlace(db, { name: 'Chennai' });
+    const tool = tools.get('update_place')!;
+    await expect(
+      tool.handler({ id: place.id, name: 'Chennai, India, World' }),
+    ).rejects.toThrow(/comma|parent_chain/i);
+
+    // Name was NOT changed
+    const row = db.prepare('SELECT * FROM places WHERE id = ?').get([place.id]) as any;
+    expect(row.name).toBe('Chennai');
+  });
+
+  it('accepts a single-component name on update', async () => {
+    const place = createPlace(db, { name: 'Madras' });
+    await callTool(tools, 'update_place', { id: place.id, name: 'Chennai' });
+
+    const row = db.prepare('SELECT * FROM places WHERE id = ?').get([place.id]) as any;
+    expect(row.name).toBe('Chennai');
+  });
+
+  it('updates other fields without touching name (no comma check needed)', async () => {
+    const place = createPlace(db, { name: 'Chennai' });
+    await callTool(tools, 'update_place', { id: place.id, place_type: 'city' });
+
+    const row = db.prepare('SELECT * FROM places WHERE id = ?').get([place.id]) as any;
+    expect(row.name).toBe('Chennai');
+    expect(row.place_type).toBe('city');
   });
 });

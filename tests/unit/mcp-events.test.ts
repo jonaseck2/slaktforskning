@@ -204,4 +204,100 @@ describe('recordEventWorkflow', () => {
     expect(result.event.date_value).toBeNull();
     expect(result.event.date_value_end).toBeNull();
   });
+
+  it('rejects a comma-separated `place` argument', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    expect(() =>
+      recordEventWorkflow(db, {
+        event_type: 'residence',
+        person_id: person.id,
+        place: 'Chennai, India, World',
+      }),
+    ).toThrow(/comma|place_chain/i);
+
+    // No place row was written, no event row was written
+    const placeRows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(placeRows).toHaveLength(0);
+    const eventRows = db.prepare('SELECT * FROM events').all([]) as any[];
+    expect(eventRows).toHaveLength(0);
+  });
+
+  it('rejects when both `place` and `place_chain` are provided', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    expect(() =>
+      recordEventWorkflow(db, {
+        event_type: 'residence',
+        person_id: person.id,
+        place: 'Chennai',
+        place_chain: ['World', 'India', 'Chennai'],
+      }),
+    ).toThrow(/either|both|not both/i);
+  });
+
+  it('place_chain creates the full hierarchy and links the event to the leaf', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    const result = recordEventWorkflow(db, {
+      event_type: 'residence',
+      person_id: person.id,
+      place_chain: ['World', 'India', 'Chennai'],
+      date_value: '2024',
+    });
+
+    expect(result.event.place_id).toBeTruthy();
+
+    const placeRows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(placeRows).toHaveLength(3);
+    const byName = Object.fromEntries(placeRows.map((r) => [r.name, r]));
+    expect(byName['World'].parent_place_id).toBeNull();
+    expect(byName['India'].parent_place_id).toBe(byName['World'].id);
+    expect(byName['Chennai'].parent_place_id).toBe(byName['India'].id);
+
+    // Event linked to the leaf
+    expect(result.event.place_id).toBe(byName['Chennai'].id);
+  });
+
+  it('place_chain is idempotent — re-recording reuses existing rows', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    recordEventWorkflow(db, {
+      event_type: 'residence',
+      person_id: person.id,
+      place_chain: ['World', 'India', 'Chennai'],
+    });
+    recordEventWorkflow(db, {
+      event_type: 'residence',
+      person_id: person.id,
+      place_chain: ['World', 'India', 'Chennai'],
+    });
+
+    const placeRows = db.prepare('SELECT * FROM places').all([]) as any[];
+    expect(placeRows).toHaveLength(3);
+  });
+
+  it('place_chain rejects a comma in any link', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    expect(() =>
+      recordEventWorkflow(db, {
+        event_type: 'residence',
+        person_id: person.id,
+        place_chain: ['World', 'India, Bharat', 'Chennai'],
+      }),
+    ).toThrow(/comma|place_chain/i);
+
+    // Nothing persisted
+    expect(db.prepare('SELECT * FROM places').all([]) as any[]).toHaveLength(0);
+    expect(db.prepare('SELECT * FROM events').all([]) as any[]).toHaveLength(0);
+  });
+
+  it('plain `place` (single component) still works as before', () => {
+    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    const result = recordEventWorkflow(db, {
+      event_type: 'birth',
+      person_id: person.id,
+      place: 'Stockholm',
+    });
+
+    const place = places.getPlace(db, result.event.place_id!);
+    expect(place!.name).toBe('Stockholm');
+    expect(place!.parent_place_id).toBeNull();
+  });
 });

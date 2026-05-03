@@ -10,11 +10,11 @@ The agent expresses hierarchy explicitly when it has it (root → leaf as `paren
 
 Every MCP tool whose input writes to `places.name`, or implicitly creates a place from a free-form string:
 
-- [ ] `add_place` ([src/mcp/tools/prod/places.ts:16](../../src/mcp/tools/prod/places.ts#L16)) — reject `name` containing commas; add optional `parent_chain: string[]` (root → leaf, excluding the leaf itself); description rewritten to state "name is a single component."
-- [ ] `update_place` ([src/mcp/tools/prod/places.ts:93](../../src/mcp/tools/prod/places.ts#L93)) — reject `name` containing commas. No `parent_chain` here (use `parent_place_id`).
-- [ ] `record_event` ([src/mcp/tools/prod/events.ts:111](../../src/mcp/tools/prod/events.ts#L111)) — reject `place` containing commas; add optional `place_chain: string[]` (root → leaf, including the leaf as the last element) which routes through `findOrCreatePlaceWithChain`. Description matches `add_place`.
-- [ ] Tool descriptions in `docs/MCP.md` updated to match.
-- [ ] Unit tests under `tests/unit/mcp.test.ts` (or its place/event splits) covering: comma-name rejection on each of the three tools; happy-path `parent_chain` / `place_chain` creating the right rows; existing flat-name calls still work.
+- [x] `add_place` ([src/mcp/tools/prod/places.ts:16](../../src/mcp/tools/prod/places.ts#L16)) — reject `name` containing commas; add optional `parent_chain: string[]` (root → leaf, excluding the leaf itself); description rewritten to state "name is a single component."
+- [x] `update_place` ([src/mcp/tools/prod/places.ts:93](../../src/mcp/tools/prod/places.ts#L93)) — reject `name` containing commas. No `parent_chain` here (use `parent_place_id`).
+- [x] `record_event` ([src/mcp/tools/prod/events.ts:111](../../src/mcp/tools/prod/events.ts#L111)) — reject `place` containing commas; add optional `place_chain: string[]` (root → leaf, including the leaf as the last element) which routes through `findOrCreatePlaceWithChain`. Description matches `add_place`.
+- [x] Tool descriptions in `docs/MCP.md` updated to match.
+- [x] Unit tests under `tests/unit/mcp.test.ts` (or its place/event splits) covering: comma-name rejection on each of the three tools; happy-path `parent_chain` / `place_chain` creating the right rows; existing flat-name calls still work.
 
 ### Scope deviations (explicit)
 
@@ -50,17 +50,17 @@ Lint + vitest are hygiene; they do not count toward verification of the user goa
 
 ## Tasks
 
-- [ ] **Task 1 — Add comma-rejection helper to `src/api/places.ts`.** Pure function `assertLeafPlaceName(name: string): void` that throws a clear error when `name.includes(',')`. Unit-tested. Used by tool wrappers, not by the importers or by the renderer (which writes whatever was in the form).
-- [ ] **Task 2 — Update `add_place` MCP tool.** Add `parent_chain?: string[]` to the Zod schema, call `assertLeafPlaceName` first, route through `findOrCreatePlaceWithChain` when `parent_chain` is provided. Description rewritten. Tests for: rejection, happy `parent_chain`, flat-name still works.
-- [ ] **Task 3 — Update `update_place` MCP tool.** Call `assertLeafPlaceName` when `name` is provided. Description note. Test for rejection.
-- [ ] **Task 4 — Update `record_event` MCP tool.** Add `place_chain?: string[]`. When `place_chain` is set, ignore `place` (or error if both are set — pick one and document it); route through `findOrCreatePlaceWithChain`. When only `place` is set, call `assertLeafPlaceName` on it. Description matches `add_place`. Tests.
-- [ ] **Task 5 — Sync `docs/MCP.md`.** Update the prose reference for the three tools to reflect the new contract, and add a short "Place input convention" callout near the Places tool group.
-- [ ] **Task 6 — Self-review checklist.**
-  - [ ] All three tools reject comma-names with a message that names `parent_chain` (or `place_chain` for events).
-  - [ ] All three tools accept the chain form and produce the right rows (verified by test, not by reading code).
-  - [ ] `docs/MCP.md` matches the implementation.
-  - [ ] No regressions on existing MCP tests.
-  - [ ] Importers and renderer untouched (per scope deviations).
-  - [ ] Plan file moved to `docs/plans/archive/` and `docs/PLAN.md` / `docs/plans/archive/PLAN.md` updated per CLAUDE.md close-out.
-  - [ ] Version bumped patch (no user-visible feature; this is a contract tightening + bug fix).
-  - [ ] Follow-up plan written for the renderer `onNamePlaceSelected` smell.
+- [x] **Task 1 — Add comma-rejection helper to `src/api/places.ts`.** Pure function `assertLeafPlaceName(name: string): void` that throws a clear error when `name.includes(',')`. Unit-tested. Used by tool wrappers, not by the importers or by the renderer (which writes whatever was in the form).
+- [x] **Task 2 — Update `add_place` MCP tool.** Add `parent_chain?: string[]` to the Zod schema, call `assertLeafPlaceName` first, route through `findOrCreatePlaceWithChain` when `parent_chain` is provided. Description rewritten. Tests for: rejection, happy `parent_chain`, flat-name still works.
+- [x] **Task 3 — Update `update_place` MCP tool.** Call `assertLeafPlaceName` when `name` is provided. Description note. Test for rejection.
+- [x] **Task 4 — Update `record_event` MCP tool.** Add `place_chain?: string[]`. When `place_chain` is set, ignore `place` (or error if both are set — pick one and document it); route through `findOrCreatePlaceWithChain`. When only `place` is set, call `assertLeafPlaceName` on it. Description matches `add_place`. Tests.
+- [x] **Task 5 — Sync `docs/MCP.md`.** Update the prose reference for the three tools to reflect the new contract, and add a short "Place input convention" callout near the Places tool group.
+- [x] **Task 6 — Self-review checklist.**
+  - [x] All three tools reject comma-names with a message that names `parent_chain` (or `place_chain` for events).
+  - [x] All three tools accept the chain form and produce the right rows (verified by test, not by reading code).
+  - [x] `docs/MCP.md` matches the implementation.
+  - [x] No regressions on existing MCP tests.
+  - [x] Importers and renderer untouched (per scope deviations).
+  - [x] Plan file moved to `docs/plans/archive/` and `docs/PLAN.md` / `docs/plans/archive/PLAN.md` updated per CLAUDE.md close-out.
+  - [x] Version bumped patch (no user-visible feature; this is a contract tightening + bug fix).
+  - [x] Follow-up plan written for the renderer `onNamePlaceSelected` smell.

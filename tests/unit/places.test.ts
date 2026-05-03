@@ -6,6 +6,7 @@ import {
   listPlacesPage, countPlaces,
   listPlaceChildren,
   getPlaceAncestors,
+  assertLeafPlaceName,
 } from '../../src/api/places';
 import { createPerson, addPersonName } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
@@ -411,5 +412,30 @@ describe('getPersonsForPlace - biography fields', () => {
     addEventParticipant(db, { event_id: zoeUndated.id, person_id: zoe.id, role: 'primary' });
     const rows = getPersonsForPlace(db, place.id);
     expect(rows.map(r => r.given_name)).toEqual(['Carl', 'Alice', 'Zoe']);
+  });
+});
+
+describe('assertLeafPlaceName', () => {
+  it('accepts a single component name', () => {
+    expect(() => assertLeafPlaceName('Chennai')).not.toThrow();
+  });
+
+  it('accepts names with spaces, special characters, and parentheses', () => {
+    expect(() => assertLeafPlaceName('Mosås')).not.toThrow();
+    expect(() => assertLeafPlaceName('Hörningsholm (T)')).not.toThrow();
+    expect(() => assertLeafPlaceName('São Paulo')).not.toThrow();
+  });
+
+  it('rejects a comma-separated path', () => {
+    expect(() => assertLeafPlaceName('Chennai, India')).toThrow(/comma/i);
+  });
+
+  it('rejects even a trailing comma', () => {
+    expect(() => assertLeafPlaceName('Chennai,')).toThrow();
+  });
+
+  it('error message names parent_chain to guide the agent', () => {
+    expect(() => assertLeafPlaceName('Chennai, India, World'))
+      .toThrow(/parent_chain|place_chain/);
   });
 });

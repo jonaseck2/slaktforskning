@@ -7,6 +7,26 @@ function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
+/**
+ * Throws if `name` contains a comma. Used by MCP tool wrappers to enforce
+ * that a place name is a single geographic component (e.g. "Chennai"), never
+ * a rendered path ("Chennai, India, World"). Hierarchy must be expressed via
+ * `parent_place_id` (or `parent_chain` / `place_chain` on the MCP tools).
+ *
+ * Not used by importers (they preserve whatever the source file contains) or
+ * by the renderer (which writes whatever the form/picker yields).
+ */
+export function assertLeafPlaceName(name: string): void {
+  if (name.includes(',')) {
+    throw new Error(
+      `Place name must be a single component, not a path (got: "${name}"). ` +
+      `Commas are rejected. To express hierarchy, use parent_chain on add_place ` +
+      `or place_chain on record_event (root → leaf). Example: ` +
+      `name: "Chennai", parent_chain: ["World", "India"].`,
+    );
+  }
+}
+
 export function createPlace(
   db: Database,
   data: {
