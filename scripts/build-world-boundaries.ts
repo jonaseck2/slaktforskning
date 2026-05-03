@@ -38,6 +38,7 @@ interface GeoJSONFeature {
     NAME: string;
     ISO_A2: string;
     ISO_A3: string;
+    CONTINENT?: string;
     [key: string]: unknown;
   };
   geometry: {
@@ -45,6 +46,19 @@ interface GeoJSONFeature {
     coordinates: number[][][] | number[][][][];
   };
 }
+
+// Continent code-name map matches the canonical continents that
+// world-countries.json emits — so the structural merge collapses by name.
+// Centroid coords match build-world.ts CONTINENT_COORDS.
+const CONTINENT_COORDS: Record<string, { lat: number; lon: number }> = {
+  Africa: { lat: 2, lon: 18 },
+  Antarctica: { lat: -75, lon: 0 },
+  Asia: { lat: 45, lon: 90 },
+  Europe: { lat: 54, lon: 15 },
+  'North America': { lat: 45, lon: -100 },
+  Oceania: { lat: -25, lon: 135 },
+  'South America': { lat: -15, lon: -60 },
+};
 
 interface GeoJSONCollection {
   type: 'FeatureCollection';
@@ -115,8 +129,14 @@ const geojson: GeoJSONCollection = JSON.parse(fs.readFileSync(TMP_GEOJSON, 'utf-
 console.log(`  ${geojson.features.length} features loaded`);
 
 // ── Step 4: Build gazetteer nodes ────────────────────────────────────
+// Group countries under their continent (Natural Earth provides CONTINENT in
+// the feature properties). The merge engine collapses same-(name, type, parent)
+// nodes, so country polygons here merge with world-countries.json's
+// non-geometry country nodes — point gazetteer + boundary gazetteer agree on
+// name+continent; boundary's `geometry` field is preserved by first-wins rule.
 
-const nodes: GazetteerNode[] = [];
+const continentBuckets = new Map<string, GazetteerNode[]>();
+let unmappedContinent = 0;
 
 for (const f of geojson.features) {
   const props = f.properties;
@@ -139,13 +159,34 @@ for (const f of geojson.features) {
   };
   if (aliases.length > 0) node.aliases = aliases;
 
-  nodes.push(node);
+  const continentName = props.CONTINENT;
+  if (!continentName || !(continentName in CONTINENT_COORDS)) {
+    unmappedContinent++;
+    continue;
+  }
+  if (!continentBuckets.has(continentName)) continentBuckets.set(continentName, []);
+  continentBuckets.get(continentName)!.push(node);
 }
 
-// Sort by name for deterministic output
-nodes.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+// Sort countries within each continent for deterministic output
+const continentNodes: GazetteerNode[] = [];
+for (const [continentName, countries] of [...continentBuckets.entries()].sort()) {
+  countries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  const coords = CONTINENT_COORDS[continentName];
+  continentNodes.push({
+    name: continentName,
+    type: 'continent',
+    lat: coords.lat,
+    lon: coords.lon,
+    children: countries,
+  });
+}
 
-console.log(`  ${nodes.length} countries`);
+const totalCountries = continentNodes.reduce((sum, c) => sum + (c.children?.length ?? 0), 0);
+console.log(`  ${totalCountries} countries across ${continentNodes.length} continents`);
+if (unmappedContinent > 0) {
+  console.warn(`  WARNING: ${unmappedContinent} features had no/unrecognized CONTINENT property`);
+}
 
 // ── Step 5: Build gazetteer ──────────────────────────────────────────
 
@@ -153,7 +194,7 @@ const gazetteer: Gazetteer = {
   id: 'world-boundaries',
   name: 'World Countries — Boundaries',
   locale: 'en',
-  description: `Country boundaries from Natural Earth 1:110m. ${nodes.length} countries with ISO A2/A3 aliases.`,
+  description: `Country boundaries from Natural Earth 1:110m. ${totalCountries} countries grouped under continents, with ISO A2/A3 aliases.`,
   source: {
     name: 'Natural Earth',
     url: 'https://www.naturalearthdata.com/',
@@ -165,7 +206,7 @@ const gazetteer: Gazetteer = {
     type: 'world',
     lat: 0,
     lon: 0,
-    children: nodes,
+    children: continentNodes,
   },
 };
 
@@ -176,7 +217,7 @@ fs.writeFileSync(OUTPUT, json, 'utf-8');
 
 const sizeKB = (fs.statSync(OUTPUT).size / 1024).toFixed(0);
 console.log(`\nWrote ${OUTPUT}`);
-console.log(`  ${sizeKB} KB (${nodes.length} countries)`);
+console.log(`  ${sizeKB} KB (${totalCountries} countries across ${continentNodes.length} continents)`);
 
 // Clean up temp file
 if (fs.existsSync(TMP_GEOJSON)) fs.unlinkSync(TMP_GEOJSON);
