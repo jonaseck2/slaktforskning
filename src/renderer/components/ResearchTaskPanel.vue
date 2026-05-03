@@ -321,7 +321,7 @@ function removeLink(linkId: string) { delLink.ask(linkId); }
 
 const showDeleteConfirm = ref(false);
 const deleteConfirmMessage = computed(() => {
-  const title = task.value?.title ?? t('common.unknown');
+  const title = task.value?.task ?? t('common.unknown');
   return t('researchTasks.deleteConfirmMessage', {
     title,
     links: personLinks.value.length + placeLinks.value.length + mediaLinks.value.length,
@@ -331,7 +331,7 @@ const deleteConfirmMessage = computed(() => {
 async function performDelete() {
   if (!props.taskId) return;
   try {
-    const title = task.value?.title ?? t('common.unknown');
+    const title = task.value?.task ?? t('common.unknown');
     await window.api.researchTasks.delete(props.taskId);
     showDeleteConfirm.value = false;
     toast.success(t('researchTasks.deletedToast', { title }));

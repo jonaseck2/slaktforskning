@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: research-task delete confirmation and toast now show the task title instead of "Unknown" — caught immediately by the fresh-context audit re-run after host-level lifecycle was added to the Surface contract
 - feat: every entity panel now has a Danger-zone delete button at the bottom, mirroring the existing person delete; places, sources, media, groups, and research tasks can now be deleted directly from their panels (places previously had no UI delete path at all)
 - chore: extend Surface contract guidance in CLAUDE.md to cover host-level lifecycle (the panel must let the user delete the entity it's hosted on, not just the items inside its sections)
 - fix: place panel's Persons section no longer carries a "+ Event" button — the section is a derived view, and a fresh-context audit caught the title/label mismatch (Persons section + Event handler); a small running hint signposts the Events section above as the canonical add path
