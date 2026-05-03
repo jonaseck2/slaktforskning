@@ -30,72 +30,25 @@
         <SectionHeader :title="$t('places.detailsTitle')" :collapsed="!sections.place" @toggle="toggleSection('place')" />
         <div v-if="sections.place" class="panel-section-body">
           <div v-if="!props.readonly" class="compact-form">
-            <!-- Place name (PlacePicker also acts as merge-from-existing) -->
+            <!-- Place name -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.name') }}</label>
-              <PlacePicker
-                :model-value="placeId"
-                @select="onNamePlaceSelected"
+              <input
+                class="compact-control"
+                type="text"
+                :value="place.name"
+                @blur="saveField('name', ($event.target as HTMLInputElement).value.trim() || place.name)"
               />
             </div>
 
-            <!-- Type -->
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.type') }}</label>
-              <div class="field-resolved-wrap" :class="{ 'has-resolved': !place.place_type && resolvedTypeLabel }">
-                <select
-                  class="compact-control"
-                  :value="place.place_type ?? ''"
-                  @change="saveField('place_type', ($event.target as HTMLSelectElement).value || null)"
-                >
-                  <option value="">{{ !place.place_type && resolvedTypeLabel ? resolvedTypeLabel : '—' }}</option>
-                  <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">{{ $t('placeTypes.' + pt) }}</option>
-                </select>
-                <span v-if="!place.place_type && resolvedTypeLabel" class="resolved-chip-inline resolved-chip-select">{{ $t('places.resolvedBadge') }}</span>
-              </div>
-            </div>
-
-            <!-- Parent place -->
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.parentPlace') }}</label>
-              <div class="field-resolved-wrap" :class="{ 'has-resolved': !place.parent_place_id && resolvedParentPath }">
-                <PlacePicker
-                  :model-value="place.parent_place_id ?? null"
-                  :placeholder="!place.parent_place_id && resolvedParentPath ? resolvedParentPath : undefined"
-                  @update:model-value="saveField('parent_place_id', $event)"
-                />
-                <span v-if="!place.parent_place_id && resolvedParentPath" class="resolved-chip-inline resolved-chip-picker">{{ $t('places.resolvedBadge') }}</span>
-              </div>
-            </div>
-
-            <!-- Coordinates: lat + long on one row, with map-pick icon button -->
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('places.coordinates') }}</label>
-              <div class="coord-row">
-                <div class="field-resolved-wrap coord-wrap" :class="{ 'has-resolved': place.latitude == null && resolvedMatch }">
-                  <input
-                    class="compact-control coord-input"
-                    type="number"
-                    step="any"
-                    :placeholder="place.latitude == null && resolvedMatch ? formatCoord(resolvedMatch.lat) : $t('places.latitude')"
-                    :aria-label="$t('places.latitude')"
-                    :value="place.latitude ?? ''"
-                    @blur="saveField('latitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-                  />
-                  <span v-if="place.latitude == null && resolvedMatch" class="resolved-chip-inline">{{ $t('places.resolvedBadge') }}</span>
-                </div>
-                <div class="field-resolved-wrap coord-wrap" :class="{ 'has-resolved': place.longitude == null && resolvedMatch }">
-                  <input
-                    class="compact-control coord-input"
-                    type="number"
-                    step="any"
-                    :placeholder="place.longitude == null && resolvedMatch ? formatCoord(resolvedMatch.lon) : $t('places.longitude')"
-                    :aria-label="$t('places.longitude')"
-                    :value="place.longitude ?? ''"
-                    @blur="saveField('longitude', ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null)"
-                  />
-                  <span v-if="place.longitude == null && resolvedMatch" class="resolved-chip-inline">{{ $t('places.resolvedBadge') }}</span>
-                </div>
+            <PlaceFormFields
+              :form="placeFormView"
+              :resolved-match="resolvedMatch"
+              :resolved-type-label="resolvedTypeLabel"
+              :resolved-parent-path="resolvedParentPath"
+              @update:field="onPlaceFieldUpdate"
+            >
+              <template #coord-extras>
                 <button
                   type="button"
                   class="coord-pick-btn"
@@ -105,18 +58,8 @@
                   :aria-pressed="props.pickMode ? 'true' : 'false'"
                   @click="onPickCoordsClick"
                 >📍</button>
-              </div>
-            </div>
-
-            <!-- Resolved-via line: gazetteer + match quality + matched path -->
-            <div v-if="resolvedMatch" class="compact-field resolved-field">
-              <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
-              <span class="resolved-value">
-                <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">{{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}</span>
-                <code class="resolved-gaz">{{ resolvedMatch.gazetteer }}</code>
-                <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
-              </span>
-            </div>
+              </template>
+            </PlaceFormFields>
 
             <!-- Notes -->
             <div class="compact-field">
@@ -296,7 +239,7 @@ import PlacePersonsSection from './PlacePersonsSection.vue';
 import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlaceTimeline from './PlaceTimeline.vue';
-import PlacePicker from './PlacePicker.vue';
+import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
 import ConfirmModal from './ConfirmModal.vue';
@@ -309,11 +252,9 @@ import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
-import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
 import { useEditableFields } from '../composables/useEditableFields';
-import { usePlaceResolver } from '../composables/usePlaceResolver';
-import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+import { useResolvedPlace } from '../composables/useResolvedPlace';
 import type { ResearchTask } from '../../api/types';
 
 declare const window: Window & {
@@ -349,7 +290,7 @@ const emit = defineEmits<{
   'cancel-pick': [];
 }>();
 
-const { t, te } = useI18n();
+const { t } = useI18n();
 const toast = useToast();
 
 // ── Section state ───────────────────────────────────────────────────────────
@@ -388,7 +329,7 @@ interface PlacePanelData {
 }
 
 const idRef = computed(() => props.placeId ?? null);
-const { data: panelData, reload } = useEntityData<PlacePanelData>(idRef, async (id) => {
+const { data: panelData } = useEntityData<PlacePanelData>(idRef, async (id) => {
   const [p, allPlaces] = await Promise.all([
     window.api.places.get(id) as Promise<Place | null>,
     window.api.places.list() as Promise<ChildPlace[]>,
@@ -430,60 +371,15 @@ const place = computed(() => panelData.value?.place ?? null);
 const ancestors = computed(() => panelData.value?.ancestors ?? []);
 
 // Gazetteer resolution: surface which gazetteer the resolver picked, at what
-// quality, and what the resolved values would be — so the user can fall back
-// to the gazetteer (or override with a researched coordinate). Resolved values
-// are NEVER persisted (Prime Directive); they are recomputed every render.
-const { ready: resolverReady, ensureLoaded: ensureResolverLoaded, resolve } = usePlaceResolver();
-ensureResolverLoaded();
-
-const resolvedMatch = computed<PlaceResolveResult | null>(() => {
-  if (!resolverReady.value) return null;
-  const p = place.value;
-  if (!p) return null;
-  const parts = [p.name, ...ancestors.value.map(a => a.name)];
-  return resolve(parts.join(', '));
-});
-
-// Did the user's leaf token (first comma-component of `place.name`) actually
-// match a node in the gazetteer? If yes, the gazetteer's matched leaf == the
-// user's place, so its type/parents apply directly. If no, the matched node
-// is an ancestor — its type doesn't describe the user's place, and the matched
-// "leaf" IS the user's place's parent.
-const leafMatched = computed<boolean>(() => {
-  const m = resolvedMatch.value;
-  const p = place.value;
-  if (!m || !p) return false;
-  const leafToken = p.name.split(/,|\.(?=[A-Z])/)[0].trim().toLowerCase();
-  return !m.unmatchedComponents.some(u => u.trim().toLowerCase() === leafToken);
-});
-
-// Resolved Type fallback — the gazetteer node's `type` (e.g. "country", "city").
-// If it overlaps with PLACE_TYPE_VALUES we render the localized label; otherwise
-// we render the raw string from the gazetteer. Only meaningful when the user's
-// leaf actually matched; otherwise the type describes an ancestor, not this place.
-const resolvedTypeLabel = computed<string | null>(() => {
-  const m = resolvedMatch.value;
-  if (!m || !leafMatched.value) return null;
-  const raw = m.matchedNode?.type ?? null;
-  if (!raw) return null;
-  const key = `placeTypes.${raw}`;
-  return te(key) ? t(key) : raw;
-});
-
-// Resolved Parent path fallback — everything in the matched gazetteer path
-// before the leaf, joined with ›. Empty when the leaf matched at root level.
-//
-// Edge case: when the user's leaf token did NOT match the gazetteer, the
-// matched gazetteer "leaf" is actually the parent of the user's place — keep
-// the full path instead of slicing it off. Example: "Uvira, Belgiska Kongo" →
-// "Uvira" is unmatched, gazetteer matched "Belgiska Kongo" → "Kingdom of
-// Kongo" — that's the parent of Uvira.
-const resolvedParentPath = computed<string | null>(() => {
-  const m = resolvedMatch.value;
-  if (!m) return null;
-  const path = leafMatched.value ? m.matchedPath.slice(0, -1) : m.matchedPath;
-  return path.length > 0 ? path.join(' › ') : null;
-});
+// quality, and what the resolved values would be. Per the Prime Directive,
+// these previewed values are NEVER persisted; they are recomputed every render
+// by the shared composable below (also used by PlaceModal).
+const placeNameRef = computed(() => place.value?.name ?? '');
+const ancestorNamesRef = computed(() => ancestors.value.map(a => a.name));
+const { resolvedMatch, resolvedTypeLabel, resolvedParentPath } = useResolvedPlace(
+  placeNameRef,
+  ancestorNamesRef,
+);
 
 const personCount = computed(() => panelData.value?.personCount ?? 0);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
@@ -507,21 +403,17 @@ async function saveField(field: string, value: unknown) {
   await save(field as keyof Place);
 }
 
-async function onNamePlaceSelected(selected: { id: string; name: string }) {
-  if (!props.placeId || selected.id === props.placeId) return;
-  const source = (await window.api.places.get(selected.id)) as Place | null;
-  const path = (await window.api.places.getPath(selected.id)) as string;
-  const updates: Record<string, unknown> = { name: path || selected.name };
-  if (source) {
-    if (source.latitude != null) updates.latitude = source.latitude;
-    if (source.longitude != null) updates.longitude = source.longitude;
-    if (source.place_type) updates.place_type = source.place_type;
-    if (source.parent_place_id) updates.parent_place_id = source.parent_place_id;
-  }
-  await window.api.places.update(props.placeId, updates);
-  await reload();
-  emit('place-updated', props.placeId);
+const placeFormView = computed<PlaceFormShape>(() => ({
+  place_type: place.value?.place_type ?? null,
+  parent_place_id: place.value?.parent_place_id ?? null,
+  latitude: place.value?.latitude ?? null,
+  longitude: place.value?.longitude ?? null,
+}));
+
+function onPlaceFieldUpdate(field: keyof PlaceFormShape, value: unknown) {
+  saveField(field, value);
 }
+
 
 // ── Map-pick coordinates ─────────────────────────────────────────────────────
 
@@ -532,10 +424,6 @@ function onPickCoordsClick() {
   } else {
     emit('pick-coords');
   }
-}
-
-function formatCoord(n: number): string {
-  return n.toFixed(5);
 }
 
 // ── Research tasks ──────────────────────────────────────────────────────────
@@ -717,28 +605,9 @@ watch(() => props.placeId, () => { void loadTasks(); void loadHero(); }, { immed
   padding: var(--space-xs) 0;
 }
 
-/* Coordinates row: lat + long inputs side-by-side, with map-pin pick button */
-.coord-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  align-items: stretch;
-}
-.coord-wrap {
-  flex: 1 1 100px;
-  min-width: 100px;
-}
-.coord-input {
-  width: 100%;
-}
-/* Hide native number-input spinners — they crowd the resolved chip and aren't
-   useful for free-form coordinate entry */
-.coord-input::-webkit-inner-spin-button,
-.coord-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.coord-input { -moz-appearance: textfield; }
+/* Map-pick button — stays in PlacePanel because it's panel-specific (rendered
+   into PlaceFormFields' #coord-extras slot). The lat/long row + resolved-chip
+   styling lives in PlaceFormFields.vue. */
 .coord-pick-btn {
   flex: 0 0 auto;
   padding: 0 var(--space-sm);
@@ -760,56 +629,9 @@ watch(() => props.placeId, () => { void loadTasks(); void loadHero(); }, { immed
   color: var(--accent-text, #fff);
 }
 
-/* Inline-in-field resolved fallback: ghost the placeholder text and pin a
-   small "Resolved" chip inside the field's right edge. Communicates "if you
-   leave this blank, the gazetteer says X" without persisting X. */
-.field-resolved-wrap {
-  position: relative;
-  display: block;
-  width: 100%;
-}
-.field-resolved-wrap.has-resolved .compact-control::placeholder {
-  color: var(--text-secondary);
-  font-style: italic;
-  opacity: 1;
-}
-/* When the parent picker is showing a resolved fallback, push its inner
-   placeholder text further right so it doesn't slide under the chip. */
-.field-resolved-wrap.has-resolved :deep(.place-picker input) {
-  padding-right: 92px;
-}
-.field-resolved-wrap.has-resolved > input.compact-control {
-  padding-right: 78px;
-}
-/* Native select arrow sits at the right edge — keep the chip clear of it */
-.field-resolved-wrap.has-resolved > select.compact-control {
-  padding-right: 96px;
-}
-.resolved-chip-inline {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  background: var(--info-bg, var(--surface-hover));
-  color: var(--info-text, var(--text-secondary));
-  border-radius: var(--radius-full);
-  padding: 1px 6px;
-  line-height: 1.4;
-  pointer-events: none;
-  z-index: 1;
-}
-/* Clear the picker's tree-button (24px wide @ right:4px → ends at right:28px) */
-.resolved-chip-picker { right: 36px; }
-/* Clear the native select dropdown caret on the right */
-.resolved-chip-select { right: 28px; }
-
-.resolved-field {
-  margin-top: var(--space-xs);
-}
+/* Resolved-via line still appears in the read-only fallback view below, so
+   keep these styles scoped to the panel for that case. */
+.resolved-field { margin-top: var(--space-xs); }
 .resolved-value {
   display: flex;
   flex-wrap: nowrap;
@@ -827,18 +649,9 @@ watch(() => props.placeId, () => { void loadTasks(); void loadHero(); }, { immed
   border-radius: var(--radius-full);
   line-height: 1.4;
 }
-.resolved-quality.match-exact {
-  background: var(--success-bg);
-  color: var(--success-text);
-}
-.resolved-quality.match-partial {
-  background: var(--warning-bg);
-  color: var(--warning-text);
-}
-.resolved-quality.match-ambiguous {
-  background: var(--error-bg);
-  color: var(--error-text);
-}
+.resolved-quality.match-exact { background: var(--success-bg); color: var(--success-text); }
+.resolved-quality.match-partial { background: var(--warning-bg); color: var(--warning-text); }
+.resolved-quality.match-ambiguous { background: var(--error-bg); color: var(--error-text); }
 .resolved-gaz {
   font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.95em;

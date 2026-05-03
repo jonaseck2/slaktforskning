@@ -17,45 +17,15 @@
           required
         />
       </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('places.type') }}</span>
-        <select class="ep-input" v-model="form.place_type">
-          <option value="">—</option>
-          <option v-for="pt in PLACE_TYPE_VALUES" :key="pt" :value="pt">
-            {{ $t('placeTypes.' + pt) }}
-          </option>
-        </select>
-      </div>
-      <div class="ep-field">
-        <span class="ep-field-label">{{ $t('places.parentPlace') }}</span>
-        <PlacePicker
-          :model-value="form.parent_place_id"
-          :placeholder="$t('places.searchPlaceholder')"
-          @update:model-value="form.parent_place_id = $event"
-        />
-      </div>
-      <div class="ep-field ep-field--row">
-        <div class="ep-field-half">
-          <span class="ep-field-label">{{ $t('places.latitude') }}</span>
-          <input
-            class="ep-input"
-            v-model="form.latitude"
-            type="text"
-            inputmode="decimal"
-            :placeholder="$t('places.latitude')"
-          />
-        </div>
-        <div class="ep-field-half">
-          <span class="ep-field-label">{{ $t('places.longitude') }}</span>
-          <input
-            class="ep-input"
-            v-model="form.longitude"
-            type="text"
-            inputmode="decimal"
-            :placeholder="$t('places.longitude')"
-          />
-        </div>
-      </div>
+
+      <PlaceFormFields
+        :form="form"
+        :resolved-match="resolvedMatch"
+        :resolved-type-label="resolvedTypeLabel"
+        :resolved-parent-path="resolvedParentPath"
+        @update:field="onFieldUpdate"
+      />
+
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('common.notes') }}</span>
         <textarea
@@ -69,11 +39,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, nextTick } from 'vue';
+import { reactive, ref, computed, onMounted, nextTick, toRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
-import PlacePicker from '../PlacePicker.vue';
-import { PLACE_TYPE_VALUES } from '../../constants/eventTypes';
+import PlaceFormFields, { type PlaceFormShape } from '../PlaceFormFields.vue';
+import { useResolvedPlace } from '../../composables/useResolvedPlace';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -109,8 +79,43 @@ const { t } = useI18n();
 
 const nameRef = ref<HTMLInputElement | null>(null);
 
-const parentPlaceName = ref('');
+interface ModalForm extends PlaceFormShape {
+  name: string;
+  notes: string | null;
+}
 
+const form = reactive<ModalForm>({
+  name: props.editingPlace?.name ?? '',
+  place_type: props.editingPlace?.place_type ?? null,
+  parent_place_id: props.editingPlace?.parent_place_id ?? props.parentPlaceId ?? null,
+  latitude: props.editingPlace?.latitude ?? null,
+  longitude: props.editingPlace?.longitude ?? null,
+  notes: props.editingPlace?.notes ?? null,
+});
+
+// Track the parent's ancestor chain (leaf → root names) so the resolver sees
+// "Chennai, India" when the user typed "Chennai" and picked India as parent.
+const ancestorChain = ref<string[]>([]);
+async function loadAncestorChain(parentId: string | null) {
+  if (!parentId || !window.api) {
+    ancestorChain.value = [];
+    return;
+  }
+  try {
+    const path = (await window.api.places.getPath(parentId)) as string | null;
+    ancestorChain.value = path ? path.split(',').map(s => s.trim()).filter(Boolean) : [];
+  } catch {
+    ancestorChain.value = [];
+  }
+}
+watch(() => form.parent_place_id, (id) => loadAncestorChain(id), { immediate: true });
+
+const { resolvedMatch, resolvedTypeLabel, resolvedParentPath } = useResolvedPlace(
+  toRef(form, 'name'),
+  ancestorChain,
+);
+
+const parentPlaceName = ref('');
 const displayTitle = computed(() => {
   if (form.name) return form.name;
   const base = t('places.newPlace');
@@ -118,7 +123,6 @@ const displayTitle = computed(() => {
     ? t('places.titleIn', { title: base, name: parentPlaceName.value })
     : base;
 });
-
 async function loadParentPlaceName() {
   if (!form.parent_place_id || !window.api) return;
   try {
@@ -127,18 +131,8 @@ async function loadParentPlaceName() {
   } catch { /* ignore */ }
 }
 
-const form = reactive({
-  name: props.editingPlace?.name ?? '',
-  place_type: props.editingPlace?.place_type ?? '',
-  parent_place_id: props.editingPlace?.parent_place_id ?? props.parentPlaceId ?? null,
-  latitude: props.editingPlace?.latitude != null ? String(props.editingPlace.latitude) : '',
-  longitude: props.editingPlace?.longitude != null ? String(props.editingPlace.longitude) : '',
-  notes: props.editingPlace?.notes ?? '',
-});
-
-function parseCoord(val: string): number | null {
-  const n = parseFloat(val);
-  return isNaN(n) ? null : n;
+function onFieldUpdate(field: keyof PlaceFormShape, value: unknown) {
+  (form as Record<string, unknown>)[field] = value;
 }
 
 async function handleSave() {
@@ -146,10 +140,10 @@ async function handleSave() {
   try {
     const payload = {
       name: form.name.trim(),
-      place_type: form.place_type || null,
+      place_type: form.place_type,
       parent_place_id: form.parent_place_id,
-      latitude: parseCoord(form.latitude),
-      longitude: parseCoord(form.longitude),
+      latitude: form.latitude,
+      longitude: form.longitude,
       notes: form.notes || null,
     };
     let place: Place;
@@ -170,17 +164,3 @@ onMounted(async () => {
   nameRef.value?.focus();
 });
 </script>
-
-<style scoped>
-.ep-field--row {
-  display: flex;
-  gap: var(--space-sm);
-}
-.ep-field-half {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-</style>
