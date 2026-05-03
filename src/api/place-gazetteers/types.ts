@@ -1,3 +1,15 @@
+export const GAZETTEER_NODE_TYPES = [
+  'world', 'continent', 'country', 'admin1', 'admin2', 'admin3', 'admin4',
+  'locality', 'parish', 'farm', 'church', 'city', 'landskap',
+  'historical-state', 'other',
+] as const;
+
+export type GazetteerNodeType = typeof GAZETTEER_NODE_TYPES[number];
+
+export function isGazetteerNodeType(s: string): s is GazetteerNodeType {
+  return (GAZETTEER_NODE_TYPES as readonly string[]).includes(s);
+}
+
 export interface GeoJSONPolygon {
   type: 'Polygon';
   coordinates: number[][][];
