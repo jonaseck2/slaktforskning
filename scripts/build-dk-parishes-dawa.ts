@@ -183,18 +183,17 @@ function buildTree(sogne: EnrichedSogn[]): GazetteerNode {
     }
     const kommune = region.kommuner.get(sogn.kommuneKode)!;
 
+    // Parish: canonical Danish form drops " Sogn"; original kept as alias.
+    const canonicalParish = sogn.navn.replace(/\s+Sogn$/i, '').trim() || sogn.navn;
+    const parishAliases: string[] = canonicalParish !== sogn.navn ? [sogn.navn] : [];
+
     const parishNode: GazetteerNode = {
-      name: sogn.navn,
-      type: 'parish',
+      name: canonicalParish,
+      type: 'admin3',
       lat: sogn.lat,
       lon: sogn.lon,
     };
-
-    // Alias: strip " Sogn" suffix
-    const bare = sogn.navn.replace(/\s+Sogn$/i, '').trim();
-    if (bare && bare !== sogn.navn) {
-      parishNode.aliases = [bare];
-    }
+    if (parishAliases.length > 0) parishNode.aliases = parishAliases;
 
     kommune.parishes.push(parishNode);
   }
@@ -210,27 +209,26 @@ function buildTree(sogne: EnrichedSogn[]): GazetteerNode {
 
       const kommuneCoords = avgCoordinates(kommuneData.parishes);
 
+      // Kommune: canonical drops " Kommune", original as alias.
+      const canonicalKommune = kommuneData.name.replace(/\s+Kommune$/i, '').trim() || kommuneData.name;
       const kommuneNode: GazetteerNode = {
-        name: kommuneData.name,
-        type: 'municipality',
+        name: canonicalKommune,
+        type: 'admin2',
         lat: kommuneCoords.lat,
         lon: kommuneCoords.lon,
         children: kommuneData.parishes,
       };
-
-      const bareKommune = kommuneData.name.replace(/\s+Kommune$/i, '').trim();
-      if (bareKommune && bareKommune !== kommuneData.name) {
-        kommuneNode.aliases = [bareKommune];
-      }
+      if (canonicalKommune !== kommuneData.name) kommuneNode.aliases = [kommuneData.name];
 
       kommuneNodes.push(kommuneNode);
     }
 
     const regionCoords = avgCoordinates(kommuneNodes);
 
+    // Region: keep canonical Danish form. Bare form goes in aliases.
     const regionNode: GazetteerNode = {
       name: regionData.name,
-      type: 'region',
+      type: 'admin1',
       lat: regionCoords.lat,
       lon: regionCoords.lon,
       children: kommuneNodes,
@@ -244,24 +242,43 @@ function buildTree(sogne: EnrichedSogn[]): GazetteerNode {
     regionNodes.push(regionNode);
   }
 
-  return {
-    name: 'Danmark',
+  // Wrap in World > Europe > Denmark.
+  const denmark: GazetteerNode = {
+    name: 'Denmark',
     type: 'country',
-    aliases: ['Denmark'],
+    aliases: ['Danmark'],
     lat: 56.0,
     lon: 10.0,
     children: regionNodes,
+  };
+  const europe: GazetteerNode = {
+    name: 'Europe',
+    type: 'continent',
+    lat: 54,
+    lon: 15,
+    children: [denmark],
+  };
+  return {
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [europe],
   };
 }
 
 // ── Stats ────────────────────────────────────────────────────────────
 
 function printStats(root: GazetteerNode): void {
+  // root is World; descend to Denmark
+  const denmark = root.children?.[0]?.children?.[0];
+  if (!denmark) return;
+
   let regionCount = 0;
   let kommuneCount = 0;
   let parishCount = 0;
 
-  for (const region of root.children ?? []) {
+  for (const region of denmark.children ?? []) {
     regionCount++;
     for (const kommune of region.children ?? []) {
       kommuneCount++;
@@ -269,9 +286,9 @@ function printStats(root: GazetteerNode): void {
     }
   }
 
-  console.log(`    Regions:        ${regionCount}`);
-  console.log(`    Municipalities: ${kommuneCount}`);
-  console.log(`    Parishes:       ${parishCount}`);
+  console.log(`    Regions (admin1):  ${regionCount}`);
+  console.log(`    Kommuner (admin2): ${kommuneCount}`);
+  console.log(`    Parishes (admin3): ${parishCount}`);
 }
 
 // ── Main ─────────────────────────────────────────────────────────────
