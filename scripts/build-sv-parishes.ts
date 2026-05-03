@@ -106,6 +106,25 @@ const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'd
 // Suffixes to strip when generating aliases
 const PARISH_SUFFIXES = /\s+(församling|distrikt|socken|pastorat)$/i;
 
+// Per-level suffix-strip helpers. Swedish admin1+admin2 names are typically
+// genitive in the "X län" / "X kommun" pattern, so the canonical (nominative)
+// form drops both the suffix AND the genitive 's' that precedes it.
+//
+// Exceptions (no trailing 's' in the genitive — name was already nominative):
+// Skåne, Kalmar, Uppsala, Örebro at län level; Eksjö, Lomma, Götene, … at
+// kommun level. The rule "strip 's' if present" handles all observed cases
+// because non-genitive names don't have the 's' to strip in the first place.
+function stripLänSuffix(name: string): string {
+  if (!name.endsWith(' län')) return name;
+  const trimmed = name.slice(0, -4);
+  return trimmed.endsWith('s') ? trimmed.slice(0, -1) : trimmed;
+}
+function stripKommunSuffix(name: string): string {
+  if (!name.endsWith(' kommun')) return name;
+  const trimmed = name.slice(0, -7);
+  return trimmed.endsWith('s') ? trimmed.slice(0, -1) : trimmed;
+}
+
 // Gazetteer definitions
 const GAZETTEERS = [
   {
@@ -183,10 +202,15 @@ async function sparqlFetch(query: string): Promise<WikidataRow[]> {
 
 /**
  * Build a hierarchical tree from Wikidata rows:
- *   Sverige → län → kommun → parish
+ *   World > Europe > Sweden > admin1 (län) > admin2 (kommun) > admin3 (parish)
+ *
+ * Suffix-stripped canonical names with originals as aliases:
+ *   - "Jönköpings län"  → name 'Jönköping' (admin1) + alias 'Jönköpings län'
+ *   - "Eksjö kommun"    → name 'Eksjö'     (admin2) + alias 'Eksjö kommun'
+ *   - parish names stay as-is; existing alias logic provides suffix variants.
  */
 function buildTree(rows: WikidataRow[]): GazetteerNode {
-  // län → kommun → parish name → { lat, lon, aliases }
+  // raw län label → raw kommun label → parish name → { lat, lon, aliases }
   const tree = new Map<string, Map<string, Map<string, { lat: number; lon: number; aliases: string[] }>>>();
 
   for (const row of rows) {
@@ -213,7 +237,7 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
   }
 
   // Convert to GazetteerNode tree
-  const countyNodes: GazetteerNode[] = [];
+  const lanNodes: GazetteerNode[] = [];
 
   for (const [countyName, kommunMap] of [...tree.entries()].sort((a, b) => a[0].localeCompare(b[0], 'sv'))) {
     const kommunNodes: GazetteerNode[] = [];
@@ -224,7 +248,7 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       for (const [parishName, entry] of [...parishMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'sv'))) {
         const node: GazetteerNode = {
           name: parishName,
-          type: 'parish',
+          type: 'admin3',
           lat: entry.lat,
           lon: entry.lon,
         };
@@ -235,14 +259,14 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       // Kommun centroid = mean of parish coordinates
       const kommunCoords = avgCoordinates(parishNodes);
 
-      // Kommun alias: strip " kommun" suffix
+      // Strip " kommun" → canonical name; keep original as alias.
+      const canonicalKommun = stripKommunSuffix(kommunName);
       const kommunAliases: string[] = [];
-      const bareKommun = kommunName.replace(/\s+kommun$/i, '').trim();
-      if (bareKommun && bareKommun !== kommunName) kommunAliases.push(bareKommun);
+      if (canonicalKommun !== kommunName) kommunAliases.push(kommunName);
 
       const kommunNode: GazetteerNode = {
-        name: kommunName,
-        type: 'municipality',
+        name: canonicalKommun,
+        type: 'admin2',
         lat: kommunCoords.lat,
         lon: kommunCoords.lon,
         children: parishNodes,
@@ -251,32 +275,49 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       kommunNodes.push(kommunNode);
     }
 
-    // County centroid = mean of kommun centroids
-    const countyCoords = avgCoordinates(kommunNodes);
+    // Län centroid = mean of kommun centroids
+    const lanCoords = avgCoordinates(kommunNodes);
 
-    // County alias: strip " län" suffix
-    const countyAliases: string[] = [];
-    const bareLan = countyName.replace(/\s+län$/i, '').trim();
-    if (bareLan && bareLan !== countyName) countyAliases.push(bareLan);
+    // Strip " län" → canonical name; keep original as alias.
+    const canonicalLan = stripLänSuffix(countyName);
+    const lanAliases: string[] = [];
+    if (canonicalLan !== countyName) lanAliases.push(countyName);
 
-    const countyNode: GazetteerNode = {
-      name: countyName,
-      type: 'county',
-      lat: countyCoords.lat,
-      lon: countyCoords.lon,
+    const lanNode: GazetteerNode = {
+      name: canonicalLan,
+      type: 'admin1',
+      lat: lanCoords.lat,
+      lon: lanCoords.lon,
       children: kommunNodes,
     };
-    if (countyAliases.length > 0) countyNode.aliases = countyAliases;
-    countyNodes.push(countyNode);
+    if (lanAliases.length > 0) lanNode.aliases = lanAliases;
+    lanNodes.push(lanNode);
   }
 
-  return {
-    name: 'Sverige',
+  // Wrap in World > Europe > Sweden.
+  const sweden: GazetteerNode = {
+    name: 'Sweden',
     type: 'country',
-    aliases: ['Sweden'],
+    aliases: ['Sverige'],
     lat: 62.0,
     lon: 15.0,
-    children: countyNodes,
+    children: lanNodes,
+  };
+
+  const europe: GazetteerNode = {
+    name: 'Europe',
+    type: 'continent',
+    lat: 54,
+    lon: 15,
+    children: [sweden],
+  };
+
+  return {
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [europe],
   };
 }
 
