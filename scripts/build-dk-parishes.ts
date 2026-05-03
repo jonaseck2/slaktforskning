@@ -177,14 +177,15 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
       // Kommune centroid = mean of parish coordinates
       const kommuneCoords = avgCoordinates(parishNodes);
 
-      // Kommune alias: strip " Kommune" suffix
+      // Kommune name: canonical form drops " Kommune" (Danish-canonical bare name).
+      // Original kept as alias.
+      const canonicalKommune = kommuneName.replace(/\s+kommune$/i, '').trim();
       const kommuneAliases: string[] = [];
-      const bareKommune = kommuneName.replace(/\s+kommune$/i, '').trim();
-      if (bareKommune && bareKommune !== kommuneName) kommuneAliases.push(bareKommune);
+      if (canonicalKommune && canonicalKommune !== kommuneName) kommuneAliases.push(kommuneName);
 
       const kommuneNode: GazetteerNode = {
-        name: kommuneName,
-        type: 'municipality',
+        name: canonicalKommune || kommuneName,
+        type: 'admin2',
         lat: kommuneCoords.lat,
         lon: kommuneCoords.lon,
         children: parishNodes,
@@ -196,14 +197,16 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
     // Region centroid = mean of kommune centroids
     const regionCoords = avgCoordinates(kommuneNodes);
 
-    // Region alias: strip "Region " prefix
+    // Region: keep canonical Danish form (e.g. "Region Hovedstaden"). Bare form
+    // ("Hovedstaden") goes in aliases. Don't try to map to GeoNames English
+    // forms ("Capital Region") — that's the language-gazetteer's job (Phase 7.1).
     const regionAliases: string[] = [];
     const bareRegion = regionName.replace(/^Region\s+/i, '').trim();
     if (bareRegion && bareRegion !== regionName) regionAliases.push(bareRegion);
 
     const regionNode: GazetteerNode = {
       name: regionName,
-      type: 'region',
+      type: 'admin1',
       lat: regionCoords.lat,
       lon: regionCoords.lon,
       children: kommuneNodes,
@@ -212,25 +215,55 @@ function buildTree(rows: WikidataRow[]): GazetteerNode {
     regionNodes.push(regionNode);
   }
 
-  return {
-    name: 'Danmark',
+  // Set parish type to admin3 in-place. Done as a final pass so the inner
+  // loop stays focused on tree construction.
+  for (const region of regionNodes) {
+    for (const kommune of region.children ?? []) {
+      for (const parish of kommune.children ?? []) {
+        parish.type = 'admin3';
+      }
+    }
+  }
+
+  // Wrap in World > Europe > Denmark.
+  const denmark: GazetteerNode = {
+    name: 'Denmark',
     type: 'country',
-    aliases: ['Denmark'],
+    aliases: ['Danmark'],
     lat: 56.0,
     lon: 10.0,
     children: regionNodes,
+  };
+  const europe: GazetteerNode = {
+    name: 'Europe',
+    type: 'continent',
+    lat: 54,
+    lon: 15,
+    children: [denmark],
+  };
+  return {
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [europe],
   };
 }
 
 // ── Stats ────────────────────────────────────────────────────────────
 
 function printStats(root: GazetteerNode): void {
+  // root is World; descend to Denmark
+  const europe = root.children?.[0];
+  const denmark = europe?.children?.[0];
+  if (!denmark) return;
+
   let regions = 0;
   let kommuner = 0;
   let parishes = 0;
   let withAliases = 0;
 
-  for (const region of root.children ?? []) {
+  for (const region of denmark.children ?? []) {
     regions++;
     for (const kommune of region.children ?? []) {
       kommuner++;
@@ -241,9 +274,9 @@ function printStats(root: GazetteerNode): void {
     }
   }
 
-  console.log(`    Regions:             ${regions}`);
-  console.log(`    Municipalities:      ${kommuner}`);
-  console.log(`    Parishes:            ${parishes}`);
+  console.log(`    Regions (admin1):    ${regions}`);
+  console.log(`    Kommuner (admin2):   ${kommuner}`);
+  console.log(`    Parishes (admin3):   ${parishes}`);
   console.log(`    Parishes w/ aliases: ${withAliases}`);
 }
 
