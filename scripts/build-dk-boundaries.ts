@@ -157,8 +157,34 @@ async function main() {
   }
   console.log(`  ${byCode.size} unique parishes`);
 
-  // Step 3: Build gazetteer nodes
-  const nodes: GazetteerNode[] = [];
+  // Step 3a: Build parish-name → (region, kommune) lookup from dk-sogne.json.
+  console.log('Building parish → (region, kommune) lookup from dk-sogne.json...');
+  const DK_SOGNE_PATH = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'dk-sogne.json');
+  const parentByParish: Record<string, { region: string; kommune: string }> = {};
+  if (fs.existsSync(DK_SOGNE_PATH)) {
+    const dkSogne = JSON.parse(fs.readFileSync(DK_SOGNE_PATH, 'utf-8'));
+    const denmark = dkSogne.root?.children?.[0]?.children?.[0];
+    for (const region of denmark?.children ?? []) {
+      for (const kommune of region.children ?? []) {
+        for (const parish of kommune.children ?? []) {
+          const entry = { region: region.name, kommune: kommune.name };
+          if (!parentByParish[parish.name]) parentByParish[parish.name] = entry;
+          // Aliases include the bare 'X' form matching ok-dk/dagi's SOGNENAVN.
+          for (const alias of parish.aliases ?? []) {
+            if (!parentByParish[alias]) parentByParish[alias] = entry;
+          }
+        }
+      }
+    }
+    console.log(`  ${Object.keys(parentByParish).length} parish-name→(region, kommune) entries (incl. aliases)`);
+  } else {
+    console.warn('  dk-sogne.json not found; polygons will attach directly under Denmark.');
+  }
+
+  // Step 3b: Build polygon nodes, group by (region, kommune).
+  type Bucket = { region: string; kommune: string; nodes: GazetteerNode[] };
+  const buckets = new Map<string, Bucket>();
+  let unmappedCount = 0;
 
   for (const [_code, features] of byCode) {
     const props = features[0].properties;
@@ -168,19 +194,53 @@ async function main() {
 
     const node: GazetteerNode = {
       name: props.SOGNENAVN,
-      type: 'parish',
+      type: 'admin3',
       lat,
       lon,
       geometry,
     };
 
-    nodes.push(node);
+    const lookup = parentByParish[props.SOGNENAVN];
+    const key = lookup ? `${lookup.region}|${lookup.kommune}` : '__direct__';
+    if (!buckets.has(key)) {
+      buckets.set(key, { region: lookup?.region ?? '', kommune: lookup?.kommune ?? '', nodes: [] });
+    }
+    buckets.get(key)!.nodes.push(node);
+    if (!lookup) unmappedCount++;
   }
 
-  // Sort by Danish name
-  nodes.sort((a, b) => a.name.localeCompare(b.name, 'da'));
+  // Build region → kommune → polygons hierarchy.
+  const regMap = new Map<string, Map<string, GazetteerNode[]>>();
+  const directPolygons: GazetteerNode[] = [];
+  for (const [key, bucket] of buckets) {
+    if (key === '__direct__') {
+      directPolygons.push(...bucket.nodes);
+      continue;
+    }
+    if (!regMap.has(bucket.region)) regMap.set(bucket.region, new Map());
+    regMap.get(bucket.region)!.set(bucket.kommune, bucket.nodes);
+  }
 
-  console.log(`  ${nodes.length} parishes`);
+  const nodes: GazetteerNode[] = [];
+  for (const [regionName, kommuneMap] of [...regMap.entries()].sort()) {
+    const kommuneNodes: GazetteerNode[] = [];
+    for (const [kommuneName, polygons] of [...kommuneMap.entries()].sort()) {
+      polygons.sort((a, b) => a.name.localeCompare(b.name, 'da'));
+      const lat = round4(polygons.reduce((s, p) => s + p.lat, 0) / polygons.length);
+      const lon = round4(polygons.reduce((s, p) => s + p.lon, 0) / polygons.length);
+      kommuneNodes.push({ name: kommuneName, type: 'admin2', lat, lon, children: polygons });
+    }
+    const lat = round4(kommuneNodes.reduce((s, k) => s + k.lat, 0) / kommuneNodes.length);
+    const lon = round4(kommuneNodes.reduce((s, k) => s + k.lon, 0) / kommuneNodes.length);
+    nodes.push({ name: regionName, type: 'admin1', lat, lon, children: kommuneNodes });
+  }
+  if (directPolygons.length > 0) {
+    console.warn(`  ${directPolygons.length} parish polygon(s) without (region, kommune) match — appending under Denmark directly`);
+    directPolygons.sort((a, b) => a.name.localeCompare(b.name, 'da'));
+    nodes.push(...directPolygons);
+  }
+
+  console.log(`  ${nodes.length} top-level nodes (regions + direct polygons; ${unmappedCount} unmapped)`);
 
   // Step 4: Build gazetteer
   const today = new Date().toISOString().slice(0, 10);
@@ -198,12 +258,24 @@ async function main() {
     },
     kind: 'boundary',
     root: {
-      name: 'Danmark',
-      type: 'country',
-      aliases: ['Denmark'],
-      lat: 56.0,
-      lon: 10.0,
-      children: nodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Denmark',
+          type: 'country',
+          aliases: ['Danmark'],
+          lat: 56.0,
+          lon: 10.0,
+          children: nodes,
+        }],
+      }],
     },
   };
 
