@@ -35,7 +35,11 @@ export type GazetteerGeometry = GeoJSONPolygon | GeoJSONMultiPolygon;
 
 export interface GazetteerNode {
   name: string;
-  type: string;
+  /**
+   * Closed-vocabulary admin level. Validated by `isGazetteerNodeType`.
+   * Allowed values: 'world' | 'continent' | 'country' | `admin${number}` (admin1, admin2, ...).
+   */
+  type: GazetteerNodeType;
   aliases?: string[];
   lat: number;
   lon: number;

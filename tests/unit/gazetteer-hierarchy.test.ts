@@ -15,11 +15,17 @@ describe('gazetteer hierarchy integrity', () => {
     expect(migrated.length).toBeGreaterThanOrEqual(2); // world-countries + world-admin1 at minimum
   });
 
-  it.skip('every node type is in the closed vocabulary (7 admin levels)', () => {
-    // Un-skip in Phase 8 once every gazetteer has migrated to the closed vocabulary.
+  it('every node type is in the closed vocabulary (admin levels)', () => {
+    // Closed vocab: 'world' | 'continent' | 'country' | `admin${number}`.
+    // Phase 8 un-skip — all migrated gazetteers use these types only.
+    const ADMIN_LEVEL_RE = /^admin([1-9]\d*)$/;
+    function isValidType(t: string): boolean {
+      if ((GAZETTEER_NODE_TYPES as readonly string[]).includes(t)) return true;
+      return ADMIN_LEVEL_RE.test(t);
+    }
     function check(node: GazetteerNode, gid: string): string[] {
       const errors: string[] = [];
-      if (!(GAZETTEER_NODE_TYPES as readonly string[]).includes(node.type)) {
+      if (!isValidType(node.type)) {
         errors.push(`${gid}: invalid type "${node.type}" on node "${node.name}"`);
       }
       if (node.children) for (const c of node.children) errors.push(...check(c, gid));
@@ -27,8 +33,12 @@ describe('gazetteer hierarchy integrity', () => {
     }
     const errors: string[] = [];
     for (const g of all) {
+      // Language gazetteers carry translation data, not geographic data.
+      // Their pseudo-root (type 'language') is exempt from the admin vocab.
+      if (g.shape === 'language' || g.kind === 'language') continue;
       if (g.root) errors.push(...check(g.root, g.id));
     }
+    if (errors.length > 0) console.error(errors.slice(0, 20).join('\n'));
     expect(errors).toEqual([]);
   });
 
