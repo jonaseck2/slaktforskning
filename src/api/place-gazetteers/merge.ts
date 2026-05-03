@@ -1,102 +1,56 @@
 import type { Gazetteer, GazetteerConfig, GazetteerNode } from './types';
 
-/**
- * Find a node in the tree by path key.
- * Bare key ("Denmark") — match first node by name at any depth.
- * Path key ("Germany > Bavaria") — walk down matching each ancestor from root's children.
- */
-function findNodeByPath(root: GazetteerNode, pathKey: string): GazetteerNode | null {
-  const parts = pathKey.split(' > ');
-  if (parts.length === 1) {
-    function walk(node: GazetteerNode): GazetteerNode | null {
-      if (node.name === parts[0]) return node;
-      if (node.children) {
-        for (const child of node.children) {
-          const found = walk(child);
-          if (found) return found;
-        }
-      }
-      return null;
-    }
-    if (root.name === parts[0]) return root;
-    if (root.children) {
-      for (const child of root.children) {
-        const found = walk(child);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-  let current: GazetteerNode | null = root;
-  for (const part of parts) {
-    if (!current.children) return null;
-    const child = current.children.find(c => c.name === part);
-    if (!child) {
-      if (current === root && current.name === part) continue;
-      return null;
-    }
-    current = child;
-  }
-  return current;
-}
-
-/**
- * Merge language gazetteer translations into target gazetteers as aliases.
- * Mutates target gazetteer nodes in place.
- */
-function mergeTranslations(langGaz: Gazetteer, targets: Gazetteer[]): void {
-  if (!langGaz.translations) return;
-  const targetMap = new Map(targets.map(g => [g.id, g]));
-
-  for (const [targetId, translations] of Object.entries(langGaz.translations)) {
-    const target = targetMap.get(targetId);
-    if (!target) continue;
-
-    for (const [pathKey, names] of Object.entries(translations)) {
-      const node = findNodeByPath(target.root, pathKey);
-      if (!node) continue;
-
-      const existing = new Set(node.aliases ?? []);
-      const merged = [...(node.aliases ?? [])];
-      for (const name of names) {
-        if (!existing.has(name)) {
-          merged.push(name);
-          existing.add(name);
-        }
-      }
-      (node as GazetteerNode).aliases = merged;
-    }
-  }
-}
-
 export function loadGazetteers(
   config: GazetteerConfig,
   bundled: Gazetteer[],
   imported: Gazetteer[] = [],
 ): Gazetteer[] {
   const enabled = new Set(config.enabledGazetteers);
-
-  // Imported overrides bundled when ids collide
   const importedIds = new Set(imported.map(g => g.id));
   const all = [...bundled.filter(g => !importedIds.has(g.id)), ...imported];
-  const filtered = all.filter(g => enabled.has(g.id));
 
-  // Separate language gazetteers from point/boundary
-  const langGazetteers = filtered.filter(g => g.kind === 'language');
-  const dataGazetteers = filtered.filter(g => g.kind !== 'language');
+  // Scaffolding is ALWAYS enabled — canonical reference set, not a toggle.
+  const filtered = all.filter(g => g.shape === 'scaffolding' || enabled.has(g.id));
 
-  // Nothing to merge — return as-is
-  if (langGazetteers.length === 0) return dataGazetteers;
+  const scaffolding = filtered
+    .filter(g => g.shape === 'scaffolding')
+    .map(g => JSON.parse(JSON.stringify(g)) as Gazetteer);
 
-  // Clone data gazetteers before mutating so bundled singletons stay clean
-  const cloned: Gazetteer[] = dataGazetteers.map(g => JSON.parse(JSON.stringify(g)) as Gazetteer);
+  const idx = buildScaffoldingIndex(scaffolding);
 
-  // Merge translations into cloned data gazetteers
-  for (const lang of langGazetteers) {
-    mergeTranslations(lang, cloned);
+  const contributions = filtered.filter(g => g.shape === 'contributions');
+  const report = attachContributions(contributions, idx);
+  if (report.rejected.length > 0) {
+    console.warn('[gazetteers] rejected contributions:', report.rejected);
   }
 
-  return cloned;
+  // Translations apply only to scaffolding nodes (admin division naming).
+  // They never touch leaves — leaf aliases stay exactly as the source authored them.
+  const langGazetteers = filtered.filter(g => g.shape === 'language');
+  for (const lang of langGazetteers) mergeTranslations(lang, idx);
+
+  // Synthesize a single merged-tree gazetteer. Multi-root case (World + World (Historical))
+  // ships in Phase 6 — for Phases 1–5 there is exactly one scaffolding root.
+  return [{
+    id: '__merged__',
+    name: 'Merged hierarchy',
+    locale: 'mul',
+    shape: 'scaffolding',
+    root: scaffolding[0]?.root ?? { name: 'World', type: 'world', lat: 0, lon: 0 },
+  }];
+}
+
+function mergeTranslations(lang: Gazetteer, idx: ScaffoldingIndex): void {
+  if (!lang.translations) return;
+  for (const [_targetId, translations] of Object.entries(lang.translations)) {
+    for (const [pathStr, names] of Object.entries(translations)) {
+      const node = idx.lookup(pathStr.split(' › '));
+      if (!node) continue;
+      const existing = new Set(node.aliases ?? []);
+      for (const n of names) existing.add(n);
+      node.aliases = Array.from(existing);
+    }
+  }
 }
 
 export interface ScaffoldingIndex {

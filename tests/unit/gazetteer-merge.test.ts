@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { attachContributions, buildScaffoldingIndex } from '../../src/api/place-gazetteers/merge';
+import { describe, it, expect, vi } from 'vitest';
+import { attachContributions, buildScaffoldingIndex, loadGazetteers } from '../../src/api/place-gazetteers/merge';
 import type { Gazetteer } from '../../src/api/place-gazetteers/types';
 
 const worldCountries: Gazetteer = {
@@ -89,5 +89,42 @@ describe('attachContributions', () => {
     expect(fromB.lat).toBeCloseTo(57.67);
     expect(fromA.aliases).toEqual(['Eksjö civil']);
     expect(fromB.aliases).toEqual(['Eksjö church']);
+  });
+});
+
+describe('loadGazetteers (attach-only)', () => {
+  it('returns one merged-tree gazetteer with the scaffolding root and attached contributions', () => {
+    const scaffolding: Gazetteer = JSON.parse(JSON.stringify(worldCountries));
+    const contrib: Gazetteer = {
+      id: 'sv-orter', name: 'SE', locale: 'sv', shape: 'contributions',
+      contributions: [{ parentPath: ['World', 'Europe', 'Sweden'],
+        nodes: [{ name: 'Eksjö', type: 'locality', lat: 57.66, lon: 14.97 }] }],
+    };
+    const result = loadGazetteers(
+      { enabledGazetteers: ['sv-orter'] },  // scaffolding always enabled
+      [scaffolding, contrib],
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('__merged__');
+    const sweden = result[0].root!.children!.find(c => c.name === 'Europe')!.children!.find(c => c.name === 'Sweden')!;
+    expect(sweden.children!.find(c => c.name === 'Eksjö')).toBeDefined();
+  });
+
+  it('always includes scaffolding regardless of enabledGazetteers', () => {
+    const scaffolding: Gazetteer = JSON.parse(JSON.stringify(worldCountries));
+    const result = loadGazetteers({ enabledGazetteers: [] }, [scaffolding]);
+    expect(result[0].root!.name).toBe('World');
+  });
+
+  it('warns and skips contributions whose parentPath cannot resolve', () => {
+    const scaffolding: Gazetteer = JSON.parse(JSON.stringify(worldCountries));
+    const orphan: Gazetteer = {
+      id: 'orphan', name: 'O', locale: 'en', shape: 'contributions',
+      contributions: [{ parentPath: ['World', 'Atlantis'], nodes: [{ name: 'X', type: 'locality', lat: 0, lon: 0 }] }],
+    };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    loadGazetteers({ enabledGazetteers: ['orphan'] }, [scaffolding, orphan]);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
