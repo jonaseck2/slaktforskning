@@ -100,9 +100,13 @@ function buildNodes(rows: WikidataRow[]): GazetteerNode[] {
 
     const aliases = generateAliases(row.itemLabel, row.altLabels, ENTITY_SUFFIXES);
 
+    // Historical entities are sovereign in their era — type as 'country' under
+    // the World (Historical) sibling super-root. The closed admin vocabulary
+    // doesn't have a separate 'historical_state' type; granularity is captured
+    // by the parent root + startYear/endYear fields.
     const node: GazetteerNode = {
       name: row.itemLabel,
-      type: 'historical_state',
+      type: 'country',
       lat: round6(coord.lat),
       lon: round6(coord.lon),
     };
@@ -160,7 +164,7 @@ async function main() {
     },
     root: {
       name: 'World (Historical)',
-      type: 'root',
+      type: 'world',
       lat: 0,
       lon: 0,
       children: nodes,
