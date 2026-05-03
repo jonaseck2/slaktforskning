@@ -98,29 +98,46 @@ async function main() {
     console.warn(`  WARNING: expected 25 landskap, got ${rows.length}. Check query.`);
   }
 
-  // Build child nodes - one per landskap.
-  const children: GazetteerNode[] = rows
+  // Build child nodes — one per landskap. Typed admin1 (parallel axis to län
+  // under Sweden; same level of partition, different cultural-historical lens).
+  // Same-name landskap and län (Blekinge, Dalarna, Gotland, …) merge as one
+  // admin1 node when both gazetteers are enabled — the merge engine unions
+  // their aliases. Unique landskap (Småland, Bohuslän, …) appear as
+  // additional admin1 siblings under Sweden.
+  const landskapNodes: GazetteerNode[] = rows
     .map<GazetteerNode>(r => ({
       name: r.svLabel,
-      type: 'landskap',
+      type: 'admin1',
       lat: round6(r.lat),
       lon: round6(r.lon),
       ...(r.aliases.length > 0 ? { aliases: r.aliases } : {}),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'sv'));
 
-  // Sweden centroid - good enough as the root point.
-  // (Roughly Östersund area. Computed once, hardcoded; the root never moves.)
-  const SE_LAT = 62.0;
-  const SE_LON = 15.0;
-
   const today = new Date().toISOString().slice(0, 10);
+
+  // World > Europe > Sweden > <landskap as admin1>
+  const sweden: GazetteerNode = {
+    name: 'Sweden',
+    type: 'country',
+    aliases: ['Sverige'],
+    lat: 62.0,
+    lon: 15.0,
+    children: landskapNodes,
+  };
+  const europe: GazetteerNode = {
+    name: 'Europe',
+    type: 'continent',
+    lat: 54,
+    lon: 15,
+    children: [sweden],
+  };
 
   const gazetteer = {
     id: 'sv-landskap',
     name: 'Svenska landskap',
     locale: 'sv',
-    description: 'Sveriges 25 historiska landskap',
+    description: 'Sveriges 25 historiska landskap, typade som admin1 under Sverige (parallell axel till län).',
     source: {
       name: 'Wikidata',
       url: 'https://www.wikidata.org/wiki/Q193556',
@@ -129,11 +146,11 @@ async function main() {
     },
     kind: 'point' as const,
     root: {
-      name: 'Sverige (landskap)',
-      type: 'country',
-      lat: SE_LAT,
-      lon: SE_LON,
-      children,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [europe],
     },
   };
 
@@ -141,7 +158,7 @@ async function main() {
   fs.writeFileSync(OUT_PATH, JSON.stringify(gazetteer, null, 2) + '\n', 'utf-8');
 
   const sizeKB = (fs.statSync(OUT_PATH).size / 1024).toFixed(1);
-  console.log(`\nWrote ${OUT_PATH} (${sizeKB} KB, ${children.length} landskap)`);
+  console.log(`\nWrote ${OUT_PATH} (${sizeKB} KB, ${landskapNodes.length} landskap)`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
