@@ -25,7 +25,7 @@
 
       <!-- Search mode: flat results, server-paged via usePagedList -->
       <template v-else-if="searchActive">
-        <div v-if="searchPaged.length === 0 && !searchLoading" class="state">{{ $t('places.tree.noResults') }}</div>
+        <div v-if="searchPaged.length === 0 && gazetteerHits.length === 0 && !searchLoading" class="state">{{ $t('places.tree.noResults') }}</div>
         <div v-else class="tree-scroll" ref="searchScrollRef">
           <ul role="listbox" class="search-results" :aria-label="$t('places.tree.title')">
             <li
@@ -44,11 +44,30 @@
               </div>
               <div v-if="place.parent_name" class="result-subtitle">{{ place.parent_name }}</div>
             </li>
+            <li
+              v-for="hit in gazetteerHits"
+              :key="hit.key"
+              role="option"
+              :aria-selected="selectedKey === hit.key"
+              class="result-row"
+              :class="{ selected: selectedKey === hit.key }"
+              v-narrate="hit.name + (hit.pathNames.length > 1 ? ', ' + hit.pathNames.slice(0, -1).join(', ') : '')"
+              @click="onSelectGaz(hit)"
+            >
+              <div class="result-main">
+                <span class="result-name">{{ hit.name }}</span>
+                <span v-if="hit.type" class="result-type">{{ $te('placeTypes.' + hit.type) ? $t('placeTypes.' + hit.type) : hit.type }}</span>
+                <span class="gaz-badge">{{ $t('places.tree.fromGazetteerBadge') }}</span>
+              </div>
+              <div v-if="hit.pathNames.length > 1" class="result-subtitle">
+                {{ hit.pathNames.slice(0, -1).join(' › ') }}
+              </div>
+            </li>
           </ul>
           <div ref="sentinel" class="scroll-sentinel"></div>
         </div>
-        <p v-if="searchTotal > 0" class="count-label tree-count">
-          {{ $t('places.showingOf', { shown: searchPaged.length, total: searchTotal }) }}
+        <p v-if="searchTotal > 0 || gazetteerHits.length > 0" class="count-label tree-count">
+          {{ $t('places.showingOf', { shown: searchPaged.length + gazetteerHits.length, total: searchTotal + gazetteerHits.length }) }}
         </p>
       </template>
 
@@ -84,6 +103,25 @@ import { usePagedList } from '../../composables/usePagedList';
 import { useToast } from '../../composables/useToast';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; postal_code: string | null; city: string | null; parent_name?: string | null; }
+interface GazetteerHit {
+  key: string;
+  name: string;
+  type: string | null;
+  /** Full path from gazetteer root down to and including the matched node. */
+  pathNames: string[];
+  gazId: string;
+}
+interface GazNodeLike {
+  name: string;
+  type?: string | null;
+  aliases?: string[];
+  children?: GazNodeLike[];
+}
+interface GazLike {
+  id: string;
+  kind?: string;
+  root: GazNodeLike;
+}
 
 const props = defineProps<{
   initialPlaceId: string | null;
@@ -145,6 +183,81 @@ const {
 // every row in the DB (not just the loaded tree roots).
 const searchActive = computed(() => searchQuery.value.trim().length >= 1);
 
+// Lower-case + accent-strip; mirrors the SQL `normalized_name` column so DB
+// substring matches and gazetteer substring matches use the same form.
+function normalizeQuery(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+
+const GAZ_HIT_LIMIT = 50;
+
+// Walk every loaded gazetteer's tree and collect nodes whose normalized name
+// (or any alias) contains the query. Capped at GAZ_HIT_LIMIT to keep the
+// list manageable on broad inputs ("a", "san"). Skips `language` gazetteers
+// — those carry no path of interest for the picker.
+function searchGazetteersSubstring(query: string, gazetteers: GazLike[], limit = GAZ_HIT_LIMIT): GazetteerHit[] {
+  const q = normalizeQuery(query);
+  if (!q) return [];
+  const hits: GazetteerHit[] = [];
+  const seen = new Set<string>();
+  for (const gaz of gazetteers) {
+    if (gaz.kind === 'language') continue;
+    const walk = (node: GazNodeLike, ancestorNames: string[]): boolean => {
+      const path = [...ancestorNames, node.name];
+      let matched = normalizeQuery(node.name).includes(q);
+      if (!matched && node.aliases) {
+        for (const a of node.aliases) {
+          if (normalizeQuery(a).includes(q)) { matched = true; break; }
+        }
+      }
+      if (matched) {
+        const key = 'gaz:' + gaz.id + ':' + path.map(s => s.toLowerCase()).join('>');
+        if (!seen.has(key)) {
+          seen.add(key);
+          hits.push({ key, name: node.name, type: node.type ?? null, pathNames: path, gazId: gaz.id });
+        }
+      }
+      if (hits.length >= limit) return true;
+      if (node.children) {
+        for (const c of node.children) {
+          if (walk(c, path)) return true;
+        }
+      }
+      return false;
+    };
+    // Walk every root the gazetteer exposes (root + allRoots — the merged
+    // tree's sibling super-roots like World + World (Historical)).
+    const allRoots = (gaz as GazLike & { allRoots?: GazNodeLike[] }).allRoots;
+    const roots = (allRoots && allRoots.length > 0) ? allRoots : (gaz.root ? [gaz.root] : []);
+    let exhausted = false;
+    for (const r of roots) {
+      if (walk(r, [])) { exhausted = true; break; }
+    }
+    if (exhausted) break;
+  }
+  return hits;
+}
+
+// Gazetteer hits for the current query, dedup'd against the currently-loaded
+// DB rows by (name, parent name). DB rows are authoritative — once a place
+// exists in the database, prefer the DB row so selection doesn't try to
+// re-create it via findOrCreateWithChain.
+const gazetteerHits = computed<GazetteerHit[]>(() => {
+  if (!searchActive.value) return [];
+  if (!gazetteerReady.value) return [];
+  const gazetteers = getGazetteers() as unknown as GazLike[];
+  if (gazetteers.length === 0) return [];
+  const all = searchGazetteersSubstring(searchQuery.value, gazetteers);
+  const dbKeys = new Set<string>();
+  for (const row of searchPaged.value) {
+    dbKeys.add(normalizeQuery(row.name) + '|' + normalizeQuery(row.parent_name ?? ''));
+  }
+  return all.filter(h => {
+    const parentName = h.pathNames.length >= 2 ? h.pathNames[h.pathNames.length - 2] : '';
+    return !dbKeys.has(normalizeQuery(h.name) + '|' + normalizeQuery(parentName));
+  });
+});
+
 // Re-attach the sentinel each time the search-mode list mounts (the v-if
 // destroys the scroll container when switching back to browse mode).
 watch(sentinel, (el) => attachSentinel(el, searchScrollRef.value));
@@ -182,6 +295,22 @@ async function onSelectNode(node: TreeNode) {
 function onSelectFlat(place: PlaceRow) {
   selectedKey.value = 'db:' + place.id;
   stagedPlace.value = place;
+}
+
+async function onSelectGaz(hit: GazetteerHit) {
+  // Materialise the gazetteer chain on click — same path the tree-mode
+  // gazetteer-only nodes use. The picker stays open; OK commits the staged
+  // place. Cancel/× closes without committing, but the chain creation is
+  // already persisted (consistent with existing tree-mode behaviour).
+  selectedKey.value = hit.key;
+  try {
+    const ancestors = hit.pathNames.slice(0, -1).map(n => ({ name: n }));
+    const place = (await window.api.places.findOrCreateWithChain(hit.name, ancestors)) as PlaceRow;
+    stagedPlace.value = place;
+  } catch (err) {
+    console.error('[PlaceTreePickerModal] gazetteer-hit select failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
 }
 
 async function onAddChild(payload: { parent: TreeNode; name: string }) {
@@ -321,6 +450,17 @@ onMounted(async () => {
 .result-type {
   font-size: var(--font-xs);
   color: var(--text-muted);
+}
+.gaz-badge {
+  font-size: var(--font-xs);
+  color: var(--success-text);
+  background: var(--success-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.result-row.selected .gaz-badge {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent-text) 18%, transparent);
 }
 .result-subtitle {
   font-size: var(--font-xs);

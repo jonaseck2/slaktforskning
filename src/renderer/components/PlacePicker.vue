@@ -71,7 +71,7 @@
         <div class="place-main">
           <span class="place-name">{{ gaz.name }}</span>
           <span class="place-type">{{ gaz.pathNodes[gaz.pathNodes.length - 1]?.type }}</span>
-          <span class="gazetteer-badge">{{ gaz.gazetteer }}</span>
+          <span v-if="gaz.contributors.length > 0" class="gazetteer-badge">{{ gaz.contributors.length === 1 ? gaz.contributors[0] : `${gaz.contributors.length} sources` }}</span>
         </div>
         <div class="place-subtitle">{{ gaz.parentChain || gaz.matchedPath.join(' › ') }}</div>
       </li>
@@ -119,7 +119,18 @@ interface GazetteerSuggestion {
   lon: number;
   matchedPath: string[];
   pathNodes: GazetteerPathNode[];
+  /**
+   * Synthetic gazetteer ID returned by the merge engine — typically '__merged__'
+   * for the unified hierarchy. Use `contributors` for the picker badge instead;
+   * this field is kept for the dedup key + select handler.
+   */
   gazetteer: string;
+  /**
+   * Source attribution from the merged node's `__contributors` array — every
+   * gazetteer that contributed to this node. Empty when the node has no
+   * source attribution (e.g. a synthesized merged-tree wrapper).
+   */
+  contributors: string[];
   /** Pretty-printed parent chain for the dropdown subtitle (e.g. "Mosås › Örebro län") */
   parentChain?: string;
   /** When this suggestion comes from the hierarchical resolver, the leaf
@@ -229,16 +240,17 @@ async function runSearch() {
       const seen = new Set<string>();
       for (const cand of hier.candidates.slice(0, 5)) {
         const node = cand.node;
-        // Build the leaf name: matched node OR the unmatched left tokens
-        // joined ("Hörningsholm" / "Mosås"). The actual create-flow uses
-        // `unmatchedLeftTokens` for the leaf name.
         const leafName = cand.unmatchedLeftTokens.length > 0
           ? cand.unmatchedLeftTokens.join(', ')
           : node.name;
-        const key = `${leafName.toLowerCase()}|${cand.gazetteer}|${cand.path.map(n => n.name).join('>')}`;
+        // Dedup by canonical leaf path. Under the structural-merge engine,
+        // `cand.gazetteer` is always '__merged__'; distinct paths to the
+        // same leaf name surface as distinct rows (e.g. multiple "Eksjö"
+        // entries differentiated by län/kommun chain).
+        const pathStr = cand.path.map(n => n.name).join('>');
+        const key = `${leafName.toLowerCase()}|${pathStr}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        // Parent chain string: matched path bottom-to-top, leaf-first
         const reversed = [...cand.path].reverse();
         const parentChain = reversed.map(n => n.name).join(' › ');
         gazSuggestions.push({
@@ -248,6 +260,7 @@ async function runSearch() {
           matchedPath: cand.path.map(n => n.name),
           pathNodes: cand.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
           gazetteer: cand.gazetteer,
+          contributors: ((node as { __contributors?: string[] }).__contributors ?? []).slice(),
           parentChain,
           unmatchedLeftTokens: cand.unmatchedLeftTokens,
         });
@@ -262,7 +275,10 @@ async function runSearch() {
     const hits = searchGazetteer(query.value, getGazetteers(), 5);
     const seen = new Set<string>();
     for (const hit of hits) {
-      const key = `${hit.node.name.toLowerCase()}|${hit.node.type}|${hit.gazetteer}`;
+      // Dedup by canonical path + type (was: + hit.gazetteer, but every hit
+      // shares the synthetic '__merged__' id under the merge engine).
+      const pathStr = hit.path.map(n => n.name).join('>');
+      const key = `${hit.node.name.toLowerCase()}|${hit.node.type}|${pathStr}`;
       if (seen.has(key)) continue;
       seen.add(key);
       gazSuggestions.push({
@@ -272,6 +288,7 @@ async function runSearch() {
         matchedPath: hit.path.map(n => n.name),
         pathNodes: hit.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
         gazetteer: hit.gazetteer,
+        contributors: ((hit.node as { __contributors?: string[] }).__contributors ?? []).slice(),
         parentChain: hit.path.map(n => n.name).join(' › '),
       });
     }
