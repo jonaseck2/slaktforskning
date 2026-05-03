@@ -736,6 +736,18 @@ git commit -m "test(gazetteers): scaffolding integrity (closed-vocab assertion d
 
 This is the user-verification gate — sign off on Sweden before any other country is touched.
 
+### Re-source the data (applies to every country migration in Phases 3, 4, 5, 6)
+
+A migration is also a re-source. Every build-script rewrite is paired with a fresh fetch from the original data source, and the regenerated JSON ships with an updated `source.fetched: 'YYYY-MM-DD'` reflecting the date of the migration commit. This catches admin-code changes, new parishes, renames — staleness that would otherwise accumulate silently — and makes each country's migration commit a coherent unit (format change + fresh data + new license attribution).
+
+**Operational split — who runs what:**
+
+- **Dispatcher (operator on the human's machine)** runs the slow source fetches: Wikidata SPARQL queries (rate-limited, can take 10–60 minutes per query), DAWA reverse-geocoding loops, Lantmäteriet GeoPackage downloads, Statistics Finland WFS pulls, Kartverket / Statistics Canada exports. These need internet, time, and sometimes API auth that subagents shouldn't carry. The dispatcher fetches into `/tmp/` (or wherever the existing scripts read from) BEFORE dispatching the migration subagent.
+- **Subagents** run the format migration: rewrite the build script to emit `shape: 'contributions'` with canonical parent paths, re-run the (already-downloaded-locally) script against the fresh inputs, write the JSON, write fixture tests, commit.
+- **GeoNames country .zip files** are an exception — they're a few MB, take seconds to fetch, and the existing scripts already handle the curl. Subagents can re-fetch these inline.
+
+Each country task (3.1–3.4, 4.x, 5.x, 6.x) implicitly includes a "Step 0: dispatcher fetches fresh source data" if the source isn't a quick GeoNames .zip. The migration commit's body lists the source name + fetch date for every regenerated gazetteer.
+
 ### Task 3.0: License & redundancy audit (mandatory pre-step)
 
 **Files:** none — this is a curatorial decision recorded in the migration commit message.

@@ -201,6 +201,22 @@ Each country/source has its own build script in `scripts/`:
 | `build-lang-sv-wikidata.ts` | Wikidata SPARQL | Swedish labels for Nordic admin divisions | lang-sv-wikidata |
 | `build-lang-world-historical.ts` | Wikidata SPARQL | Phase 1: QID fetch; Phase 2: batched label lookups (80 QIDs/batch) | lang-world-historical |
 
+## Local source-data cache: `export-import/`
+
+Already-downloaded source files for Swedish gazetteers live in the project's `export-import/` directory (gitignored). Scripts that read from there:
+- `build-sv-boundaries.ts` ← `export-import/sockenstad.gpkg` (Lantmäteriet, parishes + cities)
+- `distrikt.gpkg` is staged in `export-import/` but no script consumes it yet (Sweden's post-2016 distrikt boundaries — future feature).
+
+Other countries' large source files (DAWA dumps, Lantmäteriet datasets, etc.) accumulate here too. Before fetching anything, check `export-import/` for an existing local copy and its age — if it's recent enough for the migration's hygiene point, reuse rather than re-download.
+
+## Re-source the data when migrating or extending a gazetteer
+
+A migration commit pairs a format change with a fresh fetch from the original source. The regenerated JSON ships with an updated `source.fetched: 'YYYY-MM-DD'` reflecting the migration date. Migrating without re-sourcing carries stale admin codes / parish names forward — defeats the point of the migration as a hygiene checkpoint.
+
+Practical split: long-running fetches (Wikidata SPARQL, DAWA reverse-geo, Lantmäteriet/Kartverket/Statistics Canada GeoPackage exports, Statistics Finland WFS) run on the operator's machine before dispatching subagents — subagent sandboxes can't reliably handle multi-minute rate-limited fetches. GeoNames country .zip files are small and inline-able.
+
+The migration commit body lists the source name + license + fetch date for every regenerated gazetteer.
+
 ## License & redundancy audit (mandatory pre-step before adding or modifying any gazetteer)
 
 Before adding a new country gazetteer or making changes that touch the bundled set, audit for license and redundancy. The engine never auto-merges (see Prime Directive above) — consolidation is always a curatorial decision recorded in the commit message.
