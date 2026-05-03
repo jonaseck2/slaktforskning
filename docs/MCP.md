@@ -139,16 +139,10 @@ Entry point: `npx tsx src/mcp/server.ts`
 | `get_current_database` | Get the path and filename of the currently open database. |
 | `switch_database` | Close the current database and open a different one (creates file if needed). All subsequent tools operate on the new database. |
 
-### Gazetteers
-
-| Tool | Description |
-|------|-------------|
-| `get_gazetteer_schema` | Get the JSON Schema for the gazetteer format, for use when creating or validating a gazetteer file. |
-| `list_gazetteers` | List all gazetteers (bundled + imported) with id, name, locale, node count, and source. |
-| `import_gazetteer` | Import a gazetteer from a JSON string; stores it in the database. |
-| `export_gazetteer` | Export an imported gazetteer as a JSON string by ID. |
-| `delete_gazetteer` | Delete an imported gazetteer from the database by ID. |
-| `search_gazetteer` | Search gazetteer nodes by name prefix, returning matching place names with coordinates. |
+> **Gazetteer admin** is not exposed via MCP. Gazetteers are render-time
+> resolver data, not authored genealogy data, and stay UI/IPC-only on
+> purpose. Use `resolve_place` to query the resolver from an agent.
+> Bundled-gazetteer build scripts live in `src/gazetteer-build/`.
 
 ---
 
@@ -156,7 +150,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 Entry point: `npx tsx src/mcp/devServer.ts`
 
-All 34 production tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection. Use this server when developing or testing UI features.
+All 77 production tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection. Use this server when developing or testing UI features.
 
 ### UI Automation (requires Electron app running)
 
