@@ -107,7 +107,7 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
         .sort((a, b) => a.name.localeCompare(b.name, 'is'))
         .map(r => ({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -118,7 +118,7 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
       munNodes.push({
         name: munName,
-        type: 'municipality',
+        type: 'admin2',
         lat: munCoords.lat,
         lon: munCoords.lon,
         children: placeNodes,
@@ -131,7 +131,7 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
     regionNodes.push({
       name: regionName,
-      type: 'region',
+      type: 'admin1',
       lat: regionCoords.lat,
       lon: regionCoords.lon,
       children: munNodes,
@@ -188,12 +188,24 @@ function main() {
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'Ísland',
-      type: 'country',
-      aliases: ['Iceland'],
-      lat: 65.0,
-      lon: -18.5,
-      children: regionNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Iceland',
+          type: 'country',
+          aliases: ['Ísland'],
+          lat: 65.0,
+          lon: -18.5,
+          children: regionNodes,
+        }],
+      }],
     },
   };
 

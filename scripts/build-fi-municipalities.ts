@@ -169,7 +169,7 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
         .sort((a, b) => a.name.localeCompare(b.name, 'fi'))
         .map(r => ({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -180,17 +180,13 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
       const munNode: GazetteerNode = {
         name: munInfo.fi,
-        type: 'municipality',
+        type: 'admin2',
         lat: munCoords.lat,
         lon: munCoords.lon,
         children: placeNodes,
       };
 
-      // Add Swedish alias if available and different
-      if (munInfo.sv) {
-        munNode.aliases = [munInfo.sv];
-      }
-
+      if (munInfo.sv) munNode.aliases = [munInfo.sv];
       munNodes.push(munNode);
     }
 
@@ -200,17 +196,13 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
     const regionNode: GazetteerNode = {
       name: regionInfo.fi,
-      type: 'region',
+      type: 'admin1',
       lat: regionCoords.lat,
       lon: regionCoords.lon,
       children: munNodes,
     };
 
-    // Add Swedish alias if different from Finnish
-    if (regionInfo.sv !== regionInfo.fi) {
-      regionNode.aliases = [regionInfo.sv];
-    }
-
+    if (regionInfo.sv !== regionInfo.fi) regionNode.aliases = [regionInfo.sv];
     regionNodes.push(regionNode);
   }
 
@@ -263,12 +255,24 @@ function main() {
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'Suomi',
-      type: 'country',
-      aliases: ['Finland'],
-      lat: 64.0,
-      lon: 26.0,
-      children: regionNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Finland',
+          type: 'country',
+          aliases: ['Suomi'],
+          lat: 64.0,
+          lon: 26.0,
+          children: regionNodes,
+        }],
+      }],
     },
   };
 
