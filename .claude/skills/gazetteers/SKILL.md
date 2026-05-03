@@ -29,26 +29,57 @@ The Prime Directive's shape applied a layer up: **the source datasets** (Wikidat
 
 If something feels wrong about touching a gazetteer JSON, the question is "what does the *script* need to do differently?" — not "how do I edit this JSON to be correct?" The JSON's job is to be re-derivable.
 
-## ⚠️ Prime Directive (cont.): No cross-source merging — license & provenance are non-negotiable
+## ⚠️ Prime Directive (cont.): Contract over fixture
 
-**Every leaf belongs to exactly one source gazetteer. The load-time engine NEVER merges leaves across sources, even when names match.**
+The system is held together by a **contract**, not by fixtures.
 
-Each gazetteer ships its own license (Wikidata CC0, GeoNames CC BY 4.0, Lantmäteriet CC0, DAWA CC BY 4.0, ok-dk/dagi CC0, …). Picking a "best coord" across sources, or unioning aliases from two sources, produces a record with no clean license — a frankenstein the project cannot legally redistribute. It also breaks data fidelity: the user can't tell what was authored by whom.
+The contract:
+1. Closed type vocabulary: `world | continent | country | admin1 | admin2 | admin3 | admin4 | locality | parish | farm | church | city | landskap | historical-state | other`. This is fixed.
+2. Every gazetteer emits a tree rooted at `World` (or `World (Historical)`). Nodes are typed per the closed vocabulary.
+3. Structural merge: same `(name, type, parent_path)` from any number of gazetteers → one merged node. Aliases union; lat/lon first-wins; geometry first-wins; children recursive merge.
 
-**Two layers, two licensing models:**
+If the world's admin divisions change tomorrow, the contract still works — every gazetteer re-fetches its source, emits updated trees, and the merge produces a correct result. There is no central fixture to keep current. There are no privileged "scaffolding" gazetteers — `world-countries.json` and `world-admin1.json` are regular contributors providing broad coverage at the country / admin1 levels, no different from `sv-orter.json` providing coverage at admin2+leaf levels.
 
-1. **Scaffolding nodes** (`world | continent | country | admin1 | admin2`) — project-curated structural data. Bootstrapped from GeoNames once with `CC BY 4.0` attribution recorded on the scaffolding gazetteer's `source` field. **Always enabled** in the gazetteer-config UI; cannot be disabled (would orphan every contribution). Scaffolding deduplicates by canonical name+path — exactly one canonical Sweden node, exactly one canonical Eksjö kommun.
+A new country contribution is one new gazetteer following the contract. A migration is a script rewrite emitting trees that fit the contract. The loader is mechanical merge, never a per-country mapping table.
 
-2. **Leaf nodes** (`locality | parish | farm | church | city | landskap | historical-state | …`) — belong to **exactly one gazetteer**. Each carries `__gazetteer: <id>` runtime stamp (single string, never an array). Two contributions adding `{ name: 'Eksjö', type: 'parish' }` under the same canonical kommun → **two distinct sibling leaves**, each with its own coords, aliases, geometry, and source attribution. The picker shows both with separate source badges; the resolver returns each with its single `gazetteer` ID.
+## ⚠️ Prime Directive (cont.): Cleanly sourced, clearly processed, cleanly joined
 
-**Concrete rules — apply at every code-touch:**
+The pipeline has three serial stages, each with a clean responsibility:
 
-- **Never** write code that combines coords/aliases/geometry from two source gazetteers into one node. There is no `__contributors: string[]`. There is no coord priority table. There is no boundary-vs-point tie-breaker. Each leaf has the values its single source authored.
-- **Never** merge by `(name, type)` under a parent. Always `Array.push` distinct siblings.
-- License-redundant gazetteers are **dropped at build time, by curatorial decision**, not auto-merged at load time. If gazetteer A and B genuinely cover the same primitives without distinct value, perform a license/redundancy audit (see "License & redundancy audit" section below) and remove one from `BUNDLED_GAZETTEERS` — attribution-aware. The engine never silently combines.
-- Translations (`shape: 'language'`) apply **only** to scaffolding nodes (admin division naming like `Sweden → Sverige`). They never touch leaves; leaf aliases stay exactly as the source authored them.
+1. **Cleanly sourced data** — each source dataset (Wikidata, GeoNames, Lantmäteriet, DAWA, ok-dk/dagi, …) carries one license. We don't combine them.
+2. **Clearly processed scripts** — each build script (`scripts/build-*-*.ts`, `scripts/fetch-*.ts`) reads ONE source and produces ONE gazetteer JSON. The script knows its country: "Swedish län is `admin1`", "Swedish kommun is `admin2`", "US county is `admin2`", "Canadian census division is `admin2`". The script is the locus of correctness — it labels every node with the right closed-vocab `type` and emits canonical names with locale variants as `aliases`.
+3. **Cleanly joined gazetteers** — the load-time engine is mechanical: walk every gazetteer, merge by `(name, type, parent_path)`, union aliases, first-wins coords. No flibbergasting in the app.
 
-This is the single most important constraint on every change to gazetteers. If a feature seems to require cross-source merging to work, the design is wrong — drop a redundant source instead, or extend one source to absorb the other's distinct content under one license.
+### What "clean" means at each stage
+
+**Source stage.** One dataset, one license. We never edit downloaded source files.
+
+**Script stage.** Output canonical name as `name` (GeoNames-canonical when GeoNames is the source — `Jönköping`, not `Jönköpings län`). Put alt forms in `aliases` (`['Jönköpings län']`). Use the closed-vocab `type` to disambiguate by level — there's no ambiguity between "Jönköping" the admin1 and "Jönköping" the admin2 because they have different `type` values. Build scripts emit nodes at every level they cover (country, admin1, admin2, leaves) — they don't depend on a separate "scaffolding" file to provide structure.
+
+**Loader stage.** Two nodes with the same `(name, type, parent_path)` from any number of sources merge into one:
+- `aliases`: union, dedup.
+- `lat`/`lon`: first-wins (warn on >0.01° divergence — that's a script bug to fix upstream).
+- `geometry`: first-wins (boundary scripts run first if priority is needed).
+- `children`: recursively merge by the same rule.
+- `__contributors: string[]`: array of contributing gazetteer IDs (replaces the singular `__gazetteer`). The picker shows this as provenance.
+
+If two leaves shouldn't merge (a civil parish vs a church parish that share a name+location but represent legally distinct entities), the build scripts MUST give them different `type` or different `parent_path`. The loader doesn't second-guess the script.
+
+### License & provenance under structural merge
+
+Structural names (country/admin1/admin2/admin3/admin4) are **administrative facts** — the kommun is named "Eksjö" because the Swedish state says so, not because GeoNames or Wikidata owns the name. Merging same-`(name, type, parent)` structural nodes across sources isn't a frankenstein — it's stating the same fact. CC BY 4.0 attribution still applies for the source we credit.
+
+For leaves, the same rule holds: if two scripts independently determined that "Eksjö" is a `locality` at coords (57.66, 14.97), they're agreeing on a fact. The merge unions aliases (different translations), keeps first-wins coords. Where they disagree on coords, that's a script bug.
+
+The original "no merge across sources" framing was wrong. The right framing is: **scripts produce clean enough data that the merge is mechanical agreement, never frankenstein synthesis.**
+
+### Concrete rules — apply at every code-touch
+
+- **The build script is responsible for clean output.** If something feels wrong about a gazetteer JSON, fix the script — never patch in the loader.
+- **The loader is mechanical.** No tie-breakers beyond first-wins. No type-detection-at-load-time. No backward-compat shims. No legacy normalization.
+- **`type` is the disambiguation mechanism within a level.** "Jönköping" the admin1 and "Jönköping" the admin2 don't collide because they differ on `type`. Use this; don't append admin suffixes to the name itself.
+- **Aliases carry locale variants.** Build scripts source these from the source's locale data (GeoNames `alternateNames.txt`, Wikidata `Plabel@<lang>`).
+- **License-redundant gazetteers are dropped at build time** (curatorial). The audit doesn't disappear — it's still valuable when two scripts cover the same primitives. But the merge engine isn't load-bearing in license terms anymore.
 
 ## Overview
 
