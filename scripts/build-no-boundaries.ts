@@ -188,21 +188,91 @@ function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
   return { type: 'MultiPolygon', coordinates: allPolygons };
 }
 
-const nodes: GazetteerNode[] = [];
+// Build kommunenavn → fylkenavn lookup from /tmp/geonames_no/NO.txt to enable
+// nesting kommune polygons under their fylke (admin1) for clean structural merge
+// with no-kommuner's point data.
+console.log('Building kommune → fylke lookup from GeoNames NO.txt...');
+const NO_TXT = '/tmp/geonames_no/NO.txt';
+const fylkeByCode: Record<string, string> = {};
+const fylkeByKommune: Record<string, string> = {};
+if (fs.existsSync(NO_TXT)) {
+  const lines = fs.readFileSync(NO_TXT, 'utf-8').split('\n');
+  // Pass 1: ADM1 rows give fylke names per admin1 code (prefer Norwegian alt name)
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const c = line.split('\t');
+    if (c[6] === 'A' && c[7] === 'ADM1') {
+      const altNames = (c[3] || '').split(',').map(a => a.trim());
+      const noFylke = altNames.find(a => / [Ff]ylke$/.test(a) && /[øæåØÆÅ]/.test(a))
+        || altNames.find(a => / [Ff]ylke$/.test(a))
+        || c[1];
+      // Strip " fylke"/" Fylke" suffix to get canonical admin1 name (matches no-kommuner).
+      const canonical = noFylke.replace(/ [Ff]ylke$/, '');
+      fylkeByCode[c[10]] = canonical;
+    }
+  }
+  // Pass 2: ADM2 rows map kommune-name → fylke-name via the admin1 code.
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const c = line.split('\t');
+    if (c[6] === 'A' && c[7] === 'ADM2') {
+      const kommuneName = c[1];
+      const fylke = fylkeByCode[c[10]];
+      if (kommuneName && fylke) fylkeByKommune[kommuneName] = fylke;
+    }
+  }
+  console.log(`  ${Object.keys(fylkeByCode).length} fylker, ${Object.keys(fylkeByKommune).length} kommune→fylke entries`);
+} else {
+  console.warn('  /tmp/geonames_no/NO.txt not found; polygons will attach directly under Norway (no fylke layer).');
+}
 
+// Group by fylke. Kommunes without a fylke match attach under a synthetic '__direct__' bucket
+// (legacy fallback — should be empty in practice).
+const byFylke = new Map<string, GazetteerNode[]>();
 for (const [_code, features] of byKommune) {
   const props = features[0].properties;
   const geometry = mergeGeometries(features);
   const [lat, lon] = computeCentroid(geometry);
 
-  nodes.push({
-    name: props.kommunenavn,
-    type: 'municipality',
+  // Strip " kommune" suffix to get canonical admin2 name; original as alias.
+  const rawName = props.kommunenavn;
+  const canonicalName = rawName.endsWith(' kommune') ? rawName.slice(0, -8) : rawName;
+  const aliases = canonicalName !== rawName ? [rawName] : undefined;
+
+  const fylkeName = fylkeByKommune[rawName] || fylkeByKommune[canonicalName] || '__direct__';
+  if (!byFylke.has(fylkeName)) byFylke.set(fylkeName, []);
+  const node: GazetteerNode = {
+    name: canonicalName,
+    type: 'admin2',
     lat: round4(lat),
     lon: round4(lon),
     geometry,
+  };
+  if (aliases) node.aliases = aliases;
+  byFylke.get(fylkeName)!.push(node);
+}
+
+const fylkeNodes: GazetteerNode[] = [];
+for (const [fylkeName, kommunes] of [...byFylke.entries()].sort()) {
+  if (fylkeName === '__direct__') continue;
+  kommunes.sort((a, b) => a.name.localeCompare(b.name, 'no'));
+  const fylkeCoords = {
+    lat: round4(kommunes.reduce((s, k) => s + k.lat, 0) / kommunes.length),
+    lon: round4(kommunes.reduce((s, k) => s + k.lon, 0) / kommunes.length),
+  };
+  fylkeNodes.push({
+    name: fylkeName,
+    type: 'admin1',
+    lat: fylkeCoords.lat,
+    lon: fylkeCoords.lon,
+    children: kommunes,
   });
 }
+const directKommunes = byFylke.get('__direct__') ?? [];
+if (directKommunes.length > 0) {
+  console.warn(`  ${directKommunes.length} kommune polygon(s) without fylke match — appending under Norway directly`);
+}
+const nodes: GazetteerNode[] = [...fylkeNodes, ...directKommunes];
 
 // Sort by name (Norwegian locale)
 nodes.sort((a, b) => a.name.localeCompare(b.name, 'no'));
@@ -223,12 +293,24 @@ const gazetteer: Gazetteer = {
   },
   kind: 'boundary',
   root: {
-    name: 'Norge',
-    type: 'country',
-    lat: 65.0,
-    lon: 13.0,
-    aliases: ['Norway'],
-    children: nodes,
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [{
+      name: 'Europe',
+      type: 'continent',
+      lat: 54,
+      lon: 15,
+      children: [{
+        name: 'Norway',
+        type: 'country',
+        aliases: ['Norge'],
+        lat: 65.0,
+        lon: 13.0,
+        children: nodes,
+      }],
+    }],
   },
 };
 
