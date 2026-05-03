@@ -159,9 +159,33 @@ async function main() {
   }
   console.log(`  ${byCode.size} unique municipalities`);
 
-  // Step 3: Build gazetteer nodes
-  const nodes: GazetteerNode[] = [];
+  // Step 3a: Build sveitarfelag-name → region-name lookup from /tmp/geonames_is/IS.txt.
+  console.log('Building sveitarfelag → region lookup from GeoNames IS.txt...');
+  const IS_TXT = '/tmp/geonames_is/IS.txt';
+  const adm1ByCode: Record<string, string> = {};
+  const regionByMun: Record<string, string> = {};
+  if (fs.existsSync(IS_TXT)) {
+    const lines = fs.readFileSync(IS_TXT, 'utf-8').split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const c = line.split('\t');
+      if (c[6] === 'A' && c[7] === 'ADM1') adm1ByCode[c[10]] = c[1];
+    }
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const c = line.split('\t');
+      if (c[6] === 'A' && c[7] === 'ADM2') {
+        const region = adm1ByCode[c[10]];
+        if (region && c[1]) regionByMun[c[1]] = region;
+      }
+    }
+    console.log(`  ${Object.keys(adm1ByCode).length} regions, ${Object.keys(regionByMun).length} sveitarfelag→region entries`);
+  } else {
+    console.warn('  /tmp/geonames_is/IS.txt not found; polygons will attach directly under Iceland.');
+  }
 
+  // Step 3b: Build sveitarfelag nodes, group by region.
+  const byRegion = new Map<string, GazetteerNode[]>();
   for (const [_code, features] of byCode) {
     const props = features[0].properties;
     const rawGeometry = mergeGeometries(features);
@@ -170,19 +194,31 @@ async function main() {
 
     const node: GazetteerNode = {
       name: props.namn,
-      type: 'municipality',
+      type: 'admin2',
       lat,
       lon,
       geometry,
     };
 
-    nodes.push(node);
+    const region = regionByMun[props.namn] || '__direct__';
+    if (!byRegion.has(region)) byRegion.set(region, []);
+    byRegion.get(region)!.push(node);
   }
 
-  // Sort by Icelandic name
-  nodes.sort((a, b) => a.name.localeCompare(b.name, 'is'));
-
-  console.log(`  ${nodes.length} municipalities`);
+  const nodes: GazetteerNode[] = [];
+  for (const [regionName, muns] of [...byRegion.entries()].sort()) {
+    if (regionName === '__direct__') continue;
+    muns.sort((a, b) => a.name.localeCompare(b.name, 'is'));
+    const lat = round4(muns.reduce((s, k) => s + k.lat, 0) / muns.length);
+    const lon = round4(muns.reduce((s, k) => s + k.lon, 0) / muns.length);
+    nodes.push({ name: regionName, type: 'admin1', lat, lon, children: muns });
+  }
+  const direct = byRegion.get('__direct__') ?? [];
+  if (direct.length > 0) {
+    console.warn(`  ${direct.length} sveitarfelag polygon(s) without region match — appending under Iceland directly`);
+    nodes.push(...direct);
+  }
+  console.log(`  ${nodes.length} top-level nodes`);
 
   // Step 4: Build gazetteer
   const today = new Date().toISOString().slice(0, 10);
@@ -200,12 +236,24 @@ async function main() {
     },
     kind: 'boundary',
     root: {
-      name: 'Ísland',
-      type: 'country',
-      aliases: ['Iceland'],
-      lat: 65.0,
-      lon: -18.5,
-      children: nodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Iceland',
+          type: 'country',
+          aliases: ['Ísland'],
+          lat: 65.0,
+          lon: -18.5,
+          children: nodes,
+        }],
+      }],
     },
   };
 

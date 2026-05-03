@@ -162,9 +162,35 @@ async function main() {
   }
   console.log(`  ${byCode.size} unique municipalities`);
 
-  // Step 3: Build gazetteer nodes
-  const nodes: GazetteerNode[] = [];
+  // Step 3a: Build kunta-name → maakunta-name lookup from /tmp/geonames_fi/FI.txt
+  // for nesting kunta polygons under their region (admin1).
+  console.log('Building kunta → maakunta lookup from GeoNames FI.txt...');
+  const FI_TXT = '/tmp/geonames_fi/FI.txt';
+  const adm1ByCode: Record<string, string> = {};
+  const regionByKunta: Record<string, string> = {};
+  if (fs.existsSync(FI_TXT)) {
+    const lines = fs.readFileSync(FI_TXT, 'utf-8').split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const c = line.split('\t');
+      if (c[6] === 'A' && c[7] === 'ADM1') adm1ByCode[c[10]] = c[1];
+    }
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const c = line.split('\t');
+      // Finnish admin3 (kunta) lookup. ADM2 is the seutukunta layer; we want the kunta directly.
+      if (c[6] === 'A' && c[7] === 'ADM3') {
+        const region = adm1ByCode[c[10]];
+        if (region && c[1]) regionByKunta[c[1]] = region;
+      }
+    }
+    console.log(`  ${Object.keys(adm1ByCode).length} regions, ${Object.keys(regionByKunta).length} kunta→region entries`);
+  } else {
+    console.warn('  /tmp/geonames_fi/FI.txt not found; polygons will attach directly under Finland.');
+  }
 
+  // Step 3b: Build kunta nodes, group by region.
+  const byRegion = new Map<string, GazetteerNode[]>();
   for (const [_code, features] of byCode) {
     const props = features[0].properties;
     const rawGeometry = mergeGeometries(features);
@@ -173,24 +199,32 @@ async function main() {
 
     const node: GazetteerNode = {
       name: props.nimi,
-      type: 'municipality',
+      type: 'admin2',
       lat,
       lon,
       geometry,
     };
+    if (props.namn && props.namn !== props.nimi) node.aliases = [props.namn];
 
-    // Add Swedish name as alias when different from Finnish name
-    if (props.namn && props.namn !== props.nimi) {
-      node.aliases = [props.namn];
-    }
-
-    nodes.push(node);
+    const region = regionByKunta[props.nimi] || regionByKunta[props.namn] || '__direct__';
+    if (!byRegion.has(region)) byRegion.set(region, []);
+    byRegion.get(region)!.push(node);
   }
 
-  // Sort by Finnish name
-  nodes.sort((a, b) => a.name.localeCompare(b.name, 'fi'));
-
-  console.log(`  ${nodes.length} municipalities`);
+  const nodes: GazetteerNode[] = [];
+  for (const [regionName, kuntas] of [...byRegion.entries()].sort()) {
+    if (regionName === '__direct__') continue;
+    kuntas.sort((a, b) => a.name.localeCompare(b.name, 'fi'));
+    const lat = round4(kuntas.reduce((s, k) => s + k.lat, 0) / kuntas.length);
+    const lon = round4(kuntas.reduce((s, k) => s + k.lon, 0) / kuntas.length);
+    nodes.push({ name: regionName, type: 'admin1', lat, lon, children: kuntas });
+  }
+  const direct = byRegion.get('__direct__') ?? [];
+  if (direct.length > 0) {
+    console.warn(`  ${direct.length} kunta polygon(s) without region match — appending under Finland directly`);
+    nodes.push(...direct);
+  }
+  console.log(`  ${nodes.length} top-level nodes (regions + direct kuntas)`);
 
   // Step 4: Build gazetteer
   const today = new Date().toISOString().slice(0, 10);
@@ -208,12 +242,24 @@ async function main() {
     },
     kind: 'boundary',
     root: {
-      name: 'Suomi',
-      type: 'country',
-      aliases: ['Finland'],
-      lat: 64.0,
-      lon: 26.0,
-      children: nodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Finland',
+          type: 'country',
+          aliases: ['Suomi'],
+          lat: 64.0,
+          lon: 26.0,
+          children: nodes,
+        }],
+      }],
     },
   };
 

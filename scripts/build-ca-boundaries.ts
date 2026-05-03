@@ -58,6 +58,24 @@ interface GeoJSONFeature {
   };
 }
 
+// Statistics Canada PRUID → province name. CDUID is "PRUIDXX" so the first
+// two characters give us the parent province for each census division.
+const PROVINCE_NAMES: Record<string, string> = {
+  '10': 'Newfoundland and Labrador',
+  '11': 'Prince Edward Island',
+  '12': 'Nova Scotia',
+  '13': 'New Brunswick',
+  '24': 'Quebec',
+  '35': 'Ontario',
+  '46': 'Manitoba',
+  '47': 'Saskatchewan',
+  '48': 'Alberta',
+  '59': 'British Columbia',
+  '60': 'Yukon',
+  '61': 'Northwest Territories',
+  '62': 'Nunavut',
+};
+
 interface GeoJSONCollection {
   type: 'FeatureCollection';
   features: GeoJSONFeature[];
@@ -190,26 +208,47 @@ function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
   return { type: 'MultiPolygon', coordinates: allPolygons };
 }
 
-const nodes: GazetteerNode[] = [];
+// Group census divisions by province (first 2 chars of CDUID = PRUID).
+const byProvince = new Map<string, GazetteerNode[]>();
 
-for (const [_code, features] of byDivision) {
+for (const [code, features] of byDivision) {
   const props = features[0].properties;
   const geometry = mergeGeometries(features);
   const [lat, lon] = computeCentroid(geometry);
 
-  nodes.push({
+  const pruid = code.slice(0, 2);
+  const provinceName = PROVINCE_NAMES[pruid] || '__direct__';
+
+  if (!byProvince.has(provinceName)) byProvince.set(provinceName, []);
+  byProvince.get(provinceName)!.push({
     name: props.CDNAME,
-    type: 'division',
+    type: 'admin2',
     lat: round4(lat),
     lon: round4(lon),
     geometry,
   });
 }
 
-// Sort by name
-nodes.sort((a, b) => a.name.localeCompare(b.name, 'en'));
-
-console.log(`  ${nodes.length} census division nodes`);
+const nodes: GazetteerNode[] = [];
+for (const [provinceName, divisions] of [...byProvince.entries()].sort()) {
+  if (provinceName === '__direct__') continue;
+  divisions.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  const lat = round4(divisions.reduce((s, d) => s + d.lat, 0) / divisions.length);
+  const lon = round4(divisions.reduce((s, d) => s + d.lon, 0) / divisions.length);
+  nodes.push({
+    name: provinceName,
+    type: 'admin1',
+    lat,
+    lon,
+    children: divisions,
+  });
+}
+const direct = byProvince.get('__direct__') ?? [];
+if (direct.length > 0) {
+  console.warn(`  ${direct.length} division polygon(s) without province match — appending under Canada directly`);
+  nodes.push(...direct);
+}
+console.log(`  ${nodes.length} top-level nodes (provinces + direct divisions)`);
 
 // ── Step 5: Build gazetteer ──────────────────────────────────────────
 
@@ -225,12 +264,24 @@ const gazetteer: Gazetteer = {
   },
   kind: 'boundary',
   root: {
-    name: 'Canada',
-    type: 'country',
-    lat: 56.0,
-    lon: -96.0,
-    aliases: ['CA'],
-    children: nodes,
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [{
+      name: 'North America',
+      type: 'continent',
+      lat: 45,
+      lon: -100,
+      children: [{
+        name: 'Canada',
+        type: 'country',
+        aliases: ['CA'],
+        lat: 56.0,
+        lon: -96.0,
+        children: nodes,
+      }],
+    }],
   },
 };
 
