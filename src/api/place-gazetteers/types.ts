@@ -61,13 +61,23 @@ export interface GazetteerNormalizeRules {
   stripPrefixes?: string[];
 }
 
+export interface Contribution {
+  parentPath: string[];      // canonical names from scaffolding, e.g. ['World','Europe','Sweden']
+  nodes: GazetteerNode[];    // children to attach under the resolved parent
+}
+
 export interface Gazetteer {
   id: string;
   name: string;
   locale: string;
   description?: string;
   source?: GazetteerSource;
-  root: GazetteerNode;
+  /** Discriminator. New gazetteers set this; legacy gazetteers without it are treated as 'scaffolding' if `root` is set, else error. */
+  shape?: 'scaffolding' | 'contributions' | 'language';
+  /** Set when shape === 'scaffolding' OR for legacy self-rooted gazetteers (Phase 0–7). */
+  root?: GazetteerNode;
+  /** Set when shape === 'contributions'. */
+  contributions?: Contribution[];
   kind?: 'point' | 'boundary' | 'language';
   translations?: Record<string, Record<string, string[]>>;
   normalize?: GazetteerNormalizeRules;
