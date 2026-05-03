@@ -9,7 +9,7 @@
         </span>
       </div>
 
-      <AppLoadingState v-if="loading" />
+      <AppLoadingState v-if="loading && places.length === 0" />
 
       <div v-else class="map-content" :class="{ 'pick-mode': pickMode }">
         <!-- Coord-pick banner (overlays the map while pickMode is on) -->

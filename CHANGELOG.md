@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: places map keeps its zoom and pan when you set a pin — no more snapping back to Sweden after every map click
 - fix: place modal now previews gazetteer resolution (parent, type, coords) inline like the side panel does
 - fix: place panel name field is a plain editable text input — picking from the old name picker no longer silently overwrites parent/type/coords
 - fix: research-task delete confirmation and toast now show the task title instead of "Unknown" — caught immediately by the fresh-context audit re-run after host-level lifecycle was added to the Surface contract
