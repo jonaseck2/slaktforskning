@@ -168,13 +168,24 @@ async function main() {
     [k: string]: unknown;
   };
 
-  // Replace any existing continent nodes (idempotent re-run).
-  const existingNonContinents = (existing.root.children ?? [])
-    .filter(c => c.type !== 'continent');
-
-  // Sort continents alphabetically; prepend before countries.
-  newNodes.sort((a, b) => a.name.localeCompare(b.name, 'en'));
-  existing.root.children = [...newNodes, ...existingNonContinents];
+  // world-boundaries.json now structures continents as parent nodes with
+  // country children (post structural-merge migration). Add geometry to each
+  // existing continent node by name match, instead of prepending new ones.
+  let added = 0;
+  let unmatched = 0;
+  for (const cont of newNodes) {
+    const existingContinent = existing.root.children?.find(c => c.name === cont.name && c.type === 'continent');
+    if (!existingContinent) {
+      console.warn(`  No matching continent node in world-boundaries.json for '${cont.name}'`);
+      unmatched++;
+      continue;
+    }
+    existingContinent.geometry = cont.geometry;
+    // Replace centroid with the polygon-derived one (more accurate)
+    existingContinent.lat = cont.lat;
+    existingContinent.lon = cont.lon;
+    added++;
+  }
 
   // Update the source.fetched date so downstream caches notice the rebuild.
   if (existing.source && typeof existing.source === 'object') {
@@ -183,7 +194,7 @@ async function main() {
 
   fs.writeFileSync(OUT_PATH, JSON.stringify(existing), 'utf-8');
   const sizeKB = (fs.statSync(OUT_PATH).size / 1024).toFixed(0);
-  console.log(`Wrote ${OUT_PATH} (${sizeKB} KB, +${newNodes.length} continents)`);
+  console.log(`Wrote ${OUT_PATH} (${sizeKB} KB, attached geometry to ${added} continents${unmatched > 0 ? `, ${unmatched} unmatched` : ''})`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
