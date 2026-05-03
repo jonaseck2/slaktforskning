@@ -93,6 +93,7 @@ import BaseMap from '../components/BaseMap.vue';
 import PlacePanel from '../components/PlacePanel.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { useEntityList } from '../composables/useEntityList';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useThemeSignal } from '../composables/useThemeSignal';
 import { useI18n } from 'vue-i18n';
@@ -215,16 +216,22 @@ function showPopup(id: string) {
   });
 }
 
-// Module-level cache so data survives navigation (component remounts)
-let cachedPlaces: PlaceRow[] | null = null;
+const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary, invalidate } = usePlaceResolver();
 
-const places = ref<PlaceRow[]>(cachedPlaces ?? []);
-const loading = ref(cachedPlaces === null);
+// Auto-subscribed list — reloads on every mutating IPC call (debounced) so
+// the map mirrors live DB state without the parent view having to wire
+// up bespoke refresh paths. The targeted `refreshPlace(id)` below is still
+// useful as a cheap single-row refresh when MapView's own internal panel
+// emits `place-updated`.
+const { items: places, loading, reload: reloadPlaces } = useEntityList<PlaceRow>(
+  async () => (await window.api.places.list()) as PlaceRow[],
+  { immediate: false },
+);
+
 const filterText = computed(() => props.searchText ?? '');
 const baseMapRef = ref<InstanceType<typeof BaseMap> | null>(null);
 const mapBodyRef = ref<HTMLElement | null>(null);
 const mapInitialized = ref(false);
-const { ready: resolverReady, ensureLoaded, resolve, resolveBoundary, invalidate } = usePlaceResolver();
 
 // Boundary overlay
 const boundaryGeojson = ref<Record<string, unknown> | null>(null);
@@ -439,8 +446,15 @@ function fitBounds() {
   });
 }
 
+// Sync markers on any change to the visible set (data reloads, filter
+// changes, selection changes). Refitting bounds is intentionally NOT done
+// here — data reloads must not yank the user's zoom/pan. fitBounds runs
+// only on initial map ready and on explicit filter changes below.
 watch(filteredPlaces, () => {
   syncMarkers();
+});
+
+watch([() => props.searchText, () => props.countryFilter], () => {
   if (mapInitialized.value && baseMapRef.value?.getLeafletObject()) fitBounds();
 });
 
@@ -456,18 +470,14 @@ async function refreshPlace(id: string) {
   if (idx >= 0) {
     places.value[idx] = updated;
     places.value = [...places.value]; // trigger reactivity
-    cachedPlaces = places.value;
     invalidate(); // clear resolver cache so gazetteer re-resolves the new name
     await ensureLoaded();
   }
 }
 
 onMounted(async () => {
-  const freshPlaces = (await window.api.places.list()) as PlaceRow[];
   await ensureLoaded();
-  places.value = freshPlaces;
-  cachedPlaces = freshPlaces;
-  loading.value = false;
+  await reloadPlaces();
 
   // Auto-select a place if none is selected
   if (!selectedPlaceId.value && allDisplayPlaces.value.length > 0) {

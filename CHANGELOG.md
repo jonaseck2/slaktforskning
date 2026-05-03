@@ -12,6 +12,7 @@
 - fix: dragging the side panels next to the fan chart no longer stutters — the chart re-fits once you release
 - perf: Family in a Year report no longer pegs CPU or crashes the database worker on large trees
 - fix: events list in side panels drops the Fact column and stops wrapping place names — narrow panels truncate cleanly instead of contracting
+- fix: map view now refreshes pins automatically when places change anywhere in the app — no more switching tabs to see edits
 
 ## v0.204.0 — GEDCOM round-trip fidelity registry + coverage guard
 
