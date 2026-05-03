@@ -129,3 +129,51 @@ export function buildScaffoldingIndex(scaffolding: Gazetteer[]): ScaffoldingInde
     roots: () => rootNodes,
   };
 }
+
+export interface AttachReport {
+  attached: number;
+  rejected: Array<{ gazetteer: string; parentPath: string[]; reason: string }>;
+}
+
+interface RuntimeNode extends GazetteerNode {
+  __gazetteer?: string;     // single source ID — never an array, never updated after first set
+}
+
+function stampSource(node: GazetteerNode, gazetteerId: string): RuntimeNode {
+  const cloned = JSON.parse(JSON.stringify(node)) as RuntimeNode;
+  cloned.__gazetteer = gazetteerId;
+  if (cloned.children) {
+    cloned.children = cloned.children.map(c => stampSource(c, gazetteerId));
+  }
+  return cloned;
+}
+
+export function attachContributions(gazetteers: Gazetteer[], idx: ScaffoldingIndex): AttachReport {
+  const report: AttachReport = { attached: 0, rejected: [] };
+
+  for (const g of gazetteers) {
+    if (g.shape !== 'contributions' || !g.contributions) continue;
+    for (const contrib of g.contributions) {
+      const parent = idx.lookup(contrib.parentPath);
+      if (!parent) {
+        report.rejected.push({
+          gazetteer: g.id,
+          parentPath: contrib.parentPath,
+          reason: 'parent path does not resolve in scaffolding',
+        });
+        continue;
+      }
+      parent.children = parent.children ?? [];
+      // No merging — every contribution leaf becomes a distinct sibling under the scaffolding parent.
+      // License/provenance: each leaf is stamped with its single source gazetteer ID.
+      // If two source gazetteers contribute leaves with the same (name, type), both are appended.
+      // De-duplication of redundant gazetteers is a curatorial decision at build time, not a load-time merge.
+      for (const node of contrib.nodes) {
+        parent.children.push(stampSource(node, g.id));
+        report.attached++;
+      }
+    }
+  }
+
+  return report;
+}
