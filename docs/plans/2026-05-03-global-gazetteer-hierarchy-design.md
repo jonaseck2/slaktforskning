@@ -4,7 +4,34 @@
 
 ## User goal
 
-Place pickers, place panels, place maps, and resolver output behave as if there is **one** global place hierarchy. A genealogist drilling from "World" reaches "Sweden", from there "Jönköpings län", from there "Eksjö kommun" — once, with the union of every relevant child (parishes, churches, farms, localities, polygons) hanging under it. Adding a new country gazetteer (Egypt, Brazil, Poland, …) is a contributor task with a single contract: "root your data into the canonical World tree." The picker no longer presents a forest of `Sverige × 6`, `Danmark × 3`, `Sverige (landskap) × 1`, `World × 4`. Eksjö kommun appears once; Eksjö city appears once; Eksjö parish appears once.
+Place pickers, place panels, place maps, and resolver output behave as if there is **one** global place hierarchy. A genealogist drilling from "World" reaches "Sweden", from there "Jönköpings län", from there "Eksjö kommun" — once, with every relevant leaf (parishes, churches, farms, localities, polygons) listed underneath, each leaf carrying its source attribution intact. Adding a new country gazetteer (Egypt, Brazil, Poland, …) is a contributor task with a single contract: "root your data into the canonical World tree." The picker no longer presents a forest of `Sverige × 6`, `Danmark × 3`, `Sverige (landskap) × 1`, `World × 4`.
+
+**Critical clarification:** "Eksjö kommun appears once" because the *kommun* is project-curated scaffolding (one canonical node, one canonical name). Leaves under it are **never merged across sources** — different gazetteers' contributions stay as distinct siblings, each with its own source license. See "License & source provenance" below.
+
+## License & source provenance — non-negotiable
+
+**Every leaf's data stays attributable to a single source. No cross-source merging of leaves, ever.**
+
+Each gazetteer ships its own license (Wikidata CC0, GeoNames CC BY 4.0, Lantmäteriet CC0, DAWA CC BY 4.0, ok-dk/dagi CC0, …). Merging a leaf's coords from one source with aliases from another produces a record with no clean license — a frankenstein the project cannot legally redistribute, and a data-fidelity failure (the user can't tell what was authored where, or by whom).
+
+**Two layers, two licensing models:**
+
+1. **Scaffolding nodes** (`world | continent | country | admin1 | admin2`) are project-curated structural data — admin division names + parent chains, plus a centroid coord. Bootstrapped once from GeoNames with the `CC BY 4.0` attribution recorded on the scaffolding gazetteer's `source` field; treated thereafter as the project's canonical reference set. These deduplicate by canonical name+path. Scaffolding is the *only* layer where canonical-name deduplication happens.
+
+2. **Leaf nodes** (`locality | parish | farm | church | city | landskap | historical-state | …`) belong to **exactly one gazetteer** and inherit that gazetteer's license, source, and `fetched` date. They never merge with leaves from other gazetteers, even when names match. Two parishes both named "Eksjö parish" from different source gazetteers stay as **two distinct siblings** under the canonical kommun, each badged with its source.
+
+**Concrete rules:**
+
+- The merge engine attaches contributions as **distinct siblings**. It does not union by `(name, type)`. It does not pick a "best coord" across sources. **There is no tie-breaker.**
+- Each leaf carries a `__gazetteer: string` runtime field naming its single source. The picker reads this for source attribution; the resolver returns it in `PlaceResolveResult.gazetteer`.
+- Scaffolding nodes carry GeoNames-derived centroid coords (CC BY 4.0). Leaves carry their own source's coords. Scaffolding never inherits leaf coords; leaves never overwrite scaffolding coords.
+- License-redundant gazetteers are **dropped at build time, by curatorial decision**, not merged at load time. If gazetteer A and B genuinely cover the same primitives with no distinct value, the redundancy audit (per-country, in the implementation plan) consolidates them — one is removed, attribution-aware. The merge engine never silently combines them.
+
+**What this means for the picker:**
+
+- "Eksjö kommun" is a single canonical scaffolding node — it appears **once** because it's project scaffolding, not because we merged 5 contributions.
+- Under it, children from sv-socknar, sv-forsamlingar, sv-orter, sv-gardar, sv-kyrkor, sv-sockenstad-boundaries all listed as siblings. If two contributions both add a `parish` named "Eksjö", both appear, each with its own source badge.
+- If the redundancy audit determines two gazetteers genuinely duplicate without distinct value → one is removed in its build script before the migration ever ships. The user sees one entry because we curated; not because the engine guessed.
 
 ## Scope — gazetteer build scripts
 
@@ -51,9 +78,9 @@ Language gazetteers (3):
 The plan is verified by the genealogist using the running app. Tests below are necessary but not sufficient; they observe structure, not user goal.
 
 1. **Picker top-level.** Open `PlacePicker` (any place input). Without typing, the dropdown's hierarchy view shows **one root** ("World") whose children are **continents**, then countries, then admin1, then admin2, then leaves. No `Sverige × 6`, no `Sverige (landskap)` fork, no `World (Historical)` mixed in with the modern tree (it lives as a sibling top-level entry, intentionally).
-2. **Picker search "eksjö".** "Eksjö kommun" appears exactly **once** in the result list, with the badge `5 sources` (or equivalent) signalling that 5 gazetteers contribute leaves under it. Clicking it shows children unioned across all 5.
-3. **Picker search "Eksjö".** Eksjö as a `city` (boundary), as a `parish` (multiple variants), and as a `locality` are distinct rows, each appearing once. None of them appear with breadcrumb "Sverige" alone — every one has its full canonical chain (`World > Europe > Sweden > Jönköpings län > Eksjö kommun > Eksjö`).
-4. **Resolver smoke test.** `resolvePlace("Eksjö, Sverige")` returns one canonical match with `matchedPath = ["World", "Europe", "Sweden", "Eksjö"]` (or the canonical depth of the leaf type). Currently it returns N candidates, one per source gazetteer.
+2. **Picker search "eksjö".** "Eksjö kommun" appears exactly **once** in the result list (it's a single scaffolding node — there is nothing to merge). Clicking it shows leaves from each contributing gazetteer as distinct siblings, each with its own source badge (one badge per leaf, naming the single source).
+3. **Picker search "Eksjö".** Eksjö as a `city` (boundary), as a `parish` (potentially from multiple sources, kept as distinct siblings), and as a `locality` are listed. Each row carries its source badge. None appear with breadcrumb "Sverige" alone — every one has its full canonical chain (`World > Europe > Sweden > Jönköpings län > Eksjö kommun > Eksjö`).
+4. **Resolver smoke test.** `resolvePlace("Eksjö, Sverige")` returns each matching leaf with its single source attribution; `matchedPath` for each traverses the canonical scaffolding chain `World > Europe > Sweden > Jönköpings län > Eksjö kommun > <leaf>`. Currently it returns N candidates rooted at N different `Sverige` nodes.
 5. **CI test — scaffolding integrity.** A new test in `tests/unit/gazetteer-hierarchy.test.ts` walks every bundled gazetteer's contributions and asserts every `parentPath` resolves to an existing scaffolding node. Adding a hypothetical `eg-governorates.json` whose parent path is `["World", "Africa", "Egypta"]` (typo) breaks the build.
 6. **CI test — single canonical Sverige/Sweden.** Asserts the loaded merged tree contains exactly one node at `World > Europe > Sweden`, regardless of how many source gazetteers contributed children to it.
 
@@ -62,8 +89,8 @@ The plan is verified by the genealogist using the running app. Tests below are n
 This plan addresses three concrete bugs visible to the user as of 2026-05-03:
 
 - **`Sverige (landskap)` forks the tree.** `sv-landskap.json` roots at `"Sverige (landskap)"` rather than `"Sverige"` because the build script avoided a name collision with the län-based `sv-socknar.json` rather than modeling landskap as a sibling axis. Build-time scaffolding contract makes this kind of hack impossible — there is **one** Sweden node, and landskap nodes attach as `type: "landskap"` siblings to län.
-- **5× Eksjö kommun.** 5 gazetteers (`sv-socknar`, `sv-forsamlingar`, `sv-orter`, `sv-gardar`, `sv-kyrkor`) each carry their own `Eksjö kommun` parent because each emits a self-rooted tree. The picker's dedup key includes `gazetteer`, so identical scaffolding survives. Build-time contributions (parent paths, not full trees) make scaffolding shared by construction.
-- **Forest of 13 tops.** Each gazetteer's root is a top-level entry; there is no global root. Build-time contract forces every gazetteer to declare a parent path that resolves into the canonical scaffolding (`world-countries` + `world-admin1` + new `world-continents`).
+- **5× Eksjö kommun.** 5 gazetteers each carry their own `Eksjö kommun` parent because each emits a self-rooted tree, and the picker's dedup key includes `gazetteer`. The fix is **not** to merge them at load time — that would create a frankenstein license. The fix is to make `Eksjö kommun` a **scaffolding node** the project owns (project-curated, GeoNames-sourced under CC BY 4.0), and have each leaf-emitting gazetteer attach its leaves under that one canonical kommun. The kommun appears once because we curated one, not because the engine merged five.
+- **Forest of 13 tops.** Each gazetteer's root is a top-level entry; there is no global root. Build-time contract forces every non-scaffolding gazetteer to declare a parent path that resolves into the canonical scaffolding (`world-continents` + `world-countries` + `world-admin1` + `world-admin2`).
 
 Prior brainstorming considered render-time merging in the picker (compute one virtual tree from N source trees on every open). Rejected because: (a) every consumer (picker, panel breadcrumb, resolver, MCP `resolve_place`, map clustering, gazetteer-config UI) would need to call into the merger; (b) the merger has to invent canonicalization rules that the build scripts could just enforce up front; (c) the project's bias is "clean data over runtime inference" (CLAUDE.md Prime Directive's rationale, applied to curator-authored data).
 
@@ -100,11 +127,16 @@ The current free-form `type: string` field becomes `type: GazetteerNodeType`. Bu
 
 ### 2. Scaffolding gazetteers — load-order privileged
 
-Three gazetteers become **canonical scaffolding** that every other gazetteer's parent paths must resolve into:
+Four gazetteers become **canonical scaffolding** that every other gazetteer's parent paths must resolve into:
 
-- `world-continents` (new — extracted from `build-world-continents-boundaries.ts`, currently boundary-only) — type `continent`, children of `World`.
+- `world-continents` (new — extracted from `build-world-continents-boundaries.ts`) — type `continent`, children of `World`.
 - `world-countries` — type `country`, children of continents.
-- `world-admin1` — type `admin1`, children of countries.
+- `world-admin1` — type `admin1` (state/province/län/governorate), children of countries.
+- `world-admin2` (new) — type `admin2` (county/kommun/kommune/kunta), children of admin1.
+
+Scaffolding extends to **admin2** because that's where the user-visible canonicalization needs to land — without admin2 in scaffolding, every leaf-emitting gazetteer would have to declare `Eksjö kommun` itself, recreating the duplication the plan is meant to eliminate.
+
+Scaffolding is bootstrapped from GeoNames `countryInfo.txt` + `admin1Codes.txt` + `admin2Codes.txt` (CC BY 4.0; attribution recorded on each scaffolding gazetteer's `source` field). Centroid coords for admin1 + admin2 are computed from the populated places GeoNames lists in each division. Once bootstrapped, scaffolding is the project's canonical reference set; updates require an explicit re-fetch + curation pass.
 
 Scaffolding gazetteers are **always enabled** and **load first** (see §5 load order). Disabling them in the gazetteer-config UI is not allowed — the UI hides them.
 
@@ -160,33 +192,39 @@ interface Contribution {
 }
 ```
 
-### 4. Load-time merge
+### 4. Load-time attach (no merge across sources)
 
-`loadGazetteers(config, bundled, imported?)` in `src/api/place-gazetteers/merge.ts` gains a merge phase before the existing translations injection:
+`loadGazetteers(config, bundled, imported?)` in `src/api/place-gazetteers/merge.ts` is rewritten — there is no legacy fallback (per implementation plan, the old self-rooted path is replaced, not coexisting):
 
-1. **Phase A — load scaffolding.** Build the canonical tree from `world-continents` → `world-countries` → `world-admin1`. Index every node by `joinPath(...names).toLowerCase()` for O(1) parent resolution.
-2. **Phase B — attach contributions.** For each contribution-shape gazetteer, walk its contributions; look up `parentPath` in the index; **append** the contribution's nodes as children of the resolved parent. Track which gazetteer contributed each node (for the picker's "5 sources" badge — store `__contributors: string[]` as a non-serialized runtime field on merged nodes).
-3. **Phase C — merge duplicate nodes within a parent.** If two contributions add a child with the same `(name, type)` under the same parent, merge: union `aliases`, keep the highest-quality coords (boundary polygon centroid > Wikidata > GeoNames — see §7), recursively merge `children`. Track contributors.
-4. **Phase D — translations.** Unchanged from today, but path keys in `translations` use canonical paths.
-5. **Phase E — return** a single `MergedTree` instead of an array of `Gazetteer`.
+1. **Phase A — load scaffolding.** Build the canonical tree from `world-continents` → `world-countries` → `world-admin1` → `world-admin2`. Index every node by lowercased path for O(1) parent resolution.
+2. **Phase B — attach contributions.** For each contribution-shape gazetteer, walk its contributions; look up `parentPath` in the scaffolding index; **append** the contribution's nodes as children of the resolved parent. Each appended node is stamped with `__gazetteer: <id>` (single source). **Same-name contributions stay as distinct siblings** — no union, no merging by `(name, type)`. The only deduplication that ever happens is at the scaffolding layer, which is project-curated by definition.
+3. **Phase C — translations.** Inject language-gazetteer aliases onto scaffolding nodes only (translations are admin-division names like "Sweden" → "Sverige" — these are per-language naming of canonical scaffolding, not new leaf data). Translations never touch leaf nodes.
+4. **Phase D — return** a `MergedTree` with the scaffolding roots. Each root carries the full attached contribution forest underneath, with every leaf stamped by its single source.
 
-The renderer + resolver consume `MergedTree` (one root + one historical sibling). The `Gazetteer[]` API stays available for legacy code paths and the gazetteer-config UI; everything that walks the tree switches to `MergedTree`.
+The renderer + resolver consume `MergedTree`. The `Gazetteer[]` API stays available for the gazetteer-config UI (lists individual gazetteers as toggles).
+
+**What the engine does NOT do:**
+- It does not merge two contributions that add the same `(name, type)` under the same parent. They become two siblings. The picker may show both with source badges, or the redundancy audit (§10a) decides at build time whether to consolidate the source gazetteers.
+- It does not compute "best coords" across sources. There is no `__priority`, no boundary-vs-point tiebreaker. A leaf has the coords its source authored.
+- It does not union aliases across sources. Each leaf's aliases are exactly what its source contributed.
 
 ### 5. Load order
 
 ```
 world-continents          (scaffolding)
   ↓
-world-countries           (scaffolding — declares parent paths into continents)
+world-countries           (scaffolding — children of continents)
   ↓
-world-admin1              (scaffolding — declares parent paths into countries)
+world-admin1              (scaffolding — children of countries)
+  ↓
+world-admin2              (scaffolding — children of admin1)
   ↓
 all other data gazetteers (contributions — paths must resolve into the above)
   ↓
-language gazetteers       (translations — path keys must resolve into the merged tree)
+language gazetteers       (translations — path keys resolve into scaffolding)
 ```
 
-`getAllGazetteers()` in `bundled.ts` returns the array in this order. Imported user gazetteers run **after** all bundled gazetteers, so they can attach to anything bundled (and override colliding contributions on a last-write-wins basis — same rule as today).
+`getAllGazetteers()` in `bundled.ts` returns the array in this order. Imported user gazetteers run **after** all bundled gazetteers, so they can attach to anything bundled. Imported gazetteers attach as additional siblings (same no-merge rule as bundled) — they never overwrite bundled contributions.
 
 ### 6. CI validation — scaffolding integrity
 
@@ -198,50 +236,49 @@ language gazetteers       (translations — path keys must resolve into the merg
 - **Test 4 — closed-vocabulary types.** Walk every node in the merged tree, assert `node.type` is in the `GazetteerNodeType` enum.
 - **Test 5 — sv-orter Eksjö smoke.** Resolve `Eksjö, Sverige`; assert exactly one match; assert `matchedPath` ends at `Eksjö` and traverses through `Eksjö kommun > Jönköpings län > Sweden > Europe > World`.
 
-### 7. Coordinate tie-breaker (multi-source same node)
+### 7. (removed — see "License & source provenance")
 
-Phase C of merge needs a rule when two gazetteers contribute the same `(name, type)` under the same parent with different coords. Order:
+There is no coordinate tie-breaker. Each leaf has the coords authored by its single source. Two same-named contributions under the same scaffolding parent become two siblings, each with its own coords. This is by design — see "License & source provenance" above. If two gazetteers genuinely emit redundant data without distinct value, the per-country redundancy audit (§10a) consolidates them at build time by *removing* one source, not by merging.
 
-1. **Boundary polygon centroid** — if any contributor has `geometry`, use its centroid (most accurate, derived from the actual polygon).
-2. **Wikidata** — if any contributor sourced from Wikidata (per the gazetteer's `source.name`).
-3. **GeoNames** — fallback.
-4. **First contributor in load order** — final tiebreaker.
+Boundary polygons attach to the **leaf the boundary gazetteer itself contributes** (e.g. `sv-sockenstad-boundaries` contributes parish polygons; the polygon hangs on its own contributed `parish` leaf, not on a sibling parish from a different gazetteer). If two source gazetteers want to be deduped — e.g. boundary gazetteer A's polygon attached to point gazetteer B's parish — that's a curatorial decision: drop one, or extend the boundary gazetteer to also emit point data with both source attributions stamped on each leaf.
 
-Geometry attaches to the merged node from whichever contributor has it. If two contributors have polygons (rare), keep the boundary gazetteer's polygon and discard the other (boundary gazetteers are curated for polygons; non-boundary geometries are incidental).
-
-### 8. Boundary gazetteers contribute geometry, not a parallel tree
+### 8. Boundary gazetteers contribute polygons as their own leaves
 
 `sv-sockenstad-boundaries` today declares a flat tree: `Sverige > 2,341 parishes + 132 cities` (no län/kommun). New shape:
 
-- For each parish polygon, find the canonical `parish` node in the merged tree (via `parentPath` resolution requiring matching county+municipality, which the build script extracts from Lantmäteriet metadata). Attach `geometry` to that existing node.
-- For "cities" (Eksjö stad), they're historical city status. Either match to the modern `Eksjö kommun > Eksjö (locality)` node or attach as a sibling `city` type under the kommun. The build script picks whichever the source dataset's metadata supports.
+- The build script extracts `(län, kommun, parishname)` from Lantmäteriet metadata for each parish polygon and emits a contribution `{ parentPath: ['World', 'Europe', 'Sweden', län, kommun], nodes: [{ name, type: 'parish', geometry }] }`.
+- That parish leaf is `sv-sockenstad-boundaries`'s own contribution — it carries its own source license and `__gazetteer: 'sv-sockenstad-boundaries'`. It is **not** merged with `sv-socknar`'s parish of the same name — both stay as distinct siblings under the kommun.
+- City polygons (stadsrättigheter) emit as `{ type: 'city' }` leaves, again as the boundary gazetteer's own contribution.
+- Polygons with no kommun match (extinct parish, boundary change) are **rejected** at build time with a warning. No flat-rooted shortcut.
 
-If a parish polygon has no matching modern node (extinct parish, boundary change), the contribution is **rejected** with a build-time warning rather than introducing a flat-rooted shortcut. The user-visible result: every polygon attaches to a node a genealogist already navigates to.
+If the redundancy audit (§10a) finds that `sv-socknar`'s parishes and `sv-sockenstad-boundaries`'s parishes carry the same information for genealogy purposes, that's a curatorial call: keep both (point data + polygon data are distinct value), or extend one to emit polygons too and retire the other. The engine never auto-merges them.
 
 ### 9. Renderer + resolver consequences
 
 Most consuming code simplifies:
 
-- **`PlacePicker.vue`** — drops the `gazetteer` field from the dedup key. `runSearch` walks one tree. The `gazetteer-badge` becomes a `n sources` chip (or hidden if `n === 1`).
-- **`resolver.ts`** — `resolveHierarchical` runs against one tree instead of N. The cross-gazetteer contradiction-scoring logic stays (it's still valuable for ambiguous matches like "Dirleton") but operates inside the merged tree.
-- **`searchGazetteer`** — same. Still returns `{ node, path, gazetteer }` but `gazetteer` becomes `contributors: string[]` so the picker can show provenance.
-- **`window.api.gazetteers.getBundled()`** — unchanged for the gazetteer-config UI (lists individual gazetteers as toggles). Disabling a contribution-shape gazetteer at runtime stops including its contributions in the next merge; scaffolding remains always-on.
-- **`MapView` / `PlacePanel` map pin lookup** — uses `resolveBoundary` against the merged tree. Polygon attached to canonical node = one polygon per place, not three.
+- **`PlacePicker.vue`** — `runSearch` walks one merged tree. Each result row carries the leaf's single `__gazetteer` source for the badge. Two same-named contributions under the same parent are two distinct rows, each with its own badge — never one row labelled "N sources."
+- **`resolver.ts`** — `resolveHierarchical` runs against one tree. The cross-gazetteer contradiction-scoring logic still applies for genuinely ambiguous matches (e.g. "Dirleton" in Scotland vs. Canada — different scaffolding parents). It does not arbitrate between two contributions to the same scaffolding parent — those resolve to multiple distinct results, and the picker / caller chooses.
+- **`searchGazetteer`** — returns `{ node, path, gazetteer }` where `gazetteer` is the single source ID. No `contributors: string[]` plural — that framing was wrong.
+- **`window.api.gazetteers.getBundled()`** — unchanged for the gazetteer-config UI. Disabling a contribution-shape gazetteer at runtime omits its contributions on the next load. **Scaffolding gazetteers (`world-continents`, `world-countries`, `world-admin1`, `world-admin2`) cannot be disabled and are hidden from the toggles UI** — disabling them would orphan every contribution.
+- **`MapView` / `PlacePanel` map pin lookup** — uses `resolveBoundary` against the merged tree. A leaf with a polygon shows its polygon; a sibling leaf without a polygon shows a point. Two siblings with polygons (e.g. parish polygon from one source, kommun boundary from another) render as two layers — they were separate leaves to begin with.
 
 ### 10. Migration order (informs the implementation plan)
 
-Reverse-dependency order (scaffolding first, leaves last). Each step ships a green CI:
+Reverse-dependency order (scaffolding first, leaves last). The legacy `loadGazetteers` is **replaced**, not run alongside — there is no flag, no parallel code path. Each step ships a CI-green commit; if anything regresses, revert that commit.
 
-1. **Add types + interfaces** (Contribution, GazetteerNodeType, MergedTree). No build scripts touched yet — old gazetteers still loadable.
-2. **Implement merge.ts Phase B+C.** With a feature flag (env var) so old shape still loads. Tests cover both code paths.
-3. **Migrate scaffolding** — `build-world.ts` (already produces the scaffolding tree, mostly compatible — needs continent layer added if not present), `build-world-continents-boundaries.ts` extracted/promoted to point scaffolding too.
-4. **Migrate one country end-to-end** (Sweden — biggest blast radius, surfaces all the issues). All 7 SE gazetteers (`sv-socknar`, `sv-forsamlingar`, `sv-orter`, `sv-gardar`, `sv-kyrkor`, `sv-landskap`, `sv-sockenstad-boundaries`) migrate together.
-5. **Verify with the user** — the user navigates the picker, the panel, the map, the resolver, MCP `resolve_place`. Sign off on Sweden before moving on.
-6. **Migrate Denmark, Norway, Finland, Iceland.** Each ships its own CI-green commit.
-7. **Migrate US (3 gazetteers), Canada (2 gazetteers), Germany (1 gazetteer).**
-8. **Migrate `world-admin1`, `world-boundaries`, `world-historical`.** Historical roots under sibling `World (Historical)` per §2 deviation.
-9. **Migrate language gazetteers.** Translation path keys move to canonical paths.
-10. **Drop the feature flag.** Remove the old self-rooted-tree code path.
+1. **Add types + interfaces** (Contribution, GazetteerNodeType, MergedTree). No build scripts touched yet.
+2. **Replace `loadGazetteers`** with the new attach-only engine. Old self-rooted gazetteers still in the data folder fail loudly — they migrate in step 4+.
+3. **Build scaffolding** — `world-continents`, `world-countries`, `world-admin1`, `world-admin2`. Bootstrap from GeoNames; record CC BY 4.0 attribution.
+4. **For each country, before migrating its build scripts:**
+
+   **§10a — License & redundancy audit (mandatory pre-step per country).** List every gazetteer for the country. For each pair, ask: "do they emit distinct value, or do they overlap?" Distinct value examples: civil parishes vs church parishes (legal identities differ post-2000 reform); polygons vs points (different geometry types); historical vs modern. Overlap examples: two Wikidata-sourced gazetteers both listing the same kommunes from the same SPARQL query; a "boundaries" gazetteer that re-emits points from another gazetteer's data. Decision per overlapping pair: **drop one source gazetteer entirely from `BUNDLED_GAZETTEERS`**, or extend one to absorb the other's distinct content under a single source license. The engine never silently merges — every consolidation is a curatorial decision recorded in the migration commit message.
+
+5. **Migrate Sweden end-to-end.** All surviving SE gazetteers post-audit migrate together. User-verification gate before moving on.
+6. **Migrate Denmark, Norway, Finland, Iceland.** Each does its own §10a audit + migration + user gate.
+7. **Migrate US, Canada, Germany.** Same pattern.
+8. **Migrate `world-boundaries`, `world-historical`.** Historical roots under sibling `World (Historical)`.
+9. **Migrate language gazetteers** to canonical scaffolding path keys. Translations only ever apply to scaffolding nodes (admin division naming) — never to leaves.
 
 ### 11. Open question — imported user gazetteers
 

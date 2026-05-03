@@ -15,6 +15,27 @@ If you find yourself writing `places.update({ latitude: ..., longitude: ... })` 
 
 This is non-negotiable per `CLAUDE.md`. Past violations corrupted databases and pinned them to specific gazetteer versions. Don't reintroduce them.
 
+## ⚠️ Prime Directive (cont.): No cross-source merging — license & provenance are non-negotiable
+
+**Every leaf belongs to exactly one source gazetteer. The load-time engine NEVER merges leaves across sources, even when names match.**
+
+Each gazetteer ships its own license (Wikidata CC0, GeoNames CC BY 4.0, Lantmäteriet CC0, DAWA CC BY 4.0, ok-dk/dagi CC0, …). Picking a "best coord" across sources, or unioning aliases from two sources, produces a record with no clean license — a frankenstein the project cannot legally redistribute. It also breaks data fidelity: the user can't tell what was authored by whom.
+
+**Two layers, two licensing models:**
+
+1. **Scaffolding nodes** (`world | continent | country | admin1 | admin2`) — project-curated structural data. Bootstrapped from GeoNames once with `CC BY 4.0` attribution recorded on the scaffolding gazetteer's `source` field. **Always enabled** in the gazetteer-config UI; cannot be disabled (would orphan every contribution). Scaffolding deduplicates by canonical name+path — exactly one canonical Sweden node, exactly one canonical Eksjö kommun.
+
+2. **Leaf nodes** (`locality | parish | farm | church | city | landskap | historical-state | …`) — belong to **exactly one gazetteer**. Each carries `__gazetteer: <id>` runtime stamp (single string, never an array). Two contributions adding `{ name: 'Eksjö', type: 'parish' }` under the same canonical kommun → **two distinct sibling leaves**, each with its own coords, aliases, geometry, and source attribution. The picker shows both with separate source badges; the resolver returns each with its single `gazetteer` ID.
+
+**Concrete rules — apply at every code-touch:**
+
+- **Never** write code that combines coords/aliases/geometry from two source gazetteers into one node. There is no `__contributors: string[]`. There is no coord priority table. There is no boundary-vs-point tie-breaker. Each leaf has the values its single source authored.
+- **Never** merge by `(name, type)` under a parent. Always `Array.push` distinct siblings.
+- License-redundant gazetteers are **dropped at build time, by curatorial decision**, not auto-merged at load time. If gazetteer A and B genuinely cover the same primitives without distinct value, perform a license/redundancy audit (see "License & redundancy audit" section below) and remove one from `BUNDLED_GAZETTEERS` — attribution-aware. The engine never silently combines.
+- Translations (`shape: 'language'`) apply **only** to scaffolding nodes (admin division naming like `Sweden → Sverige`). They never touch leaves; leaf aliases stay exactly as the source authored them.
+
+This is the single most important constraint on every change to gazetteers. If a feature seems to require cross-source merging to work, the design is wrong — drop a redundant source instead, or extend one source to absorb the other's distinct content under one license.
+
 ## Overview
 
 The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 27 bundled gazetteers (16 point + 8 boundary + 3 language) cover Sweden, Denmark, Norway, Finland, Iceland, US (9 immigration states + full 50-state), all Canadian provinces/territories, ~244 countries globally, and ~1,393 historical states/empires. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
@@ -179,6 +200,23 @@ Each country/source has its own build script in `scripts/`:
 | `build-lang-sv-geonames.ts` | GeoNames alternateNamesV2 | Filter isolanguage=sv, match to world gazetteers | lang-sv-geonames |
 | `build-lang-sv-wikidata.ts` | Wikidata SPARQL | Swedish labels for Nordic admin divisions | lang-sv-wikidata |
 | `build-lang-world-historical.ts` | Wikidata SPARQL | Phase 1: QID fetch; Phase 2: batched label lookups (80 QIDs/batch) | lang-world-historical |
+
+## License & redundancy audit (mandatory pre-step before adding or modifying any gazetteer)
+
+Before adding a new country gazetteer or making changes that touch the bundled set, audit for license and redundancy. The engine never auto-merges (see Prime Directive above) — consolidation is always a curatorial decision recorded in the commit message.
+
+**Audit procedure:**
+
+1. **List every gazetteer touching the same country/region.** Note source name, license, and what primitive each emits (parishes, kommunes, polygons, etc.).
+2. **For each pair, ask: distinct value, or redundant?**
+   - Distinct value examples: civil parish (legal admin) vs church parish (different legal entity); points vs polygons (different geometry); historical vs modern; different feature classes (PPL vs FRM).
+   - Redundancy examples: two Wikidata-sourced gazetteers querying the same SPARQL parish list with different filters; a "boundaries" gazetteer that re-emits the same point data as another gazetteer.
+3. **For each redundant pair, decide:**
+   - Drop one entirely from `BUNDLED_GAZETTEERS` (and delete its JSON).
+   - OR extend one to absorb the other's distinct content under a single source license.
+4. **Record the decision in the commit message** — sources, licenses, rationale per pair, what was kept and what was dropped.
+
+**Never** auto-resolve overlap by adding merge logic to `merge.ts`. The engine is attach-only; it cannot legally combine sources.
 
 ## Adding a New Country Gazetteer
 
