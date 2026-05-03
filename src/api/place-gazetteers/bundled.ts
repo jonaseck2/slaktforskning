@@ -125,21 +125,33 @@ function attachNormalizeRules(gaz: Gazetteer): Gazetteer {
 }
 
 function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
-  if (!gaz.root.children) return gaz;
-  for (const child of gaz.root.children) {
+  if (!gaz.root) return gaz;
+  // Pre-migration self-rooted gazetteers exposed län directly under root; the
+  // global hierarchy puts them under World > Europe > Sweden, so we walk the
+  // whole tree and inject aliases wherever a node name matches a known län.
+  function walk(node: GazetteerNode): void {
     const extra: string[] = [];
-    const hist = HISTORICAL_LAN_ALIASES[child.name];
-    if (hist) extra.push(...hist);
-    const letters = LAN_LETTER_CODES[child.name];
-    if (letters) extra.push(...letters);
-    if (extra.length === 0) continue;
-    const existing = new Set(child.aliases ?? []);
-    const merged = [...(child.aliases ?? [])];
-    for (const alias of extra) {
-      if (!existing.has(alias)) merged.push(alias);
+    // Lookup keys come from the pre-migration self-rooted era ("Stockholms län").
+    // The new tree often stores the bare form ("Stockholm") as `name` with
+    // "Stockholms län" in aliases — match either to remain compatible.
+    const lookupKeys = [node.name, ...(node.aliases ?? [])];
+    for (const key of lookupKeys) {
+      const hist = HISTORICAL_LAN_ALIASES[key];
+      if (hist) extra.push(...hist);
+      const letters = LAN_LETTER_CODES[key];
+      if (letters) extra.push(...letters);
     }
-    (child as GazetteerNode).aliases = merged;
+    if (extra.length > 0) {
+      const existing = new Set(node.aliases ?? []);
+      const merged = [...(node.aliases ?? [])];
+      for (const alias of extra) {
+        if (!existing.has(alias)) merged.push(alias);
+      }
+      (node as GazetteerNode).aliases = merged;
+    }
+    if (node.children) for (const child of node.children) walk(child);
   }
+  walk(gaz.root);
   return gaz;
 }
 

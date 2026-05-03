@@ -33,7 +33,31 @@ interface CountryInfo {
   iso2: string;
   iso3: string;
   name: string;
+  continent: string; // GeoNames continent code: AF, AN, AS, EU, NA, OC, SA
 }
+
+// GeoNames continent code → canonical English name.
+const CONTINENT_NAMES: Record<string, string> = {
+  AF: 'Africa',
+  AN: 'Antarctica',
+  AS: 'Asia',
+  EU: 'Europe',
+  NA: 'North America',
+  OC: 'Oceania',
+  SA: 'South America',
+};
+
+// Hand-picked rough centroid coords for each continent (degrees lat/lon).
+// Used as the continent node's own coords; children countries carry their own population-weighted centroids.
+const CONTINENT_COORDS: Record<string, { lat: number; lon: number }> = {
+  Africa: { lat: 2, lon: 18 },
+  Antarctica: { lat: -75, lon: 0 },
+  Asia: { lat: 45, lon: 90 },
+  Europe: { lat: 54, lon: 15 },
+  'North America': { lat: 45, lon: -100 },
+  Oceania: { lat: -25, lon: 135 },
+  'South America': { lat: -15, lon: -60 },
+};
 
 interface Admin1Info {
   countryCode: string;
@@ -69,9 +93,10 @@ function parseCountryInfo(filePath: string): Map<string, CountryInfo> {
     const iso2 = cols[0];
     const iso3 = cols[1];
     const name = cols[4];
+    const continent = cols[8];
     if (!iso2 || !name) continue;
 
-    countries.set(iso2, { iso2, iso3, name });
+    countries.set(iso2, { iso2, iso3, name, continent });
   }
 
   return countries;
@@ -135,7 +160,8 @@ function buildWorldCountries(
   countries: Map<string, CountryInfo>,
   citiesByCountry: Map<string, CityRow[]>,
 ): GazetteerNode[] {
-  const nodes: GazetteerNode[] = [];
+  // Group countries by their canonical continent name.
+  const byContinent = new Map<string, GazetteerNode[]>();
 
   for (const [, country] of [...countries.entries()].sort((a, b) =>
     a[1].name.localeCompare(b[1].name, 'en')
@@ -145,10 +171,17 @@ function buildWorldCountries(
     // Skip countries with no city data for coordinates
     if (!centroid) continue;
 
+    const continentName = CONTINENT_NAMES[country.continent];
+    if (!continentName) {
+      // Skip countries with no recognised continent code (shouldn't happen with GeoNames data).
+      continue;
+    }
+
     const aliases: string[] = [country.iso2];
     if (country.iso3) aliases.push(country.iso3);
 
-    nodes.push({
+    if (!byContinent.has(continentName)) byContinent.set(continentName, []);
+    byContinent.get(continentName)!.push({
       name: country.name,
       type: 'country',
       aliases,
@@ -157,7 +190,21 @@ function buildWorldCountries(
     });
   }
 
-  return nodes;
+  // Emit continents in alphabetical order, each with its country children.
+  const continentNodes: GazetteerNode[] = [];
+  for (const continentName of Object.values(CONTINENT_NAMES).sort()) {
+    const children = byContinent.get(continentName) ?? [];
+    const coords = CONTINENT_COORDS[continentName];
+    continentNodes.push({
+      name: continentName,
+      type: 'continent',
+      lat: coords.lat,
+      lon: coords.lon,
+      children,
+    });
+  }
+
+  return continentNodes;
 }
 
 function buildWorldAdmin1(
@@ -166,7 +213,8 @@ function buildWorldAdmin1(
   citiesByCountry: Map<string, CityRow[]>,
   citiesByAdmin1: Map<string, CityRow[]>,
 ): GazetteerNode[] {
-  const nodes: GazetteerNode[] = [];
+  // Group country nodes (with admin1 children) by their canonical continent name.
+  const byContinent = new Map<string, GazetteerNode[]>();
 
   for (const [, country] of [...countries.entries()].sort((a, b) =>
     a[1].name.localeCompare(b[1].name, 'en')
@@ -174,6 +222,12 @@ function buildWorldAdmin1(
     const countryCities = citiesByCountry.get(country.iso2) || [];
     const countryCentroid = cityWeightedCentroid(countryCities);
     if (!countryCentroid) continue;
+
+    const continentName = CONTINENT_NAMES[country.continent];
+    if (!continentName) {
+      // Skip countries with no recognised continent code (shouldn't happen with GeoNames data).
+      continue;
+    }
 
     const aliases: string[] = [country.iso2];
     if (country.iso3) aliases.push(country.iso3);
@@ -206,10 +260,25 @@ function buildWorldAdmin1(
       countryNode.children = children;
     }
 
-    nodes.push(countryNode);
+    if (!byContinent.has(continentName)) byContinent.set(continentName, []);
+    byContinent.get(continentName)!.push(countryNode);
   }
 
-  return nodes;
+  // Emit continents in alphabetical order, each with its country children.
+  const continentNodes: GazetteerNode[] = [];
+  for (const continentName of Object.values(CONTINENT_NAMES).sort()) {
+    const children = byContinent.get(continentName) ?? [];
+    const coords = CONTINENT_COORDS[continentName];
+    continentNodes.push({
+      name: continentName,
+      type: 'continent',
+      lat: coords.lat,
+      lon: coords.lon,
+      children,
+    });
+  }
+
+  return continentNodes;
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -251,29 +320,34 @@ function main() {
   }
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  const today = new Date().toISOString().slice(0, 10);
+  // World scaffolding pinned to its known-good fetch date so JSON output
+  // stays stable across re-runs. Bump this when the source dataset is re-fetched.
+  const WORLD_COUNTRIES_FETCHED = '2026-05-03';
+  const WORLD_ADMIN1_FETCHED = '2026-05-03';
 
   // 1. World Countries
   console.log('\nBuilding world-countries...');
-  const countryNodes = buildWorldCountries(countries, citiesByCountry);
+  const continentNodes = buildWorldCountries(countries, citiesByCountry);
+  const totalCountries = continentNodes.reduce((s, c) => s + (c.children?.length ?? 0), 0);
 
   const countriesGazetteer = {
     id: 'world-countries',
+    shape: 'scaffolding' as const,
     name: 'World Countries',
     locale: 'en',
-    description: 'All countries with ISO alpha-2 and alpha-3 codes. Coordinates are population-weighted centroids.',
+    description: 'World > continent > country scaffolding. ISO alpha-2 and alpha-3 codes are aliases. Country coordinates are population-weighted centroids.',
     source: {
       name: 'GeoNames',
       url: 'https://www.geonames.org/',
       license: 'CC BY 4.0',
-      fetched: today,
+      fetched: WORLD_COUNTRIES_FETCHED,
     },
     root: {
       name: 'World',
-      type: 'root',
+      type: 'world',
       lat: 0,
       lon: 0,
-      children: countryNodes,
+      children: continentNodes,
     },
   };
 
@@ -281,34 +355,39 @@ function main() {
   const countriesJson = JSON.stringify(countriesGazetteer, null, 2);
   fs.writeFileSync(countriesPath, countriesJson + '\n');
   const countriesSizeKb = (Buffer.byteLength(countriesJson) / 1024).toFixed(1);
-  console.log(`  ${countryNodes.length} countries → world-countries.json (${countriesSizeKb} KB)`);
+  console.log(`  ${totalCountries} countries grouped into ${continentNodes.length} continents → world-countries.json (${countriesSizeKb} KB)`);
 
   // 2. World Admin1
   console.log('\nBuilding world-admin1...');
-  const admin1Nodes = buildWorldAdmin1(countries, admin1ByCountry, citiesByCountry, citiesByAdmin1);
+  const admin1ContinentNodes = buildWorldAdmin1(countries, admin1ByCountry, citiesByCountry, citiesByAdmin1);
 
+  let totalAdmin1Countries = 0;
   let totalAdmin1Children = 0;
-  for (const node of admin1Nodes) {
-    totalAdmin1Children += (node.children?.length ?? 0);
+  for (const continent of admin1ContinentNodes) {
+    for (const country of continent.children ?? []) {
+      totalAdmin1Countries++;
+      totalAdmin1Children += (country.children?.length ?? 0);
+    }
   }
 
   const admin1Gazetteer = {
     id: 'world-admin1',
+    shape: 'scaffolding' as const,
     name: 'World Administrative Divisions (Level 1)',
     locale: 'en',
-    description: 'Countries with first-level administrative divisions (states, provinces, regions). Coordinates are population-weighted centroids.',
+    description: 'World > continent > country > admin1 scaffolding. First-level administrative divisions (states, provinces, regions, län). Coordinates are population-weighted centroids.',
     source: {
       name: 'GeoNames',
       url: 'https://www.geonames.org/',
       license: 'CC BY 4.0',
-      fetched: today,
+      fetched: WORLD_ADMIN1_FETCHED,
     },
     root: {
       name: 'World',
-      type: 'root',
+      type: 'world',
       lat: 0,
       lon: 0,
-      children: admin1Nodes,
+      children: admin1ContinentNodes,
     },
   };
 
@@ -316,7 +395,7 @@ function main() {
   const admin1Json = JSON.stringify(admin1Gazetteer, null, 2);
   fs.writeFileSync(admin1Path, admin1Json + '\n');
   const admin1SizeKb = (Buffer.byteLength(admin1Json) / 1024).toFixed(1);
-  console.log(`  ${admin1Nodes.length} countries, ${totalAdmin1Children} admin1 divisions → world-admin1.json (${admin1SizeKb} KB)`);
+  console.log(`  ${totalAdmin1Countries} countries grouped into ${admin1ContinentNodes.length} continents, ${totalAdmin1Children} admin1 divisions → world-admin1.json (${admin1SizeKb} KB)`);
 
   console.log('\nDone!');
 }

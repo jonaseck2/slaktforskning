@@ -49,23 +49,62 @@ describe('bundled gazetteers', () => {
 
   it('world-countries has ~250 countries', () => {
     const wc = gazetteers.find(g => g.id === 'world-countries')!;
-    expect(wc.root.children!.length).toBeGreaterThan(180);
-    expect(wc.root.children!.length).toBeLessThan(300);
+    // Countries now live one level deeper, under continent nodes.
+    const countryCount = (wc.root.children ?? []).reduce(
+      (sum, continent) => sum + (continent.children?.length ?? 0),
+      0,
+    );
+    expect(countryCount).toBeGreaterThan(180);
+    expect(countryCount).toBeLessThan(300);
+  });
+
+  it('world-countries roots at "World" with continent children', () => {
+    const wc = require('../../src/api/place-gazetteers/data/world-countries.json');
+    expect(wc.shape).toBe('scaffolding');
+    expect(wc.root.name).toBe('World');
+    expect(wc.root.type).toBe('world');
+    const continents = wc.root.children.map((c: any) => c.name).sort();
+    expect(continents).toEqual([
+      'Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 'Oceania', 'South America',
+    ]);
+    const europe = wc.root.children.find((c: any) => c.name === 'Europe');
+    expect(europe.children.map((c: any) => c.name)).toContain('Sweden');
+  });
+
+  it('world-admin1 has admin1 nodes under World > continent > country', () => {
+    const wa = require('../../src/api/place-gazetteers/data/world-admin1.json');
+    expect(wa.shape).toBe('scaffolding');
+    expect(wa.root.name).toBe('World');
+    const europe = wa.root.children.find((c: any) => c.name === 'Europe');
+    const sweden = europe.children.find((c: any) => c.name === 'Sweden');
+    // GeoNames admin1CodesASCII.txt provides bare län names ("Jönköping", "Stockholm")
+    // without the "län" suffix. The user-goal form ("Jönköpings län") will land in
+    // aliases via a follow-up Sweden-specific country contribution; the scaffolding
+    // here only carries what GeoNames authors.
+    expect(sweden.children.map((c: any) => c.name)).toContain('Jönköping');
   });
 
   it('us-immigration-states has 9 states', () => {
     const us = gazetteers.find(g => g.id === 'us-immigration-states')!;
-    expect(us.root.children!.length).toBe(9);
+    // World > North America > United States > <states>
+    const usa = us.root.children![0].children![0];
+    expect(usa.name).toBe('United States');
+    expect(usa.children!.length).toBe(9);
   });
 
   it('us-all-states has 51 states', () => {
     const us = gazetteers.find(g => g.id === 'us-all-states')!;
-    expect(us.root.children!.length).toBe(51);
+    const usa = us.root.children![0].children![0];
+    expect(usa.name).toBe('United States');
+    expect(usa.children!.length).toBe(51);
   });
 
   it('ca-provinces has 13 provinces and territories', () => {
     const ca = gazetteers.find(g => g.id === 'ca-provinces')!;
-    expect(ca.root.children!.length).toBe(13);
+    // World > North America > Canada > <provinces>
+    const canada = ca.root.children![0].children![0];
+    expect(canada.name).toBe('Canada');
+    expect(canada.children!.length).toBe(13);
   });
 
   it('world-historical has > 200 dissolved entities', () => {
@@ -95,8 +134,10 @@ describe('bundled gazetteers', () => {
 
   it('lang-world-historical has > 1000 entities with translations', () => {
     const langGaz = gazetteers.find(g => g.id === 'lang-world-historical')!;
-    const whTranslations = langGaz.translations!['world-historical'];
-    expect(Object.keys(whTranslations).length).toBeGreaterThan(1000);
+    // After the global-hierarchy migration translation keys live under the
+    // synthetic "__merged__" namespace (canonical paths into the merged tree).
+    const merged = langGaz.translations!.__merged__;
+    expect(Object.keys(merged).length).toBeGreaterThan(1000);
   });
 });
 
@@ -199,7 +240,16 @@ describe('cross-country place resolution', () => {
   });
 
   it('resolves "USA" via Swedish language gazetteer alias for United States', () => {
-    const result = resolvePlace('USA', gazetteers);
+    // Scope explicitly: lang-world-historical pulled in many multilingual
+    // labels for "Union of South Africa" — including the literal "USA" — so
+    // when both world-historical and the modern country gazetteers are enabled
+    // the bare token "USA" is genuinely ambiguous. The original test was about
+    // the Swedish-language alias path, so exercise that path in isolation.
+    const scoped = loadGazetteers(
+      { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] },
+      getAllGazetteers(),
+    );
+    const result = resolvePlace('USA', scoped);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('United States');
   });
@@ -328,7 +378,7 @@ describe('Swedish exonym expansion', () => {
     const result = resolvePlace(sv, gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain(en);
-    expect(result!.gazetteer).toBe('world-boundaries');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('world-boundaries');
   });
 
   // ── Negative-control ─────────────────────────────────────────────
@@ -354,7 +404,7 @@ describe('per-gazetteer normalization rules', () => {
     const result = resolvePlace('Stockholm kommun', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedNode.name.toLowerCase()).toContain('stockholm');
-    expect(result!.gazetteer).toBe('sv-orter');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-orter');
   });
 
   it('strips Danish "Sogn" suffix when matching against dk-sogne (DK_RULES)', () => {
@@ -365,7 +415,7 @@ describe('per-gazetteer normalization rules', () => {
     const result = resolvePlace('Roskilde Sogn', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedNode.name.toLowerCase()).toContain('roskilde');
-    expect(result!.gazetteer).toBe('dk-sogne');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('dk-sogne');
   });
 
   it('treats hyphens and spaces as equivalent (universal rule)', () => {
@@ -425,16 +475,25 @@ describe('per-gazetteer normalization rules', () => {
 });
 
 describe('sv-landskap resolution', () => {
-  it('has 25 landskap', () => {
+  // Walk down to the Sweden node so the per-landskap assertions still work
+  // after the World > Europe > Sweden > <landskap> migration.
+  function svLandskapChildren() {
     const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
-    expect(gaz).toBeDefined();
-    expect(gaz.root.children).toHaveLength(25);
+    const europe = gaz.root.children!.find(c => c.name === 'Europe')!;
+    const sweden = europe.children!.find(c => c.name === 'Sweden')!;
+    return { gaz, sweden };
+  }
+
+  it('has 25 landskap', () => {
+    const { sweden } = svLandskapChildren();
+    expect(sweden.children).toHaveLength(25);
   });
 
-  it('every landskap has lat/lon and type=landskap', () => {
-    const gaz = getAllGazetteers().find(g => g.id === 'sv-landskap')!;
-    for (const c of gaz.root.children!) {
-      expect(c.type).toBe('landskap');
+  it('every landskap has lat/lon and type=admin1 (closed admin vocab)', () => {
+    const { sweden } = svLandskapChildren();
+    for (const c of sweden.children!) {
+      // Closed vocab tightened types away from the old freeform "landskap" string.
+      expect(c.type).toBe('admin1');
       expect(typeof c.lat).toBe('number');
       expect(typeof c.lon).toBe('number');
       expect(c.lat).toBeGreaterThan(54);
@@ -451,7 +510,7 @@ describe('sv-landskap resolution', () => {
     );
     const result = resolvePlace('Ångermanland', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('sv-landskap');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-landskap');
     expect(result!.matchedNode.name).toBe('Ångermanland');
   });
 
@@ -462,7 +521,7 @@ describe('sv-landskap resolution', () => {
     );
     const result = resolvePlace('Bohuslän', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('sv-landskap');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-landskap');
     expect(result!.matchedNode.name).toBe('Bohuslän');
   });
 
@@ -491,7 +550,7 @@ describe('sv-landskap resolution', () => {
     );
     const result = resolvePlace('Skåne län', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('sv-orter');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-orter');
   });
 
   it('"Skåne" (bare) resolves from sv-landskap when only sv-landskap is enabled', () => {
@@ -501,7 +560,7 @@ describe('sv-landskap resolution', () => {
     );
     const result = resolvePlace('Skåne', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('sv-landskap');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-landskap');
   });
 
   it('"Skåne" (bare) also resolves from sv-orter when only sv-orter is enabled', () => {
@@ -511,7 +570,7 @@ describe('sv-landskap resolution', () => {
     );
     const result = resolvePlace('Skåne', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('sv-orter');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-orter');
   });
 });
 
@@ -524,13 +583,13 @@ describe('de-gemeinden resolution', () => {
   it('resolves "Hamburg" to a German node', () => {
     const result = resolvePlace('Hamburg', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
   });
 
   it('resolves "Bayern" to the Bundesland', () => {
     const result = resolvePlace('Bayern', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
     expect(result!.matchedPath).toContain('Bayern');
   });
 
@@ -539,8 +598,8 @@ describe('de-gemeinden resolution', () => {
     const b = resolvePlace('Schwabach', gazetteers);
     expect(a).not.toBeNull();
     expect(b).not.toBeNull();
-    expect(a!.gazetteer).toBe('de-gemeinden');
-    expect(b!.gazetteer).toBe('de-gemeinden');
+    expect((a!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
+    expect((b!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
     expect(a!.lat).toBe(b!.lat);
     expect(a!.lon).toBe(b!.lon);
   });
@@ -548,7 +607,7 @@ describe('de-gemeinden resolution', () => {
   it('resolves "Schleswig-Holstein" without breaking on the hyphen', () => {
     const result = resolvePlace('Schleswig-Holstein', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.gazetteer).toBe('de-gemeinden');
+    expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
     expect(result!.matchedPath).toContain('Schleswig-Holstein');
   });
 });

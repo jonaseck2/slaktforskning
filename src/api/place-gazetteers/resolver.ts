@@ -601,8 +601,18 @@ export function searchGazetteer(
   }
 
   for (const gaz of gazetteers) {
-    walk(gaz.root, [], gaz);
+    // Walk every root the gazetteer exposes (root + allRoots for the merged
+    // tree's sibling super-roots).
+    if (gaz.root) walk(gaz.root, [], gaz);
     if (hits.length >= limit) break;
+    const allRoots = (gaz as Gazetteer & { allRoots?: GazetteerNode[] }).allRoots;
+    if (allRoots) {
+      for (const r of allRoots) {
+        if (r === gaz.root) continue;
+        walk(r, [], gaz);
+        if (hits.length >= limit) break;
+      }
+    }
   }
 
   return hits;
@@ -667,9 +677,16 @@ function getGlobalNameDepth(gazetteers: Gazetteer[]): Map<string, number> {
   if (memo) return memo;
   const merged = new Map<string, number>();
   for (const gaz of gazetteers) {
-    for (const [k, depth] of buildDepthForRoot(gaz.root)) {
-      const existing = merged.get(k);
-      if (existing === undefined || depth < existing) merged.set(k, depth);
+    // Walk every root (primary + allRoots for the merged tree).
+    const roots: GazetteerNode[] = [];
+    if (gaz.root) roots.push(gaz.root);
+    const allRoots = (gaz as Gazetteer & { allRoots?: GazetteerNode[] }).allRoots;
+    if (allRoots) for (const r of allRoots) if (r !== gaz.root) roots.push(r);
+    for (const root of roots) {
+      for (const [k, depth] of buildDepthForRoot(root)) {
+        const existing = merged.get(k);
+        if (existing === undefined || depth < existing) merged.set(k, depth);
+      }
     }
   }
   mergedDepthByArray.set(gazetteers, merged);

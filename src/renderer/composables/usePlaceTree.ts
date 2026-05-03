@@ -112,30 +112,40 @@ export function usePlaceTree(opts: UsePlaceTreeOptions) {
 
     // Pass 2 — gazetteer roots. Merge with same-name DB roots, otherwise add
     // as gazetteer-only.
+    //
+    // The structural-merge engine returns one synthetic `__merged__` Gazetteer
+    // per loadGazetteers call. Its primary `root` is the first accumulator root
+    // (typically `World`); `allRoots` (when present) lists every accumulator
+    // root including sibling super-roots like `World (Historical)`. Walk both:
+    // each gazetteer's `root` plus any additional roots in `allRoots`.
     const gazetteers = opts.getGazetteers();
     for (const gaz of gazetteers) {
-      const norm = normalize(gaz.root.name);
-      const existing = merged.get(norm);
-      if (existing) {
-        existing.source = 'merged';
-        existing.gazId = gaz.id;
-        existing.gazPath = [gaz.root.name];
-        if ((gaz.root.children?.length ?? 0) > 0) existing.hasChildren = true;
-      } else {
-        merged.set(norm, {
-          key: gazKeyFor(gaz.id, [gaz.root.name]),
-          name: gaz.root.name,
-          type: gaz.root.type,
-          source: 'gazetteer',
-          dbId: null,
-          gazId: gaz.id,
-          gazPath: [gaz.root.name],
-          parent: null,
-          hasChildren: (gaz.root.children?.length ?? 0) > 0,
-          childrenLoaded: false,
-          expanded: false,
-          children: [],
-        });
+      const allRoots = (gaz as typeof gaz & { allRoots?: typeof gaz.root[] }).allRoots;
+      const roots = (allRoots && allRoots.length > 0) ? allRoots : (gaz.root ? [gaz.root] : []);
+      for (const r of roots) {
+        const norm = normalize(r.name);
+        const existing = merged.get(norm);
+        if (existing) {
+          existing.source = 'merged';
+          existing.gazId = gaz.id;
+          existing.gazPath = [r.name];
+          if ((r.children?.length ?? 0) > 0) existing.hasChildren = true;
+        } else {
+          merged.set(norm, {
+            key: gazKeyFor(gaz.id, [r.name]),
+            name: r.name,
+            type: r.type,
+            source: 'gazetteer',
+            dbId: null,
+            gazId: gaz.id,
+            gazPath: [r.name],
+            parent: null,
+            hasChildren: (r.children?.length ?? 0) > 0,
+            childrenLoaded: false,
+            expanded: false,
+            children: [],
+          });
+        }
       }
     }
 

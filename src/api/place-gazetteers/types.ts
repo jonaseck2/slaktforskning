@@ -1,3 +1,26 @@
+/** Documented fixed type names. Beyond `admin4` the system accepts `admin${N}` for any positive integer N. */
+export const GAZETTEER_NODE_TYPES = [
+  'world', 'continent', 'country', 'admin1', 'admin2', 'admin3', 'admin4',
+] as const;
+
+/**
+ * The closed vocabulary for `GazetteerNode.type`:
+ * - `'world'` — root.
+ * - `'continent'` — World > Europe, World > Africa, …
+ * - `'country'` — Europe > Sweden.
+ * - `` `admin${number}` `` — admin1, admin2, …, adminN. Country-specific granularity beyond admin4 is allowed; build scripts pick what fits their data.
+ *
+ * Build scripts are responsible for choosing the right level (e.g. Swedish kommun = admin2, Swedish parish = admin3).
+ */
+export type GazetteerNodeType = 'world' | 'continent' | 'country' | `admin${number}`;
+
+const ADMIN_LEVEL_RE = /^admin([1-9]\d*)$/;
+
+export function isGazetteerNodeType(s: string): s is GazetteerNodeType {
+  if (s === 'world' || s === 'continent' || s === 'country') return true;
+  return ADMIN_LEVEL_RE.test(s);
+}
+
 export interface GeoJSONPolygon {
   type: 'Polygon';
   coordinates: number[][][];
@@ -12,7 +35,11 @@ export type GazetteerGeometry = GeoJSONPolygon | GeoJSONMultiPolygon;
 
 export interface GazetteerNode {
   name: string;
-  type: string;
+  /**
+   * Closed-vocabulary admin level. Validated by `isGazetteerNodeType`.
+   * Allowed values: 'world' | 'continent' | 'country' | `admin${number}` (admin1, admin2, ...).
+   */
+  type: GazetteerNodeType;
   aliases?: string[];
   lat: number;
   lon: number;
@@ -49,13 +76,23 @@ export interface GazetteerNormalizeRules {
   stripPrefixes?: string[];
 }
 
+export interface Contribution {
+  parentPath: string[];      // canonical names from scaffolding, e.g. ['World','Europe','Sweden']
+  nodes: GazetteerNode[];    // children to attach under the resolved parent
+}
+
 export interface Gazetteer {
   id: string;
   name: string;
   locale: string;
   description?: string;
   source?: GazetteerSource;
-  root: GazetteerNode;
+  /** Discriminator. New gazetteers set this; legacy gazetteers without it are treated as 'scaffolding' if `root` is set, else error. */
+  shape?: 'scaffolding' | 'contributions' | 'language';
+  /** Set when shape === 'scaffolding' OR for legacy self-rooted gazetteers (Phase 0–7). */
+  root?: GazetteerNode;
+  /** Set when shape === 'contributions'. */
+  contributions?: Contribution[];
   kind?: 'point' | 'boundary' | 'language';
   translations?: Record<string, Record<string, string[]>>;
   normalize?: GazetteerNormalizeRules;

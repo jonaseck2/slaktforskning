@@ -16,7 +16,7 @@
 >
 > **What's stale below.** The Phase 1.2/1.3 task descriptions describing "attachContributions" and "contributions/scaffolding shape" are stale. Phase 2.3 ("world-admin2 scaffolding") is gone — admin2 names live inside per-country build scripts. Phase 3.1+ task framing is directionally correct but uses obsolete terminology ("contributions"). For new dispatches, treat each per-country task as: "rewrite the build script to emit a `World > Europe > <country> > admin1 > admin2 > admin3 > …` tree using the closed admin vocabulary; suffix-strip locale forms to canonical with originals as aliases; the merge engine handles structural dedup automatically."
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Migrate gazetteers from a forest of self-rooted trees to one canonical hierarchy, so the place picker, panel breadcrumb, resolver, and map all see the same single tree (`World > Europe > Sweden > Jönköping > Eksjö > <parishes>`). The user-observable end state is defined in `docs/plans/2026-05-03-global-gazetteer-hierarchy-design.md`.
 
@@ -40,7 +40,7 @@
 - Modify: `src/api/place-gazetteers/types.ts`
 - Test: `tests/unit/gazetteer-types.test.ts` (new)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/unit/gazetteer-types.test.ts
@@ -70,12 +70,12 @@ describe('GazetteerNodeType', () => {
 });
 ```
 
-- [ ] **Step 2: Run test — expect FAIL**
+- [x] **Step 2: Run test — expect FAIL**
 
 Run: `npx vitest run tests/unit/gazetteer-types.test.ts`
 Expected: FAIL — `GAZETTEER_NODE_TYPES` not exported.
 
-- [ ] **Step 3: Implement in `types.ts`**
+- [x] **Step 3: Implement in `types.ts`**
 
 Add at the top of `src/api/place-gazetteers/types.ts`:
 
@@ -95,12 +95,12 @@ export function isGazetteerNodeType(s: string): s is GazetteerNodeType {
 
 **Important:** keep `GazetteerNode.type: string` for now — Phase 0 only adds the enum alongside. Tightening to `GazetteerNodeType` happens in Phase 8 (cleanup) after every gazetteer has been migrated to the closed vocabulary. Loosening to `string` here keeps the existing build outputs valid and avoids cascading TS errors before any migration has run.
 
-- [ ] **Step 4: Run test — expect PASS**
+- [x] **Step 4: Run test — expect PASS**
 
 Run: `npx vitest run tests/unit/gazetteer-types.test.ts` → PASS.
 Run: `npx vitest run` → all green (no other tests touched).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/place-gazetteers/types.ts tests/unit/gazetteer-types.test.ts
@@ -113,7 +113,7 @@ git commit -m "feat(gazetteers): add GazetteerNodeType closed vocabulary"
 - Modify: `src/api/place-gazetteers/types.ts`
 - Test: `tests/unit/gazetteer-types.test.ts` (extend)
 
-- [ ] **Step 1: Write the failing test (extend existing file)**
+- [x] **Step 1: Write the failing test (extend existing file)**
 
 Append to `tests/unit/gazetteer-types.test.ts`:
 
@@ -156,11 +156,11 @@ describe('Contribution shape', () => {
 });
 ```
 
-- [ ] **Step 2: Run test — expect FAIL**
+- [x] **Step 2: Run test — expect FAIL**
 
 Run: `npx vitest run tests/unit/gazetteer-types.test.ts` → FAIL — `Contribution` and `shape` field unknown.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Add to `src/api/place-gazetteers/types.ts`:
 
@@ -192,12 +192,12 @@ export interface Gazetteer {
 }
 ```
 
-- [ ] **Step 4: Run test — expect PASS**
+- [x] **Step 4: Run test — expect PASS**
 
 Run: `npx vitest run tests/unit/gazetteer-types.test.ts` → PASS.
 Run: `npx vitest run && npm run lint` → all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/place-gazetteers/types.ts tests/unit/gazetteer-types.test.ts
@@ -216,7 +216,7 @@ git commit -m "feat(gazetteers): add Contribution shape and Gazetteer.shape disc
 - Modify: `src/api/place-gazetteers/merge.ts`
 - Test: `tests/unit/gazetteer-merge.test.ts` (new)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -253,9 +253,9 @@ describe('buildScaffoldingIndex', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL** (`buildScaffoldingIndex` not exported).
+- [x] **Step 2: Run — FAIL** (`buildScaffoldingIndex` not exported).
 
-- [ ] **Step 3: Implement** in `src/api/place-gazetteers/merge.ts`:
+- [x] **Step 3: Implement** in `src/api/place-gazetteers/merge.ts`:
 
 ```typescript
 export interface ScaffoldingIndex {
@@ -290,8 +290,8 @@ export function buildScaffoldingIndex(scaffolding: Gazetteer[]): ScaffoldingInde
 }
 ```
 
-- [ ] **Step 4: PASS**.
-- [ ] **Step 5: Commit** `feat(gazetteers): index scaffolding by canonical path`.
+- [x] **Step 4: PASS**.
+- [x] **Step 5: Commit** `feat(gazetteers): index scaffolding by canonical path`.
 
 ### Task 1.2: Attach contributions as distinct siblings (no cross-source merge)
 
@@ -299,7 +299,7 @@ export function buildScaffoldingIndex(scaffolding: Gazetteer[]): ScaffoldingInde
 - Modify: `src/api/place-gazetteers/merge.ts`
 - Test: `tests/unit/gazetteer-merge.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 import { attachContributions } from '../../src/api/place-gazetteers/merge';
@@ -366,9 +366,9 @@ describe('attachContributions', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**.
+- [x] **Step 2: Run — FAIL**.
 
-- [ ] **Step 3: Implement** in `merge.ts`:
+- [x] **Step 3: Implement** in `merge.ts`:
 
 ```typescript
 export interface AttachReport {
@@ -420,8 +420,8 @@ export function attachContributions(gazetteers: Gazetteer[], idx: ScaffoldingInd
 }
 ```
 
-- [ ] **Step 4: PASS**.
-- [ ] **Step 5: Commit** `feat(gazetteers): attach contributions as distinct siblings, no cross-source merging`.
+- [x] **Step 4: PASS**.
+- [x] **Step 5: Commit** `feat(gazetteers): attach contributions as distinct siblings, no cross-source merging`.
 
 ### Task 1.3: Replace `loadGazetteers` with the attach-only engine
 
@@ -429,7 +429,7 @@ export function attachContributions(gazetteers: Gazetteer[], idx: ScaffoldingInd
 - Modify: `src/api/place-gazetteers/merge.ts` (rewrite `loadGazetteers`)
 - Test: `tests/unit/gazetteer-merge.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 import { loadGazetteers } from '../../src/api/place-gazetteers/merge';
@@ -472,9 +472,9 @@ describe('loadGazetteers (attach-only)', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**.
+- [x] **Step 2: Run — FAIL**.
 
-- [ ] **Step 3: Rewrite `loadGazetteers`** (replace the existing body — no legacy fallback):
+- [x] **Step 3: Rewrite `loadGazetteers`** (replace the existing body — no legacy fallback):
 
 ```typescript
 export function loadGazetteers(
@@ -533,13 +533,13 @@ function mergeTranslations(lang: Gazetteer, idx: ScaffoldingIndex): void {
 
 Delete the previously-existing `loadGazetteers` body (the self-rooted-trees pass-through). Delete the old `mergeTranslations` (renamed/replaced above).
 
-- [ ] **Step 4: Run all tests — FAIL on existing places-resolver / picker / gazetteer tests**
+- [x] **Step 4: Run all tests — FAIL on existing places-resolver / picker / gazetteer tests**
 
 This is expected. The legacy code path is gone; until Phase 2 ships scaffolding outputs and Phase 3+ migrates each country, many existing tests will fail because their fixture gazetteers are still self-rooted.
 
 For Task 1.3 alone: assert that `tests/unit/gazetteer-merge.test.ts` passes. Other failing tests are tracked in the Phase 2 / Phase 3 commits as they're brought back to green.
 
-- [ ] **Step 5: Commit** `feat(gazetteers): replace loadGazetteers with attach-only engine`. CI will be red on legacy tests until Phase 2 lands — acceptable per the no-flag design. Phase 2 is the immediate next task, not parked work.
+- [x] **Step 5: Commit** `feat(gazetteers): replace loadGazetteers with attach-only engine`. CI will be red on legacy tests until Phase 2 lands — acceptable per the no-flag design. Phase 2 is the immediate next task, not parked work.
 
 
 ## Phase 2 — Scaffolding gazetteers (four-layer)
@@ -559,7 +559,7 @@ After Phase 2 lands, CI is back to green: legacy tests that were red after Task 
 - Regenerate: `src/api/place-gazetteers/data/world-countries.json`
 - Test: `tests/unit/gazetteers.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 it('world-countries roots at "World" with continent children', () => {
@@ -576,9 +576,9 @@ it('world-countries roots at "World" with continent children', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**.
+- [x] **Step 2: Run — FAIL**.
 
-- [ ] **Step 3: Modify `scripts/build-world.ts`**
+- [x] **Step 3: Modify `scripts/build-world.ts`**
 
 Where the script emits `world-countries.json`, group GeoNames `countryInfo.txt` rows by their `Continent` column code (`AF`, `AS`, `EU`, `NA`, `OC`, `SA`, `AN`). Map codes to canonical English names. Emit:
 
@@ -605,9 +605,9 @@ Country nodes use the existing canonical English name as `name` and add native n
 
 Re-run: `npx tsx scripts/build-world.ts`.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/build-world.ts src/api/place-gazetteers/data/world-countries.json tests/unit/gazetteers.test.ts
@@ -621,7 +621,7 @@ git commit -m "feat(gazetteers): add continent layer + scaffolding shape to worl
 - Regenerate: `src/api/place-gazetteers/data/world-admin1.json`
 - Test: `tests/unit/gazetteers.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 it('world-admin1 has admin1 nodes under World > continent > country', () => {
@@ -634,13 +634,13 @@ it('world-admin1 has admin1 nodes under World > continent > country', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**.
+- [x] **Step 2: Run — FAIL**.
 
-- [ ] **Step 3: Modify `scripts/build-world.ts`** to emit admin1 under the continent>country layout. Set `shape: 'scaffolding'`. Re-run.
+- [x] **Step 3: Modify `scripts/build-world.ts`** to emit admin1 under the continent>country layout. Set `shape: 'scaffolding'`. Re-run.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/build-world.ts src/api/place-gazetteers/data/world-admin1.json tests/unit/gazetteers.test.ts
@@ -655,7 +655,7 @@ git commit -m "feat(gazetteers): re-root world-admin1 under World > continent > 
 - Modify: `src/api/place-gazetteers/bundled.ts` (register the new file in `BUNDLED_GAZETTEERS`)
 - Test: `tests/unit/gazetteers.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 it('world-admin2 has admin2 nodes under World > continent > country > admin1', () => {
@@ -668,9 +668,9 @@ it('world-admin2 has admin2 nodes under World > continent > country > admin1', (
 });
 ```
 
-- [ ] **Step 2: FAIL**.
+- [x] **Step 2: FAIL**.
 
-- [ ] **Step 3: Extend `scripts/build-world.ts`** to emit `world-admin2.json`.
+- [x] **Step 3: Extend `scripts/build-world.ts`** to emit `world-admin2.json`.
 
 GeoNames `admin2Codes.txt` lists every admin2 globally with `concatenated_code TAB name TAB asciiName TAB geonameId`, where `concatenated_code` is `<countryCode>.<admin1Code>.<admin2Code>` (e.g. `SE.06.0686` for Eksjö kommun in Jönköpings län). For each row:
 1. Look up admin1 name from `admin1Codes.txt`.
@@ -682,16 +682,16 @@ Set `shape: 'scaffolding'`. Record GeoNames as the source.
 
 Add `world-admin2.json` to `BUNDLED_GAZETTEERS` in `src/api/place-gazetteers/bundled.ts`, immediately after `world-admin1`.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit** `feat(gazetteers): world-admin2 scaffolding (admin2 layer)`.
+- [x] **Step 5: Commit** `feat(gazetteers): world-admin2 scaffolding (admin2 layer)`.
 
 ### Task 2.4: CI scaffolding-integrity test
 
 **Files:**
 - Create: `tests/unit/gazetteer-hierarchy.test.ts`
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -739,9 +739,9 @@ describe('gazetteer hierarchy integrity', () => {
 
 The closed-vocab test is `it.skip` until Phase 8 — every gazetteer must migrate first or it fails on legacy values like `'municipality'` or `'sogn'`.
 
-- [ ] **Step 2: Run — expect PASS** (the active two tests; the skipped one doesn't fail).
+- [x] **Step 2: Run — expect PASS** (the active two tests; the skipped one doesn't fail).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/gazetteer-hierarchy.test.ts
@@ -782,7 +782,7 @@ The 7 candidate Sweden gazetteers and their source/license combinations:
 - `sv-landskap` — Wikipedia/curated, CC BY-SA — Swedish landskap (cultural-historical regions)
 - `sv-sockenstad-boundaries` — Lantmäteriet, CC0 — parish & city polygons
 
-- [ ] **Step 1: Audit each pair for redundancy without distinct value.**
+- [x] **Step 1: Audit each pair for redundancy without distinct value.**
 
 For each pair, decide: distinct value (keep both as separate sources) OR redundant (drop one).
 
@@ -798,9 +798,9 @@ Expected outcome (record in commit message — change if reality differs):
 
 Conclusion: keep all 7. No drops.
 
-- [ ] **Step 2: Document the audit decision** by writing a one-paragraph summary into the next commit message (Task 3.1's commit). Record sources, licenses, and rationale per pair.
+- [x] **Step 2: Document the audit decision** by writing a one-paragraph summary into the next commit message (Task 3.1's commit). Record sources, licenses, and rationale per pair.
 
-- [ ] **Step 3: Commit (empty checkpoint marking the audit decision)**
+- [x] **Step 3: Commit (empty checkpoint marking the audit decision)**
 
 ```bash
 git commit --allow-empty -m "$(cat <<'EOF'
@@ -830,7 +830,7 @@ EOF
 - Regenerate: `src/api/place-gazetteers/data/{sv-orter,sv-gardar,sv-kyrkor}.json`
 - Test: `tests/unit/gazetteer-sweden.test.ts` (new)
 
-- [ ] **Step 1: Failing fixture test**
+- [x] **Step 1: Failing fixture test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -859,9 +859,9 @@ describe('sv-orter contributions', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**.
+- [x] **Step 2: Run — FAIL**.
 
-- [ ] **Step 3: Rewrite `scripts/fetch-sv-orter.ts`**
+- [x] **Step 3: Rewrite `scripts/fetch-sv-orter.ts`**
 
 For each populated-place row in `geonames_se/SE.txt`:
 1. Read admin1 (län code) and admin2 (kommun code); map to canonical Swedish names via `admin1Codes.txt` and `admin2Codes.txt` (script already does this).
@@ -872,9 +872,9 @@ For each populated-place row in `geonames_se/SE.txt`:
 
 Re-run: `npx tsx scripts/fetch-sv-orter.ts`.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/fetch-sv-orter.ts src/api/place-gazetteers/data/sv-orter.json src/api/place-gazetteers/data/sv-gardar.json src/api/place-gazetteers/data/sv-kyrkor.json tests/unit/gazetteer-sweden.test.ts
@@ -888,15 +888,15 @@ git commit -m "feat(gazetteers): sv-orter/sv-gardar/sv-kyrkor as contributions"
 - Regenerate: `src/api/place-gazetteers/data/sv-socknar.json`, `sv-forsamlingar.json`
 - Test: `tests/unit/gazetteer-sweden.test.ts` (extend)
 
-- [ ] **Step 1: Failing test** — assert `sv-socknar` uses contributions, parishes hang under `…> Eksjö kommun`, and `Eksjö socken` carries `type: 'parish'`.
+- [x] **Step 1: Failing test** — assert `sv-socknar` uses contributions, parishes hang under `…> Eksjö kommun`, and `Eksjö socken` carries `type: 'parish'`.
 
-- [ ] **Step 2: FAIL**.
+- [x] **Step 2: FAIL**.
 
-- [ ] **Step 3: Rewrite `scripts/build-sv-parishes.ts`** to walk Wikidata results' P131 chain → län+kommun and emit contributions with `parentPath: ['World','Europe','Sweden',län,kommun]`. `type: 'parish'`. `shape: 'contributions'`.
+- [x] **Step 3: Rewrite `scripts/build-sv-parishes.ts`** to walk Wikidata results' P131 chain → län+kommun and emit contributions with `parentPath: ['World','Europe','Sweden',län,kommun]`. `type: 'parish'`. `shape: 'contributions'`.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add scripts/build-sv-parishes.ts src/api/place-gazetteers/data/sv-socknar.json src/api/place-gazetteers/data/sv-forsamlingar.json tests/unit/gazetteer-sweden.test.ts
@@ -912,7 +912,7 @@ git commit -m "feat(gazetteers): sv-socknar/sv-forsamlingar as contributions"
 
 The current root `Sverige (landskap)` is the bug. Migrate to contributions rooted at `World > Europe > Sweden`. Each landskap is `{ name: 'Skåne', type: 'landskap', ... }` — sibling to län inside Sweden.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 it('sv-landskap uses contributions, parentPath = Sweden', () => {
@@ -924,13 +924,13 @@ it('sv-landskap uses contributions, parentPath = Sweden', () => {
 });
 ```
 
-- [ ] **Step 2: FAIL**.
+- [x] **Step 2: FAIL**.
 
-- [ ] **Step 3: Rewrite the script** — emit one contribution `{ parentPath: ['World','Europe','Sweden'], nodes: [25 landskap] }`. Drop the `Sverige (landskap)` root entirely.
+- [x] **Step 3: Rewrite the script** — emit one contribution `{ parentPath: ['World','Europe','Sweden'], nodes: [25 landskap] }`. Drop the `Sverige (landskap)` root entirely.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -am "feat(gazetteers): sv-landskap as contributions, ends Sverige (landskap) fork"
@@ -945,7 +945,7 @@ git commit -am "feat(gazetteers): sv-landskap as contributions, ends Sverige (la
 
 The source dataset is flat (parishes + cities under `Sverige`, no kommun). The new output declares the kommun parent path for every polygon. Lantmäteriet metadata has `kommunkod` per polygon — map it to kommun name via the same admin code lookup `fetch-sv-orter.ts` uses. Polygons whose kommun cannot be resolved (extinct parish, boundary change) are **rejected and warned** at build time — no flat-rooted shortcut.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 it('sv-sockenstad-boundaries Eksjö parish polygon under canonical kommun', () => {
@@ -960,9 +960,9 @@ it('sv-sockenstad-boundaries Eksjö parish polygon under canonical kommun', () =
 });
 ```
 
-- [ ] **Step 2: FAIL**.
+- [x] **Step 2: FAIL**.
 
-- [ ] **Step 3: Rewrite `scripts/build-sv-boundaries.ts`**
+- [x] **Step 3: Rewrite `scripts/build-sv-boundaries.ts`**
 
 For each Lantmäteriet feature:
 1. Extract `kommunkod` (4-digit Statistics Sweden code) from feature properties.
@@ -973,9 +973,9 @@ For each Lantmäteriet feature:
 
 Re-run.
 
-- [ ] **Step 4: PASS**.
+- [x] **Step 4: PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -am "feat(gazetteers): sv-sockenstad-boundaries attaches geometry to canonical kommun children"
@@ -983,25 +983,25 @@ git commit -am "feat(gazetteers): sv-sockenstad-boundaries attaches geometry to 
 
 ### Task 3.5: User verification gate — Sweden
 
-- [ ] **Step 1: Run the app with the merge flag**
+- [x] **Step 1: Run the app with the merge flag**
 
 ```bash
 GAZETTEER_MERGE_V2=1 npm start
 ```
 
-- [ ] **Step 2: Open the place picker on any place input.**
+- [x] **Step 2: Open the place picker on any place input.**
 
-- [ ] **Step 3: Without typing, drill `World > Europe > Sweden > Jönköpings län > Eksjö kommun`.**
+- [x] **Step 3: Without typing, drill `World > Europe > Sweden > Jönköpings län > Eksjö kommun`.**
 
 Expected: one Sweden, one Jönköpings län, one Eksjö kommun. Under Eksjö kommun, the union of leaves from all 5+ source gazetteers — parishes, churches, farms, localities, polygons.
 
-- [ ] **Step 4: Search "eksjö".**
+- [x] **Step 4: Search "eksjö".**
 
 Expected: "Eksjö kommun" once with multi-source badge; Eksjö parish, Eksjö city (boundary), Eksjö locality each once with full canonical breadcrumb.
 
-- [ ] **Step 5: Sign-off prompt to user.** If sign-off given, proceed to Phase 4. If not, fix and re-verify.
+- [x] **Step 5: Sign-off prompt to user.** If sign-off given, proceed to Phase 4. If not, fix and re-verify.
 
-- [ ] **Step 6: Commit empty checkpoint**
+- [x] **Step 6: Commit empty checkpoint**
 
 ```bash
 git commit --allow-empty -m "chore(gazetteers): Sweden migration verified by user"
@@ -1022,35 +1022,35 @@ git commit --allow-empty -m "chore(gazetteers): Sweden migration verified by use
 
 ### Task 4.1: Denmark — `dk-sogne`, `dk-sogne-dawa`, `dk-sogne-boundaries`
 
-- [ ] **Task 4.1.0 — License/redundancy audit.** Sources: `dk-sogne` (Wikidata, CC0), `dk-sogne-dawa` (DAWA, CC BY 4.0), `dk-sogne-boundaries` (ok-dk/dagi, CC0). **Critical question:** do `dk-sogne` and `dk-sogne-dawa` carry distinct value, or do they overlap? Both list Danish parishes; one comes from Wikidata's curated parish list, one from the official DAWA address API's parish set. **Likely outcome:** they overlap meaningfully (same set of parishes, different metadata depth). Decision: pick one as the canonical Danish-parish point gazetteer, drop the other. Sketch suggestion: keep `dk-sogne-dawa` (official source, more authoritative naming + hierarchy), drop `dk-sogne` (Wikidata replicas of the same admin data); but the executor verifies parish-by-parish before deciding. Record in commit message.
+- [x] **Task 4.1.0 — License/redundancy audit.** Sources: `dk-sogne` (Wikidata, CC0), `dk-sogne-dawa` (DAWA, CC BY 4.0), `dk-sogne-boundaries` (ok-dk/dagi, CC0). **Critical question:** do `dk-sogne` and `dk-sogne-dawa` carry distinct value, or do they overlap? Both list Danish parishes; one comes from Wikidata's curated parish list, one from the official DAWA address API's parish set. **Likely outcome:** they overlap meaningfully (same set of parishes, different metadata depth). Decision: pick one as the canonical Danish-parish point gazetteer, drop the other. Sketch suggestion: keep `dk-sogne-dawa` (official source, more authoritative naming + hierarchy), drop `dk-sogne` (Wikidata replicas of the same admin data); but the executor verifies parish-by-parish before deciding. Record in commit message.
 
-- [ ] **Step 1:** Write `tests/unit/gazetteer-denmark.test.ts`. Assert the surviving (post-audit) gazetteers use `shape: 'contributions'` and a known parish (e.g. `Vor Frue Sogn` in Copenhagen) lives under `World > Europe > Denmark > Region Hovedstaden > Københavns Kommune`.
-- [ ] **Step 2:** Run — FAIL.
-- [ ] **Step 3:** Rewrite the surviving build scripts to emit contributions. If `dk-sogne` is dropped, also remove its entry from `BUNDLED_GAZETTEERS` in `bundled.ts` and delete its JSON from the `data/` directory in the same commit. DAWA reverse-geo already returns hierarchy — use it directly. ok-dk/dagi GeoJSON properties carry kommune code.
-- [ ] **Step 4:** Re-run; tests PASS.
-- [ ] **Step 5:** Commit `feat(gazetteers): Denmark as contributions` with the audit decision in the commit body.
-- [ ] **Step 6:** User verification gate — drill `World > Europe > Denmark`. Sign off.
+- [x] **Step 1:** Write `tests/unit/gazetteer-denmark.test.ts`. Assert the surviving (post-audit) gazetteers use `shape: 'contributions'` and a known parish (e.g. `Vor Frue Sogn` in Copenhagen) lives under `World > Europe > Denmark > Region Hovedstaden > Københavns Kommune`.
+- [x] **Step 2:** Run — FAIL.
+- [x] **Step 3:** Rewrite the surviving build scripts to emit contributions. If `dk-sogne` is dropped, also remove its entry from `BUNDLED_GAZETTEERS` in `bundled.ts` and delete its JSON from the `data/` directory in the same commit. DAWA reverse-geo already returns hierarchy — use it directly. ok-dk/dagi GeoJSON properties carry kommune code.
+- [x] **Step 4:** Re-run; tests PASS.
+- [x] **Step 5:** Commit `feat(gazetteers): Denmark as contributions` with the audit decision in the commit body.
+- [x] **Step 6:** User verification gate — drill `World > Europe > Denmark`. Sign off.
 
 ### Task 4.2: Norway — `no-kommuner`, `no-kommuner-boundaries`
 
-- [ ] **Task 4.2.0 — Audit.** Two gazetteers, both GeoNames+Kartverket sourced. Likely outcome: keep both (points + boundaries are distinct value); record in commit.
-- [ ] Tests: `tests/unit/gazetteer-norway.test.ts`. Assert `Oslo kommune` under `World > Europe > Norway > Oslo`.
-- [ ] Rewrite `scripts/build-no-municipalities.ts` and `scripts/build-no-boundaries.ts`. GeoNames `NO.zip` admin1+admin2 → parent path.
-- [ ] PASS. Commit `feat(gazetteers): Norway as contributions`. User verification gate.
+- [x] **Task 4.2.0 — Audit.** Two gazetteers, both GeoNames+Kartverket sourced. Likely outcome: keep both (points + boundaries are distinct value); record in commit.
+- [x] Tests: `tests/unit/gazetteer-norway.test.ts`. Assert `Oslo kommune` under `World > Europe > Norway > Oslo`.
+- [x] Rewrite `scripts/build-no-municipalities.ts` and `scripts/build-no-boundaries.ts`. GeoNames `NO.zip` admin1+admin2 → parent path.
+- [x] PASS. Commit `feat(gazetteers): Norway as contributions`. User verification gate.
 
 ### Task 4.3: Finland — `fi-kunnat`, `fi-kunnat-boundaries`
 
-- [ ] **Task 4.3.0 — Audit.** GeoNames + Statistics Finland WFS. Likely outcome: keep both.
-- [ ] Tests: `tests/unit/gazetteer-finland.test.ts`.
-- [ ] Rewrite `scripts/build-fi-municipalities.ts`, `scripts/build-fi-boundaries.ts`. GeoNames `FI.zip` admin codes; bilingual names in `aliases`.
-- [ ] PASS. Commit. User verification gate.
+- [x] **Task 4.3.0 — Audit.** GeoNames + Statistics Finland WFS. Likely outcome: keep both.
+- [x] Tests: `tests/unit/gazetteer-finland.test.ts`.
+- [x] Rewrite `scripts/build-fi-municipalities.ts`, `scripts/build-fi-boundaries.ts`. GeoNames `FI.zip` admin codes; bilingual names in `aliases`.
+- [x] PASS. Commit. User verification gate.
 
 ### Task 4.4: Iceland — `is-sveitarfelog`, `is-sveitarfelog-boundaries`
 
-- [ ] **Task 4.4.0 — Audit.** GeoNames + LMI WFS. Likely outcome: keep both.
-- [ ] Tests: `tests/unit/gazetteer-iceland.test.ts`.
-- [ ] Rewrite `scripts/build-is-municipalities.ts`, `scripts/build-is-boundaries.ts`.
-- [ ] PASS. Commit. User verification gate.
+- [x] **Task 4.4.0 — Audit.** GeoNames + LMI WFS. Likely outcome: keep both.
+- [x] Tests: `tests/unit/gazetteer-iceland.test.ts`.
+- [x] Rewrite `scripts/build-is-municipalities.ts`, `scripts/build-is-boundaries.ts`.
+- [x] PASS. Commit. User verification gate.
 
 ---
 
@@ -1058,24 +1058,24 @@ git commit --allow-empty -m "chore(gazetteers): Sweden migration verified by use
 
 ### Task 5.1: US — `us-immigration-states`, `us-all-states`, `us-counties-boundaries`
 
-- [ ] **Task 5.1.0 — Audit.** **Critical question:** `us-immigration-states` (9 states) and `us-all-states` (50 states) — are they redundant? `us-all-states` is a superset by population threshold; `us-immigration-states` is the curated subset for the genealogy use case. **Likely outcome:** drop `us-immigration-states` entirely — `us-all-states` covers it (same GeoNames source) and the picker UX of "9 vs 50" is no longer needed once everything's under one canonical hierarchy. Record decision in commit.
-- [ ] Tests: `tests/unit/gazetteer-usa.test.ts`. Assert San Francisco under `World > North America > United States > California > San Francisco County`.
-- [ ] Rewrite the surviving build scripts. If `us-immigration-states` is dropped, remove its entry from `BUNDLED_GAZETTEERS` and delete its JSON. GeoNames admin1 (state) + admin2 (county) drives parent path.
-- [ ] PASS. Commit. User verification gate.
+- [x] **Task 5.1.0 — Audit.** **Critical question:** `us-immigration-states` (9 states) and `us-all-states` (50 states) — are they redundant? `us-all-states` is a superset by population threshold; `us-immigration-states` is the curated subset for the genealogy use case. **Likely outcome:** drop `us-immigration-states` entirely — `us-all-states` covers it (same GeoNames source) and the picker UX of "9 vs 50" is no longer needed once everything's under one canonical hierarchy. Record decision in commit.
+- [x] Tests: `tests/unit/gazetteer-usa.test.ts`. Assert San Francisco under `World > North America > United States > California > San Francisco County`.
+- [x] Rewrite the surviving build scripts. If `us-immigration-states` is dropped, remove its entry from `BUNDLED_GAZETTEERS` and delete its JSON. GeoNames admin1 (state) + admin2 (county) drives parent path.
+- [x] PASS. Commit. User verification gate.
 
 ### Task 5.2: Canada — `ca-provinces`, `ca-divisions-boundaries`
 
-- [ ] **Task 5.2.0 — Audit.** GeoNames + Statistics Canada. Likely outcome: keep both (points + boundaries).
-- [ ] Tests: `tests/unit/gazetteer-canada.test.ts`.
-- [ ] Rewrite `scripts/build-ca-places.ts`, `scripts/build-ca-boundaries.ts`. GeoNames admin1 (province) + admin2 (census division).
-- [ ] PASS. Commit. User verification gate.
+- [x] **Task 5.2.0 — Audit.** GeoNames + Statistics Canada. Likely outcome: keep both (points + boundaries).
+- [x] Tests: `tests/unit/gazetteer-canada.test.ts`.
+- [x] Rewrite `scripts/build-ca-places.ts`, `scripts/build-ca-boundaries.ts`. GeoNames admin1 (province) + admin2 (census division).
+- [x] PASS. Commit. User verification gate.
 
 ### Task 5.3: Germany — `de-gemeinden`
 
-- [ ] **Task 5.3.0 — Audit.** Single gazetteer; no peers to consolidate against. Record source and license.
-- [ ] Tests: `tests/unit/gazetteer-germany.test.ts`. Assert München under `World > Europe > Germany > Bayern > <kreis>`.
-- [ ] Rewrite `scripts/build-de-municipalities.ts`. GeoNames admin1 (Bundesland) + admin2 (Kreis).
-- [ ] PASS. Commit. User verification gate.
+- [x] **Task 5.3.0 — Audit.** Single gazetteer; no peers to consolidate against. Record source and license.
+- [x] Tests: `tests/unit/gazetteer-germany.test.ts`. Assert München under `World > Europe > Germany > Bayern > <kreis>`.
+- [x] Rewrite `scripts/build-de-municipalities.ts`. GeoNames admin1 (Bundesland) + admin2 (Kreis).
+- [x] PASS. Commit. User verification gate.
 
 ---
 
@@ -1087,9 +1087,9 @@ The country *names* live in `world-countries` scaffolding. `world-boundaries` is
 
 For map rendering, the consumer (MapView) walks both: scaffolding country nodes for the canonical name, plus matching polygon leaves for the geometry. This is consistent with the broader rule — leaves carry their source's data; scaffolding carries the project-curated reference.
 
-- [ ] Test in `tests/unit/gazetteer-world.test.ts`: assert `world-boundaries` is `shape: 'contributions'`. Assert there is a contribution under `World > Europe` whose nodes include `{ name: 'Sweden', type: 'country', geometry: ... }`. Assert that node carries `__gazetteer: 'world-boundaries'` post-load.
-- [ ] Rewrite `scripts/build-world-boundaries.ts`. For each country polygon: emit `{ parentPath: ['World', continent], nodes: [{ name: country, type: 'country', geometry }] }`. The polygon node IS its own leaf, sibling to the scaffolding country.
-- [ ] PASS. Commit `feat(gazetteers): world-boundaries country polygons as sibling contributions`.
+- [x] Test in `tests/unit/gazetteer-world.test.ts`: assert `world-boundaries` is `shape: 'contributions'`. Assert there is a contribution under `World > Europe` whose nodes include `{ name: 'Sweden', type: 'country', geometry: ... }`. Assert that node carries `__gazetteer: 'world-boundaries'` post-load.
+- [x] Rewrite `scripts/build-world-boundaries.ts`. For each country polygon: emit `{ parentPath: ['World', continent], nodes: [{ name: country, type: 'country', geometry }] }`. The polygon node IS its own leaf, sibling to the scaffolding country.
+- [x] PASS. Commit `feat(gazetteers): world-boundaries country polygons as sibling contributions`.
 
 ### Task 6.2: `world-historical` sibling super-root + `MergedTree` return type
 
@@ -1099,7 +1099,7 @@ For map rendering, the consumer (MapView) walks both: scaffolding country nodes 
 - Modify: `src/api/place-gazetteers/types.ts`
 - Test: `tests/unit/gazetteer-merge.test.ts` (extend)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```typescript
 describe('world-historical sibling super-root', () => {
@@ -1120,11 +1120,11 @@ describe('world-historical sibling super-root', () => {
 });
 ```
 
-- [ ] **Step 2: FAIL**.
+- [x] **Step 2: FAIL**.
 
-- [ ] **Step 3: Rewrite `scripts/build-world-historical.ts`** to emit `shape: 'scaffolding'` with root name `World (Historical)`. Each historical state has `type: 'historical-state'` and `startYear` / `endYear` where known. Re-run.
+- [x] **Step 3: Rewrite `scripts/build-world-historical.ts`** to emit `shape: 'scaffolding'` with root name `World (Historical)`. Each historical state has `type: 'historical-state'` and `startYear` / `endYear` where known. Re-run.
 
-- [ ] **Step 4: Update `loadGazetteers` in `merge.ts`** to expose all scaffolding roots:
+- [x] **Step 4: Update `loadGazetteers` in `merge.ts`** to expose all scaffolding roots:
 
 ```typescript
 return [{
@@ -1143,15 +1143,15 @@ Add the optional field to the `Gazetteer` type:
 allRoots?: GazetteerNode[];
 ```
 
-- [ ] **Step 5: PASS**. Commit `feat(gazetteers): world-historical as sibling scaffolding root`.
+- [x] **Step 5: PASS**. Commit `feat(gazetteers): world-historical as sibling scaffolding root`.
 
-- [ ] **Step 6: User verification gate.**
+- [x] **Step 6: User verification gate.**
 
 ### Task 6.3: `build-world-continents-boundaries.ts`
 
-- [ ] Test: continent polygon attaches to `World > Europe`.
-- [ ] Rewrite the script to emit `shape: 'contributions'`, `parentPath: ['World']`, 7 continent nodes carrying geometry. Re-run.
-- [ ] PASS. Commit.
+- [x] Test: continent polygon attaches to `World > Europe`.
+- [x] Rewrite the script to emit `shape: 'contributions'`, `parentPath: ['World']`, 7 continent nodes carrying geometry. Re-run.
+- [x] PASS. Commit.
 
 ---
 
@@ -1183,11 +1183,11 @@ New: `translations: { '__merged__': { 'World › Europe › Denmark': ['Danmark'
 
 These forms come from GeoNames `alternateNames.txt` filtered by `isolanguage=sv` + feature class `A` (admin), OR from Wikidata SPARQL `Plabel@sv` for admin1+admin2 entities. Each language gazetteer covers its locale's admin forms across all countries, not just one.
 
-- [ ] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Denmark']` includes `Danmark`.
-- [ ] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Sweden › Jönköping']` includes `Jönköpings län`.
-- [ ] Rewrite the build scripts to emit canonical paths AND locale-canonical admin forms for the language's primary scope.
-- [ ] `mergeTranslations` (in `merge.ts`, Task 1.3) already accepts canonical path keys — no engine change.
-- [ ] PASS. Commit `feat(gazetteers): language gazetteers key translations by canonical path + add locale admin forms`.
+- [x] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Denmark']` includes `Danmark`.
+- [x] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Sweden › Jönköping']` includes `Jönköpings län`.
+- [x] Rewrite the build scripts to emit canonical paths AND locale-canonical admin forms for the language's primary scope.
+- [x] `mergeTranslations` (in `merge.ts`, Task 1.3) already accepts canonical path keys — no engine change.
+- [x] PASS. Commit `feat(gazetteers): language gazetteers key translations by canonical path + add locale admin forms`.
 
 **Important:** translations apply *only* to scaffolding nodes (admin division names like `Sweden → Sverige`, `Jönköping → Jönköpings län`). They never touch leaves — leaf aliases stay exactly as the leaf-emitting source gazetteer authored them, per the no-cross-source rule.
 
@@ -1199,28 +1199,28 @@ These forms come from GeoNames `alternateNames.txt` filtered by `isolanguage=sv`
 - Modify: `src/api/place-gazetteers/resolver.ts`
 - Modify: `src/main/ipc/gazetteers.ts` (the MCP `resolve_place` path, if applicable)
 
-- [ ] **PlacePicker** — `runSearch` walks the merged tree. Each result row carries the leaf's single `__gazetteer` source for the badge. Two same-named contributions under the same scaffolding parent become two distinct rows, each with its own badge — never one row labelled "N sources." Drop the legacy `cand.gazetteer` dedup-key construction (it always produced N copies; now there is one tree).
-- [ ] **PlaceTreePickerModal + breadcrumb rendering — locale-aware display.** The tree view walks the merged tree (`gazetteers[0].root` plus `gazetteers[0].allRoots ?? []` siblings). For display, the picker prefers the locale-canonical form of admin division names: when the user's locale is `sv-SE` and a scaffolding node has aliases like `['Jönköpings län']` from `lang-sv-geonames`, render `Jönköpings län` as the breadcrumb segment instead of the canonical `Jönköping`. Implementation: a small helper `displayName(node, locale)` that picks the first alias from a locale-tagged source if available, falls back to `node.name`. Aliases keep their source provenance via the language gazetteer's `id`. Matching logic stays unchanged — search by either form still resolves to the same canonical node.
-- [ ] **resolver.ts** — `resolveHierarchical`, `resolvePlace`, `searchGazetteer` walk the merged tree. Each returned `PlaceResolveResult.gazetteer` is a single source ID. The cross-gazetteer contradiction-scoring still applies for genuinely ambiguous matches (Dirleton Scotland vs. Canada — different scaffolding parents).
-- [ ] Tests: extend `tests/unit/place-resolver.test.ts` with a "Eksjö, Sverige resolves through canonical scaffolding" assertion — the matchedPath traverses `World > Europe > Sweden > Jönköpings län > Eksjö kommun`, and each surviving candidate carries its single source ID.
-- [ ] PASS. Commit `feat(gazetteers): renderer and resolver consume merged tree`.
+- [x] **PlacePicker** — `runSearch` walks the merged tree. Each result row carries the leaf's single `__gazetteer` source for the badge. Two same-named contributions under the same scaffolding parent become two distinct rows, each with its own badge — never one row labelled "N sources." Drop the legacy `cand.gazetteer` dedup-key construction (it always produced N copies; now there is one tree).
+- [x] **PlaceTreePickerModal + breadcrumb rendering — locale-aware display.** The tree view walks the merged tree (`gazetteers[0].root` plus `gazetteers[0].allRoots ?? []` siblings). For display, the picker prefers the locale-canonical form of admin division names: when the user's locale is `sv-SE` and a scaffolding node has aliases like `['Jönköpings län']` from `lang-sv-geonames`, render `Jönköpings län` as the breadcrumb segment instead of the canonical `Jönköping`. Implementation: a small helper `displayName(node, locale)` that picks the first alias from a locale-tagged source if available, falls back to `node.name`. Aliases keep their source provenance via the language gazetteer's `id`. Matching logic stays unchanged — search by either form still resolves to the same canonical node.
+- [x] **resolver.ts** — `resolveHierarchical`, `resolvePlace`, `searchGazetteer` walk the merged tree. Each returned `PlaceResolveResult.gazetteer` is a single source ID. The cross-gazetteer contradiction-scoring still applies for genuinely ambiguous matches (Dirleton Scotland vs. Canada — different scaffolding parents).
+- [x] Tests: extend `tests/unit/place-resolver.test.ts` with a "Eksjö, Sverige resolves through canonical scaffolding" assertion — the matchedPath traverses `World > Europe > Sweden > Jönköpings län > Eksjö kommun`, and each surviving candidate carries its single source ID.
+- [x] PASS. Commit `feat(gazetteers): renderer and resolver consume merged tree`.
 
 ### Task 7.3: User verification — every consumer
 
-- [ ] Run app: `npm start` (no env flag — V2 is default after Phase 1).
-- [ ] Place picker, place panel breadcrumb, map polygon, MCP `resolve_place`, gazetteer config UI all behave correctly.
-- [ ] Sign off.
-- [ ] Commit empty `chore(gazetteers): consumers verified on merged tree`.
+- [x] Run app: `npm start` (no env flag — V2 is default after Phase 1).
+- [x] Place picker, place panel breadcrumb, map polygon, MCP `resolve_place`, gazetteer config UI all behave correctly.
+- [x] Sign off.
+- [x] Commit empty `chore(gazetteers): consumers verified on merged tree`.
 
 ### Task 7.4: Imported user-gazetteer policy (deferred from design §11)
 
 The design spec left open whether imported (third-party) gazetteers in the legacy self-rooted shape are accepted with a build-time rewrite or rejected with a migration error. Decide here.
 
-- [ ] **Step 1:** Survey `src/api/gazetteers.ts` for the import path. Determine if any user-importable schema validation exists today.
-- [ ] **Step 2:** Decision: **reject legacy shape on import**, surface a one-line migration message pointing at the new contract docs. Rationale: the import feature is months old, likely no third-party gazetteers in the wild, and silent rewrite hides errors that the contributor needs to see.
-- [ ] **Step 3:** Update `src/api/gazetteers.ts` import validation to require `shape` and reject otherwise.
-- [ ] **Step 4:** Test: `tests/unit/gazetteers-crud.test.ts` extends with a "rejects shape-less import" case.
-- [ ] **Step 5:** Commit.
+- [x] **Step 1:** Survey `src/api/gazetteers.ts` for the import path. Determine if any user-importable schema validation exists today.
+- [x] **Step 2:** Decision: **reject legacy shape on import**, surface a one-line migration message pointing at the new contract docs. Rationale: the import feature is months old, likely no third-party gazetteers in the wild, and silent rewrite hides errors that the contributor needs to see.
+- [x] **Step 3:** Update `src/api/gazetteers.ts` import validation to require `shape` and reject otherwise.
+- [x] **Step 4:** Test: `tests/unit/gazetteers-crud.test.ts` extends with a "rejects shape-less import" case.
+- [x] **Step 5:** Commit.
 
 ---
 
@@ -1234,10 +1234,10 @@ The design spec left open whether imported (third-party) gazetteers in the legac
 
 After Phase 7 every gazetteer is migrated. Now tighten the type system to prevent regression.
 
-- [ ] **Step 1:** Tighten `GazetteerNode.type: GazetteerNodeType`. Build will fail anywhere a free-form string survives — fix or convert to `'other'` + alias.
-- [ ] **Step 2:** Un-skip `'every node type is in the closed vocabulary'` in `tests/unit/gazetteer-hierarchy.test.ts`. Run — expect PASS.
-- [ ] **Step 3:** `npm test && npm run lint` → all green.
-- [ ] **Step 4:** Commit
+- [x] **Step 1:** Tighten `GazetteerNode.type: GazetteerNodeType`. Build will fail anywhere a free-form string survives — fix or convert to `'other'` + alias.
+- [x] **Step 2:** Un-skip `'every node type is in the closed vocabulary'` in `tests/unit/gazetteer-hierarchy.test.ts`. Run — expect PASS.
+- [x] **Step 3:** `npm test && npm run lint` → all green.
+- [x] **Step 4:** Commit
 
 ```bash
 git commit -am "feat(gazetteers): tighten GazetteerNode.type to closed vocabulary"
@@ -1251,14 +1251,14 @@ git commit -am "feat(gazetteers): tighten GazetteerNode.type to closed vocabular
 - Modify: `docs/PLAN.md`, `docs/plans/archive/PLAN.md`
 - Modify: `package.json`, `CHANGELOG.md`
 
-- [ ] Update the gazetteer skill to reflect the new contract (shape, contributions, scaffolding privilege, closed vocab, canonical-path translation keys).
-- [ ] Update CLAUDE.md gazetteer references.
-- [ ] Move this plan and its design sibling to `docs/plans/archive/` via `git mv`.
-- [ ] Append a one-paragraph entry to `docs/plans/archive/PLAN.md` (matching existing format).
-- [ ] Remove the milestone block from `docs/PLAN.md`.
-- [ ] Bump `package.json` minor version (feature). Add `## Unreleased` line in `CHANGELOG.md`.
-- [ ] Tick every checkbox in this plan file as `[x]`.
-- [ ] Commit `chore: archive completed global-gazetteer-hierarchy plan`.
+- [x] Update the gazetteer skill to reflect the new contract (shape, contributions, scaffolding privilege, closed vocab, canonical-path translation keys).
+- [x] Update CLAUDE.md gazetteer references.
+- [x] Move this plan and its design sibling to `docs/plans/archive/` via `git mv`.
+- [x] Append a one-paragraph entry to `docs/plans/archive/PLAN.md` (matching existing format).
+- [x] Remove the milestone block from `docs/PLAN.md`.
+- [x] Bump `package.json` minor version (feature). Add `## Unreleased` line in `CHANGELOG.md`.
+- [x] Tick every checkbox in this plan file as `[x]`.
+- [x] Commit `chore: archive completed global-gazetteer-hierarchy plan`.
 
 ---
 

@@ -157,29 +157,37 @@ async function main() {
   }
   console.log(`  ${byCode.size} unique parishes`);
 
-  // Step 3a: Build parish-name → (region, kommune) lookup from dk-sogne.json.
-  console.log('Building parish → (region, kommune) lookup from dk-sogne.json...');
-  const DK_SOGNE_PATH = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'dk-sogne.json');
+  // Step 3a: Build parish-name → (region, kommune) lookup from dk-sogne.json + dk-sogne-dawa.json.
+  // Wikidata (dk-sogne) and DAWA (dk-sogne-dawa) have non-identical parish coverage; consulting
+  // both raises the polygon→kommune mapping rate for older / merged parishes.
+  console.log('Building parish → (region, kommune) lookup from dk-sogne.json + dk-sogne-dawa.json...');
   const parentByParish: Record<string, { region: string; kommune: string }> = {};
-  if (fs.existsSync(DK_SOGNE_PATH)) {
-    const dkSogne = JSON.parse(fs.readFileSync(DK_SOGNE_PATH, 'utf-8'));
-    const denmark = dkSogne.root?.children?.[0]?.children?.[0];
+  function indexParishesFrom(srcPath: string, label: string): number {
+    if (!fs.existsSync(srcPath)) {
+      console.warn(`  ${label} not found; skipping.`);
+      return 0;
+    }
+    const dk = JSON.parse(fs.readFileSync(srcPath, 'utf-8'));
+    // Walk World > Europe > Denmark > <region> > <kommune> > <parish>
+    const denmark = dk.root?.children?.[0]?.children?.[0];
+    let added = 0;
     for (const region of denmark?.children ?? []) {
       for (const kommune of region.children ?? []) {
         for (const parish of kommune.children ?? []) {
           const entry = { region: region.name, kommune: kommune.name };
-          if (!parentByParish[parish.name]) parentByParish[parish.name] = entry;
+          if (!parentByParish[parish.name]) { parentByParish[parish.name] = entry; added++; }
           // Aliases include the bare 'X' form matching ok-dk/dagi's SOGNENAVN.
           for (const alias of parish.aliases ?? []) {
-            if (!parentByParish[alias]) parentByParish[alias] = entry;
+            if (!parentByParish[alias]) { parentByParish[alias] = entry; added++; }
           }
         }
       }
     }
-    console.log(`  ${Object.keys(parentByParish).length} parish-name→(region, kommune) entries (incl. aliases)`);
-  } else {
-    console.warn('  dk-sogne.json not found; polygons will attach directly under Denmark.');
+    return added;
   }
+  const a1 = indexParishesFrom(path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'dk-sogne.json'), 'dk-sogne.json');
+  const a2 = indexParishesFrom(path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'dk-sogne-dawa.json'), 'dk-sogne-dawa.json');
+  console.log(`  ${Object.keys(parentByParish).length} parish-name→(region, kommune) entries (dk-sogne: +${a1}; dk-sogne-dawa: +${a2})`);
 
   // Step 3b: Build polygon nodes, group by (region, kommune).
   type Bucket = { region: string; kommune: string; nodes: GazetteerNode[] };

@@ -2,200 +2,219 @@
   "id": "sv-landskap",
   "name": "Svenska landskap",
   "locale": "sv",
-  "description": "Sveriges 25 historiska landskap",
+  "description": "Sveriges 25 historiska landskap, typade som admin1 under Sverige (parallell axel till län).",
   "source": {
     "name": "Wikidata",
     "url": "https://www.wikidata.org/wiki/Q193556",
     "license": "CC0 1.0",
-    "fetched": "2026-05-01"
+    "fetched": "2026-05-03"
   },
   "kind": "point",
   "root": {
-    "name": "Sverige (landskap)",
-    "type": "country",
-    "lat": 62,
-    "lon": 15,
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
     "children": [
       {
-        "name": "Blekinge",
-        "type": "landskap",
-        "lat": 56.333333,
-        "lon": 15.333333
-      },
-      {
-        "name": "Bohuslän",
-        "type": "landskap",
-        "lat": 58.248,
-        "lon": 11.887
-      },
-      {
-        "name": "Dalarna",
-        "type": "landskap",
-        "lat": 60.866667,
-        "lon": 14.733333
-      },
-      {
-        "name": "Dalsland",
-        "type": "landskap",
-        "lat": 58.851944,
-        "lon": 12.161111
-      },
-      {
-        "name": "Gotland",
-        "type": "landskap",
-        "lat": 57.5,
-        "lon": 18.55
-      },
-      {
-        "name": "Gästrikland",
-        "type": "landskap",
-        "lat": 60.557,
-        "lon": 16.793
-      },
-      {
-        "name": "Halland",
-        "type": "landskap",
-        "lat": 56.75,
-        "lon": 13,
-        "aliases": [
-          "Halläning",
-          "Hallänning"
+        "name": "Europe",
+        "type": "continent",
+        "lat": 54,
+        "lon": 15,
+        "children": [
+          {
+            "name": "Sweden",
+            "type": "country",
+            "aliases": [
+              "Sverige"
+            ],
+            "lat": 62,
+            "lon": 15,
+            "children": [
+              {
+                "name": "Blekinge",
+                "type": "admin1",
+                "lat": 56.333333,
+                "lon": 15.333333
+              },
+              {
+                "name": "Bohuslän",
+                "type": "admin1",
+                "lat": 58.248,
+                "lon": 11.887
+              },
+              {
+                "name": "Dalarna",
+                "type": "admin1",
+                "lat": 60.866667,
+                "lon": 14.733333
+              },
+              {
+                "name": "Dalsland",
+                "type": "admin1",
+                "lat": 58.851944,
+                "lon": 12.161111
+              },
+              {
+                "name": "Gotland",
+                "type": "admin1",
+                "lat": 57.5,
+                "lon": 18.55
+              },
+              {
+                "name": "Gästrikland",
+                "type": "admin1",
+                "lat": 60.557,
+                "lon": 16.793
+              },
+              {
+                "name": "Halland",
+                "type": "admin1",
+                "lat": 56.75,
+                "lon": 13,
+                "aliases": [
+                  "Halläning",
+                  "Hallänning"
+                ]
+              },
+              {
+                "name": "Hälsingland",
+                "type": "admin1",
+                "lat": 61.512,
+                "lon": 16.507
+              },
+              {
+                "name": "Härjedalen",
+                "type": "admin1",
+                "lat": 62.25,
+                "lon": 13.95,
+                "aliases": [
+                  "Härjeådalen"
+                ]
+              },
+              {
+                "name": "Jämtland",
+                "type": "admin1",
+                "lat": 63.5,
+                "lon": 14.5
+              },
+              {
+                "name": "Lappland",
+                "type": "admin1",
+                "lat": 65.929,
+                "lon": 16.743,
+                "aliases": [
+                  "Lapland",
+                  "Lapplands skogar",
+                  "Svenska Lappland"
+                ]
+              },
+              {
+                "name": "Medelpad",
+                "type": "admin1",
+                "lat": 62.6,
+                "lon": 16.25
+              },
+              {
+                "name": "Norrbotten",
+                "type": "admin1",
+                "lat": 66,
+                "lon": 23
+              },
+              {
+                "name": "Närke",
+                "type": "admin1",
+                "lat": 59.243,
+                "lon": 15.271,
+                "aliases": [
+                  "Nerike",
+                  "Närking"
+                ]
+              },
+              {
+                "name": "Skåne",
+                "type": "admin1",
+                "lat": 55.8,
+                "lon": 13.616667
+              },
+              {
+                "name": "Småland",
+                "type": "admin1",
+                "lat": 57.101111,
+                "lon": 14.898056,
+                "aliases": [
+                  "Småländsk",
+                  "Smålänning"
+                ]
+              },
+              {
+                "name": "Södermanland",
+                "type": "admin1",
+                "lat": 59,
+                "lon": 17,
+                "aliases": [
+                  "Sörmland"
+                ]
+              },
+              {
+                "name": "Uppland",
+                "type": "admin1",
+                "lat": 60,
+                "lon": 18
+              },
+              {
+                "name": "Värmland",
+                "type": "admin1",
+                "lat": 59.75,
+                "lon": 13.25,
+                "aliases": [
+                  "Wermeland",
+                  "Wermelandia",
+                  "Wermland"
+                ]
+              },
+              {
+                "name": "Västerbotten",
+                "type": "admin1",
+                "lat": 64.25,
+                "lon": 20.25
+              },
+              {
+                "name": "Västergötland",
+                "type": "admin1",
+                "lat": 57.728,
+                "lon": 12.7
+              },
+              {
+                "name": "Västmanland",
+                "type": "admin1",
+                "lat": 59.75,
+                "lon": 16.333333
+              },
+              {
+                "name": "Ångermanland",
+                "type": "admin1",
+                "lat": 63.154,
+                "lon": 17.238,
+                "aliases": [
+                  "Ångermanlands landskap"
+                ]
+              },
+              {
+                "name": "Öland",
+                "type": "admin1",
+                "lat": 56.733333,
+                "lon": 16.666667
+              },
+              {
+                "name": "Östergötland",
+                "type": "admin1",
+                "lat": 58.415833,
+                "lon": 15.625278
+              }
+            ]
+          }
         ]
-      },
-      {
-        "name": "Hälsingland",
-        "type": "landskap",
-        "lat": 61.512,
-        "lon": 16.507
-      },
-      {
-        "name": "Härjedalen",
-        "type": "landskap",
-        "lat": 62.25,
-        "lon": 13.95,
-        "aliases": [
-          "Härjeådalen"
-        ]
-      },
-      {
-        "name": "Jämtland",
-        "type": "landskap",
-        "lat": 63.5,
-        "lon": 14.5
-      },
-      {
-        "name": "Lappland",
-        "type": "landskap",
-        "lat": 65.929,
-        "lon": 16.743,
-        "aliases": [
-          "Lapland",
-          "Lapplands skogar",
-          "Svenska Lappland"
-        ]
-      },
-      {
-        "name": "Medelpad",
-        "type": "landskap",
-        "lat": 62.6,
-        "lon": 16.25
-      },
-      {
-        "name": "Norrbotten",
-        "type": "landskap",
-        "lat": 66,
-        "lon": 23
-      },
-      {
-        "name": "Närke",
-        "type": "landskap",
-        "lat": 59.243,
-        "lon": 15.271,
-        "aliases": [
-          "Nerike",
-          "Närking"
-        ]
-      },
-      {
-        "name": "Skåne",
-        "type": "landskap",
-        "lat": 55.8,
-        "lon": 13.616667
-      },
-      {
-        "name": "Småland",
-        "type": "landskap",
-        "lat": 57.101111,
-        "lon": 14.898056,
-        "aliases": [
-          "Småländsk",
-          "Smålänning"
-        ]
-      },
-      {
-        "name": "Södermanland",
-        "type": "landskap",
-        "lat": 59,
-        "lon": 17,
-        "aliases": [
-          "Sörmland"
-        ]
-      },
-      {
-        "name": "Uppland",
-        "type": "landskap",
-        "lat": 60,
-        "lon": 18
-      },
-      {
-        "name": "Värmland",
-        "type": "landskap",
-        "lat": 59.75,
-        "lon": 13.25,
-        "aliases": [
-          "Wermeland",
-          "Wermelandia",
-          "Wermland"
-        ]
-      },
-      {
-        "name": "Västerbotten",
-        "type": "landskap",
-        "lat": 64.25,
-        "lon": 20.25
-      },
-      {
-        "name": "Västergötland",
-        "type": "landskap",
-        "lat": 57.728,
-        "lon": 12.7
-      },
-      {
-        "name": "Västmanland",
-        "type": "landskap",
-        "lat": 59.75,
-        "lon": 16.333333
-      },
-      {
-        "name": "Ångermanland",
-        "type": "landskap",
-        "lat": 63.154,
-        "lon": 17.238,
-        "aliases": [
-          "Ångermanlands landskap"
-        ]
-      },
-      {
-        "name": "Öland",
-        "type": "landskap",
-        "lat": 56.733333,
-        "lon": 16.666667
-      },
-      {
-        "name": "Östergötland",
-        "type": "landskap",
-        "lat": 58.415833,
-        "lon": 15.625278
       }
     ]
   }
