@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.210.1
+
+- fix(gazetteers): translation-only language gazetteers carrying the legacy `kind: 'language'` discriminator (instead of the new `shape: 'language'`) were being walked as data gazetteers, so their Swedish/historical aliases never reached the merged tree; loader now treats both as synonyms
+- fix(gazetteers): län-letter codes (e.g. "Solna (B)" → Stockholm) and historical län aliases re-attach under the new World > Europe > Sweden > <län> path, where each län's `name` is the bare form and the genitive lives in aliases
+- fix(gazetteers): `loadGazetteers` returns an empty array when no gazetteers are enabled (was a synthetic empty-World shell)
+- feat(gazetteers): `sv-sockenstad-boundaries` and `dk-sogne-boundaries` cross-reference both modern and church/Wikidata + DAWA parish gazetteers when looking up parent-admin chains, raising the polygon→kommun match rate for older / merged parishes (sv: 198 → 106 unmapped of 2473; dk: ~67 → 2 unmapped of 2148)
+
 ## 0.210.0
 
 - feat(gazetteers): global gazetteer hierarchy migration. The picker, panel breadcrumb, resolver, and map now see one canonical place hierarchy rooted at `World` (with `World (Historical)` as a sibling super-root). Every per-country and per-source gazetteer emits a self-rooted tree typed by the closed admin vocabulary `world | continent | country | admin{N}`. The structural-merge engine collapses same-`(name, type, parent_path)` nodes across sources — Eksjö kommun is one node with `__contributors` listing every gazetteer that contributed to it. Resolver verified end-to-end across SE/FI/NO/DK/IS/US/CA/DE plus `World (Historical)` for historical empires. `GazetteerNode.type` tightened to the closed type. Imported user gazetteers must root at `World` or `World (Historical)`.
