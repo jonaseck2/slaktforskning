@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(mcp): place tools (`add_place`, `update_place`, `record_event`) now reject comma-strings in `name`/`place` and accept an explicit `parent_chain` / `place_chain` (root → leaf) — closes the "Chennai, India, World, India, World" RCA where an agent's path-shaped string got persisted verbatim as a place name
 - fix: places map keeps its zoom and pan when you set a pin — no more snapping back to Sweden after every map click
 - fix: place modal now previews gazetteer resolution (parent, type, coords) inline like the side panel does
 - fix: place panel name field is a plain editable text input — picking from the old name picker no longer silently overwrites parent/type/coords

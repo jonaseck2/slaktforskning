@@ -14,11 +14,12 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
   const { getDb } = ctx;
 
   server.registerTool('add_place', {
-    description: 'Create a new place record',
+    description: 'Create a new place record. `name` must be a single geographic component (e.g. "Chennai", "Mosås"), never a comma-separated path. To express hierarchy, pass `parent_chain` (root → leaf, excluding the leaf) — missing ancestors are created automatically. Coordinates and country are derived from the gazetteer at render time; persist them only when the user authored them explicitly.',
     inputSchema: {
-      name: z.string().describe('Place name'),
+      name: z.string().describe('Place name as a single component (no commas). For "Chennai, India, World" pass name: "Chennai" + parent_chain: ["World", "India"].'),
+      parent_chain: z.array(z.string()).optional().describe('Optional ancestor chain, root → leaf, EXCLUDING the leaf itself. e.g. for "Chennai" in India: ["World", "India"]. Missing rows are created; existing ones are reused (matched by parent + normalized name).'),
       place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional().describe('Place type'),
-      parent_place_id: z.string().optional().describe('Parent place ID'),
+      parent_place_id: z.string().optional().describe('Parent place ID. Mutually exclusive with `parent_chain` — prefer `parent_chain` when you can name the ancestors.'),
       latitude: z.number().optional().describe('Latitude coordinate'),
       longitude: z.number().optional().describe('Longitude coordinate'),
       date_from: z.string().optional().describe('Date from (ISO format)'),
@@ -26,7 +27,18 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       notes: z.string().optional().describe('Notes about the place'),
     },
   }, async (args) => {
-    const place = placeApi.createPlace(getDb(), args);
+    placeApi.assertLeafPlaceName(args.name);
+    const { parent_chain, ...rest } = args;
+    if (parent_chain && parent_chain.length > 0) {
+      for (const link of parent_chain) placeApi.assertLeafPlaceName(link);
+      const place = placeApi.findOrCreatePlaceWithChain(
+        getDb(),
+        rest.name,
+        parent_chain.map((n) => ({ name: n })),
+      );
+      return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
+    }
+    const place = placeApi.createPlace(getDb(), rest);
     return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
   });
 
@@ -91,10 +103,10 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('update_place', {
-    description: 'Update an existing place (name, place_type, parent_place_id, latitude/longitude, date_from/to, notes, street/postal_code/city/country). Use to fix typos, attach to a parent, or correct a misclassified place_type.',
+    description: 'Update an existing place (name, place_type, parent_place_id, latitude/longitude, date_from/to, notes, street/postal_code/city/country). Use to fix typos, attach to a parent, or correct a misclassified place_type. `name`, when provided, must be a single geographic component (no commas) — to re-parent, pass `parent_place_id`.',
     inputSchema: {
       id: z.string().describe('Place ID'),
-      name: z.string().optional(),
+      name: z.string().optional().describe('New name as a single component (no commas). To re-parent, use parent_place_id instead.'),
       place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional(),
       parent_place_id: z.string().optional(),
       latitude: z.number().optional(),
@@ -109,6 +121,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
+    if (data.name !== undefined) placeApi.assertLeafPlaceName(data.name);
     const place = placeApi.updatePlace(getDb(), id, data);
     return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
   });

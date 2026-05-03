@@ -20,6 +20,7 @@ export interface RecordEventArgs {
   date_type?: string;
   date_original?: string;
   place?: string;
+  place_chain?: string[];
   source_title?: string;
   source_page?: string;
   confidence?: number;
@@ -36,10 +37,26 @@ export interface RecordEventResult {
 }
 
 export function recordEventWorkflow(db: Database, args: RecordEventArgs): RecordEventResult {
+  if (args.place && args.place_chain && args.place_chain.length > 0) {
+    throw new Error(
+      'Pass either `place` (single component) or `place_chain` (root → leaf, including the leaf), not both.',
+    );
+  }
   db.exec('BEGIN');
   try {
     let place_id: string | null = null;
-    if (args.place) {
+    if (args.place_chain && args.place_chain.length > 0) {
+      for (const link of args.place_chain) placeApi.assertLeafPlaceName(link);
+      const leaf = args.place_chain[args.place_chain.length - 1];
+      const ancestors = args.place_chain.slice(0, -1);
+      const place = placeApi.findOrCreatePlaceWithChain(
+        db,
+        leaf,
+        ancestors.map((n) => ({ name: n })),
+      );
+      place_id = place.id;
+    } else if (args.place) {
+      placeApi.assertLeafPlaceName(args.place);
       const place = placeApi.findOrCreatePlace(db, args.place);
       place_id = place.id;
     }
@@ -109,7 +126,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
   const { getDb } = ctx;
 
   server.registerTool('record_event', {
-    description: 'Record a life event for one or more persons, optionally with place and source citation in one step. For fact-shaped events (occupation, residence, religion, education, title, description), put the fact value (e.g. "Carpenter") in the `value` field — maps to GEDCOM-X Fact.value. The legacy `description` parameter is deprecated; use `notes` for free-form prose.',
+    description: 'Record a life event for one or more persons, optionally with place and source citation in one step. Place input: pass `place` for a single leaf component (e.g. "Chennai"), or `place_chain` for an explicit root → leaf hierarchy (e.g. ["World", "India", "Chennai"]) — never both, and never a comma-string in `place`. For fact-shaped events (occupation, residence, religion, education, title, description), put the fact value (e.g. "Carpenter") in the `value` field — maps to GEDCOM-X Fact.value. The legacy `description` parameter is deprecated; use `notes` for free-form prose.',
     inputSchema: {
       event_type: z.string().describe('Event type (e.g. birth, death, marriage, census, baptism)'),
       person_id: z.string().optional().describe('Primary participant person ID (use this for a single person)'),
@@ -122,7 +139,8 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       date_value_end: z.string().optional().describe('End-of-range date value. Required to express a range with date_type "between" (e.g. military service 1999–2000). Ignored when date_type is omitted.'),
       date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
       date_original: z.string().optional().describe('Original date text as it appears in the source'),
-      place: z.string().optional().describe('Place name — creates or reuses an existing place'),
+      place: z.string().optional().describe('Place name as a single component (no commas). Creates or reuses a place row. For hierarchy use `place_chain` instead. Mutually exclusive with `place_chain`.'),
+      place_chain: z.array(z.string()).optional().describe('Explicit place hierarchy, root → leaf, INCLUDING the leaf as the last element (e.g. ["World", "India", "Chennai"]). Missing rows are created; existing ones are reused. Mutually exclusive with `place`.'),
       source_title: z.string().optional().describe('Source document title; reuses existing source if title matches'),
       source_page: z.string().optional().describe('Page or reference within the source'),
       confidence: z.number().min(0).max(3).optional().describe('Source confidence: 0=Unreliable, 1=Questionable, 2=Secondary, 3=Primary'),

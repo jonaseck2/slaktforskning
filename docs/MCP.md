@@ -47,7 +47,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 | Tool | Description |
 |------|-------------|
-| `record_event` | Record a life event with participants, place, and an optional citation. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. Date ranges (`date_type: "between"`) use `date_value` for the start and `date_value_end` for the end (e.g. military service 1999–2000). The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
+| `record_event` | Record a life event with participants, place, and an optional citation. Place input: `place` for a single leaf component (e.g. `"Chennai"`), or `place_chain` for an explicit root → leaf hierarchy including the leaf (e.g. `["World", "India", "Chennai"]`) — never both, and never a comma-string in `place`. For fact-shaped events (occupation, religion, education, title, etc.) pass the primary value via `value` (e.g. `"Carpenter"`, `"Lutheran"`); free-form prose goes in `notes`. Date ranges (`date_type: "between"`) use `date_value` for the start and `date_value_end` for the end (e.g. military service 1999–2000). The legacy `description` parameter is accepted as a deprecated alias for `notes`. |
 | `get_timeline` | Chronological timeline of a person's events merged with key family events (spouse/children births and deaths). |
 | `update_event` | Update event fields. Place can be supplied as a string (resolved to place_id via findOrCreate). Same `value` / `notes` / deprecated `description` semantics as `record_event`. |
 | `delete_event` | Delete an event and all of its participant links. |
@@ -67,15 +67,17 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 ### Places
 
+> **Place input convention.** Every place tool that accepts a name (`add_place`, `update_place`, `record_event`) treats `name` / `place` as a **single geographic component** — `"Chennai"`, `"Mosås"`, `"Sverige"`. Comma-separated paths like `"Chennai, India, World"` are rejected. To express hierarchy, pass `parent_chain` (on `add_place`, root → leaf, EXCLUDING the leaf) or `place_chain` (on `record_event`, root → leaf, INCLUDING the leaf). Missing ancestor rows are created and existing ones reused, matched by parent + normalized name. Coordinates and country come from the gazetteer at render time — persist them only when the user authored them explicitly.
+
 | Tool | Description |
 |------|-------------|
-| `add_place` | Create a place record (name, place_type, parent_place_id, lat/lon, date_from/to, notes, address fields). |
+| `add_place` | Create a place record. `name` is a single component (no commas). Pass `parent_chain` (root → leaf, excluding the leaf) to express hierarchy — missing ancestors are created. Other fields: place_type, parent_place_id, lat/lon, date_from/to, notes, address fields. |
 | `search_places` | Search places by name. Returns id, name, place_type, parent name. |
 | `get_place_history` | All events at a place chronologically, with participant names and roles. |
 | `resolve_place` | Resolve a place name string against available gazetteers. Returns coordinates and matched node. |
 | `list_place_children` | Children of a place (next level down in the hierarchy). |
 | `get_place_ancestors` | Ancestor chain (root → self) for a place. |
-| `update_place` | Update a place (name, type, parent, coordinates, dates, address fields). |
+| `update_place` | Update a place (name, type, parent, coordinates, dates, address fields). `name` must be a single component — re-parent via `parent_place_id`. |
 | `delete_place` | Delete a place. Events at this place have place_id NULL'd; child places become orphans. |
 
 ### Research
