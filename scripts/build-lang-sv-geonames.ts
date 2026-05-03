@@ -134,42 +134,45 @@ function readGazetteers(
   countryNames: Set<string>;
   iso2ToCountryName: Map<string, string>;
   admin1CodeToAdmin1Name: Map<string, string>;
+  countryNameToContinent: Map<string, string>;
 } {
   const countriesGaz: Gazetteer = JSON.parse(fs.readFileSync(countriesPath, 'utf-8'));
   const admin1Gaz: Gazetteer = JSON.parse(fs.readFileSync(admin1Path, 'utf-8'));
 
   const countryNames = new Set<string>();
   const iso2ToCountryName = new Map<string, string>();
+  const countryNameToContinent = new Map<string, string>();
 
-  // Extract country info from world-countries.json
-  for (const node of countriesGaz.root.children ?? []) {
-    countryNames.add(node.name);
-    for (const alias of node.aliases ?? []) {
-      // Two-letter aliases are ISO2 codes
-      if (alias.length === 2) {
-        iso2ToCountryName.set(alias, node.name);
+  // Extract country info from world-countries.json (post-Phase-2.1 shape:
+  // root.children = continents, each continent's children = countries).
+  for (const continentNode of countriesGaz.root.children ?? []) {
+    const continentName = continentNode.name;
+    for (const node of continentNode.children ?? []) {
+      countryNames.add(node.name);
+      countryNameToContinent.set(node.name, continentName);
+      for (const alias of node.aliases ?? []) {
+        if (alias.length === 2) {
+          iso2ToCountryName.set(alias, node.name);
+        }
       }
     }
   }
 
-  // Extract admin1 info from world-admin1.json
-  // Key: "ISO2::admin1NameLower", Value: canonical admin1 name
+  // Extract admin1 info from world-admin1.json (post-Phase-2.2 shape:
+  // root.children = continents, each continent's children = countries with admin1).
+  // Key: "ISO2::admin1NameLower", Value: canonical admin1 name.
   const admin1CodeToAdmin1Name = new Map<string, string>();
-
-  for (const countryNode of admin1Gaz.root.children ?? []) {
-    // Find ISO2 alias
-    let iso2: string | null = null;
-    for (const alias of countryNode.aliases ?? []) {
-      if (alias.length === 2) {
-        iso2 = alias;
-        break;
+  for (const continentNode of admin1Gaz.root.children ?? []) {
+    for (const countryNode of continentNode.children ?? []) {
+      let iso2: string | null = null;
+      for (const alias of countryNode.aliases ?? []) {
+        if (alias.length === 2) { iso2 = alias; break; }
       }
-    }
-    if (!iso2) continue;
-
-    for (const admin1Node of countryNode.children ?? []) {
-      const lookupKey = `${iso2}::${admin1Node.name.toLowerCase()}`;
-      admin1CodeToAdmin1Name.set(lookupKey, admin1Node.name);
+      if (!iso2) continue;
+      for (const admin1Node of countryNode.children ?? []) {
+        const lookupKey = `${iso2}::${admin1Node.name.toLowerCase()}`;
+        admin1CodeToAdmin1Name.set(lookupKey, admin1Node.name);
+      }
     }
   }
 
@@ -177,6 +180,7 @@ function readGazetteers(
     countryNames,
     iso2ToCountryName,
     admin1CodeToAdmin1Name,
+    countryNameToContinent,
   };
 }
 
@@ -216,6 +220,7 @@ async function main() {
     countryNames,
     iso2ToCountryName,
     admin1CodeToAdmin1Name,
+    countryNameToContinent,
   } = readGazetteers(WORLD_COUNTRIES_FILE, WORLD_ADMIN1_FILE);
 
   console.log(`  Canonical countries: ${countryNames.size}`);
@@ -377,96 +382,84 @@ async function main() {
   }
 
   // Build translations output
-  // Structure: { "world-countries": { "Denmark": ["Danmark"], ... }, "world-admin1": { "Germany > Bavaria": ["Bayern"], ... } }
-  const countryTranslations: Record<string, string[]> = {};
-  const admin1Translations: Record<string, string[]> = {};
+  // Path-key format: canonical merged-tree path joined by ' › ' (U+203A) —
+  // mergeTranslations in merge.ts splits on this separator. Every key starts
+  // at 'World' (or 'World (Historical)' for sibling tree).
+  // Structure (single namespace; the target id key is informational):
+  //   { '__merged__': { 'World › Europe › Denmark': ['Danmark'], ... } }
+  const SEP = ' › ';
+  const translations: Record<string, string[]> = {};
 
-  // Countries
+  // Countries — keyed 'World › <continent> › <country>'.
   for (const [geonameId, entries] of svCountryNames) {
     const iso2 = geonameIdToIso2.get(geonameId);
     if (!iso2) continue;
     const canonicalName = iso2ToCountryName.get(iso2);
     if (!canonicalName) continue;
+    const continent = countryNameToContinent.get(canonicalName);
+    if (!continent) continue;
 
     const svName = pickBestName(entries);
-    // Only include if it differs from canonical English name
     if (svName === canonicalName) continue;
 
-    countryTranslations[canonicalName] = [svName];
+    translations[`World${SEP}${continent}${SEP}${canonicalName}`] = [svName];
   }
 
-  // Admin1
+  // Admin1 — keyed 'World › <continent> › <country> › <admin1>'.
   for (const [geonameId, entries] of svAdmin1Names) {
     const admin1Code = geonameIdToAdmin1Code.get(geonameId);
     if (!admin1Code) continue;
     const pathInfo = admin1CodeToPathKey.get(admin1Code);
     if (!pathInfo) continue;
+    const continent = countryNameToContinent.get(pathInfo.countryName);
+    if (!continent) continue;
 
     const svName = pickBestName(entries);
-    const pathKey = `${pathInfo.countryName} > ${pathInfo.admin1Name}`;
-
-    // Only include if it differs from canonical English admin1 name
     if (svName === pathInfo.admin1Name) continue;
 
-    admin1Translations[pathKey] = [svName];
+    translations[`World${SEP}${continent}${SEP}${pathInfo.countryName}${SEP}${pathInfo.admin1Name}`] = [svName];
   }
 
-  // Cities — build entries keyed as "Country > Admin1 > City" (or "Country > City"
-  // when admin1 is not found). These keys may not match any current node in
-  // world-admin1 (cities aren't in that gazetteer yet), but the resolver's
-  // mergeTranslations silently skips unmatched keys — so they're harmless now
-  // and will auto-activate if/when city nodes are added to world-admin1.
-  const cityTranslations: Record<string, string[]> = {};
+  // Cities — keyed 'World › <continent> › <country> › <admin1> › <city>'
+  // (or shorter chain when admin1 is unknown). The merge engine's lookup
+  // silently skips unmatched paths, so unknown city paths are harmless.
+  let cityCount = 0;
   for (const [geonameId, entries] of svCityNames) {
     const city = citiesByGeonameId.get(geonameId);
     if (!city) continue;
-
     const canonicalCountryName = iso2ToCountryName.get(city.iso2);
     if (!canonicalCountryName) continue;
+    const continent = countryNameToContinent.get(canonicalCountryName);
+    if (!continent) continue;
 
     const admin1Lookup = `${city.iso2}.${city.admin1Code}`;
     const admin1Info = admin1CodeToPathKey.get(admin1Lookup);
 
     const svName = pickBestName(entries);
-    if (svName === city.name) continue; // no exonym — skip
+    if (svName === city.name) continue;
 
-    // Path key: "Country > Admin1 > City" if admin1 known, else "Country > City"
     const pathKey = admin1Info
-      ? `${canonicalCountryName} > ${admin1Info.admin1Name} > ${city.name}`
-      : `${canonicalCountryName} > ${city.name}`;
-
-    cityTranslations[pathKey] = [svName];
+      ? `World${SEP}${continent}${SEP}${canonicalCountryName}${SEP}${admin1Info.admin1Name}${SEP}${city.name}`
+      : `World${SEP}${continent}${SEP}${canonicalCountryName}${SEP}${city.name}`;
+    translations[pathKey] = [svName];
+    cityCount++;
   }
 
-  console.log(`  Cities with exonyms: ${Object.keys(cityTranslations).length}`);
-
-  // Merge city translations into admin1Translations (same target gazetteer)
-  for (const [key, values] of Object.entries(cityTranslations)) {
-    admin1Translations[key] = values;
-  }
-
+  console.log(`  Cities with exonyms: ${cityCount}`);
   console.log(`\nTranslations:`);
-  console.log(`  Countries: ${Object.keys(countryTranslations).length}`);
-  console.log(`  Admin1 divisions + cities: ${Object.keys(admin1Translations).length}`);
+  console.log(`  Total keys: ${Object.keys(translations).length}`);
 
   // Spot-check
   const checks = [
-    { type: 'country', key: 'Denmark', expected: 'Danmark' },
-    { type: 'country', key: 'Germany', expected: 'Tyskland' },
-    { type: 'country', key: 'Brazil', expected: 'Brasilien' },
+    { key: `World${SEP}Europe${SEP}Denmark`, expected: 'Danmark' },
+    { key: `World${SEP}Europe${SEP}Germany`, expected: 'Tyskland' },
+    { key: `World${SEP}South America${SEP}Brazil`, expected: 'Brasilien' },
   ];
   for (const check of checks) {
-    const dict = check.type === 'country' ? countryTranslations : admin1Translations;
-    const val = dict[check.key];
+    const val = translations[check.key];
     const found = val ? val[0] : '(missing)';
     const ok = val && val[0] === check.expected ? 'ok' : 'FAIL';
     console.log(`  ${ok} ${check.key} -> ${found} (expected: ${check.expected})`);
-  }
-
-  // Also add country translations to world-admin1 — its country parent nodes
-  // need the same aliases so "São Paulo, Brasilien" fully matches.
-  for (const [countryName, svNames] of Object.entries(countryTranslations)) {
-    admin1Translations[countryName] = svNames;
   }
 
   // Build output gazetteer
@@ -477,7 +470,7 @@ async function main() {
     name: 'Swedish place names (GeoNames)',
     locale: 'sv',
     kind: 'language',
-    description: 'Swedish translations for countries, admin1 divisions, and major cities',
+    description: 'Swedish translations for countries, admin1 divisions, and major cities (canonical-path keys)',
     source: {
       name: 'GeoNames',
       url: 'https://www.geonames.org/',
@@ -486,8 +479,7 @@ async function main() {
     },
     root: { name: 'sv', type: 'language', lat: 0, lon: 0 },
     translations: {
-      'world-countries': sortedObject(countryTranslations),
-      'world-admin1': sortedObject(admin1Translations),
+      __merged__: sortedObject(translations),
     },
   };
 
