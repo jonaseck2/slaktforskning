@@ -79,10 +79,29 @@ function validateGazetteer(obj: unknown): Gazetteer {
     throw new Error('Missing required field "root"');
   }
   if (g.kind !== undefined && g.kind !== 'point' && g.kind !== 'boundary') {
+    // Language gazetteers (`kind: 'language'`) are bundled-only — they hook
+    // into specific bundled IDs and the project curates which translations
+    // overlay the canonical hierarchy. User imports must contribute geographic
+    // data (point or boundary).
     throw new Error('Field "kind" must be "point" or "boundary"');
   }
 
   validateNode(g.root, 'root');
+
+  // Imported gazetteers must follow the World-rooted contract introduced
+  // by the global-gazetteer-hierarchy migration. Reject legacy self-rooted
+  // imports (e.g. root.name === 'Sverige', 'Danmark', etc.) — they wouldn't
+  // structurally merge into the canonical hierarchy.
+  const root = g.root as { name?: unknown; type?: unknown };
+  if (root.name !== 'World' && root.name !== 'World (Historical)') {
+    throw new Error(
+      `Imported gazetteer root must be 'World' or 'World (Historical)' (got '${String(root.name)}'). ` +
+      `Self-rooted gazetteers (e.g. root.name='Sverige') are no longer supported — every gazetteer ` +
+      `emits a tree starting at the canonical World root, with admin levels typed via the closed ` +
+      `vocabulary 'world | continent | country | admin1 | admin2 | …'. ` +
+      `See .claude/skills/gazetteers/SKILL.md for the contract.`
+    );
+  }
 
   return obj as Gazetteer;
 }

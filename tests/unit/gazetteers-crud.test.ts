@@ -182,6 +182,39 @@ describe('importGazetteer', () => {
     const json = makePointGazetteer({ kind: 'language' });
     expect(() => importGazetteer(db, json)).toThrow('kind');
   });
+
+  it('rejects legacy self-rooted gazetteers (root.name not "World" or "World (Historical)")', () => {
+    const json = makePointGazetteer({
+      id: 'legacy-test',
+      root: {
+        name: 'Sverige',
+        type: 'country',
+        lat: 62,
+        lon: 15,
+        children: [{ name: 'Stockholm', type: 'city', lat: 59.33, lon: 18.07 }],
+      },
+    });
+    expect(() => importGazetteer(db, json)).toThrow(/root must be 'World'/);
+  });
+
+  it('accepts a World-rooted import', () => {
+    const json = makePointGazetteer({ id: 'world-rooted-test' });
+    expect(() => importGazetteer(db, json)).not.toThrow();
+  });
+
+  it("accepts a 'World (Historical)'-rooted import", () => {
+    const json = makePointGazetteer({
+      id: 'historical-test',
+      root: {
+        name: 'World (Historical)',
+        type: 'world',
+        lat: 0,
+        lon: 0,
+        children: [{ name: 'Holy Roman Empire', type: 'country', lat: 50, lon: 10 }],
+      },
+    });
+    expect(() => importGazetteer(db, json)).not.toThrow();
+  });
 });
 
 // ── exportGazetteer ──────────────────────────────────────────────────────────

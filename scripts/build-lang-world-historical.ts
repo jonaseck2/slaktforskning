@@ -162,13 +162,16 @@ async function main() {
 
   console.log('\nPhase 3: building translations map...');
 
+  // Path-key format: 'World (Historical) › <english entity name>' (joined
+  // by U+203A) — matches the merge engine's mergeTranslations split.
+  const SEP = ' › ';
   const translations: Record<string, string[]> = {};
   let withTranslations = 0;
 
   for (const [qid, englishName] of qidToName) {
     const labels = labelsByQid.get(qid);
     if (!labels || labels.size === 0) continue;
-    translations[englishName] = [...labels];
+    translations[`World (Historical)${SEP}${englishName}`] = [...labels];
     withTranslations++;
   }
 
@@ -202,7 +205,7 @@ async function main() {
     },
     root: { name: 'lang-world-historical', type: 'language', lat: 0, lon: 0 },
     translations: {
-      'world-historical': translations,
+      __merged__: translations,
     },
   };
 
