@@ -263,6 +263,12 @@ Most consuming code simplifies:
 - **`window.api.gazetteers.getBundled()`** — unchanged for the gazetteer-config UI. Disabling a contribution-shape gazetteer at runtime omits its contributions on the next load. **Scaffolding gazetteers (`world-continents`, `world-countries`, `world-admin1`, `world-admin2`) cannot be disabled and are hidden from the toggles UI** — disabling them would orphan every contribution.
 - **`MapView` / `PlacePanel` map pin lookup** — uses `resolveBoundary` against the merged tree. A leaf with a polygon shows its polygon; a sibling leaf without a polygon shows a point. Two siblings with polygons (e.g. parish polygon from one source, kommun boundary from another) render as two layers — they were separate leaves to begin with.
 
+### 9a. Re-source the data on every migration
+
+Each per-country migration is a re-source as well as a format change. The build-script rewrite + fresh fetch from the original source + updated `source.fetched: <YYYY-MM-DD>` ship as one commit. Migrating without re-fetching would carry stale admin codes / parish names forward into the new shape.
+
+Operational note: long-running fetches (Wikidata SPARQL, DAWA reverse-geocoding, Lantmäteriet/Kartverket/Statistics Canada GeoPackage exports, Statistics Finland WFS) run on the operator's machine, not in subagent sandboxes. Subagents handle the format migration against locally-fetched inputs. GeoNames country .zip files are small enough to re-fetch inline.
+
 ### 10. Migration order (informs the implementation plan)
 
 Reverse-dependency order (scaffolding first, leaves last). The legacy `loadGazetteers` is **replaced**, not run alongside — there is no flag, no parallel code path. Each step ships a CI-green commit; if anything regresses, revert that commit.
