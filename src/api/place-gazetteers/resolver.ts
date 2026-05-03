@@ -183,7 +183,19 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
       for (const child of node.children) walk(child, nextAncestors, normPath, pathNames);
     }
   }
-  walk(gaz.root, [], [], []);
+  // Walk every root the gazetteer exposes: the primary `root`, plus any
+  // sibling super-roots in `allRoots` (e.g. `World` + `World (Historical)`
+  // when historical gazetteers are loaded alongside modern ones). The
+  // merge engine emits a single `__merged__` Gazetteer with `allRoots`
+  // listing each top-level accumulator root.
+  if (gaz.root) walk(gaz.root, [], [], []);
+  const allRoots = (gaz as Gazetteer & { allRoots?: GazetteerNode[] }).allRoots;
+  if (allRoots) {
+    for (const r of allRoots) {
+      if (r === gaz.root) continue;
+      walk(r, [], [], []);
+    }
+  }
   nameIndexCache.set(gaz, index);
   return index;
 }
