@@ -316,6 +316,26 @@
 }
 .btn-cancel:hover { background: var(--surface-border); }
 
+/* Panel-host delete (Danger zone). Used at the bottom of every entity panel
+   that owns a deletable host entity. The pattern: an AppButton with
+   variant="secondary" (transparent + outlined) right-aligned in a
+   panel-danger-zone strip, with a trash icon and an entity-typed label,
+   that opens a ConfirmModal. */
+.panel-danger-zone {
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--surface-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+.trash-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: -4px;
+}
+
 /* ── 9. Modal ──────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;

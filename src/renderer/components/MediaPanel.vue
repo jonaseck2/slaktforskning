@@ -229,7 +229,27 @@
           <MediaChecksSection ref="checksSectionRef" :media-id="mediaId!" />
         </div>
       </div>
+
+      <!-- Danger zone: delete media -->
+      <div v-if="!props.readonly" class="panel-danger-zone">
+        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
+          <IconTrash class="trash-icon" />
+          <span>{{ $t('media.deleteMediaAction') }}</span>
+        </AppButton>
+      </div>
     </template>
+
+    <!-- Delete media confirmation -->
+    <ConfirmModal
+      :visible="showDeleteConfirm"
+      :title="$t('media.deleteConfirmTitle')"
+      :message="deleteConfirmMessage"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('media.deleteConfirmContinue')"
+      @cancel="showDeleteConfirm = false"
+      @confirm="performDelete"
+    />
 
     <ConfirmModal
       :visible="delRegion.visible.value"
@@ -257,6 +277,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
 import SectionHeader from './ui/SectionHeader.vue';
@@ -275,6 +296,7 @@ import { setMediaAsPersonProfile, isMediaPersonProfile } from '../utils/mediaPro
 import { isImageMedia } from '../utils/mediaUtils';
 import { useProfilePicStore } from '../stores/profilePic';
 import { useEntityData } from '../composables/useEntityData';
+import { useToast } from '../composables/useToast';
 import IconUnlink from './ui/IconUnlink.vue';
 import IconTrash from './ui/IconTrash.vue';
 import IconPencil from './ui/IconPencil.vue';
@@ -328,6 +350,9 @@ const emit = defineEmits<{
   'media-updated': [mediaId: string, fields: { title?: string; notes?: string }];
   'open-viewer': [];
 }>();
+
+const { t } = useI18n();
+const toast = useToast();
 
 const checksSectionRef = ref<InstanceType<typeof MediaChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
@@ -595,6 +620,34 @@ async function setProfileForRegion(r: RegionData) {
 
 function expandFaceTags() {
   sections.faceTags = true;
+}
+
+// ── Delete media ───────────────────────────────────────────────────────────
+
+const showDeleteConfirm = ref(false);
+const deleteConfirmMessage = computed(() => {
+  const title = media.value?.title || t('media.untitled');
+  return t('media.deleteConfirmMessage', {
+    title,
+    persons: linkedPersons.value.length,
+    places: linkedPlaces.value.length,
+    events: linkedEvents.value.length,
+    tags: regions.value.length,
+  });
+});
+
+async function performDelete() {
+  if (!props.mediaId) return;
+  try {
+    const title = media.value?.title || t('media.untitled');
+    await window.api.media.delete(props.mediaId);
+    showDeleteConfirm.value = false;
+    toast.success(t('media.deletedToast', { title }));
+    emit('close');
+  } catch (err) {
+    console.error('[MediaPanel] delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 defineExpose({ reload, expandFaceTags });

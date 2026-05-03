@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: every entity panel now has a Danger-zone delete button at the bottom, mirroring the existing person delete; places, sources, media, groups, and research tasks can now be deleted directly from their panels (places previously had no UI delete path at all)
+- chore: extend Surface contract guidance in CLAUDE.md to cover host-level lifecycle (the panel must let the user delete the entity it's hosted on, not just the items inside its sections)
 - fix: place panel's Persons section no longer carries a "+ Event" button — the section is a derived view, and a fresh-context audit caught the title/label mismatch (Persons section + Event handler); a small running hint signposts the Events section above as the canonical add path
 - chore: tighten Surface contract guidance to distinguish title-mismatch and duplicate-on-derived-view failures from convenience-duplicate Add CTAs across alternate views of the same primitive
 - chore: codify Surface contract guidance for panel CTAs in CLAUDE.md

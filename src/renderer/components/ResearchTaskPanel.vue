@@ -141,6 +141,14 @@
           />
         </div>
       </div>
+
+      <!-- Danger zone: delete task -->
+      <div class="panel-danger-zone">
+        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
+          <IconTrash class="trash-icon" />
+          <span>{{ $t('researchTasks.deleteTaskAction') }}</span>
+        </AppButton>
+      </div>
     </template>
 
     <ConfirmModal
@@ -153,11 +161,23 @@
       @cancel="delLink.cancel"
       @confirm="delLink.confirm"
     />
+
+    <!-- Delete task confirmation -->
+    <ConfirmModal
+      :visible="showDeleteConfirm"
+      :title="$t('researchTasks.deleteConfirmTitle')"
+      :message="deleteConfirmMessage"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('researchTasks.deleteConfirmContinue')"
+      @cancel="showDeleteConfirm = false"
+      @confirm="performDelete"
+    />
   </EntityPanel>
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, toRef } from 'vue';
+import { ref, reactive, computed, toRef } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LinkedPersonsSection from './LinkedPersonsSection.vue';
@@ -166,6 +186,8 @@ import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import EntityPanel from './EntityPanel.vue';
 import ConfirmModal from './ConfirmModal.vue';
+import AppButton from './ui/AppButton.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -294,6 +316,31 @@ const delLink = useDeleteConfirm<string>(async (linkId) => {
   }
 });
 function removeLink(linkId: string) { delLink.ask(linkId); }
+
+// ── Delete task ────────────────────────────────────────────────────────────
+
+const showDeleteConfirm = ref(false);
+const deleteConfirmMessage = computed(() => {
+  const title = task.value?.title ?? t('common.unknown');
+  return t('researchTasks.deleteConfirmMessage', {
+    title,
+    links: personLinks.value.length + placeLinks.value.length + mediaLinks.value.length,
+  });
+});
+
+async function performDelete() {
+  if (!props.taskId) return;
+  try {
+    const title = task.value?.title ?? t('common.unknown');
+    await window.api.researchTasks.delete(props.taskId);
+    showDeleteConfirm.value = false;
+    toast.success(t('researchTasks.deletedToast', { title }));
+    emit('close');
+  } catch (err) {
+    console.error('[ResearchTaskPanel] delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
+}
 </script>
 
 <style scoped>

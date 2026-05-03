@@ -251,7 +251,27 @@
           <PlaceChecksSection ref="checksSectionRef" :place-id="placeId!" />
         </div>
       </div>
+
+      <!-- Danger zone: delete place -->
+      <div v-if="!props.readonly" class="panel-danger-zone">
+        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
+          <IconTrash class="trash-icon" />
+          <span>{{ $t('places.deletePlaceAction') }}</span>
+        </AppButton>
+      </div>
     </template>
+
+    <!-- Delete confirmation -->
+    <ConfirmModal
+      :visible="showDeleteConfirm"
+      :title="$t('places.deleteConfirmTitle')"
+      :message="deleteConfirmMessage"
+      tone="danger"
+      icon="⚠️"
+      :confirm-label="$t('places.deleteConfirmContinue')"
+      @cancel="showDeleteConfirm = false"
+      @confirm="performDelete"
+    />
 
     <!-- Research task form modal -->
     <ResearchTaskModal
@@ -279,10 +299,13 @@ import PlaceTimeline from './PlaceTimeline.vue';
 import PlacePicker from './PlacePicker.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import IconTrash from './ui/IconTrash.vue';
 import type { ComponentPublicInstance, Ref } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import AppButton from './ui/AppButton.vue';
+import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
@@ -327,6 +350,7 @@ const emit = defineEmits<{
 }>();
 
 const { t, te } = useI18n();
+const toast = useToast();
 
 // ── Section state ───────────────────────────────────────────────────────────
 
@@ -551,6 +575,33 @@ async function onTaskSaved() {
 function openTaskFromRow(id: string) {
   const task = researchTasks.value.find(t => t.id === id);
   if (task) openTaskForm(task);
+}
+
+// ── Delete place ────────────────────────────────────────────────────────────
+
+const showDeleteConfirm = ref(false);
+const deleteConfirmMessage = computed(() => {
+  const name = place.value?.name ?? t('common.unknown');
+  return t('places.deleteConfirmMessage', {
+    name,
+    events: eventCount.value,
+    persons: personCount.value,
+    media: mediaCount.value,
+  });
+});
+
+async function performDelete() {
+  if (!props.placeId) return;
+  try {
+    const name = place.value?.name ?? t('common.unknown');
+    await window.api.places.delete(props.placeId);
+    showDeleteConfirm.value = false;
+    toast.success(t('places.deletedToast', { name }));
+    emit('close');
+  } catch (err) {
+    console.error('[PlacePanel] delete failed:', err);
+    toast.error(t('errors.deleteFailed'));
+  }
 }
 
 const heroMediaId = ref<string | null>(null);

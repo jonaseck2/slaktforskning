@@ -164,7 +164,7 @@
 
       <!-- Danger zone: delete person -->
       <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="ghost" size="sm" class="delete-person-btn" @click="showDeleteConfirm = true">
+        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
           <IconTrash class="trash-icon" />
           <span>{{ $t('persons.deletePersonAction') }}</span>
         </AppButton>
@@ -667,34 +667,6 @@ function openTaskFromRow(id: string) {
 </script>
 
 <style scoped>
-.panel-danger-zone {
-  padding: var(--space-md) var(--space-lg) var(--space-lg);
-  border-top: 1px solid var(--surface-border-subtle);
-  display: flex;
-  justify-content: flex-end;
-  margin-top: auto;
-}
-.trash-icon {
-  width: 18px;
-  height: 18px;
-  display: inline-block;
-  margin-right: 6px;
-  vertical-align: -4px;
-}
-
-/* Delete-person button: outlined, no background fill. Uses :deep so the
-   styles reach into AppButton's scoped element. */
-.delete-person-btn :deep(.app-btn) {
-  background: transparent;
-  border: 1px solid var(--surface-border);
-  color: var(--text-secondary);
-}
-.delete-person-btn :deep(.app-btn:hover:not(:disabled)) {
-  background: var(--surface-hover);
-  border-color: var(--surface-border);
-  color: var(--text-primary);
-}
-
 /* Person summary card — compact identity panel rendered into EntityPanel's
    #header slot. Always renders a row for birth and death even when missing,
    so the layout stays predictable. */
