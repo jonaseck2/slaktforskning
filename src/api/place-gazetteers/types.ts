@@ -1,13 +1,24 @@
+/** Documented fixed type names. Beyond `admin4` the system accepts `admin${N}` for any positive integer N. */
 export const GAZETTEER_NODE_TYPES = [
   'world', 'continent', 'country', 'admin1', 'admin2', 'admin3', 'admin4',
-  'locality', 'parish', 'farm', 'church', 'city', 'landskap',
-  'historical-state', 'other',
 ] as const;
 
-export type GazetteerNodeType = typeof GAZETTEER_NODE_TYPES[number];
+/**
+ * The closed vocabulary for `GazetteerNode.type`:
+ * - `'world'` — root.
+ * - `'continent'` — World > Europe, World > Africa, …
+ * - `'country'` — Europe > Sweden.
+ * - `` `admin${number}` `` — admin1, admin2, …, adminN. Country-specific granularity beyond admin4 is allowed; build scripts pick what fits their data.
+ *
+ * Build scripts are responsible for choosing the right level (e.g. Swedish kommun = admin2, Swedish parish = admin3).
+ */
+export type GazetteerNodeType = 'world' | 'continent' | 'country' | `admin${number}`;
+
+const ADMIN_LEVEL_RE = /^admin([1-9]\d*)$/;
 
 export function isGazetteerNodeType(s: string): s is GazetteerNodeType {
-  return (GAZETTEER_NODE_TYPES as readonly string[]).includes(s);
+  if (s === 'world' || s === 'continent' || s === 'country') return true;
+  return ADMIN_LEVEL_RE.test(s);
 }
 
 export interface GeoJSONPolygon {
