@@ -197,30 +197,35 @@ function mergeGeometries(features: GeoJSONFeature[]): GazetteerGeometry {
 // include. Same factual data, two redistribution paths — the merge engine
 // collapses same-named parishes from sv-socknar (point) and this gazetteer
 // (polygon) into one canonical admin3 node.
-console.log('Building parish → (län, kommun) lookup from sv-socknar.json...');
-const SV_SOCKNAR_PATH = path.join(ROOT, 'src', 'api', 'place-gazetteers', 'data', 'sv-socknar.json');
+console.log('Building parish → (län, kommun) lookup from sv-socknar.json + sv-forsamlingar.json...');
 const lanByParish: Record<string, { lan: string; kommun: string }> = {};
-if (fs.existsSync(SV_SOCKNAR_PATH)) {
-  const sv = JSON.parse(fs.readFileSync(SV_SOCKNAR_PATH, 'utf-8'));
-  // Walk World > Europe > Sweden > <län> > <kommun> > <parish>
+function indexParishesFrom(srcPath: string, label: string): number {
+  if (!fs.existsSync(srcPath)) {
+    console.warn(`  ${label} not found; skipping.`);
+    return 0;
+  }
+  const sv = JSON.parse(fs.readFileSync(srcPath, 'utf-8'));
   const sweden = sv.root?.children?.[0]?.children?.[0];
+  let added = 0;
   for (const lan of sweden?.children ?? []) {
     for (const kommun of lan.children ?? []) {
       for (const parish of kommun.children ?? []) {
         const entry = { lan: lan.name, kommun: kommun.name };
-        if (!lanByParish[parish.name]) lanByParish[parish.name] = entry;
-        // Index aliases too — sv-socknar uses formal 'X distrikt' / 'X socken' as `name`
-        // while Lantmäteriet's sockenstadnamn is the bare 'X'. Aliases include the bare form.
+        if (!lanByParish[parish.name]) { lanByParish[parish.name] = entry; added++; }
+        // Index aliases too — sv-socknar/sv-forsamlingar use formal
+        // 'X distrikt' / 'X församling' as `name`; Lantmäteriet's
+        // sockenstadnamn is the bare 'X'. Aliases include the bare form.
         for (const alias of parish.aliases ?? []) {
-          if (!lanByParish[alias]) lanByParish[alias] = entry;
+          if (!lanByParish[alias]) { lanByParish[alias] = entry; added++; }
         }
       }
     }
   }
-  console.log(`  ${Object.keys(lanByParish).length} parish-name→(län, kommun) entries (incl. aliases)`);
-} else {
-  console.warn('  sv-socknar.json not found; polygons will attach directly under Sweden.');
+  return added;
 }
+const a1 = indexParishesFrom(path.join(ROOT, 'src', 'api', 'place-gazetteers', 'data', 'sv-socknar.json'), 'sv-socknar.json');
+const a2 = indexParishesFrom(path.join(ROOT, 'src', 'api', 'place-gazetteers', 'data', 'sv-forsamlingar.json'), 'sv-forsamlingar.json');
+console.log(`  ${Object.keys(lanByParish).length} parish-name→(län, kommun) entries (sv-socknar: +${a1}; sv-forsamlingar: +${a2})`);
 
 // Build parish/city polygon nodes, group by (län, kommun).
 type Bucket = { lan: string; kommun: string; nodes: GazetteerNode[] };
