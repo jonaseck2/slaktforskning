@@ -601,6 +601,7 @@ export default {
   placePanel: {
     noPlaceSelected: 'Click a pin on the map',
     viewFull: 'View full details',
+    personsDerivedHint: 'Derived from primary participants of events at this place. To record someone here, add an event in Events above.',
   },
   visualization: {
     listView: 'List',

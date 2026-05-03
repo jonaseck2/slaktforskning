@@ -601,6 +601,7 @@ export default {
   placePanel: {
     noPlaceSelected: 'Klicka på en markör på kartan',
     viewFull: 'Visa alla detaljer',
+    personsDerivedHint: 'Härleds från primära deltagare i händelser på platsen. För att registrera någon här, lägg till en händelse under Händelser ovan.',
   },
   visualization: {
     listView: 'Lista',

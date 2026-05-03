@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: place panel's Persons section no longer carries a "+ Event" button — the section is a derived view, and a fresh-context audit caught the title/label mismatch (Persons section + Event handler); a small running hint signposts the Events section above as the canonical add path
+- chore: tighten Surface contract guidance to distinguish title-mismatch and duplicate-on-derived-view failures from convenience-duplicate Add CTAs across alternate views of the same primitive
 - chore: codify Surface contract guidance for panel CTAs in CLAUDE.md
 - feat: + Event from a place pre-fills the place; the place panel's Persons section now uses + Event so adding a person there actually attaches them to the place
 - fix: removed the unwired duplicate + Media button on Media Timeline sections in the Person and Place panels
