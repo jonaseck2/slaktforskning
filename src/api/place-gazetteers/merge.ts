@@ -98,3 +98,34 @@ export function loadGazetteers(
 
   return cloned;
 }
+
+export interface ScaffoldingIndex {
+  lookup(path: string[]): GazetteerNode | null;
+  roots(): GazetteerNode[];
+}
+
+function pathKey(parts: string[]): string {
+  return parts.map(p => p.toLowerCase()).join(' › ');
+}
+
+export function buildScaffoldingIndex(scaffolding: Gazetteer[]): ScaffoldingIndex {
+  const index = new Map<string, GazetteerNode>();
+  const rootNodes: GazetteerNode[] = [];
+
+  function walk(node: GazetteerNode, ancestors: string[]) {
+    const path = [...ancestors, node.name];
+    index.set(pathKey(path), node);
+    if (node.children) for (const child of node.children) walk(child, path);
+  }
+
+  for (const g of scaffolding) {
+    if (!g.root) continue;
+    rootNodes.push(g.root);
+    walk(g.root, []);
+  }
+
+  return {
+    lookup: (path) => index.get(pathKey(path)) ?? null,
+    roots: () => rootNodes,
+  };
+}
