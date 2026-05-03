@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: codify Surface contract guidance for panel CTAs in CLAUDE.md
 - feat: + Event from a place pre-fills the place; the place panel's Persons section now uses + Event so adding a person there actually attaches them to the place
 - fix: removed the unwired duplicate + Media button on Media Timeline sections in the Person and Place panels
 - feat(mcp): MCP feature parity with the desktop app. The prod server now exposes 77 workflow tools (was 39) covering full CRUD on every record type the renderer can author or curate. New tools: `update_relationship`, `delete_relationship`, `add_event_participant`, `remove_event_participant`, `delete_event`, `update_source`, `delete_source`, `update_citation`, `delete_citation`, `update_place`, `delete_place`, `link_media`, `unlink_media`, `reorder_media`, `update_media_region`, `delete_media_region`, `delete_research_task`, `add_person_identifier`, `get_person_identifiers`, `delete_person_identifier`, full Groups domain (`add_group`, `list_groups`, `get_group`, `update_group`, `delete_group`, `add_group_link`, `remove_group_link`), full Repositories domain (`add_repository`, `list_repositories`, `get_repository`, `update_repository`, `delete_repository`, `link_source_repository`, `unlink_source_repository`, `get_repositories_for_source`), and `import_archive` / `export_archive` for `.zip` round-trip with media. Coverage is enforced by a registry-completeness test in `tests/unit/mcp.test.ts` so future regressions break CI.

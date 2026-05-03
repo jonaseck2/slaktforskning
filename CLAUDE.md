@@ -63,6 +63,22 @@ The data lifecycle includes offboarding. A user who exports their database to GE
 
 **Why this matters:** the user's choice to use this app must remain reversible. If our schema evolves in a way that strands their data inside our format, we have failed them — even if everything works perfectly while they stay.
 
+## Surface contract
+
+This is a strong rule, not a Prime Directive — broken UX is recoverable, broken data isn't. But the failure mode this section guards against (panel CTAs that ignore their host entity, or that lie about what they do) has shipped twice while passing lint, unit tests, and a UX_INVENTORY review. The genealogist found both by clicking. That's the bar this section is here to lift.
+
+The genealogist thinks surface-first: they're "on a place," "on a person," "in a source." When they're on a surface, every action they take should bring the surface's host entity with it. They should never have to re-state what they already chose by being where they are, and they should never reach a CTA whose label lies about what its handler does.
+
+**Three checks at the decision point.** Apply when wiring or reviewing any `<SectionHeader … :action-label="…" @action="…" />` in `src/renderer/components/*Panel.vue` (and the section components they host), or any modal opened from such a handler.
+
+1. **Did the host entity flow in?** The panel is hosted on entity X (place, person, source, media). Whatever the action opens — modal, picker, inline form — must receive X as a default. Concrete check: trace the `@action` handler to the modal it opens; search the modal call site for `:default<X>Id="…"` (or equivalent prop). If the genealogist had to re-pick a value the surface already implied, the host was lost.
+2. **Does the handler deliver the primitive in the label?** `+ Event` adds an event. `+ Source` adds a source. Concrete check: trace the `@action` handler. If it's textually identical to a sibling section's handler in the same panel, the button is clutter — remove it. If it produces an entity unrelated to this section's data, the label is a lie — rewire the handler or relabel.
+3. **Can the genealogist edit and remove what they just added?** From this surface, or via a path *visible on this surface* (a row link, a section navigation). Add-only sections strand the user mid-task. Read-only summary tables are fine when their data origin is signposted (PlacePanel's Persons section is derived from events) and the path back to the source of truth is reachable; opaque add-only sections aren't.
+
+**Past failures this rule was written against:** `PlacePanel + Add person` (created a person with no link to the place — orphan); `MediaTimeline + Media` (duplicate of the Media section's attach handler — clutter); both surfaces were marked ✅ resolved in `docs/UX_INVENTORY.md` while the bugs still shipped. Lint, unit tests, and `panel-cta-conventions.test.ts` all passed.
+
+**Where this rule applies:** every `*Panel.vue` and the section components they host; every modal opened from a panel section; every CTA wired in a `<SectionHeader>`. Read-only snapshot views (reports, exports) are exempt.
+
 ## Project Overview
 
 Släktforskning is a cross-platform desktop genealogy app built with Electron + Vue 3 + TypeScript. All data stays local in SQLite. A built-in MCP server lets AI agents read/write genealogy data without the UI.
