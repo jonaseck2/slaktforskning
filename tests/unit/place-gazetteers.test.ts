@@ -275,52 +275,65 @@ describe('resolveBoundary', () => {
   });
 });
 
-// Minimal world gazetteer for testing language merge
+// Minimal world gazetteer for testing language merge.
+// Shape matches canonical hierarchy: World > continent > country.
 const worldGazetteer: Gazetteer = {
-  id: 'world-countries',
-  name: 'World Countries',
+  id: 'world-countries-test',
+  name: 'World Countries (test fixture)',
   locale: 'en',
   root: {
     name: 'World',
-    type: 'root',
+    type: 'world',
     lat: 0,
     lon: 0,
     children: [
-      { name: 'Denmark', type: 'country', aliases: ['DK', 'DNK'], lat: 56.0, lon: 10.0 },
-      { name: 'Germany', type: 'country', aliases: ['DE', 'DEU'], lat: 51.0, lon: 9.0,
+      {
+        name: 'Europe', type: 'continent', lat: 54, lon: 15,
         children: [
-          { name: 'Bavaria', type: 'admin1', lat: 48.8, lon: 11.5 },
+          { name: 'Denmark', type: 'country', aliases: ['DK', 'DNK'], lat: 56.0, lon: 10.0 },
+          {
+            name: 'Germany', type: 'country', aliases: ['DE', 'DEU'], lat: 51.0, lon: 9.0,
+            children: [
+              { name: 'Bavaria', type: 'admin1', lat: 48.8, lon: 11.5 },
+            ],
+          },
         ],
       },
-      { name: 'Brazil', type: 'country', aliases: ['BR', 'BRA'], lat: -10.0, lon: -55.0 },
+      {
+        name: 'South America', type: 'continent', lat: -15, lon: -60,
+        children: [
+          { name: 'Brazil', type: 'country', aliases: ['BR', 'BRA'], lat: -10.0, lon: -55.0 },
+        ],
+      },
     ],
   },
 };
 
+// Translation keys are canonical paths (` › `-separated) under the `__merged__` namespace.
 const langSvGeonames: Gazetteer = {
-  id: 'lang-sv-geonames',
-  name: 'Swedish place names (GeoNames)',
+  id: 'lang-sv-geonames-test',
+  name: 'Swedish place names (test fixture)',
   locale: 'sv',
-  kind: 'language',
-  root: { name: 'sv', type: 'language', lat: 0, lon: 0 },
+  shape: 'language',
   translations: {
-    'world-countries': {
-      'Denmark': ['Danmark'],
-      'Germany': ['Tyskland'],
-      'Brazil': ['Brasilien'],
-      'Germany > Bavaria': ['Bayern'],
+    __merged__: {
+      'World › Europe › Denmark': ['Danmark'],
+      'World › Europe › Germany': ['Tyskland'],
+      'World › South America › Brazil': ['Brasilien'],
+      'World › Europe › Germany › Bavaria': ['Bayern'],
     },
   },
 };
 
 describe('language gazetteer merge', () => {
   it('injects translations as aliases so resolver matches Swedish names', () => {
-    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries-test', 'lang-sv-geonames-test'] };
+    const gazetteers = loadGazetteers(config, [], [worldGazetteer, langSvGeonames]);
 
-    // Only point/boundary gazetteers returned, not language ones
+    // One merged gazetteer regardless of how many sources contributed.
     expect(gazetteers).toHaveLength(1);
-    expect(gazetteers[0].id).toBe('world-countries');
+    expect(gazetteers[0].id).toBe('__merged__');
+    expect(gazetteers[0].root.name).toBe('World');
 
     // "Danmark" should now resolve to Denmark
     const result = resolvePlace('Danmark', gazetteers);
@@ -331,8 +344,8 @@ describe('language gazetteer merge', () => {
   });
 
   it('resolves path-keyed translations (Germany > Bavaria -> Bayern)', () => {
-    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries-test', 'lang-sv-geonames-test'] };
+    const gazetteers = loadGazetteers(config, [], [worldGazetteer, langSvGeonames]);
 
     const result = resolvePlace('Bayern, Tyskland', gazetteers);
     expect(result).not.toBeNull();
@@ -344,28 +357,29 @@ describe('language gazetteer merge', () => {
     const langWithExisting: Gazetteer = {
       ...langSvGeonames,
       translations: {
-        'world-countries': {
-          'Denmark': ['DK'],  // DK already exists as alias
+        __merged__: {
+          'World › Europe › Denmark': ['DK'],  // DK already exists as alias
         },
       },
     };
-    const config: GazetteerConfig = { enabledGazetteers: ['world-countries', 'lang-sv-geonames'] };
-    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langWithExisting]);
-    const dk = gazetteers[0].root.children!.find(c => c.name === 'Denmark')!;
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries-test', 'lang-sv-geonames-test'] };
+    const gazetteers = loadGazetteers(config, [], [worldGazetteer, langWithExisting]);
+    const europe = gazetteers[0].root.children!.find(c => c.name === 'Europe')!;
+    const dk = europe.children!.find(c => c.name === 'Denmark')!;
     // Should not have duplicate 'DK'
     expect(dk.aliases!.filter(a => a === 'DK')).toHaveLength(1);
   });
 
   it('skips translations targeting a gazetteer that is not enabled', () => {
-    const config: GazetteerConfig = { enabledGazetteers: ['lang-sv-geonames'] };
+    const config: GazetteerConfig = { enabledGazetteers: ['lang-sv-geonames-test'] };
     // Only language gaz enabled, no target — should return empty
-    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer, langSvGeonames]);
+    const gazetteers = loadGazetteers(config, [], [worldGazetteer, langSvGeonames]);
     expect(gazetteers).toHaveLength(0);
   });
 
   it('without language gazetteer, Swedish names do not resolve', () => {
-    const config: GazetteerConfig = { enabledGazetteers: ['world-countries'] };
-    const gazetteers = loadGazetteers(config, getAllGazetteers(), [worldGazetteer]);
+    const config: GazetteerConfig = { enabledGazetteers: ['world-countries-test'] };
+    const gazetteers = loadGazetteers(config, [], [worldGazetteer]);
     const result = resolvePlace('Danmark', gazetteers);
     expect(result).toBeNull();
   });
@@ -378,20 +392,28 @@ describe('loadGazetteers', () => {
     expect(result).toEqual([]);
   });
 
-  it('returns sv-socknar when enabled', () => {
+  it('returns one merged gazetteer rooted at World when sv-socknar enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar'] };
     const result = loadGazetteers(config, getAllGazetteers());
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe('sv-socknar');
-    expect(result[0].root.name).toBe('Sverige');
-    expect(result[0].root.children!.length).toBeGreaterThan(0);
+    expect(result[0].id).toBe('__merged__');
+    expect(result[0].root.name).toBe('World');
+    // World > Europe > Sweden
+    const europe = result[0].root.children!.find(c => c.name === 'Europe');
+    expect(europe).toBeDefined();
+    expect(europe!.children!.find(c => c.name === 'Sweden')).toBeDefined();
   });
 
-  it('returns both Swedish gazetteers when both enabled', () => {
+  it('still returns one merged gazetteer when both Swedish gazetteers enabled', () => {
     const config: GazetteerConfig = { enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] };
     const result = loadGazetteers(config, getAllGazetteers());
-    expect(result).toHaveLength(2);
-    expect(result.map(g => g.id).sort()).toEqual(['sv-forsamlingar', 'sv-socknar']);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('__merged__');
+    // Both contribute to the same Sweden subtree.
+    const sweden = result[0].root.children!.find(c => c.name === 'Europe')!.children!.find(c => c.name === 'Sweden');
+    expect(sweden).toBeDefined();
+    const contributors = (sweden as { __contributors?: string[] }).__contributors ?? [];
+    expect(contributors.sort()).toEqual(['sv-forsamlingar', 'sv-socknar']);
   });
 
   it('getAllGazetteers returns all bundled gazetteers', () => {
@@ -474,7 +496,9 @@ describe('hierarchy-aware matching', () => {
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Scotland');
     expect(result!.matchedPath).toContain('United Kingdom');
-    expect(result!.gazetteer).toBe('world-admin1');
+    // After the global-hierarchy migration every resolution flows through the
+    // single merged tree; original source IDs live on each node's __contributors.
+    expect(result!.gazetteer).toBe('__merged__');
   });
 
   it('prefers USA over Canadian leaf for "Hudson Bay, Long Island, USA"', () => {
@@ -498,10 +522,14 @@ describe('hierarchy-aware matching', () => {
     const gazetteers = loadGazetteers(config, getAllGazetteers());
     const result = resolvePlace('California, USA', gazetteers);
     expect(result).not.toBeNull();
-    expect(result!.matchedPath).toEqual(['United States', 'California']);
+    // The merged tree puts every country under a continent, so the path is
+    // World > North America > United States > California.
+    expect(result!.matchedPath).toEqual(['World', 'North America', 'United States', 'California']);
     expect(result!.matchedNode.name).toBe('California');
-    expect(result!.matchedNode.type).toBe('state');
-    expect(result!.matchDepth).toBe(2);
+    // Closed admin vocab — countries' first-level subdivisions are admin1.
+    expect(result!.matchedNode.type).toBe('admin1');
+    // Depth follows the canonical path (World > North America > United States > California).
+    expect(result!.matchDepth).toBe(4);
   });
 });
 
@@ -616,9 +644,14 @@ describe('resolveHierarchical', () => {
     const gazetteers = loadGazetteers(config, getAllGazetteers());
     const r = resolveHierarchical('Solna (B)', gazetteers);
     expect(r.best).not.toBeNull();
-    // Stockholms län has aliases AB/A/B from LAN_LETTER_CODES
+    // After the global-hierarchy migration the Stockholm node's `name` is the
+    // bare form and "Stockholms län" is an alias, so the path includes
+    // "Stockholm" rather than "Stockholms län".
     const matchedNames = r.best!.path.map(n => n.name);
-    expect(matchedNames).toContain('Stockholms län');
+    expect(matchedNames).toContain('Stockholm');
+    const sthlm = r.best!.path.find(n => n.name === 'Stockholm');
+    expect(sthlm?.aliases).toContain('Stockholms län');
+    expect(sthlm?.aliases).toContain('B');
   });
 
   it('full chain "Hörningsholm, Mosås, Örebro län" — broadest token is län', () => {

@@ -119,9 +119,15 @@ export function loadGazetteers(
   const all = [...bundled.filter(g => !importedIds.has(g.id)), ...imported];
   const filtered = all.filter(g => enabled.has(g.id));
 
+  // Language gazetteers (translations only — no point/boundary data) are split out
+  // so they don't get walked as if they were a regular tree. We accept both the
+  // legacy `kind: 'language'` and the newer `shape: 'language'` discriminators.
+  const isLanguage = (g: Gazetteer): boolean =>
+    g.shape === 'language' || g.kind === 'language';
+
   // One accumulator per distinct root (typically just `World`, plus `World (Historical)`).
   const accumulators = new Map<string, MergedNode>();
-  const dataGazetteers = filtered.filter(g => g.shape !== 'language' && g.root);
+  const dataGazetteers = filtered.filter(g => !isLanguage(g) && g.root);
 
   for (const g of dataGazetteers) {
     const root = g.root!;
@@ -142,7 +148,7 @@ export function loadGazetteers(
   }
 
   // Translations apply to the merged tree.
-  const langGazetteers = filtered.filter(g => g.shape === 'language');
+  const langGazetteers = filtered.filter(isLanguage);
   if (langGazetteers.length > 0) {
     const idx = buildNodeIndex(Array.from(accumulators.values()));
     for (const lang of langGazetteers) applyTranslations(lang, idx);
@@ -150,14 +156,7 @@ export function loadGazetteers(
 
   // Return one synthetic gazetteer per accumulator root.
   const roots = Array.from(accumulators.values());
-  if (roots.length === 0) {
-    return [{
-      id: '__merged__',
-      name: 'Merged hierarchy',
-      locale: 'mul',
-      root: { name: 'World', type: 'world', lat: 0, lon: 0 },
-    } as Gazetteer];
-  }
+  if (roots.length === 0) return [];
 
   // Single root case: one merged gazetteer. Multi-root case: expose all via `allRoots`.
   const primary = roots[0];
