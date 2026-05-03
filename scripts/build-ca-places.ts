@@ -113,7 +113,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
       for (const r of unique.sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
         divisionNodes.push({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         });
@@ -134,7 +134,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
         .sort((a, b) => a.name.localeCompare(b.name, 'en'))
         .map(r => ({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -145,7 +145,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
       divisionNodes.push({
         name: divName,
-        type: 'division',
+        type: 'admin2',
         lat: divCoords.lat,
         lon: divCoords.lon,
         children: placeNodes,
@@ -158,7 +158,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
     provinceNodes.push({
       name: provinceName,
-      type: 'province',
+      type: 'admin1',
       lat: provCoords.lat,
       lon: provCoords.lon,
       children: divisionNodes,
@@ -217,12 +217,24 @@ function main() {
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'Canada',
-      type: 'country',
-      aliases: ['CA'],
-      lat: 56.0,
-      lon: -96.0,
-      children: provinceNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'North America',
+        type: 'continent',
+        lat: 45,
+        lon: -100,
+        children: [{
+          name: 'Canada',
+          type: 'country',
+          aliases: ['CA'],
+          lat: 56.0,
+          lon: -96.0,
+          children: provinceNodes,
+        }],
+      }],
     },
   };
 
