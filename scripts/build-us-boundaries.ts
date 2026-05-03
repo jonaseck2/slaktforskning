@@ -157,13 +157,22 @@ for (const f of geojson.features) {
   const [lat, lon] = computeCentroid(geometry);
 
   if (!stateMap.has(stateCode)) stateMap.set(stateCode, []);
-  stateMap.get(stateCode)!.push({
-    name: props.NAME,
-    type: 'county',
+  // Strip US county suffixes for canonical admin2 name; original as alias.
+  const COUNTY_SUFFIXES = [' County', ' Borough', ' Census Area', ' Parish', ' City and Borough', ' Municipality'];
+  let canonicalName = props.NAME;
+  for (const sfx of COUNTY_SUFFIXES) {
+    if (props.NAME.endsWith(sfx)) { canonicalName = props.NAME.slice(0, -sfx.length); break; }
+  }
+  const aliases = canonicalName !== props.NAME ? [props.NAME] : undefined;
+  const node: GazetteerNode = {
+    name: canonicalName,
+    type: 'admin2',
     lat: round4(lat),
     lon: round4(lon),
     geometry,
-  });
+  };
+  if (aliases) node.aliases = aliases;
+  stateMap.get(stateCode)!.push(node);
   countyCount++;
 }
 
@@ -172,12 +181,11 @@ const stateNodes: GazetteerNode[] = [...stateMap.entries()]
   .sort((a, b) => STATE_NAMES[a[0]].localeCompare(STATE_NAMES[b[0]], 'en'))
   .map(([code, counties]) => {
     counties.sort((a, b) => a.name.localeCompare(b.name, 'en'));
-    // State centroid = average of county centroids
     const avgLat = counties.reduce((s, c) => s + c.lat, 0) / counties.length;
     const avgLon = counties.reduce((s, c) => s + c.lon, 0) / counties.length;
     return {
       name: STATE_NAMES[code],
-      type: 'state',
+      type: 'admin1',
       lat: round4(avgLat),
       lon: round4(avgLon),
       children: counties,
@@ -200,12 +208,24 @@ const gazetteer: Gazetteer = {
   },
   kind: 'boundary',
   root: {
-    name: 'United States',
-    type: 'country',
-    lat: 39.8,
-    lon: -98.6,
-    aliases: ['USA', 'US', 'United States of America'],
-    children: stateNodes,
+    name: 'World',
+    type: 'world',
+    lat: 0,
+    lon: 0,
+    children: [{
+      name: 'North America',
+      type: 'continent',
+      lat: 45,
+      lon: -100,
+      children: [{
+        name: 'United States',
+        type: 'country',
+        aliases: ['USA', 'US', 'United States of America'],
+        lat: 39.8,
+        lon: -98.6,
+        children: stateNodes,
+      }],
+    }],
   },
 };
 
