@@ -94,6 +94,21 @@ function round6(n: number): number {
   return Math.round(n * 1000000) / 1000000;
 }
 
+// Genitive-aware suffix strip — same rule as build-sv-parishes.ts. Swedish admin1
+// names are typically genitive ("Xs län"), so canonical = strip "s län" + the
+// trailing 's'. Exceptions (Skåne, Kalmar, Uppsala, Örebro) don't have a
+// trailing 's' before " län" so the rule is no-op for them.
+function stripLänSuffix(name: string): string {
+  if (!name.endsWith(' län')) return name;
+  const t = name.slice(0, -4);
+  return t.endsWith('s') ? t.slice(0, -1) : t;
+}
+function stripKommunSuffix(name: string): string {
+  if (!name.endsWith(' kommun')) return name;
+  const t = name.slice(0, -7);
+  return t.endsWith('s') ? t.slice(0, -1) : t;
+}
+
 function buildGazetteerFromRows(
   rows: GeoNameRow[],
   nodeType: string,
@@ -143,11 +158,18 @@ function buildGazetteerFromRows(
       if (!munName) continue;
 
       const unique = dedup(munRows);
+      // Leaf-level type: closest admin level the leaf logically lives at.
+      // Localities (populated places) are admin3 (under kommun=admin2).
+      // Farms (FRM) and churches (CH) are admin4 (sub-locality features).
+      const leafType =
+        nodeType === 'locality' ? 'admin3' :
+        nodeType === 'farm' ? 'admin4' :
+        nodeType === 'church' ? 'admin4' : nodeType;
       const placeNodes: GazetteerNode[] = unique
         .sort((a, b) => a.name.localeCompare(b.name, 'sv'))
         .map(r => ({
           name: r.name,
-          type: nodeType,
+          type: leafType,
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -157,13 +179,18 @@ function buildGazetteerFromRows(
       const avgLat = placeNodes.reduce((s, p) => s + p.lat, 0) / placeNodes.length;
       const avgLon = placeNodes.reduce((s, p) => s + p.lon, 0) / placeNodes.length;
 
-      munNodes.push({
-        name: munName,
-        type: 'municipality',
+      // Strip " kommun" → canonical admin2 name (genitive-aware); original as alias.
+      const canonicalMun = stripKommunSuffix(munName);
+      const munAliases = canonicalMun !== munName ? [munName] : [];
+      const munNode: GazetteerNode = {
+        name: canonicalMun,
+        type: 'admin2',
         lat: round6(avgLat),
         lon: round6(avgLon),
         children: placeNodes,
-      });
+      };
+      if (munAliases.length > 0) munNode.aliases = munAliases;
+      munNodes.push(munNode);
     }
 
     if (munNodes.length === 0) continue;
@@ -171,13 +198,18 @@ function buildGazetteerFromRows(
     const avgLat = munNodes.reduce((s, n) => s + n.lat, 0) / munNodes.length;
     const avgLon = munNodes.reduce((s, n) => s + n.lon, 0) / munNodes.length;
 
-    countyNodes.push({
-      name: countyName,
-      type: 'county',
+    // Strip " län" → canonical admin1 name (genitive-aware); original as alias.
+    const canonicalCounty = stripLänSuffix(countyName);
+    const countyAliases = canonicalCounty !== countyName ? [countyName] : [];
+    const countyNode: GazetteerNode = {
+      name: canonicalCounty,
+      type: 'admin1',
       lat: round6(avgLat),
       lon: round6(avgLon),
       children: munNodes,
-    });
+    };
+    if (countyAliases.length > 0) countyNode.aliases = countyAliases;
+    countyNodes.push(countyNode);
   }
 
   return countyNodes;
@@ -202,6 +234,21 @@ function writeGazetteer(
   countyNodes: GazetteerNode[],
   outFile: string,
 ) {
+  const sweden: GazetteerNode = {
+    name: 'Sweden',
+    type: 'country',
+    aliases: ['Sverige'],
+    lat: 62,
+    lon: 15,
+    children: countyNodes,
+  };
+  const europe: GazetteerNode = {
+    name: 'Europe',
+    type: 'continent',
+    lat: 54,
+    lon: 15,
+    children: [sweden],
+  };
   const gazetteer = {
     id,
     name,
@@ -214,12 +261,11 @@ function writeGazetteer(
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'Sverige',
-      type: 'country',
-      aliases: ['Sweden'],
-      lat: 62,
-      lon: 15,
-      children: countyNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [europe],
     },
   };
 
