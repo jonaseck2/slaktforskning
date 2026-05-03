@@ -123,7 +123,7 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
         .sort((a, b) => a.name.localeCompare(b.name, 'no'))
         .map(r => ({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -132,26 +132,36 @@ function buildGazetteerFromRows(rows: GeoNameRow[]): GazetteerNode[] {
 
       const munCoords = avgCoordinates(placeNodes);
 
-      munNodes.push({
-        name: munName,
-        type: 'municipality',
+      // Strip " kommune" → canonical admin2 name; original as alias.
+      const canonicalMun = munName.endsWith(' kommune') ? munName.slice(0, -8) : munName;
+      const munAliases = canonicalMun !== munName ? [munName] : [];
+      const munNode: GazetteerNode = {
+        name: canonicalMun,
+        type: 'admin2',
         lat: munCoords.lat,
         lon: munCoords.lon,
         children: placeNodes,
-      });
+      };
+      if (munAliases.length > 0) munNode.aliases = munAliases;
+      munNodes.push(munNode);
     }
 
     if (munNodes.length === 0) continue;
 
     const countyCoords = avgCoordinates(munNodes);
 
-    countyNodes.push({
-      name: countyName,
-      type: 'county',
+    // Strip " fylke" → canonical admin1 name; original as alias.
+    const canonicalCounty = countyName.endsWith(' fylke') ? countyName.slice(0, -6) : countyName;
+    const countyAliases = canonicalCounty !== countyName ? [countyName] : [];
+    const countyNode: GazetteerNode = {
+      name: canonicalCounty,
+      type: 'admin1',
       lat: countyCoords.lat,
       lon: countyCoords.lon,
       children: munNodes,
-    });
+    };
+    if (countyAliases.length > 0) countyNode.aliases = countyAliases;
+    countyNodes.push(countyNode);
   }
 
   return countyNodes;
@@ -203,12 +213,24 @@ function main() {
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'Norge',
-      type: 'country',
-      aliases: ['Norway'],
-      lat: 65.0,
-      lon: 13.0,
-      children: countyNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Norway',
+          type: 'country',
+          aliases: ['Norge'],
+          lat: 65.0,
+          lon: 13.0,
+          children: countyNodes,
+        }],
+      }],
     },
   };
 

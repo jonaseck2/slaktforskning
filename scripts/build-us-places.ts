@@ -142,7 +142,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
         .sort((a, b) => a.name.localeCompare(b.name, 'en'))
         .map(r => ({
           name: r.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(r.lat),
           lon: round6(r.lon),
         }));
@@ -151,13 +151,22 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
       const countyCoords = avgCoordinates(placeNodes);
 
-      countyNodes.push({
-        name: countyName,
-        type: 'county',
+      // Strip US county-level admin suffixes; keep original as alias.
+      const COUNTY_SUFFIXES = [' County', ' Borough', ' Census Area', ' Parish', ' City and Borough', ' Municipality'];
+      let canonicalCounty = countyName;
+      for (const sfx of COUNTY_SUFFIXES) {
+        if (countyName.endsWith(sfx)) { canonicalCounty = countyName.slice(0, -sfx.length); break; }
+      }
+      const countyAliases = canonicalCounty !== countyName ? [countyName] : [];
+      const countyNode: GazetteerNode = {
+        name: canonicalCounty,
+        type: 'admin2',
         lat: countyCoords.lat,
         lon: countyCoords.lon,
         children: placeNodes,
-      });
+      };
+      if (countyAliases.length > 0) countyNode.aliases = countyAliases;
+      countyNodes.push(countyNode);
     }
 
     if (countyNodes.length === 0) continue;
@@ -166,7 +175,7 @@ function buildGazetteer(rows: GeoNameRow[]): GazetteerNode[] {
 
     stateNodes.push({
       name: stateName,
-      type: 'state',
+      type: 'admin1',
       lat: stateCoords.lat,
       lon: stateCoords.lon,
       children: countyNodes,
@@ -221,12 +230,24 @@ function main() {
       fetched: new Date().toISOString().slice(0, 10),
     },
     root: {
-      name: 'United States',
-      type: 'country',
-      aliases: ['USA', 'US', 'United States of America'],
-      lat: 39.8,
-      lon: -98.6,
-      children: stateNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'North America',
+        type: 'continent',
+        lat: 45,
+        lon: -100,
+        children: [{
+          name: 'United States',
+          type: 'country',
+          aliases: ['USA', 'US', 'United States of America'],
+          lat: 39.8,
+          lon: -98.6,
+          children: stateNodes,
+        }],
+      }],
     },
   };
 

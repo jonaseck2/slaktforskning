@@ -183,7 +183,7 @@ async function main() {
           .sort((a, b) => a.name.localeCompare(b.name, 'de'))
           .map<GazetteerNode>(p => ({
             name: p.name,
-            type: 'locality',
+            type: 'admin3',
             lat: round6(p.lat),
             lon: round6(p.lon),
           }));
@@ -203,7 +203,7 @@ async function main() {
         .sort((a, b) => a.name.localeCompare(b.name, 'de'))
         .map<GazetteerNode>(p => ({
           name: p.name,
-          type: 'locality',
+          type: 'admin3',
           lat: round6(p.lat),
           lon: round6(p.lon),
         }));
@@ -264,12 +264,24 @@ async function main() {
     },
     kind: 'point' as const,
     root: {
-      name: 'Tyskland',
-      type: 'country',
-      lat: round6(deCoords.lat),
-      lon: round6(deCoords.lon),
-      aliases: ['Germany', 'Deutschland', 'DE'],
-      children: bundeslandNodes,
+      name: 'World',
+      type: 'world',
+      lat: 0,
+      lon: 0,
+      children: [{
+        name: 'Europe',
+        type: 'continent',
+        lat: 54,
+        lon: 15,
+        children: [{
+          name: 'Germany',
+          type: 'country',
+          aliases: ['Tyskland', 'Deutschland', 'DE'],
+          lat: round6(deCoords.lat),
+          lon: round6(deCoords.lon),
+          children: bundeslandNodes,
+        }],
+      }],
     },
   };
 
