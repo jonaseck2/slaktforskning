@@ -138,6 +138,14 @@ Scaffolding extends to **admin2** because that's where the user-visible canonica
 
 Scaffolding is bootstrapped from GeoNames `countryInfo.txt` + `admin1Codes.txt` + `admin2Codes.txt` (CC BY 4.0; attribution recorded on each scaffolding gazetteer's `source` field). Centroid coords for admin1 + admin2 are computed from the populated places GeoNames lists in each division. Once bootstrapped, scaffolding is the project's canonical reference set; updates require an explicit re-fetch + curation pass.
 
+**Scaffolding names are GeoNames-pure.** Names ship exactly as GeoNames provides — `Jönköping` (not `Jönköpings län`), `Bavaria` (not `Bayern`), `Eksjö` (not `Eksjö kommun`). Locale-canonical administrative forms are the **language gazetteer**'s responsibility (§9 + §10 step 9): `lang-sv-geonames` adds `Jönköpings län` as an alias on the scaffolding `Jönköping` node; the picker (§9 PlacePicker) renders the locale-preferred form for display while keeping the canonical underlying path.
+
+Why this split:
+- **Single-source per layer** — scaffolding is one source (GeoNames), language gazetteers are another source per locale, contributions are one source per leaf. No layer ever combines.
+- **Build-script simplicity** — contributions declare GeoNames-canonical parent paths (`['World','Europe','Sweden','Jönköping','Eksjö']`); they don't need to know about local admin suffixes.
+- **Scalability** — adding Egypt or Brazil doesn't require curating "what's the local form of muhafazah/estado?" up front. The contributions ship with GeoNames-canonical paths; the language gazetteer (or the user's later authoring) supplies the local form.
+- **Genealogist UX preserved** — Swedish users see `Jönköpings län > Eksjö kommun > Eksjö` in breadcrumbs because the Swedish language gazetteer is enabled and the picker uses its aliases for display.
+
 Scaffolding gazetteers are **always enabled** and **load first** (see §5 load order). Disabling them in the gazetteer-config UI is not allowed — the UI hides them.
 
 `world-historical` becomes scaffolding for the historical sibling tree (rooted at `World (Historical)`). Same rules apply for any contributing historical-context gazetteer.

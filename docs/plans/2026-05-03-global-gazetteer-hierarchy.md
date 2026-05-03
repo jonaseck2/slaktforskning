@@ -530,6 +530,10 @@ For Task 1.3 alone: assert that `tests/unit/gazetteer-merge.test.ts` passes. Oth
 
 **Goal:** Build the four-layer canonical scaffolding: `world-continents`, `world-countries`, `world-admin1`, `world-admin2`. After this phase the engine has scaffolding to attach contributions into. All four are bootstrapped from GeoNames (`countryInfo.txt` + `admin1Codes.txt` + `admin2Codes.txt`, CC BY 4.0); attribution is recorded on each scaffolding gazetteer's `source` field. **Scaffolding cannot be disabled in the gazetteer-config UI** — it's the canonical reference set, not user-toggleable.
 
+**Design decision — scaffolding names are GeoNames-pure (no synthesized suffixes).** Admin1/admin2 names ship exactly as GeoNames provides them: `Jönköping` (not `Jönköpings län`), `Bavaria` (not `Bayern`), `Eksjö` (not `Eksjö kommun`). Locale-canonical forms ("Jönköpings län") are the responsibility of **language gazetteers** (Phase 7.1) — they contribute these as aliases on scaffolding nodes. The picker/renderer (Phase 7.2) prefers the user's locale's alias for display when one is available; the underlying canonical path stays GeoNames. This keeps each layer one-source: GeoNames for structural names, language gazetteers for locale display, contributions for leaves. No cross-source merging.
+
+This means contributions in Phase 3+ MUST declare `parentPath` matching GeoNames-canonical names — `parentPath: ['World','Europe','Sweden','Jönköping','Eksjö']`, not `['World','Europe','Sweden','Jönköpings län','Eksjö kommun']`. The "Jönköpings län" form is added later by `lang-sv-geonames`.
+
 After Phase 2 lands, CI is back to green: legacy tests that were red after Task 1.3 either pass (because their fixture self-rooted gazetteer is replaced by scaffolding) or are migrated alongside the scaffolding emit.
 
 ### Task 2.1: Add the continent layer to `world-countries`
@@ -1137,7 +1141,7 @@ allRoots?: GazetteerNode[];
 
 ## Phase 7 — Language gazetteers and consumer wiring
 
-### Task 7.1: Translation path keys move to canonical paths
+### Task 7.1: Translation path keys move to canonical paths + locale-canonical admin forms
 
 **Files:**
 - Modify: `scripts/build-lang-sv-geonames.ts`, `scripts/build-lang-sv-wikidata.ts`, `scripts/build-lang-world-historical.ts`
@@ -1146,12 +1150,30 @@ allRoots?: GazetteerNode[];
 Today: `translations: { 'world-countries': { 'Denmark': ['Danmark'] } }` keyed by gazetteer ID.
 New: `translations: { '__merged__': { 'World › Europe › Denmark': ['Danmark'] } }` keyed against the merged tree's canonical paths.
 
-- [ ] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Denmark']` includes `Danmark`.
-- [ ] Rewrite the build scripts to emit canonical paths.
-- [ ] `mergeTranslations` (in `merge.ts`, Task 1.3) already accepts canonical path keys — no engine change.
-- [ ] PASS. Commit `feat(gazetteers): language gazetteers key translations by canonical path`.
+**New responsibility (per Phase 2 design decision):** language gazetteers contribute **locale-canonical administrative forms** as aliases on scaffolding nodes, since scaffolding ships GeoNames-pure (no synthesized suffixes). Examples for `lang-sv-geonames`:
 
-**Important:** translations apply *only* to scaffolding nodes (admin division names like `Sweden → Sverige`). They never touch leaves — leaf aliases stay exactly as the source authored them, per the no-cross-source rule.
+```json
+{
+  "translations": {
+    "__merged__": {
+      "World › Europe › Sweden › Jönköping": ["Jönköpings län"],
+      "World › Europe › Sweden › Jönköping › Eksjö": ["Eksjö kommun"],
+      "World › Europe › Sweden › Stockholm": ["Stockholms län"],
+      "World › Europe › Sweden › Stockholm › Stockholm": ["Stockholms kommun"]
+    }
+  }
+}
+```
+
+These forms come from GeoNames `alternateNames.txt` filtered by `isolanguage=sv` + feature class `A` (admin), OR from Wikidata SPARQL `Plabel@sv` for admin1+admin2 entities. Each language gazetteer covers its locale's admin forms across all countries, not just one.
+
+- [ ] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Denmark']` includes `Danmark`.
+- [ ] Test: `lang-sv-geonames.translations.__merged__['World › Europe › Sweden › Jönköping']` includes `Jönköpings län`.
+- [ ] Rewrite the build scripts to emit canonical paths AND locale-canonical admin forms for the language's primary scope.
+- [ ] `mergeTranslations` (in `merge.ts`, Task 1.3) already accepts canonical path keys — no engine change.
+- [ ] PASS. Commit `feat(gazetteers): language gazetteers key translations by canonical path + add locale admin forms`.
+
+**Important:** translations apply *only* to scaffolding nodes (admin division names like `Sweden → Sverige`, `Jönköping → Jönköpings län`). They never touch leaves — leaf aliases stay exactly as the leaf-emitting source gazetteer authored them, per the no-cross-source rule.
 
 ### Task 7.2: Renderer + resolver wiring
 
@@ -1162,7 +1184,7 @@ New: `translations: { '__merged__': { 'World › Europe › Denmark': ['Danmark'
 - Modify: `src/main/ipc/gazetteers.ts` (the MCP `resolve_place` path, if applicable)
 
 - [ ] **PlacePicker** — `runSearch` walks the merged tree. Each result row carries the leaf's single `__gazetteer` source for the badge. Two same-named contributions under the same scaffolding parent become two distinct rows, each with its own badge — never one row labelled "N sources." Drop the legacy `cand.gazetteer` dedup-key construction (it always produced N copies; now there is one tree).
-- [ ] **PlaceTreePickerModal** — the tree view walks the merged tree (`gazetteers[0].root` plus `gazetteers[0].allRoots ?? []` siblings).
+- [ ] **PlaceTreePickerModal + breadcrumb rendering — locale-aware display.** The tree view walks the merged tree (`gazetteers[0].root` plus `gazetteers[0].allRoots ?? []` siblings). For display, the picker prefers the locale-canonical form of admin division names: when the user's locale is `sv-SE` and a scaffolding node has aliases like `['Jönköpings län']` from `lang-sv-geonames`, render `Jönköpings län` as the breadcrumb segment instead of the canonical `Jönköping`. Implementation: a small helper `displayName(node, locale)` that picks the first alias from a locale-tagged source if available, falls back to `node.name`. Aliases keep their source provenance via the language gazetteer's `id`. Matching logic stays unchanged — search by either form still resolves to the same canonical node.
 - [ ] **resolver.ts** — `resolveHierarchical`, `resolvePlace`, `searchGazetteer` walk the merged tree. Each returned `PlaceResolveResult.gazetteer` is a single source ID. The cross-gazetteer contradiction-scoring still applies for genuinely ambiguous matches (Dirleton Scotland vs. Canada — different scaffolding parents).
 - [ ] Tests: extend `tests/unit/place-resolver.test.ts` with a "Eksjö, Sverige resolves through canonical scaffolding" assertion — the matchedPath traverses `World > Europe > Sweden > Jönköpings län > Eksjö kommun`, and each surviving candidate carries its single source ID.
 - [ ] PASS. Commit `feat(gazetteers): renderer and resolver consume merged tree`.
