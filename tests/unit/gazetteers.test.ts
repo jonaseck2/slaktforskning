@@ -71,6 +71,19 @@ describe('bundled gazetteers', () => {
     expect(europe.children.map((c: any) => c.name)).toContain('Sweden');
   });
 
+  it('world-admin1 has admin1 nodes under World > continent > country', () => {
+    const wa = require('../../src/api/place-gazetteers/data/world-admin1.json');
+    expect(wa.shape).toBe('scaffolding');
+    expect(wa.root.name).toBe('World');
+    const europe = wa.root.children.find((c: any) => c.name === 'Europe');
+    const sweden = europe.children.find((c: any) => c.name === 'Sweden');
+    // GeoNames admin1CodesASCII.txt provides bare län names ("Jönköping", "Stockholm")
+    // without the "län" suffix. The user-goal form ("Jönköpings län") will land in
+    // aliases via a follow-up Sweden-specific country contribution; the scaffolding
+    // here only carries what GeoNames authors.
+    expect(sweden.children.map((c: any) => c.name)).toContain('Jönköping');
+  });
+
   it('us-immigration-states has 9 states', () => {
     const us = gazetteers.find(g => g.id === 'us-immigration-states')!;
     expect(us.root.children!.length).toBe(9);

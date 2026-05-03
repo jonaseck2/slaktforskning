@@ -213,7 +213,8 @@ function buildWorldAdmin1(
   citiesByCountry: Map<string, CityRow[]>,
   citiesByAdmin1: Map<string, CityRow[]>,
 ): GazetteerNode[] {
-  const nodes: GazetteerNode[] = [];
+  // Group country nodes (with admin1 children) by their canonical continent name.
+  const byContinent = new Map<string, GazetteerNode[]>();
 
   for (const [, country] of [...countries.entries()].sort((a, b) =>
     a[1].name.localeCompare(b[1].name, 'en')
@@ -221,6 +222,12 @@ function buildWorldAdmin1(
     const countryCities = citiesByCountry.get(country.iso2) || [];
     const countryCentroid = cityWeightedCentroid(countryCities);
     if (!countryCentroid) continue;
+
+    const continentName = CONTINENT_NAMES[country.continent];
+    if (!continentName) {
+      // Skip countries with no recognised continent code (shouldn't happen with GeoNames data).
+      continue;
+    }
 
     const aliases: string[] = [country.iso2];
     if (country.iso3) aliases.push(country.iso3);
@@ -253,10 +260,25 @@ function buildWorldAdmin1(
       countryNode.children = children;
     }
 
-    nodes.push(countryNode);
+    if (!byContinent.has(continentName)) byContinent.set(continentName, []);
+    byContinent.get(continentName)!.push(countryNode);
   }
 
-  return nodes;
+  // Emit continents in alphabetical order, each with its country children.
+  const continentNodes: GazetteerNode[] = [];
+  for (const continentName of Object.values(CONTINENT_NAMES).sort()) {
+    const children = byContinent.get(continentName) ?? [];
+    const coords = CONTINENT_COORDS[continentName];
+    continentNodes.push({
+      name: continentName,
+      type: 'continent',
+      lat: coords.lat,
+      lon: coords.lon,
+      children,
+    });
+  }
+
+  return continentNodes;
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -298,10 +320,10 @@ function main() {
   }
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  const today = new Date().toISOString().slice(0, 10);
-  // World-countries scaffolding pinned to its known-good fetch date so JSON output
+  // World scaffolding pinned to its known-good fetch date so JSON output
   // stays stable across re-runs. Bump this when the source dataset is re-fetched.
   const WORLD_COUNTRIES_FETCHED = '2026-05-03';
+  const WORLD_ADMIN1_FETCHED = '2026-05-03';
 
   // 1. World Countries
   console.log('\nBuilding world-countries...');
@@ -337,30 +359,35 @@ function main() {
 
   // 2. World Admin1
   console.log('\nBuilding world-admin1...');
-  const admin1Nodes = buildWorldAdmin1(countries, admin1ByCountry, citiesByCountry, citiesByAdmin1);
+  const admin1ContinentNodes = buildWorldAdmin1(countries, admin1ByCountry, citiesByCountry, citiesByAdmin1);
 
+  let totalAdmin1Countries = 0;
   let totalAdmin1Children = 0;
-  for (const node of admin1Nodes) {
-    totalAdmin1Children += (node.children?.length ?? 0);
+  for (const continent of admin1ContinentNodes) {
+    for (const country of continent.children ?? []) {
+      totalAdmin1Countries++;
+      totalAdmin1Children += (country.children?.length ?? 0);
+    }
   }
 
   const admin1Gazetteer = {
     id: 'world-admin1',
+    shape: 'scaffolding' as const,
     name: 'World Administrative Divisions (Level 1)',
     locale: 'en',
-    description: 'Countries with first-level administrative divisions (states, provinces, regions). Coordinates are population-weighted centroids.',
+    description: 'World > continent > country > admin1 scaffolding. First-level administrative divisions (states, provinces, regions, län). Coordinates are population-weighted centroids.',
     source: {
       name: 'GeoNames',
       url: 'https://www.geonames.org/',
       license: 'CC BY 4.0',
-      fetched: today,
+      fetched: WORLD_ADMIN1_FETCHED,
     },
     root: {
       name: 'World',
-      type: 'root',
+      type: 'world',
       lat: 0,
       lon: 0,
-      children: admin1Nodes,
+      children: admin1ContinentNodes,
     },
   };
 
@@ -368,7 +395,7 @@ function main() {
   const admin1Json = JSON.stringify(admin1Gazetteer, null, 2);
   fs.writeFileSync(admin1Path, admin1Json + '\n');
   const admin1SizeKb = (Buffer.byteLength(admin1Json) / 1024).toFixed(1);
-  console.log(`  ${admin1Nodes.length} countries, ${totalAdmin1Children} admin1 divisions → world-admin1.json (${admin1SizeKb} KB)`);
+  console.log(`  ${totalAdmin1Countries} countries grouped into ${admin1ContinentNodes.length} continents, ${totalAdmin1Children} admin1 divisions → world-admin1.json (${admin1SizeKb} KB)`);
 
   console.log('\nDone!');
 }
