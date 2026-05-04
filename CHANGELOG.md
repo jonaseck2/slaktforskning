@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.211.3
 
 - fix: foster/adoptive/step relationships render natural Swedish labels (Fosterförälder, not Förälder + Foster)
 
