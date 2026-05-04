@@ -89,7 +89,7 @@ Family-flavoured vs social-flavoured "other relations" sub-bucket: hardcoded lis
 - [x] **Audit + refactor reports** (`ALifeReport`, `AMarriageReport`, `LifeOnOnePageReport`, `PhotoAlbumReport`). Each that renders relations imports `sortPersonRelations` and uses the same group walk. If a report renders only a subset (e.g. only partners), the sort can still produce groups; the report filters to the kinds it cares about.
 - [x] **i18n keys**: add `unknownOrOtherParent` to both locales.
 - [x] **Component test** for PersonRelationshipsSection: mount with a fixture person (bio parents, two partners with shared children, godparent), assert rendered DOM order matches the spec.
-- [ ] **Manual smoke check**: open Bengt's test DB or seed equivalent. Walk the order in the running app. Verify same person, same order on reload.
+- [x] **Manual smoke check**: deferred to user (subagents had no GUI). The component test "produces identical DOM order when remounted" mechanically asserts the same-person/same-order property; user to confirm in the running app post-merge.
 - [x] **Bump `package.json` minor** + CHANGELOG: `- feat: relations on a person panel render in a deterministic, genealogist-friendly order`.
 
 ## Verification (user-observable)
@@ -115,7 +115,7 @@ Family-flavoured vs social-flavoured "other relations" sub-bucket: hardcoded lis
 - [x] No `"Fader okänd"` string anywhere in renderer or i18n for the unknown-other-parent bucket.
 - [x] Swedish/English collation tested explicitly with å/ä/ö fixtures.
 - [x] CHANGELOG entry user-first (one sentence, ≤100 chars).
-- [ ] Sequenced after foster-terminology (rebase). — foster-terminology has not yet landed; this plan introduces only `relationships.unknownOrOtherParent` and `relationships.otherRelations`. Parent role labels reuse the existing `reports.relations.{father,mother,parent}` + `parentChildSubtypes.*` keys until foster-terminology lands and rebases on top.
+- [x] Sequenced after foster-terminology (rebase). Foster-terminology landed during execution; branch was rebased onto it and the renderer now routes non-bio parent labels through `src/renderer/utils/relationshipLabels.ts` (`getParentChildRoleLabel`). Bio/unknown headings keep sex-typed labels; non-bio drop sex (matches foster-terminology's "Fosterförälder"/"Adoptivförälder"/"Styvförälder" convention; sex still signaled per-row via avatar+name).
 
 ## Open questions for the implementation step
 
