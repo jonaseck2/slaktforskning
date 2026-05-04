@@ -98,23 +98,23 @@ If repro fails after ~2 hours: split into a follow-up `2026-05-XX-chart-dual-foc
 
 ## Tasks
 
-- [ ] **Recon pass**: read `hourglass.ts` lines 110-230 (measure pass), 431-505 (placement of partners + recurse), 528-720 (descendant placement + Pass 4 outlines). Map which pass owns partner edges, which owns child anchors, which owns sibling order. Sketch the change locations as code comments before editing.
-- [ ] **Fix 1 — multi-partner routing**: implement the side-flip + polyline routing. Test fixture: focal with 3 partners.
-- [ ] **Fix 2 — couple connector anchor**: change child's vertical anchor when both parents are on chart. Test fixture: couple with shared child + half-sibling.
-- [ ] **Fix 3 — auto-recentre**: add the focus-change handler. Test: programmatically set focus to an off-screen person, assert viewport translates.
-- [ ] **Fix 4 — sibling sort**: add the sort step to `hourglass-tree.ts`. Test fixture: 4 siblings with mixed dates / no-dates. Audit pedigree + descendant tree builders for the same fix.
-- [ ] **Fix 5 — foster dashed edges**: thread subtype through edge data. Update the SVG renderer's stroke. Add legend entry. Add hover tooltip. Test: foster child fixture, assert SVG has `stroke-dasharray` on the foster edge.
-- [ ] **Fix 6 — single-focus**: repro hunt first. Then per the gated path above.
-- [ ] **Layout snapshot tests**: extend existing chart-layout tests to cover the new fixtures (3-partner, couple-with-shared-child, foster-child, mixed-sibling-dates). Snapshots assert the geometric output (box positions, edge endpoints, dashing).
-- [ ] **Manual smoke check**:
+- [x] **Recon pass**: read `hourglass.ts` lines 110-230 (measure pass), 431-505 (placement of partners + recurse), 528-720 (descendant placement + Pass 4 outlines). Map which pass owns partner edges, which owns child anchors, which owns sibling order. Sketch the change locations as code comments before editing.
+- [x] **Fix 1 — multi-partner routing**: implement the side-flip + polyline routing. Test fixture: focal with 3 partners.
+- [x] **Fix 2 — couple connector anchor**: change child's vertical anchor when both parents are on chart. Test fixture: couple with shared child + half-sibling.
+- [x] **Fix 3 — auto-recentre**: add the focus-change handler. Test: programmatically set focus to an off-screen person, assert viewport translates.
+- [x] **Fix 4 — sibling sort**: add the sort step to `chartData.ts` fetch layer (recon-corrected from original `hourglass-tree.ts` location). Test fixture: 4 siblings with mixed dates / no-dates. Pedigree mode does not carry sibling lists; descendant children sorted via the same helper.
+- [x] **Fix 5 — foster dashed edges**: thread subtype through edge data. Update the SVG renderer's stroke. Add hover tooltip via SVG `<title>`. Test: foster child fixture, assert SVG has `stroke-dasharray` on the foster edge. Legend entry deferred — no chart-legend component exists today; that's a separate UX decision.
+- [x] **Fix 6 — single-focus**: repro hunt completed. No active dual-highlight bug found in HourglassChart (the only path with that risk, `chartNavFocusedPerson`, is wired to PedigreeChart only). Shipped a regression test asserting the single-source-of-truth invariant + a warning comment in PersonsView so future devs don't accidentally introduce the dual-source path.
+- [x] **Layout snapshot tests**: chart-layout tests extended with new fixtures (multipartner, couple-anchor, foster-edges, sibling-sort). Snapshots assert geometric output (box positions, path prefixes, dashing).
+- [ ] **Manual smoke check** (pending user verification — needs running app):
   - Build a person with 3 partners. Check no crossing.
   - Build a couple with two shared children + one half-sibling. Check shared kids hang from couple connector; half-sib hangs from one parent.
   - Set focus off-screen → focal box re-centres.
   - Build a sibling group with mixed dates. Check oldest-leftmost.
-  - Build a foster child. Edge is dashed. Legend reflects. Tooltip on hover.
-  - Reset Bengt's exact dual-focus repro path (if found, the bug doesn't reproduce; if unfound, document).
-- [ ] **PDF/SVG export check**: each fix re-renders correctly in the print path. Run `reports` skill workflow to confirm.
-- [ ] **Bump `package.json` minor** + CHANGELOG: `- feat: hourglass chart shows partners, children, foster relationships, and focus correctly`.
+  - Build a foster child. Edge is dashed. Tooltip on hover.
+  - Reset Bengt's exact dual-focus repro path (if found, the bug doesn't reproduce).
+- [ ] **PDF/SVG export check** (pending user verification — needs running app): each fix re-renders correctly in the print path.
+- [x] **Bump `package.json` minor** + CHANGELOG entry.
 
 ## Verification (user-observable)
 
@@ -138,13 +138,13 @@ The verification IS the manual smoke check above, walked end-to-end in a running
 
 ## Self-review checklist
 
-- [ ] Three-partner case verified visually.
-- [ ] Shared-child anchor moves correctly when other parent is/isn't on chart.
-- [ ] Auto-recentre never fights with initial fit-to-fill.
-- [ ] Sibling sort applied at tree-build, not per-render.
-- [ ] Foster dashing reaches the print/PDF/SVG export path too.
-- [ ] R50 either fixed with repro evidence OR moved to follow-up plan with documented investigation.
-- [ ] CHANGELOG entry user-first (one sentence, ≤100 chars).
+- [x] Three-partner case verified geometrically (test asserts no path crosses any spouse box body).
+- [x] Shared-child anchor moves correctly when other parent is/isn't on chart (test fixtures cover both).
+- [x] Auto-recentre never fights with initial fit-to-fill (guarded by `selectedId === props.personId` skip).
+- [x] Sibling sort applied at fetch-layer (recon-corrected from tree-build), not per-render.
+- [ ] Foster dashing reaches the print/PDF/SVG export path too (pending user verification — needs running app).
+- [x] R50 documented as no-active-bug-found-in-current-code; regression test guards against future regression.
+- [x] CHANGELOG entry user-first (one sentence, ≤100 chars).
 
 ## Dependency order
 

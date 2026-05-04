@@ -25,6 +25,23 @@
           stroke-width="1.5"
           vector-effect="non-scaling-stroke"
         />
+        <!-- Foster parent_child connectors: same colour as biological, but a
+             distinctive dash pattern (8 4) so they're visibly different from
+             solid edges and from outline placeholder edges (which use 4 3).
+             Wrapped in a <g> so the SVG <title> child surfaces a native
+             tooltip on hover, naming the relationship for users who don't
+             immediately read the dash. -->
+        <g v-for="(d, i) in fosterPaths" :key="'fp' + i">
+          <title>{{ $t('chart.tooltip.fosterRelationship') }}</title>
+          <path
+            :d="d"
+            fill="none"
+            :stroke="chartTokens.line"
+            stroke-width="1.5"
+            stroke-dasharray="8 4"
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
@@ -278,11 +295,18 @@ const layout = computed(() => {
   return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId, selectedParentInfo.value);
 });
 
+// Path-class prefixes:
+//   'D:' — outline placeholder connectors (rendered dashed 4 3, placeholder colour)
+//   'F:' — foster parent_child connectors (rendered dashed 8 4, normal line colour, with tooltip)
+//   (no prefix) — biological/adopted/step/unknown parent_child + couple connectors (solid)
 const solidPaths = computed(() =>
-  layout.value.paths.filter(d => !d.startsWith('D:')),
+  layout.value.paths.filter(d => !d.startsWith('D:') && !d.startsWith('F:')),
 );
 const dashedPaths = computed(() =>
   layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)),
+);
+const fosterPaths = computed(() =>
+  layout.value.paths.filter(d => d.startsWith('F:')).map(d => d.slice(2)),
 );
 
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParentId?: string | null) {
@@ -524,6 +548,59 @@ function centerOnFocal() {
   const viewportW = (scrollRef.value as HTMLElement).clientWidth;
   (scrollRef.value as HTMLElement).scrollLeft = Math.max(0, focalCenterX - viewportW / 2);
 }
+
+// Pan the viewport so the selected box is on screen. Called when the user
+// clicks a relative (changing selectedPersonId) without re-rooting the tree.
+// Only pans when the box is meaningfully off-screen — if it's already inside
+// the viewport with >= 100 px inset from each edge, we leave the scroll
+// position alone so the user isn't jolted by tiny corrections.
+//
+// Skipped when the selected person is also the focal: centerOnFocal() (and
+// the initial fit-to-fill on tree load) already handles that case, and
+// firing both would compete.
+const SCROLL_INSET_PX = 100;
+function scrollSelectedBoxIntoView(selectedId: string | null | undefined) {
+  if (!selectedId || !scrollRef.value || !layout.value.boxes.length) return;
+  // If the selected person is the focal, the load path's centerOnFocal /
+  // initial fit-to-fill already handles positioning. Don't fight it.
+  if (selectedId === props.personId) return;
+  const box = layout.value.boxes.find(b => b.person.id === selectedId);
+  if (!box) return;
+  const el = scrollRef.value as HTMLElement;
+  const z = zoom.value;
+  // SVG renders with viewBox="0 ${viewBoxMinY} svgWidth svgHeight" sized to
+  // (svgWidth * zoom, svgHeight * zoom), so layout coordinates map to screen
+  // pixels as: screenX = box.x * zoom, screenY = (box.y - viewBoxMinY) * zoom.
+  const minY = layout.value.viewBoxMinY;
+  const boxLeft = box.x * z;
+  const boxTop = (box.y - minY) * z;
+  const boxRight = boxLeft + box.w * z;
+  const boxBottom = boxTop + box.h * z;
+  const viewLeft = el.scrollLeft;
+  const viewTop = el.scrollTop;
+  const viewW = el.clientWidth;
+  const viewH = el.clientHeight;
+  const viewRight = viewLeft + viewW;
+  const viewBottom = viewTop + viewH;
+  const insetX = Math.min(SCROLL_INSET_PX, viewW / 2);
+  const insetY = Math.min(SCROLL_INSET_PX, viewH / 2);
+  const insideHorizontally =
+    boxLeft >= viewLeft + insetX && boxRight <= viewRight - insetX;
+  const insideVertically =
+    boxTop >= viewTop + insetY && boxBottom <= viewBottom - insetY;
+  if (insideHorizontally && insideVertically) return;
+  // Centre the box in the viewport.
+  const targetLeft = Math.max(0, boxLeft + (box.w * z) / 2 - viewW / 2);
+  const targetTop = Math.max(0, boxTop + (box.h * z) / 2 - viewH / 2);
+  // scrollTo with behavior:'smooth' gives the browser-native ~200–300 ms ease.
+  el.scrollTo({ left: targetLeft, top: targetTop, behavior: 'smooth' });
+}
+
+watch(() => props.selectedPersonId, (id) => {
+  // Wait for layout to settle (selectedPersonId can change layout via
+  // outline placeholders; box coordinates need to reflect post-update state).
+  nextTick(() => scrollSelectedBoxIntoView(id));
+});
 
 defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>

@@ -4,6 +4,51 @@
 import { CURVE_R } from './constants';
 
 /**
+ * Generate a U-shaped marriage connector between a focal node and a non-adjacent
+ * spouse on the same side. Used for the 3+ spouse case where a direct horizontal
+ * line would visually cross through one or more intermediate spouse boxes.
+ *
+ * The path drops vertically from the focal node's edge to a `jogY` below (or
+ * above) the row, travels horizontally under (or over) any intermediate spouses,
+ * and rises to meet the target spouse's edge.
+ *
+ * `fromX`, `fromY` is the focal-side endpoint (typically focal.x ± BOX_W/2 at
+ * the marriage-line height). `toX`, `toY` is the target spouse's near-edge
+ * endpoint at the same height. `jogY` is the y-coordinate of the horizontal
+ * traversal; it must be different from `fromY` (i.e. clearly below or above
+ * the row).
+ */
+export function marriageJog(
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  jogY: number,
+): string {
+  const dy1 = jogY - fromY;
+  const dy2 = toY - jogY;
+  const dx = toX - fromX;
+  const signY1 = dy1 >= 0 ? 1 : -1;
+  const signY2 = dy2 >= 0 ? 1 : -1;
+  const signX = dx >= 0 ? 1 : -1;
+  const r = Math.min(
+    CURVE_R,
+    Math.abs(dy1) / 2,
+    Math.abs(dy2) / 2,
+    Math.abs(dx) / 2,
+  );
+
+  return [
+    `M ${fromX},${fromY}`,
+    `V ${jogY - signY1 * r}`,
+    `Q ${fromX},${jogY} ${fromX + signX * r},${jogY}`,
+    `H ${toX - signX * r}`,
+    `Q ${toX},${jogY} ${toX},${jogY + signY2 * r}`,
+    `V ${toY}`,
+  ].join(' ');
+}
+
+/**
  * Generate a curved elbow SVG path between two points.
  *
  * - `"right"` (pedigree): horizontal-first elbow (goes right, then bends to target Y)
