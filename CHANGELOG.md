@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.214.0 — Event participants parity + marriage-flow prompts
+
+- feat(events): editing a wedding/marriage/engagement/divorce now shows the "Other person" picker pre-filled — the affordance is symmetric across create and edit
+- feat(events): every event type (baptism, funeral, christening, …) now exposes a Deltagare / Participants section, so witnesses, godparents and mourners can be recorded against any event
+- feat(relationships): saving a couple+marriage relationship without a wedding event now offers to record the wedding inline; declining writes nothing
+- feat(relationships): creating a second partnership while an existing one has no divorce event and the partner is still alive now warns before silent overlap; the user can proceed or cancel
+
 ## 0.213.0 — Hourglass chart polish
 
 - feat: siblings and shared children render oldest-leftmost in the family chart
