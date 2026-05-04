@@ -55,6 +55,10 @@
           @reload="reloadChart"
           @person-context-menu="openContextMenu"
         />
+        <!-- Single-focus invariant (Bengt R50). HourglassChart intentionally does NOT receive
+             :focused-person — its highlight is driven solely by :selected-person-id. If you
+             ever wire :focused-person to HourglassChart, you MUST de-duplicate against
+             selectedPersonId, otherwise two boxes can render the focal fill simultaneously. -->
         <HourglassChart
           v-if="activeTab === 'hourglass'"
           ref="hourglassChartRef"
