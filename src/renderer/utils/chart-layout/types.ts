@@ -78,6 +78,19 @@ export interface TreePerson {
   siblings?: TreePerson[];
   /** For focal's direct children: which spouse is the co-parent. */
   coParentId?: string | null;
+  /**
+   * Subtype of the parent-child relationship that connects this node to its
+   * adjacent generation in the rendered tree.
+   *
+   * - When the node is rendered as a CHILD (i.e. it appears in some parent's
+   *   `children`), this carries the subtype of that parent_child relationship.
+   * - When the node is rendered as a PARENT (i.e. it appears in some child's
+   *   `parents`), this carries the subtype of that parent_child relationship.
+   *
+   * The chart uses `'foster'` to render the connector edge dashed; all other
+   * values (biological, adopted, step, unknown, null) render solid.
+   */
+  parentSubtype?: 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
 }
 
 export interface ChartLayout {
@@ -112,6 +125,8 @@ export interface DescendantNode {
   hasMoreChildren?: boolean; // children exist in DB but not loaded (meaningful at max depth)
   /** Set on focal's direct children only: which of focal's spouses is the other parent (null = none). */
   coParentId?: string | null;
+  /** Subtype of the parent_child relationship from this node's parent → this node. */
+  parentSubtype?: 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
 }
 
 /**

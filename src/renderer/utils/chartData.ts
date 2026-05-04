@@ -7,7 +7,18 @@ import { cropImageToDataUrl, type RegionFrac } from './cropImage';
 type RawPerson  = { id: string; sex: string; living: boolean };
 type RawName    = { id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; sort_order: number; name_type: string; date_from: string | null };
 type RawEvent   = { event_type: string; date_value: string | null; place_id?: string | null };
-type RawRel     = { type: string; person1_id: string | null; person2_id: string | null };
+type RawRel     = { type: string; person1_id: string | null; person2_id: string | null; subtype?: string | null };
+
+type ParentSubtype = 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
+
+/** Coerce `relationships.subtype` from a raw row into the typed enum. */
+function coerceParentSubtype(value: string | null | undefined): ParentSubtype {
+  if (value == null) return null;
+  if (value === 'biological' || value === 'adopted' || value === 'foster' || value === 'step' || value === 'unknown') {
+    return value;
+  }
+  return null;
+}
 type RawPlace   = { id: string; name: string };
 type ProfilePicRef = { mediaId: string; region: RegionFrac | null };
 
@@ -524,7 +535,9 @@ export async function fetchHourglassTreePerson(
     return sorted;
   }
 
-  /** Recursively build ancestors as TreePerson (supports N parents). */
+  /** Recursively build ancestors as TreePerson (supports N parents).
+   *  Parents carry the subtype of the parent_child relationship that links
+   *  them to `personId` (so foster parents can render dashed). */
   async function buildAncestors(personId: string, depth: number): Promise<TreePerson> {
     const node = await fetchPersonNode(personId);
     const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
@@ -535,10 +548,12 @@ export async function fetchHourglassTreePerson(
       return { person: node, parents: [], children: [], spouses, hasMoreAncestors: hasMore };
     }
 
-    let parentIds = rels
-      .filter(r => r.type === 'parent_child' && r.person2_id === personId)
-      .map(r => r.person1_id)
-      .filter((id): id is string => id !== null);
+    const parentRels = rels.filter(r => r.type === 'parent_child' && r.person2_id === personId && r.person1_id !== null);
+    const subtypeByParentId = new Map<string, ParentSubtype>();
+    for (const r of parentRels) {
+      if (r.person1_id) subtypeByParentId.set(r.person1_id, coerceParentSubtype(r.subtype ?? null));
+    }
+    let parentIds = parentRels.map(r => r.person1_id!).filter((id): id is string => id !== null);
 
     if (parentIds.length >= 2) {
       const sexes = await Promise.all(
@@ -547,11 +562,17 @@ export async function fetchHourglassTreePerson(
       parentIds = sortParentIds(parentIds, sexes);
     }
 
-    const parents = await Promise.all(parentIds.map(pid => buildAncestors(pid, depth + 1)));
+    const parents = await Promise.all(parentIds.map(async (pid) => {
+      const tp = await buildAncestors(pid, depth + 1);
+      tp.parentSubtype = subtypeByParentId.get(pid) ?? null;
+      return tp;
+    }));
     return { person: node, parents, children: [], spouses };
   }
 
-  /** Recursively build descendants as TreePerson (with spouses). */
+  /** Recursively build descendants as TreePerson (with spouses).
+   *  Each child carries the subtype of the parent_child relationship that
+   *  links it to `personId` (so foster children can render dashed). */
   async function buildDescendants(personId: string, depth: number, isFocal: boolean): Promise<TreePerson> {
     const node = await fetchPersonNode(personId);
     const rels = (await window.api.relationships.getForPerson(personId)) as RawRel[];
@@ -562,17 +583,30 @@ export async function fetchHourglassTreePerson(
       return { person: node, parents: [], children: [], spouses, hasMoreChildren: hasMore, isFocal };
     }
 
-    const childIds = rels
-      .filter(r => r.type === 'parent_child' && r.person1_id === personId)
-      .map(r => r.person2_id)
-      .filter((id): id is string => id !== null);
+    const childRels = rels.filter(r => r.type === 'parent_child' && r.person1_id === personId && r.person2_id !== null);
+    const subtypeByChildId = new Map<string, ParentSubtype>();
+    for (const r of childRels) {
+      if (r.person2_id) subtypeByChildId.set(r.person2_id, coerceParentSubtype(r.subtype ?? null));
+    }
+    const childIds = childRels.map(r => r.person2_id!).filter((id): id is string => id !== null);
 
-    const children = await Promise.all(childIds.map(cid => buildDescendants(cid, depth + 1, false)));
+    const children = await Promise.all(childIds.map(async (cid) => {
+      const tp = await buildDescendants(cid, depth + 1, false);
+      tp.parentSubtype = subtypeByChildId.get(cid) ?? null;
+      return tp;
+    }));
 
     return { person: node, parents: [], children: sortByBirthOldestFirst(children), spouses, isFocal };
   }
 
-  // Build ancestor parents
+  // Build ancestor parents — capture subtype on each from the focal's
+  // parent_child relationships so foster parents render dashed.
+  const focalParentSubtypeById = new Map<string, ParentSubtype>();
+  for (const r of focalRels) {
+    if (r.type === 'parent_child' && r.person2_id === focalId && r.person1_id) {
+      focalParentSubtypeById.set(r.person1_id, coerceParentSubtype(r.subtype ?? null));
+    }
+  }
   let parentIds = [...focalParentIds];
   if (parentIds.length >= 2) {
     const sexes = await Promise.all(
@@ -581,9 +615,19 @@ export async function fetchHourglassTreePerson(
     parentIds = sortParentIds(parentIds, sexes);
   }
 
-  const parents = await Promise.all(parentIds.map(pid => buildAncestors(pid, 1)));
+  const parents = await Promise.all(parentIds.map(async (pid) => {
+    const tp = await buildAncestors(pid, 1);
+    tp.parentSubtype = focalParentSubtypeById.get(pid) ?? null;
+    return tp;
+  }));
 
-  // Descendant children
+  // Descendant children — capture subtype keyed by child id (from focal-side rels).
+  const focalChildSubtypeById = new Map<string, ParentSubtype>();
+  for (const r of focalRels) {
+    if (r.type === 'parent_child' && r.person1_id === focalId && r.person2_id) {
+      focalChildSubtypeById.set(r.person2_id, coerceParentSubtype(r.subtype ?? null));
+    }
+  }
   const childIds = focalRels
     .filter(r => r.type === 'parent_child' && r.person1_id === focalId)
     .map(r => r.person2_id)
@@ -612,6 +656,7 @@ export async function fetchHourglassTreePerson(
       .map(r => r.person1_id)
       .find(pid => pid !== null && spouseIdSet.has(pid!)) ?? null;
     child.coParentId = coParentId;
+    child.parentSubtype = focalChildSubtypeById.get(cid) ?? null;
     return child;
   }));
   const children = sortByBirthOldestFirst(childrenUnsorted);
@@ -653,8 +698,12 @@ export async function loadAncestorGenerationTP(
   async function updateNode(node: TreePerson): Promise<TreePerson> {
     if (node.person.id === targetPersonId && node.parents.length === 0 && node.hasMoreAncestors) {
       const rels = (await window.api.relationships.getForPerson(targetPersonId)) as RR[];
-      const parentIds = rels
-        .filter(r => r.type === 'parent_child' && r.person2_id === targetPersonId)
+      const parentRels = rels.filter(r => r.type === 'parent_child' && r.person2_id === targetPersonId && r.person1_id !== null);
+      const subtypeByParentId = new Map<string, ParentSubtype>();
+      for (const r of parentRels) {
+        if (r.person1_id) subtypeByParentId.set(r.person1_id, coerceParentSubtype(r.subtype ?? null));
+      }
+      const parentIds = parentRels
         .map(r => r.person1_id)
         .filter((id): id is string => id !== null);
 
@@ -686,7 +735,14 @@ export async function loadAncestorGenerationTP(
           parents: [], children: [], spouses: [],
         })));
         const hasMore = pRels.some(r => r.type === 'parent_child' && r.person2_id === pid && r.person1_id !== null);
-        return { person: pNode, parents: [], children: [], spouses, hasMoreAncestors: hasMore } as TreePerson;
+        return {
+          person: pNode,
+          parents: [],
+          children: [],
+          spouses,
+          hasMoreAncestors: hasMore,
+          parentSubtype: subtypeByParentId.get(pid) ?? null,
+        } as TreePerson;
       }));
 
       return { ...node, parents, hasMoreAncestors: false };
@@ -720,21 +776,25 @@ export async function loadChildrenForNodeTP(
   async function updateNode(node: TreePerson): Promise<TreePerson> {
     if (node.person.id === targetPersonId && node.children.length === 0) {
       const rels = (await window.api.relationships.getForPerson(targetPersonId)) as RR[];
-      const childIds = rels
-        .filter(r => r.type === 'parent_child' && r.person1_id === targetPersonId)
+      const childRels = rels.filter(r => r.type === 'parent_child' && r.person1_id === targetPersonId && r.person2_id !== null);
+      const subtypeByChildId = new Map<string, ParentSubtype>();
+      for (const r of childRels) {
+        if (r.person2_id) subtypeByChildId.set(r.person2_id, coerceParentSubtype(r.subtype ?? null));
+      }
+      const childIds = childRels
         .map(r => r.person2_id)
         .filter((id): id is string => id !== null);
 
       const children = await Promise.all(childIds.map(async (cid) => {
-        const [childNode, childRels] = await Promise.all([
+        const [childNode, cRels] = await Promise.all([
           fetchPersonNode(cid),
           window.api.relationships.getForPerson(cid) as Promise<RR[]>,
         ]);
-        const hasMore = childRels.some(
+        const hasMore = cRels.some(
           r => r.type === 'parent_child' && r.person1_id === cid && r.person2_id !== null,
         );
         // Fetch spouses for each new child
-        const spouseIds = childRels
+        const spouseIds = cRels
           .filter(r => r.type === 'couple')
           .map(r => (r.person1_id === cid ? r.person2_id : r.person1_id))
           .filter((id): id is string => id !== null && id !== cid);
@@ -742,7 +802,14 @@ export async function loadChildrenForNodeTP(
           person: await fetchPersonNode(sid),
           parents: [], children: [], spouses: [],
         })));
-        return { person: childNode, parents: [], children: [], spouses, hasMoreChildren: hasMore } as TreePerson;
+        return {
+          person: childNode,
+          parents: [],
+          children: [],
+          spouses,
+          hasMoreChildren: hasMore,
+          parentSubtype: subtypeByChildId.get(cid) ?? null,
+        } as TreePerson;
       }));
 
       return { ...node, children: sortByBirthOldestFirst(children), hasMoreChildren: false };

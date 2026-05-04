@@ -83,6 +83,14 @@ export default {
       saveSvg: 'SVG',
       savePdf: 'PDF',
     },
+    legend: {
+      fosterRelationship: 'Fosterf\u00f6rh\u00e5llande',
+    },
+    tooltip: {
+      fosterRelationship: 'Fosterf\u00f6rh\u00e5llande',
+      fosterParent: 'Fosterf\u00f6r\u00e4lder',
+      fosterChild: 'Fosterbarn',
+    },
   },
   contextMenu: {
     personActions: 'Personåtgärder',

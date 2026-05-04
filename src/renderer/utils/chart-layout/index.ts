@@ -23,7 +23,7 @@ export { wrapName, wrapFullNameSegments, measureBoxHeight } from './measure';
 export { curvedElbow } from './connectors';
 export { yearFromDate, maxDescendantDepth } from './utils';
 export { computePedigreeLayout } from './pedigree';
-export { computeHourglassLayout, maxDescendantDepthTP } from './hourglass';
+export { computeHourglassLayout, maxDescendantDepthTP, FOSTER_PATH_PREFIX } from './hourglass';
 export { computeTimelineLayout, eventSymbol } from './timeline';
 export { computeDescendantLayout } from './descendant';
 export { buildHourglassTree, buildPedigreeTreePerson, buildDescendantTreePerson, injectOutlines, findPerson, PLACEHOLDER_PREFIX } from './hourglass-tree';

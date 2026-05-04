@@ -29,7 +29,10 @@ function findPersonInTree(node: TreePerson, id: string, visited = new Set<string
   return null;
 }
 
-/** Deep-clone a TreePerson graph so layout mutations don't affect the source. */
+/** Deep-clone a TreePerson graph so layout mutations don't affect the source.
+ *  Spreading `node` first preserves transferable scalar fields like
+ *  `parentSubtype` (foster/adopted/etc) on the clone — those are then carried
+ *  into edge emission below. */
 function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): TreePerson {
   if (visited.has(node.person.id)) return visited.get(node.person.id)!;
   const clone: TreePerson = { ...node, person: { ...node.person }, parents: [], children: [], spouses: [], siblings: undefined };
@@ -40,6 +43,10 @@ function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): T
   if (node.siblings) clone.siblings = node.siblings.map(s => cloneTree(s, visited));
   return clone;
 }
+
+/** Path-string prefix marker for foster parent_child connectors. The renderer
+ *  filters paths by prefix and renders foster edges with a distinctive dash. */
+export const FOSTER_PATH_PREFIX = 'F:';
 
 export function maxDescendantDepthTP(node: TreePerson, visited = new Set<string>()): number {
   if (visited.has(node.person.id)) return 0;
@@ -510,7 +517,9 @@ export function computeHourglassLayout(
     for (let i = 0; i < realParents.length; i++) {
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(depth + 1) + hOf(realParents[i]);
-      paths.push(curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down', sharedMidY));
+      const d = curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down', sharedMidY);
+      const isFoster = realParents[i].parentSubtype === 'foster';
+      paths.push(isFoster ? FOSTER_PATH_PREFIX + d : d);
     }
   }
 
@@ -542,7 +551,9 @@ export function computeHourglassLayout(
     // consistent height between generations, regardless of individual node heights.
     const sharedMidY = descendantRowTopY[depth + 1] - GEN_GAP / 2;
     for (let i = 0; i < n; i++) {
-      paths.push(curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down', sharedMidY));
+      const d = curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down', sharedMidY);
+      const isFoster = realChildren[i].parentSubtype === 'foster';
+      paths.push(isFoster ? FOSTER_PATH_PREFIX + d : d);
       placeDescendants(realChildren[i], childCXs[i], depth + 1);
     }
   }
@@ -569,7 +580,9 @@ export function computeHourglassLayout(
     for (let i = 0; i < focalRealParents.length; i++) {
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(1) + hOf(focalRealParents[i]);
-      paths.push(curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down', sharedMidY));
+      const d = curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down', sharedMidY);
+      const isFoster = focalRealParents[i].parentSubtype === 'foster';
+      paths.push(isFoster ? FOSTER_PATH_PREFIX + d : d);
     }
   }
 
@@ -792,7 +805,9 @@ export function computeHourglassLayout(
         midY = fromY < focalChildSharedMidY ? focalChildSharedMidY : undefined;
       }
 
-      paths.push(curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', midY));
+      const d = curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', midY);
+      const isFoster = child.parentSubtype === 'foster';
+      paths.push(isFoster ? FOSTER_PATH_PREFIX + d : d);
       placeDescendants(child, childCXs[i], 1);
     }
   }
@@ -899,7 +914,16 @@ export function computeHourglassLayout(
     // coordinate pair, plus the lone number after H. V values are Y only
     // (unchanged). We shift paths token-by-token.
     const shiftPath = (d: string): number[] | string => {
-      const tokens = d.split(/\s+/);
+      // Strip and re-attach a path-class prefix marker like "F:" so the
+      // tokenizer only sees the SVG path itself.
+      let prefix = '';
+      let body = d;
+      const colonIdx = d.indexOf(':');
+      if (colonIdx > 0 && colonIdx < 3 && /^[A-Z]+$/.test(d.slice(0, colonIdx))) {
+        prefix = d.slice(0, colonIdx + 1);
+        body = d.slice(colonIdx + 1);
+      }
+      const tokens = body.split(/\s+/);
       for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i];
         if (t === 'M' || t === 'Q') {
@@ -915,7 +939,7 @@ export function computeHourglassLayout(
           if (next !== undefined) tokens[i + 1] = String(parseFloat(next) + shift);
         }
       }
-      return tokens.join(' ');
+      return prefix + tokens.join(' ');
     };
     for (let i = 0; i < paths.length; i++) paths[i] = shiftPath(paths[i]) as string;
     for (let i = 0; i < placeholderPaths.length; i++) placeholderPaths[i] = shiftPath(placeholderPaths[i]) as string;

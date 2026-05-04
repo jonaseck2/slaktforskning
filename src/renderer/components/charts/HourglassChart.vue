@@ -25,6 +25,23 @@
           stroke-width="1.5"
           vector-effect="non-scaling-stroke"
         />
+        <!-- Foster parent_child connectors: same colour as biological, but a
+             distinctive dash pattern (8 4) so they're visibly different from
+             solid edges and from outline placeholder edges (which use 4 3).
+             Wrapped in a <g> so the SVG <title> child surfaces a native
+             tooltip on hover, naming the relationship for users who don't
+             immediately read the dash. -->
+        <g v-for="(d, i) in fosterPaths" :key="'fp' + i">
+          <title>{{ $t('chart.tooltip.fosterRelationship') }}</title>
+          <path
+            :d="d"
+            fill="none"
+            :stroke="chartTokens.line"
+            stroke-width="1.5"
+            stroke-dasharray="8 4"
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
@@ -278,11 +295,18 @@ const layout = computed(() => {
   return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId, selectedParentInfo.value);
 });
 
+// Path-class prefixes:
+//   'D:' — outline placeholder connectors (rendered dashed 4 3, placeholder colour)
+//   'F:' — foster parent_child connectors (rendered dashed 8 4, normal line colour, with tooltip)
+//   (no prefix) — biological/adopted/step/unknown parent_child + couple connectors (solid)
 const solidPaths = computed(() =>
-  layout.value.paths.filter(d => !d.startsWith('D:')),
+  layout.value.paths.filter(d => !d.startsWith('D:') && !d.startsWith('F:')),
 );
 const dashedPaths = computed(() =>
   layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)),
+);
+const fosterPaths = computed(() =>
+  layout.value.paths.filter(d => d.startsWith('F:')).map(d => d.slice(2)),
 );
 
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParentId?: string | null) {
