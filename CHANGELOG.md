@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.210.6
+
+- fix(ci): release workflow no longer self-deadlocks on artifact storage quota. The cleanup job was gated on `release.result == 'success'`, but the release fails when uploads hit quota — so cleanup never ran and quota stayed full forever. Cleanup now runs `if: always()`, keeps only the 3 newest artifacts (was 30), and build artifacts get `retention-days: 1` since they're transit-only between the build and release jobs (the durable copies live on the GitHub Release page). v0.205 → v0.210.5 binaries were lost to this; first release after the fix is v0.210.6.
+- fix(tests): two Genney import tests no longer time out on Ubuntu CI. They asserted "Docker spawn rejects without a real Derby DB," but Ubuntu runners ship Docker preinstalled, so the spawn took longer than the default 5 s test timeout to actually fail. Per-test timeout bumped to 30 s.
+
 ## 0.210.5
 
 - perf(import): large GEDCOM imports (10k+ persons) no longer churn CPU for minutes. `createPerson` was running two correlated `EXISTS` subqueries through `livingSqlExpr` after every INSERT, scanning the growing `events` + `event_participants` tables — turning bulk imports into O(n²). The just-created person has no events yet, so the derivation is skipped. Regression introduced when the stored `living` flag was replaced by the read-time derivation; the report-side fix landed in `loadLivingDerivation`, but the import-side call site was missed.

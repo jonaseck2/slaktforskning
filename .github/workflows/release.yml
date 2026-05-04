@@ -71,6 +71,7 @@ jobs:
           name: Slaktforskning-${{ needs.check-version.outputs.version }}-${{
             matrix.platform }}
           path: out/make/**/*
+          retention-days: 1
 
   release:
     needs: [ check-version, build ]
@@ -89,18 +90,20 @@ jobs:
           files: artifacts/**/*
 
   cleanup:
-    needs: [ release ]
-    if: always() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch')
+    needs: [ build, release ]
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Delete old artifacts (keep 30 most recent)
+      - name: Delete old artifacts (keep 3 most recent)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          # Delete everything beyond the 30 newest artifacts
+          # Free space even when build/release failed — quota exhaustion is the
+          # most likely reason they failed. Keep 3 = 1 version × 3 platforms;
+          # durable copies live on the GitHub Release page anyway.
           gh api "repos/$REPO/actions/artifacts" --paginate \
-            --jq '.artifacts | sort_by(.created_at) | reverse | .[30:] | .[].id' \
+            --jq '.artifacts | sort_by(.created_at) | reverse | .[3:] | .[].id' \
           | while read -r id; do
             echo "Deleting artifact $id"
             gh api --method DELETE "repos/$REPO/actions/artifacts/$id"

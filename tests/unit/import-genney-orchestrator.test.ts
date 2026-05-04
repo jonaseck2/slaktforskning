@@ -234,6 +234,9 @@ describe('importFromGenney — encrypted Derby database', () => {
 // ── importFromGenney — unencrypted Derby → Docker path ────────────────────────
 
 describe('importFromGenney — unencrypted Derby database', () => {
+  // 30s timeout: on runners with Docker preinstalled (ubuntu-latest) the spawn
+  // takes >5s to fail against garbage Derby files. The test only asserts that
+  // the promise eventually rejects, so a longer timeout is harmless elsewhere.
   it('finds unencrypted Derby at root level and attempts Docker (rejects without real DB)', async () => {
     const db = createTestDb();
     const archivePath = writeZip({
@@ -241,9 +244,8 @@ describe('importFromGenney — unencrypted Derby database', () => {
       'seg0/c10.dat': enc('dummy'),
     }, '.backup');
 
-    // Should proceed past archive extraction to ensureJars/detectSchema, then fail
     await expect(importFromGenney(db, archivePath)).rejects.toThrow();
-  });
+  }, 30000);
 
   it('finds unencrypted Derby in a subdirectory', async () => {
     const db = createTestDb();
@@ -253,7 +255,7 @@ describe('importFromGenney — unencrypted Derby database', () => {
     }, '.backup');
 
     await expect(importFromGenney(db, archivePath)).rejects.toThrow();
-  });
+  }, 30000);
 });
 
 // ── importFromGenney — onProgress callback ───────────────────────────────────
