@@ -2,7 +2,7 @@
 
 ## 0.215.0
 
-- feat: relations on a person panel render in a deterministic, genealogist-friendly order — parents (bio → adoptive → foster → step), partners chronologically with their children grouped under each partner, then other relations. Same person, same order, every open.
+- feat: relations on a person panel render in a deterministic order
 
 ## 0.214.0 — Event participants parity + marriage-flow prompts
 

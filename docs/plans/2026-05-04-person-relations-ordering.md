@@ -111,7 +111,7 @@ Family-flavoured vs social-flavoured "other relations" sub-bucket: hardcoded lis
 ## Self-review checklist
 
 - [x] `sortPersonRelations` is pure (no DB, no `t()`, no globals).
-- [x] Both PersonRelationshipsSection AND every report-side relations renderer use the same function. (ALifeReport's parents/spouses/children walk the sort. AMarriageReport consumes `getFamilyUnit` directly — not a relations-list shape; LifeOnOnePageReport iterates couples to build marriage entries, no relations list rendered; PhotoAlbumReport uses a single subject-couple — all three reviewed and confirmed not to render an ordered list of the focal person's relations.)
+- [x] Both PersonRelationshipsSection AND every report-side relations renderer use the same function. (ALifeReport's parents/spouses/children walk the sort. LifeOnOnePageReport's marriages list also walks the sort to render partners chronologically — matches the panel's order. AMarriageReport consumes `getFamilyUnit` directly — not a relations-list shape; PhotoAlbumReport uses a single subject-couple — neither renders a relations list of the focal person.)
 - [x] No `"Fader okänd"` string anywhere in renderer or i18n for the unknown-other-parent bucket.
 - [x] Swedish/English collation tested explicitly with å/ä/ö fixtures.
 - [x] CHANGELOG entry user-first (one sentence, ≤100 chars).

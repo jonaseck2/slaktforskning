@@ -111,7 +111,7 @@ function other(opts: {
 }
 
 function run(rows: RelationRow[], locale = 'sv'): RelationsSortGroup[] {
-  return sortPersonRelations({ focalPersonId: FOCAL, rows, locale });
+  return sortPersonRelations({ rows, locale });
 }
 
 // ── tests ────────────────────────────────────────────────────────────────

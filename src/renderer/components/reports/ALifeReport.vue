@@ -315,7 +315,6 @@ const sortedRelGroups = computed<RelationsSortGroup[]>(() => {
   if (!data.value) return [];
   const rows = data.value.relationships.map(r => toSortRow(r, props.personId));
   return sortPersonRelations({
-    focalPersonId: props.personId,
     rows,
     locale: locale.value,
   });

@@ -106,7 +106,6 @@ const PARENT_BUCKET_ORDER: ParentSubtype[] = ['biological', 'adopted', 'foster',
 const FAMILY_FLAVOURED_OTHER_TYPES = new Set<string>(['godparent', 'godchild', 'sibling', 'fadder']);
 
 export interface SortPersonRelationsInput {
-  focalPersonId: string;
   rows: RelationRow[];
   /**
    * BCP-47 locale tag (e.g. `'sv'`, `'en'`). Used to construct an
@@ -120,11 +119,16 @@ export interface SortPersonRelationsInput {
 /**
  * Sort a person's relations into deterministic groups for display.
  *
+ * The focal person is implicit in the input: every row's `direction` is
+ * already pre-computed against the focal, and the "other person" fields
+ * carry the non-focal side. Callers don't pass `focalPersonId` because the
+ * sort never needs to compare against it.
+ *
  * @returns an ordered array of groups; the renderer walks them in order.
  *          Empty buckets are omitted (no "Adoptive father: none" placeholder).
  */
 export function sortPersonRelations(input: SortPersonRelationsInput): RelationsSortGroup[] {
-  const { focalPersonId, rows, locale } = input;
+  const { rows, locale } = input;
   const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
   const groups: RelationsSortGroup[] = [];
 
@@ -250,12 +254,6 @@ export function sortPersonRelations(input: SortPersonRelationsInput): RelationsS
 
   for (const row of familyFlavoured) groups.push({ kind: 'other', row });
   for (const row of social) groups.push({ kind: 'other', row });
-
-  // Mark `focalPersonId` as read so callers/eslint can rely on the param.
-  // It's part of the public contract for future expansion (e.g. derived
-  // direction tagging) even though the current implementation receives
-  // direction pre-computed on each row.
-  void focalPersonId;
 
   return groups;
 }

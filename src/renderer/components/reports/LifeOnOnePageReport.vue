@@ -67,6 +67,7 @@ import { useMediaChronological, type MediaEntityRef } from '../../composables/us
 import { formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
+import { sortPersonRelations, type RelationRow } from '../../../api/sortPersonRelations';
 
 const props = withDefaults(defineProps<{
   personId: string;
@@ -121,6 +122,9 @@ interface RawRelSummary {
   other_person_id: string | null;
   other_person_names: RawPersonName[];
   other_person_sex: string | null;
+  other_person_birth_date: string | null;
+  partnership_start_date: string | null;
+  other_parent_id: string | null;
 }
 interface RawPerson { id: string; sex: string; living: boolean; notes: string | null; }
 interface PersonSummary {
@@ -221,11 +225,31 @@ interface MarriageEntry {
 
 const marriages = computed<MarriageEntry[]>(() => {
   if (!data.value) return [];
+  // Use the canonical sort to render marriages chronologically (earliest
+  // first; undated last) — matches the Person panel's Relationer order.
+  const rows: RelationRow[] = data.value.relationships.map(rel => ({
+    id: rel.id,
+    type: rel.type,
+    subtype: rel.subtype,
+    person1_id: rel.person1_id,
+    person2_id: rel.person2_id,
+    direction: rel.person1_id === props.personId ? 'outgoing' : 'incoming',
+    other: {
+      id: rel.other_person_id,
+      display_name: personNameFrom(rel.other_person_names),
+      sex: (rel.other_person_sex as 'M' | 'F' | 'U' | null) ?? 'U',
+      birth_date: rel.other_person_birth_date,
+    },
+    start_date: rel.partnership_start_date,
+    other_parent_id: rel.other_parent_id,
+  }));
+  const groups = sortPersonRelations({ rows, locale: locale.value });
   const out: MarriageEntry[] = [];
-  for (const rel of data.value.relationships) {
-    if (rel.type !== 'couple') continue;
+  for (const g of groups) {
+    if (g.kind !== 'partner') continue;
+    const rel = data.value.relationships.find(r => r.id === g.row.id);
+    if (!rel) continue;
     const spouseName = personNameFrom(rel.other_person_names);
-    // Find marriage event tied to this relationship
     const marriageEvent = data.value.events.find(
       e => e.event_type === 'marriage' && e.relationship_id === rel.id,
     ) ?? null;
