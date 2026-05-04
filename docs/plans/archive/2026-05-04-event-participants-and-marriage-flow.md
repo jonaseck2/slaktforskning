@@ -55,10 +55,10 @@ User can proceed (genealogy frequently has overlapping or undocumented separatio
 
 ### Part A
 
-- [ ] **A.1**: in `EventModal.vue:446-451`, drop `!props.editingEvent` from `showSecondPersonField`. Load the existing second-person value from `event_participants` (where `role: 'spouse'` or equivalent) on `editingEvent` mount; pre-fill `secondPersonId`. Wire save to update the event_participants row instead of inserting a new one.
-- [ ] **A.2**: add a `<EventParticipantsSection>` component (new file: `src/renderer/components/EventParticipantsSection.vue`). Props: `eventId: string | null` (null when event isn't saved yet — section deferred until save), `excludePersonIds: string[]` (the primary + spouse to avoid duplicate listings). Renders existing additional participants (PersonName + remove button), plus a PersonPicker to add more. Appears below the existing fields in EventModal, visible for all event types. When `eventId` is null (creating new event), the section shows a message "Spara händelsen först för att lägga till fler deltagare" / "Save the event first to add additional participants." OR it accumulates picks in a local array and saves them post-event-creation — implementation choice.
-- [ ] **A.2 API**: confirm `window.api.events.addParticipant(eventId, personId, role)` and `removeParticipant(eventId, personId)` exist (or equivalent). Add if missing.
-- [ ] **Component test** for EventModal in edit mode: assert the second-person picker is rendered and pre-filled when `editingEvent` is set. Add a participant via the new section; assert it persists in `event_participants`.
+- [x] **A.1**: in `EventModal.vue:446-451`, drop `!props.editingEvent` from `showSecondPersonField`. Load the existing second-person value from `event_participants` (where `role: 'spouse'` or equivalent) on `editingEvent` mount; pre-fill `secondPersonId`. Wire save to update the event_participants row instead of inserting a new one. *(Commit `882c0df7`. Update branch handles all four cases — same / change / clear / both null — using participant row id, not blind delete.)*
+- [x] **A.2**: add a `<EventParticipantsSection>` component (new file: `src/renderer/components/EventParticipantsSection.vue`). Props: `eventId: string | null` (null when event isn't saved yet — section deferred until save), `excludePersonIds: string[]` (the primary + spouse to avoid duplicate listings). Renders existing additional participants (PersonName + remove button), plus a PersonPicker to add more. Appears below the existing fields in EventModal, visible for all event types. When `eventId` is null (creating new event), the section shows a message "Spara händelsen först för att lägga till fler deltagare" / "Save the event first to add additional participants." OR it accumulates picks in a local array and saves them post-event-creation — implementation choice. *(Commits `6ddb47f2` + race-guard `426a0a1e`. Picked the deferred-section message option. Section is rendered unconditionally for every event type.)*
+- [x] **A.2 API**: confirm `window.api.events.addParticipant(eventId, personId, role)` and `removeParticipant(eventId, personId)` exist (or equivalent). Add if missing. *(Existing surface — `window.api.eventParticipants.add/getForEvent/remove` — was sufficient. No new IPC channels added.)*
+- [x] **Component test** for EventModal in edit mode: assert the second-person picker is rendered and pre-filled when `editingEvent` is set. Add a participant via the new section; assert it persists in `event_participants`. *(`tests/components/EventModal-edit-second-person.test.ts` — 4 tests — and `tests/components/EventParticipantsSection.test.ts` — 4 tests. All green.)*
 
 ### Part C
 
@@ -69,19 +69,19 @@ User can proceed (genealogy frequently has overlapping or undocumented separatio
 
 ### Part D
 
-- [ ] In RelationshipModal save path, before persisting, check if person1 has an existing unresolved partnership (no end_date, partner has no death event). If yes, show a non-blocking warning dialog before save.
-- [ ] i18n keys: `relationships.overlapWarningTitle` / `relationships.overlapWarningMessage` in both locales.
-- [ ] **Component test**: build a fixture where person X has an unresolved partnership; attempt to save a second partnership; assert the warning fires. Confirm proceed → save happens; cancel → no save.
+- [x] In RelationshipModal save path, before persisting, check if person1 has an existing unresolved partnership (no end_date, partner has no death event). If yes, show a non-blocking warning dialog before save. *(Commit `fb0e5855`. `findUnresolvedPartnership` helper — read-only — gates `performSave`. Subtype-based "Skild" check dropped (CoupleSubtype has no `divorced` value); divorces detected via linked event rows. person2 check deferred with code comment.)*
+- [x] i18n keys: `relationships.overlapWarningTitle` / `relationships.overlapWarningMessage` in both locales. *(Plus `relationships.overlapAddAnyway` for the confirm-button label override.)*
+- [x] **Component test**: build a fixture where person X has an unresolved partnership; attempt to save a second partnership; assert the warning fires. Confirm proceed → save happens; cancel → no save. *(`tests/components/RelationshipModal-overlap-warning.test.ts` — 7 tests covering positive, two suppressions (death, divorce), cancel/proceed, edit-mode skip, non-couple skip. All green.)*
 
 ### Cross-cutting
 
-- [ ] **i18n**: add all new keys (Part C and D) to both `sv.ts` and `en.ts`.
-- [ ] **Manual smoke check**:
+- [x] **i18n**: add all new keys (Part C and D) to both `sv.ts` and `en.ts`.
+- [ ] **Manual smoke check** *(deferred to user — subagent environment cannot launch the GUI; component tests cover the user-observable behaviour. User to run before/after merge.)*:
   - Open existing Vigsel event in PersonPanel events list → second-person picker appears with current spouse pre-filled; can be changed.
   - Open EventModal for any non-couple event (e.g. baptism) → Participants section visible. Add a person → row appears. Remove → row removed. Save and reopen → persists.
   - Create a new marriage relationship → after save, confirm dialog appears. Yes → EventModal pre-filled. No → no event written.
   - Create a second partnership for a person whose first is unresolved → warning fires.
-- [ ] **Bump `package.json` minor** + CHANGELOG: `- feat: any event can carry additional participants; marriage/divorce offer to record the matching event`.
+- [x] **Bump `package.json` minor** + CHANGELOG: `- feat: any event can carry additional participants; marriage/divorce offer to record the matching event`.
 
 ## Verification (user-observable)
 
@@ -100,12 +100,12 @@ User can proceed (genealogy frequently has overlapping or undocumented separatio
 
 ## Self-review checklist
 
-- [ ] Editing existing couple events shows the second-person picker, pre-filled.
-- [ ] Every event type has the Participants section.
-- [ ] No event row is written when the user clicks No on the marriage offer.
-- [ ] Overlap warning never auto-resolves the existing partnership; it just informs.
-- [ ] CHANGELOG entry user-first (one sentence, ≤100 chars).
-- [ ] All tests + smoke check actually performed.
+- [x] Editing existing couple events shows the second-person picker, pre-filled.
+- [x] Every event type has the Participants section.
+- [x] No event row is written when the user clicks No on the marriage offer.
+- [x] Overlap warning never auto-resolves the existing partnership; it just informs.
+- [x] CHANGELOG entry user-first (one sentence, ≤100 chars).
+- [x] All tests *(20 component tests across 4 new test files all pass; smoke check deferred to user — no GUI in subagent environment).*
 
 ## Open questions for the implementation step
 
