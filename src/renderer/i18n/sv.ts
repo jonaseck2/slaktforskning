@@ -222,6 +222,9 @@ export default {
     newRelationship: 'Ny relation',
     offerWeddingTitle: 'Registrera vigsel?',
     offerWeddingMessage: 'Vill du registrera vigseln för detta äktenskap nu? Du kan alltid lägga till den senare.',
+    overlapWarningTitle: 'Pågående relation finns',
+    overlapWarningMessage: 'Det finns redan en pågående relation med {partnerName}. Vill du ändå lägga till ytterligare?',
+    overlapAddAnyway: 'Lägg till ändå',
   },
   relationshipDetail: {
     title: 'Relation',

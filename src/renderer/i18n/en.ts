@@ -222,6 +222,9 @@ export default {
     newRelationship: 'New Relationship',
     offerWeddingTitle: 'Record a wedding?',
     offerWeddingMessage: 'Would you like to record the wedding for this marriage now? You can always add it later.',
+    overlapWarningTitle: 'Existing partnership',
+    overlapWarningMessage: 'There is already an ongoing partnership with {partnerName}. Add another anyway?',
+    overlapAddAnyway: 'Add anyway',
   },
   relationshipDetail: {
     title: 'Relationship',

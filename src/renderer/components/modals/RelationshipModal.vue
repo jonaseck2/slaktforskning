@@ -139,6 +139,25 @@
     @confirm="onAcceptOffer"
     @cancel="onDeclineOffer"
   />
+
+  <!-- Overlap warning (Part D of plan 2026-05-04-event-participants-and-marriage-flow).
+       Before persisting a NEW couple relationship, warn if person1 already has
+       an unresolved partnership (no divorce event linked, other partner not
+       deceased). The warning is informational; the user can still proceed.
+       PRIME DIRECTIVE: nothing is written until the user confirms. Cancel
+       leaves the modal open with no DB write. The check never modifies the
+       existing relationship — that's what makes it Prime-Directive-safe. -->
+  <ConfirmModal
+    :visible="!!pendingOverlapWarning"
+    :title="$t('relationships.overlapWarningTitle')"
+    :message="pendingOverlapWarning ? $t('relationships.overlapWarningMessage', { partnerName: pendingOverlapWarning.partnerName }) : ''"
+    tone="warning"
+    icon="⚠️"
+    :confirm-label="$t('relationships.overlapAddAnyway')"
+    :cancel-label="$t('common.cancel')"
+    @confirm="onAcceptOverlap"
+    @cancel="onCancelOverlap"
+  />
 </template>
 
 <script setup lang="ts">
@@ -377,7 +396,69 @@ function onWeddingEventClosed() {
   closeSubPanel();
 }
 
-// Save relationship
+// Overlap warning (Part D of plan 2026-05-04-event-participants-and-marriage-flow).
+//
+// When the genealogist creates a NEW couple relationship and person1 already
+// has an unresolved partnership, warn before silent overlap. "Unresolved":
+//   - existing relationship has type='couple', AND
+//   - the other partner has no death event, AND
+//   - the relationship has no linked divorce event.
+//
+// The warning fires only on CREATE (not edit) and only for couple type. The
+// current implementation checks person1 only; person2 check is acceptable as
+// a future enhancement (person2 is often a brand-new spouse with no other
+// relationships, and the plan's user-goal framing is "person X has unresolved
+// partnership" — singular).
+//
+// PRIME DIRECTIVE: this check NEVER writes anything. Cancel keeps the modal
+// open with no DB write; Add Anyway proceeds with the create exactly as
+// authored. The existing relationship is never auto-modified.
+const pendingOverlapWarning = ref<{ partnerName: string } | null>(null);
+
+async function findUnresolvedPartnership(person1Id: string): Promise<{ partnerId: string; partnerName: string } | null> {
+  if (!window.api) return null;
+  const rels = (await window.api.relationships.getForPerson(person1Id)) as Array<{
+    id: string;
+    type: string;
+    person1_id: string | null;
+    person2_id: string | null;
+  }>;
+  for (const rel of rels.filter((r) => r.type === 'couple')) {
+    const otherId = rel.person1_id === person1Id ? rel.person2_id : rel.person1_id;
+    if (!otherId) continue;
+    // Has the relationship been ended by a divorce event?
+    const relEvents = (await window.api.events.forRelationship(rel.id)) as Array<{ event_type: string }>;
+    if (relEvents.some((e) => e.event_type === 'divorce')) continue;
+    // Has the other partner died?
+    const otherEvents = (await window.api.events.forPerson(otherId)) as Array<{ event_type: string }>;
+    if (otherEvents.some((e) => e.event_type === 'death')) continue;
+    // Unresolved: return name for the warning.
+    const names = (await window.api.persons.getNames(otherId)) as Array<{ given_name: string; surname: string }>;
+    const primary = names[0];
+    const partnerName = primary
+      ? [primary.given_name, primary.surname].filter(Boolean).join(' ') || otherId
+      : otherId;
+    return { partnerId: otherId, partnerName };
+  }
+  return null;
+}
+
+function onAcceptOverlap() {
+  pendingOverlapWarning.value = null;
+  // Continue the save the user already initiated. performSave() does the
+  // actual create.
+  void performSave();
+}
+
+function onCancelOverlap() {
+  // Decline: clear the pending state, leave the modal open, no save.
+  pendingOverlapWarning.value = null;
+}
+
+// Save relationship — split into two phases:
+//   handleSave(): validates the form, runs the overlap check, and either
+//     gates on the warning ConfirmModal or proceeds straight to performSave().
+//   performSave(): does the actual create/update + the wedding-offer flow.
 async function handleSave() {
   if (!window.api) return;
   if (!form.person1_id || !form.person2_id) {
@@ -388,6 +469,27 @@ async function handleSave() {
     toast.error(t('relationships.differentPersons'));
     return;
   }
+  // Overlap warning: only on CREATE of a new couple relationship.
+  if (props.editingRelationship === null && form.type === 'couple' && form.person1_id) {
+    try {
+      const overlap = await findUnresolvedPartnership(form.person1_id);
+      if (overlap) {
+        pendingOverlapWarning.value = { partnerName: overlap.partnerName };
+        return;
+      }
+    } catch (err) {
+      // Degrade gracefully: if the check fails, skip the warning rather than
+      // blocking the user. The Prime Directive is preserved either way — we
+      // only ever read here.
+      console.warn('[RelationshipModal] overlap check failed:', err);
+    }
+  }
+  await performSave();
+}
+
+async function performSave() {
+  if (!window.api) return;
+  if (!form.person1_id || !form.person2_id) return;
   try {
     let rel: RelationshipData;
     const payload = {
