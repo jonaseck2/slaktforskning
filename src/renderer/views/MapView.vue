@@ -514,6 +514,8 @@ onMounted(async () => {
   flex-direction: row;
   height: 100%;
   gap: var(--space-xs);
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Left sheet: header slot + toolbar + map */
@@ -523,7 +525,7 @@ onMounted(async () => {
 }
 .map-chart-area {
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   position: relative;

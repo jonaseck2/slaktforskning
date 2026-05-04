@@ -401,6 +401,8 @@ onActivated(() => {
   height: 100%;
   gap: var(--space-xs);
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 /* Layout, surface, and `padding-right: 28px` for the collapse tab come
    from `.list-column` in shared.css. */
