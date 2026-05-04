@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.210.8
+
+- fix(ci): the Vitest root `testTimeout: 15000` was not inheriting into the `unit` and `components` projects, so per-project timeouts silently fell back to the 5 s default. Windows runners hit this on `mcp.test.ts > switch_database` (slow first-time SQLite-WASM init) and `import-genney-orchestrator.test.ts > isDockerAvailable` (slow `where docker` spawn). Now set per-project too.
+- fix(ci): e2e tests against the packaged Linux binary now pass `--no-sandbox --disable-setuid-sandbox` to Electron on Linux runners. GitHub Actions' Ubuntu image ships the packaged binary without the root-owned, mode-4755 `chrome-sandbox` helper that Electron's SUID sandbox requires, so the binary aborted at startup with `chrome-sandbox helper binary was found, but is not configured correctly`. macOS and Windows still launch unmodified.
+
 ## 0.210.7
 
 - perf(ipc): the per-IPC timing log was running unconditionally in production, doing two synchronous `fs.appendFileSync` calls per IPC handler invocation. After a long session it had grown to 1 GB; appending to that file from the Electron main thread on every renderer call eventually serialized the entire IPC bus — `persons:list` calls were observed taking over 4 minutes from queue to response while the actual handler completed in milliseconds. The log is now off by default and gated behind `SLAKTFORSKNING_IPC_LOG=1`; when enabled it uses a buffered write stream instead of sync appends. The 1 GB log this regression produced sits in `~/Library/Application Support/Släktforskning/ipc-timing.log` — safe to truncate.

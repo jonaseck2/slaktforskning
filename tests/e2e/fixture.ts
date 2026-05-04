@@ -118,7 +118,12 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
   // build users get, with no Vite dev-server contention. On POSIX, detached
   // forms a process group so killProcessGroup(-pid) kills all children.
   const spawnCmd  = packagedBinaryPath();
-  const spawnArgs: string[] = [];
+  // Linux GitHub runners ship without root-owned chrome-sandbox helper, so
+  // the SUID sandbox aborts startup with mode-4755 errors. Tests don't need
+  // browser sandboxing — disable on Linux only to keep macOS/Windows real.
+  const spawnArgs: string[] = process.platform === 'linux'
+    ? ['--no-sandbox', '--disable-setuid-sandbox']
+    : [];
   const proc = spawn(spawnCmd, spawnArgs, {
     cwd: PROJECT_ROOT,
     env: {

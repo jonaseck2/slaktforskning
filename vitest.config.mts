@@ -89,6 +89,10 @@ export default defineConfig({
           exclude: ['tests/unit/components/**/*.test.ts'],
           environment: 'node',
           setupFiles: ['./tests/unit/vitestSetup.ts'],
+          // Project-level test config does not inherit testTimeout from the
+          // parent. Windows runners hit the 5s default on slow spawns
+          // (isDockerAvailable, switch_database opening a new sqlite file).
+          testTimeout: 15000,
         },
       },
       {
@@ -101,6 +105,7 @@ export default defineConfig({
           ],
           environment: 'happy-dom',
           setupFiles: ['./tests/components/vitestSetup.ts'],
+          testTimeout: 15000,
         },
       },
     ],
