@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.215.2
+
+- fix(chart): multi-partner connector sits a quarter of the gap above the row, no longer overlapping the parent line
+
 ## 0.215.1
 
 - fix(chart): multi-partner connector now routes above the row so it doesn't cross children

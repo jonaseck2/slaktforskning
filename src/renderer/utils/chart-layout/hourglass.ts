@@ -465,7 +465,9 @@ export function computeHourglassLayout(
     // uses an inverted-U jog above the row so the line does not cross spouse[0..i-1]'s
     // box. Above-row routing stays clear of descendant connectors below the row
     // (children to focal/spouse couples).
-    const jogY = nodeY - GEN_GAP / 2;
+    // Quarter of the gap up — stays well below the parent connector horizontal
+    // which runs at GEN_GAP/2 (the gap midpoint). Avoids visual collision.
+    const jogY = nodeY - GEN_GAP / 4;
     for (let i = 0; i < realSpouses.length; i++) {
       const spCX = spCXs[i];
       const nodeEdgeX = onLeft ? nodeCX - BOX_W / 2 : nodeCX + BOX_W / 2;
@@ -680,7 +682,9 @@ export function computeHourglassLayout(
 
   if (focalRealSpouseNodes.length > 0) {
     const lineY = focalRowY + focalH / 2;
-    const jogY = focalRowY - GEN_GAP / 2;
+    // Quarter of the gap up — stays below the parent connector horizontal
+    // which runs at GEN_GAP/2 (the gap midpoint). Avoids visual collision.
+    const jogY = focalRowY - GEN_GAP / 4;
     const focalEdgeX = spouseOnLeft ? focalCX - BOX_W / 2 : focalCX + BOX_W / 2;
     // Per-spouse connectors: spouse[0] adjacent → direct horizontal stub.
     // spouse[i>=1] → inverted-U jog above the row to avoid crossing intermediate
