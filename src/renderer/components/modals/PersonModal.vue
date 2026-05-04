@@ -75,7 +75,7 @@
             <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
           </template>
           <template v-else>
-            <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('parentChildSubtypes.' + st) }}</option>
+            <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ parentChildSubtypeOptionLabel(st) }}</option>
           </template>
         </select>
       </div>
@@ -106,7 +106,7 @@
               <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
             </template>
             <template v-else>
-              <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('parentChildSubtypes.' + st) }}</option>
+              <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">{{ parentChildSubtypeOptionLabel(st) }}</option>
             </template>
           </select>
         </div>
@@ -210,6 +210,7 @@ import EventModal from './EventModal.vue';
 import PersonPicker from '../PersonPicker.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
+import { getParentChildRoleLabel } from '../../utils/relationshipLabels';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -272,6 +273,26 @@ const isChildMode = computed(() => {
   const m = props.addRelatedTo?.mode;
   return m === 'child' || m === 'son' || m === 'daughter';
 });
+
+/**
+ * For parent_child subtype dropdowns: direction the *new* (or selected
+ * existing) person plays toward the panel host.
+ *   father / mother → new person becomes the parent → render parent labels
+ *                     ("Fosterförälder", "Adoptivförälder", …)
+ *   child / son / daughter → new person becomes the child → render child labels
+ *                     ("Fosterbarn", "Adoptivbarn", …)
+ * Direction comes from addRelatedTo.mode; falls back to 'child' for the
+ * (unreachable) parent_child path with no mode set.
+ */
+const parentChildDirection = computed<'parent' | 'child'>(() => {
+  const m = props.addRelatedTo?.mode;
+  if (m === 'father' || m === 'mother') return 'parent';
+  return 'child';
+});
+
+function parentChildSubtypeOptionLabel(subtype: string): string {
+  return getParentChildRoleLabel(t, parentChildDirection.value, subtype);
+}
 const childSexPicked = ref(props.addRelatedTo?.mode !== 'child');
 const needsChildSexPick = computed(() =>
   props.addRelatedTo?.mode === 'child'

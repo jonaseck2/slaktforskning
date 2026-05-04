@@ -7,6 +7,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import RelationshipsList, { type RelationshipListRow } from './RelationshipsList.vue';
 import { narrateRelationshipRow } from '../utils/screenReaderNarration';
+import { getParentChildRoleLabel } from '../utils/relationshipLabels';
 
 export interface RelRow {
   id: string;
@@ -36,33 +37,43 @@ defineEmits<{ delete: [id: string]; select: [id: string] }>();
 
 const { t } = useI18n();
 
-function roleLabel1(type: string): string {
-  if (type === 'parent_child') return t('relTypes.parent');
+function roleLabel1(type: string, subtype: string | null): string {
+  if (type === 'parent_child') return getParentChildRoleLabel(t, 'parent', subtype);
   if (type === 'couple') return t('relTypes.partner');
   if (type === 'sibling') return t('relTypes.sibling');
   if (type === 'godparent') return t('relTypes.godparent');
   return '';
 }
 
-function roleLabel2(type: string): string {
-  if (type === 'parent_child') return t('relTypes.child');
+function roleLabel2(type: string, subtype: string | null): string {
+  if (type === 'parent_child') return getParentChildRoleLabel(t, 'child', subtype);
   if (type === 'couple') return t('relTypes.partner');
   if (type === 'sibling') return t('relTypes.sibling');
   if (type === 'godparent') return t('relTypes.godchild');
   return '';
 }
 
-function subtypeLabel(type: string, subtype: string): string {
-  if (type === 'couple') return t('coupleSubtypes.' + subtype);
-  if (type === 'parent_child') return t('parentChildSubtypes.' + subtype);
-  return subtype;
+// Header badge label for the row.
+//   parent_child → direction-aware role (parent side, since person1 is the parent)
+//                  e.g. "Fosterförälder" — never composed type+subtype.
+//   couple       → "Par (Gift)" / "Couple (Marriage)" composition; couple
+//                  subtypes are noun phrases that compose cleanly.
+//   other        → bare type label.
+function rowRoleLabel(type: string, subtype: string | null): string {
+  if (type === 'parent_child') {
+    return getParentChildRoleLabel(t, 'parent', subtype);
+  }
+  const typeLabel = t('relTypes.' + type);
+  if (type === 'couple' && subtype) {
+    return `${typeLabel} (${t('coupleSubtypes.' + subtype)})`;
+  }
+  return typeLabel;
 }
 
 const rows = computed<RelationshipListRow[]>(() =>
   props.relationships.map(rel => ({
     id: rel.id,
-    typeLabel: t('relTypes.' + rel.type),
-    subtypeLabel: rel.subtype ? subtypeLabel(rel.type, rel.subtype) : null,
+    roleLabel: rowRoleLabel(rel.type, rel.subtype),
     persons: [
       {
         id: rel.person1_id,
@@ -73,7 +84,7 @@ const rows = computed<RelationshipListRow[]>(() =>
         // Display only — see plan birth-name-display-and-quality-check.
         birthSurname: rel.person1_birth_surname,
         sex: rel.person1_sex ?? 'U',
-        roleLabel: roleLabel1(rel.type),
+        roleLabel: roleLabel1(rel.type, rel.subtype),
       },
       {
         id: rel.person2_id,
@@ -84,7 +95,7 @@ const rows = computed<RelationshipListRow[]>(() =>
         // Display only — see plan birth-name-display-and-quality-check.
         birthSurname: rel.person2_birth_surname,
         sex: rel.person2_sex ?? 'U',
-        roleLabel: roleLabel2(rel.type),
+        roleLabel: roleLabel2(rel.type, rel.subtype),
       },
     ],
     narration: narrateRelationshipRow({

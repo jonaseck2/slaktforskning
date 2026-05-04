@@ -17,8 +17,7 @@
         @keydown.up.prevent="focusPrevRow($event)"
       >
         <td class="type-cell">
-          <span class="type-badge">{{ row.typeLabel }}</span>
-          <span v-if="row.subtypeLabel" class="type-badge">{{ row.subtypeLabel }}</span>
+          <span class="type-badge">{{ row.roleLabel }}</span>
         </td>
         <td>
           <div class="persons-cell">
@@ -66,7 +65,7 @@
         <td class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('a11y.unlinkItem', { item: row.ariaLabel || row.typeLabel })"
+            :aria-label="$t('a11y.unlinkItem', { item: row.ariaLabel || row.roleLabel })"
             :title="$t('common.unlinkTooltip')"
             @click.stop="$emit('delete', row.id)"
           >
@@ -101,8 +100,19 @@ export interface RelationshipListPerson {
 
 export interface RelationshipListRow {
   id: string;
-  typeLabel: string;
-  subtypeLabel?: string | null;
+  /**
+   * Single user-visible label for the relationship row.
+   *
+   * For parent_child rows this is a role label like "Fosterförälder" /
+   * "Adoptivbarn" (computed from direction + subtype via
+   * getParentChildRoleLabel — NEVER composed at render time from
+   * type + subtype, that produced "Förälder Foster").
+   *
+   * For couple / sibling / other rows this is the type label (or
+   * type + subtype if a callsite chooses to combine, but composition
+   * is the callsite's responsibility, not this component's).
+   */
+  roleLabel: string;
   persons: RelationshipListPerson[];
   narration?: string;
   ariaLabel?: string;

@@ -36,8 +36,14 @@
       <div v-if="form.type === 'parent_child'" class="ep-field">
         <span class="ep-field-label">{{ $t('relationshipDetail.subtype') }}</span>
         <select class="ep-input" v-model="form.subtype">
+          <!--
+            person1 = parent by DB convention; the dropdown describes
+            person1's role toward person2. Use parent-direction labels
+            (e.g. "Fosterförälder", "Adoptivförälder") rather than the
+            bare modifier "Foster" / "Adopterad".
+          -->
           <option v-for="st in PARENT_CHILD_SUBTYPE_VALUES" :key="st" :value="st">
-            {{ $t('parentChildSubtypes.' + st) }}
+            {{ parentSubtypeOptionLabel(st) }}
           </option>
         </select>
       </div>
@@ -136,6 +142,7 @@ import {
   PARENT_CHILD_SUBTYPE_VALUES,
 } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
+import { getParentChildRoleLabel } from '../../utils/relationshipLabels';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -212,6 +219,11 @@ const person2Label = computed(() => {
   if (form.type === 'parent_child') return t('relationships.child');
   return t('relationships.person2');
 });
+
+function parentSubtypeOptionLabel(subtype: string): string {
+  // person1 is the parent; render the option as the parent's role.
+  return getParentChildRoleLabel(t, 'parent', subtype);
+}
 
 function onPerson1Select(person: { given_name: string; surname: string }) {
   person1Name.value = [person.given_name, person.surname].filter(Boolean).join(' ') || null;

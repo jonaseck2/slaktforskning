@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: foster/adoptive/step relationships render natural Swedish labels (Fosterförälder, not Förälder + Foster)
+
 ## 0.210.12
 
 - fix: place tree picker filter input now has matching padding around it, like other filter boxes
