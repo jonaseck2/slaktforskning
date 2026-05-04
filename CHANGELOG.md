@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.210.4
+
+- fix(gazetteers): toggling a gazetteer in settings now actually re-resolves places everywhere — the resolved-via line, map pins, and tree picker hits all reflect the new enabled set immediately. The shared resolver's `ready` ref was created per-call, so when GazetteersView invalidated the cache the other consumers (PlacePanel, MapView, useResolvedPlace, …) never saw the flip and kept rendering against the old tree. `ready` is now module-level shared state, `invalidate()` drops the gazetteer references too (not just the result cache), and saving the settings calls `ensureLoaded()` so the new tree is in place before consumers re-run.
+- fix(gazetteers): `resolveBoundary` now respects the user's enabled-set; disabling a boundary gazetteer in settings actually removes its polygons from the map.
+
 ## 0.210.3
 
 - fix(gazetteers): the GazetteersView "Test Lookup" panel now shows one row per source gazetteer that produced a hit (with each source merged with the enabled language gazetteers for alias enrichment), so `world-historical` is visible again when testing historical names like "Sovjetunionen". Previously the loop iterated the merge engine's single synthetic gazetteer, hiding every source under the "Merged hierarchy" label.

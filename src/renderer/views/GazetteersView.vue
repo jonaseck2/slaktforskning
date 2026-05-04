@@ -125,7 +125,7 @@ declare const window: Window & {
 };
 
 const { t } = useI18n();
-const { invalidate: invalidatePlaceResolver } = usePlaceResolver();
+const { invalidate: invalidatePlaceResolver, ensureLoaded: ensurePlaceResolverLoaded } = usePlaceResolver();
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const gazetteerList = ref<GazetteerInfo[]>([]);
@@ -272,7 +272,13 @@ async function loadAll() {
 
 async function saveConfig() {
   await window.api.db.setSetting('gazetteer_config', JSON.stringify(config.value));
+  // Drop every cached resolution and reload the resolver against the new
+  // enabled set. ensureLoaded() flips the shared `ready` ref false → true,
+  // which is what every consumer's `computed` watches to know it should
+  // re-run against the new tree (PlacePanel resolved-via line, MapView
+  // popups, the tree picker's gazetteer suggestions, …).
   invalidatePlaceResolver();
+  await ensurePlaceResolverLoaded();
 }
 
 function toggleGazetteer(id: string, checked: boolean) {
@@ -321,6 +327,7 @@ async function handleImport(event: Event) {
     alert(t('gazetteers.importSuccess', { name: result.name, nodeCount: result.nodeCount }));
     await loadAll();
     invalidatePlaceResolver();
+    await ensurePlaceResolverLoaded();
   } catch (e) {
     alert(t('gazetteers.importError', { error: String(e) }));
   } finally {
@@ -358,6 +365,7 @@ async function doDelete() {
   config.value = { ...config.value, enabledGazetteers: config.value.enabledGazetteers.filter(g => g !== id) };
   await window.api.db.setSetting('gazetteer_config', JSON.stringify(config.value));
   invalidatePlaceResolver();
+  await ensurePlaceResolverLoaded();
   await loadAll();
 }
 
