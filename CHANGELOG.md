@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.215.1
+
+- fix(chart): multi-partner connector now routes above the row so it doesn't cross children
+
 ## 0.215.0
 
 - feat: relations on a person panel render in a deterministic order

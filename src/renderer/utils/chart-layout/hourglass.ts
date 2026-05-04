@@ -462,9 +462,10 @@ export function computeHourglassLayout(
       });
     }
     // Per-spouse connectors: spouse[0] is adjacent (direct horizontal); spouse[i>=1]
-    // uses a U-jog below the row so the line does not cross spouse[0..i-1]'s box.
-    const nodeBottom = nodeY + nodeH;
-    const jogY = nodeBottom + GEN_GAP / 2;
+    // uses an inverted-U jog above the row so the line does not cross spouse[0..i-1]'s
+    // box. Above-row routing stays clear of descendant connectors below the row
+    // (children to focal/spouse couples).
+    const jogY = nodeY - GEN_GAP / 2;
     for (let i = 0; i < realSpouses.length; i++) {
       const spCX = spCXs[i];
       const nodeEdgeX = onLeft ? nodeCX - BOX_W / 2 : nodeCX + BOX_W / 2;
@@ -473,11 +474,11 @@ export function computeHourglassLayout(
         // Direct horizontal stub between focal and adjacent spouse.
         paths.push(curvedElbow(nodeEdgeX, lineY, spNearEdgeX, lineY, 'right'));
       } else {
-        // U-jog: drop from node edge below the row, travel across, rise to the
-        // spouse's bottom edge at its center. The connector enters the spouse
-        // from below, not by passing through any intermediate box.
-        const spBottom = nodeY + hOf(realSpouses[i]);
-        paths.push(marriageJog(nodeEdgeX, lineY, spCX, spBottom, jogY));
+        // Inverted-U jog: rise from node edge above the row, travel across, drop
+        // to the spouse's top edge at its center. The connector enters the spouse
+        // from above, not by passing through any intermediate box, and stays clear
+        // of any child connectors descending from the row below.
+        paths.push(marriageJog(nodeEdgeX, lineY, spCX, nodeY, jogY));
       }
     }
   }
@@ -679,11 +680,11 @@ export function computeHourglassLayout(
 
   if (focalRealSpouseNodes.length > 0) {
     const lineY = focalRowY + focalH / 2;
-    const focalBottom = focalRowY + focalH;
-    const jogY = focalBottom + GEN_GAP / 2;
+    const jogY = focalRowY - GEN_GAP / 2;
     const focalEdgeX = spouseOnLeft ? focalCX - BOX_W / 2 : focalCX + BOX_W / 2;
     // Per-spouse connectors: spouse[0] adjacent → direct horizontal stub.
-    // spouse[i>=1] → U-jog below the row to avoid crossing intermediate boxes.
+    // spouse[i>=1] → inverted-U jog above the row to avoid crossing intermediate
+    // boxes AND to stay clear of descendant connectors below the row.
     for (let i = 0; i < focalRealSpouseNodes.length; i++) {
       const spCX = realSpouseCXAt(i);
       boxes.push({
@@ -694,8 +695,7 @@ export function computeHourglassLayout(
       if (i === 0) {
         paths.push(curvedElbow(focalEdgeX, lineY, spNearEdgeX, lineY, 'right'));
       } else {
-        const spBottom = focalRowY + hOf(focalRealSpouseNodes[i]);
-        paths.push(marriageJog(focalEdgeX, lineY, spCX, spBottom, jogY));
+        paths.push(marriageJog(focalEdgeX, lineY, spCX, focalRowY, jogY));
       }
       placeSpouses(focalRealSpouseNodes[i], spCX, focalRowY);
     }
@@ -760,7 +760,6 @@ export function computeHourglassLayout(
     const focalChildSharedMidY = descendantRowTopY[1] - GEN_GAP / 2;
     const focalBottom = focalRowY + focalH;
     const focalCenterY = focalRowY + focalH / 2;
-    const spouseJogY = focalBottom + GEN_GAP / 2;
     // Build a map of on-chart spouse id → its placed box for couple-anchor lookup.
     const spouseBoxById = new Map<string, BoxLayout>();
     for (const sp of focalRealSpouseNodes) {
@@ -768,7 +767,9 @@ export function computeHourglassLayout(
       if (b) spouseBoxById.set(sp.person.id, b);
     }
     // Index of each focal real spouse in the placed order (drives marriage Y:
-    // spouse[0] → centerline stub; spouse[i>=1] → jog Y under the row).
+    // spouse[0] → centerline stub; spouse[i>=1] → marriage line routed above
+    // the row, child anchored at the row-bottom midpoint between focal and
+    // spouse so the child line drops cleanly without re-crossing the row).
     const spouseIndexById = new Map<string, number>();
     for (let i = 0; i < focalRealSpouseNodes.length; i++) {
       spouseIndexById.set(focalRealSpouseNodes[i].person.id, i);
@@ -793,16 +794,14 @@ export function computeHourglassLayout(
         const innerSpouseX = spouseIsRight ? spouseLeftEdge : spouseRightEdge;
         fromX = (innerFocalX + innerSpouseX) / 2;
         const spIdx = spouseIndexById.get(child.coParentId!) ?? 0;
-        // spouse[0] → adjacent stub at focal centerline; spouse[i>=1] → jog
-        // below the row. Anchor the child at whichever Y the marriage line
-        // for THIS pair traverses, so the child visibly hangs from the
-        // correct couple's connector.
-        fromY = spIdx === 0 ? focalCenterY : spouseJogY;
-        // Below-the-box anchors do not need the row-gap shared midY (they're
-        // already past focalBottom). Letting curvedElbow pick its own midY
-        // produces a clean L when fromY is already at/below the target row's
-        // midpoint, avoiding degenerate arcs.
-        midY = fromY < focalChildSharedMidY ? focalChildSharedMidY : undefined;
+        // spouse[0] → adjacent stub at focal centerline; child anchors there.
+        // spouse[i>=1] → marriage line routed above the row; the child cannot
+        // anchor at that Y because the line would have to come back down
+        // through the row. Anchor at focal-row bottom instead — X-midpoint
+        // between focal and spouse preserves "this couple" framing, Y at
+        // focalBottom drops cleanly through the descendant gap.
+        fromY = spIdx === 0 ? focalCenterY : focalBottom;
+        midY = focalChildSharedMidY;
       }
 
       const d = curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', midY);
