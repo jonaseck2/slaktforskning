@@ -110,7 +110,59 @@ try {
 }
 ```
 
-`BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). Use it for any import or migration that writes multiple rows. For bulk imports, also use `withStatementCache` to avoid re-compiling the same SQL thousands of times — see `/sqlite-finalize`.
+`BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). The rule applies to **any writes-in-loop**, not just imports or migrations — `consolidateMediaFolder`'s 12k `UPDATE media SET file_ref = ?` rewrites needed this and shipped without it (v0.210.7), turning ~50 ms of work into 30+ seconds of WAL fsyncs. Audit any new `for (const row of rows) <DB-write>` loop against this rule. For bulk imports, also use `withStatementCache` to avoid re-compiling the same SQL thousands of times — see `/sqlite-finalize`.
+
+## Worker-thread sync I/O — mandatory rules
+
+The DB worker is a **single thread** that serves every DB-touching IPC channel. Any synchronous I/O call inside a worker handler pins the worker for that call's full duration, queuing every other handler behind it. With media in the DB and a list view mounted, this turns the renderer into a slideshow inside a second.
+
+**Banned in worker handlers** (`src/main/db-worker.ts`, anything `src/api/` reachable from a worker channel):
+
+- `fs.readFileSync`, `fs.writeFileSync`, `fs.appendFileSync`
+- `fs.existsSync`, `fs.statSync`, `fs.accessSync`
+- `fs.cpSync`, `fs.copyFileSync`, `fs.renameSync`
+- Any `child_process.spawnSync` / `execSync`
+
+**Use instead:**
+
+- `fs/promises` versions — they dispatch to libuv's threadpool. Multiple in-flight calls run in parallel; the worker yields between them and stays responsive to other IPCs.
+- For "is the file there?", `await fsp.access(p, fs.constants.F_OK)` (catch → false) instead of `existsSync`.
+- For per-row file ops at scale, a bounded-concurrency worker pool (8 in flight) saturates libuv without blowing it up.
+
+**Past bugs this rule was written against:**
+- `media:readAsDataUrl` did `readFileSync` + base64 — every avatar in PersonsListTab pinned the worker for ~50 ms (5 MB JPEG); 50 rows = 2.5 s of frozen worker. Fixed in v0.210.9.
+- `wrap-handler.ts` wrote a per-IPC timing log via `appendFileSync` — after a long session the log hit 1 GB and every IPC call inherited 100s-of-ms of disk-write latency. `persons:list` was observed taking 4.5 minutes from queue to response. Fixed in v0.210.7 by gating behind `SLAKTFORSKNING_IPC_LOG=1` and switching to a buffered write stream.
+- `consolidateMediaFolder` did 7 sequential `await fsp.*` calls per file → libuv's 4-worker threadpool ran at 75% idle. Fixed in v0.210.7 with a worker pool + `bulkCopyMediaFolder` that uses one `fsp.cp({ recursive: true })` instead of N `copyFile` calls.
+- Same shape lurked in Genney's `fs.cpSync` — sync, blocked main thread for the duration of the media copy. Fixed in v0.210.7.
+
+**Diagnostic logging is in scope.** If you add `console.log` instrumentation that's "just for debugging," gate it behind an env var from day one. A diagnostic that ships unconditionally and writes synchronously becomes a slow-burning regression as the log file grows.
+
+## "Bulk" / "Batch" naming — mandatory contract
+
+A function named `getXyzs` (plural), `bulkXyz`, or `batchXyz` **must** be SQL-level bulk — one query (or a small fixed number) regardless of input size. A JS loop calling the singular `getXyz` is a lying name.
+
+```typescript
+// ❌ Lying: name says "Refs" (plural) but it's N×2 SQL queries
+export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {
+  const result: Record<string, ProfilePicRef | null> = {};
+  for (const id of personIds) result[id] = getPersonProfilePicRef(db, id);
+  return result;
+}
+
+// ✅ Honest: 2 SQL queries total regardless of N (window function + fallback)
+export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {
+  const placeholders = personIds.map(() => '?').join(',');
+  const faceTags = queryAll(db, `
+    SELECT person_id, media_id, x, y, width, height FROM (
+      SELECT ..., ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY created_at) AS rn
+      FROM media_regions WHERE person_id IN (${placeholders})
+    ) WHERE rn = 1
+  `, personIds);
+  // ...
+}
+```
+
+The IPC layer will trust the name — every avatar batch goes through `media:profilePicRefs` expecting one cheap call. A JS-loop fake-bulk function makes batching at the renderer pointless. Fixed example shipped in v0.210.10 (`getPersonProfilePicRefs`).
 
 ## Import/export data integrity
 

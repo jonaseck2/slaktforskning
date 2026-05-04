@@ -119,6 +119,33 @@ Every list+panel route shows three things at once: a left list of entities, a ri
 
 The mechanism: `preload/index.ts` wraps every mutating IPC call in `mutating()` which fans out to `dataChangedListeners`. Composables register and unregister against this single source of truth.
 
+### Per-row IPC fan-out — mandatory batching
+
+A list view that renders N rows and fires one IPC per row is an N-times-too-loud caller of the DB worker. The worker is single-threaded; serialised per-row IPCs pin it for seconds on a paginated list with media in the DB.
+
+**The contract:**
+- A component rendered per-row (`AppAvatar`, thumbnail strip, per-row `count` badge) must NOT call `window.api.*` directly. It calls a Pinia store method that **microtask-coalesces** all calls in the same tick into a single batched IPC.
+- The store method exposes a per-id Promise (so the component still says "give me X for this id"); under the hood, every same-tick caller shares one round-trip via the bulk endpoint (`media:profilePicRefs`, etc.).
+- The bulk endpoint must be SQL-level bulk per `.claude/rules/api.md` "Bulk / Batch naming" — otherwise the renderer-side batching is just hiding an N+1 inside one IPC.
+
+**Reference implementation:** `src/renderer/stores/profilePic.ts` `ensureLoaded` (microtask-batched dispatcher) + `getPersonProfilePicRefs` (single SQL query with `ROW_NUMBER() OVER PARTITION BY`). Vue flushes child component setups within the same microtask, so a 50-row list collapses to one round-trip with no UX change.
+
+### Existence checks — never use un-paged `list()`
+
+`window.api.persons.list()` returns every row + every joined name. Calling it just to check `length === 0` (or any other one-bit answer) hits the worker with a 22k-row query. Use a cheap probe instead:
+
+```typescript
+// ❌ Pulls 22k rows + joined names just to compare to zero
+const persons = await window.api.persons.list();
+noPersonsExist.value = persons.length === 0;
+
+// ✅ One row + a SELECT COUNT(*) via the existing pagination path
+const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: unknown[]; total: number };
+noPersonsExist.value = probe.total === 0;
+```
+
+The same shape applies to any `*.list()` endpoint that has a paged sibling — sources, places, media, etc. Past bug: `PersonsView.load()` (v0.210.7).
+
 ### Shared component catalog
 
 The full list of UI primitives, modals, pickers, panels, composables, Pinia stores, reports, and report primitives lives in `/frontend-design`. Quick orientation:
