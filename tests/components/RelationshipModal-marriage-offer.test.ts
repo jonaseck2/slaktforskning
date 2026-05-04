@@ -127,7 +127,7 @@ describe('RelationshipModal — marriage wedding offer (Part C)', () => {
     expect(savedPayload.id).toBe(REL_ID);
   });
 
-  it('accepting the offer opens an EventModal pre-filled with marriage / person1 / person2 / relationshipId', async () => {
+  it('accepting the offer opens an EventModal pre-filled with marriage + relationshipId (canonical relationship-event shape)', async () => {
     const wrapper = mountModalNew();
     await flushPromises();
     await fillCoupleMarriageAndSave(wrapper);
@@ -142,8 +142,12 @@ describe('RelationshipModal — marriage wedding offer (Part C)', () => {
     const eventModal = wrapper.findComponent({ name: 'EventModal' });
     expect(eventModal.exists()).toBe(true);
     expect(eventModal.props('defaultEventType')).toBe('marriage');
-    expect(eventModal.props('personId')).toBe(PERSON1_ID);
     expect(eventModal.props('relationshipId')).toBe(REL_ID);
+    // The offer flow opens EventModal with only `relationshipId` (no
+    // `personId`) so the wedding event is linked to the couple via
+    // `relationship_id` with no participant rows — matching the canonical
+    // "Add Event from RelationshipModal" shape.
+    expect(eventModal.props('personId')).toBeUndefined();
 
     // `saved` should still be held back — we only emit after the wedding
     // event flow completes (or the user backs out of EventModal).

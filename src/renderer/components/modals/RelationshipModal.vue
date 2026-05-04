@@ -114,9 +114,8 @@
         v-if="subPanel === 'event'"
         mode="subpanel"
         :relationship-id="savedRelationshipId ?? undefined"
-        :person-id="weddingOfferContext ? (form.person1_id ?? undefined) : undefined"
         :editing-event="activeEvent || undefined"
-        :default-event-type="weddingOfferContext ? 'marriage' : (form.type === 'couple' ? 'marriage' : 'other')"
+        :default-event-type="form.type === 'couple' ? 'marriage' : 'other'"
         @cancel="onWeddingEventClosed"
         @close="onWeddingEventClosed"
         @saved="onWeddingEventSaved"
@@ -266,29 +265,19 @@ async function loadEvents() {
 const subPanel = ref<'event' | null>(null);
 const activeEvent = ref<EventRow | null>(null);
 
-// Tracks whether the currently-open EventModal subpanel was launched via the
-// wedding-offer flow (Part C). When true, the modal is pre-filled with
-// person1 as the primary so the spouse picker (`secondPersonId`) defaults to
-// person2 — matching what the genealogist expects after saying "Yes" to the
-// offer. Reset on close.
-const weddingOfferContext = ref(false);
-
 function openAddEvent() {
   activeEvent.value = null;
-  weddingOfferContext.value = false;
   subPanel.value = 'event';
 }
 
 function openEditEvent(ev: EventRow) {
   activeEvent.value = ev;
-  weddingOfferContext.value = false;
   subPanel.value = 'event';
 }
 
 function closeSubPanel() {
   subPanel.value = null;
   activeEvent.value = null;
-  weddingOfferContext.value = false;
 }
 
 // Load person names when editing an existing relationship
@@ -347,9 +336,9 @@ function onAcceptOffer() {
   if (!pendingOffer.value) return;
   // Keep pendingOffer set until the EventModal closes so the parent doesn't
   // emit `saved` and tear us down before the user finishes recording the
-  // wedding. weddingOfferContext flips the EventModal pre-fill into the
-  // "marriage from a person panel" shape (primary=person1, spouse=person2).
-  weddingOfferContext.value = true;
+  // wedding. The EventModal opens with only `relationshipId` (matching the
+  // canonical "Add Event from RelationshipModal" shape); the wedding event
+  // is linked to the couple via `relationship_id` with no participant rows.
   activeEvent.value = null;
   subPanel.value = 'event';
 }
@@ -376,11 +365,11 @@ async function onWeddingEventSaved() {
 function onWeddingEventClosed() {
   // User cancelled / closed the EventModal during the offer flow. Treat as
   // an implicit decline — relationship stays saved, no wedding event.
-  if (weddingOfferContext.value) {
+  if (pendingOffer.value) {
     const rel = pendingOffer.value;
     pendingOffer.value = null;
     closeSubPanel();
-    if (rel) emit('saved', rel);
+    emit('saved', rel);
     return;
   }
   // Otherwise this is a normal events-section close (Add / Edit Event), not
