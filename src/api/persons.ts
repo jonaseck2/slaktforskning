@@ -87,7 +87,12 @@ export function createPerson(
     );
   }
 
-  return getPerson(db, id)!;
+  // Skip livingSqlExpr — the just-created person has no events yet, so living=true
+  // by definition. Calling getPerson() here ran two correlated EXISTS subqueries
+  // against the growing events + event_participants tables on every INSERT, which
+  // turned bulk imports into O(n²). Regression introduced in bad81619.
+  const row = queryOne<Omit<Person, 'living'>>(db, `SELECT * FROM persons WHERE id = ?`, [id])!;
+  return { ...row, living: true };
 }
 
 export function getPerson(db: Database, id: string): Person | null {

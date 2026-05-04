@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import { getMediaDir, getMediaFolderName } from './media';
@@ -17,9 +18,13 @@ export interface ConsolidateResult {
  * file, copy it into `<dbname>-media/` (creating the folder if needed) and rewrite
  * the row to the relative `<dbname>-media/<filename>` form.
  *
- * Idempotent. Safe to call multiple times.
+ * Async to keep the main thread responsive during large imports — copyFile and
+ * stat go through libuv's threadpool so IPC traffic from the renderer (list
+ * loads, undo, etc.) is serviced between file ops instead of being queued
+ * behind tens of seconds of synchronous I/O. Idempotent. Safe to call
+ * multiple times.
  */
-export function consolidateMediaFolder(db: Database, dbPath: string): ConsolidateResult {
+export async function consolidateMediaFolder(db: Database, dbPath: string): Promise<ConsolidateResult> {
   const result: ConsolidateResult = { copied: 0, skipped: 0, missing: 0 };
   const folderName = getMediaFolderName(dbPath);
   const mediaDir = getMediaDir(dbPath);
@@ -28,9 +33,9 @@ export function consolidateMediaFolder(db: Database, dbPath: string): Consolidat
   if (rows.length === 0) return result;
 
   let folderEnsured = false;
-  const ensureFolder = () => {
+  const ensureFolder = async () => {
     if (folderEnsured) return;
-    fs.mkdirSync(mediaDir, { recursive: true });
+    await fsp.mkdir(mediaDir, { recursive: true });
     folderEnsured = true;
   };
 
@@ -40,18 +45,18 @@ export function consolidateMediaFolder(db: Database, dbPath: string): Consolidat
       const ref = row.file_ref;
       if (!ref) { result.skipped++; continue; }
       if (!path.isAbsolute(ref)) { result.skipped++; continue; }
-      if (!fs.existsSync(ref)) { result.missing++; continue; }
+      if (!(await exists(ref))) { result.missing++; continue; }
 
-      ensureFolder();
+      await ensureFolder();
       const filename = path.basename(ref);
       let dest = path.join(mediaDir, filename);
-      if (fs.existsSync(dest) && !sameFile(ref, dest)) {
+      if (await exists(dest) && !(await sameFile(ref, dest))) {
         const ext = path.extname(filename);
         const base = path.basename(filename, ext);
         let n = 1;
-        while (fs.existsSync(dest = path.join(mediaDir, `${base}_${n}${ext}`))) n++;
+        while (await exists(dest = path.join(mediaDir, `${base}_${n}${ext}`))) n++;
       }
-      if (!fs.existsSync(dest)) fs.copyFileSync(ref, dest);
+      if (!(await exists(dest))) await fsp.copyFile(ref, dest);
       const newRef = path.join(folderName, path.basename(dest));
       update.run([newRef, row.id]);
       result.copied++;
@@ -62,10 +67,14 @@ export function consolidateMediaFolder(db: Database, dbPath: string): Consolidat
   return result;
 }
 
-function sameFile(a: string, b: string): boolean {
+async function exists(p: string): Promise<boolean> {
+  try { await fsp.access(p, fs.constants.F_OK); return true; }
+  catch { return false; }
+}
+
+async function sameFile(a: string, b: string): Promise<boolean> {
   try {
-    const sa = fs.statSync(a);
-    const sb = fs.statSync(b);
+    const [sa, sb] = await Promise.all([fsp.stat(a), fsp.stat(b)]);
     return sa.size === sb.size && sa.ino === sb.ino && sa.dev === sb.dev;
   } catch { return false; }
 }

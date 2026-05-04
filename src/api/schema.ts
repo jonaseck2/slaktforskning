@@ -459,4 +459,11 @@ export function initializeSchema(db: Database): void {
     runSql(db, 'ALTER TABLE events RENAME COLUMN description TO notes');
   }
 
+  // v0.211.0: place lookup indexes. findOrCreatePlace and findOrCreatePlaceWithChain
+  // run thousands of `SELECT … WHERE normalized_name = ?` (and `WHERE parent_place_id
+  // = ? AND normalized_name = ?`) per import. Without these indexes each lookup is a
+  // full table scan, making large imports O(n²).
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_normalized_name ON places(normalized_name)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_parent_normalized ON places(parent_place_id, normalized_name)');
+
 }

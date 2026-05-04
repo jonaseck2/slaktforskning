@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.210.5
+
+- perf(import): large GEDCOM imports (10k+ persons) no longer churn CPU for minutes. `createPerson` was running two correlated `EXISTS` subqueries through `livingSqlExpr` after every INSERT, scanning the growing `events` + `event_participants` tables — turning bulk imports into O(n²). The just-created person has no events yet, so the derivation is skipped. Regression introduced when the stored `living` flag was replaced by the read-time derivation; the report-side fix landed in `loadLivingDerivation`, but the import-side call site was missed.
+- perf(places): added `places(normalized_name)` and `places(parent_place_id, normalized_name)` indexes. `findOrCreatePlace` and `findOrCreatePlaceWithChain` were doing full-table scans on every event — fine on day one, O(n²) once you've imported a few thousand places. Idempotent migration runs on next DB open.
+- perf(import): media consolidation no longer freezes the renderer. `consolidateMediaFolder` is now async — `fs.copyFile` and `fs.access` go through libuv's threadpool so the main thread stays free to service IPC traffic (list loads, undo, panel switches) between file copies. Previously a 1.5 GB media import blocked the main thread for ~38 s of synchronous `copyFileSync` calls at ~40 MB/s while the UI sat unresponsive at 10 % CPU.
+- fix(import): the Holger and Genney import handlers now set `importInProgress` like the GEDCOM and archive handlers, so the worker thread skips `checks:runAll` for the duration of the import instead of running quality checks concurrently with the import's writes.
+
 ## 0.210.4
 
 - fix(gazetteers): toggling a gazetteer in settings now actually re-resolves places everywhere — the resolved-via line, map pins, and tree picker hits all reflect the new enabled set immediately. The shared resolver's `ready` ref was created per-call, so when GazetteersView invalidated the cache the other consumers (PlacePanel, MapView, useResolvedPlace, …) never saw the flip and kept rendering against the old tree. `ready` is now module-level shared state, `invalidate()` drops the gazetteer references too (not just the result cache), and saving the settings calls `ensureLoaded()` so the new tree is in place before consumers re-run.

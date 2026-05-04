@@ -113,7 +113,7 @@ export function registerImportHandlers(
       const text = readGedcomFile(gedPath);
       const tree = parseGedcom(text);
       const report = importGedcom(getDb(), tree, options);
-      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { imported: true, filePath: gedPath, report };
     } finally {
       importInProgress = false;
@@ -196,19 +196,26 @@ export function registerImportHandlers(
     const destMediaDir = isBackup
       ? media.getMediaDir(getCurrentDatabasePath())
       : undefined;
-    const result = await importFromGenney(getDb(), options.sourcePath, {
-      schema: options.schema,
-      mediaDir: options.mediaDir,
-      destMediaDir,
-      onProgress: (msg) => {
-        if (win) win.webContents.send('import:genneyProgress', { message: msg });
-      },
-    });
-    if (result.gedcomFallbackPath) {
-      return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
+    importInProgress = true;
+    notifyWorkerImportStart();
+    try {
+      const result = await importFromGenney(getDb(), options.sourcePath, {
+        schema: options.schema,
+        mediaDir: options.mediaDir,
+        destMediaDir,
+        onProgress: (msg) => {
+          if (win) win.webContents.send('import:genneyProgress', { message: msg });
+        },
+      });
+      if (result.gedcomFallbackPath) {
+        return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
+      }
+      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      return { imported: true, summary: result.summary };
+    } finally {
+      importInProgress = false;
+      notifyWorkerImportEnd();
     }
-    consolidateMediaFolder(getDb(), getCurrentDatabasePath());
-    return { imported: true, summary: result.summary };
   });
 
   // Holger / OurKind GEDCOM import
@@ -240,6 +247,8 @@ export function registerImportHandlers(
     const options = opts as { sourcePath: string; mediaDir?: string } | undefined;
     if (!options?.sourcePath) return { success: false, error: 'sourcePath is required' };
     const win = BrowserWindow.getFocusedWindow();
+    importInProgress = true;
+    notifyWorkerImportStart();
     try {
       const result = await importFromHolger(getDb(), {
         sourcePath: options.sourcePath,
@@ -248,10 +257,13 @@ export function registerImportHandlers(
           if (win) win.webContents.send('import:holgerProgress', { message: msg });
         },
       });
-      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { success: true, report: result.report };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };
+    } finally {
+      importInProgress = false;
+      notifyWorkerImportEnd();
     }
   });
 
@@ -286,7 +298,7 @@ export function registerImportHandlers(
     notifyWorkerImportStart();
     try {
       const report = importArchive(getDb(), archivePath, mediaDir);
-      consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
       return { imported: true, filePath: archivePath, report };
     } finally {
       importInProgress = false;
