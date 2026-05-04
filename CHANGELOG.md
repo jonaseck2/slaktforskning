@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.211.1
+
+- fix: place name autocomplete no longer opens its dropdown when the panel switches to a different place
+
 ## 0.211.0
 
 - feat: place name field autocompletes from existing places + gazetteer in both the Add Place modal and the Place Details panel — picking a suggestion only fills the name string, no merge or side-effects

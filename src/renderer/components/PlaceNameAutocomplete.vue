@@ -27,6 +27,7 @@
       :aria-controls="acId + '-listbox'"
       :aria-activedescendant="highlightIndex >= 0 ? acId + '-option-' + highlightIndex : undefined"
       autocomplete="off"
+      @input="onUserInput"
       @focus="onFocus"
       @blur="onBlur"
       @keydown="onKeydown"
@@ -127,24 +128,12 @@ let debounceTimer: ReturnType<typeof setTimeout>;
 // `:value` binding, snapping the user's in-progress text back to the
 // last-committed prop. PlacePicker uses the same local-ref pattern.
 const localValue = ref(props.modelValue);
+// Sync prop → local when the panel switches to a different entity. We do NOT
+// watch localValue and re-emit / re-search from there: that would conflate
+// user typing with prop-driven re-sync (panel switching to a new place
+// would open the dropdown and run a search). The @input handler handles
+// the user-typing path explicitly.
 watch(() => props.modelValue, (v) => { localValue.value = v; });
-// Drive the search + emit off the v-model'd ref directly. Watching the ref
-// (instead of @input) keeps the input behaviour consistent regardless of how
-// the value changed (typing, paste, programmatic).
-watch(localValue, (v) => {
-  emit('update:modelValue', v);
-  clearTimeout(debounceTimer);
-  if (v.length < 1) {
-    results.value = [];
-    gazetteerResults.value = [];
-    return;
-  }
-  // Typing implies the input has focus — open the dropdown so suggestions
-  // are visible. Avoids relying on a separate `focus` event firing first
-  // (some platforms/test harnesses dispatch input without focus).
-  showDropdown.value = true;
-  debounceTimer = setTimeout(() => runSearch(v), 150);
-});
 
 function updateDropdownPosition() {
   const el = inputRef.value;
@@ -234,6 +223,20 @@ async function runSearch(query: string) {
   // we're already showing — the user doesn't need to see "Stockholm" twice.
   const dbNames = new Set(results.value.map(r => r.name.toLowerCase()));
   gazetteerResults.value = suggestions.filter(s => !dbNames.has(s.name.toLowerCase()));
+}
+
+function onUserInput() {
+  // localValue is already in sync via v-model. Treat any input event as the
+  // user typing (paste counts) — emit, open the dropdown, debounce a search.
+  emit('update:modelValue', localValue.value);
+  clearTimeout(debounceTimer);
+  if (localValue.value.length < 1) {
+    results.value = [];
+    gazetteerResults.value = [];
+    return;
+  }
+  showDropdown.value = true;
+  debounceTimer = setTimeout(() => runSearch(localValue.value), 150);
 }
 
 function onFocus() {
