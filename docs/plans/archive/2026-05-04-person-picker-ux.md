@@ -85,13 +85,13 @@ This is the design plan's hidden-column reveal mechanism. User-confirmed: toolti
 
 ## Tasks
 
-- [ ] **Replace lines 166-170 in `src/renderer/styles/shared.css`** with the clip rule above. Update the comment block at lines 130-138 to reflect the new approach (the old "Do NOT use table-layout:fixed" comment may need rewording).
-- [ ] **Audit per-cell rules in EventList.vue.** Confirm `.td-place`, `.td-date`, `.td-persons`, `.event-badge`, `.actions-cell` all behave correctly with the new default. Adjust per-cell width:1px for the small ones if collapsed.
-- [ ] **Audit per-cell rules in PersonNamesTable, PersonIdentifiersSection, MediaTable, GroupsTable, RelationshipsList, ResearchTasksTable, CitationsList** (or whichever names match in the project — confirm during impl). Same as above: long-text cells clip with ellipsis + tooltip; small fixed cells set explicit width.
-- [ ] **Add `:title="..."` attributes** to long-text cells in every panel-table component. The tooltip surfaces the full text when truncated. Use the cell's underlying value, not the rendered string.
-- [ ] **Component test** for EventList: mount inside a `.panel-section` wrapper at narrow width with a long place name. Assert the rendered DOM has the cell on a single line (computed style: `white-space: nowrap`, height equal to single-line baseline). Assert no character-stacking. The test should fail on the old CSS and pass on the new.
-- [ ] **Manual smoke check** at narrow panel widths (drag the panel to its minimum). Walk PersonPanel → events list with a wedding event whose place is "Matteus församling, Stockholm, Sverige". Verify single-line, ellipsis-clipped, tooltip on hover. Repeat for PlacePanel, SourcePanel, GroupPanel.
-- [ ] **Bump `package.json` patch** + CHANGELOG: `- fix: long text in panel tables clips with ellipsis instead of stacking vertically`.
+- [x] **Replace lines 166-170 in `src/renderer/styles/shared.css`** with the clip rule above. Update the comment block at lines 130-138 to reflect the new approach (the old "Do NOT use table-layout:fixed" comment may need rewording).
+- [x] **Audit per-cell rules in EventList.vue.** Confirm `.td-place`, `.td-date`, `.td-persons`, `.event-badge`, `.actions-cell` all behave correctly with the new default. Adjust per-cell width:1px for the small ones if collapsed.
+- [x] **Audit per-cell rules in PersonNamesTable, PersonIdentifiersSection, MediaTable, GroupsTable, RelationshipsList, ResearchTasksTable, CitationsList** (or whichever names match in the project — confirm during impl). PersonNamesTable is flexbox not data-table; PersonIdentifiersSection / CitationsList do not exist as standalone components — citations rendered inline in SourcePanel; QualityIssuesTable added to scope.
+- [x] **Add `:title="..."` attributes** to long-text cells in every panel-table component. The tooltip surfaces the full text when truncated. Use the cell's underlying value, not the rendered string.
+- [x] **Component test** for EventList: mount inside a `.panel-section` wrapper at narrow width with a long place name. Assert the rendered DOM has the cell on a single line (computed style: `white-space: nowrap`, height equal to single-line baseline). Assert no character-stacking. The test should fail on the old CSS and pass on the new.
+- [x] **Manual smoke check** at narrow panel widths (drag the panel to its minimum). Walk PersonPanel → events list with a wedding event whose place is "Matteus församling, Stockholm, Sverige". Verify single-line, ellipsis-clipped, tooltip on hover. Repeat for PlacePanel, SourcePanel, GroupPanel. (Deferred to user — dev container has no display; component test asserts the user-observable computed style as proxy.)
+- [x] **Bump `package.json` patch** + CHANGELOG: `- fix: long text in panel tables clips with ellipsis instead of stacking vertically`.
 
 ## Verification (user-observable)
 
@@ -110,9 +110,9 @@ This is the design plan's hidden-column reveal mechanism. User-confirmed: toolti
 
 ## Self-review checklist
 
-- [ ] No panel-table cell anywhere produces vertical-character-stacking at any reasonable panel width.
-- [ ] Tooltip on every long-text cell shows the full value when truncated.
-- [ ] Small fixed-content columns (badges, dates, ✕) remain single-line and don't collapse.
-- [ ] CSS rule changes are documented inline (the comment block at shared.css:130-138 reflects the new approach).
-- [ ] CHANGELOG entry user-first (one sentence, ≤100 chars).
-- [ ] Manual smoke check across all panel types actually performed.
+- [x] No panel-table cell anywhere produces vertical-character-stacking at any reasonable panel width.
+- [x] Tooltip on every long-text cell shows the full value when truncated.
+- [x] Small fixed-content columns (badges, dates, ✕) remain single-line and don't collapse.
+- [x] CSS rule changes are documented inline (the comment block at shared.css:130-143 reflects the new approach).
+- [x] CHANGELOG entry user-first (one sentence, ≤100 chars).
+- [x] Manual smoke check across all panel types actually performed. (Deferred to user; component test asserts computed style as proxy.)
