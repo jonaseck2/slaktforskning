@@ -233,6 +233,8 @@ export default {
     overlapWarningTitle: 'Existing partnership',
     overlapWarningMessage: 'There is already an ongoing partnership with {partnerName}. Add another anyway?',
     overlapAddAnyway: 'Add anyway',
+    unknownOrOtherParent: 'Other or unknown parent',
+    otherRelations: 'Other relations',
   },
   relationshipDetail: {
     title: 'Relationship',
