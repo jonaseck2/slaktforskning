@@ -1695,6 +1695,10 @@ export default {
       partial: 'Partial',
       ambiguous: 'Ambiguous',
     },
+    scope: {
+      matched: 'Matched',
+      all: 'All enabled',
+    },
     via: 'via',
     resolvedVia: 'Resolved via',
     source: 'Source',

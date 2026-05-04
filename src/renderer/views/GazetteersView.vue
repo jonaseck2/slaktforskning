@@ -19,27 +19,35 @@
       <div class="section-header">
         <h4>{{ $t('gazetteers.testLookup') }}</h4>
       </div>
-      <input
-        v-model="testQuery"
-        type="text"
-        class="test-input"
-        :placeholder="$t('gazetteers.testPlaceholder')"
-      />
+      <div class="test-input-wrap">
+        <input
+          v-model="testQuery"
+          type="text"
+          class="list-filter-input"
+          :placeholder="$t('gazetteers.testPlaceholder')"
+        />
+      </div>
+      <div v-if="testQuery" class="test-scope-filter">
+        <FilterChips :model-value="testScope" :options="testScopeOptions" @update:model-value="setTestScope" />
+      </div>
       <div v-if="testQuery && results.length > 0" class="test-results">
-        <div v-for="r in results" :key="r.gaz.id" class="test-result">
+        <div v-for="r in results" :key="r.gaz.id" class="test-result" :class="{ 'no-match': !r.result }">
           <div class="result-header">
-            <span :class="['quality-badge', 'quality-' + r.result.matchQuality]">
+            <span v-if="r.result" :class="['quality-badge', 'quality-' + r.result.matchQuality]">
               {{ $t('gazetteers.match.' + r.result.matchQuality) }}
             </span>
+            <span v-else class="quality-badge quality-none">{{ $t('gazetteers.noMatch') }}</span>
             <span class="result-gazetteer">{{ r.gaz.name }}</span>
           </div>
-          <div class="result-path">{{ r.result.matchedPath.join(' > ') }}</div>
-          <div class="result-details">
-            <span class="result-coords">{{ r.result.lat.toFixed(4) }}, {{ r.result.lon.toFixed(4) }}</span>
-            <span v-if="r.result.unmatchedComponents.length > 0" class="result-unmatched">
-              {{ $t('gazetteers.unmatched') }}: {{ r.result.unmatchedComponents.join(', ') }}
-            </span>
-          </div>
+          <template v-if="r.result">
+            <div class="result-path">{{ r.result.matchedPath.join(' > ') }}</div>
+            <div class="result-details">
+              <span class="result-coords">{{ r.result.lat.toFixed(4) }}, {{ r.result.lon.toFixed(4) }}</span>
+              <span v-if="r.result.unmatchedComponents.length > 0" class="result-unmatched">
+                {{ $t('gazetteers.unmatched') }}: {{ r.result.unmatchedComponents.join(', ') }}
+              </span>
+            </div>
+          </template>
         </div>
       </div>
       <SectionEmpty v-else-if="testQuery && results.length === 0" :message="$t('gazetteers.noMatch')" />
@@ -122,10 +130,17 @@ const { invalidate: invalidatePlaceResolver } = usePlaceResolver();
 const fileInput = ref<HTMLInputElement | null>(null);
 const gazetteerList = ref<GazetteerInfo[]>([]);
 const config = ref<GazetteerConfig>({ enabledGazetteers: [] });
-const enabledGazetteerObjects = ref<Gazetteer[]>([]);
+// Full Gazetteer objects retained so the test-resolution loop can iterate
+// each source individually (the merge engine collapses everything into one
+// `__merged__` entry, which would hide which gazetteer actually matched).
+const allBundled = ref<Gazetteer[]>([]);
+const allImported = ref<Gazetteer[]>([]);
 const testQuery = ref('');
 const filterCountry = ref('');
 const filterKind = ref('');
+// Test-results scope: 'matched' shows only gazetteers that produced a hit;
+// 'all' shows every enabled gazetteer with an empty-state row when no hit.
+const testScope = ref<'matched' | 'all'>('matched');
 
 const countryOptions = computed(() => {
   const counts = new Map<string, number>();
@@ -180,17 +195,51 @@ const deleteModal = ref<{ visible: boolean; id: string; name: string; message: s
   message: '',
 });
 
-/** Resolve against each enabled gazetteer individually so the user sees all matches */
+/**
+ * Resolve against each enabled non-language gazetteer individually so the
+ * user can see which source contributed each match. Each source is merged
+ * with all enabled language gazetteers (for alias enrichment) before
+ * resolution — that's what makes "Sovjetunionen" reach world-historical
+ * via lang-world-historical. Sources with no hit are dropped unless
+ * `testScope === 'all'`.
+ */
 const results = computed(() => {
   const q = testQuery.value;
   if (!q) return [];
-  return enabledGazetteerObjects.value
-    .map(gaz => ({ gaz, result: resolvePlace(q, [gaz]) }))
-    .filter((r): r is { gaz: Gazetteer; result: NonNullable<ReturnType<typeof resolvePlace>> } => r.result !== null);
+  const enabled = new Set(config.value.enabledGazetteers);
+  const known = [...allBundled.value, ...allImported.value];
+  const isLanguage = (g: Gazetteer): boolean => g.shape === 'language' || g.kind === 'language';
+  const langIds = known.filter(g => enabled.has(g.id) && isLanguage(g)).map(g => g.id);
+  const sources = known.filter(g => enabled.has(g.id) && !isLanguage(g));
+
+  const out: { gaz: Gazetteer; result: ReturnType<typeof resolvePlace> | null }[] = [];
+  for (const gaz of sources) {
+    const merged = loadGazetteers(
+      { enabledGazetteers: [gaz.id, ...langIds] },
+      allBundled.value,
+      allImported.value,
+    );
+    const result = resolvePlace(q, merged);
+    if (result || testScope.value === 'all') out.push({ gaz, result });
+  }
+  return out;
 });
 
-function buildEnabledGazetteers(cfg: GazetteerConfig, bundled: Gazetteer[], imported: Gazetteer[]): Gazetteer[] {
-  return loadGazetteers(cfg, bundled, imported);
+const testScopeOptions = computed(() => {
+  const matched = results.value.filter(r => r.result).length;
+  const enabledNonLang = (() => {
+    const enabled = new Set(config.value.enabledGazetteers);
+    const isLanguage = (g: Gazetteer): boolean => g.shape === 'language' || g.kind === 'language';
+    return [...allBundled.value, ...allImported.value].filter(g => enabled.has(g.id) && !isLanguage(g)).length;
+  })();
+  return [
+    { value: 'matched', label: t('gazetteers.scope.matched'), count: matched },
+    { value: 'all', label: t('gazetteers.scope.all'), count: enabledNonLang },
+  ];
+});
+
+function setTestScope(value: string) {
+  testScope.value = value === 'all' ? 'all' : 'matched';
 }
 
 async function loadAll() {
@@ -211,22 +260,18 @@ async function loadAll() {
     config.value = { enabledGazetteers: list.filter(g => g.bundled).map(g => g.id) };
   }
 
-  // Load full Gazetteer objects for test lookup
+  // Load full Gazetteer objects for the test-resolution loop, which iterates
+  // each source individually rather than the merged tree.
   const [bundled, imported] = await Promise.all([
     window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
     window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
   ]);
-  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, bundled, imported);
+  allBundled.value = bundled;
+  allImported.value = imported;
 }
 
 async function saveConfig() {
   await window.api.db.setSetting('gazetteer_config', JSON.stringify(config.value));
-  // Reload enabled gazetteers for test lookup
-  const [bundled, imported] = await Promise.all([
-    window.api.gazetteers.getBundled() as Promise<Gazetteer[]>,
-    window.api.gazetteers.getImported() as Promise<Gazetteer[]>,
-  ]);
-  enabledGazetteerObjects.value = buildEnabledGazetteers(config.value, bundled, imported);
   invalidatePlaceResolver();
 }
 
@@ -454,14 +499,39 @@ onMounted(loadAll);
   margin-left: 8px;
 }
 
-.test-input {
+.test-input-wrap {
+  padding: 0 0 var(--space-sm);
+}
+/* Mirror the canonical .list-filter-input style used across list views and
+ * the place tree picker, so the test input matches everywhere we ask the
+ * user to type a search query. Style lives here scoped because the same
+ * class is replicated in SourcesView, PlacesView, PersonsListTab, etc. —
+ * extracting to shared.css is a separate consistency pass. */
+.list-filter-input {
   width: 100%;
-  padding: 8px;
-  font-family: inherit;
+  padding: 6px 10px;
   font-size: var(--font-sm);
   border: 1px solid var(--surface-border);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  outline: none;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
   box-sizing: border-box;
+}
+.list-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.test-scope-filter {
+  margin: 0 0 var(--space-sm);
+}
+.test-result.no-match {
+  opacity: 0.65;
+}
+.quality-badge.quality-none {
+  background: var(--surface-hover);
+  color: var(--text-muted);
 }
 
 .test-results {

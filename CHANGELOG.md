@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.210.3
+
+- fix(gazetteers): the GazetteersView "Test Lookup" panel now shows one row per source gazetteer that produced a hit (with each source merged with the enabled language gazetteers for alias enrichment), so `world-historical` is visible again when testing historical names like "Sovjetunionen". Previously the loop iterated the merge engine's single synthetic gazetteer, hiding every source under the "Merged hierarchy" label.
+- feat(gazetteers): test-lookup results have a Matched / All-enabled filter chip — "Matched" (default) shows only sources that resolved the input; "All enabled" lists every enabled source with a "no match" placeholder for the rest, so it's clear which sources you've enabled but didn't contribute.
+- fix(ux): the test-lookup search input uses the canonical `.list-filter-input` style (padding, border-radius, focus ring) shared with the list/tree pickers across the app, instead of its own slightly off variant.
+
 ## 0.210.2
 
 - fix(gazetteers): the resolver no longer requires the matched node to be a leaf to call a match `exact` — "Afrika" → Africa and "Sverige" → Sweden now report `exact` instead of `partial`. The leaf-only shortcut was a relic from when leaves were the "specific" places (parishes, cities); with the global hierarchy every continent and country has children, so the shortcut downgraded every input that landed on a real, fully-consumed node above leaf level.

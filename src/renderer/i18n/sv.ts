@@ -1674,6 +1674,10 @@ export default {
       partial: 'Delvis',
       ambiguous: 'Tvetydig',
     },
+    scope: {
+      matched: 'Matchade',
+      all: 'Alla aktiverade',
+    },
     via: 'via',
     resolvedVia: 'Matchat via',
     source: 'Källa',
