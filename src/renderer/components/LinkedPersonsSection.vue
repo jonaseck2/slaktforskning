@@ -15,7 +15,7 @@
       </thead>
       <tbody>
         <tr v-for="r in rows" :key="r.linkId">
-          <td>
+          <td class="name-cell" :title="((r.given_name || '') + ' ' + (r.surname || '')).trim()">
             <span class="member-cell">
               <AppAvatar
                 :person-id="r.personId"
@@ -25,7 +25,7 @@
                 :sex="(r.sex as 'M' | 'F' | 'U')"
                 size="sm"
               />
-              <router-link :to="'/persons/' + r.personId" class="person-link" @click.stop>
+              <router-link :to="'/persons/' + r.personId" class="person-link name-link" @click.stop>
                 <!-- Display only — see plan birth-name-display-and-quality-check. -->
                 <PersonName
                   :given-name="r.given_name"
@@ -139,10 +139,25 @@ function cancelAdd() {
   padding: var(--space-xs) 0;
 }
 .add-row > :first-child { flex: 1; }
+.name-cell {
+  /* Clip long names with ellipsis instead of letting them stack vertically. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
 .member-cell {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.name-link {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; }
 </style>

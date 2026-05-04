@@ -27,10 +27,10 @@
           @keydown.enter="!props.readonly && editEvent(event)"
           @keydown.space.prevent="!props.readonly && editEvent(event)"
         >
-          <td v-if="props.showPersons" class="td-persons">{{ event.participant_names || '—' }}</td>
-          <td><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
+          <td v-if="props.showPersons" class="td-persons" :title="event.participant_names || ''">{{ event.participant_names || '—' }}</td>
+          <td class="td-badge"><span class="event-badge">{{ $t('eventTypes.' + event.event_type) }}</span></td>
           <td class="td-date">{{ formatDate(event) }}</td>
-          <td class="td-place">
+          <td class="td-place" :title="event.place_name || ''">
             <router-link v-if="event.place_id" :to="{ path: '/places', query: { place: event.place_id } }" class="person-link" @click.stop>{{ event.place_name || '—' }}</router-link>
           </td>
           <td v-if="!props.readonly" class="actions-cell">
@@ -256,8 +256,15 @@ defineExpose({ reload, openAddForm, count: computed(() => events.value.length) }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.td-badge {
+  width: 1px;
+  max-width: none;
+  white-space: nowrap;
+}
 .th-date,
 .td-date {
+  width: 1px;
+  max-width: none;
   white-space: nowrap;
 }
 .td-place {
@@ -266,7 +273,7 @@ defineExpose({ reload, openAddForm, count: computed(() => events.value.length) }
   text-overflow: ellipsis;
   max-width: 0;
 }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; vertical-align: middle; }
 tr.non-interactive { cursor: default; }
 tr.non-interactive:hover td { background: transparent; }
 </style>

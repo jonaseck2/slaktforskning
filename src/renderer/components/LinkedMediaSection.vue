@@ -17,7 +17,7 @@
       </thead>
       <tbody>
         <tr v-for="r in rows" :key="r.linkId" class="clickable-row" @click="openMedia(r.mediaId)">
-          <td>{{ mediaDisplayName(r.title, r.file_ref) }}</td>
+          <td class="title-cell" :title="mediaDisplayName(r.title, r.file_ref)">{{ mediaDisplayName(r.title, r.file_ref) }}</td>
           <td class="td-shrink">{{ r.format || '—' }}</td>
           <td class="actions-cell">
             <AppButton
@@ -92,7 +92,13 @@ function onCommitted({ mediaId }: { mediaId: string }) {
 </script>
 
 <style scoped>
-.th-shrink { width: 1%; white-space: nowrap; }
-.td-shrink { width: 1%; white-space: nowrap; color: var(--text-muted); }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.th-shrink { width: 1%; max-width: none; white-space: nowrap; }
+.td-shrink { width: 1%; max-width: none; white-space: nowrap; color: var(--text-muted); }
+.title-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; }
 </style>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.212.2
+
+- fix: long text in panel tables clips with ellipsis instead of stacking vertically
+
 ## 0.212.1
 
 - fix(places): the map sheet no longer overflows its column when the center is squeezed narrow (small windows, default panel widths, static-export preview iframe). `.map-chart-area` was held open at `min-width: 200px` while its parent shrank, so it leaked across the list and panel columns. Now matches `PersonsView`'s `.viz-chart-area` (min-width: 0 + overflow: hidden on the wrapper) — the map shrinks cleanly with its slot.

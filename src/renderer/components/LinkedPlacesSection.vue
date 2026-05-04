@@ -15,7 +15,7 @@
       </thead>
       <tbody>
         <tr v-for="r in rows" :key="r.linkId">
-          <td>
+          <td class="name-cell" :title="r.name">
             <router-link :to="'/places/' + r.placeId" class="person-link" @click.stop>
               {{ r.name }}
             </router-link>
@@ -93,5 +93,11 @@ function cancelAdd() {
   padding: var(--space-xs) 0;
 }
 .add-row > :first-child { flex: 1; }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.name-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; }
 </style>

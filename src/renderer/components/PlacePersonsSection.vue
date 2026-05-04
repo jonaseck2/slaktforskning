@@ -12,13 +12,13 @@
       </thead>
       <tbody>
         <tr v-for="p in persons" :key="p.id" class="clickable-row" @click="$router.push('/persons/' + p.id)">
-          <td class="person-cell">
+          <td class="person-cell" :title="[p.given_name, p.surname].filter(Boolean).join(' ') || ''">
             <AppAvatar :person-id="p.id" :given-name="p.given_name" :surname="p.surname" :sex="p.sex" size="sm" />
-            <span class="person-link">{{ [p.given_name, p.surname].filter(Boolean).join(' ') || '—' }}</span>
+            <span class="person-link person-name-text">{{ [p.given_name, p.surname].filter(Boolean).join(' ') || '—' }}</span>
           </td>
-          <td><span :class="['sex-badge', 'sex-' + p.sex]">{{ p.sex }}</span></td>
+          <td class="sex-cell"><span :class="['sex-badge', 'sex-' + p.sex]">{{ p.sex }}</span></td>
           <td class="years-cell">{{ formatYears(p.first_year, p.last_year) }}</td>
-          <td>{{ p.event_count }}</td>
+          <td class="count-cell">{{ p.event_count }}</td>
         </tr>
       </tbody>
     </table>
@@ -63,6 +63,26 @@ defineExpose({ reload });
 </script>
 
 <style scoped>
-.person-cell { display: flex; align-items: center; gap: var(--space-xs); }
-.years-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  /* Default for panel-section data-table cells: max-width: 0 + nowrap +
+     ellipsis, so long names clip on a single line. The flex container's
+     min-width: 0 lets the name span shrink instead of overflowing. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+  min-width: 0;
+}
+.person-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.sex-cell { width: 1px; max-width: none; white-space: nowrap; }
+.years-cell { font-variant-numeric: tabular-nums; white-space: nowrap; width: 1px; max-width: none; }
+.count-cell { width: 1px; max-width: none; white-space: nowrap; text-align: right; }
 </style>

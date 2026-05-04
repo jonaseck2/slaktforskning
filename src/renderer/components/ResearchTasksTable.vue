@@ -28,15 +28,15 @@
         @keydown.down.prevent="focusNextRow($event)"
         @keydown.up.prevent="focusPrevRow($event)"
       >
-        <td><span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span></td>
-        <td>
+        <td class="td-shrink"><span :class="['priority-badge', 'priority-' + task.priority]">{{ task.priority }}</span></td>
+        <td class="td-shrink">
           <span
             :class="['status-chip', 'status-' + task.status, { 'status-readonly': props.readonly }]"
             @click.stop="!props.readonly && cycleStatus(task)"
             :title="$t('researchTasks.status')"
           >{{ $t('researchTasks.statuses.' + task.status) }}</span>
         </td>
-        <td class="task-text">{{ task.task }}</td>
+        <td class="task-text" :title="task.task">{{ task.task }}</td>
         <td v-if="!props.readonly" class="actions-cell">
           <button
             class="btn-sm btn-delete"
@@ -120,8 +120,8 @@ function handleDelete(id: string) { del.ask(id); }
 </script>
 
 <style scoped>
-.th-shrink { width: 1%; white-space: nowrap; }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.th-shrink, .td-shrink { width: 1%; max-width: none; white-space: nowrap; }
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; vertical-align: middle; }
 .priority-badge {
   display: inline-block;
   width: 24px;
@@ -157,6 +157,9 @@ function handleDelete(id: string) { del.ask(id); }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* In panel-section context, the shared rule's `max-width: 0` clips the
+     long task text to the column's available width. In wider list-view
+     context, keep a readable cap so the column doesn't dominate. */
   max-width: 380px;
 }
 .selected-row { background: var(--surface-hover); }

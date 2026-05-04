@@ -133,9 +133,14 @@
    which lets a long URL or table cell grow the section. Setting
    min-width:0 lets it shrink, and overflow-x:hidden on the body clips
    anything that still doesn't wrap.
-   Do NOT use table-layout:fixed — it distributes width equally across
-   columns and squashes shrink-to-fit columns (badges, dates, action ✕)
-   into stacked vertical content. */
+   Panel-section table cells default to single-line + ellipsis clip
+   (see rule below). The clip rule sets max-width:0 on every cell so
+   text-overflow:ellipsis fires on a <td> whose content exceeds the
+   column. Small fixed-content cells (badges, dates, action ✕) opt
+   back in with `width: 1px; max-width: none; white-space: nowrap;`
+   so they don't collapse to zero. Do NOT use table-layout:fixed — it
+   distributes width equally across columns and squashes the same
+   shrink-to-fit columns into stacked vertical content. */
 .panel-section { min-width: 0; }
 .panel-section-body {
   min-width: 0;
@@ -165,8 +170,10 @@
 }
 .panel-section .data-table th,
 .panel-section .data-table td {
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
 }
 /* Side-panel tables are narrow + the row content is self-evident
    (avatar+name link, date, action ✕). Skip the column headers for a

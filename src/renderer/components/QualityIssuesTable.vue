@@ -41,7 +41,7 @@
             </template>
             <span v-else class="entity-name">{{ entityLabel(r) }}</span>
           </td>
-          <td :class="{ 'ignored-text': isIgnored(r) }">{{ checkMessage(r) }}</td>
+          <td class="message-cell" :class="{ 'ignored-text': isIgnored(r) }" :title="checkMessage(r)">{{ checkMessage(r) }}</td>
           <td v-if="!props.readonly" class="actions-cell">
             <button
               class="btn-sm btn-delete"
@@ -164,8 +164,14 @@ function entityRoute(r: QualityIssue, id: string): { path: string; query?: Recor
 </script>
 
 <style scoped>
-.th-shrink, .td-shrink { width: 1%; white-space: nowrap; }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.th-shrink, .td-shrink { width: 1%; max-width: none; white-space: nowrap; }
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; vertical-align: middle; }
+.message-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
 .severity-badge {
   font-size: var(--font-xs);
   font-weight: 700;

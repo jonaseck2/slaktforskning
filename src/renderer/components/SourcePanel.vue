@@ -128,14 +128,14 @@
             </thead>
             <tbody>
               <tr v-for="cit in citations" :key="cit.id" class="clickable-row" @click="editingCitation = cit">
-                <td>
+                <td class="entity-cell" :title="cit.entityLabel || ''">
                   <a v-if="cit.entityRoute" class="entity-link" href="#" @click.stop.prevent="cit.entityRoute && router.push(cit.entityRoute)">
                     {{ cit.entityLabel }}
                   </a>
                   <span v-else-if="cit.entityLabel" class="muted">{{ cit.entityLabel }}</span>
                   <span v-else class="muted">—</span>
                 </td>
-                <td>
+                <td class="confidence-cell">
                   <span :class="'confidence-badge confidence-' + cit.confidence">
                     {{ $t('confidenceLevels.' + cit.confidence) }}
                   </span>
@@ -542,5 +542,12 @@ async function performDelete() {
   flex: 1;
 }
 
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; }
+.entity-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.confidence-cell { width: 1px; max-width: none; white-space: nowrap; }
 </style>

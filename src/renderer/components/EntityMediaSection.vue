@@ -29,7 +29,7 @@
             <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
             <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
           </td>
-          <td>{{ mediaDisplayName(m.title, m.file_ref) }}</td>
+          <td class="title-cell" :title="mediaDisplayName(m.title, m.file_ref)">{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>
           <td v-if="!props.readonly" class="actions-cell">
             <button v-if="m.file_ref" class="btn-sm" @click.stop="openFile(m.id)">{{ $t('media.open') }}</button>
@@ -162,8 +162,14 @@ watch(() => `${props.entityType}:${props.entityId}`, () => load(), { immediate: 
 </script>
 
 <style scoped>
-.th-shrink, .td-shrink { width: 1%; white-space: nowrap; }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; vertical-align: middle; }
+.th-shrink, .td-shrink { width: 1%; max-width: none; white-space: nowrap; }
+.title-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; vertical-align: middle; }
 .order-cell { text-align: center; vertical-align: middle; }
 .btn-order {
   background: none;

@@ -19,7 +19,7 @@
         <td class="type-cell">
           <span class="type-badge">{{ row.roleLabel }}</span>
         </td>
-        <td>
+        <td class="persons-td">
           <div class="persons-cell">
             <div v-for="(p, i) in row.persons" :key="i" class="person-chip">
               <AppAvatar
@@ -132,7 +132,15 @@ function focusPrevRow(e: KeyboardEvent): void {
 </script>
 
 <style scoped>
-.type-cell { white-space: nowrap; width: 1px; }
+.type-cell { white-space: nowrap; width: 1px; max-width: none; }
+.persons-td {
+  /* Persons can wrap to multiple lines as separate chips. Override the
+     panel-section default (nowrap + ellipsis) so chips can flex-wrap. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  max-width: none;
+}
 .type-badge {
   color: var(--text-muted);
   font-size: var(--font-xs);
@@ -153,6 +161,6 @@ function focusPrevRow(e: KeyboardEvent): void {
   font-size: var(--font-xs);
   color: var(--text-muted);
 }
-.actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; }
 .selected-row { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 </style>
