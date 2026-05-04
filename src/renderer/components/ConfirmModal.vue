@@ -6,6 +6,7 @@
     :icon="icon"
     :tone="tone"
     :save-label="resolvedConfirmLabel"
+    :cancel-label="cancelLabel"
     mode="standalone"
     centered
     @cancel="cancel"
@@ -39,6 +40,8 @@ const props = withDefaults(defineProps<{
   icon?: string;
   /** Override label for the confirm button. Defaults to 'Delete' for danger tone, 'Confirm' otherwise. */
   confirmLabel?: string;
+  /** Override label for the cancel button. Defaults to 'Cancel' (via BaseSubPanel). */
+  cancelLabel?: string;
 }>(), {
   tone: 'danger',
 });

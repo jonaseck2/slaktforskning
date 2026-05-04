@@ -62,10 +62,10 @@ User can proceed (genealogy frequently has overlapping or undocumented separatio
 
 ### Part C
 
-- [ ] Add an `offerEventForRelationship(rel)` helper. Decides whether to offer an event based on rel.subtype + presence of linked event. Hook it into RelationshipModal's save success path.
-- [ ] Add the confirm dialog (use existing `ConfirmModal` component for consistency). i18n keys: `relationships.offerWeddingTitle` / `offerWeddingMessage` / `offerDivorceTitle` / `offerDivorceMessage` in both locales.
-- [ ] On Yes, open EventModal as a sub-panel of RelationshipModal (or as a new modal flow — confirm `BaseSubPanel`'s `mode='subpanel'` path matches per the renderer rules).
-- [ ] **Component test**: save a marriage relationship without an event → confirm dialog renders. Click Yes → EventModal opens pre-filled. Click No → no event row written.
+- [x] Add an `offerEventForRelationship(rel)` helper. Decides whether to offer an event based on rel.subtype + presence of linked event. Hook it into RelationshipModal's save success path. *(Implemented as `shouldOfferWedding(rel)` inside RelationshipModal — divorce mirror deferred; see code comment.)*
+- [x] Add the confirm dialog (use existing `ConfirmModal` component for consistency). i18n keys: `relationships.offerWeddingTitle` / `offerWeddingMessage` in both locales. *(Divorce keys deferred — `CoupleSubtype` has no `divorced` value to trigger off; divorces are tracked as separate event rows. Add keys when the data model gains the concept.)*
+- [x] On Yes, open EventModal as a sub-panel of RelationshipModal (or as a new modal flow — confirm `BaseSubPanel`'s `mode='subpanel'` path matches per the renderer rules). *(Reused the existing EventModal `#subpanels` slot; new `weddingOfferContext` flag flips the pre-fill into "primary=person1, default_event_type=marriage".)*
+- [x] **Component test**: save a marriage relationship without an event → confirm dialog renders. Click Yes → EventModal opens pre-filled. Click No → no event row written. *(`tests/components/RelationshipModal-marriage-offer.test.ts` — 5 tests, all green.)*
 
 ### Part D
 

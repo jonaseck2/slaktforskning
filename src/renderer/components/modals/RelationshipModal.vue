@@ -114,14 +114,32 @@
         v-if="subPanel === 'event'"
         mode="subpanel"
         :relationship-id="savedRelationshipId ?? undefined"
+        :person-id="weddingOfferContext ? (form.person1_id ?? undefined) : undefined"
         :editing-event="activeEvent || undefined"
-        :default-event-type="form.type === 'couple' ? 'marriage' : 'other'"
-        @cancel="closeSubPanel"
-        @close="closeSubPanel"
-        @saved="onEventSaved"
+        :default-event-type="weddingOfferContext ? 'marriage' : (form.type === 'couple' ? 'marriage' : 'other')"
+        @cancel="onWeddingEventClosed"
+        @close="onWeddingEventClosed"
+        @saved="onWeddingEventSaved"
       />
     </template>
   </BaseSubPanel>
+
+  <!-- Wedding offer (Part C of plan 2026-05-04-event-participants-and-marriage-flow).
+       After saving a couple+marriage relationship with no linked wedding event
+       yet, gently offer to record the wedding inline.
+       PRIME DIRECTIVE: nothing is written if the user declines — the relationship
+       was already saved before the offer; only the wedding event is in question. -->
+  <ConfirmModal
+    :visible="!!pendingOffer"
+    :title="$t('relationships.offerWeddingTitle')"
+    :message="$t('relationships.offerWeddingMessage')"
+    tone="info"
+    icon="💍"
+    :confirm-label="$t('common.yes')"
+    :cancel-label="$t('common.notNow')"
+    @confirm="onAcceptOffer"
+    @cancel="onDeclineOffer"
+  />
 </template>
 
 <script setup lang="ts">
@@ -129,6 +147,7 @@ import { reactive, ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
+import ConfirmModal from '../ConfirmModal.vue';
 import PersonPicker from '../PersonPicker.vue';
 import {
   RELATIONSHIP_TYPE_VALUES,
@@ -247,24 +266,29 @@ async function loadEvents() {
 const subPanel = ref<'event' | null>(null);
 const activeEvent = ref<EventRow | null>(null);
 
+// Tracks whether the currently-open EventModal subpanel was launched via the
+// wedding-offer flow (Part C). When true, the modal is pre-filled with
+// person1 as the primary so the spouse picker (`secondPersonId`) defaults to
+// person2 — matching what the genealogist expects after saying "Yes" to the
+// offer. Reset on close.
+const weddingOfferContext = ref(false);
+
 function openAddEvent() {
   activeEvent.value = null;
+  weddingOfferContext.value = false;
   subPanel.value = 'event';
 }
 
 function openEditEvent(ev: EventRow) {
   activeEvent.value = ev;
+  weddingOfferContext.value = false;
   subPanel.value = 'event';
 }
 
 function closeSubPanel() {
   subPanel.value = null;
   activeEvent.value = null;
-}
-
-async function onEventSaved() {
-  closeSubPanel();
-  await loadEvents();
+  weddingOfferContext.value = false;
 }
 
 // Load person names when editing an existing relationship
@@ -286,6 +310,82 @@ async function loadPersonNames() {
       }
     } catch { /* ignore */ }
   }
+}
+
+// Wedding offer (Part C of plan 2026-05-04-event-participants-and-marriage-flow).
+//
+// When the genealogist saves a couple+marriage relationship that has no
+// linked wedding event yet, we gently offer to record the wedding inline —
+// rather than forcing them to remember to open EventModal afterward. Decline
+// writes nothing (Prime Directive); the relationship was already saved
+// before the offer is shown.
+//
+// Divorce mirror: deferred. The data model has no `divorced` couple-subtype —
+// `CoupleSubtype` is `marriage | civil_union | cohabitation | living_apart |
+// relationship | unknown | other` (see src/api/types.ts and
+// constants/eventTypes.ts). Divorces are tracked as separate event rows
+// linked via relationship_id, so there's no subtype transition that signals
+// "divorce happened" from this modal. When/if the data model gains that
+// concept, mirror this helper for divorces.
+const pendingOffer = ref<RelationshipData | null>(null);
+
+// Wedding ceremonies are stored with event_type='marriage' (label "Vigsel")
+// in this codebase; 'wedding' (label "Bröllop") also exists. Treat either
+// linked event as "already recorded" so we don't pester users.
+async function shouldOfferWedding(rel: RelationshipData): Promise<boolean> {
+  if (rel.type !== 'couple' || rel.subtype !== 'marriage') return false;
+  if (!window.api) return false;
+  try {
+    const existing = (await window.api.events.forRelationship(rel.id)) as Array<{ event_type: string }>;
+    return !existing.some((e) => e.event_type === 'marriage' || e.event_type === 'wedding');
+  } catch {
+    return false;
+  }
+}
+
+function onAcceptOffer() {
+  if (!pendingOffer.value) return;
+  // Keep pendingOffer set until the EventModal closes so the parent doesn't
+  // emit `saved` and tear us down before the user finishes recording the
+  // wedding. weddingOfferContext flips the EventModal pre-fill into the
+  // "marriage from a person panel" shape (primary=person1, spouse=person2).
+  weddingOfferContext.value = true;
+  activeEvent.value = null;
+  subPanel.value = 'event';
+}
+
+function onDeclineOffer() {
+  // Decline path — the relationship is already saved, the wedding event is
+  // not. Emit `saved` once and finish.
+  const rel = pendingOffer.value;
+  pendingOffer.value = null;
+  if (rel) emit('saved', rel);
+}
+
+async function onWeddingEventSaved() {
+  // Wedding event saved successfully. Refresh the events list, close the
+  // subpanel, and finalise the parent flow with the relationship that was
+  // already persisted.
+  const rel = pendingOffer.value;
+  pendingOffer.value = null;
+  closeSubPanel();
+  await loadEvents();
+  if (rel) emit('saved', rel);
+}
+
+function onWeddingEventClosed() {
+  // User cancelled / closed the EventModal during the offer flow. Treat as
+  // an implicit decline — relationship stays saved, no wedding event.
+  if (weddingOfferContext.value) {
+    const rel = pendingOffer.value;
+    pendingOffer.value = null;
+    closeSubPanel();
+    if (rel) emit('saved', rel);
+    return;
+  }
+  // Otherwise this is a normal events-section close (Add / Edit Event), not
+  // tied to the wedding offer — fall through to the regular handler.
+  closeSubPanel();
 }
 
 // Save relationship
@@ -313,6 +413,13 @@ async function handleSave() {
     } else {
       rel = (await window.api.relationships.create(payload)) as RelationshipData;
       savedRelationshipId.value = rel.id;
+    }
+    // Marriage offer — only after the relationship is persisted. If the
+    // helper returns true we hold the `saved` emit until the user resolves
+    // the offer (Yes records a wedding event; No / cancel just finishes).
+    if (await shouldOfferWedding(rel)) {
+      pendingOffer.value = rel;
+      return;
     }
     emit('saved', rel);
   } catch (err) {

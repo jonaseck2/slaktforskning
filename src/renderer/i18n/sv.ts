@@ -103,6 +103,7 @@ export default {
     loading: 'Laddar\u2026',
     yes: 'Ja',
     no: 'Nej',
+    notNow: 'Inte nu',
     notes: 'Anteckningar',
     type: 'Typ',
     name: 'Namn',
@@ -219,6 +220,8 @@ export default {
     showingOf: 'Visar {shown} av {total} relationer',
     searchOrAdd: 'Sök eller lägg till relation…',
     newRelationship: 'Ny relation',
+    offerWeddingTitle: 'Registrera vigsel?',
+    offerWeddingMessage: 'Vill du registrera vigseln för detta äktenskap nu? Du kan alltid lägga till den senare.',
   },
   relationshipDetail: {
     title: 'Relation',

@@ -103,6 +103,7 @@ export default {
     loading: 'Loading\u2026',
     yes: 'Yes',
     no: 'No',
+    notNow: 'Not now',
     notes: 'Notes',
     type: 'Type',
     name: 'Name',
@@ -219,6 +220,8 @@ export default {
     showingOf: 'Showing {shown} of {total} relations',
     searchOrAdd: 'Search or add relationship…',
     newRelationship: 'New Relationship',
+    offerWeddingTitle: 'Record a wedding?',
+    offerWeddingMessage: 'Would you like to record the wedding for this marriage now? You can always add it later.',
   },
   relationshipDetail: {
     title: 'Relationship',
