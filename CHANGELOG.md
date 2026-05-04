@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.210.11
+
+- fix(import): Holger imports no longer crash with `ReferenceError: existsSync is not defined` the moment they hit an inline OBJE. v0.210.7 removed the `existsSync` import from `obje-importer.ts` (matching the parallel cleanup in `phaseObje`) but missed the call site at line 53. Lint with `--quiet` doesn't surface "used identifier with no matching import," so the regression shipped through v0.210.10. `is_missing` now derives from `!file` only — on-disk truth is decided later by `consolidateMediaFolder`'s single recursive readdir, matching `phaseObje`.
+- fix(import): media imported via Holger now actually loads in the renderer. v0.210.7's bulk-copy step preserves the source media folder structure (e.g. `Media/P12/photo.jpg` → `<dbname>-media/P12/photo.jpg`), but `consolidateMediaFolder`'s fast-path was rewriting the DB ref to `<dbname>-media/photo.jpg` (basename only, flat). Every row's `file_ref` therefore pointed at a path that didn't exist; `media:readAsDataUrl` returned null, MediaView spinners hung, AppAvatars showed initials. Consolidate now takes a `bulkCopiedFromDir` argument from the import handler and writes the relative subpath that matches what bulk-copy actually placed on disk. Existing databases imported under v0.210.7–v0.210.10 need to be re-imported to pick up the corrected refs.
+- fix(import): consolidate's fast-path now verifies the bulk-copied file is actually in dest before rewriting the ref. If a source file was missing from the bulk-copy tree (the wetransfer bundle didn't include it, etc.), the row is counted as `missing` instead of silently writing a broken ref.
+
 ## 0.210.10
 
 - perf(media): `getPersonProfilePicRefs` (the bulk endpoint behind every avatar batch fetch) now runs two SQL queries total regardless of input size — one window-function pass over `media_regions` to pick the first face tag per person, and one pass over `media_links` for persons without a face tag. Previous implementation was a JS loop calling the singular per-id helper, so a 50-row PersonsListTab triggered 100 SQL prepares + executes inside one IPC. Down to 2.

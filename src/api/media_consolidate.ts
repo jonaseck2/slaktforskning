@@ -36,46 +36,68 @@ export async function bulkCopyMediaFolder(srcDir: string, destDir: string): Prom
  * Walk all media rows; for any `file_ref` that is an absolute path, copy the
  * file into `<dbname>-media/` and rewrite the row to the relative form.
  *
- * One `fsp.copyFile(..., COPYFILE_EXCL)` per row — no separate stat/exists
- * checks. The kernel atomically handles "dest already exists" (EEXIST) and
- * "source missing" (ENOENT). Each copy round-trips to libuv's threadpool;
- * a small worker pool saturates that pool so wall time scales with disk
- * bandwidth, not awaits-per-file.
+ * Two paths:
+ *  - **Fast path (bulk-copy already ran for the row's source dir):** the file
+ *    has the same relative position under `<dbname>-media/` that it had under
+ *    the source media dir. We compute that relative path, verify it's in the
+ *    pre-walked `existingDestFiles` set, and rewrite the DB ref. No syscall.
+ *    Posix subdirs from the source (e.g. Holger's `P12/photo.jpg`) are
+ *    preserved — both in the on-disk layout AND in the DB ref. Without this,
+ *    the recursive `fsp.cp` would create nested files but the consolidate
+ *    would write `photo.jpg` (basename only) to the DB, leaving the row
+ *    pointing at a non-existent flat path while the actual file sat at
+ *    `P12/photo.jpg`. (See: bengt-media import session, 2026-05-04.)
+ *  - **Slow path (no bulk copy, or file outside the bulk-copied tree):** one
+ *    `fsp.copyFile(..., COPYFILE_EXCL)` per row. The kernel atomically handles
+ *    "dest already exists" (EEXIST) and "source missing" (ENOENT). Same-
+ *    basename collisions across different sources keep the first-written file
+ *    (acceptable for genealogy imports where source folders namespace by ID).
  *
- * Idempotent: re-running on a populated `<dbname>-media/` is safe — EEXIST
- * is treated as "already there, keep going." Same-basename collisions across
- * different sources keep the first-written file (acceptable for genealogy
- * imports where source folders namespace by ID).
+ * `bulkCopiedFromDir` (optional): the source media dir that was just
+ * `bulkCopyMediaFolder`'d into `<dbname>-media/`. Pass it from any import
+ * handler that called bulk copy — without it, every row falls through to the
+ * slow path (one syscall each), which is correct but ~10× slower for large
+ * imports.
+ *
+ * A `BEGIN IMMEDIATE / COMMIT` wraps every `update.run`; without it each
+ * `UPDATE media SET file_ref = ?` is its own autocommit → its own WAL fsync
+ * (~1–5 ms on APFS), turning 12k rewrites into 30+ seconds.
  */
-export async function consolidateMediaFolder(db: Database, dbPath: string): Promise<ConsolidateResult> {
+export async function consolidateMediaFolder(
+  db: Database,
+  dbPath: string,
+  bulkCopiedFromDir?: string,
+): Promise<ConsolidateResult> {
   const result: ConsolidateResult = { copied: 0, skipped: 0, missing: 0 };
   const folderName = getMediaFolderName(dbPath);
   const mediaDir = getMediaDir(dbPath);
 
   const rows = db.all('SELECT id, file_ref FROM media') as Array<{ id: string; file_ref: string | null }>;
-  console.log(`[import-timing]   consolidateMediaFolder: ${rows.length} media rows to walk, dest=${mediaDir}, concurrency=${COPY_CONCURRENCY}`);
+  console.log(`[import-timing]   consolidateMediaFolder: ${rows.length} media rows to walk, dest=${mediaDir}, bulkCopiedFromDir=${bulkCopiedFromDir ?? '(none)'}, concurrency=${COPY_CONCURRENCY}`);
   if (rows.length === 0) return result;
 
   // Eagerly create the dest folder once (no per-row guard needed).
   await fsp.mkdir(mediaDir, { recursive: true });
 
-  // Snapshot dest folder contents once. If the bulk-copy step ran first, every
-  // file is already here and the per-row loop never has to call `copyFile` —
-  // it just rewrites the DB ref. Recursive scan because bulk-copy preserves
-  // subfolders (e.g. Holger's P12/photo.jpg).
-  const existingDestFiles = new Set<string>();
-  async function indexDestRecursive(dir: string): Promise<void> {
+  // Snapshot dest folder contents once, indexed by RELATIVE path (e.g.
+  // `P12/photo.jpg`). The fast path checks this set before rewriting the DB
+  // ref, so a file that wasn't actually bulk-copied (source missing in the
+  // user's wetransfer bundle, etc.) falls through to the slow path's ENOENT
+  // accounting instead of silently writing a broken ref.
+  const existingDestRelPaths = new Set<string>();
+  async function indexDestRecursive(dir: string, prefix = ''): Promise<void> {
     let entries: import('fs').Dirent[];
     try { entries = await fsp.readdir(dir, { withFileTypes: true }); }
     catch { return; }
     for (const e of entries) {
       const full = path.join(dir, e.name);
-      if (e.isDirectory()) await indexDestRecursive(full);
-      else existingDestFiles.add(e.name);
+      const rel = prefix ? path.join(prefix, e.name) : e.name;
+      if (e.isDirectory()) await indexDestRecursive(full, rel);
+      else existingDestRelPaths.add(rel);
     }
   }
   await indexDestRecursive(mediaDir);
-  console.log(`[import-timing]   consolidateMediaFolder: ${existingDestFiles.size} files already in dest folder (fast-path candidates)`);
+  console.log(`[import-timing]   consolidateMediaFolder: ${existingDestRelPaths.size} files already in dest folder (fast-path candidates)`);
 
   // Single transaction over all the file_ref rewrites. Without this, each
   // update.run() is its own autocommit → its own WAL fsync (~1–5 ms on APFS),
@@ -97,21 +119,31 @@ export async function consolidateMediaFolder(db: Database, dbPath: string): Prom
     if (!ref) { result.skipped++; return; }
     if (!path.isAbsolute(ref)) { result.skipped++; return; }
 
-    const filename = path.basename(ref);
-
-    // Fast path: bulk-copy already put the file in dest. Skip the syscall
-    // entirely, just rewrite the ref. Per-row cost: one Set lookup + one DB
-    // update — completes in microseconds when batched in a transaction.
-    if (existingDestFiles.has(filename)) {
-      update.run([path.join(folderName, filename), row.id]);
-      fastPathHits++;
-      result.copied++;
+    // Fast path: row's file_ref is under the bulk-copy source dir, so it
+    // landed in dest with the same relative position. Compute that relative
+    // path, verify the file is actually present in dest (bulk copy could have
+    // skipped a missing source file), then rewrite the ref to the nested
+    // relative form (e.g. `<dbname>-media/P12/photo.jpg`, NOT `…/photo.jpg`).
+    if (bulkCopiedFromDir && isPathUnder(ref, bulkCopiedFromDir)) {
+      const rel = path.relative(bulkCopiedFromDir, ref);
+      if (existingDestRelPaths.has(rel)) {
+        update.run([path.join(folderName, rel), row.id]);
+        fastPathHits++;
+        result.copied++;
+        return;
+      }
+      // Source file wasn't in the bulk-copy tree — bulk copy is async + best-
+      // effort, skipped this one. Counts as missing; leave the ref alone.
+      result.missing++;
       return;
     }
 
     // Slow path: source is outside the bulk-copied tree (or no bulk copy ran).
-    // Single COPYFILE_EXCL — kernel handles "dest exists" / "source missing"
-    // atomically without a separate stat round-trip.
+    // Flat copy: dest filename is the source basename. The fast path is the
+    // only place that preserves subdirs — slow-path callers historically used
+    // flat layouts and basename-collision detection (now `_n` suffixing is
+    // gone; same-basename collisions across different sources keep the first).
+    const filename = path.basename(ref);
     const dest = path.join(mediaDir, filename);
     try {
       await fsp.copyFile(ref, dest, fs.constants.COPYFILE_EXCL);
@@ -166,4 +198,10 @@ export async function consolidateMediaFolder(db: Database, dbPath: string): Prom
   const rate = processed / (elapsed / 1000);
   console.log(`[import-timing]   consolidateMediaFolder finished: fastPath=${fastPathHits} slowCopied=${slowPathCopies} skipped=${result.skipped} missing=${result.missing} in ${elapsed}ms (${rate.toFixed(0)} rows/s)`);
   return result;
+}
+
+/** True when `p` is the same as `dir` or any descendant of it (no `..` escapes). */
+function isPathUnder(p: string, dir: string): boolean {
+  const rel = path.relative(dir, p);
+  return rel.length > 0 && !rel.startsWith('..') && !path.isAbsolute(rel);
 }

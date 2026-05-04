@@ -255,9 +255,11 @@ export function registerImportHandlers(
       // Bulk-copy the media folder up-front. fsp.cp recursive walks + copies
       // through libuv much faster than 12k sequential per-row copyFile calls.
       // After this, consolidateMediaFolder fast-paths every row that lands here.
+      let bulkCopiedFromDir: string | undefined;
       if (options.mediaDir) {
         try {
           const { ms } = await bulkCopyMediaFolder(options.mediaDir, media.getMediaDir(getCurrentDatabasePath()));
+          bulkCopiedFromDir = options.mediaDir;
           console.log(`[import-timing] bulkCopyMediaFolder done — ${ms}ms`);
         } catch (err) {
           console.warn(`[import-timing] bulkCopyMediaFolder failed (will fall back to per-row copy): ${err instanceof Error ? err.message : err}`);
@@ -273,7 +275,7 @@ export function registerImportHandlers(
       });
       console.log(`[import-timing] importFromHolger done — ${Date.now() - tHolger}ms`);
       const tConsol = Date.now();
-      const consolResult = await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      const consolResult = await consolidateMediaFolder(getDb(), getCurrentDatabasePath(), bulkCopiedFromDir);
       console.log(`[import-timing] consolidateMediaFolder done — ${Date.now() - tConsol}ms — copied=${consolResult.copied} skipped=${consolResult.skipped} missing=${consolResult.missing}`);
       console.log(`[import-timing] holger handler total — ${Date.now() - tHandler}ms`);
       return { success: true, report: result.report };

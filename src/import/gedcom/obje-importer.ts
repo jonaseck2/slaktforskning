@@ -50,7 +50,11 @@ export function importObjeNode(
     format: form,
     notes: note || undefined,
     is_printable: false,
-    is_missing: !file || !existsSync(file),
+    // Matches phaseObje: on-disk truth is decided later by consolidateMediaFolder
+    // (single recursive readdir of dest), not per-OBJE existsSync on the main
+    // thread. existsSync was removed when phaseObje dropped it; this call site
+    // was missed in v0.210.7.
+    is_missing: !file,
   });
   return media.id;
 }
