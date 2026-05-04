@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.211.0
+
+- feat: place name field autocompletes from existing places + gazetteer in both the Add Place modal and the Place Details panel — picking a suggestion only fills the name string, no merge or side-effects
+
 ## 0.210.12
 
 - fix: place tree picker filter input now has matching padding around it, like other filter boxes

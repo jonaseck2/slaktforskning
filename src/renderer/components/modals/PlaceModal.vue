@@ -10,11 +10,11 @@
     <div class="ep-fields">
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('places.name') }}</span>
-        <input
+        <PlaceNameAutocomplete
           ref="nameRef"
-          class="ep-input"
-          v-model="form.name"
-          required
+          :model-value="form.name"
+          :exclude-place-id="editingPlace?.id ?? null"
+          @update:model-value="form.name = $event"
         />
       </div>
 
@@ -43,6 +43,7 @@ import { reactive, ref, computed, onMounted, nextTick, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import PlaceFormFields, { type PlaceFormShape } from '../PlaceFormFields.vue';
+import PlaceNameAutocomplete from '../PlaceNameAutocomplete.vue';
 import { useResolvedPlace } from '../../composables/useResolvedPlace';
 
 declare const window: Window & {
@@ -77,7 +78,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const nameRef = ref<HTMLInputElement | null>(null);
+const nameRef = ref<{ focus: () => void } | null>(null);
 
 interface ModalForm extends PlaceFormShape {
   name: string;

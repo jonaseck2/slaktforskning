@@ -33,11 +33,10 @@
             <!-- Place name -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('places.name') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="place.name"
-                @blur="saveField('name', ($event.target as HTMLInputElement).value.trim() || place.name)"
+              <PlaceNameAutocomplete
+                :model-value="place.name"
+                :exclude-place-id="place.id"
+                @change="(v: string) => saveField('name', v.trim() || place.name)"
               />
             </div>
 
@@ -240,6 +239,7 @@ import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlaceTimeline from './PlaceTimeline.vue';
 import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
+import PlaceNameAutocomplete from './PlaceNameAutocomplete.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
 import ConfirmModal from './ConfirmModal.vue';
