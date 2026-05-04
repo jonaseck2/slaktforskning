@@ -30,6 +30,25 @@ export interface RelationshipSummary extends Relationship {
   other_person_id: string | null;
   other_person_names: PersonName[];
   other_person_sex: string | null;
+  /**
+   * Other person's birth event `date_value` (ISO or partial). `null` when
+   * unknown. Used by `sortPersonRelations` to order children oldest-first.
+   */
+  other_person_birth_date: string | null;
+  /**
+   * For `couple` rows, the partnership start date — typically the marriage
+   * event's `date_value` tied to this relationship. `null` for non-couple
+   * rows or when no start-date event exists. Used by `sortPersonRelations`
+   * to order partners chronologically.
+   */
+  partnership_start_date: string | null;
+  /**
+   * For outgoing `parent_child` rows (focal is the parent), this is the
+   * OTHER parent's person id — the partner who produced this child with
+   * the focal person. `null` when no other parent is recorded. Used by
+   * `sortPersonRelations` to bucket children under the producing partner.
+   */
+  other_parent_id: string | null;
 }
 
 export interface PersonSummary {
@@ -346,16 +365,52 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
     const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
     let otherNames: PersonName[] = [];
     let otherSex: string | null = null;
+    let otherBirthDate: string | null = null;
     if (otherId) {
       otherNames = getPersonNames(db, otherId);
       const otherPerson = getPerson(db, otherId);
       otherSex = otherPerson?.sex ?? null;
+      const otherEvents = getEventsForPerson(db, otherId);
+      const birthEvent = otherEvents.find(e => e.event_type === 'birth');
+      otherBirthDate = birthEvent?.date_value ?? null;
     }
+
+    // Partnership start date — for couple rows, look up the marriage
+    // event tied to this relationship; fall back to the earliest dated
+    // relationship event.
+    let partnershipStartDate: string | null = null;
+    if (r.type === 'couple') {
+      const relEvents = getEventsForRelationship(db, r.id);
+      const marriage = relEvents.find(e => e.event_type === 'marriage');
+      partnershipStartDate = marriage?.date_value
+        ?? relEvents.map(e => e.date_value).filter((d): d is string => !!d).sort()[0]
+        ?? null;
+    }
+
+    // Other-parent id — for outgoing parent_child rows (focal is the
+    // parent), find the child's other parent by walking the child's
+    // incoming parent_child relations.
+    let otherParentId: string | null = null;
+    if (r.type === 'parent_child' && r.person1_id === personId && otherId) {
+      const childRels = getRelationshipsOfPerson(db, otherId);
+      for (const cr of childRels) {
+        if (cr.type !== 'parent_child') continue;
+        // person1 = parent, person2 = child convention
+        if (cr.person2_id === otherId && cr.person1_id && cr.person1_id !== personId) {
+          otherParentId = cr.person1_id;
+          break;
+        }
+      }
+    }
+
     return {
       ...r,
       other_person_id: otherId ?? null,
       other_person_names: otherNames,
       other_person_sex: otherSex,
+      other_person_birth_date: otherBirthDate,
+      partnership_start_date: partnershipStartDate,
+      other_parent_id: otherParentId,
     };
   });
 

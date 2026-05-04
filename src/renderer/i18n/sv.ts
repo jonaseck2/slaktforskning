@@ -233,6 +233,8 @@ export default {
     overlapWarningTitle: 'Pågående relation finns',
     overlapWarningMessage: 'Det finns redan en pågående relation med {partnerName}. Vill du ändå lägga till ytterligare?',
     overlapAddAnyway: 'Lägg till ändå',
+    unknownOrOtherParent: 'Annan/okänd förälder',
+    otherRelations: 'Övriga relationer',
   },
   relationshipDetail: {
     title: 'Relation',

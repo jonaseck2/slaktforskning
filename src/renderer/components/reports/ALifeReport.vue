@@ -117,6 +117,7 @@ import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
 import type { TimelineEntry } from '../../../api/report_data';
+import { sortPersonRelations, type RelationRow, type RelationsSortGroup } from '../../../api/sortPersonRelations';
 
 const props = withDefaults(defineProps<{
   personId: string;
@@ -147,7 +148,7 @@ const props = withDefaults(defineProps<{
   showBirthNameParenthetical: true,
 });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 
 // Types matching report_data.PersonSummary shape via IPC
@@ -184,6 +185,9 @@ interface RawRelSummary {
   other_person_id: string | null;
   other_person_names: RawPersonName[];
   other_person_sex: string | null;
+  other_person_birth_date: string | null;
+  partnership_start_date: string | null;
+  other_parent_id: string | null;
 }
 interface RawCitation {
   id: string;
@@ -280,36 +284,79 @@ const yearsSubtitle = computed(() => {
 
 interface PersonRef { id: string; name: string; }
 
-const parents = computed<PersonRef[]>(() => {
+/**
+ * Map a `RawRelSummary` (server-side `RelationshipSummary`) to a sort `RelationRow`.
+ * Carries the report's pre-formatted display name on the row so the renderer
+ * doesn't re-derive it after sorting.
+ */
+function toSortRow(r: RawRelSummary, focalId: string): RelationRow & { _displayName: string } {
+  const direction = r.person1_id === focalId ? 'outgoing' : 'incoming';
+  const displayName = personNameFrom(r.other_person_names);
+  return {
+    id: r.id,
+    type: r.type,
+    subtype: r.subtype,
+    person1_id: r.person1_id,
+    person2_id: r.person2_id,
+    direction,
+    other: {
+      id: r.other_person_id,
+      display_name: displayName || t('common.unknown'),
+      sex: (r.other_person_sex as 'M' | 'F' | 'U' | null) ?? null,
+      birth_date: r.other_person_birth_date,
+    },
+    start_date: r.partnership_start_date,
+    other_parent_id: r.other_parent_id,
+    _displayName: displayName,
+  };
+}
+
+const sortedRelGroups = computed<RelationsSortGroup[]>(() => {
   if (!data.value) return [];
+  const rows = data.value.relationships.map(r => toSortRow(r, props.personId));
+  return sortPersonRelations({
+    rows,
+    locale: locale.value,
+  });
+});
+
+const parents = computed<PersonRef[]>(() => {
   const out: PersonRef[] = [];
-  for (const r of data.value.relationships) {
-    if (r.type !== 'parent_child') continue;
-    // person2_id is the child in parent_child convention
-    if (r.person2_id === props.personId && r.other_person_id) {
-      out.push({ id: r.other_person_id, name: personNameFrom(r.other_person_names) });
-    }
+  for (const g of sortedRelGroups.value) {
+    if (g.kind !== 'parent') continue;
+    const otherId = g.row.other.id;
+    if (!otherId) continue;
+    out.push({ id: otherId, name: (g.row as RelationRow & { _displayName: string })._displayName });
   }
   return out;
 });
 
 const spouses = computed<PersonRef[]>(() => {
-  if (!data.value) return [];
   const out: PersonRef[] = [];
-  for (const r of data.value.relationships) {
-    if (r.type !== 'couple' || !r.other_person_id) continue;
-    out.push({ id: r.other_person_id, name: personNameFrom(r.other_person_names) });
+  for (const g of sortedRelGroups.value) {
+    if (g.kind !== 'partner') continue;
+    const otherId = g.row.other.id;
+    if (!otherId) continue;
+    out.push({ id: otherId, name: (g.row as RelationRow & { _displayName: string })._displayName });
   }
   return out;
 });
 
 const children = computed<PersonRef[]>(() => {
-  if (!data.value) return [];
   const out: PersonRef[] = [];
-  for (const r of data.value.relationships) {
-    if (r.type !== 'parent_child') continue;
-    if (r.person1_id === props.personId && r.other_person_id) {
-      out.push({ id: r.other_person_id, name: personNameFrom(r.other_person_names) });
+  for (const g of sortedRelGroups.value) {
+    if (g.kind === 'partner') {
+      for (const c of g.children) {
+        const otherId = c.other.id;
+        if (!otherId) continue;
+        out.push({ id: otherId, name: (c as RelationRow & { _displayName: string })._displayName });
+      }
+    } else if (g.kind === 'children-no-partner') {
+      for (const c of g.children) {
+        const otherId = c.other.id;
+        if (!otherId) continue;
+        out.push({ id: otherId, name: (c as RelationRow & { _displayName: string })._displayName });
+      }
     }
   }
   return out;
