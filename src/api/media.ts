@@ -246,11 +246,58 @@ export function getPersonProfilePicRef(db: Database, personId: string): ProfileP
   return { mediaId: link.media_id, region: null };
 }
 
+/**
+ * Bulk variant of getPersonProfilePicRef. Two SQL queries total regardless of N
+ * (vs the per-id loop's 2N). Uses ROW_NUMBER() OVER (PARTITION BY ...) so the
+ * "first" row per person is selected inside SQLite — no JS-side dedup. The
+ * same fallback chain applies (face tag → first linked media → null).
+ */
 export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {
   const result: Record<string, ProfilePicRef | null> = {};
-  for (const id of personIds) {
-    result[id] = getPersonProfilePicRef(db, id);
+  if (personIds.length === 0) return result;
+  for (const id of personIds) result[id] = null;
+
+  const placeholders = personIds.map(() => '?').join(',');
+
+  // Best face tag per person — first by created_at.
+  const faceTags = queryAll<{
+    person_id: string; media_id: string; x: number; y: number; width: number; height: number;
+  }>(db, `
+    SELECT person_id, media_id, x, y, width, height FROM (
+      SELECT person_id, media_id, x, y, width, height,
+             ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY created_at) AS rn
+      FROM media_regions
+      WHERE person_id IN (${placeholders})
+    )
+    WHERE rn = 1
+  `, personIds);
+
+  for (const ft of faceTags) {
+    result[ft.person_id] = {
+      mediaId: ft.media_id,
+      region: { x: ft.x, y: ft.y, width: ft.width, height: ft.height },
+    };
   }
+
+  // For persons without a face tag, fall back to the first linked media.
+  const remaining = personIds.filter(id => result[id] === null);
+  if (remaining.length === 0) return result;
+
+  const placeholders2 = remaining.map(() => '?').join(',');
+  const links = queryAll<{ entity_id: string; media_id: string }>(db, `
+    SELECT entity_id, media_id FROM (
+      SELECT entity_id, media_id,
+             ROW_NUMBER() OVER (PARTITION BY entity_id ORDER BY sort_order, created_at) AS rn
+      FROM media_links
+      WHERE entity_type = 'person' AND entity_id IN (${placeholders2})
+    )
+    WHERE rn = 1
+  `, remaining);
+
+  for (const l of links) {
+    result[l.entity_id] = { mediaId: l.media_id, region: null };
+  }
+
   return result;
 }
 

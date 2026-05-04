@@ -25,6 +25,14 @@ interface MergedNode extends GazetteerNode {
 
 const COORD_DIVERGENCE_WARN_THRESHOLD = 0.01;
 
+// Off by default — divergences are upstream script bugs to fix one-off, not
+// runtime concerns. With multiple sources merging the same World tree, a
+// single mismatched coordinate fires the warning hundreds of times per
+// gazetteer load and floods the terminal buffer. Re-enable with
+// SLAKTFORSKNING_GAZETTEER_DEBUG=1 when actually triaging a divergence.
+const COORD_WARN_ENABLED =
+  typeof process !== 'undefined' && process.env?.SLAKTFORSKNING_GAZETTEER_DEBUG === '1';
+
 function unionAliases(target: MergedNode, incoming: GazetteerNode): void {
   if (!incoming.aliases || incoming.aliases.length === 0) return;
   const set = new Set(target.aliases ?? []);
@@ -39,8 +47,9 @@ function addContributor(target: MergedNode, gazetteerId: string): void {
 
 function mergeChild(target: MergedNode, incoming: GazetteerNode, gazetteerId: string, path: string[]): void {
   // First-wins on lat/lon and geometry; warn if scalars diverge meaningfully.
-  if (Math.abs(target.lat - incoming.lat) > COORD_DIVERGENCE_WARN_THRESHOLD
-      || Math.abs(target.lon - incoming.lon) > COORD_DIVERGENCE_WARN_THRESHOLD) {
+  if (COORD_WARN_ENABLED
+      && (Math.abs(target.lat - incoming.lat) > COORD_DIVERGENCE_WARN_THRESHOLD
+          || Math.abs(target.lon - incoming.lon) > COORD_DIVERGENCE_WARN_THRESHOLD)) {
     console.warn(`[gazetteers] coord divergence at ${path.join(' › ')}: existing (${target.lat}, ${target.lon}) vs incoming (${incoming.lat}, ${incoming.lon}) from ${gazetteerId}`);
   }
   if (!target.geometry && incoming.geometry) target.geometry = incoming.geometry;

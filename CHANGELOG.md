@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.210.10
+
+- perf(media): `getPersonProfilePicRefs` (the bulk endpoint behind every avatar batch fetch) now runs two SQL queries total regardless of input size — one window-function pass over `media_regions` to pick the first face tag per person, and one pass over `media_links` for persons without a face tag. Previous implementation was a JS loop calling the singular per-id helper, so a 50-row PersonsListTab triggered 100 SQL prepares + executes inside one IPC. Down to 2.
+- fix(profilePic): if the batched profile-pic IPC rejects (worker error, dropped reply, anything), the store now logs `[profilePic] batch fetch failed:` and marks every queued person as `error` so the loading spinners terminate cleanly. Without this, the shared `pendingPromise` would hang forever and AppAvatars would spin until the user navigated away.
+- chore(gazetteers): the `[gazetteers] coord divergence at …` warning is off by default. With multiple sources merging the same World tree, a single mismatched coordinate fires the warning hundreds of times per gazetteer load and floods the terminal buffer. The divergences themselves are upstream script bugs to fix one-off, not runtime concerns. Re-enable with `SLAKTFORSKNING_GAZETTEER_DEBUG=1` when actually triaging.
+
 ## 0.210.9
 
 - perf(ipc): the DB worker no longer pins on synchronous file reads when the renderer mounts a list view full of avatars. `media:readAsDataUrl` and `media:getFilePath` were doing `fs.readFileSync` / `fs.existsSync` on the worker thread; with media in the database, switching to PersonsListTab fired N per-row IPCs that each blocked the worker for the duration of a 5 MB JPEG read + base64 encode (~50 ms each), serialising every other handler behind them. Reads now go through `fs.promises.readFile` / `fs.promises.access` — libuv's threadpool runs them in parallel and the worker stays responsive between callbacks.

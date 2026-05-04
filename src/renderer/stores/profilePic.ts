@@ -79,7 +79,16 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     const ids = Array.from(pendingIds);
     pendingIds = new Set<string>();
     pendingPromise = null;
-    return ensureBatch(ids);
+    // Catch + recover: if the batch IPC rejects (worker crash, dropped reply,
+    // etc.), mark everything in the batch as 'error' instead of leaving the
+    // pending Promise to hang and avatars stuck on a loading spinner forever.
+    return ensureBatch(ids).catch((err) => {
+      console.error('[profilePic] batch fetch failed:', err);
+      for (const id of ids) {
+        const gen = generations.get(id) ?? 0;
+        setEntry(id, gen, { status: 'error', src: null });
+      }
+    });
   }
 
   async function ensureLoaded(personId: string): Promise<void> {
