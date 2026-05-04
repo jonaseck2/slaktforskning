@@ -733,10 +733,67 @@ export function computeHourglassLayout(
 
     // One curved elbow per child. Shared midY aligns with row-gap midpoint so the
     // connector stem is consistent even when focal and spouses have different heights.
+    //
+    // Couple-anchor: when a child's coParentId points to a spouse that is on the
+    // chart, the connector originates at the midpoint of the focal↔spouse
+    // marriage line for that pair (X = midpoint between the two boxes' inner
+    // edges; Y = the marriage line's Y for that pair). This makes shared
+    // children visibly belong to the couple that produced them, instead of
+    // appearing to drop from the focal parent alone.
+    //
+    // Children with no coParentId (other parent unknown) or whose coParent is
+    // not on the chart fall back to the original anchor: focal box bottom
+    // center.
     const focalChildSharedMidY = descendantRowTopY[1] - GEN_GAP / 2;
+    const focalBottom = focalRowY + focalH;
+    const focalCenterY = focalRowY + focalH / 2;
+    const spouseJogY = focalBottom + GEN_GAP / 2;
+    // Build a map of on-chart spouse id → its placed box for couple-anchor lookup.
+    const spouseBoxById = new Map<string, BoxLayout>();
+    for (const sp of focalRealSpouseNodes) {
+      const b = boxes.find(box => box.person.id === sp.person.id);
+      if (b) spouseBoxById.set(sp.person.id, b);
+    }
+    // Index of each focal real spouse in the placed order (drives marriage Y:
+    // spouse[0] → centerline stub; spouse[i>=1] → jog Y under the row).
+    const spouseIndexById = new Map<string, number>();
+    for (let i = 0; i < focalRealSpouseNodes.length; i++) {
+      spouseIndexById.set(focalRealSpouseNodes[i].person.id, i);
+    }
+    const focalLeftEdge = focalCX - BOX_W / 2;
+    const focalRightEdge = focalCX + BOX_W / 2;
     for (let i = 0; i < n; i++) {
-      paths.push(curvedElbow(focalCX, focalRowY + focalH, childCXs[i], descRowY(1), 'down', focalChildSharedMidY));
-      placeDescendants(focalRealChildren[i], childCXs[i], 1);
+      const child = focalRealChildren[i];
+      const coParentBox = child.coParentId ? spouseBoxById.get(child.coParentId) : undefined;
+
+      let fromX = focalCX;
+      let fromY = focalBottom;
+      let midY: number | undefined = focalChildSharedMidY;
+
+      if (coParentBox) {
+        // Anchor at the couple connector: midpoint between focal and spouse's
+        // facing edges, at this pair's marriage-line Y.
+        const spouseLeftEdge = coParentBox.x;
+        const spouseRightEdge = coParentBox.x + coParentBox.w;
+        const spouseIsRight = coParentBox.x > focalCX;
+        const innerFocalX = spouseIsRight ? focalRightEdge : focalLeftEdge;
+        const innerSpouseX = spouseIsRight ? spouseLeftEdge : spouseRightEdge;
+        fromX = (innerFocalX + innerSpouseX) / 2;
+        const spIdx = spouseIndexById.get(child.coParentId!) ?? 0;
+        // spouse[0] → adjacent stub at focal centerline; spouse[i>=1] → jog
+        // below the row. Anchor the child at whichever Y the marriage line
+        // for THIS pair traverses, so the child visibly hangs from the
+        // correct couple's connector.
+        fromY = spIdx === 0 ? focalCenterY : spouseJogY;
+        // Below-the-box anchors do not need the row-gap shared midY (they're
+        // already past focalBottom). Letting curvedElbow pick its own midY
+        // produces a clean L when fromY is already at/below the target row's
+        // midpoint, avoiding degenerate arcs.
+        midY = fromY < focalChildSharedMidY ? focalChildSharedMidY : undefined;
+      }
+
+      paths.push(curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', midY));
+      placeDescendants(child, childCXs[i], 1);
     }
   }
 
