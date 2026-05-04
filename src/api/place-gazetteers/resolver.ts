@@ -756,12 +756,16 @@ export function resolvePlace(
 
   const { candidate, ambiguous, gazId } = bestOverall;
   const deepestNode = candidate.path[candidate.path.length - 1];
-  const isLeaf = !deepestNode.children || deepestNode.children.length === 0;
 
+  // `exact` means every input component landed on a node. The leaf-only
+  // shortcut from the pre-global-hierarchy era is gone: Africa, Sweden, and
+  // every other intermediate node now have children, but a user typing
+  // "Afrika" or "Sverige" expects an exact resolution to that node — they
+  // didn't ask for a more specific place.
   let matchQuality: PlaceResolveResult['matchQuality'];
   if (ambiguous) {
     matchQuality = 'ambiguous';
-  } else if (candidate.unmatched.length === 0 && isLeaf) {
+  } else if (candidate.unmatched.length === 0) {
     matchQuality = 'exact';
   } else {
     matchQuality = 'partial';

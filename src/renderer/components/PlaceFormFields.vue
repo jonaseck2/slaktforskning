@@ -83,14 +83,14 @@
       </div>
     </div>
 
-    <!-- Resolved-via line: gazetteer + match quality + matched path -->
+    <!-- Resolved-via line: match quality + source provenance + matched path -->
     <div v-if="resolvedMatch" class="pff-field resolved-field">
       <span class="pff-label">{{ $t('gazetteers.resolvedVia') }}</span>
       <span class="resolved-value">
         <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">
           {{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}
         </span>
-        <code class="resolved-gaz">{{ resolvedMatch.gazetteer }}</code>
+        <code v-if="resolvedSource" class="resolved-gaz">{{ resolvedSource }}</code>
         <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
       </span>
     </div>
@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import PlacePicker from './PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
@@ -109,12 +110,25 @@ export interface PlaceFormShape {
   longitude: number | null;
 }
 
-defineProps<{
+const props = defineProps<{
   form: PlaceFormShape;
   resolvedMatch: PlaceResolveResult | null;
   resolvedTypeLabel: string | null;
   resolvedParentPath: string | null;
 }>();
+
+// Source provenance for the resolved-via line. The merge engine collapses
+// every source into one synthetic gazetteer (`__merged__`), so the useful
+// "where did this come from?" data lives on the matched node's
+// `__contributors`. Show the contributor IDs; suppress the synthetic id.
+const resolvedSource = computed<string | null>(() => {
+  if (!props.resolvedMatch) return null;
+  const node = props.resolvedMatch.matchedNode as { __contributors?: string[] };
+  const contributors = node.__contributors ?? [];
+  if (contributors.length === 0) return null;
+  if (contributors.length === 1) return contributors[0];
+  return contributors.join(', ');
+});
 
 const emit = defineEmits<{
   'update:field': [field: keyof PlaceFormShape, value: unknown];

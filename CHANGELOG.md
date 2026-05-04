@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.210.2
+
+- fix(gazetteers): the resolver no longer requires the matched node to be a leaf to call a match `exact` — "Afrika" → Africa and "Sverige" → Sweden now report `exact` instead of `partial`. The leaf-only shortcut was a relic from when leaves were the "specific" places (parishes, cities); with the global hierarchy every continent and country has children, so the shortcut downgraded every input that landed on a real, fully-consumed node above leaf level.
+- fix(gazetteers): the "Resolved via" line in PlacePanel, PlaceFormFields, and the map popup now shows the real source gazetteer IDs (`world-boundaries`, `lang-sv-geonames`, …) from the matched node's `__contributors`, instead of the synthetic merge-engine id `__merged__`.
+
 ## 0.210.1
 
 - fix(gazetteers): translation-only language gazetteers carrying the legacy `kind: 'language'` discriminator (instead of the new `shape: 'language'`) were being walked as data gazetteers, so their Swedish/historical aliases never reached the merged tree; loader now treats both as synonyms

@@ -200,7 +200,15 @@ function showPopup(id: string) {
     const qClass = 'match-' + place.resolved.matchQuality;
     html += `<div class="popup-resolved"><span class="${qClass}">${t('gazetteers.match.' + place.resolved.matchQuality)}</span>`;
     html += `<span class="match-path">${place.resolved.matchedPath.join(' &gt; ')}</span>`;
-    html += `<span class="match-gazetteer">${t('gazetteers.via')} <code>${place.resolved.gazetteer}</code></span></div>`;
+    // Source provenance: the merge engine returns a synthetic id; the actual
+    // contributing gazetteers live on the matched node's `__contributors`.
+    const node = place.resolved.matchedNode as { __contributors?: string[] };
+    const contributors = node.__contributors ?? [];
+    if (contributors.length > 0) {
+      const label = contributors.length === 1 ? contributors[0] : contributors.join(', ');
+      html += `<span class="match-gazetteer">${t('gazetteers.via')} <code>${label}</code></span>`;
+    }
+    html += `</div>`;
   }
 
   popup = L.popup({ offset: [0, -8] })

@@ -100,7 +100,7 @@
               <span class="compact-label">{{ $t('gazetteers.resolvedVia') }}</span>
               <span class="resolved-value">
                 <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">{{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}</span>
-                <code class="resolved-gaz">{{ resolvedMatch.gazetteer }}</code>
+                <code v-if="resolvedSource" class="resolved-gaz">{{ resolvedSource }}</code>
                 <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
               </span>
             </div>
@@ -380,6 +380,19 @@ const { resolvedMatch, resolvedTypeLabel, resolvedParentPath } = useResolvedPlac
   placeNameRef,
   ancestorNamesRef,
 );
+
+// Source provenance for the resolved-via line. The merge engine collapses
+// every source into one synthetic gazetteer (`__merged__`), so the useful
+// "where did this come from?" data lives on the matched node's
+// `__contributors`. Show the contributor IDs; suppress the synthetic id.
+const resolvedSource = computed<string | null>(() => {
+  if (!resolvedMatch.value) return null;
+  const node = resolvedMatch.value.matchedNode as { __contributors?: string[] };
+  const contributors = node.__contributors ?? [];
+  if (contributors.length === 0) return null;
+  if (contributors.length === 1) return contributors[0];
+  return contributors.join(', ');
+});
 
 const personCount = computed(() => panelData.value?.personCount ?? 0);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
