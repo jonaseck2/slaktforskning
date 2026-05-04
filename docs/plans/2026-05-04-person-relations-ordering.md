@@ -82,15 +82,15 @@ Family-flavoured vs social-flavoured "other relations" sub-bucket: hardcoded lis
 
 ## Tasks
 
-- [ ] **Confirm relations data shape.** Read `src/api/relationships.ts` `getForPerson` to see the exact return shape; confirm what's joined (other person's name? birth date? partnership start_date?). Adjust `RelationsSortInput` to match, OR extend `getForPerson` to include the join columns the sort needs (one trip to the DB, not N+1 from the sort).
-- [ ] **Write `sortPersonRelations.ts`** in `src/api/`. Pure function, no Database param, takes already-loaded data, returns groups. Document the order rules at the top.
-- [ ] **Unit test the sort** with fixtures covering: bio + adoptive parents present; foster parent absent (empty bucket omitted); partners with mixed start_date / no start_date; children grouped under multiple partners; child with `other_parent_id = null`; godparent + group membership rendered in the correct sub-bucket; locale collation (Swedish å/ä/ö).
-- [ ] **Refactor `PersonRelationshipsSection.vue`** to call `sortPersonRelations` and walk the returned groups. The render template reads each group's `kind` and renders the appropriate header + rows. Remove any inline sort logic.
-- [ ] **Audit + refactor reports** (`ALifeReport`, `AMarriageReport`, `LifeOnOnePageReport`, `PhotoAlbumReport`). Each that renders relations imports `sortPersonRelations` and uses the same group walk. If a report renders only a subset (e.g. only partners), the sort can still produce groups; the report filters to the kinds it cares about.
-- [ ] **i18n keys**: add `unknownOrOtherParent` to both locales.
-- [ ] **Component test** for PersonRelationshipsSection: mount with a fixture person (bio parents, two partners with shared children, godparent), assert rendered DOM order matches the spec.
+- [x] **Confirm relations data shape.** Read `src/api/relationships.ts` `getForPerson` to see the exact return shape; confirm what's joined (other person's name? birth date? partnership start_date?). Adjust `RelationsSortInput` to match, OR extend `getForPerson` to include the join columns the sort needs (one trip to the DB, not N+1 from the sort).
+- [x] **Write `sortPersonRelations.ts`** in `src/api/`. Pure function, no Database param, takes already-loaded data, returns groups. Document the order rules at the top.
+- [x] **Unit test the sort** with fixtures covering: bio + adoptive parents present; foster parent absent (empty bucket omitted); partners with mixed start_date / no start_date; children grouped under multiple partners; child with `other_parent_id = null`; godparent + group membership rendered in the correct sub-bucket; locale collation (Swedish å/ä/ö).
+- [x] **Refactor `PersonRelationshipsSection.vue`** to call `sortPersonRelations` and walk the returned groups. The render template reads each group's `kind` and renders the appropriate header + rows. Remove any inline sort logic.
+- [x] **Audit + refactor reports** (`ALifeReport`, `AMarriageReport`, `LifeOnOnePageReport`, `PhotoAlbumReport`). Each that renders relations imports `sortPersonRelations` and uses the same group walk. If a report renders only a subset (e.g. only partners), the sort can still produce groups; the report filters to the kinds it cares about.
+- [x] **i18n keys**: add `unknownOrOtherParent` to both locales.
+- [x] **Component test** for PersonRelationshipsSection: mount with a fixture person (bio parents, two partners with shared children, godparent), assert rendered DOM order matches the spec.
 - [ ] **Manual smoke check**: open Bengt's test DB or seed equivalent. Walk the order in the running app. Verify same person, same order on reload.
-- [ ] **Bump `package.json` minor** + CHANGELOG: `- feat: relations on a person panel render in a deterministic, genealogist-friendly order`.
+- [x] **Bump `package.json` minor** + CHANGELOG: `- feat: relations on a person panel render in a deterministic, genealogist-friendly order`.
 
 ## Verification (user-observable)
 
@@ -110,12 +110,12 @@ Family-flavoured vs social-flavoured "other relations" sub-bucket: hardcoded lis
 
 ## Self-review checklist
 
-- [ ] `sortPersonRelations` is pure (no DB, no `t()`, no globals).
-- [ ] Both PersonRelationshipsSection AND every report-side relations renderer use the same function.
-- [ ] No `"Fader okänd"` string anywhere in renderer or i18n for the unknown-other-parent bucket.
-- [ ] Swedish/English collation tested explicitly with å/ä/ö fixtures.
-- [ ] CHANGELOG entry user-first (one sentence, ≤100 chars).
-- [ ] Sequenced after foster-terminology (rebase).
+- [x] `sortPersonRelations` is pure (no DB, no `t()`, no globals).
+- [x] Both PersonRelationshipsSection AND every report-side relations renderer use the same function. (ALifeReport's parents/spouses/children walk the sort. AMarriageReport consumes `getFamilyUnit` directly — not a relations-list shape; LifeOnOnePageReport iterates couples to build marriage entries, no relations list rendered; PhotoAlbumReport uses a single subject-couple — all three reviewed and confirmed not to render an ordered list of the focal person's relations.)
+- [x] No `"Fader okänd"` string anywhere in renderer or i18n for the unknown-other-parent bucket.
+- [x] Swedish/English collation tested explicitly with å/ä/ö fixtures.
+- [x] CHANGELOG entry user-first (one sentence, ≤100 chars).
+- [ ] Sequenced after foster-terminology (rebase). — foster-terminology has not yet landed; this plan introduces only `relationships.unknownOrOtherParent` and `relationships.otherRelations`. Parent role labels reuse the existing `reports.relations.{father,mother,parent}` + `parentChildSubtypes.*` keys until foster-terminology lands and rebases on top.
 
 ## Open questions for the implementation step
 
