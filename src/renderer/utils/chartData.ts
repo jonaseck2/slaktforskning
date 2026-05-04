@@ -103,6 +103,41 @@ async function resolvePersonPhotoUrl(personId: string): Promise<string | null> {
   }
 }
 
+/**
+ * Sort siblings / children oldest-first by birthDate.
+ * - Items WITH a birthDate sort first, ascending lexicographically (ISO dates sort correctly).
+ * - Items WITHOUT a birthDate sort to the right of all dated items, ordered by id among themselves.
+ *
+ * Pure: returns a new array; does not mutate the input. Stable for equal keys.
+ *
+ * Accepts both shapes used in this module:
+ *   - PersonNode-shaped (`{ id, birthDate }`)
+ *   - TreePerson-shaped (`{ person: { id, birthDate } }`)
+ */
+export function sortByBirthOldestFirst<T extends { birthDate?: string | null; id?: string } | { person: { birthDate: string | null; id: string } }>(
+  items: readonly T[],
+): T[] {
+  function key(item: T): { birth: string | null; id: string } {
+    if ('person' in item && item.person) {
+      return { birth: item.person.birthDate ?? null, id: item.person.id };
+    }
+    const flat = item as { birthDate?: string | null; id?: string };
+    return { birth: flat.birthDate ?? null, id: flat.id ?? '' };
+  }
+  return [...items].sort((a, b) => {
+    const ka = key(a);
+    const kb = key(b);
+    if (ka.birth && kb.birth) {
+      if (ka.birth !== kb.birth) return ka.birth < kb.birth ? -1 : 1;
+      return ka.id.localeCompare(kb.id);
+    }
+    if (ka.birth && !kb.birth) return -1;  // dated wins, dated goes left
+    if (!ka.birth && kb.birth) return 1;
+    // Both undated → by id
+    return ka.id.localeCompare(kb.id);
+  });
+}
+
 export async function fetchPersonNode(id: string): Promise<PersonNode> {
   const [person, names, events] = await Promise.all([
     window.api.persons.get(id),
@@ -288,7 +323,7 @@ export async function fetchDescendantTree(
     const children = await Promise.all(
       childIds.map(id => fetchDescendantTree(id, depth + 1, maxDepth)),
     );
-    return { person: node, children, hasMoreChildren: false };
+    return { person: node, children: sortByBirthOldestFirst(children), hasMoreChildren: false };
   } else {
     // Deepest generation: fetch node + check if children exist in DB.
     const [node, rawRels] = await Promise.all([
@@ -332,7 +367,7 @@ export async function loadChildrenForNode(
         return { person: childNode, children: [], hasMoreChildren };
       }));
 
-      return { ...node, children, hasMoreChildren: false };
+      return { ...node, children: sortByBirthOldestFirst(children), hasMoreChildren: false };
     }
 
     // Recurse into children, creating new object references only along changed path
@@ -382,7 +417,9 @@ export async function fetchHourglassTree(focalId: string): Promise<HourglassTree
       .forEach(r => { if (r.person2_id) siblingIdSet.add(r.person2_id); });
   }));
 
-  const siblings = await Promise.all([...siblingIdSet].map(fetchPersonNode));
+  const siblings = sortByBirthOldestFirst(
+    await Promise.all([...siblingIdSet].map(fetchPersonNode)),
+  );
 
   // Annotate focal's direct children with their co-parent ID.
   // A child's co-parent is the focal's spouse who is also a parent of that child.
@@ -399,7 +436,10 @@ export async function fetchHourglassTree(focalId: string): Promise<HourglassTree
         return { ...child, coParentId };
       }),
     );
-    annotatedRoot = { ...descendantRoot, children: annotatedChildren };
+    annotatedRoot = { ...descendantRoot, children: sortByBirthOldestFirst(annotatedChildren) };
+  } else {
+    // No annotation needed; still ensure siblings (children of the focal) are birth-sorted.
+    annotatedRoot = { ...descendantRoot, children: sortByBirthOldestFirst(descendantRoot.children) };
   }
 
   return { ancestors, descendantRoot: annotatedRoot, descendantGenerations: 3, spouses, siblings };
@@ -529,7 +569,7 @@ export async function fetchHourglassTreePerson(
 
     const children = await Promise.all(childIds.map(cid => buildDescendants(cid, depth + 1, false)));
 
-    return { person: node, parents: [], children, spouses, isFocal };
+    return { person: node, parents: [], children: sortByBirthOldestFirst(children), spouses, isFocal };
   }
 
   // Build ancestor parents
@@ -564,7 +604,7 @@ export async function fetchHourglassTreePerson(
   })));
 
   // Build children with coParentId annotation
-  const children = await Promise.all(childIds.map(async (cid) => {
+  const childrenUnsorted = await Promise.all(childIds.map(async (cid) => {
     const child = await buildDescendants(cid, 1, false);
     const childRels = (await window.api.relationships.getForPerson(cid)) as RawRel[];
     const coParentId = childRels
@@ -574,9 +614,10 @@ export async function fetchHourglassTreePerson(
     child.coParentId = coParentId;
     return child;
   }));
+  const children = sortByBirthOldestFirst(childrenUnsorted);
 
   // Siblings (with their spouses)
-  const siblings: TreePerson[] = await Promise.all([...siblingIdSet].map(async (id) => {
+  const siblingsUnsorted: TreePerson[] = await Promise.all([...siblingIdSet].map(async (id) => {
     const spouses = await fetchSpouses(id);
     return {
       person: await fetchPersonNode(id),
@@ -585,6 +626,7 @@ export async function fetchHourglassTreePerson(
       spouses,
     };
   }));
+  const siblings = sortByBirthOldestFirst(siblingsUnsorted);
 
   const focal = await fetchPersonNode(focalId);
   return {
@@ -703,7 +745,7 @@ export async function loadChildrenForNodeTP(
         return { person: childNode, parents: [], children: [], spouses, hasMoreChildren: hasMore } as TreePerson;
       }));
 
-      return { ...node, children, hasMoreChildren: false };
+      return { ...node, children: sortByBirthOldestFirst(children), hasMoreChildren: false };
     }
 
     // Recurse into children
