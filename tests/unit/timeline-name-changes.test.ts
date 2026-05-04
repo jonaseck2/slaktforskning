@@ -12,7 +12,7 @@ beforeEach(() => {
 
 describe('getTimeline — name change derivation', () => {
   it('emits a name_change entry for a non-birth name with date_from', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' });
+    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
     addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Andersson', name_type: 'birth', sort_order: 0,
     });
@@ -30,7 +30,7 @@ describe('getTimeline — name change derivation', () => {
   });
 
   it('emits NO name_change entry for a name with NULL date_from', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' });
+    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
     addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Lindberg', name_type: 'married', sort_order: 1,
     });
@@ -39,7 +39,7 @@ describe('getTimeline — name change derivation', () => {
   });
 
   it('emits NO name_change entry for the birth name even with date_from set', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' });
+    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
     addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Andersson', name_type: 'birth',
       date_from: '1940-06-01', sort_order: 0,

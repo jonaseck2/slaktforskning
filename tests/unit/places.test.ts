@@ -223,7 +223,7 @@ describe('deletePlace', () => {
 describe('getPersonsForPlace', () => {
   it('returns persons linked to events at a place', () => {
     const place = createPlace(db, { name: 'Stockholm' });
-    const person = createPerson(db, { sex: 'M' });
+    const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
@@ -243,7 +243,7 @@ describe('getPersonsForPlace', () => {
 
   it('deduplicates persons with multiple events at same place', () => {
     const place = createPlace(db, { name: 'Uppsala' });
-    const person = createPerson(db, { sex: 'F' });
+    const person = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, person.id, { given_name: 'Anna', surname: 'Nilsson' });
     const e1 = createEvent(db, { event_type: 'birth', place_id: place.id });
     const e2 = createEvent(db, { event_type: 'christening', place_id: place.id });
@@ -339,7 +339,7 @@ describe('getPersonsForPlace - biography fields', () => {
   test('returns first_year and last_year per person from primary-role events', () => {
     const db = createTestDb();
     const place = createPlace(db, { name: 'Vienna' });
-    const alice = createPerson(db, { sex: 'F' });
+    const alice = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
     const birth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1842-03-01', date_original: '1842-03-01', place_id: place.id });
     addEventParticipant(db, { event_id: birth.id, person_id: alice.id, role: 'primary' });
@@ -355,9 +355,9 @@ describe('getPersonsForPlace - biography fields', () => {
   test('excludes persons whose only role at the place is non-primary', () => {
     const db = createTestDb();
     const place = createPlace(db, { name: 'Vienna' });
-    const alice = createPerson(db, { sex: 'F' });
+    const alice = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
-    const bob = createPerson(db, { sex: 'M' });
+    const bob = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, bob.id, { given_name: 'Bob', surname: 'B', name_type: 'birth' });
     const wedding = createEvent(db, { event_type: 'marriage', date_type: 'exact', date_value: '1860-06-01', date_original: '1860-06-01', place_id: place.id });
     addEventParticipant(db, { event_id: wedding.id, person_id: alice.id, role: 'primary' });
@@ -369,7 +369,7 @@ describe('getPersonsForPlace - biography fields', () => {
   test('includes person with primary AND witness roles (counts only primary events)', () => {
     const db = createTestDb();
     const place = createPlace(db, { name: 'Vienna' });
-    const alice = createPerson(db, { sex: 'F' });
+    const alice = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
     const ownBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1842-03-01', date_original: '1842-03-01', place_id: place.id });
     addEventParticipant(db, { event_id: ownBirth.id, person_id: alice.id, role: 'primary' });
@@ -385,7 +385,7 @@ describe('getPersonsForPlace - biography fields', () => {
   test('returns null first_year/last_year for primary-role events without dates', () => {
     const db = createTestDb();
     const place = createPlace(db, { name: 'Vienna' });
-    const alice = createPerson(db, { sex: 'F' });
+    const alice = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
     const undated = createEvent(db, { event_type: 'residence', date_type: 'unknown', date_value: null, date_original: '', place_id: place.id });
     addEventParticipant(db, { event_id: undated.id, person_id: alice.id, role: 'primary' });
@@ -398,15 +398,15 @@ describe('getPersonsForPlace - biography fields', () => {
   test('sorts by first_year ascending, undated last, then by surname/given_name', () => {
     const db = createTestDb();
     const place = createPlace(db, { name: 'Vienna' });
-    const carl = createPerson(db, { sex: 'M' });
+    const carl = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, carl.id, { given_name: 'Carl', surname: 'C', name_type: 'birth' });
     const carlBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1830-01-01', date_original: '1830-01-01', place_id: place.id });
     addEventParticipant(db, { event_id: carlBirth.id, person_id: carl.id, role: 'primary' });
-    const alice = createPerson(db, { sex: 'F' });
+    const alice = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, alice.id, { given_name: 'Alice', surname: 'A', name_type: 'birth' });
     const aliceBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1850-01-01', date_original: '1850-01-01', place_id: place.id });
     addEventParticipant(db, { event_id: aliceBirth.id, person_id: alice.id, role: 'primary' });
-    const zoe = createPerson(db, { sex: 'F' });
+    const zoe = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, zoe.id, { given_name: 'Zoe', surname: 'Z', name_type: 'birth' });
     const zoeUndated = createEvent(db, { event_type: 'residence', date_type: 'unknown', date_value: null, date_original: '', place_id: place.id });
     addEventParticipant(db, { event_id: zoeUndated.id, person_id: zoe.id, role: 'primary' });

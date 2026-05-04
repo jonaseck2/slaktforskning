@@ -125,11 +125,16 @@ Register in `runAllCheckFunctions()`. The check appears under the existing `noti
 
 | Path | Today | After fix |
 |---|---|---|
-| `PersonModal.vue` (create mode) | Toast warning post-save | Save disabled until name present |
-| `persons.create` IPC / api function | TBD | TBD |
-| `persons.createWithEvent` | TBD | TBD |
-| GEDCOM importer INDI without NAME | TBD | TBD |
-| Holger importer | TBD | TBD |
-| Genney importer | TBD | TBD |
-| MCP `create_person` | TBD | TBD |
-| MCP `add_relationship` (shadow person?) | TBD | TBD |
+| `PersonModal.vue` (create mode) | Toast warning post-save | Save disabled until name present (SA-A) |
+| `src/api/persons.ts` `createPerson` | Wrote person row, conditionally wrote names row when given/surname truthy — empty/whitespace silently skipped names insert | Throws `Error('Cannot create person without a name…')` unless `{ allowNameless: true }` opt-in is passed (importers only). Whitespace-only counts as blank. |
+| `persons.create` IPC | Funnels through `createPerson` | Inherits api guard — modal already gates client-side; agent IPC misuse now fails server-side too |
+| `persons.createWithEvent` IPC | Funnels through `createPerson` (`persons_workflows.ts` `_core`) | Inherits api guard |
+| MCP `create_person` (`src/mcp/tools/prod/persons.ts`) | Zod `given_name: z.string()` accepted empty string; flowed into `createPerson` which silently dropped the names insert | Tool handler now rejects with friendly `Error('At least one of given_name or surname must be non-empty')` before workflow runs. API guard is the backstop. |
+| MCP `add_child` (`src/mcp/tools/prod/families.ts`) | Same as `create_person` | Same fix — handler-level guard + api backstop |
+| GEDCOM importer INDI without NAME (`src/import/gedcom/phases.ts`) | `createPerson` called without given/surname; if INDI had no NAME tag the resulting person had no names row, silently | Calls `createPerson(..., { allowNameless: true })` (the importer always inserts the person row first then appends names via `addPersonName`); when `nameNodes.length === 0`, increments `ctx.namelessPersonCount`. Final report's `warnings[]` discloses the count via `${n} INDI record(s) had no NAME tag — imported as nameless persons (visible under quality checks)`. Surfaced to user via `PERSON_NO_NAME` quality check (SA-C). |
+| Holger importer (`src/import/holger/`) | Delegates to GEDCOM importer | Inherits the GEDCOM-importer fix above |
+| Archive (`.zip`) importer | Delegates to GEDCOM importer | Inherits the GEDCOM-importer fix above |
+| Genney importer (`src/import/genney/transform.ts`) | Bypassed `createPerson` with prepared statements; conditionally wrote names row when `given || p.SURNAME` truthy — same silent-skip as before | Inline guard mirrors api logic (`hasName` boolean from trimmed values); when both blank, increments `namelessPersonCount` and pushes `${n} PERSON record(s) had no GIVENNAME or SURNAME — imported as nameless persons…` warning to summary |
+| MCP `add_relationship` / `record_event` "shadow person" creation | None — both require existing person ids; never auto-create | No fix needed |
+| MCP `merge_persons`, `seed_person`, `seed_family` | All pass real names; not affected | No fix needed |
+| Existing test fixtures (228 nameless `createPerson` callsites) | N/A | Updated to `createPerson(db, …, { allowNameless: true })` so the suite continues to test relationship/event APIs without authoring placeholder names |

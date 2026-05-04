@@ -34,8 +34,8 @@ describe('POSSIBLE_DUPLICATE_PERSON', () => {
 
 describe('DUPLICATE_IDENTIFIER', () => {
   it('fires when two persons share the same identifier', async () => {
-    const p1 = createPerson(db, {});
-    const p2 = createPerson(db, {});
+    const p1 = createPerson(db, {}, { allowNameless: true });
+    const p2 = createPerson(db, {}, { allowNameless: true });
     queryRun(db,
       'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)',
       [uuidv4(), p1.id, 'familysearch', 'ABC-1234']);
@@ -50,8 +50,8 @@ describe('DUPLICATE_IDENTIFIER', () => {
   });
 
   it('does not fire for unique identifiers', async () => {
-    const p1 = createPerson(db, {});
-    const p2 = createPerson(db, {});
+    const p1 = createPerson(db, {}, { allowNameless: true });
+    const p2 = createPerson(db, {}, { allowNameless: true });
     queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p1.id, 'familysearch', 'A']);
     queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p2.id, 'familysearch', 'B']);
     const results = await runAllChecks(db);
@@ -82,7 +82,7 @@ describe('DUPLICATE_PLACE', () => {
 
 describe('DUPLICATE_MEDIA', () => {
   it('fires for two media rows with the same file_ref', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const a = createMedia(db, { title: 'Foo', file_ref: '/photos/p.jpg' });
     const b = createMedia(db, { title: 'Bar', file_ref: '/photos/p.jpg' });
     addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
@@ -94,7 +94,7 @@ describe('DUPLICATE_MEDIA', () => {
   });
 
   it('does not fire for empty file_ref', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const a = createMedia(db, { title: 'Foo' });
     const b = createMedia(db, { title: 'Bar' });
     addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });

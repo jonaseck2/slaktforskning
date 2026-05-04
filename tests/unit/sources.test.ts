@@ -156,7 +156,7 @@ describe('citations', () => {
   });
 
   it('gets citations for a person', () => {
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const source = createSource(db, { title: 'Record' });
     createCitation(db, { source_id: source.id, person_id: person.id });
     createCitation(db, { source_id: source.id, person_id: person.id });

@@ -37,7 +37,7 @@ describe('exportGedcom 7.0 — header', () => {
 
 describe('exportGedcom 7.0 — EXID identifiers', () => {
   it('emits EXID for familysearch identifier in 7.0', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'LHWY-GQT' });
     const { ged: out } = exportGedcom(db, '7.0');
     expect(out).toContain('1 EXID LHWY-GQT');
@@ -45,7 +45,7 @@ describe('exportGedcom 7.0 — EXID identifiers', () => {
     expect(out).not.toContain('1 REFN LHWY-GQT');
   });
   it('emits REFN for familysearch identifier in 5.5.1', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'LHWY-GQT' });
     const { ged: out } = exportGedcom(db, '5.5.1');
     expect(out).toContain('1 REFN LHWY-GQT');
@@ -55,7 +55,7 @@ describe('exportGedcom 7.0 — EXID identifiers', () => {
 
 describe('exportGedcom 7.0 — DATE PHRASE', () => {
   it('emits PHRASE for unparseable date_original in 7.0', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const ev = createEvent(db, { event_type: 'birth', date_type: 'unknown', date_original: 'Summer 1923' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
     const { ged: out } = exportGedcom(db, '7.0');
@@ -63,14 +63,14 @@ describe('exportGedcom 7.0 — DATE PHRASE', () => {
     expect(out).not.toContain('2 DATE Summer 1923');
   });
   it('emits standard DATE value for parseable date in 7.0', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const ev = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1845-06-12', date_original: '12 JUN 1845' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
     const { ged: out } = exportGedcom(db, '7.0');
     expect(out).toContain('2 DATE 12 JUN 1845');
   });
   it('5.5.1 emits date_original as-is (no PHRASE)', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const ev = createEvent(db, { event_type: 'birth', date_type: 'unknown', date_original: 'Summer 1923' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
     const { ged: out } = exportGedcom(db, '5.5.1');
@@ -81,8 +81,8 @@ describe('exportGedcom 7.0 — DATE PHRASE', () => {
 
 describe('exportGedcom 7.0 — PEDI values', () => {
   it('emits BIRTH (uppercase) for biological parent_child in 7.0', () => {
-    const parent = createPerson(db, { sex: 'M' });
-    const child = createPerson(db, { sex: 'F' });
+    const parent = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const child = createPerson(db, { sex: 'F' }, { allowNameless: true });
     createRelationship(db, { type: 'couple', person1_id: parent.id });
     createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id, subtype: 'biological' });
     const { ged: out } = exportGedcom(db, '7.0');
@@ -90,8 +90,8 @@ describe('exportGedcom 7.0 — PEDI values', () => {
     expect(out).not.toContain('2 PEDI birth');
   });
   it('emits birth (lowercase) for biological parent_child in 5.5.1', () => {
-    const parent = createPerson(db, { sex: 'M' });
-    const child = createPerson(db, { sex: 'F' });
+    const parent = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const child = createPerson(db, { sex: 'F' }, { allowNameless: true });
     createRelationship(db, { type: 'couple', person1_id: parent.id });
     createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id, subtype: 'biological' });
     const { ged: out } = exportGedcom(db, '5.5.1');
@@ -101,14 +101,14 @@ describe('exportGedcom 7.0 — PEDI values', () => {
 
 describe('exportGedcom 7.0 — NAME.TYPE', () => {
   it('emits AKA (not ALIAS) for alias name type in 7.0', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Sven', surname: 'Larsson', name_type: 'alias' });
     const { ged: out } = exportGedcom(db, '7.0');
     expect(out).toContain('2 TYPE AKA');
     expect(out).not.toContain('2 TYPE ALIAS');
   });
   it('emits ALIAS for alias name type in 5.5.1', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Sven', surname: 'Larsson', name_type: 'alias' });
     const { ged: out } = exportGedcom(db, '5.5.1');
     expect(out).toContain('2 TYPE ALIAS');

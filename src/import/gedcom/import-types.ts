@@ -41,6 +41,8 @@ export interface ImportContext {
   noCount: number;
   assoDropCount: number;
   holgerRemarkCount: number;
+  /** Count of INDI records imported with no NAME tag — preserved with allowNameless. */
+  namelessPersonCount: number;
   firstPersonId: string | null;
   submitterNames: string[];
 }

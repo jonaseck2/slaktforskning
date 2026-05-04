@@ -88,6 +88,36 @@ describe('GEDCOM import — data integrity reporting', () => {
     expect(entry).toBeTruthy();
     expect(entry!.count).toBeGreaterThan(0);
   });
+
+  // Plan 2026-05-04-new-person-dialog-hardening: nameless INDIs are preserved
+  // (the source's reference graph may need them) but the user is disclosed via
+  // a warning so the PERSON_NO_NAME quality check finds them.
+  it('preserves a NAME-less INDI as a nameless person and warns the user', () => {
+    const NAMELESS_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 SEX M
+0 @I2@ INDI
+1 NAME Lars /Eriksson/
+1 SEX M
+0 TRLR
+`.trim();
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(NAMELESS_GED));
+    expect(report.persons).toBe(2);
+    // Both persons exist...
+    const personRows = (db.prepare('SELECT id FROM persons').all([]) as Array<{ id: string }>);
+    expect(personRows).toHaveLength(2);
+    // ...but only one has a names row attached.
+    const nameRows = (db.prepare('SELECT person_id FROM person_names').all([]) as Array<{ person_id: string }>);
+    expect(nameRows).toHaveLength(1);
+    // And the import report disclosed the nameless person.
+    const namelessWarn = report.warnings.find(w => /NAME tag/.test(w) && /nameless/.test(w));
+    expect(namelessWarn).toBeTruthy();
+    expect(namelessWarn).toMatch(/1 INDI record\(s\)/);
+  });
 });
 
 describe('db_settings API', () => {

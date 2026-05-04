@@ -34,7 +34,7 @@ const VERSIONS: RegistryVersion[] = ['v551', 'v70'];
 
 function seedComprehensive(db: Database): void {
   // ── Person 1: full name + identifier coverage ────────────────────────────
-  const p1 = createPerson(db, { sex: 'M', notes: 'P1 lifestory notes' });
+  const p1 = createPerson(db, { sex: 'M', notes: 'P1 lifestory notes' }, { allowNameless: true });
 
   // First (birth) name with prefix/suffix/patronymic/qualifier/preferred/nickname
   // exercising the multi-field interaction: NPFX + NSFX + _PATR + _NQUAL + asterisk
@@ -71,7 +71,7 @@ function seedComprehensive(db: Database): void {
   addPersonIdentifier(db, p1.id, { identifier_type: 'rin', identifier_value: '42' });
 
   // ── Person 2: spouse for the couple relationship ─────────────────────────
-  const p2 = createPerson(db, { sex: 'F', notes: '' });
+  const p2 = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
   addPersonName(db, p2.id, {
     given_name: 'Anna',
     surname: 'Bengtsdotter',

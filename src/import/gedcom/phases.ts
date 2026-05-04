@@ -220,12 +220,25 @@ export function phaseIndividuals(ctx: ImportContext): void {
       }
     }
 
+    // Look ahead at NAME tags so we know whether to allow a nameless create.
+    // The importer always inserts the person row first then appends names via
+    // addPersonName below, so createPerson is always called without given/surname.
+    // We opt in to the importer-only `allowNameless` flag when (and only when)
+    // the source INDI record has no NAME tag — preserving the source's reference
+    // graph (this person may be a parent/spouse in a FAM record). The user is
+    // disclosed via the import report's `namelessPersonCount`.
+    const nameNodes = getChildren(node, 'NAME');
+
     const person = createPerson(ctx.db, {
       sex,
       notes: notes || undefined,
-    });
+    }, { allowNameless: true });
     ctx.personMap.set(node.xref, person.id);
     if (ctx.isHolger && ctx.firstPersonId === null) ctx.firstPersonId = person.id;
+
+    if (nameNodes.length === 0) {
+      ctx.namelessPersonCount += 1;
+    }
 
     if (ctx.isHolger) {
       const subtypeMap = parseHolgerAdoptionSubtypes(node);
@@ -233,7 +246,6 @@ export function phaseIndividuals(ctx: ImportContext): void {
     }
 
     // Names
-    const nameNodes = getChildren(node, 'NAME');
     for (const nameNode of nameNodes) {
       const raw = nameNode.value ?? '';
       const surnameMatch = raw.match(/^(.*?)\/(.+?)\/(.*)$/);

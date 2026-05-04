@@ -35,7 +35,7 @@ beforeEach(() => {
 describe('checkGazetteerMatchQuality', () => {
   it('returns no results for places with manual coordinates', async () => {
     const place = createPlace(db, { name: 'Okänd plats', latitude: 59.0, longitude: 18.0 });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -44,7 +44,7 @@ describe('checkGazetteerMatchQuality', () => {
 
   it('returns PLACE_MATCH_NONE for an unresolvable place linked to an event', async () => {
     const place = createPlace(db, { name: 'Xyzzy, Fjärran Ort' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -56,7 +56,7 @@ describe('checkGazetteerMatchQuality', () => {
   it('returns PLACE_MATCH_WRONG_LEVEL when a single-word name matches a deep leaf', async () => {
     // "Amerika" is a single component that matches a leaf parish at depth 3
     const place = createPlace(db, { name: 'Amerika' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'emigration', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -70,7 +70,7 @@ describe('checkGazetteerMatchQuality', () => {
 
   it('returns no issue for an exact match', async () => {
     const place = createPlace(db, { name: 'Smedjebacken, Dalarnas län, Sverige' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -82,7 +82,7 @@ describe('checkGazetteerMatchQuality', () => {
   it('returns PLACE_MATCH_PARTIAL when there are unmatched components', async () => {
     // "Smedjebacken, Okänd Del, Sverige" — "Okänd Del" won't match
     const place = createPlace(db, { name: 'Smedjebacken, Okänd Del, Sverige' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -96,8 +96,8 @@ describe('checkGazetteerMatchQuality', () => {
 
   it('does not populate personIds — place-match issues are place-scoped', async () => {
     const place = createPlace(db, { name: 'Xyzzy, Nowhere' });
-    const person1 = createPerson(db, {});
-    const person2 = createPerson(db, {});
+    const person1 = createPerson(db, {}, { allowNameless: true });
+    const person2 = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person1.id });
     addEventParticipant(db, { event_id: event.id, person_id: person2.id });
@@ -124,7 +124,7 @@ describe('checkGazetteerMatchQuality', () => {
 
   it('populates placeIds and resolvedLat/Lon for PLACE_MATCH_NONE results', async () => {
     const place = createPlace(db, { name: 'Xyzzy, Nowhere' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -139,7 +139,7 @@ describe('checkGazetteerMatchQuality', () => {
   it('single-word place matching a leaf at depth > 2 triggers PLACE_MATCH_WRONG_LEVEL', async () => {
     // "Smedjebacken" is a single component, matches a leaf at depth 3 (Sverige > Dalarnas > Smedjebacken)
     const place = createPlace(db, { name: 'Smedjebacken' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, [testGazetteer]);
@@ -149,7 +149,7 @@ describe('checkGazetteerMatchQuality', () => {
 
   it('returns empty array when no gazetteers are provided', async () => {
     const place = createPlace(db, { name: 'Smedjebacken' });
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const event = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: event.id, person_id: person.id });
     const results = await checkGazetteerMatchQuality(db, []);

@@ -13,7 +13,7 @@ beforeEach(() => { db = createTestDb(); });
 
 describe('buildPreview', () => {
   it('returns the expected top-level shape', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const result = buildPreview(db, {
       siteTitle: 'My Tree',
       scope: { everyone: true },
@@ -43,9 +43,9 @@ describe('buildPreview', () => {
   });
 
   it('respects scope — excludes persons outside focus window', () => {
-    const focus = createPerson(db, { sex: 'M' });
+    const focus = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, focus.id, { given_name: 'Focus', surname: 'Person', name_type: 'birth', sort_order: 0 });
-    const stranger = createPerson(db, { sex: 'F' });
+    const stranger = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, stranger.id, { given_name: 'Stranger', surname: 'Away', name_type: 'birth', sort_order: 0 });
 
     const result = buildPreview(db, {
@@ -60,7 +60,7 @@ describe('buildPreview', () => {
   });
 
   it('populates given_name and surname from person_names', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik', surname: 'Svensson', name_type: 'birth', sort_order: 0 });
 
     const result = buildPreview(db, {
@@ -73,7 +73,7 @@ describe('buildPreview', () => {
   });
 
   it('populates birth_year and death_year from events', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const birth = createEvent(db, { event_type: 'birth', date_value: '1920-06-01', date_original: '1920' });
     const death = createEvent(db, { event_type: 'death', date_value: '1985-03-15', date_original: '1985' });
     addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
@@ -89,7 +89,7 @@ describe('buildPreview', () => {
   });
 
   it('populates death_year from burial event when no death event present', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const burial = createEvent(db, { event_type: 'burial', date_value: '1950-07-10', date_original: '1950' });
     addEventParticipant(db, { event_id: burial.id, person_id: p.id, role: 'primary' });
 
@@ -102,7 +102,7 @@ describe('buildPreview', () => {
   });
 
   it('counts distinct places attached to in-scope persons via events', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const place1 = createPlace(db, { name: 'Stockholm' });
     const place2 = createPlace(db, { name: 'Göteborg' });
     const e1 = createEvent(db, { event_type: 'birth', place_id: place1.id, date_original: '1900' });
@@ -119,7 +119,7 @@ describe('buildPreview', () => {
   });
 
   it('does not double-count the same place referenced by multiple events', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const place = createPlace(db, { name: 'Uppsala' });
     const e1 = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1900' });
     const e2 = createEvent(db, { event_type: 'death', place_id: place.id, date_original: '1970' });
@@ -135,7 +135,7 @@ describe('buildPreview', () => {
   });
 
   it('counts media linked to in-scope persons', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const m1 = createMedia(db, { title: 'Photo1' });
     const m2 = createMedia(db, { title: 'Photo2' });
     addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: p.id });
@@ -151,11 +151,11 @@ describe('buildPreview', () => {
 
   it('excludes living persons when excludeLiving=true', () => {
     // A person with a death event is not living (derived); one without is living.
-    const dead = createPerson(db, { sex: 'M' });
+    const dead = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const death = createEvent(db, { event_type: 'death', date_value: '1950-01-01', date_original: '1950' });
     addEventParticipant(db, { event_id: death.id, person_id: dead.id, role: 'primary' });
 
-    const _alive = createPerson(db, { sex: 'F' });
+    const _alive = createPerson(db, { sex: 'F' }, { allowNameless: true });
 
     const result = buildPreview(db, {
       siteTitle: 'T',
@@ -167,7 +167,7 @@ describe('buildPreview', () => {
   });
 
   it('redacts living persons when redactLiving=true — clears names and floors birth year', () => {
-    const living = createPerson(db, { sex: 'M' });
+    const living = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, living.id, { given_name: 'Secret', surname: 'Name', name_type: 'birth', sort_order: 0 });
     const birth = createEvent(db, { event_type: 'birth', date_value: '1985-05-20', date_original: '1985' });
     addEventParticipant(db, { event_id: birth.id, person_id: living.id, role: 'primary' });
@@ -188,7 +188,7 @@ describe('buildPreview', () => {
   });
 
   it('does not redact deceased persons when redactLiving=true', () => {
-    const dead = createPerson(db, { sex: 'M' });
+    const dead = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, dead.id, { given_name: 'OldGuy', surname: 'Deceased', name_type: 'birth', sort_order: 0 });
     const death = createEvent(db, { event_type: 'death', date_value: '1900-01-01', date_original: '1900' });
     addEventParticipant(db, { event_id: death.id, person_id: dead.id, role: 'primary' });
@@ -205,11 +205,11 @@ describe('buildPreview', () => {
   });
 
   it('personSample is sorted alphabetically by surname then given_name', () => {
-    const p1 = createPerson(db, { sex: 'M' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p1.id, { given_name: 'Bo', surname: 'Zetterberg', name_type: 'birth', sort_order: 0 });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p2.id, { given_name: 'Anna', surname: 'Andersson', name_type: 'birth', sort_order: 0 });
-    const p3 = createPerson(db, { sex: 'M' });
+    const p3 = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p3.id, { given_name: 'Carl', surname: 'Andersson', name_type: 'birth', sort_order: 0 });
 
     const result = buildPreview(db, {
@@ -223,7 +223,7 @@ describe('buildPreview', () => {
 
   it('personSample is capped at 50 persons', () => {
     for (let i = 0; i < 60; i++) {
-      createPerson(db, { sex: 'U' });
+      createPerson(db, { sex: 'U' }, { allowNameless: true });
     }
     const result = buildPreview(db, {
       siteTitle: 'Big',
@@ -235,7 +235,7 @@ describe('buildPreview', () => {
   });
 
   it('does not persist any inferred values back to the DB (prime directive)', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Infer', surname: 'Test', name_type: 'birth', sort_order: 0 });
     const birth = createEvent(db, { event_type: 'birth', date_value: '1970-01-01', date_original: '1970' });
     addEventParticipant(db, { event_id: birth.id, person_id: p.id, role: 'primary' });
@@ -261,7 +261,7 @@ describe('buildPreview', () => {
     // Create place and media but no persons in scope
     createPlace(db, { name: 'Nowhere' });
     const m = createMedia(db, { title: 'Photo' });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
 
     const result = buildPreview(db, {
@@ -274,7 +274,7 @@ describe('buildPreview', () => {
   });
 
   it('handles persons with no name rows gracefully', () => {
-    createPerson(db, { sex: 'U' });
+    createPerson(db, { sex: 'U' }, { allowNameless: true });
 
     const result = buildPreview(db, {
       siteTitle: 'T',
@@ -289,8 +289,8 @@ describe('buildPreview', () => {
   });
 
   it('does not count media linked to out-of-scope persons', () => {
-    const inScope = createPerson(db, { sex: 'M' });
-    const outOfScope = createPerson(db, { sex: 'F' });
+    const inScope = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const outOfScope = createPerson(db, { sex: 'F' }, { allowNameless: true });
     const m = createMedia(db, { title: 'Photo' });
     addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: outOfScope.id });
 
@@ -303,7 +303,7 @@ describe('buildPreview', () => {
   });
 
   it('redacted count is 0 when redactLiving=false even with living persons', () => {
-    createPerson(db, { sex: 'M' });
+    createPerson(db, { sex: 'M' }, { allowNameless: true });
 
     const result = buildPreview(db, {
       siteTitle: 'T',

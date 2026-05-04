@@ -177,7 +177,7 @@ describe('Undo wrappers', () => {
     });
 
     it('undo updatePerson restores old values', () => {
-      const person = createPersonUndo(db, { sex: 'M' });
+      const person = createPersonUndo(db, { sex: 'M', given_name: 'Test' });
       undoManager.clear(); // clear the create action
       updatePersonUndo(db, person.id, { sex: 'F' });
       expect(persons.getPerson(db, person.id)!.sex).toBe('F');
@@ -202,7 +202,7 @@ describe('Undo wrappers', () => {
 
   describe('PersonName', () => {
     it('undo addPersonName removes the name', () => {
-      const person = persons.createPerson(db, {});
+      const person = persons.createPerson(db, {}, { allowNameless: true });
       const name = addPersonNameUndo(db, person.id, { given_name: 'Extra', surname: 'Name' });
       expect(persons.getPersonNames(db, person.id).length).toBeGreaterThanOrEqual(1);
 
@@ -237,7 +237,7 @@ describe('Undo wrappers', () => {
     });
 
     it('undo deleteEvent restores event + participants', () => {
-      const person = persons.createPerson(db, {});
+      const person = persons.createPerson(db, {}, { allowNameless: true });
       const ev = events.createEvent(db, { event_type: 'birth' });
       relationships.addEventParticipant(db, { event_id: ev.id, person_id: person.id, role: 'primary' });
 
@@ -264,7 +264,7 @@ describe('Undo wrappers', () => {
 
   describe('EventParticipant', () => {
     it('undo addEventParticipant removes the participant', () => {
-      const person = persons.createPerson(db, {});
+      const person = persons.createPerson(db, {}, { allowNameless: true });
       const ev = events.createEvent(db, { event_type: 'birth' });
       const ep = addEventParticipantUndo(db, { event_id: ev.id, person_id: person.id });
 
@@ -274,7 +274,7 @@ describe('Undo wrappers', () => {
     });
 
     it('undo removeEventParticipant restores the participant', () => {
-      const person = persons.createPerson(db, {});
+      const person = persons.createPerson(db, {}, { allowNameless: true });
       const ev = events.createEvent(db, { event_type: 'birth' });
       const ep = relationships.addEventParticipant(db, { event_id: ev.id, person_id: person.id });
 
@@ -289,8 +289,8 @@ describe('Undo wrappers', () => {
 
   describe('Relationship', () => {
     it('undo createRelationship deletes it', () => {
-      const p1 = persons.createPerson(db, {});
-      const p2 = persons.createPerson(db, {});
+      const p1 = persons.createPerson(db, {}, { allowNameless: true });
+      const p2 = persons.createPerson(db, {}, { allowNameless: true });
       const rel = createRelationshipUndo(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
       expect(relationships.getRelationship(db, rel.id)).not.toBeNull();
 
@@ -299,8 +299,8 @@ describe('Undo wrappers', () => {
     });
 
     it('undo deleteRelationship restores it', () => {
-      const p1 = persons.createPerson(db, {});
-      const p2 = persons.createPerson(db, {});
+      const p1 = persons.createPerson(db, {}, { allowNameless: true });
+      const p2 = persons.createPerson(db, {}, { allowNameless: true });
       const rel = relationships.createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
 
       undoManager.clear();
@@ -312,8 +312,8 @@ describe('Undo wrappers', () => {
     });
 
     it('undo updateRelationship restores old values', () => {
-      const p1 = persons.createPerson(db, {});
-      const p2 = persons.createPerson(db, {});
+      const p1 = persons.createPerson(db, {}, { allowNameless: true });
+      const p2 = persons.createPerson(db, {}, { allowNameless: true });
       const rel = createRelationshipUndo(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, notes: 'old' });
       undoManager.clear();
       updateRelationshipUndo(db, rel.id, { notes: 'new' });
@@ -560,8 +560,8 @@ describe('Undo wrappers', () => {
 
   describe('deleteRelationship with events', () => {
     it('undo deleteRelationship restores relationship and its events', () => {
-      const p1 = persons.createPerson(db, {});
-      const p2 = persons.createPerson(db, {});
+      const p1 = persons.createPerson(db, {}, { allowNameless: true });
+      const p2 = persons.createPerson(db, {}, { allowNameless: true });
       const rel = relationships.createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
       const ev = events.createEvent(db, { event_type: 'marriage', relationship_id: rel.id, date_original: '1900-01-01' });
 

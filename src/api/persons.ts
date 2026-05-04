@@ -68,17 +68,36 @@ export function parsePreferredName(givenName: string | undefined | null): { give
   return { given_name: cleaned || null, preferred_name: preferred };
 }
 
+/**
+ * Create a person row, with an associated `person_names` row when at least one
+ * of `given_name` / `surname` (after trim) is non-empty.
+ *
+ * **User-goal guard:** in default mode, throws if both name fields are blank.
+ * The Prime Directive says we don't fabricate names, but the User Goal of plan
+ * 2026-05-04-new-person-dialog-hardening says no code path may *silently*
+ * produce a nameless `persons` row either. Importers that legitimately need
+ * to preserve a nameless source record (because the source's reference graph
+ * needs the person to exist as a parent / spouse) opt in via
+ * `{ allowNameless: true }` AND must record a warning in their import report.
+ * No other code path may pass that flag.
+ */
 export function createPerson(
   db: Database,
-  data: { sex?: Person['sex']; notes?: string; given_name?: string; surname?: string }
+  data: { sex?: Person['sex']; notes?: string; given_name?: string; surname?: string },
+  options: { allowNameless?: boolean } = {}
 ): Person {
+  const hasName = !!(data.given_name?.trim() || data.surname?.trim());
+  if (!hasName && !options.allowNameless) {
+    throw new Error('Cannot create person without a name. Provide given_name or surname.');
+  }
+
   const id = uuid();
   runSql(db,
     `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
     [id, data.sex ?? 'U', data.notes ?? '']
   );
 
-  if (data.given_name || data.surname) {
+  if (hasName) {
     const nameId = uuid();
     const parsed = parsePreferredName(data.given_name);
     runSql(db,

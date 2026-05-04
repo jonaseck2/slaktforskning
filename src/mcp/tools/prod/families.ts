@@ -149,12 +149,12 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('add_child', {
-    description: 'Create a child person and parent_child relationship(s). Optionally creates birth event and citation.',
+    description: 'Create a child person and parent_child relationship(s). Optionally creates birth event and citation. At least one of given_name or surname must be non-empty.',
     inputSchema: {
       parent_id: z.string().describe('ID of the primary parent'),
       other_parent_id: z.string().optional().describe('ID of the other parent (creates a second parent_child relationship)'),
-      given_name: z.string().describe('Given/first name(s) of the child'),
-      surname: z.string().describe('Surname/family name of the child'),
+      given_name: z.string().describe('Given/first name(s) of the child — required unless surname is provided'),
+      surname: z.string().describe('Surname/family name of the child — required unless given_name is provided'),
       sex: z.enum(['M', 'F', 'U']).optional().describe('Sex: M, F, or U (unknown)'),
       birth_date: z.string().optional().describe('Birth date (free text, e.g. "1850" or "12 Mar 1850"). Without birth_date_type, this is stored only as date_original; date_value stays null.'),
       birth_date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown. Required to populate the structured date_value field.'),
@@ -163,6 +163,11 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       source_page: z.string().optional().describe('Page or reference within the source'),
     },
   }, async (args) => {
+    // User-goal guard: a child created via this tool must have at least one
+    // name. See create_person above + plan 2026-05-04-new-person-dialog-hardening.
+    if (!args.given_name?.trim() && !args.surname?.trim()) {
+      throw new Error('At least one of given_name or surname must be non-empty');
+    }
     const result = addChildWorkflow(getDb(), args as AddChildArgs);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });

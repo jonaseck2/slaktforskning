@@ -341,6 +341,13 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   const unknownEventTypes = new Set<string>();
   let skippedParentLinks = 0;
   let sourceNoteCount = 0;
+  // Persons imported with no GIVENNAME and no SURNAME — preserved (since the
+  // Genney source's reference graph may include them as parents/spouses/children),
+  // but disclosed via a warning so the user can review them under the
+  // PERSON_NO_NAME quality check. Mirrors the GEDCOM importer's
+  // `namelessPersonCount` and the `createPerson({ allowNameless: true })`
+  // opt-in in src/api/persons.ts.
+  let namelessPersonCount = 0;
 
   // Pre-compile all INSERT statements once.
   // Each db.prepare() crosses the JS→WASM boundary and compiles SQL.
@@ -474,13 +481,20 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     stmts.insertPerson.run([id, sex, notes]);
     personMap.set(p.RID, id);
 
-    if (given || p.SURNAME) {
+    const hasName = !!((given && given.trim()) || (p.SURNAME && p.SURNAME.trim()));
+    if (hasName) {
       stmts.insertPersonName.run([
         crypto.randomUUID(), id,
         given ?? null, p.SURNAME ?? null,
         p.PREFIX ?? null, p.SUFFIX ?? null,
         preferred_name, p.NICKNAME ?? null,
       ]);
+    } else {
+      // Source PERSON record has neither GIVENNAME nor SURNAME — preserve the
+      // person row (reference graph may need it) but flag for the user via the
+      // import-report warning + PERSON_NO_NAME quality check. See note above
+      // and createPerson({ allowNameless: true }) in src/api/persons.ts.
+      namelessPersonCount += 1;
     }
 
     if (p.UID) {
@@ -822,6 +836,9 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   }
   if (sourceNoteCount > 0) {
     summary.warnings.push(`${sourceNoteCount} source(s) have a NOTE field — not mapped to any app field, content not imported`);
+  }
+  if (namelessPersonCount > 0) {
+    summary.warnings.push(`${namelessPersonCount} PERSON record(s) had no GIVENNAME or SURNAME — imported as nameless persons (visible under quality checks)`);
   }
 
   return summary;

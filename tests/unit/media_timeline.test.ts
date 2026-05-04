@@ -16,13 +16,13 @@ beforeEach(() => {
 describe('getMediaTimeline', () => {
   describe('person timeline', () => {
     it('returns empty array when no media exists', () => {
-      const person = createPerson(db, { sex: 'M' });
+      const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
       const result = getMediaTimeline(db, 'person', person.id);
       expect(result).toEqual([]);
     });
 
     it('returns directly linked media as undated', () => {
-      const person = createPerson(db, { sex: 'M' });
+      const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
       const media = createMedia(db, { title: 'Photo 1', format: 'jpg' });
       addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
 
@@ -33,7 +33,7 @@ describe('getMediaTimeline', () => {
     });
 
     it('returns event-linked media with date info', () => {
-      const person = createPerson(db, { sex: 'F' });
+      const person = createPerson(db, { sex: 'F' }, { allowNameless: true });
       const place = createPlace(db, { name: 'Stockholm' });
       const event = createEvent(db, {
         event_type: 'birth',
@@ -55,7 +55,7 @@ describe('getMediaTimeline', () => {
     });
 
     it('deduplicates same media linked to person and event (prefers dated)', () => {
-      const person = createPerson(db, { sex: 'M' });
+      const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
       const event = createEvent(db, {
         event_type: 'baptism',
         date_type: 'exact',
@@ -76,7 +76,7 @@ describe('getMediaTimeline', () => {
     });
 
     it('sorts dated items before undated', () => {
-      const person = createPerson(db, { sex: 'F' });
+      const person = createPerson(db, { sex: 'F' }, { allowNameless: true });
       const event = createEvent(db, {
         event_type: 'death',
         date_type: 'exact',
@@ -99,7 +99,7 @@ describe('getMediaTimeline', () => {
     });
 
     it('sorts dated items chronologically', () => {
-      const person = createPerson(db, { sex: 'M' });
+      const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
 
       const birthEvent = createEvent(db, {
         event_type: 'birth',
@@ -130,7 +130,7 @@ describe('getMediaTimeline', () => {
 
   describe('sort edge cases', () => {
     it('maintains stable order for multiple undated items', () => {
-      const person = createPerson(db, { sex: 'M' });
+      const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
       const m1 = createMedia(db, { title: 'Undated 1', format: 'jpg' });
       const m2 = createMedia(db, { title: 'Undated 2', format: 'jpg' });
       addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
@@ -144,7 +144,7 @@ describe('getMediaTimeline', () => {
     });
 
     it('sorts undated item after dated item', () => {
-      const person = createPerson(db, { sex: 'F' });
+      const person = createPerson(db, { sex: 'F' }, { allowNameless: true });
       // Create undated media first
       const undated = createMedia(db, { title: 'Undated', format: 'jpg' });
       addMediaLink(db, { media_id: undated.id, entity_type: 'person', entity_id: person.id });

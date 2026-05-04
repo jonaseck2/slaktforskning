@@ -48,10 +48,50 @@ describe('persons', () => {
   });
 
   it('creates a person without a name', () => {
-    const person = createPerson(db, { sex: 'U' });
+    const person = createPerson(db, { sex: 'U' }, { allowNameless: true });
     expect(person.id).toBeDefined();
     const names = getPersonNames(db, person.id);
     expect(names).toHaveLength(0);
+  });
+
+  describe('createPerson nameless guard (plan 2026-05-04-new-person-dialog-hardening)', () => {
+    it('throws when both given_name and surname are missing', () => {
+      expect(() => createPerson(db, { sex: 'U' })).toThrow(/without a name/i);
+    });
+
+    it('throws when given_name is whitespace-only and surname is empty', () => {
+      expect(() => createPerson(db, { given_name: '   ', surname: '' })).toThrow(/without a name/i);
+    });
+
+    it('throws when both names are blank strings', () => {
+      expect(() => createPerson(db, { given_name: '', surname: '' })).toThrow(/without a name/i);
+    });
+
+    it('succeeds with only given_name', () => {
+      const person = createPerson(db, { given_name: 'A' });
+      const names = getPersonNames(db, person.id);
+      expect(names).toHaveLength(1);
+      expect(names[0].given_name).toBe('A');
+    });
+
+    it('succeeds with only surname', () => {
+      const person = createPerson(db, { surname: 'B' });
+      const names = getPersonNames(db, person.id);
+      expect(names).toHaveLength(1);
+      expect(names[0].surname).toBe('B');
+    });
+
+    it('importer escape hatch: allowNameless lets a nameless person through', () => {
+      const person = createPerson(db, { sex: 'U' }, { allowNameless: true });
+      expect(person.id).toBeDefined();
+      // No name row written when source had no name.
+      expect(getPersonNames(db, person.id)).toHaveLength(0);
+    });
+
+    it('importer escape hatch with whitespace-only names also creates no name row', () => {
+      const person = createPerson(db, { given_name: '   ', surname: '' }, { allowNameless: true });
+      expect(getPersonNames(db, person.id)).toHaveLength(0);
+    });
   });
 
   it('gets a person by id', () => {
@@ -75,7 +115,7 @@ describe('persons', () => {
   });
 
   it('updates a person', () => {
-    const person = createPerson(db, { sex: 'U' });
+    const person = createPerson(db, { sex: 'U' }, { allowNameless: true });
     const updated = updatePerson(db, person.id, { sex: 'F', notes: 'updated' });
     expect(updated!.sex).toBe('F');
     expect(updated!.notes).toBe('updated');
@@ -174,7 +214,7 @@ describe('persons', () => {
   });
 
   it('deletes a non-primary name', () => {
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const name = addPersonName(db, person.id, { given_name: 'Alias', name_type: 'alias' });
     expect(deletePersonName(db, name.id)).toBe(true);
     const names = getPersonNames(db, person.id);
@@ -183,39 +223,39 @@ describe('persons', () => {
 
   describe('addPersonName with extended fields', () => {
     it('stores name_prefix and name_suffix', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Carl', surname: 'Linné', name_prefix: 'von' });
       expect(name.name_prefix).toBe('von');
       expect(name.name_suffix).toBeNull();
     });
 
     it('stores patronymic_base and name_qualifier', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Lars', surname: 'Eriksson', patronymic_base: 'Erik', name_qualifier: 'patronymic' });
       expect(name.patronymic_base).toBe('Erik');
       expect(name.name_qualifier).toBe('patronymic');
     });
 
     it('stores and retrieves preferred_name', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Eva Linda Marie', surname: 'Karlsson', preferred_name: 'Linda' });
       expect(name.preferred_name).toBe('Linda');
     });
 
     it('preferred_name defaults to null when not provided', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
       expect(name.preferred_name).toBeNull();
     });
 
     it('stores and retrieves nickname', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Susanna', surname: 'Johansson', nickname: 'Sanna' });
       expect(name.nickname).toBe('Sanna');
     });
 
     it('nickname defaults to null when not provided', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Erik', surname: 'Svensson' });
       expect(name.nickname).toBeNull();
     });
@@ -240,7 +280,7 @@ describe('persons', () => {
     });
 
     it('clears preferred_name with null', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Eva Linda Marie', surname: 'Test', preferred_name: 'Linda' });
       const updated = updatePersonName(db, name.id, { preferred_name: null });
       expect(updated!.preferred_name).toBeNull();
@@ -254,7 +294,7 @@ describe('persons', () => {
     });
 
     it('clears nickname with null', () => {
-      const person = createPerson(db, {});
+      const person = createPerson(db, {}, { allowNameless: true });
       const name = addPersonName(db, person.id, { given_name: 'Susanna', surname: 'Test', nickname: 'Sanna' });
       const updated = updatePersonName(db, name.id, { nickname: null });
       expect(updated!.nickname).toBeNull();
@@ -299,7 +339,7 @@ describe('getDisplayGivenName', () => {
 
 describe('person identifiers', () => {
   it('adds and retrieves an identifier', () => {
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const ident = addPersonIdentifier(db, person.id, { identifier_type: 'familysearch', identifier_value: 'L123-XYZ' });
     expect(ident.identifier_type).toBe('familysearch');
     const list = getPersonIdentifiers(db, person.id);
@@ -307,14 +347,14 @@ describe('person identifiers', () => {
   });
 
   it('deletes an identifier', () => {
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     const ident = addPersonIdentifier(db, person.id, { identifier_type: 'ancestry', identifier_value: 'A456' });
     expect(deletePersonIdentifier(db, ident.id)).toBe(true);
     expect(getPersonIdentifiers(db, person.id)).toHaveLength(0);
   });
 
   it('enforces uniqueness per person/type/value', () => {
-    const person = createPerson(db, {});
+    const person = createPerson(db, {}, { allowNameless: true });
     addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' });
     expect(() => addPersonIdentifier(db, person.id, { identifier_type: 'riksarkivet', identifier_value: 'R789' })).toThrow();
   });
@@ -541,7 +581,7 @@ describe('getPersonDisplayNames', () => {
   });
 
   it('returns ? for person with no name', () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const map = getPersonDisplayNames(db, [p.id]);
     // Person has no names, so not in query result
     expect(map.has(p.id)).toBe(false);

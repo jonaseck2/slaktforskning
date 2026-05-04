@@ -407,7 +407,7 @@ describe('exportGedcom', () => {
   });
 
   it('exports a person as INDI record', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars', surname: 'Eriksson' });
     const { ged } = exportGedcom(db);
     expect(ged).toContain('INDI');
@@ -416,8 +416,8 @@ describe('exportGedcom', () => {
   });
 
   it('exports a couple relationship as FAM record', () => {
-    const p1 = createPerson(db, { sex: 'M' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, subtype: 'marriage' });
     const { ged } = exportGedcom(db);
     expect(ged).toContain('FAM');
@@ -461,14 +461,14 @@ function roundtrip(sourceDb: ReturnType<typeof createTestDb>): ReturnType<typeof
 describe('Extended GEDCOM roundtrip — persons', () => {
   it('does not emit non-standard _LIVING tag', () => {
     // living is now derived from birth/death events; no separate flag is exported
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const { ged } = exportGedcom(db);
     expect(ged).not.toContain('_LIVING');
   });
 
   it('preferred_name survives roundtrip via asterisk in NAME', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna Maria', surname: 'Eriksson', preferred_name: 'Maria' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
@@ -479,7 +479,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('nickname survives roundtrip via NICK', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', nickname: 'Nanna' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
@@ -503,7 +503,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('patronymic_base survives roundtrip via _PATR', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars', surname: 'Eriksson', patronymic_base: 'Erik' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
@@ -512,7 +512,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('name date_from and date_to survive roundtrip via _DATE_FROM/_DATE_TO', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', date_from: '1850', date_to: '1875', name_type: 'married' });
     const db2 = roundtrip(db);
     const persons2 = listPersons(db2);
@@ -523,7 +523,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('name_qualifier survives roundtrip via _NQUAL', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars', name_qualifier: 'patronymic' });
     const { ged } = exportGedcom(db);
     expect(ged).toContain('_NQUAL patronymic');
@@ -534,7 +534,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('familysearch identifier survives roundtrip via REFN+TYPE', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'L-ABC-123' });
     const db2 = roundtrip(db);
@@ -544,7 +544,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('ancestry identifier survives roundtrip via REFN+TYPE', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Maria' });
     addPersonIdentifier(db, p.id, { identifier_type: 'ancestry', identifier_value: 'A123456789' });
     const db2 = roundtrip(db);
@@ -554,7 +554,7 @@ describe('Extended GEDCOM roundtrip — persons', () => {
   });
 
   it('personnummer identifier survives roundtrip via REFN+TYPE', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'personnummer', identifier_value: '196501011234' });
     const db2 = roundtrip(db);
@@ -566,9 +566,9 @@ describe('Extended GEDCOM roundtrip — persons', () => {
 
 describe('Extended GEDCOM roundtrip — relationships', () => {
   it('sibling relationship survives roundtrip via ASSO', () => {
-    const p1 = createPerson(db, { sex: 'M' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p1.id, { given_name: 'Lars' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p2.id, { given_name: 'Anna' });
     createRelationship(db, { type: 'sibling', person1_id: p1.id, person2_id: p2.id });
     const db2 = roundtrip(db);
@@ -579,9 +579,9 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
   it('sibling ASSO deduplicates within a single import (exporter writes ASSO under both persons)', () => {
     // The exporter writes ASSO under Lars *and* under Anna. On import, only ONE sibling
     // relationship must be created, not two.
-    const p1 = createPerson(db, { sex: 'M' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p1.id, { given_name: 'Lars' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p2.id, { given_name: 'Anna' });
     createRelationship(db, { type: 'sibling', person1_id: p1.id, person2_id: p2.id });
     const db2 = roundtrip(db);
@@ -590,9 +590,9 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
   });
 
   it('godparent relationship survives roundtrip via ASSO', () => {
-    const godparent = createPerson(db, { sex: 'M' });
+    const godparent = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, godparent.id, { given_name: 'Erik' });
-    const child = createPerson(db, { sex: 'F' });
+    const child = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, child.id, { given_name: 'Stina' });
     createRelationship(db, { type: 'godparent', person1_id: godparent.id, person2_id: child.id });
     const db2 = roundtrip(db);
@@ -601,11 +601,11 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
   });
 
   it('parent_child subtype adopted survives roundtrip via PEDI', () => {
-    const father = createPerson(db, { sex: 'M' });
+    const father = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, father.id, { given_name: 'Erik' });
-    const mother = createPerson(db, { sex: 'F' });
+    const mother = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, mother.id, { given_name: 'Maria' });
-    const child = createPerson(db, { sex: 'M' });
+    const child = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, child.id, { given_name: 'Lars' });
     createRelationship(db, { type: 'couple', person1_id: father.id, person2_id: mother.id });
     createRelationship(db, { type: 'parent_child', person1_id: father.id, person2_id: child.id, subtype: 'adopted' });
@@ -617,8 +617,8 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
   });
 
   it('couple _SUBTYPE survives roundtrip', () => {
-    const p1 = createPerson(db, { sex: 'M' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, subtype: 'civil_union' });
     const db2 = roundtrip(db);
     const couples = listRelationships(db2).filter(r => r.type === 'couple');
@@ -626,8 +626,8 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
   });
 
   it('couple notes survive roundtrip via _RELNOTES', () => {
-    const p1 = createPerson(db, { sex: 'M' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id, notes: 'Met at sea' });
     const db2 = roundtrip(db);
     const couples = listRelationships(db2).filter(r => r.type === 'couple');
@@ -637,9 +637,9 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
 
 describe('Extended GEDCOM roundtrip — event participants', () => {
   it('non-primary event participant survives roundtrip via ASSO+_EVID', () => {
-    const primary = createPerson(db, { sex: 'F' });
+    const primary = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, primary.id, { given_name: 'Anna' });
-    const witness = createPerson(db, { sex: 'M' });
+    const witness = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, witness.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'christening', date_original: '1 JAN 1850' });
     addEventParticipant(db, { event_id: ev.id, person_id: primary.id, role: 'primary' });
@@ -662,7 +662,7 @@ describe('Extended GEDCOM roundtrip — event participants', () => {
 describe('Extended GEDCOM roundtrip — places', () => {
   it('place coordinates survive roundtrip via MAP/LATI/LONG', () => {
     const place = createPlace(db, { name: 'Göteborg', latitude: 57.7089, longitude: 11.9746 });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1850' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -674,7 +674,7 @@ describe('Extended GEDCOM roundtrip — places', () => {
 
   it('place address fields survive roundtrip via ADDR', () => {
     const place = createPlace(db, { name: 'My Home', street: 'Storgatan 1', postal_code: '41234', city: 'Göteborg', country: 'Sverige' });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'residence', place_id: place.id, date_original: '1900' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -688,7 +688,7 @@ describe('Extended GEDCOM roundtrip — places', () => {
 
   it('place type and notes survive roundtrip via _PTYPE/_PNOTES', () => {
     const place = createPlace(db, { name: 'Fässberg', place_type: 'parish', notes: 'Historic parish' });
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1800' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -701,7 +701,7 @@ describe('Extended GEDCOM roundtrip — places', () => {
   it('_PLAC_ID deduplicates on same-DB reimport', () => {
     // Create a place, export, then reimport into the same DB — should reuse the existing place
     const place = createPlace(db, { name: 'Stockholm', notes: 'Capital' });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1850' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -736,7 +736,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
   });
 
   it('citation notes survive roundtrip via NOTE on SOUR block', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     const src = createSource(db, { title: 'Test Source' });
     const ev = createEvent(db, { event_type: 'birth', date_original: '1850' });
@@ -750,7 +750,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
   });
 
   it('citation date_accessed survives roundtrip via _ACCESSED', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna' });
     const src = createSource(db, { title: 'Test Source' });
     const ev = createEvent(db, { event_type: 'death', date_original: '1900' });
@@ -764,7 +764,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
   });
 
   it('person-level citation survives roundtrip', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     const src = createSource(db, { title: 'Test Source' });
     createCitation(db, { source_id: src.id, person_id: p.id, page: 'p. 42', confidence: 2 });
@@ -777,9 +777,9 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
   });
 
   it('family-level citation survives roundtrip', () => {
-    const p1 = createPerson(db, { sex: 'M' });
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p1.id, { given_name: 'Erik' });
-    const p2 = createPerson(db, { sex: 'F' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p2.id, { given_name: 'Maria' });
     const rel = createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
     const src = createSource(db, { title: 'Marriage Records' });
@@ -811,7 +811,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     // AND has a direct place-level citation (carried by the _PLAC record).
     // Verifies that the _PLAC record's citation ends up on the correct place in db2.
     const place = createPlace(db, { name: 'Göteborg' });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id, date_original: '1850' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -921,7 +921,7 @@ describe('GEDCOM import completeness', () => {
   });
 
   it('engagement event roundtrips via export (ENGA tag appears)', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Maria', surname: 'Nilsson' });
     const ev = createEvent(db, { event_type: 'engagement', date_original: 'ABT 2020' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -1008,7 +1008,7 @@ describe('GEDCOM media import', () => {
   });
 
   it('exports person media as inline OBJE and re-imports correctly', () => {
-    const person = createPerson(db, { sex: 'M' });
+    const person = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, person.id, { given_name: 'Test', surname: 'Person' });
     const media = createMedia(db, { title: 'Photo', file_ref: '/test.jpg', format: 'JPG', is_missing: false });
     addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
@@ -1034,7 +1034,7 @@ describe('GEDCOM media import', () => {
 // ──────────────────────────────────────────────
 describe('exportGedcom — round-trip improvements', () => {
   it('exports familysearch identifier as REFN with TYPE FamilySearch', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });
     addPersonIdentifier(db, p.id, { identifier_type: 'familysearch', identifier_value: 'L-ABC-123' });
     const { ged } = exportGedcom(db);
@@ -1043,7 +1043,7 @@ describe('exportGedcom — round-trip improvements', () => {
   });
 
   it('exports ancestry identifier as REFN with TYPE Ancestry', () => {
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Maria' });
     addPersonIdentifier(db, p.id, { identifier_type: 'ancestry', identifier_value: 'A123456789' });
     const { ged } = exportGedcom(db);
@@ -1052,7 +1052,7 @@ describe('exportGedcom — round-trip improvements', () => {
   });
 
   it('exports riksarkivet identifier as REFN with TYPE Riksarkivet', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'riksarkivet', identifier_value: 'RA-987' });
     const { ged } = exportGedcom(db);
@@ -1061,7 +1061,7 @@ describe('exportGedcom — round-trip improvements', () => {
   });
 
   it('exports personnummer identifier as REFN with TYPE Personnummer', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'personnummer', identifier_value: '196501011234' });
     const { ged } = exportGedcom(db);
@@ -1070,7 +1070,7 @@ describe('exportGedcom — round-trip improvements', () => {
   });
 
   it('exports plain refn identifier without TYPE sub-tag', () => {
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     addPersonIdentifier(db, p.id, { identifier_type: 'refn', identifier_value: 'CUSTOM-001' });
     const { ged } = exportGedcom(db);
@@ -1081,7 +1081,7 @@ describe('exportGedcom — round-trip improvements', () => {
 
   it('exports place coordinates as MAP/LATI/LONG on event PLAC', () => {
     const place = createPlace(db, { name: 'Stockholm', latitude: 59.334591, longitude: 18.063240 });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -1094,7 +1094,7 @@ describe('exportGedcom — round-trip improvements', () => {
 
   it('exports place with negative coords using S/W prefixes', () => {
     const place = createPlace(db, { name: 'Cape Town', latitude: -33.9249, longitude: 18.4241 });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
@@ -1105,7 +1105,7 @@ describe('exportGedcom — round-trip improvements', () => {
 
   it('exports citation transcription as DATA.TEXT', () => {
     const src = createSource(db, { title: 'Parish record' });
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Lars' });
     const ev = createEvent(db, { event_type: 'birth' });
     addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });

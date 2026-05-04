@@ -25,7 +25,7 @@ describe('ORPHANED_PLACE', () => {
 
   it('does not fire when place is used by an event', async () => {
     const pl = createPlace(db, { name: 'Använd plats' });
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'birth', place_id: pl.id });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);

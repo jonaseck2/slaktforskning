@@ -52,7 +52,7 @@ describe('GEDCOM export — ExportReport', () => {
 describe('GEDCOM export — place_address exclusion', () => {
   it('reports excluded place_address in ExportReport when events have free-text addresses', () => {
     const db = createTestDb();
-    const p = createPerson(db, { sex: 'M' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     const rel = createRelationship(db, { type: 'couple', person1_id: p.id });
     const evt = createEvent(db, {
       event_type: 'marriage',
@@ -73,7 +73,7 @@ describe('GEDCOM export — place_address exclusion', () => {
 
   it('does not report place_address exclusion when events have no free-text address', () => {
     const db = createTestDb();
-    createPerson(db, { sex: 'M' });
+    createPerson(db, { sex: 'M' }, { allowNameless: true });
     const { report } = exportGedcom(db);
     const entry = report.excluded.find(e =>
       e.category.includes('place_address') ||

@@ -28,18 +28,18 @@ function seedBlankName(personId: string, given: string | null, surname: string |
 describe('checkPersonNoName', () => {
   it('flags persons with no person_names row, persons with all-blank names rows, and skips named persons', () => {
     // Case 1: persons row with NO names row at all
-    const noNamesPerson = createPerson(db, {}); // createPerson skips name insert when both are absent
+    const noNamesPerson = createPerson(db, {}, { allowNameless: true }); // createPerson skips name insert when both are absent
 
     // Case 2a: persons row with a names row whose given+surname are empty strings
-    const emptyStringPerson = createPerson(db, {});
+    const emptyStringPerson = createPerson(db, {}, { allowNameless: true });
     seedBlankName(emptyStringPerson.id, '', '');
 
     // Case 2b: persons row with a names row whose given+surname are NULL
-    const nullNamePerson = createPerson(db, {});
+    const nullNamePerson = createPerson(db, {}, { allowNameless: true });
     seedBlankName(nullNamePerson.id, null, null);
 
     // Case 2c: persons row with a names row whose fields are whitespace only
-    const whitespacePerson = createPerson(db, {});
+    const whitespacePerson = createPerson(db, {}, { allowNameless: true });
     seedBlankName(whitespacePerson.id, '   ', '\t');
 
     // Case 3: named person — must NOT be flagged
@@ -69,7 +69,7 @@ describe('checkPersonNoName', () => {
   it('still flags a person whose only names row has only the partial-name pattern (given but no surname blank-only across rows)', () => {
     // A person can have one row with only given_name set — that's a PARTIAL_NAME
     // case, NOT a no-name case. checkPersonNoName must NOT fire here.
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     seedBlankName(p.id, 'Erik', '');
 
     const results = checkPersonNoName(db);

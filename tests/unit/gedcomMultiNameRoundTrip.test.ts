@@ -20,7 +20,7 @@ describe('GEDCOM round-trip: multiple person_names rows', () => {
   it('preserves all five name_type values across export → import', () => {
     // 1. Create one person with NO default birth name (createPerson skips
     // person_names insert when both given_name and surname are absent).
-    const p = createPerson(db, { sex: 'F' });
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
 
     // 2. Insert all five name_type rows with distinguishable surnames.
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'BirthSur',       name_type: 'birth',       sort_order: 0 });

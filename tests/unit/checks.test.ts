@@ -11,7 +11,7 @@ import { createTestDb } from './helpers';
 
 // Helper: create a person with a birth event on the given date (YYYY-MM-DD)
 function personWithBirth(db: ReturnType<typeof createTestDb>, birthDate: string, opts?: Parameters<typeof createPerson>[1]) {
-  const p = createPerson(db, opts ?? {});
+  const p = createPerson(db, opts ?? {}, { allowNameless: true });
   const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: birthDate });
   addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
   return { person: p, birthEvent: e };
@@ -234,7 +234,7 @@ describe('MARRIED_BEFORE_12', () => {
 
 describe('PERSON_NO_NAME', () => {
   it('fires for a person with no name entries', async () => {
-    const p = createPerson(db, {}); // no given_name or surname → no person_names row
+    const p = createPerson(db, {}, { allowNameless: true }); // no given_name or surname → no person_names row
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'PERSON_NO_NAME' && r.personIds.includes(p.id));
     expect(hit).toHaveLength(1);
@@ -269,7 +269,7 @@ describe('LIKELY_INLINE_BIRTH_NAME', () => {
   });
 
   it('flags given_name containing "(född Svensson)"', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna (född Svensson)', surname: 'Andersson', name_type: 'birth' });
     const results = await runAllChecks(db);
     const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
@@ -277,7 +277,7 @@ describe('LIKELY_INLINE_BIRTH_NAME', () => {
   });
 
   it('flags given_name containing "(born Svensson)"', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna (born Svensson)', surname: 'Andersson', name_type: 'birth' });
     const results = await runAllChecks(db);
     const hits = results.filter(r => r.code === 'LIKELY_INLINE_BIRTH_NAME' && r.personIds.includes(p.id));
@@ -317,7 +317,7 @@ describe('LIKELY_INLINE_BIRTH_NAME', () => {
   });
 
   it('does NOT flag the well-structured case (separate birth + current name rows)', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson', name_type: 'birth' });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Andersson', name_type: 'married' });
     const results = await runAllChecks(db);
@@ -408,7 +408,7 @@ describe('False positives: clean family', () => {
 
 describe('INVALID_DATE', () => {
   it('fires for month > 12', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'death', date_type: 'exact', date_value: '1727-14-10' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
@@ -418,7 +418,7 @@ describe('INVALID_DATE', () => {
   });
 
   it('fires for day > 31', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1953-03-90' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
@@ -428,7 +428,7 @@ describe('INVALID_DATE', () => {
   });
 
   it('fires for day 31 in a 30-day month', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1990-04-31' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
@@ -444,7 +444,7 @@ describe('INVALID_DATE', () => {
   });
 
   it('does not fire for year-only dates', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'birth', date_type: 'about', date_value: '1800' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
@@ -455,7 +455,7 @@ describe('INVALID_DATE', () => {
 
 describe('UNRELATED_PERSON', () => {
   it('fires for a person with no relationships', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Tord', surname: 'Hulinder' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'UNRELATED_PERSON' && r.personIds.includes(p.id));
@@ -463,8 +463,8 @@ describe('UNRELATED_PERSON', () => {
   });
 
   it('does not fire for a person in a relationship', async () => {
-    const p1 = createPerson(db, {});
-    const p2 = createPerson(db, {});
+    const p1 = createPerson(db, {}, { allowNameless: true });
+    const p2 = createPerson(db, {}, { allowNameless: true });
     createRelationship(db, { type: 'parent_child', person1_id: p1.id, person2_id: p2.id });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'UNRELATED_PERSON' && (r.personIds.includes(p1.id) || r.personIds.includes(p2.id)));
@@ -474,7 +474,7 @@ describe('UNRELATED_PERSON', () => {
 
 describe('MEDIA_FILE_MISSING', () => {
   it('fires for a media record pointing to a non-existent file', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const m = createMedia(db, { title: 'Photo', file_ref: '/nonexistent/path/photo.jpg', is_missing: true });
     addMediaLink(db, { media_id: m.id, entity_type: 'person', entity_id: p.id });
     const results = await runAllChecks(db);
@@ -513,7 +513,7 @@ describe('ORPHANED_SOURCE', () => {
 
 describe('TEXT_CONTROL_CHARS', () => {
   it('fires for control characters in person names', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna\x01', surname: 'Svensson' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
@@ -521,10 +521,10 @@ describe('TEXT_CONTROL_CHARS', () => {
   });
 
   it('does not fire for normal text with newlines', async () => {
-    const p = createPerson(db, { notes: 'Line 1\nLine 2\tTabbed' });
+    const p = createPerson(db, { notes: 'Line 1\nLine 2\tTabbed' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson' });
     // Add a relationship so UNRELATED_PERSON doesn't fire
-    const p2 = createPerson(db, {});
+    const p2 = createPerson(db, {}, { allowNameless: true });
     createRelationship(db, { type: 'parent_child', person1_id: p.id, person2_id: p2.id });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'TEXT_CONTROL_CHARS' && r.personIds.includes(p.id));
@@ -738,7 +738,7 @@ describe('UNSOURCED_BIRTH / UNSOURCED_DEATH', () => {
 
 describe('INVALID_DATE edge cases', () => {
   it('fires for invalid date_value_end', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     const e = createEvent(db, { event_type: 'census', date_type: 'between', date_value: '1900-01-01', date_value_end: '1900-13-01' });
     addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     const results = await runAllChecks(db);
@@ -750,7 +750,7 @@ describe('INVALID_DATE edge cases', () => {
 
 describe('MULTIPLE_BIRTH_NAMES', () => {
   it('fires when a person has two name_type=birth entries', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', name_type: 'birth' });
     addPersonName(db, p.id, { given_name: 'Anna Maria', surname: 'Eriksson', name_type: 'birth' });
     const results = await runAllChecks(db);
@@ -760,7 +760,7 @@ describe('MULTIPLE_BIRTH_NAMES', () => {
   });
 
   it('does not fire when person has one birth name and one married name', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Eriksson', name_type: 'birth' });
     addPersonName(db, p.id, { given_name: 'Anna', surname: 'Svensson', name_type: 'married' });
     const results = await runAllChecks(db);
@@ -778,7 +778,7 @@ describe('PARTIAL_NAME', () => {
   });
 
   it('fires when a person has only surname', async () => {
-    const p = createPerson(db, {});
+    const p = createPerson(db, {}, { allowNameless: true });
     addPersonName(db, p.id, { given_name: '', surname: 'Nilsson', name_type: 'birth' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'PARTIAL_NAME' && r.personIds.includes(p.id));

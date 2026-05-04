@@ -111,10 +111,10 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
   const { getDb } = ctx;
 
   server.registerTool('create_person', {
-    description: 'Create a new person, optionally with a birth event and source citation in one step',
+    description: 'Create a new person, optionally with a birth event and source citation in one step. At least one of given_name or surname must be non-empty.',
     inputSchema: {
-      given_name: z.string().describe('Given/first name(s)'),
-      surname: z.string().describe('Surname/family name'),
+      given_name: z.string().describe('Given/first name(s) — required unless surname is provided'),
+      surname: z.string().describe('Surname/family name — required unless given_name is provided'),
       sex: z.enum(['M', 'F', 'U']).optional().describe('Sex: M, F, or U (unknown)'),
       birth_date: z.string().optional().describe('Birth date (free text, e.g. "1850" or "12 Mar 1850")'),
       birth_date_type: z.string().optional().describe('Date type: exact, about, before, after, between, calculated, unknown'),
@@ -124,6 +124,13 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       notes: z.string().optional().describe('Free-text notes'),
     },
   }, async (args) => {
+    // User-goal guard: a person must always be created with at least one name.
+    // The api-layer createPerson() throws on blank-both-names; we catch that
+    // here so the agent gets a friendly message before the SQL runs. See plan
+    // 2026-05-04-new-person-dialog-hardening.
+    if (!args.given_name?.trim() && !args.surname?.trim()) {
+      throw new Error('At least one of given_name or surname must be non-empty');
+    }
     const result = await createPersonWorkflow(getDb(), args as CreatePersonArgs);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
