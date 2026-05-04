@@ -33,6 +33,8 @@
             type="button"
             class="ep-save-btn"
             :class="{ 'ep-save-btn--danger': tone === 'danger' }"
+            :disabled="saveDisabled"
+            :aria-disabled="saveDisabled || undefined"
             @click="$emit('save')"
           >
             {{ saveLabel ?? $t('common.save') }}
@@ -80,6 +82,8 @@
           type="button"
           class="ep-save-btn"
           :class="{ 'ep-save-btn--danger': tone === 'danger' }"
+          :disabled="saveDisabled"
+          :aria-disabled="saveDisabled || undefined"
           @click="$emit('save')"
         >
           {{ saveLabel ?? $t('common.save') }}
@@ -108,6 +112,14 @@ const props = withDefaults(defineProps<{
   saveLabel?: string;
   /** When true, the save/primary button is hidden. Use for informational dialogs with only a close action. */
   hideSave?: boolean;
+  /**
+   * When true, the save/primary button remains visible but is rendered with the
+   * `:disabled` attribute (and `aria-disabled`). Use this to gate Save on the
+   * form's own validity (e.g. PersonModal greys Save until at least one
+   * identifier is typed). Distinct from `hideSave`: the user must SEE that
+   * Save exists but is currently inaccessible.
+   */
+  saveDisabled?: boolean;
   /** Override label for the cancel/close button. Defaults to $t('common.cancel'). */
   cancelLabel?: string;
   /** Optional icon override — when provided, replaces the entity visual's default icon in the header. */
@@ -119,6 +131,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   mode: 'standalone',
   hideSave: false,
+  saveDisabled: false,
   tone: 'info',
   centered: false,
 });

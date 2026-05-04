@@ -4,6 +4,7 @@
     :title="displayTitle"
     :mode="mode"
     :hide-save="needsChildSexPick"
+    :save-disabled="!canSave"
     @cancel="$emit('cancel')"
     @save="handleSave"
     @close="$emit('close')"
@@ -350,6 +351,33 @@ const form = reactive({
 
 const relatedPersonName = ref('');
 
+/**
+ * Gate Save until the user has typed at least one identifier (or, in
+ * existing-person link mode, picked a person from the picker). The genealogist
+ * must never accidentally create a `persons` row with no `names` row attached
+ * — this is the modal-side enforcement of the project's data-fidelity rule.
+ *
+ * Modes:
+ * - Edit mode (`savedPersonId` set, no `addRelatedTo`): always enabled — the
+ *   form is pre-populated from the existing person and the user is editing,
+ *   not creating a nameless row.
+ * - Existing-person link mode (`addRelatedTo` + `entryMode === 'existing'`):
+ *   enabled when a person has been picked.
+ * - Create / new-person mode (everything else, including `addRelatedTo` with
+ *   `entryMode === 'new'`): enabled when at least one of given_name / surname
+ *   is non-empty after trim.
+ */
+const canSave = computed(() => {
+  // Edit mode — the modal opens with fields populated; saving never produces a nameless row.
+  if (savedPersonId.value && !props.addRelatedTo) return true;
+  // Existing-person link mode — gate on the picker, not the name fields.
+  if (props.addRelatedTo && entryMode.value === 'existing') {
+    return existingPersonId.value !== null;
+  }
+  // Create / new-person mode — at least one identifier must be typed.
+  return form.given_name.trim().length > 0 || form.surname.trim().length > 0;
+});
+
 const displayTitle = computed(() => {
   if (props.addRelatedTo) {
     const m = props.addRelatedTo.mode;
@@ -431,10 +459,8 @@ async function handleSave() {
       if (!existingPersonId.value) return;
       person = (await window.api.persons.get(existingPersonId.value)) as Person;
     } else {
-      // Warn (but allow) when neither name field is filled in.
-      if (!form.given_name.trim() && !form.surname.trim()) {
-        toast.info(t('persons.missingNameWarning'));
-      }
+      // Disabled-Save (canSave computed) prevents reaching this branch with
+      // both name fields empty — no need for a post-save warning toast.
       // Create new person (no embedded event — events are added separately)
       const payload: Record<string, unknown> = {
         given_name: form.given_name,

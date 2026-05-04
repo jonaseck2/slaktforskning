@@ -1360,6 +1360,11 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
   font-family: inherit;
 }
 .ep-save-btn:hover:not(:disabled) { filter: brightness(1.05); }
+.ep-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
 .ep-save-btn--danger {
   background: var(--error-text);
 }
