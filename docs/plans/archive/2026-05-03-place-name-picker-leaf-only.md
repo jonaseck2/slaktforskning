@@ -2,7 +2,9 @@
 
 ## Status
 
-Stub. Sibling to [2026-05-03-place-leaf-only-mcp.md](2026-05-03-place-leaf-only-mcp.md). Write the full plan after the MCP plan lands so this one can reuse the `assertLeafPlaceName` helper and any test patterns the MCP plan introduces.
+Obsoleted before being written. Commit `7b040b17` ("fix: unify place modal/panel form + drop silent picker-merge overwrite", 2026-05-03) removed the entire `onNamePlaceSelected` handler — the Place panel's name field is now a plain editable text input with no PlacePicker-merge affordance, so the smell this stub was written against no longer exists. `grep onNamePlaceSelected` returns no hits in `src/`. Remaining `places.getPath()` callers ([PlacePicker.vue:216](../../src/renderer/components/PlacePicker.vue#L216), [PlaceModal.vue:105](../../src/renderer/components/modals/PlaceModal.vue#L105), [useLifeMap.ts:51](../../src/renderer/composables/useLifeMap.ts#L51), [PersonMap.vue:112](../../src/renderer/components/PersonMap.vue#L112)) are display-only and never write back to `places.name`. The "merge-from vs pivot-to" decision was answered by deletion: no silent merge gesture exists on the Place panel anymore; merging two places must use an explicit merge action.
+
+Sibling to [archive/2026-05-03-place-leaf-only-mcp.md](archive/2026-05-03-place-leaf-only-mcp.md) (the MCP-side fix that did ship as a planned change).
 
 ## User goal
 
