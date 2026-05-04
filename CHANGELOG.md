@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.210.12
+
+- fix: place tree picker filter input now has matching padding around it, like other filter boxes
+
 ## 0.210.11
 
 - fix(import): Holger imports no longer crash with `ReferenceError: existsSync is not defined` the moment they hit an inline OBJE. v0.210.7 removed the `existsSync` import from `obje-importer.ts` (matching the parallel cleanup in `phaseObje`) but missed the call site at line 53. Lint with `--quiet` doesn't surface "used identifier with no matching import," so the regression shipped through v0.210.10. `is_missing` now derives from `!file` only — on-disk truth is decided later by `consolidateMediaFolder`'s single recursive readdir, matching `phaseObje`.

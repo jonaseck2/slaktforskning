@@ -388,6 +388,7 @@ onMounted(async () => {
   min-width: 480px;
   flex: 1;
   min-height: 0;
+  padding: var(--space-md);
 }
 /* Mirror the canonical .list-filter / .list-filter-input wrapper used across
    PersonsListTab, SourcesView, PlacesView, MediaView. The wrapper provides
