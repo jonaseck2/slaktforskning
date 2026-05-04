@@ -13,7 +13,7 @@
 import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox } from './types';
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
-import { curvedElbow } from './connectors';
+import { curvedElbow, marriageJog } from './connectors';
 import { injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -428,29 +428,51 @@ export function computeHourglassLayout(
   const paths: string[] = [];
   const placeholderPaths: string[] = [];
 
-  /** Place REAL spouse boxes and marriage line beside a node. Skips placeholder spouses (Pass 4 handles those). */
+  /** Place REAL spouse boxes and per-pair marriage connectors beside a node.
+   *  Skips placeholder spouses (Pass 4 handles those).
+   *
+   *  Each spouse gets its OWN connector to `node` — never a single line spanning
+   *  multiple spouses. The first (adjacent) spouse uses a direct horizontal stub.
+   *  Subsequent spouses on the same side use a U-shaped jog that drops below the
+   *  row, travels under intermediate spouse boxes, and rises to the target. This
+   *  ensures the connector for spouse i never visually crosses spouse j's box.
+   */
   function placeSpouses(node: TreePerson, nodeCX: number, nodeY: number): void {
     const realSpouses = node.spouses.filter(s => !s.isPlaceholder);
     if (realSpouses.length === 0) return;
     const onLeft = node.person.sex === 'F';
     const nodeH = hOf(node);
     const lineY = nodeY + nodeH / 2;
+    const spCXs: number[] = [];
     for (let i = 0; i < realSpouses.length; i++) {
       const spCX = onLeft
         ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - i * (BOX_W + V_GAP)
         : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + i * (BOX_W + V_GAP);
+      spCXs.push(spCX);
       boxes.push({
         person: realSpouses[i].person, isFocal: false,
         x: spCX - BOX_W / 2, y: nodeY, w: BOX_W, h: hOf(realSpouses[i]),
       });
     }
-    const lastIdx = realSpouses.length - 1;
-    const lastCX = onLeft
-      ? nodeCX - BOX_W / 2 - V_GAP - BOX_W / 2 - lastIdx * (BOX_W + V_GAP)
-      : nodeCX + BOX_W / 2 + V_GAP + BOX_W / 2 + lastIdx * (BOX_W + V_GAP);
-    const fromX = onLeft ? lastCX - BOX_W / 2 : nodeCX + BOX_W / 2;
-    const toX = onLeft ? nodeCX - BOX_W / 2 : lastCX + BOX_W / 2;
-    paths.push(curvedElbow(fromX, lineY, toX, lineY, 'right'));
+    // Per-spouse connectors: spouse[0] is adjacent (direct horizontal); spouse[i>=1]
+    // uses a U-jog below the row so the line does not cross spouse[0..i-1]'s box.
+    const nodeBottom = nodeY + nodeH;
+    const jogY = nodeBottom + GEN_GAP / 2;
+    for (let i = 0; i < realSpouses.length; i++) {
+      const spCX = spCXs[i];
+      const nodeEdgeX = onLeft ? nodeCX - BOX_W / 2 : nodeCX + BOX_W / 2;
+      const spNearEdgeX = onLeft ? spCX + BOX_W / 2 : spCX - BOX_W / 2;
+      if (i === 0) {
+        // Direct horizontal stub between focal and adjacent spouse.
+        paths.push(curvedElbow(nodeEdgeX, lineY, spNearEdgeX, lineY, 'right'));
+      } else {
+        // U-jog: drop from node edge below the row, travel across, rise to the
+        // spouse's bottom edge at its center. The connector enters the spouse
+        // from below, not by passing through any intermediate box.
+        const spBottom = nodeY + hOf(realSpouses[i]);
+        paths.push(marriageJog(nodeEdgeX, lineY, spCX, spBottom, jogY));
+      }
+    }
   }
 
   function placeAncestors(node: TreePerson, nodeCX: number, depth: number): void {
@@ -644,16 +666,24 @@ export function computeHourglassLayout(
 
   if (focalRealSpouseNodes.length > 0) {
     const lineY = focalRowY + focalH / 2;
-    const lastCX = realSpouseCXAt(focalRealSpouseNodes.length - 1);
-    const fromX = spouseOnLeft ? lastCX - BOX_W / 2 : focalCX + BOX_W / 2;
-    const toX = spouseOnLeft ? focalCX - BOX_W / 2 : lastCX + BOX_W / 2;
-    paths.push(curvedElbow(fromX, lineY, toX, lineY, 'right'));
+    const focalBottom = focalRowY + focalH;
+    const jogY = focalBottom + GEN_GAP / 2;
+    const focalEdgeX = spouseOnLeft ? focalCX - BOX_W / 2 : focalCX + BOX_W / 2;
+    // Per-spouse connectors: spouse[0] adjacent → direct horizontal stub.
+    // spouse[i>=1] → U-jog below the row to avoid crossing intermediate boxes.
     for (let i = 0; i < focalRealSpouseNodes.length; i++) {
       const spCX = realSpouseCXAt(i);
       boxes.push({
         person: focalRealSpouseNodes[i].person, isFocal: false,
         x: spCX - BOX_W / 2, y: focalRowY, w: BOX_W, h: hOf(focalRealSpouseNodes[i]),
       });
+      const spNearEdgeX = spouseOnLeft ? spCX + BOX_W / 2 : spCX - BOX_W / 2;
+      if (i === 0) {
+        paths.push(curvedElbow(focalEdgeX, lineY, spNearEdgeX, lineY, 'right'));
+      } else {
+        const spBottom = focalRowY + hOf(focalRealSpouseNodes[i]);
+        paths.push(marriageJog(focalEdgeX, lineY, spCX, spBottom, jogY));
+      }
       placeSpouses(focalRealSpouseNodes[i], spCX, focalRowY);
     }
   }
