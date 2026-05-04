@@ -110,21 +110,58 @@ function getCoupleSubtypeLabel(subtype: string | null): string {
   return t('coupleSubtypes.' + subtype);
 }
 
-// ── Data loading: relations + the auxiliary fields the sort needs ─────────
+// ── Data loading: one round-trip via reports.personSummary ────────────────
+//
+// `reports.personSummary` already pre-joins everything the sort needs:
+// the other person's names + sex + birth_date, the partnership start_date,
+// and the other_parent_id resolution. The renderer only layers display-name
+// choice (locale/UI concern) on top — see `pickDisplayedName` /
+// `pickBirthSurnameForDisplay` below.
+//
+// Past bug: this section used to fire ~5 IPCs per relation row
+// (persons.get + persons.getNames + events.forPerson + events.forRelationship
+// + relationships.getForPerson) — for N=20 that's 80–100 round-trips per
+// open. Replaced with a single `reports.personSummary` call.
+
+interface SummaryName {
+  id: string;
+  given_name: string | null;
+  surname: string | null;
+  preferred_name: string | null;
+  nickname: string | null;
+  name_prefix: string | null;
+  name_suffix: string | null;
+  sort_order: number;
+  name_type: string;
+  date_from: string | null;
+}
+
+interface SummaryRelationship {
+  id: string;
+  type: string;
+  subtype: string | null;
+  person1_id: string | null;
+  person2_id: string | null;
+  other_person_id: string | null;
+  other_person_names: SummaryName[];
+  other_person_sex: string | null;
+  other_person_birth_date: string | null;
+  partnership_start_date: string | null;
+  other_parent_id: string | null;
+}
+
+interface PersonSummaryShape {
+  relationships: SummaryRelationship[];
+}
 
 const idRef = computed(() => props.personId ?? null);
 const { data: relsData, reload } = useEntityData<PersonRelHydratedRow[]>(idRef, async (personId) => {
-  const rawRels = (await window.api.relationships.getForPerson(personId)) as Array<{
-    id: string;
-    type: string;
-    person1_id: string | null;
-    person2_id: string | null;
-    subtype: string | null;
-  }>;
+  const summary = (await window.api.reports.personSummary(personId)) as PersonSummaryShape | null;
+  if (!summary) return [];
 
-  return Promise.all(rawRels.map(async (r): Promise<PersonRelHydratedRow> => {
-    const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
-    const direction = r.person1_id === personId ? 'outgoing' : 'incoming';
+  return summary.relationships.map((r): PersonRelHydratedRow => {
+    const otherId = r.other_person_id;
+    const direction: 'incoming' | 'outgoing' = r.person1_id === personId ? 'outgoing' : 'incoming';
 
     let otherDisplayName = t('common.unknown');
     let otherGivenName = '';
@@ -132,68 +169,25 @@ const { data: relsData, reload } = useEntityData<PersonRelHydratedRow[]>(idRef, 
     let otherPreferredName: string | null = null;
     let otherNickname: string | null = null;
     let otherBirthSurname: string | null = null;
-    let otherSex: 'M' | 'F' | 'U' = 'U';
-    let otherBirthDate: string | null = null;
+    const otherSex: 'M' | 'F' | 'U' = (r.other_person_sex as 'M' | 'F' | 'U' | null) ?? 'U';
+    const otherBirthDate = r.other_person_birth_date;
 
-    if (otherId) {
-      try {
-        const [person, names, otherEvents] = await Promise.all([
-          window.api.persons.get(otherId) as Promise<{ sex?: string } | null>,
-          window.api.persons.getNames(otherId) as Promise<Array<{ id: string; given_name: string | null; surname: string | null; preferred_name: string | null; nickname: string | null; name_prefix: string | null; name_suffix: string | null; sort_order: number; name_type: string; date_from: string | null }>>,
-          window.api.events.forPerson(otherId) as Promise<Array<{ event_type: string; date_value: string | null }>>,
-        ]);
-        if (person) {
-          otherSex = (person.sex as 'M' | 'F' | 'U') || 'U';
-        }
-        if (names.length > 0) {
-          const primary = pickDisplayedName(names, otherEvents) ?? names[0];
-          otherGivenName = primary.given_name || '';
-          otherSurname = primary.surname || '';
-          otherPreferredName = primary.preferred_name;
-          otherNickname = primary.nickname;
-          otherDisplayName = formatFullName(primary) || t('common.unknown');
-          // Display only — see plan birth-name-display-and-quality-check.
-          otherBirthSurname = pickBirthSurnameForDisplay(primary, names);
-        }
-        const birthEvent = otherEvents.find(e => e.event_type === 'birth');
-        otherBirthDate = birthEvent?.date_value ?? null;
-      } catch { /* ignore */ }
-    }
-
-    // For couple rows: load the partnership start date — typically the
-    // marriage event tied to this relationship.
-    let startDate: string | null = null;
-    if (r.type === 'couple') {
-      try {
-        const relEvents = (await window.api.events.forRelationship(r.id)) as Array<{
-          event_type: string; date_value: string | null;
-        }>;
-        // Prefer marriage; fall back to the earliest start-flavoured event.
-        const marriage = relEvents.find(e => e.event_type === 'marriage');
-        startDate = marriage?.date_value
-          ?? relEvents.map(e => e.date_value).filter((d): d is string => !!d).sort()[0]
-          ?? null;
-      } catch { /* ignore */ }
-    }
-
-    // For outgoing parent_child rows (focal is the parent): resolve the
-    // *other* parent's id by walking the child's incoming parent_child rows
-    // and picking the parent that isn't the focal.
-    let otherParentId: string | null = null;
-    if (r.type === 'parent_child' && direction === 'outgoing' && otherId) {
-      try {
-        const childRels = (await window.api.relationships.getForPerson(otherId)) as Array<{
-          type: string; person1_id: string | null; person2_id: string | null;
-        }>;
-        for (const cr of childRels) {
-          if (cr.type !== 'parent_child') continue;
-          // person1 = parent, person2 = child convention
-          if (cr.person2_id === otherId && cr.person1_id && cr.person1_id !== personId) {
-            otherParentId = cr.person1_id;
-            break;
-          }
-        }
-      } catch { /* ignore */ }
+    const names = r.other_person_names;
+    if (names.length > 0) {
+      // pickDisplayedName needs the other person's events only to extract a
+      // birth date — synthesize the minimal event list from the pre-joined
+      // birth date so we don't need a separate per-row events.forPerson IPC.
+      const syntheticEvents = otherBirthDate
+        ? [{ event_type: 'birth', date_value: otherBirthDate }]
+        : [];
+      const primary = pickDisplayedName(names, syntheticEvents) ?? names[0];
+      otherGivenName = primary.given_name || '';
+      otherSurname = primary.surname || '';
+      otherPreferredName = primary.preferred_name;
+      otherNickname = primary.nickname;
+      otherDisplayName = formatFullName(primary) || t('common.unknown');
+      // Display only — see plan birth-name-display-and-quality-check.
+      otherBirthSurname = pickBirthSurnameForDisplay(primary, names);
     }
 
     // Compute the single user-visible row label.
@@ -228,8 +222,8 @@ const { data: relsData, reload } = useEntityData<PersonRelHydratedRow[]>(idRef, 
         sex: otherSex,
         birth_date: otherBirthDate,
       },
-      start_date: startDate,
-      other_parent_id: otherParentId,
+      start_date: r.partnership_start_date,
+      other_parent_id: r.other_parent_id,
       display: {
         otherGivenName,
         otherSurname,
@@ -239,7 +233,7 @@ const { data: relsData, reload } = useEntityData<PersonRelHydratedRow[]>(idRef, 
         roleLabel,
       },
     };
-  }));
+  });
 });
 
 const rels = computed<PersonRelHydratedRow[]>(() => relsData.value ?? []);
@@ -249,7 +243,6 @@ const totalCount = computed(() => rels.value.length);
 
 const sortedGroups = computed<RelationsSortGroup[]>(() =>
   sortPersonRelations({
-    focalPersonId: props.personId,
     rows: rels.value,
     locale: locale.value,
   })

@@ -87,19 +87,52 @@ const REL_EVENTS: Record<string, Array<{ event_type: string; date_value: string 
 describe('PersonRelationshipsSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Build the focal person's summary in the shape `reports.personSummary`
+    // returns. Pre-joined: other person's names + sex + birth_date,
+    // partnership_start_date, other_parent_id.
+    function buildSummary() {
+      const focalRels = RELS_BY_PERSON[FOCAL] ?? [];
+      const relationships = focalRels.map(r => {
+        const otherId = r.person1_id === FOCAL ? r.person2_id : r.person1_id;
+        const otherEvents = otherId ? (PERSON_EVENTS[otherId] ?? []) : [];
+        const birth = otherEvents.find(e => e.event_type === 'birth');
+        let partnershipStart: string | null = null;
+        if (r.type === 'couple') {
+          const relEvents = REL_EVENTS[r.id] ?? [];
+          partnershipStart = relEvents.find(e => e.event_type === 'marriage')?.date_value ?? null;
+        }
+        let otherParentId: string | null = null;
+        if (r.type === 'parent_child' && r.person1_id === FOCAL && otherId) {
+          const childRels = RELS_BY_PERSON[otherId] ?? [];
+          for (const cr of childRels) {
+            if (cr.type !== 'parent_child') continue;
+            if (cr.person2_id === otherId && cr.person1_id && cr.person1_id !== FOCAL) {
+              otherParentId = cr.person1_id;
+              break;
+            }
+          }
+        }
+        return {
+          ...r,
+          other_person_id: otherId,
+          other_person_names: otherId ? (NAMES[otherId] ?? []) : [],
+          other_person_sex: otherId ? (PERSONS[otherId]?.sex ?? null) : null,
+          other_person_birth_date: birth?.date_value ?? null,
+          partnership_start_date: partnershipStart,
+          other_parent_id: otherParentId,
+        };
+      });
+      return { relationships };
+    }
+
     (window as unknown as { api: unknown }).api = {
+      reports: {
+        personSummary: vi.fn(() => Promise.resolve(buildSummary())),
+      },
       relationships: {
-        getForPerson: vi.fn((id: string) => Promise.resolve(RELS_BY_PERSON[id] ?? [])),
         get: vi.fn((id: string) => Promise.resolve(RELS_BY_PERSON[FOCAL].find(r => r.id === id) ?? null)),
         delete: vi.fn().mockResolvedValue(true),
-      },
-      persons: {
-        get: vi.fn((id: string) => Promise.resolve(PERSONS[id] ?? null)),
-        getNames: vi.fn((id: string) => Promise.resolve(NAMES[id] ?? [])),
-      },
-      events: {
-        forPerson: vi.fn((id: string) => Promise.resolve(PERSON_EVENTS[id] ?? [])),
-        forRelationship: vi.fn((id: string) => Promise.resolve(REL_EVENTS[id] ?? [])),
       },
       onDataChanged: vi.fn(() => () => undefined),
     };
