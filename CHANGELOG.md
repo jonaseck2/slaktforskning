@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.211.2
+
+- fix: Place Details panel now reactively previews Type / Parent / Coordinates as you type in the Name field, matching the Add Place modal
+
 ## 0.211.1
 
 - fix: place name autocomplete no longer opens its dropdown when the panel switches to a different place

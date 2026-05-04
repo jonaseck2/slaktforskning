@@ -36,7 +36,8 @@
               <PlaceNameAutocomplete
                 :model-value="place.name"
                 :exclude-place-id="place.id"
-                @change="(v: string) => saveField('name', v.trim() || place.name)"
+                @update:model-value="draftName = $event"
+                @change="(v: string) => { draftName = ''; saveField('name', v.trim() || place.name); }"
               />
             </div>
 
@@ -374,7 +375,16 @@ const ancestors = computed(() => panelData.value?.ancestors ?? []);
 // quality, and what the resolved values would be. Per the Prime Directive,
 // these previewed values are NEVER persisted; they are recomputed every render
 // by the shared composable below (also used by PlaceModal).
-const placeNameRef = computed(() => place.value?.name ?? '');
+//
+// `draftName` mirrors what the user is currently typing in the Name field
+// (emitted from PlaceNameAutocomplete via @update:model-value). Feeding it
+// into the resolver lets the Type / Parent / Coordinates Resolved chips
+// re-preview live as the user types — same UX as PlaceModal, where the
+// modal's `form.name` is v-modeled directly into the resolver. Cleared on
+// commit (@change) so the chips fall back to the saved place.name once the
+// user is done.
+const draftName = ref('');
+const placeNameRef = computed(() => draftName.value || place.value?.name || '');
 const ancestorNamesRef = computed(() => ancestors.value.map(a => a.name));
 const { resolvedMatch, resolvedTypeLabel, resolvedParentPath } = useResolvedPlace(
   placeNameRef,
