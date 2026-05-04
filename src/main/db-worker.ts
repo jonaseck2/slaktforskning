@@ -6,6 +6,7 @@
 import { parentPort } from 'node:worker_threads';
 import * as nodePath from 'node:path';
 import * as nodeFs from 'node:fs';
+import * as nodeFsp from 'node:fs/promises';
 import { Database } from 'node-sqlite3-wasm';
 import { channelRegistry } from '../shared/channels';
 import { initializeSchema } from '../api/schema';
@@ -62,24 +63,39 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   // state (getDbDir(), checksRunId, importInProgress) or async yield loops.
 
   // media:getFilePath and media:readAsDataUrl require getDbDir() (worker-local).
-  'media:getFilePath': (id) => {
+  'media:getFilePath': async (id) => {
     const item = media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
     const absPath = nodePath.resolve(getDbDir(), item.file_ref);
-    return nodeFs.existsSync(absPath) ? absPath : null;
+    try {
+      await nodeFsp.access(absPath, nodeFs.constants.F_OK);
+      return absPath;
+    } catch {
+      return null;
+    }
   },
-  'media:readAsDataUrl': (id) => {
+  'media:readAsDataUrl': async (id) => {
     const item = media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
     const absPath = nodePath.resolve(getDbDir(), item.file_ref);
-    if (!nodeFs.existsSync(absPath)) return null;
     const ext = nodePath.extname(absPath).toLowerCase().slice(1);
     const mimeMap: Record<string, string> = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
       gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
     };
     const mime = mimeMap[ext] ?? 'image/jpeg';
-    return `data:${mime};base64,${nodeFs.readFileSync(absPath).toString('base64')}`;
+    // Async file read — libuv's threadpool handles the disk I/O so the worker
+    // thread stays free to service other IPC traffic concurrently. With the
+    // sync version, a 5 MB JPEG pinned the worker for the entire read+encode,
+    // queuing every other handler behind it; on a fresh import with media,
+    // a list view full of avatars would saturate the worker for seconds.
+    let buf: Buffer;
+    try {
+      buf = await nodeFsp.readFile(absPath);
+    } catch {
+      return null; // ENOENT or permission error — file is gone
+    }
+    return `data:${mime};base64,${buf.toString('base64')}`;
   },
 
   // undo:undo and undo:redo: the actual undo/redo operations are dispatched here,
@@ -216,17 +232,27 @@ type CallMsg = { id: number; channel: string; args: unknown[] };
 
 parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
   if ('type' in msg) {
-    if (msg.type === 'init') {
-      openDb(msg.dbPath);
-      parentPort!.postMessage({ type: 'ready' });
-    } else if (msg.type === 'db-switch') {
-      openDb(msg.dbPath);
-      undoManager.clear();
-      parentPort!.postMessage({ type: 'switched' });
-    } else if (msg.type === 'import-start') {
-      importInProgress = true;
-    } else if (msg.type === 'import-end') {
-      importInProgress = false;
+    try {
+      if (msg.type === 'init') {
+        openDb(msg.dbPath);
+        parentPort!.postMessage({ type: 'ready' });
+      } else if (msg.type === 'db-switch') {
+        openDb(msg.dbPath);
+        undoManager.clear();
+        parentPort!.postMessage({ type: 'switched' });
+      } else if (msg.type === 'import-start') {
+        importInProgress = true;
+      } else if (msg.type === 'import-end') {
+        importInProgress = false;
+      }
+    } catch (err) {
+      // Without this, an openDb failure (corrupt DB, failed migration, lock
+      // race) takes the entire worker down with exit code 1 — leaving the
+      // user with "Worker exited with code 1" on every IPC and no clue why.
+      // Log loudly and rethrow so the parent's worker.on('error') still fires
+      // (the worker will still die, but with a visible error message).
+      console.error('[db-worker] lifecycle handler crashed:', err);
+      throw err;
     }
     return;
   }

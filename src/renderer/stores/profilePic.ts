@@ -66,6 +66,22 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     }
   }
 
+  // Micro-batched coalescer: every AppAvatar in the same render tick that
+  // calls ensureLoaded shares a single profilePicRefs (plural) IPC + a single
+  // batched readAsDataUrl fan-out via ensureBatch. Without this, mounting
+  // PersonsListTab over a 22k-person DB fired N per-row IPCs that pinned the
+  // worker thread serially. queueMicrotask defers to end-of-tick — Vue flushes
+  // all child component setups within the same microtask so a 50-row list
+  // collapses to one batched call.
+  let pendingIds = new Set<string>();
+  let pendingPromise: Promise<void> | null = null;
+  function flushPending(): Promise<void> {
+    const ids = Array.from(pendingIds);
+    pendingIds = new Set<string>();
+    pendingPromise = null;
+    return ensureBatch(ids);
+  }
+
   async function ensureLoaded(personId: string): Promise<void> {
     const current = entries.value[personId];
     if (current && (current.status === 'ready' || current.status === 'none' || current.status === 'error')) {
@@ -73,22 +89,16 @@ export const useProfilePicStore = defineStore('profilePic', () => {
     }
     const existing = inFlight.get(personId);
     if (existing) return existing;
-    const gen = generations.get(personId) ?? 0;
-    entries.value = { ...entries.value, [personId]: { status: 'loading', src: null } };
-    const p = (async () => {
-      try {
-        const mediaRef = await window.api.media.profilePicRef(personId) as MediaRef | null;
-        const urlPromise = mediaRef
-          ? (window.api.media.readAsDataUrl(mediaRef.mediaId) as Promise<string | null>)
-          : null;
-        await resolveOne(personId, gen, mediaRef, urlPromise);
-      } catch {
-        setEntry(personId, gen, { status: 'error', src: null });
-      } finally {
-        inFlight.delete(personId);
-      }
-    })();
-    inFlight.set(personId, p);
+
+    pendingIds.add(personId);
+    if (!pendingPromise) {
+      pendingPromise = new Promise<void>((resolve) => {
+        queueMicrotask(() => { void flushPending().then(resolve); });
+      });
+    }
+    inFlight.set(personId, pendingPromise);
+    const p = pendingPromise;
+    void p.finally(() => { inFlight.delete(personId); });
     return p;
   }
 

@@ -398,9 +398,12 @@ async function load() {
   if (!id) {
     const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
     if (defaultId) { router.replace('/persons/' + defaultId); return; }
-    const persons = (await window.api.persons.list()) as PersonWithName[];
-    noPersonsExist.value = persons.length === 0;
-    noFocalPerson.value = persons.length > 0;
+    // Just check whether any persons exist — fetch one row, not the whole table.
+    // The previous `persons.list()` call returned all 22k rows + their joined
+    // names just to compare length to zero, hammering the worker on PersonsView mount.
+    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: unknown[]; total: number };
+    noPersonsExist.value = probe.total === 0;
+    noFocalPerson.value = probe.total > 0;
     return;
   }
   const person = (await window.api.persons.get(id)) as Person | null;
@@ -408,9 +411,12 @@ async function load() {
     focalPerson.value = null;
     const defaultId = await window.api.db.getSetting('default_person_id') as string | null;
     if (defaultId && defaultId !== id) { router.replace('/persons/' + defaultId); return; }
-    const persons = (await window.api.persons.list()) as PersonWithName[];
-    noPersonsExist.value = persons.length === 0;
-    noFocalPerson.value = persons.length > 0;
+    // Just check whether any persons exist — fetch one row, not the whole table.
+    // The previous `persons.list()` call returned all 22k rows + their joined
+    // names just to compare length to zero, hammering the worker on PersonsView mount.
+    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: unknown[]; total: number };
+    noPersonsExist.value = probe.total === 0;
+    noFocalPerson.value = probe.total > 0;
     return;
   }
   focalPerson.value = person;

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.210.9
+
+- perf(ipc): the DB worker no longer pins on synchronous file reads when the renderer mounts a list view full of avatars. `media:readAsDataUrl` and `media:getFilePath` were doing `fs.readFileSync` / `fs.existsSync` on the worker thread; with media in the database, switching to PersonsListTab fired N per-row IPCs that each blocked the worker for the duration of a 5 MB JPEG read + base64 encode (~50 ms each), serialising every other handler behind them. Reads now go through `fs.promises.readFile` / `fs.promises.access` — libuv's threadpool runs them in parallel and the worker stays responsive between callbacks.
+- perf(renderer): the profile-pic store now coalesces per-row `ensureLoaded` calls into a single batched `media:profilePicRefs` IPC per microtask. Mounting PersonsListTab over a 22k-person DB fired one IPC per visible avatar (50+ round-trips through the worker) — Vue flushes child component setups inside the same microtask, so collecting them into a single `ensureBatch` call collapses that into one round-trip with no UX change.
+- perf(renderer): `PersonsView.load()` no longer fetches the entire `persons` table just to compute `noPersonsExist` / `noFocalPerson`. The previous `persons.list()` returned all 22k rows (with joined names) so two boolean comparisons could run; now `persons.listPage(1, 0, ...)` returns one row plus the total via the existing pagination path.
+- fix(worker): lifecycle handlers (`init`, `db-switch`, `import-start`, `import-end`) now log a clear `[db-worker] lifecycle handler crashed:` line before re-throwing. Without this, an `openDb` failure (corrupt DB, failed migration, lock race) took the worker down silently and every subsequent IPC failed with the unhelpful `Worker exited with code 1`.
+
 ## 0.210.8
 
 - fix(ci): the Vitest root `testTimeout: 15000` was not inheriting into the `unit` and `components` projects, so per-project timeouts silently fell back to the 5 s default. Windows runners hit this on `mcp.test.ts > switch_database` (slow first-time SQLite-WASM init) and `import-genney-orchestrator.test.ts > isDockerAvailable` (slow `where docker` spawn). Now set per-project too.
