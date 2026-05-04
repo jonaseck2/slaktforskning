@@ -232,18 +232,18 @@ describe('MARRIED_BEFORE_12', () => {
 // Category F — Data Completeness
 // ---------------------------------------------------------------------------
 
-describe('NO_NAME', () => {
+describe('PERSON_NO_NAME', () => {
   it('fires for a person with no name entries', async () => {
     const p = createPerson(db, {}); // no given_name or surname → no person_names row
     const results = await runAllChecks(db);
-    const hit = results.filter(r => r.code === 'NO_NAME' && r.personIds.includes(p.id));
+    const hit = results.filter(r => r.code === 'PERSON_NO_NAME' && r.personIds.includes(p.id));
     expect(hit).toHaveLength(1);
   });
 
   it('does not fire for a person with a name', async () => {
     const p = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
     const results = await runAllChecks(db);
-    const hit = results.filter(r => r.code === 'NO_NAME' && r.personIds.includes(p.id));
+    const hit = results.filter(r => r.code === 'PERSON_NO_NAME' && r.personIds.includes(p.id));
     expect(hit).toHaveLength(0);
   });
 });

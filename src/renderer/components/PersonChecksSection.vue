@@ -26,7 +26,7 @@ const FIX_ACTIONS: Record<string, FixAction> = {
   NO_BIRTH_EVENT: 'add-birth-event',
   UNSOURCED_BIRTH: 'add-birth-event',
   NO_PARENTS: 'add-father',
-  NO_NAME: 'add-name',
+  PERSON_NO_NAME: 'add-name',
   UNSOURCED_DEATH: 'add-death-event',
   DEATH_WITHOUT_BIRTH: 'add-birth-event',
   UNRELATED_PERSON: 'add-father',

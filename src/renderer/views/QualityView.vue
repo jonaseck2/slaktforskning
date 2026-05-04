@@ -59,7 +59,7 @@ const visibleCount = ref(PAGE_SIZE);
 const sentinel = ref<HTMLElement | null>(null);
 
 const CODE_CATEGORY: Record<string, string> = {
-  NO_NAME: 'quality',
+  PERSON_NO_NAME: 'quality',
   INVALID_DATE: 'quality', UNRELATED_PERSON: 'quality', TEXT_CONTROL_CHARS: 'quality',
   MULTIPLE_BIRTH_NAMES: 'quality', PARTIAL_NAME: 'quality',
   UNSOURCED_BIRTH: 'quality', UNSOURCED_DEATH: 'quality',

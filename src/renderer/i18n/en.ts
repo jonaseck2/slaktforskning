@@ -833,7 +833,7 @@ export default {
       MARRIAGE_BEFORE_BIRTH: 'Marriage ({marriageDate}) occurs before person\'s birth date ({birthDate})',
       COUPLE_WITH_SELF: 'Person is registered in a couple relationship with themselves',
       SIMULTANEOUS_DISTANT_LOCATIONS: 'Two events on the same date ({date}) are {km} km apart',
-      NO_NAME: 'Person has no name recorded',
+      PERSON_NO_NAME: 'Person has no name — check and fill in, or remove.',
       UNSOURCED_BIRTH: 'Birth event has no citation',
       UNSOURCED_DEATH: 'Death event has no citation',
       INVALID_DATE: 'Invalid date: {date} — {reason}',

@@ -833,7 +833,7 @@ export default {
       MARRIAGE_BEFORE_BIRTH: 'Giftermål ({marriageDate}) sker före personens födelsedag ({birthDate})',
       COUPLE_WITH_SELF: 'Person är registrerad i ett parförhållande med sig själv',
       SIMULTANEOUS_DISTANT_LOCATIONS: 'Två händelser på samma datum ({date}) är {km} km från varandra',
-      NO_NAME: 'Person saknar namnuppgifter',
+      PERSON_NO_NAME: 'Personen saknar namn — kontrollera och fyll i, eller ta bort.',
       UNSOURCED_BIRTH: 'Födelsehändelsen saknar källhänvisning',
       UNSOURCED_DEATH: 'Dödshändelsen saknar källhänvisning',
       INVALID_DATE: 'Ogiltigt datum: {date} — {reason}',

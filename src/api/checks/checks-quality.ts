@@ -3,17 +3,35 @@ import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { isInvalidDate } from './check-utils';
 
-export function checkNoName(db: Database): CheckResult[] {
-  const hasName = new Set(
-    queryAll<{ person_id: string }>(db, `SELECT DISTINCT person_id FROM person_names`).map(r => r.person_id)
-  );
+/**
+ * Flags persons with no usable name: either no `person_names` row at all, OR
+ * every row's given_name + surname is blank/whitespace. The two cases are
+ * surfaced under one code so the user sees one row per nameless person in
+ * QualityView regardless of which path produced the empty state. Bound by the
+ * Surface contract: row click navigates to the person panel, where the user
+ * decides whether to fill in or remove. We never fabricate a "Unknown"
+ * surname here — Prime Directive.
+ */
+export function checkPersonNoName(db: Database): CheckResult[] {
+  // Pull all rows and decide blankness in JS — SQLite's default TRIM only
+  // strips ASCII space, not tab/CR/LF, and getting the WHERE clause to handle
+  // every whitespace variant is harder to read than a JS .trim() per row.
+  const nameRows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+    SELECT person_id, given_name, surname FROM person_names
+  `);
+  const personsWithUsableName = new Set<string>();
+  for (const r of nameRows) {
+    if ((r.given_name && r.given_name.trim() !== '') || (r.surname && r.surname.trim() !== '')) {
+      personsWithUsableName.add(r.person_id);
+    }
+  }
   const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
   return allPersonIds
-    .filter(r => !hasName.has(r.id))
+    .filter(r => !personsWithUsableName.has(r.id))
     .map(r => ({
-      code: 'NO_NAME',
+      code: 'PERSON_NO_NAME',
       severity: 'notice' as CheckSeverity,
-      message: `Person saknar namnuppgifter`,
+      message: `Personen saknar namn — kontrollera och fyll i, eller ta bort.`,
       messageParams: {},
       personIds: [r.id],
     }));

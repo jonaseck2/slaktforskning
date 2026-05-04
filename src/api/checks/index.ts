@@ -29,7 +29,7 @@ import {
   checkCoupleWithSelf,
 } from './checks-relationships';
 import {
-  checkNoName,
+  checkPersonNoName,
   checkUnsourcedLifeEvent,
   checkInvalidDates,
   checkUnrelatedPerson,
@@ -170,7 +170,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     }},
 
     // F. Data Completeness
-    { name: 'checkNoName',                fn: (db) => checkNoName(db) },
+    { name: 'checkPersonNoName',          fn: (db) => checkPersonNoName(db) },
     { name: 'checkUnsourcedLifeEvent(birth)', fn: (db) => checkUnsourcedLifeEvent(db, 'birth') },
     { name: 'checkUnsourcedLifeEvent(death)', fn: (db) => checkUnsourcedLifeEvent(db, 'death') },
     { name: 'checkMultipleBirthNames',    fn: (db) => checkMultipleBirthNames(db) },
