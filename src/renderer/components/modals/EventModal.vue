@@ -207,6 +207,19 @@
       </div>
     </div>
 
+    <!-- Additional participants (godparents, witnesses, mourners, …).
+         Visible for every event type — see plan
+         2026-05-04-event-participants-and-marriage-flow Part A.2. The
+         component handles its own load + reactivity via useEntityData and
+         shows a "save the event first" hint when the event isn't persisted
+         yet (in which case eventId is null). Excludes the primary
+         (props.personId) and spouse (secondPersonId) so they aren't
+         double-listed below the slots already showing them above. -->
+    <EventParticipantsSection
+      :event-id="savedEventId"
+      :exclude-person-ids="extraParticipantsExcludeIds"
+    />
+
     <!-- Sub-panels -->
     <template #subpanels>
       <CitationModal
@@ -256,6 +269,7 @@ import DateInput from '../DateInput.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
 import PersonPicker from '../PersonPicker.vue';
+import EventParticipantsSection from '../EventParticipantsSection.vue';
 import PersonModal from './PersonModal.vue';
 import { EVENT_TYPE_VALUES, isSpanEventType } from '../../constants/eventTypes';
 import { isEventTypeSortMode, sortEventTypes, type EventTypeSortMode } from '../../utils/eventTypeSort';
@@ -477,6 +491,16 @@ const showSecondPersonField = computed(
 // it in place (preserving its id + any future-attached metadata) rather than
 // blindly delete-and-reinsert. Initialised by loadExistingParticipants.
 const existingSpouseParticipantId = ref<string | null>(null);
+
+// IDs already represented in the modal as dedicated rows (primary above the
+// fold, spouse picker for couple events). Drop them from the additional
+// participants list so they aren't shown twice on the same event.
+const extraParticipantsExcludeIds = computed<string[]>(() => {
+  const ids: string[] = [];
+  if (props.personId) ids.push(props.personId);
+  if (secondPersonId.value) ids.push(secondPersonId.value);
+  return ids;
+});
 
 function onSecondPersonSelectChange(val: string) {
   if (val === '__pick') {

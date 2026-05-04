@@ -346,6 +346,13 @@ export default {
     notes: 'Notes',
     notesPlaceholder: 'Free-form notes about the event…',
     valuePlaceholder: 'e.g. Carpenter',
+    participants: 'Participants',
+    participantsHint: 'Other persons involved in the event',
+    participantsSaveFirstHint: 'Save the event first to add additional participants',
+    participantsEmpty: 'No additional participants',
+    participantsAddPlaceholder: 'Add a participant…',
+    participantsRemove: 'Remove participant',
+    participantsAlreadyAdded: 'This person is already on the event',
     value: {
       occupation: 'Occupation',
       education: 'Degree',
