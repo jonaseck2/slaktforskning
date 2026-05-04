@@ -113,14 +113,20 @@ export async function importFromHolger(
 
   try {
     progress('Reading GEDCOM…');
+    const tRead = Date.now();
     const text = readGedcomFile(gedPath);
+    console.log(`[import-timing] readGedcomFile — ${Date.now() - tRead}ms — ${text.length} chars`);
     progress('Parsing GEDCOM…');
+    const tParse = Date.now();
     const tree = parseGedcom(text);
+    console.log(`[import-timing] parseGedcom — ${Date.now() - tParse}ms — ${tree.length} top-level nodes`);
     progress('Importing…');
+    const tImport = Date.now();
     const report = importGedcom(db, tree, {
       profile: 'holger',
       ...(mediaDir ? { mediaDir } : {}),
     });
+    console.log(`[import-timing] importGedcom — ${Date.now() - tImport}ms — persons=${report.persons} families=${report.families} places=${report.places}`);
     progress(`Done — ${report.persons} persons, ${report.families} families`);
     return { report, gedPath };
   } finally {

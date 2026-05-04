@@ -18,7 +18,6 @@
  *   SUBM  Submitter name collection
  */
 
-import { existsSync } from 'fs';
 import { basename } from 'path';
 import type { Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
@@ -90,25 +89,33 @@ export function phaseNotes(ctx: ImportContext): void {
 // ── Phase 0.5: OBJE top-level records ──────────────────────────────────────
 
 export function phaseObje(ctx: ImportContext): void {
+  let total = 0, withFile = 0;
   for (const node of ctx.tree) {
     if (node.tag !== 'OBJE' || !node.xref) continue;
+    total++;
     let file = getChild(node, 'FILE')?.value ?? '';
     if (file && ctx.options?.mediaDir) {
       file = remapHolgerMediaPath(file, ctx.options.mediaDir);
     }
+    if (file) withFile++;
     const form = getChild(node, 'FORM')?.value ?? null;
     const titl = getChild(node, 'TITL')?.value ?? null;
     const note = getChild(node, 'NOTE')?.value ?? '';
+    // is_missing is the inverse of "we have a file_ref"; whether that file is
+    // actually on disk is decided later by consolidateMediaFolder via a single
+    // recursive readdir of the dest folder. Doing it here would mean N
+    // sync existsSync() calls (~6s for 12k OBJEs) on the main thread.
     const media = createMedia(ctx.db, {
       file_ref: file || null,
       title: titl || (file ? basename(file) : undefined),
       format: form,
       notes: note || undefined,
       is_printable: false,
-      is_missing: !file || !existsSync(file),
+      is_missing: !file,
     });
     ctx.objeMap.set(node.xref, media.id);
   }
+  console.log(`[import-timing]     phaseObje: total=${total} withFile=${withFile}`);
 }
 
 // ── Phase 0.7: REPO records ────────────────────────────────────────────────

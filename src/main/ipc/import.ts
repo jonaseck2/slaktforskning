@@ -11,7 +11,7 @@ import { importFromHolger } from '../../import/holger/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
 import * as media from '../../api/media';
-import { consolidateMediaFolder } from '../../api/media_consolidate';
+import { consolidateMediaFolder, bulkCopyMediaFolder } from '../../api/media_consolidate';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
@@ -249,7 +249,21 @@ export function registerImportHandlers(
     const win = BrowserWindow.getFocusedWindow();
     importInProgress = true;
     notifyWorkerImportStart();
+    const tHandler = Date.now();
+    console.log(`[import-timing] holger handler start — sourcePath=${options.sourcePath} mediaDir=${options.mediaDir ?? '(none)'}`);
     try {
+      // Bulk-copy the media folder up-front. fsp.cp recursive walks + copies
+      // through libuv much faster than 12k sequential per-row copyFile calls.
+      // After this, consolidateMediaFolder fast-paths every row that lands here.
+      if (options.mediaDir) {
+        try {
+          const { ms } = await bulkCopyMediaFolder(options.mediaDir, media.getMediaDir(getCurrentDatabasePath()));
+          console.log(`[import-timing] bulkCopyMediaFolder done — ${ms}ms`);
+        } catch (err) {
+          console.warn(`[import-timing] bulkCopyMediaFolder failed (will fall back to per-row copy): ${err instanceof Error ? err.message : err}`);
+        }
+      }
+      const tHolger = Date.now();
       const result = await importFromHolger(getDb(), {
         sourcePath: options.sourcePath,
         mediaDir: options.mediaDir,
@@ -257,7 +271,11 @@ export function registerImportHandlers(
           if (win) win.webContents.send('import:holgerProgress', { message: msg });
         },
       });
-      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      console.log(`[import-timing] importFromHolger done — ${Date.now() - tHolger}ms`);
+      const tConsol = Date.now();
+      const consolResult = await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
+      console.log(`[import-timing] consolidateMediaFolder done — ${Date.now() - tConsol}ms — copied=${consolResult.copied} skipped=${consolResult.skipped} missing=${consolResult.missing}`);
+      console.log(`[import-timing] holger handler total — ${Date.now() - tHandler}ms`);
       return { success: true, report: result.report };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };

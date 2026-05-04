@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.210.7
+
+- perf(ipc): the per-IPC timing log was running unconditionally in production, doing two synchronous `fs.appendFileSync` calls per IPC handler invocation. After a long session it had grown to 1 GB; appending to that file from the Electron main thread on every renderer call eventually serialized the entire IPC bus — `persons:list` calls were observed taking over 4 minutes from queue to response while the actual handler completed in milliseconds. The log is now off by default and gated behind `SLAKTFORSKNING_IPC_LOG=1`; when enabled it uses a buffered write stream instead of sync appends. The 1 GB log this regression produced sits in `~/Library/Application Support/Släktforskning/ipc-timing.log` — safe to truncate.
+- perf(import): Holger imports with a media folder now finish in seconds instead of minutes. Three compounding issues:
+  - The media folder was copied one file at a time inside `consolidateMediaFolder` with up to 7 sequential `await` calls per file (multiple stat/exists checks + `copyFile` + a diagnostic stat), so libuv's threadpool sat ~75% idle. The Holger handler now bulk-copies the source media tree up front via `fsp.cp({ recursive: true })` (one Node call, libuv parallelises internally), and consolidate fast-paths every row already present in dest with a single `Set.has` lookup.
+  - The remaining slow-path copies (files outside the bulk-copy tree) now use `COPYFILE_EXCL`, which lets the kernel handle "dest exists" / "source missing" atomically — one syscall per file instead of stat+open+write.
+  - The 12k `UPDATE media SET file_ref = ?` rewrites were each their own autocommit, triggering a WAL fsync per row (~1–5 ms each on APFS). Now wrapped in `BEGIN IMMEDIATE / COMMIT` — one fsync at the end. CLAUDE.md's existing "writes > 50 rows must be transactional" rule applies; this loop was missed.
+- perf(import): `phaseObje` and `importObjeNode` no longer call `existsSync` per OBJE record (~12k synchronous stat calls on the main thread for a Holger import). The `is_missing` flag is now derived from "do we have a file_ref" only; whether the file is actually on disk is decided later by `consolidateMediaFolder`'s single recursive readdir of the dest folder.
+- perf(import): Genney's `.backup` archive media copy migrated from `fs.cpSync` to the new async `bulkCopyMediaFolder` helper, so the main thread stays responsive during the copy.
+- chore(import): Holger import path emits boundary timing logs (`[import-timing] ...`) for parse, each phase, bulk copy, consolidate, and total handler time — visible in the npm-start terminal. Useful when tracking down regressions in this area; constant overhead, no per-row chatter.
+
 ## 0.210.6
 
 - fix(ci): release workflow no longer self-deadlocks on artifact storage quota. The cleanup job was gated on `release.result == 'success'`, but the release fails when uploads hit quota — so cleanup never ran and quota stayed full forever. Cleanup now runs `if: always()`, keeps only the 3 newest artifacts (was 30), and build artifacts get `retention-days: 1` since they're transit-only between the build and release jobs (the durable copies live on the GitHub Release page). v0.205 → v0.210.5 binaries were lost to this; first release after the fix is v0.210.6.

@@ -23,6 +23,7 @@ import { Worker } from 'worker_threads';
 import { Unzip, UnzipInflate } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
 import { getDbSetting, setDbSetting } from '../../api/db_settings';
+import { bulkCopyMediaFolder } from '../../api/media_consolidate';
 import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
 // parseNdJson is used inside PARSE_WORKER_CODE (eval worker), not imported directly
 
@@ -143,11 +144,13 @@ export async function importFromGenney(
 
     let effectiveMediaDir: string | undefined = options.mediaDir ?? extractedMediaDir;
 
-    // Copy extracted media to a permanent location so file_refs survive tempDir cleanup
+    // Copy extracted media to a permanent location so file_refs survive tempDir cleanup.
+    // bulkCopyMediaFolder uses fsp.cp recursive — async, libuv-parallel — instead of
+    // the previous fs.cpSync which blocked the main thread for the duration of the copy.
     if (extractedMediaDir && options.destMediaDir) {
       onProgress('Copying media files…');
-      fs.mkdirSync(options.destMediaDir, { recursive: true });
-      fs.cpSync(extractedMediaDir, options.destMediaDir, { recursive: true });
+      const { ms } = await bulkCopyMediaFolder(extractedMediaDir, options.destMediaDir);
+      console.log(`[import-timing] genney bulkCopyMediaFolder done — ${ms}ms`);
       effectiveMediaDir = options.destMediaDir;
     }
 

@@ -141,17 +141,23 @@ function doImportGedcom(
 ): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; firstPersonId: string | null; submitterNames: string[] } {
   const ctx = createImportContext(db, tree, options);
 
-  phaseNotes(ctx);
-  phaseObje(ctx);
-  phaseRepo(ctx);
-  phaseGroups(ctx);
-  phaseSources(ctx);
-  phaseIndividuals(ctx);
-  phaseFamilies(ctx);
-  phaseAsso(ctx);
-  phasePlaceCitations(ctx);
-  phaseTodos(ctx);
-  phaseSubmitters(ctx);
+  const runPhase = (name: string, fn: (c: typeof ctx) => void) => {
+    const t = Date.now();
+    fn(ctx);
+    console.log(`[import-timing]   phase ${name} — ${Date.now() - t}ms`);
+  };
+  runPhase('notes',          phaseNotes);
+  runPhase('obje',           phaseObje);
+  runPhase('repo',           phaseRepo);
+  runPhase('groups',         phaseGroups);
+  runPhase('sources',        phaseSources);
+  runPhase('individuals',    phaseIndividuals);
+  runPhase('families',       phaseFamilies);
+  runPhase('asso',           phaseAsso);
+  runPhase('placeCitations', phasePlaceCitations);
+  runPhase('todos',          phaseTodos);
+  runPhase('submitters',     phaseSubmitters);
+  console.log(`[import-timing]   maps: noteMap=${ctx.noteMap.size} objeMap=${ctx.objeMap.size} sourceMap=${ctx.sourceMap.size} personMap=${ctx.personMap.size} placeIdMap=${ctx.placeIdMap.size}`);
 
   // Build and return partial report
   const skipped = Array.from(ctx.skippedTags.entries())

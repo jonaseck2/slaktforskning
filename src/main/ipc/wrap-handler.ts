@@ -4,11 +4,19 @@ import { ipcMain, app } from 'electron';
 
 export type WrapHandlerFn = (channel: string, handler: (...args: unknown[]) => unknown) => void;
 
-let _logPath: string | null = null;
+// Per-IPC timing log. Off by default — enable with SLAKTFORSKNING_IPC_LOG=1.
+// Synchronous appends on every IPC call serialize the entire IPC bus on the
+// main thread; a multi-hour session produced a 1 GB log and caused renderer
+// list queries to take minutes during concurrent imports.
+const IPC_LOG_ENABLED = process.env.SLAKTFORSKNING_IPC_LOG === '1';
+let _logStream: fs.WriteStream | null = null;
 function ipcLog(msg: string) {
-  if (!_logPath) _logPath = path.join(app.getPath('userData'), 'ipc-timing.log');
-  const line = `${new Date().toISOString()} ${msg}\n`;
-  fs.appendFileSync(_logPath, line);
+  if (!IPC_LOG_ENABLED) return;
+  if (!_logStream) {
+    const logPath = path.join(app.getPath('userData'), 'ipc-timing.log');
+    _logStream = fs.createWriteStream(logPath, { flags: 'a' });
+  }
+  _logStream.write(`${new Date().toISOString()} ${msg}\n`);
 }
 
 export function wrapHandler(channel: string, handler: (...args: unknown[]) => unknown) {

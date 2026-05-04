@@ -2,7 +2,6 @@
  * GEDCOM OBJE (media object) import logic.
  */
 
-import { existsSync } from 'fs';
 import { basename } from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
