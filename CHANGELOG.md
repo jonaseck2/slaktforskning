@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.213.0 — Hourglass chart polish
+
+- feat: siblings and shared children render oldest-leftmost in the family chart
+- feat: partner edges no longer cross other partners' boxes when a person has 2+ partners
+- feat: shared children visibly hang from the couple connector, not from one parent
+- feat: foster parent–child relationships render with a dashed line and a hover label
+- feat: clicking a relative pans the chart to keep them on screen
+
 ## 0.211.1
 
 - fix: place name autocomplete no longer opens its dropdown when the panel switches to a different place
