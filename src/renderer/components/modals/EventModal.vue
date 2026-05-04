@@ -397,6 +397,26 @@ async function loadExistingParticipants() {
     existingParticipants.value = (await window.api.eventParticipants.getForEvent(savedEventId.value)) as Array<{
       id: string; person_id: string; role: string;
     }>;
+    // Pre-fill the second-person picker for edit mode. Find the spouse row
+    // that isn't the panel-owning person (the panel-owner is the 'primary').
+    if (props.editingEvent && props.personId) {
+      const spouse = existingParticipants.value.find(
+        (p) => p.role === 'spouse' && p.person_id !== props.personId,
+      );
+      if (spouse) {
+        existingSpouseParticipantId.value = spouse.id;
+        secondPersonId.value = spouse.person_id;
+        // If the spouse isn't reachable through the panel-owner's couple
+        // relationships (e.g. wedding event without a backing relationship),
+        // the relationship-derived select can't display them — switch to the
+        // PersonPicker fallback so the user always sees who is on the event.
+        if (!partnerOptions.value.some((o) => o.id === spouse.person_id)) {
+          secondPersonMode.value = 'pick';
+        }
+      } else {
+        existingSpouseParticipantId.value = null;
+      }
+    }
   } catch { /* ignore */ }
 }
 
@@ -443,12 +463,20 @@ interface PartnerOption { id: string; label: string; }
 const partnerOptions = ref<PartnerOption[]>([]);
 const secondPersonId = ref<string | null>(null);
 const secondPersonMode = ref<'select' | 'pick'>('select');
+// Visible whenever we're hosted on a person panel for a couple event — at
+// create time AND when re-opening an existing event in edit mode. Editing must
+// expose the same affordance as creating; otherwise the panel-owning
+// genealogist can't see or change who the second participant is.
 const showSecondPersonField = computed(
   () => COUPLE_EVENT_TYPES.has(form.event_type)
     && !!props.personId
     && !props.relationshipId
-    && !props.editingEvent
 );
+
+// Track the spouse-role participant row for the edit branch so we can update
+// it in place (preserving its id + any future-attached metadata) rather than
+// blindly delete-and-reinsert. Initialised by loadExistingParticipants.
+const existingSpouseParticipantId = ref<string | null>(null);
 
 function onSecondPersonSelectChange(val: string) {
   if (val === '__pick') {
@@ -675,8 +703,11 @@ function deleteCitation(id: string) { delCitation.ask(id); }
 onMounted(async () => {
   await loadEventTypeSort();
   await loadCitations();
-  await loadExistingParticipants();
+  // partnerOptions must load before participants so loadExistingParticipants
+  // can decide between the select and the PersonPicker fallback when the
+  // existing spouse isn't reachable via the panel-owner's couple relationships.
   await reloadPartnerOptions();
+  await loadExistingParticipants();
   await loadContextName();
 });
 
@@ -728,6 +759,41 @@ async function handleSave() {
         value: form.value || null,
         notes: form.notes || '',
       })) as EventData;
+      // Couple events: keep the spouse participant in sync with the picker.
+      // Four cases (see Prime Directive — never blind delete + reinsert if
+      // the value didn't change):
+      //   - same id  → no-op
+      //   - changed  → remove old, add new
+      //   - cleared  → remove old
+      //   - both nil → no-op
+      if (showSecondPersonField.value && props.personId) {
+        const desiredId = secondPersonId.value && secondPersonId.value !== props.personId
+          ? secondPersonId.value
+          : null;
+        const existingId = existingSpouseParticipantId.value;
+        // Re-derive the existing spouse's person_id from the cached
+        // participants list (loaded in loadExistingParticipants).
+        const existingSpouse = existingId
+          ? existingParticipants.value.find((p) => p.id === existingId)
+          : null;
+        const existingPersonId = existingSpouse?.person_id ?? null;
+        if (desiredId !== existingPersonId) {
+          if (existingId) {
+            await window.api.eventParticipants.remove(existingId);
+            existingSpouseParticipantId.value = null;
+          }
+          if (desiredId) {
+            const added = (await window.api.eventParticipants.add({
+              event_id: savedEventId.value,
+              person_id: desiredId,
+              role: 'spouse',
+            })) as { id: string } | null;
+            if (added?.id) existingSpouseParticipantId.value = added.id;
+          }
+          // Refresh the cache so subsequent saves observe the new state.
+          await loadExistingParticipants();
+        }
+      }
     } else {
       ev = (await window.api.events.create({
         event_type: form.event_type,
