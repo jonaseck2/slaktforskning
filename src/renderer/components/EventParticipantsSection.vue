@@ -170,15 +170,27 @@ async function resolveNames(rows: EventParticipantRow[]): Promise<ParticipantWit
 // Watch the loaded participant rows (filtered to exclude primary/spouse) and
 // resolve display names. The async resolution lives in a watcher rather than
 // a computed so the template stays synchronous.
+//
+// Local generation guard: useEntityData race-guards the rawParticipants fetch,
+// but this watcher runs its own async (resolveNames) on top. Quick add/remove
+// or excludePersonIds churn could otherwise let an earlier resolution land
+// after a later one, briefly resurrecting a removed row or hiding a fresh
+// add. Mirror useEntityData's gen-counter pattern: capture gen before the
+// await, drop the result if a newer invocation has already started.
+let nameResolveGen = 0;
 watch(
   () => ({ rows: rawParticipants.value, excludes: props.excludePersonIds }),
   async ({ rows, excludes }) => {
+    const gen = ++nameResolveGen;
     if (!rows) {
+      if (gen !== nameResolveGen) return;
       participantsWithNames.value = [];
       return;
     }
     const filtered = rows.filter((r) => !excludes.includes(r.person_id));
-    participantsWithNames.value = await resolveNames(filtered);
+    const resolved = await resolveNames(filtered);
+    if (gen !== nameResolveGen) return;
+    participantsWithNames.value = resolved;
   },
   { immediate: true, deep: true },
 );

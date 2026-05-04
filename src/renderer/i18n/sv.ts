@@ -347,7 +347,6 @@ export default {
     notesPlaceholder: 'Fri text om händelsen…',
     valuePlaceholder: 't.ex. Snickare',
     participants: 'Deltagare',
-    participantsHint: 'Övriga personer som deltog i händelsen',
     participantsSaveFirstHint: 'Spara händelsen först för att lägga till fler deltagare',
     participantsEmpty: 'Inga ytterligare deltagare',
     participantsAddPlaceholder: 'Lägg till deltagare…',
