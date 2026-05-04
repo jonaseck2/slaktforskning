@@ -32,6 +32,7 @@ import ConfirmModal from './ConfirmModal.vue';
 import RelationshipModal from './modals/RelationshipModal.vue';
 import { formatFullName, pickDisplayedName, pickBirthSurnameForDisplay } from '../utils/nameUtils';
 import { useEntityData } from '../composables/useEntityData';
+import { getParentChildRoleLabel } from '../utils/relationshipLabels';
 
 interface PersonRelRow {
   id: string;
@@ -48,8 +49,14 @@ interface PersonRelRow {
   /** Display only — see plan birth-name-display-and-quality-check. */
   otherBirthSurname: string | null;
   otherSex: 'M' | 'F' | 'U';
-  typeLabel: string;
-  subtypeLabel: string;
+  /**
+   * Single user-visible label for the row. For parent_child this is a
+   * direction-aware role label (Fosterförälder / Fosterbarn / etc.).
+   * For couple rows this is "type (subtype)" or "type" — couple rows
+   * keep the legacy composition since they are out of scope for
+   * role-coalescing in the foster-terminology plan.
+   */
+  roleLabel: string;
 }
 
 const props = defineProps<{ personId: string }>();
@@ -57,11 +64,9 @@ const emit = defineEmits<{ deleted: [] }>();
 
 const { t } = useI18n();
 
-function getSubtypeLabel(type: string, subtype: string | null): string {
+function getCoupleSubtypeLabel(subtype: string | null): string {
   if (!subtype) return '';
-  if (type === 'couple') return t('coupleSubtypes.' + subtype);
-  if (type === 'parent_child') return t('parentChildSubtypes.' + subtype);
-  return subtype;
+  return t('coupleSubtypes.' + subtype);
 }
 
 const idRef = computed(() => props.personId ?? null);
@@ -106,9 +111,29 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
       } catch { /* ignore */ }
     }
 
-    let typeLabel = t('relTypes.' + r.type);
+    // Compute the single user-visible row label.
+    //
+    // parent_child: direction-aware role label — "Fosterförälder" /
+    // "Fosterbarn" / "Adoptivbarn" / etc. The DB convention is
+    // person1_id = parent, person2_id = child. So when viewing person X:
+    //   X is person1_id (X is the parent) → "other" is the child →
+    //     this row describes X's role-toward-other = "child" direction
+    //     reversed → other's role is 'child' → no, the other way:
+    //     the row reads as "X's relationship to other"; if X is the
+    //     parent, the row labels the OTHER as the child. The legacy
+    //     code's `r.person1_id === personId ? t('relTypes.child') : t('relTypes.parent')`
+    //     was assigning the role label to the OTHER person — so when
+    //     the current person is person1 (parent), the row badge said
+    //     "Barn" (child) describing the other. Preserve that semantics:
+    //     person1_id === personId → other is the child → child direction.
+    let roleLabel: string;
     if (r.type === 'parent_child') {
-      typeLabel = r.person1_id === personId ? t('relTypes.child') : t('relTypes.parent');
+      const direction: 'parent' | 'child' = r.person1_id === personId ? 'child' : 'parent';
+      roleLabel = getParentChildRoleLabel(t, direction, r.subtype);
+    } else {
+      const typeLabel = t('relTypes.' + r.type);
+      const subLabel = r.type === 'couple' ? getCoupleSubtypeLabel(r.subtype) : '';
+      roleLabel = subLabel ? `${typeLabel} (${subLabel})` : typeLabel;
     }
 
     return {
@@ -125,8 +150,7 @@ const { data: relsData, reload } = useEntityData<PersonRelRow[]>(idRef, async (p
       otherNickname,
       otherBirthSurname,
       otherSex,
-      typeLabel,
-      subtypeLabel: getSubtypeLabel(r.type, r.subtype),
+      roleLabel,
     } as PersonRelRow;
   }));
 });
@@ -135,8 +159,7 @@ const rels = computed(() => relsData.value ?? []);
 const rows = computed<RelationshipListRow[]>(() =>
   rels.value.map(r => ({
     id: r.id,
-    typeLabel: r.typeLabel,
-    subtypeLabel: r.subtypeLabel || null,
+    roleLabel: r.roleLabel,
     persons: [
       {
         id: r.otherId,
@@ -166,17 +189,10 @@ const confirmMessages = computed<string[]>(() => {
   const r = pendingDelete.value;
   if (!r) return [];
   const parts: string[] = [];
-  if (r.subtypeLabel) {
-    parts.push(t('relationships.removeConfirmLine', {
-      type: `${r.typeLabel} (${r.subtypeLabel})`,
-      name: r.otherName,
-    }));
-  } else {
-    parts.push(t('relationships.removeConfirmLine', {
-      type: r.typeLabel,
-      name: r.otherName,
-    }));
-  }
+  parts.push(t('relationships.removeConfirmLine', {
+    type: r.roleLabel,
+    name: r.otherName,
+  }));
   parts.push(t('relationships.removeConfirmPersonsKept'));
   if (r.type === 'couple') {
     parts.push(t('relationships.removeConfirmEventsNote'));

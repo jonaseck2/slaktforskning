@@ -504,6 +504,18 @@ export default {
     step: 'Styv',
     unknown: 'Okänt',
   },
+  relationshipRoles: {
+    parent_biological: 'Förälder',
+    parent_adopted: 'Adoptivförälder',
+    parent_foster: 'Fosterförälder',
+    parent_step: 'Styvförälder',
+    parent_unknown: 'Förälder (okänd typ)',
+    child_biological: 'Barn',
+    child_adopted: 'Adoptivbarn',
+    child_foster: 'Fosterbarn',
+    child_step: 'Styvbarn',
+    child_unknown: 'Barn (okänd typ)',
+  },
   participantRoles: {
     primary: 'Primär',
     spouse: 'Make/Maka',

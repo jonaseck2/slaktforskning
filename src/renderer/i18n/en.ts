@@ -504,6 +504,18 @@ export default {
     step: 'Step',
     unknown: 'Unknown',
   },
+  relationshipRoles: {
+    parent_biological: 'Parent',
+    parent_adopted: 'Adoptive parent',
+    parent_foster: 'Foster parent',
+    parent_step: 'Step-parent',
+    parent_unknown: 'Parent (unknown type)',
+    child_biological: 'Child',
+    child_adopted: 'Adopted child',
+    child_foster: 'Foster child',
+    child_step: 'Stepchild',
+    child_unknown: 'Child (unknown type)',
+  },
   participantRoles: {
     primary: 'Primary',
     spouse: 'Spouse',

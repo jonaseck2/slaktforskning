@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.211.3
+
+- fix: foster/adoptive/step relationships render natural Swedish labels (Fosterförälder, not Förälder + Foster)
+
 ## 0.211.2
 
 - fix: Place Details panel now reactively previews Type / Parent / Coordinates as you type in the Name field, matching the Add Place modal
