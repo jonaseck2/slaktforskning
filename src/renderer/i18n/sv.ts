@@ -680,6 +680,7 @@ export default {
   },
   personPanel: {
     status: 'Status',
+    partner: 'Partner',
     partners: 'Partners',
     children: 'Barn',
     spouse: 'Make/Maka',

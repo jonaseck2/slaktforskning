@@ -286,7 +286,7 @@ function parentHeading(subtype: ParentSubtype, sex: 'M' | 'F' | 'U' | null): str
 }
 
 function partnerHeading(): string {
-  return t('personPanel.partners');
+  return t('personPanel.partner');
 }
 
 // ── Adapter to RelationshipsList row ──────────────────────────────────────

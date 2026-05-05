@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: per-row partner heading is singular ('Partner' not 'Partners')
+
 ## 0.215.2
 
 - fix(chart): multi-partner connector sits a quarter of the gap above the row, no longer overlapping the parent line

@@ -29,7 +29,7 @@
         </div>
 
         <div v-if="spouses.length > 0" class="rel-group">
-          <h3 class="rel-group-heading">{{ $t('personPanel.partners') }}</h3>
+          <h3 class="rel-group-heading">{{ $t('personPanel.partner') }}</h3>
           <ul class="rel-list">
             <li v-for="s in spouses" :key="s.id" :id="'person-' + s.id">{{ s.name || $t('common.unknown') }}</li>
           </ul>
