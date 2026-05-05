@@ -470,6 +470,51 @@ describe('listPersonsPage / countPersons / searchPersonsWithDetails', () => {
     createPerson(db, { given_name: 'Test', surname: 'Person' });
     expect(searchPersonsWithDetails(db, '')).toHaveLength(0);
   });
+
+  describe('listPersonsPage given_name sort uses preferred_name when set', () => {
+    // The "Förnamn" column in the persons list shows preferred_name (tilltalsnamn)
+    // when set, otherwise the full given_name. Sort key must match what's shown
+    // so rows don't appear under the wrong letter. Fixtures are constructed so
+    // that the OLD `pn.given_name` sort produces the opposite order from the
+    // NEW `COALESCE(NULLIF(TRIM(preferred_name), ''), given_name)` sort.
+    it('uses preferred_name over the full given_name as the sort key', () => {
+      // Old sort key: 'Anders Zorro' < 'Bo' → Zorro-row first.
+      // New sort key: 'Zorro' > 'Bo' → Bo-row first (matches displayed names).
+      const zorroPerson = createPerson(db, { given_name: 'Anders Zorro', surname: 'X' });
+      const zorroName = getPersonNames(db, zorroPerson.id)[0];
+      updatePersonName(db, zorroName.id, { preferred_name: 'Zorro' });
+      const boPerson = createPerson(db, { given_name: 'Bo', surname: 'Y' });
+
+      const rows = listPersonsPage(db, 100, 0, 'given_name', 'asc');
+      const order = rows.map(r => r.id);
+      expect(order.indexOf(boPerson.id)).toBeLessThan(order.indexOf(zorroPerson.id));
+    });
+
+    it('falls back to given_name when no preferred_name is set on either', () => {
+      const bertil = createPerson(db, { given_name: 'Bertil', surname: 'X' });
+      const anna = createPerson(db, { given_name: 'Anna', surname: 'Y' });
+
+      const rows = listPersonsPage(db, 100, 0, 'given_name', 'asc');
+      const order = rows.map(r => r.id);
+      expect(order.indexOf(anna.id)).toBeLessThan(order.indexOf(bertil.id));
+    });
+
+    it('mixes preferred + non-preferred rows in the displayed order', () => {
+      // Old sort key: 'Anna' < 'Karl Bertil' → Anna first (matches new).
+      // To force divergence, give the non-preferred row a name that is
+      // alphabetically *before* the preferred-row's full given_name but
+      // *after* its preferred_name. Old: 'Carl' < 'Karl Bertil' → Carl
+      // first. New: 'Bertil' < 'Carl' → Bertil first.
+      const bertilPerson = createPerson(db, { given_name: 'Karl Bertil', surname: 'X' });
+      const bertilName = getPersonNames(db, bertilPerson.id)[0];
+      updatePersonName(db, bertilName.id, { preferred_name: 'Bertil' });
+      const carlPerson = createPerson(db, { given_name: 'Carl', surname: 'Y' });
+
+      const rows = listPersonsPage(db, 100, 0, 'given_name', 'asc');
+      const order = rows.map(r => r.id);
+      expect(order.indexOf(bertilPerson.id)).toBeLessThan(order.indexOf(carlPerson.id));
+    });
+  });
 });
 
 describe('listUnsourcedPersonsPage / countUnsourcedPersons', () => {

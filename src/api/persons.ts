@@ -491,8 +491,12 @@ export function listPersonsPage(
   // before LIMIT caused O(4N) lookups on large DBs.
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
   // NULL birth_dates sort last on asc, first on desc (CASE WHEN trick).
+  // For given_name sort, use COALESCE(NULLIF(TRIM(preferred_name), ''), given_name)
+  // so the sort key matches what the user sees in the row (display uses
+  // preferred_name when set; otherwise the full given_name). Read-only —
+  // never written back to the DB.
   const orderBy = sortBy === 'given_name'
-    ? `pn.given_name ${dir}, pn.surname ${dir}`
+    ? `COALESCE(NULLIF(TRIM(pn.preferred_name), ''), pn.given_name) ${dir}, pn.surname ${dir}`
     : sortBy === 'birth_date'
     ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
     : `pn.surname ${dir}, pn.given_name ${dir}`;

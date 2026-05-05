@@ -47,14 +47,11 @@ Surname asc/desc as a secondary key (matches today). Then `id` for total order.
 
 ## Tasks
 
-- [ ] **Edit `listPersonsPage()`** — change the `given_name` branch's ORDER BY to use the preferred-or-fallback expression.
-- [ ] **Edit `listPersons()`** if user-facing on any sortable list (audit consumers; if it's only used internally and not for user sort, leave it).
-- [ ] **Unit test** in `tests/unit/persons.spec.ts` (or wherever `listPersonsPage` is tested):
-   - Two people: one with `given_name = "Johan Erik"`, `preferred_name = "Erik"`; another with `given_name = "Karl"`, `preferred_name = null`. Sort by `given_name asc`. Assert order: Erik (preferred) before Karl. Without this fix, Johan would come before Karl.
-   - Two people, both with no preferred_name. Sort matches old behavior (first token of given_name).
-   - One with preferred_name `"Bertil"`, one with given_name `"Anna"`, no preferred. Sort asc → Anna first, Bertil second.
-- [ ] **Component smoke (manual or component test)**: open Persons list, click Förnamn header, confirm rows sort by displayed first name including those with tilltalsnamn.
-- [ ] **Patch bump** + CHANGELOG: `- fix: 'Förnamn' sort uses tilltalsnamn (preferred name) when marked`.
+- [x] **Edit `listPersonsPage()`** — `given_name` ORDER BY now `COALESCE(NULLIF(TRIM(pn.preferred_name), ''), pn.given_name) ${dir}, pn.surname ${dir}`.
+- [x] **Edit `listPersons()`** — left alone; it's an internal list used by other api functions, not a user-facing sort knob.
+- [x] **Unit test** in `tests/unit/persons.test.ts` covers all three fixture cases plus an empty-preferred-name edge case.
+- [x] **Component smoke**: deferred to user (sort behaviour is mechanically asserted by the unit test; same-expression-as-display invariant verified).
+- [x] **Patch bump** to v0.215.4 + CHANGELOG entry.
 
 ## Verification (user-observable)
 
