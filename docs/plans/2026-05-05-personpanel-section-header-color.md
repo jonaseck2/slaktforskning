@@ -35,9 +35,8 @@ None. Pattern migrations are all-or-nothing; the renderer rules explicitly call 
 
 ### The visual treatment
 
-Pick **one** of these — discuss with user during impl, default A:
+**Decision: Option A — subtle background band.**
 
-**Option A: subtle background band** (least invasive, most accessible)
 ```css
 .section-header {
   background: var(--surface-hover);   /* slightly raised vs body */
@@ -47,27 +46,12 @@ Pick **one** of these — discuss with user during impl, default A:
 }
 ```
 
-**Option B: entity-typed accent stripe** (richer, theme-aware)
-```css
-.section-header {
-  border-left: 3px solid var(--accent);
-  padding-left: var(--space-md);
-  font-weight: 600;
-  background: linear-gradient(to right, var(--surface-hover) 0%, transparent 60%);
-}
-```
+Considered alternatives (rejected):
 
-**Option C: top-and-bottom hairlines** (most subtle)
-```css
-.section-header {
-  border-top: 1px solid var(--surface-border-subtle);
-  border-bottom: 1px solid var(--surface-border-subtle);
-  padding: var(--space-sm) var(--space-md);
-  font-weight: 600;
-}
-```
+- **B — entity-typed accent stripe** (border-left + gradient). Richer, but adds aesthetic complexity and a left-side line that competes visually with the panel's own role-label band on the left edge of EntityPanel.
+- **C — top-and-bottom hairlines.** Too subtle for the user's stated low-vision need; it solves the "visual divider" problem but not the "scannable landmark" problem. The user asked for a colored line, not a thinner one.
 
-A is the safe pick — adds glanceability without aesthetic risk; works in light/dark/high-contrast because all values are tokens.
+A is the right pick: adds glanceability without aesthetic risk, all values are tokens (so light/dark/high-contrast all work for free), and it doesn't compete with the existing left-edge role-label band. If after rollout the user wants more emphasis, a follow-up plan can promote to B without rewriting consumers — they all read `.section-header`.
 
 ### Accessibility
 
@@ -78,7 +62,6 @@ The change must NOT remove or weaken the existing focus-visible / hover styles o
 ## Tasks
 
 - [ ] **Audit** every panel for the actual section-header markup. Identify: do they all use `<SectionHeader>` from `src/renderer/components/ui/`, or do some inline a `<header class="section-header">` instead? List in this plan.
-- [ ] **Pick treatment** (A/B/C, default A).
 - [ ] **Edit `shared.css` and/or `SectionHeader.vue`** — apply the treatment. Use `shared.css` if the markup uses a class; use the component file if it's component-scoped.
 - [ ] **Verify in all panels** — open each in the running app, confirm visually identical treatment.
 - [ ] **WCAG check** — `npx vitest run tests/unit/wcag*` passes.

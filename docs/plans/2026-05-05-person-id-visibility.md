@@ -27,20 +27,19 @@ Person primary keys in this project are **UUIDv4** strings (per `.claude/rules/a
 
 The user's mental model is integer ids. UUIDs satisfy use case 1 (uniqueness) but fail at glanceable display, and they fail use case 2 (walking the database in id order doesn't equal creation order).
 
-**Three options, decide before tasks:**
+**Decision: Option B — `display_id` integer column.**
 
-**Option A — show a short prefix of the UUID** (e.g. first 8 chars). Glanceable, no schema change, but prefix collisions are possible at scale and the value isn't ordered by creation.
+Considered alternatives (rejected):
 
-**Option B — add a stable, visible `display_id` column** that's an auto-incrementing integer assigned at create time. Per-database scope (so import doesn't collide). New column on `persons`. Migration assigns values to existing rows ordered by `created_at`. This matches the user's Holger mental model exactly.
+- **A — short UUID prefix** (first 8 chars). Glanceable, but not ordered by creation, so the "walk the database" use case fails. Prefix collisions also possible at scale.
+- **C — `created_at` formatted as date** as the disambiguator. Solves disambiguation but not the walk use case; date format is not as compact as an integer id.
 
-**Option C — show `created_at` formatted as date** as the disambiguator instead of an id. Solves use case 1 (different timestamps for two duplicates) without a new column. Doesn't satisfy use case 2.
-
-**Recommended: Option B**, with deeper rationale:
-- It's the only one that satisfies both use cases.
-- The prime-directive risk is low: `display_id` is deterministic from `created_at` order at import time; it's not an inference about the person, it's an internal ordering label. (We already store `created_at` and `updated_at` — these aren't "inferred about the person" either; they're metadata. `display_id` is the same kind.)
+**Rationale for B:**
+- It's the only option that satisfies both use cases (disambiguation AND walking the database in creation order).
+- The prime-directive risk is low: `display_id` is deterministic from `created_at` order at first run; it's not an inference *about the person*, it's an internal ordering label. (We already store `created_at` and `updated_at` — these aren't "inferred about the person" either; they're metadata. `display_id` is the same kind.)
 - Holger users (the target audience) read it as expected.
 
-If picking B, register `display_id` in `gedcom_fidelity_registry.ts` as `excluded:internal-ordering-id` (per the round-trip directive) since it's not GEDCOM-representable and is re-assigned on import (deterministically by `created_at` order).
+`display_id` is registered in `gedcom_fidelity_registry.ts` as `excluded:internal-ordering-id` — it's not GEDCOM-representable and is re-assigned on import (deterministically by `created_at` order). Round-trip contract: the integers may differ across export/re-import, but the per-database stability and `created_at` ordering invariant hold.
 
 ### File scope
 
@@ -59,7 +58,7 @@ If picking B, register `display_id` in `gedcom_fidelity_registry.ts` as `exclude
 - Don't show `display_id` in chart boxes (visual clutter; not the point).
 - Don't gate import on `display_id` collision — assignment is post-import in a single transaction.
 
-## Design summary (assuming Option B)
+## Design summary
 
 ### Schema
 
@@ -103,7 +102,6 @@ PersonPanel: small `<span class="person-display-id">#{{ displayId }}</span>` in 
 
 ## Tasks
 
-- [ ] **Decide A/B/C** with user before implementing. (Default: B.)
 - [ ] **Schema migration** (`schema.ts`): add column + unique index + backfill in `BEGIN IMMEDIATE` transaction.
 - [ ] **Registry entry** (`gedcom_fidelity_registry.ts`): add `display_id` row.
 - [ ] **API:** `createPerson` assigns; `listPersonsPage` selects + sorts; `getPerson` returns it.
