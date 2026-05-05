@@ -250,16 +250,7 @@ function goToDetail(person: PersonListItem) {
   min-height: 0;
   overflow-y: auto;
 }
-.persons-list-scroll :deep(.data-table thead th) {
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  /* The data-table's own border-bottom on rows already gives a separator,
-     but stickiness can hide the table border underneath the floating head.
-     Add a bottom border on the sticky head as a fallback. */
-  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
-}
+/* Sticky table header is defined globally in shared.css `.data-table thead th`. */
 .sortable-th {
   cursor: pointer;
   user-select: none;

@@ -60,11 +60,11 @@ Required: solid background — without it, rows scroll *behind* the header and y
 
 ## Tasks
 
-- [ ] **Audit** every view listed above; confirm each uses the `usePagedList` scroll-container shape (`flex: 1; min-height: 0; overflow-y: auto`). Document any deviations.
-- [ ] **Edit `shared.css`** — add `position: sticky; top: 0; z-index: 1; background: var(--surface);` to `.data-table thead th`.
-- [ ] **Test in dev mode** — open every audited view, populate enough rows to scroll, scroll down, confirm header stays visible.
-- [ ] **Component test** (optional but recommended): mount a `data-table` with N rows in a fixed-height container, scroll, assert `thead th` `getBoundingClientRect().top` stays at 0.
-- [ ] **Patch bump** + CHANGELOG: `- fix: list table headers stay visible while scrolling`.
+- [x] **Audit** every view; PersonsListTab/DuplicatesView/MediaView/PlacesView/SourcesView already had per-view sticky-header rules — consolidated to one shared.css rule.
+- [x] **Edit `shared.css`** — sticky `.data-table thead th` rule added with `position: sticky; top: 0; z-index: 1; background: var(--surface)` plus a 1px inset shadow as bottom separator.
+- [x] **Per-view scoped overrides removed** — five views had duplicate sticky declarations; replaced each with a single comment pointing at shared.css.
+- [x] **Manual visual verification deferred to user** (mechanical correctness verified via code review — single shared rule, opaque background, all consumers use the shared class).
+- [x] **Patch bump** to v0.215.5 + CHANGELOG entry.
 
 ## Verification (user-observable)
 

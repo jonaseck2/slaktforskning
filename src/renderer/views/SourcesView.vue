@@ -251,13 +251,7 @@ onActivated(() => {
   min-height: 0;
   overflow-y: auto;
 }
-.sources-list-scroll :deep(.data-table thead th) {
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
-}
+/* Sticky table header is defined globally in shared.css `.data-table thead th`. */
 .list-filter {
   flex-shrink: 0;
   padding: 0 0 var(--space-sm);

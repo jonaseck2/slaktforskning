@@ -5,6 +5,7 @@
 - fix: clarify "date original" field with label and helper; flag misuse via quality check
 - fix: per-row partner heading is singular ('Partner' not 'Partners')
 - fix: 'Förnamn' sort uses tilltalsnamn (preferred name) when marked
+- fix: list table headers stay visible while scrolling
 
 ## 0.215.2
 

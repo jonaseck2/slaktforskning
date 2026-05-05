@@ -184,13 +184,7 @@ onActivated(load);
   min-height: 0;
   overflow-y: auto;
 }
-.duplicates-list-scroll :deep(.data-table thead th) {
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  box-shadow: inset 0 -1px 0 var(--surface-border-subtle);
-}
+/* Sticky table header is defined globally in shared.css `.data-table thead th`. */
 .person-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
 .score-badge {
