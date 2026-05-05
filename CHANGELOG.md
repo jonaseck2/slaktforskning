@@ -6,6 +6,7 @@
 - fix: per-row partner heading is singular ('Partner' not 'Partners')
 - fix: 'Förnamn' sort uses tilltalsnamn (preferred name) when marked
 - fix: list table headers stay visible while scrolling
+- fix: section headers in side panels are visually distinct (color band)
 
 ## 0.215.2
 

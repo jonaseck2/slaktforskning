@@ -56,7 +56,9 @@ async function onAction() {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) 0;
+  background: var(--surface-hover);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   user-select: none;
 }

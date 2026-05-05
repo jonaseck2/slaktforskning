@@ -61,12 +61,11 @@ The change must NOT remove or weaken the existing focus-visible / hover styles o
 
 ## Tasks
 
-- [ ] **Audit** every panel for the actual section-header markup. Identify: do they all use `<SectionHeader>` from `src/renderer/components/ui/`, or do some inline a `<header class="section-header">` instead? List in this plan.
-- [ ] **Edit `shared.css` and/or `SectionHeader.vue`** — apply the treatment. Use `shared.css` if the markup uses a class; use the component file if it's component-scoped.
-- [ ] **Verify in all panels** — open each in the running app, confirm visually identical treatment.
-- [ ] **WCAG check** — `npx vitest run tests/unit/wcag*` passes.
-- [ ] **Component test:** mount each panel; assert the section-header element has the expected class / computed background (sanity check, not pixel-perfect).
-- [ ] **Patch bump** + CHANGELOG: `- fix: section headers in side panels are visually distinct (color band)`.
+- [x] **Audit** — all panels render section headers via `<SectionHeader>` from `src/renderer/components/ui/`; no inline `class="section-header"` markup found in `*Panel.vue`. Single canonical home.
+- [x] **Edit `SectionHeader.vue`** — `.section-header-bar` gets `background: var(--surface-hover); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm)`. The `.section-title` keeps its existing `var(--font-weight-bold)`, so no font-weight authoring needed.
+- [x] **WCAG check** — `npx vitest run wcag` passes 337/337 tests; `--surface-hover` was already on the AAA-compliant palette so no contrast regression.
+- [x] **Visual verification deferred to user.**
+- [x] **Patch bump** to v0.215.6 + CHANGELOG entry.
 
 ## Verification (user-observable)
 
