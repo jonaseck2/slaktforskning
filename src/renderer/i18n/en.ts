@@ -682,6 +682,7 @@ export default {
   },
   personPanel: {
     status: 'Status',
+    partner: 'Partner',
     partners: 'Partners',
     children: 'Children',
     spouse: 'Spouse',

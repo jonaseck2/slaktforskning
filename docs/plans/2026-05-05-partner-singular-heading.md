@@ -32,11 +32,22 @@ grep -rn "partner:" src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
 
 ## Tasks
 
-- [ ] **Audit** all `partners` / `partner` i18n keys. For each, mark per-row vs section-level. Capture in a small table in this plan before editing.
-- [ ] **Add `partner` (singular) keys** if not already present: `'Partner'` in both `sv.ts` and `en.ts`.
-- [ ] **Switch per-row consumers** to the singular key. Section-level stays plural.
-- [ ] **Test:** mount PersonRelationshipsSection with two partners. Each row's heading reads "Partner" (or its localized equivalent). The section-level container, if any, stays plural.
-- [ ] **Patch bump** + CHANGELOG: `- fix: per-row partner heading is singular ('Partner' not 'Partners')`.
+- [x] **Audit** all `partners` / `partner` i18n keys. For each, mark per-row vs section-level. Capture in a small table in this plan before editing.
+- [x] **Add `partner` (singular) keys** if not already present: `'Partner'` in both `sv.ts` and `en.ts`.
+- [x] **Switch per-row consumers** to the singular key. Section-level stays plural.
+- [x] **Test:** mount PersonRelationshipsSection with two partners. Each row's heading reads "Partner" (or its localized equivalent). The section-level container, if any, stays plural.
+- [x] **Patch bump** + CHANGELOG: `- fix: per-row partner heading is singular ('Partner' not 'Partners')`.
+
+## Audit results
+
+| Location | Key | Usage | Per-row / section-level |
+|---|---|---|---|
+| `sv.ts:10` / `en.ts:10` | `picker.relation.partner` | Picker relation tag (lowercase "partner") | per-relation; already singular |
+| `sv.ts:507` / `en.ts:507` | `relTypes.partner` | Relationship-type label | per-relation; already singular |
+| `sv.ts:683` / `en.ts:683` | `personPanel.partners` | Heading rendered once per partner row in `PersonRelationshipsSection` (`v-for partnerGroups`) and `ALifeReport` (`v-for spouses`) | **per-row** — was plural, switched consumers to new singular `personPanel.partner` |
+| `sv.ts:686-687` / `en.ts:686-687` | `personPanel.partner1` / `partner2` | Numbered partner labels | per-partner; already singular |
+
+No section-level "Partners" group heading uses `personPanel.partners` — the only two consumers were per-row. Added a new `personPanel.partner: 'Partner'` key in both locales, switched both consumers, left the plural key in place to avoid renaming-in-place breakage as the RCA footer warned.
 
 ## Verification (user-observable)
 
