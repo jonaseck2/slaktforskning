@@ -37,6 +37,7 @@ import {
   checkMultipleBirthNames,
   checkPartialName,
   checkLikelyInlineBirthName,
+  checkEventDateOriginalNonDate,
 } from './checks-quality';
 import { checkOrphanedSource, checkSourceMissingTitle, checkOrphanedRepository } from './checks-source';
 import {
@@ -179,6 +180,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
 
     // G. Data Validation
     { name: 'checkInvalidDates',          fn: (db) => checkInvalidDates(db) },
+    { name: 'checkEventDateOriginalNonDate', fn: (db) => checkEventDateOriginalNonDate(db) },
     { name: 'checkUnrelatedPerson',       fn: (db) => checkUnrelatedPerson(db) },
     { name: 'checkMediaFileMissing',      global: true, fn: (db, dbDir) => checkMediaFileMissing(db, dbDir) },
     { name: 'checkOrphanedMedia',         fn: (db) => checkOrphanedMedia(db) },

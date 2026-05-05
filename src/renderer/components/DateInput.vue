@@ -78,6 +78,7 @@
       </template>
     </div>
     <div v-if="!simple" class="date-original-row">
+      <span class="date-original-label">{{ $t('events.dateOriginalLabel') }}</span>
       <input
         type="text"
         :value="dateOriginal"
@@ -86,6 +87,7 @@
         v-narrate="() => narrateFieldFocus($t('a11y.dateOriginalLabel'), 'text', dateOriginal, t)"
         @input="updateDateOriginal($event)"
       />
+      <p class="ep-field-hint date-original-help">{{ $t('events.dateOriginalHelp') }}</p>
     </div>
   </div>
 </template>
@@ -266,6 +268,16 @@ function updateDateOriginal(e: Event) {
   color: var(--text-muted);
   font-size: var(--font-sm);
 }
+.date-original-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.date-original-label {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
 .date-original-row input {
   width: 100%;
   padding: 6px 9px;
@@ -281,5 +293,11 @@ function updateDateOriginal(e: Event) {
   border-color: var(--accent);
   background: var(--surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.date-original-help {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
 }
 </style>

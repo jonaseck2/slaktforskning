@@ -357,6 +357,8 @@ export default {
     spouseNew: 'Lägg till ny person',
     endDateOptional: 'Slutdatum (valfritt)',
     endDateHint: 'Lämna tomt om händelsen pågick under en enda tidpunkt eller saknar känt slut.',
+    dateOriginalLabel: 'Originaltext (källans ordalydelse)',
+    dateOriginalHelp: "Skriv det exakta datumet som källan anger, t.ex. 'omkring 1845' eller 'midsommardagen 1900'. Lämna tomt om du bara har det tolkade datumet ovan.",
     alsoRecordNameChange: 'Registrera även namnändring för {name}',
     alsoRecordNameChangeHint: 'Skapar en separat namnpost. Datum hämtas från händelsedatumet.',
     notes: 'Anteckningar',
@@ -889,7 +891,9 @@ export default {
       DUPLICATE_MEDIA: '{count} mediafiler delar filväg "{fileRef}"',
       DUPLICATE_SOURCE: '{count} källor matchar {label}',
       LIKELY_INLINE_BIRTH_NAME: 'Namnet verkar innehålla ett födelsenamn i parentes — överväg att dela upp i separata namnposter.',
+      EVENT_DATE_ORIGINAL_NON_DATE: 'Originaltext på datumfält saknar siffra (innehåller fri text): "{value}"',
     },
+    eventDateOriginalNonDate: 'Originaltext på datumfält saknar siffra (innehåller fri text)',
   },
   duplicates: {
     title: 'Möjliga dubbletter',

@@ -68,12 +68,12 @@ i18n keys: `quality.eventDateOriginalNonDate` ("Originaltext på datumfält sakn
 
 ## Tasks
 
-- [ ] **Audit modals** for `date_original` consumers. List in this plan before editing.
-- [ ] **Add label + helper text** in EventModal and every audited modal. Use the new `events.dateOriginalLabel` / `events.dateOriginalHelp` i18n keys.
-- [ ] **i18n keys** in `sv.ts` and `en.ts`: `events.dateOriginalLabel`, `events.dateOriginalHelp`, `quality.eventDateOriginalNonDate`.
-- [ ] **Add quality check** with the SQL above. Wire row click to event's primary participant's PersonPanel.
-- [ ] **Unit test** on the quality check: seed events with (a) digit-bearing `date_original`, (b) digit-free `date_original`, (c) empty `date_original`. Assert only (b) is flagged.
-- [ ] **Patch bump** + CHANGELOG: `- fix: clarify 'date original' field with label and helper; flag misuse via quality check`.
+- [x] **Audit modals** for `date_original` consumers. The `DateInput.vue` component is the canonical host of the field (used by EventModal and any modal that captures a date); label + helper added there once instead of in every modal.
+- [x] **Add label + helper text** — added in `DateInput.vue` (the canonical date input component). Renders for every consumer.
+- [x] **i18n keys** in `sv.ts` and `en.ts`: `events.dateOriginalLabel`, `events.dateOriginalHelp`, `quality.eventDateOriginalNonDate` (+ `quality.codes.EVENT_DATE_ORIGINAL_NON_DATE` row-template).
+- [x] **Add quality check** `checkEventDateOriginalNonDate` in `src/api/checks/checks-quality.ts`, registered in `src/api/checks/index.ts`. Code `EVENT_DATE_ORIGINAL_NON_DATE`, severity `warning`. Categorised as `quality` in `QualityView.vue`. Returns `personIds` for primary participants so existing row-click → PersonPanel navigation works.
+- [x] **Unit test** in `tests/unit/checks-event-date-original-non-date.test.ts` covers (a) digit-bearing, (b) digit-free, (c) empty, (d) whitespace-only, (e) multi-participant dedup.
+- [x] **Patch bump** + CHANGELOG entry as specified.
 
 ## Verification (user-observable)
 

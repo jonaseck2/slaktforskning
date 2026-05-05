@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix: clarify "date original" field with label and helper; flag misuse via quality check
+
 ## 0.215.2
 
 - fix(chart): multi-partner connector sits a quarter of the gap above the row, no longer overlapping the parent line

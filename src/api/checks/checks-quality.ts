@@ -270,6 +270,55 @@ export function checkLikelyInlineBirthName(db: Database): CheckResult[] {
   return results;
 }
 
+/**
+ * Flags events whose `date_original` is non-empty but contains no digit. The
+ * UI persists `date_original` as the verbatim authored date string (e.g.
+ * "kring midsommar 1900") and `listPersonsPage` ranks rows by COALESCE on
+ * date_original first — so a free-form non-date string like a street address
+ * accidentally typed into the field will sort before real dates and break
+ * the person list. This check surfaces existing misuse so the user can fix
+ * it; the matching label/help text in EventModal prevents new occurrences.
+ *
+ * PRIME DIRECTIVE: this check FLAGS, never TRANSFORMS. We do not auto-clear
+ * the value — the user authored it and the user must remove it.
+ */
+export function checkEventDateOriginalNonDate(db: Database): CheckResult[] {
+  // SQLite's GLOB '*[0-9]*' matches any character in the digit class — fast
+  // and index-free since we only filter non-empty rows. The trim guards
+  // against rows that are pure whitespace (treated the same as empty).
+  const rows = queryAll<{ event_id: string; person_id: string | null; date_original: string }>(db, `
+    SELECT e.id AS event_id, ep.person_id, e.date_original
+    FROM events e
+    LEFT JOIN event_participants ep
+      ON ep.event_id = e.id AND ep.role = 'primary'
+    WHERE e.date_original IS NOT NULL
+      AND TRIM(e.date_original) <> ''
+      AND e.date_original NOT GLOB '*[0-9]*'
+  `);
+  // De-dupe by event_id — an event with no primary participant still shows
+  // up once (person_id will be null), and an event with multiple primary
+  // participants would otherwise produce N rows.
+  const seen = new Map<string, { person_ids: string[]; date_original: string }>();
+  for (const r of rows) {
+    if (!seen.has(r.event_id)) {
+      seen.set(r.event_id, { person_ids: [], date_original: r.date_original });
+    }
+    if (r.person_id) seen.get(r.event_id)!.person_ids.push(r.person_id);
+  }
+  const results: CheckResult[] = [];
+  for (const [eventId, { person_ids, date_original }] of seen.entries()) {
+    results.push({
+      code: 'EVENT_DATE_ORIGINAL_NON_DATE',
+      severity: 'warning',
+      message: `Originaltext på datumfält saknar siffra: "${date_original}"`,
+      messageParams: { value: date_original },
+      personIds: person_ids,
+      eventIds: [eventId],
+    });
+  }
+  return results;
+}
+
 export function checkPartialName(db: Database): CheckResult[] {
   const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names

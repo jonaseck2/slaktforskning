@@ -357,6 +357,8 @@ export default {
     spouseNew: 'Add a new person',
     endDateOptional: 'End date (optional)',
     endDateHint: 'Leave blank if the event happened at a single point in time or has no known end.',
+    dateOriginalLabel: 'Original wording (as in the source)',
+    dateOriginalHelp: "Type the date exactly as the source records it, e.g. 'about 1845' or 'midsummer 1900'. Leave blank if you only have the parsed date above.",
     alsoRecordNameChange: 'Also record a name change for {name}',
     alsoRecordNameChangeHint: 'Creates a separate name record. Date comes from the event date.',
     notes: 'Notes',
@@ -889,7 +891,9 @@ export default {
       DUPLICATE_MEDIA: '{count} media files share file path "{fileRef}"',
       DUPLICATE_SOURCE: '{count} sources match {label}',
       LIKELY_INLINE_BIRTH_NAME: 'This name appears to contain an inline birth name — consider splitting into separate name records.',
+      EVENT_DATE_ORIGINAL_NON_DATE: 'Date original field has no digit (contains free text): "{value}"',
     },
+    eventDateOriginalNonDate: 'Date original field has no digit (contains free text)',
   },
   duplicates: {
     title: 'Potential Duplicates',
