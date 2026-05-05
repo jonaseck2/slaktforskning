@@ -7,6 +7,7 @@
 - fix: 'Förnamn' sort uses tilltalsnamn (preferred name) when marked
 - fix: list table headers stay visible while scrolling
 - fix: section headers in side panels are visually distinct (color band)
+- fix: chart controls (zoom, generation count, fan arc, color mode) now show tooltips on hover
 
 ## 0.215.2
 

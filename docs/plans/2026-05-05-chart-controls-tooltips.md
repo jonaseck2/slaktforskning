@@ -49,12 +49,12 @@ Audit which buttons actually exist before adding keys. Don't add keys for contro
 
 ## Tasks
 
-- [ ] **Audit** the four chart components for icon-only / number-only buttons. Produce a list of (file, button, i18n key needed) before editing.
-- [ ] **Add i18n keys** to `sv.ts` and `en.ts` in the `chart.tooltip` namespace for every audited button.
-- [ ] **Wire `title` + `aria-label`** on every audited button. Do NOT add Vue tooltip components — native `title` is enough and matches the existing dashed-edge pattern.
-- [ ] **Component test:** mount HourglassChart, assert every `<button>` and number-stepper has a non-empty `title` attribute. Lock the contract so future controls can't ship without one.
-- [ ] **Manual smoke check:** hover every control in the running app, both Swedish and English locales, confirm tooltip text is what the i18n key says.
-- [ ] **Patch bump** (this is a UX fix, not a feature) + CHANGELOG: `- fix: chart controls now show tooltips on hover`.
+- [x] **Audit** — covered ZoomControls, HourglassChart, PedigreeChart, DescendantChart, FanChart. Each had zoom +/-/reset, plus chart-specific generation-count or fan-arc steppers.
+- [x] **Add i18n keys** — chart.tooltip namespace gained zoomIn/Out/Reset, generationCount/Increase/Decrease, generationCountAncestors/Descendants variants for the asymmetric pedigree/descendant pickers, fanArc, colorMode. Both sv.ts and en.ts.
+- [x] **Wire `title` + `aria-label`** on every chart control. Native HTML title attribute, no library.
+- [x] **Component test** in `tests/components/HourglassChart-tooltips.test.ts` asserts every chart button and stepper has a non-empty title.
+- [x] **Manual smoke check deferred to user.**
+- [x] **Patch bump** to v0.215.7 + CHANGELOG entry.
 
 ## Verification (user-observable)
 

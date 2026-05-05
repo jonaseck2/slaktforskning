@@ -24,21 +24,23 @@
     </div>
 
     <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
-      <span class="zoom-extra-label">{{ $t('visualization.fan.arc') }}</span>
+      <span class="zoom-extra-label" :title="$t('chart.tooltip.fanArc')" :aria-label="$t('chart.tooltip.fanArc')">{{ $t('visualization.fan.arc') }}</span>
       <button
         v-for="span in arcOptions"
         :key="span"
         class="zoom-extra-btn"
         :class="{ active: selectedArc === span }"
+        :title="$t('chart.tooltip.fanArc')"
+        :aria-label="$t('chart.tooltip.fanArc')"
         @click="selectedArc = span"
       >{{ span }}°</button>
       <span class="zoom-extra-sep">|</span>
-      <span class="zoom-extra-label">{{ $t('visualization.fan.generations') }}</span>
-      <button class="zoom-extra-btn" @click="decrGens" :disabled="selectedGens <= 1">−</button>
-      <span class="zoom-extra-value">{{ selectedGens }}</span>
-      <button class="zoom-extra-btn" @click="incrGens" :disabled="selectedGens >= 8">+</button>
+      <span class="zoom-extra-label" :title="$t('chart.tooltip.generationCountAncestors')" :aria-label="$t('chart.tooltip.generationCountAncestors')">{{ $t('visualization.fan.generations') }}</span>
+      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationDecreaseAncestors')" :aria-label="$t('chart.tooltip.generationDecreaseAncestors')" @click="decrGens" :disabled="selectedGens <= 1">−</button>
+      <span class="zoom-extra-value" :title="$t('chart.tooltip.generationCountAncestors')" :aria-label="$t('chart.tooltip.generationCountAncestors')">{{ selectedGens }}</span>
+      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationIncreaseAncestors')" :aria-label="$t('chart.tooltip.generationIncreaseAncestors')" @click="incrGens" :disabled="selectedGens >= 8">+</button>
       <span class="zoom-extra-sep">|</span>
-      <button class="zoom-extra-btn" :title="$t('chart.export.colorMode')" @click="cycleColorMode">
+      <button class="zoom-extra-btn" :title="$t('chart.tooltip.colorMode')" :aria-label="$t('chart.tooltip.colorMode')" @click="cycleColorMode">
         {{ colorModeLabel }}
       </button>
     </ZoomControls>

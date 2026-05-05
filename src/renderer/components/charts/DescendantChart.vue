@@ -192,10 +192,10 @@
       </svg>
     </div>
     <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
-      <span class="zoom-extra-label">{{ $t('reports.generations') }}</span>
-      <button class="zoom-extra-btn" @click="decrGens" :disabled="genTarget <= 1">−</button>
-      <span class="zoom-extra-value">{{ genTarget }}</span>
-      <button class="zoom-extra-btn" @click="incrGens">+</button>
+      <span class="zoom-extra-label" :title="$t('chart.tooltip.generationCountDescendants')" :aria-label="$t('chart.tooltip.generationCountDescendants')">{{ $t('reports.generations') }}</span>
+      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationDecreaseDescendants')" :aria-label="$t('chart.tooltip.generationDecreaseDescendants')" @click="decrGens" :disabled="genTarget <= 1">−</button>
+      <span class="zoom-extra-value" :title="$t('chart.tooltip.generationCountDescendants')" :aria-label="$t('chart.tooltip.generationCountDescendants')">{{ genTarget }}</span>
+      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationIncreaseDescendants')" :aria-label="$t('chart.tooltip.generationIncreaseDescendants')" @click="incrGens">+</button>
     </ZoomControls>
 
     <!-- Add related person modal -->

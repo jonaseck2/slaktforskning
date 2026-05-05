@@ -2,11 +2,11 @@
   <div class="zoom-controls-bar" :class="{ 'is-overlay': overlay, 'is-inline': inline }">
     <slot></slot>
     <span v-if="$slots.default" class="zoom-sep">|</span>
-    <button class="zoom-btn" :disabled="zoom <= 0.2" :aria-label="$t('a11y.zoomOut')" @click="$emit('zoomOut')">−</button>
+    <button class="zoom-btn" :disabled="zoom <= 0.2" :title="$t('chart.tooltip.zoomOut')" :aria-label="$t('chart.tooltip.zoomOut')" @click="$emit('zoomOut')">−</button>
     <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
-    <button class="zoom-btn" :aria-label="$t('a11y.zoomIn')" @click="$emit('zoomIn')">+</button>
-    <button v-if="showFit" class="zoom-btn" :aria-label="$t('a11y.resetZoom')" @click="$emit('reset')">{{ $t('reports.zoomFit') }}</button>
-    <button v-else class="zoom-btn" :aria-label="$t('a11y.resetZoom')" @click="$emit('reset')">↺</button>
+    <button class="zoom-btn" :title="$t('chart.tooltip.zoomIn')" :aria-label="$t('chart.tooltip.zoomIn')" @click="$emit('zoomIn')">+</button>
+    <button v-if="showFit" class="zoom-btn" :title="$t('chart.tooltip.zoomReset')" :aria-label="$t('chart.tooltip.zoomReset')" @click="$emit('reset')">{{ $t('reports.zoomFit') }}</button>
+    <button v-else class="zoom-btn" :title="$t('chart.tooltip.zoomReset')" :aria-label="$t('chart.tooltip.zoomReset')" @click="$emit('reset')">↺</button>
   </div>
 </template>
 
