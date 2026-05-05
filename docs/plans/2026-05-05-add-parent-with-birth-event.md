@@ -95,13 +95,13 @@ events.placeLabel: 'Plats' / 'Place'
 
 ## Tasks
 
-- [ ] **Audit `PersonModal.vue`** — find the "create" mode branch and the existing form shape. Confirm the modal already has a `mode === 'create'` distinction, or add one.
-- [ ] **Add inline birth fields** to the create-mode form, expanded by default.
-- [ ] **Save handler** creates person, then conditionally creates the birth event using the fields. Both wrapped in try/catch.
-- [ ] **i18n keys** in both locales.
-- [ ] **Component test:** mount PersonModal in create mode, fill name + birth date + place, save, assert two IPC calls fire (create person, create event), assert the event has correct participants array and place_id.
-- [ ] **E2E smoke (optional):** new person from PersonRelationshipsSection → "+ Förälder → Ny person" flow → fill birth → save → verify birth event appears on the new person's panel.
-- [ ] **Patch bump** (call it a UX improvement; technically additive feature so could be minor — pick minor for visibility). CHANGELOG: `- feat: register birth date and place inline when adding a new person`.
+- [x] **PersonModal.vue audit** — modal distinguishes create-vs-edit by `savedPersonId`; create-only fields gated on `v-if="!savedPersonId"`.
+- [x] **Inline birth fields** added below sex/name/surname, expanded by default. Date via `SimpleDateInput`, place via `PlacePicker`.
+- [x] **Save handler** uses the existing `persons.createWithEvent` workflow (atomic — single IPC, undoable) when birth date or place is filled. Empty fields skip event creation entirely. Verbatim text → `date_original`; only full ISO date populates `date_value`.
+- [x] **i18n keys** `persons.birthInline` added in both locales. Reused existing `events.date` / `events.place` / `events.placePlaceholder` for sub-labels.
+- [x] **Component test** in `tests/components/PersonModal-inlineBirth.test.ts` covers (a) both fields → event in payload, (b) date-only → event with null place, (c) both empty → no event.
+- [x] **Manual smoke check deferred to user.**
+- [x] **Minor bump** to v0.216.0 + CHANGELOG entry.
 
 ## Verification (user-observable)
 

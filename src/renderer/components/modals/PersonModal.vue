@@ -128,6 +128,26 @@
             />
           </div>
         </div>
+
+        <!-- Inline birth event (create mode only — when no existing person yet).
+             User goal: register birth date/place in the same modal step instead
+             of having to open the new person and add a birth event manually.
+             Empty fields skip event creation entirely (no toast, no error). -->
+        <template v-if="!savedPersonId">
+          <div class="ep-field">
+            <span class="ep-field-label">{{ $t('persons.birthInline') }}</span>
+            <div class="ep-birth-grid">
+              <div class="ep-birth-cell">
+                <span class="ep-birth-sublabel">{{ $t('events.date') }}</span>
+                <SimpleDateInput v-model="birth.date" />
+              </div>
+              <div class="ep-birth-cell">
+                <span class="ep-birth-sublabel">{{ $t('events.place') }}</span>
+                <PlacePicker v-model="birth.placeId" :placeholder="$t('events.placePlaceholder')" />
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
 
     </template>
@@ -209,6 +229,8 @@ import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
 import PersonPicker from '../PersonPicker.vue';
+import PlacePicker from '../PlacePicker.vue';
+import SimpleDateInput from '../SimpleDateInput.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
 import { getParentChildRoleLabel } from '../../utils/relationshipLabels';
@@ -349,6 +371,15 @@ const form = reactive({
   subtype: defaultSubtype(),
 });
 
+// Inline birth event fields (create-mode only). The user's verbatim date string
+// goes into `date_original`; if it parses as a full ISO date we also fill
+// `date_value`. Per the Prime Directive, we never invent values the user didn't
+// type — empty fields skip event creation entirely.
+const birth = reactive<{ date: string; placeId: string | null }>({
+  date: '',
+  placeId: null,
+});
+
 const relatedPersonName = ref('');
 
 /**
@@ -461,12 +492,31 @@ async function handleSave() {
     } else {
       // Disabled-Save (canSave computed) prevents reaching this branch with
       // both name fields empty — no need for a post-save warning toast.
-      // Create new person (no embedded event — events are added separately)
+      // Create new person, optionally with an inline birth event in the same
+      // atomic workflow when the user filled in birth date or birth place.
       const payload: Record<string, unknown> = {
         given_name: form.given_name,
         surname: form.surname,
         sex: form.sex,
       };
+
+      const birthDate = birth.date.trim();
+      const birthPlaceId = birth.placeId;
+      if (birthDate || birthPlaceId) {
+        // Prime Directive: `date_original` is the user's verbatim text. Only
+        // populate `date_value` when the input is already a full ISO date —
+        // never invent a "best guess" that overwrites what the user wrote.
+        const isFullIso = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
+        payload.event = {
+          event_type: 'birth',
+          date_type: 'exact',
+          date_value: isFullIso ? birthDate : null,
+          date_original: birthDate,
+          place_id: birthPlaceId,
+          notes: '',
+          cause: null,
+        };
+      }
 
       const result = (await window.api.persons.createWithEvent(payload)) as { person: Person };
       person = result.person;
@@ -577,6 +627,20 @@ onMounted(async () => {
 .entry-mode-helper {
   margin: 0 0 var(--space-sm) 0;
   font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+.ep-birth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+.ep-birth-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.ep-birth-sublabel {
+  font-size: var(--font-xs);
   color: var(--text-muted);
 }
 </style>

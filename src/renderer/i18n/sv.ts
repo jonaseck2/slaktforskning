@@ -188,6 +188,7 @@ export default {
     newPerson: 'Ny person',
     titleFor: '{title} – {name}',
     missingNameWarning: 'Personen sparades utan förnamn och efternamn — du kan lägga till namn senare.',
+    birthInline: 'Födelse (valfritt)',
   },
   personDetail: {
     deceased: 'Avliden',

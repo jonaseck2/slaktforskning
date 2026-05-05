@@ -188,6 +188,7 @@ export default {
     newPerson: 'New Person',
     titleFor: '{title} for {name}',
     missingNameWarning: 'Person was saved with no given name or surname — you can add a name later.',
+    birthInline: 'Birth (optional)',
   },
   personDetail: {
     deceased: 'Deceased',
