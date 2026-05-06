@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- perf: hourglass tree at 7 generations loads noticeably faster — fewer DB round-trips per node
 - fix: place-tree picker icon and tooltip explain what the panel shows
 - fix: clarify "date original" field with label and helper; flag misuse via quality check
 - fix: per-row partner heading is singular ('Partner' not 'Partners')
