@@ -15,6 +15,7 @@
 - fix(chart): dedup focal partner against tree members so persons can no longer appear twice in the hourglass
 - fix: imported (Genney) and undo-restored persons get a display_id immediately, not at next app launch
 - chore: test suite is fully green (13 stale tests updated to match shipped behavior; no code regressions found)
+- feat: undo/redo buttons in the topbar with action-naming tooltips (e.g. "Ångra: Skapa person")
 
 ## 0.215.2
 

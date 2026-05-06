@@ -1777,6 +1777,7 @@ export default {
   },
   undo: {
     createPerson: 'Create person',
+    createPersonWithEvent: 'Create person with event',
     deletePerson: 'Delete person',
     updatePerson: 'Update person',
     addPersonName: 'Add name',
@@ -1798,6 +1799,13 @@ export default {
     deleteCitation: 'Delete citation',
     undone: 'Undone: {action}',
     redone: 'Redone: {action}',
+    toolbar: 'Undo and redo',
+    tooltipUndo: 'Undo last change',
+    tooltipUndoWithAction: 'Undo: {action}',
+    tooltipRedo: 'Redo last change',
+    tooltipRedoWithAction: 'Redo: {action}',
+    nothingToUndo: 'Nothing to undo',
+    nothingToRedo: 'Nothing to redo',
   },
   addPerson: {
     eventSection: 'Add event (optional)',

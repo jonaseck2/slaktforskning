@@ -1756,6 +1756,7 @@ export default {
   },
   undo: {
     createPerson: 'Skapa person',
+    createPersonWithEvent: 'Skapa person med händelse',
     deletePerson: 'Ta bort person',
     updatePerson: 'Ändra person',
     addPersonName: 'Lägg till namn',
@@ -1777,6 +1778,13 @@ export default {
     deleteCitation: 'Ta bort hänvisning',
     undone: 'Ångrat: {action}',
     redone: 'Omgjort: {action}',
+    toolbar: 'Ångra och gör om',
+    tooltipUndo: 'Ångra senaste ändringen',
+    tooltipUndoWithAction: 'Ångra: {action}',
+    tooltipRedo: 'Gör om senaste ändringen',
+    tooltipRedoWithAction: 'Gör om: {action}',
+    nothingToUndo: 'Inget att ångra',
+    nothingToRedo: 'Inget att göra om',
   },
   addPerson: {
     eventSection: 'Lägg till händelse (valfritt)',
