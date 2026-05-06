@@ -20,6 +20,7 @@
 - fix: typing in a place field after picking from the suggestion list edits the field instead of clearing it
 - fix: tall modal forms now scroll inside the modal so Save stays reachable
 - fix(schema): pre-v0.218 databases no longer crash on app launch with "no such column: display_id"
+- fix: relation row uses clearer role labels (full word, not "Fö"), hover tooltips on every affordance, and a trash icon for remove
 
 ## 0.215.2
 
