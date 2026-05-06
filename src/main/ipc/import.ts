@@ -1,11 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { dialog, BrowserWindow } from 'electron';
+import { dialog } from 'electron';
 import { exportGedcom } from '../../gedcom';
-import { importFromGenney, discoverTables, isDockerAvailable } from '../../import/genney/index';
+import { isDockerAvailable } from '../../import/genney/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
-import * as media from '../../api/media';
 import { consolidateMediaFolder } from '../../api/media_consolidate';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
@@ -97,49 +96,13 @@ export function registerImportHandlers(
     return { canceled: false, path: result.filePaths[0] };
   });
 
-  wrapHandler('import:genneyDiscover', async (opts) => {
-    const options = opts as { sourcePath: string; schema?: string } | undefined;
-    if (!options?.sourcePath) return { error: 'sourcePath is required' };
-    const win = BrowserWindow.getFocusedWindow();
-    const tables = await discoverTables(options.sourcePath, {
-      schema: options.schema,
-      onProgress: (msg) => {
-        if (win) win.webContents.send('import:genneyProgress', { message: msg });
-      },
-    });
-    return { tables };
-  });
-
-  wrapHandler('import:genneyRun', async (opts) => {
-    const options = opts as { sourcePath: string; schema?: string; mediaDir?: string } | undefined;
-    if (!options?.sourcePath) return { error: 'sourcePath is required' };
-    const win = BrowserWindow.getFocusedWindow();
-    // .backup archives bundle a media/ dir — copy it alongside the DB so file_refs survive
-    const isBackup = options.sourcePath.toLowerCase().endsWith('.backup');
-    const destMediaDir = isBackup
-      ? media.getMediaDir(getCurrentDatabasePath())
-      : undefined;
-    importInProgress = true;
-    notifyWorkerImportStart();
-    try {
-      const result = await importFromGenney(getDb(), options.sourcePath, {
-        schema: options.schema,
-        mediaDir: options.mediaDir,
-        destMediaDir,
-        onProgress: (msg) => {
-          if (win) win.webContents.send('import:genneyProgress', { message: msg });
-        },
-      });
-      if (result.gedcomFallbackPath) {
-        return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
-      }
-      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
-      return { imported: true, summary: result.summary };
-    } finally {
-      importInProgress = false;
-      notifyWorkerImportEnd();
-    }
-  });
+  // import:genneyRun and import:genneyDiscover are registered via the channel
+  // registry as worker channels (src/shared/channels/import.ts). The Derby
+  // extraction, transform, DB import, and media consolidation all run in the
+  // DB worker thread, so the Electron main thread stays responsive for the
+  // full duration of a multi-minute Genney import. Progress messages flow
+  // worker → main → all renderers via the broadcast primitive on topic
+  // 'import:genneyProgress'.
 
   // Holger / OurKind GEDCOM import
   wrapHandler('import:holgerSelectFile', async () => {

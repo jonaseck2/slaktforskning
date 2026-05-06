@@ -149,19 +149,26 @@ async function runDerbyImport(sourcePath: string, mediaDir?: string) {
   busy.value = true;
   genneyProgress.value = t('importExport.genneyDerbyRunning');
   try {
+    // import:genneyRun runs in the worker thread and returns the
+    // withImportLifecycle envelope: { success, report, error }.
+    // The inner report shape: { imported: true, summary } on success,
+    // { gedcomFallback: true, gedcomPath } when the .gcc archive is encrypted.
     const result = await window.api.import.genneyRun({ sourcePath, mediaDir }) as {
-      imported?: boolean;
-      gedcomFallback?: boolean;
-      summary?: ImportSummary;
+      success?: boolean;
       error?: string;
+      report?: {
+        imported?: boolean;
+        gedcomFallback?: boolean;
+        summary?: ImportSummary;
+      };
     };
-    if (result.error) {
-      setStatus(t('importExport.genneyDerbyError', { error: result.error }), 'error');
-    } else if (result.imported && result.summary) {
-      genneyReport.value = result.summary;
+    if (!result.success) {
+      setStatus(t('importExport.genneyDerbyError', { error: result.error ?? 'unknown' }), 'error');
+    } else if (result.report?.imported && result.report.summary) {
+      genneyReport.value = result.report.summary;
       showGenneyReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
-    } else if (result.gedcomFallback) {
+    } else if (result.report?.gedcomFallback) {
       setStatus(t('importExport.genneyDerbyFallback'), 'error');
     }
   } catch (err) {

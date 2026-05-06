@@ -98,7 +98,9 @@ describe('static API parity', () => {
       'gedcom:selectFile', 'gedcom:export',
       // genney + holger import
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
-      'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
+      'import:genneySelectMedia',
+      // import:genneyRun and import:genneyDiscover migrated to registry worker
+      // channels — covered by the registry-stub check above.
       'import:holgerSelectFile', 'import:holgerSelectMedia',
       // import:holgerRun is now a registry worker channel — checked by the
       // 'every registry channel has a stub in the static api' test above.

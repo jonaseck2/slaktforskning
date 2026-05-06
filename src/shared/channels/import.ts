@@ -4,6 +4,7 @@ import * as path from 'path';
 import { unzipSync } from 'fflate';
 import { defineChannel } from './registry';
 import { importFromHolger } from '../../import/holger/index';
+import { importFromGenney, discoverTables } from '../../import/genney/index';
 import { bulkCopyMediaFolder, consolidateMediaFolder } from '../../api/media_consolidate';
 import { getMediaDir } from '../../api/media';
 import { broadcast } from '../../main/db-worker-broadcast';
@@ -122,6 +123,70 @@ defineChannel({
         if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
       }
     });
+  },
+});
+
+/**
+ * Genney Derby / .gcc / .backup import. Runs in the worker thread so the main
+ * thread stays responsive for the full duration (Derby extraction can take
+ * minutes on first run while Docker pulls the image; large databases take
+ * tens of seconds to transform). Progress messages flow worker → main → all
+ * renderers via the broadcast primitive on topic 'import:genneyProgress'.
+ *
+ * The renderer reads `result.success` (envelope) and `result.report.{summary,
+ * gedcomFallback, gedcomPath}` (the inner payload).
+ */
+defineChannel({
+  name: 'import:genneyRun',
+  thread: 'worker',
+  mutating: true,
+  handler: async (db, opts: { sourcePath: string; schema?: string; mediaDir?: string }) => {
+    if (!opts?.sourcePath) {
+      return { success: false, error: 'sourcePath is required' } as const;
+    }
+    return withImportLifecycle('genney', async () => {
+      const dbPath = getWorkerDbPath();
+      // .backup archives bundle a media/ dir — copy it alongside the DB so
+      // file_refs survive tempDir cleanup.
+      const isBackup = opts.sourcePath.toLowerCase().endsWith('.backup');
+      const destMediaDir = isBackup ? getMediaDir(dbPath) : undefined;
+
+      const result = await importFromGenney(db, opts.sourcePath, {
+        schema: opts.schema,
+        mediaDir: opts.mediaDir,
+        destMediaDir,
+        onProgress: (msg: string) => broadcast('import:genneyProgress', { message: msg }),
+      });
+
+      if (result.gedcomFallbackPath) {
+        return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
+      }
+
+      await consolidateMediaFolder(db, dbPath);
+      return { imported: true, summary: result.summary };
+    });
+  },
+});
+
+/**
+ * Pre-import inspection of a Genney source (Derby dir / .gcc / .backup).
+ * Read-only — does not flip importInProgress and does not run through
+ * withImportLifecycle. Progress flows via broadcast so the renderer can
+ * display Docker-pull / extraction status.
+ */
+defineChannel({
+  name: 'import:genneyDiscover',
+  thread: 'worker',
+  mutating: false,
+  handler: async (_db, opts: { sourcePath: string; schema?: string }) => {
+    if (!opts?.sourcePath) {
+      return { error: 'sourcePath is required' } as const;
+    }
+    const tables = await discoverTables(opts.sourcePath, {
+      schema: opts.schema,
+      onProgress: (msg: string) => broadcast('import:genneyProgress', { message: msg }),
+    });
+    return { tables };
   },
 });
 
