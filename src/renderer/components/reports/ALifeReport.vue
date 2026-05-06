@@ -1,3 +1,9 @@
+<!--
+  Research tasks are intentionally excluded from print/export reports.
+  Tasks are internal todos (see plan 2026-05-06-research-tasks-link-persons),
+  not lineage facts the genealogist wants to share. Do NOT add a Tasks
+  section to this — or any — report component.
+-->
 <template>
   <div class="a-life-report">
     <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>

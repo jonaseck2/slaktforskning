@@ -154,10 +154,14 @@
 
       <!-- Forskning section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTasks.length" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
         <div v-if="sections.research" class="panel-section-body">
-          <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
-          <ResearchTasksTable v-else :tasks="researchTasks" :readonly="props.readonly" @updated="reload" @select="openTaskFromRow" />
+          <PersonResearchTasksSection
+            ref="researchSectionRef"
+            :person-id="personId!"
+            :readonly="props.readonly"
+            @select="openTaskForm"
+          />
         </div>
       </div>
 
@@ -262,7 +266,7 @@ import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
-import ResearchTasksTable from './ResearchTasksTable.vue';
+import PersonResearchTasksSection from './PersonResearchTasksSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
@@ -311,13 +315,10 @@ interface GroupData {
 interface ResearchTaskRow {
   id: string;
   task: string;
-  notes: string | null;
-  result: string | null;
-  status: string;
+  notes?: string | null;
+  result?: string | null;
+  status: 'open' | 'in_progress' | 'done' | 'stopped';
   priority: number;
-  person_id?: string | null;
-  person_given_name?: string | null;
-  person_surname?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -328,7 +329,6 @@ interface PersonPanelData {
   names: NameData[];
   birthEventDate: string | null;
   groups: GroupData[];
-  researchTasks: ResearchTaskRow[];
   eventCount: number;
   mapPointCount: number;
   relationshipCount: number;
@@ -408,7 +408,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
       names: [],
       birthEventDate: null,
       groups: [],
-      researchTasks: [],
       eventCount: 0,
       mapPointCount: 0,
       relationshipCount: 0,
@@ -419,11 +418,10 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
   const birth = events.find(e => e.event_type === 'birth');
   const death = events.find(e => e.event_type === 'death');
 
-  const [birthLine, deathLine, grps, tasks, rels, media] = await Promise.all([
+  const [birthLine, deathLine, grps, rels, media] = await Promise.all([
     buildDateLine(birth),
     buildDateLine(death),
     window.api.groups.forPerson(id) as Promise<GroupData[]>,
-    window.api.researchTasks.forPerson(id) as Promise<ResearchTaskRow[]>,
     window.api.relationships.getForPerson(id) as Promise<unknown[]>,
     window.api.media.forEntity('person', id) as Promise<unknown[]>,
   ]);
@@ -443,7 +441,6 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
     names: sortNamesBySortOrder(fetchedNames),
     birthEventDate: birthDateValue(events),
     groups: grps,
-    researchTasks: tasks,
     eventCount: events.length,
     mapPointCount: events.filter(e => e.place_id).length,
     relationshipCount: rels.length,
@@ -457,7 +454,6 @@ const primaryName = computed(() => panelData.value?.primaryName ?? null);
 const names = computed(() => panelData.value?.names ?? []);
 const birthEventDate = computed(() => panelData.value?.birthEventDate ?? null);
 const groups = computed(() => panelData.value?.groups ?? []);
-const researchTasks = computed(() => panelData.value?.researchTasks ?? []);
 const eventCount = computed(() => panelData.value?.eventCount ?? 0);
 const mapPointCount = computed(() => panelData.value?.mapPointCount ?? 0);
 const relationshipCount = computed(() => panelData.value?.relationshipCount ?? 0);
@@ -500,6 +496,8 @@ const eventListRef = ref<(ComponentPublicInstance & { openAddForm: (eventType?: 
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count: number; reload: () => void }) | null>(null);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
+const researchSectionRef = ref<InstanceType<typeof PersonResearchTasksSection> | null>(null);
+const researchTaskCount = computed(() => researchSectionRef.value?.count ?? 0);
 
 // ── Cross-section add actions ───────────────────────────────────────────────
 
@@ -671,12 +669,10 @@ function closeTaskForm() {
 
 async function onTaskSaved() {
   closeTaskForm();
+  // The new task linked to this person triggers `onDataChanged` which
+  // reloads PersonResearchTasksSection automatically. Reload PersonPanel's
+  // own data as well so other dependent caches stay fresh.
   await reload();
-}
-
-function openTaskFromRow(id: string) {
-  const task = researchTasks.value.find(t => t.id === id);
-  if (task) openTaskForm(task);
 }
 </script>
 

@@ -49,14 +49,14 @@ The PersonPanel's `+ Task` CTA must:
 
 ## Tasks
 
-- [ ] **API audit** — confirm `getResearchTasksForPerson` exists (or add it) returning `(task, link.created_at)` joined.
-- [ ] **`PersonResearchTasksSection.vue`** — new component using `useEntityData`. Empty state when no tasks. Row click navigates.
-- [ ] **`PersonPanel.vue`** — register new section between Notes and Quality. SectionHeader `+ Task` opens task modal with host person pre-linked.
-- [ ] **`ResearchTaskPanel.vue`** — "Linked persons" section with PersonPicker. Edit/save updates `task_links`.
-- [ ] **i18n keys** in both locales: `personPanel.researchTasks` ("Uppgifter" / "Tasks"), `taskPanel.linkedPersons`, `personPanel.researchTasks.empty`.
-- [ ] **Reports check** — grep `src/renderer/components/reports/` for any `research_tasks` access; confirm none. Document in plan as excluded by design.
-- [ ] **Component test** — mount `PersonResearchTasksSection` with a fixture person who has 2 linked tasks; assert both render with correct text + click-to-navigate.
-- [ ] **Component test** — mount PersonPanel; assert section renders. Click "+ Task" → assert modal opens with `default-person-ids` containing the host id.
+- [x] **API audit** — confirm `getResearchTasksForPerson` exists (or add it) returning `(task, link.created_at)` joined.
+- [x] **`PersonResearchTasksSection.vue`** — new component using `useEntityData`. Empty state when no tasks. Row click navigates.
+- [x] **`PersonPanel.vue`** — register new section between Notes and Quality. SectionHeader `+ Task` opens task modal with host person pre-linked.
+- [x] **`ResearchTaskPanel.vue`** — "Linked persons" section with PersonPicker. Edit/save updates `task_links`.
+- [x] **i18n keys** in both locales: `personPanel.researchTasks` ("Uppgifter" / "Tasks"), `taskPanel.linkedPersons`, `personPanel.researchTasks.empty`.
+- [x] **Reports check** — grep `src/renderer/components/reports/` for any `research_tasks` access; confirm none. Document in plan as excluded by design.
+- [x] **Component test** — mount `PersonResearchTasksSection` with a fixture person who has 2 linked tasks; assert both render with correct text + click-to-navigate.
+- [x] **Component test** — mount PersonPanel; assert section renders. Click "+ Task" → assert modal opens with `default-person-ids` containing the host id.
 - [ ] **Minor bump** + CHANGELOG: `- feat: research tasks can be linked to persons; visible from PersonPanel`.
 
 ## Verification (user-observable)
