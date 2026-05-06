@@ -11,14 +11,9 @@ import { callWorker } from './worker-client';
 // Heavy import work (archive, holger, genney, gedcom) now runs in the DB worker
 // thread via worker-channel handlers in src/shared/channels/import.ts. Each of
 // those uses `withImportLifecycle`, which flips the worker-local
-// importInProgress flag and broadcasts to all renderers. The legacy main-thread
-// flag below is kept only because some main-thread call sites still consult it
-// (left at default false; never written from this file anymore).
-let importInProgress = false;
-
-export function isImportInProgress(): boolean {
-  return importInProgress;
-}
+// importInProgress flag and broadcasts to all renderers. No main-thread
+// importInProgress mirror is kept here — the worker is the single source of
+// truth.
 
 export function registerImportHandlers(
   getDb: () => ReturnType<typeof import('../database').getDatabase>,
