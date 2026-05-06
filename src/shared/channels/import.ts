@@ -3,10 +3,8 @@ import { importFromHolger } from '../../import/holger/index';
 import { bulkCopyMediaFolder, consolidateMediaFolder } from '../../api/media_consolidate';
 import { getMediaDir } from '../../api/media';
 import { broadcast } from '../../main/db-worker-broadcast';
-import {
-  getWorkerDbPath,
-  setWorkerImportInProgress,
-} from '../../main/db-worker-state';
+import { getWorkerDbPath } from '../../main/db-worker-state';
+import { withImportLifecycle } from './_import-helpers';
 
 defineChannel({
   name: 'import:holgerRun',
@@ -17,16 +15,10 @@ defineChannel({
       return { success: false, error: 'sourcePath is required' } as const;
     }
 
-    const tHandler = Date.now();
-    console.log(
-      `[import-timing] holger handler start — sourcePath=${opts.sourcePath} mediaDir=${opts.mediaDir ?? '(none)'}`,
-    );
+    return withImportLifecycle('holger', async () => {
+      // Worker-local DB path (set on init / db-switch by db-worker.ts).
+      const dbPath = getWorkerDbPath();
 
-    // Worker-local DB path (set on init / db-switch by db-worker.ts).
-    const dbPath = getWorkerDbPath();
-
-    setWorkerImportInProgress(true);
-    try {
       // Bulk-copy the media folder up-front. fsp.cp recursive walks + copies
       // through libuv much faster than 12k sequential per-row copyFile calls.
       // After this, consolidateMediaFolder fast-paths every row that lands here.
@@ -60,16 +52,8 @@ defineChannel({
       console.log(
         `[import-timing] consolidateMediaFolder done — ${Date.now() - tConsol}ms — copied=${consolResult.copied} skipped=${consolResult.skipped} missing=${consolResult.missing}`,
       );
-      console.log(`[import-timing] holger handler total — ${Date.now() - tHandler}ms`);
 
-      return { success: true as const, report: result.report };
-    } catch (err) {
-      return {
-        success: false as const,
-        error: err instanceof Error ? err.message : String(err),
-      };
-    } finally {
-      setWorkerImportInProgress(false);
-    }
+      return result.report;
+    });
   },
 });
