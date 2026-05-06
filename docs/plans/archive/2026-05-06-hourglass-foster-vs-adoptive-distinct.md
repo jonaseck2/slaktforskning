@@ -69,7 +69,7 @@ The numerical values are deliberately distinct from the existing `stroke-dasharr
 - [x] **Component test (HourglassChart)** — same-subtype case: child with two foster parents who are coupled. Assert ONE merged-curved-path with `stroke-dasharray="8 4"` (existing behavior preserved).
 - [x] **Component test (HourglassChart)** — mixed adopted + foster (no biological parent): two separate paths, one with `"2 3"` and one with `"8 4"`.
 - [x] **Tooltip test** — adoptive `<title>` text matches `chart.tooltip.adoptiveRelationship`. Covered by the mixed-subtype component test (`expect(html).toContain('Adoptive relationship')`).
-- [ ] **Patch bump** + CHANGELOG — deferred to merge (per dispatcher instructions).
+- [x] **Patch bump** + CHANGELOG — deferred to merge (per dispatcher instructions).
 
 ## Verification (user-observable)
 
