@@ -540,20 +540,21 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v551: {
       kind: 'lossy',
       reason:
-        'event-level citations round-trip transcription via DATA/TEXT. Person-level, family-level and place-level ' +
-        'citation phases do NOT read DATA/TEXT back, so transcription is preserved only when the citation is ' +
-        'attached to an event.',
+        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person-level, ' +
+        'family-level and place-level citation phases do NOT read DATA/TEXT back, so transcription is ' +
+        'preserved only when the citation is attached to an event or person_name.',
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.event_id ? seeded : '';
+        return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
       },
     },
     v70: {
       kind: 'lossy',
       reason:
-        'event-level citations round-trip transcription via DATA/TEXT. Person/family/place citation phases ' +
-        'do not read DATA/TEXT back, so transcription is preserved only when the citation is attached to an event.',
+        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person/family/place ' +
+        'citation phases do not read DATA/TEXT back, so transcription is preserved only when the citation ' +
+        'is attached to an event or person_name.',
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.event_id ? seeded : '';
+        return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
       },
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
@@ -568,6 +569,13 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'citations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
   'citations.relationship_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'citations.place_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  // Name-level citations: emitted as SOUR sub-tag under the NAME line (allowed
+  // by both 5.5.1 and 7.0 NAME_PIECE structure). Importer reads SOUR under NAME
+  // and routes to person_name_id. The literal UUID is re-issued on import; the
+  // graph identity (citation attached to *the same* NAME row) is preserved
+  // because NAME emit order is stable and the importer creates names in the
+  // same order.
+  'citations.person_name_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
 
   // ----- groups -----
   'groups.id': {

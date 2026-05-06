@@ -74,6 +74,7 @@ const api = {
     forPerson: (personId: string) => ipcRenderer.invoke('citations:forPerson', personId),
     forRelationship: (relationshipId: string) => ipcRenderer.invoke('citations:forRelationship', relationshipId),
     forPlace: (placeId: string) => ipcRenderer.invoke('citations:forPlace', placeId),
+    forPersonName: (personNameId: string) => ipcRenderer.invoke('citations:forPersonName', personNameId),
     delete: mutating((id: string) => ipcRenderer.invoke('citations:delete', id)),
     update: mutating((id: string, updates: Record<string, unknown>) => ipcRenderer.invoke('citations:update', id, updates)),
   },

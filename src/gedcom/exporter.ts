@@ -8,6 +8,7 @@ import {
   getCitationsForPerson,
   getCitationsForRelationship,
   getCitationsForPlace,
+  getCitationsForPersonName,
 } from '../api/sources';
 import { getPlace, listPlaces } from '../api/places';
 import { getMediaForEntity } from '../api/media';
@@ -292,6 +293,16 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (n.name_qualifier) lines.push(`2 _NQUAL ${n.name_qualifier}`);
       if (n.date_from) lines.push(`2 _DATE_FROM ${n.date_from}`);
       if (n.date_to) lines.push(`2 _DATE_TO ${n.date_to}`);
+      // Name-level citations: emit as SOUR sub-tag under NAME (allowed by both
+      // 5.5.1 and 7.0 NAME_PIECE structure). Importer routes these back into
+      // citations.person_name_id.
+      if (includeSources) {
+        const nameCitations = getCitationsForPersonName(db, n.id);
+        for (const cit of nameCitations) {
+          const srcXr = sourceXref.get(cit.source_id);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+        }
+      }
     }
 
     lines.push(`1 SEX ${p.sex}`);

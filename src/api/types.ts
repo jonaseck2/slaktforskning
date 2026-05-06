@@ -119,6 +119,7 @@ export interface Citation {
   person_id: string | null;
   relationship_id: string | null;
   place_id: string | null;
+  person_name_id: string | null;
   created_at: string;
 }
 

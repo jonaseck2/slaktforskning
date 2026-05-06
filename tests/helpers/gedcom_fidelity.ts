@@ -487,13 +487,28 @@ function seedCitations(db: Database, col: string, value: unknown): string {
     );
     overrides.place_id = placeId;
     attached = true;
+  } else if (col === 'person_name_id') {
+    // Seed a person + a single name and attach the citation to that name.
+    // The name must be the only one so the importer's NAME-order based
+    // re-linking points at the same row after round-trip.
+    const personId = crypto.randomUUID();
+    runSql(db, 'INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)', [personId, 'U', '']);
+    const nameId = crypto.randomUUID();
+    runSql(
+      db,
+      `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order)
+       VALUES (?, ?, ?, ?, 'birth', 0)`,
+      [nameId, personId, 'Sentinel', 'Subject'],
+    );
+    overrides.person_name_id = nameId;
+    attached = true;
   }
   if (!attached) {
     // Default: attach to a person so the citation isn't an orphan.
     const personId = insertPersonWithDefaultName(db);
     overrides.person_id = personId;
   }
-  if (col !== 'id' && col !== 'source_id' && col !== 'created_at' && !['event_id','person_id','relationship_id','place_id'].includes(col)) {
+  if (col !== 'id' && col !== 'source_id' && col !== 'created_at' && !['event_id','person_id','relationship_id','place_id','person_name_id'].includes(col)) {
     overrides[col] = value;
   }
   const cols = ['id', ...Object.keys(overrides)];

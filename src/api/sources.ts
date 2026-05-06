@@ -104,6 +104,7 @@ export function createCitation(
     person_id?: string | null;
     relationship_id?: string | null;
     place_id?: string | null;
+    person_name_id?: string | null;
     page?: string;
     confidence?: number;
     transcription?: string;
@@ -113,12 +114,12 @@ export function createCitation(
 ): Citation {
   const id = uuid();
   runSql(db, `
-    INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id, data.source_id, data.page ?? '', data.date_accessed ?? '', data.confidence ?? 0,
     data.transcription ?? '', data.notes ?? '', data.event_id ?? null, data.person_id ?? null,
-    data.relationship_id ?? null, data.place_id ?? null
+    data.relationship_id ?? null, data.place_id ?? null, data.person_name_id ?? null
   ]);
   return getCitation(db, id)!;
 }
@@ -145,6 +146,10 @@ export function getCitationsForRelationship(db: Database, relationshipId: string
 
 export function getCitationsForPlace(db: Database, placeId: string): Citation[] {
   return getCitationsByOwner<Citation>(db, 'place', placeId);
+}
+
+export function getCitationsForPersonName(db: Database, personNameId: string): Citation[] {
+  return getCitationsByOwner<Citation>(db, 'person_name', personNameId);
 }
 
 export function deleteCitation(db: Database, id: string): boolean {

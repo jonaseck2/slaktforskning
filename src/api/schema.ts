@@ -119,6 +119,7 @@ export function initializeSchema(db: Database): void {
       notes TEXT NOT NULL DEFAULT '',
       event_id TEXT REFERENCES events(id) ON DELETE SET NULL,
       person_id TEXT REFERENCES persons(id) ON DELETE SET NULL,
+      person_name_id TEXT REFERENCES person_names(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_citations_source_id ON citations(source_id);
@@ -261,6 +262,13 @@ export function initializeSchema(db: Database): void {
   }
   if (!citationCols.includes('place_id')) {
     db.exec(`ALTER TABLE citations ADD COLUMN place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
+  }
+  // v0.219.0: citations can now attach to person_names rows so a name change
+  // (or any name record) can carry its own source. ON DELETE CASCADE matches
+  // the parent → name FK semantics: deleting the name takes its citations
+  // with it. See docs/plans/2026-05-06-name-citation-and-validity.md.
+  if (!citationCols.includes('person_name_id')) {
+    runSql(db, 'ALTER TABLE citations ADD COLUMN person_name_id TEXT REFERENCES person_names(id) ON DELETE CASCADE');
   }
 
   // v0.4.0 places column migrations — idempotent

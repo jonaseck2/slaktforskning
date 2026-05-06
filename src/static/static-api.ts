@@ -18,6 +18,7 @@ interface Indices {
   citationsByPlace: Map<string, Citation[]>;
   citationsByRelationship: Map<string, Citation[]>;
   citationsBySource: Map<string, Citation[]>;
+  citationsByPersonName: Map<string, Citation[]>;
   relationshipsByPerson: Map<string, Relationship[]>;
   mediaById: Map<string, Media>;
   mediaLinksByEntity: Map<string, (Media & { link_id: string; link_type: string | null; sort_order: number })[]>;
@@ -90,6 +91,7 @@ function buildIndices(s: Snapshot): Indices {
   const citationsByPlace = new Map<string, Citation[]>();
   const citationsByRelationship = new Map<string, Citation[]>();
   const citationsBySource = new Map<string, Citation[]>();
+  const citationsByPersonName = new Map<string, Citation[]>();
   for (const c of s.citations) {
     if (c.person_id) {
       const list = citationsByPerson.get(c.person_id) ?? [];
@@ -110,6 +112,11 @@ function buildIndices(s: Snapshot): Indices {
       const list = citationsByRelationship.get(c.relationship_id) ?? [];
       list.push(c);
       citationsByRelationship.set(c.relationship_id, list);
+    }
+    if (c.person_name_id) {
+      const list = citationsByPersonName.get(c.person_name_id) ?? [];
+      list.push(c);
+      citationsByPersonName.set(c.person_name_id, list);
     }
     const srcList = citationsBySource.get(c.source_id) ?? [];
     srcList.push(c);
@@ -178,7 +185,7 @@ function buildIndices(s: Snapshot): Indices {
   return {
     personById, namesByPerson, idsByPerson, placeById, eventById,
     eventsByPerson, eventsByRelationship, eventsByPlace,
-    sourceById, citationsByPerson, citationsByEvent, citationsByPlace, citationsByRelationship, citationsBySource,
+    sourceById, citationsByPerson, citationsByEvent, citationsByPlace, citationsByRelationship, citationsBySource, citationsByPersonName,
     relationshipsByPerson, mediaById, mediaLinksByEntity, mediaLinksByMedia, mediaLinkCounts,
     regionsByMedia, regionsByPerson, participantsByEvent, participantsByPerson, searchIndex,
   };
@@ -456,6 +463,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     forPerson: async (personId: string) => idx.citationsByPerson.get(personId) ?? [],
     forRelationship: async (relationshipId: string) => idx.citationsByRelationship.get(relationshipId) ?? [],
     forPlace: async (placeId: string) => idx.citationsByPlace.get(placeId) ?? [],
+    forPersonName: async (personNameId: string) => idx.citationsByPersonName.get(personNameId) ?? [],
     create: noop, update: noop, delete: noopFalse,
   };
 

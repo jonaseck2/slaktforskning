@@ -51,7 +51,7 @@ export function getLinkedEntities<T>(
   return queryAll<T>(db, sql, [entityType, entityId]);
 }
 
-export type CitationOwnerType = 'person' | 'place' | 'event' | 'relationship' | 'source';
+export type CitationOwnerType = 'person' | 'place' | 'event' | 'relationship' | 'source' | 'person_name';
 
 const CITATION_FK_COLUMN: Record<CitationOwnerType, string> = {
   person: 'person_id',
@@ -59,6 +59,7 @@ const CITATION_FK_COLUMN: Record<CitationOwnerType, string> = {
   event: 'event_id',
   relationship: 'relationship_id',
   source: 'source_id',
+  person_name: 'person_name_id',
 };
 
 /**

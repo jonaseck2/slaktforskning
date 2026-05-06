@@ -285,7 +285,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         if (fore) preferred_name = fore;
       }
 
-      addPersonName(ctx.db, person.id, {
+      const personName = addPersonName(ctx.db, person.id, {
         given_name: given,
         surname,
         name_prefix: prefix,
@@ -298,6 +298,29 @@ export function phaseIndividuals(ctx: ImportContext): void {
         date_from: getChild(nameNode, '_DATE_FROM')?.value ?? null,
         date_to: getChild(nameNode, '_DATE_TO')?.value ?? null,
       });
+
+      // Name-level citations: SOUR sub-tags under NAME (allowed by GEDCOM
+      // 5.5.1 and 7.0 NAME_PIECE structure). Counterpart of the exporter's
+      // emitCitationBlock under each NAME line.
+      for (const sour of getChildren(nameNode, 'SOUR')) {
+        const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
+        if (!srcId) continue;
+        const quay = parseInt(getChild(sour, 'QUAY')?.value ?? '2', 10);
+        const page = getChild(sour, 'PAGE')?.value ?? '';
+        const citNotes = getChild(sour, 'NOTE')?.value ?? '';
+        const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+        const dataNode = getChild(sour, 'DATA');
+        const transcription = dataNode ? (getChild(dataNode, 'TEXT')?.value ?? '') : '';
+        createCitation(ctx.db, {
+          source_id: srcId,
+          person_name_id: personName.id,
+          page,
+          confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
+          notes: citNotes || undefined,
+          transcription: transcription || undefined,
+          date_accessed: date_accessed || undefined,
+        });
+      }
     }
 
     // External identifiers: standard GEDCOM

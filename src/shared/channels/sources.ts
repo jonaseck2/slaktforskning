@@ -97,6 +97,12 @@ defineChannel({
 });
 
 defineChannel({
+  name: 'citations:forPersonName',
+  thread: 'worker',
+  handler: (db, personNameId: string) => sources.getCitationsForPersonName(db, personNameId),
+});
+
+defineChannel({
   name: 'citations:delete',
   thread: 'worker',
   mutating: true,

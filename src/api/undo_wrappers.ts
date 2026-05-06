@@ -500,8 +500,8 @@ export function deleteCitationUndo(
     label: 'undo.deleteCitation',
     undo: () => {
       runSql(db,
-        `INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [old.id, old.source_id, old.page, old.date_accessed, old.confidence, old.transcription, old.notes, old.event_id, old.person_id, old.relationship_id, old.place_id]
+        `INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [old.id, old.source_id, old.page, old.date_accessed, old.confidence, old.transcription, old.notes, old.event_id, old.person_id, old.relationship_id, old.place_id, old.person_name_id]
       );
     },
     redo: () => { sources.deleteCitation(db, id); },
