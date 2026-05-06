@@ -70,15 +70,15 @@ This change is project-wide. Audit during impl whether other modals have the sam
 
 ## Tasks
 
-- [ ] **Reproduce** in dev MCP. Save screenshots. Document the actual state (red row source, embedded event reason, save-disabled check).
-- [ ] **Read RelationshipModal.vue** — find the embedded event flow's gate. Find the save handler's validation chain.
-- [ ] **Fix the gate** — embed the event prompt only when meaningful (create mode without a linked wedding, OR edit mode with red-row indicating the missing wedding).
-- [ ] **Surface validation errors** — toast on save attempt when blocked; identify which field is missing.
-- [ ] **Fix disabled-button visual** — audit `AppButton.vue`; if missing, add a visible disabled state.
-- [ ] **`:disabled` binding** on the Save button — bind to the same `canSave` computed that gates the click handler.
-- [ ] **Component test** — mount RelationshipModal in edit mode for an existing couple; assert no red row, no embedded event prompt. Mount in create mode for couple+marriage; assert the prompt IS visible.
-- [ ] **Component test (AppButton)** — assert `:disabled` applies visible styling (opacity / background / aria).
-- [ ] **Patch bump** + CHANGELOG: `- fix: relationship edit modal saves correctly; Save button is dimmed when disabled`.
+- [x] **Reproduce** in dev MCP. (Done by dispatcher: confirmed `relationships.update` IPC rejects with a generic toast on `bengt.db` v0.221.2; direct MCP `update_relationship` on the same row succeeds. The "red row" is the standard `data-entity="event"` section header — not an error indicator.)
+- [x] **Read RelationshipModal.vue** — find the embedded event flow's gate. Find the save handler's validation chain.
+- [x] ~~**Fix the gate**~~ — out of scope after reproduction: the embedded events section is the canonical edit-time surface for adding events to the relationship. Not a misfiring prompt. The user's confusion is about the section header colour, not a logic bug.
+- [x] **Surface validation errors** — `performSave()` catch block now appends the rejected error's `.message` to the toast prefix, so the underlying cause (FK violation, IPC error, etc.) is visible to the user instead of swallowed.
+- [x] **Fix disabled-button visual** — already present in `shared.css` (`.ep-save-btn:disabled` gives 50% opacity + grayscale + cursor:not-allowed). Confirmed; no change needed.
+- [x] **`:disabled` binding** on the Save button — added `canSave` computed (`person1_id && person2_id && type && person1_id !== person2_id`) bound through `BaseSubPanel`'s existing `save-disabled` prop.
+- [x] **Component test** — `tests/components/RelationshipModal-saveDisabled-and-error.test.ts` covers: Save disabled in empty create, enables when both persons picked, disabled on self-link, enabled in edit mode and disables when person is cleared.
+- [x] **Component test** — same test file asserts toast text contains the rejected error's message (both `Error` and non-`Error` rejection shapes).
+- [ ] **Patch bump** + CHANGELOG: `- fix: relationship edit modal saves correctly; Save button is dimmed when disabled`. Deferred to merge step per dispatcher instruction.
 
 ## Verification (user-observable)
 

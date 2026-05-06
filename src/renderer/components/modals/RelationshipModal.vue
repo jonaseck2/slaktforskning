@@ -3,6 +3,7 @@
     entity-type="relationship"
     :title="displayTitle"
     :mode="mode"
+    :save-disabled="!canSave"
     @cancel="$emit('cancel')"
     @save="handleSave"
     @close="$emit('close')"
@@ -255,6 +256,19 @@ const person1Label = computed(() => {
 const person2Label = computed(() => {
   if (form.type === 'parent_child') return t('relationships.child');
   return t('relationships.person2');
+});
+
+// A relationship needs both persons + a type to save. Saving when person1_id
+// or person2_id is null falls through `performSave`'s early-return guard
+// silently — the user sees an active-looking Save button do nothing. Bind
+// this to BaseSubPanel's `save-disabled` so the button is visibly dimmed
+// (50% opacity + grayscale + cursor:not-allowed, see .ep-save-btn:disabled
+// in shared.css) when the form isn't ready, AND so the click handler is
+// no-op'd at the DOM level (the [disabled] attribute blocks the click event,
+// so handleSave never runs at all when canSave is false).
+const canSave = computed(() => {
+  return !!form.person1_id && !!form.person2_id && !!form.type
+    && form.person1_id !== form.person2_id;
 });
 
 function parentSubtypeOptionLabel(subtype: string): string {
@@ -526,8 +540,12 @@ async function performSave() {
     }
     emit('saved', rel);
   } catch (err) {
+    // Surface the underlying error message so the user (and beta tester
+    // reports) can see WHY save failed — a silent "Could not save" toast
+    // is the worst-case UX. The console.error stays for full stack trace.
     console.error('[RelationshipModal] save failed:', err);
-    toast.error(t('errors.saveFailed'));
+    const detail = (err instanceof Error && err.message) ? err.message : String(err ?? 'unknown');
+    toast.error(`${t('errors.saveFailed')}: ${detail}`);
   }
 }
 
