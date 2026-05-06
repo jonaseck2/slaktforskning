@@ -9,6 +9,7 @@
 - fix: section headers in side panels are visually distinct (color band)
 - fix: chart controls (zoom, generation count, fan arc, color mode) now show tooltips on hover
 - feat: register birth date and place inline when adding a new person
+- fix: 'About OurLegacy' is reachable from the macOS app menu and from Settings
 
 ## 0.215.2
 

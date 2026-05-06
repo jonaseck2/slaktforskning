@@ -1811,6 +1811,7 @@ export default {
   },
   about: {
     title: 'About OurLegacy',
+    openLink: 'About OurLegacy',
     version: 'Version {version}',
     description: 'A local-first genealogy app. All your data stays on your computer.',
     openSource: 'Open source (MIT licence).',

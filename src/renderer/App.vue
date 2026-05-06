@@ -313,6 +313,12 @@ declare const window: Window & {
 if (typeof window !== 'undefined' && window.api?.app?.onOpenAbout) {
   window.api.app.onOpenAbout(() => { aboutVisible.value = true; });
 }
+// In-renderer entry points (e.g. SettingsView's About link) dispatch a
+// CustomEvent on the window so we open the same modal without round-
+// tripping through the main process.
+if (typeof window !== 'undefined') {
+  window.addEventListener('app:openAbout', () => { aboutVisible.value = true; });
+}
 
 // Nav orientation: vertical (left sidebar) or horizontal (top-bar with section
 // dropdowns). Persisted in localStorage; UI preference, not db_settings.

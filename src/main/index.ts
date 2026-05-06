@@ -82,7 +82,35 @@ function createWindow(): BrowserWindow {
 }
 
 function buildMenu(): void {
+  // macOS convention: the application's "About …" entry lives in the app
+  // menu (the first submenu), not in Help. Wire it to the same renderer
+  // signal as the cross-platform Help → About entry below so both paths
+  // open the same AboutModal.
+  const macAppMenu: Electron.MenuItemConstructorOptions | null = process.platform === 'darwin'
+    ? {
+        label: app.name,
+        submenu: [
+          {
+            label: 'About OurLegacy',
+            click: () => {
+              const win = activeWindow ?? BrowserWindow.getAllWindows()[0];
+              if (win) win.webContents.send('app:openAbout');
+            },
+          },
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' },
+        ],
+      }
+    : null;
+
   const template: Electron.MenuItemConstructorOptions[] = [
+    ...(macAppMenu ? [macAppMenu] : []),
     {
       label: 'File',
       submenu: [

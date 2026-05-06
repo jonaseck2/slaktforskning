@@ -1790,6 +1790,7 @@ export default {
   },
   about: {
     title: 'Om OurLegacy',
+    openLink: 'Om OurLegacy',
     version: 'Version {version}',
     description: 'Ett släktforskningsprogram som körs lokalt på din dator. All data ligger kvar hos dig.',
     openSource: 'Öppen källkod (MIT-licens).',

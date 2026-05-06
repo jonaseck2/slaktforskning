@@ -12,6 +12,12 @@
       <LinkRulesView v-else-if="activeTab === 'link-rules'" />
       <GazetteersView v-else-if="activeTab === 'gazetteers'" />
     </div>
+
+    <div class="settings-about">
+      <button type="button" class="about-link" @click="openAbout">
+        {{ $t('about.openLink') }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -34,10 +40,36 @@ const tabOptions = computed(() => [
   { value: 'link-rules', label: t('settings.tabs.linkRules') },
   { value: 'gazetteers', label: t('settings.tabs.gazetteers') },
 ]);
+
+// AboutModal listens to the same `app:openAbout` IPC channel that the
+// native Help / app menus use, so this entry point reuses the existing
+// modal without forking it.
+function openAbout() {
+  window.dispatchEvent(new CustomEvent('app:openAbout'));
+}
 </script>
 
 <style scoped>
 .settings-content {
   margin-top: 16px;
+}
+.settings-about {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--surface-border-subtle);
+  text-align: center;
+}
+.about-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+.about-link:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 </style>
