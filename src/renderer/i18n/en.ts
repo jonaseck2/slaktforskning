@@ -474,6 +474,7 @@ export default {
     wedding: 'Wedding',
     adoption: 'Adoption',
     foster_placement: 'Foster Placement',
+    gender_transition: 'Gender transition',
     travel: 'Travel',
     title: 'Title',
     religion: 'Religion',

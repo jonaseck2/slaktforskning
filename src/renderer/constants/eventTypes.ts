@@ -7,6 +7,7 @@ export const EVENT_TYPE_VALUES = [
   'emigration', 'naturalization', 'occupation', 'residence', 'education',
   'graduation', 'military', 'retirement', 'will', 'probate', 'mention',
   'engagement', 'wedding', 'adoption', 'foster_placement',
+  'gender_transition',
   'travel',
   // GEDCOM-X fact-shaped event types — line value lives in events.value.
   'title', 'religion', 'description', 'fact',

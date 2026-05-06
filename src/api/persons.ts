@@ -1,8 +1,35 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
-import type { Person, PersonName, PersonIdentifier } from './types';
+import type { Person, PersonName, PersonIdentifier, GenealogyEvent } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 import { livingSqlExpr } from './personLiving';
+
+/**
+ * Thrown by `updatePerson` when a sex flip is requested on a person who has
+ * one or more active relationships and the caller has not declared whether
+ * the change is a typo correction or a genuine gender transition.
+ *
+ * The UI catches this error and routes the user through the
+ * `GenderTransitionConfirmModal` (Phase 2). The MCP tool wrapper adds the
+ * confirmation arguments in Phase 3.
+ *
+ * Carries `personId` and `activeRelationshipIds` so the consumer can render
+ * a per-relationship review without an extra DB round-trip.
+ */
+export class SexChangeRequiresConfirmationError extends Error {
+  readonly personId: string;
+  readonly activeRelationshipIds: string[];
+  constructor(personId: string, activeRelationshipIds: string[]) {
+    super(
+      `Sex change on person ${personId} requires explicit confirmation: ` +
+      `person has ${activeRelationshipIds.length} active relationship(s). ` +
+      `Pass opts.confirmCorrection=true (typo) or opts.confirmGenderTransition (transition event).`
+    );
+    this.name = 'SexChangeRequiresConfirmationError';
+    this.personId = personId;
+    this.activeRelationshipIds = activeRelationshipIds;
+  }
+}
 
 /**
  * SQL fragment returning the id of the *displayed* name for a person.
@@ -151,11 +178,133 @@ export function listPersons(db: Database): (Person & { given_name: string; surna
   return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
+/**
+ * Optional caller-supplied details for a `gender_transition` event created
+ * atomically with a sex flip. Mirrors the relevant subset of `createEvent`
+ * — `event_type` is fixed to `'gender_transition'` and `relationship_id`
+ * cannot be set (a person-only fact).
+ */
+export type GenderTransitionEventDetails = {
+  date: string;
+  date_type?: GenealogyEvent['date_type'];
+  date_original?: string;
+  place_id?: string | null;
+  notes?: string;
+};
+
+/**
+ * Options for `updatePerson` that opt out of (or into) the sex-change guard.
+ *
+ * - `confirmCorrection: true` — caller declares the sex change is fixing a
+ *   typo. No event is created; sex flips silently.
+ * - `confirmGenderTransition: { date, ... }` — caller declares the sex
+ *   change records a real-life transition. A `gender_transition` event is
+ *   created AND the sex flips, atomically in one transaction.
+ *
+ * If neither is set and the change targets `sex` on a person with active
+ * relationships, `updatePerson` throws `SexChangeRequiresConfirmationError`.
+ */
+export type UpdatePersonOptions = {
+  confirmCorrection?: boolean;
+  confirmGenderTransition?: GenderTransitionEventDetails;
+};
+
+/**
+ * Returns the IDs of all relationships that involve `personId` as either
+ * `person1_id` or `person2_id`. Used by the sex-change guard to decide
+ * whether silent flips are safe (zero relationships) or need confirmation.
+ */
+function getActiveRelationshipIdsForPerson(db: Database, personId: string): string[] {
+  return queryAll<{ id: string }>(
+    db,
+    `SELECT id FROM relationships WHERE person1_id = ? OR person2_id = ?`,
+    [personId, personId]
+  ).map(r => r.id);
+}
+
+/**
+ * Update a person's mutable fields (`sex`, `notes`).
+ *
+ * **Sex-change guard (plan 2026-05-06-sex-change-guard, Phase 1).** When
+ * `data.sex` is set AND differs from the stored value AND the person has at
+ * least one active relationship, the caller must opt into one of two paths:
+ *
+ *   1. `opts.confirmCorrection: true` — typo correction, sex flips silently,
+ *      no event created.
+ *   2. `opts.confirmGenderTransition: { date, ... }` — real-life transition;
+ *      a `gender_transition` event is created AND the sex flips, in a single
+ *      transaction.
+ *
+ * If neither flag is set under those conditions, the function throws
+ * `SexChangeRequiresConfirmationError` carrying the active relationship IDs
+ * so the UI / MCP wrapper can render the appropriate confirmation flow.
+ *
+ * Persons with zero active relationships flip silently — no friction
+ * (locked decision D1 in the plan).
+ *
+ * Per the Prime Directive, the resolver of "what sex was this person at
+ * date X" lives at render time (`resolveParentSexAt`). This function only
+ * persists what the user authored: their current sex AND, optionally, an
+ * authored transition event marking when the change happened.
+ */
 export function updatePerson(
   db: Database,
   id: string,
-  data: Partial<Pick<Person, 'sex' | 'notes'>>
+  data: Partial<Pick<Person, 'sex' | 'notes'>>,
+  opts?: UpdatePersonOptions,
 ): Person | null {
+  // Sex-change guard: only fires when the caller actually requests a sex
+  // change AND it would change the stored value.
+  if (data.sex !== undefined) {
+    const existing = getPerson(db, id);
+    if (existing && existing.sex !== data.sex) {
+      const relIds = getActiveRelationshipIdsForPerson(db, id);
+      const hasRelationships = relIds.length > 0;
+
+      if (hasRelationships) {
+        if (opts?.confirmGenderTransition) {
+          // Atomic: create the transition event AND flip the sex.
+          const ev = opts.confirmGenderTransition;
+          runSql(db, 'BEGIN IMMEDIATE');
+          try {
+            const eventId = uuid();
+            runSql(db, `
+              INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, value, notes)
+              VALUES (?, 'gender_transition', NULL, ?, ?, NULL, ?, ?, NULL, NULL, ?)
+            `, [
+              eventId,
+              ev.date_type ?? 'exact',
+              ev.date,
+              ev.date_original ?? '',
+              ev.place_id ?? null,
+              ev.notes ?? '',
+            ]);
+            const participantId = uuid();
+            runSql(db, `
+              INSERT INTO event_participants (id, event_id, person_id, role)
+              VALUES (?, ?, ?, 'primary')
+            `, [participantId, eventId, id]);
+            runSql(db, `
+              UPDATE persons SET sex = ?, updated_at = datetime('now')
+              ${data.notes !== undefined ? ', notes = ?' : ''}
+              WHERE id = ?
+            `, data.notes !== undefined ? [data.sex, data.notes, id] : [data.sex, id]);
+            runSql(db, 'COMMIT');
+          } catch (err) {
+            try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+            throw err;
+          }
+          return getPerson(db, id);
+        }
+        if (!opts?.confirmCorrection) {
+          throw new SexChangeRequiresConfirmationError(id, relIds);
+        }
+        // confirmCorrection === true → fall through to plain UPDATE below.
+      }
+      // Zero active relationships → fall through; silent flip allowed.
+    }
+  }
+
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.sex !== undefined) { fields.push('sex = ?'); values.push(data.sex); }
@@ -165,6 +314,36 @@ export function updatePerson(
   values.push(id);
   runSql(db, `UPDATE persons SET ${fields.join(', ')} WHERE id = ?`, values);
   return getPerson(db, id);
+}
+
+/**
+ * Convenience wrapper for the gender-transition path. Equivalent to:
+ *   updatePerson(db, id, { sex }, { confirmGenderTransition: eventDetails })
+ * but returns both the updated person and the created event for callers
+ * (Phase 2 modals, Phase 3 MCP) that need both ids without re-querying.
+ */
+export function updatePersonWithGenderTransitionWorkflow(
+  db: Database,
+  id: string,
+  args: { sex: Person['sex']; eventDetails: GenderTransitionEventDetails },
+): { person: Person | null; event: GenealogyEvent | null } {
+  const person = updatePerson(
+    db,
+    id,
+    { sex: args.sex },
+    { confirmGenderTransition: args.eventDetails },
+  );
+  // The most recently inserted gender_transition event for this person —
+  // we just created it inside the same transaction, so it's the newest.
+  const event = queryOne<GenealogyEvent>(db, `
+    SELECT e.* FROM events e
+    JOIN event_participants ep ON ep.event_id = e.id
+    WHERE ep.person_id = ?
+      AND e.event_type = 'gender_transition'
+    ORDER BY e.created_at DESC, e.id DESC
+    LIMIT 1
+  `, [id]) ?? null;
+  return { person, event };
 }
 
 export function deletePerson(db: Database, id: string): boolean {
