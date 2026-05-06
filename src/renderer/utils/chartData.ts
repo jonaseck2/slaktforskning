@@ -633,11 +633,18 @@ export async function fetchHourglassTreePerson(
     .map(r => r.person2_id)
     .filter((id): id is string => id !== null);
 
-  // Focal spouses
+  // Focal spouses. Dedup against `treePersonIds` so a partner who already
+  // appears elsewhere in the tree (e.g. as a sibling-in-law's partner, or
+  // as a niece picked up via descendant collection) doesn't get rendered
+  // twice. Add the kept ids to `treePersonIds` so subsequent fetches in
+  // this build (children's coParentId resolution, sibling spouses) don't
+  // re-introduce them. Tree-walk order: ancestors → descendants → siblings
+  // → focal spouses; the first occurrence wins.
   const spouseIds = focalRels
     .filter(r => r.type === 'couple')
     .map(r => (r.person1_id === focalId ? r.person2_id : r.person1_id))
-    .filter((id): id is string => id !== null && id !== focalId);
+    .filter((id): id is string => id !== null && id !== focalId && !treePersonIds.has(id));
+  for (const sid of spouseIds) treePersonIds.add(sid);
   const spouseIdSet = new Set(spouseIds);
 
   const spouses = await Promise.all(spouseIds.map(async (id) => ({

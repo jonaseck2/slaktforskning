@@ -12,6 +12,7 @@
 - fix: 'About OurLegacy' is reachable from the macOS app menu and from Settings
 - feat: side panels show when an entity was registered and (where tracked) last changed
 - feat: each person has a stable, sortable display id, visible in the list and the panel header
+- fix(chart): dedup focal partner against tree members so persons can no longer appear twice in the hourglass
 
 ## 0.215.2
 
