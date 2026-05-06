@@ -2,8 +2,9 @@
 
 **Date:** 2026-05-06
 **Branch strategy:** worktree (touches chart-layout connectors + render path; needs dev-MCP reproduction)
-**Source:** Beta tester reports 66 + 67 — symptoms B.2 and B.3 (carried over from `2026-05-05-hourglass-focus-stability.md`)
+**Source:** Beta tester reports 66 + 67 (symptoms B.2 and B.3, carried over from `2026-05-05-hourglass-focus-stability.md`); reinforced by report 77 (foster-edge horizontal portion shared with bio relations defeats the dashed signal — same per-edge rendering concern), and report 77's "bludder 1" (couple edge between focal and partner disappears) — same symptom as B.3.
 **Predecessor:** [2026-05-05-hourglass-focus-stability.md](archive/2026-05-05-hourglass-focus-stability.md) (shipped Fix 1: tree dedup)
+**Related plan:** [2026-05-06-hourglass-foster-vs-adoptive-distinct.md](2026-05-06-hourglass-foster-vs-adoptive-distinct.md) — sequenced AFTER this plan; depends on the per-edge subtype routing introduced here.
 
 ## User goal
 
