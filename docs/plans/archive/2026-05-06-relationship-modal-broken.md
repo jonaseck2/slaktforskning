@@ -78,7 +78,7 @@ This change is project-wide. Audit during impl whether other modals have the sam
 - [x] **`:disabled` binding** on the Save button — added `canSave` computed (`person1_id && person2_id && type && person1_id !== person2_id`) bound through `BaseSubPanel`'s existing `save-disabled` prop.
 - [x] **Component test** — `tests/components/RelationshipModal-saveDisabled-and-error.test.ts` covers: Save disabled in empty create, enables when both persons picked, disabled on self-link, enabled in edit mode and disables when person is cleared.
 - [x] **Component test** — same test file asserts toast text contains the rejected error's message (both `Error` and non-`Error` rejection shapes).
-- [ ] **Patch bump** + CHANGELOG: `- fix: relationship edit modal saves correctly; Save button is dimmed when disabled`. Deferred to merge step per dispatcher instruction.
+- [x] **Patch bump** + CHANGELOG: `- fix: relationship edit modal saves correctly; Save button is dimmed when disabled`.
 
 ## Verification (user-observable)
 

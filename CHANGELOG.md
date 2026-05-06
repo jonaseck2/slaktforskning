@@ -26,6 +26,7 @@
 - feat: source types include passenger list, probate inventory, peerage register, encyclopedia, genealogist; dropdown sorts alphabetically in the user's locale; "Tidning / Tidskrift" and "Onlinedatabas / Sociala media" relabeled
 - fix(mcp): dev tools (db_stats, seed_*, clear_test_data) follow `switch_database` swaps instead of staying pinned to the closed initial connection
 - fix(mcp): `db_stats` no longer throws `stmt.getAsObject is not a function` (used the sql.js API instead of node-sqlite3-wasm's); `app_status` reports the live DB path after a `switch_database` swap (was reporting only the launch-time env var)
+- fix: relationship edit modal saves correctly; Save button is dimmed when fields are missing; save errors now surface the underlying cause instead of a generic "Could not save" toast
 
 ## 0.215.2
 
