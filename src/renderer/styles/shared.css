@@ -1296,11 +1296,16 @@ html.screen-reader h1:focus {
   flex-direction: column;
   overflow: hidden;
   width: 320px;
-  /* Content sets the floor: the panel never shrinks below what its body needs.
-     A user-set height (via the resize handle) only takes effect if it is
-     taller. Capped at viewport so the modal never runs off-screen — past that
-     cap, .ep-body scrolls inside the panel. */
-  min-height: min-content;
+  /* Capped at viewport so the modal never runs off-screen. Past that cap,
+     .ep-body scrolls inside the panel (flex: 1; overflow-y: auto below).
+     `min-height: 0` is required so the max-height cap actually clamps —
+     `min-height: min-content` (an earlier attempt to keep small panels at
+     their natural size) wins over `max-height` per CSS spec, which let the
+     panel grow past the viewport on tall forms (Save button below the fold;
+     reports R72 + R75). The browser still gives the panel its natural height
+     when content fits; only when content exceeds the cap does the body
+     scroll. */
+  min-height: 0;
   max-height: calc(100vh - 64px);
 }
 

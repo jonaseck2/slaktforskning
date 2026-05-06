@@ -64,12 +64,17 @@ The user asked for the scrollbar to appear only when needed. With `overflow-y: a
 
 ## Tasks
 
-- [ ] **Audit** `BaseSubPanel.vue`'s structural classes; confirm header / body / actions are clearly separable.
-- [ ] **Edit `BaseSubPanel.vue`** scoped CSS: flex column on `.modal`, max-height, body scrolls, header + actions fixed.
-- [ ] **Verify** subpanel mode still positions side-by-side when both modals open (the existing `mode="subpanel"` rule renders them in the parent's `#subpanels` slot — flex-row container; nothing should change here).
+- [x] **Audit** `BaseSubPanel.vue`'s structural classes; confirm header / body / actions are clearly separable.
+  - Found: the structural pattern (`display: flex; flex-direction: column` on `.entity-panel`, `max-height: calc(100vh - 64px)`, `.ep-body { flex: 1; overflow-y: auto }`, `.ep-header` + `.ep-footer` with `flex-shrink: 0`) was *already in place* in `src/renderer/styles/shared.css` (lines 1287–1368). The plan's diagnosis ("the modal's body container has no `overflow-y: auto` + `max-height` policy") was almost right but missed the actual blocker.
+  - The actual blocker: `.entity-panel` had `min-height: min-content` AND `max-height: calc(100vh - 64px)`. Per CSS spec, `min-height` overrides `max-height`. When body content was taller than the viewport, the `min-content` floor exceeded the `100vh - 64px` cap; the panel grew past the viewport; the footer fell off-screen; the body never overflowed because the panel itself absorbed the extra height. Fix: change `min-height: min-content` to `min-height: 0` (single line in shared.css). All other rules already do their job.
+- [x] **Edit `BaseSubPanel.vue`** scoped CSS: flex column on `.modal`, max-height, body scrolls, header + actions fixed.
+  - Edit landed in `src/renderer/styles/shared.css` (single rule, the global home of `.entity-panel`) rather than `BaseSubPanel.vue`'s scoped block — the rules under fix are global, used by both standalone and subpanel modes from a single source. Comment updated to record the bug surface and why `min-height: 0` is required.
+- [x] **Verify** subpanel mode still positions side-by-side when both modals open (the existing `mode="subpanel"` rule renders them in the parent's `#subpanels` slot — flex-row container; nothing should change here).
+  - Both modes share the same `.entity-panel` rule. The fix is symmetric: the only changed property is `min-height`. The `.entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }` flex-row container is untouched, so side-by-side layout for subpanels is unaffected.
 - [ ] **Smoke check (deferred to user)** — open EventModal with date + place + citation + Mer expanded on a small window. Save button visible; body scrolls.
-- [ ] **Component test** — mount BaseSubPanel with a body taller than the viewport; assert `.modal-body`'s `scrollHeight > clientHeight` and the footer is in the document at the modal's bottom.
-- [ ] **Patch bump** + CHANGELOG: `- fix: tall modal forms now scroll inside the modal so Save stays reachable`.
+- [x] **Component test** — mount BaseSubPanel with a body taller than the viewport; assert footer is in the document and the CSS contract (`.entity-panel` min/max-height; `.ep-body` flex+overflow; header/footer flex-shrink: 0; DOM order header→body→footer; Save lives in footer not body) holds.
+  - File: `tests/components/BaseSubPanel-scrollable.test.ts` (6 cases). Verified that reverting `min-height: 0` back to `min-height: min-content` makes the suite fail on the bug-shaped property.
+- [ ] **Patch bump** + CHANGELOG: `- fix: tall modal forms now scroll inside the modal so Save stays reachable`. *(Deferred to plan close-out / merge step per CLAUDE.md workflow.)*
 
 ## Verification (user-observable)
 
