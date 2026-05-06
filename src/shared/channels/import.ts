@@ -15,6 +15,8 @@ import { importGedcom, previewGedcomImport } from '../../import/gedcom';
 import type { ImportOptions } from '../../import/gedcom';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
+import { exportGedcom } from '../../gedcom';
+import type { ExportOptions } from '../../api/export_options';
 
 /**
  * If `selectedPath` is a .zip, extract the largest .ged into a fresh tmp dir
@@ -235,6 +237,24 @@ defineChannel({
     const version = opts.gedcomVersion ?? '5.5.1';
     const report = exportArchive(db, opts.filePath, dbDir, { gedcomVersion: version });
     return { exported: true, filePath: opts.filePath, report };
+  },
+});
+
+/**
+ * GEDCOM export — runs in the worker thread. Read-only with respect to the DB
+ * (it walks every person/family/event/source/media to produce a `.ged` string),
+ * so it does NOT use `withImportLifecycle`. The public `gedcom:export` channel
+ * stays on the main thread for the save dialog + the final fs.writeFile; only
+ * the heavy DB walk runs here.
+ */
+defineChannel({
+  name: 'gedcom:_exportRun',
+  thread: 'worker',
+  mutating: false,
+  handler: async (db, opts: { version?: '5.5.1' | '7.0'; exportOptions?: ExportOptions }) => {
+    const version = opts?.version === '7.0' ? '7.0' : '5.5.1';
+    const { ged, report } = exportGedcom(db, version, opts?.exportOptions);
+    return { ged, report };
   },
 });
 

@@ -1,9 +1,9 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { dialog } from 'electron';
-import { exportGedcom } from '../../gedcom';
 import { isDockerAvailable } from '../../import/genney/index';
 import type { ExportOptions } from '../../api/export_options';
+import type { ExportReport } from '../../gedcom';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
 import { callWorker } from './worker-client';
@@ -16,7 +16,7 @@ import { callWorker } from './worker-client';
 // truth.
 
 export function registerImportHandlers(
-  getDb: () => ReturnType<typeof import('../database').getDatabase>,
+  _getDb: () => ReturnType<typeof import('../database').getDatabase>,
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
@@ -42,6 +42,10 @@ export function registerImportHandlers(
   // removed — the renderer pairs both calls with gedcom:selectFile and
   // always supplies filePath.
 
+  // gedcom:export — thin main-thread shim. The save dialog stays here (it
+  // needs the renderer's BrowserWindow), but the heavy DB walk that builds
+  // the .ged string runs in the worker via `gedcom:_exportRun`. The final
+  // file write is back on the main thread to keep the worker free of fs I/O.
   wrapHandler('gedcom:export', async (opts?: unknown) => {
     const typedOpts = opts as { version?: string; exportOptions?: ExportOptions } | undefined;
     const version = typedOpts?.version === '7.0' ? '7.0' : '5.5.1';
@@ -53,8 +57,11 @@ export function registerImportHandlers(
       filters: [{ name: 'GEDCOM Files', extensions: ['ged'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    const { ged, report } = exportGedcom(getDb(), version, exportOptions);
-    fs.writeFileSync(result.filePath, ged, 'utf-8');
+    const { ged, report } = (await callWorker('gedcom:_exportRun', {
+      version,
+      exportOptions,
+    })) as { ged: string; report: ExportReport };
+    await fsp.writeFile(result.filePath, ged, 'utf-8');
     return { exported: true, filePath: result.filePath, report };
   });
 
