@@ -1,11 +1,7 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { dialog, BrowserWindow } from 'electron';
-import { unzipSync } from 'fflate';
-import { previewGedcomImport } from '../../import/gedcom';
-import type { ImportOptions } from '../../import/gedcom';
-import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../gedcom';
+import { exportGedcom } from '../../gedcom';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../../import/genney/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
@@ -42,84 +38,12 @@ export function registerImportHandlers(
     return { canceled: false, path: result.filePaths[0] };
   });
 
-  wrapHandler('gedcom:preview', async (opts) => {
-    const options = opts as { filePath?: string } | undefined;
-    let selectedPath: string;
-    if (options?.filePath) {
-      selectedPath = options.filePath;
-    } else {
-      const result = await dialog.showOpenDialog({
-        title: 'Preview GEDCOM File',
-        defaultPath: getDefaultDir(),
-        filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
-        properties: ['openFile'],
-      });
-      if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-      selectedPath = result.filePaths[0];
-    }
-    let tmpDir: string | null = null;
-    try {
-      let gedPath = selectedPath;
-      if (path.extname(gedPath).toLowerCase() === '.zip') {
-        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-preview-'));
-        const entries = unzipSync(new Uint8Array(fs.readFileSync(gedPath)));
-        const gedEntries = Object.entries(entries)
-          .filter(([name]) => name.toLowerCase().endsWith('.ged'))
-          .sort(([, a], [, b]) => b.length - a.length);
-        if (gedEntries.length === 0) throw new Error('No .ged file found inside zip archive.');
-        gedPath = path.join(tmpDir, path.basename(gedEntries[0][0]));
-        fs.writeFileSync(gedPath, Buffer.from(gedEntries[0][1]));
-      }
-      const text = readGedcomFile(gedPath);
-      const tree = parseGedcom(text);
-      const preview = previewGedcomImport(tree);
-      return { canceled: false, filePath: selectedPath, preview };
-    } finally {
-      if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
-
-  wrapHandler('gedcom:import', async (opts) => {
-    const options = opts as (ImportOptions & { filePath?: string }) | undefined;
-    let selectedPath: string;
-    if (options?.filePath) {
-      selectedPath = options.filePath;
-    } else {
-      const result = await dialog.showOpenDialog({
-        title: 'Import GEDCOM File',
-        defaultPath: getDefaultDir(),
-        filters: [{ name: 'GEDCOM Files', extensions: ['ged', 'gedcom', 'zip'] }],
-        properties: ['openFile'],
-      });
-      if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-      selectedPath = result.filePaths[0];
-    }
-    importInProgress = true;
-    notifyWorkerImportStart();
-    let tmpDir: string | null = null;
-    try {
-      let gedPath = selectedPath;
-      if (path.extname(gedPath).toLowerCase() === '.zip') {
-        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-import-'));
-        const entries = unzipSync(new Uint8Array(fs.readFileSync(gedPath)));
-        const gedEntries = Object.entries(entries)
-          .filter(([name]) => name.toLowerCase().endsWith('.ged'))
-          .sort(([, a], [, b]) => b.length - a.length);
-        if (gedEntries.length === 0) throw new Error('No .ged file found inside zip archive.');
-        gedPath = path.join(tmpDir, path.basename(gedEntries[0][0]));
-        fs.writeFileSync(gedPath, Buffer.from(gedEntries[0][1]));
-      }
-      const text = readGedcomFile(gedPath);
-      const tree = parseGedcom(text);
-      const report = importGedcom(getDb(), tree, options);
-      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
-      return { imported: true, filePath: gedPath, report };
-    } finally {
-      importInProgress = false;
-      notifyWorkerImportEnd();
-      if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
+  // gedcom:preview and gedcom:import are registered via the channel registry
+  // as worker channels (src/shared/channels/import.ts). The full read + parse
+  // + DB import + media consolidation runs in the DB worker thread, so the
+  // Electron main thread stays responsive. The inline-dialog fallback was
+  // removed — the renderer pairs both calls with gedcom:selectFile and
+  // always supplies filePath.
 
   wrapHandler('gedcom:export', async (opts?: unknown) => {
     const typedOpts = opts as { version?: string; exportOptions?: ExportOptions } | undefined;

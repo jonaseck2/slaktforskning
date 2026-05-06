@@ -35,7 +35,8 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'chart:saveSvg', 'chart:savePdf',
   'csv:export',
   // gazetteers:getSchema and gazetteers:getBundled migrated to registry with thread:'main'
-  'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
+  // gedcom:preview and gedcom:import migrated to the registry as worker channels.
+  'gedcom:selectFile', 'gedcom:export',
   'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
   'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
   'import:holgerSelectFile', 'import:holgerSelectMedia',

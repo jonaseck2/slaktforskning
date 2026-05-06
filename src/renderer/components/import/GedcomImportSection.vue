@@ -216,7 +216,15 @@ async function handlePreviewGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.gedcom.preview()) as {
+    // The inline-dialog fallback inside gedcom:preview was removed when the
+    // handler moved to the worker thread (so the main thread stays responsive
+    // for big imports). Pair with gedcom:selectFile here — the documented flow.
+    const picked = (await window.api.gedcom.selectFile()) as {
+      canceled?: boolean;
+      path?: string;
+    };
+    if (picked.canceled || !picked.path) return;
+    const result = (await window.api.gedcom.preview({ filePath: picked.path })) as {
       canceled?: boolean;
       filePath?: string;
       preview?: {
@@ -251,10 +259,11 @@ async function proceedImport() {
   showPreview.value = false;
   busy.value = true;
   try {
+    // gedcom:import now runs in the worker thread and returns the
+    // withImportLifecycle envelope: { success, report, error }.
     const result = (await window.api.gedcom.import({ filePath: previewFilePath.value })) as {
-      imported?: boolean;
-      canceled?: boolean;
-      filePath?: string;
+      success?: boolean;
+      error?: string;
       report?: {
         version?: string;
         persons: number;
@@ -267,14 +276,17 @@ async function proceedImport() {
         warnings: string[];
       };
     };
-    if (result.imported) {
+    if (result.success && result.report) {
       window.dispatchEvent(new CustomEvent('data-imported'));
-      if (result.report) {
-        importReport.value = result.report;
-        showImportReport.value = true;
-      } else {
-        setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
-      }
+      importReport.value = result.report;
+      showImportReport.value = true;
+    } else if (result.success) {
+      window.dispatchEvent(new CustomEvent('data-imported'));
+      setStatus(t('importExport.importSuccess', { file: previewFilePath.value }));
+    } else {
+      setStatus(t('importExport.importError'), 'error');
+      console.error('[ImportExport] GEDCOM import failed:', result.error);
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');

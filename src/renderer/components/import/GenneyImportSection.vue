@@ -190,14 +190,20 @@ async function importGed() {
   if (!gedPath.value || busy.value) return;
   busy.value = true;
   try {
+    // gedcom:import runs in the worker thread and returns the
+    // withImportLifecycle envelope: { success, report, error }.
     const result = await window.api.gedcom.import({
       profile: 'genney',
       filePath: gedPath.value,
       mediaDir: gedMediaDir.value || undefined,
-    }) as { imported?: boolean; canceled?: boolean; filePath?: string };
-    if (result.imported) {
-      setStatus(t('importExport.importSuccess', { file: result.filePath ?? '' }));
+    }) as { success?: boolean; error?: string };
+    if (result.success) {
+      setStatus(t('importExport.importSuccess', { file: gedPath.value }));
       window.dispatchEvent(new CustomEvent('data-imported'));
+    } else {
+      setStatus(t('importExport.importError'), 'error');
+      console.error('[GenneyImport] .ged import failed:', result.error);
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');

@@ -1,3 +1,7 @@
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { unzipSync } from 'fflate';
 import { defineChannel } from './registry';
 import { importFromHolger } from '../../import/holger/index';
 import { bulkCopyMediaFolder, consolidateMediaFolder } from '../../api/media_consolidate';
@@ -5,6 +9,35 @@ import { getMediaDir } from '../../api/media';
 import { broadcast } from '../../main/db-worker-broadcast';
 import { getWorkerDbPath } from '../../main/db-worker-state';
 import { withImportLifecycle } from './_import-helpers';
+import { readGedcomFile, parseGedcom } from '../../gedcom';
+import { importGedcom, previewGedcomImport } from '../../import/gedcom';
+import type { ImportOptions } from '../../import/gedcom';
+
+/**
+ * If `selectedPath` is a .zip, extract the largest .ged into a fresh tmp dir
+ * and return both the extracted .ged path and the tmp dir (so the caller can
+ * clean it up). Otherwise return the input path and a null cleanup target.
+ *
+ * Worker-side equivalent of the inline-extract logic that used to live in
+ * src/main/ipc/import.ts gedcom:preview / gedcom:import handlers.
+ */
+function extractGedFromMaybeZip(selectedPath: string): { gedPath: string; tmpDir: string | null } {
+  if (path.extname(selectedPath).toLowerCase() !== '.zip') {
+    return { gedPath: selectedPath, tmpDir: null };
+  }
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-zip-'));
+  const entries = unzipSync(new Uint8Array(fs.readFileSync(selectedPath)));
+  const gedEntries = Object.entries(entries)
+    .filter(([name]) => name.toLowerCase().endsWith('.ged'))
+    .sort(([, a], [, b]) => b.length - a.length);
+  if (gedEntries.length === 0) {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error('No .ged file found inside zip archive.');
+  }
+  const gedPath = path.join(tmpDir, path.basename(gedEntries[0][0]));
+  fs.writeFileSync(gedPath, Buffer.from(gedEntries[0][1]));
+  return { gedPath, tmpDir };
+}
 
 defineChannel({
   name: 'import:holgerRun',
@@ -55,5 +88,64 @@ defineChannel({
 
       return result.report;
     });
+  },
+});
+
+/**
+ * Standard GEDCOM import (.ged or .zip-containing-.ged). Runs in the worker
+ * thread so the main thread stays responsive for the full duration. The
+ * inline-dialog fallback that lived in the old main-thread handler is
+ * removed: the renderer pairs this with `gedcom:selectFile` + `gedcom:preview`
+ * (the documented flow) and always supplies `filePath`.
+ */
+defineChannel({
+  name: 'gedcom:import',
+  thread: 'worker',
+  mutating: true,
+  handler: async (db, opts: { filePath: string; mediaDir?: string; profile?: ImportOptions['profile'] }) => {
+    if (!opts?.filePath) {
+      return { success: false, error: 'filePath is required' } as const;
+    }
+    return withImportLifecycle('gedcom', async () => {
+      const dbPath = getWorkerDbPath();
+      const { gedPath, tmpDir } = extractGedFromMaybeZip(opts.filePath);
+      try {
+        const text = readGedcomFile(gedPath);
+        const tree = parseGedcom(text);
+        const report = importGedcom(db, tree, {
+          mediaDir: opts.mediaDir,
+          profile: opts.profile,
+        });
+        await consolidateMediaFolder(db, dbPath);
+        return report;
+      } finally {
+        if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    });
+  },
+});
+
+/**
+ * Preview a GEDCOM file (.ged or .zip) without writing to the DB. The renderer
+ * pairs this with `gedcom:selectFile` and supplies `filePath`. Read-only — does
+ * not flip importInProgress.
+ */
+defineChannel({
+  name: 'gedcom:preview',
+  thread: 'worker',
+  mutating: false,
+  handler: async (_db, opts: { filePath: string }) => {
+    if (!opts?.filePath) {
+      return { canceled: true } as const;
+    }
+    const { gedPath, tmpDir } = extractGedFromMaybeZip(opts.filePath);
+    try {
+      const text = readGedcomFile(gedPath);
+      const tree = parseGedcom(text);
+      const preview = previewGedcomImport(tree);
+      return { canceled: false, filePath: opts.filePath, preview };
+    } finally {
+      if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   },
 });

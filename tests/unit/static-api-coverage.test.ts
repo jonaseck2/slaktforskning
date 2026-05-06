@@ -93,8 +93,9 @@ describe('static API parity', () => {
       'print:print', 'print:exportPdf',
       'csv:export',
       'backup:backup', 'backup:restore',
-      // gedcom import/export
-      'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
+      // gedcom select-file/export — gedcom:preview and gedcom:import migrated
+      // to registry worker channels (covered by the registry-stub check above).
+      'gedcom:selectFile', 'gedcom:export',
       // genney + holger import
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
       'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
