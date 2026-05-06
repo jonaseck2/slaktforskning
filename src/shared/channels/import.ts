@@ -17,6 +17,13 @@ import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
 import { exportGedcom } from '../../gedcom';
 import type { ExportOptions } from '../../api/export_options';
+import {
+  exportPersonsCsv,
+  exportEventsCsv,
+  exportSourcesCsv,
+  exportPlacesCsv,
+} from '../../api/csv_export';
+import type { CsvOptions } from '../../api/csv_export';
 
 /**
  * If `selectedPath` is a .zip, extract the largest .ged into a fresh tmp dir
@@ -255,6 +262,55 @@ defineChannel({
     const version = opts?.version === '7.0' ? '7.0' : '5.5.1';
     const { ged, report } = exportGedcom(db, version, opts?.exportOptions);
     return { ged, report };
+  },
+});
+
+/**
+ * CSV export — runs in the worker thread. Read-only with respect to the DB
+ * (it walks one entity table to produce a CSV string), so it does NOT use
+ * `withImportLifecycle`. The public `csv:export` channel stays on the main
+ * thread for the save dialog + the final fs.writeFile; only the heavy DB
+ * walk runs here. Returns both the CSV text and the suggested defaultName so
+ * the shim can pre-populate the save dialog.
+ */
+defineChannel({
+  name: 'csv:_exportRun',
+  thread: 'worker',
+  mutating: false,
+  handler: async (
+    db,
+    opts: { entityType?: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' },
+  ) => {
+    if (!opts?.entityType) {
+      return { error: 'entityType is required' } as const;
+    }
+    const csvOptions: CsvOptions = {
+      delimiter: opts.delimiter ?? ',',
+      encoding: opts.encoding ?? 'utf-8',
+    };
+    let csv: string;
+    let defaultName: string;
+    switch (opts.entityType) {
+      case 'persons':
+        csv = exportPersonsCsv(db, csvOptions);
+        defaultName = 'persons.csv';
+        break;
+      case 'events':
+        csv = exportEventsCsv(db, csvOptions);
+        defaultName = 'events.csv';
+        break;
+      case 'sources':
+        csv = exportSourcesCsv(db, csvOptions);
+        defaultName = 'sources.csv';
+        break;
+      case 'places':
+        csv = exportPlacesCsv(db, csvOptions);
+        defaultName = 'places.csv';
+        break;
+      default:
+        return { error: 'Unknown entityType: ' + opts.entityType } as const;
+    }
+    return { csv, defaultName };
   },
 });
 
