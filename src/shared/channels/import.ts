@@ -13,6 +13,8 @@ import { withImportLifecycle } from './_import-helpers';
 import { readGedcomFile, parseGedcom } from '../../gedcom';
 import { importGedcom, previewGedcomImport } from '../../import/gedcom';
 import type { ImportOptions } from '../../import/gedcom';
+import { exportArchive } from '../../api/archive_export';
+import { importArchive } from '../../api/archive_import';
 
 /**
  * If `selectedPath` is a .zip, extract the largest .ged into a fresh tmp dir
@@ -187,6 +189,52 @@ defineChannel({
       onProgress: (msg: string) => broadcast('import:genneyProgress', { message: msg }),
     });
     return { tables };
+  },
+});
+
+/**
+ * Archive (.zip) import — runs in the worker thread. The public `archive:import`
+ * channel stays on the main thread because it opens an Electron file dialog;
+ * the main-thread shim resolves the picked path and delegates the heavy DB +
+ * media work here. The `:_` prefix marks this as an internal channel — the
+ * preload/static-api coverage tests skip it.
+ */
+defineChannel({
+  name: 'archive:_importRun',
+  thread: 'worker',
+  mutating: true,
+  handler: async (db, opts: { archivePath: string; mediaDir: string }) => {
+    if (!opts?.archivePath || !opts?.mediaDir) {
+      return { success: false, error: 'archivePath and mediaDir are required' } as const;
+    }
+    return withImportLifecycle('archive', async () => {
+      const dbPath = getWorkerDbPath();
+      const report = importArchive(db, opts.archivePath, opts.mediaDir);
+      await consolidateMediaFolder(db, dbPath);
+      return { imported: true, filePath: opts.archivePath, report };
+    });
+  },
+});
+
+/**
+ * Archive (.zip) export — runs in the worker thread. Read-only with respect
+ * to the DB (it reads the entire DB to build a GEDCOM + media archive on disk),
+ * so it does NOT use `withImportLifecycle`. The public `archive:export` channel
+ * stays on the main thread for the dialog.
+ */
+defineChannel({
+  name: 'archive:_exportRun',
+  thread: 'worker',
+  mutating: false,
+  handler: async (db, opts: { filePath: string; gedcomVersion?: '5.5.1' | '7.0' }) => {
+    if (!opts?.filePath) {
+      return { canceled: true } as const;
+    }
+    const dbPath = getWorkerDbPath();
+    const dbDir = path.dirname(dbPath);
+    const version = opts.gedcomVersion ?? '5.5.1';
+    const report = exportArchive(db, opts.filePath, dbDir, { gedcomVersion: version });
+    return { exported: true, filePath: opts.filePath, report };
   },
 });
 

@@ -3,14 +3,17 @@ import * as path from 'path';
 import { dialog } from 'electron';
 import { exportGedcom } from '../../gedcom';
 import { isDockerAvailable } from '../../import/genney/index';
-import { exportArchive } from '../../api/archive_export';
-import { importArchive } from '../../api/archive_import';
-import { consolidateMediaFolder } from '../../api/media_consolidate';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
-import { notifyWorkerImportStart, notifyWorkerImportEnd } from './worker-client';
+import { callWorker } from './worker-client';
 
+// Heavy import work (archive, holger, genney, gedcom) now runs in the DB worker
+// thread via worker-channel handlers in src/shared/channels/import.ts. Each of
+// those uses `withImportLifecycle`, which flips the worker-local
+// importInProgress flag and broadcasts to all renderers. The legacy main-thread
+// flag below is kept only because some main-thread call sites still consult it
+// (left at default false; never written from this file anymore).
 let importInProgress = false;
 
 export function isImportInProgress(): boolean {
@@ -137,7 +140,10 @@ export function registerImportHandlers(
   // broadcast primitive on topic 'import:holgerProgress'. Renderer listeners
   // (window.api.import.onHolgerProgress) are unchanged.
 
-  // Archive export/import
+  // Archive export/import — public channels are thin main-thread shims that
+  // open the file dialog; the heavy DB + media work runs in the DB worker
+  // thread via the internal `archive:_importRun` / `archive:_exportRun`
+  // channels (registered in src/shared/channels/import.ts).
   wrapHandler('archive:export', async (opts?: unknown) => {
     const options = opts as { gedcomVersion?: '5.5.1' | '7.0' } | undefined;
     const version = options?.gedcomVersion ?? '5.5.1';
@@ -147,9 +153,10 @@ export function registerImportHandlers(
       filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    const dbDir = path.dirname(getCurrentDatabasePath());
-    const report = exportArchive(getDb(), result.filePath, dbDir, { gedcomVersion: version });
-    return { exported: true, filePath: result.filePath, report };
+    return await callWorker('archive:_exportRun', {
+      filePath: result.filePath,
+      gedcomVersion: version,
+    });
   });
 
   wrapHandler('archive:import', async () => {
@@ -164,15 +171,6 @@ export function registerImportHandlers(
     const dbPath = getCurrentDatabasePath();
     const dbDir = path.dirname(dbPath);
     const mediaDir = path.join(dbDir, mediaFolderName(dbPath));
-    importInProgress = true;
-    notifyWorkerImportStart();
-    try {
-      const report = importArchive(getDb(), archivePath, mediaDir);
-      await consolidateMediaFolder(getDb(), getCurrentDatabasePath());
-      return { imported: true, filePath: archivePath, report };
-    } finally {
-      importInProgress = false;
-      notifyWorkerImportEnd();
-    }
+    return await callWorker('archive:_importRun', { archivePath, mediaDir });
   });
 }
