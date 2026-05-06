@@ -375,9 +375,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
 }
-/* The default `.entity-panel` sizes itself to `min-content`, which collapses
-   when our content is `flex: 1; min-height: 0`. Force a real height so the
-   inner `.tree-scroll` actually has space to scroll within. */
+/* `.entity-panel` defaults to `min-height: 0` so its `max-height` cap can
+   clamp normally, but our flex-1/min-height-0 body would then collapse to
+   nothing because nothing imposes a baseline height. Force a real height so
+   the inner `.tree-scroll` actually has space to scroll within. */
 :deep(.entity-panel) {
   height: clamp(420px, 70vh, 800px);
 }

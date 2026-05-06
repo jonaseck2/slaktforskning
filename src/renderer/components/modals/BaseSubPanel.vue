@@ -207,10 +207,11 @@ const wrapStyle = computed(() => {
   return { position: 'fixed' as const, left: `${pos.x}px`, top: `${pos.y}px` };
 });
 
-// `.entity-panel`'s min-height: min-content keeps the modal from shrinking
-// below its body, and its max-height caps it at viewport. The user-set height
-// from the resize handle is applied here only when set, and acts as a target
-// — the min/max-height clamps win when content is taller or viewport is shorter.
+// `.entity-panel`'s `min-height: 0` (R72/R75: lets the `max-height` cap clamp
+// at `100vh - 64px` so the body can scroll instead of pushing the footer past
+// the viewport). The user-set height from the resize handle is applied here
+// only when set, and acts as a target — the max-height clamp wins when
+// viewport is shorter than the requested height.
 const panelStyle = computed(() =>
   props.mode === 'standalone'
     ? { width: `${pos.w}px`, ...(pos.h !== null ? { height: `${pos.h}px` } : {}) }
