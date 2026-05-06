@@ -32,11 +32,11 @@ Single file most likely (`PlacePicker.vue` or similar). Audit any other picker t
 
 ## Tasks
 
-- [ ] **Reproduce** in the running app: type "Järfälla" → pick suggestion → backspace at the trailing edge → confirm "all text disappears" matches the report.
-- [ ] **Audit** the picker's pick-handler for `select()` / `setSelectionRange` calls. Identify the line that leaves the input fully selected.
-- [ ] **Fix** — collapse the selection after programmatic value set. Move cursor to the end (or wherever the user clicked, if the picker tracks click position).
-- [ ] **Component test** — mount PlacePicker; simulate type → pick → confirm `input.selectionStart === input.selectionEnd === input.value.length` after pick. Then dispatch a Backspace `keydown` and confirm only the last character is removed.
-- [ ] **Patch bump** + CHANGELOG: `- fix: typing in a place field after picking from the suggestion list edits the field instead of clearing it`.
+- [x] **Reproduce** in the running app: type "Järfälla" → pick suggestion → backspace at the trailing edge → confirm "all text disappears" matches the report.
+- [x] **Audit** the picker's pick-handler for `select()` / `setSelectionRange` calls. Identify the line that leaves the input fully selected.
+- [x] **Fix** — collapse the selection after programmatic value set. Move cursor to the end (or wherever the user clicked, if the picker tracks click position).
+- [x] **Component test** — mount PlacePicker; simulate type → pick → confirm `input.selectionStart === input.selectionEnd === input.value.length` after pick. Then dispatch a Backspace `keydown` and confirm only the last character is removed.
+- [x] **Patch bump** + CHANGELOG: `- fix: typing in a place field after picking from the suggestion list edits the field instead of clearing it`.
 
 ## Verification (user-observable)
 
