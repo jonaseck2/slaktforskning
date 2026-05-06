@@ -18,6 +18,7 @@
 - feat: undo/redo buttons in the topbar with action-naming tooltips (e.g. "Ångra: Skapa person")
 - fix: typing in a place field after picking from the suggestion list edits the field instead of clearing it
 - fix: tall modal forms now scroll inside the modal so Save stays reachable
+- fix(schema): pre-v0.218 databases no longer crash on app launch with "no such column: display_id"
 
 ## 0.215.2
 
