@@ -22,6 +22,7 @@
 - fix(schema): pre-v0.218 databases no longer crash on app launch with "no such column: display_id"
 - fix: relation row uses clearer role labels (full word, not "Fö"), hover tooltips on every affordance, and a trash icon for remove
 - feat: research tasks can be linked to persons; each person's PersonPanel surfaces an "Uppgifter" section with a + Task CTA that auto-links the host person
+- feat: source types include passenger list, probate inventory, peerage register, encyclopedia, genealogist; dropdown sorts alphabetically in the user's locale; "Tidning / Tidskrift" and "Onlinedatabas / Sociala media" relabeled
 
 ## 0.215.2
 
