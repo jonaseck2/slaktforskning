@@ -93,12 +93,15 @@ All 5 tests get `null` where they expected a data URL. **First-pass guess:** the
 
 ## Tasks
 
-- [ ] **Investigate each failure** per the 15-minute checklist above. Update this plan's per-failure section with the actual finding (bug in test, bug in code, or stale test).
-- [ ] **For "bug in code" failures**: file a per-failure implementation plan. Bump and ship.
-- [ ] **For "stale test" failures**: update or delete the test in a single small commit per file.
-- [ ] **For "intentional silencing" failures (F1)**: confirm with user whether the warn should fire; either re-enable or delete the test.
-- [ ] **Re-run `npm test`** after all failures are addressed. Confirm clean run.
-- [ ] **Patch bump** per the largest landed change + CHANGELOG line per real fix.
+- [x] **Investigate each failure**. All 13 turned out to be **stale tests asserting deprecated behavior** — none were code regressions. Findings:
+  - **F1** (gazetteer warn): warn is opt-in via `SLAKTFORSKNING_GAZETTEER_DEBUG=1` (intentional, see merge.ts comment). Test updated to assert first-wins (the user-observable contract); warn is documented as a triage helper, not asserted.
+  - **F2** (gedcom media): `is_missing` decided by `consolidateMediaFolder` post-import (single recursive readdir), not per-OBJE existsSync — change shipped in v0.210.7 with an explicit comment. Tests updated to expect `is_missing=0` after import.
+  - **F3** (media_consolidate suffix): `_n` suffix removed, same-basename collisions now keep the first source (also documented in code comment). Test updated to assert first-wins.
+  - **F4** (PersonsView fallback): `persons.list()` replaced with `persons.listPage(1, 0, …)` per renderer rules' "never use un-paged list()". Tests + mocks updated.
+  - **F5** (usePersonProfilePic, 5 tests): store moved to microtask-batched `profilePicRefs` (plural) per renderer rules' per-row-IPC fan-out batching. Test helper synthesizes `profilePicRefs` from per-id `profilePicRef` mocks; flush helper increased to cover the deeper await chain; one synchronous-assertion test now waits one tick.
+- [x] **No code changes needed** — everything was test debt from intentional refactors that didn't sweep test fixtures.
+- [x] **Re-run `npm test`** — 3325 passed / 0 failed.
+- [x] **Patch bump** to v0.218.3 + CHANGELOG entry.
 
 ## Verification (user-observable)
 

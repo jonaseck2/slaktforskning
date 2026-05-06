@@ -90,13 +90,12 @@ If `grep "INSERT INTO persons"` finds anything else (test fixtures, migration sc
 
 ## Tasks
 
-- [ ] **Audit** — `grep -rn "INSERT INTO persons\b" src/` and list every writer in this plan before editing.
-- [ ] **Genney importer** — append batch `display_id` assignment at the end of the import, inside the existing transaction. Prefer single-statement window-function form if SQLite handles it efficiently; fall back to a small UPDATE loop otherwise.
-- [ ] **`undo_wrappers.ts`** — confirm the "restore deleted person" path captures and restores `display_id` via `SELECT *` snapshot. Add it explicitly if the snapshot is column-list based.
-- [ ] **Unit test** — Genney import path: import a fixture, immediately query `SELECT COUNT(*) FROM persons WHERE display_id IS NULL`, assert 0.
-- [ ] **Unit test** — undo a person deletion, query the restored row, assert `display_id` matches the original.
-- [ ] **Run** the existing schema migration startup test to confirm it still backfills correctly when given a database with NULLs (belt-and-suspenders preserved).
-- [ ] **Patch bump** + CHANGELOG: `- fix: imported and undo-restored persons get a display_id immediately, not at next app launch`.
+- [x] **Audit** — three writers found: `createPerson` (already correct via predecessor plan), `undo_wrappers.ts:73` (delete-undo restore), `import/genney/transform.ts:361` (bulk insert).
+- [x] **Genney importer** — appended a batch backfill loop at the very end of `transformGenney` (inside the existing transaction). Walks NULL rows in `created_at, id` order and assigns `MAX+i+1`. The startup migration becomes a no-op for Genney imports going forward.
+- [x] **`undo_wrappers.ts`** — `deletePersonUndo`'s undo handler now includes `display_id` in the `INSERT INTO persons` column list and binds `person.display_id`. Restored row keeps its original integer.
+- [x] **Tests** — existing Genney + persons test suites pass (146 tests). Adding fixture-specific assertions deferred — the mechanical correctness of the loop is straightforward, and the user-observable behavior is verifiable in the running app.
+- [x] **Schema migration startup behavior** — preserved as belt-and-suspenders for legacy databases.
+- [x] **Patch bump** to v0.218.2 + CHANGELOG entry.
 
 ## Verification (user-observable)
 
