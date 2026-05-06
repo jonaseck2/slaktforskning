@@ -9,17 +9,18 @@ import { registerInspectTools } from './tools/dev/inspect';
 const DEFAULT_UI_PORT = 19241;
 
 export function createDevServer(initialDb: Database, initialDbPath?: string): McpServer {
-  const server = createProdServer(initialDb, initialDbPath);
+  const { server, getDb } = createProdServer(initialDb, initialDbPath);
 
   const uiPort = process.env.SLAKTFORSKNING_UI_PORT
     ? parseInt(process.env.SLAKTFORSKNING_UI_PORT, 10)
     : DEFAULT_UI_PORT;
   const uiBase = `http://localhost:${uiPort}`;
 
-  // ctx for dev-only tools. Uses the initial db; switch_database operates on
-  // the prod server's own closure and dev tools always see the original db.
-  // Sufficient for dev/test scenarios.
-  const ctx = { getDb: () => initialDb };
+  // ctx for dev-only tools — share the prod server's live db getter so
+  // `db_stats` / `seed_*` / `clear_test_data` follow `switch_database` swaps.
+  // Capturing `initialDb` directly here was a bug: after a switch the dev
+  // tools still pointed at the closed initial connection.
+  const ctx = { getDb };
 
   registerUiTools(server, uiBase);
   registerChartTools(server, uiBase);

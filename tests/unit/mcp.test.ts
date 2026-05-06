@@ -22,7 +22,7 @@ async function call(name: string, args: Record<string, unknown> = {}): Promise<u
 
 beforeEach(async () => {
   const db = createTestDb();
-  const server = createProdServer(db, ':memory:');
+  const { server } = createProdServer(db, ':memory:');
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: 'test', version: '1.0.0' });
   await server.connect(serverTransport);

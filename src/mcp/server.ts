@@ -21,7 +21,7 @@ async function main() {
   const db = new Database(dbPath);
   initializeSchemaWithRetry(db);
 
-  const server = createProdServer(db, dbPath);
+  const { server } = createProdServer(db, dbPath);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

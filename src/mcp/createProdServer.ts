@@ -11,7 +11,17 @@ import { registerGroupTools } from './tools/prod/groups';
 import { registerRepositoryTools } from './tools/prod/repositories';
 import { registerDataManagementTools } from './tools/prod/data-management';
 
-export function createProdServer(initialDb: Database, initialDbPath?: string): McpServer {
+export interface ProdServer {
+  server: McpServer;
+  /**
+   * Live getter for the active database. Always reflects the most recent
+   * `switch_database` call. Dev tools must use this getter (not capture the
+   * initial db) so they keep pointing at the live connection after a swap.
+   */
+  getDb: () => Database;
+}
+
+export function createProdServer(initialDb: Database, initialDbPath?: string): ProdServer {
   let db = initialDb;
   let currentDbPath = initialDbPath ?? 'unknown';
 
@@ -21,7 +31,8 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
   });
 
   // Tool registration context — getDb() always returns the current db after switch_database
-  const ctx = { getDb: () => db };
+  const getDb = () => db;
+  const ctx = { getDb };
 
   // Extended context for utility tools that need to swap the active database
   const utilCtx = {
@@ -42,5 +53,5 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): M
   registerRepositoryTools(server, ctx);
   registerDataManagementTools(server, utilCtx);
 
-  return server;
+  return { server, getDb };
 }
