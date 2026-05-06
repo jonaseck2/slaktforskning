@@ -3,6 +3,7 @@
     entity-type="group"
     :entity="group"
     :label="$t('panel.manageGroup')"
+    :created-at="group?.created_at ?? null"
     @close="emit('close')"
   >
     <template #empty>{{ $t('groupPanel.noGroupSelected') }}</template>

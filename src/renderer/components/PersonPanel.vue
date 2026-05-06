@@ -3,6 +3,8 @@
     entity-type="person"
     :entity="person"
     :label="$t('panel.managePerson')"
+    :created-at="person?.created_at ?? null"
+    :updated-at="person?.updated_at ?? null"
     @close="emit('close')"
   >
     <template #empty>{{ $t('panel.noPersonSelected') }}</template>
@@ -290,6 +292,8 @@ interface PersonData {
   living: boolean;
   birthLine: string | null;
   deathLine: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface GroupData {
@@ -380,7 +384,7 @@ async function buildDateLine(event: {
 const idRef = computed(() => props.personId ?? null);
 const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async (id) => {
   const [raw, fetchedNames, events] = await Promise.all([
-    window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean } | null>,
+    window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean; created_at: string; updated_at: string } | null>,
     window.api.persons.getNames(id) as Promise<NameData[]>,
     window.api.events.forPerson(id) as Promise<Array<{
       event_type: string;
@@ -425,6 +429,8 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
       living: raw.living,
       birthLine,
       deathLine,
+      created_at: raw.created_at,
+      updated_at: raw.updated_at,
     },
     primaryName: pickDisplayedName(fetchedNames, events),
     names: sortNamesBySortOrder(fetchedNames),

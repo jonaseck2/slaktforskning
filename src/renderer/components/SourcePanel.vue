@@ -3,6 +3,8 @@
     entity-type="source"
     :entity="source"
     :label="$t('panel.manageSource')"
+    :created-at="source?.created_at ?? null"
+    :updated-at="source?.updated_at ?? null"
     @close="emit('close')"
   >
     <template #empty>{{ $t('sourcePanel.noSourceSelected') }}</template>

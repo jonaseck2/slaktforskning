@@ -3,6 +3,7 @@
     entity-type="media"
     :entity="media"
     :label="$t('panel.manageMedia')"
+    :created-at="media?.created_at ?? null"
     @close="emit('close')"
   >
     <template #empty>{{ $t('media.selectMedia') }}</template>

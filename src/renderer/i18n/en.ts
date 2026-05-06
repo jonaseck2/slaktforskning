@@ -705,6 +705,8 @@ export default {
     partner2: 'Partner 2',
   },
   panel: {
+    created: 'Created',
+    updated: 'updated',
     managePerson: 'Manage person',
     managePlace: 'Manage place',
     manageSource: 'Manage source',

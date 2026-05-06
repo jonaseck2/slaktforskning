@@ -3,6 +3,8 @@
     entity-type="task"
     :entity="task"
     :label="$t('panel.manageTask')"
+    :created-at="task?.created_at ?? null"
+    :updated-at="task?.updated_at ?? null"
     @close="emit('close')"
   >
     <template #empty>{{ $t('taskPanel.noTaskSelected') }}</template>

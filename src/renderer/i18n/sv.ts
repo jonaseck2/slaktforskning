@@ -705,6 +705,8 @@ export default {
     partner2: 'Partner 2',
   },
   panel: {
+    created: 'Registrerad',
+    updated: 'ändrad',
     managePerson: 'Hantera person',
     managePlace: 'Hantera plats',
     manageSource: 'Hantera källa',
