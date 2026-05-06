@@ -237,6 +237,11 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     if (src.publication_info) lines.push(`1 PUBL ${src.publication_info}`);
     if (src.repository) lines.push(`1 _REPO_TEXT ${src.repository}`);
     if (src.url) lines.push(`1 _URL ${src.url}`);
+    // source_type is exported as a raw enum string via the custom _STYPE sub-tag.
+    // Lossless under both 5.5.1 and 7.0 — the importer reads _STYPE back verbatim,
+    // and unknown enum values (e.g. future additions like passenger_list,
+    // probate_inventory, genealogist, peerage_register, encyclopedia) flow through
+    // automatically because no static enum map gates the value on either side.
     if (src.source_type) lines.push(`1 _STYPE ${src.source_type}`);
     // Link to structured REPO records (use cached lookup)
     const linkedRepos = sourceReposCache.get(src.id) ?? [];

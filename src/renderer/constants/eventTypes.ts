@@ -44,7 +44,11 @@ export const CONFIDENCE_LEVEL_VALUES = [0, 1, 2, 3] as const;
 export const SOURCE_TYPE_VALUES = [
   'vital_record', 'census', 'church_record', 'newspaper', 'photograph',
   'oral_history', 'letter', 'legal_document', 'military_record',
-  'immigration_record', 'book', 'online_database', 'other',
+  'immigration_record', 'book', 'online_database',
+  // Added 2026-05-06 (source-types-curation): Swedish-genealogy first-class types.
+  // Order is for code organization; the dropdown sorts by locale label at render.
+  'passenger_list', 'probate_inventory', 'genealogist', 'peerage_register', 'encyclopedia',
+  'other',
 ] as const;
 
 export const RELATIONSHIP_TYPE_VALUES = [

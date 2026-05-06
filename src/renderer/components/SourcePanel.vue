@@ -49,7 +49,7 @@
                 @change="saveField('source_type', ($event.target as HTMLSelectElement).value)"
               >
                 <option value="">{{ $t('sourceDetail.noType') }}</option>
-                <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
+                <option v-for="st in sortedSourceTypes" :key="st" :value="st">
                   {{ $t('sourceTypes.' + st) }}
                 </option>
               </select>
@@ -288,9 +288,18 @@ interface CitationRow {
 const props = defineProps<{ sourceId: string | null }>();
 const emit = defineEmits<{ close: [] }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const router = useRouter();
+
+// Locale-aware alphabetical sort of source types — Swedish needs å/ä/ö
+// ordered correctly relative to z, which a binary string compare gets wrong.
+const sortedSourceTypes = computed(() => {
+  const collator = new Intl.Collator(locale.value);
+  return [...SOURCE_TYPE_VALUES].sort((a, b) =>
+    collator.compare(t(`sourceTypes.${a}`), t(`sourceTypes.${b}`)),
+  );
+});
 
 // ── Section state ───────────────────────────────────────────────────────────
 

@@ -21,7 +21,7 @@
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('sources.sourceType') }}</span>
         <select class="ep-input" v-model="form.source_type">
-          <option v-for="st in SOURCE_TYPE_VALUES" :key="st" :value="st">
+          <option v-for="st in sortedSourceTypes" :key="st" :value="st">
             {{ $t('sourceTypes.' + st) }}
           </option>
         </select>
@@ -76,8 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch, nextTick, onMounted } from 'vue';
+import { reactive, ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import { SOURCE_TYPE_VALUES } from '../../constants/eventTypes';
 
@@ -110,7 +111,17 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const { t, locale } = useI18n();
 const titleRef = ref<HTMLInputElement | null>(null);
+
+// Locale-aware alphabetical sort of source types — Swedish needs å/ä/ö
+// ordered correctly relative to z, which a binary string compare gets wrong.
+const sortedSourceTypes = computed(() => {
+  const collator = new Intl.Collator(locale.value);
+  return [...SOURCE_TYPE_VALUES].sort((a, b) =>
+    collator.compare(t(`sourceTypes.${a}`), t(`sourceTypes.${b}`)),
+  );
+});
 const savedSourceId = ref<string | null>(props.editingSource?.id ?? null);
 const citations = ref<Citation[]>([]);
 

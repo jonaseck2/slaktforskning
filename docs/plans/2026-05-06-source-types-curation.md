@@ -73,15 +73,15 @@ If `SourcesView` has a FilterChips bar bucketed by source type (per renderer rul
 
 ## Tasks
 
-- [ ] **Add the 5 new values** to `SOURCE_TYPE_VALUES` in `src/renderer/constants/eventTypes.ts`. Preserve existing values; append the new ones (sort happens at render).
-- [ ] **i18n sv + en** — add labels for `passenger_list`, `probate_inventory`, `genealogist`, `peerage_register`, `encyclopedia`. Rewrite labels for `newspaper` and `online_data`.
-- [ ] **Locale-aware sort** in the dropdown consumer (most likely `SourceModal.vue` — confirm during audit). Use `Intl.Collator(currentLocale)`. **Test**: in Swedish, "Adelskalender" appears before "Bok" (A < B); in English, "Encyclopedia" appears before "Foster relationship" (E < F).
-- [ ] **GEDCOM export mapping** — find the `source_type` → GEDCOM class table; add entries for the 5 new types. Where no clean GEDCOM equivalent exists (most genealogy types map cleanly to vital_record/census/etc., but `peerage_register` and `genealogist` may not), map to a generic source with NOTE.
-- [ ] **GEDCOM import coercion** — audit; confirm new values import correctly without code changes. If the importer maps GEDCOM source classes back to enum values via a static map, add reverse entries.
-- [ ] **Registry coverage** — re-run `npx vitest run gedcom-fidelity-registry-coverage` to confirm no missing entries.
-- [ ] **Unit test (sort)** — assert `sortedSourceTypes` ordering for sv and en locales using known fixtures.
-- [ ] **Unit test (round-trip)** — for each new type, seed → export → re-import → verify the type round-trips losslessly (or with the documented lossy reason).
-- [ ] **Manual smoke (deferred to user)** — open Source modal, confirm dropdown shows all 17 (12 old + 5 new) types alphabetically. Save a source of each new type; reload; confirm label persists.
+- [x] **Add the 5 new values** to `SOURCE_TYPE_VALUES` in `src/renderer/constants/eventTypes.ts`. Preserve existing values; append the new ones (sort happens at render).
+- [x] **i18n sv + en** — add labels for `passenger_list`, `probate_inventory`, `genealogist`, `peerage_register`, `encyclopedia`. Rewrite labels for `newspaper` and `online_data`.
+- [x] **Locale-aware sort** in the dropdown consumer (most likely `SourceModal.vue` — confirm during audit). Use `Intl.Collator(currentLocale)`. **Test**: in Swedish, "Adelskalender" appears before "Bok" (A < B); in English, "Encyclopedia" appears before "Foster relationship" (E < F).
+- [x] **GEDCOM export mapping** — find the `source_type` → GEDCOM class table; add entries for the 5 new types. Where no clean GEDCOM equivalent exists (most genealogy types map cleanly to vital_record/census/etc., but `peerage_register` and `genealogist` may not), map to a generic source with NOTE.
+- [x] **GEDCOM import coercion** — audit; confirm new values import correctly without code changes. If the importer maps GEDCOM source classes back to enum values via a static map, add reverse entries.
+- [x] **Registry coverage** — re-run `npx vitest run gedcom-fidelity-registry-coverage` to confirm no missing entries.
+- [x] **Unit test (sort)** — assert `sortedSourceTypes` ordering for sv and en locales using known fixtures.
+- [x] **Unit test (round-trip)** — for each new type, seed → export → re-import → verify the type round-trips losslessly (or with the documented lossy reason).
+- [ ] **Manual smoke (deferred to user)** — open Source modal, confirm dropdown shows all 18 (13 old + 5 new) types alphabetically. Save a source of each new type; reload; confirm label persists.
 - [ ] **Minor bump** + CHANGELOG: `- feat: source types include passenger list, probate inventory, peerage register, encyclopedia, genealogist; dropdown sorts alphabetically; "Tidning / Tidskrift" and "Onlinedatabas / Sociala media" relabeled`.
 
 ## Verification (user-observable)

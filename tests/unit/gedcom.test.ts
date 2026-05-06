@@ -729,6 +729,22 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     expect(listSources(db2)[0].source_type).toBe('church_record');
   });
 
+  // Curated 2026-05-06: confirm the 5 newly added source types round-trip.
+  // _STYPE carries the raw enum string, so unknown-to-GEDCOM values (peerage
+  // registers, probate inventories, etc.) survive lossless under both 5.5.1
+  // and 7.0 — the importer trusts whatever value is in the file.
+  it.each([
+    'passenger_list',
+    'probate_inventory',
+    'genealogist',
+    'peerage_register',
+    'encyclopedia',
+  ])('newly curated source_type "%s" round-trips losslessly', (sourceType) => {
+    createSource(db, { title: `Test ${sourceType}`, source_type: sourceType });
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].source_type).toBe(sourceType);
+  });
+
   it('source repository survives roundtrip via REPO', () => {
     createSource(db, { title: 'Census 1880', repository: 'Riksarkivet' });
     const db2 = roundtrip(db);
