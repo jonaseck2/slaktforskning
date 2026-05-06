@@ -53,26 +53,26 @@ Three files-or-clusters touched:
 
 ## Tasks
 
-- [ ] **Add `gender_transition` to `EVENT_TYPE_VALUES`** in `src/renderer/constants/eventTypes.ts`. Place after `foster_placement`. Also add to `PERSON_EVENT_TYPE_VALUES` (not relationship-coupled).
-- [ ] **i18n** — `eventTypes.gender_transition` in `src/renderer/i18n/sv.ts` ("Könsbyte") and `src/renderer/i18n/en.ts` ("Gender transition").
-- [ ] **Type the typed error** — `class SexChangeRequiresConfirmationError extends Error` with `{ personId: string; activeRelationshipIds: string[] }` properties. Lives in `src/api/persons.ts`. Re-exported from `src/api/types.ts` for renderer consumption.
-- [ ] **API guard** — extend `updatePerson(db, id, data, opts?)` signature. Implement guard logic per Scope §2. When `confirmGenderTransition` is set, the event creation + sex flip happen in a single `BEGIN IMMEDIATE` / `COMMIT` block.
-- [ ] **API workflow helper** — `updatePersonWithGenderTransitionWorkflow(db, id, { sex, eventDetails })`. Single transaction. Returns `{ person, event }`.
-- [ ] **Render resolver** — `resolveParentSexAt(parentEvents, parentCurrentSex, asOfIso)` in `src/renderer/utils/relationshipLabels.ts`. Pure function. Documented per the plan's signature sketch.
-- [ ] **Unit test** — `tests/unit/persons.test.ts` (extend) — `updatePerson` with sex change:
+- [x] **Add `gender_transition` to `EVENT_TYPE_VALUES`** in `src/renderer/constants/eventTypes.ts`. Place after `foster_placement`. Also add to `PERSON_EVENT_TYPE_VALUES` (not relationship-coupled).
+- [x] **i18n** — `eventTypes.gender_transition` in `src/renderer/i18n/sv.ts` ("Könsbyte") and `src/renderer/i18n/en.ts` ("Gender transition").
+- [x] **Type the typed error** — `class SexChangeRequiresConfirmationError extends Error` with `{ personId: string; activeRelationshipIds: string[] }` properties. Lives in `src/api/persons.ts`. Re-exported from `src/api/types.ts` for renderer consumption.
+- [x] **API guard** — extend `updatePerson(db, id, data, opts?)` signature. Implement guard logic per Scope §2. When `confirmGenderTransition` is set, the event creation + sex flip happen in a single `BEGIN IMMEDIATE` / `COMMIT` block.
+- [x] **API workflow helper** — `updatePersonWithGenderTransitionWorkflow(db, id, { sex, eventDetails })`. Single transaction. Returns `{ person, event }`.
+- [x] **Render resolver** — `resolveParentSexAt(parentEvents, parentCurrentSex, asOfIso)` in `src/renderer/utils/relationshipLabels.ts`. Pure function. Documented per the plan's signature sketch.
+- [x] **Unit test** — `tests/unit/persons.test.ts` (extend) — `updatePerson` with sex change:
   - person with zero relationships → proceeds, no event, returns updated row.
   - person with relationships, no flag → throws `SexChangeRequiresConfirmationError` with the right `activeRelationshipIds`.
   - person with relationships, `confirmCorrection: true` → proceeds, no event.
   - person with relationships, `confirmGenderTransition: { date: '2020-01-01' }` → creates `gender_transition` event AND flips sex; both visible in DB after.
   - All four cases assert the event count and `persons.sex` values directly (not return values).
-- [ ] **Unit test** — `tests/unit/relationshipLabels.test.ts` (new or extend) — `resolveParentSexAt`:
+- [x] **Unit test** — `tests/unit/relationshipLabels.test.ts` (new or extend) — `resolveParentSexAt`:
   - no transitions → returns `parentCurrentSex`.
   - one transition with `asOfIso` BEFORE → returns the OPPOSITE of `parentCurrentSex`.
   - one transition with `asOfIso` AFTER → returns `parentCurrentSex`.
   - `asOfIso === null` → returns `parentCurrentSex` (current/unknown date defaults to live identity).
   - two transitions, asOf between them → walks the chain correctly (assert specific case: M→F at 2010, F→M at 2025, asOf=2015 → F; asOf=2030 → M; asOf=2005 → M).
-- [ ] **Lint** — `npm run lint` clean.
-- [ ] **Tests** — `npm test` runs full suite; new tests pass.
+- [x] **Lint** — `npm run lint` clean.
+- [x] **Tests** — `npm test` runs full suite; new tests pass.
 
 ## Verification
 
