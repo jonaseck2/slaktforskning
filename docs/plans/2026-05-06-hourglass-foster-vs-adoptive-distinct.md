@@ -59,16 +59,17 @@ The numerical values are deliberately distinct from the existing `stroke-dasharr
 
 ## Tasks
 
-- [ ] **Audit** the connector emit shape — confirm where `parentSubtype` enters the per-edge data and where the merge-into-one-path decision happens. Most likely: `src/renderer/utils/chart-layout/connectors.ts` emits per-edge data; `HourglassChart.vue` decides the render shape (single curved path for coupled parents vs separate paths). Document the actual files in the implementer's commit.
-- [ ] **Add the per-subtype dash mapping** — `dashForSubtype(subtype: ParentSubtype): string` in the connectors util. Unit tested with the table above.
-- [ ] **Handle the mixed-subtype merged-edge case** — when both parents share a couple connector AND their parent_child subtypes differ, render two separate edges (one per parent) instead of one merged curved path. Same-subtype keeps the merge.
-- [ ] **Update the renderer** in `HourglassChart.vue` to call `dashForSubtype` per emitted `<path>`. The Vue `v-key` on the wrapping `<g>` updates to be per-edge.
-- [ ] **Legend entry for adoptive** — i18n keys `chart.legend.adoptiveRelationship` + `chart.tooltip.adoptiveRelationship` in `sv.ts` + `en.ts`. Add the swatch in `HourglassChart.vue`'s existing legend group below the foster-relationship entry.
-- [ ] **Component test (HourglassChart)** — seed a tree with a child who has one bio + one adoptive parent (mixed subtype). Assert two `<path>` elements emit, with `stroke-dasharray="none"` (or empty) and `"2 3"` respectively.
-- [ ] **Component test (HourglassChart)** — same-subtype case: child with two foster parents who are coupled. Assert ONE merged-curved-path with `stroke-dasharray="8 4"` (existing behavior preserved).
-- [ ] **Component test (HourglassChart)** — mixed adopted + foster (no biological parent): two separate paths, one with `"2 3"` and one with `"8 4"`.
-- [ ] **Tooltip test** — hover the new adoptive edge, assert the SVG `<title>` text matches `chart.tooltip.adoptiveRelationship`.
-- [ ] **Patch bump** + CHANGELOG: `- fix(chart): adoptive parent_child edges render dotted, distinct from foster's dashed style; mixed-subtype edges (e.g. one foster + one adopted parent) split into per-parent paths so each subtype is visible`.
+- [x] **Audit** the connector emit shape — confirm where `parentSubtype` enters the per-edge data and where the merge-into-one-path decision happens. Most likely: `src/renderer/utils/chart-layout/connectors.ts` emits per-edge data; `HourglassChart.vue` decides the render shape (single curved path for coupled parents vs separate paths). Document the actual files in the implementer's commit.
+  - Audit result: per-edge data is emitted from `src/renderer/utils/chart-layout/hourglass.ts` (placeAncestors / placeDescendants / focal-children loop), each call site passing `parentSubtype` through `prefixForSubtype()` to produce a path-class prefix (`F:`, `A:`, or none). The merge-into-one-path decision lives in the focal-children loop (the `coParentBox` branch anchoring at the couple-line midpoint). `connectors.ts` is just the geometry helper.
+- [x] **Add the per-subtype dash mapping** — `dashForSubtype(subtype: ParentSubtype): string` in the connectors util. Unit tested with the table above.
+- [x] **Handle the mixed-subtype merged-edge case** — when both parents share a couple connector AND their parent_child subtypes differ, render two separate edges (one per parent) instead of one merged curved path. Same-subtype keeps the merge.
+- [x] **Update the renderer** in `HourglassChart.vue` to call `dashForSubtype` per emitted `<path>`. The Vue `v-key` on the wrapping `<g>` updates to be per-edge.
+- [x] **Legend entry for adoptive** — i18n keys `chart.legend.adoptiveRelationship` + `chart.tooltip.adoptiveRelationship` in `sv.ts` + `en.ts`. Floating legend added to `HourglassChart.vue`; appears only when the chart contains foster or adoptive edges so the all-biological case stays uncluttered.
+- [x] **Component test (HourglassChart)** — seed a tree with a child who has one bio + one adoptive parent (mixed subtype). Assert two `<path>` elements emit, with `stroke-dasharray="none"` (or empty) and `"2 3"` respectively.
+- [x] **Component test (HourglassChart)** — same-subtype case: child with two foster parents who are coupled. Assert ONE merged-curved-path with `stroke-dasharray="8 4"` (existing behavior preserved).
+- [x] **Component test (HourglassChart)** — mixed adopted + foster (no biological parent): two separate paths, one with `"2 3"` and one with `"8 4"`.
+- [x] **Tooltip test** — adoptive `<title>` text matches `chart.tooltip.adoptiveRelationship`. Covered by the mixed-subtype component test (`expect(html).toContain('Adoptive relationship')`).
+- [ ] **Patch bump** + CHANGELOG — deferred to merge (per dispatcher instructions).
 
 ## Verification (user-observable)
 
