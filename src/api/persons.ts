@@ -96,6 +96,12 @@ export function createPerson(
     `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
     [id, data.sex ?? 'U', data.notes ?? '']
   );
+  // Assign display_id = max + 1 for this database. UNIQUE index catches any
+  // race; SQLite serializes within a single connection so this is safe.
+  runSql(db,
+    `UPDATE persons SET display_id = (SELECT COALESCE(MAX(display_id), 0) + 1 FROM persons) WHERE id = ?`,
+    [id]
+  );
 
   if (hasName) {
     const nameId = uuid();
@@ -381,6 +387,7 @@ export function deletePersonIdentifier(db: Database, id: string): boolean {
 export type PersonListItem = {
   id: string;
   sex: Person['sex'];
+  display_id: number | null;
   given_name: string;
   surname: string;
   preferred_name: string | null;
@@ -461,7 +468,7 @@ const PERSON_LIST_BASE_QUERY = `
 `;
 
 
-export type ListPersonsSortBy = 'surname' | 'given_name' | 'birth_date';
+export type ListPersonsSortBy = 'surname' | 'given_name' | 'birth_date' | 'display_id';
 export type ListPersonsSortDir = 'asc' | 'desc';
 
 function buildPersonsFilterClause(query: string | undefined): { where: string; params: unknown[] } {
@@ -499,13 +506,15 @@ export function listPersonsPage(
     ? `COALESCE(NULLIF(TRIM(pn.preferred_name), ''), pn.given_name) ${dir}, pn.surname ${dir}`
     : sortBy === 'birth_date'
     ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
+    : sortBy === 'display_id'
+    ? `CASE WHEN p.display_id IS NULL THEN 1 ELSE 0 END, p.display_id ${dir}`
     : `pn.surname ${dir}, pn.given_name ${dir}`;
   const filter = buildPersonsFilterClause(query);
   // `birth_surname` is a display-only correlated subquery — see
   // plan birth-name-display-and-quality-check. Computed at read time;
   // never persisted.
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
-    SELECT p.id, p.sex,
+  const page = queryAll<{ id: string; sex: string; display_id: number | null; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
+    SELECT p.id, p.sex, p.display_id,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname,
            pn.preferred_name           AS preferred_name,
@@ -566,6 +575,7 @@ export function listPersonsPage(
     return {
       id: p.id,
       sex: p.sex as Person['sex'],
+      display_id: p.display_id,
       given_name: p.given_name,
       surname: p.surname,
       preferred_name: p.preferred_name,
@@ -655,6 +665,7 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
     return {
       id: p.id,
       sex: p.sex as Person['sex'],
+      display_id: p.display_id,
       given_name: p.given_name,
       surname: p.surname,
       preferred_name: p.preferred_name,

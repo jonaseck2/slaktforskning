@@ -31,6 +31,11 @@
                 :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical"
               />
             </div>
+            <span
+              v-if="rawDisplayId !== null && rawDisplayId !== undefined"
+              class="person-display-id"
+              :title="$t('persons.displayIdLabel')"
+            >#{{ rawDisplayId }}</span>
             <span v-if="showTreeBtn && isTreeSubject" class="tree-subject-chip">{{ $t('panel.treeSubject') }}</span>
             <AppButton v-else-if="showTreeBtn" variant="soft" size="sm" @click="emit('set-tree-subject')">{{ $t('panel.setAsTreeSubject') }}</AppButton>
           </div>
@@ -292,6 +297,7 @@ interface PersonData {
   living: boolean;
   birthLine: string | null;
   deathLine: string | null;
+  display_id: number | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -384,7 +390,7 @@ async function buildDateLine(event: {
 const idRef = computed(() => props.personId ?? null);
 const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async (id) => {
   const [raw, fetchedNames, events] = await Promise.all([
-    window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean; created_at: string; updated_at: string } | null>,
+    window.api.persons.get(id) as Promise<{ id: string; sex: string; living: boolean; display_id: number | null; created_at: string; updated_at: string } | null>,
     window.api.persons.getNames(id) as Promise<NameData[]>,
     window.api.events.forPerson(id) as Promise<Array<{
       event_type: string;
@@ -429,6 +435,7 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
       living: raw.living,
       birthLine,
       deathLine,
+      display_id: raw.display_id,
       created_at: raw.created_at,
       updated_at: raw.updated_at,
     },
@@ -445,6 +452,7 @@ const { data: panelData, reload } = useEntityData<PersonPanelData>(idRef, async 
 });
 
 const person = computed(() => panelData.value?.person ?? null);
+const rawDisplayId = computed(() => panelData.value?.person?.display_id ?? null);
 const primaryName = computed(() => panelData.value?.primaryName ?? null);
 const names = computed(() => panelData.value?.names ?? []);
 const birthEventDate = computed(() => panelData.value?.birthEventDate ?? null);
@@ -749,6 +757,14 @@ function openTaskFromRow(id: string) {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
+}
+
+.person-display-id {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  margin-right: var(--space-sm);
 }
 
 .tree-subject-chip {

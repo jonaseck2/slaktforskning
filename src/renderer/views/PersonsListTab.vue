@@ -33,6 +33,10 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th class="sortable-th display-id-col" @click="toggleSort('display_id')">
+              {{ $t('persons.idColumn') }}
+              <span v-if="sortBy === 'display_id'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+            </th>
             <th class="sortable-th" @click="toggleSort('given_name')">
               {{ $t('persons.givenNameColumn') }}
               <span v-if="sortBy === 'given_name'" class="sort-arrow">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -68,6 +72,7 @@
             @keydown.down.prevent="focusNextRow($event)"
             @keydown.up.prevent="focusPrevRow($event)"
           >
+            <td class="display-id-cell">{{ person.display_id ?? '' }}</td>
             <td>
               <div class="name-cell">
                 <AppAvatar :person-id="person.id" :given-name="person.given_name || ''" :surname="person.surname || ''" :preferred-name="person.preferred_name ?? null" :sex="(person.sex as 'M' | 'F' | 'U') || 'U'" />
@@ -126,6 +131,7 @@ const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
 interface PersonListItem {
   id: string;
   sex: string;
+  display_id: number | null;
   given_name: string;
   surname: string;
   preferred_name: string | null;
@@ -144,7 +150,7 @@ const emit = defineEmits<{ select: [id: string] }>();
 const router = useRouter();
 const selectedPersonStore = useSelectedPersonStore();
 
-type SortBy = 'surname' | 'given_name' | 'birth_date';
+type SortBy = 'surname' | 'given_name' | 'birth_date' | 'display_id';
 
 const {
   items: persons,
@@ -271,6 +277,17 @@ function goToDetail(person: PersonListItem) {
   text-align: center;
 }
 .actions-cell { width: 1px; text-align: right; white-space: nowrap; }
+.display-id-col {
+  width: 64px;
+  text-align: right;
+  white-space: nowrap;
+}
+.display-id-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
 .name-cell { display: flex; align-items: center; gap: var(--space-sm); }
 .info-cell { color: var(--text-muted); font-size: var(--font-sm); }
 /* Lock the Born column to a width that fits a full ISO date (YYYY-MM-DD)

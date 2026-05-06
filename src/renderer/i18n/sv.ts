@@ -151,6 +151,8 @@ export default {
     givenName: 'Förnamn (fullständigt)',
     givenNameColumn: 'Förnamn',
     bornColumn: 'Född',
+    idColumn: 'Id',
+    displayIdLabel: 'Person-ID',
     givenNameHint: 'Markera tilltalsnamn med * eller ! efter det, t.ex. Eva Linda* Marie',
     preferredName: 'Tilltalsnamn',
     preferredNamePlaceholder: 't.ex. Linda (om fullständigt förnamn är Eva Linda Marie)',

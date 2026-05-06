@@ -99,6 +99,10 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v70: { kind: 'lossless' },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
+  'persons.display_id': {
+    v551: { kind: 'excluded', reason: 'per-database integer ordering label; not GEDCOM-representable, re-assigned on import in created_at order' },
+    v70: { kind: 'excluded', reason: 'per-database integer ordering label; not GEDCOM-representable, re-assigned on import in created_at order' },
+  },
   'persons.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
   'persons.updated_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 

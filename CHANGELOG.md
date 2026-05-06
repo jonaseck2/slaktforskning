@@ -11,6 +11,7 @@
 - feat: register birth date and place inline when adding a new person
 - fix: 'About OurLegacy' is reachable from the macOS app menu and from Settings
 - feat: side panels show when an entity was registered and (where tracked) last changed
+- feat: each person has a stable, sortable display id, visible in the list and the panel header
 
 ## 0.215.2
 

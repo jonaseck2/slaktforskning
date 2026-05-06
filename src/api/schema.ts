@@ -10,9 +10,11 @@ export function initializeSchema(db: Database): void {
       id TEXT PRIMARY KEY,
       sex TEXT NOT NULL DEFAULT 'U' CHECK(sex IN ('M', 'F', 'U')),
       notes TEXT NOT NULL DEFAULT '',
+      display_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL;
 
     CREATE TABLE IF NOT EXISTS person_names (
       id TEXT PRIMARY KEY,
@@ -465,5 +467,39 @@ export function initializeSchema(db: Database): void {
   // full table scan, making large imports O(n²).
   runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_normalized_name ON places(normalized_name)');
   runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_parent_normalized ON places(parent_place_id, normalized_name)');
+
+  // v0.218.0: persons.display_id — per-database integer ordering label, visible
+  // to genealogists in the panel header and the persons list. Stable, sortable,
+  // never recycled. Not GEDCOM-representable; re-assigned on import per
+  // gedcom_fidelity_registry. See plan 2026-05-05-person-id-visibility.md.
+  const personsColsV218 = queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)').map(c => c.name);
+  if (!personsColsV218.includes('display_id')) {
+    runSql(db, 'ALTER TABLE persons ADD COLUMN display_id INTEGER');
+    runSql(db, 'CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL');
+  }
+  // Backfill any rows missing display_id. Runs on startup so importers that
+  // bypass createPerson (Genney, restore-from-undo) get backfilled the next
+  // time the database is opened. Cheap when nothing is missing — the WHERE
+  // EXISTS check short-circuits and the UPDATE is skipped.
+  const missingDisplayId = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons WHERE display_id IS NULL')?.n ?? 0;
+  if (missingDisplayId > 0) {
+    runSql(db, 'BEGIN IMMEDIATE');
+    try {
+      const maxRow = queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons');
+      const startFrom = (maxRow?.m ?? 0) + 1;
+      const rows = queryAll<{ id: string }>(db, `
+        SELECT id FROM persons
+        WHERE display_id IS NULL
+        ORDER BY created_at, id
+      `);
+      for (let i = 0; i < rows.length; i++) {
+        runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, rows[i].id]);
+      }
+      runSql(db, 'COMMIT');
+    } catch (err) {
+      try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+      throw err;
+    }
+  }
 
 }

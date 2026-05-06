@@ -3,6 +3,7 @@ export interface Person {
   sex: 'M' | 'F' | 'U';
   living: boolean;
   notes: string;
+  display_id: number | null;
   created_at: string;
   updated_at: string;
 }
