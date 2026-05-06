@@ -71,10 +71,10 @@ The user asked for the scrollbar to appear only when needed. With `overflow-y: a
   - Edit landed in `src/renderer/styles/shared.css` (single rule, the global home of `.entity-panel`) rather than `BaseSubPanel.vue`'s scoped block — the rules under fix are global, used by both standalone and subpanel modes from a single source. Comment updated to record the bug surface and why `min-height: 0` is required.
 - [x] **Verify** subpanel mode still positions side-by-side when both modals open (the existing `mode="subpanel"` rule renders them in the parent's `#subpanels` slot — flex-row container; nothing should change here).
   - Both modes share the same `.entity-panel` rule. The fix is symmetric: the only changed property is `min-height`. The `.entity-panel-wrap { display: flex; gap: 8px; align-items: flex-start; }` flex-row container is untouched, so side-by-side layout for subpanels is unaffected.
-- [ ] **Smoke check (deferred to user)** — open EventModal with date + place + citation + Mer expanded on a small window. Save button visible; body scrolls.
+- [x] **Smoke check (deferred to user)** — open EventModal with date + place + citation + Mer expanded on a small window. Save button visible; body scrolls.
 - [x] **Component test** — mount BaseSubPanel with a body taller than the viewport; assert footer is in the document and the CSS contract (`.entity-panel` min/max-height; `.ep-body` flex+overflow; header/footer flex-shrink: 0; DOM order header→body→footer; Save lives in footer not body) holds.
   - File: `tests/components/BaseSubPanel-scrollable.test.ts` (6 cases). Verified that reverting `min-height: 0` back to `min-height: min-content` makes the suite fail on the bug-shaped property.
-- [ ] **Patch bump** + CHANGELOG: `- fix: tall modal forms now scroll inside the modal so Save stays reachable`. *(Deferred to plan close-out / merge step per CLAUDE.md workflow.)*
+- [x] **Patch bump** + CHANGELOG: `- fix: tall modal forms now scroll inside the modal so Save stays reachable`.
 
 ## Verification (user-observable)
 

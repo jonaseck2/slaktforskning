@@ -17,6 +17,7 @@
 - chore: test suite is fully green (13 stale tests updated to match shipped behavior; no code regressions found)
 - feat: undo/redo buttons in the topbar with action-naming tooltips (e.g. "Ångra: Skapa person")
 - fix: typing in a place field after picking from the suggestion list edits the field instead of clearing it
+- fix: tall modal forms now scroll inside the modal so Save stays reachable
 
 ## 0.215.2
 
