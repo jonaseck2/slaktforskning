@@ -24,16 +24,15 @@ Editing an existing name record (type `name_change`):
 - **Adding citation to OTHER name types** (`birth`, `married`, `alias`, `aka`): in scope. The citation field is universally useful on names; design it once in the modal, applies to every name type.
 - **A new `name_change` event type** that ties name + date + source together as a first-class event: out of scope. The user is asking for a small fix on the existing modal, not a redesign.
 
+## Locked decisions
+
+**Option B (locked).** Citation linkage adds `person_name_id` to the `citations` schema, with a migration + registry entry. Folding citations onto the person (Option A) would diffuse the meaning — the user-visible feature is "attach a source to *this name change record*", not "this source is about this person".
+
 ## Investigation needed
 
 Before writing code, audit:
 
-1. **Citation linkage to names** — the existing `citations` table per `.claude/rules/api.md` has `event_id`, `person_id`, `relationship_id`, `place_id` as nullable FKs but **no `person_name_id`**. Decide:
-   - **Option A**: link the citation to the *person* (existing `person_id` FK). Simpler — no schema change. But then the citation isn't specific to one of the person's name records.
-   - **Option B**: add `person_name_id` to `citations` schema, with a migration + registry entry. More precise; lets the citation say "this source confirms this specific name change", not just "this source is about this person".
-   - **Recommended: Option B**, since the user-visible feature is "attach a source to a *name change* record" — folding it onto the person diffuses the meaning.
-
-2. **`name_qualifier` and `date_to` semantics on `person_names`** — confirm the schema-level interpretation of `date_to`. If it's intended to bound a name's validity period (e.g. for an alias used 1990–2000), then `name_change` legitimately doesn't use it. Document the decision in code comments.
+1. **`name_qualifier` and `date_to` semantics on `person_names`** — confirm the schema-level interpretation of `date_to`. If it's intended to bound a name's validity period (e.g. for an alias used 1990–2000), then `name_change` legitimately doesn't use it. Document the decision in code comments.
 
 ## Design summary
 
@@ -62,15 +61,14 @@ Per CLAUDE.md "Authored values are not discarded by side effect": if the user pr
 
 ## Tasks
 
-- [ ] **Decide Option A vs B** for citation linkage. Default: B.
-- [ ] **If B**: schema migration adds `citations.person_name_id`; registry entry for round-trip; new `getCitationsForPersonName` API; IPC + preload coverage.
+- [ ] **Schema migration**: add `citations.person_name_id` (nullable FK to `person_names.id`); registry entry for round-trip; new `getCitationsForPersonName` API; IPC + preload coverage.
 - [ ] **Audit `PersonNameModal.vue`** — current field layout; locate "Mer" section; locate `date_to` (Giltigt till) input.
 - [ ] **Add citation block** in "Mer" section. Reuse CitationPicker / chip-list pattern from EventModal.
 - [ ] **Conditional `date_to`** — hide for `name_change`; relabel per-type for others.
 - [ ] **Save handler audit** — ensure hidden `date_to` field doesn't get nulled out; existing rows with values keep them.
 - [ ] **i18n keys** in both locales for the per-type "valid until" labels.
 - [ ] **Component test** — mount PersonNameModal in `name_change` mode; assert no `date_to` input in DOM. Mount in `alias` mode; assert input is present with the "Användes till" label.
-- [ ] **Test (Option B only)** — create a name, attach a citation, verify the citation has `person_name_id` set; getCitationsForPersonName returns it.
+- [ ] **Test** — create a name, attach a citation, verify the citation has `person_name_id` set; getCitationsForPersonName returns it.
 - [ ] **Minor bump** + CHANGELOG: `- feat: name records can carry a source citation; 'Valid until' field hidden where it doesn't apply`.
 
 ## Verification (user-observable)
@@ -84,5 +82,4 @@ Per CLAUDE.md "Authored values are not discarded by side effect": if the user pr
 ## Failure modes / RCA reference
 
 - **Authored-data discard:** the most likely defect when hiding a field is the save handler nulling it. Test must seed a `name_change` row with `date_to = '2020-01-01'`, open the modal, save without other changes, query — `date_to` is still `'2020-01-01'`. (CLAUDE.md "Authored values are not discarded by side effect" rule.)
-- **Citation on the wrong target:** if Option A is chosen, the citation lands on the *person*, not the *name record*. Subsequent edits to the name record won't show the citation; subsequent person-level citation views show citations from name changes mixed with citations from other person-level claims. That's why Option B is the recommended path.
-- **Schema migration gap (Option B):** every new column needs a registry entry per CLAUDE.md "Round-Trip Fidelity". Adding `citations.person_name_id` without registering it breaks CI.
+- **Schema migration gap:** every new column needs a registry entry per CLAUDE.md "Round-Trip Fidelity". Adding `citations.person_name_id` without registering it breaks CI.
