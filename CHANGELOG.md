@@ -21,6 +21,7 @@
 - fix: tall modal forms now scroll inside the modal so Save stays reachable
 - fix(schema): pre-v0.218 databases no longer crash on app launch with "no such column: display_id"
 - fix: relation row uses clearer role labels (full word, not "Fö"), hover tooltips on every affordance, and a trash icon for remove
+- feat: research tasks can be linked to persons; each person's PersonPanel surfaces an "Uppgifter" section with a + Task CTA that auto-links the host person
 
 ## 0.215.2
 
