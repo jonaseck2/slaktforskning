@@ -41,6 +41,10 @@ describe('static API parity', () => {
   it('every registry channel has a stub in the static api', () => {
     const missing: string[] = [];
     for (const name of Object.keys(channelRegistry)) {
+      // Internal worker-only channels (names containing ':_') are dispatched
+      // from main-thread shims via callWorker(...) and are not part of the
+      // renderer-facing surface, so the static SPA does not stub them.
+      if (name.includes(':_')) continue;
       const colonIdx = name.indexOf(':');
       if (colonIdx === -1) continue;
       const domain = name.slice(0, colonIdx);
