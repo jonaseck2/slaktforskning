@@ -209,6 +209,16 @@ const lastResolvedPath = ref<string>('');
 
 watch(() => props.modelValue, async (id) => {
   if (!id) {
+    // The parent cleared the bound place. If the user is in the middle of
+    // editing the field (query no longer matches the previously resolved
+    // path), preserve what they typed — Backspace at the trailing edge of
+    // a picked place must edit the visible label one character at a time,
+    // not blank the whole field. We still drop the cached resolved path so
+    // showCreateNew kicks back in for the new query.
+    if (query.value !== lastResolvedPath.value) {
+      lastResolvedPath.value = '';
+      return;
+    }
     query.value = '';
     lastResolvedPath.value = '';
     return;

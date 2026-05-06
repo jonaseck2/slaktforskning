@@ -163,6 +163,64 @@ describe('PlacePicker', () => {
     expect((window as any).api.places.getPath).toHaveBeenCalledWith('pl1');
   });
 
+  it('preserves typed text when user edits the field after picking a suggestion (BENGT #73)', async () => {
+    // User goal: type "Järf" → pick "Järfälla, Stockholms län, Sweden, Europe"
+    // → place cursor at end → press Backspace once. Only the trailing
+    // character is removed; the whole field MUST NOT clear.
+    //
+    // Reproduces the regression where the modelValue watcher cleared
+    // `query.value` whenever the parent unbound the place id — including
+    // when the unbind was caused by the user's own edit (handled by
+    // onInput before the modelValue change reaches us).
+    (window as any).api.places.getPath.mockResolvedValue('Järfälla, Stockholms län, Sweden, Europe');
+
+    const wrapper = mountPicker({ modelValue: 'pl-jarfalla' });
+    await flushPromises();
+
+    const input = wrapper.find('input');
+    expect((input.element as HTMLInputElement).value).toBe('Järfälla, Stockholms län, Sweden, Europe');
+
+    // Simulate Backspace at the trailing edge: input value becomes the
+    // resolved path minus its last character, the @input handler fires.
+    const trimmed = 'Järfälla, Stockholms län, Sweden, Europ';
+    await input.setValue(trimmed);
+    await flushPromises();
+
+    // onInput should have unbound modelValue (user is editing away from the
+    // resolved path) — verify the unbind happened.
+    const emits = wrapper.emitted('update:modelValue') ?? [];
+    expect(emits.some(e => e[0] === null)).toBe(true);
+
+    // Now propagate the unbind back through the modelValue prop, the way a
+    // real parent (e.g. EventModal) would via v-model.
+    await wrapper.setProps({ modelValue: null });
+    await flushPromises();
+
+    // CRITICAL: the visible field must still reflect what the user typed,
+    // not be blanked by the modelValue=null watcher.
+    expect((input.element as HTMLInputElement).value).toBe(trimmed);
+  });
+
+  it('clears the field when parent programmatically nulls modelValue (e.g. Reset button)', async () => {
+    // Counterpart to the BENGT #73 test: when modelValue goes null and the
+    // query still matches the last resolved path (i.e. the user did NOT
+    // edit the field), clearing the field is the right behavior — that's
+    // a parent-driven reset, not user typing.
+    (window as any).api.places.getPath.mockResolvedValue('Stockholm');
+
+    const wrapper = mountPicker({ modelValue: 'pl1' });
+    await flushPromises();
+
+    const input = wrapper.find('input');
+    expect((input.element as HTMLInputElement).value).toBe('Stockholm');
+
+    // Parent resets — query was untouched, equals lastResolvedPath.
+    await wrapper.setProps({ modelValue: null });
+    await flushPromises();
+
+    expect((input.element as HTMLInputElement).value).toBe('');
+  });
+
   it('shows parent name in subtitle', async () => {
     const wrapper = mountPicker();
     const input = wrapper.find('input');
