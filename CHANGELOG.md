@@ -28,6 +28,7 @@
 - fix(mcp): `db_stats` no longer throws `stmt.getAsObject is not a function` (used the sql.js API instead of node-sqlite3-wasm's); `app_status` reports the live DB path after a `switch_database` swap (was reporting only the launch-time env var)
 - fix: relationship edit modal saves correctly; Save button is dimmed when fields are missing; save errors now surface the underlying cause instead of a generic "Could not save" toast
 - feat(events): new `gender_transition` event type plus an API guard that requires explicit confirmation before flipping a person's `sex` when they have active relationships (groundwork for the upcoming UI flow — Phase 1 of 3)
+- feat: name records can carry a source citation (Hänvisning section in PersonNameModal); 'Giltigt till' / 'Valid until' field is hidden where it doesn't apply (`birth`, `name_change`) and relabeled per name type ('Used until' for `alias` / `aka`)
 
 ## 0.215.2
 

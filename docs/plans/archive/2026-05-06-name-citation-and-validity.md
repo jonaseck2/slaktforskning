@@ -69,7 +69,7 @@ Per CLAUDE.md "Authored values are not discarded by side effect": if the user pr
 - [x] **i18n keys** in both locales for the per-type "valid until" labels (`names.dateToUsed`).
 - [x] **Component test** — `tests/components/PersonNameModal.test.ts` — covers `name_change`, `birth`, `married`, `alias`, `aka` visibility + label, plus the legacy-`date_to` Prime-Directive guard, plus citation section rendering + chip load.
 - [x] **Test** — `tests/unit/sources.test.ts` — `getCitationsForPersonName` returns name-attached citations; `person_name_id` cascade-deletes citations when the parent name is removed.
-- [ ] **Minor bump** + CHANGELOG: `- feat: name records can carry a source citation; 'Valid until' field hidden where it doesn't apply` — handled at merge time per project workflow.
+- [x] **Minor bump** + CHANGELOG: `- feat: name records can carry a source citation; 'Valid until' field hidden where it doesn't apply` — handled at merge time per project workflow.
 
 ## Verification (user-observable)
 
