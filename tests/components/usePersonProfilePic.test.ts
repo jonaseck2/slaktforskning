@@ -34,15 +34,31 @@ function installWindowApi(overrides: Partial<FakeMediaApi> = {}): FakeMediaApi {
     profilePicRefs: vi.fn().mockResolvedValue({}),
     ...overrides,
   };
+  // The renderer rules require batched IPC; the store calls
+  // media.profilePicRefs(ids[]). Existing fixtures stub the per-id
+  // profilePicRef helper for readability, so synthesize a profilePicRefs
+  // that calls through to it (unless the test explicitly overrode the
+  // batched form). Each call resolves the per-id mock once per id.
+  if (!('profilePicRefs' in overrides)) {
+    media.profilePicRefs = vi.fn(async (ids: string[]) => {
+      const out: Record<string, unknown> = {};
+      for (const id of ids) {
+        out[id] = await media.profilePicRef(id);
+      }
+      return out;
+    }) as unknown as typeof media.profilePicRefs;
+  }
   (globalThis as Record<string, unknown>).window = { api: { media } };
   return media;
 }
 
 // Flush all microtasks / resolved promises.
+// The store batches via queueMicrotask + several await hops (profilePicRefs
+// → readAsDataUrl → cropImageToDataUrl → setEntry). The synthesized
+// profilePicRefs in installWindowApi adds one more await per id. Six
+// nextTicks comfortably covers the deepest chain in the existing fixtures.
 async function flushAll() {
-  await nextTick();
-  await nextTick();
-  await nextTick();
+  for (let i = 0; i < 6; i++) await nextTick();
 }
 
 // -------------------------------------------------------------------
@@ -118,18 +134,21 @@ describe('usePersonProfilePic — api returns a region-tagged profile pic', () =
     expect(src.value).toBe('data:cropped-face');
   });
 
-  it('loading is true synchronously (watch is immediate; store sets status to loading before first await)', () => {
+  it('loading flips to true on the next tick (microtask-batched store)', async () => {
     installWindowApi({
       profilePicRef: vi.fn().mockResolvedValue({
         mediaId: 'm1',
         region: { x: 0, y: 0, width: 1, height: 1 },
       }),
     });
-    // The watch is { immediate: true }, so ensureLoaded runs synchronously.
-    // ensureLoaded sets the store entry to { status: 'loading' } before any
-    // await, so loading.value is true the moment the composable is called.
+    // The store's ensureLoaded is microtask-batched (queueMicrotask
+    // flushPending — see profilePic store). The 'loading' status is
+    // assigned inside ensureBatch, after one microtask hop. Synchronous
+    // truth was a property of the pre-batching store; today it lands
+    // one tick later.
     const id = ref<string | null>('p1');
     const { loading } = usePersonProfilePic(id);
+    await nextTick();
     expect(loading.value).toBe(true);
   });
 

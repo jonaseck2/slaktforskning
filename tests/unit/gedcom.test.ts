@@ -984,7 +984,11 @@ describe('GEDCOM media import', () => {
     expect(media[0].file_ref).toBe('C:\\Photos\\bengt.jpg');
     expect(media[0].format).toBe('JPG');
     expect(media[0].title).toBe('Portrait');
-    expect(media[0].is_missing).toBe(1);
+    // is_missing is decided by consolidateMediaFolder post-import (single
+    // recursive readdir), not by per-OBJE existsSync during import. Per
+    // v0.210.7. With a non-empty file_ref, importer leaves is_missing=0;
+    // the on-disk reality is not the importer's concern.
+    expect(media[0].is_missing).toBe(0);
   });
 
   it('imports top-level OBJE referenced from INDI', () => {
@@ -1004,7 +1008,8 @@ describe('GEDCOM media import', () => {
     const media = getMediaForEntity(db, 'person', persons[0].id);
     expect(media).toHaveLength(1);
     expect(media[0].file_ref).toBe('/photos/portrait.png');
-    expect(media[0].is_missing).toBe(1);
+    // is_missing decided by consolidateMediaFolder, not per-OBJE existsSync.
+    expect(media[0].is_missing).toBe(0);
   });
 
   it('exports person media as inline OBJE and re-imports correctly', () => {

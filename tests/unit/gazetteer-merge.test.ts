@@ -72,14 +72,16 @@ describe('mergeTree (structural merge by name+type)', () => {
     expect(eksjo.__contributors).toEqual(expect.arrayContaining(['sv-orter', 'sv-socknar']));
   });
 
-  it('first-wins on lat/lon; warns on >0.01° divergence', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('first-wins on lat/lon when sources diverge', () => {
+    // Note: console.warn on >0.01° divergence is opt-in via
+    // SLAKTFORSKNING_GAZETTEER_DEBUG=1 (off by default — the warning
+    // floods the terminal during multi-source merges, see merge.ts).
+    // The user-observable contract is first-wins; the warn is a triage
+    // helper and not asserted here.
     const acc = makeWorld([{ name: 'Sweden', type: 'country', lat: 62.0, lon: 15.0 }]);
     mergeTree(acc, makeWorld([{ name: 'Sweden', type: 'country', lat: 62.05, lon: 15.05 }]), 'gz-2');
     expect(acc.children![0].lat).toBe(62.0);
     expect(acc.children![0].lon).toBe(15.0);
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
   });
 
   it('throws if accumulator/source roots have different name or type', () => {

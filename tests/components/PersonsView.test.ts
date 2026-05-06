@@ -49,6 +49,7 @@ describe('PersonsView', () => {
         get: vi.fn().mockResolvedValue({ id: 'test-id', sex: 'M', living: true }),
         getNames: vi.fn().mockResolvedValue([{ given_name: 'Magnus', surname: 'Eriksson', preferred_name: null, nickname: null, sort_order: 0 }]),
         list: vi.fn().mockResolvedValue([{ id: 'test-id' }]),
+        listPage: vi.fn().mockResolvedValue({ persons: [{ id: 'test-id' }], total: 1 }),
       },
       db: {
         getSetting: vi.fn().mockResolvedValue(null),
@@ -137,7 +138,9 @@ describe('PersonsView', () => {
       await flushPromises();
 
       expect(mockReplace).not.toHaveBeenCalled();
-      expect((window as any).api.persons.list).toHaveBeenCalled();
+      // Per renderer rules: never use un-paged list() for existence/probe.
+      // PersonsView falls back to listPage(1, 0, …) instead.
+      expect((window as any).api.persons.listPage).toHaveBeenCalled();
     });
 
     it('redirects to default_person_id when route person is not found in current db', async () => {
@@ -158,7 +161,9 @@ describe('PersonsView', () => {
       await flushPromises();
 
       expect(mockReplace).not.toHaveBeenCalled();
-      expect((window as any).api.persons.list).toHaveBeenCalled();
+      // Per renderer rules: never use un-paged list() for existence/probe.
+      // PersonsView falls back to listPage(1, 0, …) instead.
+      expect((window as any).api.persons.listPage).toHaveBeenCalled();
     });
 
     it('does not redirect when route person is found', async () => {
@@ -178,7 +183,9 @@ describe('PersonsView', () => {
 
       // Guard against infinite redirect loop: skip if defaultId === id
       expect(mockReplace).not.toHaveBeenCalled();
-      expect((window as any).api.persons.list).toHaveBeenCalled();
+      // Per renderer rules: never use un-paged list() for existence/probe.
+      // PersonsView falls back to listPage(1, 0, …) instead.
+      expect((window as any).api.persons.listPage).toHaveBeenCalled();
     });
   });
 });

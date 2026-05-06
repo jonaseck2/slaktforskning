@@ -59,7 +59,13 @@ describe('consolidateMediaFolder', () => {
     expect(getMedia(db, m.id)?.file_ref).toBe('/no/such/file.jpg');
   });
 
-  it('handles name conflicts by appending a numeric suffix', async () => {
+  it('same-basename sources collapse to one file (first wins)', async () => {
+    // Behavior change: `_n` suffix was removed (see comment in
+    // media_consolidate.ts slow path). When two source paths share a
+    // basename, both rows end up pointing at the same dest file and the
+    // first source's content is kept (copyFile uses COPYFILE_EXCL; the
+    // second copy throws EEXIST and is silently swallowed). Both rows
+    // are still rewritten to the same relative ref.
     const db = createTestDb();
     const srcA = path.join(tmpDir, 'a', 'p.jpg');
     const srcB = path.join(tmpDir, 'b', 'p.jpg');
@@ -75,11 +81,10 @@ describe('consolidateMediaFolder', () => {
 
     const refA = getMedia(db, mA.id)?.file_ref ?? '';
     const refB = getMedia(db, mB.id)?.file_ref ?? '';
-    expect(refA).not.toBe(refB);
+    expect(refA).toBe(refB);
     expect(fs.existsSync(path.join(tmpDir, refA))).toBe(true);
-    expect(fs.existsSync(path.join(tmpDir, refB))).toBe(true);
+    // First-wins: the file at the shared dest path holds AAA, not BBB.
     expect(fs.readFileSync(path.join(tmpDir, refA), 'utf8')).toBe('AAA');
-    expect(fs.readFileSync(path.join(tmpDir, refB), 'utf8')).toBe('BBB');
   });
 
   it('skips null/empty file_ref', async () => {
