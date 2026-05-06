@@ -14,7 +14,6 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL;
 
     CREATE TABLE IF NOT EXISTS person_names (
       id TEXT PRIMARY KEY,
@@ -475,8 +474,12 @@ export function initializeSchema(db: Database): void {
   const personsColsV218 = queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)').map(c => c.name);
   if (!personsColsV218.includes('display_id')) {
     runSql(db, 'ALTER TABLE persons ADD COLUMN display_id INTEGER');
-    runSql(db, 'CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL');
   }
+  // Index creation must run unconditionally (idempotent via IF NOT EXISTS) so
+  // both fresh DBs and pre-v0.218 DBs end up with it. Keeping the index inside
+  // the inline CREATE TABLE block crashes initializeSchema on a pre-v0.218 DB
+  // because the column doesn't exist yet at that point.
+  runSql(db, 'CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL');
   // Backfill any rows missing display_id. Runs on startup so importers that
   // bypass createPerson (Genney, restore-from-undo) get backfilled the next
   // time the database is opened. Cheap when nothing is missing — the WHERE
