@@ -30,8 +30,11 @@
              solid edges and from outline placeholder edges (which use 4 3).
              Wrapped in a <g> so the SVG <title> child surfaces a native
              tooltip on hover, naming the relationship for users who don't
-             immediately read the dash. -->
-        <g v-for="(d, i) in fosterPaths" :key="'fp' + i">
+             immediately read the dash.
+             Key is per-edge ('fp' + index) so a parent with multiple
+             children of differing subtypes doesn't trigger reused-DOM
+             render bugs. -->
+        <g v-for="(d, i) in fosterPaths" :key="'foster-' + i">
           <title>{{ $t('chart.tooltip.fosterRelationship') }}</title>
           <path
             :d="d"
@@ -39,6 +42,21 @@
             :stroke="chartTokens.line"
             stroke-width="1.5"
             stroke-dasharray="8 4"
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
+        <!-- Adoptive parent_child connectors: same colour as biological/foster,
+             but a dotted pattern (2 3) so the user can tell adoptive from
+             foster at a glance. Distinct from the outline-placeholder dash
+             (4 3) so a placeholder edge stays visually separable. -->
+        <g v-for="(d, i) in adoptedPaths" :key="'adopted-' + i">
+          <title>{{ $t('chart.tooltip.adoptiveRelationship') }}</title>
+          <path
+            :d="d"
+            fill="none"
+            :stroke="chartTokens.line"
+            stroke-width="1.5"
+            stroke-dasharray="2 3"
             vector-effect="non-scaling-stroke"
           />
         </g>
@@ -209,6 +227,24 @@
         </template>
       </svg>
     </div>
+    <!-- Legend: shown only when the rendered tree actually contains foster
+         or adoptive parent_child edges, so the legend doesn't clutter the
+         common (all-biological) case. The two entries match the SVG dash
+         patterns the chart emits per `dashForSubtype`. -->
+    <div v-if="fosterPaths.length > 0 || adoptedPaths.length > 0" class="chart-legend" aria-label="Chart legend">
+      <div v-if="fosterPaths.length > 0" class="chart-legend-entry">
+        <svg class="chart-legend-swatch" width="32" height="8" aria-hidden="true">
+          <line x1="0" y1="4" x2="32" y2="4" :stroke="chartTokens.line" stroke-width="1.5" stroke-dasharray="8 4" />
+        </svg>
+        <span>{{ $t('chart.legend.fosterRelationship') }}</span>
+      </div>
+      <div v-if="adoptedPaths.length > 0" class="chart-legend-entry">
+        <svg class="chart-legend-swatch" width="32" height="8" aria-hidden="true">
+          <line x1="0" y1="4" x2="32" y2="4" :stroke="chartTokens.line" stroke-width="1.5" stroke-dasharray="2 3" />
+        </svg>
+        <span>{{ $t('chart.legend.adoptiveRelationship') }}</span>
+      </div>
+    </div>
     <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
       <span class="zoom-extra-label" :title="$t('chart.tooltip.generationCount')" :aria-label="$t('chart.tooltip.generationCount')">{{ $t('reports.generations') }}</span>
       <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationDecrease')" :aria-label="$t('chart.tooltip.generationDecrease')" @click="decrGens" :disabled="genTarget <= 1">−</button>
@@ -298,15 +334,19 @@ const layout = computed(() => {
 // Path-class prefixes:
 //   'D:' — outline placeholder connectors (rendered dashed 4 3, placeholder colour)
 //   'F:' — foster parent_child connectors (rendered dashed 8 4, normal line colour, with tooltip)
-//   (no prefix) — biological/adopted/step/unknown parent_child + couple connectors (solid)
+//   'A:' — adoptive parent_child connectors (rendered dotted 2 3, normal line colour, with tooltip)
+//   (no prefix) — biological/unknown/null parent_child + couple connectors (solid)
 const solidPaths = computed(() =>
-  layout.value.paths.filter(d => !d.startsWith('D:') && !d.startsWith('F:')),
+  layout.value.paths.filter(d => !d.startsWith('D:') && !d.startsWith('F:') && !d.startsWith('A:')),
 );
 const dashedPaths = computed(() =>
   layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)),
 );
 const fosterPaths = computed(() =>
   layout.value.paths.filter(d => d.startsWith('F:')).map(d => d.slice(2)),
+);
+const adoptedPaths = computed(() =>
+  layout.value.paths.filter(d => d.startsWith('A:')).map(d => d.slice(2)),
 );
 
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParentId?: string | null) {
@@ -681,5 +721,34 @@ defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 }
 .add-relative-btn:hover .add-relative-leaf-glyph {
   transform: scale(1.15);
+}
+
+/* Floating legend in the bottom-left corner. Shown only when the chart
+   contains non-biological parent_child edges, so the common all-biological
+   case stays uncluttered. */
+.chart-legend {
+  position: absolute;
+  bottom: var(--space-md);
+  left: var(--space-md);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  z-index: 10;
+  pointer-events: none;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+.chart-legend-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.chart-legend-swatch {
+  flex-shrink: 0;
 }
 </style>

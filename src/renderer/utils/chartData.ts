@@ -654,16 +654,21 @@ export async function fetchHourglassTreePerson(
     spouses: [],
   })));
 
-  // Build children with coParentId annotation
+  // Build children with coParentId annotation. Also capture coParentSubtype
+  // — the subtype of the parent_child relationship between the co-parent and
+  // this child — so the chart can detect mixed-subtype cases (e.g. focal is
+  // biological to the child while the spouse is adopted) and split the
+  // merged couple-edge into per-parent edges.
   const childrenUnsorted = await Promise.all(childIds.map(async (cid) => {
     const child = await buildDescendants(cid, 1, false);
     const childRels = await getRels(cid);
-    const coParentId = childRels
+    const coParentRel = childRels
       .filter(r => r.type === 'parent_child' && r.person2_id === cid && r.person1_id !== focalId)
-      .map(r => r.person1_id)
-      .find(pid => pid !== null && spouseIdSet.has(pid!)) ?? null;
+      .find(r => r.person1_id !== null && spouseIdSet.has(r.person1_id!));
+    const coParentId = coParentRel?.person1_id ?? null;
     child.coParentId = coParentId;
     child.parentSubtype = focalChildSubtypeById.get(cid) ?? null;
+    child.coParentSubtype = coParentRel ? coerceParentSubtype(coParentRel.subtype ?? null) : null;
     return child;
   }));
   const children = sortByBirthOldestFirst(childrenUnsorted);

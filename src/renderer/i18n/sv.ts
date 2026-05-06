@@ -85,11 +85,13 @@ export default {
     },
     legend: {
       fosterRelationship: 'Fosterf\u00f6rh\u00e5llande',
+      adoptiveRelationship: 'Adoptivt f\u00f6rh\u00e5llande',
     },
     tooltip: {
       fosterRelationship: 'Fosterf\u00f6rh\u00e5llande',
       fosterParent: 'Fosterf\u00f6r\u00e4lder',
       fosterChild: 'Fosterbarn',
+      adoptiveRelationship: 'Adoptivt f\u00f6rh\u00e5llande',
       zoomIn: 'Zooma in',
       zoomOut: 'Zooma ut',
       zoomReset: '\u00c5terst\u00e4ll zoom',
