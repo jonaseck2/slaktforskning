@@ -69,9 +69,15 @@ export function deletePersonUndo(
   undoManager.push({
     label: 'undo.deletePerson',
     undo: () => {
+      // Restore the row exactly as it was, including display_id — undo means
+      // "as if the delete never happened", not "create a new row with similar
+      // data". The unique partial index on display_id permits this because
+      // the delete freed the integer; if a concurrent write took it
+      // (extremely unlikely on this single-user DB) the restore errors loudly,
+      // which is the right behavior.
       runSql(db,
-        `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
-        [person.id, person.sex, person.notes]
+        `INSERT INTO persons (id, sex, notes, display_id) VALUES (?, ?, ?, ?)`,
+        [person.id, person.sex, person.notes, person.display_id]
       );
       for (const name of names) {
         runSql(db,

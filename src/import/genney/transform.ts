@@ -13,6 +13,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { parseGedcomDate } from '../../gedcom/date';
 import { eventTypeHasFactValue } from '../../api/events_gedcom';
+import { queryOne, queryAll, runSql } from '../../api/db';
 
 // ── Genney row shapes ──────────────────────────────────────────────────────
 
@@ -839,6 +840,22 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   }
   if (namelessPersonCount > 0) {
     summary.warnings.push(`${namelessPersonCount} PERSON record(s) had no GIVENNAME or SURNAME — imported as nameless persons (visible under quality checks)`);
+  }
+
+  // Backfill display_id for every person inserted by this importer. The bulk
+  // INSERT path bypasses createPerson (it uses prepared statements for speed),
+  // so display_id is null on those rows. The startup migration would catch it
+  // on next launch, but the user can open the persons list mid-session and
+  // see empty Id cells. Assign here so the value is correct immediately.
+  // Same logic as the schema backfill, scoped to NULL rows only.
+  const startFrom = (queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons')?.m ?? 0) + 1;
+  const newRows = queryAll<{ id: string }>(db, `
+    SELECT id FROM persons
+    WHERE display_id IS NULL
+    ORDER BY created_at, id
+  `);
+  for (let i = 0; i < newRows.length; i++) {
+    runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, newRows[i].id]);
   }
 
   return summary;

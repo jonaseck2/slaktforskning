@@ -13,6 +13,7 @@
 - feat: side panels show when an entity was registered and (where tracked) last changed
 - feat: each person has a stable, sortable display id, visible in the list and the panel header
 - fix(chart): dedup focal partner against tree members so persons can no longer appear twice in the hourglass
+- fix: imported (Genney) and undo-restored persons get a display_id immediately, not at next app launch
 
 ## 0.215.2
 
