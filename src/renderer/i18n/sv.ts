@@ -641,8 +641,9 @@ export default {
     newPlace: 'Ny plats',
     titleIn: '{title} i {name}',
     tree: {
-      openTree: 'Bläddra platser i träd',
+      openTree: 'Bläddra bland platser som redan finns i databasen',
       title: 'Platsträd',
+      description: 'Platser som redan finns i databasen, ordnade som ett släktträd (ort under kommun under län under land). Skriv för att söka — träffar från ortsregister visas också, märkta "ortsregister".',
       filterPlaceholder: 'Filtrera platser…',
       addChild: 'Lägg till underplats',
       newChildLabel: 'Ny underplats till {parent}',

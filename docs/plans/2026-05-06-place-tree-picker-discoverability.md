@@ -62,12 +62,12 @@ Per the Surface contract:
 
 ## Tasks
 
-- [ ] **Audit** — `grep "browseTreeTooltip\|Bläddra plats"` to find the i18n key and consumer; locate the icon and current tooltip.
-- [ ] **Audit the opened panel** — confirm what it shows (database places only, gazetteer only, or both). If both, make sure typing in the search field still queries both (Surface contract #4).
-- [ ] **Replace / annotate the icon** — pick a clearer glyph from the existing set; if none fits, keep the current icon + add a small hover-revealed text label.
-- [ ] **Update tooltip i18n** in both locales.
-- [ ] **Add panel header** — one line explaining the rows; group labels if both database + gazetteer rows are shown.
-- [ ] **Patch bump** + CHANGELOG: `- fix: place-tree picker icon and tooltip explain what the panel shows`.
+- [x] **Audit** — `grep "browseTreeTooltip\|Bläddra plats"` to find the i18n key and consumer; locate the icon and current tooltip. The actual i18n key is `places.tree.openTree` (not `placePicker.browseTreeTooltip`); icon is an inline SVG inside `PlacePicker.vue`'s `<button class="tree-picker-btn">`.
+- [x] **Audit the opened panel** — confirm what it shows (database places only, gazetteer only, or both). If both, make sure typing in the search field still queries both (Surface contract #4). Confirmed: `PlaceTreePickerModal.vue` shows DB places (server-paged) AND gazetteer hits (computed) when typing — both kinds remain visible across the empty → typed transition. No silent degradation.
+- [x] **Replace / annotate the icon** — pick a clearer glyph from the existing set; if none fits, keep the current icon + add a small hover-revealed text label. No tree/folder icon exists in `src/renderer/components/ui/` (only IconPencil/IconTrash/IconUnlink). Replaced the inline path with a clearer hierarchy glyph: three stacked rows with indentation guides showing parent → child structure.
+- [x] **Update tooltip i18n** in both locales. `places.tree.openTree` → "Bläddra bland platser som redan finns i databasen" / "Browse places already in this database".
+- [x] **Add panel header** — one line explaining the rows; group labels if both database + gazetteer rows are shown. Added `places.tree.description` rendered as a `.tree-picker-description` info pill at the top of the modal body.
+- [x] **Patch bump** + CHANGELOG: `- fix: place-tree picker icon and tooltip explain what the panel shows`. CHANGELOG `## Unreleased` entry added; version bump deferred to merge per project workflow.
 
 ## Verification (user-observable)
 

@@ -24,9 +24,25 @@
         :title="$t('places.tree.openTree')"
         @click="openTreeModal"
       >
+        <!-- Hierarchy / folder-tree glyph: three stacked rows with indentation
+             guides showing parent → child structure (top row = root, second row
+             indented one step, third row indented two steps). Reads as "browse
+             a tree of places already in the database" rather than the previous
+             clipboard-shaped path that beta tester #76 described as "looks like
+             a car battery". -->
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-          <path fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
-            d="M3 2h3l1 1.5h6V13H3z M3 6h10 M7 3.5V13" />
+          <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Root row -->
+            <rect x="2" y="2" width="5" height="2.5" rx="0.5" />
+            <!-- Indentation guide from root to second row -->
+            <path d="M4.5 4.5 V8 H7.5" />
+            <!-- Second row (one level in) -->
+            <rect x="7.5" y="6.75" width="6.5" height="2.5" rx="0.5" />
+            <!-- Indentation guide from second row to third row -->
+            <path d="M10 9.25 V12.75 H13" />
+            <!-- Third row (two levels in) -->
+            <rect x="9" y="11.5" width="5" height="2.5" rx="0.5" />
+          </g>
         </svg>
       </button>
     </div>

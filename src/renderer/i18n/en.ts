@@ -641,8 +641,9 @@ export default {
     newPlace: 'New place',
     titleIn: '{title} in {name}',
     tree: {
-      openTree: 'Browse places in tree',
+      openTree: 'Browse places already in this database',
       title: 'Place tree',
+      description: 'Places already in this database, arranged as a tree (town under county under country). Type to search — gazetteer suggestions also appear, tagged "gazetteer".',
       filterPlaceholder: 'Filter places…',
       addChild: 'Add child place',
       newChildLabel: 'New child place under {parent}',

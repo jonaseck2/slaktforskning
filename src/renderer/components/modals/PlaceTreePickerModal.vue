@@ -10,6 +10,7 @@
     @close="$emit('close')"
   >
     <div class="tree-picker">
+      <p class="tree-picker-description">{{ $t('places.tree.description') }}</p>
       <div class="list-filter">
         <input
           ref="filterInputRef"
@@ -394,6 +395,16 @@ onMounted(async () => {
 /* Mirror the canonical .list-filter / .list-filter-input wrapper used across
    PersonsListTab, SourcesView, PlacesView, MediaView. The wrapper provides
    bottom padding (var(--space-sm)) so the filter doesn't crowd the list. */
+.tree-picker-description {
+  flex-shrink: 0;
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  background: var(--info-bg);
+  border-radius: var(--radius-md);
+  line-height: 1.4;
+}
 .list-filter {
   flex-shrink: 0;
   padding: 0 0 var(--space-sm);
