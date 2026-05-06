@@ -17,7 +17,11 @@
         @keydown.up.prevent="focusPrevRow($event)"
       >
         <td class="type-cell">
-          <span class="type-badge">{{ row.roleLabel }}</span>
+          <span
+            class="type-badge"
+            :title="$t('relationshipRow.editRelationship')"
+            :aria-label="$t('relationshipRow.editRelationship')"
+          >{{ row.roleLabel }}</span>
         </td>
         <td class="persons-td">
           <div class="persons-cell">
@@ -29,12 +33,16 @@
                 :surname="p.surname"
                 :preferred-name="p.preferredName ?? null"
                 :sex="p.sex ?? 'U'"
+                :title="manageOtherTitle(p)"
+                :aria-label="manageOtherTitle(p)"
               />
               <span v-if="p.roleLabel" class="role-label">{{ p.roleLabel }}</span>
               <router-link
                 v-if="p.id && (p.givenName || p.surname)"
                 :to="'/persons/' + p.id"
                 class="person-link"
+                :title="manageOtherTitle(p)"
+                :aria-label="manageOtherTitle(p)"
                 @click.stop
               >
                 <!-- Display only — see plan birth-name-display-and-quality-check. -->
@@ -65,11 +73,12 @@
         <td class="actions-cell">
           <button
             class="btn-sm btn-delete"
-            :aria-label="$t('a11y.unlinkItem', { item: row.ariaLabel || row.roleLabel })"
-            :title="$t('common.unlinkTooltip')"
+            :aria-label="$t('relationshipRow.removeRelationship')"
+            :title="$t('relationshipRow.removeRelationship')"
+            data-testid="rel-row-remove"
             @click.stop="$emit('delete', row.id)"
           >
-            <IconUnlink :size="14" />
+            <IconTrash :size="14" />
           </button>
         </td>
       </tr>
@@ -78,10 +87,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import AppAvatar from './ui/AppAvatar.vue';
 import PersonName from './PersonName.vue';
-import IconUnlink from './ui/IconUnlink.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { usePersonNameOptions } from '../stores/personNameOptions';
+import { formatFullName } from '../utils/nameUtils';
+
+const { t } = useI18n();
 
 // Display only — see plan birth-name-display-and-quality-check.
 const personNameOptions = usePersonNameOptions();
@@ -121,6 +134,16 @@ export interface RelationshipListRow {
 defineProps<{ rows: RelationshipListRow[]; selectedId?: string | null }>();
 defineEmits<{ delete: [id: string]; select: [id: string] }>();
 
+function manageOtherTitle(p: RelationshipListPerson): string {
+  const name = formatFullName({
+    given_name: p.givenName,
+    surname: p.surname,
+    preferred_name: p.preferredName ?? null,
+    nickname: p.nickname ?? null,
+  }) || t('common.unknown');
+  return t('relationshipRow.manageOther', { name });
+}
+
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
   if (row?.matches('tr[tabindex]')) row.focus();
@@ -132,7 +155,18 @@ function focusPrevRow(e: KeyboardEvent): void {
 </script>
 
 <style scoped>
-.type-cell { white-space: nowrap; width: 1px; max-width: none; }
+/* Type cell is shrink-to-fit and shows the full role label.
+   Override the panel-section default (`white-space: nowrap; overflow: hidden;
+   text-overflow: ellipsis; max-width: 0`) so labels like "Förälder" /
+   "Adoptivförälder" / "Foster parent" never truncate to "Fö" / "Foster pa…".
+   Higher-specificity selector beats `.panel-section .data-table td`. */
+.data-table td.type-cell {
+  white-space: nowrap;
+  width: 1px;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+}
 .persons-td {
   /* Persons can wrap to multiple lines as separate chips. Override the
      panel-section default (nowrap + ellipsis) so chips can flex-wrap. */

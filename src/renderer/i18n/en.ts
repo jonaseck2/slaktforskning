@@ -253,6 +253,11 @@ export default {
     unknownOrOtherParent: 'Other or unknown parent',
     otherRelations: 'Other relations',
   },
+  relationshipRow: {
+    editRelationship: 'Edit relationship',
+    manageOther: 'Manage {name}',
+    removeRelationship: 'Remove relationship',
+  },
   relationshipDetail: {
     title: 'Relationship',
     persons: 'Persons',

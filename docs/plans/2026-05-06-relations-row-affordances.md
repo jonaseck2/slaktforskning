@@ -56,13 +56,21 @@ The trash icon must:
 
 ## Tasks
 
-- [ ] **Audit** the relation-row template — find the file (`PersonRelationshipsSection.vue` or `RelationshipsList.vue`).
-- [ ] **Audit** the role abbreviations currently in i18n. List each existing abbrev + its expansion.
-- [ ] **Replace `Fö`** with `Föräld` (and other ambiguous two-letter abbreviations as found). EN side gets full words where they fit.
-- [ ] **Add tooltips** — `title` + `aria-label` on every clickable child of the relation row: role-edit, name/initials (manage other person), remove.
-- [ ] **Swap the remove glyph** for the project's standard trash icon. Confirm hover state, accessibility label, and confirm dialog still wire correctly.
-- [ ] **Component test** — assert each row child has a non-empty `title`. Assert the remove element matches the trash-icon component (e.g. by selector on the icon's data-testid).
-- [ ] **Patch bump** + CHANGELOG: `- fix: relation row uses clearer role abbreviations, hover tooltips, and a trash icon for remove`.
+- [x] **Audit** the relation-row template — find the file (`PersonRelationshipsSection.vue` or `RelationshipsList.vue`).
+- [x] **Audit** the role abbreviations currently in i18n. List each existing abbrev + its expansion.
+- [x] **Replace `Fö`** with `Föräld` (and other ambiguous two-letter abbreviations as found). EN side gets full words where they fit.
+- [x] **Add tooltips** — `title` + `aria-label` on every clickable child of the relation row: role-edit, name/initials (manage other person), remove.
+- [x] **Swap the remove glyph** for the project's standard trash icon. Confirm hover state, accessibility label, and confirm dialog still wire correctly.
+- [x] **Component test** — assert each row child has a non-empty `title`. Assert the remove element matches the trash-icon component (e.g. by selector on the icon's data-testid).
+- [ ] **Patch bump** + CHANGELOG: `- fix: relation row uses clearer role abbreviations, hover tooltips, and a trash icon for remove`. (Deferred to merge per project workflow.)
+
+### Audit notes
+
+- **Component:** `src/renderer/components/RelationshipsList.vue` is the single primitive (used by `PersonRelationshipsSection.vue`).
+- **"Fö" root cause:** the panel-section table rule `.panel-section .data-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0 }` was truncating the role label (e.g. `Förälder` → `Fö`). The local `.type-cell` override only set `max-width: none` but the same selector specificity meant it didn't reliably win against the panel rule depending on rendering order. Bumped specificity (`.data-table td.type-cell` in scoped block) and added `overflow: visible; text-overflow: clip` so the full role label always renders.
+- **i18n abbreviations audit:** the `relationshipRoles` and `relTypes` namespaces already use full Swedish words (`Förälder`, `Adoptivförälder`, `Fosterförälder`, `Styvförälder`, `Barn`, `Adoptivbarn`, `Fosterbarn`, `Styvbarn`, `Par`, `Syskon`, `Fadder`, `Gudbarn`, `Övrigt`). No abbreviation was ever authored — `Fö` was purely the result of the CSS truncation. Fix: stop truncating, no i18n change needed for the role labels themselves. New `relationshipRow` namespace added for tooltip strings only.
+- **Tooltip wiring:** `title` + `aria-label` on the role badge ("Edit relationship" — the row click target), the avatar + person link ("Manage {name}"), and the trash button ("Remove relationship"). All keys interpolate via `vue-i18n`.
+- **Trash icon:** swapped `IconUnlink` → `IconTrash` (existing `src/renderer/components/ui/IconTrash.vue`, no new SVG). Confirm-before-delete flow untouched (`@delete` → `askRemove` → `ConfirmModal`).
 
 ## Verification (user-observable)
 

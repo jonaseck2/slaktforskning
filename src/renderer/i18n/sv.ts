@@ -253,6 +253,11 @@ export default {
     unknownOrOtherParent: 'Annan/okänd förälder',
     otherRelations: 'Övriga relationer',
   },
+  relationshipRow: {
+    editRelationship: 'Redigera relationen',
+    manageOther: 'Hantera {name}',
+    removeRelationship: 'Ta bort relationen',
+  },
   relationshipDetail: {
     title: 'Relation',
     persons: 'Personer',
