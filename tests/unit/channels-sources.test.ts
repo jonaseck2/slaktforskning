@@ -10,7 +10,7 @@ describe('sources channel registry', () => {
 
   it('registers all citations:* channels', () => {
     const citationChannels = listChannels().filter(c => c.startsWith('citations:'));
-    expect(citationChannels.length).toBe(9);
+    expect(citationChannels.length).toBe(10);
   });
 
   it('sources:get is a worker channel', () => {
@@ -37,5 +37,6 @@ describe('sources channel registry', () => {
     expect(getChannel('citations:forPerson')!.mutating).toBeFalsy();
     expect(getChannel('citations:forRelationship')!.mutating).toBeFalsy();
     expect(getChannel('citations:forPlace')!.mutating).toBeFalsy();
+    expect(getChannel('citations:forPersonName')!.mutating).toBeFalsy();
   });
 });

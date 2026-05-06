@@ -122,6 +122,7 @@ const props = defineProps<{
   personId?: string;
   relationshipId?: string;
   placeId?: string;
+  personNameId?: string;
   // When true, skip the DB write and emit `deferredSave` with the form data
   // so the parent can buffer it and persist later.
   defer?: boolean;
@@ -231,6 +232,10 @@ async function loadCitedEntityName() {
     } else if (props.placeId) {
       const place = (await window.api.places.get(props.placeId)) as { name: string } | null;
       if (place) citedEntityName.value = place.name;
+    } else if (props.personNameId) {
+      // No direct lookup endpoint for a single person_name; the parent modal
+      // already shows the name in its own title — leave the citation title
+      // generic if the API doesn't surface a getter.
     }
   } catch { /* ignore */ }
 }
@@ -310,6 +315,7 @@ async function save() {
       if (props.personId)       data.person_id       = props.personId;
       if (props.relationshipId) data.relationship_id = props.relationshipId;
       if (props.placeId)        data.place_id        = props.placeId;
+      if (props.personNameId)   data.person_name_id  = props.personNameId;
 
       await window.api.citations.create(data);
       sourceSession.setLastUsed(pickedSourceId.value, form.page);

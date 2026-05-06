@@ -132,13 +132,82 @@
           />
         </div>
 
-        <!-- Date to (rare; date_from is surfaced inline above for non-birth name types) -->
-        <div class="ep-field">
-          <span class="ep-field-label">{{ $t('names.dateTo') }}</span>
+        <!--
+          Date to (rare). Hidden for `birth` and `name_change`:
+          - birth: a birth name doesn't end; it's superseded by `married` /
+            `name_change` rows that have their own date_from.
+          - name_change: the name change date marks when the new name took
+            effect. The name doesn't expire — the *next* name change ends it.
+
+          PRIME DIRECTIVE: hiding the input is NOT consent to null the value
+          on save. If a legacy row was authored with `date_to` filled, the
+          save handler builds the payload from `form.date_to` which is still
+          populated; we never overwrite it with null based on UI mode. See
+          the `name-change-with-legacy-date-to` test.
+        -->
+        <div v-if="showDateTo" class="ep-field">
+          <span class="ep-field-label">{{ $t(dateToLabelKey) }}</span>
           <SimpleDateInput v-model="form.date_to" />
         </div>
       </details>
+
+      <!-- Citations / Hänvisning. Mirrors EventModal's pattern: in add mode
+           (no editingName.id yet) we buffer pending citations and persist
+           them after the name row is created. In edit mode we attach
+           directly to the existing name's id via citations.create with
+           person_name_id. -->
+      <div class="ep-sec-header" data-entity="citation">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
+          <span class="ep-sec-count">{{ allCitationRows.length }}</span>
+        </div>
+        <button type="button" class="ep-sec-action" @click="openAddCitation">
+          + {{ $t('sourceDetail.addCitation') }}
+        </button>
+      </div>
+      <div class="ep-sec-content">
+        <div v-if="allCitationRows.length === 0" class="ep-sec-empty">{{ $t('empty.citations') }}</div>
+        <div
+          v-for="cit in allCitationRows"
+          :key="cit.key"
+          class="ep-entity-row"
+          @click="cit.isPending ? openEditPendingCitation(cit.id) : openEditCitation(cit.id)"
+        >
+          <div class="ep-entity-main">
+            <div class="ep-entity-name">
+              <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
+                {{ $t('confidenceLevels.' + cit.confidence) }}
+              </span>
+              <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
+            </div>
+            <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
+          </div>
+          <button
+            type="button"
+            class="btn-sm btn-delete"
+            style="flex-shrink:0"
+            :aria-label="$t('common.remove')"
+            @click.stop="cit.isPending ? removePendingCitation(cit.id) : deleteCitation(cit.id)"
+          >✕</button>
+        </div>
+      </div>
     </div>
+
+    <!-- Sub-panels -->
+    <template #subpanels>
+      <CitationModal
+        v-if="subPanel === 'citation'"
+        mode="subpanel"
+        :person-name-id="savedNameId || undefined"
+        :editing-citation="editingCitation"
+        :defer="!savedNameId"
+        :editing-pending="editingPendingCitation"
+        @deferred-save="onPendingCitationSaved"
+        @cancel="closeSubPanel"
+        @close="closeSubPanel"
+        @saved="onCitationSaved"
+      />
+    </template>
   </BaseSubPanel>
 </template>
 
@@ -147,6 +216,7 @@ import { reactive, ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
+import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
 import { parseAsteriskNotation, pickDisplayedName } from '../../utils/nameUtils';
@@ -212,6 +282,17 @@ watch(() => props.editingName, (n) => {
   form.date_to = n?.date_to ?? '';
 }, { immediate: true });
 
+// Visibility + label of the optional Date-to field, by name type.
+// `birth` and `name_change` hide it (a birth name doesn't end, and a
+// name-change row's "end" is implied by the next change). `married` keeps
+// the generic "Valid until" wording. `alias` / `aka` use "Used until" since
+// those names live for a period rather than being formally retired.
+const showDateTo = computed(() => form.name_type !== 'birth' && form.name_type !== 'name_change');
+const dateToLabelKey = computed(() => {
+  if (form.name_type === 'alias' || form.name_type === 'aka') return 'names.dateToUsed';
+  return 'names.dateTo';
+});
+
 /**
  * Switching to `married` or `name_change` on a freshly-opened add form
  * pre-fills given_name + surname from the current displayed name so the
@@ -254,11 +335,154 @@ async function loadPersonName() {
   } catch { /* ignore */ }
 }
 
+// ---- Citation flow (mirrors EventModal) ---------------------------------
+//
+// `savedNameId` is the id of the persisted person_names row the citation
+// attaches to. In edit mode it's set immediately from props; in add mode
+// it remains null until handleSave creates the row, at which point any
+// pending citations are flushed.
+const savedNameId = ref<string | null>(props.editingName?.id ?? null);
+
+watch(() => props.editingName, (n) => {
+  savedNameId.value = n?.id ?? null;
+});
+
+interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
+interface EditingCitation {
+  id: string;
+  page: string;
+  confidence: number;
+  transcription: string;
+  notes: string;
+  date_accessed: string;
+}
+const citations = ref<CitationRow[]>([]);
+const pendingCitations = ref<DeferredCitationPayload[]>([]);
+
+const subPanel = ref<'citation' | null>(null);
+const editingCitation = ref<EditingCitation | null>(null);
+const editingPendingCitation = ref<DeferredCitationPayload | null>(null);
+
+function openAddCitation() {
+  editingCitation.value = null;
+  editingPendingCitation.value = null;
+  subPanel.value = 'citation';
+}
+
+async function openEditCitation(citationId: string) {
+  if (!window.api) return;
+  try {
+    const c = (await window.api.citations.get(citationId)) as EditingCitation | null;
+    if (!c) return;
+    editingCitation.value = c;
+    editingPendingCitation.value = null;
+    subPanel.value = 'citation';
+  } catch { /* ignore */ }
+}
+
+function openEditPendingCitation(tempId: string) {
+  const found = pendingCitations.value.find((c) => c.tempId === tempId);
+  if (!found) return;
+  editingCitation.value = null;
+  editingPendingCitation.value = found;
+  subPanel.value = 'citation';
+}
+
+function closeSubPanel() {
+  subPanel.value = null;
+  editingCitation.value = null;
+  editingPendingCitation.value = null;
+}
+
+async function loadCitations() {
+  if (!savedNameId.value || !window.api) return;
+  try {
+    const raw = (await window.api.citations.forPersonName(savedNameId.value)) as Array<{
+      id: string; source_id: string; page: string | null; confidence: number | null;
+    }>;
+    const rows: CitationRow[] = [];
+    for (const c of raw) {
+      const src = (await window.api.sources.get(c.source_id)) as { title: string } | null;
+      rows.push({
+        id: c.id,
+        sourceTitle: src?.title ?? c.source_id,
+        page: c.page,
+        confidence: c.confidence,
+      });
+    }
+    citations.value = rows;
+  } catch { /* ignore */ }
+}
+
+async function onCitationSaved() {
+  closeSubPanel();
+  await loadCitations();
+}
+
+function onPendingCitationSaved(payload: DeferredCitationPayload) {
+  if (payload.tempId) {
+    const i = pendingCitations.value.findIndex((c) => c.tempId === payload.tempId);
+    if (i >= 0) pendingCitations.value.splice(i, 1, payload);
+  } else {
+    pendingCitations.value.push({
+      ...payload,
+      tempId: 'pending-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    });
+  }
+  closeSubPanel();
+}
+
+function removePendingCitation(tempId: string) {
+  const i = pendingCitations.value.findIndex((c) => c.tempId === tempId);
+  if (i >= 0) pendingCitations.value.splice(i, 1);
+}
+
+interface MergedCitationRow {
+  key: string;
+  id: string;
+  isPending: boolean;
+  sourceTitle: string;
+  page: string | null;
+  confidence: number | null;
+}
+const allCitationRows = computed<MergedCitationRow[]>(() => {
+  const saved = citations.value.map((c): MergedCitationRow => ({
+    key: 'saved:' + c.id,
+    id: c.id,
+    isPending: false,
+    sourceTitle: c.sourceTitle,
+    page: c.page,
+    confidence: c.confidence,
+  }));
+  const pending = pendingCitations.value.map((c): MergedCitationRow => ({
+    key: 'pending:' + (c.tempId ?? ''),
+    id: c.tempId ?? '',
+    isPending: true,
+    sourceTitle: c.sourceTitle,
+    page: c.page,
+    confidence: c.confidence,
+  }));
+  return [...saved, ...pending];
+});
+
+async function deleteCitation(id: string) {
+  if (!window.api) return;
+  try {
+    await window.api.citations.delete(id);
+    await loadCitations();
+  } catch { /* ignore */ }
+}
+
 async function handleSave() {
   if (!form.given_name.trim()) return;
   try {
     const { given_name: parsedGiven, preferred_name: parsedPreferred } = parseAsteriskNotation(form.given_name);
     const resolvedPreferred = form.preferred_name || parsedPreferred || null;
+    // PRIME DIRECTIVE: build the payload from form values exactly as authored.
+    // `date_to` is included unconditionally — even when the field is hidden
+    // (birth, name_change) — because the form value reflects whatever the
+    // user (or import) authored before, and a UI-mode change is not consent
+    // to null it.
     const payload = {
       given_name: parsedGiven,
       surname: form.surname || null,
@@ -275,7 +499,23 @@ async function handleSave() {
     if (props.editingName) {
       await window.api.persons.updateName(props.editingName.id, payload);
     } else {
-      await window.api.persons.addName(props.personId, payload);
+      const created = (await window.api.persons.addName(props.personId, payload)) as { id: string } | null;
+      if (created?.id) {
+        savedNameId.value = created.id;
+        // Persist any citations the user added before the name row existed.
+        for (const pc of pendingCitations.value) {
+          await window.api.citations.create({
+            source_id: pc.source_id,
+            page: pc.page,
+            confidence: pc.confidence,
+            transcription: pc.transcription,
+            notes: pc.notes,
+            date_accessed: pc.date_accessed,
+            person_name_id: created.id,
+          });
+        }
+        pendingCitations.value = [];
+      }
     }
     emit('saved');
     emit('close');
@@ -287,6 +527,7 @@ async function handleSave() {
 
 onMounted(async () => {
   await loadPersonName();
+  await loadCitations();
   await nextTick();
   givenNameRef.value?.focus();
 });

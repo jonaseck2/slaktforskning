@@ -20,9 +20,11 @@ import {
   getCitationsForPerson,
   getCitationsForRelationship,
   getCitationsForPlace,
+  getCitationsForPersonName,
   deleteCitation,
   updateCitation,
 } from '../../src/api/sources';
+import { addPersonName } from '../../src/api/persons';
 import { createTestDb } from './helpers';
 
 let db: Database.Database;
@@ -178,6 +180,39 @@ describe('citations', () => {
     createCitation(db, { source_id: source.id, place_id: place.id });
     expect(getCitationsForPlace(db, place.id)).toHaveLength(1);
     expect(getCitationsForPlace(db, 'nonexistent')).toHaveLength(0);
+  });
+
+  it('gets citations for a person_name (name-level citation)', () => {
+    const person = createPerson(db, {}, { allowNameless: true });
+    const name = addPersonName(db, person.id, {
+      given_name: 'Anna',
+      surname: 'Andersson',
+      name_type: 'name_change',
+      date_from: '1995-06-01',
+    });
+    const source = createSource(db, { title: 'Marriage register' });
+    const citation = createCitation(db, {
+      source_id: source.id,
+      person_name_id: name.id,
+      page: 'p. 12',
+    });
+    const found = getCitationsForPersonName(db, name.id);
+    expect(found).toHaveLength(1);
+    expect(found[0].id).toBe(citation.id);
+    expect(found[0].person_name_id).toBe(name.id);
+    expect(found[0].page).toBe('p. 12');
+    expect(getCitationsForPersonName(db, 'nonexistent')).toHaveLength(0);
+  });
+
+  it('cascades name-level citations when the parent name is deleted', () => {
+    const person = createPerson(db, {}, { allowNameless: true });
+    const name = addPersonName(db, person.id, { given_name: 'Brita', name_type: 'alias' });
+    const source = createSource(db, { title: 'Memoir' });
+    const citation = createCitation(db, { source_id: source.id, person_name_id: name.id });
+    expect(getCitation(db, citation.id)).not.toBeNull();
+    // Delete the name; CASCADE on citations.person_name_id should remove the citation.
+    db.prepare('DELETE FROM person_names WHERE id = ?').run([name.id]);
+    expect(getCitation(db, citation.id)).toBeNull();
   });
 
   it('updateCitation updates editable fields', () => {

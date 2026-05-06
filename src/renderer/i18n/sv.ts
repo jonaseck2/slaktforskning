@@ -604,6 +604,7 @@ export default {
     dateFrom: 'Giltigt från',
     dateFromHint: 'Visas på personens tidslinje när datum anges.',
     dateTo: 'Giltigt till',
+    dateToUsed: 'Användes till',
     dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
   },

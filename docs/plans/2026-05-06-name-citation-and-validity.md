@@ -61,15 +61,15 @@ Per CLAUDE.md "Authored values are not discarded by side effect": if the user pr
 
 ## Tasks
 
-- [ ] **Schema migration**: add `citations.person_name_id` (nullable FK to `person_names.id`); registry entry for round-trip; new `getCitationsForPersonName` API; IPC + preload coverage.
-- [ ] **Audit `PersonNameModal.vue`** — current field layout; locate "Mer" section; locate `date_to` (Giltigt till) input.
-- [ ] **Add citation block** in "Mer" section. Reuse CitationPicker / chip-list pattern from EventModal.
-- [ ] **Conditional `date_to`** — hide for `name_change`; relabel per-type for others.
-- [ ] **Save handler audit** — ensure hidden `date_to` field doesn't get nulled out; existing rows with values keep them.
-- [ ] **i18n keys** in both locales for the per-type "valid until" labels.
-- [ ] **Component test** — mount PersonNameModal in `name_change` mode; assert no `date_to` input in DOM. Mount in `alias` mode; assert input is present with the "Användes till" label.
-- [ ] **Test** — create a name, attach a citation, verify the citation has `person_name_id` set; getCitationsForPersonName returns it.
-- [ ] **Minor bump** + CHANGELOG: `- feat: name records can carry a source citation; 'Valid until' field hidden where it doesn't apply`.
+- [x] **Schema migration**: add `citations.person_name_id` (nullable FK to `person_names.id`); registry entry for round-trip; new `getCitationsForPersonName` API; IPC + preload coverage.
+- [x] **Audit `PersonNameModal.vue`** — current field layout; locate "Mer" section; locate `date_to` (Giltigt till) input.
+- [x] **Add citation block** in "Mer" section. Reuse CitationPicker / chip-list pattern from EventModal.
+- [x] **Conditional `date_to`** — hide for `name_change` and `birth`; relabel per-type for others (`married` → "Valid to" / "Giltigt till"; `alias` / `aka` → "Used until" / "Användes till").
+- [x] **Save handler audit** — hidden `date_to` field doesn't get nulled out; the form value is hydrated from the row and emitted unconditionally on save. Covered by `Prime Directive: hidden field does not null authored data` test.
+- [x] **i18n keys** in both locales for the per-type "valid until" labels (`names.dateToUsed`).
+- [x] **Component test** — `tests/components/PersonNameModal.test.ts` — covers `name_change`, `birth`, `married`, `alias`, `aka` visibility + label, plus the legacy-`date_to` Prime-Directive guard, plus citation section rendering + chip load.
+- [x] **Test** — `tests/unit/sources.test.ts` — `getCitationsForPersonName` returns name-attached citations; `person_name_id` cascade-deletes citations when the parent name is removed.
+- [ ] **Minor bump** + CHANGELOG: `- feat: name records can carry a source citation; 'Valid until' field hidden where it doesn't apply` — handled at merge time per project workflow.
 
 ## Verification (user-observable)
 
