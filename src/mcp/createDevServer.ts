@@ -9,7 +9,7 @@ import { registerInspectTools } from './tools/dev/inspect';
 const DEFAULT_UI_PORT = 19241;
 
 export function createDevServer(initialDb: Database, initialDbPath?: string): McpServer {
-  const { server, getDb } = createProdServer(initialDb, initialDbPath);
+  const { server, getDb, getDbPath } = createProdServer(initialDb, initialDbPath);
 
   const uiPort = process.env.SLAKTFORSKNING_UI_PORT
     ? parseInt(process.env.SLAKTFORSKNING_UI_PORT, 10)
@@ -21,11 +21,12 @@ export function createDevServer(initialDb: Database, initialDbPath?: string): Mc
   // Capturing `initialDb` directly here was a bug: after a switch the dev
   // tools still pointed at the closed initial connection.
   const ctx = { getDb };
+  const inspectCtx = { getDb, getDbPath };
 
   registerUiTools(server, uiBase);
   registerChartTools(server, uiBase);
   registerSeedTools(server, ctx);
-  registerInspectTools(server, ctx, uiBase);
+  registerInspectTools(server, inspectCtx, uiBase);
 
   return server;
 }

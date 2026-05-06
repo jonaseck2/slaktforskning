@@ -1,5 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ToolContext } from '../prod/types';
+import { queryOne } from '../../../api/db';
+
+interface InspectToolContext extends ToolContext {
+  getDbPath?: () => string;
+}
 
 async function uiGet(uiBase: string, path: string): Promise<unknown> {
   let res: Response;
@@ -11,8 +16,8 @@ async function uiGet(uiBase: string, path: string): Promise<unknown> {
   return res.json();
 }
 
-export function registerInspectTools(server: McpServer, ctx: ToolContext, uiBase: string): void {
-  const { getDb } = ctx;
+export function registerInspectTools(server: McpServer, ctx: InspectToolContext, uiBase: string): void {
+  const { getDb, getDbPath } = ctx;
 
   server.tool(
     'db_stats',
@@ -20,7 +25,14 @@ export function registerInspectTools(server: McpServer, ctx: ToolContext, uiBase
     {},
     async () => {
       const db = getDb();
-      const stmt = db.prepare(`
+      const row = queryOne<{
+        persons: number;
+        relationships: number;
+        events: number;
+        places: number;
+        sources: number;
+        media: number;
+      }>(db, `
         SELECT
           (SELECT COUNT(*) FROM persons) as persons,
           (SELECT COUNT(*) FROM relationships) as relationships,
@@ -29,9 +41,7 @@ export function registerInspectTools(server: McpServer, ctx: ToolContext, uiBase
           (SELECT COUNT(*) FROM sources) as sources,
           (SELECT COUNT(*) FROM media) as media
       `);
-      const row = stmt.getAsObject();
-      stmt.free();
-      return { content: [{ type: 'text' as const, text: JSON.stringify(row, null, 2) }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(row ?? {}, null, 2) }] };
     }
   );
 
@@ -44,7 +54,10 @@ export function registerInspectTools(server: McpServer, ctx: ToolContext, uiBase
       if (!result || (result as { error?: string }).error === 'No window available') {
         return { content: [{ type: 'text' as const, text: JSON.stringify({ running: false }, null, 2) }] };
       }
-      const dbPath = process.env.SLAKTFORSKNING_DB ?? null;
+      // Live DB path — follows `switch_database`. Falls back to env var (which
+      // only carries the *initial* path the MCP was launched with) when the
+      // dev server didn't pass `getDbPath` for backward compatibility.
+      const dbPath = getDbPath?.() ?? process.env.SLAKTFORSKNING_DB ?? null;
       return {
         content: [{
           type: 'text' as const,

@@ -19,6 +19,8 @@ export interface ProdServer {
    * initial db) so they keep pointing at the live connection after a swap.
    */
   getDb: () => Database;
+  /** Live getter for the active database path. Follows `switch_database`. */
+  getDbPath: () => string;
 }
 
 export function createProdServer(initialDb: Database, initialDbPath?: string): ProdServer {
@@ -32,12 +34,13 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): P
 
   // Tool registration context — getDb() always returns the current db after switch_database
   const getDb = () => db;
+  const getDbPath = () => currentDbPath;
   const ctx = { getDb };
 
   // Extended context for utility tools that need to swap the active database
   const utilCtx = {
     ...ctx,
-    getDbPath: () => currentDbPath,
+    getDbPath,
     setDb: (newDb: Database) => { db = newDb; },
     setDbPath: (newPath: string) => { currentDbPath = newPath; },
   };
@@ -53,5 +56,5 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): P
   registerRepositoryTools(server, ctx);
   registerDataManagementTools(server, utilCtx);
 
-  return { server, getDb };
+  return { server, getDb, getDbPath };
 }

@@ -25,6 +25,7 @@
 - feat: research tasks can be linked to persons; each person's PersonPanel surfaces an "Uppgifter" section with a + Task CTA that auto-links the host person
 - feat: source types include passenger list, probate inventory, peerage register, encyclopedia, genealogist; dropdown sorts alphabetically in the user's locale; "Tidning / Tidskrift" and "Onlinedatabas / Sociala media" relabeled
 - fix(mcp): dev tools (db_stats, seed_*, clear_test_data) follow `switch_database` swaps instead of staying pinned to the closed initial connection
+- fix(mcp): `db_stats` no longer throws `stmt.getAsObject is not a function` (used the sql.js API instead of node-sqlite3-wasm's); `app_status` reports the live DB path after a `switch_database` swap (was reporting only the launch-time env var)
 
 ## 0.215.2
 
