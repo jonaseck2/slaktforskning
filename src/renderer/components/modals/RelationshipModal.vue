@@ -545,7 +545,10 @@ async function performSave() {
     // is the worst-case UX. The console.error stays for full stack trace.
     console.error('[RelationshipModal] save failed:', err);
     const detail = (err instanceof Error && err.message) ? err.message : String(err ?? 'unknown');
-    toast.error(`${t('errors.saveFailed')}: ${detail}`);
+    // Em-dash separator reads cleanly after the i18n prefix's trailing period
+    // ('Could not save. Please try again. — <detail>') instead of the
+    // 'Please try again.: <detail>' shape colon-separation produced.
+    toast.error(`${t('errors.saveFailed')} — ${detail}`);
   }
 }
 
