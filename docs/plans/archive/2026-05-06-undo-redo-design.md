@@ -87,3 +87,13 @@ Defer Level 3 indefinitely.
 1. User picks Level 1 vs Level 1+2 vs other ambition.
 2. Implementation plan ships as `2026-05-06-undo-redo.md` covering the chosen scope.
 3. Tooltip i18n keys land first (they're a one-liner per existing undo label), then the toolbar buttons + wiring.
+
+## Decisions locked + shipped (2026-05-06)
+
+- **Ambition: Level 1.** Visible buttons + tooltips against the existing manager. Level 2 (coverage audit) deferred until a real gap surfaces in use.
+- **Position:** the existing right-edge tools cluster — next to Import/Export and Settings on both the sidebar (vertical) and topbar (horizontal) layouts.
+- **Tooltip shape:** named-action format. *"Ångra: Skapa person"* / *"Undo: Create person"* — and *"Inget att ångra"* / *"Nothing to undo"* on the disabled state. Matches the Gimp-style precedent the user referenced.
+- **Multi-window stack:** shared. The undo manager lives in the worker thread alongside the DB; every BrowserWindow sees the same stack. Confirmed by reading the existing IPC channel registry.
+- **Icons:** `↶` (undo) and `↷` (redo) — curving-arrow glyphs. Mocked in `/tmp/undo-mockup.html` and approved.
+
+Implementation went straight to code (Level 1 was small — `App.vue` topbar + sidebar entries, 7 new i18n keys, plus one new `undo.createPersonWithEvent` label that was missing). Shipped in commit alongside this archive.
