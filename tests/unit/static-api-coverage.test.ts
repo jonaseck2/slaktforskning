@@ -98,7 +98,9 @@ describe('static API parity', () => {
       // genney + holger import
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
       'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
-      'import:holgerSelectFile', 'import:holgerSelectMedia', 'import:holgerRun',
+      'import:holgerSelectFile', 'import:holgerSelectMedia',
+      // import:holgerRun is now a registry worker channel — checked by the
+      // 'every registry channel has a stub in the static api' test above.
       // archive
       'archive:export', 'archive:import',
       // website

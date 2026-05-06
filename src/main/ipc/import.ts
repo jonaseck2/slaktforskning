@@ -7,11 +7,10 @@ import { previewGedcomImport } from '../../import/gedcom';
 import type { ImportOptions } from '../../import/gedcom';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../gedcom';
 import { importFromGenney, discoverTables, isDockerAvailable } from '../../import/genney/index';
-import { importFromHolger } from '../../import/holger/index';
 import { exportArchive } from '../../api/archive_export';
 import { importArchive } from '../../api/archive_import';
 import * as media from '../../api/media';
-import { consolidateMediaFolder, bulkCopyMediaFolder } from '../../api/media_consolidate';
+import { consolidateMediaFolder } from '../../api/media_consolidate';
 import type { ExportOptions } from '../../api/export_options';
 import type { WrapHandlerFn } from './wrap-handler';
 import { mediaFolderName } from './media';
@@ -243,49 +242,13 @@ export function registerImportHandlers(
     return { canceled: false, path: result.filePaths[0] };
   });
 
-  wrapHandler('import:holgerRun', async (opts) => {
-    const options = opts as { sourcePath: string; mediaDir?: string } | undefined;
-    if (!options?.sourcePath) return { success: false, error: 'sourcePath is required' };
-    const win = BrowserWindow.getFocusedWindow();
-    importInProgress = true;
-    notifyWorkerImportStart();
-    const tHandler = Date.now();
-    console.log(`[import-timing] holger handler start — sourcePath=${options.sourcePath} mediaDir=${options.mediaDir ?? '(none)'}`);
-    try {
-      // Bulk-copy the media folder up-front. fsp.cp recursive walks + copies
-      // through libuv much faster than 12k sequential per-row copyFile calls.
-      // After this, consolidateMediaFolder fast-paths every row that lands here.
-      let bulkCopiedFromDir: string | undefined;
-      if (options.mediaDir) {
-        try {
-          const { ms } = await bulkCopyMediaFolder(options.mediaDir, media.getMediaDir(getCurrentDatabasePath()));
-          bulkCopiedFromDir = options.mediaDir;
-          console.log(`[import-timing] bulkCopyMediaFolder done — ${ms}ms`);
-        } catch (err) {
-          console.warn(`[import-timing] bulkCopyMediaFolder failed (will fall back to per-row copy): ${err instanceof Error ? err.message : err}`);
-        }
-      }
-      const tHolger = Date.now();
-      const result = await importFromHolger(getDb(), {
-        sourcePath: options.sourcePath,
-        mediaDir: options.mediaDir,
-        onProgress: (msg) => {
-          if (win) win.webContents.send('import:holgerProgress', { message: msg });
-        },
-      });
-      console.log(`[import-timing] importFromHolger done — ${Date.now() - tHolger}ms`);
-      const tConsol = Date.now();
-      const consolResult = await consolidateMediaFolder(getDb(), getCurrentDatabasePath(), bulkCopiedFromDir);
-      console.log(`[import-timing] consolidateMediaFolder done — ${Date.now() - tConsol}ms — copied=${consolResult.copied} skipped=${consolResult.skipped} missing=${consolResult.missing}`);
-      console.log(`[import-timing] holger handler total — ${Date.now() - tHandler}ms`);
-      return { success: true, report: result.report };
-    } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
-    } finally {
-      importInProgress = false;
-      notifyWorkerImportEnd();
-    }
-  });
+  // import:holgerRun is registered via the channel registry as a worker channel
+  // (src/shared/channels/import.ts). The whole import — bulk media copy, GEDCOM
+  // parse + import, media consolidation — runs in the DB worker thread, so the
+  // Electron main thread stays responsive for the full duration of a 22k-person
+  // import. Progress messages flow worker → main → all renderers via the
+  // broadcast primitive on topic 'import:holgerProgress'. Renderer listeners
+  // (window.api.import.onHolgerProgress) are unchanged.
 
   // Archive export/import
   wrapHandler('archive:export', async (opts?: unknown) => {

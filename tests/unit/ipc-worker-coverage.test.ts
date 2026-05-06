@@ -38,7 +38,8 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
   'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
   'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
-  'import:holgerSelectFile', 'import:holgerSelectMedia', 'import:holgerRun',
+  'import:holgerSelectFile', 'import:holgerSelectMedia',
+  // import:holgerRun migrated to the registry as a worker channel.
   'archive:export', 'archive:import',
 ]);
 

@@ -18,6 +18,7 @@ import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
 import { buildPreview } from '../api/html_site/preview';
 import { _setBroadcastTarget, broadcast } from './db-worker-broadcast';
+import { _setWorkerStateAccessors } from './db-worker-state';
 
 if (!parentPort) throw new Error('db-worker must run in a worker thread');
 
@@ -33,6 +34,15 @@ export { broadcast };
 let db: Database | null = null;
 let dbPath: string | null = null;
 let importInProgress = false;
+
+// Wire worker-local state accessors so registry channel handlers in
+// src/shared/channels/ can read/write dbPath and importInProgress without
+// taking a hard import on this module.
+_setWorkerStateAccessors({
+  getDbPath: () => dbPath,
+  getImportInProgress: () => importInProgress,
+  setImportInProgress: (v: boolean) => { importInProgress = v; },
+});
 
 function getDb(): Database {
   if (!db) throw new Error('Worker DB not initialized');
