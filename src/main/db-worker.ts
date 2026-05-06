@@ -17,8 +17,16 @@ import * as media from '../api/media';
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
 import { buildPreview } from '../api/html_site/preview';
+import { _setBroadcastTarget, broadcast } from './db-worker-broadcast';
 
 if (!parentPort) throw new Error('db-worker must run in a worker thread');
+
+// Wire the broadcast helper to this worker's parentPort so worker-side
+// handlers can emit unsolicited topic-keyed events back to main.
+_setBroadcastTarget(parentPort);
+
+// Re-exported for production callers (handlers inside this worker).
+export { broadcast };
 
 // ── DB state ──────────────────────────────────────────────────────────────────
 
