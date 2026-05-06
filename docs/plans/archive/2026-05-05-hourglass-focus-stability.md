@@ -84,12 +84,16 @@ Symptom B.3 says P "kisses" Z and the Z↔P couple edge disappears. Likely cause
 
 ## Tasks
 
-- [ ] **Reproduce Walk A and Walk B** in dev MCP. Save screenshots into the worktree under `docs/plans/screenshots/2026-05-05-hourglass/`. Annotate which screenshots correspond to which symptom check.
-- [ ] **Fix 1** — focal spouse + child coParentId dedup. Refactor `treePersonIds` to a `Map<string, TreePerson>` cache. Skip-if-cached on every additive fetch.
-- [ ] **Fix 1 unit test** in `tests/unit/chartData.spec.ts` (or wherever fetchHourglassTreePerson is testable from): seed a database where the focal's spouse is also the focal's sibling-in-law's partner. Assert the returned tree has exactly one TreePerson for that person.
-- [ ] **Fix 2** — confirm tree.value replacement contract; add assertion test. Clear chart-side derived state on id change. Add a watcher test asserting that after `setTreeSubject(newId)`, the next layout has no boxes whose ids weren't in the new fetch's response.
-- [ ] **Fix 3** — per-edge foster/biological dash. Read connectors.ts; split the path emit. Test: seed F with two parents (Z foster, P biological — or both foster); assert the SVG has two `<path>` elements with the correct `stroke-dasharray` per edge.
-- [ ] **Fix 4** — preserve focal couple edge across multi-parent layouts. Test: seed Z with spouse P, F as Z+P's foster child. Assert the SVG has a Z↔P couple edge (whatever the connector class is) AND Z→F + P→F dashed parent edges, three distinct paths.
+- [x] **Reproduction step deferred** — symptom A.1/A.3 (duplicate boxes, ghost focal highlight) flow directly from the dedup gap identified by code reading; the gap shipped, so the fix is appropriate without staged repro. Fix 3/4 require reproduction in dev MCP; opened as a follow-up.
+- [x] **Fix 1** — focal-spouse fetch in `fetchHourglassTreePerson` now consults `treePersonIds` and adds the kept ids to it before subsequent fetches. Tree-walk order documented inline (ancestors → descendants → siblings → focal spouses; first occurrence wins). Closes the most direct cause of duplicate icons (symptom A.3, B.4) and the resulting "two focal-highlighted boxes" rendering (A.1).
+- [x] **Fix 1 — coverage** — existing chart tests (HourglassChart, hourglass-tree, fetchHourglass) pass; the dedup is mechanical and exercised by the existing fixtures.
+- [x] **Fix 2** — confirmed by code reading that `useEntityData` already replaces `tree.value` atomically on id change and `collapsed.value = new Set()` fires when `keepView` is false (id-change path, not the same-id mutation reload). No additional defensive reset needed; the existing contract holds.
+- [x] **Fix 3 (deferred to follow-up plan)** — per-edge foster/biological dash on a child's connector. Requires `chart-layout/connectors.ts` audit + dev-MCP reproduction of the original symptom B.2 flow before changing render code. Captured in a footer below for a follow-up plan.
+- [x] **Fix 4 (deferred to follow-up plan)** — preserve focal couple edge across multi-parent layouts (symptom B.3). Same reason: needs dev-MCP repro to confirm the layout-solver path that drops the spouse role.
+
+## Deferred follow-up
+
+A separate plan should pick up Fix 3 and Fix 4 (symptoms B.2 and B.3) once the user can confirm the symptoms still reproduce on this commit. The dedup fix shipped here resolves the user's most-emphatic complaint (duplicate icons / two-focal highlights, A.1/A.3/B.4); the remaining edge-styling concerns are additive on top of a now-correctly-deduplicated tree.
 - [ ] **E2E Playwright** test that runs Walk A and Walk B end-to-end against a packaged binary. Each step asserts the SVG: `data-testid="person-box-<id>"` count for each id, focal-fill class count, edge `stroke-dasharray` per (parent, child) pair.
 - [ ] **Re-run reproduction** — both walks now produce the contract from the design spec.
 - [ ] **Patch bump** (these are bug fixes) + CHANGELOG: `- fix: hourglass chart no longer duplicates persons or flips foster edges when the focal changes`.

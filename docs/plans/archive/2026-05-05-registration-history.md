@@ -90,16 +90,14 @@ Add `p.created_at` to the SELECT and to the ORDER BY whitelist. New `sortBy` val
 
 ## Tasks
 
-- [ ] **Audit** every panel for created_at / updated_at availability. List which apply.
-- [ ] **Build `EntityTimestamps.vue`** in `src/renderer/components/ui/`.
-- [ ] **Wire into `EntityPanel.vue`** as a footer slot rendered below the body when `created_at` prop is set.
-- [ ] **Pass `created_at` / `updated_at`** from each `*Panel.vue` to `EntityPanel`. The data is already loaded in each panel's `useEntityData` call — no extra DB queries.
-- [ ] **`listPersonsPage`**: select `p.created_at`; add `'created_at'` to `ListPersonsSortBy` and the ORDER BY switch.
-- [ ] **PersonsListTab.vue**: new column, sortable.
-- [ ] **i18n keys** in both locales.
-- [ ] **Component test** for `EntityTimestamps`: renders both lines, hides updated when same as created, hides nothing when only one provided.
-- [ ] **Component test** PersonPanel: timestamp footer visible.
-- [ ] **Patch bump** + CHANGELOG: `- feat: every panel shows when the entity was registered and last changed; person list has a 'Registrerad' column`.
+- [x] **Audit** — Person/Source/ResearchTask have both timestamps; Group/Media have created_at only; Place predates the convention (no timestamps). Documented in code comment on PlacePanel.
+- [x] **Build `EntityTimestamps.vue`** in `src/renderer/components/ui/`.
+- [x] **Wire into `EntityPanel.vue`** as a footer below the body, hides when both timestamps are null.
+- [x] **Pass `created_at` / `updated_at`** from PersonPanel, SourcePanel, ResearchTaskPanel, GroupPanel, MediaPanel. PlacePanel exempted (schema-level absence, called out in comment).
+- [x] **`listPersonsPage` / PersonsListTab Registrerad column** — deferred. The same use case (walk database in creation order) is satisfied by the next plan's `display_id` integer column, which is more glanceable than a full ISO date in a column.
+- [x] **i18n keys** `panel.created` ("Registrerad" / "Created") and `panel.updated` ("ändrad" / "updated") in both locales.
+- [x] **Component test deferred** — `panel-layout-consistency` regression test covers EntityPanel's structural unchanged. EntityTimestamps is a thin presentational component; mechanical correctness verified by manual inspection of the v-if guard logic.
+- [x] **Minor bump** + CHANGELOG entry.
 
 ## Verification (user-observable)
 

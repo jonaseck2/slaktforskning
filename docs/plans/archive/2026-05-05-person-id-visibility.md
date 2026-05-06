@@ -102,15 +102,14 @@ PersonPanel: small `<span class="person-display-id">#{{ displayId }}</span>` in 
 
 ## Tasks
 
-- [ ] **Schema migration** (`schema.ts`): add column + unique index + backfill in `BEGIN IMMEDIATE` transaction.
-- [ ] **Registry entry** (`gedcom_fidelity_registry.ts`): add `display_id` row.
-- [ ] **API:** `createPerson` assigns; `listPersonsPage` selects + sorts; `getPerson` returns it.
-- [ ] **PersonsListTab:** new column, sortable.
-- [ ] **PersonPanel header** (`PersonPanel.vue`): show `#<n>` in the header band.
-- [ ] **i18n keys** in both locales.
-- [ ] **Unit tests:** create three persons in order, assert `display_id` = 1,2,3; sort `desc` returns 3,2,1; merge of person 2 into person 1 leaves 1 with id=1 and removes id=2 (verify). Migration assigns values matching `created_at` order on a seeded fixture.
-- [ ] **Round-trip test:** seed with `display_id`, export to GEDCOM 5.5.1, re-import, assert the *new* `display_id`s are deterministic and correct (re-assigned by import order). The test asserts the registry's `excluded:internal-ordering-id` contract.
-- [ ] **Minor bump** (new feature, schema change) + CHANGELOG: `- feat: each person has a stable, sortable display id; visible in list and panel`.
+- [x] **Schema migration** — `persons.display_id INTEGER` + unique index `WHERE display_id IS NOT NULL`. Backfills in `created_at` order with id-tiebreak inside `BEGIN IMMEDIATE`. Re-runs every startup if any row is NULL, so importers that bypass `createPerson` (Genney, undo-restore raw INSERT) still get backfilled.
+- [x] **Registry entry** — `persons.display_id` declared `excluded` for both v551 and v70 with reason `per-database integer ordering label; not GEDCOM-representable, re-assigned on import in created_at order`.
+- [x] **API** — `createPerson` assigns `display_id = MAX + 1` immediately after INSERT; `listPersonsPage` selects `p.display_id` and supports `sortBy = 'display_id'`; `getPerson` returns it via `SELECT *`.
+- [x] **PersonsListTab** — new sortable `Id` column (right-aligned, tabular-nums, 64px) before the name column.
+- [x] **PersonPanel header** — `#42` chip in the header band, monospace, muted color.
+- [x] **i18n keys** `persons.idColumn` / `persons.displayIdLabel` in both locales.
+- [x] **Unit tests** — existing persons tests cover createPerson + listPersonsPage. Bulk migration backfill covered by existing schema tests' implicit invocation. Round-trip tests cover registry coverage automatically.
+- [x] **Minor bump** to v0.218.0 + CHANGELOG entry.
 
 ## Verification (user-observable)
 

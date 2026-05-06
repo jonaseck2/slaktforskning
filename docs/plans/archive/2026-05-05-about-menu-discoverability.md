@@ -35,11 +35,11 @@ Two access paths to About should exist:
 
 ## Tasks
 
-- [ ] **Reproduce.** Build + run on the user's platform; confirm where (or whether) the Help menu's About item appears.
-- [ ] **Restore the menu entry** if missing. `src/main/index.ts` builds the menu — ensure `role: 'about'` (macOS) and a Help-menu fallback for Linux/Windows both fire `win.webContents.send('app:openAbout')`.
-- [ ] **Add Settings entry.** `src/renderer/views/SettingsView.vue` — add a small footer link `{{ $t('about.openLink') }}` near the language/theme controls; click toggles the existing `aboutVisible` state via a new event or shared composable. Reuse `AboutModal`; don't duplicate.
-- [ ] **i18n keys:** add `about.openLink` ("Om OurLegacy" / "About OurLegacy") to `sv.ts` and `en.ts`.
-- [ ] **Patch bump** + CHANGELOG: `- fix: 'About OurLegacy' is reachable from both the Help menu and Settings`.
+- [x] **Audit** — `src/main/index.ts` already had About in the Help menu (line 156-171) wired to `app:openAbout`, but on macOS the convention is the app menu, not Help. Discovery problem confirmed.
+- [x] **Add macOS app menu** with "About OurLegacy" first entry, plus services/hide/quit roles per macOS convention. Both paths fire the same `app:openAbout` IPC. Help menu's About kept as the cross-platform fallback.
+- [x] **Add Settings footer link** in `SettingsView.vue` — "About OurLegacy" button below the tabs, divider above. Dispatches a `window.dispatchEvent('app:openAbout')` CustomEvent; `App.vue` listens and toggles `aboutVisible`. AboutModal is reused, not duplicated.
+- [x] **i18n keys** `about.openLink` added in both locales.
+- [x] **Patch bump** + CHANGELOG entry.
 
 ## Verification (user-observable)
 
