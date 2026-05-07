@@ -173,7 +173,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 0;
 }
 /* Side-panel tables are narrow + the row content is self-evident
    (avatar+name link, date, action ✕). Skip the column headers for a

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: side-panel tables no longer clip badges, dates, and delete buttons — columns size to content again
 - feat: imports, exports, and website preview run on the DB worker thread — the app no longer freezes for 25 s during a 22 k-person Holger import (or for the duration of any long-running export/preview)
 - perf: hourglass tree at 7 generations loads noticeably faster — fewer DB round-trips per node
 - fix: place-tree picker icon and tooltip explain what the panel shows

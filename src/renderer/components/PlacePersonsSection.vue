@@ -67,13 +67,9 @@ defineExpose({ reload });
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  /* Default for panel-section data-table cells: max-width: 0 + nowrap +
-     ellipsis, so long names clip on a single line. The flex container's
-     min-width: 0 lets the name span shrink instead of overflowing. */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 0;
   min-width: 0;
 }
 .person-name-text {
