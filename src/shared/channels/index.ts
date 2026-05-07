@@ -13,5 +13,7 @@ import './media';
 import './gazetteers';
 import './database';
 import './undo';
+import './import';
+import './website-export';
 export { defineChannel, channelRegistry, listChannels, getChannel } from './registry';
 export type { ChannelDef, WorkerChannelDef, MainChannelDef, ThreadMode, ChannelRegistry } from './types';

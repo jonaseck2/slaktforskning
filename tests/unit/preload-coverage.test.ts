@@ -31,6 +31,10 @@ describe('preload coverage', () => {
   it('every registry channel is exposed on window.api', () => {
     const missing: string[] = [];
     for (const name of Object.keys(channelRegistry)) {
+      // Internal worker-only channels (names containing ':_') are called from
+      // main-thread shims via callWorker(...) and are intentionally NOT exposed
+      // on window.api — the renderer keeps using the public channel name.
+      if (name.includes(':_')) continue;
       if (!exposedChannels.has(name)) missing.push(name);
     }
     expect(

@@ -1,8 +1,7 @@
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { app, dialog, BrowserWindow, shell } from 'electron';
-import { exportPersonsCsv, exportEventsCsv, exportSourcesCsv, exportPlacesCsv } from '../../api/csv_export';
-import type { CsvOptions } from '../../api/csv_export';
 import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
 
@@ -14,8 +13,8 @@ import type { WrapHandlerFn } from './wrap-handler';
  *     export:openFolder → require Electron dialog / BrowserWindow / fs
  */
 export function registerUtilityHandlers(
-  getDb: () => ReturnType<typeof import('../database').getDatabase>,
-  getCurrentDatabasePath: () => string,
+  _getDb: () => ReturnType<typeof import('../database').getDatabase>,
+  _getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
   // Checks → worker (stay in legacy dispatch table — worker-local state)
@@ -147,26 +146,22 @@ export function registerUtilityHandlers(
     }
   });
 
-  // CSV Export — dialog + DB (stays on main thread)
+  // CSV Export — thin main-thread shim. The save dialog stays here (it needs
+  // the renderer's BrowserWindow); the heavy DB walk that builds the CSV
+  // string runs in the worker via `csv:_exportRun`. The final fs write is
+  // back on the main thread to keep the worker free of fs I/O.
   wrapHandler('csv:export', async (opts?: unknown) => {
     const options = opts as { entityType: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' } | undefined;
     if (!options?.entityType) return { success: false, error: 'entityType is required' };
 
-    const csvOptions: CsvOptions = {
-      delimiter: options.delimiter ?? ',',
-      encoding: options.encoding ?? 'utf-8',
+    const defaultNames: Record<string, string> = {
+      persons: 'persons.csv',
+      events: 'events.csv',
+      sources: 'sources.csv',
+      places: 'places.csv',
     };
-
-    const db = getDb();
-    let csv: string;
-    let defaultName: string;
-    switch (options.entityType) {
-      case 'persons':  csv = exportPersonsCsv(db, csvOptions);  defaultName = 'persons.csv';  break;
-      case 'events':   csv = exportEventsCsv(db, csvOptions);   defaultName = 'events.csv';   break;
-      case 'sources':  csv = exportSourcesCsv(db, csvOptions);  defaultName = 'sources.csv';  break;
-      case 'places':   csv = exportPlacesCsv(db, csvOptions);   defaultName = 'places.csv';   break;
-      default: return { success: false, error: 'Unknown entityType: ' + options.entityType };
-    }
+    const defaultName = defaultNames[options.entityType];
+    if (!defaultName) return { success: false, error: 'Unknown entityType: ' + options.entityType };
 
     const result = await dialog.showSaveDialog({
       title: 'Export CSV',
@@ -174,7 +169,15 @@ export function registerUtilityHandlers(
       filters: [{ name: 'CSV Files', extensions: ['csv'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    fs.writeFileSync(result.filePath, csv, 'utf-8');
+
+    const workerResult = (await callWorker('csv:_exportRun', options)) as
+      | { csv: string; defaultName: string }
+      | { error: string };
+    if ('error' in workerResult) {
+      return { success: false, error: workerResult.error };
+    }
+
+    await fsp.writeFile(result.filePath, workerResult.csv, 'utf-8');
     return { success: true, filePath: result.filePath };
   });
 }

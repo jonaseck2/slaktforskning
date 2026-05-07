@@ -236,16 +236,29 @@ async function handleImport() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    const result = (await window.api.archive.import()) as {
-      imported?: boolean;
-      canceled?: boolean;
-      filePath?: string;
-      report?: ImportReport;
-    };
-    if (result.imported) {
+    // archive:import now runs in the worker thread and returns the
+    // withImportLifecycle envelope: { success, report, error }. The cancel
+    // path stays as { canceled: true } because the file dialog runs on the
+    // main-thread shim before the worker call.
+    const result = (await window.api.archive.import()) as
+      | { canceled: true }
+      | {
+          success: true;
+          report: { imported?: boolean; filePath?: string; report?: ImportReport };
+        }
+      | { success: false; error: string };
+    if ('canceled' in result && result.canceled) return;
+    if ('success' in result && !result.success) {
+      setStatus(t('importExport.archiveImportError'), 'error');
+      console.error('[Archive] import failed:', result.error);
+      toast.error(t('errors.saveFailed'));
+      return;
+    }
+    const inner = result.report;
+    if (inner.imported) {
       window.dispatchEvent(new CustomEvent('data-imported'));
-      if (result.report) {
-        importReportData.value = result.report;
+      if (inner.report) {
+        importReportData.value = inner.report;
         showImportReport.value = true;
       } else {
         setStatus(t('importExport.archiveImportSuccess'));

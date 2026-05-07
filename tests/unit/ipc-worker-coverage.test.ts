@@ -30,15 +30,19 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'shell:open-external',
   'export:openFolder',
   'app:getVersion', 'app:openExternal',
-  'website:export', 'website:previewSnapshot', 'website:buildPreviewHtml',
+  'website:export', 'website:buildPreviewHtml',
+  // website:previewSnapshot migrated to the registry as a worker channel.
   'print:print', 'print:exportPdf',
   'chart:saveSvg', 'chart:savePdf',
   'csv:export',
   // gazetteers:getSchema and gazetteers:getBundled migrated to registry with thread:'main'
-  'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
+  // gedcom:preview and gedcom:import migrated to the registry as worker channels.
+  'gedcom:selectFile', 'gedcom:export',
   'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
-  'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
-  'import:holgerSelectFile', 'import:holgerSelectMedia', 'import:holgerRun',
+  'import:genneySelectMedia',
+  // import:genneyRun and import:genneyDiscover migrated to the registry as worker channels.
+  'import:holgerSelectFile', 'import:holgerSelectMedia',
+  // import:holgerRun migrated to the registry as a worker channel.
   'archive:export', 'archive:import',
 ]);
 

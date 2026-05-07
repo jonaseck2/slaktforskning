@@ -40,24 +40,9 @@ async function buildPreviewThumbnails(
 }
 
 export function registerWebsiteExportHandlers(): void {
-  wrapHandler('website:previewSnapshot', async (...args) => {
-    const opts = args[0] as {
-      siteTitle: string;
-      scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
-      options: {
-        excludeLiving: boolean;
-        redactLiving: boolean;
-      };
-    };
-    return await callWorker('website:buildPreview', {
-      siteTitle: opts.siteTitle,
-      scope: opts.scope,
-      options: {
-        excludeLiving: opts.options.excludeLiving,
-        redactLiving: opts.options.redactLiving,
-      },
-    });
-  });
+  // `website:previewSnapshot` is a registry-defined worker channel — see
+  // src/shared/channels/website-export.ts. The registry walk in
+  // src/main/ipc/index.ts wires its main-side ipcMain.handle automatically.
 
   // Builds the full snapshot for the iframe preview and inlines it into a
   // copy of the static SPA's index.html. The renderer drops the returned

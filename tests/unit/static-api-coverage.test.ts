@@ -41,6 +41,10 @@ describe('static API parity', () => {
   it('every registry channel has a stub in the static api', () => {
     const missing: string[] = [];
     for (const name of Object.keys(channelRegistry)) {
+      // Internal worker-only channels (names containing ':_') are dispatched
+      // from main-thread shims via callWorker(...) and are not part of the
+      // renderer-facing surface, so the static SPA does not stub them.
+      if (name.includes(':_')) continue;
       const colonIdx = name.indexOf(':');
       if (colonIdx === -1) continue;
       const domain = name.slice(0, colonIdx);
@@ -89,12 +93,17 @@ describe('static API parity', () => {
       'print:print', 'print:exportPdf',
       'csv:export',
       'backup:backup', 'backup:restore',
-      // gedcom import/export
-      'gedcom:selectFile', 'gedcom:preview', 'gedcom:import', 'gedcom:export',
+      // gedcom select-file/export — gedcom:preview and gedcom:import migrated
+      // to registry worker channels (covered by the registry-stub check above).
+      'gedcom:selectFile', 'gedcom:export',
       // genney + holger import
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
-      'import:genneySelectMedia', 'import:genneyDiscover', 'import:genneyRun',
-      'import:holgerSelectFile', 'import:holgerSelectMedia', 'import:holgerRun',
+      'import:genneySelectMedia',
+      // import:genneyRun and import:genneyDiscover migrated to registry worker
+      // channels — covered by the registry-stub check above.
+      'import:holgerSelectFile', 'import:holgerSelectMedia',
+      // import:holgerRun is now a registry worker channel — checked by the
+      // 'every registry channel has a stub in the static api' test above.
       // archive
       'archive:export', 'archive:import',
       // website

@@ -16,15 +16,32 @@ import * as checks from '../api/checks';
 import * as media from '../api/media';
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
-import { buildPreview } from '../api/html_site/preview';
+import { _setBroadcastTarget, broadcast } from './db-worker-broadcast';
+import { _setWorkerStateAccessors } from './db-worker-state';
 
 if (!parentPort) throw new Error('db-worker must run in a worker thread');
+
+// Wire the broadcast helper to this worker's parentPort so worker-side
+// handlers can emit unsolicited topic-keyed events back to main.
+_setBroadcastTarget(parentPort);
+
+// Re-exported for production callers (handlers inside this worker).
+export { broadcast };
 
 // ── DB state ──────────────────────────────────────────────────────────────────
 
 let db: Database | null = null;
 let dbPath: string | null = null;
 let importInProgress = false;
+
+// Wire worker-local state accessors so registry channel handlers in
+// src/shared/channels/ can read/write dbPath and importInProgress without
+// taking a hard import on this module.
+_setWorkerStateAccessors({
+  getDbPath: () => dbPath,
+  getImportInProgress: () => importInProgress,
+  setImportInProgress: (v: boolean) => { importInProgress = v; },
+});
 
 function getDb(): Database {
   if (!db) throw new Error('Worker DB not initialized');
@@ -193,9 +210,12 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   'checks:forMedia': (mediaId) => checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
 
-  // Website export
+  // Website export — buildSnapshot + resolveMediaPaths are still in the
+  // legacy dispatch table because they're called from the website-export.ts
+  // shims via callWorker() (not directly from the renderer). buildPreview
+  // moved to the registry as `website:previewSnapshot` (it IS called from
+  // the renderer).
   'website:buildSnapshot': (opts) => buildSnapshot(getDb(), opts),
-  'website:buildPreview': (opts) => buildPreview(getDb(), opts),
   'website:resolveMediaPaths': (mediaIds: string[]) => {
     const result: Record<string, { absPath: string; mime: string }> = {};
     const mimeMap: Record<string, string> = {

@@ -234,6 +234,25 @@ window.api.gedcom.export(opts?: { version?: '5.5.1' | '7.0' })  // → { exporte
 | `db:createNew` | `dialog.showSaveDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:openExisting` | `dialog.showOpenDialog` → `switchDatabase(path)` → broadcast `db:switched` |
 | `db:switchTo` | `switchDatabase(path)` → broadcast `db:switched` |
-| `gedcom:preview` | Parse GEDCOM file → `previewGedcomImport(tree)` → `{ canceled, filePath, preview }` |
-| `gedcom:import` | `importGedcom(db, opts)` |
-| `gedcom:export` | `exportGedcom(db, version)` → Save dialog → `{ exported, filePath, report }` |
+| `gedcom:preview` | (worker) Parse GEDCOM file → `previewGedcomImport(tree)` → `{ canceled, filePath, preview }` |
+| `gedcom:import` | (worker) `importGedcom(db, opts)` wrapped in `withImportLifecycle` → `{ success, report, error }` |
+| `gedcom:export` | (main shim → worker `gedcom:_exportRun`) `exportGedcom(db, version)` → Save dialog → `{ exported, filePath, report }` |
+| `import:holgerRun` | (worker) Holger import wrapped in `withImportLifecycle` → `{ success, report, error }` |
+| `import:genneyRun` | (worker) Genney import wrapped in `withImportLifecycle` → `{ success, report, error }` |
+| `import:genneyDiscover` | (worker) Inspect Genney archive → `{ tables }` |
+| `archive:import` | (main shim → worker `archive:_importRun`) Open dialog → `importArchive(db, …)` → `withImportLifecycle` envelope |
+| `archive:export` | (main shim → worker `archive:_exportRun`) Save dialog → `exportArchive(db, …)` → `{ exported, filePath, report }` |
+| `csv:export` | (main shim → worker `csv:_exportRun`) Save dialog → walk one entity table → write CSV |
+| `website:previewSnapshot` | (worker) `buildPreview(db, opts)` → totals + sample for the preview pane |
+| `website:buildPreviewHtml` | (main shim → worker `website:buildSnapshot`) Walk DB in worker, JPEG-resize thumbnails on main via `nativeImage`, build HTML string |
+| `website:export` | (main shim → worker `website:buildSnapshot`) Pick output dir on main, walk DB in worker, copy files on main |
+
+### Threading model
+
+Long-running channels run on the dedicated DB worker thread (`src/main/db-worker.ts`) so the Electron main thread stays responsive. Three placement patterns:
+
+- **Pure worker channel** — `defineChannel({ thread: 'worker' })`. The registry walk in `src/main/ipc/index.ts` wraps it in `callWorker(...)`. Examples: `import:holgerRun`, `gedcom:import`, `gedcom:preview`, `import:genneyRun`, `import:genneyDiscover`, `website:previewSnapshot`.
+- **Main shim → internal worker channel** — channels that need an Electron-only API on main (`dialog`, `nativeImage`) keep their public name on main as a thin `wrapHandler` shim that opens the dialog, then `callWorker('<name>:_run', …)` for the heavy work. The internal `:_`-prefixed channel is registry-defined and worker-thread; it's never exposed to the renderer (preload-coverage and static-api-coverage tests skip channels matching `/:_/`). Examples: `archive:import` → `archive:_importRun`, `archive:export` → `archive:_exportRun`, `gedcom:export` → `gedcom:_exportRun`, `csv:export` → `csv:_exportRun`.
+- **Pure main channel** — `defineChannel({ thread: 'main' })` or `wrapHandler` directly when the channel is fast and doesn't need worker context. Examples: `db:getCurrent`, `print:print`, `chart:saveSvg`.
+
+`tests/unit/main-thread-responsive-during-import.test.ts` enforces that the heavy channels stay on the worker — moving any of them back to main is a user-goal regression.

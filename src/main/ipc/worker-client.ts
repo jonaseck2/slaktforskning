@@ -15,6 +15,7 @@ let switchedResolve: (() => void) | null = null;
 type WorkerMsg =
   | { type: 'ready' }
   | { type: 'switched' }
+  | { type: 'broadcast'; topic: string; payload: unknown }
   | { id: number; result: unknown }
   | { id: number; error: string };
 
@@ -42,6 +43,12 @@ export function startWorker(dbPath: string): void {
       } else if (msg.type === 'switched') {
         switchedResolve?.();
         switchedResolve = null;
+      } else if (msg.type === 'broadcast') {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { BrowserWindow } = require('electron');
+        for (const w of BrowserWindow.getAllWindows()) {
+          if (!w.isDestroyed()) w.webContents.send(msg.topic, msg.payload);
+        }
       }
       return;
     }
