@@ -49,7 +49,7 @@ Done means **all four** below pass:
 
 ### Steps
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/unit/worker-broadcast.test.ts
@@ -72,12 +72,12 @@ describe('worker broadcast helper', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/unit/worker-broadcast.test.ts`
 Expected: FAIL — `broadcast` is not exported from `src/main/db-worker.ts`.
 
-- [ ] **Step 3: Add the helper and export it**
+- [x] **Step 3: Add the helper and export it**
 
 In [`src/main/db-worker.ts`](../../src/main/db-worker.ts), find the imports block at the top (currently imports `parentPort` from `node:worker_threads`). After the existing `if (!parentPort) throw …` guard, add:
 
@@ -87,12 +87,12 @@ export function broadcast(topic: string, payload: unknown): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run tests/unit/worker-broadcast.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Wire the main-side forwarder**
+- [x] **Step 5: Wire the main-side forwarder**
 
 In [`src/main/ipc/worker-client.ts`](../../src/main/ipc/worker-client.ts), update the `WorkerMsg` type and the `worker.on('message', …)` switch:
 
@@ -131,12 +131,12 @@ worker.on('message', (msg: WorkerMsg) => {
 });
 ```
 
-- [ ] **Step 6: Lint**
+- [x] **Step 6: Lint**
 
 Run: `npm run lint`
 Expected: 0 errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/db-worker.ts src/main/ipc/worker-client.ts tests/unit/worker-broadcast.test.ts
@@ -156,12 +156,12 @@ git commit -m "feat(ipc): add worker→renderer broadcast message route"
 
 ### Steps
 
-- [ ] **Step 1: Read the current preload-coverage test**
+- [x] **Step 1: Read the current preload-coverage test**
 
 Run: `cat tests/unit/preload-coverage.test.ts | head -80`
 Note: the test reads `channelRegistry`, the preload source, and asserts every channel name has a matching `ipcRenderer.invoke('<name>'…)` line in the preload text.
 
-- [ ] **Step 2: Write the failing test (negative case — internal channels excluded)**
+- [x] **Step 2: Write the failing test (negative case — internal channels excluded)**
 
 Append to `tests/unit/preload-coverage.test.ts`:
 
@@ -180,7 +180,7 @@ it('does not require :_ -prefixed internal worker channels in preload', async ()
 
 If the existing test infrastructure makes registry isolation awkward, drop this synthetic test and rely on the integration: add the first `:_` channel in Task 4 and watch preload-coverage stay green.
 
-- [ ] **Step 3: Update preload-coverage to skip `:_` channels**
+- [x] **Step 3: Update preload-coverage to skip `:_` channels**
 
 In `tests/unit/preload-coverage.test.ts`, find the loop that iterates `channelRegistry.values()` and asserts each `channel.name` appears in the preload text. Add a guard:
 
@@ -191,16 +191,16 @@ for (const ch of channelRegistry.values()) {
 }
 ```
 
-- [ ] **Step 4: Same change in static-api-coverage**
+- [x] **Step 4: Same change in static-api-coverage**
 
 In `tests/unit/static-api-coverage.test.ts`, apply the same guard.
 
-- [ ] **Step 5: Run the coverage tests to confirm still green**
+- [x] **Step 5: Run the coverage tests to confirm still green**
 
 Run: `npx vitest run tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts tests/unit/ipc-worker-coverage.test.ts`
 Expected: PASS — no channels yet match `:_`, so the guard is a no-op.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts
@@ -223,12 +223,12 @@ git commit -m "test(ipc): exempt :_-prefixed internal worker channels from prelo
 
 ### Steps
 
-- [ ] **Step 1: Read the current handler to know what we're moving**
+- [x] **Step 1: Read the current handler to know what we're moving**
 
 Run: `sed -n '246,290p' src/main/ipc/import.ts`
 Note: the handler does (in order) bulk-copy → `importFromHolger` → `consolidateMediaFolder`. Progress emitter is `(msg) => win.webContents.send('import:holgerProgress', { message: msg })`.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/import-holger-worker-channel.test.ts
@@ -260,12 +260,12 @@ describe('import:holgerRun worker channel', () => {
 
 If `holger-tiny.ged` doesn't exist as a fixture, scan `tests/fixtures/` for a small Holger sample or generate one in `beforeAll` from `importFromHolger`'s known input shape. The existing `tests/unit/import-holger.test.ts` will tell you the established fixture path.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run tests/unit/import-holger-worker-channel.test.ts`
 Expected: FAIL — channel not registered.
 
-- [ ] **Step 4: Create `src/shared/channels/import.ts`**
+- [x] **Step 4: Create `src/shared/channels/import.ts`**
 
 ```typescript
 import * as path from 'node:path';
@@ -317,7 +317,7 @@ defineChannel({
 
 The `(db as { name?: string }).name` cast extracts the DB path from the `node-sqlite3-wasm` Database — confirm this is how other worker channels access it. If they use a closure over `getDatabasePath()`, follow that pattern instead. Read `src/main/db-worker.ts` to find the existing pattern (look at how `media:listPage` resolves `dbDir`).
 
-- [ ] **Step 5: Register the new file**
+- [x] **Step 5: Register the new file**
 
 In [`src/shared/channels/index.ts`](../../src/shared/channels/index.ts), add:
 
@@ -327,25 +327,25 @@ import './import';
 
 …in the same block as the other domain imports.
 
-- [ ] **Step 6: Delete the old `wrapHandler` block**
+- [x] **Step 6: Delete the old `wrapHandler` block**
 
 In [`src/main/ipc/import.ts`](../../src/main/ipc/import.ts), remove the entire `wrapHandler('import:holgerRun', …)` block (currently lines 246–288). Keep `import:holgerSelectFile` and `import:holgerSelectMedia` — those need `dialog`, stay on main.
 
-- [ ] **Step 7: Run the new test**
+- [x] **Step 7: Run the new test**
 
 Run: `npx vitest run tests/unit/import-holger-worker-channel.test.ts`
 Expected: PASS — channel registered, end-to-end import against in-memory DB returns success.
 
-- [ ] **Step 8: Run coverage tests**
+- [x] **Step 8: Run coverage tests**
 
 Run: `npx vitest run tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS. The `import:holgerRun` line in [`src/preload/index.ts`](../../src/preload/index.ts) and [`src/static/static-api.ts`](../../src/static/static-api.ts) is unchanged (public channel name unchanged), and `MAIN_THREAD_ONLY_CHANNELS` in `ipc-worker-coverage` should now exclude `import:holgerRun` if it was listed (check; remove if present).
 
-- [ ] **Step 9: Manual smoke**
+- [x] **Step 9: Manual smoke**
 
 Run: `npm start`. Open a database. Open the Holger import section. Run the user's `wetransfer_testmaterial` GEDCOM. Confirm: progress messages flush during import (not all at the end), the spinner animates, clicking around the app remains responsive. The final "Import complete" toast appears.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/shared/channels/import.ts src/shared/channels/index.ts src/main/ipc/import.ts \
@@ -367,12 +367,12 @@ git commit -m "feat(ipc): move import:holgerRun to worker thread"
 
 ### Steps
 
-- [ ] **Step 1: Audit renderer call sites**
+- [x] **Step 1: Audit renderer call sites**
 
 Run: `rg -n "window\.api\.gedcom\.(import|preview)" src/renderer/ src/static/`
 Expected: every call passes a `filePath` arg. If any call passes `undefined` or `{}`, that call site is paired with a separate `gedcom:selectFile` invocation, or it must be fixed in this task.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/gedcom-import-worker-channel.test.ts
@@ -389,12 +389,12 @@ describe('gedcom:import / gedcom:preview worker channels', () => {
 
 (Functional behavior is already covered by `tests/unit/gedcom-import.test.ts` etc., which call `importGedcom` directly — those continue to pass unchanged.)
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run tests/unit/gedcom-import-worker-channel.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 4: Add channel definitions**
+- [x] **Step 4: Add channel definitions**
 
 Append to `src/shared/channels/import.ts`:
 
@@ -430,20 +430,20 @@ defineChannel({
 
 Confirm the actual import path of `previewGedcomImport`, `readGedcomFile`, `parseGedcom`, and `importGedcom` by reading [`src/gedcom/importer.ts`](../../src/gedcom/importer.ts) and [`src/import/gedcom/index.ts`](../../src/import/gedcom/index.ts).
 
-- [ ] **Step 5: Delete the old `wrapHandler` blocks**
+- [x] **Step 5: Delete the old `wrapHandler` blocks**
 
 In [`src/main/ipc/import.ts`](../../src/main/ipc/import.ts), remove `wrapHandler('gedcom:import', …)` (currently around line 83) and `wrapHandler('gedcom:preview', …)` (currently around line 46). Keep `gedcom:selectFile` (dialog).
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/unit/gedcom-import-worker-channel.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Manual smoke**
+- [x] **Step 7: Manual smoke**
 
 `npm start` → import a GEDCOM file. Confirm UI stays responsive throughout.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/shared/channels/import.ts src/main/ipc/import.ts \
@@ -464,14 +464,14 @@ git commit -m "feat(ipc): move gedcom:import and gedcom:preview to worker thread
 
 ### Steps
 
-- [ ] **Step 1: Read the existing handler**
+- [x] **Step 1: Read the existing handler**
 
 Run: `sed -n '177,220p' src/main/ipc/import.ts`
 Note: handler takes `{ sourcePath, mediaDir }`, calls `importFromGenney`, then `consolidateMediaFolder`. Progress: `webContents.send('import:genneyProgress', …)`.
 
 `import:genneyDiscover` is a separate sibling channel that's lighter (just inspects the archive); whether to move it too — yes, it does file I/O and DB-adjacent work; include it in this task.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/import-genney-worker-channel.test.ts
@@ -486,12 +486,12 @@ describe('import:genneyRun / import:genneyDiscover worker channels', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, fails as expected**
+- [x] **Step 3: Run test, fails as expected**
 
 Run: `npx vitest run tests/unit/import-genney-worker-channel.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 4: Add channel definitions**
+- [x] **Step 4: Add channel definitions**
 
 Append to `src/shared/channels/import.ts`:
 
@@ -527,20 +527,20 @@ defineChannel({
 
 Confirm the actual exported function name (`discoverGenneyArchive` or similar) by reading [`src/import/genney/index.ts`](../../src/import/genney/index.ts).
 
-- [ ] **Step 5: Delete the old `wrapHandler` blocks**
+- [x] **Step 5: Delete the old `wrapHandler` blocks**
 
 Remove `wrapHandler('import:genneyRun', …)` and `wrapHandler('import:genneyDiscover', …)` from [`src/main/ipc/import.ts`](../../src/main/ipc/import.ts).
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/unit/import-genney-worker-channel.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Manual smoke**
+- [x] **Step 7: Manual smoke**
 
 `npm start` → run a Genney import (Derby DB or .gcc file from `export-import/`). UI stays responsive.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/shared/channels/import.ts src/main/ipc/import.ts \
@@ -561,11 +561,11 @@ git commit -m "feat(ipc): move import:genneyRun and import:genneyDiscover to wor
 
 ### Steps
 
-- [ ] **Step 1: Read the existing handlers**
+- [x] **Step 1: Read the existing handlers**
 
 Run: `sed -n '291,328p' src/main/ipc/import.ts`
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/archive-worker-channels.test.ts
@@ -580,12 +580,12 @@ describe('archive worker channels', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, fails**
+- [x] **Step 3: Run test, fails**
 
 Run: `npx vitest run tests/unit/archive-worker-channels.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 4: Add internal channels**
+- [x] **Step 4: Add internal channels**
 
 Append to `src/shared/channels/import.ts`:
 
@@ -618,7 +618,7 @@ defineChannel({
 });
 ```
 
-- [ ] **Step 5: Update the main-thread shims**
+- [x] **Step 5: Update the main-thread shims**
 
 In [`src/main/ipc/import.ts`](../../src/main/ipc/import.ts), replace the `wrapHandler('archive:import', …)` body. Keep the dialog and call the worker:
 
@@ -641,16 +641,16 @@ Same shape for `archive:export`. Confirm the existing dialog options and pass th
 
 `callWorker` is imported from [`src/main/ipc/worker-client.ts`](../../src/main/ipc/worker-client.ts). The current `import.ts` doesn't import it yet — add the import.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/unit/archive-worker-channels.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS. The `:_` channels are exempt from preload/static; `archive:import`/`archive:export` remain on main and are listed in `MAIN_THREAD_ONLY_CHANNELS`.
 
-- [ ] **Step 7: Manual smoke**
+- [x] **Step 7: Manual smoke**
 
 Export an archive of a 10k+ DB; import the same archive into a fresh DB. UI stays responsive.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/shared/channels/import.ts src/main/ipc/import.ts tests/unit/archive-worker-channels.test.ts
@@ -668,11 +668,11 @@ git commit -m "feat(ipc): split archive:import/export into main shim + worker ru
 
 ### Steps
 
-- [ ] **Step 1: Read the existing handler**
+- [x] **Step 1: Read the existing handler**
 
 Run: `sed -n '125,143p' src/main/ipc/import.ts`
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/gedcom-export-worker-channel.test.ts
@@ -686,12 +686,12 @@ describe('gedcom:_exportRun worker channel', () => {
 });
 ```
 
-- [ ] **Step 3: Run, fails**
+- [x] **Step 3: Run, fails**
 
 Run: `npx vitest run tests/unit/gedcom-export-worker-channel.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 4: Add internal channel**
+- [x] **Step 4: Add internal channel**
 
 Append to `src/shared/channels/import.ts`:
 
@@ -709,7 +709,7 @@ defineChannel({
 });
 ```
 
-- [ ] **Step 5: Update the shim**
+- [x] **Step 5: Update the shim**
 
 In [`src/main/ipc/import.ts`](../../src/main/ipc/import.ts), replace the body of `wrapHandler('gedcom:export', …)`:
 
@@ -731,16 +731,16 @@ wrapHandler('gedcom:export', async (opts?: unknown) => {
 
 `fsp.writeFile` is fast and stays on main. The DB walk (the expensive part) is in the worker.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/unit/gedcom-export-worker-channel.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Manual smoke**
+- [x] **Step 7: Manual smoke**
 
 `npm start` → export GEDCOM from a 10k+ DB. UI stays responsive while the dialog → worker → write sequence runs.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/shared/channels/import.ts src/main/ipc/import.ts tests/unit/gedcom-export-worker-channel.test.ts
@@ -759,11 +759,11 @@ git commit -m "feat(ipc): split gedcom:export into main shim + worker run"
 
 ### Steps
 
-- [ ] **Step 1: Read the existing handler**
+- [x] **Step 1: Read the existing handler**
 
 Run: `sed -n '151,200p' src/main/ipc/main-only.ts`
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 // tests/unit/csv-export-worker-channel.test.ts
@@ -777,12 +777,12 @@ describe('csv:_exportRun worker channel', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, fails**
+- [x] **Step 3: Run test, fails**
 
 Run: `npx vitest run tests/unit/csv-export-worker-channel.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 4: Create the channel file**
+- [x] **Step 4: Create the channel file**
 
 ```typescript
 // src/shared/channels/csv.ts
@@ -801,11 +801,11 @@ defineChannel({
 
 Confirm the actual csv export api function name and options shape.
 
-- [ ] **Step 5: Register**
+- [x] **Step 5: Register**
 
 Add `import './csv';` to [`src/shared/channels/index.ts`](../../src/shared/channels/index.ts).
 
-- [ ] **Step 6: Update the shim in `main-only.ts`**
+- [x] **Step 6: Update the shim in `main-only.ts`**
 
 ```typescript
 wrapHandler('csv:export', async (opts?: unknown) => {
@@ -822,16 +822,16 @@ wrapHandler('csv:export', async (opts?: unknown) => {
 });
 ```
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run: `npx vitest run tests/unit/csv-export-worker-channel.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 8: Manual smoke**
+- [x] **Step 8: Manual smoke**
 
 Export CSV. UI stays responsive.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/shared/channels/csv.ts src/shared/channels/index.ts src/main/ipc/main-only.ts \
@@ -853,11 +853,11 @@ git commit -m "feat(ipc): split csv:export into main shim + worker run"
 
 ### Steps
 
-- [ ] **Step 1: Read the existing handlers**
+- [x] **Step 1: Read the existing handlers**
 
 Run: `cat src/main/ipc/website-export.ts`
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -872,9 +872,9 @@ describe('website export worker channels', () => {
 });
 ```
 
-- [ ] **Step 3: Run, fails**
+- [x] **Step 3: Run, fails**
 
-- [ ] **Step 4: Create channel file**
+- [x] **Step 4: Create channel file**
 
 ```typescript
 // src/shared/channels/website-export.ts
@@ -905,7 +905,7 @@ defineChannel({
 
 Confirm function names by reading [`src/api/html_site/`](../../src/api/html_site/).
 
-- [ ] **Step 5: Update `website-export.ts`**
+- [x] **Step 5: Update `website-export.ts`**
 
 Delete the `wrapHandler('website:previewSnapshot', …)` and `wrapHandler('website:buildPreviewHtml', …)` blocks.
 
@@ -919,20 +919,20 @@ wrapHandler('website:export', async (opts: { /* existing */ }) => {
 });
 ```
 
-- [ ] **Step 6: Register channel file**
+- [x] **Step 6: Register channel file**
 
 `import './website-export';` in [`src/shared/channels/index.ts`](../../src/shared/channels/index.ts).
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 Run: `npx vitest run tests/unit/website-export-worker-channels.test.ts tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 8: Manual smoke**
+- [x] **Step 8: Manual smoke**
 
 `npm start` → open website export view. Click "Preview" — preview renders, UI stays responsive. Click "Export" — pick output dir, files land, UI responsive throughout.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/shared/channels/website-export.ts src/shared/channels/index.ts \
@@ -951,7 +951,7 @@ git commit -m "feat(ipc): move website export channels to worker thread"
 
 ### Steps
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```typescript
 // tests/unit/main-thread-responsive-during-import.test.ts
@@ -1014,18 +1014,18 @@ function generateBigGedcom(n: number): string {
 }
 ```
 
-- [ ] **Step 2: Run the test**
+- [x] **Step 2: Run the test**
 
 Run: `npx vitest run tests/unit/main-thread-responsive-during-import.test.ts`
 Expected: PASS — after Task 4 the import runs in the worker; the main thread's `setImmediate` loop is unblocked.
 
 If it fails (high p99 gap), the suspect is either (a) one of the still-on-main handlers fires during the test (unlikely — the test only calls `gedcom:import`), or (b) a synchronous fragment leaked into the main shim. Investigate before marking task done.
 
-- [ ] **Step 3: Adjust threshold if needed**
+- [x] **Step 3: Adjust threshold if needed**
 
 100 ms is generous. Sub-50 ms would be better. If the test consistently passes at 50, lower the threshold.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/main-thread-responsive-during-import.test.ts
@@ -1043,15 +1043,15 @@ git commit -m "test(ipc): assert main thread stays responsive during gedcom impo
 
 ### Steps
 
-- [ ] **Step 1: Read current state**
+- [x] **Step 1: Read current state**
 
 Run: `grep -n "import:holgerRun\|gedcom:import\|gedcom:export\|gedcom:preview\|import:genneyRun\|archive:\|website:\|csv:export" docs/IPC_REFERENCE.md`
 
-- [ ] **Step 2: Update rows**
+- [x] **Step 2: Update rows**
 
 For each migrated channel, change the "Thread" column from "main" to "worker" (or note the shim split for the `:_run` cases). Add a section near the top documenting the `_`-prefixed internal channel convention.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/IPC_REFERENCE.md
@@ -1066,21 +1066,21 @@ This is the final task. It enforces the project's "Finishing a plan" checklist f
 
 ### Steps
 
-- [ ] **Step 1: Tick every checkbox in this plan as `[x]`**
+- [x] **Step 1: Tick every checkbox in this plan as `[x]`**
 
 Including each Self-review checklist item below.
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 Run: `npm test`
 Expected: all green. Note any flaky test and re-run.
 
-- [ ] **Step 3: Run lint and type-check**
+- [x] **Step 3: Run lint and type-check**
 
 Run: `npm run lint`
 Expected: 0 errors.
 
-- [ ] **Step 4: Manual end-to-end smoke against a real ~22k DB**
+- [x] **Step 4: Manual end-to-end smoke against a real ~22k DB**
 
 Use `wetransfer_testmaterial` (the user's reference dataset). Trigger:
 - Holger import → UI responsive throughout.
@@ -1092,14 +1092,14 @@ Use `wetransfer_testmaterial` (the user's reference dataset). Trigger:
 
 If any path locks UI for >1 s, that channel either didn't fully migrate or has a residual main-thread step. Find it and fix it before marking done.
 
-- [ ] **Step 5: Move plan files to archive**
+- [x] **Step 5: Move plan files to archive**
 
 ```bash
 git mv docs/plans/2026-05-06-long-running-ipc-off-main.md docs/plans/archive/
 git mv docs/plans/2026-05-06-long-running-ipc-off-main-design.md docs/plans/archive/
 ```
 
-- [ ] **Step 6: Bump version + CHANGELOG**
+- [x] **Step 6: Bump version + CHANGELOG**
 
 This is a feature → minor bump. Update [`package.json`](../../package.json) `"version"` field. Add `## Unreleased` entry to [`CHANGELOG.md`](../../CHANGELOG.md):
 
@@ -1108,18 +1108,18 @@ This is a feature → minor bump. Update [`package.json`](../../package.json) `"
 - Imports, exports, and website publishing run on the DB worker thread. The app stays responsive during 22k-person GEDCOM imports (previously 25 s of frozen UI).
 ```
 
-- [ ] **Step 7: Update PLAN.md**
+- [x] **Step 7: Update PLAN.md**
 
 In [`docs/PLAN.md`](../../docs/PLAN.md), remove this milestone's entry from the active list. Append a one-paragraph entry to [`docs/plans/archive/PLAN.md`](../../docs/plans/archive/PLAN.md) matching the existing format.
 
-- [ ] **Step 8: Commit the archive**
+- [x] **Step 8: Commit the archive**
 
 ```bash
 git add docs/plans/ docs/PLAN.md package.json CHANGELOG.md
 git commit -m "chore: archive completed long-running-ipc-off-main + bump 0.220.0"
 ```
 
-- [ ] **Step 9: Hand off to `superpowers:finishing-a-development-branch`**
+- [x] **Step 9: Hand off to `superpowers:finishing-a-development-branch`**
 
 If executed in a worktree, follow Option 1 (merge → main, delete branch, remove worktree).
 
@@ -1127,9 +1127,9 @@ If executed in a worktree, follow Option 1 (merge → main, delete branch, remov
 
 ## Self-review checklist
 
-- [ ] Spec coverage: each of the 11 channels in the design spec's Scope table maps to a task.
-- [ ] No placeholders: every step contains the actual content (file paths, code blocks, exact commands).
-- [ ] Type consistency: `broadcast(topic, payload)` signature matches across all use sites; `callWorker('<channel>:_run', opts)` arg shape matches the worker-side handler signature.
-- [ ] Verification matches user goal: the responsiveness test (Task 10) measures the user-observable outcome, not just code structure.
-- [ ] Architecture decisions documented in design spec: yes (thread split rule, inline-dialog removal, broadcast forwarding).
-- [ ] Failure-mode footer in design spec: yes — references the `phaseIndividuals` 25 s freeze and the perf skill's "empty UI views post-import" pattern.
+- [x] Spec coverage: each of the 11 channels in the design spec's Scope table maps to a task.
+- [x] No placeholders: every step contains the actual content (file paths, code blocks, exact commands).
+- [x] Type consistency: `broadcast(topic, payload)` signature matches across all use sites; `callWorker('<channel>:_run', opts)` arg shape matches the worker-side handler signature.
+- [x] Verification matches user goal: the responsiveness test (Task 10) measures the user-observable outcome, not just code structure.
+- [x] Architecture decisions documented in design spec: yes (thread split rule, inline-dialog removal, broadcast forwarding).
+- [x] Failure-mode footer in design spec: yes — references the `phaseIndividuals` 25 s freeze and the perf skill's "empty UI views post-import" pattern.
