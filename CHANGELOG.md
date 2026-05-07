@@ -27,9 +27,9 @@
 - fix(mcp): dev tools (db_stats, seed_*, clear_test_data) follow `switch_database` swaps instead of staying pinned to the closed initial connection
 - fix(mcp): `db_stats` no longer throws `stmt.getAsObject is not a function` (used the sql.js API instead of node-sqlite3-wasm's); `app_status` reports the live DB path after a `switch_database` swap (was reporting only the launch-time env var)
 - fix: relationship edit modal saves correctly; Save button is dimmed when fields are missing; save errors now surface the underlying cause instead of a generic "Could not save" toast
-- feat(events): new `gender_transition` event type plus an API guard that requires explicit confirmation before flipping a person's `sex` when they have active relationships (groundwork for the upcoming UI flow — Phase 1 of 3)
 - feat: name records can carry a source citation (Hänvisning section in PersonNameModal); 'Giltigt till' / 'Valid until' field is hidden where it doesn't apply (`birth`, `name_change`) and relabeled per name type ('Used until' for `alias` / `aka`)
 - fix(chart): adoptive parent_child edges render dotted, distinct from foster's dashed style; mixed-subtype edges (e.g. one foster + one adopted parent) split into per-parent paths so each subtype is visible; legend wires both foster and adoptive entries
+- chore: revert sex-change-guard Phase 1 — the new `gender_transition` event type didn't fit GEDCOM 5.5.1/7 round-trip cleanly enough to ship; the API guard also regressed PersonModal sex changes for any person with relationships
 
 ## 0.215.2
 

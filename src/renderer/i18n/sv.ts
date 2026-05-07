@@ -476,7 +476,6 @@ export default {
     wedding: 'Bröllop',
     adoption: 'Adoption',
     foster_placement: 'Fosterhemsplacering',
-    gender_transition: 'Könsbyte',
     travel: 'Resa',
     title: 'Titel',
     religion: 'Trossamfund',

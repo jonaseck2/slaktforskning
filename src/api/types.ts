@@ -214,9 +214,3 @@ export interface MediaRegion {
   created_at: string;
 }
 
-// Re-export the typed error from the persons API so renderer code can
-// `import { SexChangeRequiresConfirmationError } from '../../api/types'`
-// without depending on the implementation file directly.
-export { SexChangeRequiresConfirmationError } from './persons';
-export type { GenderTransitionEventDetails, UpdatePersonOptions } from './persons';
-

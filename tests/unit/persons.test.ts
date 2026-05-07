@@ -5,8 +5,6 @@ import {
   getPerson,
   listPersons,
   updatePerson,
-  updatePersonWithGenderTransitionWorkflow,
-  SexChangeRequiresConfirmationError,
   deletePerson,
   searchPersons,
   addPersonName,
@@ -26,7 +24,7 @@ import {
   getPersonDisplayNames,
 } from '../../src/api/persons';
 import { createEvent } from '../../src/api/events';
-import { addEventParticipant, createRelationship } from '../../src/api/relationships';
+import { addEventParticipant } from '../../src/api/relationships';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createPlace } from '../../src/api/places';
 import { createTestDb } from './helpers';
@@ -747,159 +745,5 @@ describe('listPersonsPage with places', () => {
     const row = result.find(r => r.id === p.id)!;
     expect(row.birth_place).toBe('Malmö');
     expect(row.birth_date).toBe('1850-03-20');
-  });
-});
-
-// Plan: 2026-05-06-sex-change-guard-phase1-data-layer.md
-// Each assertion reads back from the DB (events table, persons.sex column,
-// or via getPerson/getEventsForPerson) — never trusting only the return
-// value, per .claude/rules/tests.md.
-describe('updatePerson sex-change guard', () => {
-  it('person with zero relationships → sex flips silently, no event created, persons.sex updated in DB', () => {
-    const p = createPerson(db, { given_name: 'Lone', surname: 'Wolf', sex: 'M' });
-    const result = updatePerson(db, p.id, { sex: 'F' });
-    expect(result).not.toBeNull();
-
-    // DB-state assertion: persons.sex now F.
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([p.id]) as { sex: string } | undefined;
-    expect(stored?.sex).toBe('F');
-
-    // DB-state assertion: no gender_transition event exists for this person.
-    const evs = db.prepare(`
-      SELECT COUNT(*) AS n FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE ep.person_id = ? AND e.event_type = 'gender_transition'
-    `).get([p.id]) as { n: number };
-    expect(evs.n).toBe(0);
-  });
-
-  it('person with relationships, no flag → throws SexChangeRequiresConfirmationError carrying the active relationship ids; persons.sex unchanged in DB', () => {
-    const parent = createPerson(db, { given_name: 'Parent', surname: 'Person', sex: 'M' });
-    const child = createPerson(db, { given_name: 'Child', surname: 'Person' });
-    const rel = createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    let thrown: unknown = null;
-    try {
-      updatePerson(db, parent.id, { sex: 'F' });
-    } catch (err) {
-      thrown = err;
-    }
-    expect(thrown).toBeInstanceOf(SexChangeRequiresConfirmationError);
-    const err = thrown as SexChangeRequiresConfirmationError;
-    expect(err.personId).toBe(parent.id);
-    expect(err.activeRelationshipIds).toEqual([rel.id]);
-
-    // DB-state assertion: sex did NOT change.
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([parent.id]) as { sex: string };
-    expect(stored.sex).toBe('M');
-
-    // DB-state assertion: no event was created.
-    const evs = db.prepare(`
-      SELECT COUNT(*) AS n FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE ep.person_id = ? AND e.event_type = 'gender_transition'
-    `).get([parent.id]) as { n: number };
-    expect(evs.n).toBe(0);
-  });
-
-  it('person with relationships, confirmCorrection: true → sex flips, no event created, persons.sex updated in DB', () => {
-    const parent = createPerson(db, { given_name: 'Typo', surname: 'Fix', sex: 'M' });
-    const child = createPerson(db, { given_name: 'Child', surname: 'Fix' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    const result = updatePerson(db, parent.id, { sex: 'F' }, { confirmCorrection: true });
-    expect(result).not.toBeNull();
-
-    // DB-state assertion: sex flipped.
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([parent.id]) as { sex: string };
-    expect(stored.sex).toBe('F');
-
-    // DB-state assertion: no gender_transition event was created.
-    const evs = db.prepare(`
-      SELECT COUNT(*) AS n FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE ep.person_id = ? AND e.event_type = 'gender_transition'
-    `).get([parent.id]) as { n: number };
-    expect(evs.n).toBe(0);
-  });
-
-  it('person with relationships, confirmGenderTransition: { date } → creates gender_transition event AND flips sex, both visible in DB', () => {
-    const parent = createPerson(db, { given_name: 'Trans', surname: 'Person', sex: 'M' });
-    const child = createPerson(db, { given_name: 'Child', surname: 'Of' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    const result = updatePerson(
-      db,
-      parent.id,
-      { sex: 'F' },
-      { confirmGenderTransition: { date: '2020-01-01', date_original: '1 January 2020', notes: 'Authored by user' } },
-    );
-    expect(result).not.toBeNull();
-
-    // DB-state assertion: sex flipped.
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([parent.id]) as { sex: string };
-    expect(stored.sex).toBe('F');
-
-    // DB-state assertion: exactly one gender_transition event exists for this person,
-    // with the supplied date and an event_participants row tying it to the parent
-    // with role='primary'.
-    const evs = db.prepare(`
-      SELECT e.id, e.event_type, e.date_value, e.date_original, e.notes, ep.role
-      FROM events e
-      JOIN event_participants ep ON ep.event_id = e.id
-      WHERE ep.person_id = ? AND e.event_type = 'gender_transition'
-    `).all([parent.id]) as Array<{ id: string; event_type: string; date_value: string; date_original: string; notes: string; role: string }>;
-    expect(evs).toHaveLength(1);
-    expect(evs[0].event_type).toBe('gender_transition');
-    expect(evs[0].date_value).toBe('2020-01-01');
-    expect(evs[0].date_original).toBe('1 January 2020');
-    expect(evs[0].notes).toBe('Authored by user');
-    expect(evs[0].role).toBe('primary');
-  });
-
-  it('updatePersonWithGenderTransitionWorkflow returns both the updated person and the created event', () => {
-    const parent = createPerson(db, { given_name: 'Wf', surname: 'Test', sex: 'F' });
-    const child = createPerson(db, { given_name: 'Wf', surname: 'Child' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    const { person, event } = updatePersonWithGenderTransitionWorkflow(db, parent.id, {
-      sex: 'M',
-      eventDetails: { date: '2025-06-15', date_type: 'exact' },
-    });
-
-    expect(person?.sex).toBe('M');
-    expect(event?.event_type).toBe('gender_transition');
-    expect(event?.date_value).toBe('2025-06-15');
-
-    // DB-state cross-check: persons.sex M, single event row with the supplied date.
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([parent.id]) as { sex: string };
-    expect(stored.sex).toBe('M');
-    const evRow = db.prepare(`
-      SELECT date_value FROM events WHERE event_type = 'gender_transition' AND id = ?
-    `).get([event!.id]) as { date_value: string };
-    expect(evRow.date_value).toBe('2025-06-15');
-  });
-
-  it('non-sex updates (notes only) bypass the guard even when relationships exist', () => {
-    const parent = createPerson(db, { given_name: 'Notes', surname: 'Only', sex: 'M' });
-    const child = createPerson(db, { given_name: 'C', surname: 'C' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    const result = updatePerson(db, parent.id, { notes: 'just notes' });
-    expect(result?.notes).toBe('just notes');
-    const stored = db.prepare('SELECT sex, notes FROM persons WHERE id = ?').get([parent.id]) as { sex: string; notes: string };
-    expect(stored.sex).toBe('M');
-    expect(stored.notes).toBe('just notes');
-  });
-
-  it('sex-change guard does not fire when data.sex equals the stored value (no-op)', () => {
-    const parent = createPerson(db, { given_name: 'Same', surname: 'Same', sex: 'M' });
-    const child = createPerson(db, { given_name: 'C', surname: 'C' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-
-    // Setting sex to its current value with relationships present should NOT throw.
-    expect(() => updatePerson(db, parent.id, { sex: 'M' })).not.toThrow();
-    const stored = db.prepare('SELECT sex FROM persons WHERE id = ?').get([parent.id]) as { sex: string };
-    expect(stored.sex).toBe('M');
   });
 });
