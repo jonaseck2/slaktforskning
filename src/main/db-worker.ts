@@ -16,7 +16,6 @@ import * as checks from '../api/checks';
 import * as media from '../api/media';
 import { queryAll } from '../api/db';
 import { buildSnapshot } from '../api/html_site/snapshot';
-import { buildPreview } from '../api/html_site/preview';
 import { _setBroadcastTarget, broadcast } from './db-worker-broadcast';
 import { _setWorkerStateAccessors } from './db-worker-state';
 
@@ -211,9 +210,12 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   'checks:forMedia': (mediaId) => checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
 
-  // Website export
+  // Website export — buildSnapshot + resolveMediaPaths are still in the
+  // legacy dispatch table because they're called from the website-export.ts
+  // shims via callWorker() (not directly from the renderer). buildPreview
+  // moved to the registry as `website:previewSnapshot` (it IS called from
+  // the renderer).
   'website:buildSnapshot': (opts) => buildSnapshot(getDb(), opts),
-  'website:buildPreview': (opts) => buildPreview(getDb(), opts),
   'website:resolveMediaPaths': (mediaIds: string[]) => {
     const result: Record<string, { absPath: string; mime: string }> = {};
     const mimeMap: Record<string, string> = {

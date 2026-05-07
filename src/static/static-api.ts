@@ -618,7 +618,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     holgerSelectFile: noop, holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
   };
   const archive = { export: noop, import: noop };
-  const website = { export: noop };
+  const website = { export: noop, previewSnapshot: noop };
   const chart = {
     saveSvg: noop, savePdf: noop,
     onGetVisiblePersons: () => {}, onSelectPerson: () => {},
