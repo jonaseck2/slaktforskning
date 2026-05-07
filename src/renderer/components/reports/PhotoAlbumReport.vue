@@ -17,6 +17,7 @@
           :items="displayItems"
           :show-captions="props.showCaptions"
           :show-notes="props.showNotes"
+          :linkify-notes="props.linkifyNotes"
           :per-page="props.perPage"
           :include-documents="props.includeDocuments"
           :linked-person-ids="[]"
@@ -55,6 +56,7 @@ const props = withDefaults(defineProps<{
   perPage?: 1 | 2 | 4;
   showCaptions?: boolean;
   showNotes?: boolean;
+  linkifyNotes?: boolean;
   showIndex?: boolean;
   includeDocuments?: boolean;
   showBirthNameParenthetical?: boolean;
@@ -63,6 +65,7 @@ const props = withDefaults(defineProps<{
   perPage: 1,
   showCaptions: true,
   showNotes: true,
+  linkifyNotes: false,
   showIndex: false,
   includeDocuments: false,
   showBirthNameParenthetical: true,

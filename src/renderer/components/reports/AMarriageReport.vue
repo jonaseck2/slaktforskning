@@ -97,13 +97,13 @@
       <!-- Narrative (notes) -->
       <section v-if="props.showNotes && notesParagraphs.length > 0" class="report-section prose-section">
         <h2 class="section-heading">{{ $t('reports.amarriage.narrative') }}</h2>
-        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph">{{ para }}</p>
+        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph"><LinkedText :text="para" :enabled="props.linkifyNotes" /></p>
       </section>
 
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :linkify-notes="props.linkifyNotes" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Sources -->
@@ -131,6 +131,7 @@ import LifeMap, { type LifeMapPathPoint } from './primitives/LifeMap.vue';
 import TimelineBar, { type TimelineItem } from './primitives/TimelineBar.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
+import LinkedText from '../LinkedText.vue';
 import { useLifeMap } from '../../composables/useLifeMap';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullNameWithBirthName, getDisplayName, pickBirthSurnameForDisplay } from '../../utils/nameUtils';
@@ -148,6 +149,7 @@ const props = withDefaults(defineProps<{
   redactLiving?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  linkifyNotes?: boolean;
   showBirthNameParenthetical?: boolean;
 }>(), {
   showLifeMap: true,
@@ -158,6 +160,7 @@ const props = withDefaults(defineProps<{
   redactLiving: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  linkifyNotes: false,
   showBirthNameParenthetical: true,
 });
 

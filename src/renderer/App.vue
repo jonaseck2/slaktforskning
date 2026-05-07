@@ -285,6 +285,7 @@ import { saveLocale } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { useDataVersionStore } from './stores/dataVersion';
 import { usePersonNameOptions } from './stores/personNameOptions';
+import { useLinkRulesStore } from './stores/linkRules';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
@@ -297,6 +298,7 @@ const route = useRoute();
 const { locale, t } = useI18n();
 const dataVersionStore = useDataVersionStore();
 const personNameOptions = usePersonNameOptions();
+const linkRulesStore = useLinkRulesStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
@@ -587,6 +589,7 @@ onMounted(() => {
   window.addEventListener('click', handleDocClick);
   loadDefaultPerson();
   personNameOptions.init();
+  linkRulesStore.init();
   // Delay heavy quality checks so initial navigation/data loading isn't blocked
   setTimeout(loadQualityBadge, 5000);
   setTimeout(loadDuplicatesBadge, 5000);

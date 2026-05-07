@@ -178,7 +178,8 @@
               <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
                 {{ $t('confidenceLevels.' + cit.confidence) }}
               </span>
-              <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
+              <LinkedText v-if="cit.page" :text="cit.page" class="ep-cit-page" />
+              <span v-else class="ep-cit-page">{{ $t('citations.noPage') }}</span>
             </div>
             <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
           </div>
@@ -218,6 +219,7 @@ import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
+import LinkedText from '../LinkedText.vue';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
 import { parseAsteriskNotation, pickDisplayedName } from '../../utils/nameUtils';
 import type { NameRow } from '../PersonNamesTable.vue';

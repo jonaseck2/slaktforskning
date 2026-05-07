@@ -1005,6 +1005,8 @@ export default {
       headerFooter: 'Header & footer',
       showHeaderFooter: 'Show header and footer',
       headerFooterHint: 'Researcher information appears at the top and bottom of every page. Page numbers are always printed. Fill in researcher info under Settings.',
+      linkifyNotes: 'Make archive references clickable',
+      linkifyNotesHint: 'Renders archive references in biography, place and photo notes as clickable links per your link rules. Useful for PDF and website export — on paper the dotted underline is mostly visual noise.',
     },
     options: {
       showBirthNameParenthetical: 'Show birth name in parenthesis',

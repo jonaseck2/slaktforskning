@@ -106,7 +106,7 @@
             </div>
             <div v-if="place.notes" class="compact-field">
               <span class="compact-label">{{ $t('panel.notes') }}</span>
-              <span class="readonly-value">{{ place.notes }}</span>
+              <LinkedText :text="place.notes" class="readonly-value" />
             </div>
           </div>
         </div>
@@ -233,6 +233,7 @@
 import { ref, computed, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventList from './EventList.vue';
+import LinkedText from './LinkedText.vue';
 import ResearchTaskModal from './modals/ResearchTaskModal.vue';
 import ResearchTasksTable from './ResearchTasksTable.vue';
 import PlacePersonsSection from './PlacePersonsSection.vue';

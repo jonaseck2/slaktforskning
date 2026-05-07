@@ -75,19 +75,19 @@
       <!-- Biography (notes) -->
       <section v-if="props.showNotes && notesParagraphs.length > 0" class="report-section prose-section">
         <h2 class="section-heading">{{ $t('reports.alife.biography') }}</h2>
-        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph">{{ para }}</p>
+        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph"><LinkedText :text="para" :enabled="props.linkifyNotes" /></p>
       </section>
 
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :linkify-notes="props.linkifyNotes" :per-page="2" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Documents -->
       <section v-if="props.showDocuments && documentItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.documents') }}</h2>
-        <MediaChronological :items="documentItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="4" :include-documents="true" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="documentItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :linkify-notes="props.linkifyNotes" :per-page="4" :include-documents="true" :relations="personRelations" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Sources -->
@@ -117,6 +117,7 @@ import ReportCover from './primitives/ReportCover.vue';
 import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import TimelineBar, { type TimelineItem } from './primitives/TimelineBar.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
+import LinkedText from '../LinkedText.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { formatFullName, formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
@@ -136,6 +137,7 @@ const props = withDefaults(defineProps<{
   redactLiving?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  linkifyNotes?: boolean;
   includeChildrenMarriages?: boolean;
   includeSiblingDeaths?: boolean;
   showBirthNameParenthetical?: boolean;
@@ -149,6 +151,7 @@ const props = withDefaults(defineProps<{
   redactLiving: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  linkifyNotes: false,
   includeChildrenMarriages: false,
   includeSiblingDeaths: false,
   showBirthNameParenthetical: true,

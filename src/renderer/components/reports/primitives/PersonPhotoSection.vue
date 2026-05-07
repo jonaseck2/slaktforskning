@@ -4,6 +4,7 @@
     :items="photoItems"
     :show-captions="showCaptions"
     :show-notes="showNotes"
+    :linkify-notes="linkifyNotes"
     :per-page="2"
   />
 </template>
@@ -17,9 +18,11 @@ const props = withDefaults(defineProps<{
   personId: string;
   showCaptions?: boolean;
   showNotes?: boolean;
+  linkifyNotes?: boolean;
 }>(), {
   showCaptions: true,
   showNotes: true,
+  linkifyNotes: false,
 });
 
 const entityRef = computed<MediaEntityRef>(() => ({

@@ -44,6 +44,7 @@
               :show-extra-photos="store.yourAncestorsShowExtraPhotos"
               :show-media-captions="store.yourAncestorsShowMediaCaptions"
               :show-media-notes="store.yourAncestorsShowMediaNotes"
+              :linkify-notes="store.linkifyNotes"
               :show-sources="store.yourAncestorsShowSources"
               :show-birth-name-parenthetical="store.yourAncestorsShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
@@ -68,6 +69,7 @@
               :show-notes="store.aLifeShowNotes"
               :show-media-captions="store.aLifeShowMediaCaptions"
               :show-media-notes="store.aLifeShowMediaNotes"
+              :linkify-notes="store.linkifyNotes"
               :include-children-marriages="store.aLifeIncludeChildrenMarriages"
               :include-sibling-deaths="store.aLifeIncludeSiblingDeaths"
               :show-birth-name-parenthetical="store.aLifeShowBirthNameParenthetical"
@@ -124,6 +126,7 @@
               :per-page="store.photoAlbumPerPage"
               :show-captions="store.photoAlbumShowCaptions"
               :show-notes="store.photoAlbumShowNotes"
+              :linkify-notes="store.linkifyNotes"
               :show-index="store.photoAlbumShowIndex"
               :include-documents="store.photoAlbumIncludeDocuments"
               :show-birth-name-parenthetical="store.photoAlbumShowBirthNameParenthetical"
@@ -149,6 +152,7 @@
               :show-sources="store.placeChronicleShowSources"
               :show-media-captions="store.placeChronicleShowMediaCaptions"
               :show-media-notes="store.placeChronicleShowMediaNotes"
+              :linkify-notes="store.linkifyNotes"
               :show-birth-name-parenthetical="store.placeChronicleShowBirthNameParenthetical"
             />
           </div>
@@ -170,6 +174,7 @@
               :show-sources="store.aMarriageShowSources"
               :show-media-captions="store.aMarriageShowMediaCaptions"
               :show-media-notes="store.aMarriageShowMediaNotes"
+              :linkify-notes="store.linkifyNotes"
               :show-birth-name-parenthetical="store.aMarriageShowBirthNameParenthetical"
               :redact-living="store.redactLiving"
             />

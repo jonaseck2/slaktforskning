@@ -1,69 +1,51 @@
 <template>
   <span class="linked-text">
-    <template v-for="(seg, i) in segments" :key="i">
-      <a
-        v-if="seg.url"
-        :href="seg.url"
-        :title="seg.ruleName"
-        class="source-link"
-        @click.prevent="openExternal(seg.url!)"
-      >{{ seg.text }}</a>
-      <template v-else>{{ seg.text }}</template>
+    <template v-if="!enabled">{{ props.text }}</template>
+    <template v-else>
+      <template v-for="(seg, i) in segments" :key="i">
+        <a
+          v-if="seg.url"
+          :href="seg.url"
+          :title="seg.ruleName"
+          class="source-link"
+          @click.stop.prevent="openExternal(seg.url!)"
+        >{{ seg.text }}</a>
+        <template v-else>{{ seg.text }}</template>
+      </template>
     </template>
   </span>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { linkify, resolveRules, type LinkedSegment, type LinkRuleOverrides } from '../../api/source-linker';
-import { svRules } from '../../api/link-rules/sv';
-import { enRules } from '../../api/link-rules/en';
-import { deRules } from '../../api/link-rules/de';
-import { daRules } from '../../api/link-rules/da';
-import { noRules } from '../../api/link-rules/no';
-import { universalRules } from '../../api/link-rules/universal';
+import { computed } from 'vue';
+import { linkify, type LinkedSegment } from '../../api/source-linker';
+import { useLinkRulesStore } from '../stores/linkRules';
 
-declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
-};
-
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   text: string;
-}>();
+  enabled?: boolean;
+}>(), {
+  enabled: true,
+});
 
-const allDefaults = [...universalRules, ...svRules, ...enRules, ...deRules, ...daRules, ...noRules];
-
-const config = ref<LinkRuleOverrides>({ enabledLocales: ['sv'], overrides: {} });
-const loaded = ref(false);
-
-async function loadConfig() {
-  try {
-    const raw = await window.api.db.getSetting('link_rules_config') as string | null;
-    if (raw) {
-      config.value = JSON.parse(raw) as LinkRuleOverrides;
-    }
-  } catch {
-    // keep default
-  }
-  loaded.value = true;
-}
+const store = useLinkRulesStore();
+// Lazy init — safe to call repeatedly; resolves once.
+store.init();
 
 const segments = computed<LinkedSegment[]>(() => {
-  if (!props.text || !loaded.value) return [];
-  const rules = resolveRules(allDefaults, config.value);
-  return linkify(props.text, rules);
+  if (!props.text || !store.loaded) return props.text ? [{ text: props.text }] : [];
+  return linkify(props.text, store.rules);
 });
 
 function openExternal(url: string) {
-  window.api.shell.openExternal(url);
+  (globalThis as unknown as { api?: { shell?: { openExternal?: (url: string) => void } } })
+    .api?.shell?.openExternal?.(url);
 }
-
-onMounted(loadConfig);
 </script>
 
 <style scoped>
 .source-link {
-  color: var(--color-link);
+  color: var(--color-link, var(--accent));
   text-decoration: underline;
   text-decoration-style: dotted;
   cursor: pointer;

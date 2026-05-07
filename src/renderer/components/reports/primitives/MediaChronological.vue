@@ -40,6 +40,7 @@
         :linked-person-ids="linkedPersonIds"
         :show-captions="showCaptions"
         :show-notes="showNotes"
+        :linkify-notes="linkifyNotes"
         :href-builder="(id: string) => '#person-' + id"
         @person-click="onCaptionPersonClick"
       />
@@ -93,6 +94,7 @@ const props = withDefaults(defineProps<{
   items: MediaDisplayItem[];
   showCaptions?: boolean;
   showNotes?: boolean;
+  linkifyNotes?: boolean;
   perPage?: 1 | 2 | 4;
   includeDocuments?: boolean;
   /** personId → relation label (e.g. 'Father', 'Pappa'). Prefixes the name in captions/overlays. */
@@ -102,6 +104,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   showCaptions: true,
   showNotes: true,
+  linkifyNotes: false,
   perPage: 1,
   includeDocuments: false,
   relations: null,

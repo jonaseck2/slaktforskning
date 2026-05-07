@@ -47,7 +47,7 @@
         <div v-if="sections.notes" class="panel-section-body">
           <template v-if="props.readonly">
             <SectionEmpty v-if="!notesDraft" :message="$t('empty.notes') || ''" />
-            <pre v-else class="notes-readonly" :class="{ 'notes-mono': notesMonospaced }">{{ notesDraft }}</pre>
+            <pre v-else class="notes-readonly" :class="{ 'notes-mono': notesMonospaced }"><LinkedText :text="notesDraft" /></pre>
           </template>
           <template v-else>
             <div class="notes-toggle-row">
@@ -286,6 +286,7 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonPicker from './PersonPicker.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import EntityPanel from './EntityPanel.vue';
+import LinkedText from './LinkedText.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';

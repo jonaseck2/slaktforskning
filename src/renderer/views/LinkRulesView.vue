@@ -145,6 +145,7 @@ import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import LinkRuleModal from '../components/modals/LinkRuleModal.vue';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { linkify, resolveRules, type LinkRule, type LinkRuleOverrides } from '../../api/source-linker';
+import { useLinkRulesStore } from '../stores/linkRules';
 
 const { textareaRef: testRef, storedHeight: testStoredHeight, persistHeight: persistTestHeight } = useTextareaHeight('link-rules-test');
 import { svRules } from '../../api/link-rules/sv';
@@ -183,8 +184,12 @@ function isCustomRule(id: string): boolean {
   return !defaultIds.has(id);
 }
 
+const linkRulesStore = useLinkRulesStore();
+
 async function saveConfig() {
   await window.api.db.setSetting('link_rules_config', JSON.stringify(config.value));
+  // Re-load the shared store so other open <LinkedText> instances reflect changes immediately.
+  linkRulesStore.refresh();
 }
 
 async function loadConfig() {

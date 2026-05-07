@@ -193,7 +193,8 @@
             <span v-if="cit.confidence != null" :class="'confidence-badge confidence-' + cit.confidence">
               {{ $t('confidenceLevels.' + cit.confidence) }}
             </span>
-            <span class="ep-cit-page">{{ cit.page || $t('citations.noPage') }}</span>
+            <LinkedText v-if="cit.page" :text="cit.page" class="ep-cit-page" />
+            <span v-else class="ep-cit-page">{{ $t('citations.noPage') }}</span>
           </div>
           <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
         </div>
@@ -262,6 +263,7 @@ import { reactive, ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
+import LinkedText from '../LinkedText.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import { useDeleteConfirm } from '../../composables/useDeleteConfirm';
 import { useToast } from '../../composables/useToast';

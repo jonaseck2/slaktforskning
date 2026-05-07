@@ -107,6 +107,12 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
   // Page numbers are independent of this — always rendered when printing.
   const showHeaderFooter = ref(true);
 
+  // Shared link-rule rendering toggle (keepsake reports). Default off:
+  // dotted underlines clash with print typography, but PDF and website
+  // export pick the rendered <a> through. Off-by-default keeps printed
+  // pages clean.
+  const linkifyNotes = ref(false);
+
   // Fan chart (standalone print tab)
   const fanArcSpan   = ref<ArcSpan>(360);
   const fanColorMode = ref<'branch' | 'sex' | 'bw'>('bw');
@@ -148,6 +154,7 @@ export const useReportConfigStore = defineStore('reportConfig', () => {
     aMarriageShowBirthNameParenthetical,
     redactLiving,
     showHeaderFooter,
+    linkifyNotes,
     fanArcSpan, fanColorMode,
     yourAncestorsFanGenerations, yourAncestorsFanArcSpan,
     chartColorMode,

@@ -1005,6 +1005,8 @@ export default {
       headerFooter: 'Sidhuvud och sidfot',
       showHeaderFooter: 'Visa sidhuvud och sidfot',
       headerFooterHint: 'Forskaruppgifter visas överst och nederst på varje sida. Sidnummer skrivs alltid ut. Fyll i forskarinformation under Inställningar.',
+      linkifyNotes: 'Gör arkivreferenser klickbara',
+      linkifyNotesHint: 'Visar arkivreferenser i biografi-, plats- och bildtexter som klickbara länkar enligt dina länkregler. Användbart vid PDF- och webbexport — på papper blir den prickiga understrykningen lätt visuellt brus.',
     },
     options: {
       showBirthNameParenthetical: 'Visa födelsenamn i parentes',

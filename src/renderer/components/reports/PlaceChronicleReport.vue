@@ -49,13 +49,13 @@
       <!-- Description (notes) -->
       <section v-if="props.showNotes && notesParagraphs.length > 0" class="report-section prose-section">
         <h2 class="section-heading">{{ $t('reports.placeChronicle.description') }}</h2>
-        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph">{{ para }}</p>
+        <p v-for="(para, i) in notesParagraphs" :key="i" class="prose-paragraph"><LinkedText :text="para" :enabled="props.linkifyNotes" /></p>
       </section>
 
       <!-- Photos -->
       <section v-if="props.showPhotos && photoItems.length > 0" class="report-section">
         <h2 class="section-heading">{{ $t('reports.common.photos') }}</h2>
-        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :per-page="2" :linked-person-ids="linkedPersonIds" />
+        <MediaChronological :items="photoItems" :show-captions="props.showMediaCaptions" :show-notes="props.showMediaNotes" :linkify-notes="props.linkifyNotes" :per-page="2" :linked-person-ids="linkedPersonIds" />
       </section>
 
       <!-- Child places -->
@@ -89,6 +89,7 @@ import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
 import PlaceBoundaryMap, { type PlacePin } from './primitives/PlaceBoundaryMap.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
+import LinkedText from '../LinkedText.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
@@ -102,6 +103,7 @@ const props = withDefaults(defineProps<{
   showSources?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  linkifyNotes?: boolean;
   showBirthNameParenthetical?: boolean;
 }>(), {
   showBoundary: true,
@@ -111,6 +113,7 @@ const props = withDefaults(defineProps<{
   showSources: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  linkifyNotes: false,
   showBirthNameParenthetical: true,
 });
 

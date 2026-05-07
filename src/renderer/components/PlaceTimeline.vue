@@ -25,7 +25,7 @@
               <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
               <span v-if="item.participantNames" class="timeline-persons">{{ item.participantNames }}</span>
               <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
-              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
+              <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
               <span v-if="item.event.citation_count" class="cite-badge" :title="$t('events.citeSources')">{{ item.event.citation_count }}</span>
             </div>
           </div>
@@ -52,7 +52,7 @@
             <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
             <span v-if="item.participantNames" class="timeline-persons">{{ item.participantNames }}</span>
             <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
-              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
+              <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
           </div>
         </div>
@@ -77,6 +77,7 @@
 import { ref, computed, watch, toRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EventModal from './modals/EventModal.vue';
+import LinkedText from './LinkedText.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';

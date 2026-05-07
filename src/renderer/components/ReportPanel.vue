@@ -80,6 +80,11 @@
           {{ $t('reports.panel.showHeaderFooter') }}
         </label>
         <p class="panel-hint">{{ $t('reports.panel.headerFooterHint') }}</p>
+        <label class="panel-checkbox">
+          <input type="checkbox" v-model="store.linkifyNotes">
+          {{ $t('reports.panel.linkifyNotes') }}
+        </label>
+        <p class="panel-hint">{{ $t('reports.panel.linkifyNotesHint') }}</p>
       </div>
     </div>
 

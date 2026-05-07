@@ -17,13 +17,14 @@
       </div>
       <div v-if="inferredDateISO" class="caption-date">{{ inferredDateISO.slice(0, 10) }}</div>
     </template>
-    <div v-if="showNotes && notes" class="caption-notes">{{ notes }}</div>
+    <LinkedText v-if="showNotes && notes" :text="notes" :enabled="linkifyNotes" class="caption-notes" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import LinkedText from './LinkedText.vue';
 
 export interface CaptionFaceTag {
   personId: string;
@@ -40,6 +41,7 @@ const props = withDefaults(defineProps<{
   linkedPersonIds?: string[] | null;
   showCaptions?: boolean;
   showNotes?: boolean;
+  linkifyNotes?: boolean;
   hrefBuilder?: ((personId: string) => string) | null;
 }>(), {
   notes: null,
@@ -49,6 +51,7 @@ const props = withDefaults(defineProps<{
   linkedPersonIds: null,
   showCaptions: true,
   showNotes: true,
+  linkifyNotes: true,
   hrefBuilder: null,
 });
 

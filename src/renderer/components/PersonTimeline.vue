@@ -36,7 +36,7 @@
               <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
               <span v-if="item.age !== null" class="timeline-age">({{ item.age }})</span>
               <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
-              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
+              <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
               <span v-if="item.event.citation_count" class="cite-badge" :title="$t('events.citeSources')">{{ item.event.citation_count }}</span>
             </div>
           </div>
@@ -69,7 +69,7 @@
             </template>
             <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
             <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
-              <span v-if="item.event.notes" class="timeline-desc">{{ item.event.notes }}</span>
+              <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
           </div>
         </div>
@@ -103,6 +103,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import EventModal from './modals/EventModal.vue';
+import LinkedText from './LinkedText.vue';
 import PersonNameModal from './modals/PersonNameModal.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { isSpanEventType } from '../constants/eventTypes';

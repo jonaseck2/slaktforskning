@@ -60,7 +60,7 @@
             v-for="(para, i) in ancestor.notesParagraphs"
             :key="i"
             class="prose-paragraph"
-          >{{ para }}</p>
+          ><LinkedText :text="para" :enabled="props.linkifyNotes" /></p>
         </div>
         <div v-if="showEvents && ancestor.events.length > 0" class="ancestor-events">
           <ul class="event-list">
@@ -86,6 +86,7 @@
           :person-id="ancestor.id"
           :show-captions="props.showMediaCaptions"
           :show-notes="props.showMediaNotes"
+          :linkify-notes="props.linkifyNotes"
         />
       </section>
 
@@ -123,6 +124,7 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ReportCover from './primitives/ReportCover.vue';
+import LinkedText from '../LinkedText.vue';
 import PersonMiniCard from './primitives/PersonMiniCard.vue';
 import PersonLifeMap from './primitives/PersonLifeMap.vue';
 import PersonPhotoSection from './primitives/PersonPhotoSection.vue';
@@ -145,6 +147,7 @@ const props = withDefaults(defineProps<{
   showExtraPhotos?: boolean;
   showMediaCaptions?: boolean;
   showMediaNotes?: boolean;
+  linkifyNotes?: boolean;
   showSources?: boolean;
   redactLiving?: boolean;
   showBirthNameParenthetical?: boolean;
@@ -160,6 +163,7 @@ const props = withDefaults(defineProps<{
   showExtraPhotos: false,
   showMediaCaptions: true,
   showMediaNotes: true,
+  linkifyNotes: false,
   showSources: false,
   redactLiving: false,
   showBirthNameParenthetical: true,
