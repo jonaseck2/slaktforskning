@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: add `gedcom-fidelity-registry` and `undo-redo-patterns` skills — trigger-on-intent guides for the two safety nets that protect user data when adding schema columns or new mutations
 - fix: research tasks shown on a place panel now refresh as soon as you save or delete one — previously the list went stale until the panel was closed and reopened
 - fix: research-task person links survived in name only — upgrading from a v0.79 database silently wiped every task→person link because `DROP TABLE research_tasks` cascaded through `task_links`. Both legacy table-redefinition migrations (research_tasks + person_names) now disable foreign keys around the rebuild
 - chore: add schema-migration coverage tests — synthesised pre-v0.3 fixture, idempotency check, and a column-fingerprint snapshot that fails CI if a column is added without a migration block
