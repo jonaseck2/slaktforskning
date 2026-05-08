@@ -8,7 +8,7 @@
 <body>
   <div id="app"></div>
   <!--
-    The snapshot is delivered by one of three paths chosen at runtime by
+    The snapshot is delivered by one of four paths chosen at runtime by
     src/static/static-api.ts (in priority order):
       1. Portable export — `<script>window.__SNAPSHOT_GZ__='...'</script>`
          injected by website-export.ts before this file is shipped. Decoded
@@ -16,9 +16,14 @@
       2. Hosted/split export — sibling `data.json.gz` fetched + decompressed
          (requires http(s); file:// is blocked).
       3. Dev mode — `data.json` served by npm run dev:static.
+      4. Preview iframe — main process replaces the marker below with an
+         inline `<script>window.__SNAPSHOT__=…</script>` (see
+         src/main/preview-protocol.ts). Must come BEFORE the module tag
+         so the snapshot is set when installStaticApi() runs.
     Old exports may still ship a sibling `data.js` setting window.__SNAPSHOT__
     directly; the bootstrap honours that too for back-compat.
   -->
+  <!--PREVIEW_SNAPSHOT_INJECTION_POINT-->
   <script type="module" src="./main.ts"></script>
 </body>
 </html>

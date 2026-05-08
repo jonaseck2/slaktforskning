@@ -29,10 +29,13 @@ async function loadIndexHtml(): Promise<string> {
 }
 
 /**
- * Returns the SPA index.html with `<script src="./data.js"></script>` swapped
- * for an inline `<script>window.__SNAPSHOT__=…</script>`. The renderer drops
- * this string into `<iframe srcdoc>`.
+ * Returns the SPA index.html with the `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->`
+ * marker (in src/static/index.html, preserved verbatim by viteSingleFile)
+ * replaced by an inline `<script>window.__SNAPSHOT__=…</script>`. The renderer
+ * drops this string into a Blob URL the iframe loads.
  */
+const INJECTION_MARKER = '<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->';
+
 export async function buildPreviewHtml(snapshot: unknown): Promise<string> {
   const html = await loadIndexHtml();
   const json = JSON.stringify(snapshot ?? null);
@@ -40,8 +43,13 @@ export async function buildPreviewHtml(snapshot: unknown): Promise<string> {
   // string fields (notes, transcriptions). Escape the slash to be safe.
   const safeJson = json.replace(/<\/script/gi, '<\\/script');
   const inline = `<script>window.__SNAPSHOT__=${safeJson};</script>`;
-  const result = html.replace(/<script\s+src="\.\/data\.js"><\/script>/, inline);
+  const result = html.replace(INJECTION_MARKER, inline);
   const replaced = result !== html;
-  console.log('[preview-protocol] built preview html: bundle', html.length, 'snapshot', json.length, 'replaced', replaced);
+  if (!replaced) {
+    // Loud failure beats a silent broken preview that falls through to
+    // installStaticApi's data.json fetch path (which errors out on a blob: URL).
+    throw new Error(`[preview-protocol] index.html missing ${INJECTION_MARKER}`);
+  }
+  console.log('[preview-protocol] built preview html: bundle', html.length, 'snapshot', json.length);
   return result;
 }
