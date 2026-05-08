@@ -14,12 +14,12 @@
 
     <div class="panel-body">
 
-      <!-- Subject -->
+      <!-- Focus person -->
       <div class="panel-section">
-        <SectionHeader :title="$t('htmlSite.subject')" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
+        <SectionHeader :title="$t('htmlSite.focusPerson')" :collapsed="!open.subject" @toggle="toggleSection('subject')" />
         <div v-if="open.subject" class="panel-section-body">
           <PersonPicker :model-value="focusPersonId ?? null" @update:model-value="focusPersonId = $event" />
-          <p class="panel-hint">{{ $t('htmlSite.subjectHint') }}</p>
+          <p class="panel-hint">{{ $t('htmlSite.focusPersonHint') }}</p>
         </div>
       </div>
 
@@ -64,7 +64,13 @@
       <div class="panel-section">
         <SectionHeader :title="$t('htmlSite.include')" :collapsed="!open.include" @toggle="toggleSection('include')" />
         <div v-if="open.include" class="panel-section-body">
-          <label class="panel-checkbox"><input type="checkbox" v-model="includeMedia"> {{ $t('htmlSite.includeMedia') }}</label>
+          <label class="panel-checkbox">
+            <input type="checkbox" v-model="includeMedia">
+            {{ $t('htmlSite.includeMedia') }}
+            <span v-if="includeMedia && mediaCount !== null && mediaCount !== undefined" class="media-count">
+              ({{ $t('htmlSite.mediaCount', { count: mediaCount }, mediaCount) }})
+            </span>
+          </label>
         </div>
       </div>
 
@@ -117,11 +123,14 @@ const mediaPersonOnly = defineModel<boolean>('mediaPersonOnly', { required: true
 const includeMedia = defineModel<boolean>('includeMedia', { required: true });
 const siteTitle = defineModel<string>('siteTitle', { required: true });
 
-defineProps<{
+withDefaults(defineProps<{
   exporting: boolean;
   lastOutput: string | null;
   bundleMissing: boolean;
-}>();
+  mediaCount?: number | null;
+}>(), {
+  mediaCount: null,
+});
 
 const emit = defineEmits<{ export: []; close: [] }>();
 
@@ -213,5 +222,10 @@ const { sections: open, toggleSection } = usePanelSections(
   font-size: var(--font-xs);
   color: var(--error-text);
   margin: 0;
+}
+.media-count {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-xs);
 }
 </style>

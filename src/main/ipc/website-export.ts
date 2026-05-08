@@ -5,6 +5,7 @@ import { app, dialog, nativeImage } from 'electron';
 import { buildPreviewHtml } from '../preview-protocol';
 import { wrapHandler } from './wrap-handler';
 import { callWorker } from './worker-client';
+import { getCurrentDatabasePath } from '../database';
 
 // Per-image and total budget for inlined preview thumbnails. The whole HTML
 // is loaded into the iframe via a Blob URL — keeping this bounded avoids
@@ -150,18 +151,23 @@ export function registerWebsiteExportHandlers(): void {
     if (opts.options.includeMedia) {
       const fullDir = path.join(out, 'media', 'full');
       await fsp.mkdir(fullDir, { recursive: true });
+      // file_ref is the post-consolidate relative shape (`<dbname>-media/<filename>`),
+      // anchored at the database directory. Resolving via path.resolve handles both
+      // that shape and any historical absolute refs.
+      const dbDir = path.dirname(getCurrentDatabasePath());
       let copied = 0;
       for (const m of snapshot.media) {
         if (!m.file_ref) continue;
+        const absPath = path.resolve(dbDir, m.file_ref);
         try {
-          await fsp.access(m.file_ref);
+          await fsp.access(absPath);
         } catch {
           continue;
         }
-        const ext = path.extname(m.file_ref);
+        const ext = path.extname(absPath);
         const filename = `${m.id}${ext}`;
         try {
-          await fsp.copyFile(m.file_ref, path.join(fullDir, filename));
+          await fsp.copyFile(absPath, path.join(fullDir, filename));
         } catch {
           // Skip individual file failures rather than aborting the export
           continue;

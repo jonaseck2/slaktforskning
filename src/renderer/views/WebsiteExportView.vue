@@ -34,6 +34,7 @@
           v-model:includeMedia="includeMedia"
           v-model:siteTitle="siteTitle"
           :exporting="exporting"
+          :media-count="mediaCount"
           :last-output="lastOutput"
           :bundle-missing="bundleMissing"
           @export="exportSite"
@@ -70,6 +71,7 @@ const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
 
 const snapshot = ref<PreviewSnapshot | null>(null);
+const mediaCount = computed(() => snapshot.value?.totals?.media ?? null);
 const snapshotLoading = ref(false);
 const snapshotError = ref<string | null>(null);
 const iframeKey = ref(0);
