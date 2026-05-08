@@ -11,6 +11,7 @@
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
+import { injectSnapshotIntoHtml } from './preview-html-inject';
 
 function bundlePath(): string {
   return app.isPackaged
@@ -29,27 +30,13 @@ async function loadIndexHtml(): Promise<string> {
 }
 
 /**
- * Returns the SPA index.html with the `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->`
- * marker (in src/static/index.html, preserved verbatim by viteSingleFile)
- * replaced by an inline `<script>window.__SNAPSHOT__=…</script>`. The renderer
- * drops this string into a Blob URL the iframe loads.
+ * Returns the SPA index.html with the snapshot inlined. The renderer drops
+ * the result into a Blob URL the preview iframe loads. Pure injection logic
+ * lives in preview-html-inject.ts so it can be unit-tested.
  */
-const INJECTION_MARKER = '<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->';
-
 export async function buildPreviewHtml(snapshot: unknown): Promise<string> {
   const html = await loadIndexHtml();
-  const json = JSON.stringify(snapshot ?? null);
-  // Closing-tag-safe inline script: snapshots can contain `</script>` inside
-  // string fields (notes, transcriptions). Escape the slash to be safe.
-  const safeJson = json.replace(/<\/script/gi, '<\\/script');
-  const inline = `<script>window.__SNAPSHOT__=${safeJson};</script>`;
-  const result = html.replace(INJECTION_MARKER, inline);
-  const replaced = result !== html;
-  if (!replaced) {
-    // Loud failure beats a silent broken preview that falls through to
-    // installStaticApi's data.json fetch path (which errors out on a blob: URL).
-    throw new Error(`[preview-protocol] index.html missing ${INJECTION_MARKER}`);
-  }
-  console.log('[preview-protocol] built preview html: bundle', html.length, 'snapshot', json.length);
+  const result = injectSnapshotIntoHtml(html, snapshot);
+  console.log('[preview-protocol] built preview html: bundle', html.length);
   return result;
 }

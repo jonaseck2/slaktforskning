@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: pure preview-injection helper extracted from `src/main/preview-protocol.ts` into `src/main/preview-html-inject.ts` and unit-tested (marker-present / marker-missing / placement-before-module / `</script>` escape / null-snapshot / dist-static survives viteSingleFile). Adds a Static SPA gotcha + memory rule capturing the silent-string-replace anti-pattern that produced v0.227.5 — never let a build-artifact mutation no-op silently; throw if the marker isn't found.
 - fix: website export preview iframe is blank with a `Failed to fetch ./data.json` console error after the Track B compression change. preview-protocol's regex was looking for the `<script src="./data.js">` tag that Track B removed, so the snapshot never got injected and the bootstrap fell through to the dev-mode `data.json` fetch (which fails on the iframe's blob: URL). Restored via a stable `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->` marker in the static HTML; the preview builder now throws loudly if the marker is missing instead of silently producing a broken iframe.
 - chore: expand `ux-intent-mapping` skill with the four Surface Contract checks (host-entity flow, label honesty, lifecycle parity, no silent state degradation), the five historical panel failures, and a pre-commit checklist
 - chore: add `gedcom-fidelity-registry` and `undo-redo-patterns` skills — trigger-on-intent guides for the two safety nets that protect user data when adding schema columns or new mutations
