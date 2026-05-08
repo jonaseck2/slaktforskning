@@ -360,28 +360,38 @@ export function initializeSchema(db: Database): void {
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_names'`
   ))?.sql ?? '';
   if (!nameTypeCheck.includes('name_change')) {
-    db.exec(`DROP TABLE IF EXISTS person_names_new`);
-    db.exec(`
-      CREATE TABLE person_names_new (
-        id TEXT PRIMARY KEY,
-        person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-        given_name TEXT,
-        surname TEXT,
-        name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'name_change', 'alias', 'aka')),
-        date_from TEXT,
-        date_to TEXT,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        name_prefix TEXT,
-        name_suffix TEXT,
-        patronymic_base TEXT,
-        name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias')),
-        preferred_name TEXT,
-        nickname TEXT
-      );
-      INSERT INTO person_names_new SELECT id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname FROM person_names;
-      DROP TABLE person_names;
-      ALTER TABLE person_names_new RENAME TO person_names;
-    `);
+    // SQLite quirk: with foreign_keys=ON, DROP TABLE issues an implicit
+    // DELETE that cascades into child rows (citations.person_name_id with
+    // ON DELETE CASCADE). The table redefinition pattern must run with FKs
+    // disabled — this is the SQLite-recommended approach (sqlite.org/lang_altertable.html
+    // step 12). Children re-bind to the renamed table.
+    runSql(db, 'DROP TABLE IF EXISTS person_names_new');
+    runSql(db, 'PRAGMA foreign_keys = OFF');
+    try {
+      runSql(db, `
+        CREATE TABLE person_names_new (
+          id TEXT PRIMARY KEY,
+          person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+          given_name TEXT,
+          surname TEXT,
+          name_type TEXT NOT NULL DEFAULT 'birth' CHECK(name_type IN ('birth', 'married', 'name_change', 'alias', 'aka')),
+          date_from TEXT,
+          date_to TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          name_prefix TEXT,
+          name_suffix TEXT,
+          patronymic_base TEXT,
+          name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias')),
+          preferred_name TEXT,
+          nickname TEXT
+        )
+      `);
+      runSql(db, 'INSERT INTO person_names_new SELECT id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname FROM person_names');
+      runSql(db, 'DROP TABLE person_names');
+      runSql(db, 'ALTER TABLE person_names_new RENAME TO person_names');
+    } finally {
+      runSql(db, 'PRAGMA foreign_keys = ON');
+    }
   }
 
   // v0.80.0: research_tasks.person_id → task_links; group_members → group_links
@@ -397,23 +407,34 @@ export function initializeSchema(db: Database): void {
         [crypto.randomUUID(), t.id, t.person_id!]
       );
     }
-    db.exec(`
-      DROP INDEX IF EXISTS idx_research_tasks_person_id;
-      CREATE TABLE research_tasks_new (
-        id TEXT PRIMARY KEY,
-        priority INTEGER NOT NULL DEFAULT 0,
-        status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'in_progress', 'done', 'stopped')),
-        task TEXT NOT NULL DEFAULT '',
-        notes TEXT NOT NULL DEFAULT '',
-        result TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-      INSERT INTO research_tasks_new (id, priority, status, task, notes, result, created_at, updated_at)
-        SELECT id, priority, status, task, notes, result, created_at, updated_at FROM research_tasks;
-      DROP TABLE research_tasks;
-      ALTER TABLE research_tasks_new RENAME TO research_tasks;
-    `);
+    // FK toggle protects task_links rows we just inserted from being
+    // cascade-deleted by `DROP TABLE research_tasks` (SQLite issues an
+    // implicit DELETE during DROP when foreign_keys=ON; task_links.task_id
+    // → research_tasks(id) ON DELETE CASCADE would wipe them).
+    runSql(db, 'PRAGMA foreign_keys = OFF');
+    try {
+      runSql(db, 'DROP INDEX IF EXISTS idx_research_tasks_person_id');
+      runSql(db, `
+        CREATE TABLE research_tasks_new (
+          id TEXT PRIMARY KEY,
+          priority INTEGER NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'in_progress', 'done', 'stopped')),
+          task TEXT NOT NULL DEFAULT '',
+          notes TEXT NOT NULL DEFAULT '',
+          result TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      runSql(db, `
+        INSERT INTO research_tasks_new (id, priority, status, task, notes, result, created_at, updated_at)
+          SELECT id, priority, status, task, notes, result, created_at, updated_at FROM research_tasks
+      `);
+      runSql(db, 'DROP TABLE research_tasks');
+      runSql(db, 'ALTER TABLE research_tasks_new RENAME TO research_tasks');
+    } finally {
+      runSql(db, 'PRAGMA foreign_keys = ON');
+    }
   }
 
   const groupMembersExists = queryOne<{ name: string }>(db,

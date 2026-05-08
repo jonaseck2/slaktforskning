@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: research-task person links survived in name only — upgrading from a v0.79 database silently wiped every task→person link because `DROP TABLE research_tasks` cascaded through `task_links`. Both legacy table-redefinition migrations (research_tasks + person_names) now disable foreign keys around the rebuild
+- chore: add schema-migration coverage tests — synthesised pre-v0.3 fixture, idempotency check, and a column-fingerprint snapshot that fails CI if a column is added without a migration block
 - feat: bundled gazetteers ship gzipped — installer is ~46 MB smaller (52.6 MB raw → 6.4 MB compressed for the 29 bundled gazetteer JSONs); app boot, place picker and gazetteer resolution unchanged
 - feat: website export gets two delivery modes — Split (default, smaller, for hosted deployment on GitHub Pages / S3 / Netlify) and Portable (single self-contained index.html for emailing or opening locally with a double-click). The exported snapshot is always gzipped; on a typical DB the hosted folder drops from ~60 MB to ~13 MB and the portable single-file from ~60 MB to ~17 MB
 - chore: add `worker-thread-ipc-split` skill — trigger-on-intent companion to the IPC rules, with bug history and pre-commit reflex for sync I/O / bulk-write / lying-bulk-name violations
