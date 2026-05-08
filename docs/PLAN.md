@@ -6,10 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-#### Compress shipped JSON assets [planned]
-Bundled gazetteers (52.6 MB → ~6.4 MB gzipped, ~46 MB smaller installer) and website-export data bundle (split + portable modes; ~47 MB smaller hosted export, ~42 MB smaller portable). User-visible: smaller download, no behavior change. Two independent tracks under one version bump.
-- Plan: `docs/plans/2026-05-08-compress-shipped-json-assets.md`
-
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`

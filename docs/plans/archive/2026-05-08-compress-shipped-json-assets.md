@@ -111,39 +111,39 @@ This plan has no prior failed attempt, but flag known traps from the codebase an
 
 ### Track A — Bundled gazetteers
 
-- [ ] Update `vite.main.config.ts` `externalize-gazetteers` plugin: add a `load` hook that returns a virtual module containing `module.exports = JSON.parse(require('zlib').gunzipSync(require('fs').readFileSync(__dirname + '/gazetteers/<id>.json.gz')).toString('utf8'))`; in `closeBundle`, gzip each file with level 9 to `<dest>/<file>.json.gz`. Stop emitting raw `.json`.
-- [ ] Mirror the same plugin change in `vite.worker.config.ts`.
-- [ ] Confirm `bundled.ts` static imports continue to resolve unchanged after the plugin rewrite — no source change should be needed.
-- [ ] Verify `vitest.config.mts` does NOT run the externalize-gazetteers plugin (tests should resolve to raw JSON in the source dir). Add a comment noting why.
-- [ ] Run `npm test` — all unit tests pass without modification.
-- [ ] Run `npm run package` and capture installer sizes for at least Linux + macOS. Record the delta in the plan close-out commit message.
-- [ ] Boot the running app against a real DB. Smoke-test place picker for a Swedish (letter-code), US, and Canadian place per the verification table.
-- [ ] Time from app launch to first chart render — confirm no >50 ms regression.
+- [x] Update `vite.main.config.ts` `externalize-gazetteers` plugin: add a `load` hook that returns a virtual module containing `module.exports = JSON.parse(require('zlib').gunzipSync(require('fs').readFileSync(__dirname + '/gazetteers/<id>.json.gz')).toString('utf8'))`; in `closeBundle`, gzip each file with level 9 to `<dest>/<file>.json.gz`. Stop emitting raw `.json`.
+- [x] Mirror the same plugin change in `vite.worker.config.ts`.
+- [x] Confirm `bundled.ts` static imports continue to resolve unchanged after the plugin rewrite — no source change should be needed.
+- [x] Verify `vitest.config.mts` does NOT run the externalize-gazetteers plugin (tests should resolve to raw JSON in the source dir). Add a comment noting why.
+- [x] Run `npm test` — all unit tests pass without modification.
+- [x] Run `npm run package` and capture installer sizes for at least Linux + macOS. Record the delta in the plan close-out commit message.
+- [x] Boot the running app against a real DB. Smoke-test place picker for a Swedish (letter-code), US, and Canadian place per the verification table.
+- [x] Time from app launch to first chart render — confirm no >50 ms regression.
 
 ### Track B — Website export
 
-- [ ] Add `mode: 'split' | 'portable'` to the website export IPC request type and the matching preload + static-api stubs.
-- [ ] In `WebsiteExportPanel.vue`, add a checkbox for "Single-file portable export" with i18n label + helper text (sv + en). Wire it into the export request.
-- [ ] In `website-export.ts`: branch on `mode`. Split mode writes `index.html` + `data.json.gz` (gzipSync of the snapshot JSON) + `media/`. Portable mode writes a single `index.html` with `<script>window.__SNAPSHOT_GZ__='...';</script>` containing base64-encoded gzip + `media/`.
-- [ ] Update the static SPA bootstrap (`src/static/main.ts` or whichever entry is appropriate): wrap `installStaticApiWith(snapshot)` in an async loader that uses `DecompressionStream` to gunzip either a `fetch`'d `data.json.gz` (when present and reachable) or the embedded `window.__SNAPSHOT_GZ__` (when present). Show no spinner — the existing first-paint behavior already covers the brief load.
-- [ ] Update `vite.static.config.ts` so split mode emits multi-file output (no `viteSingleFile`) and portable mode emits single-file (with `viteSingleFile`). Likely two separate Vite invocations from the same config file driven by a build flag.
-- [ ] Run existing website export tests; add one new test covering each mode's expected output shape (file list + total size order-of-magnitude check).
-- [ ] Manual smoke from the running app: export both modes from a real DB, open the hosted output via `python3 -m http.server`, open the portable output via double-click. Verify person list, family tree chart, search, panel navigation in both.
-- [ ] Confirm an old (pre-this-plan) website export folder still renders when opened today.
+- [x] Add `mode: 'split' | 'portable'` to the website export IPC request type and the matching preload + static-api stubs.
+- [x] In `WebsiteExportPanel.vue`, add a checkbox for "Single-file portable export" with i18n label + helper text (sv + en). Wire it into the export request.
+- [x] In `website-export.ts`: branch on `mode`. Split mode writes `index.html` + `data.json.gz` (gzipSync of the snapshot JSON) + `media/`. Portable mode writes a single `index.html` with `<script>window.__SNAPSHOT_GZ__='...';</script>` containing base64-encoded gzip + `media/`.
+- [x] Update the static SPA bootstrap (`src/static/main.ts` or whichever entry is appropriate): wrap `installStaticApiWith(snapshot)` in an async loader that uses `DecompressionStream` to gunzip either a `fetch`'d `data.json.gz` (when present and reachable) or the embedded `window.__SNAPSHOT_GZ__` (when present). Show no spinner — the existing first-paint behavior already covers the brief load.
+- [x] Update `vite.static.config.ts` so split mode emits multi-file output (no `viteSingleFile`) and portable mode emits single-file (with `viteSingleFile`). Likely two separate Vite invocations from the same config file driven by a build flag.
+- [x] Run existing website export tests; add one new test covering each mode's expected output shape (file list + total size order-of-magnitude check).
+- [x] Manual smoke from the running app: export both modes from a real DB, open the hosted output via `python3 -m http.server`, open the portable output via double-click. Verify person list, family tree chart, search, panel navigation in both.
+- [x] Confirm an old (pre-this-plan) website export folder still renders when opened today.
 
 ### Plan close-out (per CLAUDE.md "Finishing a plan" checklist)
 
-- [ ] Mark every box above as `[x]`.
-- [ ] Move this plan file to `docs/plans/archive/`.
-- [ ] Bump `package.json` version (feature → minor: 0.225.0 → 0.226.0). Add a `## Unreleased` line in `CHANGELOG.md` summarizing the plan ("Compress shipped JSON assets — 46 MB smaller installer; new portable/hosted website-export modes").
-- [ ] Update `docs/PLAN.md`: remove this milestone from the active roadmap. Append a one-paragraph entry to `docs/plans/archive/PLAN.md`.
-- [ ] Commit `chore: archive completed compress-shipped-json-assets`.
-- [ ] Merge the worktree to `main`.
+- [x] Mark every box above as `[x]`.
+- [x] Move this plan file to `docs/plans/archive/`.
+- [x] Bump `package.json` version (feature → minor: 0.225.0 → 0.226.0). Add a `## Unreleased` line in `CHANGELOG.md` summarizing the plan ("Compress shipped JSON assets — 46 MB smaller installer; new portable/hosted website-export modes").
+- [x] Update `docs/PLAN.md`: remove this milestone from the active roadmap. Append a one-paragraph entry to `docs/plans/archive/PLAN.md`.
+- [x] Commit `chore: archive completed compress-shipped-json-assets`.
+- [x] Merge the worktree to `main`.
 
 ## Self-review checklist
 
-- [ ] User goal section names a user-observable outcome (smaller installer; smaller website export folder), not a mechanism (gzip; DecompressionStream).
-- [ ] Scope enumerates every file/path touched, deviations explicit.
-- [ ] Verification proves user goal: installer-size measurement, place picker smoke-test, hosted+portable export smoke-test in running browsers — not just lint+unit-tests.
-- [ ] Failure modes cite specific gotchas already documented in CLAUDE.md, not generic warnings.
-- [ ] Both tracks ship full pattern migration, no half-states.
+- [x] User goal section names a user-observable outcome (smaller installer; smaller website export folder), not a mechanism (gzip; DecompressionStream).
+- [x] Scope enumerates every file/path touched, deviations explicit.
+- [x] Verification proves user goal: installer-size measurement, place picker smoke-test, hosted+portable export smoke-test in running browsers — not just lint+unit-tests.
+- [x] Failure modes cite specific gotchas already documented in CLAUDE.md, not generic warnings.
+- [x] Both tracks ship full pattern migration, no half-states.

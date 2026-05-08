@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: bundled gazetteers ship gzipped — installer is ~46 MB smaller (52.6 MB raw → 6.4 MB compressed for the 29 bundled gazetteer JSONs); app boot, place picker and gazetteer resolution unchanged
+- feat: website export gets two delivery modes — Split (default, smaller, for hosted deployment on GitHub Pages / S3 / Netlify) and Portable (single self-contained index.html for emailing or opening locally with a double-click). The exported snapshot is always gzipped; on a typical DB the hosted folder drops from ~60 MB to ~13 MB and the portable single-file from ~60 MB to ~17 MB
 - chore: add `worker-thread-ipc-split` skill — trigger-on-intent companion to the IPC rules, with bug history and pre-commit reflex for sync I/O / bulk-write / lying-bulk-name violations
 - feat: website export panel renames "Ämne" to "Fokusperson" with a clearer hint, and shows a file count next to the "Mediafiler" checkbox so you know how big the export will be before clicking
 - fix: website export now copies media files when `file_ref` is stored as a relative path — previously the access check ran against the wrong base directory and silently dropped every file
