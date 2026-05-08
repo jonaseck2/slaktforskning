@@ -15,8 +15,8 @@ Loads when touching the build/test configs.
 | File | Purpose |
 |------|---------|
 | `forge.config.ts` | Electron Forge config — two main entries: `index.ts` + `db-worker.ts` |
-| `vite.main.config.ts` | Main process build + WASM copy plugin + gazetteer externalization |
-| `vite.worker.config.ts` | DB Worker build — same plugins as main (worker imports gazetteer code) |
+| `vite.main.config.ts` | Main process build + WASM copy plugin + gazetteer gzip-on-emit |
+| `vite.worker.config.ts` | DB Worker build — WASM copy only (gazetteers are emitted by main, shared dir) |
 | `vite.preload.config.ts` | Preload build (`entryFileNames: 'preload.js'` — avoids collision with main process `index.js`) |
 | `vite.renderer.config.ts` | Renderer build (`root: src/renderer`, `outDir` resolves to project root) |
 | `vite.static.config.ts` | Static SPA build (`VITE_STATIC_MODE=true`, `outDir=dist-static`) |
@@ -26,8 +26,7 @@ Loads when touching the build/test configs.
 
 ## Critical invariants
 
-- **Worker build must replicate main build's plugins.** Both `vite.main.config.ts` and `vite.worker.config.ts` need the WASM copy plugin AND the `externalize-gazetteers` plugin. The worker imports gazetteer code, so its bundle must externalize those JSONs to the same `./gazetteers/<file>.json` path the main config emits — otherwise `checks:runAll` (which runs in the worker) throws "cannot find module" in the packaged app.
-- **Gazetteer JSON files (~42 MB) are externalized from Vite, not bundled.** The `externalize-gazetteers` plugin in both main and worker configs returns `./gazetteers/<file>.json` from `resolveId`. `vite.main.config.ts` owns the `closeBundle` hook that copies those JSONs into `.vite/build/gazetteers/`.
+- **Gazetteer JSON files (~52 MB raw → ~6.4 MB gzipped) ship as gzipped sidecars to the main+worker bundles.** `vite.main.config.ts` owns the `compress-bundled-gazetteers` plugin: its `closeBundle` hook gzips each file in `src/api/place-gazetteers/data/` (level 9) and writes to `.vite/build/gazetteers/<id>.json.gz`. `src/api/place-gazetteers/bundled.ts` loads them at module init via `gunzipSync(readFileSync(...))`, resolving the path against `import.meta.url` — which after Vite/Rollup CJS bundling points at `<.vite/build>/`, the dir shared by `index.js` and `db-worker.js`. The worker config does NOT need its own gazetteer plugin: `bundled.ts` no longer holds static `.json` imports, and the gz files written by main are reachable from the worker bundle's `__dirname` too. The `data/` source dir is preserved for tests and dev — `bundled.ts` falls back to raw `data/<id>.json` when no `.gz` sibling exists.
 - **Preload entry filename is `preload.js`**, not `index.js` — collision with main process output.
 
 ## Dev container caveats
