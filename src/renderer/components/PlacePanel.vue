@@ -181,7 +181,6 @@
             v-else
             :tasks="researchTasks"
             :readonly="props.readonly"
-            @updated="loadTasks"
             @select="openTaskFromRow"
           />
         </div>
@@ -452,22 +451,17 @@ function onPickCoordsClick() {
 
 // ── Research tasks ──────────────────────────────────────────────────────────
 
-const researchTasks = ref<ResearchTask[]>([]);
+// useEntityData auto-subscribes to onDataChanged, so the list refreshes after
+// any mutation (this panel's task modal, a sibling window, an MCP call) without
+// a manual loadTasks() call. Pre-2026-05: this used a ref + watch + manual
+// loadTasks; saving a task in the modal left the list stale until panel reopen.
+const { data: tasksData } = useEntityData<ResearchTask[]>(
+  idRef,
+  async (id) => (await window.api.researchTasks.forPlace(id)) as ResearchTask[],
+);
+const researchTasks = computed<ResearchTask[]>(() => tasksData.value ?? []);
 const showTaskForm = ref(false);
 const editingTask = ref<ResearchTask | null>(null);
-
-async function loadTasks() {
-  if (!props.placeId) {
-    researchTasks.value = [];
-    return;
-  }
-  try {
-    researchTasks.value = (await window.api.researchTasks.forPlace(props.placeId)) as ResearchTask[];
-  } catch (err) {
-    console.error('[PlacePanel] loadTasks failed:', err);
-    researchTasks.value = [];
-  }
-}
 
 function openTaskForm(task: ResearchTask | null = null) {
   editingTask.value = task;
@@ -479,9 +473,9 @@ function closeTaskForm() {
   editingTask.value = null;
 }
 
-async function onTaskSaved() {
+function onTaskSaved() {
   closeTaskForm();
-  await loadTasks();
+  // useEntityData's onDataChanged subscription handles the reload.
 }
 
 function openTaskFromRow(id: string) {
@@ -543,7 +537,7 @@ async function loadHero() {
   }
 }
 
-watch(() => props.placeId, () => { void loadTasks(); void loadHero(); }, { immediate: true });
+watch(() => props.placeId, () => { void loadHero(); }, { immediate: true });
 </script>
 
 <style scoped>
