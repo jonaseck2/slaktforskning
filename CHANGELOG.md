@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: add `worker-thread-ipc-split` skill — trigger-on-intent companion to the IPC rules, with bug history and pre-commit reflex for sync I/O / bulk-write / lying-bulk-name violations
 - feat: website export panel renames "Ämne" to "Fokusperson" with a clearer hint, and shows a file count next to the "Mediafiler" checkbox so you know how big the export will be before clicking
 - fix: website export now copies media files when `file_ref` is stored as a relative path — previously the access check ran against the wrong base directory and silently dropped every file
 - feat: notes, place descriptions, media captions and citation page badges render archive references as clickable links per your link rules; reports get an opt-in toggle (Header & footer section) so printed pages stay clean while PDF and website export pick up the live links
