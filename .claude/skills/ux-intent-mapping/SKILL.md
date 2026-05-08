@@ -46,6 +46,64 @@ Write the Purpose sentence, the inventory cells, and the inventory file entries 
 
 This app's user-facing objects: **person, place, source, citation, event, name, identifier, relationship, group, research task, media**. The Purpose sentence must use one of these. If a section talks about "data" or "items", it's not been thought through.
 
+## Surface Contract — the four checks
+
+This is a hard rule from CLAUDE.md (project-defining; broken UX is recoverable, broken data isn't, but the failure mode this guards against has shipped twice while passing lint/unit tests/`panel-cta-conventions.test.ts`). Apply on every `<SectionHeader … :action-label="…" @action="…" />` in any `*Panel.vue` you touch. Do this before claiming the work is done — read the actual code, don't trust the `docs/UX_INVENTORY.md` ✅ marker.
+
+The genealogist thinks **surface-first**: they're "on a place," "on a person," "in a source." When they're on a surface, every action they take should bring the surface's host entity with it. They should never have to re-state what they already chose by being where they are, and they should never reach a CTA whose label lies about what its handler does.
+
+### Check 1 — Did the host entity flow in?
+
+The panel is hosted on entity X (place, person, source, media). Whatever the action opens — modal, picker, inline form — must receive X as a default.
+
+**Concrete check:** trace the `@action` handler to the modal it opens. Search the modal call site for `:default<X>Id="…"` (or equivalent prop). If the genealogist had to re-pick a value the surface already implied, the host was lost.
+
+### Check 2 — Does the handler deliver the primitive named in the section title?
+
+Two failure modes:
+
+- **Title mismatch (label lie).** Section title says primitive X, handler creates Y. Section "Persons" with `+ Event` adds an event, not a person. Rewire the CTA to a real `+ Person` flow, or remove the CTA if this section is a derived view and the canonical Add path lives in a sibling section.
+- **Duplicate-of-canonical on a derived view.** A sibling section is the canonical Add path for the primitive, and this section is just a different rendering of the same data. `MediaTimeline + Media` was this — the Media section already adds; the timeline view doesn't need its own Add. Ship the Add only on the canonical section.
+
+**What's *not* a failure:** sibling sections that are different views of the same primitive each carrying their own `+ X` CTA (PersonPanel's Events ↔ Timeline ↔ Life Map all view the `event` table — three `+ Event` buttons is convenience, because each header truthfully describes what gets added).
+
+### Check 3 — Can the user edit and remove (a) what each section's CTA adds, AND (b) the panel's host entity itself?
+
+Two levels:
+
+- **Section-level lifecycle.** For each section that adds a primitive, the user must also see/edit/remove that primitive on the same surface (row click → edit modal, trash icon → confirm dialog). Read-only summary tables are fine when their data origin is signposted (PlacePanel's Persons section is derived from events) and the path back to the source of truth is reachable; opaque add-only sections aren't.
+- **Host-level lifecycle.** The panel must offer a way to delete the entity it's hosted on — a Danger-zone button at the bottom with `IconTrash` + an entity-typed label and a `ConfirmModal` cascade summary, mirroring `PersonPanel.vue`'s `panel-danger-zone`. A panel that lets the user create or edit an entity but offers no delete from this surface strands the user.
+
+### Check 4 — No silent degradation across state
+
+A surface that offers something in one state must keep offering it (or signal the change explicitly) in adjacent states. If a picker shows DB rows + gazetteer suggestions when empty, filtering must still query both — typing narrows what's *displayed*, never what's *queried*. If `+ Media` works when the section is open, it works when collapsed (even if the handler must expand the section first).
+
+**Test:** walk the user's task as a sequence of states (`empty → typed`, `open → collapsed`, `first save → reopen`); at each transition, ask whether state B still offers everything state A did. If features drop quietly between A and B, that's the bug.
+
+### Past failures this rule was written against
+
+These all passed lint, unit tests, and `panel-cta-conventions.test.ts`. The genealogist found each by clicking. That's the bar this section lifts.
+
+| Failure | Check it failed |
+|---|---|
+| `PlacePanel + Add person` created a person with no link to the place — orphan | #1 (host place_id never flowed into the modal) |
+| `MediaTimeline + Media` was a duplicate of the Media section's attach handler | #2 (derived view duplicating canonical Add) |
+| Five panels (Place, Source, Media, Group, ResearchTask) had no host-level delete affordance — places had no UI delete path at all | #3 (host-level lifecycle) |
+| Place picker filter excluded gazetteer suggestions when the user typed | #4 (silent scope loss between empty and typed states) |
+| `+ Media` on a collapsed Media section silently no-op'd because the handler depended on a child component behind `v-if` | #4 (silent degradation between open and collapsed states) |
+
+All five were marked ✅ resolved in `docs/UX_INVENTORY.md` while the bugs still shipped, or passed `panel-cta-conventions.test.ts` — which checks label shapes and verb glyphs but **cannot see** whether handlers wire the host entity into modals or whether collapsing a section breaks an action.
+
+### Pre-commit checklist for any panel-touching change
+
+Before claiming a panel change done — even one as small as adding a CTA or relabeling a section header:
+
+1. **Walk every `<SectionHeader>` in the touched file** (and the section components it hosts). For each `@action` handler, run checks #1–#4 above.
+2. **Read the modal it opens.** Search the modal's call site for `:default<HostEntity>Id`. If the prop isn't there, check #1 fails.
+3. **Walk the lifecycle.** For each primitive the section adds, can the user edit it from this panel? Delete it? Is there a Danger-zone delete for the panel's own host entity?
+4. **Walk the states.** Empty → typed for any picker. Open → collapsed for any section with an action. First save → reopen for any modal that creates a child entity.
+5. **Update `docs/UX_INVENTORY.md`** to reflect what the *code* now does, not what you intended. The doc tracks intent; the running app is the truth. Fix the doc to match the code, not the other way around.
+
 ## Project-specific consistency checks
 
 ### The `+` check
