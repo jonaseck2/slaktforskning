@@ -7,7 +7,18 @@
 </head>
 <body>
   <div id="app"></div>
-  <script src="./data.js"></script>
+  <!--
+    The snapshot is delivered by one of three paths chosen at runtime by
+    src/static/static-api.ts (in priority order):
+      1. Portable export — `<script>window.__SNAPSHOT_GZ__='...'</script>`
+         injected by website-export.ts before this file is shipped. Decoded
+         in-page via DecompressionStream — works from file:// (no fetch).
+      2. Hosted/split export — sibling `data.json.gz` fetched + decompressed
+         (requires http(s); file:// is blocked).
+      3. Dev mode — `data.json` served by npm run dev:static.
+    Old exports may still ship a sibling `data.js` setting window.__SNAPSHOT__
+    directly; the bootstrap honours that too for back-compat.
+  -->
   <script type="module" src="./main.ts"></script>
 </body>
 </html>

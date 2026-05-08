@@ -85,6 +85,23 @@
         </div>
       </div>
 
+      <!-- Format -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('htmlSite.format')" :collapsed="!open.format" @toggle="toggleSection('format')" />
+        <div v-if="open.format" class="panel-section-body">
+          <label class="panel-radio">
+            <input type="radio" :checked="exportMode === 'split'" @change="exportMode = 'split'" />
+            {{ $t('htmlSite.formatSplit') }}
+          </label>
+          <p class="panel-hint">{{ $t('htmlSite.formatSplitHint') }}</p>
+          <label class="panel-radio">
+            <input type="radio" :checked="exportMode === 'portable'" @change="exportMode = 'portable'" />
+            {{ $t('htmlSite.formatPortable') }}
+          </label>
+          <p class="panel-hint">{{ $t('htmlSite.formatPortableHint') }}</p>
+        </div>
+      </div>
+
     </div>
 
     <div class="panel-actions">
@@ -122,6 +139,7 @@ const redactLiving = defineModel<boolean>('redactLiving', { required: true });
 const mediaPersonOnly = defineModel<boolean>('mediaPersonOnly', { required: true });
 const includeMedia = defineModel<boolean>('includeMedia', { required: true });
 const siteTitle = defineModel<string>('siteTitle', { required: true });
+const exportMode = defineModel<'split' | 'portable'>('exportMode', { required: true });
 
 withDefaults(defineProps<{
   exporting: boolean;
@@ -136,7 +154,7 @@ const emit = defineEmits<{ export: []; close: [] }>();
 
 const { sections: open, toggleSection } = usePanelSections(
   'website-panel-section-',
-  { subject: true, scope: true, privacy: true, include: true, site: true },
+  { subject: true, scope: true, privacy: true, include: true, site: true, format: true },
 );
 </script>
 

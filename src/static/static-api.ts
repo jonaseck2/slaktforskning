@@ -647,14 +647,47 @@ export function installStaticApiWith(snapshot: Snapshot): void {
   (globalThis as { api: unknown }).api = buildStaticApi(snapshot);
 }
 
+async function decompressGzipBase64(b64: string): Promise<Snapshot> {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const text = await new Response(stream).text();
+  return JSON.parse(text) as Snapshot;
+}
+
+async function decompressGzipResponse(res: Response): Promise<Snapshot> {
+  const stream = (res.body as ReadableStream).pipeThrough(new DecompressionStream('gzip'));
+  const text = await new Response(stream).text();
+  return JSON.parse(text) as Snapshot;
+}
+
 export async function installStaticApi(): Promise<void> {
+  // Path 1: legacy raw snapshot inlined as `<script src="./data.js">` setting
+  // window.__SNAPSHOT__. Old exports (pre-gzip) shipped this shape; the static
+  // bundle still mounts them when a user revisits an old folder.
   const injected = (globalThis as { __SNAPSHOT__?: Snapshot }).__SNAPSHOT__;
   if (injected) {
     installStaticApiWith(injected);
     return;
   }
-  // Dev mode fallback: load from data.json (served via npm run dev:static)
+  // Path 2: portable mode — gz+base64 embedded directly in index.html via
+  // <script>window.__SNAPSHOT_GZ__='...'</script>. No fetch needed; works
+  // when the file is opened by double-click from a `file://` URL.
+  const embedded = (globalThis as { __SNAPSHOT_GZ__?: string }).__SNAPSHOT_GZ__;
+  if (embedded) {
+    installStaticApiWith(await decompressGzipBase64(embedded));
+    return;
+  }
+  // Path 3: split mode — sibling data.json.gz alongside index.html. Requires
+  // a host (http://) because file:// fetch of a relative binary is blocked
+  // in Chromium/Firefox/Safari by default.
+  try {
+    const gzRes = await fetch('./data.json.gz');
+    if (gzRes.ok) {
+      installStaticApiWith(await decompressGzipResponse(gzRes));
+      return;
+    }
+  } catch { /* file:// blocks fetch; fall through to dev path */ }
+  // Path 4: dev mode (npm run dev:static) — raw data.json served by Vite.
   const res = await fetch('./data.json');
-  const snap = (await res.json()) as Snapshot;
-  installStaticApiWith(snap);
+  installStaticApiWith((await res.json()) as Snapshot);
 }

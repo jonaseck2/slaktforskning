@@ -33,6 +33,7 @@
           v-model:mediaPersonOnly="mediaPersonOnly"
           v-model:includeMedia="includeMedia"
           v-model:siteTitle="siteTitle"
+          v-model:exportMode="exportMode"
           :exporting="exporting"
           :media-count="mediaCount"
           :last-output="lastOutput"
@@ -66,6 +67,10 @@ const redactLiving = ref(true);
 const mediaPersonOnly = ref(true);
 const includeMedia = ref(true);
 const siteTitle = ref('Family Tree');
+const exportMode = ref<'split' | 'portable'>(
+  (localStorage.getItem('website-export-mode') as 'split' | 'portable' | null) ?? 'split',
+);
+watch(exportMode, (v) => localStorage.setItem('website-export-mode', v));
 const exporting = ref(false);
 const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
@@ -210,6 +215,7 @@ async function exportSite() {
         redactLiving: redactLiving.value,
         mediaPersonOnly: mediaPersonOnly.value,
       },
+      mode: exportMode.value,
     }) as { canceled?: boolean; outputDir?: string; bundleMissing?: boolean } | null;
     if (res?.bundleMissing) {
       bundleMissing.value = true;
