@@ -339,11 +339,24 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       // Write _EVID so importer can match ASSO blocks back to this event across databases
       lines.push(`2 _EVID ${ev.id}`);
+      let emittedPlac = false;
       if (ev.place_id) {
         const place = getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          emittedPlac = true;
+        }
+      }
+      // Event-specific free-text address. Lossless via custom _PLAC_ADDR sub-tag.
+      // Sits under PLAC at level 3 when a PLAC line was emitted; otherwise at level 2
+      // directly under the event so authored address data survives even when no place
+      // is attached. Distinct from the place's standalone ADDR/CITY/POST sub-tags.
+      if (ev.place_address) {
+        if (emittedPlac) {
+          lines.push(`3 _PLAC_ADDR ${ev.place_address}`);
+        } else {
+          lines.push(`2 _PLAC_ADDR ${ev.place_address}`);
         }
       }
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
@@ -512,11 +525,21 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (gedcomType) lines.push(`2 TYPE ${gedcomType}`);
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       lines.push(`2 _EVID ${ev.id}`);
+      let emittedPlac = false;
       if (ev.place_id) {
         const place = getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          emittedPlac = true;
+        }
+      }
+      // See INDI-event emitter for rationale on level-3-vs-2 placement.
+      if (ev.place_address) {
+        if (emittedPlac) {
+          lines.push(`3 _PLAC_ADDR ${ev.place_address}`);
+        } else {
+          lines.push(`2 _PLAC_ADDR ${ev.place_address}`);
         }
       }
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
@@ -569,9 +592,6 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   // ── Build ExportReport ─────────────────────────────────────────────────────
   const researchTaskCount = ((db.get('SELECT COUNT(*) as n FROM research_tasks') as { n: number } | undefined)?.n ?? 0);
   const groupCount = ((db.get('SELECT COUNT(*) as n FROM groups') as { n: number } | undefined)?.n ?? 0);
-  const placeAddressCount = ((db.get(
-    "SELECT COUNT(*) as n FROM events WHERE place_address IS NOT NULL AND place_address != ''"
-  ) as { n: number } | undefined)?.n ?? 0);
 
   const excluded: ExportReport['excluded'] = [];
   if (researchTaskCount > 0) excluded.push({
@@ -584,11 +604,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     count: groupCount,
     reason: 'No equivalent concept in GEDCOM 5.5.1',
   });
-  if (placeAddressCount > 0) excluded.push({
-    category: 'Event free-text addresses (place_address field)',
-    count: placeAddressCount,
-    reason: 'GEDCOM ADDR is on event records; no mapping implemented yet',
-  });
+  // events.place_address: now lossless via custom _PLAC_ADDR sub-tag (see emit sites above).
 
   // Count total events exported (across all persons and couples)
   const totalEventCount = ((db.get('SELECT COUNT(*) as n FROM events') as { n: number } | undefined)?.n ?? 0);
