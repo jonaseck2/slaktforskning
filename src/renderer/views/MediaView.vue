@@ -224,6 +224,7 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
 import { usePagedList } from '../composables/usePagedList';
+import { useFirstMediaAttachToast } from '../composables/useFirstMediaAttachToast';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 const selectedStore = useSelectedPersonStore();
 const profilePicStore = useProfilePicStore();
@@ -236,6 +237,7 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
+const firstMediaAttach = useFirstMediaAttachToast();
 
 const listOpen = ref(localStorage.getItem(STORAGE_KEYS.mediaListOpen) !== 'false');
 function openList() {
@@ -554,6 +556,7 @@ async function attachFile() {
   const result = await window.api.media.attach();
   if (!(result as { canceled: boolean }).canceled) {
     await reload();
+    await firstMediaAttach.notifyIfFirst();
   }
 }
 

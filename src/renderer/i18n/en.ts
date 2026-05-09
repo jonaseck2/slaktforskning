@@ -1896,7 +1896,11 @@ export default {
       },
     },
     coach: {},
-    toast: {},
+    toast: {
+      mediaFirstAttach: {
+        body: 'Your file is copied into the <dbname>-media/ folder so it travels with the database.',
+      },
+    },
     settings: {
       resetTitle: 'Reset onboarding hints',
       resetDescription: 'Show empty-state coaching and coachmarks again — like the first time you opened the app.',

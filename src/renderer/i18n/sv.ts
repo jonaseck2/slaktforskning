@@ -1875,7 +1875,11 @@ export default {
       },
     },
     coach: {},
-    toast: {},
+    toast: {
+      mediaFirstAttach: {
+        body: 'Filen kopieras in i mappen <dbnamn>-media/ så att den följer med när du flyttar databasen.',
+      },
+    },
     settings: {
       resetTitle: 'Återställ introduktionshjälpen',
       resetDescription: 'Visa instruktionsmeddelanden och vinjetter på nytt — som första gången du öppnade appen.',
