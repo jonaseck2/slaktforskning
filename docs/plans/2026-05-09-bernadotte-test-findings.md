@@ -23,7 +23,7 @@ Fixes landed in the same session as the test:
 | 11 | ✅ VERIFIED | Audit script walked `EVENT_TYPE_VALUES` (34 entries) against both `sv.ts` and `en.ts` — every key has a translation in both locales. No misses. |
 | 12 | ✅ FIXED | `EVENT_TYPE_VALUES` constant missing `name_change`, `accession`, `coronation` |
 | 13 | ✅ ADDED | `ui_reload` MCP dev tool — Cmd+R via the bridge, lets the agent re-render after MCP-side mutations |
-| 14 | ❌ open | No `PersonIdentifiersSection` UI — identifiers only addable via MCP |
+| 14 | ✅ FIXED | `PersonIdentifiersSection` shipped — self-loading, inline add form, count exposed via `defineExpose`. Wired into PersonPanel between Namn and Händelser using `v-show` so the (N) badge stays accurate while collapsed. Verified live: Karl XIV Johan shows "Identifierare (1)" with the FamilySearch L8B5-9MK row. |
 | 15 | ✅ FIXED | `Uppgifter`/`Kvalitet` sections show (0) when collapsed because `v-if` unmounts the child whose `defineExpose({ count })` is the count source. Switched to `v-show` on PersonPanel + PlacePanel + MediaPanel. |
 | 16 | ✅ ADDED | `ui_get_dom` extended with `mode` (outerHTML/innerHTML/textContent/attributes), `all`, `limit` — agents can extract specific section counts in 200 bytes instead of dumping 300 KB. |
 | 17 | ✅ DONE | Quality-issue triage: 359 total → 232 are the date-parser bug (one fix), 65 are sloppy data (missing source citations), 41 are gazetteer/place-quality, 14 are real structural gaps, 7 are intentional fixtures or duplicates. No MCP-side data corruption. |
