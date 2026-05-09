@@ -1,3 +1,4 @@
+<!-- Empty-state coaching N/A: ReportPanel is a configuration form (dropdowns / option pickers / chart toggles), not a list-shaped section. The v-for usages are inside <select><option> elements for choosing report subjects and chart parameters — they are never "empty" in the sense the coaching pattern targets. See docs/plans/2026-05-09-onboarding-design.md §Scope deviations. -->
 <template>
   <EntityPanel
     entity-type="report"
