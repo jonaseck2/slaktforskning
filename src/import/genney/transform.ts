@@ -388,6 +388,11 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   // Each db.prepare() crosses the JS→WASM boundary and compiles SQL.
   // Reusing prepared statements avoids ~31,000 redundant compilations that
   // would otherwise saturate the CPU for a typical Genney database.
+  //
+  // IMPORTANT: each compiled statement lives in the WASM heap and is NOT
+  // freed by JS GC. We finalize the entire `stmts` map in a `finally` at the
+  // end of the function — without this, a single import leaks 17 prepared
+  // statements (the unique SQLs below) into the WASM heap on every call.
   const stmts = {
     insertPlace: db.prepare(
       `INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, notes, street, postal_code, city, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -441,6 +446,8 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
       `INSERT INTO citations (id, source_id, event_id, person_id, relationship_id, page, confidence, transcription, notes, date_accessed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
   };
+
+  try {
 
   // ── 1. Import SPLACE records (parents before children) ───────────────────
   const splaceFlatMap = new Map<number, string>(); // SPLACE.RID → place UUID
@@ -903,7 +910,15 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   // their own contact info in Settings keeps it on re-import.
   importGenneyResearcher(db, tables);
 
-  return summary;
+    return summary;
+  } finally {
+    // Free all 17 compiled statements from the WASM heap. node-sqlite3-wasm
+    // statements are NOT garbage-collected by JS; without this, every Genney
+    // import would leak the compiled INSERTs forever.
+    for (const stmt of Object.values(stmts)) {
+      try { (stmt as unknown as { finalize(): void }).finalize(); } catch { /* ignore */ }
+    }
+  }
 }
 
 function importGenneyResearcher(db: Database, tables: GenneyTables): void {
