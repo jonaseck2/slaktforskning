@@ -83,7 +83,7 @@ The original "no merge across sources" framing was wrong. The right framing is: 
 
 ## Overview
 
-The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 30 bundled gazetteers (18 point + 8 boundary + 3 language + 1 admin-only `sv-sockenstad-boundaries`) cover Sweden, Denmark, Norway, Finland, Iceland, Germany (Bundesländer + Kreise + Wikidata parishes), US (9 immigration states + full 50-state), all Canadian provinces/territories, ~244 countries globally, and ~1,393 historical states/empires. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
+The gazetteer system resolves place strings (e.g. "Roskilde, Danmark") to coordinates by matching against hierarchical place trees. 31 bundled gazetteers (18 point + 9 boundary + 3 language + 1 historical) cover Sweden, Denmark, Norway, Finland, Iceland, Germany (Bundesländer + Kreise + boundaries + Wikidata parishes), US (9 immigration states + full 50-state + counties boundaries), all Canadian provinces/territories, ~244 countries globally, and ~1,393 historical states/empires. Language gazetteers provide multilingual place name translations (e.g. "Danmark" → "Denmark", "Brasilien" → "Brazil").
 
 ## Architecture
 
@@ -152,7 +152,7 @@ This ensures "Dirleton, East Lothian, Skottland" matches Scotland (via language 
 
 The global name-depth map is cached across `resolvePlace` calls for the same gazetteer set.
 
-## Bundled Gazetteers (30)
+## Bundled Gazetteers (31)
 
 ### Point Gazetteers (18)
 
@@ -177,7 +177,7 @@ The global name-depth map is cached across `resolvePlace` calls for the same gaz
 | `world-admin1` | World States & Provinces | GeoNames | ~2,754 | 452 KB |
 | `world-historical` | World Historical States | Wikidata | ~1,393 | 350 KB |
 
-### Boundary Gazetteers (8)
+### Boundary Gazetteers (9)
 
 | ID | Name | Source | Nodes | Size |
 |----|------|--------|-------|------|
@@ -189,6 +189,7 @@ The global name-depth map is cached across `resolvePlace` calls for the same gaz
 | `is-sveitarfelog-boundaries` | Icelandic Municipalities — Boundaries | LMI WFS | 64 | 3.7 MB |
 | `no-kommuner-boundaries` | Norwegian Municipalities — Boundaries | Kartverket | 357 | 474 KB |
 | `ca-divisions-boundaries` | Canadian Census Divisions — Boundaries | Statistics Canada | 293 | 637 KB |
+| `de-gemeinden-boundaries` | German Bundesländer & Kreise — Boundaries | BKG vg250 | 16 + 400 | 5.4 MB |
 
 ### Language Gazetteers (3)
 

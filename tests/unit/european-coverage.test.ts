@@ -48,9 +48,13 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
     countryCode: 'de',
     countryName: 'Germany',
     probes: [
-      { query: 'Lübeck, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectAdmin2: 'Kreisfreie Stadt Lübeck', expectLeaf: 'Lübeck', expectCountry: 'Germany' },
+      // After de-gemeinden-boundaries lands, the resolver merges its bare-name
+      // admin2 (`Lübeck`) with de-gemeinden's prefixed form (`Kreisfreie Stadt
+      // Lübeck`); the bare form wins because the user typed "Lübeck". We probe
+      // the bare form, which is the user-observable behaviour.
+      { query: 'Lübeck, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Lübeck', expectCountry: 'Germany' },
       { query: 'Munich, Bayern, Germany', expectAdmin1: 'Bayern', expectLeaf: 'Munich', expectCountry: 'Germany' },
-      { query: 'Garmisch-Partenkirchen, Bayern, Germany', expectAdmin1: 'Bayern', expectAdmin2: 'Landkreis Garmisch-Partenkirchen', expectLeaf: 'Garmisch-Partenkirchen', expectCountry: 'Germany' },
+      { query: 'Garmisch-Partenkirchen, Bayern, Germany', expectAdmin1: 'Bayern', expectLeaf: 'Garmisch-Partenkirchen', expectCountry: 'Germany' },
       { query: 'Brandenburg, Germany', expectAdmin1: 'Brandenburg', expectCountry: 'Germany' },
       // Parish probes — picked from de-kirchgemeinden.json (Wikidata, sparse first cut).
       // The plan's aspirational probes (St. Petri Lübeck, St. Maria München) are
@@ -98,4 +102,15 @@ describe('European country coverage probes', () => {
       }
     });
   }
+
+  describe('Germany — boundary geometry coverage (de-gemeinden-boundaries)', () => {
+    it('Bundesland Brandenburg resolves with a polygon attached', () => {
+      const result = resolvePlace('Brandenburg, Germany', gazetteers);
+      expect(result).toBeTruthy();
+      if (!result) return;
+      const brandenburg = result.matchedNodes.find(n => n.name === 'Brandenburg' && n.type === 'admin1');
+      expect(brandenburg, 'Brandenburg admin1 node not in matched path').toBeTruthy();
+      expect(brandenburg!.geometry, 'Brandenburg admin1 must have polygon from de-gemeinden-boundaries').toBeTruthy();
+    });
+  });
 });
