@@ -103,7 +103,7 @@ Wikidata SPARQL via `src/gazetteer-build/sparql.ts`. No reprojection (Wikidata c
 
 ### Task 0: SPARQL design + collision audit
 
-- [ ] **Step 1: Design and validate the SPARQL query manually.**
+- [x] **Step 1: Design and validate the SPARQL query manually.**
 
 Open the Wikidata Query Service. Iterate the query until it returns a clean, deduplicated set of European historical entities at admin1 depth. Sample query:
 
@@ -134,13 +134,13 @@ LIMIT 2000
 
 Verify > 300 results spanning all eight class buckets. Refine class set if any bucket is degenerate.
 
-- [ ] **Step 2: Collision audit against `world-historical`.**
+- [x] **Step 2: Collision audit against `world-historical`.**
 
 Run the SPARQL query, then for each returned QID, check whether it already exists in `src/api/place-gazetteers/data/world-historical.json`. Record the overlap count. Plan output: how many entities are net-new vs how many will produce loader-merge events.
 
 If the overlap is > 25%, refine the query — `europe-historical` should be predominantly net-new entities, not a re-emission of `world-historical`.
 
-- [ ] **Step 3: Document findings in this plan body.** No commit.
+- [x] **Step 3: Document findings in this plan body.** No commit.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -220,12 +220,12 @@ Mirror DE Task 7. Nine user-goal probes. Confirm Swedish-exonym + native-form du
 
 ## Self-review checklist
 
-- [ ] All nine user-goal probes resolve.
-- [ ] Swedish exonyms via extended `lang-world-historical` resolve.
-- [ ] No regression in existing `world-historical` resolution (probe a known entry like "Roman Empire" still works).
-- [ ] Collision audit (Task 0 Step 2) result documented; overlap < 25%.
-- [ ] Bundle within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All nine user-goal probes resolve.
+- [x] Swedish exonyms via extended `lang-world-historical` resolve.
+- [x] No regression in existing `world-historical` resolution (probe a known entry like "Roman Empire" still works).
+- [x] Collision audit (Task 0 Step 2) result documented; overlap < 25%.
+- [x] Bundle within budget.
+- [x] Plan archived; minor version bumped.
 
 ---
 

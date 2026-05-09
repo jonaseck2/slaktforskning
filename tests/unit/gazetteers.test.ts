@@ -7,8 +7,8 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 71 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(71);
+  it('loads all 72 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(72);
   });
 
   const dataIds = [
@@ -32,7 +32,7 @@ describe('bundled gazetteers', () => {
     'by-rajony', 'ua-oblasti', 'fo-kommunur', 'gl-kommune',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
-    'world-historical',
+    'world-historical', 'europe-historical',
     'dk-sogne-boundaries', 'no-kommuner-boundaries', 'fi-kunnat-boundaries',
     'is-sveitarfelog-boundaries', 'us-counties-boundaries', 'ca-divisions-boundaries',
     'world-boundaries',

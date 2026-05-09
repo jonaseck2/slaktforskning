@@ -60,6 +60,7 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'world-countries', 'world-admin1',
   // Historical
   'world-historical',
+  'europe-historical',
   // Language gazetteers
   'lang-sv-geonames', 'lang-sv-wikidata', 'lang-world-historical',
   // Boundary gazetteers
