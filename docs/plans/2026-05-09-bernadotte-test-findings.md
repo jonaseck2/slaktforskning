@@ -19,8 +19,8 @@ Fixes landed in the same session as the test:
 | 7 | ✅ FIXED | i18n missing for `eventTypes.accession` and `eventTypes.coronation` |
 | 8 | ✅ FIXED | `add_source` was silently dropping `abstract` + `call_number`. Same shape as #3 — INSERT statement out of sync with the Source type and tool inputSchema. Round-trip regression test added in `tests/unit/sources.test.ts`. |
 | 9 | ❌ open | `living` flag on persons born >130 yrs ago without death event |
-| 10 | ❌ open | Place type vocabulary too narrow for royal residences |
-| 11 | ❌ open | Other event-type i18n keys may be missing (`name_change`, `census`, etc.) |
+| 10 | ✅ FIXED | Place type vocabulary too narrow for royal residences. Added `palace`, `castle`, `church` to `PLACE_TYPE_VALUES` + sv/en i18n + the MCP `add_place`/`update_place` enums (which were also out of sync with the renderer constant — `admin1`, `municipality`, `locality` were renderer-only; now both lists match). |
+| 11 | ✅ VERIFIED | Audit script walked `EVENT_TYPE_VALUES` (34 entries) against both `sv.ts` and `en.ts` — every key has a translation in both locales. No misses. |
 | 12 | ✅ FIXED | `EVENT_TYPE_VALUES` constant missing `name_change`, `accession`, `coronation` |
 | 13 | ✅ ADDED | `ui_reload` MCP dev tool — Cmd+R via the bridge, lets the agent re-render after MCP-side mutations |
 | 14 | ❌ open | No `PersonIdentifiersSection` UI — identifiers only addable via MCP |
