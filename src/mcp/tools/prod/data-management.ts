@@ -6,6 +6,7 @@ import { initializeSchema } from '../../../api/schema';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../../gedcom/index';
 import { importFromGenney } from '../../../import/genney/index';
 import { importFromHolger } from '../../../import/holger/index';
+import { importFromRootsMagic } from '../../../import/rootsmagic/index';
 import { exportArchive } from '../../../api/archive_export';
 import { importArchive } from '../../../api/archive_import';
 import { getMediaDir } from '../../../api/media';
@@ -15,10 +16,10 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
   const { getDb, getDbPath, setDb, setDbPath } = ctx;
 
   server.registerTool('import_file', {
-    description: 'Import genealogy data from a file. Format is auto-detected from extension (.backup/.gcc → genney, .ged → gedcom) unless overridden. Use format "holger" for Holger/OurKind GEDCOM exports.',
+    description: 'Import genealogy data from a file. Format is auto-detected from extension (.backup/.gcc → genney, .rmgc/.rmtree → rootsmagic, .ged → gedcom) unless overridden. Use format "holger" for Holger/OurKind GEDCOM exports.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to the file to import'),
-      format: z.enum(['gedcom', 'genney', 'holger']).optional().describe('Import format (auto-detected if omitted)'),
+      format: z.enum(['gedcom', 'genney', 'holger', 'rootsmagic']).optional().describe('Import format (auto-detected if omitted)'),
       media_dir: z.string().optional().describe('For holger imports: path to local OurKind/Media directory for remapping Windows image paths'),
     },
   }, async (args) => {
@@ -29,8 +30,23 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     if (!format) {
       if (lower.endsWith('.backup') || lower.endsWith('.gcc')) {
         format = 'genney';
+      } else if (lower.endsWith('.rmgc') || lower.endsWith('.rmtree')) {
+        format = 'rootsmagic';
       } else {
         format = 'gedcom';
+      }
+    }
+
+    if (format === 'rootsmagic') {
+      const messages: string[] = [];
+      try {
+        const result = await importFromRootsMagic(db, args.file_path, {
+          onProgress: (msg) => messages.push(msg),
+        });
+        return { content: [{ type: 'text', text: JSON.stringify({ ...result, progress: messages }, null, 2) }] };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { content: [{ type: 'text', text: JSON.stringify({ error: message, progress: messages }, null, 2) }] };
       }
     }
 
