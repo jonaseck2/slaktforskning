@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: document dev-mode Vite path-traversal assumption in `app:readThirdPartyLicenses`; tighten `window.api.app` type to remove `as string` cast in licenses modal
+
 - feat: `THIRD_PARTY_LICENSES.txt` is now auto-generated and bundled into the packaged app at `Resources/THIRD_PARTY_LICENSES.txt`
 - fix: `npm ls` warnings (peer-dep advisories, extraneous-package notices) are now forwarded to stderr instead of being silently discarded during license generation
 - fix: editing a relationship's subtype (e.g. father → adopted father) crashed with `NOT NULL constraint failed: relationships.notes` when the notes field was empty. RelationshipModal sent `null` for empty notes and `updateRelationship` wrote it through to the NOT-NULL column; both now coerce empty notes to `''` to match `createRelationship`'s contract.
