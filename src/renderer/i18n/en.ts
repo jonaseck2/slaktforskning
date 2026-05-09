@@ -1845,5 +1845,8 @@ export default {
     description: 'A local-first genealogy app. All your data stays on your computer.',
     openSource: 'Open source (MIT licence).',
     viewOnGitHub: 'View on GitHub',
+    viewLicenses: 'View open source notices',
+    licensesTitle: 'Open source notices',
+    licensesElectronNote: 'Electron and Chromium ship their own license files in the application resources folder.',
   },
 };

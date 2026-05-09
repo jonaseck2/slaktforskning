@@ -29,7 +29,7 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'backup:backup', 'backup:restore',
   'shell:open-external',
   'export:openFolder',
-  'app:getVersion', 'app:openExternal',
+  'app:getVersion', 'app:openExternal', 'app:readThirdPartyLicenses',
   'website:export', 'website:buildPreviewHtml',
   // website:previewSnapshot migrated to the registry as a worker channel.
   'print:print', 'print:exportPdf',

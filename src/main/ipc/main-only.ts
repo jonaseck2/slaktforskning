@@ -34,6 +34,19 @@ export function registerUtilityHandlers(
     if (!url.startsWith('https://') && !url.startsWith('http://') && !url.startsWith('mailto:')) return;
     await shell.openExternal(url);
   });
+  wrapHandler('app:readThirdPartyLicenses', () => {
+    // Packaged: process.resourcesPath. Dev (npm start): repo root or app.getAppPath().
+    const candidates = [
+      path.join(process.resourcesPath, 'THIRD_PARTY_LICENSES.txt'),
+      path.join(app.getAppPath(), 'THIRD_PARTY_LICENSES.txt'),
+      path.join(app.getAppPath(), '..', 'THIRD_PARTY_LICENSES.txt'),
+      path.join(app.getAppPath(), '..', '..', 'THIRD_PARTY_LICENSES.txt'),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
+    }
+    throw new Error('THIRD_PARTY_LICENSES.txt not found in any expected location');
+  });
 
   // Print / PDF
   wrapHandler('print:print', () => {

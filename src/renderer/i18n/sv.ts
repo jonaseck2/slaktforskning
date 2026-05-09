@@ -1824,5 +1824,8 @@ export default {
     description: 'Ett släktforskningsprogram som körs lokalt på din dator. All data ligger kvar hos dig.',
     openSource: 'Öppen källkod (MIT-licens).',
     viewOnGitHub: 'Visa på GitHub',
+    viewLicenses: 'Visa öppen källkod-information',
+    licensesTitle: 'Öppen källkod-information',
+    licensesElectronNote: 'Electron och Chromium har sina egna licensfiler i programmets resurser-mapp.',
   },
 };
