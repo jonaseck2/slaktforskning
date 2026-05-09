@@ -115,17 +115,62 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
         const qIdx = url.indexOf('?');
         const params = new URLSearchParams(qIdx >= 0 ? url.slice(qIdx + 1) : '');
         const selector = params.get('selector');
-        const html = selector
-          ? await win.webContents.executeJavaScript(
-              `(() => { const el = document.querySelector(${JSON.stringify(selector)}); return el ? el.outerHTML : null; })()`
-            ) as string | null
-          : await win.webContents.executeJavaScript('document.documentElement.outerHTML') as string;
-        if (selector && html === null) {
-          json(res, 404, { error: `Element not found: ${selector}` });
-        } else {
+        const mode = (params.get('mode') ?? 'outerHTML') as 'outerHTML' | 'innerHTML' | 'textContent' | 'attributes';
+        const all = params.get('all') === 'true' || params.get('all') === '1';
+        const limit = Math.min(200, Math.max(1, Number(params.get('limit') ?? (all ? 50 : 1))));
+
+        // No selector → full document outerHTML (legacy behaviour, usually too
+        // large; the agent should pass `selector` to scope).
+        if (!selector) {
+          const html = await win.webContents.executeJavaScript('document.documentElement.outerHTML') as string;
           res.writeHead(200, { 'Content-Type': 'text/html' });
           res.end(html);
+          return;
         }
+
+        const sel = JSON.stringify(selector);
+        const result = await win.webContents.executeJavaScript(
+          `(() => {
+             const els = [...document.querySelectorAll(${sel})].slice(0, ${limit});
+             if (els.length === 0) return { matches: [], total: 0 };
+             const total = document.querySelectorAll(${sel}).length;
+             const extract = (el) => {
+               switch (${JSON.stringify(mode)}) {
+                 case 'innerHTML':   return el.innerHTML;
+                 case 'textContent': return (el.textContent ?? '').trim();
+                 case 'attributes': {
+                   const out = {};
+                   for (const a of el.attributes) out[a.name] = a.value;
+                   return out;
+                 }
+                 default: return el.outerHTML;
+               }
+             };
+             return { matches: els.map(extract), total };
+           })()`
+        ) as { matches: unknown[]; total: number };
+
+        if (result.matches.length === 0) {
+          json(res, 404, { error: `Element not found: ${selector}` });
+          return;
+        }
+
+        // Default ergonomics: when caller didn't ask for `all`, return the
+        // single-element result directly (string or attribute object) so the
+        // common case stays a one-liner.
+        if (!all) {
+          const single = result.matches[0];
+          if (typeof single === 'string') {
+            res.writeHead(200, { 'Content-Type': mode === 'textContent' ? 'text/plain' : 'text/html' });
+            res.end(single);
+          } else {
+            json(res, 200, single);
+          }
+          return;
+        }
+
+        // `all=true` → JSON envelope so the agent gets each match separately.
+        json(res, 200, { matches: result.matches, total: result.total, returned: result.matches.length });
 
       } else if (method === 'POST' && url === '/query_styles') {
         const body = await readBody(req) as { selector: string; props?: string[]; limit?: number };

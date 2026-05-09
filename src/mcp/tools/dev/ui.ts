@@ -89,12 +89,23 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
 
   server.tool(
     'ui_get_dom',
-    'Get HTML DOM of the Electron renderer. WITHOUT `selector` returns the full document — typically multiple MB on real views (Places returns ~12 MB) and will exceed the model output limit, forcing a file dump. Pass `selector` to scope the result to one element\'s outerHTML — that is the right default for layout/visual debugging.',
-    { selector: z.string().optional().describe('CSS selector. If omitted, returns the full document — usually too large; prefer a selector.') },
-    async ({ selector }) => {
-      const path = selector ? `/dom?selector=${encodeURIComponent(selector)}` : '/dom';
-      const html = await uiGet(uiBase, path);
-      return { content: [{ type: 'text' as const, text: html }] };
+    'Get DOM content from the Electron renderer. Pass `selector` to scope to specific elements — the full document is usually too large (Places returns ~12 MB) and will exceed the model output limit. Use `mode` to extract just what you need (textContent for counts/labels, attributes for state, innerHTML to skip the wrapper, outerHTML for layout debugging). Use `all=true` with a multi-match selector to extract many small elements in one call (e.g. `selector=h2.section-title, mode=textContent, all=true` to read every section title).',
+    {
+      selector: z.string().optional().describe('CSS selector. Omit to return the whole document (usually too large).'),
+      mode: z.enum(['outerHTML', 'innerHTML', 'textContent', 'attributes']).optional().describe('What to extract from each match. Defaults to outerHTML. textContent strips markup; attributes returns a {name: value} JSON map.'),
+      all: z.boolean().optional().describe('When true, returns every match as a JSON array (`{ matches, total, returned }`). When false (default), returns the first match only — a string for outerHTML/innerHTML/textContent or a JSON object for attributes.'),
+      limit: z.number().optional().describe('Maximum matches to return when `all=true` (default 50, max 200).'),
+    },
+    async ({ selector, mode, all, limit }) => {
+      const params = new URLSearchParams();
+      if (selector) params.set('selector', selector);
+      if (mode) params.set('mode', mode);
+      if (all) params.set('all', 'true');
+      if (limit !== undefined) params.set('limit', String(limit));
+      const qs = params.toString();
+      const path = qs ? `/dom?${qs}` : '/dom';
+      const text = await uiGet(uiBase, path);
+      return { content: [{ type: 'text' as const, text }] };
     }
   );
 
