@@ -46,7 +46,7 @@
         />
         <div v-if="sections.notes" class="panel-section-body">
           <template v-if="props.readonly">
-            <SectionEmpty v-if="!notesDraft" :message="$t('empty.notes') || ''" />
+            <SectionEmpty v-if="!notesDraft" purpose-key="onboarding.empty.mediaNotes.purpose" />
             <pre v-else class="notes-readonly" :class="{ 'notes-mono': notesMonospaced }"><LinkedText :text="notesDraft" /></pre>
           </template>
           <template v-else>
@@ -91,7 +91,12 @@
             <PersonPicker :model-value="null" :relatee-id="linkedPersons[0]?.entityId" :placeholder="$t('addRelated.searchPlaceholder')" @select="linkPerson" />
             <AppButton variant="ghost" size="sm" @click="showPersonPicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
-          <SectionEmpty v-if="linkedPersons.length === 0 && !showPersonPicker" :message="$t('empty.persons')" />
+          <SectionEmpty
+            v-if="linkedPersons.length === 0 && !showPersonPicker"
+            purpose-key="onboarding.empty.mediaLinkedPersons.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.mediaLinkedPersons.cta'"
+            @action="showPersonPicker = true"
+          />
           <div v-for="lp in linkedPersons" :key="lp.linkId" class="linked-row">
             <AppAvatar :person-id="lp.entityId" :given-name="lp.givenName" :surname="lp.surname" :sex="lp.sex" size="sm" />
             <router-link :to="'/persons/' + lp.entityId" class="person-link">{{ lp.label }}</router-link>
@@ -113,7 +118,12 @@
           @action="drawMode ? emit('stop-draw-mode') : emit('start-draw-mode')"
         />
         <div v-if="sections.faceTags" class="panel-section-body">
-          <SectionEmpty v-if="regions.length === 0 && !drawMode" :message="$t('empty.faceTags')" />
+          <SectionEmpty
+            v-if="regions.length === 0 && !drawMode"
+            purpose-key="onboarding.empty.mediaFaceTags.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.mediaFaceTags.cta'"
+            @action="emit('start-draw-mode')"
+          />
           <div
             v-for="r in regions"
             :key="r.id"
@@ -189,7 +199,12 @@
             <PlacePicker :model-value="null" :placeholder="$t('places.searchPlaceholder')" @select="linkPlace" />
             <AppButton variant="ghost" size="sm" @click="showPlacePicker = false">{{ $t('common.cancel') }}</AppButton>
           </div>
-          <SectionEmpty v-if="linkedPlaces.length === 0 && !showPlacePicker" :message="$t('empty.places')" />
+          <SectionEmpty
+            v-if="linkedPlaces.length === 0 && !showPlacePicker"
+            purpose-key="onboarding.empty.mediaLinkedPlaces.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.mediaLinkedPlaces.cta'"
+            @action="showPlacePicker = true"
+          />
           <div v-for="lp in linkedPlaces" :key="lp.linkId" class="linked-row">
             <router-link :to="{ path: '/places', query: { place: lp.entityId } }" class="person-link">{{ lp.label }}</router-link>
             <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: lp.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(lp.linkId)">
@@ -208,7 +223,11 @@
           @toggle="toggleSection('events')"
         />
         <div v-if="sections.events" class="panel-section-body">
-          <SectionEmpty v-if="linkedEvents.length === 0" :message="$t('empty.events')" />
+          <SectionEmpty
+            v-if="linkedEvents.length === 0"
+            purpose-key="onboarding.empty.mediaLinkedEvents.purpose"
+            secondary-hint-key="onboarding.empty.mediaLinkedEvents.hint"
+          />
           <div v-for="le in linkedEvents" :key="le.linkId" class="linked-row">
             <span>{{ le.label }}</span>
             <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: le.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(le.linkId)">

@@ -1976,6 +1976,29 @@ export default {
         purpose: 'A user would use this section to attach photos and documents related to this record — and unlink them when no longer relevant.',
         cta: 'Attach media',
       },
+      mediaNotes: {
+        purpose: 'A user would use this section to write a caption, context, and notes about this media — what it depicts, where it came from, who appears in it.',
+      },
+      mediaLinkedPersons: {
+        purpose: 'A user would use this section to link this media to the persons it depicts or relates to — faces in a photo, the letter\'s author, a document\'s owner — so the same file surfaces on every person\'s page.',
+        cta: 'Add person',
+      },
+      mediaFaceTags: {
+        purpose: 'A user would use this section to mark faces on a photo and link each region to a person — the cropped face becomes that person\'s profile photo everywhere in the app.',
+        cta: 'Mark face',
+      },
+      mediaLinkedPlaces: {
+        purpose: 'A user would use this section to link this media to the places it shows or concerns — a farm, a church, a harbor — so a place gets a visual identity.',
+        cta: 'Add place',
+      },
+      mediaLinkedEvents: {
+        purpose: 'A user would use this section to see the events this media documents — the wedding in the photo, the baptism in the parish-book scan, the funeral on the memorial card.',
+        hint: 'Link this media to an event by attaching media on the event itself.',
+      },
+      eventParticipants: {
+        purpose: 'A user would use this section to add other participants in this event — godparents at a baptism, witnesses at a wedding, mourners at a funeral — beyond the event\'s primary person.',
+        hint: 'Type a name below to add a participant. You can pick an existing person or create a new one.',
+      },
     },
     coach: {
       hourglassFocus: {

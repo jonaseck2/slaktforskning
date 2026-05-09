@@ -1955,6 +1955,29 @@ export default {
         purpose: 'Här bifogar du foton och dokument som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
         cta: 'Bifoga media',
       },
+      mediaNotes: {
+        purpose: 'Här skriver du bildtext, kontext och anteckningar om mediafilen — vad föreställer den, varifrån kommer den, vem syns på bilden.',
+      },
+      mediaLinkedPersons: {
+        purpose: 'Här kopplar du mediafilen till de personer den föreställer eller berör — ansikten på bilden, brevförfattare, dokumentets ägare — så att samma fil dyker upp på varje persons sida.',
+        cta: 'Lägg till person',
+      },
+      mediaFaceTags: {
+        purpose: 'Här markerar du ansikten på fotot och knyter varje markering till en person — den beskurna delen blir personens profilbild överallt i appen.',
+        cta: 'Markera ansikte',
+      },
+      mediaLinkedPlaces: {
+        purpose: 'Här kopplar du mediafilen till de platser den visar eller berör — en gård, en kyrka, en hamn — så att platsen får en visuell identitet.',
+        cta: 'Lägg till plats',
+      },
+      mediaLinkedEvents: {
+        purpose: 'Här ser du händelserna som mediafilen dokumenterar — bröllopet på fotot, dopet i kyrkboksskanningen, begravningen på minneskortet.',
+        hint: 'Koppla mediafilen till en händelse genom att lägga till media på själva händelsen.',
+      },
+      eventParticipants: {
+        purpose: 'Här lägger du till övriga deltagare i händelsen — faddrar vid dop, vittnen vid vigsel, sörjande vid begravning — utöver händelsens primära person.',
+        hint: 'Skriv ett namn nedan för att lägga till en deltagare. Du kan välja en befintlig person eller skapa en ny.',
+      },
     },
     coach: {
       hourglassFocus: {
