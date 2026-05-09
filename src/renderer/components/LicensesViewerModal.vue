@@ -42,7 +42,7 @@ async function load() {
   loading.value = true;
   error.value = '';
   try {
-    text.value = (await window.api.app.readThirdPartyLicenses()) as string;
+    text.value = await window.api.app.readThirdPartyLicenses();
   } catch (err) {
     console.error('[LicensesViewerModal] load failed:', err);
     error.value = t('errors.loadFailed');

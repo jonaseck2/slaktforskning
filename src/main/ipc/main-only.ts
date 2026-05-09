@@ -35,7 +35,13 @@ export function registerUtilityHandlers(
     await shell.openExternal(url);
   });
   wrapHandler('app:readThirdPartyLicenses', () => {
-    // Packaged: process.resourcesPath. Dev (npm start): repo root or app.getAppPath().
+    // Candidate resolution order:
+    //   1. Packaged app: extraResource copies the file to <resourcesPath>/THIRD_PARTY_LICENSES.txt
+    //   2. Dev mode (npm start): Vite outputs to .vite/build/; app.getAppPath() returns that dir.
+    //      Candidate 2 checks .vite/build/ itself (unused in practice but cheap),
+    //      candidate 3 walks up one level to .vite/,
+    //      candidate 4 walks up two levels to the repo root — where the file lives.
+    //   If Vite's output depth ever changes (e.g. to a single-level dist/), add a new candidate here.
     const candidates = [
       path.join(process.resourcesPath, 'THIRD_PARTY_LICENSES.txt'),
       path.join(app.getAppPath(), 'THIRD_PARTY_LICENSES.txt'),

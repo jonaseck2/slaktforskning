@@ -276,6 +276,12 @@ declare global {
         print: () => Promise<void>;
         exportPdf: (path?: string) => Promise<string | null>;
       };
+      app: {
+        getVersion: () => Promise<string>;
+        openExternal: (url: string) => Promise<void>;
+        onOpenAbout: (cb: () => void) => void;
+        readThirdPartyLicenses: () => Promise<string>;
+      };
       backup: {
         backup: () => Promise<{ success: boolean; path?: string; error?: string }>;
         restore: () => Promise<{ success: boolean; path?: string; error?: string }>;
