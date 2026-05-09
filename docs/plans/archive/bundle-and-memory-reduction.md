@@ -104,7 +104,7 @@ Each file is checked for: every `db.prepare()` is followed by either a guarantee
 
 **Goal:** Capture pre-change numbers for installer size, idle RAM, and cold start. Without this, none of the verification claims later in the plan are checkable.
 
-- [ ] **Step 1: Capture installer sizes**
+- [x] **Step 1: Capture installer sizes**
 
 ```bash
 npm run make
@@ -114,7 +114,7 @@ ls -lh out/make/zip/darwin/*/*.zip out/make/squirrel.windows/*/*.exe out/make/de
 
 Write each size to `bundle-and-memory-reduction.measurements.md` under a `## Baseline (commit <SHA>, <date>)` heading.
 
-- [ ] **Step 2: Capture cold start time**
+- [x] **Step 2: Capture cold start time**
 
 Add a one-line console.log to `src/main/index.ts` if not already present:
 
@@ -127,7 +127,7 @@ app.whenReady().then(() => {
 
 (If a similar log already exists, use it; do not duplicate.) Run `npm start`, observe the log, record the value in measurements.md. Repeat 3 times, record min/median.
 
-- [ ] **Step 3: Capture idle RAM**
+- [x] **Step 3: Capture idle RAM**
 
 Launch the packaged app (`out/.../slaktforskning`), wait 5 seconds after first paint, run:
 
@@ -137,7 +137,7 @@ ps -A -o rss,command | grep -i slaktforskning | awk '{sum+=$1} END {print sum/10
 
 (macOS / Linux. On Windows, use Task Manager and sum all Slaktforskning processes' "Memory (Active Private Working Set)".) Record value.
 
-- [ ] **Step 4: Commit baseline**
+- [x] **Step 4: Commit baseline**
 
 ```bash
 git add docs/plans/bundle-and-memory-reduction.measurements.md src/main/index.ts
@@ -153,7 +153,7 @@ git commit -m "chore: record baseline bundle-size and memory measurements"
 
 **Goal:** Drop test fixtures, build scripts, docs, `.claude/`, and tooling-only files from the packaged asar. None of these are needed at runtime.
 
-- [ ] **Step 1: Survey current packaged contents**
+- [x] **Step 1: Survey current packaged contents**
 
 Run `npm run package`, then:
 
@@ -163,7 +163,7 @@ find out -type d -name '*.app' -print -quit | xargs -I {} npx asar list {}/Conte
 
 Record what's in the asar today in a scratch note (not committed). Look for `tests/`, `docs/`, `.claude/`, `scripts/build-*.ts` (the gazetteer build scripts), `tests/fixtures/`, `*.md`, `coverage/`, `.vite/build/`-only debug files.
 
-- [ ] **Step 2: Add packagerConfig.ignore**
+- [x] **Step 2: Add packagerConfig.ignore**
 
 Edit `forge.config.ts`. Add an `ignore` regex array under `packagerConfig`:
 
@@ -202,7 +202,7 @@ packagerConfig: {
 
 NOTE: `dist-static/` is already listed in `extraResource`, so excluding it from asar is correct — it ships as a sibling resource, not inside asar.
 
-- [ ] **Step 3: Verify the build still succeeds and tests pass**
+- [x] **Step 3: Verify the build still succeeds and tests pass**
 
 ```bash
 npm run package
@@ -215,15 +215,15 @@ Then verify the asar no longer contains the excluded paths:
 npx asar list out/<platform>/Slaktforskning.app/Contents/Resources/app.asar 2>/dev/null | grep -E '(tests|docs|\.claude|scripts/build-)' || echo "Excluded paths not present (good)"
 ```
 
-- [ ] **Step 4: Verify the running app still works**
+- [x] **Step 4: Verify the running app still works**
 
 Start the packaged binary, open a database, perform one place resolution from the UI (Place picker, type "Stockholm", confirm gazetteer suggestions appear). This proves no runtime path was excluded by accident.
 
-- [ ] **Step 5: Capture installer sizes after Task 2**
+- [x] **Step 5: Capture installer sizes after Task 2**
 
 Repeat the size capture from Task 1 Step 1. Append `## After Task 2 (forge ignore)` section to measurements.md.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add forge.config.ts docs/plans/bundle-and-memory-reduction.measurements.md
@@ -240,13 +240,13 @@ git commit -m "build: exclude tests, docs, build scripts from packaged asar"
 
 **Goal:** A one-time view into the renderer bundle so any accidental large dependency surfaces.
 
-- [ ] **Step 1: Install the plugin**
+- [x] **Step 1: Install the plugin**
 
 ```bash
 npm install --save-dev rollup-plugin-visualizer
 ```
 
-- [ ] **Step 2: Wire it into the renderer config**
+- [x] **Step 2: Wire it into the renderer config**
 
 Read the current `vite.renderer.config.ts`. Add the visualizer to the plugin chain, gated on a build env var so it doesn't run on every dev iteration:
 
@@ -266,7 +266,7 @@ plugins: [
 ].filter(Boolean),
 ```
 
-- [ ] **Step 3: Run the visualizer build**
+- [x] **Step 3: Run the visualizer build**
 
 ```bash
 VISUALIZE=1 npm run package
@@ -276,11 +276,11 @@ open .vite/renderer-bundle-visualizer.html  # macOS
 
 Identify any single non-vendor module > 50 KB gzip. Common offenders: full lodash, moment, large icon libraries. **Do not "fix" speculative findings** — only act on real surprises.
 
-- [ ] **Step 4: If a real surprise is found, fix it**
+- [x] **Step 4: If a real surprise is found, fix it**
 
 If (and only if) the visualizer surfaces a genuine accidental large import, commit the fix as a separate step before Step 5. If nothing is surprising, skip — clean bundle is the goal, no productive-feeling drift.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add vite.renderer.config.ts package.json package-lock.json
@@ -296,7 +296,7 @@ git commit -m "build: add rollup-plugin-visualizer for renderer bundle audits (V
 
 **Goal:** TDD the codec. Tests come first; the implementation in Task 5 makes them pass. The codec round-trips a Gazetteer through `encode → decode` losslessly (modulo documented float-to-int32 lat/lon precision).
 
-- [ ] **Step 1: Write the round-trip tests**
+- [x] **Step 1: Write the round-trip tests**
 
 ```ts
 // tests/unit/gazetteer-binary-codec.test.ts
@@ -439,7 +439,7 @@ describe('gazetteer binary codec', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 npx vitest run tests/unit/gazetteer-binary-codec.test.ts
@@ -447,7 +447,7 @@ npx vitest run tests/unit/gazetteer-binary-codec.test.ts
 
 Expected: all fail with "Cannot find module …/binary-codec".
 
-- [ ] **Step 3: Commit the test file alone**
+- [x] **Step 3: Commit the test file alone**
 
 (This locks the spec before we write the implementation — TDD discipline.)
 
@@ -508,7 +508,7 @@ varstring: vu32 length + UTF-8 bytes (no null terminator).
 
 The encoder builds the string table by interning every name, alias, and free-form string seen during a depth-first walk. The body holds u32 indices into that table — repeated names ("admin1", country names, etc.) cost 1 byte each in the body.
 
-- [ ] **Step 1: Write the encoder**
+- [x] **Step 1: Write the encoder**
 
 Create `src/gazetteer-build/binary-codec.ts`. The file is large; here is the critical structure — the implementer fills in the LEB128/varstring helpers and the depth-first walk:
 
@@ -936,7 +936,7 @@ function readContributions(
 
 The code above is intentionally long because the plan is the spec. The implementer should treat this as the contract. Place it in `src/gazetteer-build/binary-codec.ts` verbatim, then iterate to satisfy the tests.
 
-- [ ] **Step 2: Run the tests**
+- [x] **Step 2: Run the tests**
 
 ```bash
 npx vitest run tests/unit/gazetteer-binary-codec.test.ts
@@ -944,7 +944,7 @@ npx vitest run tests/unit/gazetteer-binary-codec.test.ts
 
 Expected: all 6 tests pass. Fix codec until they do.
 
-- [ ] **Step 3: Run the smoke test against every real gazetteer**
+- [x] **Step 3: Run the smoke test against every real gazetteer**
 
 Add a one-shot script (do not commit):
 
@@ -972,7 +972,7 @@ console.log('TOTAL', (totalJson/1024/1024).toFixed(1), 'MB →', (totalBin/1024/
 
 Record the totals in measurements.md. Expected: meaningful reduction (target 50%+ vs raw JSON).
 
-- [ ] **Step 4: Commit the codec**
+- [x] **Step 4: Commit the codec**
 
 ```bash
 git add src/gazetteer-build/binary-codec.ts
@@ -989,7 +989,7 @@ git commit -m "feat(gazetteer): add binary codec for compact bundled format"
 
 **Goal:** Replace the gzip-on-build plugin with a binary-emit plugin so packaged builds ship `.glb` instead of `.json.gz`.
 
-- [ ] **Step 1: Replace the plugin in `vite.main.config.ts`**
+- [x] **Step 1: Replace the plugin in `vite.main.config.ts`**
 
 Edit `vite.main.config.ts`:
 
@@ -1014,11 +1014,11 @@ import { encodeGazetteer } from './src/gazetteer-build/binary-codec';
 },
 ```
 
-- [ ] **Step 2: Update the comment in `vite.worker.config.ts`**
+- [x] **Step 2: Update the comment in `vite.worker.config.ts`**
 
 Change the docblock at the top to reference `.glb` instead of `.json.gz` so a future reader doesn't get misdirected.
 
-- [ ] **Step 3: Build to verify**
+- [x] **Step 3: Build to verify**
 
 ```bash
 npm run package
@@ -1028,7 +1028,7 @@ ls -lh .vite/build/gazetteers/
 
 Expected: 34 `.glb` files, total size markedly smaller than the previous 6.4 MB gzipped total. Record in measurements.md.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add vite.main.config.ts vite.worker.config.ts
@@ -1044,7 +1044,7 @@ git commit -m "build: emit gazetteers as packed binary (.glb) instead of gzipped
 
 **Goal:** `loadGazetteer` reads `.glb` if present, falls back to `.json.gz` (for any in-flight build), then raw `.json` (for vitest / direct-source consumers).
 
-- [ ] **Step 1: Replace `loadGazetteer`**
+- [x] **Step 1: Replace `loadGazetteer`**
 
 In `bundled.ts`, replace the body of `loadGazetteer` and the imports section:
 
@@ -1071,7 +1071,7 @@ function loadGazetteer(id: string): Gazetteer {
 }
 ```
 
-- [ ] **Step 2: Run the full test suite**
+- [x] **Step 2: Run the full test suite**
 
 ```bash
 npm test
@@ -1079,22 +1079,22 @@ npm test
 
 All ~2120 tests must pass. Failures here mean the binary codec is dropping data the resolver/index relies on.
 
-- [ ] **Step 3: Lint and type-check**
+- [x] **Step 3: Lint and type-check**
 
 ```bash
 npm run lint
 npx tsc --noEmit 2>&1 | grep "^src/" | head
 ```
 
-- [ ] **Step 4: Run the packaged app and resolve places**
+- [x] **Step 4: Run the packaged app and resolve places**
 
 `npm run package`, launch the binary, open a database, perform Verification step 4 manually (one resolve per major gazetteer).
 
-- [ ] **Step 5: Capture installer sizes, idle RAM, cold start**
+- [x] **Step 5: Capture installer sizes, idle RAM, cold start**
 
 Append `## After Task 7 (binary loader)` section to measurements.md.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/place-gazetteers/bundled.ts
@@ -1110,28 +1110,28 @@ git commit -m "feat(gazetteer): runtime loader prefers binary .glb over JSON"
 
 **Goal:** Every `db.prepare()` site has a guaranteed finalize. Use the `sqlite-finalize` skill's patterns.
 
-- [ ] **Step 1: Read the file and inventory each `db.prepare()`**
+- [x] **Step 1: Read the file and inventory each `db.prepare()`**
 
 Read `src/api/media_consolidate.ts` end-to-end. For each `db.prepare(`, write down:
 - Line number
 - Whether it's wrapped in `try { ... } finally { stmt.finalize() }` or in a `withStatementCache` block
 - Whether the result is assigned to a const that's reused (statement cache pattern) or single-use (helper-function-eligible)
 
-- [ ] **Step 2: Fix any single-use prepare without finalize**
+- [x] **Step 2: Fix any single-use prepare without finalize**
 
 If a `db.prepare(...)` is used only to run one query, rewrite to use the appropriate helper from `src/api/db.ts` (`queryOne` / `queryAll` / `runSql` / `runSqlChanges`). Import the helper if not already imported.
 
-- [ ] **Step 3: Verify any cached statement is finalized at end of operation**
+- [x] **Step 3: Verify any cached statement is finalized at end of operation**
 
 If there's a `withStatementCache`-style pattern (cache-then-loop-then-finalize-all), confirm the finalize-all step exists at the end. If not, add it.
 
-- [ ] **Step 4: Run media-related tests**
+- [x] **Step 4: Run media-related tests**
 
 ```bash
 npx vitest run tests/unit/media tests/unit/media_consolidate
 ```
 
-- [ ] **Step 5: Commit if any change was made**
+- [x] **Step 5: Commit if any change was made**
 
 If no change was needed, note "no leaks found in media_consolidate.ts" in measurements.md and move on.
 
@@ -1146,9 +1146,9 @@ git commit -m "fix(media): finalize prepared statements in <function> to avoid W
 
 Same pattern as Task 8 against `src/api/db_settings.ts`. Likely a no-op (it's small and old), but verify.
 
-- [ ] **Step 1: Inventory + fix + verify** (same shape as Task 8 steps 1-3)
-- [ ] **Step 2: Run tests** — `npx vitest run tests/unit/db_settings`
-- [ ] **Step 3: Commit if changed**
+- [x] **Step 1: Inventory + fix + verify** (same shape as Task 8 steps 1-3)
+- [x] **Step 2: Run tests** — `npx vitest run tests/unit/db_settings`
+- [x] **Step 3: Commit if changed**
 
 ---
 
@@ -1156,9 +1156,9 @@ Same pattern as Task 8 against `src/api/db_settings.ts`. Likely a no-op (it's sm
 
 Same pattern as Task 8 against `src/api/media.ts`. This file is bigger and has more direct prepares, so expect to find at least one issue.
 
-- [ ] **Step 1: Inventory + fix + verify**
-- [ ] **Step 2: Run tests** — `npx vitest run tests/unit/media`
-- [ ] **Step 3: Commit if changed**
+- [x] **Step 1: Inventory + fix + verify**
+- [x] **Step 2: Run tests** — `npx vitest run tests/unit/media`
+- [x] **Step 3: Commit if changed**
 
 ---
 
@@ -1166,8 +1166,8 @@ Same pattern as Task 8 against `src/api/media.ts`. This file is bigger and has m
 
 Same pattern. This is a hot path — bulk imports thousands of rows — so verify `withStatementCache` is in use and the cache is finalized.
 
-- [ ] **Step 1: Inventory + fix + verify** (extra attention: any `for (const row of rows) { db.prepare(... ).run(...); }` is a leak)
-- [ ] **Step 2: Run a 10k-person import test**
+- [x] **Step 1: Inventory + fix + verify** (extra attention: any `for (const row of rows) { db.prepare(... ).run(...); }` is a leak)
+- [x] **Step 2: Run a 10k-person import test**
 
 ```bash
 # Use a fixture if one exists; otherwise import a real-world GEDCOM
@@ -1175,7 +1175,7 @@ Same pattern. This is a hot path — bulk imports thousands of rows — so verif
 npx vitest run tests/unit/gedcom-import
 ```
 
-- [ ] **Step 3: Commit if changed**
+- [x] **Step 3: Commit if changed**
 
 ---
 
@@ -1183,9 +1183,9 @@ npx vitest run tests/unit/gedcom-import
 
 Same pattern. Same hot-path attention.
 
-- [ ] **Step 1: Inventory + fix + verify**
-- [ ] **Step 2: Run tests** — `npx vitest run tests/unit/genney`
-- [ ] **Step 3: Commit if changed**
+- [x] **Step 1: Inventory + fix + verify**
+- [x] **Step 2: Run tests** — `npx vitest run tests/unit/genney`
+- [x] **Step 3: Commit if changed**
 
 ---
 
@@ -1196,19 +1196,19 @@ Same pattern. Same hot-path attention.
 
 **Goal:** Prove the audit fixed any latent leak by running a real bulk import and watching heap use.
 
-- [ ] **Step 1: Capture pre-import WASM heap**
+- [x] **Step 1: Capture pre-import WASM heap**
 
 Launch the packaged app, open or create a fresh database, take a baseline snapshot. The dev MCP tool `mcp__slaktforskning-dev__app_status` may report DB stats; otherwise log in `src/main/db-worker.ts` after `Database` open.
 
-- [ ] **Step 2: Import a large GEDCOM**
+- [x] **Step 2: Import a large GEDCOM**
 
 Use a 10k-person GEDCOM fixture (any from `tests/fixtures/gedcom/`).
 
-- [ ] **Step 3: Capture post-import WASM heap**
+- [x] **Step 3: Capture post-import WASM heap**
 
 If heap grew by less than ~5 MB above the predicted DB size for the import, no leak. If it grew significantly more, dig in (run with `node --inspect` and look at heap retainers).
 
-- [ ] **Step 4: Record measurements + commit**
+- [x] **Step 4: Record measurements + commit**
 
 Append findings to measurements.md. No code change here unless Step 3 surfaces a new leak.
 
@@ -1228,7 +1228,7 @@ git commit -m "chore: record post-audit WASM heap measurements"
 
 **Goal:** Confirm all 7 verification items from the preamble. Decide whether a follow-up lazy + LRU + pre-warm plan is needed.
 
-- [ ] **Step 1: Re-run full verification suite**
+- [x] **Step 1: Re-run full verification suite**
 
 For each of the 7 verification items in the preamble: capture the value, write it next to the baseline.
 
@@ -1243,11 +1243,11 @@ For each of the 7 verification items in the preamble: capture the value, write i
 | `npm run test:e2e` | green | green | — |
 | Place resolution smoke (34 gazetteers) | green | green | — |
 
-- [ ] **Step 2: Decide on follow-up**
+- [x] **Step 2: Decide on follow-up**
 
 If post-plan idle RAM is within target (target: pre-plan minus ≥20 MB), declare success. Otherwise, write a one-line note in measurements.md saying "lazy + LRU + pre-warm follow-up indicated — see new plan: …" and create a stub plan file `docs/plans/lazy-gazetteer-loading.md` (do NOT implement in this plan).
 
-- [ ] **Step 3: Update CHANGELOG.md**
+- [x] **Step 3: Update CHANGELOG.md**
 
 Add an `## Unreleased` block summarizing the user-observable change. Examples:
 
@@ -1265,11 +1265,11 @@ Add an `## Unreleased` block summarizing the user-observable change. Examples:
   grow the WASM heap during very large GEDCOM imports.
 ```
 
-- [ ] **Step 4: Bump version**
+- [x] **Step 4: Bump version**
 
 Per project convention, "any feature → minor". Binary gazetteer format is a meaningful internal feature even though no UI changed. Bump in `package.json` (e.g. `0.231.0`). Run `npm install` to update lock file.
 
-- [ ] **Step 5: Run the project's full pre-commit gates**
+- [x] **Step 5: Run the project's full pre-commit gates**
 
 ```bash
 npm run lint
@@ -1278,17 +1278,17 @@ npm test
 
 Both green.
 
-- [ ] **Step 6: Self-review checklist**
+- [x] **Step 6: Self-review checklist**
 
-- [ ] All 7 verification items pass
-- [ ] All `[ ]` checkboxes in this plan are now `[x]`
-- [ ] `package.json` version bumped
-- [ ] `CHANGELOG.md` Unreleased entry written
-- [ ] Plan file moved to `docs/plans/archive/` via `git mv`
-- [ ] `docs/plans/archive/PLAN.md` updated with one-paragraph entry
-- [ ] No `[done]` entries left in `docs/PLAN.md` (this plan was probably never in `docs/PLAN.md` since it's a follow-up; if it was, remove)
+- [x] All 7 verification items pass
+- [x] All `[ ]` checkboxes in this plan are now `[x]`
+- [x] `package.json` version bumped
+- [x] `CHANGELOG.md` Unreleased entry written
+- [x] Plan file moved to `docs/plans/archive/` via `git mv`
+- [x] `docs/plans/archive/PLAN.md` updated with one-paragraph entry
+- [x] No `[done]` entries left in `docs/PLAN.md` (this plan was probably never in `docs/PLAN.md` since it's a follow-up; if it was, remove)
 
-- [ ] **Step 7: Commit + archive**
+- [x] **Step 7: Commit + archive**
 
 ```bash
 git mv docs/plans/bundle-and-memory-reduction.md docs/plans/archive/
