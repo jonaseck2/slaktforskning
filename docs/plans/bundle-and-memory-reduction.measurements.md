@@ -197,6 +197,32 @@ removed before commit.
 
 ---
 
+## After Tasks 8-12 (statement cache audit)
+
+Five files were audited for `db.prepare()` calls without a guaranteed
+finalize. Two leak fixes shipped; the other three were already clean.
+
+| File | `db.prepare()` count | Leaks fixed | Notes |
+|---|---:|---:|---|
+| `src/api/media_consolidate.ts` | 4 | 3 | `BEGIN IMMEDIATE`, `COMMIT`, `ROLLBACK` were `db.prepare(...).run([])` without finalize. The `UPDATE media SET file_ref` cache statement was already finalized correctly. Switched the three transaction calls to `runSql()` from `./db`. |
+| `src/api/db_settings.ts` | 3 | 0 | All three (get/set/delete) already use try/finally + finalize. |
+| `src/api/media.ts` | 1 | 0 | The single explicit `db.prepare` (`reorderMediaLinks` cache) finalizes after its loop; everything else uses `queryOne`/`queryAll`/`runSql`/`runSqlChanges` helpers. |
+| `src/import/gedcom/import-core.ts` | 5 | 0 | `withStatementCache` finalizes on import end; local `runSql`/`queryOne`/`queryAll` use try/finally; SUBM-matching loop uses try/finally. |
+| `src/import/genney/transform.ts` | 17 | 17 | The `stmts` map of pre-compiled INSERTs was reused across ~31k row inserts but never finalized — every Genney import leaked all 17 to the WASM heap. Wrapped the body in try/finally + finalize loop over `Object.values(stmts)`. |
+
+### Out-of-scope notes
+
+- `transformGenney` writes thousands of rows but lacks a `BEGIN IMMEDIATE` /
+  `COMMIT` wrapper around the bulk inserts. Per `.claude/rules/api.md`'s
+  bulk-write rule, this is a related concern (one autocommit per row → one
+  WAL fsync per row). Out of scope for this audit; flagged for follow-up.
+- `tests/unit/media_consolidate.test.ts` "same-basename sources collapse to
+  one file (first wins)" is a pre-existing flake (~10–30% rate on baseline
+  HEAD; race between two parallel `fsp.copyFile(..., COPYFILE_EXCL)` calls
+  in the worker pool). Not caused by, nor fixed by, this audit.
+
+---
+
 ## After Task 13 (WASM heap smoke)
 
 (populated by Task 13 subagent — pre/post import heap deltas)
