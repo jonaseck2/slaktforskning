@@ -177,18 +177,46 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 - `mcp__slaktforskning__search_persons`
 - etc.
 
-### When changing the MCP server source: full process restart required
+### When does my edit need a restart? — the reload matrix
 
-The MCP server is a long-running child process spawned by Claude Code from `.mcp.json`. **Reconnecting the MCP from Claude Code does not always respawn the underlying `npx tsx` process** — sometimes only the transport reconnects. Symptoms:
+Several long-running processes share the codebase: the **Electron main process**, the **DB worker thread inside Electron**, the **renderer (Vue)**, the **preload script** (loads at window creation), and the **MCP server** (separate `npx tsx` process). Each caches different parts of the source. An edit that lands in one process is invisible to another until the right thing reloads.
+
+| You edited | Reload needed | Why |
+|---|---|---|
+| `src/renderer/**` (Vue, CSS, composables, stores) | Renderer reload — `ui_reload` MCP tool, or Cmd+R, or just save under HMR | Vite HMR updates the renderer; nothing else is involved. |
+| `src/preload/index.ts` | **Full Electron app restart.** Renderer reload alone won't pick it up. | Preload only loads at window creation. After a renderer reload, the renderer is new but the same preload bridge is reattached. |
+| `src/api/**` (any) | Restart Electron app **and** restart MCP server | The Electron worker thread loads api/* once at boot. The MCP server is a separate Node process that loads its own copy of the same files at boot. Both need to restart. |
+| `src/api/checks/**` | Same as above — restart Electron app + MCP server | These run inside the worker thread (called from `checks:runAll` IPC). The 2026-05-09 date-parser fix landed in source but stayed invisible until the worker restarted. |
+| `src/main/**` (db-worker, ipc, ui-server) | Restart Electron app | Main-process code is loaded once on boot. |
+| `src/main/db-worker.ts` | Restart Electron app | The worker is spawned at app start; no hot-reload. |
+| `src/shared/channels/**` | Restart Electron app **and** restart MCP server | Both processes import the channel registry at boot. |
+| `src/mcp/createProdServer.ts`, `src/mcp/createDevServer.ts`, `src/mcp/server.ts`, `src/mcp/devServer.ts` | Restart MCP server only | The MCP server is its own `npx tsx` process; restarting Electron doesn't touch it. |
+| `src/mcp/tools/**` | Restart MCP server only | Same. |
+| `.claude/skills/**`, `.claude/rules/**` | Nothing — picked up automatically at next prompt | Read by Claude Code on each turn. |
+
+**Restarting the MCP server** — use Claude Code's `/mcp` slash command and explicitly restart the slaktforskning server (or quit + reopen the Claude Code window). **Reconnecting from Claude Code does not always respawn the underlying `npx tsx` process** — sometimes only the transport reconnects. Symptoms of a transport-only reconnect:
 
 - A newly added tool isn't visible via `ToolSearch`.
 - `update_event` / `record_event` reject `date_value_end` ("Input validation error: Unrecognized key").
 - `mcp__slaktforskning__update_person_name` returns "No matching deferred tools found".
 
-To force a real restart, use Claude Code's `/mcp` slash command and explicitly restart the slaktforskning server (or quit + reopen the Claude Code window). After restart:
+After a real MCP restart:
 
 1. **The MCP server's "current database" resets to the default app data DB.** Always call `switch_database` again before continuing work.
 2. Verify the new tool appears via `ToolSearch` before calling it — if it's still missing, the restart didn't take.
+
+**Restarting the Electron app** — ask the user. Claude Code can't restart their app without their consent (it would close their unsaved work).
+
+### Verifying interactive UI fixes via MCP
+
+The MCP UI bridge can `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`, `ui_query_styles`, `ui_reload`. It **cannot synthesize a drag** — there's no `mousedown + mousemove + mouseup` sequence. Don't claim "verified live" for any feature whose acceptance test is a drag (resizable columns, panel resize, chart pan/zoom). Instead:
+
+1. Verify the structural state via `ui_query_styles` (handles present at the right rect, computed `cursor: col-resize`, `pointerEvents: auto`).
+2. Mutate the underlying state via the same path the drag would (set localStorage, write the persisted width directly).
+3. Reload and confirm the new state renders correctly.
+4. Tell the user "I verified the wiring; please drag once to confirm the interaction works in your hands."
+
+The 2026-05-09 resizable-columns rollout took two iterations because I claimed live-verification on iteration 1 without realising the structural state was correct but the runtime drag was being squashed by `width: 100%`.
 
 ## Adding a New MCP Tool
 

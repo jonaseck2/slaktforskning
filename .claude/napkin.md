@@ -18,6 +18,12 @@
 3. **[2026-05-04] Don't bundle unrelated fixes into one commit, even when they share a symptom**
    "Holger import broken" had two independent root causes — a ReferenceError and a path-mismatch. Bundling them blocks the small risk-free fix on validation of the bigger one, and pollutes the commit's blast-radius diagnosis. Ship the obvious-and-tested fix first; queue the speculative one separately. CHANGELOG entries for unverified fixes are also premature — write them after the user confirms.
 
+4. **[2026-05-09] User commits in parallel — `git status` before staging large batches**
+   Multi-hour sessions: the user often commits gazetteer/import work in parallel while you're working. Symptoms: a `fatal: Exiting because of an unresolved conflict` after `git add` you weren't expecting; `D` + `A` instead of `R` after a `git mv` you did at the start. The end state is usually fine — git's rename detection just degrades when the file content also changed materially. Always `git status` before a non-trivial commit, and `git diff --cached` to confirm the staged shape matches your intent. If a merge wiped a file you `Write`'d, recreate it from your context — the merge silently dropped staged-but-not-committed content.
+
+5. **[2026-05-09] MCP cannot simulate drag interactions — don't claim "verified live" on resize/pan/zoom**
+   The slaktforskning-dev MCP UI bridge supports `ui_screenshot`, `ui_click` (single click), `ui_fill`, `ui_get_dom`, `ui_query_styles`, `ui_reload`, `ui_navigate`. It can't synthesize a drag (`mousedown` + `mousemove` + `mouseup`). For features whose acceptance is a drag (resizable columns, panel resize, chart pan, zoom): verify the *structure* (handles present at right rect, computed `cursor: col-resize`, `pointerEvents: auto`), mutate the persisted state directly (set localStorage), reload, confirm the new state renders. Then ask the user to do one drag to confirm. The 2026-05-09 resizable-columns rollout took two iterations because I claimed live-verification on round 1 — the structural state was correct but the runtime drag was being squashed by `width: 100%`.
+
 ## Performance & Symptoms
 
 1. **[2026-04-30] Empty UI right after import = worker thread blocked by checks, not missing data**
