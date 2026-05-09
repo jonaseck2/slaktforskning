@@ -152,10 +152,14 @@
         </div>
       </div>
 
-      <!-- Forskning section -->
+      <!-- Forskning section. v-show (not v-if) keeps the section component
+           mounted while collapsed so its `defineExpose({ count })` is live —
+           otherwise the (N) count badge falls back to 0 whenever the section
+           is closed, contradicting the DB and confusing the user. The child
+           uses useEntityData with caching so the per-mount fetch is cheap. -->
       <div class="panel-section">
         <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
-        <div v-if="sections.research" class="panel-section-body">
+        <div v-show="sections.research" class="panel-section-body">
           <PersonResearchTasksSection
             ref="researchSectionRef"
             :person-id="personId!"
@@ -165,10 +169,10 @@
         </div>
       </div>
 
-      <!-- Quality section -->
+      <!-- Quality section. Same v-show rationale as Forskning above. -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
-        <div v-if="sections.quality" class="panel-section-body">
+        <div v-show="sections.quality" class="panel-section-body">
           <PersonChecksSection ref="checksSectionRef" :person-id="personId!" @fix="handleCheckFix" />
         </div>
       </div>
