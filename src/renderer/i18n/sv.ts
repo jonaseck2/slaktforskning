@@ -120,6 +120,7 @@ export default {
     yes: 'Ja',
     no: 'Nej',
     notNow: 'Inte nu',
+    gotIt: 'Förstått',
     notes: 'Anteckningar',
     type: 'Typ',
     name: 'Namn',

@@ -120,6 +120,7 @@ export default {
     yes: 'Yes',
     no: 'No',
     notNow: 'Not now',
+    gotIt: 'Got it',
     notes: 'Notes',
     type: 'Type',
     name: 'Name',
