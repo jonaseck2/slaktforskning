@@ -1,0 +1,1074 @@
+{
+  "id": "mt-localities",
+  "name": "Malta Localities",
+  "locale": "mt",
+  "description": "Malta: 68 local councils (admin1, no admin2 layer in GeoNames) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/MT.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Malta",
+            "type": "country",
+            "aliases": [
+              "Repubblika ta' Malta"
+            ],
+            "lat": 35.9,
+            "lon": 14.4,
+            "children": [
+              {
+                "name": "Attard",
+                "type": "admin1",
+                "aliases": [
+                  "Attard",
+                  "H'Attard",
+                  "Ħ’Attard"
+                ],
+                "lat": 35.88967,
+                "lon": 14.4425,
+                "children": [
+                  {
+                    "name": "Attard",
+                    "type": "admin2",
+                    "lat": 35.88967,
+                    "lon": 14.4425
+                  }
+                ]
+              },
+              {
+                "name": "Balzan",
+                "type": "admin1",
+                "aliases": [
+                  "Bal'can",
+                  "Balzan",
+                  "Balzanas",
+                  "Hal Balzan"
+                ],
+                "lat": 35.89927,
+                "lon": 14.45541,
+                "children": []
+              },
+              {
+                "name": "Birkirkara",
+                "type": "admin1",
+                "aliases": [
+                  "Birkirkara"
+                ],
+                "lat": 35.89706,
+                "lon": 14.46115,
+                "children": [
+                  {
+                    "name": "Birkirkara",
+                    "type": "admin2",
+                    "lat": 35.89706,
+                    "lon": 14.46115
+                  }
+                ]
+              },
+              {
+                "name": "Birżebbuġa",
+                "type": "admin1",
+                "aliases": [
+                  "Birzebbuga",
+                  "Birżebbuġa"
+                ],
+                "lat": 35.82546,
+                "lon": 14.52685,
+                "children": [
+                  {
+                    "name": "Birżebbuġa",
+                    "type": "admin2",
+                    "lat": 35.82546,
+                    "lon": 14.52685
+                  }
+                ]
+              },
+              {
+                "name": "Bormla",
+                "type": "admin1",
+                "aliases": [
+                  "Bormla"
+                ],
+                "lat": 35.88556,
+                "lon": 14.5275,
+                "children": [
+                  {
+                    "name": "Cospicua",
+                    "type": "admin2",
+                    "lat": 35.88556,
+                    "lon": 14.5275
+                  }
+                ]
+              },
+              {
+                "name": "Dingli",
+                "type": "admin1",
+                "aliases": [
+                  "Dingli",
+                  "Had-Dingli",
+                  "Ħad-Dingli"
+                ],
+                "lat": 35.85972,
+                "lon": 14.38333,
+                "children": []
+              },
+              {
+                "name": "Għajnsielem",
+                "type": "admin1",
+                "aliases": [
+                  "Ajnsilem",
+                  "Aynsilem",
+                  "Gajnsijelem",
+                  "Gajnsilem"
+                ],
+                "lat": 36.02667,
+                "lon": 14.28611,
+                "children": []
+              },
+              {
+                "name": "Ħal Għargħur",
+                "type": "admin1",
+                "aliases": [
+                  "Gharghur",
+                  "Għargħur",
+                  "Hal Gharghur",
+                  "Ħal Għargħur"
+                ],
+                "lat": 35.92361,
+                "lon": 14.455,
+                "children": []
+              },
+              {
+                "name": "Ħal Għaxaq",
+                "type": "admin1",
+                "aliases": [
+                  "Ghaxaq",
+                  "Għaxaq",
+                  "Hal Ghaxaq",
+                  "Ħal Għaxaq"
+                ],
+                "lat": 35.84583,
+                "lon": 14.51667,
+                "children": []
+              },
+              {
+                "name": "Ħaż-Żabbar",
+                "type": "admin1",
+                "aliases": [
+                  "Haz-Zabbar",
+                  "Zabbar",
+                  "Ħaż-Żabbar",
+                  "Żabbar"
+                ],
+                "lat": 35.87687,
+                "lon": 14.53592,
+                "children": [
+                  {
+                    "name": "Żabbar",
+                    "type": "admin2",
+                    "lat": 35.87687,
+                    "lon": 14.53592
+                  }
+                ]
+              },
+              {
+                "name": "Ħaż-Żebbuġ",
+                "type": "admin1",
+                "aliases": [
+                  "Haz-Zebbug",
+                  "Zebbug",
+                  "Ħaż-Żebbuġ",
+                  "Żebbuġ"
+                ],
+                "lat": 35.87194,
+                "lon": 14.44111,
+                "children": [
+                  {
+                    "name": "Haz-Zebbug",
+                    "type": "admin2",
+                    "lat": 35.87194,
+                    "lon": 14.44111
+                  }
+                ]
+              },
+              {
+                "name": "Il-Birgu",
+                "type": "admin1",
+                "aliases": [
+                  "Birgu",
+                  "Il-Birgu"
+                ],
+                "lat": 35.88594,
+                "lon": 14.52707,
+                "children": []
+              },
+              {
+                "name": "Il-Fgura",
+                "type": "admin1",
+                "aliases": [
+                  "Fgura",
+                  "Il-Fgura"
+                ],
+                "lat": 35.87028,
+                "lon": 14.51333,
+                "children": [
+                  {
+                    "name": "Fgura",
+                    "type": "admin2",
+                    "lat": 35.87028,
+                    "lon": 14.51333
+                  }
+                ]
+              },
+              {
+                "name": "Il-Fontana",
+                "type": "admin1",
+                "aliases": [
+                  "Fontana",
+                  "Il-Fontana",
+                  "It-Triq tal-Ghajn",
+                  "It-Triq tal-Għajn"
+                ],
+                "lat": 36.0375,
+                "lon": 14.23611,
+                "children": []
+              },
+              {
+                "name": "Il-Furjana",
+                "type": "admin1",
+                "aliases": [
+                  "Floriana",
+                  "Il-Furjana",
+                  "flwryana",
+                  "furoriana"
+                ],
+                "lat": 35.89167,
+                "lon": 14.50417,
+                "children": []
+              },
+              {
+                "name": "Il-Gudja",
+                "type": "admin1",
+                "aliases": [
+                  "Gudja",
+                  "Il-Gudja"
+                ],
+                "lat": 35.85139,
+                "lon": 14.50333,
+                "children": []
+              },
+              {
+                "name": "Il-Gżira",
+                "type": "admin1",
+                "aliases": [
+                  "Gzira",
+                  "Gżira",
+                  "Il-Gzira",
+                  "Il-Gżira"
+                ],
+                "lat": 35.90583,
+                "lon": 14.48806,
+                "children": [
+                  {
+                    "name": "Gżira",
+                    "type": "admin2",
+                    "lat": 35.90583,
+                    "lon": 14.48806
+                  }
+                ]
+              },
+              {
+                "name": "Il-Ħamrun",
+                "type": "admin1",
+                "aliases": [
+                  "Hamrun",
+                  "Il-Hamrun",
+                  "Il-Ħamrun",
+                  "Ħamrun"
+                ],
+                "lat": 35.88452,
+                "lon": 14.48498,
+                "children": [
+                  {
+                    "name": "Ħamrun",
+                    "type": "admin2",
+                    "lat": 35.88452,
+                    "lon": 14.48498
+                  }
+                ]
+              },
+              {
+                "name": "Il-Kalkara",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Kalkara",
+                  "Kalkara"
+                ],
+                "lat": 35.89111,
+                "lon": 14.53278,
+                "children": []
+              },
+              {
+                "name": "Il-Marsa",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Marsa",
+                  "Marsa"
+                ],
+                "lat": 35.87925,
+                "lon": 14.49462,
+                "children": [
+                  {
+                    "name": "Marsa",
+                    "type": "admin2",
+                    "lat": 35.87925,
+                    "lon": 14.49462
+                  }
+                ]
+              },
+              {
+                "name": "Il-Mellieħa",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Mellieha",
+                  "Il-Mellieħa",
+                  "Mellieha",
+                  "Mellieħa"
+                ],
+                "lat": 35.95663,
+                "lon": 14.36259,
+                "children": [
+                  {
+                    "name": "Mellieħa",
+                    "type": "admin2",
+                    "lat": 35.95663,
+                    "lon": 14.36259
+                  }
+                ]
+              },
+              {
+                "name": "Il-Mosta",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Mosta",
+                  "Mosta"
+                ],
+                "lat": 35.90942,
+                "lon": 14.42566,
+                "children": [
+                  {
+                    "name": "Mosta",
+                    "type": "admin2",
+                    "lat": 35.90942,
+                    "lon": 14.42566
+                  }
+                ]
+              },
+              {
+                "name": "Il-Munxar",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Munxar",
+                  "Munxar"
+                ],
+                "lat": 36.02917,
+                "lon": 14.22556,
+                "children": []
+              },
+              {
+                "name": "Il-Qala",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Qala",
+                  "Qala"
+                ],
+                "lat": 36.0375,
+                "lon": 14.31667,
+                "children": []
+              },
+              {
+                "name": "Il-Qrendi",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Qrendi",
+                  "Qrendi"
+                ],
+                "lat": 35.83194,
+                "lon": 14.45139,
+                "children": []
+              },
+              {
+                "name": "In-Nadur",
+                "type": "admin1",
+                "aliases": [
+                  "In-Nadur",
+                  "Nadur"
+                ],
+                "lat": 36.04861,
+                "lon": 14.29444,
+                "children": []
+              },
+              {
+                "name": "In-Naxxar",
+                "type": "admin1",
+                "aliases": [
+                  "In-Naxxar",
+                  "Naxxar"
+                ],
+                "lat": 35.91368,
+                "lon": 14.44382,
+                "children": [
+                  {
+                    "name": "Naxxar",
+                    "type": "admin2",
+                    "lat": 35.91368,
+                    "lon": 14.44382
+                  }
+                ]
+              },
+              {
+                "name": "Ir-Rabat",
+                "type": "admin1",
+                "aliases": [
+                  "Ir-Rabat",
+                  "Rabat"
+                ],
+                "lat": 35.88152,
+                "lon": 14.39872,
+                "children": [
+                  {
+                    "name": "Rabat",
+                    "type": "admin2",
+                    "lat": 35.88152,
+                    "lon": 14.39872
+                  }
+                ]
+              },
+              {
+                "name": "Is-Siġġiewi",
+                "type": "admin1",
+                "aliases": [
+                  "Is-Siggiewi",
+                  "Is-Siġġiewi",
+                  "Siggiewi",
+                  "Siġġiewi"
+                ],
+                "lat": 35.85547,
+                "lon": 14.43611,
+                "children": [
+                  {
+                    "name": "Siġġiewi",
+                    "type": "admin2",
+                    "lat": 35.85547,
+                    "lon": 14.43611
+                  }
+                ]
+              },
+              {
+                "name": "Is-Swieqi",
+                "type": "admin1",
+                "aliases": [
+                  "Is-Swieqi",
+                  "Swieqi"
+                ],
+                "lat": 35.92154,
+                "lon": 14.47998,
+                "children": [
+                  {
+                    "name": "Swieqi",
+                    "type": "admin2",
+                    "lat": 35.92154,
+                    "lon": 14.47998
+                  }
+                ]
+              },
+              {
+                "name": "Ix-Xagħra",
+                "type": "admin1",
+                "aliases": [
+                  "Ix-Xaghra",
+                  "Ix-Xagħra",
+                  "Xaghra",
+                  "Xagħra"
+                ],
+                "lat": 36.05417,
+                "lon": 14.26667,
+                "children": []
+              },
+              {
+                "name": "Ix-Xewkija",
+                "type": "admin1",
+                "aliases": [
+                  "Ix-Xewkija",
+                  "Xewkija"
+                ],
+                "lat": 36.03333,
+                "lon": 14.26111,
+                "children": []
+              },
+              {
+                "name": "Ix-Xgħajra",
+                "type": "admin1",
+                "aliases": [
+                  "Ix-Xghajra",
+                  "Ix-Xgħajra",
+                  "Xghajra",
+                  "Xgħajra"
+                ],
+                "lat": 35.88683,
+                "lon": 14.54639,
+                "children": []
+              },
+              {
+                "name": "Iż-Żebbuġ",
+                "type": "admin1",
+                "aliases": [
+                  "Iz-Zebbug",
+                  "Iż-Żebbuġ",
+                  "Zebbug",
+                  "Żebbuġ"
+                ],
+                "lat": 36.06667,
+                "lon": 14.24444,
+                "children": []
+              },
+              {
+                "name": "Iż-Żejtun",
+                "type": "admin1",
+                "aliases": [
+                  "Iz-Zejtun",
+                  "Iż-Żejtun",
+                  "Zejtun",
+                  "Żejtun"
+                ],
+                "lat": 35.85547,
+                "lon": 14.53341,
+                "children": [
+                  {
+                    "name": "Żejtun",
+                    "type": "admin2",
+                    "lat": 35.85547,
+                    "lon": 14.53341
+                  }
+                ]
+              },
+              {
+                "name": "Iż-Żurrieq",
+                "type": "admin1",
+                "aliases": [
+                  "Iz-Zurrieq",
+                  "Iż-Żurrieq",
+                  "Zurrieq",
+                  "Żurrieq"
+                ],
+                "lat": 35.8296,
+                "lon": 14.47588,
+                "children": [
+                  {
+                    "name": "Żurrieq",
+                    "type": "admin2",
+                    "lat": 35.8296,
+                    "lon": 14.47588
+                  }
+                ]
+              },
+              {
+                "name": "Kirkop",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Kirkop",
+                  "Kirkop",
+                  "Ħal Kirkop"
+                ],
+                "lat": 35.84417,
+                "lon": 14.48417,
+                "children": []
+              },
+              {
+                "name": "L-Għarb",
+                "type": "admin1",
+                "aliases": [
+                  "Gharb",
+                  "Għarb",
+                  "L-Gharb",
+                  "L-Għarb"
+                ],
+                "lat": 36.06806,
+                "lon": 14.20139,
+                "children": []
+              },
+              {
+                "name": "L-Għasri",
+                "type": "admin1",
+                "aliases": [
+                  "Ghasri",
+                  "Għasri",
+                  "L-Ghasri",
+                  "L-Għasri"
+                ],
+                "lat": 36.06528,
+                "lon": 14.22167,
+                "children": []
+              },
+              {
+                "name": "L-Iklin",
+                "type": "admin1",
+                "aliases": [
+                  "Iklin",
+                  "L-Iklin"
+                ],
+                "lat": 35.90972,
+                "lon": 14.45556,
+                "children": []
+              },
+              {
+                "name": "L-Imdina",
+                "type": "admin1",
+                "aliases": [
+                  "Imdina",
+                  "L-Imdina"
+                ],
+                "lat": 35.88722,
+                "lon": 14.40528,
+                "children": []
+              },
+              {
+                "name": "L-Imġarr",
+                "type": "admin1",
+                "aliases": [
+                  "Imgarr",
+                  "Imġarr",
+                  "L-Imgarr",
+                  "L-Imġarr"
+                ],
+                "lat": 35.91944,
+                "lon": 14.36389,
+                "children": []
+              },
+              {
+                "name": "L-Imqabba",
+                "type": "admin1",
+                "aliases": [
+                  "Imqabba",
+                  "L-Imqabba"
+                ],
+                "lat": 35.845,
+                "lon": 14.4675,
+                "children": []
+              },
+              {
+                "name": "L-Imsida",
+                "type": "admin1",
+                "aliases": [
+                  "Imsida",
+                  "L-Imsida"
+                ],
+                "lat": 35.8925,
+                "lon": 14.48278,
+                "children": [
+                  {
+                    "name": "Imsida",
+                    "type": "admin2",
+                    "lat": 35.8925,
+                    "lon": 14.48278
+                  }
+                ]
+              },
+              {
+                "name": "L-Imtarfa",
+                "type": "admin1",
+                "aliases": [
+                  "Imtarfa",
+                  "L-Imtarfa",
+                  "Mtarfa",
+                  "ematarapha"
+                ],
+                "lat": 35.89056,
+                "lon": 14.39722,
+                "children": []
+              },
+              {
+                "name": "L-Isla",
+                "type": "admin1",
+                "aliases": [
+                  "Isla",
+                  "L-Isla",
+                  "Senglea",
+                  "Senglej"
+                ],
+                "lat": 35.8901,
+                "lon": 14.5196,
+                "children": []
+              },
+              {
+                "name": "Lija",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Lija",
+                  "Lija",
+                  "Ħal Lija"
+                ],
+                "lat": 35.90139,
+                "lon": 14.44222,
+                "children": []
+              },
+              {
+                "name": "Luqa",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Luqa",
+                  "Luqa",
+                  "Ħal Luqa"
+                ],
+                "lat": 35.85985,
+                "lon": 14.48895,
+                "children": [
+                  {
+                    "name": "Luqa",
+                    "type": "admin2",
+                    "lat": 35.85985,
+                    "lon": 14.48895
+                  }
+                ]
+              },
+              {
+                "name": "Marsaskala",
+                "type": "admin1",
+                "aliases": [
+                  "Marsaskala"
+                ],
+                "lat": 35.8622,
+                "lon": 14.56701,
+                "children": [
+                  {
+                    "name": "Marsaskala",
+                    "type": "admin2",
+                    "lat": 35.8622,
+                    "lon": 14.56701
+                  }
+                ]
+              },
+              {
+                "name": "Marsaxlokk",
+                "type": "admin1",
+                "aliases": [
+                  "Marsaxlokk"
+                ],
+                "lat": 35.84167,
+                "lon": 14.55139,
+                "children": []
+              },
+              {
+                "name": "Paola",
+                "type": "admin1",
+                "aliases": [
+                  "Paola"
+                ],
+                "lat": 35.87297,
+                "lon": 14.49897,
+                "children": [
+                  {
+                    "name": "Paola",
+                    "type": "admin2",
+                    "lat": 35.87297,
+                    "lon": 14.49897
+                  }
+                ]
+              },
+              {
+                "name": "Pembroke",
+                "type": "admin1",
+                "aliases": [
+                  "Pembroke"
+                ],
+                "lat": 35.93056,
+                "lon": 14.47639,
+                "children": []
+              },
+              {
+                "name": "Qormi",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Qormi",
+                  "Qormi",
+                  "Ħal Qormi"
+                ],
+                "lat": 35.87601,
+                "lon": 14.472,
+                "children": [
+                  {
+                    "name": "Qormi",
+                    "type": "admin2",
+                    "lat": 35.87601,
+                    "lon": 14.472
+                  }
+                ]
+              },
+              {
+                "name": "Safi",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Safi",
+                  "Safi",
+                  "Ħal Safi"
+                ],
+                "lat": 35.83472,
+                "lon": 14.49167,
+                "children": []
+              },
+              {
+                "name": "Saint John",
+                "type": "admin1",
+                "aliases": [
+                  "Saint John",
+                  "San Gwann",
+                  "San Ġwann",
+                  "Sent-Dzhon"
+                ],
+                "lat": 35.90556,
+                "lon": 14.47611,
+                "children": [
+                  {
+                    "name": "San Ġwann",
+                    "type": "admin2",
+                    "lat": 35.90556,
+                    "lon": 14.47611
+                  }
+                ]
+              },
+              {
+                "name": "Saint Julian's",
+                "type": "admin1",
+                "aliases": [
+                  "Saint Julian",
+                  "San Giljan",
+                  "San Ġiljan",
+                  "Sent-Dzhulian"
+                ],
+                "lat": 35.91839,
+                "lon": 14.48977,
+                "children": [
+                  {
+                    "name": "San Ġiljan",
+                    "type": "admin2",
+                    "lat": 35.91839,
+                    "lon": 14.48977
+                  }
+                ]
+              },
+              {
+                "name": "Saint Lawrence",
+                "type": "admin1",
+                "aliases": [
+                  "Saint Lawrence",
+                  "San Lawrenz",
+                  "Sent-Lorens",
+                  "Sint Lorans"
+                ],
+                "lat": 36.04861,
+                "lon": 14.19778,
+                "children": []
+              },
+              {
+                "name": "Saint Lucia",
+                "type": "admin1",
+                "aliases": [
+                  "Saint Lucia",
+                  "Santa Lucija",
+                  "Santa Luċija",
+                  "Sent-Ljusija"
+                ],
+                "lat": 35.86167,
+                "lon": 14.50639,
+                "children": []
+              },
+              {
+                "name": "Saint Paul’s Bay",
+                "type": "admin1",
+                "aliases": [
+                  "Saint Paul's Bay",
+                  "Saint Paul’s Bay",
+                  "San Pawl il-Bahar",
+                  "San Pawl il-Baħar"
+                ],
+                "lat": 35.95064,
+                "lon": 14.41561,
+                "children": [
+                  {
+                    "name": "San Pawl il-Baħar",
+                    "type": "admin2",
+                    "lat": 35.95064,
+                    "lon": 14.41561
+                  }
+                ]
+              },
+              {
+                "name": "Saint Venera",
+                "type": "admin1",
+                "aliases": [
+                  "Saint Venera",
+                  "Santa Venera",
+                  "Sent-Venera",
+                  "Sint Venera"
+                ],
+                "lat": 35.88998,
+                "lon": 14.47291,
+                "children": [
+                  {
+                    "name": "Santa Venera",
+                    "type": "admin2",
+                    "lat": 35.88998,
+                    "lon": 14.47291
+                  }
+                ]
+              },
+              {
+                "name": "Sannat",
+                "type": "admin1",
+                "aliases": [
+                  "Sannat",
+                  "Ta' Sannat",
+                  "Ta’ Sannat"
+                ],
+                "lat": 36.02306,
+                "lon": 14.25139,
+                "children": []
+              },
+              {
+                "name": "Ta’ Kerċem",
+                "type": "admin1",
+                "aliases": [
+                  "Kercem",
+                  "Kerċem",
+                  "Ta' Kercem",
+                  "Ta’ Kerċem"
+                ],
+                "lat": 36.04389,
+                "lon": 14.21611,
+                "children": []
+              },
+              {
+                "name": "Ta’ Xbiex",
+                "type": "admin1",
+                "aliases": [
+                  "Ta' Xbiex",
+                  "Ta’ Xbiex"
+                ],
+                "lat": 35.8656,
+                "lon": 14.51506,
+                "children": [
+                  {
+                    "name": "Tarxien",
+                    "type": "admin2",
+                    "lat": 35.8656,
+                    "lon": 14.51506
+                  }
+                ]
+              },
+              {
+                "name": "Tal-Pietà",
+                "type": "admin1",
+                "aliases": [
+                  "Pieta",
+                  "Pietà",
+                  "Tal-Pieta",
+                  "Tal-Pietà"
+                ],
+                "lat": 35.8925,
+                "lon": 14.49389,
+                "children": []
+              },
+              {
+                "name": "Tarxien",
+                "type": "admin1",
+                "aliases": [
+                  "Hal Tarxien",
+                  "Tarxien",
+                  "Ħal Tarxien"
+                ],
+                "lat": 35.86667,
+                "lon": 14.51306,
+                "children": []
+              },
+              {
+                "name": "Tas-Sliema",
+                "type": "admin1",
+                "aliases": [
+                  "Sliema",
+                  "Tas-Sliema"
+                ],
+                "lat": 35.91247,
+                "lon": 14.50175,
+                "children": [
+                  {
+                    "name": "Sliema",
+                    "type": "admin2",
+                    "lat": 35.91247,
+                    "lon": 14.50175
+                  }
+                ]
+              },
+              {
+                "name": "Valletta",
+                "type": "admin1",
+                "aliases": [
+                  "Il-Belt Valletta",
+                  "Valletta",
+                  "bhyaleta",
+                  "vaileta"
+                ],
+                "lat": 35.89968,
+                "lon": 14.5148,
+                "children": [
+                  {
+                    "name": "Valletta",
+                    "type": "admin2",
+                    "lat": 35.89968,
+                    "lon": 14.5148
+                  }
+                ]
+              },
+              {
+                "name": "Victoria",
+                "type": "admin1",
+                "aliases": [
+                  "Citta Victoria",
+                  "Città Victoria",
+                  "Ir-Rabat",
+                  "Ir-Rabat Ghawdex"
+                ],
+                "lat": 36.04473,
+                "lon": 14.24118,
+                "children": [
+                  {
+                    "name": "Victoria",
+                    "type": "admin2",
+                    "lat": 36.04473,
+                    "lon": 14.24118
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -7,8 +7,8 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 40 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(40);
+  it('loads all 50 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(50);
   });
 
   const dataIds = [
@@ -23,6 +23,8 @@ describe('bundled gazetteers', () => {
     'fr-departements',
     'ee-counties', 'lv-novadi', 'lt-savivaldybes',
     'pl-powiaty',
+    'at-bezirke', 'ch-cantons', 'it-province', 'es-provincias', 'pt-distritos',
+    'mt-localities', 'sm-castelli', 'li-gemeinden', 'ad-parroquies', 'mc-quartiers',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',

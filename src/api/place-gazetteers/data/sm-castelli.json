@@ -1,0 +1,185 @@
+{
+  "id": "sm-castelli",
+  "name": "San Marino Castelli",
+  "locale": "sm",
+  "description": "San Marino: 9 castelli (admin1) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/SM.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "San Marino",
+            "type": "country",
+            "aliases": [
+              "Repubblica di San Marino"
+            ],
+            "lat": 43.9,
+            "lon": 12.5,
+            "children": [
+              {
+                "name": "Castello di Acquaviva",
+                "type": "admin1",
+                "aliases": [
+                  "Acquaviva",
+                  "Acquaviva i San Marino",
+                  "Akkuaviva",
+                  "Akouaviva"
+                ],
+                "lat": 43.95,
+                "lon": 12.41667,
+                "children": []
+              },
+              {
+                "name": "Castello di Borgo Maggiore",
+                "type": "admin1",
+                "aliases": [
+                  "Borgo Madzhore",
+                  "Borgo Madzore",
+                  "Borgo Madžore",
+                  "Borgo Madžorė"
+                ],
+                "lat": 43.94107,
+                "lon": 12.4518,
+                "children": [
+                  {
+                    "name": "Borgo Maggiore",
+                    "type": "admin2",
+                    "lat": 43.94193,
+                    "lon": 12.44738
+                  },
+                  {
+                    "name": "Valdragone",
+                    "type": "admin2",
+                    "lat": 43.94021,
+                    "lon": 12.45622
+                  }
+                ]
+              },
+              {
+                "name": "Castello di Domagnano",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Domagnano",
+                  "Domagnano",
+                  "Doman'jano",
+                  "domaganano"
+                ],
+                "lat": 43.95417,
+                "lon": 12.48333,
+                "children": []
+              },
+              {
+                "name": "Castello di Faetano",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Faetano",
+                  "Castiddu di Faetanu",
+                  "Faehtano",
+                  "Faetan"
+                ],
+                "lat": 43.9251,
+                "lon": 12.49849,
+                "children": []
+              },
+              {
+                "name": "Castello di Fiorentino",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Fiorentino",
+                  "Castiddu di Fiorentinu",
+                  "F'orentino",
+                  "Fiorentin"
+                ],
+                "lat": 43.91144,
+                "lon": 12.45652,
+                "children": []
+              },
+              {
+                "name": "Castello di Montegiardino",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Montegiardino",
+                  "Castiddu di Muntijardinu",
+                  "Mons Viridarium",
+                  "Montedzardinas"
+                ],
+                "lat": 43.91131,
+                "lon": 12.48442,
+                "children": []
+              },
+              {
+                "name": "Castello di San Marino Città",
+                "type": "admin1",
+                "aliases": [
+                  "Castell de San Marino",
+                  "Castello di San Marino",
+                  "Castello di San Marino Citta",
+                  "Castello di San Marino Città"
+                ],
+                "lat": 43.93333,
+                "lon": 12.45,
+                "children": []
+              },
+              {
+                "name": "Chiesanuova",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Chiesanuova",
+                  "Castiddu di Cresianova",
+                  "Castiddu di Crèsianova",
+                  "Chiesanuova"
+                ],
+                "lat": 43.91667,
+                "lon": 12.41667,
+                "children": []
+              },
+              {
+                "name": "Serravalle",
+                "type": "admin1",
+                "aliases": [
+                  "Castello di Serravalle",
+                  "Serravalle",
+                  "serarabhale",
+                  "seravale"
+                ],
+                "lat": 43.974655,
+                "lon": 12.48609,
+                "children": [
+                  {
+                    "name": "Dogana",
+                    "type": "admin2",
+                    "lat": 43.98034,
+                    "lon": 12.49051
+                  },
+                  {
+                    "name": "Serravalle",
+                    "type": "admin2",
+                    "lat": 43.96897,
+                    "lon": 12.48167
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "id": "ad-parroquies",
+  "name": "Andorra Parròquies",
+  "locale": "ad",
+  "description": "Andorra: 7 parròquies (admin1) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/AD.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Andorra",
+            "type": "country",
+            "aliases": [
+              "Principat d'Andorra"
+            ],
+            "lat": 42.5,
+            "lon": 1.5,
+            "children": [
+              {
+                "name": "Andorra la Vella",
+                "type": "admin1",
+                "aliases": [
+                  "Andorra la Vella",
+                  "Andorre-la-Vieille",
+                  "Parroquia d'Andorra la Vella",
+                  "Parròquia d'Andorra la Vella"
+                ],
+                "lat": 42.50779,
+                "lon": 1.52109,
+                "children": [
+                  {
+                    "name": "Andorra la Vella",
+                    "type": "admin2",
+                    "lat": 42.50779,
+                    "lon": 1.52109
+                  }
+                ]
+              },
+              {
+                "name": "Canillo",
+                "type": "admin1",
+                "aliases": [
+                  "Canillo",
+                  "Canillo koezoesseg",
+                  "Canillo közösség",
+                  "Canillo vald"
+                ],
+                "lat": 42.58333,
+                "lon": 1.65833,
+                "children": []
+              },
+              {
+                "name": "Encamp",
+                "type": "admin1",
+                "aliases": [
+                  "Ankam",
+                  "Ehnkamp",
+                  "En'kam",
+                  "Encamp"
+                ],
+                "lat": 42.53474,
+                "lon": 1.58014,
+                "children": [
+                  {
+                    "name": "Encamp",
+                    "type": "admin2",
+                    "lat": 42.53474,
+                    "lon": 1.58014
+                  }
+                ]
+              },
+              {
+                "name": "Escaldes-Engordany",
+                "type": "admin1",
+                "aliases": [
+                  "Askaldes-Angurdan",
+                  "Ehskal'des-Ehngordan'",
+                  "Escaldes-Engordany",
+                  "Escaldes-Engordany koezoesseg"
+                ],
+                "lat": 42.50729,
+                "lon": 1.53414,
+                "children": [
+                  {
+                    "name": "les Escaldes",
+                    "type": "admin2",
+                    "lat": 42.50729,
+                    "lon": 1.53414
+                  }
+                ]
+              },
+              {
+                "name": "La Massana",
+                "type": "admin1",
+                "aliases": [
+                  "La Masana",
+                  "La Massana",
+                  "La Massana koezoesseg",
+                  "La Massana közösség"
+                ],
+                "lat": 42.54499,
+                "lon": 1.51483,
+                "children": [
+                  {
+                    "name": "la Massana",
+                    "type": "admin2",
+                    "lat": 42.54499,
+                    "lon": 1.51483
+                  }
+                ]
+              },
+              {
+                "name": "Ordino",
+                "type": "admin1",
+                "aliases": [
+                  "Ordinas",
+                  "Ordino",
+                  "Ordino koezoesseg",
+                  "Ordino közösség"
+                ],
+                "lat": 42.59758,
+                "lon": 1.52573,
+                "children": []
+              },
+              {
+                "name": "Sant Julià de Lòria",
+                "type": "admin1",
+                "aliases": [
+                  "Parochia de Sant Julia de Loria",
+                  "Parochia de Sant Julià de Lòria",
+                  "Parroquia de Sant Julia de Loria",
+                  "Parròquia de Sant Julià de Lòria"
+                ],
+                "lat": 42.46372,
+                "lon": 1.49129,
+                "children": [
+                  {
+                    "name": "Sant Julià de Lòria",
+                    "type": "admin2",
+                    "lat": 42.46372,
+                    "lon": 1.49129
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

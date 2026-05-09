@@ -1,0 +1,4354 @@
+{
+  "id": "ch-cantons",
+  "name": "Switzerland Cantons + Bezirke",
+  "locale": "ch",
+  "description": "Switzerland: 26 Kantone (admin1) + 149 Bezirke (admin2) + populated places ≥5000 pop. Trilingual DE/FR/IT names where present in GeoNames altNames.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/CH.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Switzerland",
+            "type": "country",
+            "aliases": [
+              "Schweiz",
+              "Suisse",
+              "Svizzera",
+              "Svizra"
+            ],
+            "lat": 46.8,
+            "lon": 8.2,
+            "children": [
+              {
+                "name": "Canton de Berne",
+                "type": "admin1",
+                "aliases": [
+                  "BE",
+                  "Baern",
+                  "Bern",
+                  "Bern Chiu"
+                ],
+                "lat": 46.910794,
+                "lon": 7.523708,
+                "children": [
+                  {
+                    "name": "Bern-Mittelland District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bern-Mittelland",
+                      "Verwaltungskreis Bern-Mittelland"
+                    ],
+                    "lat": 46.92526,
+                    "lon": 7.49024,
+                    "children": [
+                      {
+                        "name": "Belp",
+                        "type": "admin3",
+                        "lat": 46.89129,
+                        "lon": 7.49825
+                      },
+                      {
+                        "name": "Bern",
+                        "type": "admin3",
+                        "lat": 46.94809,
+                        "lon": 7.44744
+                      },
+                      {
+                        "name": "Bolligen",
+                        "type": "admin3",
+                        "lat": 46.9751,
+                        "lon": 7.49697
+                      },
+                      {
+                        "name": "Ittigen",
+                        "type": "admin3",
+                        "lat": 46.97434,
+                        "lon": 7.48281
+                      },
+                      {
+                        "name": "Köniz",
+                        "type": "admin3",
+                        "lat": 46.92436,
+                        "lon": 7.41457
+                      },
+                      {
+                        "name": "Münchenbuchsee",
+                        "type": "admin3",
+                        "lat": 47.02175,
+                        "lon": 7.45036
+                      },
+                      {
+                        "name": "Münsingen",
+                        "type": "admin3",
+                        "lat": 46.87298,
+                        "lon": 7.561
+                      },
+                      {
+                        "name": "Muri",
+                        "type": "admin3",
+                        "lat": 46.93122,
+                        "lon": 7.48658
+                      },
+                      {
+                        "name": "Urtenen",
+                        "type": "admin3",
+                        "lat": 47.02667,
+                        "lon": 7.50081
+                      },
+                      {
+                        "name": "Wohlen",
+                        "type": "admin3",
+                        "lat": 46.97118,
+                        "lon": 7.35685
+                      },
+                      {
+                        "name": "Worb",
+                        "type": "admin3",
+                        "lat": 46.92984,
+                        "lon": 7.56306
+                      },
+                      {
+                        "name": "Zollikofen",
+                        "type": "admin3",
+                        "lat": 46.99905,
+                        "lon": 7.45809
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bernese Jura",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arrondissement administratif Jura bernois",
+                      "Berner Jura",
+                      "Bernese Jura"
+                    ],
+                    "lat": 47.21892,
+                    "lon": 7.21981,
+                    "children": [
+                      {
+                        "name": "Saint-Imier",
+                        "type": "admin3",
+                        "lat": 47.15284,
+                        "lon": 6.99692
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Biel/Bienne District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arrondissement administratif de Bienne",
+                      "Biel/Bienne",
+                      "Districte administratiu de Bienne"
+                    ],
+                    "lat": 47.12725,
+                    "lon": 7.26174,
+                    "children": [
+                      {
+                        "name": "Biel/Bienne",
+                        "type": "admin3",
+                        "lat": 47.13713,
+                        "lon": 7.24608
+                      },
+                      {
+                        "name": "Lengnau",
+                        "type": "admin3",
+                        "lat": 47.18155,
+                        "lon": 7.36814
+                      },
+                      {
+                        "name": "Nidau",
+                        "type": "admin3",
+                        "lat": 47.12545,
+                        "lon": 7.24033
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Emmental District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Emmental",
+                      "Verwaltungskreis Emmental"
+                    ],
+                    "lat": 47.04425,
+                    "lon": 7.66176,
+                    "children": [
+                      {
+                        "name": "Burgdorf",
+                        "type": "admin3",
+                        "lat": 47.05901,
+                        "lon": 7.62786
+                      },
+                      {
+                        "name": "Kirchberg",
+                        "type": "admin3",
+                        "lat": 47.08538,
+                        "lon": 7.58288
+                      },
+                      {
+                        "name": "Langnau",
+                        "type": "admin3",
+                        "lat": 46.93936,
+                        "lon": 7.78738
+                      },
+                      {
+                        "name": "Sumiswald",
+                        "type": "admin3",
+                        "lat": 47.02747,
+                        "lon": 7.74526
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Frutigen-Niedersimmental District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arrondissement administratif de Frutigen-Bas-Simmental",
+                      "Circondario amministrativo di Frutigen-Niedersimmental",
+                      "Districte administratiu de Frutigen-Niedersimmental"
+                    ],
+                    "lat": 46.60236,
+                    "lon": 7.62292,
+                    "children": [
+                      {
+                        "name": "Frutigen",
+                        "type": "admin3",
+                        "lat": 46.58723,
+                        "lon": 7.64945
+                      },
+                      {
+                        "name": "Spiez",
+                        "type": "admin3",
+                        "lat": 46.68473,
+                        "lon": 7.69111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Interlaken-Oberhasli District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Interlaken-Oberhasli",
+                      "Verwaltungskreis Interlaken-Oberhasli"
+                    ],
+                    "lat": 46.68931,
+                    "lon": 7.98869,
+                    "children": [
+                      {
+                        "name": "Interlaken",
+                        "type": "admin3",
+                        "lat": 46.68387,
+                        "lon": 7.86638
+                      },
+                      {
+                        "name": "Unterseen",
+                        "type": "admin3",
+                        "lat": 46.6853,
+                        "lon": 7.84722
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Oberaargau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Oberaargau",
+                      "Verwaltungskreis Oberaargau"
+                    ],
+                    "lat": 47.19202,
+                    "lon": 7.74553,
+                    "children": [
+                      {
+                        "name": "Herzogenbuchsee",
+                        "type": "admin3",
+                        "lat": 47.18795,
+                        "lon": 7.7062
+                      },
+                      {
+                        "name": "Langenthal",
+                        "type": "admin3",
+                        "lat": 47.21526,
+                        "lon": 7.79607
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obersimmental-Saanen District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obersimmental-Saanen",
+                      "Verwaltungskreis Obersimmental-Saanen"
+                    ],
+                    "lat": 46.47932,
+                    "lon": 7.35803,
+                    "children": [
+                      {
+                        "name": "Gstaad",
+                        "type": "admin3",
+                        "lat": 46.47215,
+                        "lon": 7.28685
+                      },
+                      {
+                        "name": "Saanen",
+                        "type": "admin3",
+                        "lat": 46.48945,
+                        "lon": 7.26003
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Seeland District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Seeland",
+                      "Verwaltungskreis Seeland"
+                    ],
+                    "lat": 47.06635,
+                    "lon": 7.26333,
+                    "children": [
+                      {
+                        "name": "Lyss",
+                        "type": "admin3",
+                        "lat": 47.0741,
+                        "lon": 7.30655
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Thun District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Thun",
+                      "District Thun",
+                      "District de Thoune"
+                    ],
+                    "lat": 46.7629,
+                    "lon": 7.62503,
+                    "children": [
+                      {
+                        "name": "Heimberg",
+                        "type": "admin3",
+                        "lat": 46.79482,
+                        "lon": 7.60433
+                      },
+                      {
+                        "name": "Steffisburg",
+                        "type": "admin3",
+                        "lat": 46.77807,
+                        "lon": 7.63249
+                      },
+                      {
+                        "name": "Thun",
+                        "type": "admin3",
+                        "lat": 46.75118,
+                        "lon": 7.62166
+                      },
+                      {
+                        "name": "Uetendorf",
+                        "type": "admin3",
+                        "lat": 46.77392,
+                        "lon": 7.57251
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Canton de Fribourg",
+                "type": "admin1",
+                "aliases": [
+                  "CH022",
+                  "Canto de Friburg",
+                  "Canton Fribourg",
+                  "Canton Friburgo"
+                ],
+                "lat": 46.734711,
+                "lon": 7.048359,
+                "children": [
+                  {
+                    "name": "Broye District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Broje",
+                      "Brojo",
+                      "Broye"
+                    ],
+                    "lat": 46.82212,
+                    "lon": 6.90249,
+                    "children": [
+                      {
+                        "name": "Estavayer-le-Lac",
+                        "type": "admin3",
+                        "lat": 46.84876,
+                        "lon": 6.8465
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Glâne District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de la Glane",
+                      "District de la Glâne",
+                      "Glane"
+                    ],
+                    "lat": 46.66667,
+                    "lon": 6.91667,
+                    "children": [
+                      {
+                        "name": "Romont",
+                        "type": "admin3",
+                        "lat": 46.69652,
+                        "lon": 6.91898
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Gruyère District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de la Gruyere",
+                      "District de la Gruyère",
+                      "Gruyere"
+                    ],
+                    "lat": 46.60753,
+                    "lon": 7.10741,
+                    "children": [
+                      {
+                        "name": "Bulle",
+                        "type": "admin3",
+                        "lat": 46.61797,
+                        "lon": 7.0569
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sarine District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distreto de la Sarine",
+                      "Distreto de ła Sarine",
+                      "District de la Sarine"
+                    ],
+                    "lat": 46.78435,
+                    "lon": 7.09993,
+                    "children": [
+                      {
+                        "name": "Fribourg",
+                        "type": "admin3",
+                        "lat": 46.80237,
+                        "lon": 7.15128
+                      },
+                      {
+                        "name": "Marly",
+                        "type": "admin3",
+                        "lat": 46.77611,
+                        "lon": 7.16459
+                      },
+                      {
+                        "name": "Villars-sur-Glâne",
+                        "type": "admin3",
+                        "lat": 46.79054,
+                        "lon": 7.11717
+                      }
+                    ]
+                  },
+                  {
+                    "name": "See District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distreto de Lac",
+                      "District du Lac",
+                      "District du Lec"
+                    ],
+                    "lat": 46.91016,
+                    "lon": 7.14088,
+                    "children": [
+                      {
+                        "name": "Murten/Morat",
+                        "type": "admin3",
+                        "lat": 46.92827,
+                        "lon": 7.11715
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sense District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distreto de la Sense",
+                      "Distreto de ła Sense",
+                      "District de la Singena"
+                    ],
+                    "lat": 46.80132,
+                    "lon": 7.26028,
+                    "children": [
+                      {
+                        "name": "Düdingen",
+                        "type": "admin3",
+                        "lat": 46.84916,
+                        "lon": 7.1915
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Veveyse District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Vivisbach",
+                      "Distreto de la Veveyse",
+                      "Distreto de ła Veveyse"
+                    ],
+                    "lat": 46.55083,
+                    "lon": 6.91085,
+                    "children": [
+                      {
+                        "name": "Châtel-Saint-Denis",
+                        "type": "admin3",
+                        "lat": 46.52691,
+                        "lon": 6.90083
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Canton de Genève",
+                "type": "admin1",
+                "aliases": [
+                  "CH013",
+                  "Canton Ginevra",
+                  "Canton Xenevra",
+                  "Canton de Chinevra"
+                ],
+                "lat": 46.20804,
+                "lon": 6.12737,
+                "children": [
+                  {
+                    "name": "Geneva",
+                    "type": "admin2",
+                    "aliases": [
+                      "Geneve",
+                      "Genf",
+                      "Genève"
+                    ],
+                    "lat": 46.20804,
+                    "lon": 6.12737,
+                    "children": [
+                      {
+                        "name": "Bernex",
+                        "type": "admin3",
+                        "lat": 46.1765,
+                        "lon": 6.07544
+                      },
+                      {
+                        "name": "Carouge",
+                        "type": "admin3",
+                        "lat": 46.18096,
+                        "lon": 6.13921
+                      },
+                      {
+                        "name": "Chêne-Bougeries",
+                        "type": "admin3",
+                        "lat": 46.19843,
+                        "lon": 6.18642
+                      },
+                      {
+                        "name": "Chêne-Bourg",
+                        "type": "admin3",
+                        "lat": 46.19534,
+                        "lon": 6.19406
+                      },
+                      {
+                        "name": "Genève",
+                        "type": "admin3",
+                        "lat": 46.20222,
+                        "lon": 6.14569
+                      },
+                      {
+                        "name": "Lancy",
+                        "type": "admin3",
+                        "lat": 46.18981,
+                        "lon": 6.11441
+                      },
+                      {
+                        "name": "Le Grand-Saconnex",
+                        "type": "admin3",
+                        "lat": 46.23188,
+                        "lon": 6.12091
+                      },
+                      {
+                        "name": "Les Avanchets",
+                        "type": "admin3",
+                        "lat": 46.22168,
+                        "lon": 6.10814
+                      },
+                      {
+                        "name": "Meyrin",
+                        "type": "admin3",
+                        "lat": 46.23424,
+                        "lon": 6.08025
+                      },
+                      {
+                        "name": "Onex",
+                        "type": "admin3",
+                        "lat": 46.18396,
+                        "lon": 6.10237
+                      },
+                      {
+                        "name": "Plan-les-Ouates",
+                        "type": "admin3",
+                        "lat": 46.16789,
+                        "lon": 6.11664
+                      },
+                      {
+                        "name": "Thônex",
+                        "type": "admin3",
+                        "lat": 46.18815,
+                        "lon": 6.19904
+                      },
+                      {
+                        "name": "Vernier",
+                        "type": "admin3",
+                        "lat": 46.21702,
+                        "lon": 6.08497
+                      },
+                      {
+                        "name": "Versoix",
+                        "type": "admin3",
+                        "lat": 46.28382,
+                        "lon": 6.16214
+                      },
+                      {
+                        "name": "Veyrier",
+                        "type": "admin3",
+                        "lat": 46.16699,
+                        "lon": 6.18436
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Canton de Jura",
+                "type": "admin1",
+                "aliases": [
+                  "CH025",
+                  "Cantao do Jura",
+                  "Canto del Jura",
+                  "Canton Giura"
+                ],
+                "lat": 47.323728,
+                "lon": 7.204305,
+                "children": [
+                  {
+                    "name": "Delémont District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Delemont",
+                      "Delsberg",
+                      "Delémont"
+                    ],
+                    "lat": 47.35434,
+                    "lon": 7.33053,
+                    "children": [
+                      {
+                        "name": "Delémont",
+                        "type": "admin3",
+                        "lat": 47.36493,
+                        "lon": 7.34453
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Franches-Montagnes District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Freibaerge",
+                      "Bezirk Freibärge",
+                      "Distreto de le Franches-Montagnes"
+                    ],
+                    "lat": 47.24935,
+                    "lon": 7.04562,
+                    "children": []
+                  },
+                  {
+                    "name": "Moutier",
+                    "type": "admin2",
+                    "lat": 47.27647,
+                    "lon": 7.36469,
+                    "children": [
+                      {
+                        "name": "Moutier",
+                        "type": "admin3",
+                        "lat": 47.27818,
+                        "lon": 7.36951
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Porrentruy District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Porrentruy",
+                      "Brundusia",
+                      "Distreto de Porrentruy"
+                    ],
+                    "lat": 47.41475,
+                    "lon": 7.07638,
+                    "children": [
+                      {
+                        "name": "Porrentruy",
+                        "type": "admin3",
+                        "lat": 47.41728,
+                        "lon": 7.07573
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Canton de Neuchâtel",
+                "type": "admin1",
+                "aliases": [
+                  "Bang Neuchatel",
+                  "Bang Neuchâtel",
+                  "CH024",
+                  "Canton Neuchatel"
+                ],
+                "lat": 47.008073,
+                "lon": 6.805028,
+                "children": [
+                  {
+                    "name": "Boudry District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Boudry",
+                      "Bezirk Boudry",
+                      "Boudry"
+                    ],
+                    "lat": 46.94594,
+                    "lon": 6.82842,
+                    "children": []
+                  },
+                  {
+                    "name": "La Chaux-de-Fonds District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk La Chaux-de-Fonds",
+                      "Distreto de La Chaux-de-Fonds",
+                      "District de La Chals"
+                    ],
+                    "lat": 47.12159,
+                    "lon": 6.84064,
+                    "children": [
+                      {
+                        "name": "La Chaux-de-Fonds",
+                        "type": "admin3",
+                        "lat": 47.09993,
+                        "lon": 6.82586
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Le Locle District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Le Locle",
+                      "Distreto de Le Locle",
+                      "Distrett ta' Le Locle"
+                    ],
+                    "lat": 47.01927,
+                    "lon": 6.69635,
+                    "children": [
+                      {
+                        "name": "Le Locle",
+                        "type": "admin3",
+                        "lat": 47.05619,
+                        "lon": 6.74913
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Neuchâtel District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de Neuchatel",
+                      "District de Neuchâtel",
+                      "Neuchatel"
+                    ],
+                    "lat": 47.01799,
+                    "lon": 6.99337,
+                    "children": [
+                      {
+                        "name": "Neuchâtel",
+                        "type": "admin3",
+                        "lat": 46.99179,
+                        "lon": 6.931
+                      },
+                      {
+                        "name": "Peseux",
+                        "type": "admin3",
+                        "lat": 46.98704,
+                        "lon": 6.88903
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Val-de-Ruz District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Val-de-Ruz",
+                      "Distreto de Val-de-Ruz",
+                      "District du Val-de-Ruz"
+                    ],
+                    "lat": 47.04008,
+                    "lon": 6.90829,
+                    "children": []
+                  },
+                  {
+                    "name": "Val-de-Travers District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District du Val-de-Travers",
+                      "Val-de-Travers"
+                    ],
+                    "lat": 46.90357,
+                    "lon": 6.5631,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Canton de Vaud",
+                "type": "admin1",
+                "aliases": [
+                  "CH011",
+                  "Canton Vaud",
+                  "Canton de Vaud",
+                  "Canton de Vod"
+                ],
+                "lat": 46.549199,
+                "lon": 6.661045,
+                "children": [
+                  {
+                    "name": "Aigle District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aigle",
+                      "Aigle District",
+                      "Aigle Koan"
+                    ],
+                    "lat": 46.30577,
+                    "lon": 7.02974,
+                    "children": [
+                      {
+                        "name": "Aigle",
+                        "type": "admin3",
+                        "lat": 46.3181,
+                        "lon": 6.96457
+                      },
+                      {
+                        "name": "Bex",
+                        "type": "admin3",
+                        "lat": 46.24965,
+                        "lon": 7.0098
+                      },
+                      {
+                        "name": "Ollon",
+                        "type": "admin3",
+                        "lat": 46.29524,
+                        "lon": 6.99314
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Broye-Vully District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Broye-Vully",
+                      "Brojo-Vully",
+                      "Broye-Vully"
+                    ],
+                    "lat": 46.78082,
+                    "lon": 6.90161,
+                    "children": [
+                      {
+                        "name": "Payerne",
+                        "type": "admin3",
+                        "lat": 46.82192,
+                        "lon": 6.93817
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Gros-de-Vaud District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gros-de-Vaud",
+                      "Distreto de Gros-de-Vaud",
+                      "District Gros-de-Vod"
+                    ],
+                    "lat": 46.6518,
+                    "lon": 6.65728,
+                    "children": [
+                      {
+                        "name": "Echallens",
+                        "type": "admin3",
+                        "lat": 46.6413,
+                        "lon": 6.63317
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jura-Nord vaudois District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Jura-Nord vaudois",
+                      "Distreto de Jura-Nord vaudois",
+                      "District Jura-Vod de bise"
+                    ],
+                    "lat": 46.72981,
+                    "lon": 6.45429,
+                    "children": [
+                      {
+                        "name": "Orbe",
+                        "type": "admin3",
+                        "lat": 46.72504,
+                        "lon": 6.53069
+                      },
+                      {
+                        "name": "Yverdon-les-Bains",
+                        "type": "admin3",
+                        "lat": 46.77852,
+                        "lon": 6.64115
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lausanne District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lausanne",
+                      "Distreto de Loxana",
+                      "Distreto de Łoxana"
+                    ],
+                    "lat": 46.52131,
+                    "lon": 6.63334,
+                    "children": [
+                      {
+                        "name": "Blécherette",
+                        "type": "admin3",
+                        "lat": 46.53932,
+                        "lon": 6.62227
+                      },
+                      {
+                        "name": "Epalinges",
+                        "type": "admin3",
+                        "lat": 46.54896,
+                        "lon": 6.66831
+                      },
+                      {
+                        "name": "Lausanne",
+                        "type": "admin3",
+                        "lat": 46.516,
+                        "lon": 6.63282
+                      },
+                      {
+                        "name": "Le Mont-sur-Lausanne",
+                        "type": "admin3",
+                        "lat": 46.55815,
+                        "lon": 6.63145
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lavaux-Oron District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de Lavaux-Oron",
+                      "Lavaux-Oron"
+                    ],
+                    "lat": 46.53618,
+                    "lon": 6.77086,
+                    "children": [
+                      {
+                        "name": "Lutry",
+                        "type": "admin3",
+                        "lat": 46.50241,
+                        "lon": 6.68647
+                      },
+                      {
+                        "name": "Pully",
+                        "type": "admin3",
+                        "lat": 46.51027,
+                        "lon": 6.66183
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Morges District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de Morges",
+                      "Morges"
+                    ],
+                    "lat": 46.53578,
+                    "lon": 6.48662,
+                    "children": [
+                      {
+                        "name": "Morges",
+                        "type": "admin3",
+                        "lat": 46.51127,
+                        "lon": 6.49854
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Nyon District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Nyon",
+                      "Bezirk Nyon",
+                      "Distreto de Nyon"
+                    ],
+                    "lat": 46.42004,
+                    "lon": 6.22177,
+                    "children": [
+                      {
+                        "name": "Gland",
+                        "type": "admin3",
+                        "lat": 46.42082,
+                        "lon": 6.2701
+                      },
+                      {
+                        "name": "Nyon",
+                        "type": "admin3",
+                        "lat": 46.38318,
+                        "lon": 6.23955
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ouest Lausannois District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Ouest lausannois",
+                      "Distreto de l'Ouest lausannois",
+                      "District de Losena du Ponant"
+                    ],
+                    "lat": 46.54589,
+                    "lon": 6.56995,
+                    "children": [
+                      {
+                        "name": "Bussigny",
+                        "type": "admin3",
+                        "lat": 46.5511,
+                        "lon": 6.55597
+                      },
+                      {
+                        "name": "Chavannes",
+                        "type": "admin3",
+                        "lat": 46.53005,
+                        "lon": 6.57068
+                      },
+                      {
+                        "name": "Crissier",
+                        "type": "admin3",
+                        "lat": 46.54586,
+                        "lon": 6.57567
+                      },
+                      {
+                        "name": "Ecublens",
+                        "type": "admin3",
+                        "lat": 46.52899,
+                        "lon": 6.56261
+                      },
+                      {
+                        "name": "Prilly",
+                        "type": "admin3",
+                        "lat": 46.53698,
+                        "lon": 6.60456
+                      },
+                      {
+                        "name": "Renens",
+                        "type": "admin3",
+                        "lat": 46.53989,
+                        "lon": 6.5881
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Riviera-Pays-d'Enhaut District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de la Riviera-Pays-d'Enhaut",
+                      "District de la Riviera-Pays-d’Enhaut",
+                      "Riviera-Pays-d'Enhaut"
+                    ],
+                    "lat": 46.46459,
+                    "lon": 6.88499,
+                    "children": [
+                      {
+                        "name": "Blonay",
+                        "type": "admin3",
+                        "lat": 46.46778,
+                        "lon": 6.89615
+                      },
+                      {
+                        "name": "La Tour-de-Peilz",
+                        "type": "admin3",
+                        "lat": 46.45312,
+                        "lon": 6.85856
+                      },
+                      {
+                        "name": "Montreux",
+                        "type": "admin3",
+                        "lat": 46.43301,
+                        "lon": 6.91143
+                      },
+                      {
+                        "name": "Vevey",
+                        "type": "admin3",
+                        "lat": 46.46299,
+                        "lon": 6.84345
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Canton du Valais",
+                "type": "admin1",
+                "aliases": [
+                  "CH012",
+                  "Canton Valais",
+                  "Canton Vales",
+                  "Canton Valexe"
+                ],
+                "lat": 46.231282,
+                "lon": 7.488264,
+                "children": [
+                  {
+                    "name": "Brig District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Brig",
+                      "Bezirk Brig",
+                      "Brig"
+                    ],
+                    "lat": 46.28255,
+                    "lon": 8.01185,
+                    "children": [
+                      {
+                        "name": "Brig",
+                        "type": "admin3",
+                        "lat": 46.31667,
+                        "lon": 7.98333
+                      },
+                      {
+                        "name": "Naters",
+                        "type": "admin3",
+                        "lat": 46.32536,
+                        "lon": 7.98912
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Conthey District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Conthey",
+                      "District de Conthey"
+                    ],
+                    "lat": 46.20485,
+                    "lon": 7.27857,
+                    "children": [
+                      {
+                        "name": "Basse-Nendaz",
+                        "type": "admin3",
+                        "lat": 46.18993,
+                        "lon": 7.31209
+                      },
+                      {
+                        "name": "Conthey",
+                        "type": "admin3",
+                        "lat": 46.2237,
+                        "lon": 7.30283
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Entremont District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Antremon",
+                      "Bezirk Entremont",
+                      "Distreto de Entremont"
+                    ],
+                    "lat": 46.02099,
+                    "lon": 7.2126,
+                    "children": [
+                      {
+                        "name": "Bagnes",
+                        "type": "admin3",
+                        "lat": 46.08333,
+                        "lon": 7.21667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Goms District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Goms",
+                      "Conches",
+                      "Distreto de Goms"
+                    ],
+                    "lat": 46.46161,
+                    "lon": 8.2219,
+                    "children": []
+                  },
+                  {
+                    "name": "Hérens District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District d'Herens",
+                      "District d'Hérens",
+                      "Herens"
+                    ],
+                    "lat": 46.19407,
+                    "lon": 7.42391,
+                    "children": []
+                  },
+                  {
+                    "name": "Leuk District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Leuk",
+                      "Distreto de Leuk",
+                      "District da Leuk"
+                    ],
+                    "lat": 46.31439,
+                    "lon": 7.67291,
+                    "children": []
+                  },
+                  {
+                    "name": "Martigny District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Martigny",
+                      "District de Martigny",
+                      "Martigny"
+                    ],
+                    "lat": 46.12386,
+                    "lon": 7.10354,
+                    "children": [
+                      {
+                        "name": "Fully",
+                        "type": "admin3",
+                        "lat": 46.13851,
+                        "lon": 7.11468
+                      },
+                      {
+                        "name": "Martigny-Ville",
+                        "type": "admin3",
+                        "lat": 46.10276,
+                        "lon": 7.07245
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Monthey District",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de Monthey",
+                      "Monthey"
+                    ],
+                    "lat": 46.27043,
+                    "lon": 6.90274,
+                    "children": [
+                      {
+                        "name": "Collombey",
+                        "type": "admin3",
+                        "lat": 46.27385,
+                        "lon": 6.94789
+                      },
+                      {
+                        "name": "Monthey",
+                        "type": "admin3",
+                        "lat": 46.25451,
+                        "lon": 6.95406
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Raron District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Raron",
+                      "Distretto di Raron",
+                      "District Raron"
+                    ],
+                    "lat": 46.3,
+                    "lon": 7.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Saint-Maurice District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Saint-Maurice",
+                      "Distretto di San Maurizio",
+                      "District Saint-Maurice"
+                    ],
+                    "lat": 46.15384,
+                    "lon": 6.99823,
+                    "children": []
+                  },
+                  {
+                    "name": "Sierre District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Sierre",
+                      "Distretto di Sierre",
+                      "District Sierre"
+                    ],
+                    "lat": 46.27052,
+                    "lon": 7.5157,
+                    "children": [
+                      {
+                        "name": "Crans-Montana",
+                        "type": "admin3",
+                        "lat": 46.31316,
+                        "lon": 7.47914
+                      },
+                      {
+                        "name": "Sierre",
+                        "type": "admin3",
+                        "lat": 46.29192,
+                        "lon": 7.53559
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sion District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Sion",
+                      "Distretto di Sion",
+                      "District Sion"
+                    ],
+                    "lat": 46.23343,
+                    "lon": 7.34939,
+                    "children": [
+                      {
+                        "name": "Savièse",
+                        "type": "admin3",
+                        "lat": 46.25115,
+                        "lon": 7.34558
+                      },
+                      {
+                        "name": "Sitten",
+                        "type": "admin3",
+                        "lat": 46.22739,
+                        "lon": 7.35559
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Visp District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Visp",
+                      "Bezirk Visp",
+                      "Distreto de Visp"
+                    ],
+                    "lat": 46.17612,
+                    "lon": 7.85609,
+                    "children": [
+                      {
+                        "name": "Visp",
+                        "type": "admin3",
+                        "lat": 46.2937,
+                        "lon": 7.88149
+                      },
+                      {
+                        "name": "Zermatt",
+                        "type": "admin3",
+                        "lat": 46.01998,
+                        "lon": 7.74863
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Cantone Ticino",
+                "type": "admin1",
+                "aliases": [
+                  "CH070",
+                  "Canton Ticino",
+                  "Canton Tisin",
+                  "Canton d'o Tesino"
+                ],
+                "lat": 46.233424,
+                "lon": 8.873518,
+                "children": [
+                  {
+                    "name": "Bellinzona District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belinzona",
+                      "Belinzono",
+                      "Bellincona"
+                    ],
+                    "lat": 46.18858,
+                    "lon": 9.00254,
+                    "children": [
+                      {
+                        "name": "Bellinzona",
+                        "type": "admin3",
+                        "lat": 46.19278,
+                        "lon": 9.01703
+                      },
+                      {
+                        "name": "Giubiasco",
+                        "type": "admin3",
+                        "lat": 46.17246,
+                        "lon": 9.00793
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Blenio District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Blenio",
+                      "Blenio",
+                      "Blenio District"
+                    ],
+                    "lat": 46.47613,
+                    "lon": 8.94609,
+                    "children": []
+                  },
+                  {
+                    "name": "Leventina District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Leventina",
+                      "Distreto de Leventina",
+                      "Distretto di Leventina"
+                    ],
+                    "lat": 46.46912,
+                    "lon": 8.75539,
+                    "children": []
+                  },
+                  {
+                    "name": "Locarno District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Locarno",
+                      "Distreto de Locarno",
+                      "Distreto de Łocarno"
+                    ],
+                    "lat": 46.18033,
+                    "lon": 8.75991,
+                    "children": [
+                      {
+                        "name": "Ascona",
+                        "type": "admin3",
+                        "lat": 46.15451,
+                        "lon": 8.77327
+                      },
+                      {
+                        "name": "Locarno",
+                        "type": "admin3",
+                        "lat": 46.17086,
+                        "lon": 8.79953
+                      },
+                      {
+                        "name": "Losone",
+                        "type": "admin3",
+                        "lat": 46.16866,
+                        "lon": 8.75928
+                      },
+                      {
+                        "name": "Minusio",
+                        "type": "admin3",
+                        "lat": 46.17769,
+                        "lon": 8.81473
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lugano District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lugano",
+                      "Diamerisma tou Lounkano",
+                      "Distreto de Lugan"
+                    ],
+                    "lat": 46.02322,
+                    "lon": 8.93802,
+                    "children": [
+                      {
+                        "name": "Lugano",
+                        "type": "admin3",
+                        "lat": 46.01008,
+                        "lon": 8.96004
+                      },
+                      {
+                        "name": "Massagno",
+                        "type": "admin3",
+                        "lat": 46.01257,
+                        "lon": 8.94354
+                      },
+                      {
+                        "name": "Pregassona",
+                        "type": "admin3",
+                        "lat": 46.02021,
+                        "lon": 8.97429
+                      },
+                      {
+                        "name": "Viganello",
+                        "type": "admin3",
+                        "lat": 46.01342,
+                        "lon": 8.96879
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mendrisio District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Mendrisio",
+                      "Bezirk Mendrisio",
+                      "Distreto de Mendrisio"
+                    ],
+                    "lat": 45.86592,
+                    "lon": 8.99931,
+                    "children": [
+                      {
+                        "name": "Chiasso",
+                        "type": "admin3",
+                        "lat": 45.83203,
+                        "lon": 9.03119
+                      },
+                      {
+                        "name": "Mendrisio",
+                        "type": "admin3",
+                        "lat": 45.87019,
+                        "lon": 8.9816
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Riviera District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beziak Riviera",
+                      "Bezirk Riviera",
+                      "Distreto de Riviera"
+                    ],
+                    "lat": 46.30926,
+                    "lon": 8.98148,
+                    "children": [
+                      {
+                        "name": "Biasca",
+                        "type": "admin3",
+                        "lat": 46.35972,
+                        "lon": 8.96965
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vallemaggia District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Vallemaggia",
+                      "Distreto de Vallemaggia",
+                      "Distretto di Vallemaggia"
+                    ],
+                    "lat": 46.35483,
+                    "lon": 8.6054,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Aargau",
+                "type": "admin1",
+                "aliases": [
+                  "AG",
+                  "Aargau",
+                  "Aargau Chiu",
+                  "Aargau kanton"
+                ],
+                "lat": 47.407437,
+                "lon": 8.149941,
+                "children": [
+                  {
+                    "name": "Bezirk Aarau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aarau",
+                      "Bezirk Aarau"
+                    ],
+                    "lat": 47.37706,
+                    "lon": 8.05235,
+                    "children": [
+                      {
+                        "name": "Aarau",
+                        "type": "admin3",
+                        "lat": 47.39254,
+                        "lon": 8.04422
+                      },
+                      {
+                        "name": "Buchs",
+                        "type": "admin3",
+                        "lat": 47.39358,
+                        "lon": 8.08233
+                      },
+                      {
+                        "name": "Gränichen",
+                        "type": "admin3",
+                        "lat": 47.3593,
+                        "lon": 8.10243
+                      },
+                      {
+                        "name": "Küttigen",
+                        "type": "admin3",
+                        "lat": 47.41484,
+                        "lon": 8.04979
+                      },
+                      {
+                        "name": "Oberentfelden",
+                        "type": "admin3",
+                        "lat": 47.35639,
+                        "lon": 8.04594
+                      },
+                      {
+                        "name": "Suhr",
+                        "type": "admin3",
+                        "lat": 47.37172,
+                        "lon": 8.07967
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Baden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baden",
+                      "Bezirk Baden"
+                    ],
+                    "lat": 47.4566,
+                    "lon": 8.30059,
+                    "children": [
+                      {
+                        "name": "Baden",
+                        "type": "admin3",
+                        "lat": 47.47333,
+                        "lon": 8.30592
+                      },
+                      {
+                        "name": "Neuenhof",
+                        "type": "admin3",
+                        "lat": 47.44985,
+                        "lon": 8.32682
+                      },
+                      {
+                        "name": "Obersiggenthal",
+                        "type": "admin3",
+                        "lat": 47.4875,
+                        "lon": 8.29652
+                      },
+                      {
+                        "name": "Spreitenbach",
+                        "type": "admin3",
+                        "lat": 47.42285,
+                        "lon": 8.36792
+                      },
+                      {
+                        "name": "Untersiggenthal",
+                        "type": "admin3",
+                        "lat": 47.50213,
+                        "lon": 8.25554
+                      },
+                      {
+                        "name": "Wettingen",
+                        "type": "admin3",
+                        "lat": 47.46606,
+                        "lon": 8.32663
+                      },
+                      {
+                        "name": "Würenlos",
+                        "type": "admin3",
+                        "lat": 47.44205,
+                        "lon": 8.36261
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Bremgarten",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Bremgarten",
+                      "Bremgarten",
+                      "Bremgarten District"
+                    ],
+                    "lat": 47.34927,
+                    "lon": 8.33343,
+                    "children": [
+                      {
+                        "name": "Bremgarten",
+                        "type": "admin3",
+                        "lat": 47.35109,
+                        "lon": 8.34214
+                      },
+                      {
+                        "name": "Villmergen",
+                        "type": "admin3",
+                        "lat": 47.35009,
+                        "lon": 8.24762
+                      },
+                      {
+                        "name": "Wohlen",
+                        "type": "admin3",
+                        "lat": 47.35066,
+                        "lon": 8.27517
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Brugg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Brugg",
+                      "Brugg",
+                      "Бругг"
+                    ],
+                    "lat": 47.47776,
+                    "lon": 8.17798,
+                    "children": [
+                      {
+                        "name": "Brugg",
+                        "type": "admin3",
+                        "lat": 47.48096,
+                        "lon": 8.20869
+                      },
+                      {
+                        "name": "Windisch",
+                        "type": "admin3",
+                        "lat": 47.47899,
+                        "lon": 8.21842
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Kulm",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kulm",
+                      "Kulm"
+                    ],
+                    "lat": 47.28757,
+                    "lon": 8.13302,
+                    "children": [
+                      {
+                        "name": "Menziken",
+                        "type": "admin3",
+                        "lat": 47.23965,
+                        "lon": 8.18996
+                      },
+                      {
+                        "name": "Reinach",
+                        "type": "admin3",
+                        "lat": 47.25732,
+                        "lon": 8.18091
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Laufenburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Laufenburg",
+                      "Laufenburg",
+                      "Laufenburg District"
+                    ],
+                    "lat": 47.51844,
+                    "lon": 8.03878,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Lenzburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lenzburg",
+                      "Lenzburg"
+                    ],
+                    "lat": 47.37184,
+                    "lon": 8.1891,
+                    "children": [
+                      {
+                        "name": "Lenzburg",
+                        "type": "admin3",
+                        "lat": 47.38853,
+                        "lon": 8.17503
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Muri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Muri",
+                      "Muri"
+                    ],
+                    "lat": 47.25233,
+                    "lon": 8.35362,
+                    "children": [
+                      {
+                        "name": "Muri",
+                        "type": "admin3",
+                        "lat": 47.27428,
+                        "lon": 8.33854
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Rheinfelden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Rheinfelden",
+                      "Distretto di Rheinfelden",
+                      "District Rheinfelden"
+                    ],
+                    "lat": 47.54048,
+                    "lon": 7.83331,
+                    "children": [
+                      {
+                        "name": "Möhlin",
+                        "type": "admin3",
+                        "lat": 47.55915,
+                        "lon": 7.84329
+                      },
+                      {
+                        "name": "Rheinfelden",
+                        "type": "admin3",
+                        "lat": 47.55437,
+                        "lon": 7.79403
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Zofingen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Zofingen",
+                      "Distretto di Zofingen",
+                      "District Zofingen"
+                    ],
+                    "lat": 47.28864,
+                    "lon": 7.95697,
+                    "children": [
+                      {
+                        "name": "Aarburg",
+                        "type": "admin3",
+                        "lat": 47.32067,
+                        "lon": 7.89986
+                      },
+                      {
+                        "name": "Oftringen",
+                        "type": "admin3",
+                        "lat": 47.31382,
+                        "lon": 7.92533
+                      },
+                      {
+                        "name": "Rothrist",
+                        "type": "admin3",
+                        "lat": 47.30508,
+                        "lon": 7.89196
+                      },
+                      {
+                        "name": "Zofingen",
+                        "type": "admin3",
+                        "lat": 47.28779,
+                        "lon": 7.94586
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Zurzach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Zurzach",
+                      "Zurzach",
+                      "Zurzach District"
+                    ],
+                    "lat": 47.56182,
+                    "lon": 8.2802,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Appenzell Ausserrhoden",
+                "type": "admin1",
+                "aliases": [
+                  "AR",
+                  "Abbatis Cella Exterior",
+                  "Apencel Auseroden",
+                  "Apencel Auserroden"
+                ],
+                "lat": 47.394457,
+                "lon": 9.415627,
+                "children": [
+                  {
+                    "name": "Bezirk Hinterland",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hinterland",
+                      "Hinterland"
+                    ],
+                    "lat": 47.3647,
+                    "lon": 9.2735,
+                    "children": [
+                      {
+                        "name": "Herisau",
+                        "type": "admin3",
+                        "lat": 47.38615,
+                        "lon": 9.27916
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Mittelland",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Mittelland",
+                      "Mittelland"
+                    ],
+                    "lat": 47.377,
+                    "lon": 9.43469,
+                    "children": [
+                      {
+                        "name": "Teufen",
+                        "type": "admin3",
+                        "lat": 47.3908,
+                        "lon": 9.38644
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Vorderland",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Vorderland",
+                      "Vorderland"
+                    ],
+                    "lat": 47.44167,
+                    "lon": 9.53869,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Appenzell Innerrhoden",
+                "type": "admin1",
+                "aliases": [
+                  "AI",
+                  "Abbatis Cella Interior",
+                  "Apencel Ineroden",
+                  "Apencel Inerroden"
+                ],
+                "lat": 47.34133,
+                "lon": 9.43058,
+                "children": [
+                  {
+                    "name": "Appenzell Inner Rhodes",
+                    "type": "admin2",
+                    "aliases": [
+                      "Appenzell I.Rh.",
+                      "Appenzell Innerrhoden"
+                    ],
+                    "lat": 47.34133,
+                    "lon": 9.43058,
+                    "children": [
+                      {
+                        "name": "Appenzell",
+                        "type": "admin3",
+                        "lat": 47.33103,
+                        "lon": 9.40996
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Basel-Landschaft",
+                "type": "admin1",
+                "aliases": [
+                  "BL",
+                  "Bala-Campagne",
+                  "Bale Campagne",
+                  "Bale-Mboka"
+                ],
+                "lat": 47.45144,
+                "lon": 7.67841,
+                "children": [
+                  {
+                    "name": "Bezirk Arlesheim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arlesheim",
+                      "Bezirk Arlesheim",
+                      "District of Arlesheim"
+                    ],
+                    "lat": 47.51668,
+                    "lon": 7.58733,
+                    "children": [
+                      {
+                        "name": "Aesch",
+                        "type": "admin3",
+                        "lat": 47.47104,
+                        "lon": 7.5973
+                      },
+                      {
+                        "name": "Allschwil",
+                        "type": "admin3",
+                        "lat": 47.55074,
+                        "lon": 7.53599
+                      },
+                      {
+                        "name": "Arlesheim",
+                        "type": "admin3",
+                        "lat": 47.49412,
+                        "lon": 7.61979
+                      },
+                      {
+                        "name": "Binningen",
+                        "type": "admin3",
+                        "lat": 47.54021,
+                        "lon": 7.56932
+                      },
+                      {
+                        "name": "Birsfelden",
+                        "type": "admin3",
+                        "lat": 47.5529,
+                        "lon": 7.62322
+                      },
+                      {
+                        "name": "Bottmingen",
+                        "type": "admin3",
+                        "lat": 47.52343,
+                        "lon": 7.57211
+                      },
+                      {
+                        "name": "Münchenstein",
+                        "type": "admin3",
+                        "lat": 47.51848,
+                        "lon": 7.60966
+                      },
+                      {
+                        "name": "Muttenz",
+                        "type": "admin3",
+                        "lat": 47.52271,
+                        "lon": 7.64511
+                      },
+                      {
+                        "name": "Oberwil",
+                        "type": "admin3",
+                        "lat": 47.51407,
+                        "lon": 7.55786
+                      },
+                      {
+                        "name": "Reinach",
+                        "type": "admin3",
+                        "lat": 47.49702,
+                        "lon": 7.59172
+                      },
+                      {
+                        "name": "Therwil",
+                        "type": "admin3",
+                        "lat": 47.49941,
+                        "lon": 7.55669
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Laufen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Laufen",
+                      "Laufen",
+                      "Laufen District"
+                    ],
+                    "lat": 47.42324,
+                    "lon": 7.4875,
+                    "children": [
+                      {
+                        "name": "Laufen",
+                        "type": "admin3",
+                        "lat": 47.42193,
+                        "lon": 7.49946
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Liestal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Liestal",
+                      "Liestal",
+                      "Liestal District"
+                    ],
+                    "lat": 47.48124,
+                    "lon": 7.72714,
+                    "children": [
+                      {
+                        "name": "Frenkendorf",
+                        "type": "admin3",
+                        "lat": 47.50686,
+                        "lon": 7.71648
+                      },
+                      {
+                        "name": "Liestal",
+                        "type": "admin3",
+                        "lat": 47.48455,
+                        "lon": 7.73446
+                      },
+                      {
+                        "name": "Pratteln",
+                        "type": "admin3",
+                        "lat": 47.52071,
+                        "lon": 7.69356
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Sissach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Sissach",
+                      "Distretto di Sissach",
+                      "District Sissach"
+                    ],
+                    "lat": 47.44237,
+                    "lon": 7.84871,
+                    "children": [
+                      {
+                        "name": "Gelterkinden",
+                        "type": "admin3",
+                        "lat": 47.46497,
+                        "lon": 7.85174
+                      },
+                      {
+                        "name": "Sissach",
+                        "type": "admin3",
+                        "lat": 47.46408,
+                        "lon": 7.80888
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Waldenburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Waldenburg",
+                      "Distretto di Waldenburg",
+                      "District Waldenburg"
+                    ],
+                    "lat": 47.39367,
+                    "lon": 7.74137,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Basel-Stadt",
+                "type": "admin1",
+                "aliases": [
+                  "BS",
+                  "Bala-Vela",
+                  "Bale-Engumba",
+                  "Bale-Ville"
+                ],
+                "lat": 47.56658,
+                "lon": 7.60199,
+                "children": [
+                  {
+                    "name": "Basel-Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bale-Ville",
+                      "Basel City",
+                      "Basel-City"
+                    ],
+                    "lat": 47.56658,
+                    "lon": 7.60199,
+                    "children": [
+                      {
+                        "name": "Basel",
+                        "type": "admin3",
+                        "lat": 47.55839,
+                        "lon": 7.57327
+                      },
+                      {
+                        "name": "Riehen",
+                        "type": "admin3",
+                        "lat": 47.57884,
+                        "lon": 7.64683
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Glarus",
+                "type": "admin1",
+                "aliases": [
+                  "CH051",
+                  "Canto de Glarus",
+                  "Canton Glarona",
+                  "Canton Glarus"
+                ],
+                "lat": 47.0167,
+                "lon": 9.05889,
+                "children": [
+                  {
+                    "name": "Glarus",
+                    "type": "admin2",
+                    "aliases": [
+                      "Glaris",
+                      "Glaris Centre",
+                      "Glarona"
+                    ],
+                    "lat": 47.0167,
+                    "lon": 9.05889,
+                    "children": [
+                      {
+                        "name": "Glarus",
+                        "type": "admin3",
+                        "lat": 47.04057,
+                        "lon": 9.06804
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Graubünden",
+                "type": "admin1",
+                "aliases": [
+                  "CH056",
+                  "Canton Griggiuni",
+                  "Canton Grison",
+                  "Canton Grisons"
+                ],
+                "lat": 46.663413,
+                "lon": 9.619595,
+                "children": [
+                  {
+                    "name": "Region Albula",
+                    "type": "admin2",
+                    "aliases": [
+                      "Albula",
+                      "Albula Region"
+                    ],
+                    "lat": 46.60255,
+                    "lon": 9.6515,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Bernina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bernina"
+                    ],
+                    "lat": 46.33488,
+                    "lon": 10.07349,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Engiadina Bassa / Val Müstair",
+                    "type": "admin2",
+                    "aliases": [
+                      "Engiadina Bassa/Val Muestair",
+                      "Engiadina Bassa/Val Müstair"
+                    ],
+                    "lat": 46.75212,
+                    "lon": 10.26032,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Imboden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Imboden"
+                    ],
+                    "lat": 46.84876,
+                    "lon": 9.36225,
+                    "children": [
+                      {
+                        "name": "Domat",
+                        "type": "admin3",
+                        "lat": 46.83483,
+                        "lon": 9.45075
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Region Landquart",
+                    "type": "admin2",
+                    "aliases": [
+                      "Landquart"
+                    ],
+                    "lat": 46.96403,
+                    "lon": 9.56365,
+                    "children": [
+                      {
+                        "name": "Igis",
+                        "type": "admin3",
+                        "lat": 46.94531,
+                        "lon": 9.57218
+                      },
+                      {
+                        "name": "Landquart",
+                        "type": "admin3",
+                        "lat": 46.95,
+                        "lon": 9.56667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Region Maloja",
+                    "type": "admin2",
+                    "aliases": [
+                      "Maloja"
+                    ],
+                    "lat": 46.47448,
+                    "lon": 9.83138,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Moesa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Moesa",
+                      "Moesano"
+                    ],
+                    "lat": 46.352,
+                    "lon": 9.1787,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Plessur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Plessur"
+                    ],
+                    "lat": 46.81819,
+                    "lon": 9.62542,
+                    "children": [
+                      {
+                        "name": "Chur",
+                        "type": "admin3",
+                        "lat": 46.84986,
+                        "lon": 9.53287
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Region Prättigau / Davos",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praettigau/Davos",
+                      "Prättigau/Davos"
+                    ],
+                    "lat": 46.86727,
+                    "lon": 9.82014,
+                    "children": [
+                      {
+                        "name": "Davos",
+                        "type": "admin3",
+                        "lat": 46.80429,
+                        "lon": 9.83723
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Region Surselva",
+                    "type": "admin2",
+                    "aliases": [
+                      "Surselva"
+                    ],
+                    "lat": 46.69564,
+                    "lon": 9.04834,
+                    "children": []
+                  },
+                  {
+                    "name": "Region Viamala",
+                    "type": "admin2",
+                    "aliases": [
+                      "Viamala"
+                    ],
+                    "lat": 46.58762,
+                    "lon": 9.40035,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Luzern",
+                "type": "admin1",
+                "aliases": [
+                  "CH061",
+                  "Canto de Lucerna",
+                  "Canton Lucerna",
+                  "Canton Luserna"
+                ],
+                "lat": 47.0812,
+                "lon": 8.166833,
+                "children": [
+                  {
+                    "name": "Entlebuch District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Entlebuch",
+                      "Wahlkreis Entlebuch"
+                    ],
+                    "lat": 46.9259,
+                    "lon": 8.01427,
+                    "children": []
+                  },
+                  {
+                    "name": "Hochdorf District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hochdorf",
+                      "Wahlkreis Hochdorf"
+                    ],
+                    "lat": 47.17062,
+                    "lon": 8.28702,
+                    "children": [
+                      {
+                        "name": "Emmen",
+                        "type": "admin3",
+                        "lat": 47.07819,
+                        "lon": 8.27331
+                      },
+                      {
+                        "name": "Hochdorf",
+                        "type": "admin3",
+                        "lat": 47.16841,
+                        "lon": 8.29179
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lucerne-Land District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Luzern-Land",
+                      "Wahlkreis Luzern-Land"
+                    ],
+                    "lat": 47.04046,
+                    "lon": 8.29271,
+                    "children": [
+                      {
+                        "name": "Adligenswil",
+                        "type": "admin3",
+                        "lat": 47.06521,
+                        "lon": 8.36124
+                      },
+                      {
+                        "name": "Buchrain",
+                        "type": "admin3",
+                        "lat": 47.09625,
+                        "lon": 8.34729
+                      },
+                      {
+                        "name": "Ebikon",
+                        "type": "admin3",
+                        "lat": 47.07937,
+                        "lon": 8.34041
+                      },
+                      {
+                        "name": "Horw",
+                        "type": "admin3",
+                        "lat": 47.01692,
+                        "lon": 8.30956
+                      },
+                      {
+                        "name": "Kriens",
+                        "type": "admin3",
+                        "lat": 47.0311,
+                        "lon": 8.28547
+                      },
+                      {
+                        "name": "Malters",
+                        "type": "admin3",
+                        "lat": 47.03628,
+                        "lon": 8.18193
+                      },
+                      {
+                        "name": "Meggen",
+                        "type": "admin3",
+                        "lat": 47.04691,
+                        "lon": 8.37467
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lucerne-Stadt District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Luzern-Stadt",
+                      "Wahlkreis Luzern-Stadt"
+                    ],
+                    "lat": 47.05334,
+                    "lon": 8.31063,
+                    "children": [
+                      {
+                        "name": "Littau",
+                        "type": "admin3",
+                        "lat": 47.05,
+                        "lon": 8.26274
+                      },
+                      {
+                        "name": "Luzern",
+                        "type": "admin3",
+                        "lat": 47.05048,
+                        "lon": 8.30635
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sursee District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sursee",
+                      "Wahlkreis Sursee"
+                    ],
+                    "lat": 47.15591,
+                    "lon": 8.13704,
+                    "children": [
+                      {
+                        "name": "Neuenkirch",
+                        "type": "admin3",
+                        "lat": 47.09989,
+                        "lon": 8.20416
+                      },
+                      {
+                        "name": "Ruswil",
+                        "type": "admin3",
+                        "lat": 47.08425,
+                        "lon": 8.12645
+                      },
+                      {
+                        "name": "Sursee",
+                        "type": "admin3",
+                        "lat": 47.17088,
+                        "lon": 8.11113
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Willisau District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Wahlkreis Willisau",
+                      "Willisau"
+                    ],
+                    "lat": 47.14097,
+                    "lon": 7.95933,
+                    "children": [
+                      {
+                        "name": "Willisau",
+                        "type": "admin3",
+                        "lat": 47.12183,
+                        "lon": 7.99418
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Nidwalden",
+                "type": "admin1",
+                "aliases": [
+                  "CH065",
+                  "Canton Nidvaldo",
+                  "Canton Nidvaldu",
+                  "Canton Nidwalden"
+                ],
+                "lat": 46.95355,
+                "lon": 8.38,
+                "children": [
+                  {
+                    "name": "Nidwalden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nidwalden"
+                    ],
+                    "lat": 46.95355,
+                    "lon": 8.38,
+                    "children": [
+                      {
+                        "name": "Buochs",
+                        "type": "admin3",
+                        "lat": 46.97398,
+                        "lon": 8.42279
+                      },
+                      {
+                        "name": "Hergiswil",
+                        "type": "admin3",
+                        "lat": 46.98429,
+                        "lon": 8.30944
+                      },
+                      {
+                        "name": "Stans",
+                        "type": "admin3",
+                        "lat": 46.95805,
+                        "lon": 8.36609
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Obwalden",
+                "type": "admin1",
+                "aliases": [
+                  "CH064",
+                  "Canton Obvaldo",
+                  "Canton Obvaldu",
+                  "Canton d'Obwald"
+                ],
+                "lat": 46.87983,
+                "lon": 8.26557,
+                "children": [
+                  {
+                    "name": "Obwalden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obwalden"
+                    ],
+                    "lat": 46.87983,
+                    "lon": 8.26557,
+                    "children": [
+                      {
+                        "name": "Alpnach",
+                        "type": "admin3",
+                        "lat": 46.94227,
+                        "lon": 8.2718
+                      },
+                      {
+                        "name": "Kerns",
+                        "type": "admin3",
+                        "lat": 46.90121,
+                        "lon": 8.27514
+                      },
+                      {
+                        "name": "Sarnen",
+                        "type": "admin3",
+                        "lat": 46.89611,
+                        "lon": 8.24531
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Schaffhausen",
+                "type": "admin1",
+                "aliases": [
+                  "CH052",
+                  "Canton Schaffhausen",
+                  "Canton Sciaffusa",
+                  "Canton Sciafuesa"
+                ],
+                "lat": 47.705857,
+                "lon": 8.613745,
+                "children": [
+                  {
+                    "name": "Bezirk Oberklettgau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Oberklettgau"
+                    ],
+                    "lat": 47.69893,
+                    "lon": 8.51774,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Reiat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Reiat",
+                      "Reiat"
+                    ],
+                    "lat": 47.74752,
+                    "lon": 8.70821,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Schaffhausen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Schaffhausen",
+                      "Schaffhausen"
+                    ],
+                    "lat": 47.6944,
+                    "lon": 8.63525,
+                    "children": [
+                      {
+                        "name": "Neuhausen",
+                        "type": "admin3",
+                        "lat": 47.68579,
+                        "lon": 8.61474
+                      },
+                      {
+                        "name": "Schaffhausen",
+                        "type": "admin3",
+                        "lat": 47.69732,
+                        "lon": 8.63493
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Schleitheim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Schleitheim",
+                      "Schleitheim"
+                    ],
+                    "lat": 47.75,
+                    "lon": 8.51111,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Stein",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Stein",
+                      "Stein"
+                    ],
+                    "lat": 47.66429,
+                    "lon": 8.84683,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Unterklettgau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Unterklettgau",
+                      "Unterklettgau"
+                    ],
+                    "lat": 47.68,
+                    "lon": 8.46333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Schwyz",
+                "type": "admin1",
+                "aliases": [
+                  "Bang Schwyz",
+                  "CH063",
+                  "Canto de Schwyz",
+                  "Canton Svit"
+                ],
+                "lat": 47.09698,
+                "lon": 8.668023,
+                "children": [
+                  {
+                    "name": "Bezirk Einsiedeln",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Einsiedeln",
+                      "Einsiedeln"
+                    ],
+                    "lat": 47.10792,
+                    "lon": 8.7601,
+                    "children": [
+                      {
+                        "name": "Einsiedeln",
+                        "type": "admin3",
+                        "lat": 47.12849,
+                        "lon": 8.74735
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Gersau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gersau",
+                      "Gersau"
+                    ],
+                    "lat": 47.008,
+                    "lon": 8.51678,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Höfe",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hoefe",
+                      "Bezirk Höfe",
+                      "Hoefe"
+                    ],
+                    "lat": 47.19043,
+                    "lon": 8.7396,
+                    "children": [
+                      {
+                        "name": "Freienbach",
+                        "type": "admin3",
+                        "lat": 47.20534,
+                        "lon": 8.75842
+                      },
+                      {
+                        "name": "Pfäffikon",
+                        "type": "admin3",
+                        "lat": 47.20109,
+                        "lon": 8.77816
+                      },
+                      {
+                        "name": "Wollerau",
+                        "type": "admin3",
+                        "lat": 47.19478,
+                        "lon": 8.71903
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Küssnacht",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kuessnacht",
+                      "Bezirk Küssnacht",
+                      "Kuessnacht"
+                    ],
+                    "lat": 47.08611,
+                    "lon": 8.44444,
+                    "children": [
+                      {
+                        "name": "Küssnacht",
+                        "type": "admin3",
+                        "lat": 47.08557,
+                        "lon": 8.44206
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk March",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk March",
+                      "March",
+                      "March District"
+                    ],
+                    "lat": 47.16128,
+                    "lon": 8.91103,
+                    "children": [
+                      {
+                        "name": "Altendorf",
+                        "type": "admin3",
+                        "lat": 47.18994,
+                        "lon": 8.83823
+                      },
+                      {
+                        "name": "Lachen",
+                        "type": "admin3",
+                        "lat": 47.19224,
+                        "lon": 8.85324
+                      },
+                      {
+                        "name": "Schübelbach",
+                        "type": "admin3",
+                        "lat": 47.17326,
+                        "lon": 8.92811
+                      },
+                      {
+                        "name": "Siebnen",
+                        "type": "admin3",
+                        "lat": 47.17449,
+                        "lon": 8.89781
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Schwyz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Schwyz",
+                      "Distretto di Svitto",
+                      "District Schwyz"
+                    ],
+                    "lat": 47.02814,
+                    "lon": 8.63619,
+                    "children": [
+                      {
+                        "name": "Arth",
+                        "type": "admin3",
+                        "lat": 47.06337,
+                        "lon": 8.52349
+                      },
+                      {
+                        "name": "Goldau",
+                        "type": "admin3",
+                        "lat": 47.04761,
+                        "lon": 8.54616
+                      },
+                      {
+                        "name": "Ingenbohl",
+                        "type": "admin3",
+                        "lat": 46.9988,
+                        "lon": 8.61529
+                      },
+                      {
+                        "name": "Schwyz",
+                        "type": "admin3",
+                        "lat": 47.02076,
+                        "lon": 8.65414
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Solothurn",
+                "type": "admin1",
+                "aliases": [
+                  "CH023",
+                  "Canto de Solothurn",
+                  "Canton Soleta",
+                  "Canton Soletta"
+                ],
+                "lat": 47.293982,
+                "lon": 7.648875,
+                "children": [
+                  {
+                    "name": "Bezirk Bucheggberg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Bucheggberg",
+                      "Bucheggberg",
+                      "Bucheggberg District"
+                    ],
+                    "lat": 47.13205,
+                    "lon": 7.47885,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Dorneck",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Dorneck",
+                      "Dorneck"
+                    ],
+                    "lat": 47.48032,
+                    "lon": 7.61816,
+                    "children": [
+                      {
+                        "name": "Dornach",
+                        "type": "admin3",
+                        "lat": 47.48038,
+                        "lon": 7.61644
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Gäu",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gaeu",
+                      "Bezirk Gäu",
+                      "Gaeu"
+                    ],
+                    "lat": 47.29606,
+                    "lon": 7.77503,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Gösgen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Goesgen",
+                      "Bezirk Gösgen",
+                      "Goesgen"
+                    ],
+                    "lat": 47.37758,
+                    "lon": 7.9203,
+                    "children": [
+                      {
+                        "name": "Trimbach",
+                        "type": "admin3",
+                        "lat": 47.36561,
+                        "lon": 7.8868
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Lebern",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lebern",
+                      "Lebern"
+                    ],
+                    "lat": 47.21798,
+                    "lon": 7.48053,
+                    "children": [
+                      {
+                        "name": "Grenchen",
+                        "type": "admin3",
+                        "lat": 47.1921,
+                        "lon": 7.39586
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Olten",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Olten",
+                      "Olten"
+                    ],
+                    "lat": 47.34426,
+                    "lon": 7.90755,
+                    "children": [
+                      {
+                        "name": "Olten",
+                        "type": "admin3",
+                        "lat": 47.34999,
+                        "lon": 7.90329
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Solothurn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Solothurn",
+                      "Distretto di Soletta",
+                      "District Solothurn"
+                    ],
+                    "lat": 47.20818,
+                    "lon": 7.53084,
+                    "children": [
+                      {
+                        "name": "Solothurn",
+                        "type": "admin3",
+                        "lat": 47.20791,
+                        "lon": 7.53714
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Thal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Thal",
+                      "Thal"
+                    ],
+                    "lat": 47.31095,
+                    "lon": 7.63592,
+                    "children": [
+                      {
+                        "name": "Balsthal",
+                        "type": "admin3",
+                        "lat": 47.31613,
+                        "lon": 7.69318
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Thierstein",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Thierstein",
+                      "Thierstein"
+                    ],
+                    "lat": 47.38333,
+                    "lon": 7.55,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Wasseramt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Wasseramt",
+                      "Wasseramt"
+                    ],
+                    "lat": 47.18911,
+                    "lon": 7.59157,
+                    "children": [
+                      {
+                        "name": "Biberist",
+                        "type": "admin3",
+                        "lat": 47.18009,
+                        "lon": 7.56246
+                      },
+                      {
+                        "name": "Derendingen",
+                        "type": "admin3",
+                        "lat": 47.1985,
+                        "lon": 7.58844
+                      },
+                      {
+                        "name": "Zuchwil",
+                        "type": "admin3",
+                        "lat": 47.20173,
+                        "lon": 7.56649
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton St. Gallen",
+                "type": "admin1",
+                "aliases": [
+                  "CH055",
+                  "Canton San Gallo",
+                  "Canton de Saint-Gall",
+                  "Canton de San Galo"
+                ],
+                "lat": 47.310005,
+                "lon": 9.327809,
+                "children": [
+                  {
+                    "name": "Wahlkreis Rheintal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rheintal"
+                    ],
+                    "lat": 47.37769,
+                    "lon": 9.57903,
+                    "children": [
+                      {
+                        "name": "Altstätten",
+                        "type": "admin3",
+                        "lat": 47.37766,
+                        "lon": 9.54746
+                      },
+                      {
+                        "name": "Au",
+                        "type": "admin3",
+                        "lat": 47.43093,
+                        "lon": 9.63448
+                      },
+                      {
+                        "name": "Diepoldsau",
+                        "type": "admin3",
+                        "lat": 47.386,
+                        "lon": 9.65558
+                      },
+                      {
+                        "name": "Oberriet",
+                        "type": "admin3",
+                        "lat": 47.32088,
+                        "lon": 9.56808
+                      },
+                      {
+                        "name": "Sankt Margrethen",
+                        "type": "admin3",
+                        "lat": 47.45253,
+                        "lon": 9.63741
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis Rorschach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Circonscription electorale de Rorschach",
+                      "Circonscription électorale de Rorschach",
+                      "Circoscrizione elettorale di Rorschach"
+                    ],
+                    "lat": 47.46647,
+                    "lon": 9.44246,
+                    "children": [
+                      {
+                        "name": "Goldach",
+                        "type": "admin3",
+                        "lat": 47.47401,
+                        "lon": 9.46711
+                      },
+                      {
+                        "name": "Rorschach",
+                        "type": "admin3",
+                        "lat": 47.478,
+                        "lon": 9.4903
+                      },
+                      {
+                        "name": "Thal",
+                        "type": "admin3",
+                        "lat": 47.46677,
+                        "lon": 9.56643
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis Sarganserland",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sarganserland",
+                      "Wahlkreis Sarganserland"
+                    ],
+                    "lat": 47.05,
+                    "lon": 9.43333,
+                    "children": [
+                      {
+                        "name": "Bad Ragaz",
+                        "type": "admin3",
+                        "lat": 47.00601,
+                        "lon": 9.50266
+                      },
+                      {
+                        "name": "Sargans",
+                        "type": "admin3",
+                        "lat": 47.04896,
+                        "lon": 9.44103
+                      },
+                      {
+                        "name": "Walenstadt",
+                        "type": "admin3",
+                        "lat": 47.12411,
+                        "lon": 9.31194
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis See-Gaster",
+                    "type": "admin2",
+                    "aliases": [
+                      "See-Gaster"
+                    ],
+                    "lat": 47.22459,
+                    "lon": 9.0168,
+                    "children": [
+                      {
+                        "name": "Eschenbach",
+                        "type": "admin3",
+                        "lat": 47.23981,
+                        "lon": 8.92156
+                      },
+                      {
+                        "name": "Jona",
+                        "type": "admin3",
+                        "lat": 47.22983,
+                        "lon": 8.83884
+                      },
+                      {
+                        "name": "Rapperswil",
+                        "type": "admin3",
+                        "lat": 47.22557,
+                        "lon": 8.82228
+                      },
+                      {
+                        "name": "Uznach",
+                        "type": "admin3",
+                        "lat": 47.22421,
+                        "lon": 8.98263
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis St. Gallen",
+                    "type": "admin2",
+                    "lat": 47.46342,
+                    "lon": 9.39052,
+                    "children": [
+                      {
+                        "name": "Gossau",
+                        "type": "admin3",
+                        "lat": 47.41551,
+                        "lon": 9.25482
+                      },
+                      {
+                        "name": "Sankt Gallen",
+                        "type": "admin3",
+                        "lat": 47.42391,
+                        "lon": 9.37477
+                      },
+                      {
+                        "name": "Wittenbach",
+                        "type": "admin3",
+                        "lat": 47.46108,
+                        "lon": 9.38601
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis Toggenburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Toggenburg"
+                    ],
+                    "lat": 47.29453,
+                    "lon": 9.17283,
+                    "children": [
+                      {
+                        "name": "Kirchberg",
+                        "type": "admin3",
+                        "lat": 47.41159,
+                        "lon": 9.0402
+                      },
+                      {
+                        "name": "Wattwil",
+                        "type": "admin3",
+                        "lat": 47.29955,
+                        "lon": 9.08657
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis Werdenberg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Circondario di Werdenberg",
+                      "District Werdenberg",
+                      "District de Werdenberg"
+                    ],
+                    "lat": 47.17743,
+                    "lon": 9.46299,
+                    "children": [
+                      {
+                        "name": "Buchs",
+                        "type": "admin3",
+                        "lat": 47.16743,
+                        "lon": 9.47794
+                      },
+                      {
+                        "name": "Grabs",
+                        "type": "admin3",
+                        "lat": 47.18248,
+                        "lon": 9.44395
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wahlkreis Wil",
+                    "type": "admin2",
+                    "aliases": [
+                      "Circonscription de Wil",
+                      "Circoscrizione di Wil",
+                      "Circunscripcion de Wil"
+                    ],
+                    "lat": 47.42591,
+                    "lon": 9.12451,
+                    "children": [
+                      {
+                        "name": "Flawil",
+                        "type": "admin3",
+                        "lat": 47.41301,
+                        "lon": 9.18324
+                      },
+                      {
+                        "name": "Oberuzwil",
+                        "type": "admin3",
+                        "lat": 47.43076,
+                        "lon": 9.12724
+                      },
+                      {
+                        "name": "Uzwil",
+                        "type": "admin3",
+                        "lat": 47.43653,
+                        "lon": 9.13422
+                      },
+                      {
+                        "name": "Wil",
+                        "type": "admin3",
+                        "lat": 47.46152,
+                        "lon": 9.04552
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Thurgau",
+                "type": "admin1",
+                "aliases": [
+                  "CH057",
+                  "Canton Turgovia",
+                  "Canton de Thurgau",
+                  "Canton de Thurgovie"
+                ],
+                "lat": 47.561178,
+                "lon": 9.111172,
+                "children": [
+                  {
+                    "name": "Bezirk Arbon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arbon",
+                      "Arbon District",
+                      "Bezirk Arbon"
+                    ],
+                    "lat": 47.54867,
+                    "lon": 9.35159,
+                    "children": [
+                      {
+                        "name": "Amriswil",
+                        "type": "admin3",
+                        "lat": 47.54699,
+                        "lon": 9.29586
+                      },
+                      {
+                        "name": "Arbon",
+                        "type": "admin3",
+                        "lat": 47.51667,
+                        "lon": 9.43333
+                      },
+                      {
+                        "name": "Romanshorn",
+                        "type": "admin3",
+                        "lat": 47.56586,
+                        "lon": 9.37869
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Frauenfeld",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Frauenfeld",
+                      "Frauenfeld"
+                    ],
+                    "lat": 47.61115,
+                    "lon": 8.89444,
+                    "children": [
+                      {
+                        "name": "Frauenfeld",
+                        "type": "admin3",
+                        "lat": 47.55776,
+                        "lon": 8.89893
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Kreuzlingen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kreuzlingen",
+                      "Kreuzlingen"
+                    ],
+                    "lat": 47.63046,
+                    "lon": 9.16458,
+                    "children": [
+                      {
+                        "name": "Kreuzlingen",
+                        "type": "admin3",
+                        "lat": 47.65051,
+                        "lon": 9.17504
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Münchwilen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Muenchwilen",
+                      "Bezirk Münchwilen",
+                      "Muenchwilen"
+                    ],
+                    "lat": 47.47324,
+                    "lon": 8.98812,
+                    "children": [
+                      {
+                        "name": "Aadorf",
+                        "type": "admin3",
+                        "lat": 47.49204,
+                        "lon": 8.90099
+                      },
+                      {
+                        "name": "Münchwilen",
+                        "type": "admin3",
+                        "lat": 47.47719,
+                        "lon": 8.99677
+                      },
+                      {
+                        "name": "Sirnach",
+                        "type": "admin3",
+                        "lat": 47.46222,
+                        "lon": 8.99763
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Weinfelden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Weinfelden",
+                      "Circondario di Weinfelden",
+                      "District Weinfelden"
+                    ],
+                    "lat": 47.54237,
+                    "lon": 9.15713,
+                    "children": [
+                      {
+                        "name": "Weinfelden",
+                        "type": "admin3",
+                        "lat": 47.56667,
+                        "lon": 9.1
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Uri",
+                "type": "admin1",
+                "aliases": [
+                  "Bang Uri",
+                  "CH062",
+                  "Canton Uri",
+                  "Canton d'Uri"
+                ],
+                "lat": 46.83042,
+                "lon": 8.63876,
+                "children": [
+                  {
+                    "name": "Uri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Uri"
+                    ],
+                    "lat": 46.83042,
+                    "lon": 8.63876,
+                    "children": [
+                      {
+                        "name": "Altdorf",
+                        "type": "admin3",
+                        "lat": 46.88042,
+                        "lon": 8.64441
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Zug",
+                "type": "admin1",
+                "aliases": [
+                  "Bang Zug",
+                  "CH066",
+                  "Canto de Zug",
+                  "Canton Zug"
+                ],
+                "lat": 47.1645,
+                "lon": 8.52052,
+                "children": [
+                  {
+                    "name": "Zug",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canton de Zoug",
+                      "Canton de Zug",
+                      "Canton of Zug"
+                    ],
+                    "lat": 47.1645,
+                    "lon": 8.52052,
+                    "children": [
+                      {
+                        "name": "Baar",
+                        "type": "admin3",
+                        "lat": 47.19625,
+                        "lon": 8.52954
+                      },
+                      {
+                        "name": "Cham",
+                        "type": "admin3",
+                        "lat": 47.18213,
+                        "lon": 8.46358
+                      },
+                      {
+                        "name": "Hünenberg",
+                        "type": "admin3",
+                        "lat": 47.17536,
+                        "lon": 8.42497
+                      },
+                      {
+                        "name": "Rotkreuz",
+                        "type": "admin3",
+                        "lat": 47.14283,
+                        "lon": 8.4314
+                      },
+                      {
+                        "name": "Steinhausen",
+                        "type": "admin3",
+                        "lat": 47.1951,
+                        "lon": 8.48581
+                      },
+                      {
+                        "name": "Unterägeri",
+                        "type": "admin3",
+                        "lat": 47.13645,
+                        "lon": 8.5853
+                      },
+                      {
+                        "name": "Zug",
+                        "type": "admin3",
+                        "lat": 47.17242,
+                        "lon": 8.51745
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kanton Zürich",
+                "type": "admin1",
+                "aliases": [
+                  "CH040",
+                  "Canton Zuricu",
+                  "Canton Zurigh",
+                  "Canton Zurigo"
+                ],
+                "lat": 47.392842,
+                "lon": 8.626166,
+                "children": [
+                  {
+                    "name": "Bezirk Affoltern",
+                    "type": "admin2",
+                    "aliases": [
+                      "Affoltern",
+                      "Bezirk Affoltern",
+                      "Knonaueramt"
+                    ],
+                    "lat": 47.27311,
+                    "lon": 8.47444,
+                    "children": [
+                      {
+                        "name": "Affoltern am Albis",
+                        "type": "admin3",
+                        "lat": 47.27743,
+                        "lon": 8.45128
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Andelfingen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Andelfingen",
+                      "Andelfingen District",
+                      "Bezirk Andelfingen"
+                    ],
+                    "lat": 47.61328,
+                    "lon": 8.68124,
+                    "children": []
+                  },
+                  {
+                    "name": "Bezirk Bülach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Buelach",
+                      "Bezirk Bülach",
+                      "Buelach"
+                    ],
+                    "lat": 47.49706,
+                    "lon": 8.56764,
+                    "children": [
+                      {
+                        "name": "Bassersdorf",
+                        "type": "admin3",
+                        "lat": 47.44342,
+                        "lon": 8.62851
+                      },
+                      {
+                        "name": "Bülach",
+                        "type": "admin3",
+                        "lat": 47.52197,
+                        "lon": 8.54049
+                      },
+                      {
+                        "name": "Dietlikon / Dietlikon (Dorf)",
+                        "type": "admin3",
+                        "lat": 47.41827,
+                        "lon": 8.6188
+                      },
+                      {
+                        "name": "Embrach",
+                        "type": "admin3",
+                        "lat": 47.50561,
+                        "lon": 8.59406
+                      },
+                      {
+                        "name": "Kloten",
+                        "type": "admin3",
+                        "lat": 47.45152,
+                        "lon": 8.58491
+                      },
+                      {
+                        "name": "Opfikon",
+                        "type": "admin3",
+                        "lat": 47.43169,
+                        "lon": 8.57588
+                      },
+                      {
+                        "name": "Wallisellen",
+                        "type": "admin3",
+                        "lat": 47.41499,
+                        "lon": 8.59672
+                      },
+                      {
+                        "name": "Wallisellen / Wallisellen-Ost",
+                        "type": "admin3",
+                        "lat": 47.41446,
+                        "lon": 8.59727
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Dielsdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Dielsdorf",
+                      "Dielsdorf",
+                      "Dielsdorf District"
+                    ],
+                    "lat": 47.47181,
+                    "lon": 8.45631,
+                    "children": [
+                      {
+                        "name": "Regensdorf",
+                        "type": "admin3",
+                        "lat": 47.4341,
+                        "lon": 8.46874
+                      },
+                      {
+                        "name": "Rümlang",
+                        "type": "admin3",
+                        "lat": 47.45041,
+                        "lon": 8.52993
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Dietikon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Dietikon",
+                      "Dietikon"
+                    ],
+                    "lat": 47.38804,
+                    "lon": 8.4426,
+                    "children": [
+                      {
+                        "name": "Dietikon",
+                        "type": "admin3",
+                        "lat": 47.40165,
+                        "lon": 8.40015
+                      },
+                      {
+                        "name": "Oberengstringen",
+                        "type": "admin3",
+                        "lat": 47.40841,
+                        "lon": 8.46515
+                      },
+                      {
+                        "name": "Schlieren",
+                        "type": "admin3",
+                        "lat": 47.39668,
+                        "lon": 8.44763
+                      },
+                      {
+                        "name": "Urdorf",
+                        "type": "admin3",
+                        "lat": 47.38507,
+                        "lon": 8.42581
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Hinwil",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hinwil",
+                      "Hinwil"
+                    ],
+                    "lat": 47.29646,
+                    "lon": 8.83431,
+                    "children": [
+                      {
+                        "name": "Hinwil",
+                        "type": "admin3",
+                        "lat": 47.29426,
+                        "lon": 8.84393
+                      },
+                      {
+                        "name": "Rüti",
+                        "type": "admin3",
+                        "lat": 47.25603,
+                        "lon": 8.85552
+                      },
+                      {
+                        "name": "Wetzikon",
+                        "type": "admin3",
+                        "lat": 47.3264,
+                        "lon": 8.79779
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Horgen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Horgen",
+                      "Horgen"
+                    ],
+                    "lat": 47.25767,
+                    "lon": 8.59702,
+                    "children": [
+                      {
+                        "name": "Adliswil",
+                        "type": "admin3",
+                        "lat": 47.30997,
+                        "lon": 8.52462
+                      },
+                      {
+                        "name": "Horgen",
+                        "type": "admin3",
+                        "lat": 47.25983,
+                        "lon": 8.59778
+                      },
+                      {
+                        "name": "Horgen / Horgen (Dorfkern)",
+                        "type": "admin3",
+                        "lat": 47.25604,
+                        "lon": 8.60159
+                      },
+                      {
+                        "name": "Kilchberg",
+                        "type": "admin3",
+                        "lat": 47.32438,
+                        "lon": 8.54548
+                      },
+                      {
+                        "name": "Langnau am Albis",
+                        "type": "admin3",
+                        "lat": 47.28885,
+                        "lon": 8.5411
+                      },
+                      {
+                        "name": "Richterswil",
+                        "type": "admin3",
+                        "lat": 47.20622,
+                        "lon": 8.69686
+                      },
+                      {
+                        "name": "Thalwil",
+                        "type": "admin3",
+                        "lat": 47.29175,
+                        "lon": 8.56351
+                      },
+                      {
+                        "name": "Thalwil / Dorfkern",
+                        "type": "admin3",
+                        "lat": 47.29047,
+                        "lon": 8.56633
+                      },
+                      {
+                        "name": "Wädenswil",
+                        "type": "admin3",
+                        "lat": 47.22683,
+                        "lon": 8.6687
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Meilen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Meilen",
+                      "Meilen"
+                    ],
+                    "lat": 47.2792,
+                    "lon": 8.66259,
+                    "children": [
+                      {
+                        "name": "Herrliberg",
+                        "type": "admin3",
+                        "lat": 47.29064,
+                        "lon": 8.61464
+                      },
+                      {
+                        "name": "Hombrechtikon",
+                        "type": "admin3",
+                        "lat": 47.25298,
+                        "lon": 8.77212
+                      },
+                      {
+                        "name": "Küsnacht",
+                        "type": "admin3",
+                        "lat": 47.31805,
+                        "lon": 8.58401
+                      },
+                      {
+                        "name": "Männedorf",
+                        "type": "admin3",
+                        "lat": 47.25686,
+                        "lon": 8.69893
+                      },
+                      {
+                        "name": "Meilen",
+                        "type": "admin3",
+                        "lat": 47.27232,
+                        "lon": 8.64617
+                      },
+                      {
+                        "name": "Stäfa",
+                        "type": "admin3",
+                        "lat": 47.24254,
+                        "lon": 8.72342
+                      },
+                      {
+                        "name": "Zollikon",
+                        "type": "admin3",
+                        "lat": 47.34019,
+                        "lon": 8.57407
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Pfäffikon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Pfaeffikon",
+                      "Bezirk Pfäffikon",
+                      "Pfaeffikon"
+                    ],
+                    "lat": 47.40905,
+                    "lon": 8.77208,
+                    "children": [
+                      {
+                        "name": "Effretikon",
+                        "type": "admin3",
+                        "lat": 47.42575,
+                        "lon": 8.69094
+                      },
+                      {
+                        "name": "Pfäffikon",
+                        "type": "admin3",
+                        "lat": 47.36453,
+                        "lon": 8.79202
+                      },
+                      {
+                        "name": "Pfäffikon / Pfäffikon (Dorfkern)",
+                        "type": "admin3",
+                        "lat": 47.36943,
+                        "lon": 8.78309
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Uster",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Uster",
+                      "Distretto di Uster",
+                      "District Uster"
+                    ],
+                    "lat": 47.34952,
+                    "lon": 8.71353,
+                    "children": [
+                      {
+                        "name": "Dübendorf",
+                        "type": "admin3",
+                        "lat": 47.39724,
+                        "lon": 8.61872
+                      },
+                      {
+                        "name": "Egg",
+                        "type": "admin3",
+                        "lat": 47.29976,
+                        "lon": 8.69032
+                      },
+                      {
+                        "name": "Greifensee",
+                        "type": "admin3",
+                        "lat": 47.36717,
+                        "lon": 8.68115
+                      },
+                      {
+                        "name": "Hegnau",
+                        "type": "admin3",
+                        "lat": 47.39227,
+                        "lon": 8.66988
+                      },
+                      {
+                        "name": "Uster",
+                        "type": "admin3",
+                        "lat": 47.34713,
+                        "lon": 8.72091
+                      },
+                      {
+                        "name": "Uster / Kirch-Uster",
+                        "type": "admin3",
+                        "lat": 47.34579,
+                        "lon": 8.71839
+                      },
+                      {
+                        "name": "Uster / Ober-Uster",
+                        "type": "admin3",
+                        "lat": 47.34874,
+                        "lon": 8.73319
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Winterthur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Winterthur",
+                      "Distretto di Winterthur",
+                      "District Winterthur"
+                    ],
+                    "lat": 47.50781,
+                    "lon": 8.769,
+                    "children": [
+                      {
+                        "name": "Mattenbach (Kreis 7)",
+                        "type": "admin3",
+                        "lat": 47.48705,
+                        "lon": 8.74681
+                      },
+                      {
+                        "name": "Mattenbach (Kreis 7) / Deutweg",
+                        "type": "admin3",
+                        "lat": 47.49419,
+                        "lon": 8.73948
+                      },
+                      {
+                        "name": "Oberwinterthur (Kreis 2)",
+                        "type": "admin3",
+                        "lat": 47.51692,
+                        "lon": 8.76863
+                      },
+                      {
+                        "name": "Oberwinterthur (Kreis 2) / Guggenbühl",
+                        "type": "admin3",
+                        "lat": 47.51339,
+                        "lon": 8.75998
+                      },
+                      {
+                        "name": "Oberwinterthur (Kreis 2) / Talacker",
+                        "type": "admin3",
+                        "lat": 47.50596,
+                        "lon": 8.7515
+                      },
+                      {
+                        "name": "Seen (Kreis 3)",
+                        "type": "admin3",
+                        "lat": 47.47646,
+                        "lon": 8.76996
+                      },
+                      {
+                        "name": "Stadt Winterthur (Kreis 1)",
+                        "type": "admin3",
+                        "lat": 47.49494,
+                        "lon": 8.71954
+                      },
+                      {
+                        "name": "Töss (Kreis 4)",
+                        "type": "admin3",
+                        "lat": 47.4789,
+                        "lon": 8.70215
+                      },
+                      {
+                        "name": "Veltheim (Kreis 5)",
+                        "type": "admin3",
+                        "lat": 47.51419,
+                        "lon": 8.717
+                      },
+                      {
+                        "name": "Winterthur",
+                        "type": "admin3",
+                        "lat": 47.50564,
+                        "lon": 8.72413
+                      },
+                      {
+                        "name": "Wülflingen (Kreis 6)",
+                        "type": "admin3",
+                        "lat": 47.51036,
+                        "lon": 8.68333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bezirk Zürich",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canton de Zurich",
+                      "Canton of Zurich",
+                      "Cantone di Zurigo"
+                    ],
+                    "lat": 47.3711,
+                    "lon": 8.54323,
+                    "children": [
+                      {
+                        "name": "Zürich",
+                        "type": "admin3",
+                        "lat": 47.36667,
+                        "lon": 8.55
+                      },
+                      {
+                        "name": "Zürich (Kreis 1)",
+                        "type": "admin3",
+                        "lat": 47.37055,
+                        "lon": 8.54177
+                      },
+                      {
+                        "name": "Zürich (Kreis 10)",
+                        "type": "admin3",
+                        "lat": 47.40773,
+                        "lon": 8.5005
+                      },
+                      {
+                        "name": "Zürich (Kreis 10) / Höngg",
+                        "type": "admin3",
+                        "lat": 47.40313,
+                        "lon": 8.4971
+                      },
+                      {
+                        "name": "Zürich (Kreis 10) / Wipkingen",
+                        "type": "admin3",
+                        "lat": 47.39503,
+                        "lon": 8.52529
+                      },
+                      {
+                        "name": "Zürich (Kreis 11)",
+                        "type": "admin3",
+                        "lat": 47.42326,
+                        "lon": 8.52166
+                      },
+                      {
+                        "name": "Zürich (Kreis 11) / Affoltern",
+                        "type": "admin3",
+                        "lat": 47.41814,
+                        "lon": 8.5122
+                      },
+                      {
+                        "name": "Zürich (Kreis 11) / Oerlikon",
+                        "type": "admin3",
+                        "lat": 47.40823,
+                        "lon": 8.54258
+                      },
+                      {
+                        "name": "Zürich (Kreis 11) / Seebach",
+                        "type": "admin3",
+                        "lat": 47.42181,
+                        "lon": 8.54779
+                      },
+                      {
+                        "name": "Zürich (Kreis 12)",
+                        "type": "admin3",
+                        "lat": 47.40372,
+                        "lon": 8.57608
+                      },
+                      {
+                        "name": "Zürich (Kreis 12) / Hirzenbach",
+                        "type": "admin3",
+                        "lat": 47.40187,
+                        "lon": 8.58633
+                      },
+                      {
+                        "name": "Zürich (Kreis 12) / Saatlen",
+                        "type": "admin3",
+                        "lat": 47.41127,
+                        "lon": 8.5648
+                      },
+                      {
+                        "name": "Zürich (Kreis 12) / Schwamendingen-Mitte",
+                        "type": "admin3",
+                        "lat": 47.4063,
+                        "lon": 8.57242
+                      },
+                      {
+                        "name": "Zürich (Kreis 2)",
+                        "type": "admin3",
+                        "lat": 47.33756,
+                        "lon": 8.5211
+                      },
+                      {
+                        "name": "Zürich (Kreis 2) / Enge",
+                        "type": "admin3",
+                        "lat": 47.3605,
+                        "lon": 8.53127
+                      },
+                      {
+                        "name": "Zürich (Kreis 2) / Wollishofen",
+                        "type": "admin3",
+                        "lat": 47.3401,
+                        "lon": 8.53134
+                      },
+                      {
+                        "name": "Zürich (Kreis 3)",
+                        "type": "admin3",
+                        "lat": 47.35785,
+                        "lon": 8.50296
+                      },
+                      {
+                        "name": "Zürich (Kreis 3) / Alt-Wiedikon",
+                        "type": "admin3",
+                        "lat": 47.36201,
+                        "lon": 8.51497
+                      },
+                      {
+                        "name": "Zürich (Kreis 3) / Friesenberg",
+                        "type": "admin3",
+                        "lat": 47.36372,
+                        "lon": 8.50417
+                      },
+                      {
+                        "name": "Zürich (Kreis 3) / Sihlfeld",
+                        "type": "admin3",
+                        "lat": 47.37382,
+                        "lon": 8.51164
+                      },
+                      {
+                        "name": "Zürich (Kreis 4) / Aussersihl",
+                        "type": "admin3",
+                        "lat": 47.37752,
+                        "lon": 8.52127
+                      },
+                      {
+                        "name": "Zürich (Kreis 4) / Hard",
+                        "type": "admin3",
+                        "lat": 47.38311,
+                        "lon": 8.50942
+                      },
+                      {
+                        "name": "Zürich (Kreis 4) / Langstrasse",
+                        "type": "admin3",
+                        "lat": 47.37767,
+                        "lon": 8.52854
+                      },
+                      {
+                        "name": "Zürich (Kreis 5)",
+                        "type": "admin3",
+                        "lat": 47.38767,
+                        "lon": 8.52152
+                      },
+                      {
+                        "name": "Zürich (Kreis 5) / Gewerbeschule",
+                        "type": "admin3",
+                        "lat": 47.38481,
+                        "lon": 8.53011
+                      },
+                      {
+                        "name": "Zürich (Kreis 6)",
+                        "type": "admin3",
+                        "lat": 47.39223,
+                        "lon": 8.54381
+                      },
+                      {
+                        "name": "Zürich (Kreis 6) / Oberstrass",
+                        "type": "admin3",
+                        "lat": 47.38917,
+                        "lon": 8.5504
+                      },
+                      {
+                        "name": "Zürich (Kreis 6) / Unterstrass",
+                        "type": "admin3",
+                        "lat": 47.3953,
+                        "lon": 8.53721
+                      },
+                      {
+                        "name": "Zürich (Kreis 7)",
+                        "type": "admin3",
+                        "lat": 47.37328,
+                        "lon": 8.58038
+                      },
+                      {
+                        "name": "Zürich (Kreis 7) / Fluntern",
+                        "type": "admin3",
+                        "lat": 47.38013,
+                        "lon": 8.56133
+                      },
+                      {
+                        "name": "Zürich (Kreis 7) / Hirslanden",
+                        "type": "admin3",
+                        "lat": 47.3624,
+                        "lon": 8.56755
+                      },
+                      {
+                        "name": "Zürich (Kreis 7) / Hottingen",
+                        "type": "admin3",
+                        "lat": 47.37011,
+                        "lon": 8.56306
+                      },
+                      {
+                        "name": "Zürich (Kreis 7) / Witikon",
+                        "type": "admin3",
+                        "lat": 47.35751,
+                        "lon": 8.59105
+                      },
+                      {
+                        "name": "Zürich (Kreis 8)",
+                        "type": "admin3",
+                        "lat": 47.3548,
+                        "lon": 8.56097
+                      },
+                      {
+                        "name": "Zürich (Kreis 8) / Mühlebach",
+                        "type": "admin3",
+                        "lat": 47.35727,
+                        "lon": 8.55744
+                      },
+                      {
+                        "name": "Zürich (Kreis 9)",
+                        "type": "admin3",
+                        "lat": 47.38245,
+                        "lon": 8.47993
+                      },
+                      {
+                        "name": "Zürich (Kreis 9) / Albisrieden",
+                        "type": "admin3",
+                        "lat": 47.37398,
+                        "lon": 8.49007
+                      },
+                      {
+                        "name": "Zürich (Kreis 9) / Altstetten",
+                        "type": "admin3",
+                        "lat": 47.38946,
+                        "lon": 8.48533
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,2596 @@
+{
+  "id": "at-bezirke",
+  "name": "Austria Bundesländer + Bezirke",
+  "locale": "at",
+  "description": "Austria: 9 Bundesländer (admin1) + 94 Bezirke (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/AT.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Austria",
+            "type": "country",
+            "aliases": [
+              "Österreich",
+              "Autriche",
+              "Austria"
+            ],
+            "lat": 47.6,
+            "lon": 13.3,
+            "children": [
+              {
+                "name": "Burgenland",
+                "type": "admin1",
+                "aliases": [
+                  "AT11",
+                  "Bgld",
+                  "Bournkenlant",
+                  "Burgenland"
+                ],
+                "lat": 47.54835,
+                "lon": 16.473407,
+                "children": [
+                  {
+                    "name": "Eisenstadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aizenstadt",
+                      "Aizenstat",
+                      "Aizenštadt"
+                    ],
+                    "lat": 47.8445,
+                    "lon": 16.52575,
+                    "children": [
+                      {
+                        "name": "Eisenstadt",
+                        "type": "admin3",
+                        "lat": 47.84565,
+                        "lon": 16.52327
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Eisenstadt-Umgebung",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Eisenstadt-Umgebung",
+                      "Eisenstadt Land",
+                      "Eisenstadt-Umgebung"
+                    ],
+                    "lat": 47.83333,
+                    "lon": 16.58333,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Güssing",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Guessing",
+                      "Bezirk Güssing",
+                      "Guessing"
+                    ],
+                    "lat": 47.10164,
+                    "lon": 16.30363,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Jennersdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Jennersdorf",
+                      "Jennersdorf",
+                      "Politischer Bezirk Jennersdorf"
+                    ],
+                    "lat": 46.9368,
+                    "lon": 16.1418,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Mattersburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Mattersburg",
+                      "Mattersburg",
+                      "Mattersburg District"
+                    ],
+                    "lat": 47.73823,
+                    "lon": 16.39486,
+                    "children": [
+                      {
+                        "name": "Mattersburg",
+                        "type": "admin3",
+                        "lat": 47.73333,
+                        "lon": 16.4
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Neusiedl am See",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Neusiedl am See",
+                      "Neusiedl am See",
+                      "Politischer Bezirk Neusiedl am See"
+                    ],
+                    "lat": 47.88853,
+                    "lon": 16.92465,
+                    "children": [
+                      {
+                        "name": "Neusiedl am See",
+                        "type": "admin3",
+                        "lat": 47.94901,
+                        "lon": 16.8417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Oberpullendorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mittelburgenland",
+                      "Oberpullendorf",
+                      "Oberpullendorf District"
+                    ],
+                    "lat": 47.50184,
+                    "lon": 16.50593,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Oberwart",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Oberwart",
+                      "Oberwart",
+                      "Oberwart District"
+                    ],
+                    "lat": 47.28854,
+                    "lon": 16.20861,
+                    "children": [
+                      {
+                        "name": "Oberwart",
+                        "type": "admin3",
+                        "lat": 47.28971,
+                        "lon": 16.20595
+                      },
+                      {
+                        "name": "Pinkafeld",
+                        "type": "admin3",
+                        "lat": 47.3709,
+                        "lon": 16.1241
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rust",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rust",
+                      "Stadt Rust"
+                    ],
+                    "lat": 47.80174,
+                    "lon": 16.6721,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kärnten",
+                "type": "admin1",
+                "aliases": [
+                  "AT21",
+                  "Carendre",
+                  "Carinsia",
+                  "Carinthia"
+                ],
+                "lat": 46.692834,
+                "lon": 14.067977,
+                "children": [
+                  {
+                    "name": "Klagenfurt am Wörthersee",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klagenfurt",
+                      "Klagenfurt am Woerthersee",
+                      "Klagenfurt am Wörthersee"
+                    ],
+                    "lat": 46.63333,
+                    "lon": 14.3,
+                    "children": [
+                      {
+                        "name": "Annabichl",
+                        "type": "admin3",
+                        "lat": 46.65,
+                        "lon": 14.31667
+                      },
+                      {
+                        "name": "Klagenfurt am Wörthersee",
+                        "type": "admin3",
+                        "lat": 46.62472,
+                        "lon": 14.30528
+                      },
+                      {
+                        "name": "Sankt Martin",
+                        "type": "admin3",
+                        "lat": 46.61667,
+                        "lon": 14.28333
+                      },
+                      {
+                        "name": "Sankt Peter",
+                        "type": "admin3",
+                        "lat": 46.62978,
+                        "lon": 14.34016
+                      },
+                      {
+                        "name": "Sankt Ruprecht",
+                        "type": "admin3",
+                        "lat": 46.6,
+                        "lon": 14.31667
+                      },
+                      {
+                        "name": "Viktring",
+                        "type": "admin3",
+                        "lat": 46.59194,
+                        "lon": 14.26917
+                      },
+                      {
+                        "name": "Villacher Vorstadt",
+                        "type": "admin3",
+                        "lat": 46.62368,
+                        "lon": 14.28892
+                      },
+                      {
+                        "name": "Wölfnitz",
+                        "type": "admin3",
+                        "lat": 46.66639,
+                        "lon": 14.25806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Feldkirchen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Feldkirchen",
+                      "Feldkirchen",
+                      "Feldkirchen District"
+                    ],
+                    "lat": 46.72127,
+                    "lon": 14.09683,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Hermagor",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hermagor",
+                      "Hermagor",
+                      "Politischer Bezirk Hermagor"
+                    ],
+                    "lat": 46.63137,
+                    "lon": 13.13246,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Klagenfurt Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Klagenfurt-Land",
+                      "Klagenfurt Land",
+                      "Politischer Bezirk Klagenfurt Land"
+                    ],
+                    "lat": 46.56722,
+                    "lon": 14.29295,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Sankt Veit an der Glan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sankt Veit an der Glan",
+                      "Sankt Veit an der Glan District"
+                    ],
+                    "lat": 46.83333,
+                    "lon": 14.4,
+                    "children": [
+                      {
+                        "name": "Sankt Veit an der Glan",
+                        "type": "admin3",
+                        "lat": 46.76806,
+                        "lon": 14.36028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Spittal an der Drau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Spittal an der Drau",
+                      "Politischer Bezirk Spittal an der Drau",
+                      "Spittal"
+                    ],
+                    "lat": 46.85,
+                    "lon": 13.33333,
+                    "children": [
+                      {
+                        "name": "Spittal an der Drau",
+                        "type": "admin3",
+                        "lat": 46.8,
+                        "lon": 13.5
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Villach Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Villach-Land",
+                      "Politischer Bezirk Villach Land",
+                      "Villach Land"
+                    ],
+                    "lat": 46.65308,
+                    "lon": 13.77287,
+                    "children": [
+                      {
+                        "name": "Finkenstein am Faaker See",
+                        "type": "admin3",
+                        "lat": 46.56081,
+                        "lon": 13.87115
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Völkermarkt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Politischer Bezirk Volkermarkt",
+                      "Politischer Bezirk Völkermarkt",
+                      "Voelkermarkt"
+                    ],
+                    "lat": 46.59641,
+                    "lon": 14.66664,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Wolfsberg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Wolfsberg",
+                      "Politischer Bezirk Wolfsberg",
+                      "Wolfsberg"
+                    ],
+                    "lat": 46.83333,
+                    "lon": 14.83333,
+                    "children": [
+                      {
+                        "name": "Wolfsberg",
+                        "type": "admin3",
+                        "lat": 46.84056,
+                        "lon": 14.84417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Villach Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beljak",
+                      "Stadt Villach",
+                      "Villach Stadt"
+                    ],
+                    "lat": 46.609,
+                    "lon": 13.85136,
+                    "children": [
+                      {
+                        "name": "Auen",
+                        "type": "admin3",
+                        "lat": 46.59963,
+                        "lon": 13.84389
+                      },
+                      {
+                        "name": "Lind",
+                        "type": "admin3",
+                        "lat": 46.62244,
+                        "lon": 13.84715
+                      },
+                      {
+                        "name": "Villach",
+                        "type": "admin3",
+                        "lat": 46.61028,
+                        "lon": 13.85583
+                      },
+                      {
+                        "name": "Villach-Innere Stadt",
+                        "type": "admin3",
+                        "lat": 46.61275,
+                        "lon": 13.84638
+                      },
+                      {
+                        "name": "Völkendorf",
+                        "type": "admin3",
+                        "lat": 46.60806,
+                        "lon": 13.83153
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Niederösterreich",
+                "type": "admin1",
+                "aliases": [
+                  "AT12",
+                  "Ala-Itaevalta",
+                  "Ala-Itävalta",
+                  "Alam-Austria"
+                ],
+                "lat": 48.249715,
+                "lon": 15.756758,
+                "children": [
+                  {
+                    "name": "Krems an der Donau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krems an der Donau",
+                      "Stadt Krems an der Donau"
+                    ],
+                    "lat": 48.4104,
+                    "lon": 15.60574,
+                    "children": [
+                      {
+                        "name": "Krems an der Donau",
+                        "type": "admin3",
+                        "lat": 48.40921,
+                        "lon": 15.61415
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Amstetten",
+                    "type": "admin2",
+                    "aliases": [
+                      "Amstetten",
+                      "Bezirk Amstetten",
+                      "Distretto di Amstetten"
+                    ],
+                    "lat": 48,
+                    "lon": 14.76667,
+                    "children": [
+                      {
+                        "name": "Amstetten",
+                        "type": "admin3",
+                        "lat": 48.1229,
+                        "lon": 14.87206
+                      },
+                      {
+                        "name": "Sankt Valentin",
+                        "type": "admin3",
+                        "lat": 48.16667,
+                        "lon": 14.51667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Baden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baden",
+                      "Bezirk Baden",
+                      "Politischer Bezirk Baden"
+                    ],
+                    "lat": 47.97729,
+                    "lon": 16.19845,
+                    "children": [
+                      {
+                        "name": "Bad Vöslau",
+                        "type": "admin3",
+                        "lat": 47.96533,
+                        "lon": 16.21359
+                      },
+                      {
+                        "name": "Baden",
+                        "type": "admin3",
+                        "lat": 48.00543,
+                        "lon": 16.23264
+                      },
+                      {
+                        "name": "Berndorf",
+                        "type": "admin3",
+                        "lat": 47.94567,
+                        "lon": 16.10973
+                      },
+                      {
+                        "name": "Ebreichsdorf",
+                        "type": "admin3",
+                        "lat": 47.95579,
+                        "lon": 16.40705
+                      },
+                      {
+                        "name": "Kottingbrunn",
+                        "type": "admin3",
+                        "lat": 47.95096,
+                        "lon": 16.22715
+                      },
+                      {
+                        "name": "Traiskirchen",
+                        "type": "admin3",
+                        "lat": 48.01485,
+                        "lon": 16.29324
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Bruck an der Leitha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Bruck an der Leitha",
+                      "Bruck an der Leitha",
+                      "Politischer Bezirk Bruck an der Leitha"
+                    ],
+                    "lat": 48.06781,
+                    "lon": 16.77284,
+                    "children": [
+                      {
+                        "name": "Bruck an der Leitha",
+                        "type": "admin3",
+                        "lat": 48.0242,
+                        "lon": 16.7757
+                      },
+                      {
+                        "name": "Fischamend",
+                        "type": "admin3",
+                        "lat": 48.11843,
+                        "lon": 16.61211
+                      },
+                      {
+                        "name": "Hainburg an der Donau",
+                        "type": "admin3",
+                        "lat": 48.14627,
+                        "lon": 16.94504
+                      },
+                      {
+                        "name": "Himberg",
+                        "type": "admin3",
+                        "lat": 48.08333,
+                        "lon": 16.43333
+                      },
+                      {
+                        "name": "Leopoldsdorf",
+                        "type": "admin3",
+                        "lat": 48.11557,
+                        "lon": 16.39126
+                      },
+                      {
+                        "name": "Schwechat",
+                        "type": "admin3",
+                        "lat": 48.13333,
+                        "lon": 16.46667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Gänserndorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gaenserndorf",
+                      "Bezirk Gänserndorf",
+                      "Gaenserndorf"
+                    ],
+                    "lat": 48.3934,
+                    "lon": 16.73892,
+                    "children": [
+                      {
+                        "name": "Gänserndorf",
+                        "type": "admin3",
+                        "lat": 48.33925,
+                        "lon": 16.72016
+                      },
+                      {
+                        "name": "Groß-Enzersdorf",
+                        "type": "admin3",
+                        "lat": 48.20278,
+                        "lon": 16.55083
+                      },
+                      {
+                        "name": "Strasshof an der Nordbahn",
+                        "type": "admin3",
+                        "lat": 48.31667,
+                        "lon": 16.66667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Gmünd",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gmuend",
+                      "Bezirk Gmünd",
+                      "Gmuend"
+                    ],
+                    "lat": 48.74732,
+                    "lon": 14.98166,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Hollabrunn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hollabrunn",
+                      "Hollabrunn",
+                      "Politischer Bezirk Hollabrunn"
+                    ],
+                    "lat": 48.65286,
+                    "lon": 15.99701,
+                    "children": [
+                      {
+                        "name": "Hollabrunn",
+                        "type": "admin3",
+                        "lat": 48.55,
+                        "lon": 16.08333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Horn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Horn",
+                      "Horn",
+                      "Politischer Bezirk Horn"
+                    ],
+                    "lat": 48.71341,
+                    "lon": 15.68712,
+                    "children": [
+                      {
+                        "name": "Horn",
+                        "type": "admin3",
+                        "lat": 48.66274,
+                        "lon": 15.65663
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Korneuburg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Korneuburg",
+                      "Politischer Bezirk Korneuburg"
+                    ],
+                    "lat": 48.44343,
+                    "lon": 16.2412,
+                    "children": [
+                      {
+                        "name": "Gerasdorf bei Wien",
+                        "type": "admin3",
+                        "lat": 48.29447,
+                        "lon": 16.46765
+                      },
+                      {
+                        "name": "Korneuburg",
+                        "type": "admin3",
+                        "lat": 48.35,
+                        "lon": 16.33333
+                      },
+                      {
+                        "name": "Langenzersdorf",
+                        "type": "admin3",
+                        "lat": 48.30432,
+                        "lon": 16.36143
+                      },
+                      {
+                        "name": "Stockerau",
+                        "type": "admin3",
+                        "lat": 48.38333,
+                        "lon": 16.21667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Krems",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krems",
+                      "Krems an der Donau",
+                      "Krems an der Donau Land"
+                    ],
+                    "lat": 48.46582,
+                    "lon": 15.52093,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Lilienfeld",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lilienfeld",
+                      "Lilienfeld",
+                      "Politischer Bezirk Lilienfeld"
+                    ],
+                    "lat": 47.91667,
+                    "lon": 15.6,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Melk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Melk",
+                      "Melk",
+                      "Politischer Bezirk Melk"
+                    ],
+                    "lat": 48.21314,
+                    "lon": 15.24282,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Mistelbach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Mistelbach",
+                      "Mistelbach",
+                      "Mistelbach District"
+                    ],
+                    "lat": 48.59436,
+                    "lon": 16.5473,
+                    "children": [
+                      {
+                        "name": "Mistelbach",
+                        "type": "admin3",
+                        "lat": 48.57,
+                        "lon": 16.57667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Mödling",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Moedling",
+                      "Bezirk Mödling",
+                      "Moedling"
+                    ],
+                    "lat": 48.08517,
+                    "lon": 16.24118,
+                    "children": [
+                      {
+                        "name": "Breitenfurt bei Wien",
+                        "type": "admin3",
+                        "lat": 48.13333,
+                        "lon": 16.15
+                      },
+                      {
+                        "name": "Brunn am Gebirge",
+                        "type": "admin3",
+                        "lat": 48.10697,
+                        "lon": 16.28466
+                      },
+                      {
+                        "name": "Guntramsdorf",
+                        "type": "admin3",
+                        "lat": 48.04687,
+                        "lon": 16.31384
+                      },
+                      {
+                        "name": "Maria Enzersdorf",
+                        "type": "admin3",
+                        "lat": 48.1,
+                        "lon": 16.28333
+                      },
+                      {
+                        "name": "Mödling",
+                        "type": "admin3",
+                        "lat": 48.08605,
+                        "lon": 16.28921
+                      },
+                      {
+                        "name": "Neu-Guntramsdorf",
+                        "type": "admin3",
+                        "lat": 48.0642,
+                        "lon": 16.31573
+                      },
+                      {
+                        "name": "Perchtoldsdorf",
+                        "type": "admin3",
+                        "lat": 48.11935,
+                        "lon": 16.26607
+                      },
+                      {
+                        "name": "Vösendorf",
+                        "type": "admin3",
+                        "lat": 48.12107,
+                        "lon": 16.34036
+                      },
+                      {
+                        "name": "Wiener Neudorf",
+                        "type": "admin3",
+                        "lat": 48.08278,
+                        "lon": 16.31384
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Neunkirchen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Neunkirchen",
+                      "Neunkirchen",
+                      "Politischer Bezirk Neunkirchen"
+                    ],
+                    "lat": 47.69424,
+                    "lon": 15.93783,
+                    "children": [
+                      {
+                        "name": "Neunkirchen",
+                        "type": "admin3",
+                        "lat": 47.72096,
+                        "lon": 16.08107
+                      },
+                      {
+                        "name": "Ternitz",
+                        "type": "admin3",
+                        "lat": 47.71565,
+                        "lon": 16.03575
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Sankt Pölten",
+                    "type": "admin2",
+                    "aliases": [
+                      "Politischer Bezirk Sankt Polten",
+                      "Politischer Bezirk Sankt Polten Land",
+                      "Politischer Bezirk Sankt Pölten"
+                    ],
+                    "lat": 48.16905,
+                    "lon": 15.66508,
+                    "children": [
+                      {
+                        "name": "Pressbaum",
+                        "type": "admin3",
+                        "lat": 48.18333,
+                        "lon": 16.08333
+                      },
+                      {
+                        "name": "Purkersdorf",
+                        "type": "admin3",
+                        "lat": 48.20769,
+                        "lon": 16.17539
+                      },
+                      {
+                        "name": "Wilhelmsburg",
+                        "type": "admin3",
+                        "lat": 48.10571,
+                        "lon": 15.60539
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Scheibbs",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Scheibbs",
+                      "Politischer Bezirk Scheibbs",
+                      "Scheibbs"
+                    ],
+                    "lat": 47.92316,
+                    "lon": 15.10376,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Tulln",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Tulln",
+                      "Politischer Bezirk Tulln",
+                      "Tulln"
+                    ],
+                    "lat": 48.3,
+                    "lon": 16,
+                    "children": [
+                      {
+                        "name": "Klosterneuburg",
+                        "type": "admin3",
+                        "lat": 48.30521,
+                        "lon": 16.32522
+                      },
+                      {
+                        "name": "Tulln",
+                        "type": "admin3",
+                        "lat": 48.32829,
+                        "lon": 16.05858
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Waidhofen an der Thaya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Waidhofen an der Thaya",
+                      "Politischer Bezirk Waidhofen an der Thaya",
+                      "Waidhofen an der Thaya"
+                    ],
+                    "lat": 48.85925,
+                    "lon": 15.35814,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Wiener Neustadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Wiener Neustadt-Land",
+                      "Politischer Bezirk Wiener Neustadt",
+                      "Politischer Bezirk Wiener Neustadt Land"
+                    ],
+                    "lat": 47.83203,
+                    "lon": 16.14291,
+                    "children": [
+                      {
+                        "name": "Sollenau",
+                        "type": "admin3",
+                        "lat": 47.89834,
+                        "lon": 16.24833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Zwettl",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Zwettl",
+                      "Politischer Bezirk Zwettl",
+                      "Zwettl"
+                    ],
+                    "lat": 48.57435,
+                    "lon": 15.17159,
+                    "children": []
+                  },
+                  {
+                    "name": "Sankt Pölten Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sankt Poelten Stadt",
+                      "Sankt Pölten Stadt",
+                      "St. Poelten"
+                    ],
+                    "lat": 48.2,
+                    "lon": 15.61667,
+                    "children": [
+                      {
+                        "name": "Sankt Pölten",
+                        "type": "admin3",
+                        "lat": 48.20762,
+                        "lon": 15.63725
+                      },
+                      {
+                        "name": "Spratzern",
+                        "type": "admin3",
+                        "lat": 48.17044,
+                        "lon": 15.61844
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Waidhofen an der Ybbs Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Waidhofen an der Ybbs"
+                    ],
+                    "lat": 47.95999,
+                    "lon": 14.77438,
+                    "children": []
+                  },
+                  {
+                    "name": "Wiener Neustadt Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stadt Wiener Neustadt"
+                    ],
+                    "lat": 47.8,
+                    "lon": 16.25,
+                    "children": [
+                      {
+                        "name": "Wiener Neustadt",
+                        "type": "admin3",
+                        "lat": 47.80485,
+                        "lon": 16.23196
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oberösterreich",
+                "type": "admin1",
+                "aliases": [
+                  "AT31",
+                  "Alta Austria",
+                  "Alta Austria - Oberoesterreich",
+                  "Alta Àustria"
+                ],
+                "lat": 48.186159,
+                "lon": 14.034804,
+                "children": [
+                  {
+                    "name": "Linz Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Linz Stadt",
+                      "Stadt Linz"
+                    ],
+                    "lat": 48.3,
+                    "lon": 14.28333,
+                    "children": [
+                      {
+                        "name": "Linz",
+                        "type": "admin3",
+                        "lat": 48.30639,
+                        "lon": 14.28611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Braunau am Inn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Braunau am Inn",
+                      "Braunau am Inn",
+                      "Politischer Bezirk Braunau am Inn"
+                    ],
+                    "lat": 48.11203,
+                    "lon": 13.08924,
+                    "children": [
+                      {
+                        "name": "Mattighofen",
+                        "type": "admin3",
+                        "lat": 48.10732,
+                        "lon": 13.15081
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Eferding",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Eferding",
+                      "Eferding",
+                      "Politischer Bezirk Eferding"
+                    ],
+                    "lat": 48.32168,
+                    "lon": 13.98453,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Freistadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Freistadt",
+                      "Freistadt District",
+                      "Politischer Bezirk Freistadt"
+                    ],
+                    "lat": 48.47006,
+                    "lon": 14.64844,
+                    "children": [
+                      {
+                        "name": "Freistadt",
+                        "type": "admin3",
+                        "lat": 48.51103,
+                        "lon": 14.50453
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Gmunden",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Gmunden",
+                      "Gmunden",
+                      "Politischer Bezirk Gmunden"
+                    ],
+                    "lat": 47.75,
+                    "lon": 13.75,
+                    "children": [
+                      {
+                        "name": "Gmunden",
+                        "type": "admin3",
+                        "lat": 47.91839,
+                        "lon": 13.79933
+                      },
+                      {
+                        "name": "Laakirchen",
+                        "type": "admin3",
+                        "lat": 47.98188,
+                        "lon": 13.82166
+                      },
+                      {
+                        "name": "Vorchdorf",
+                        "type": "admin3",
+                        "lat": 48.00388,
+                        "lon": 13.92122
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Grieskirchen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Grieskirchen",
+                      "Grieskirchen",
+                      "Politischer Bezirk Grieskirchen"
+                    ],
+                    "lat": 48.26667,
+                    "lon": 13.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Kirchdorf an der Krems",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kirchdorf an der Krems",
+                      "Kirchdorf an der Krems",
+                      "Politischer Bezirk Kirchdorf an der Krems"
+                    ],
+                    "lat": 47.84346,
+                    "lon": 14.21346,
+                    "children": [
+                      {
+                        "name": "Kremsmünster",
+                        "type": "admin3",
+                        "lat": 48.0529,
+                        "lon": 14.12919
+                      },
+                      {
+                        "name": "Micheldorf in Oberösterreich",
+                        "type": "admin3",
+                        "lat": 47.87764,
+                        "lon": 14.13357
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Linz-Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Linz-Land",
+                      "Politischer Bezirk Linz-Land"
+                    ],
+                    "lat": 48.16667,
+                    "lon": 14.3,
+                    "children": [
+                      {
+                        "name": "Enns",
+                        "type": "admin3",
+                        "lat": 48.21346,
+                        "lon": 14.47612
+                      },
+                      {
+                        "name": "Haag",
+                        "type": "admin3",
+                        "lat": 48.27063,
+                        "lon": 14.26875
+                      },
+                      {
+                        "name": "Haid",
+                        "type": "admin3",
+                        "lat": 48.20477,
+                        "lon": 14.25107
+                      },
+                      {
+                        "name": "Hart",
+                        "type": "admin3",
+                        "lat": 48.26526,
+                        "lon": 14.25691
+                      },
+                      {
+                        "name": "Neuhofen an der Krems",
+                        "type": "admin3",
+                        "lat": 48.13866,
+                        "lon": 14.22764
+                      },
+                      {
+                        "name": "Sankt Martin",
+                        "type": "admin3",
+                        "lat": 48.23091,
+                        "lon": 14.26781
+                      },
+                      {
+                        "name": "Traun",
+                        "type": "admin3",
+                        "lat": 48.22086,
+                        "lon": 14.23833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Perg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Perg",
+                      "Perg",
+                      "Perg District"
+                    ],
+                    "lat": 48.25724,
+                    "lon": 14.71796,
+                    "children": [
+                      {
+                        "name": "Perg",
+                        "type": "admin3",
+                        "lat": 48.25,
+                        "lon": 14.63333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Ried im Innkreis",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Ried im Innkreis",
+                      "Politischer Bezirk Ried im Innkreis",
+                      "Ried im Innkreis"
+                    ],
+                    "lat": 48.23333,
+                    "lon": 13.46667,
+                    "children": [
+                      {
+                        "name": "Ried im Innkreis",
+                        "type": "admin3",
+                        "lat": 48.21123,
+                        "lon": 13.48855
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Rohrbach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Rohrbach",
+                      "Politischer Bezirk Rohrbach",
+                      "Politischer Bezirk Rohrbach in Oberosterreich"
+                    ],
+                    "lat": 48.55739,
+                    "lon": 13.96926,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Schärding",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Schaerding",
+                      "Bezirk Schärding",
+                      "Politischer Bezirk Scharding"
+                    ],
+                    "lat": 48.43333,
+                    "lon": 13.6,
+                    "children": [
+                      {
+                        "name": "Schärding",
+                        "type": "admin3",
+                        "lat": 48.45294,
+                        "lon": 13.43722
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Steyr-Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Steyr-Land",
+                      "Politischer Bezirk Steyr Land",
+                      "Steyr-Land"
+                    ],
+                    "lat": 47.9,
+                    "lon": 14.46667,
+                    "children": [
+                      {
+                        "name": "Bad Hall",
+                        "type": "admin3",
+                        "lat": 48.03832,
+                        "lon": 14.20773
+                      },
+                      {
+                        "name": "Neuzeug",
+                        "type": "admin3",
+                        "lat": 48.05,
+                        "lon": 14.33333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Urfahr-Umgebung",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Urfahr-Umgebung",
+                      "Politischer Bezirk Urfahr-Umgebung",
+                      "Urfahr-Umgebung"
+                    ],
+                    "lat": 48.42512,
+                    "lon": 14.27451,
+                    "children": [
+                      {
+                        "name": "Gallneukirchen",
+                        "type": "admin3",
+                        "lat": 48.35363,
+                        "lon": 14.41604
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Vöcklabruck",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Voecklabruck",
+                      "Bezirk Vöcklabruck",
+                      "Voecklabruck"
+                    ],
+                    "lat": 48.00313,
+                    "lon": 13.65772,
+                    "children": [
+                      {
+                        "name": "Attnang-Puchheim",
+                        "type": "admin3",
+                        "lat": 48.00833,
+                        "lon": 13.71667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Steyr Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stadt Steyr",
+                      "Steyr Stadt"
+                    ],
+                    "lat": 48.03333,
+                    "lon": 14.41667,
+                    "children": [
+                      {
+                        "name": "Steyr",
+                        "type": "admin3",
+                        "lat": 48.04274,
+                        "lon": 14.42127
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wels Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Wels-Land",
+                      "Wels"
+                    ],
+                    "lat": 48.16082,
+                    "lon": 14.02164,
+                    "children": [
+                      {
+                        "name": "Lichtenegg",
+                        "type": "admin3",
+                        "lat": 48.15,
+                        "lon": 14
+                      },
+                      {
+                        "name": "Oberhaid",
+                        "type": "admin3",
+                        "lat": 48.17593,
+                        "lon": 14.01495
+                      },
+                      {
+                        "name": "Wels",
+                        "type": "admin3",
+                        "lat": 48.16667,
+                        "lon": 14.03333
+                      },
+                      {
+                        "name": "Wimpassing",
+                        "type": "admin3",
+                        "lat": 48.16667,
+                        "lon": 13.98333
+                      },
+                      {
+                        "name": "WÖS",
+                        "type": "admin3",
+                        "lat": 48.16553,
+                        "lon": 14.03651
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wels-Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Wels-Land",
+                      "Distret di Wels-Land",
+                      "Distretto di Wels-Land"
+                    ],
+                    "lat": 48.1166,
+                    "lon": 13.96637,
+                    "children": [
+                      {
+                        "name": "Marchtrenk",
+                        "type": "admin3",
+                        "lat": 48.19022,
+                        "lon": 14.10908
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Salzburg",
+                "type": "admin1",
+                "aliases": [
+                  "AT32",
+                  "Deelstaat Salzburg",
+                  "Estado de Salzburgo",
+                  "Etat de Salzbourg"
+                ],
+                "lat": 47.495698,
+                "lon": 13.205552,
+                "children": [
+                  {
+                    "name": "Politischer Bezirk Hallein",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Hallein",
+                      "Hallein",
+                      "Hallein District"
+                    ],
+                    "lat": 47.6,
+                    "lon": 13.3,
+                    "children": [
+                      {
+                        "name": "Hallein",
+                        "type": "admin3",
+                        "lat": 47.68333,
+                        "lon": 13.1
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Salzburg-Umgebung",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Salzburg-Umgebung",
+                      "Politischer Bezirk Salzburg-Umgebung",
+                      "Salzburg Land"
+                    ],
+                    "lat": 47.84019,
+                    "lon": 13.18799,
+                    "children": [
+                      {
+                        "name": "Oberndorf bei Salzburg",
+                        "type": "admin3",
+                        "lat": 47.93911,
+                        "lon": 12.95108
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Sankt Johann im Pongau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk St. Johann im Pongau",
+                      "Politischer Bezirk Sankt Johann im Pongau",
+                      "Pongau"
+                    ],
+                    "lat": 47.3,
+                    "lon": 13.3,
+                    "children": [
+                      {
+                        "name": "Bischofshofen",
+                        "type": "admin3",
+                        "lat": 47.41667,
+                        "lon": 13.21667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Tamsweg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Tamsweg",
+                      "Politischer Bezirk Tamsweg",
+                      "Tamsweg"
+                    ],
+                    "lat": 47.15,
+                    "lon": 13.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Zell am See",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Zell am See",
+                      "Politischer Bezirk Zell am See",
+                      "Zell am See"
+                    ],
+                    "lat": 47.28333,
+                    "lon": 12.7,
+                    "children": [
+                      {
+                        "name": "Saalfelden am Steinernen Meer",
+                        "type": "admin3",
+                        "lat": 47.42681,
+                        "lon": 12.848
+                      },
+                      {
+                        "name": "Zell am See",
+                        "type": "admin3",
+                        "lat": 47.32306,
+                        "lon": 12.79839
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Salzburg Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Salisburgo",
+                      "Salzbourg",
+                      "Salzburg"
+                    ],
+                    "lat": 47.80067,
+                    "lon": 13.04532,
+                    "children": [
+                      {
+                        "name": "Salzburg",
+                        "type": "admin3",
+                        "lat": 47.79941,
+                        "lon": 13.04399
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Steiermark",
+                "type": "admin1",
+                "aliases": [
+                  "AT22",
+                  "Estiria",
+                  "Estíria",
+                  "Ijolati Shtirija"
+                ],
+                "lat": 47.153438,
+                "lon": 15.196895,
+                "children": [
+                  {
+                    "name": "Graz Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Graz Stadt",
+                      "Stadt Graz"
+                    ],
+                    "lat": 47.06667,
+                    "lon": 15.43333,
+                    "children": [
+                      {
+                        "name": "Andritz",
+                        "type": "admin3",
+                        "lat": 47.11387,
+                        "lon": 15.42348
+                      },
+                      {
+                        "name": "Eggenberg",
+                        "type": "admin3",
+                        "lat": 47.07,
+                        "lon": 15.39871
+                      },
+                      {
+                        "name": "Geidorf",
+                        "type": "admin3",
+                        "lat": 47.08393,
+                        "lon": 15.444
+                      },
+                      {
+                        "name": "Gösting",
+                        "type": "admin3",
+                        "lat": 47.09788,
+                        "lon": 15.39777
+                      },
+                      {
+                        "name": "Graz",
+                        "type": "admin3",
+                        "lat": 47.06733,
+                        "lon": 15.44197
+                      },
+                      {
+                        "name": "Gries",
+                        "type": "admin3",
+                        "lat": 47.06236,
+                        "lon": 15.42421
+                      },
+                      {
+                        "name": "Jakomini",
+                        "type": "admin3",
+                        "lat": 47.05441,
+                        "lon": 15.44984
+                      },
+                      {
+                        "name": "Lend",
+                        "type": "admin3",
+                        "lat": 47.08256,
+                        "lon": 15.41589
+                      },
+                      {
+                        "name": "Liebenau",
+                        "type": "admin3",
+                        "lat": 47.03333,
+                        "lon": 15.46667
+                      },
+                      {
+                        "name": "Mariatrost",
+                        "type": "admin3",
+                        "lat": 47.09641,
+                        "lon": 15.46537
+                      },
+                      {
+                        "name": "Puntigam",
+                        "type": "admin3",
+                        "lat": 47.03333,
+                        "lon": 15.43333
+                      },
+                      {
+                        "name": "Ries",
+                        "type": "admin3",
+                        "lat": 47.08315,
+                        "lon": 15.485
+                      },
+                      {
+                        "name": "Sankt Leonhard",
+                        "type": "admin3",
+                        "lat": 47.06924,
+                        "lon": 15.45784
+                      },
+                      {
+                        "name": "Sankt Peter",
+                        "type": "admin3",
+                        "lat": 47.05,
+                        "lon": 15.46667
+                      },
+                      {
+                        "name": "Straßgang",
+                        "type": "admin3",
+                        "lat": 47.03333,
+                        "lon": 15.4
+                      },
+                      {
+                        "name": "Waltendorf",
+                        "type": "admin3",
+                        "lat": 47.06667,
+                        "lon": 15.46667
+                      },
+                      {
+                        "name": "Wetzelsdorf",
+                        "type": "admin3",
+                        "lat": 47.05293,
+                        "lon": 15.39923
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Bruck-Mürzzuschlag",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Muerzzuschlag",
+                      "Bezirk Mürzzuschlag",
+                      "Bruck-Muerzzuschlag"
+                    ],
+                    "lat": 47.4188,
+                    "lon": 15.27512,
+                    "children": [
+                      {
+                        "name": "Bruck an der Mur",
+                        "type": "admin3",
+                        "lat": 47.41667,
+                        "lon": 15.28333
+                      },
+                      {
+                        "name": "Deuchendorf",
+                        "type": "admin3",
+                        "lat": 47.46593,
+                        "lon": 15.32172
+                      },
+                      {
+                        "name": "Hafendorf",
+                        "type": "admin3",
+                        "lat": 47.45653,
+                        "lon": 15.31837
+                      },
+                      {
+                        "name": "Kindberg",
+                        "type": "admin3",
+                        "lat": 47.5,
+                        "lon": 15.45
+                      },
+                      {
+                        "name": "Mürzzuschlag",
+                        "type": "admin3",
+                        "lat": 47.6066,
+                        "lon": 15.67226
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Deutschlandsberg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Deutschlandsberg",
+                      "Deutschlandsberg",
+                      "Deutschlandsberg District"
+                    ],
+                    "lat": 46.75,
+                    "lon": 15.2,
+                    "children": [
+                      {
+                        "name": "Deutschlandsberg",
+                        "type": "admin3",
+                        "lat": 46.81528,
+                        "lon": 15.22222
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Graz-Umgebung",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Graz-Umgebung",
+                      "Graz Land",
+                      "Graz-Umgebung"
+                    ],
+                    "lat": 47.1386,
+                    "lon": 15.38823,
+                    "children": [
+                      {
+                        "name": "Gratkorn",
+                        "type": "admin3",
+                        "lat": 47.13333,
+                        "lon": 15.35
+                      },
+                      {
+                        "name": "Kalsdorf bei Graz",
+                        "type": "admin3",
+                        "lat": 46.96528,
+                        "lon": 15.48028
+                      },
+                      {
+                        "name": "Kirchenviertel",
+                        "type": "admin3",
+                        "lat": 47.13124,
+                        "lon": 15.34764
+                      },
+                      {
+                        "name": "Seiersberg",
+                        "type": "admin3",
+                        "lat": 47,
+                        "lon": 15.4
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Hartberg-Fürstenfeld",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hartberg-Fuerstenfeld",
+                      "Hartberg-Fuerstenfeld District",
+                      "Hartberg-Fürstenfeld"
+                    ],
+                    "lat": 47.27923,
+                    "lon": 15.98373,
+                    "children": [
+                      {
+                        "name": "Fürstenfeld",
+                        "type": "admin3",
+                        "lat": 47.05,
+                        "lon": 16.08333
+                      },
+                      {
+                        "name": "Pöllau",
+                        "type": "admin3",
+                        "lat": 47.3,
+                        "lon": 15.83333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Leibnitz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Leibnitz",
+                      "Leibnitz District",
+                      "Politischer Bezirk Leibnitz"
+                    ],
+                    "lat": 46.79565,
+                    "lon": 15.51849,
+                    "children": [
+                      {
+                        "name": "Leibnitz",
+                        "type": "admin3",
+                        "lat": 46.78161,
+                        "lon": 15.53836
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Leoben",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Leoben",
+                      "Leoben",
+                      "Leoben District"
+                    ],
+                    "lat": 47.41667,
+                    "lon": 14.91667,
+                    "children": [
+                      {
+                        "name": "Judendorf",
+                        "type": "admin3",
+                        "lat": 47.4,
+                        "lon": 15.1
+                      },
+                      {
+                        "name": "Leoben",
+                        "type": "admin3",
+                        "lat": 47.3765,
+                        "lon": 15.09144
+                      },
+                      {
+                        "name": "Trofaiach",
+                        "type": "admin3",
+                        "lat": 47.42524,
+                        "lon": 15.00681
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Liezen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Liezen",
+                      "Liezen",
+                      "Liezen District"
+                    ],
+                    "lat": 47.53521,
+                    "lon": 14.34314,
+                    "children": [
+                      {
+                        "name": "Liezen",
+                        "type": "admin3",
+                        "lat": 47.56667,
+                        "lon": 14.23333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Murau",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Murau",
+                      "Murau",
+                      "Politischer Bezirk Murau"
+                    ],
+                    "lat": 47.13333,
+                    "lon": 14.2,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Murtal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Murtal",
+                      "Murtal District"
+                    ],
+                    "lat": 47.16964,
+                    "lon": 14.66469,
+                    "children": [
+                      {
+                        "name": "Judenburg",
+                        "type": "admin3",
+                        "lat": 47.16667,
+                        "lon": 14.66667
+                      },
+                      {
+                        "name": "Knittelfeld",
+                        "type": "admin3",
+                        "lat": 47.21667,
+                        "lon": 14.81667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Südoststeiermark",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Suedoststeiermark",
+                      "Bezirk Südoststeiermark",
+                      "Suedoststeiermark"
+                    ],
+                    "lat": 46.94089,
+                    "lon": 15.88623,
+                    "children": []
+                  },
+                  {
+                    "name": "Politischer Bezirk Voitsberg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Voitsberg",
+                      "Politischer Bezirk Voitsberg",
+                      "Voitsberg"
+                    ],
+                    "lat": 47.05,
+                    "lon": 15.1,
+                    "children": [
+                      {
+                        "name": "Voitsberg",
+                        "type": "admin3",
+                        "lat": 47.04445,
+                        "lon": 15.15313
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Weiz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Weiz",
+                      "Politischer Bezirk Weiz",
+                      "Weiz"
+                    ],
+                    "lat": 47.3,
+                    "lon": 15.65,
+                    "children": [
+                      {
+                        "name": "Gleisdorf",
+                        "type": "admin3",
+                        "lat": 47.10559,
+                        "lon": 15.71011
+                      },
+                      {
+                        "name": "Weiz",
+                        "type": "admin3",
+                        "lat": 47.21667,
+                        "lon": 15.61667
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Tirol",
+                "type": "admin1",
+                "aliases": [
+                  "AT33",
+                  "An Tioroil",
+                  "An Tioróil",
+                  "Bundesland Tirol"
+                ],
+                "lat": 47.245564,
+                "lon": 11.486353,
+                "children": [
+                  {
+                    "name": "Innsbruck Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Innsbruck",
+                      "Innsbruck Stadt",
+                      "Stadt Innsbruck"
+                    ],
+                    "lat": 47.28433,
+                    "lon": 11.37706,
+                    "children": [
+                      {
+                        "name": "Amras",
+                        "type": "admin3",
+                        "lat": 47.25,
+                        "lon": 11.41667
+                      },
+                      {
+                        "name": "Arzl",
+                        "type": "admin3",
+                        "lat": 47.28333,
+                        "lon": 11.43333
+                      },
+                      {
+                        "name": "Hötting",
+                        "type": "admin3",
+                        "lat": 47.26815,
+                        "lon": 11.36868
+                      },
+                      {
+                        "name": "Innsbruck",
+                        "type": "admin3",
+                        "lat": 47.26266,
+                        "lon": 11.39454
+                      },
+                      {
+                        "name": "Mühlau",
+                        "type": "admin3",
+                        "lat": 47.28333,
+                        "lon": 11.4
+                      },
+                      {
+                        "name": "Pradl",
+                        "type": "admin3",
+                        "lat": 47.26539,
+                        "lon": 11.4152
+                      },
+                      {
+                        "name": "Wilten",
+                        "type": "admin3",
+                        "lat": 47.25829,
+                        "lon": 11.38808
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Imst",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Imst",
+                      "Imst",
+                      "Imst District"
+                    ],
+                    "lat": 47.08333,
+                    "lon": 10.86667,
+                    "children": [
+                      {
+                        "name": "Imst",
+                        "type": "admin3",
+                        "lat": 47.24504,
+                        "lon": 10.73974
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Innsbruck Land",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Innsbruck Land",
+                      "Innsbruck Land",
+                      "Politischer Bezirk Innsbruck"
+                    ],
+                    "lat": 47.2,
+                    "lon": 11.33333,
+                    "children": [
+                      {
+                        "name": "Absam",
+                        "type": "admin3",
+                        "lat": 47.29572,
+                        "lon": 11.50593
+                      },
+                      {
+                        "name": "Axams",
+                        "type": "admin3",
+                        "lat": 47.23111,
+                        "lon": 11.27892
+                      },
+                      {
+                        "name": "Hall in Tirol",
+                        "type": "admin3",
+                        "lat": 47.28333,
+                        "lon": 11.51667
+                      },
+                      {
+                        "name": "Rum",
+                        "type": "admin3",
+                        "lat": 47.28333,
+                        "lon": 11.45
+                      },
+                      {
+                        "name": "Telfs",
+                        "type": "admin3",
+                        "lat": 47.30707,
+                        "lon": 11.06817
+                      },
+                      {
+                        "name": "Völs",
+                        "type": "admin3",
+                        "lat": 47.25,
+                        "lon": 11.33333
+                      },
+                      {
+                        "name": "Wattens",
+                        "type": "admin3",
+                        "lat": 47.29419,
+                        "lon": 11.5907
+                      },
+                      {
+                        "name": "Zirl",
+                        "type": "admin3",
+                        "lat": 47.2741,
+                        "lon": 11.23961
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Kitzbühel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kitzbuehel",
+                      "Kitzbuehel",
+                      "Kitzbühel"
+                    ],
+                    "lat": 47.43333,
+                    "lon": 12.38333,
+                    "children": [
+                      {
+                        "name": "Kirchberg in Tirol",
+                        "type": "admin3",
+                        "lat": 47.44539,
+                        "lon": 12.31602
+                      },
+                      {
+                        "name": "Kitzbühel",
+                        "type": "admin3",
+                        "lat": 47.44637,
+                        "lon": 12.39215
+                      },
+                      {
+                        "name": "Sankt Johann in Tirol",
+                        "type": "admin3",
+                        "lat": 47.5233,
+                        "lon": 12.4232
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Kufstein",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Kufstein",
+                      "Kufstein",
+                      "Politischer Bezirk Kufstein"
+                    ],
+                    "lat": 47.5,
+                    "lon": 12.03333,
+                    "children": [
+                      {
+                        "name": "Kirchbichl",
+                        "type": "admin3",
+                        "lat": 47.51743,
+                        "lon": 12.09629
+                      },
+                      {
+                        "name": "Kufstein",
+                        "type": "admin3",
+                        "lat": 47.58333,
+                        "lon": 12.16667
+                      },
+                      {
+                        "name": "Wörgl",
+                        "type": "admin3",
+                        "lat": 47.48906,
+                        "lon": 12.06174
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Landeck",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Landeck",
+                      "Distretto di Landeck",
+                      "Landeck"
+                    ],
+                    "lat": 47.12575,
+                    "lon": 10.56679,
+                    "children": [
+                      {
+                        "name": "Landeck",
+                        "type": "admin3",
+                        "lat": 47.13988,
+                        "lon": 10.56593
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Lienz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lienz",
+                      "Lienz",
+                      "Osttirol"
+                    ],
+                    "lat": 46.9,
+                    "lon": 12.5,
+                    "children": [
+                      {
+                        "name": "Lienz",
+                        "type": "admin3",
+                        "lat": 46.8289,
+                        "lon": 12.76903
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Reutte",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ausserfern",
+                      "Bezirk Reutte",
+                      "Politischer Bezirk Reutte"
+                    ],
+                    "lat": 47.41667,
+                    "lon": 10.55,
+                    "children": [
+                      {
+                        "name": "Reutte",
+                        "type": "admin3",
+                        "lat": 47.48333,
+                        "lon": 10.71667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Schwaz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Schwaz",
+                      "Politischer Bezirk Schwaz",
+                      "Schwaz"
+                    ],
+                    "lat": 47.26667,
+                    "lon": 11.76667,
+                    "children": [
+                      {
+                        "name": "Jenbach",
+                        "type": "admin3",
+                        "lat": 47.39173,
+                        "lon": 11.77245
+                      },
+                      {
+                        "name": "Schwaz",
+                        "type": "admin3",
+                        "lat": 47.35169,
+                        "lon": 11.71014
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Vorarlberg",
+                "type": "admin1",
+                "aliases": [
+                  "AT34",
+                  "Cisarulana",
+                  "Foralberg",
+                  "Forarl'berg"
+                ],
+                "lat": 47.302743,
+                "lon": 9.769353,
+                "children": [
+                  {
+                    "name": "Politischer Bezirk Bludenz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Bludenz",
+                      "Bludenz",
+                      "Bludenz District"
+                    ],
+                    "lat": 47.15144,
+                    "lon": 9.82452,
+                    "children": [
+                      {
+                        "name": "Bludenz",
+                        "type": "admin3",
+                        "lat": 47.15476,
+                        "lon": 9.82255
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Bregenz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Bregenz",
+                      "Bregenz",
+                      "Politischer Bezirk Bregenz"
+                    ],
+                    "lat": 47.42069,
+                    "lon": 9.91989,
+                    "children": [
+                      {
+                        "name": "Bregenz",
+                        "type": "admin3",
+                        "lat": 47.50311,
+                        "lon": 9.7471
+                      },
+                      {
+                        "name": "Hard",
+                        "type": "admin3",
+                        "lat": 47.48306,
+                        "lon": 9.68306
+                      },
+                      {
+                        "name": "Höchst",
+                        "type": "admin3",
+                        "lat": 47.45934,
+                        "lon": 9.6405
+                      },
+                      {
+                        "name": "Hörbranz",
+                        "type": "admin3",
+                        "lat": 47.55,
+                        "lon": 9.75
+                      },
+                      {
+                        "name": "Lauterach",
+                        "type": "admin3",
+                        "lat": 47.47572,
+                        "lon": 9.72941
+                      },
+                      {
+                        "name": "Lochau",
+                        "type": "admin3",
+                        "lat": 47.53333,
+                        "lon": 9.75
+                      },
+                      {
+                        "name": "Wolfurt",
+                        "type": "admin3",
+                        "lat": 47.46667,
+                        "lon": 9.75
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Dornbirn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Dornbirn",
+                      "Dornbirn",
+                      "Politischer Bezirk Dornbirn"
+                    ],
+                    "lat": 47.38349,
+                    "lon": 9.7494,
+                    "children": [
+                      {
+                        "name": "Dornbirn",
+                        "type": "admin3",
+                        "lat": 47.41427,
+                        "lon": 9.74195
+                      },
+                      {
+                        "name": "Hohenems",
+                        "type": "admin3",
+                        "lat": 47.36121,
+                        "lon": 9.68694
+                      },
+                      {
+                        "name": "Lustenau",
+                        "type": "admin3",
+                        "lat": 47.42642,
+                        "lon": 9.65851
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Politischer Bezirk Feldkirch",
+                    "type": "admin2",
+                    "aliases": [
+                      "Feldkirch",
+                      "Feldkirch District"
+                    ],
+                    "lat": 47.25535,
+                    "lon": 9.5836,
+                    "children": [
+                      {
+                        "name": "Altach",
+                        "type": "admin3",
+                        "lat": 47.35438,
+                        "lon": 9.65207
+                      },
+                      {
+                        "name": "Feldkirch",
+                        "type": "admin3",
+                        "lat": 47.23645,
+                        "lon": 9.59734
+                      },
+                      {
+                        "name": "Frastanz",
+                        "type": "admin3",
+                        "lat": 47.21735,
+                        "lon": 9.62995
+                      },
+                      {
+                        "name": "Götzis",
+                        "type": "admin3",
+                        "lat": 47.33306,
+                        "lon": 9.63306
+                      },
+                      {
+                        "name": "Rankweil",
+                        "type": "admin3",
+                        "lat": 47.27108,
+                        "lon": 9.64308
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Wien",
+                "type": "admin1",
+                "aliases": [
+                  "AT13",
+                  "Bec",
+                  "Beč",
+                  "Bundesland Wien"
+                ],
+                "lat": 48.2066,
+                "lon": 16.37341,
+                "children": [
+                  {
+                    "name": "Wien Stadt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Viena",
+                      "Vienna",
+                      "Wien"
+                    ],
+                    "lat": 48.2066,
+                    "lon": 16.37341,
+                    "children": [
+                      {
+                        "name": "Alsergrund",
+                        "type": "admin3",
+                        "lat": 48.22321,
+                        "lon": 16.35506
+                      },
+                      {
+                        "name": "Aspern",
+                        "type": "admin3",
+                        "lat": 48.21806,
+                        "lon": 16.48306
+                      },
+                      {
+                        "name": "Brigittenau",
+                        "type": "admin3",
+                        "lat": 48.24275,
+                        "lon": 16.37551
+                      },
+                      {
+                        "name": "Döbling",
+                        "type": "admin3",
+                        "lat": 48.25,
+                        "lon": 16.33333
+                      },
+                      {
+                        "name": "Donaustadt",
+                        "type": "admin3",
+                        "lat": 48.2333,
+                        "lon": 16.46002
+                      },
+                      {
+                        "name": "Essling",
+                        "type": "admin3",
+                        "lat": 48.21289,
+                        "lon": 16.52442
+                      },
+                      {
+                        "name": "Favoriten",
+                        "type": "admin3",
+                        "lat": 48.16116,
+                        "lon": 16.38233
+                      },
+                      {
+                        "name": "Floridsdorf",
+                        "type": "admin3",
+                        "lat": 48.25,
+                        "lon": 16.4
+                      },
+                      {
+                        "name": "Fünfhaus",
+                        "type": "admin3",
+                        "lat": 48.19596,
+                        "lon": 16.3183
+                      },
+                      {
+                        "name": "Hernals",
+                        "type": "admin3",
+                        "lat": 48.22544,
+                        "lon": 16.30871
+                      },
+                      {
+                        "name": "Hietzing",
+                        "type": "admin3",
+                        "lat": 48.18623,
+                        "lon": 16.2965
+                      },
+                      {
+                        "name": "Innere Stadt",
+                        "type": "admin3",
+                        "lat": 48.20906,
+                        "lon": 16.37135
+                      },
+                      {
+                        "name": "Josefstadt",
+                        "type": "admin3",
+                        "lat": 48.21243,
+                        "lon": 16.34549
+                      },
+                      {
+                        "name": "Landstraße",
+                        "type": "admin3",
+                        "lat": 48.2019,
+                        "lon": 16.38792
+                      },
+                      {
+                        "name": "Margareten",
+                        "type": "admin3",
+                        "lat": 48.1855,
+                        "lon": 16.35373
+                      },
+                      {
+                        "name": "Mariahilf",
+                        "type": "admin3",
+                        "lat": 48.19571,
+                        "lon": 16.35215
+                      },
+                      {
+                        "name": "Meidling",
+                        "type": "admin3",
+                        "lat": 48.16667,
+                        "lon": 16.33333
+                      },
+                      {
+                        "name": "Neubau",
+                        "type": "admin3",
+                        "lat": 48.20172,
+                        "lon": 16.34715
+                      },
+                      {
+                        "name": "Ottakring",
+                        "type": "admin3",
+                        "lat": 48.21667,
+                        "lon": 16.3
+                      },
+                      {
+                        "name": "Penzing",
+                        "type": "admin3",
+                        "lat": 48.2,
+                        "lon": 16.26667
+                      },
+                      {
+                        "name": "Simmering",
+                        "type": "admin3",
+                        "lat": 48.18333,
+                        "lon": 16.43333
+                      },
+                      {
+                        "name": "Vienna",
+                        "type": "admin3",
+                        "lat": 48.20849,
+                        "lon": 16.37208
+                      },
+                      {
+                        "name": "Währing",
+                        "type": "admin3",
+                        "lat": 48.22611,
+                        "lon": 16.34484
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

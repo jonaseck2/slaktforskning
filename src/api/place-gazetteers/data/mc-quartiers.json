@@ -1,0 +1,86 @@
+{
+  "id": "mc-quartiers",
+  "name": "Monaco Quartiers",
+  "locale": "mc",
+  "description": "Monaco: 1 single ADM1 entry from GeoNames + populated places ≥5000 pop. Quartiers (10) deferred — no GeoNames admin layer.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/MC.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Monaco",
+            "type": "country",
+            "aliases": [
+              "Principauté de Monaco"
+            ],
+            "lat": 43.7,
+            "lon": 7.4,
+            "children": [
+              {
+                "name": "Commune de Monaco",
+                "type": "admin1",
+                "aliases": [
+                  "Comu de Monaco",
+                  "Comuna de Monaco",
+                  "Comuna de Mónaco",
+                  "Comú de Mònaco"
+                ],
+                "lat": 43.737872,
+                "lon": 7.422882,
+                "children": [
+                  {
+                    "name": "Jardin Exotique",
+                    "type": "admin2",
+                    "lat": 43.73049,
+                    "lon": 7.41399
+                  },
+                  {
+                    "name": "La Condamine",
+                    "type": "admin2",
+                    "lat": 43.73439,
+                    "lon": 7.42024
+                  },
+                  {
+                    "name": "La Rousse",
+                    "type": "admin2",
+                    "lat": 43.74754,
+                    "lon": 7.43141
+                  },
+                  {
+                    "name": "Monaco",
+                    "type": "admin2",
+                    "lat": 43.73718,
+                    "lon": 7.42145
+                  },
+                  {
+                    "name": "Monte-Carlo",
+                    "type": "admin2",
+                    "lat": 43.73976,
+                    "lon": 7.42732
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "id": "li-gemeinden",
+  "name": "Liechtenstein Gemeinden",
+  "locale": "li",
+  "description": "Liechtenstein: 11 Gemeinden (admin1) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/LI.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Liechtenstein",
+            "type": "country",
+            "aliases": [
+              "Fürstentum Liechtenstein"
+            ],
+            "lat": 47.2,
+            "lon": 9.5,
+            "children": [
+              {
+                "name": "Balzers",
+                "type": "admin1",
+                "aliases": [
+                  "Balzers",
+                  "Balzers / Mals",
+                  "Balzers / Mäls",
+                  "Gemeinde Balzers"
+                ],
+                "lat": 47.0677,
+                "lon": 9.50408,
+                "children": []
+              },
+              {
+                "name": "Eschen",
+                "type": "admin1",
+                "aliases": [
+                  "Asen",
+                  "Ehshehn",
+                  "Ehshen",
+                  "Escha"
+                ],
+                "lat": 47.20178,
+                "lon": 9.53588,
+                "children": []
+              },
+              {
+                "name": "Gamprin",
+                "type": "admin1",
+                "aliases": [
+                  "Gamprin",
+                  "Gamprin-Bendern",
+                  "Gamprinas",
+                  "Gampryn"
+                ],
+                "lat": 47.21986,
+                "lon": 9.50995,
+                "children": []
+              },
+              {
+                "name": "Mauren",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Mauren",
+                  "Mauehren",
+                  "Maurehn",
+                  "Mauren"
+                ],
+                "lat": 47.21513,
+                "lon": 9.55898,
+                "children": []
+              },
+              {
+                "name": "Planken",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Planken",
+                  "Planken"
+                ],
+                "lat": 47.18015,
+                "lon": 9.55994,
+                "children": []
+              },
+              {
+                "name": "Ruggell",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Ruggell",
+                  "Rounkel",
+                  "Rugel",
+                  "Rugel'"
+                ],
+                "lat": 47.24502,
+                "lon": 9.53323,
+                "children": []
+              },
+              {
+                "name": "Schaan",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Schaan",
+                  "Saan",
+                  "San",
+                  "Sanas"
+                ],
+                "lat": 47.16498,
+                "lon": 9.50867,
+                "children": [
+                  {
+                    "name": "Schaan",
+                    "type": "admin2",
+                    "lat": 47.16498,
+                    "lon": 9.50867
+                  }
+                ]
+              },
+              {
+                "name": "Schellenberg",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Schellenberg",
+                  "Schellenberg"
+                ],
+                "lat": 47.23431,
+                "lon": 9.55103,
+                "children": []
+              },
+              {
+                "name": "Triesen",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Triesen",
+                  "Tresa",
+                  "Triesen",
+                  "Trijzen"
+                ],
+                "lat": 47.10752,
+                "lon": 9.52815,
+                "children": [
+                  {
+                    "name": "Triesen",
+                    "type": "admin2",
+                    "lat": 47.10752,
+                    "lon": 9.52815
+                  }
+                ]
+              },
+              {
+                "name": "Triesenberg",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Triesenberg",
+                  "Triesemberg",
+                  "Triesenberg",
+                  "Triesenberg / Steg / Malbun"
+                ],
+                "lat": 47.12663,
+                "lon": 9.55962,
+                "children": []
+              },
+              {
+                "name": "Vaduz",
+                "type": "admin1",
+                "aliases": [
+                  "Gemeinde Vaduz",
+                  "Vaduz"
+                ],
+                "lat": 47.14151,
+                "lon": 9.52154,
+                "children": [
+                  {
+                    "name": "Vaduz",
+                    "type": "admin2",
+                    "lat": 47.14151,
+                    "lon": 9.52154
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

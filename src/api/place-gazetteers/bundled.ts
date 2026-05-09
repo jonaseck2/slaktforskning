@@ -43,6 +43,9 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'ee-counties', 'lv-novadi', 'lt-savivaldybes',
   // Poland
   'pl-powiaty',
+  // Tier 2 Western Europe
+  'at-bezirke', 'ch-cantons', 'it-province', 'es-provincias', 'pt-distritos',
+  'mt-localities', 'sm-castelli', 'li-gemeinden', 'ad-parroquies', 'mc-quartiers',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -159,6 +162,17 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'lt-savivaldybes': { stripSuffixes: ['savivaldybė', 'savivaldybės', 'seniūnija', 'seniūnijos', 'apskritis', 'apskrities', 'parapija', 'parapijos', 'miestas', 'kaimas', 'rajonas', 'rajono'] },
   // Poland
   'pl-powiaty': { stripSuffixes: ['województwo', 'powiat', 'gmina', 'parafia', 'dzielnica', 'miasto', 'osada', 'wieś', 'voivodeship'], stripPrefixes: ['gmina', 'powiat'] },
+  // Tier 2 Western Europe — minimal per-country admin suffixes
+  'at-bezirke': { stripSuffixes: ['bundesland', 'bezirk', 'gemeinde', 'stadt'] },
+  'ch-cantons': { stripSuffixes: ['kanton', 'canton', 'cantone', 'bezirk', 'gemeinde', 'commune', 'comune'], stripPrefixes: ['canton de', 'canton du'] },
+  'it-province': { stripSuffixes: ['regione', 'provincia', 'comune', 'frazione', 'borgo'], stripPrefixes: ['provincia di', 'comune di'] },
+  'es-provincias': { stripSuffixes: ['comunidad autónoma', 'provincia', 'municipio', 'comarca'], stripPrefixes: ['provincia de', 'municipio de', 'ciudad de'] },
+  'pt-distritos': { stripSuffixes: ['distrito', 'concelho', 'freguesia', 'cidade', 'município'], stripPrefixes: ['distrito de', 'concelho de', 'cidade de', 'município de'] },
+  'mt-localities': { stripSuffixes: ['region', 'lokalità'] },
+  'sm-castelli': { stripSuffixes: ['castello'], stripPrefixes: ['castello di'] },
+  'li-gemeinden': { stripSuffixes: ['wahlkreis', 'gemeinde'] },
+  'ad-parroquies': { stripSuffixes: ['parròquia'], stripPrefixes: ['parròquia de'] },
+  'mc-quartiers': { stripSuffixes: ['quartier'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

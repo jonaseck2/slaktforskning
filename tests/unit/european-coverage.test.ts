@@ -170,6 +170,16 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Bochnia, Powiat bocheński, Poland', expectAdmin2: 'Powiat bocheński', expectCountry: 'Poland' },
     ],
   },
+  // ── Tier 2 Western Europe — minimal one-probe-per-country smoke set.
+  {
+    countryCode: 'tier2w',
+    countryName: 'Tier 2 Western Europe',
+    probes: [
+      { query: 'Burgenland, Austria', expectAdmin1: 'Burgenland', expectCountry: 'Austria' },
+      { query: 'Canton de Genève, Switzerland', expectAdmin1: 'Canton de Genève', expectCountry: 'Switzerland' },
+      { query: 'Abruzzo, Italy', expectAdmin1: 'Abruzzo', expectCountry: 'Italy' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {
