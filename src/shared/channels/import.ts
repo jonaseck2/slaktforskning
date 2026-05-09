@@ -6,6 +6,7 @@ import { defineChannel } from './registry';
 import { importFromHolger } from '../../import/holger/index';
 import { importFromGenney, discoverTables } from '../../import/genney/index';
 import { importFromRootsMagic } from '../../import/rootsmagic/index';
+import { importFromGramps } from '../../import/gramps/index';
 import { bulkCopyMediaFolder, consolidateMediaFolder } from '../../api/media_consolidate';
 import { getMediaDir } from '../../api/media';
 import { broadcast } from '../../main/db-worker-broadcast';
@@ -204,6 +205,27 @@ defineChannel({
       // <dbname>-media/ and rewrites the refs. Idempotent for the typical
       // case where media is missing on this machine.
       await consolidateMediaFolder(db, dbPath);
+      return { imported: true, summary: result.summary };
+    });
+  },
+});
+
+/**
+ * Gramps .gramps / .gpkg import. Runs in the worker thread. The file is
+ * plain XML (sometimes gzipped), parsed and transformed in-process.
+ */
+defineChannel({
+  name: 'import:grampsRun',
+  thread: 'worker',
+  mutating: true,
+  handler: async (db, opts: { sourcePath: string }) => {
+    if (!opts?.sourcePath) {
+      return { success: false, error: 'sourcePath is required' } as const;
+    }
+    return withImportLifecycle('gramps', async () => {
+      const result = await importFromGramps(db, opts.sourcePath, {
+        onProgress: (msg: string) => broadcast('import:grampsProgress', { message: msg }),
+      });
       return { imported: true, summary: result.summary };
     });
   },

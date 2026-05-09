@@ -134,6 +134,22 @@ export function registerImportHandlers(
     return { canceled: false, path: result.filePaths[0] };
   });
 
+  // Gramps .gramps / .gpkg import — file picker only; the import itself
+  // is a worker channel.
+  wrapHandler('import:grampsSelectFile', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select Gramps file',
+      defaultPath: getDefaultDir(),
+      properties: ['openFile'],
+      filters: [
+        { name: 'Gramps file', extensions: ['gramps', 'gpkg'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
   // RootsMagic .rmgc import — file picker only; the import itself is a
   // worker channel registered in src/shared/channels/import.ts.
   wrapHandler('import:rootsmagicSelectFile', async () => {

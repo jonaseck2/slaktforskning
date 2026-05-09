@@ -134,7 +134,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 | Tool | Description |
 |------|-------------|
-| `import_file` | Unified import: detects GEDCOM / Genney / Holger / RootsMagic by file extension (.ged → gedcom; .gcc/.backup → genney; .rmgc/.rmtree → rootsmagic; format=holger to override). Returns ImportReport with warnings and unmapped data. |
+| `import_file` | Unified import: detects GEDCOM / Genney / Holger / RootsMagic / Gramps by file extension (.ged → gedcom; .gcc/.backup → genney; .rmgc/.rmtree → rootsmagic; .gramps/.gpkg → gramps; format=holger to override). Returns ImportReport with warnings and unmapped data. |
 | `export_gedcom` | Export the current database as a GEDCOM file. Accepts `version: '5.5.1' \| '7.0'` (default `'5.5.1'`). Returns `{ ged, report }` where report lists excluded entities. |
 | `import_archive` | Import a `.zip` archive containing a GEDCOM file plus a `media/` folder. Media files are copied into `<dbname>-media/` and `file_ref` rewritten to the relative path. |
 | `export_archive` | Export the database as a `.zip` archive (GEDCOM + media). Pairs with `import_archive` for full backup round-trip. |

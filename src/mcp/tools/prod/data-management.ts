@@ -7,6 +7,7 @@ import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../.
 import { importFromGenney } from '../../../import/genney/index';
 import { importFromHolger } from '../../../import/holger/index';
 import { importFromRootsMagic } from '../../../import/rootsmagic/index';
+import { importFromGramps } from '../../../import/gramps/index';
 import { exportArchive } from '../../../api/archive_export';
 import { importArchive } from '../../../api/archive_import';
 import { getMediaDir } from '../../../api/media';
@@ -16,10 +17,10 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
   const { getDb, getDbPath, setDb, setDbPath } = ctx;
 
   server.registerTool('import_file', {
-    description: 'Import genealogy data from a file. Format is auto-detected from extension (.backup/.gcc → genney, .rmgc/.rmtree → rootsmagic, .ged → gedcom) unless overridden. Use format "holger" for Holger/OurKind GEDCOM exports.',
+    description: 'Import genealogy data from a file. Format is auto-detected from extension (.backup/.gcc → genney, .rmgc/.rmtree → rootsmagic, .gramps/.gpkg → gramps, .ged → gedcom) unless overridden. Use format "holger" for Holger/OurKind GEDCOM exports.',
     inputSchema: {
       file_path: z.string().describe('Absolute path to the file to import'),
-      format: z.enum(['gedcom', 'genney', 'holger', 'rootsmagic']).optional().describe('Import format (auto-detected if omitted)'),
+      format: z.enum(['gedcom', 'genney', 'holger', 'rootsmagic', 'gramps']).optional().describe('Import format (auto-detected if omitted)'),
       media_dir: z.string().optional().describe('For holger imports: path to local OurKind/Media directory for remapping Windows image paths'),
     },
   }, async (args) => {
@@ -32,8 +33,23 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
         format = 'genney';
       } else if (lower.endsWith('.rmgc') || lower.endsWith('.rmtree')) {
         format = 'rootsmagic';
+      } else if (lower.endsWith('.gramps') || lower.endsWith('.gpkg')) {
+        format = 'gramps';
       } else {
         format = 'gedcom';
+      }
+    }
+
+    if (format === 'gramps') {
+      const messages: string[] = [];
+      try {
+        const result = await importFromGramps(db, args.file_path, {
+          onProgress: (msg) => messages.push(msg),
+        });
+        return { content: [{ type: 'text', text: JSON.stringify({ ...result, progress: messages }, null, 2) }] };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { content: [{ type: 'text', text: JSON.stringify({ error: message, progress: messages }, null, 2) }] };
       }
     }
 

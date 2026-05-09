@@ -112,6 +112,10 @@ const api = {
     rootsmagicRun: (opts: unknown) => ipcRenderer.invoke('import:rootsmagicRun', opts),
     onRootsmagicProgress: (cb: (msg: string) => void) =>
       ipcRenderer.on('import:rootsmagicProgress', (_e, data: { message: string }) => cb(data.message)),
+    grampsSelectFile: () => ipcRenderer.invoke('import:grampsSelectFile'),
+    grampsRun: (opts: unknown) => ipcRenderer.invoke('import:grampsRun', opts),
+    onGrampsProgress: (cb: (msg: string) => void) =>
+      ipcRenderer.on('import:grampsProgress', (_e, data: { message: string }) => cb(data.message)),
   },
   db: {
     getCurrent: () => ipcRenderer.invoke('db:getCurrent'),
