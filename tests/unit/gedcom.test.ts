@@ -945,6 +945,75 @@ describe('GEDCOM import completeness', () => {
     expect(ged).toContain('1 ENGA');
   });
 
+  it('_PLAC_ADDR under PLAC is imported into events.place_address', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Erik /Lindqvist/
+1 BIRT
+2 DATE 1953
+2 PLAC Adolf Fredrik kyrka, Stockholm
+3 _PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth).toBeTruthy();
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
+  it('_PLAC_ADDR directly under event (no PLAC) is imported into events.place_address', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Anna /Persson/
+1 BIRT
+2 DATE 1900
+2 _PLAC_ADDR Backgatan 12, Lund
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth).toBeTruthy();
+    expect(birth?.place_address).toBe('Backgatan 12, Lund');
+  });
+
+  it('events.place_address survives full export → import round-trip (5.5.1)', () => {
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Märta', surname: 'Eriksson' });
+    const ev = createEvent(db, { event_type: 'birth', date_original: '1900' });
+    db.run('UPDATE events SET place_address = ? WHERE id = ?', ['Tvärgatan 5, 35243 Växjö, Sverige', ev.id]);
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('_PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const events = getEventsForPerson(fresh, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
+  it('events.place_address survives full export → import round-trip (7.0)', () => {
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Märta', surname: 'Eriksson' });
+    const ev = createEvent(db, { event_type: 'birth', date_original: '1900' });
+    db.run('UPDATE events SET place_address = ? WHERE id = ?', ['Tvärgatan 5, 35243 Växjö, Sverige', ev.id]);
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain('_PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const events = getEventsForPerson(fresh, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
   it('ImportReport contains correct counts', () => {
     const ged = `0 HEAD
 1 GEDC

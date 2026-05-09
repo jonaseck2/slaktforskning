@@ -11,6 +11,7 @@ import { createCitation } from '../../api/sources';
 import { updatePlace } from '../../api/places';
 import { addMediaLink } from '../../api/media';
 import { FACT_VALUE_GEDCOM_TAGS } from '../../api/events_gedcom';
+import { runSql } from '../../api/db';
 import type { ImportOptions } from './import-core';
 import { getChild, getChildren, resolveNote } from './node-utils';
 import { resolvePlace } from './place-resolver';
@@ -95,6 +96,15 @@ export function importEventNode(
   }
   const notes = noteParts.join('\n\n') || '';
 
+  // Custom _PLAC_ADDR sub-tag: event-specific free-text address authored by the
+  // user, distinct from the place's standalone ADDR. The exporter emits it under
+  // PLAC at level 3 when a PLAC line is present, otherwise directly under the
+  // event at level 2 (so authored data survives even with no place attached).
+  // Read both locations.
+  const placAddrFromPlac = placNode ? getChild(placNode, '_PLAC_ADDR')?.value ?? null : null;
+  const placAddrFromEvent = getChild(evNode, '_PLAC_ADDR')?.value ?? null;
+  const placeAddress = placAddrFromPlac ?? placAddrFromEvent ?? null;
+
   const event = createEvent(db, {
     event_type: appType,
     date_type: parsed.date_type,
@@ -107,6 +117,11 @@ export function importEventNode(
     value,
     notes,
   });
+
+  // place_address is not in the createEvent API surface — set it directly when present.
+  if (placeAddress) {
+    runSql(db, 'UPDATE events SET place_address = ? WHERE id = ?', [placeAddress, event.id]);
+  }
 
   // Track old→new event ID so ASSO _EVID references resolve across databases
   const oldEvid = getChild(evNode, '_EVID')?.value;
