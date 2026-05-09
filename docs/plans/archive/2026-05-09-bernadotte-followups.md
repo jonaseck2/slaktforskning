@@ -36,6 +36,25 @@ The verification of this plan is operating the running app on a fully-built Bern
 
 Each panel must also offer a `+ <Noun>` action that creates the matching primitive without leaving the panel surface.
 
+## Status (close-out 2026-05-09)
+
+Every quick win + plan in this doc landed in the same session:
+
+| Item | Status | Commit / verification |
+|---|---|---|
+| Q1. PlacePanel + MediaPanel inventory | ✅ done | Inspected live during session — Stockholms slott shows all sections ≥1 (after introducing the deliberate inverted-dates fixture for Kvalitet); Carl XVI Gustaf King portrait media verified after `tag_person_in_media` + `link_media` for place + event. Findings #15 (v-show fix) and #14 (PersonIdentifiersSection) emerged from this work. |
+| Q2. `add_source` allowlist audit | ✅ done — `785d9a74` | `createSource` now persists `abstract` + `call_number`; round-trip test in `tests/unit/sources.test.ts` |
+| Q3. `run_checks` date parser | ✅ done — `185e00bc` | `parseLooseDate` / `extractYear` / `dateDefinitelyAfter` rewritten on top of robust parser; SQL `CAST(SUBSTR(date_value,1,4))` anti-pattern removed; 16 cases in `tests/unit/check-utils-parse-loose-date.test.ts` |
+| Q4. `default_person_id` fallback | ✅ done — `709c4840` | PersonsView route-replaces to first person on a fresh DB; render-time only |
+| Q5. Place type vocabulary | ✅ done — `856fd26b` | `palace`/`castle`/`church` added to `PLACE_TYPE_VALUES` + i18n + MCP enum; MCP enum also synced with renderer constant (added `admin1`/`municipality`/`locality`) |
+| Q6. i18n event-type audit | ✅ verified | Audit script confirmed every `EVENT_TYPE_VALUES` entry has both sv + en translations |
+| Plan A. PersonIdentifiersSection | ✅ done — `e40dbaff` | New `src/renderer/components/PersonIdentifiersSection.vue`; verified live: Karl XIV Johan shows "Identifierare (1)" with FamilySearch L8B5-9MK |
+| Plan B. `merge_persons` post-merge dedupe | ✅ done — `577ff318` | Single-cardinality event dedupe (birth/baptism/christening/death/burial) with citation + media_link transfer; source `name_type='birth'` demoted to `aka`; 3 new tests in `tests/unit/duplicates.test.ts` |
+
+Beyond the original Q/Plan list, the session also shipped: `data:changed` broadcast wiring (`c3f12d95`), `add_place` leafProps drop (`c3f12d95`), i18n for `eventTypes.accession`/`coronation` (`c3f12d95`), `ui_reload` MCP tool (`c3f12d95`), `ui_get_dom` mode/all/limit (`d7799f10`), v-show on Forskning/Kvalitet/PlacePanel/MediaPanel (`c3f12d95`), tolerant date parser, resizable columns with localStorage persistence (`457b8869`, `8db78ad8`), `slaktforskning-mcp` and renamed `slaktforskning-mcp-dev` skills, two new pitfall sections + reload-matrix in `slaktforskning-mcp-dev` (`fb754636`, `e71d0d02`), three project-wide UI rules in `renderer.md`, two napkin entries.
+
+The only remaining open finding is #9 in `2026-05-09-bernadotte-test-findings.md` — the `living: true` heuristic for >130-yr-old persons without a death event. By-design behaviour, low priority; tracked for a future plan if it ever becomes user-visible friction.
+
 ## Quick wins (one PR each, no plan needed)
 
 ### Q1. PlacePanel + MediaPanel inventory pass
