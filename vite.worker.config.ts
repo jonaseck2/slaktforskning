@@ -5,11 +5,12 @@ import { defineConfig } from 'vite';
 
 // The DB worker imports api/checks → place-gazetteers/bundled, but that file
 // no longer holds static .json imports — gazetteers are loaded at module init
-// via gunzipSync(readFileSync(...)) against `<bundle-dir>/gazetteers/*.json.gz`.
-// vite.main.config.ts owns the closeBundle hook that emits those gz files; the
-// worker bundle just emits db-worker.js into the same .vite/build/ dir, so
-// `import.meta.url` inside bundled.ts resolves to that shared dir at runtime.
-// No gazetteer plugin needed here.
+// via decodeGazetteer(gunzipSync(readFileSync(...))) against
+// `<bundle-dir>/gazetteers/*.glb.gz`. vite.main.config.ts owns the closeBundle
+// hook that emits those packed-binary gz files; the worker bundle just emits
+// db-worker.js into the same .vite/build/ dir, so `import.meta.url` inside
+// bundled.ts resolves to that shared dir at runtime. No gazetteer plugin
+// needed here.
 export default defineConfig({
   build: {
     emptyOutDir: false,
