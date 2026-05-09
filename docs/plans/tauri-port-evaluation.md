@@ -2,9 +2,9 @@
 
 > **For agentic workers:** this is a research/spike plan, not an implementation plan. Its output is a go/no-go decision grounded in numbers measured on real elderly-user hardware. Do NOT begin a full port until this plan completes and the user accepts a "go" recommendation.
 
-**User goal:** Decide with confidence, based on measurements on the actual hardware our users own, whether a Tauri port of Släktforskning is worth 2-3 months of focused engineering. The decision artifact is a one-page recommendation with concrete numbers — RAM, disk, startup, scroll FPS, chart render time — captured on both an "elderly target" machine and a modern dev machine, across all three OSes the app supports today.
+**User goal:** Decide with confidence, based on measurements, whether a Tauri port of Släktforskning is worth 2-3 months of focused engineering. The decision artifact is a one-page recommendation with concrete numbers — RAM, disk, startup, scroll FPS, chart render time — captured on whatever hardware we have available, on all three OSes the app supports today. The decision rule is simple: if the port delivers ≥25% improvement across the headline metrics (app size, idle RAM, RAM under load, cold start, list scroll, chart render), it's worth doing; ≥50% is clearly worth doing; below 25% is not. We don't tune for any specific user segment or hardware floor.
 
-**Why this matters now:** A meaningful share of genealogists are elderly and use older hardware. Electron's per-window memory cost (~150 MB resident per BrowserWindow) and ~280 MB installer dominate the user's experience on a 8 GB-RAM laptop in a way they don't on a 32 GB-RAM dev machine. The "smaller installer" framing was understating the case; the headline is "does Släktforskning feel acceptable on the kind of computer our users actually have?" A Tauri port could plausibly deliver −250 MB on disk and −2× to −5× idle RAM. But that's an estimate. This plan replaces estimates with measurements.
+**Why this matters now:** Today's app ships ~280 MB on disk and a typical session resident-set after opening 1-2 windows on a real database lands in the 400-500 MB range. That's a lot of bytes for software that does CRUD over an SQLite database and renders some Vue components. A Tauri port could plausibly deliver −250 MB on disk and a 2× to 5× idle-RAM reduction. But that's an estimate. This plan replaces the estimate with measured numbers, and uses percentage thresholds — not arbitrary absolute targets — so the recommendation reflects the actual lift, not a goalpost we picked to hit.
 
 **Non-goal:** This plan does not perform the port. It produces enough evidence to choose between three outcomes:
 1. **Go** — the win on real hardware is large enough to justify a 2-3 month port plan.
@@ -50,38 +50,40 @@ The plan ships when the user has read the recommendation and accepted one of tho
 - **Don't port the Holger / Genney / GEDCOM importers.** These are pure-TS and live in the api/ layer; if `persons.create` works under Tauri, they work.
 - **Don't migrate auto-update.** Tauri 2.x has a working auto-updater plugin; we trust it for the spike. Real validation goes in the full-port plan.
 
-### What "elderly target hardware" means concretely
+### Hardware: whatever we have
 
-The plan needs a hardware floor to measure against. Until the user picks specific machines, the working assumption is:
-- **macOS**: a 2017 MacBook Pro (Intel, 8 GB RAM, macOS 12 Monterey). Or comparable Intel Mac from 2017-2019 with 8 GB.
-- **Windows**: a Windows 10 laptop with 8 GB RAM and an Intel HD Graphics-era integrated GPU. Bonus: also test on Windows 11 to cover WebView2's "should already be installed" path.
-- **Linux**: Ubuntu 22.04 LTS on a similar 8 GB machine.
+No hardware floor. We measure on whichever machines are at hand — at minimum the dev mac, plus a Windows machine and a Linux VM or runner for cross-platform parity. Percentage-improvement thresholds make the decision robust to absolute hardware specs: if Tauri saves 50% RAM on a 32 GB dev mac, it'll save roughly 50% RAM on an 8 GB user laptop too, and the recommendation is the same in both cases. We don't need to source a specific elderly-target machine to make a defensible call.
 
-If the user lacks physical access to those machines, an acceptable proxy is a VM constrained to 8 GB RAM and 2 vCPU, or a CI runner of the right shape (GitHub Actions free-tier runners are roughly comparable: 7 GB RAM, 2 vCPU).
-
-The reason this matters: Electron's pain point on 8 GB systems is RAM swapping under multi-window use plus list scroll jank. Both vanish on a 32 GB dev machine. Measuring on dev hardware would systematically underestimate the user-facing benefit of porting.
+If we happen to have access to a constrained machine (8 GB RAM, integrated GPU, older OS), great — add it to the measurement set. But it's not a gating requirement.
 
 ---
 
 ## Verification
 
-The plan succeeds when **a one-page recommendation** exists at `docs/plans/tauri-port-evaluation-recommendation.md` containing all of the following, populated with measured numbers:
+The plan succeeds when **a one-page recommendation** exists at `docs/plans/tauri-port-evaluation-recommendation.md` containing all of the following, populated with measured numbers per machine we tested on:
 
-| Metric | Electron (elderly mac) | Tauri (elderly mac) | Δ | Electron (modern dev) | Tauri (modern dev) | Δ |
-|---|---:|---:|---:|---:|---:|---:|
-| Disk: installer size | … | … | … | … | … | … |
-| Disk: installed app | … | … | … | … | … | … |
-| Memory: idle (1 window, blank DB) | … | … | … | … | … | … |
-| Memory: 2 windows, 10k-person DB | … | … | … | … | … | … |
-| Memory: after 10k-person GEDCOM import | … | … | … | … | … | … |
-| Cold start: launch → first paint | … | … | … | … | … | … |
-| Cold start: launch → DB ready (IPC responds) | … | … | … | … | … | … |
-| `persons.list` round-trip on 10k-person DB | … | … | … | … | … | … |
-| List scroll FPS (PersonsListView, 10k rows) | … | … | … | … | … | … |
-| Chart render: pedigree to depth 6 | … | … | … | … | … | … |
-| Print: chart → PDF | … | … | … | … | … | … |
-| Place resolution: 100 calls warm | … | … | … | … | … | … |
-| MCP `app_status` round-trip | … | … | … | … | … | … |
+| Metric | Electron | Tauri | Δ % | Verdict |
+|---|---:|---:|---:|---|
+| Disk: installer size | … | … | … | ≥50% / ≥25% / below |
+| Disk: installed app | … | … | … | … |
+| Memory: idle (1 window, blank DB) | … | … | … | … |
+| Memory: 2 windows, 10k-person DB | … | … | … | … |
+| Memory: after 10k-person GEDCOM import | … | … | … | … |
+| Cold start: launch → first paint | … | … | … | … |
+| Cold start: launch → DB ready (IPC responds) | … | … | … | … |
+| `persons.list` round-trip on 10k-person DB | … | … | … | … |
+| List scroll FPS (PersonsListView, 10k rows) | … | … | … | … |
+| Chart render: pedigree to depth 6 | … | … | … | … |
+| Print: chart → PDF | … | … | … | … |
+| Place resolution: 100 calls warm | … | … | … | … |
+| MCP `app_status` round-trip | … | … | … | … |
+
+The recommendation rule:
+- **≥50% improvement** across the headline rows (disk app, idle RAM, loaded RAM, cold start, list scroll) → **Go.** Clear win, justifies the port outright.
+- **≥25% improvement** on most headline rows, no dealbreakers → **Go.** The lift is meaningful even if not dramatic.
+- **<25% improvement**, or any dealbreaker (chart-print regression, IPC commands needing >200 LOC of Rust, WebKit/WebView2 lacking a feature the renderer relies on) → **No-go** or **Defer**.
+
+A separate row for each test machine. If results diverge across machines, that itself is a signal — usually it means our wins are RAM-pressure-dependent and bigger on constrained hardware.
 
 Also required:
 
@@ -106,44 +108,39 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 ## Tasks
 
-### Phase 1 — Baseline measurements on real hardware
+### Phase 1 — Baseline measurements
 
-#### Task 1: Pick reference hardware
+#### Task 1: List the test machines
 
-**Goal:** Lock in the specific machines (or VM specs) that count as "elderly target." Without this, every later measurement is comparable to nothing.
+**Goal:** Write down which machines we'll measure on. No hardware-spec gating — whatever's at hand counts.
 
-- [ ] **Step 1:** User picks the macOS reference. Suggested: 2017 Intel MacBook Pro / Air with 8 GB RAM, macOS 12 Monterey or 13 Ventura. If none is physically available, use a UTM/Parallels VM constrained to 8 GB / 2 vCPU.
-- [ ] **Step 2:** User picks the Windows reference. Suggested: any Windows 10 laptop with 8 GB RAM and Intel HD Graphics. WebView2 absent by default on Win10 — that's intentional, we want to test the bootstrap-installer path.
-- [ ] **Step 3:** User picks the Linux reference. Suggested: Ubuntu 22.04 LTS in a VM with 8 GB / 2 vCPU.
-- [ ] **Step 4:** User picks the modern-dev control. Default: their current daily-driver Mac.
-- [ ] **Step 5:** Document choices in `docs/plans/tauri-port-evaluation-hardware.md` (a sibling file, gitignored if confidential — otherwise committed). Include CPU model, RAM, OS version, GPU, disk type.
+- [ ] **Step 1:** Inventory available test surfaces. Minimum useful set is the dev mac plus one Windows machine (or VM) plus one Linux VM. If a constrained machine (older laptop, 8 GB RAM, integrated GPU) is around, add it as a bonus.
+- [ ] **Step 2:** Record CPU model, RAM, OS version, disk type per machine in `docs/plans/tauri-port-evaluation-baseline.md`. Confidential? Don't commit. Generic? Commit.
 
-#### Task 2: Pick "worth it" thresholds
+#### Task 2: Note the decision rule
 
-**Goal:** Define what "go" looks like before any number is measured. This is the bias control.
+**Goal:** Lock in the percentage-threshold rule so it's the same yardstick before and after measurement.
 
-- [ ] **Step 1:** User decides minimum acceptable wins to call "go":
-  - Idle RAM reduction: ≥ ___ MB
-  - 2-window-plus-10k-DB RAM reduction: ≥ ___ MB
-  - Cold start improvement: ≥ ___ ms (or ≥ ___ % faster)
-  - Installer size reduction: ≥ ___ MB
-  - List scroll FPS improvement on elderly hardware: ≥ ___ FPS
-- [ ] **Step 2:** User decides what counts as a deal-breaker (any of):
+- [ ] **Step 1:** Confirm the rule (no per-metric absolute targets):
+  - **≥50%** improvement on most headline metrics (disk app, idle RAM, loaded RAM, cold start, list scroll) → **Go.**
+  - **≥25%** improvement on most headline metrics, no dealbreakers → **Go.**
+  - **<25%** improvement, or any dealbreaker, → **No-go** or **Defer.**
+- [ ] **Step 2:** Note the dealbreakers (any one is enough to tank the recommendation):
   - Chart-print PDF visibly different from Electron output (font subsetting, page breaks, raster fallback)
   - Any of the 6 IPC commands needs > 200 LOC of Rust glue
-  - WebKit on macOS 12 lacks a CSS feature the renderer relies on
+  - WebKit/WebView2/WebKitGTK lacks a CSS feature the renderer currently relies on
   - Multi-window mutation propagation requires a fundamentally different api/ contract
-- [ ] **Step 3:** Commit the thresholds to `docs/plans/tauri-port-evaluation-thresholds.md`. The recommendation in Phase 3 measures against these values, not against vibes.
+- [ ] **Step 3:** Add this rule to the top of `tauri-port-evaluation-baseline.md` so the recommendation in Phase 3 is graded against the same rule.
 
 #### Task 3: Capture Electron baselines
 
 **Goal:** All 13 metrics from the Verification table populated for Electron, on each reference machine.
 
-- [ ] **Step 1:** Build the current main: `npm run make`. Note the installer size for each platform (or skip the platform-makers and just measure the .app/.exe bundle if cross-compilation isn't set up).
-- [ ] **Step 2:** Install on each reference machine.
+- [ ] **Step 1:** Build current main: `npm run make`. Note the installer size for each platform (or skip the platform-makers and just measure the .app/.exe bundle if cross-compilation isn't set up).
+- [ ] **Step 2:** Install on each test machine.
 - [ ] **Step 3:** Prepare a 10k-person reference DB. Use an existing GEDCOM fixture or seed via the dev MCP's `seed_family` tool. Save the .db file so the same dataset is used in Phase 2.
 - [ ] **Step 4:** Capture each metric per the verification table. For RAM, sum all process RSS via Activity Monitor / Task Manager / `ps`. For FPS, use the OS performance overlay or Chrome DevTools' FPS meter (Electron exposes it via `devtools` toggle).
-- [ ] **Step 5:** Record numbers in a `docs/plans/tauri-port-evaluation-baseline.md` working document.
+- [ ] **Step 5:** Record numbers in `docs/plans/tauri-port-evaluation-baseline.md`.
 - [ ] **Step 6:** Commit baseline.
 
 ### Phase 2 — Tauri spike
@@ -213,12 +210,12 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 ### Phase 3 — Comparison + recommendation
 
-#### Task 11: Capture Tauri spike numbers on reference hardware
+#### Task 11: Capture Tauri spike numbers on the same machines
 
-**Goal:** All 13 verification-table metrics populated for the Tauri spike, on each reference machine.
+**Goal:** All 13 verification-table metrics populated for the Tauri spike, on each machine from Task 1.
 
 - [ ] **Step 1:** Bundle the spike: `npm run tauri build`. Record installer/.app size per platform.
-- [ ] **Step 2:** Install on each reference machine.
+- [ ] **Step 2:** Install on each test machine.
 - [ ] **Step 3:** Same metrics + same procedure as Task 3, against the spike. Use the same reference DB.
 - [ ] **Step 4:** Append to `tauri-port-evaluation-baseline.md`.
 
@@ -243,11 +240,11 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 **Goal:** A one-page `docs/plans/tauri-port-evaluation-recommendation.md` that the user can read in 5 minutes and decide on.
 
-- [ ] **Step 1:** Populate the comparison table with measured numbers from Tasks 3 + 11.
-- [ ] **Step 2:** Compare each row against the Task-2 thresholds. Mark each as: meets threshold ✅ / below threshold ⚠️ / regression ❌.
+- [ ] **Step 1:** Populate the comparison table with measured numbers from Tasks 3 + 11. Compute Δ % per row per machine.
+- [ ] **Step 2:** Apply the Task-2 rule. Headline rows (disk app, idle RAM, loaded RAM, cold start, list scroll) carry the verdict; secondary rows are informational.
 - [ ] **Step 3:** Write the parity report findings, the feature-gap audit, the risk register.
 - [ ] **Step 4:** Update the cost estimate. Was 2-3 months still right? If the spike took 1 week, the full port might be 6-8 weeks. If it took 3 weeks, scale accordingly.
-- [ ] **Step 5:** Recommendation: **Go**, **Defer**, or **No-go**, with one paragraph of reasoning grounded in the numbers.
+- [ ] **Step 5:** Recommendation: **Go**, **Defer**, or **No-go**, with one paragraph of reasoning grounded in the numbers and the percentage rule.
 - [ ] **Step 6:** Hand to user. They accept one of the three outcomes. If "go," a separate full-port plan opens. If "defer" or "no-go," archive this plan.
 
 ---
