@@ -78,28 +78,6 @@ export interface TreePerson {
   siblings?: TreePerson[];
   /** For focal's direct children: which spouse is the co-parent. */
   coParentId?: string | null;
-  /**
-   * Subtype of the parent-child relationship that connects this node to its
-   * adjacent generation in the rendered tree.
-   *
-   * - When the node is rendered as a CHILD (i.e. it appears in some parent's
-   *   `children`), this carries the subtype of that parent_child relationship.
-   * - When the node is rendered as a PARENT (i.e. it appears in some child's
-   *   `parents`), this carries the subtype of that parent_child relationship.
-   *
-   * The hourglass renderer maps each subtype to a stroke-dasharray via
-   * `dashForSubtype()` — biological/null → solid, foster → 8 4, adopted →
-   * 2 3, step → 8 4 (deferred), unknown → solid (assume bio).
-   */
-  parentSubtype?: 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
-  /**
-   * For a focal-row child with `coParentId` set: the subtype of the
-   * parent_child relationship between the co-parent and this child. Used by
-   * the hourglass chart to detect the mixed-subtype case (e.g. focal is
-   * `biological` to the child but the co-parent is `adopted`) and split the
-   * merged couple-edge into two separate edges so each subtype is visible.
-   */
-  coParentSubtype?: 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
 }
 
 export interface ChartLayout {
@@ -134,8 +112,6 @@ export interface DescendantNode {
   hasMoreChildren?: boolean; // children exist in DB but not loaded (meaningful at max depth)
   /** Set on focal's direct children only: which of focal's spouses is the other parent (null = none). */
   coParentId?: string | null;
-  /** Subtype of the parent_child relationship from this node's parent → this node. */
-  parentSubtype?: 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null;
 }
 
 /**

@@ -4,57 +4,6 @@
 import { CURVE_R } from './constants';
 
 /**
- * SVG `stroke-dasharray` value for a parent_child relationship subtype.
- *
- * The hourglass chart uses dash pattern alone (not color) to encode
- * relationship subtype, so the user can tell foster from adoptive at a
- * glance without conflicting with the existing colour-mode setting
- * (themed / sex-coloured).
- *
- * Patterns are deliberately distinct from the outline-placeholder dash
- * (`"4 3"`) so a placeholder edge stays visually different from an
- * adoptive edge.
- *
- *   biological → 'none'   (solid line)
- *   foster     → '8 4'    (long dashes)
- *   adopted    → '2 3'    (dotted)
- *   step       → '8 4'    (treated as foster for now — the plan deferred a
- *                         distinct visual; revisit when the user asks)
- *   unknown    → 'none'   (assume biological for now — flagging it as
- *                         dashed would mis-signal an authored value)
- *   null       → 'none'   (biological-equivalent; no relationship-subtype
- *                         data present)
- */
-export type ParentSubtypeForDash =
-  | 'biological'
-  | 'adopted'
-  | 'foster'
-  | 'step'
-  | 'unknown'
-  | null
-  | undefined;
-
-export function dashForSubtype(subtype: ParentSubtypeForDash): string {
-  switch (subtype) {
-    case 'foster':
-      return '8 4';
-    case 'adopted':
-      return '2 3';
-    // Deferred — same visual as foster until the user asks for a third style.
-    case 'step':
-      return '8 4';
-    // Ambiguous — assume biological so we don't claim authored data we
-    // don't have.
-    case 'unknown':
-    case 'biological':
-    case null:
-    case undefined:
-    default:
-      return 'none';
-  }
-}
-
-/**
  * Generate a U-shaped marriage connector between a focal node and a non-adjacent
  * spouse on the same side. Used for the 3+ spouse case where a direct horizontal
  * line would visually cross through one or more intermediate spouse boxes.

@@ -13,7 +13,7 @@
 import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox } from './types';
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
-import { curvedElbow, marriageJog, dashForSubtype } from './connectors';
+import { curvedElbow, marriageJog } from './connectors';
 import { injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -29,10 +29,7 @@ function findPersonInTree(node: TreePerson, id: string, visited = new Set<string
   return null;
 }
 
-/** Deep-clone a TreePerson graph so layout mutations don't affect the source.
- *  Spreading `node` first preserves transferable scalar fields like
- *  `parentSubtype` (foster/adopted/etc) on the clone — those are then carried
- *  into edge emission below. */
+/** Deep-clone a TreePerson graph so layout mutations don't affect the source. */
 function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): TreePerson {
   if (visited.has(node.person.id)) return visited.get(node.person.id)!;
   const clone: TreePerson = { ...node, person: { ...node.person }, parents: [], children: [], spouses: [], siblings: undefined };
@@ -42,33 +39,6 @@ function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): T
   clone.spouses = node.spouses.map(s => cloneTree(s, visited));
   if (node.siblings) clone.siblings = node.siblings.map(s => cloneTree(s, visited));
   return clone;
-}
-
-/** Path-string prefix markers for parent_child connectors with non-default
- *  subtype rendering. The renderer filters paths by prefix and applies the
- *  subtype's `stroke-dasharray` per `dashForSubtype()` in `connectors.ts`.
- *
- *  Subtypes that render solid (biological / unknown / null) emit no prefix,
- *  matching the historical default. Foster, adopted, and step each get a
- *  one-letter prefix. The path-shift token walker accepts any uppercase
- *  prefix shorter than 3 characters (`/^[A-Z]+$/` with `colonIdx < 3`).
- *
- *  Step is grouped under the foster prefix because the plan defers a third
- *  visual until the user asks for one — both render with the foster dash.
- */
-export const FOSTER_PATH_PREFIX = 'F:';
-export const ADOPTED_PATH_PREFIX = 'A:';
-
-type ParentSubtype = 'biological' | 'adopted' | 'foster' | 'step' | 'unknown' | null | undefined;
-
-/** Map a parent_child subtype to its path-class prefix (or '' for solid). */
-function prefixForSubtype(subtype: ParentSubtype): string {
-  if (subtype === 'foster') return FOSTER_PATH_PREFIX;
-  if (subtype === 'adopted') return ADOPTED_PATH_PREFIX;
-  // step: deferred — same visual as foster (matches dashForSubtype()).
-  if (subtype === 'step') return FOSTER_PATH_PREFIX;
-  // biological / unknown / null / undefined → solid, no prefix.
-  return '';
 }
 
 export function maxDescendantDepthTP(node: TreePerson, visited = new Set<string>()): number {
@@ -544,7 +514,7 @@ export function computeHourglassLayout(
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(depth + 1) + hOf(realParents[i]);
       const d = curvedElbow(nodeCX, nodeY, pcx, pBottom, 'down', sharedMidY);
-      paths.push(prefixForSubtype(realParents[i].parentSubtype) + d);
+      paths.push(d);
     }
   }
 
@@ -577,7 +547,7 @@ export function computeHourglassLayout(
     const sharedMidY = descendantRowTopY[depth + 1] - GEN_GAP / 2;
     for (let i = 0; i < n; i++) {
       const d = curvedElbow(nodeCX, nodeY + nodeH, childCXs[i], descRowY(depth + 1), 'down', sharedMidY);
-      paths.push(prefixForSubtype(realChildren[i].parentSubtype) + d);
+      paths.push(d);
       placeDescendants(realChildren[i], childCXs[i], depth + 1);
     }
   }
@@ -605,7 +575,7 @@ export function computeHourglassLayout(
       const pcx = parentCXs[i];
       const pBottom = ancestorRowY(1) + hOf(focalRealParents[i]);
       const d = curvedElbow(focalCX, focalRowY, pcx, pBottom, 'down', sharedMidY);
-      paths.push(prefixForSubtype(focalRealParents[i].parentSubtype) + d);
+      paths.push(d);
     }
   }
 
@@ -804,64 +774,28 @@ export function computeHourglassLayout(
       const child = focalRealChildren[i];
       const coParentBox = child.coParentId ? spouseBoxById.get(child.coParentId) : undefined;
 
-      // Mixed-subtype detection: when the child has a co-parent on chart
-      // AND the two parent_child subtypes differ visually (per
-      // dashForSubtype mapping), the merged couple-edge would only show one
-      // dash pattern, hiding the other parent's relationship type. Split
-      // into two separate edges, one from each parent's bottom-center, each
-      // carrying its own dash. Same-subtype cases (both biological, both
-      // foster, etc.) keep the single merged couple-anchored edge — that's
-      // the common shape and the visual is already correct.
-      const focalSub = child.parentSubtype ?? null;
-      const coParentSub = child.coParentSubtype ?? null;
-      const focalDash = dashForSubtype(focalSub);
-      const coParentDash = dashForSubtype(coParentSub);
-      const isMixedSubtype = !!coParentBox && focalDash !== coParentDash;
+      // Anchor at the couple connector midpoint when the co-parent is on
+      // chart, else at the focal box bottom.
+      let fromX = focalCX;
+      let fromY = focalBottom;
 
-      if (isMixedSubtype && coParentBox) {
-        // Two edges: focal → child, co-parent → child. Each anchors at its
-        // own parent's bottom-center and uses its own subtype's dash. Share
-        // midY so both edges' horizontal segments align at the same level
-        // (the merged-edge midY is also focalChildSharedMidY).
-        const focalEdgeD = curvedElbow(focalCX, focalBottom, childCXs[i], descRowY(1), 'down', focalChildSharedMidY);
-        paths.push(prefixForSubtype(focalSub) + focalEdgeD);
-
-        const coParentCX = coParentBox.x + coParentBox.w / 2;
-        const coParentBottom = coParentBox.y + coParentBox.h;
-        const coParentEdgeD = curvedElbow(coParentCX, coParentBottom, childCXs[i], descRowY(1), 'down', focalChildSharedMidY);
-        paths.push(prefixForSubtype(coParentSub) + coParentEdgeD);
-      } else {
-        // Same-subtype (or no on-chart co-parent): single merged edge, as
-        // before. Anchor at the couple connector midpoint when the
-        // co-parent is on chart, else at focal box bottom.
-        let fromX = focalCX;
-        let fromY = focalBottom;
-        const midY: number | undefined = focalChildSharedMidY;
-
-        if (coParentBox) {
-          // Anchor at the couple connector: midpoint between focal and spouse's
-          // facing edges, at this pair's marriage-line Y.
-          const spouseLeftEdge = coParentBox.x;
-          const spouseRightEdge = coParentBox.x + coParentBox.w;
-          const spouseIsRight = coParentBox.x > focalCX;
-          const innerFocalX = spouseIsRight ? focalRightEdge : focalLeftEdge;
-          const innerSpouseX = spouseIsRight ? spouseLeftEdge : spouseRightEdge;
-          fromX = (innerFocalX + innerSpouseX) / 2;
-          const spIdx = spouseIndexById.get(child.coParentId!) ?? 0;
-          // spouse[0] → adjacent stub at focal centerline; child anchors there.
-          // spouse[i>=1] → marriage line routed above the row; the child cannot
-          // anchor at that Y because the line would have to come back down
-          // through the row. Anchor at focal-row bottom instead — X-midpoint
-          // between focal and spouse preserves "this couple" framing, Y at
-          // focalBottom drops cleanly through the descendant gap.
-          fromY = spIdx === 0 ? focalCenterY : focalBottom;
-        }
-
-        const d = curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', midY);
-        // When both parents share the same subtype, both contribute the
-        // same dash, so emitting a single prefix is correct.
-        paths.push(prefixForSubtype(focalSub) + d);
+      if (coParentBox) {
+        const spouseLeftEdge = coParentBox.x;
+        const spouseRightEdge = coParentBox.x + coParentBox.w;
+        const spouseIsRight = coParentBox.x > focalCX;
+        const innerFocalX = spouseIsRight ? focalRightEdge : focalLeftEdge;
+        const innerSpouseX = spouseIsRight ? spouseLeftEdge : spouseRightEdge;
+        fromX = (innerFocalX + innerSpouseX) / 2;
+        const spIdx = spouseIndexById.get(child.coParentId!) ?? 0;
+        // spouse[0] → adjacent stub at focal centerline; child anchors there.
+        // spouse[i>=1] → marriage line routed above the row; anchor at
+        // focal-row bottom so the child line drops cleanly through the
+        // descendant gap without re-crossing the row.
+        fromY = spIdx === 0 ? focalCenterY : focalBottom;
       }
+
+      const d = curvedElbow(fromX, fromY, childCXs[i], descRowY(1), 'down', focalChildSharedMidY);
+      paths.push(d);
       placeDescendants(child, childCXs[i], 1);
     }
   }
@@ -968,16 +902,7 @@ export function computeHourglassLayout(
     // coordinate pair, plus the lone number after H. V values are Y only
     // (unchanged). We shift paths token-by-token.
     const shiftPath = (d: string): number[] | string => {
-      // Strip and re-attach a path-class prefix marker like "F:" so the
-      // tokenizer only sees the SVG path itself.
-      let prefix = '';
-      let body = d;
-      const colonIdx = d.indexOf(':');
-      if (colonIdx > 0 && colonIdx < 3 && /^[A-Z]+$/.test(d.slice(0, colonIdx))) {
-        prefix = d.slice(0, colonIdx + 1);
-        body = d.slice(colonIdx + 1);
-      }
-      const tokens = body.split(/\s+/);
+      const tokens = d.split(/\s+/);
       for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i];
         if (t === 'M' || t === 'Q') {
@@ -993,7 +918,7 @@ export function computeHourglassLayout(
           if (next !== undefined) tokens[i + 1] = String(parseFloat(next) + shift);
         }
       }
-      return prefix + tokens.join(' ');
+      return tokens.join(' ');
     };
     for (let i = 0; i < paths.length; i++) paths[i] = shiftPath(paths[i]) as string;
     for (let i = 0; i < placeholderPaths.length; i++) placeholderPaths[i] = shiftPath(placeholderPaths[i]) as string;
