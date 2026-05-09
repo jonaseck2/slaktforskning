@@ -60,25 +60,38 @@ Confirmed absent (intended exclusions): `/tests`, `/docs`, `/.claude`,
 (other `src/` runtime dirs `api`, `gedcom`, `import`, `main`, `mcp`,
 `preload`, `renderer`, `shared`, `static` remain).
 
-### Installer / packaged size after Task 2
-- macOS .zip (`out/make/zip/darwin/arm64/Släktforskning-darwin-arm64-0.234.0.zip`): **135 MB**
-- macOS app.asar (uncompressed inside the bundle): **128 MB**
-- Windows .exe: _user-pending — no Windows toolchain on this macOS host_
-- Linux .deb: _user-pending — no Linux toolchain on this macOS host_
+### Initial regex-list ignore (rolled back)
+The plan's literal regex list left `/src/`, `/node_modules/`, `/.superpowers/`
+and other non-runtime paths in the asar. macOS .zip from that pass: 135 MB,
+app.asar: 128 MB. Forge's own notice flagged this: "Your packaged app may
+be larger than expected if you don't ignore everything other than the
+'.vite' folder." The Vite plugin would normally do that auto-ignore for
+us — by setting `packagerConfig.ignore` we'd opted out of it.
 
-Baseline numbers for comparison are user-pending (the parent commit was the
-plan-only commit; the Task 1 baseline make run was deferred to the user per
-the measurements scaffold). User should run `npm run make` against the
-parent `main` SHA `096e6fd9` and the resulting commit on this branch to get
-the Δ — both numbers should drop together because the `ignore` array kicks
-in only when `forge.config.ts` is present in this shape.
+### Aggressive allowlist (kept)
+Switched `ignore` to a function that allows only `/.vite/**` and `/package.json`
+inside the asar. Vite already bundles every non-`external` JS dep into
+`.vite/build/`, and `extraResource` ships `dist-static/` and the licenses
+file outside the asar.
 
-### Smoke check (Place picker resolves "Stockholm")
-- _user-pending — could not run a UI smoke check against the packaged binary
-  from this subagent session. The `npm run package` build succeeded and the
-  asar contents look correct; user is asked to launch
-  `out/Släktforskning-darwin-arm64/Släktforskning.app` and confirm the Place
-  picker still shows gazetteer suggestions for "Stockholm" before merge._
+- macOS app.asar (uncompressed inside the bundle): **10 MB** (was 128 MB)
+- macOS .app bundle total: **275 MB** (Electron framework dominates after asar shrink)
+- macOS .zip (`out/make/zip/darwin/arm64/...`): _capture in Task 14 with one make-and-diff against `main`_
+- Windows .exe: _user-pending_
+- Linux .deb: _user-pending_
+
+### Smoke check
+Launched `out/Släktforskning-darwin-arm64/Släktforskning.app/Contents/MacOS/slaktforskning`
+directly. Stayed alive 4+ s, stdout shows clean startup:
+```
+[UI server] http://127.0.0.1:19241
+[startup] app ready in 173 ms
+```
+No missing-module crash, no native-binding error. Process killed cleanly.
+
+User-pending: open the launched app, exercise a Place picker on "Stockholm",
+confirm gazetteer suggestions still appear (still relevant — the binary
+boots, but no UI was visually inspected).
 
 ---
 

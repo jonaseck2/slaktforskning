@@ -15,31 +15,21 @@ const config: ForgeConfig = {
     asar: true,
     executableName: 'slaktforskning',
     extraResource: ['./dist-static', './THIRD_PARTY_LICENSES.txt'],
-    ignore: [
-      // tests and fixtures
-      /^\/tests($|\/)/,
-      // build scripts (only run at npm run package time, not at runtime)
-      /^\/scripts($|\/)/,
-      /^\/src\/gazetteer-build($|\/)/,
-      // docs and config
-      /^\/docs($|\/)/,
-      /^\/\.claude($|\/)/,
-      /^\/\.devcontainer($|\/)/,
-      /^\/\.github($|\/)/,
-      /^\/\.vscode($|\/)/,
-      // top-level non-runtime files
-      /^\/(README|CONTRIBUTING|CHANGELOG|LICENSE|CLAUDE)\.md$/,
-      /^\/playwright\.config\.ts$/,
-      /^\/vitest\.config\.mts$/,
-      /^\/eslint\.config\.[mt]?js$/,
-      /^\/tsconfig\.json$/,
-      /^\/forge\.config\.ts$/,
-      /^\/vite\.[a-z]+\.config\.ts$/,
-      // coverage / build artifacts that aren't the runtime bundle
-      /^\/coverage($|\/)/,
-      /^\/dist-static($|\/)/, // intentionally — extraResource above ships it explicitly
-      /^\/out($|\/)/,
-    ],
+    // Aggressive allowlist. The runtime only needs:
+    //   - /.vite (everything Vite emits: main bundle, worker, preload, renderer,
+    //     WASM copy, gazetteer assets)
+    //   - /package.json (Electron reads `main` from here at startup)
+    // Everything else (src/, node_modules/, docs, tests, dev configs, .claude,
+    // .superpowers, top-level Markdown, etc.) is dev-only because Vite bundles
+    // every JS dep that isn't in `external` (currently just electron + node
+    // builtins) into the .vite output. dist-static and THIRD_PARTY_LICENSES.txt
+    // ship via extraResource above, outside the asar entirely.
+    ignore: (filePath: string): boolean => {
+      if (filePath === '') return false; // packager calls with '' for the root; never ignore that
+      if (filePath === '/package.json') return false;
+      if (filePath === '/.vite' || filePath.startsWith('/.vite/')) return false;
+      return true;
+    },
   },
   hooks: {
     generateAssets: async () => {
