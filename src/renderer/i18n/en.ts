@@ -1940,6 +1940,30 @@ export default {
         purpose: 'A user would use this section to attach photos and documents tied to this relationship — a wedding photo, a marriage certificate scan — so the relationship has visual evidence of its own.',
         cta: 'Attach media',
       },
+      groupPersons: {
+        purpose: 'A user would use this section to gather the persons that belong in this group — a household, a passenger list, a wedding party — so the cluster of people is reachable from one named record.',
+        cta: 'Add person',
+      },
+      groupPlaces: {
+        purpose: 'A user would use this section to gather the places that belong in this group — parishes a congregation covered, ports along an emigration route — so the cluster of places is reachable from one named record.',
+        cta: 'Add place',
+      },
+      groupMedia: {
+        purpose: 'A user would use this section to gather the media that belong in this group — photographs of the wedding party, scans of the passenger list — so the cluster of files is reachable from one named record.',
+        cta: 'Attach media',
+      },
+      linkedPersons: {
+        purpose: 'A user would use this section to link persons related to this record — and unlink them when no longer relevant.',
+        cta: 'Add person',
+      },
+      linkedPlaces: {
+        purpose: 'A user would use this section to link places related to this record — and unlink them when no longer relevant.',
+        cta: 'Add place',
+      },
+      linkedMedia: {
+        purpose: 'A user would use this section to attach photos and documents related to this record — and unlink them when no longer relevant.',
+        cta: 'Attach media',
+      },
     },
     coach: {
       hourglassFocus: {

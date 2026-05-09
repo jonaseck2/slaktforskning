@@ -1919,6 +1919,30 @@ export default {
         purpose: 'Här bifogar du foton och dokument knutna till relationen — bröllopsfoto, vigselattest — så att relationen har egna visuella belägg.',
         cta: 'Bifoga media',
       },
+      groupPersons: {
+        purpose: 'Här samlar du de personer som hör till gruppen — ett hushåll, en passagerarlista, ett bröllopsfölje — så att klustret av personer kan nås från en namngiven post.',
+        cta: 'Lägg till person',
+      },
+      groupPlaces: {
+        purpose: 'Här samlar du de platser som hör till gruppen — socknar en församling omfattade, hamnar längs en emigrationsväg — så att klustret av platser kan nås från en namngiven post.',
+        cta: 'Lägg till plats',
+      },
+      groupMedia: {
+        purpose: 'Här samlar du media som hör till gruppen — foton av bröllopssällskapet, skanningar av passagerarlistan — så att klustret av filer kan nås från en namngiven post.',
+        cta: 'Bifoga media',
+      },
+      linkedPersons: {
+        purpose: 'Här kopplar du personer som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Lägg till person',
+      },
+      linkedPlaces: {
+        purpose: 'Här kopplar du platser som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Lägg till plats',
+      },
+      linkedMedia: {
+        purpose: 'Här bifogar du foton och dokument som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Bifoga media',
+      },
     },
     coach: {
       hourglassFocus: {

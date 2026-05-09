@@ -5,7 +5,12 @@
       <AppButton variant="primary" size="sm" :disabled="!pickedId" @click="onAdd">{{ $t('common.add') }}</AppButton>
       <AppButton variant="ghost" size="sm" @click="cancelAdd">{{ $t('common.cancel') }}</AppButton>
     </div>
-    <SectionEmpty v-if="rows.length === 0 && !showPicker" :message="$t('empty.persons')" />
+    <SectionEmpty
+      v-if="rows.length === 0 && !showPicker"
+      :purpose-key="purposeKey ?? 'onboarding.empty.linkedPersons.purpose'"
+      :action-label-key="actionLabelKey ?? 'onboarding.empty.linkedPersons.cta'"
+      @action="emit('openPicker')"
+    />
     <table v-else-if="rows.length > 0" class="data-table">
       <thead>
         <tr>
@@ -86,12 +91,15 @@ interface Row {
 const props = defineProps<{
   links: LinkInput[];
   showPicker: boolean;
+  purposeKey?: string;
+  actionLabelKey?: string;
 }>();
 
 const emit = defineEmits<{
   add: [personId: string];
   remove: [linkId: string];
   cancelPicker: [];
+  openPicker: [];
 }>();
 
 const rows = ref<Row[]>([]);
