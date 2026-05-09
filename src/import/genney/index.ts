@@ -38,6 +38,7 @@ const tables = {
   CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
   REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
   MEDIA: [], OWNER_MEDIA: [], TODO: [],
+  SUBMITTER: [], ADDRESS: [], INI: [],
 };
 for (const line of workerData.ndjson.split('\\n')) {
   const trimmed = line.trim();

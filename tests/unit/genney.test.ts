@@ -5,6 +5,7 @@ import { listRelationships } from '../../src/api/relationships';
 import { getEventsForPerson, getEventsForRelationship } from '../../src/api/events';
 import { listSources, getCitationsForEvent } from '../../src/api/sources';
 import { listPlaces } from '../../src/api/places';
+import { getDbSetting, setDbSetting } from '../../src/api/db_settings';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
@@ -22,6 +23,7 @@ function emptyTables(): GenneyTables {
     CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
     REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
     MEDIA: [], OWNER_MEDIA: [], TODO: [],
+    SUBMITTER: [], ADDRESS: [], INI: [],
   };
 }
 
@@ -406,5 +408,73 @@ describe('transformGenney — sources and citations', () => {
     const events = getEventsForPerson(db, persons[0].id);
     const citations = getCitationsForEvent(db, events[0].id);
     expect(citations[0].confidence).toBe(0);
+  });
+});
+
+// ── researcher info from SUBMITTER + INI + ADDRESS ────────────────────────
+
+describe('transformGenney — researcher info', () => {
+  it('populates researcher_* settings from the SUBMITTER row INI points at', () => {
+    const tables = emptyTables();
+    tables.INI = [{ SUBMITTER: '1' }];
+    tables.SUBMITTER = [{
+      RID: '1', NAME: 'Linda Ahnstedt', PHONE: '0709105849',
+      EMAIL: 'linda.ahnstedt@gmail.com', ADDRESS: 'A1',
+    }];
+    tables.ADDRESS = [{ RID: 'A1', ADDRESS: 'Norra Esplanaden 20c\n35231 Växjö\nSverige' }];
+    transformGenney(db, tables);
+    expect(getDbSetting(db, 'researcher_name')).toBe('Linda Ahnstedt');
+    expect(getDbSetting(db, 'researcher_phone')).toBe('0709105849');
+    expect(getDbSetting(db, 'researcher_email')).toBe('linda.ahnstedt@gmail.com');
+    expect(getDbSetting(db, 'researcher_address')).toBe('Norra Esplanaden 20c\n35231 Växjö\nSverige');
+  });
+
+  it('ignores SUBMITTER rows that INI does not reference (imported third-party submitters)', () => {
+    const tables = emptyTables();
+    tables.INI = [{ SUBMITTER: '1' }];
+    tables.SUBMITTER = [
+      { RID: '1', NAME: 'Linda', EMAIL: 'linda@example.com' },
+      { RID: '3', NAME: 'Imported From Other GEDCOM', EMAIL: 'other@example.com' },
+    ];
+    transformGenney(db, tables);
+    expect(getDbSetting(db, 'researcher_name')).toBe('Linda');
+    expect(getDbSetting(db, 'researcher_email')).toBe('linda@example.com');
+  });
+
+  it('falls back to structured ADDRESS1/CITY/POSTALCODE/STATE/COUNTRY when no ADDRESS FK', () => {
+    const tables = emptyTables();
+    tables.INI = [{ SUBMITTER: '1' }];
+    tables.SUBMITTER = [{
+      RID: '1', NAME: 'Genealog', ADDRESS: null,
+      ADDRESS1: 'Storgatan 1', POSTALCODE: '12345', CITY: 'Lund', COUNTRY: 'Sverige',
+    }];
+    transformGenney(db, tables);
+    expect(getDbSetting(db, 'researcher_address')).toBe('Storgatan 1\n12345 Lund\nSverige');
+  });
+
+  it('does not overwrite researcher_* settings the user has already typed', () => {
+    setDbSetting(db, 'researcher_name', 'Pre-existing Name');
+    setDbSetting(db, 'researcher_email', 'mine@example.com');
+    const tables = emptyTables();
+    tables.INI = [{ SUBMITTER: '1' }];
+    tables.SUBMITTER = [{
+      RID: '1', NAME: 'Linda', PHONE: '0709105849',
+      EMAIL: 'linda@example.com', ADDRESS: 'A1',
+    }];
+    tables.ADDRESS = [{ RID: 'A1', ADDRESS: 'Norra Esplanaden' }];
+    transformGenney(db, tables);
+    expect(getDbSetting(db, 'researcher_name')).toBe('Pre-existing Name');
+    expect(getDbSetting(db, 'researcher_email')).toBe('mine@example.com');
+    // Empty ones still populated.
+    expect(getDbSetting(db, 'researcher_phone')).toBe('0709105849');
+    expect(getDbSetting(db, 'researcher_address')).toBe('Norra Esplanaden');
+  });
+
+  it('is a no-op when the database has no SUBMITTER / INI rows', () => {
+    const tables = emptyTables();
+    tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Anyone' }];
+    transformGenney(db, tables);
+    expect(getDbSetting(db, 'researcher_name')).toBeNull();
+    expect(getDbSetting(db, 'researcher_address')).toBeNull();
   });
 });

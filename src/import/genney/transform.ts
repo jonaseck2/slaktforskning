@@ -14,6 +14,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import { parseGedcomDate } from '../../gedcom/date';
 import { eventTypeHasFactValue } from '../../api/events_gedcom';
 import { queryOne, queryAll, runSql } from '../../api/db';
+import { getDbSetting, setDbSetting } from '../../api/db_settings';
 
 // ── Genney row shapes ──────────────────────────────────────────────────────
 
@@ -205,6 +206,36 @@ export interface RemarkRow {
   [key: string]: unknown;
 }
 
+export interface SubmitterRow {
+  RID: string;
+  ADDRESS?: string | null;  // FK → ADDRESS.RID
+  NAME?: string | null;
+  PHONE?: string | null;
+  EMAIL?: string | null;
+  WEB?: string | null;
+  // Some Genney installs populate the structured fields instead of an ADDRESS FK.
+  ADDRESS1?: string | null;
+  ADDRESS2?: string | null;
+  CITY?: string | null;
+  POSTALCODE?: string | null;
+  STATE?: string | null;
+  COUNTRY?: string | null;
+  [key: string]: unknown;
+}
+
+export interface AddressRow {
+  RID: string;
+  ADDRESS?: string | null;  // multi-line free-text
+  [key: string]: unknown;
+}
+
+export interface IniRow {
+  // INI is a singleton — one row per Genney database — holding user prefs.
+  // SUBMITTER points at the user's own SUBMITTER.RID (default tree subject).
+  SUBMITTER?: string | null;
+  [key: string]: unknown;
+}
+
 export interface GenneyTables {
   PERSON: PersonRow[];
   FAMILY: FamilyRow[];
@@ -226,6 +257,9 @@ export interface GenneyTables {
   MEDIA: MediaRow[];
   OWNER_MEDIA: OwnerMediaRow[];
   TODO: TodoRow[];
+  SUBMITTER: SubmitterRow[];
+  ADDRESS: AddressRow[];
+  INI: IniRow[];
 }
 
 export interface ImportSummary {
@@ -858,7 +892,60 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
     runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, newRows[i].id]);
   }
 
+  // ── Researcher info from SUBMITTER + INI + ADDRESS ─────────────────────────
+  // Mirror the GEDCOM importer's SUBM → researcher_* mapping so the exporter
+  // and importer stay symmetric. Genney's data model:
+  //   INI (singleton) → SUBMITTER field points at the user's own SUBMITTER.RID
+  //   SUBMITTER row holds NAME / PHONE / EMAIL inline + an ADDRESS FK
+  //   ADDRESS row holds multi-line free-text (or SUBMITTER may use the
+  //   structured ADDRESS1/CITY/POSTALCODE/STATE/COUNTRY fields directly).
+  // Only writes settings that are currently empty — a user who has typed
+  // their own contact info in Settings keeps it on re-import.
+  importGenneyResearcher(db, tables);
+
   return summary;
+}
+
+function importGenneyResearcher(db: Database, tables: GenneyTables): void {
+  const ini = tables.INI?.[0];
+  const userRid = ini?.SUBMITTER?.trim();
+  if (!userRid) return;
+
+  const submitter = tables.SUBMITTER?.find(s => s.RID === userRid);
+  if (!submitter) return;
+
+  const name = submitter.NAME?.trim();
+  const phone = submitter.PHONE?.trim();
+  const email = submitter.EMAIL?.trim();
+
+  // Address: prefer the FK-linked ADDRESS row's free-text; fall back to
+  // assembling structured fields if present.
+  let address: string | undefined;
+  if (submitter.ADDRESS) {
+    const addrRow = tables.ADDRESS?.find(a => a.RID === submitter.ADDRESS);
+    address = addrRow?.ADDRESS?.trim() || undefined;
+  }
+  if (!address) {
+    const lines = [
+      submitter.ADDRESS1, submitter.ADDRESS2,
+      [submitter.POSTALCODE, submitter.CITY].filter(Boolean).join(' ').trim() || null,
+      submitter.STATE, submitter.COUNTRY,
+    ]
+      .map(s => s?.trim())
+      .filter((s): s is string => Boolean(s));
+    if (lines.length > 0) address = lines.join('\n');
+  }
+
+  const setIfEmpty = (key: string, value: string | undefined): void => {
+    if (!value) return;
+    const existing = getDbSetting(db, key);
+    if (existing && existing.trim()) return;
+    setDbSetting(db, key, value);
+  };
+  setIfEmpty('researcher_name', name);
+  setIfEmpty('researcher_address', address);
+  setIfEmpty('researcher_phone', phone);
+  setIfEmpty('researcher_email', email);
 }
 
 /** Parse NDJSON lines from DerbyExtractor stdout into GenneyTables. */
@@ -880,6 +967,7 @@ export function parseNdJson(output: string): GenneyTables {
     CITATION: [], CITATION_SOURCE: [], OWNER_CITATION: [], REMARK: [],
     REPO: [], SOURCE_REPO: [], GROUPS: [], GROUP_MEMBER: [],
     MEDIA: [], OWNER_MEDIA: [], TODO: [],
+    SUBMITTER: [], ADDRESS: [], INI: [],
     ...tables,
   } as GenneyTables;
 }
