@@ -24,7 +24,11 @@
             <span v-else-if="isImageMedia(m.format, m.file_ref)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
-          <td v-if="!props.readonly" class="td-shrink order-cell">
+          <td
+            v-if="!props.readonly"
+            :ref="(el) => { if (idx === 0) dragHandleEl = el as HTMLElement | null; }"
+            class="td-shrink order-cell"
+          >
             <button
               class="star-btn"
               :class="{ 'is-profile': idx === 0 }"
@@ -62,6 +66,16 @@
       @cancel="del.cancel"
       @confirm="del.confirm"
     />
+
+    <Coachmark
+      v-if="!props.readonly && media.length >= 2"
+      seen-key="coach.media.reorder"
+      :anchor-el="dragHandleEl"
+      tip-key="onboarding.coach.mediaReorder.tip"
+      dismiss-key="onboarding.coach.mediaReorder.dismiss"
+      placement="right"
+      :auto-dismiss-on="() => reorderedOnce"
+    />
   </div>
 </template>
 
@@ -72,6 +86,7 @@ import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { useProfilePicStore } from '../stores/profilePic';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import IconUnlink from './ui/IconUnlink.vue';
+import Coachmark from './ui/Coachmark.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
@@ -99,6 +114,8 @@ const router = useRouter();
 const thumbnails = ref<Record<string, string>>({});
 const showAddRow = ref(false);
 const profilePicStore = useProfilePicStore();
+const dragHandleEl = ref<HTMLElement | null>(null);
+const reorderedOnce = ref(false);
 
 const idRef = computed(() => props.personId ?? null);
 const { data, reload } = useEntityData<MediaItem[]>(idRef, async (id) => {
@@ -154,6 +171,7 @@ function unlink(linkId: string) { del.ask(linkId); }
 
 async function reorder(newOrder: MediaItem[]) {
   await window.api.media.reorder(newOrder.map(m => m.link_id));
+  reorderedOnce.value = true;
   profilePicStore.invalidatePerson(props.personId);
   await reload();
   emit('profileChanged');

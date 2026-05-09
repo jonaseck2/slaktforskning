@@ -1851,7 +1851,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      mediaReorder: {
+        tip: 'Drag rows to reorder — e.g. childhood photos first, later ones last.',
+        dismiss: 'Got it',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Reset onboarding hints',

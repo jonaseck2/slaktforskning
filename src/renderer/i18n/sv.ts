@@ -1830,7 +1830,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      mediaReorder: {
+        tip: 'Dra rader för att sortera om — t.ex. barnbilder först, äldre sist.',
+        dismiss: 'Förstått',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Återställ introduktionshjälpen',
