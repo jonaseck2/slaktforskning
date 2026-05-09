@@ -148,7 +148,52 @@ instead of via the JSON-blob fallback. Out of scope for this task.
 
 ## After Task 7 (binary loader)
 
-(populated by Task 7 subagent — packaged `.vite/build/gazetteers/` total bytes)
+Replaced `compress-bundled-gazetteers` (gzip-of-JSON) with
+`emit-bundled-gazetteers-binary` in `vite.main.config.ts`: each `<id>.json` in
+`src/api/place-gazetteers/data/` is parsed, packed via `encodeGazetteer`, and
+gzipped at level 9 to `.vite/build/gazetteers/<id>.glb.gz`. The runtime loader
+in `src/api/place-gazetteers/bundled.ts` now prefers `.glb.gz`, falls back to
+the previous `.json.gz` (transitional, in case a partially-rebuilt
+`.vite/build/` lacks the new files), and finally to raw `data/<id>.json`
+(vitest / dev / direct-source consumers).
+
+### Packaged `.vite/build/gazetteers/` totals (after `npm run package`)
+
+- Files emitted: **36 `.glb.gz`** (one per `data/*.json`), **0 `.json.gz`**
+- Total bytes: **5,780 KB ≈ 5.64 MB** (du -kc)
+- Previous shipping format (gzipped JSON): 7.30 MB
+- **Net saving: ~1.66 MB / ~22.7%** of bundled gazetteer payload
+
+### Smoke check — packaged binary
+
+Launched
+`out/Släktforskning-darwin-arm64/Släktforskning.app/Contents/MacOS/slaktforskning`
+directly. Stayed alive 5+ s, stdout shows clean startup:
+
+```
+[UI server] http://127.0.0.1:19241
+[startup] app ready in 207 ms
+```
+
+A temporary `[gazetteer] loaded <id> via .glb.gz` log was added to the binGzPath
+branch and confirmed all 36 unique gazetteers loaded via the binary path (×2
+for main + worker thread, 72 total log lines, all distinct IDs). Log was
+removed before commit.
+
+### Test / lint status
+
+- `npm test`: **3557 passed**, 104 skipped, **3 failed** — all 3 failures are
+  in `tests/components/PersonsView.test.ts` (route-fallback tests for
+  `default_person_id`); confirmed pre-existing on the worktree's baseline
+  HEAD by re-running with my changes stashed (same 3 failures). Unrelated to
+  gazetteer loading.
+- `npm run lint`: **0 errors**, 23 pre-existing warnings.
+
+### TODO for Task 14 wrap-up
+
+`.claude/rules/build.md` still describes the gzip-of-JSON plugin and the
+`*.json.gz` shipping path. Update at plan close-out so the rule reflects
+`emit-bundled-gazetteers-binary` and `*.glb.gz`.
 
 ---
 

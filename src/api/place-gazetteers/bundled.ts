@@ -8,6 +8,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
+import { decodeGazetteer } from '../../gazetteer-build/binary-codec';
 import {
   SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES, GB_RULES,
 } from '../../gazetteer-build/normalize-rules';
@@ -69,17 +70,28 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-// Resolves to one of two locations depending on whether we're running from
+// Resolves to one of three locations depending on whether we're running from
 // source (tests, dev, ts-node) or from a Vite-built bundle:
-//   - Built: <bundle-dir>/gazetteers/<id>.json.gz (gzipped, shipped in app.asar)
+//   - Built (current): <bundle-dir>/gazetteers/<id>.glb.gz (packed binary +
+//     gzipped, shipped in app.asar — see vite.main.config.ts)
+//   - Built (transitional): <bundle-dir>/gazetteers/<id>.json.gz (gzipped JSON
+//     left over from a previous build; tolerated so a partially-rebuilt
+//     .vite/build/ does not crash at startup)
 //   - Source: <src/api/place-gazetteers>/data/<id>.json (raw, authored truth)
-// The compressed sibling is preferred when present; falls back to raw for
-// vitest and any direct-source consumer.
+// The compressed binary is preferred when present; falls back to gzipped JSON,
+// then to raw JSON for vitest and any direct-source consumer.
 function loadGazetteer(id: string): Gazetteer {
+  const binGzPath = resolve(HERE, 'gazetteers', `${id}.glb.gz`);
+  if (existsSync(binGzPath)) {
+    return decodeGazetteer(gunzipSync(readFileSync(binGzPath)));
+  }
+  // Transitional fallback: previously we shipped gzipped JSON.
   const gzPath = resolve(HERE, 'gazetteers', `${id}.json.gz`);
   if (existsSync(gzPath)) {
     return JSON.parse(gunzipSync(readFileSync(gzPath)).toString('utf8')) as Gazetteer;
   }
+  // Source fallback: vitest, dev runners, anything reading directly from
+  // src/api/place-gazetteers/data/.
   const rawPath = resolve(HERE, 'data', `${id}.json`);
   return JSON.parse(readFileSync(rawPath, 'utf8')) as Gazetteer;
 }
