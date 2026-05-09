@@ -7,8 +7,8 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 39 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(39);
+  it('loads all 40 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(40);
   });
 
   const dataIds = [
@@ -22,6 +22,7 @@ describe('bundled gazetteers', () => {
     'be-provinces',
     'fr-departements',
     'ee-counties', 'lv-novadi', 'lt-savivaldybes',
+    'pl-powiaty',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',

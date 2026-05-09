@@ -41,6 +41,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'fr-departements',
   // Baltic states
   'ee-counties', 'lv-novadi', 'lt-savivaldybes',
+  // Poland
+  'pl-powiaty',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -155,6 +157,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'ee-counties': { stripSuffixes: ['maakond', 'vald', 'linn', 'kihelkond', 'kogudus', 'alev', 'alevik', 'küla'] },
   'lv-novadi': { stripSuffixes: ['novads', 'pagasts', 'pilsēta', 'valstspilsēta', 'apriņķis', 'draudze', 'ciemats'] },
   'lt-savivaldybes': { stripSuffixes: ['savivaldybė', 'savivaldybės', 'seniūnija', 'seniūnijos', 'apskritis', 'apskrities', 'parapija', 'parapijos', 'miestas', 'kaimas', 'rajonas', 'rajono'] },
+  // Poland
+  'pl-powiaty': { stripSuffixes: ['województwo', 'powiat', 'gmina', 'parafia', 'dzielnica', 'miasto', 'osada', 'wieś', 'voivodeship'], stripPrefixes: ['gmina', 'powiat'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

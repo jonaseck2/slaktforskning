@@ -158,6 +158,18 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Birštonas, Kaunas County, Lithuania', expectAdmin1: 'Kaunas County', expectAdmin2: 'Birštonas', expectCountry: 'Lithuania' },
     ],
   },
+  {
+    countryCode: 'pl',
+    countryName: 'Poland',
+    probes: [
+      // Polish adjectival voivodeship names from GeoNames altNames pulled to
+      // canonical (Malopolskie, not "Lesser Poland Voivodeship"). Some altNames
+      // miss diacritics (Malopolskie vs Małopolskie) — the universal normalize
+      // strips diacritics, so either form resolves.
+      { query: 'Kraków, Malopolskie, Poland', expectAdmin1: 'Malopolskie', expectAdmin2: 'Kraków', expectCountry: 'Poland' },
+      { query: 'Bochnia, Powiat bocheński, Poland', expectAdmin2: 'Powiat bocheński', expectCountry: 'Poland' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {
