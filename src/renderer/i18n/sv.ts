@@ -1900,6 +1900,17 @@ export default {
       placeQualityChecks: {
         purpose: 'Här visas vad som saknas eller skaver kring platsens uppgifter — inga koordinater, ingen överordnad plats, otydlig gazetteer-matchning — så att du vet var nästa städsteg ligger. Tom sektion betyder inga problem.',
       },
+      sourceCitations: {
+        purpose: 'Här granskar du varje påstående som källan har använts för att underbygga i hela databasen — vilka personer, händelser, relationer eller platser den stöttar — så att du kan upptäcka luckor och kontrollera att en enskild källa inte bär mer vikt än vad dess säkerhetsnivå motiverar.',
+        cta: 'Lägg till citat',
+      },
+      sourceMedia: {
+        purpose: 'Här bifogar du skanningar av själva källan — foto av sockenbokens uppslag, skärmbild från ArkivDigital, digital tidningsnotis — så att citatet inte bara är text utan stöttas av det synliga originalet.',
+        cta: 'Bifoga media',
+      },
+      sourceQualityChecks: {
+        purpose: 'Här ser du vad som saknas eller skaver i hur källan är beskriven — ingen titel, ingen källtyp, lösa citat utan transkription, inga skanningar — så att du vet var nästa städsteg ligger.',
+      },
       eventMedia: {
         purpose: 'Här bifogar du foton och dokument som hör till händelsen — en sockenboksskanning, ett bröllopsfoto, en tidningsnotis — så att registret är förankrat visuellt i källan.',
         cta: 'Bifoga media',

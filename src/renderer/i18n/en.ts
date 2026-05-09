@@ -1921,6 +1921,17 @@ export default {
       placeQualityChecks: {
         purpose: 'A user would use this section to see what\'s missing or inconsistent about this place\'s record — no coordinates, no parent place, ambiguous gazetteer match — so they know where to direct cleanup. An empty section means no issues were found.',
       },
+      sourceCitations: {
+        purpose: 'A user would use this section to audit every claim this source has been used to back up across the database — which persons, events, relationships, or places it underpins — so they can spot gaps and verify a single source isn\'t carrying more weight than its confidence allows.',
+        cta: 'Add citation',
+      },
+      sourceMedia: {
+        purpose: 'A user would use this section to attach scans of the source itself — a photo of the parish-book page, a screenshot from ArkivDigital, a digitised newspaper clipping — so the citation isn\'t just text but is backed by the visible record.',
+        cta: 'Attach media',
+      },
+      sourceQualityChecks: {
+        purpose: 'A user would use this section to see what\'s missing or shaky about how this source is described — no title, no source type, dangling citations with no transcription, no scans of the record — so they know where to direct their next bit of cleanup work.',
+      },
       eventMedia: {
         purpose: 'A user would use this section to attach photos and documents that depict this event — a parish-book scan, a wedding photograph, a newspaper clipping — so the record is anchored visually to the source.',
         cta: 'Attach media',

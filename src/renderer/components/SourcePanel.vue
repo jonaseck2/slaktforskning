@@ -119,7 +119,12 @@
           @action="showCitationForm = true"
         />
         <div v-if="sections.citations" class="panel-section-body">
-          <SectionEmpty v-if="citations.length === 0" :message="$t('empty.citations')" />
+          <SectionEmpty
+            v-if="citations.length === 0"
+            purpose-key="onboarding.empty.sourceCitations.purpose"
+            action-label-key="onboarding.empty.sourceCitations.cta"
+            @action="showCitationForm = true"
+          />
           <table v-else class="data-table">
             <thead>
               <tr>
@@ -174,7 +179,7 @@
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
         <div v-if="sections.quality" class="panel-section-body">
-          <SectionEmpty :message="$t('sourcePanel.noChecks')" />
+          <SectionEmpty purpose-key="onboarding.empty.sourceQualityChecks.purpose" />
         </div>
       </div>
 
