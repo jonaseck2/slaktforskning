@@ -1883,6 +1883,10 @@ export default {
         tip: 'Dra rader för att sortera om — t.ex. barnbilder först, äldre sist.',
         dismiss: 'Förstått',
       },
+      faceTagging: {
+        tip: 'Klicka och dra på bilden för att markera ett ansikte. Knyt sedan markeringen till en person.',
+        dismiss: 'Förstått',
+      },
     },
     toast: {
       mediaFirstAttach: {

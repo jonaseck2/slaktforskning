@@ -388,7 +388,7 @@ async function reloadRegions() {
   await loadRegions();
 }
 
-defineExpose({ reloadRegions });
+defineExpose({ reloadRegions, canvasEl, regions: enrichedRegions });
 
 watch(currentIndex, () => {
   loadMedia();

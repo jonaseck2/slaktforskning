@@ -1904,6 +1904,10 @@ export default {
         tip: 'Drag rows to reorder — e.g. childhood photos first, later ones last.',
         dismiss: 'Got it',
       },
+      faceTagging: {
+        tip: 'Click and drag on the image to mark a face. Then link the marker to a person.',
+        dismiss: 'Got it',
+      },
     },
     toast: {
       mediaFirstAttach: {
