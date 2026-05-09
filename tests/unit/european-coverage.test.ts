@@ -104,6 +104,20 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Groningen, Groningen, Netherlands', expectAdmin1: 'Groningen', expectAdmin2: 'Groningen', expectCountry: 'Netherlands' },
     ],
   },
+  {
+    countryCode: 'be',
+    countryName: 'Belgium',
+    probes: [
+      // GeoNames BE: 3 regions (admin1: Bruxelles-Capitale, Wallonie, Vlaanderen)
+      // + 10 provinces (admin2) + populated places ≥1000 pop. "Provincie X" /
+      // "Province de X" prefixes stripped from canonical name; bilingual
+      // NL/FR/DE forms attached as aliases.
+      { query: 'Antwerpen, Vlaanderen, Belgium', expectAdmin1: 'Vlaanderen', expectAdmin2: 'Antwerpen', expectCountry: 'Belgium' },
+      { query: 'Liège, Wallonie, Belgium', expectAdmin1: 'Wallonie', expectAdmin2: 'Liège', expectCountry: 'Belgium' },
+      { query: 'Hainaut, Belgium', expectAdmin1: 'Wallonie', expectAdmin2: 'Hainaut', expectCountry: 'Belgium' },
+      { query: 'West-Vlaanderen, Belgium', expectAdmin1: 'Vlaanderen', expectAdmin2: 'West-Vlaanderen', expectCountry: 'Belgium' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {
