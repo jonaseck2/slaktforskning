@@ -269,7 +269,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     description: 'Attach an external identifier to a person — FamilySearch ID, Ancestry ID, Riksarkivet ref, Swedish personnummer, GEDCOM REFN/RIN, or anything else. Use this to record matches found in third-party trees and to keep cross-references for future re-imports.',
     inputSchema: {
       person_id: z.string().describe('Person ID'),
-      identifier_type: z.enum(['familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other']).describe('Identifier scheme'),
+      identifier_type: z.enum(['familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'uid', 'afn', 'ssn', 'other']).describe('Identifier scheme'),
       identifier_value: z.string().describe('The identifier value as it appears in the source system'),
     },
   }, async (args) => {

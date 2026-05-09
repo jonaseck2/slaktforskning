@@ -28,7 +28,7 @@ export interface PersonName {
 export interface PersonIdentifier {
   id: string;
   person_id: string;
-  identifier_type: 'familysearch' | 'ancestry' | 'riksarkivet' | 'personnummer' | 'refn' | 'rin' | 'other';
+  identifier_type: 'familysearch' | 'ancestry' | 'riksarkivet' | 'personnummer' | 'refn' | 'rin' | 'uid' | 'afn' | 'ssn' | 'other';
   identifier_value: string;
   created_at: string;
 }

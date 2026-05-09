@@ -86,13 +86,13 @@ declare const window: Window & {
 interface PersonIdentifier {
   id: string;
   person_id: string;
-  identifier_type: 'familysearch' | 'ancestry' | 'riksarkivet' | 'personnummer' | 'refn' | 'rin' | 'other';
+  identifier_type: 'familysearch' | 'ancestry' | 'riksarkivet' | 'personnummer' | 'refn' | 'rin' | 'uid' | 'afn' | 'ssn' | 'other';
   identifier_value: string;
   created_at: string;
 }
 
 const IDENTIFIER_TYPES = [
-  'familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other',
+  'familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'uid', 'afn', 'ssn', 'other',
 ] as const;
 
 const props = withDefaults(defineProps<{

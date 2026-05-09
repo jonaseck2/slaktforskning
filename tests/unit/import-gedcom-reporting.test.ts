@@ -514,6 +514,58 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
   });
 });
 
+describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
+  // Closes silent-drop gaps surfaced by real-world testing against
+  // RootsMagic, Family Tree Maker, FamilyOrigins, and PAF exports.
+  const IDS_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Test /Person/
+1 RIN 12345
+1 _UID 8C8B5A7F1234567890ABCDEF12345678
+1 AFN ABCD-EFG
+1 SSN 123-45-6789
+1 FSID L1XK-2YZ
+0 TRLR
+`.trim();
+
+  it('imports RIN, _UID, AFN, SSN, FSID into person_identifiers with the right types', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(IDS_GED));
+    const rows = db.prepare(
+      'SELECT identifier_type, identifier_value FROM person_identifiers ORDER BY identifier_type'
+    ).all([]) as Array<{ identifier_type: string; identifier_value: string }>;
+    const byType = Object.fromEntries(rows.map(r => [r.identifier_type, r.identifier_value]));
+    expect(byType.rin).toBe('12345');
+    expect(byType.uid).toBe('8C8B5A7F1234567890ABCDEF12345678');
+    expect(byType.afn).toBe('ABCD-EFG');
+    expect(byType.ssn).toBe('123-45-6789');
+    expect(byType.familysearch).toBe('L1XK-2YZ');
+  });
+
+  it('does not list these identifier tags in the report skipped list', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(IDS_GED));
+    const droppedIdentifierTags = report.skipped.filter(s =>
+      ['RIN', '_UID', 'AFN', 'SSN', 'FSID'].includes(s.tag)
+    );
+    expect(droppedIdentifierTags).toEqual([]);
+  });
+
+  it('round-trips _UID, AFN, SSN through GEDCOM export', async () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(IDS_GED));
+    const { exportGedcom } = await import('../../src/gedcom/exporter');
+    const { ged } = exportGedcom(db);
+    expect(ged).toMatch(/^1 _UID 8C8B5A7F1234567890ABCDEF12345678$/m);
+    expect(ged).toMatch(/^1 AFN ABCD-EFG$/m);
+    expect(ged).toMatch(/^1 SSN 123-45-6789$/m);
+    expect(ged).toMatch(/^1 RIN 12345$/m);
+  });
+});
+
 describe('GEDCOM import - SEX value normalization', () => {
   // Real-world files from FamilySearch GEDCOM 7.0 reference, webtreeprint,
   // and others ship sex values our schema's CHECK (M/F/U) rejects:

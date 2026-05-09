@@ -36,7 +36,7 @@ export function initializeSchema(db: Database): void {
     CREATE TABLE IF NOT EXISTS person_identifiers (
       id TEXT PRIMARY KEY,
       person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-      identifier_type TEXT NOT NULL CHECK(identifier_type IN ('familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'other')),
+      identifier_type TEXT NOT NULL CHECK(identifier_type IN ('familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'uid', 'afn', 'ssn', 'other')),
       identifier_value TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(person_id, identifier_type, identifier_value)
@@ -531,6 +531,36 @@ export function initializeSchema(db: Database): void {
     } catch (err) {
       try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
       throw err;
+    }
+  }
+
+  // v0.235.0: extend person_identifiers.identifier_type CHECK with 'uid', 'afn', 'ssn'.
+  // Real-world testing against RootsMagic / FTM / FamilyOrigins / PAF exports surfaced
+  // these widely-used identifier tags being silently dropped on import. SQLite CHECK
+  // constraints are baked in — must recreate the table to relax them.
+  const identifierCheck = (queryOne<{ sql: string }>(db,
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_identifiers'`
+  ))?.sql ?? '';
+  if (identifierCheck && !identifierCheck.includes("'uid'")) {
+    runSql(db, 'DROP TABLE IF EXISTS person_identifiers_new');
+    runSql(db, 'PRAGMA foreign_keys = OFF');
+    try {
+      runSql(db, `
+        CREATE TABLE person_identifiers_new (
+          id TEXT PRIMARY KEY,
+          person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+          identifier_type TEXT NOT NULL CHECK(identifier_type IN ('familysearch', 'ancestry', 'riksarkivet', 'personnummer', 'refn', 'rin', 'uid', 'afn', 'ssn', 'other')),
+          identifier_value TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(person_id, identifier_type, identifier_value)
+        )
+      `);
+      runSql(db, 'INSERT INTO person_identifiers_new SELECT id, person_id, identifier_type, identifier_value, created_at FROM person_identifiers');
+      runSql(db, 'DROP TABLE person_identifiers');
+      runSql(db, 'ALTER TABLE person_identifiers_new RENAME TO person_identifiers');
+      runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id)');
+    } finally {
+      runSql(db, 'PRAGMA foreign_keys = ON');
     }
   }
 

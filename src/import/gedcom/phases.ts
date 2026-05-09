@@ -60,6 +60,7 @@ export const FAMILY_EVENT_TAGS: Record<string, string> = {
 
 const KNOWN_INDI_TAGS = new Set([
   'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
+  'AFN', 'SSN', 'FSID',
   '_UID', '_FSI', '_ANID', '_RAID', '_PNUMMER', '_YHAPLOGROUP', '_MHAPLOGROUP', '_GRP',
   'FAMC', 'FAMS', 'CHAN',
   // PERSON_EVENT_TAGS keys:
@@ -355,11 +356,25 @@ export function phaseIndividuals(ctx: ImportContext): void {
     }
     const rin = getChild(node, 'RIN');
     if (rin?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
-    // Genney 4.1: _UID -> person_identifiers
-    if (ctx.isGenney) {
-      const uid = getChild(node, '_UID');
-      if (uid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'other', identifier_value: `Genney UID: ${uid.value}` });
-    }
+
+    // _UID — RootsMagic, Genney, FTM, others use this for cross-system sync.
+    // Standalone tag in every dialect that emits it; no profile gating.
+    const uid = getChild(node, '_UID');
+    if (uid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'uid', identifier_value: uid.value });
+
+    // AFN — Ancestral File Number. GEDCOM 5.5/5.5.1 standard tag.
+    const afn = getChild(node, 'AFN');
+    if (afn?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'afn', identifier_value: afn.value });
+
+    // SSN — Social Security Number. GEDCOM 5.5 standard tag. Privacy-sensitive
+    // but if the user authored it in their source DB, the Prime Directive
+    // says preserve it; the user can delete it via the panel if they want.
+    const ssn = getChild(node, 'SSN');
+    if (ssn?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ssn', identifier_value: ssn.value });
+
+    // FSID — modern FamilySearch ID. Non-standard tag emitted by FTM and others.
+    const fsid = getChild(node, 'FSID');
+    if (fsid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsid.value });
 
     // Extended identifiers (legacy custom tags -- kept for backward compat reading old exports)
     const fsi = getChild(node, '_FSI');

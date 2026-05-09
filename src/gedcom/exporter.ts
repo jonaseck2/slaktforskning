@@ -376,6 +376,19 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         case 'rin':
           lines.push(`1 RIN ${ident.identifier_value}`);
           break;
+        case 'uid':
+          // _UID is a non-standard but ubiquitous tag (RootsMagic, FTM,
+          // Genney, MyHeritage all emit it). Round-trips through itself.
+          lines.push(`1 _UID ${ident.identifier_value}`);
+          break;
+        case 'afn':
+          // GEDCOM 5.5/5.5.1 standard tag.
+          lines.push(`1 AFN ${ident.identifier_value}`);
+          break;
+        case 'ssn':
+          // GEDCOM 5.5 standard tag. Privacy-sensitive; the user authored it.
+          lines.push(`1 SSN ${ident.identifier_value}`);
+          break;
         case 'familysearch':
           lines.push(`1 ${refTag} ${ident.identifier_value}`);
           lines.push(`2 TYPE FamilySearch`);
