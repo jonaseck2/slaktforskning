@@ -60,9 +60,9 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       // The plan's aspirational probes (St. Petri Lübeck, St. Maria München) are
       // *not* in the Wikidata dataset and are deferred to a future per-Bundesland
       // church-portal extension plan.
-      { query: 'Adelby, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Adelby', expectLeafType: 'parish', expectCountry: 'Germany' },
-      { query: 'Pfarrei St. Anna, Bayern, Germany', expectAdmin1: 'Bayern', expectLeaf: 'Pfarrei St. Anna', expectLeafType: 'parish', expectCountry: 'Germany' },
-      { query: 'Ev.-Luth. Kirchengemeinde Borby, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Ev.-Luth. Kirchengemeinde Borby', expectLeafType: 'parish', expectCountry: 'Germany' },
+      { query: 'Adelby, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Adelby', expectLeafType: 'admin3', expectCountry: 'Germany' },
+      { query: 'Pfarrei St. Anna, Bayern, Germany', expectAdmin1: 'Bayern', expectLeaf: 'Pfarrei St. Anna', expectLeafType: 'admin3', expectCountry: 'Germany' },
+      { query: 'Ev.-Luth. Kirchengemeinde Borby, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Ev.-Luth. Kirchengemeinde Borby', expectLeafType: 'admin3', expectCountry: 'Germany' },
     ],
   },
 ];

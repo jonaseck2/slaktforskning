@@ -64,7 +64,11 @@
  * ──────────────────────────────────────────────────────────────────────
  * HIERARCHY
  * ──────────────────────────────────────────────────────────────────────
- *   World > Europe > Germany > Bundesland (admin1) > [Kreis (admin2)] > parish
+ *   World > Europe > Germany > Bundesland (admin1) > [Kreis (admin2)] > parish (admin3)
+ *
+ * NOTE: Closed-vocab `type` is `world|continent|country|adminN`. Parish leaves
+ * therefore carry `type: 'admin3'`, matching the sv-socknar / dk-sogne precedent.
+ * The "parish" semantic lives in the gazetteer ID + node name, not the type.
  *
  * Parishes without an admin1 Bundesland match are skipped (logged).
  * Parishes without an admin2 Kreis attach directly under admin1.
@@ -257,7 +261,7 @@ function buildTree(rows: WikidataRow[]): {
         .map<GazetteerNode>(p => {
           const node: GazetteerNode = {
             name: p.name,
-            type: 'parish',
+            type: 'admin3',
             lat: p.lat,
             lon: p.lon,
           };
@@ -275,12 +279,12 @@ function buildTree(rows: WikidataRow[]): {
       });
     }
 
-    // Direct parishes (no Kreis) — attach as parish leaves directly under admin1.
+    // Direct parishes (no Kreis) — attach as admin3 leaves directly under admin1.
     // Per the plan: do NOT synthesize a fake admin2 wrapper.
     for (const p of directParishes.sort((a, b) => a.name.localeCompare(b.name, 'de'))) {
       const node: GazetteerNode = {
         name: p.name,
-        type: 'parish',
+        type: 'admin3',
         lat: p.lat,
         lon: p.lon,
       };
@@ -348,7 +352,7 @@ function printStats(root: GazetteerNode, skipped: { skippedNoAdmin1: number; ski
     bundeslaender++;
     for (const child of bl.children ?? []) {
       kreiseOrDirect++;
-      if (child.type === 'parish') {
+      if (child.type === 'admin3') {
         // direct parish leaf
         parishes++;
         if (child.aliases && child.aliases.length > 0) withAliases++;
@@ -363,7 +367,7 @@ function printStats(root: GazetteerNode, skipped: { skippedNoAdmin1: number; ski
 
   console.log(`    Bundesländer (admin1):   ${bundeslaender}`);
   console.log(`    Kreise + direct buckets: ${kreiseOrDirect}`);
-  console.log(`    Parishes:                ${parishes}`);
+  console.log(`    Parishes (admin3):       ${parishes}`);
   console.log(`    Parishes w/ aliases:     ${withAliases}`);
   console.log(`    Skipped — no admin1:     ${skipped.skippedNoAdmin1}`);
   console.log(`    Skipped — no coords:     ${skipped.skippedNoCoord}`);
