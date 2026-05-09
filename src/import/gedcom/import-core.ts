@@ -130,6 +130,7 @@ function createImportContext(db: Database, tree: GedcomNode[], options?: ImportO
     namelessPersonCount: 0,
     firstPersonId: null,
     submitterNames: [],
+    submitterContact: null,
   };
 }
 
@@ -139,7 +140,7 @@ function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[] } {
+): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null } {
   const ctx = createImportContext(db, tree, options);
 
   const runPhase = (name: string, fn: (c: typeof ctx) => void) => {
@@ -176,6 +177,7 @@ function doImportGedcom(
     namelessPersonCount: ctx.namelessPersonCount,
     firstPersonId: ctx.firstPersonId,
     submitterNames: ctx.submitterNames,
+    submitterContact: ctx.submitterContact,
   };
 }
 
@@ -401,7 +403,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
-  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[] };
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null };
   try {
     partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
@@ -468,6 +470,32 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
         (stmt as unknown as { finalize(): void }).finalize();
       }
     }
+  }
+
+  // Persist firstPersonId as default_person_id when SUBM matching produced
+  // nothing — guarantees the chart has a focal person after import instead
+  // of an empty visualization. Never overwrites an existing setting (a user
+  // who imports into a populated DB keeps their prior tree subject).
+  if (!getDbSetting(db, 'default_person_id') && partial.firstPersonId) {
+    setDbSetting(db, 'default_person_id', partial.firstPersonId);
+  }
+
+  // Populate researcher_* settings from the SUBM record. Mirrors the
+  // exporter at src/gedcom/exporter.ts:147-187 — closes the round-trip gap
+  // where SUBM ADDR/PHON/EMAIL were silently dropped on import.
+  // Only writes settings that are currently empty: a user who has typed
+  // their own contact info in Settings keeps it on re-import.
+  if (partial.submitterNames.length > 0 || partial.submitterContact) {
+    const setIfEmpty = (key: string, value: string | undefined): void => {
+      if (!value) return;
+      const existing = getDbSetting(db, key);
+      if (existing && existing.trim()) return;
+      setDbSetting(db, key, value);
+    };
+    setIfEmpty('researcher_name', partial.submitterNames[0]);
+    setIfEmpty('researcher_address', partial.submitterContact?.address);
+    setIfEmpty('researcher_phone', partial.submitterContact?.phone);
+    setIfEmpty('researcher_email', partial.submitterContact?.email);
   }
 
   const events: Record<string, number> = {};

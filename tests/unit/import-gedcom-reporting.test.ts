@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
+import { exportGedcom } from '../../src/gedcom/exporter';
 import { getDbSetting, setDbSetting, deleteDbSetting } from '../../src/api/db_settings';
 import { createTestDb } from './helpers';
 
@@ -370,6 +371,112 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
     const db = createTestDb();
     importGedcom(db, parseGedcom(SUBM_GIVEN_AMBIG));
     expect(getDbSetting(db, 'default_person_id')).toBeNull();
+  });
+});
+
+const SUBM_FULL_CONTACT_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 SUBM @S1@
+0 @S1@ SUBM
+1 NAME Bengt Sareld
+1 ADDR Inneby kobbväg 10
+2 CONT 18495 Ljusterö
+2 CONT Sverige
+1 PHON 0733-415330
+1 EMAIL bengt@sareld.se
+0 @I1@ INDI
+1 NAME Bengt /Sareld/
+1 SEX M
+0 @I2@ INDI
+1 NAME Anna /Sareld/
+1 SEX F
+0 TRLR
+`.trim();
+
+describe('GEDCOM import - SUBM contact info → researcher_* settings', () => {
+  it('populates researcher_name/address/phone/email from SUBM record', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    expect(getDbSetting(db, 'researcher_name')).toBe('Bengt Sareld');
+    expect(getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
+    expect(getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
+    expect(getDbSetting(db, 'researcher_email')).toBe('bengt@sareld.se');
+  });
+
+  it('does not overwrite researcher_* settings the user has already typed', () => {
+    const db = createTestDb();
+    setDbSetting(db, 'researcher_name', 'Pre-existing Name');
+    setDbSetting(db, 'researcher_email', 'mine@example.com');
+    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    expect(getDbSetting(db, 'researcher_name')).toBe('Pre-existing Name');
+    expect(getDbSetting(db, 'researcher_email')).toBe('mine@example.com');
+    // Settings that were empty are still populated from SUBM.
+    expect(getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
+    expect(getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
+  });
+
+  it('still matches SUBM NAME against persons (tree subject) alongside contact import', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    const defaultId = getDbSetting(db, 'default_person_id');
+    expect(defaultId).not.toBeNull();
+    const stmt = db.prepare('SELECT given_name FROM person_names WHERE person_id = ?');
+    const row = stmt.get([defaultId!]) as { given_name: string } | undefined;
+    (stmt as unknown as { finalize(): void }).finalize();
+    expect(row?.given_name).toContain('Bengt');
+  });
+
+  it('round-trips researcher_* settings through export → re-import', () => {
+    // Seed source DB with researcher info, export, parse + re-import into fresh DB.
+    const src = createTestDb();
+    setDbSetting(src, 'researcher_name', 'Jonas Ahnstedt');
+    setDbSetting(src, 'researcher_address', 'Storgatan 1\n123 45 Lund');
+    setDbSetting(src, 'researcher_phone', '+46 70 123 45 67');
+    setDbSetting(src, 'researcher_email', 'jonas@example.se');
+    const { ged } = exportGedcom(src);
+
+    const dst = createTestDb();
+    importGedcom(dst, parseGedcom(ged));
+
+    expect(getDbSetting(dst, 'researcher_name')).toBe('Jonas Ahnstedt');
+    expect(getDbSetting(dst, 'researcher_address')).toBe('Storgatan 1\n123 45 Lund');
+    expect(getDbSetting(dst, 'researcher_phone')).toBe('+46 70 123 45 67');
+    expect(getDbSetting(dst, 'researcher_email')).toBe('jonas@example.se');
+  });
+});
+
+const FALLBACK_DEFAULT_PERSON_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Astrid /Lindgren/
+1 SEX F
+0 @I2@ INDI
+1 NAME Karin /Nyman/
+1 SEX F
+0 TRLR
+`.trim();
+
+describe('GEDCOM import - default_person_id fallback to firstPersonId', () => {
+  it('persists default_person_id from firstPersonId when SUBM is missing (Holger profile)', () => {
+    // Holger profile tracks firstPersonId as a fallback; verify it now flows
+    // into db_settings.default_person_id (was previously only returned in
+    // the report, so the chart was empty after the user navigated away).
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
+    expect(report.defaultPersonId).toBeTruthy();
+    expect(getDbSetting(db, 'default_person_id')).toBe(report.defaultPersonId);
+  });
+
+  it('does not overwrite an existing default_person_id when re-importing', () => {
+    const db = createTestDb();
+    // Pre-populate the setting (simulating a user importing into a populated DB).
+    setDbSetting(db, 'default_person_id', 'pre-existing-id');
+    importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
+    expect(getDbSetting(db, 'default_person_id')).toBe('pre-existing-id');
   });
 });
 

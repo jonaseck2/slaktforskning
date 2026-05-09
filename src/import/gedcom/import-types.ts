@@ -45,4 +45,6 @@ export interface ImportContext {
   namelessPersonCount: number;
   firstPersonId: string | null;
   submitterNames: string[];
+  /** Contact info from the first SUBM record that has a NAME — used to populate researcher_* settings. */
+  submitterContact: { address?: string; phone?: string; email?: string } | null;
 }
