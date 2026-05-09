@@ -1,0 +1,51 @@
+0 HEAD
+1 SOUR FTM
+2 NAME Family Tree Maker for Windows
+2 VERS 24.0.0.1228
+2 CORP Software MacKiev / Ancestry
+1 DEST GEDCOM55
+1 DATE 12 NOV 2026
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUBM@
+0 @SUBM@ SUBM
+1 NAME FTM User
+0 @I1@ INDI
+1 NAME William /Brown/
+1 SEX M
+1 BIRT
+2 DATE 3 FEB 1900
+2 PLAC Manchester, England
+1 DEAT
+2 DATE 18 OCT 1975
+2 PLAC London, England
+1 FAMS @F1@
+1 OBJE
+2 FORM jpeg
+2 FILE C:\Users\Public\FTM Photos\william.jpg
+2 TITL William Brown
+2 _PRIM Y
+0 @I2@ INDI
+1 NAME Elizabeth /Taylor/
+1 SEX F
+1 BIRT
+2 DATE 25 DEC 1903
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME George /Brown/
+1 SEX M
+1 _FREL @I1@
+2 _MREL Adopted
+1 BIRT
+2 DATE 11 JUL 1932
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 14 APR 1928
+2 PLAC London, England
+0 TRLR

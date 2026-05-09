@@ -1,0 +1,37 @@
+0 HEAD
+1 SOUR MACFAMILYTREE
+2 NAME MacFamilyTree
+2 VERS 10.5
+2 CORP Synium Software GmbH
+1 DEST GEDCOM55
+1 DATE 12 NOV 2026
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUBM@
+0 @SUBM@ SUBM
+1 NAME MFT User
+0 @I1@ INDI
+1 NAME Hans /Müller/
+2 GIVN Hans
+2 SURN Müller
+1 SEX M
+1 BIRT
+2 DATE 7 OCT 1925
+2 PLAC München, Bayern, Deutschland
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Greta /Schmidt/
+1 SEX F
+1 BIRT
+2 DATE 22 FEB 1930
+2 PLAC Salzburg, Österreich
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 19 MAY 1955
+2 PLAC München, Bayern, Deutschland
+0 TRLR

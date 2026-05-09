@@ -1,0 +1,45 @@
+0 HEAD
+1 SOUR PAF
+2 NAME Personal Ancestral File
+2 VERS 5.2.18.0
+2 CORP The Church of Jesus Christ of Latter-day Saints
+1 DEST GEDCOM55
+1 DATE 12 NOV 2026
+1 GEDC
+2 VERS 5.5
+2 FORM LINEAGE-LINKED
+1 CHAR ANSI
+1 SUBM @SUBM@
+0 @SUBM@ SUBM
+1 NAME PAF User
+0 @I1@ INDI
+1 NAME Joseph /Anderson/
+1 SEX M
+1 BIRT
+2 DATE 4 JUL 1888
+2 PLAC Salt Lake City, Utah, USA
+1 DEAT
+2 DATE 23 NOV 1962
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Ellen /Larson/
+1 SEX F
+1 BIRT
+2 DATE 19 SEP 1892
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME David /Anderson/
+1 SEX M
+1 _FREL Adopted
+1 _MREL Adopted
+1 BIRT
+2 DATE 11 MAR 1925
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 6 JUN 1915
+2 PLAC Salt Lake City, Utah, USA
+0 TRLR

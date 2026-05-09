@@ -1,0 +1,46 @@
+0 HEAD
+1 SOUR Gramps
+2 NAME Gramps
+2 VERS 5.2.2
+2 CORP The Gramps Project
+1 DEST GEDCOM 5.5.1
+1 DATE 12 NOV 2026
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 LANG English
+1 SUBM @SUBM@
+0 @SUBM@ SUBM
+1 NAME Gramps User
+0 @I0001@ INDI
+1 _UID a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6
+1 NAME Lars /Eriksson/
+2 GIVN Lars
+2 SURN Eriksson
+1 SEX M
+1 BIRT
+2 DATE 14 SEP 1880
+2 PLAC Stockholm, Sweden
+1 FAMS @F0001@
+1 NOTE @N0001@
+1 OBJE @M0001@
+0 @I0002@ INDI
+1 _UID b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1
+1 NAME Anna /Svensson/
+1 SEX F
+1 BIRT
+2 DATE 22 JUL 1885
+2 PLAC Uppsala, Sweden
+1 FAMS @F0001@
+0 @F0001@ FAM
+1 HUSB @I0001@
+1 WIFE @I0002@
+1 MARR
+2 DATE 1 MAY 1908
+0 @N0001@ NOTE Researched 2024-01-15.
+0 @M0001@ OBJE
+1 FILE photos/lars-eriksson.jpg
+1 FORM jpg
+1 TITL Lars Eriksson portrait
+0 TRLR

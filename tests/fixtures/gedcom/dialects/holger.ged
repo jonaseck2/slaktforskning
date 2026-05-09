@@ -1,0 +1,43 @@
+0 HEAD
+1 SOUR HOLGER 8.0
+1 DEST HOLGER 7.*/8.*
+1 DATE 12 NOV 2026
+1 GEDC
+2 VERS 5.5
+2 FORM Lineage-Linked
+1 CHAR UTF-8
+1 FILE C:\HolgerData\test.ged
+0 @S1@ SUBM
+1 NAME Holger User
+1 ADDR Test Street 1
+2 CONT 12345 Stockholm
+2 CONT Sverige
+1 PHON 070-1234567
+0 @I1@ INDI
+1 NAME Sven Erik /Andersson/
+2 FORE Sven
+1 SEX M
+1 _HDP 12345
+1 BIRT
+2 DATE 15 MAY 1920
+2 PLAC Stockholm
+2 PARI Stockholms domkyrkoförsamling (A)
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Astrid /Larsson/
+2 FORE Astrid
+1 SEX F
+1 _HDP 12346
+1 BIRT
+2 DATE 8 SEP 1925
+2 PLAC Uppsala
+2 PARI Uppsala domkyrkoförsamling (C)
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 14 JUN 1948
+2 PLAC Stockholm
+2 PARI Stockholms domkyrkoförsamling (A)
+0 TRLR
