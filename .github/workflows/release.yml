@@ -86,10 +86,14 @@ jobs:
       - name: Generate THIRD_PARTY_LICENSES.txt
         run: node scripts/build-third-party-licenses.mjs
       - name: Generate CycloneDX SBOM
+        # Includes the full dep tree (no --omit=dev) because Electron is a
+        # devDependency that physically ships inside the packaged binary.
+        # Over-including dev-only tools like vitest/eslint is the safe SBOM
+        # stance — under-including bundled runtimes would be misleading.
         run: |
-          npm sbom --sbom-format=cyclonedx --omit=dev > sbom.cdx.json
+          npm sbom --sbom-format=cyclonedx > sbom.cdx.json
           test -s sbom.cdx.json
-          node -e "JSON.parse(require('fs').readFileSync('sbom.cdx.json','utf8'))"
+          node -e "const s=JSON.parse(require('fs').readFileSync('sbom.cdx.json','utf8')); if (!s.components?.find(c=>c.name==='electron')) { console.error('SBOM missing electron — see release.yml comment'); process.exit(1); }"
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
