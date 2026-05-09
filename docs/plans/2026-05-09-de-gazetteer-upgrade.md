@@ -111,16 +111,20 @@ We use only the LAN and KRS layers (boundary scope is Bundesland + Kreis per § 
 
 If the URL is no longer reachable at build time, fall back to the same dataset on Geofabrik or a Zenodo mirror; cite the actual URL in the script header.
 
-- [ ] **Step 2: Confirm Wikidata as the parish source**
+- [ ] **Step 2: Confirm Wikidata as the parish source — CORRECTED QIDs after validation gate (design § 3.2)**
 
-Wikidata SPARQL on:
-- Q1620908 (Kirchengemeinde — covers Evangelisch and broader Protestant)
-- Q73501 (Pfarrei — covers Catholic)
-- Q1141869 (parish church) — only used as a fallback if a Q1620908 / Q73501 entity has no P625 of its own
-- Filter `?p wdt:P17 wd:Q183` (country = Germany)
-- Optional `?p wdt:P3896 ?geoshape` for parish polygons (sparse; not required)
+The original drafted QIDs in this plan were wrong: Q1620908 = "historical region" (NOT Kirchengemeinde), Q73501 = "Bredevoort" (a Dutch town!). Validated replacements via `wbgetentities`:
 
-License: CC0 1.0. Coverage will be uneven (estimated 2–5k entries vs. ~23,500 actual parishes), and we accept that — Wikidata is the only uniformly free source for German parishes. Sparseness is recorded in `source.notes`.
+- **Q20820021** = "ecclesiastical municipality / Kirchengemeinde" — Evangelisch and broader Protestant. ✓
+- **Q17143723** = "Catholic parish" — Pfarreien. ✓
+- **Q102496** = "parish" — generic fallback covering subdivision-of-diocese parishes. ✓
+- Country filter `?p wdt:P17 wd:Q183` (Germany — validated). ✓
+- Bundesland filter `?admin1 wdt:P31/wdt:P279* wd:Q1221156` (validated: federated state of Germany). ✓
+- Kreis filter `?admin2 wdt:P31/wdt:P279* wd:Q106658` (validated: district of Germany / Landkreis). ✓
+
+License: CC0 1.0. Actual measured coverage from Task 5 build: 899 raw rows, 61 with admin1 chain across 8 of 16 Bundesländer (Schleswig-Holstein, Bayern, Hamburg dominantly). The plan's aspirational user-goal probes (St. Petri Lübeck, St. Maria München) are NOT in Wikidata's German parish coverage and remain a known gap for a future per-Bundesland church-portal extension plan.
+
+**RCA:** the original plan QIDs were taken from desk research without API validation. The corrected QIDs were found by the Task 5 implementer subagent via `wbsearchentities` + sample-row inspection. Going forward, every Wikidata-sourced plan in this roadmap runs the QID-validation gate from design § 3.2 in its own Task 0.
 
 - [ ] **Step 3: Confirm normalize rule additions**
 
@@ -598,7 +602,7 @@ Open the Wikidata Query Service: <https://query.wikidata.org/>. Paste:
 ```sparql
 SELECT ?p ?pLabel ?coord ?denomination ?denominationLabel ?admin1Label ?admin2Label WHERE {
   ?p wdt:P31/wdt:P279* ?class .
-  VALUES ?class { wd:Q1620908 wd:Q73501 }
+  VALUES ?class { wd:Q20820021 wd:Q17143723 wd:Q102496 }
   ?p wdt:P17 wd:Q183 .
   OPTIONAL { ?p wdt:P625 ?coord . }
   OPTIONAL { ?p wdt:P140 ?denomination . }
@@ -619,7 +623,7 @@ Expected: 50 rows, mix of Catholic and Lutheran parishes, most with admin1, some
 
 Mirror `scripts/build-dk-parishes.ts` (Wikidata-sourced parishes) as the structural template. Differences:
 
-- Two parish classes: Q1620908 (Kirchengemeinde, Protestant) and Q73501 (Pfarrei, Catholic).
+- Two parish classes: Q20820021 (Kirchengemeinde, Protestant), Q17143723 (Catholic parish), and Q102496 (generic parish).
 - Country filter: P17 = Q183 (Germany).
 - Hierarchy: Germany → Bundesland (admin1) → Kreis (admin2) → parish (leaf, type='parish').
 - Denomination preserved as alias, e.g. `["Evangelisch-Lutherische Kirchengemeinde St. Petri", "St. Petri"]`.
@@ -639,8 +643,9 @@ Mirror `scripts/build-dk-parishes.ts` (Wikidata-sourced parishes) as the structu
  * Hierarchy: Germany → Bundesland (admin1) → Kreis (admin2) → parish (leaf).
  *
  * Classes:
- *   Q1620908 — Kirchengemeinde (Protestant parish, primarily Lutheran)
- *   Q73501   — Pfarrei (Catholic parish)
+ *   Q20820021 — ecclesiastical municipality (Kirchengemeinde, Protestant)
+ *   Q17143723 — Catholic parish (Pfarrei)
+ *   Q102496   — parish (generic fallback)
  *
  * Usage:
  *   npx tsx scripts/build-de-kirchgemeinden.ts
@@ -668,7 +673,7 @@ const QUERY = `
 SELECT ?p ?pLabel ?coord ?denominationLabel ?admin1Label ?admin2Label
        (GROUP_CONCAT(DISTINCT ?altLabel; separator='|') AS ?altLabels) WHERE {
   ?p wdt:P31/wdt:P279* ?class .
-  VALUES ?class { wd:Q1620908 wd:Q73501 }
+  VALUES ?class { wd:Q20820021 wd:Q17143723 wd:Q102496 }
   ?p wdt:P17 wd:Q183 .
   ?p wdt:P625 ?coord .
   OPTIONAL { ?p wdt:P140 ?denomination . }
@@ -777,7 +782,7 @@ async function main(): Promise<void> {
       url: 'https://query.wikidata.org/sparql',
       license: 'CC0 1.0',
       fetched: FETCHED_DATE,
-      notes: `Q1620908 (Kirchengemeinde, Protestant) + Q73501 (Pfarrei, Catholic), filtered to country=Germany. Sparse: ~${parishes.length} entries vs ~23.5k actual.`,
+      notes: `Q20820021 (Kirchengemeinde, Protestant) + Q17143723 (Catholic parish) + Q102496 (parish, generic), filtered to country=Germany. Sparse: ~${parishes.length} entries vs ~23.5k actual.`,
     },
     data: root,
   });

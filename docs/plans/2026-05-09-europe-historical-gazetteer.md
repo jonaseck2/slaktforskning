@@ -26,18 +26,24 @@ User-observable smoke probes:
 
 **One gazetteer:**
 
-`europe-historical` — Wikidata SPARQL across these instance-of and subclass classes:
+`europe-historical` — Wikidata SPARQL across these instance-of and subclass classes. **The original draft of this plan had several wrong QIDs that were caught by post-design validation per design § 3.2; corrected and TBD-flagged below.**
 
-- Q3024240 (historical state) — already used by `world-historical`; this plan extends coverage to European-only entities at admin1 depth.
-- Q3146899 (historical region of a country) — for crown lands of the Habsburg Empire.
-- Q1620908-flagged-historical (deprecated parishes) — out of scope; defer to per-country plans.
-- Q188359 (governorate of the Russian Empire) — for Russian gubernii.
-- Q47093 (Province of Prussia) — for Posen, Westpreußen, Pommern, Schlesien etc.
-- Q1496967 (Province of Austria-Hungary) — for Cisleithanian crown lands.
-- Q15028894 (member state of the Holy Roman Empire) — for Bund-era German mini-states.
-- Q3024240 covering Yugoslav SFRJ (1945–1992) component republics.
-- Q15861002 covering Soviet Union republics (1922–1991, separate from modern country trees).
-- Q23498 (member state of the German Confederation) — for the 39 Bund states.
+**Validated QIDs (use directly):**
+
+- **Q3024240** = "historical country" — already used by `world-historical`; this plan extends coverage to European admin1-depth entities. ✓
+- **Q86622** = "governorate" (administrative subdivision of the Russian Empire and several Soviet States) — for Russian gubernii. ✓ (Replaces wrong Q188359.)
+- **Q675291** = "Province of Prussia" — for Posen, Westpreußen, Pommern, Schlesien. ✓ (Replaces wrong Q47093 = "Anversa degli Abruzzi", an Italian comune.)
+- **Q236036** = "republic of the Soviet Union" — top-level political division of the USSR. ✓ (Replaces wrong Q15861002 = "Tetrops praeustus", a beetle species.)
+- **Q3024240** covering Yugoslav SFRJ component republics (uses the same historical-country class). ✓
+
+**TBD QIDs — must be researched in Task 0 via `wbsearchentities` before scripting (the originals were validated as wrong):**
+
+- ⚠️ **TBD: "historical region of a country"** — original Q3146899 is actually "diocese of the Catholic Church". Search candidates: `historical region`, `historical territory`, `crown land`. Possibly a parent class on the existing crown-land entities (e.g. Galicia, Bohemia) — find by inspecting `?p wdt:P31 ?cls` on a known instance.
+- ⚠️ **TBD: "Province of Austria-Hungary" / Cisleithanian crown lands** — original Q1496967 is just "territory" (too generic). Search: `Cisleithanian crown land`, `Austrian crown land`. Likely class is something like `kronland` (German `Kronland`).
+- ⚠️ **TBD: "member state of the Holy Roman Empire"** — original Q15028894 is "Category:Pamphagus" (Wikimedia category, not a class). Search: `Holy Roman Empire member state`, `Reichsstand`, `imperial estate`.
+- ⚠️ **TBD: "member state of the German Confederation"** — original Q23498 is "archaeology" (entirely wrong). Search: `German Confederation member`, `Deutscher Bund member`, `Bund state`.
+
+**Scope note:** if any of the TBD classes turn out to be unmodeled in Wikidata at the class level (i.e. only individual instances exist with no instance-of class connecting them), the SPARQL falls back to enumerating known instances by name from a curated list in the build script header. Document this in the script.
 
 **Tree shape:**
 
@@ -103,7 +109,17 @@ Open the Wikidata Query Service. Iterate the query until it returns a clean, ded
 
 ```sparql
 SELECT DISTINCT ?p ?pLabel ?coord ?startTime ?endTime ?parentLabel WHERE {
-  VALUES ?class { wd:Q3024240 wd:Q3146899 wd:Q188359 wd:Q47093 wd:Q1496967 wd:Q15028894 wd:Q23498 wd:Q15861002 }
+  # Validated classes (use directly):
+  #   Q3024240   historical country
+  #   Q86622     governorate (Russian Empire / Soviet)
+  #   Q675291    Province of Prussia
+  #   Q236036    republic of the Soviet Union
+  # TBD classes (research in Task 0 via wbsearchentities, then drop into VALUES):
+  #   ?-CrownLandHistRegion (replaces wrong Q3146899)
+  #   ?-CisleithanianCrownLand (replaces wrong Q1496967)
+  #   ?-HREMemberState (replaces wrong Q15028894)
+  #   ?-GermanConfederationMember (replaces wrong Q23498)
+  VALUES ?class { wd:Q3024240 wd:Q86622 wd:Q675291 wd:Q236036 }
   ?p wdt:P31/wdt:P279* ?class .
   ?p wdt:P30 wd:Q46 .   # continent = Europe
   OPTIONAL { ?p wdt:P625 ?coord }

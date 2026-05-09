@@ -31,7 +31,7 @@ User-observable smoke probes:
 | Województwa + powiaty + gminy | GUS (Statistics Poland) — TERYT register | CC BY 4.0 (gov data) |
 | Localities | GeoNames PL.zip + GUS BDOT | CC BY 4.0 |
 | Boundaries (województwo + powiat) | GUGiK (Head Office of Geodesy) — PRG (Państwowy Rejestr Granic) | CC BY 4.0 |
-| Catholic parafie | Wikidata SPARQL on Q1860233, country=Poland | CC0 1.0 |
+| Catholic parafie | Wikidata SPARQL on Q17143723, country=Poland | CC0 1.0 |
 
 **Scope deviations:**
 
@@ -72,7 +72,7 @@ GUS TERYT API + GUGiK PRG GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata
 
 - [ ] GUS TERYT license (Polish public-sector info, CC BY 4.0 compatible).
 - [ ] GUGiK PRG license, attribution string.
-- [ ] Wikidata SPARQL for parafie: `?p wdt:P31/wdt:P279* wd:Q1860233 . ?p wdt:P17 wd:Q36 .` Verify > 4,000 results.
+- [ ] Wikidata SPARQL for parafie: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q36 .` Verify > 4,000 results.
 - [ ] PL_RULES suffixes (longest-first): `województwo`, `powiat`, `parafia`, `dzielnica`, `gmina`, `miasto`, `osada`, `wieś`. Plus prefix `Gmina ` (case-insensitive, leading).
 
 ### Task 1: Extend normalize rules (TDD)

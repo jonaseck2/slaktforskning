@@ -31,7 +31,7 @@ User-observable smoke probes:
 | Provinces, arrondissements, communes | Statbel + IGN-NGI municipal boundaries | CC BY 4.0 |
 | Bilingual names | Wikidata (P1448 official name, language-tagged) | CC0 1.0 |
 | Boundaries | IGN-NGI / Statbel | CC BY 4.0 |
-| Catholic parishes | Wikidata SPARQL on Q1860233 (Catholic parish), country=Belgium | CC0 1.0 |
+| Catholic parishes | Wikidata SPARQL on Q17143723 (Catholic parish), country=Belgium | CC0 1.0 |
 
 **Scope deviations:**
 
@@ -93,7 +93,7 @@ Mirror DE Task 4. Smoke probes assert both linguistic forms resolve.
 
 ### Task 4: Build `be-catholic-parishes`
 
-Wikidata SPARQL on Q1860233, country=Belgium. Diocese as alias. Parent_path = civil commune from P131 chain.
+Wikidata SPARQL on Q17143723, country=Belgium. Diocese as alias. Parent_path = civil commune from P131 chain.
 
 ### Task 5: Wire `be-catholic-parishes`
 

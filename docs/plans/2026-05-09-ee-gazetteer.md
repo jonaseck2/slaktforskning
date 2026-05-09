@@ -70,7 +70,7 @@ Maa-amet GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata SPARQL.
 ### Task 0: License audit + source decisions
 
 - [ ] Maa-amet license (CC BY 3.0 EE) attribution string.
-- [ ] Wikidata SPARQL for kihelkonnad: `?p wdt:P31/wdt:P279* wd:Q3308141 . ?p wdt:P17 wd:Q191 .` Verify > 80 results.
+- [ ] Wikidata SPARQL for kihelkonnad: `?p wdt:P31/wdt:P279* wd:Q102496 . ?p wdt:P17 wd:Q191 .` Verify > 80 results.
 - [ ] EE_RULES suffixes (longest-first): `kihelkond`, `kogudus`, `maakond`, `alev`, `alevik`, `linn`, `vald`, `küla`. Plus compound-form rule (handled in build script normalization, not the runtime rule list — but document the rule).
 
 ### Task 1: Extend normalize rules (TDD)
@@ -92,7 +92,7 @@ Maa-amet GeoPackage → tree. Maakond polygons + vald polygons. ~79 valds × pol
 
 ### Task 4: Build `ee-kihelkonnad`
 
-Wikidata SPARQL on historical Lutheran parishes (Q3308141 + country=Estonia + denomination=Lutheran). Many are defunct administrative units but their names are alive in genealogical records — emit as `type: 'parish'` with parent_path = pre-reform maakond derived from P131 chain.
+Wikidata SPARQL on historical Lutheran parishes (Q102496 + country=Estonia + denomination=Lutheran). Many are defunct administrative units but their names are alive in genealogical records — emit as `type: 'parish'` with parent_path = pre-reform maakond derived from P131 chain.
 
 ### Task 5: Wire kihelkonnad
 

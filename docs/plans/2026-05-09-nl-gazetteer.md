@@ -74,7 +74,7 @@ Kadaster BRT GeoPackage + ogr2ogr + mapshaper + Wikidata SPARQL. License: CC0 + 
 ### Task 0: License audit + source decisions
 
 - [ ] Confirm Kadaster BRT or CBS Open Data as the boundary + admin source. Both CC0. Pick whichever has the cleanest GeoPackage download (probably Kadaster's BRT250).
-- [ ] Wikidata SPARQL for historical gemeenten: `?p wdt:P31 wd:Q2039348` — verify > 1,000 results.
+- [ ] Wikidata SPARQL for historical gemeenten: `?p wdt:P31 wd:Q2039348 . ?p wdt:P582 ?endTime` — Q2039348 is **"municipality of the Netherlands"** (validated, covers BOTH active and dissolved), so the `P582` (end-time) clause is what selects *former* gemeenten specifically. Without it, the query returns the ~342 active municipalities, not the ~1,200 historical ones we want. Verify > 1,000 results.
 - [ ] NL_RULES: `Gemeente`, `Stad`, `Dorp`, `Kerkdorp`, `Provincie`, `Buurt`, plus prefix `Provincie van`. Longest-first.
 
 ### Task 1: Extend normalize rules (TDD, mirror DE Task 1)

@@ -30,7 +30,7 @@ User-observable smoke probes:
 | admin2 — Counties (32 historical, 26 RoI + 6 NI) | OSi + OSNI | CC BY 4.0 / OGL v3 |
 | Civil parishes (~2,500) | OSi townlands.ie open data | CC BY 4.0 |
 | Townlands (~62,000) | OSi townlands.ie open data | CC BY 4.0 |
-| Catholic parishes | Catholic Heritage / National Archives Ireland (NLI registers) | CC BY 4.0 (where available) — Wikidata fallback (Q1860233 Catholic parish, P17=Ireland) |
+| Catholic parishes | Catholic Heritage / National Archives Ireland (NLI registers) | CC BY 4.0 (where available) — Wikidata fallback (Q17143723 Catholic parish, P17=Ireland) |
 | Boundaries (counties + civil parishes) | OSi vector boundaries | CC BY 4.0 |
 
 **Two gazetteers ship from this plan:**
@@ -82,7 +82,7 @@ OSi townlands.ie REST + bulk dump + ogr2ogr + mapshaper + Wikidata SPARQL (Catho
 ### Task 0: License audit + source decisions
 
 - [ ] OSi townlands.ie license, attribution string for script header.
-- [ ] Wikidata Catholic parish query: `?p wdt:P31/wdt:P279* wd:Q1860233 . ?p wdt:P17 wd:Q27 .` (Ireland) — confirm > 500 results before scripting; widen via P31 wd:Q3308141 if degraded.
+- [ ] Wikidata Catholic parish query: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q27 .` (Ireland) — confirm > 500 results before scripting; widen via P31 wd:Q102496 if degraded.
 - [ ] IE_RULES suffixes: `Civil Parish of`, `Catholic Parish of`, `County of`, `Diocese of`, `Townland of`, `Townland`, `Civil Parish`, `Parish`, `Co.`, `County`. Longest-first.
 - [ ] No commit.
 
@@ -116,7 +116,7 @@ Mirror DE Task 4. Append IE probe set including the cross-gazetteer NI probe.
 
 ### Task 4: Build `ie-catholic-parishes`
 
-Wikidata SPARQL (mirror DE Task 5). One class (Q1860233 Catholic parish) + country=Ireland. Diocese as alias on each parish; parent_path is the civil county derived from P131 chain. No P3896 geoshapes (parish-level geoshapes for Ireland are virtually nonexistent on Wikidata — accept point-only).
+Wikidata SPARQL (mirror DE Task 5). One class (Q17143723 Catholic parish) + country=Ireland. Diocese as alias on each parish; parent_path is the civil county derived from P131 chain. No P3896 geoshapes (parish-level geoshapes for Ireland are virtually nonexistent on Wikidata — accept point-only).
 
 ### Task 5: Wire `ie-catholic-parishes`
 

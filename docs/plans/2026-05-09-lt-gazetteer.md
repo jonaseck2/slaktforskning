@@ -71,7 +71,7 @@ RC GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata SPARQL.
 ### Task 0: License audit + source decisions
 
 - [ ] RC license (CC BY 4.0).
-- [ ] Wikidata SPARQL for parapijos: `?p wdt:P31/wdt:P279* wd:Q1860233 . ?p wdt:P17 wd:Q37 .` Verify > 600 results (Lithuania has ~700 active Catholic parishes).
+- [ ] Wikidata SPARQL for parapijos: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q37 .` Verify > 600 results (Lithuania has ~700 active Catholic parishes).
 - [ ] LT_RULES suffixes (longest-first): `savivaldybė`, `seniūnija`, `gyvenvietė`, `apskritis`, `parapija`, `miestas`, `kaimas`. Genitive forms (`savivaldybės`, `seniūnijos`, `apskrities`, `parapijos`) included.
 
 ### Task 1: Extend normalize rules (TDD)

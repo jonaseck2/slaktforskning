@@ -84,6 +84,27 @@ Before authoring a build script for any country, the per-country plan runs the a
 
 The Tier 2 batched plans run this audit per country as their first task.
 
+### 3.2 Wikidata QID validation gate (mandatory pre-step for any Wikidata-sourced gazetteer)
+
+**Authored Wikidata QIDs are unvalidated until checked. Don't dispatch a build subagent without validating every QID the script will use.** This rule was written against the DE Gazetteer Upgrade plan, which committed `Q1620908` ("historical region", not Kirchengemeinde) and `Q73501` ("Bredevoort", a Dutch town) as parish classes. The subagent caught the error before producing data — but only because the SPARQL returned near-zero rows on those QIDs. A QID that *happens* to return rows for an unrelated class is a silent disaster: the resulting gazetteer would ship as authoritative data while modeling the wrong primitive.
+
+**The procedure** (run in Task 0 of every plan that uses Wikidata SPARQL, before any build subagent dispatch):
+
+1. List every QID the plan's SPARQL will reference — class IDs, country IDs, denomination IDs, P31/P279/P131 targets.
+2. Batch-validate via the `wbgetentities` API:
+
+```bash
+curl -s "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1|Q2|Q3&props=labels|descriptions&languages=en&format=json" \
+  | python3 -c "import sys, json; [print(f'{k:14s} {(v.get(\"labels\",{}).get(\"en\") or {}).get(\"value\",\"?\")} — {(v.get(\"descriptions\",{}).get(\"en\") or {}).get(\"value\",\"\")[:80]}') for k,v in json.load(sys.stdin).get('entities',{}).items()]"
+```
+
+3. Confirm each QID's label and description match the intended class. Document the validation result in the plan body as a table.
+4. Any QID whose label / description doesn't match → either find the correct QID (use `wbsearchentities` with relevant search terms) or mark `TBD-validate-at-Task-0` and surface to the operator before scripting.
+
+**This gate is non-negotiable.** A plan that dispatches a build subagent without this validation has skipped Task 0 of itself, and the build is at risk of silently shipping wrong data — which violates the Prime Directive's "the genealogist's data is sacred" framing one layer up (the gazetteer is the lookup truth; getting it wrong corrupts every render).
+
+The validation procedure also covers the existing-gazetteer audit: when adding a new Wikidata source for a region already covered, re-validate the existing scripts' QIDs at the same time. The `sv-socknar` script's `Q18333556` ("registration district in Sweden", not historical socken `Q60495698`/`Q1523821`) is a documented drift the original author introduced before this rule existed; re-validation will catch new instances.
+
 ## 4. Plan structure
 
 This design → 14 implementation plans, sequenced:

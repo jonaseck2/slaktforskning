@@ -58,7 +58,7 @@ User-observable smoke probes:
 
 ## Failure modes / RCA
 
-- The CofE Open Data portal has historically published patchy schemas; if a query returns < 12,000 parishes, it's degraded — fall back to Wikidata SPARQL on Q2389005 (Church of England parish) filtered to England, document the substitution.
+- The CofE Open Data portal has historically published patchy schemas; if a query returns < 12,000 parishes, it's degraded — fall back to Wikidata SPARQL filtered to England. **QID for "Church of England parish" is TBD** — the originally-drafted Q2389005 was wrong (it is "Siebe", a male given name). Q5116872 ("Church of England parish church") is the *building*, not the parish-as-entity. Run design § 3.2 validation with `wbsearchentities` for "Church of England parish" / "Anglican parish" and confirm the right class before scripting; document the substitution in the script header.
 - ONS Open Geography Portal serves multiple geographic generations; pin to the latest "Census 2021 boundaries" generation to avoid mixing 2011/2021 boundaries silently.
 - Past failure to learn from: the original German plan went point-only because boundaries felt "later" — this plan ships point + boundary + ecclesial together to avoid the same drift.
 
