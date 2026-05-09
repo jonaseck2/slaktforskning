@@ -36,6 +36,23 @@ export const EN_RULES: GazetteerNormalizeRules = {
   stripPrefixes: ['county of', 'province of', 'state of'],
 };
 
+export const GB_RULES: GazetteerNormalizeRules = {
+  // Civil-administrative + ecclesiastical British-isles suffixes. Longest-first;
+  // resolver applies them case-insensitively. The base EN_RULES set already
+  // covers `county` / `parish` / `province` / `state`; GB adds the home-nation-
+  // specific layers (council area, principal area, community, civil parish,
+  // royal burgh, etc.).
+  stripSuffixes: [
+    'civil parish', 'ecclesiastical parish', 'royal burgh', 'council area',
+    'principal area', 'ceremonial county', 'unitary authority', 'metropolitan borough',
+    'borough', 'burgh', 'district', 'community', 'parish', 'town', 'village', 'hamlet',
+  ],
+  stripPrefixes: [
+    'civil parish of', 'ecclesiastical parish of',
+    'county of', 'city of', 'borough of', 'royal burgh of', 'parish of',
+  ],
+};
+
 export const DE_RULES: GazetteerNormalizeRules = {
   stripSuffixes: [
     // Civil-administrative
