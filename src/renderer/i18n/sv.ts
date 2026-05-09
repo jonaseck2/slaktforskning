@@ -1830,7 +1830,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      hourglassFocus: {
+        tip: 'Klicka på en person för att titta på den. Dubbelklicka för att flytta fokus dit.',
+        dismiss: 'Förstått',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Återställ introduktionshjälpen',

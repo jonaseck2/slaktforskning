@@ -69,6 +69,7 @@
           @navigate="navigateTo"
           @reload="reloadChart"
           @person-context-menu="openContextMenu"
+          @focus-person="setTreeSubject"
         />
         <DescendantChart
           v-if="activeTab === 'descendants'"

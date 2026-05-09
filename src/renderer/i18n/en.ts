@@ -1851,7 +1851,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      hourglassFocus: {
+        tip: 'Click any person to view them. Double-click to set focus there.',
+        dismiss: 'Got it',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Reset onboarding hints',
