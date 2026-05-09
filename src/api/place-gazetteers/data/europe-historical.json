@@ -1,0 +1,495 @@
+{
+  "id": "europe-historical",
+  "name": "European Historical States",
+  "locale": "en",
+  "description": "Historical European entities at admin1 depth: Russian Empire/Soviet governorates (Q86622), Provinces of Prussia (Q675291), Soviet Union republics (Q236036), Holy Roman Empire imperial estates (Q1507115), Crown lands of Austria (Q681026), and other historical countries (Q3024240). Date ranges in aliases. 39 entities total. Collisions with world-historical avoided. German Confederation Bund states + generic \"historical region of country\" deferred — Wikidata class structure unclear.",
+  "kind": "point",
+  "source": {
+    "name": "Wikidata",
+    "url": "https://query.wikidata.org/sparql",
+    "license": "CC0 1.0",
+    "attribution": "Source: Wikidata (CC0 1.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Classes: Q86622, Q675291, Q236036, Q1507115, Q681026. Collisions with world-historical: 0."
+  },
+  "root": {
+    "name": "World (Historical)",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Austria-Hungary",
+        "type": "country",
+        "lat": 50,
+        "lon": 15,
+        "children": [
+          {
+            "name": "Archduchy of Austria above the Enns",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Principality of Austria above the Enns",
+              "Fürstentum Österreich ob der Enns"
+            ]
+          },
+          {
+            "name": "Archduchy of Austria below the Enns",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Erzherzogtum Österreich unter der Enns"
+            ]
+          },
+          {
+            "name": "Austrian Silesia",
+            "type": "admin1",
+            "lat": 49.938056,
+            "lon": 17.904444,
+            "aliases": [
+              "Śląsk austriacki",
+              "Księstwo Śląska",
+              "Ducato dell'Alta e della Bassa Slesia",
+              "Osztrák-Szilézia",
+              "Alsó- és Felső-Sziléziai Hercegség"
+            ]
+          },
+          {
+            "name": "County of Tyrol",
+            "type": "admin1",
+            "lat": 46.9161,
+            "lon": 11.2061,
+            "aliases": [
+              "1140–?",
+              "графство Тироль",
+              "Contea Principesca del Tirolo",
+              "Tiroli Grófság",
+              "Tirol és Vorarlberg Hercegesített Grófság",
+              "Tyrolské okněžněné hrabství"
+            ]
+          },
+          {
+            "name": "County of Vorarlberg",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15
+          },
+          {
+            "name": "Crown land of Venetia",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15
+          },
+          {
+            "name": "Duchy of Bukovina",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Duchy Boekovina",
+              "Herzogtum Boekovina",
+              "Bukowina",
+              "Bukovina"
+            ]
+          },
+          {
+            "name": "Duchy of Carinthia",
+            "type": "admin1",
+            "lat": 46.616667,
+            "lon": 14.3,
+            "aliases": [
+              "Герцогство Каринтия",
+              "Герцогство Каринтийское",
+              "Duca di Carinzia",
+              "Herzogtum Kärnten",
+              "Duche de Carinthie"
+            ]
+          },
+          {
+            "name": "Duchy of Carniola",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Герцогство Краина",
+              "Vévodství kraňské",
+              "Krajinsko",
+              "Krajna"
+            ]
+          },
+          {
+            "name": "Duchy of Salzburg",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Герцогство Зальцбургское",
+              "Герцогство Зальцбург",
+              "Grand-duché de Salzbourg",
+              "Kronland Salzburg",
+              "Kurfürstentum Salzburg"
+            ]
+          },
+          {
+            "name": "Duchy of Styria",
+            "type": "admin1",
+            "lat": 47.066667,
+            "lon": 15.433333,
+            "aliases": [
+              "Штирия (герцогство)",
+              "Герцогство Штирия",
+              "Herzogtum Steier",
+              "Styria",
+              "Styrie"
+            ]
+          },
+          {
+            "name": "Gorizia and Gradisca",
+            "type": "admin1",
+            "lat": 45.9419,
+            "lon": 13.6206,
+            "aliases": [
+              "Гориция и Градишка",
+              "Гёрц и Градишка",
+              "Герц и Градишка",
+              "Gorizia e Gradisca",
+              "Gorizia e Gradica"
+            ]
+          },
+          {
+            "name": "Grand Duchy of Cracow",
+            "type": "admin1",
+            "lat": 50.066667,
+            "lon": 19.933333,
+            "aliases": [
+              "Grand Duchy of Kraków"
+            ]
+          },
+          {
+            "name": "Imperial Free City of Trieste",
+            "type": "admin1",
+            "lat": 45.633333,
+            "lon": 13.8,
+            "aliases": [
+              "Città immediata imperiale di Trieste",
+              "Imperial city of Trieste and its territory",
+              "Trieste"
+            ]
+          },
+          {
+            "name": "Kingdom of Croatia",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Хорватия в империи Габсбургов",
+              "Габсбургская Хорватия",
+              "Kralovství chorvatů"
+            ]
+          },
+          {
+            "name": "Kingdom of Croatia-Slavonia",
+            "type": "admin1",
+            "lat": 45.8,
+            "lon": 15.966667,
+            "aliases": [
+              "Horvát-Szlavónország",
+              "Croatia-Slavonia",
+              "Хорватия и Славония",
+              "Croatia and Slavonia"
+            ]
+          },
+          {
+            "name": "Kingdom of Dalmatia",
+            "type": "admin1",
+            "lat": 44.116667,
+            "lon": 15.216667,
+            "aliases": [
+              "second Kingdom of Dalmatia",
+              "Kronland Dalmatien",
+              "Dalmáciai Királyság",
+              "Далмация",
+              "Dalmácia"
+            ]
+          },
+          {
+            "name": "Kingdom of Galicia and Lodomeria",
+            "type": "admin1",
+            "lat": 49.841889,
+            "lon": 24.0315,
+            "aliases": [
+              "Королевство Галичины и Лодомерии",
+              "Королевство Галиция и Лодомерия",
+              "Галиция и Лодомерия",
+              "Królestwo Galicji i Lodomerii z Wielkim Księstwem Krakowskim i Księstwami Oświęcimskim i Zatorskim",
+              "Galizia e Lodomeria"
+            ]
+          },
+          {
+            "name": "Kingdom of Hungary",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Венгрия"
+            ]
+          },
+          {
+            "name": "Kingdom of Illyria",
+            "type": "admin1",
+            "lat": 46.05,
+            "lon": 14.5,
+            "aliases": [
+              "Королевство Иллирия",
+              "Új-Illíria",
+              "Osztrák Illíria",
+              "Habsburg Illíria",
+              "Království ilyrské"
+            ]
+          },
+          {
+            "name": "Kingdom of Slavonia",
+            "type": "admin1",
+            "lat": 45.5603,
+            "lon": 18.6703,
+            "aliases": [
+              "Re di Slavonia"
+            ]
+          },
+          {
+            "name": "Lombardei",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Kronland Lombardei"
+            ]
+          },
+          {
+            "name": "Margraviate of Istria",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "1849–1918"
+            ]
+          },
+          {
+            "name": "Margraviate of Moravia",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 17,
+            "aliases": [
+              "Маркграфство Моравия",
+              "Marchia Morawska",
+              "morva őrgrófok listája",
+              "Moravie",
+              "March of Moravia"
+            ]
+          },
+          {
+            "name": "Military Frontier",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Habsburg Military Frontier",
+              "marches militaires",
+              "frontières militaires",
+              "Военная Краина"
+            ]
+          },
+          {
+            "name": "Principality of Transylvania",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Gran Principato di Transilvania",
+              "Erdélyi Nagyfejedelemség",
+              "Principauté de Transylvanie (1711–1867)",
+              "Grand-duché des Sept-Forteresses",
+              "Grand Principality of Transylvania"
+            ]
+          },
+          {
+            "name": "Voivodeship of Serbia and Banat of Temeschwar",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Voïvodine serbe et Banat de Tamiš",
+              "Voïvodine de Serbie et Banat de Tamiš",
+              "Voïvodat de Serbie et du Banat de Tamis",
+              "Voivodat de Serbie et du Banat de Tamis",
+              "Wojwodschaft Serbien und Temeser Banat"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Soviet Union",
+        "type": "country",
+        "lat": 50,
+        "lon": 15,
+        "children": [
+          {
+            "name": "Chinese Soviet Republic",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Chung-hua Su-wei-ai kung ho kuo",
+              "Chūka Sobieto Kyōwakoku",
+              "China Soviet Republic",
+              "Jiangxi Soviet",
+              "CSR"
+            ]
+          },
+          {
+            "name": "Georgia",
+            "type": "admin1",
+            "lat": 42,
+            "lon": 44,
+            "aliases": [
+              "Республика Грузия",
+              "Repubblica di Georgia",
+              "République de Géorgie",
+              "Géorgie (pays)",
+              "Géorg."
+            ]
+          },
+          {
+            "name": "Gorno-Altai Autonomous Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Горный Алтай",
+              "Горно-Алтайская ССР",
+              "Горно-Алтайская Советская Социалистическая Республика",
+              "Горно-Алтайская АССР",
+              "Górno-Ałtajska ASRR"
+            ]
+          },
+          {
+            "name": "Karelo-Finnish Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 61.783333,
+            "lon": 34.35,
+            "aliases": [
+              "Karelo-Finnland",
+              "Karelo-Finnische SSR",
+              "Karelofinská SSR",
+              "Karelofinská sovětská socialistická republika",
+              "Karelo-finská SSR"
+            ]
+          },
+          {
+            "name": "Kirghiz Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 42.866667,
+            "lon": 74.6,
+            "aliases": [
+              "Kirgiziska socialistiska sovjetrepubliken",
+              "Кыргызская ССР",
+              "КирССР",
+              "КиргССР",
+              "Киргизская Советская Социалистическая Республика"
+            ]
+          },
+          {
+            "name": "Latvian Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 56.958056,
+            "lon": 24.1025,
+            "aliases": [
+              "Lettiska Socialistiska Sovjetrepubliken",
+              "Lettiska socialistiska sovjetrepubliken",
+              "ЛатССР",
+              "ЛатвССР",
+              "Латвийская Советская Социалистическая Республика"
+            ]
+          },
+          {
+            "name": "Lithuanian Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 55.5,
+            "lon": 24,
+            "aliases": [
+              "Litauiska Socialistiska Sovjetrepubliken",
+              "ЛитССР",
+              "Литовская Советская Социалистическая Республика",
+              "LSRR",
+              "Litewska SRR"
+            ]
+          },
+          {
+            "name": "Moldavian Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "RSSM",
+              "RSS de Moldavie",
+              "République soviétique socialiste moldave",
+              "République socialiste soviétique de moldavie",
+              "Republique socialiste sovietique de Moldavie"
+            ]
+          },
+          {
+            "name": "Pridnestrovian Moldavian Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 50,
+            "lon": 15,
+            "aliases": [
+              "Pridnestrovian Moldavian SSR",
+              "Transnistria"
+            ]
+          },
+          {
+            "name": "Socialist Soviet Republic of Abkhazia",
+            "type": "admin1",
+            "lat": 43,
+            "lon": 41.0167,
+            "aliases": [
+              "Abchaziska socialistiska sovjetrepubliken",
+              "ССР Абхазия",
+              "Социалистическая Советская Республика Абхазии",
+              "Советская Социалистическая Республика Абхазия",
+              "АбхССР"
+            ]
+          },
+          {
+            "name": "Tajik Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 38.533333,
+            "lon": 68.766667,
+            "aliases": [
+              "ТаССР",
+              "ТаджССР",
+              "Tadżycka SRR",
+              "RSSA Tagika",
+              "RSS Tagika"
+            ]
+          },
+          {
+            "name": "Turkmen Soviet Socialist Republic",
+            "type": "admin1",
+            "lat": 37.966667,
+            "lon": 58.333333,
+            "aliases": [
+              "Turkmeńska SRR",
+              "RSS Turkmena",
+              "Repubblica socialista sovietica del Turkmenistan",
+              "République socialiste soviétique turkmène",
+              "Republique socialiste sovietique du Turkmenistan"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
