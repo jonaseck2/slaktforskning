@@ -1,0 +1,1756 @@
+{
+  "id": "lt-savivaldybes",
+  "name": "Lithuania Apskritys and Savivaldybės",
+  "locale": "lt",
+  "description": "Lithuania: 10 apskritys (admin1, statistical/historical) → 60 savivaldybės (admin2) → populated places ≥1000 pop. Catholic parapijos deferred.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/LT.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥1000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Lithuania",
+            "type": "country",
+            "aliases": [
+              "Lietuva",
+              "Litauen"
+            ],
+            "lat": 55.2,
+            "lon": 23.9,
+            "children": [
+              {
+                "name": "Alytus County",
+                "type": "admin1",
+                "aliases": [
+                  "Alitas aprinkis",
+                  "Alitaus apskretes",
+                  "Alitus",
+                  "Alitus nahiyesi"
+                ],
+                "lat": 54.253254,
+                "lon": 24.045042,
+                "children": [
+                  {
+                    "name": "Alytaus rajonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "33",
+                      "Alitusskij rajon",
+                      "Alitusskoe rajonnoe samoupravlenie"
+                    ],
+                    "lat": 54.3996,
+                    "lon": 24.1252,
+                    "children": [
+                      {
+                        "name": "Daugai",
+                        "type": "admin3",
+                        "lat": 54.36667,
+                        "lon": 24.33333
+                      },
+                      {
+                        "name": "Simnas",
+                        "type": "admin3",
+                        "lat": 54.382,
+                        "lon": 23.646
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Alytus",
+                    "type": "admin2",
+                    "aliases": [
+                      "11",
+                      "Alytaus miesto savivaldybe",
+                      "Alytaus miesto savivaldybė"
+                    ],
+                    "lat": 54.4,
+                    "lon": 24.05,
+                    "children": [
+                      {
+                        "name": "Alytus",
+                        "type": "admin3",
+                        "lat": 54.39574,
+                        "lon": 24.03885
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Druskininkai",
+                    "type": "admin2",
+                    "aliases": [
+                      "15",
+                      "Druskininkai",
+                      "Druskininkai Municipality"
+                    ],
+                    "lat": 54.01667,
+                    "lon": 23.96667,
+                    "children": [
+                      {
+                        "name": "Druskininkai",
+                        "type": "admin3",
+                        "lat": 54.01573,
+                        "lon": 23.98703
+                      },
+                      {
+                        "name": "Leipalingis",
+                        "type": "admin3",
+                        "lat": 54.09091,
+                        "lon": 23.8587
+                      },
+                      {
+                        "name": "Viečiūnai",
+                        "type": "admin3",
+                        "lat": 54.055,
+                        "lon": 24.055
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lazdijai",
+                    "type": "admin2",
+                    "aliases": [
+                      "59",
+                      "Gorad Lazdzijaj",
+                      "Lazdeje"
+                    ],
+                    "lat": 54.23333,
+                    "lon": 23.51667,
+                    "children": [
+                      {
+                        "name": "Lazdijai",
+                        "type": "admin3",
+                        "lat": 54.23326,
+                        "lon": 23.51466
+                      },
+                      {
+                        "name": "Veisiejai",
+                        "type": "admin3",
+                        "lat": 54.1011,
+                        "lon": 23.69614
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Varėna",
+                    "type": "admin2",
+                    "aliases": [
+                      "38",
+                      "Varena",
+                      "Varena District Municipality"
+                    ],
+                    "lat": 54.21667,
+                    "lon": 24.56667,
+                    "children": [
+                      {
+                        "name": "Matuizos",
+                        "type": "admin3",
+                        "lat": 54.2753,
+                        "lon": 24.68003
+                      },
+                      {
+                        "name": "Senoji Varėna",
+                        "type": "admin3",
+                        "lat": 54.25044,
+                        "lon": 24.55088
+                      },
+                      {
+                        "name": "Varėna",
+                        "type": "admin3",
+                        "lat": 54.21546,
+                        "lon": 24.57538
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kaunas County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Kaunas",
+                  "Comtat de Kaunas",
+                  "Condato de Kaunas",
+                  "Contae Kaunas"
+                ],
+                "lat": 54.960397,
+                "lon": 23.967974,
+                "children": [
+                  {
+                    "name": "Birštonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "12",
+                      "Berstuons",
+                      "Birshtonas"
+                    ],
+                    "lat": 54.61667,
+                    "lon": 24.03333,
+                    "children": [
+                      {
+                        "name": "Birštonas",
+                        "type": "admin3",
+                        "lat": 54.608,
+                        "lon": 24.034
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jonava",
+                    "type": "admin2",
+                    "aliases": [
+                      "46",
+                      "Jonava",
+                      "Jonava District Municipality"
+                    ],
+                    "lat": 55.08333,
+                    "lon": 24.28333,
+                    "children": [
+                      {
+                        "name": "Jonava",
+                        "type": "admin3",
+                        "lat": 55.08014,
+                        "lon": 24.27544
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kaišiadorys",
+                    "type": "admin2",
+                    "aliases": [
+                      "49",
+                      "Gorad Kajshadorys",
+                      "Kaisadore"
+                    ],
+                    "lat": 54.86667,
+                    "lon": 24.45,
+                    "children": [
+                      {
+                        "name": "Kaišiadorys",
+                        "type": "admin3",
+                        "lat": 54.86528,
+                        "lon": 24.46815
+                      },
+                      {
+                        "name": "Žiežmariai",
+                        "type": "admin3",
+                        "lat": 54.80725,
+                        "lon": 24.44073
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kaunas",
+                    "type": "admin2",
+                    "aliases": [
+                      "19",
+                      "Kaunas",
+                      "Kauno miesto savivaldybe"
+                    ],
+                    "lat": 54.89816,
+                    "lon": 23.90659,
+                    "children": [
+                      {
+                        "name": "Aleksotas",
+                        "type": "admin3",
+                        "lat": 54.88037,
+                        "lon": 23.90842
+                      },
+                      {
+                        "name": "Dainava (Kaunas)",
+                        "type": "admin3",
+                        "lat": 54.91525,
+                        "lon": 23.96831
+                      },
+                      {
+                        "name": "Eiguliai",
+                        "type": "admin3",
+                        "lat": 54.93133,
+                        "lon": 23.93243
+                      },
+                      {
+                        "name": "Kaunas",
+                        "type": "admin3",
+                        "lat": 54.90156,
+                        "lon": 23.90909
+                      },
+                      {
+                        "name": "Sargėnai",
+                        "type": "admin3",
+                        "lat": 54.94933,
+                        "lon": 23.88316
+                      },
+                      {
+                        "name": "Šilainiai",
+                        "type": "admin3",
+                        "lat": 54.92911,
+                        "lon": 23.88599
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kauno rajonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "52",
+                      "Kaunas",
+                      "Kaunas District Municipality"
+                    ],
+                    "lat": 54.93502,
+                    "lon": 24.0372,
+                    "children": [
+                      {
+                        "name": "Akademija (Kaunas)",
+                        "type": "admin3",
+                        "lat": 54.8964,
+                        "lon": 23.82411
+                      },
+                      {
+                        "name": "Domeikava",
+                        "type": "admin3",
+                        "lat": 54.96758,
+                        "lon": 23.91615
+                      },
+                      {
+                        "name": "Ežerėlis",
+                        "type": "admin3",
+                        "lat": 54.88315,
+                        "lon": 23.60396
+                      },
+                      {
+                        "name": "Garliava",
+                        "type": "admin3",
+                        "lat": 54.82139,
+                        "lon": 23.8713
+                      },
+                      {
+                        "name": "Karmėlava",
+                        "type": "admin3",
+                        "lat": 54.97055,
+                        "lon": 24.06182
+                      },
+                      {
+                        "name": "Kulautuva",
+                        "type": "admin3",
+                        "lat": 54.94212,
+                        "lon": 23.64218
+                      },
+                      {
+                        "name": "Mastaiciai",
+                        "type": "admin3",
+                        "lat": 54.81998,
+                        "lon": 23.84462
+                      },
+                      {
+                        "name": "Ramučiai",
+                        "type": "admin3",
+                        "lat": 54.9483,
+                        "lon": 24.0305
+                      },
+                      {
+                        "name": "Raudondvaris",
+                        "type": "admin3",
+                        "lat": 54.94356,
+                        "lon": 23.77141
+                      },
+                      {
+                        "name": "Vilkija",
+                        "type": "admin3",
+                        "lat": 55.04609,
+                        "lon": 23.58552
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kėdainiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "53",
+                      "Kedainiai",
+                      "Kedainiai District Municipality"
+                    ],
+                    "lat": 55.28333,
+                    "lon": 23.96667,
+                    "children": [
+                      {
+                        "name": "Kėdainiai",
+                        "type": "admin3",
+                        "lat": 55.28782,
+                        "lon": 23.97275
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Prienai",
+                    "type": "admin2",
+                    "aliases": [
+                      "69",
+                      "Gorad Pryenaj",
+                      "Preina"
+                    ],
+                    "lat": 54.63333,
+                    "lon": 23.95,
+                    "children": [
+                      {
+                        "name": "Jieznas",
+                        "type": "admin3",
+                        "lat": 54.59937,
+                        "lon": 24.17593
+                      },
+                      {
+                        "name": "Prienai",
+                        "type": "admin3",
+                        "lat": 54.636,
+                        "lon": 23.94585
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Raseiniai",
+                    "type": "admin2",
+                    "aliases": [
+                      "72",
+                      "Gorad Rasjajnej",
+                      "Raseine"
+                    ],
+                    "lat": 55.36667,
+                    "lon": 23.11667,
+                    "children": [
+                      {
+                        "name": "Ariogala",
+                        "type": "admin3",
+                        "lat": 55.262,
+                        "lon": 23.477
+                      },
+                      {
+                        "name": "Raseiniai",
+                        "type": "admin3",
+                        "lat": 55.37973,
+                        "lon": 23.12386
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Klaipėda County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Klaipeda",
+                  "Bezirk Klaipėda",
+                  "Comtat de Klaipeda",
+                  "Comtat de Klaipėda"
+                ],
+                "lat": 55.746573,
+                "lon": 21.270047,
+                "children": [
+                  {
+                    "name": "Klaipėda",
+                    "type": "admin2",
+                    "aliases": [
+                      "21",
+                      "Gorad Klajpeda",
+                      "Klaiped"
+                    ],
+                    "lat": 55.71667,
+                    "lon": 21.11667,
+                    "children": [
+                      {
+                        "name": "Klaipėda",
+                        "type": "admin3",
+                        "lat": 55.7068,
+                        "lon": 21.13912
+                      },
+                      {
+                        "name": "Palanga",
+                        "type": "admin3",
+                        "lat": 55.9175,
+                        "lon": 21.06861
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Klaipėdos rajonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "55",
+                      "Klaipeda",
+                      "Klaipeda District Municipality"
+                    ],
+                    "lat": 55.71667,
+                    "lon": 21.4,
+                    "children": [
+                      {
+                        "name": "Gargždai",
+                        "type": "admin3",
+                        "lat": 55.70951,
+                        "lon": 21.39441
+                      },
+                      {
+                        "name": "Priekulė",
+                        "type": "admin3",
+                        "lat": 55.55427,
+                        "lon": 21.31903
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kretinga",
+                    "type": "admin2",
+                    "aliases": [
+                      "56",
+                      "Gorad Kracinga",
+                      "Kretinga"
+                    ],
+                    "lat": 55.88333,
+                    "lon": 21.25,
+                    "children": [
+                      {
+                        "name": "Kretinga",
+                        "type": "admin3",
+                        "lat": 55.8888,
+                        "lon": 21.24448
+                      },
+                      {
+                        "name": "Salantai",
+                        "type": "admin3",
+                        "lat": 56.0565,
+                        "lon": 21.5689
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Neringa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Neringa Municipality"
+                    ],
+                    "lat": 55.376,
+                    "lon": 21.057,
+                    "children": [
+                      {
+                        "name": "Neringa",
+                        "type": "admin3",
+                        "lat": 55.37194,
+                        "lon": 21.06472
+                      },
+                      {
+                        "name": "Nida",
+                        "type": "admin3",
+                        "lat": 55.3086,
+                        "lon": 20.99651
+                      },
+                      {
+                        "name": "Pervalka",
+                        "type": "admin3",
+                        "lat": 55.41486,
+                        "lon": 21.09774
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Palanga",
+                    "type": "admin2",
+                    "aliases": [
+                      "25",
+                      "Gorad Palanga",
+                      "Palanga"
+                    ],
+                    "lat": 55.91667,
+                    "lon": 21.05,
+                    "children": [
+                      {
+                        "name": "Šventoji",
+                        "type": "admin3",
+                        "lat": 56.0261,
+                        "lon": 21.08411
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šilutė",
+                    "type": "admin2",
+                    "aliases": [
+                      "88",
+                      "Silute",
+                      "Silute District Municipality"
+                    ],
+                    "lat": 55.35,
+                    "lon": 21.48333,
+                    "children": [
+                      {
+                        "name": "Rusnė",
+                        "type": "admin3",
+                        "lat": 55.2982,
+                        "lon": 21.3712
+                      },
+                      {
+                        "name": "Silute",
+                        "type": "admin3",
+                        "lat": 55.34889,
+                        "lon": 21.48306
+                      },
+                      {
+                        "name": "Žemaičių Naumiestis",
+                        "type": "admin3",
+                        "lat": 55.35941,
+                        "lon": 21.70364
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Skuodas",
+                    "type": "admin2",
+                    "aliases": [
+                      "75",
+                      "Gorad Skuodas",
+                      "Skoda"
+                    ],
+                    "lat": 56.26667,
+                    "lon": 21.53333,
+                    "children": [
+                      {
+                        "name": "Skuodas",
+                        "type": "admin3",
+                        "lat": 56.27057,
+                        "lon": 21.53208
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Marijampolė County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Marijampole",
+                  "Bezirk Marijampolė",
+                  "Comtat de Marijampole",
+                  "Comtat de Marijampolė"
+                ],
+                "lat": 54.665772,
+                "lon": 23.230178,
+                "children": [
+                  {
+                    "name": "Kalvarija Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "48",
+                      "Dimos Kalvarigia",
+                      "Kal'varyjskae samakiravanne"
+                    ],
+                    "lat": 54.41468,
+                    "lon": 23.22484,
+                    "children": [
+                      {
+                        "name": "Kalvarija",
+                        "type": "admin3",
+                        "lat": 54.417,
+                        "lon": 23.223
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kazlų Rūda Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "58"
+                    ],
+                    "lat": 54.74751,
+                    "lon": 23.49272,
+                    "children": [
+                      {
+                        "name": "Kazlų Rūda",
+                        "type": "admin3",
+                        "lat": 54.749,
+                        "lon": 23.49
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Marijampolė Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "18",
+                      "Marijampole",
+                      "Marijampolė"
+                    ],
+                    "lat": 54.56667,
+                    "lon": 23.35,
+                    "children": [
+                      {
+                        "name": "Marijampolė",
+                        "type": "admin3",
+                        "lat": 54.55787,
+                        "lon": 23.35004
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sakiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "84",
+                      "Sakiai",
+                      "Sakiai District Municipality"
+                    ],
+                    "lat": 54.95,
+                    "lon": 23.05,
+                    "children": [
+                      {
+                        "name": "Gelgaudiškis",
+                        "type": "admin3",
+                        "lat": 55.07688,
+                        "lon": 22.97699
+                      },
+                      {
+                        "name": "Kudirkos Naumiestis",
+                        "type": "admin3",
+                        "lat": 54.77353,
+                        "lon": 22.86138
+                      },
+                      {
+                        "name": "Šakiai",
+                        "type": "admin3",
+                        "lat": 54.95339,
+                        "lon": 23.04779
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vilkaviškis District Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "39",
+                      "Vilkaviskis",
+                      "Vilkaviškis"
+                    ],
+                    "lat": 54.65,
+                    "lon": 23.03333,
+                    "children": [
+                      {
+                        "name": "Kybartai",
+                        "type": "admin3",
+                        "lat": 54.63858,
+                        "lon": 22.76316
+                      },
+                      {
+                        "name": "Vilkaviskis",
+                        "type": "admin3",
+                        "lat": 54.65167,
+                        "lon": 23.03222
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Panevėžys",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Panevezys",
+                  "Bezirk Panevėžys",
+                  "Condato de Panevezys",
+                  "Condato de Panevėžys"
+                ],
+                "lat": 55.921743,
+                "lon": 24.745642,
+                "children": [
+                  {
+                    "name": "Biržai",
+                    "type": "admin2",
+                    "aliases": [
+                      "36",
+                      "Birzai",
+                      "Birzai District Municipality"
+                    ],
+                    "lat": 56.2,
+                    "lon": 24.75,
+                    "children": [
+                      {
+                        "name": "Birzai",
+                        "type": "admin3",
+                        "lat": 56.2,
+                        "lon": 24.75
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kupiškis",
+                    "type": "admin2",
+                    "aliases": [
+                      "57",
+                      "Gorad Kupishkis",
+                      "Kopeskis"
+                    ],
+                    "lat": 55.83333,
+                    "lon": 24.96667,
+                    "children": [
+                      {
+                        "name": "Kupiskis",
+                        "type": "admin3",
+                        "lat": 55.84027,
+                        "lon": 24.97976
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Panevėžys City",
+                    "type": "admin2",
+                    "aliases": [
+                      "27",
+                      "Panevezys",
+                      "Panevezys City"
+                    ],
+                    "lat": 55.736,
+                    "lon": 24.34347,
+                    "children": [
+                      {
+                        "name": "Panevėžys",
+                        "type": "admin3",
+                        "lat": 55.73186,
+                        "lon": 24.35983
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Panevėžys District Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "66",
+                      "Gorad Panevjazhys",
+                      "Paneveza"
+                    ],
+                    "lat": 55.72779,
+                    "lon": 24.43038,
+                    "children": [
+                      {
+                        "name": "Ramygala",
+                        "type": "admin3",
+                        "lat": 55.514,
+                        "lon": 24.3
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pasvalys",
+                    "type": "admin2",
+                    "aliases": [
+                      "67",
+                      "Gorad Pasvalis",
+                      "Pasvale"
+                    ],
+                    "lat": 56.06667,
+                    "lon": 24.4,
+                    "children": [
+                      {
+                        "name": "Pasvalys",
+                        "type": "admin3",
+                        "lat": 56.06251,
+                        "lon": 24.39965
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rokiškis",
+                    "type": "admin2",
+                    "aliases": [
+                      "73",
+                      "Gorad Rokishkis",
+                      "Rakiszki"
+                    ],
+                    "lat": 55.96667,
+                    "lon": 25.58333,
+                    "children": [
+                      {
+                        "name": "Juodupė",
+                        "type": "admin3",
+                        "lat": 56.087,
+                        "lon": 25.607
+                      },
+                      {
+                        "name": "Obeliai",
+                        "type": "admin3",
+                        "lat": 55.96895,
+                        "lon": 25.15648
+                      },
+                      {
+                        "name": "Rokiškis",
+                        "type": "admin3",
+                        "lat": 55.95867,
+                        "lon": 25.59466
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Šiauliai County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Schaulen",
+                  "Comtat de Siauliai",
+                  "Comtat de Šiauliai",
+                  "Condato de Siauliai"
+                ],
+                "lat": 55.976639,
+                "lon": 23.343394,
+                "children": [
+                  {
+                    "name": "Akmenės Rajonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "32",
+                      "Akmene District Municipality",
+                      "Akmenes Rajono Savivaldybe"
+                    ],
+                    "lat": 56.31667,
+                    "lon": 22.9,
+                    "children": [
+                      {
+                        "name": "Akmenė",
+                        "type": "admin3",
+                        "lat": 56.25,
+                        "lon": 22.75
+                      },
+                      {
+                        "name": "Naujoji Akmene",
+                        "type": "admin3",
+                        "lat": 56.31667,
+                        "lon": 22.9
+                      },
+                      {
+                        "name": "Papilė",
+                        "type": "admin3",
+                        "lat": 56.15091,
+                        "lon": 22.79502
+                      },
+                      {
+                        "name": "Venta",
+                        "type": "admin3",
+                        "lat": 56.19162,
+                        "lon": 22.69528
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Joniškis",
+                    "type": "admin2",
+                    "aliases": [
+                      "47",
+                      "Gorad Jonishkis",
+                      "Ionishkis"
+                    ],
+                    "lat": 56.23333,
+                    "lon": 23.61667,
+                    "children": [
+                      {
+                        "name": "Joniškis",
+                        "type": "admin3",
+                        "lat": 56.23939,
+                        "lon": 23.61541
+                      },
+                      {
+                        "name": "Žagarė",
+                        "type": "admin3",
+                        "lat": 56.36149,
+                        "lon": 23.25094
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kelmė",
+                    "type": "admin2",
+                    "aliases": [
+                      "54",
+                      "Gorad Kjal'me",
+                      "Kel'me"
+                    ],
+                    "lat": 55.63333,
+                    "lon": 22.93333,
+                    "children": [
+                      {
+                        "name": "Kelmė",
+                        "type": "admin3",
+                        "lat": 55.63009,
+                        "lon": 22.9349
+                      },
+                      {
+                        "name": "Tytuvėnai",
+                        "type": "admin3",
+                        "lat": 55.59791,
+                        "lon": 23.20212
+                      },
+                      {
+                        "name": "Tytuvėnėliai",
+                        "type": "admin3",
+                        "lat": 55.62345,
+                        "lon": 23.17162
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pakruojis",
+                    "type": "admin2",
+                    "aliases": [
+                      "65",
+                      "Pakruojis",
+                      "Pakruojis District Municipality"
+                    ],
+                    "lat": 55.96667,
+                    "lon": 23.86667,
+                    "children": [
+                      {
+                        "name": "Linkuva",
+                        "type": "admin3",
+                        "lat": 56.08596,
+                        "lon": 23.97061
+                      },
+                      {
+                        "name": "Pakruojis",
+                        "type": "admin3",
+                        "lat": 55.97889,
+                        "lon": 23.85508
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Radviliškis",
+                    "type": "admin2",
+                    "aliases": [
+                      "71",
+                      "Radviliskio rajono savivaldybe",
+                      "Radviliskis"
+                    ],
+                    "lat": 55.81667,
+                    "lon": 23.53333,
+                    "children": [
+                      {
+                        "name": "Baisogala",
+                        "type": "admin3",
+                        "lat": 55.64,
+                        "lon": 23.733
+                      },
+                      {
+                        "name": "Radviliskis",
+                        "type": "admin3",
+                        "lat": 55.81667,
+                        "lon": 23.53333
+                      },
+                      {
+                        "name": "Šeduva",
+                        "type": "admin3",
+                        "lat": 55.7493,
+                        "lon": 23.7561
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šiauliai",
+                    "type": "admin2",
+                    "aliases": [
+                      "29",
+                      "Comune urbano di Siauliai",
+                      "Comune urbano di Šiauliai"
+                    ],
+                    "lat": 55.93333,
+                    "lon": 23.31667,
+                    "children": [
+                      {
+                        "name": "Šiauliai",
+                        "type": "admin3",
+                        "lat": 55.93333,
+                        "lon": 23.31667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šiaulių rajonas",
+                    "type": "admin2",
+                    "aliases": [
+                      "91",
+                      "Siauliai",
+                      "Siauliai District Municipality"
+                    ],
+                    "lat": 55.93647,
+                    "lon": 23.23709,
+                    "children": [
+                      {
+                        "name": "Kuršėnai",
+                        "type": "admin3",
+                        "lat": 56.00318,
+                        "lon": 22.93662
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Tauragė County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Taurage",
+                  "Bezirk Tauragė",
+                  "Comtat de Taurage",
+                  "Comtat de Tauragė"
+                ],
+                "lat": 55.239815,
+                "lon": 22.29666,
+                "children": [
+                  {
+                    "name": "Jurbarkas",
+                    "type": "admin2",
+                    "aliases": [
+                      "94",
+                      "Jurbarkas",
+                      "Jurbarkas District Municipality"
+                    ],
+                    "lat": 55.10859,
+                    "lon": 22.79885,
+                    "children": [
+                      {
+                        "name": "Jurbarkas",
+                        "type": "admin3",
+                        "lat": 55.07556,
+                        "lon": 22.76416
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pagėgiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "63",
+                      "Pagegiai Municipality",
+                      "Pagegiu savivaldybe"
+                    ],
+                    "lat": 55.134,
+                    "lon": 21.90446,
+                    "children": [
+                      {
+                        "name": "Pagėgiai",
+                        "type": "admin3",
+                        "lat": 55.13793,
+                        "lon": 21.91378
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šilalė",
+                    "type": "admin2",
+                    "aliases": [
+                      "87",
+                      "Gorad Shylale",
+                      "Selale"
+                    ],
+                    "lat": 55.46667,
+                    "lon": 22.2,
+                    "children": [
+                      {
+                        "name": "Šilalė",
+                        "type": "admin3",
+                        "lat": 55.4898,
+                        "lon": 22.18692
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tauragė",
+                    "type": "admin2",
+                    "aliases": [
+                      "77",
+                      "Taurage",
+                      "Taurage District Municipality"
+                    ],
+                    "lat": 55.25,
+                    "lon": 22.28333,
+                    "children": [
+                      {
+                        "name": "Būgai",
+                        "type": "admin3",
+                        "lat": 55.41387,
+                        "lon": 22.60894
+                      },
+                      {
+                        "name": "Taurage",
+                        "type": "admin3",
+                        "lat": 55.25222,
+                        "lon": 22.28972
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Telšių apskritis",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Telschen",
+                  "Cjal'shehjski pavet",
+                  "Comtat de Telsiai",
+                  "Comtat de Telšiai"
+                ],
+                "lat": 55.985105,
+                "lon": 22.091498,
+                "children": [
+                  {
+                    "name": "Mažeikiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "61",
+                      "Gorad Mazhehjkej",
+                      "Majaykay"
+                    ],
+                    "lat": 56.31667,
+                    "lon": 22.33333,
+                    "children": [
+                      {
+                        "name": "Mazeikiai",
+                        "type": "admin3",
+                        "lat": 56.31667,
+                        "lon": 22.33333
+                      },
+                      {
+                        "name": "Seda",
+                        "type": "admin3",
+                        "lat": 56.16854,
+                        "lon": 22.09071
+                      },
+                      {
+                        "name": "Viekšniai",
+                        "type": "admin3",
+                        "lat": 56.23598,
+                        "lon": 22.51667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Plungė",
+                    "type": "admin2",
+                    "aliases": [
+                      "68",
+                      "Plunge",
+                      "Plunge District Municipality"
+                    ],
+                    "lat": 55.91667,
+                    "lon": 21.85,
+                    "children": [
+                      {
+                        "name": "Plateliai",
+                        "type": "admin3",
+                        "lat": 56.04657,
+                        "lon": 21.81615
+                      },
+                      {
+                        "name": "Plunge",
+                        "type": "admin3",
+                        "lat": 55.91139,
+                        "lon": 21.84417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rietavas",
+                    "type": "admin2",
+                    "aliases": [
+                      "74",
+                      "Rietavas Municipality"
+                    ],
+                    "lat": 55.72375,
+                    "lon": 21.93266,
+                    "children": [
+                      {
+                        "name": "Rietavas",
+                        "type": "admin3",
+                        "lat": 55.72708,
+                        "lon": 21.92343
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Telšiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "78",
+                      "Telsiai",
+                      "Telsiai District Municipality"
+                    ],
+                    "lat": 55.98333,
+                    "lon": 22.25,
+                    "children": [
+                      {
+                        "name": "Telsiai",
+                        "type": "admin3",
+                        "lat": 55.98139,
+                        "lon": 22.24722
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Utena County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Utena",
+                  "Comtat d'Utena",
+                  "Condato d'Utena",
+                  "Contae Utena"
+                ],
+                "lat": 55.491665,
+                "lon": 25.825002,
+                "children": [
+                  {
+                    "name": "Anykščiai",
+                    "type": "admin2",
+                    "aliases": [
+                      "34",
+                      "Aniksci",
+                      "Anikscyay"
+                    ],
+                    "lat": 55.53333,
+                    "lon": 25.1,
+                    "children": [
+                      {
+                        "name": "Anykščiai",
+                        "type": "admin3",
+                        "lat": 55.52557,
+                        "lon": 25.10264
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ignalina",
+                    "type": "admin2",
+                    "aliases": [
+                      "45",
+                      "Egnalena",
+                      "Gorad Ignalina"
+                    ],
+                    "lat": 55.35,
+                    "lon": 26.16667,
+                    "children": [
+                      {
+                        "name": "Ignalina",
+                        "type": "admin3",
+                        "lat": 55.34063,
+                        "lon": 26.16049
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Moletai",
+                    "type": "admin2",
+                    "aliases": [
+                      "62",
+                      "Moletai",
+                      "Moletai District Municipality"
+                    ],
+                    "lat": 55.23333,
+                    "lon": 25.41667,
+                    "children": [
+                      {
+                        "name": "Molėtai",
+                        "type": "admin3",
+                        "lat": 55.22469,
+                        "lon": 25.41688
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Utena",
+                    "type": "admin2",
+                    "aliases": [
+                      "82",
+                      "Utena",
+                      "Utena District Municipality"
+                    ],
+                    "lat": 55.5,
+                    "lon": 25.6,
+                    "children": [
+                      {
+                        "name": "Utena",
+                        "type": "admin3",
+                        "lat": 55.4978,
+                        "lon": 25.60462
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Visaginas",
+                    "type": "admin2",
+                    "aliases": [
+                      "30",
+                      "Gorad Visaginas",
+                      "Vesagens"
+                    ],
+                    "lat": 55.6,
+                    "lon": 26.41667,
+                    "children": [
+                      {
+                        "name": "Visaginas",
+                        "type": "admin3",
+                        "lat": 55.59678,
+                        "lon": 26.43984
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Zarasai",
+                    "type": "admin2",
+                    "aliases": [
+                      "43",
+                      "Gorad Zarasaj",
+                      "Jeziorosy"
+                    ],
+                    "lat": 55.73333,
+                    "lon": 26.25,
+                    "children": [
+                      {
+                        "name": "Zarasai",
+                        "type": "admin3",
+                        "lat": 55.73225,
+                        "lon": 26.25115
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Vilnius County",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Vilnius",
+                  "Condato de Vilna",
+                  "Contae Vilnius",
+                  "County Vilnius"
+                ],
+                "lat": 54.825037,
+                "lon": 25.207954,
+                "children": [
+                  {
+                    "name": "Elektrėnai",
+                    "type": "admin2",
+                    "aliases": [
+                      "42",
+                      "Elektrenai Municipality",
+                      "Elektrėnai Municipality"
+                    ],
+                    "lat": 54.78604,
+                    "lon": 24.66113,
+                    "children": [
+                      {
+                        "name": "Elektrėnai",
+                        "type": "admin3",
+                        "lat": 54.78544,
+                        "lon": 24.66302
+                      },
+                      {
+                        "name": "Vievis",
+                        "type": "admin3",
+                        "lat": 54.77258,
+                        "lon": 24.81129
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šalčininkai",
+                    "type": "admin2",
+                    "aliases": [
+                      "85",
+                      "Gorad Shal'chyninkaj",
+                      "Salcenenka"
+                    ],
+                    "lat": 54.3,
+                    "lon": 25.38333,
+                    "children": [
+                      {
+                        "name": "Eišiškės",
+                        "type": "admin3",
+                        "lat": 54.17414,
+                        "lon": 24.99917
+                      },
+                      {
+                        "name": "Šalčininkai",
+                        "type": "admin3",
+                        "lat": 54.30864,
+                        "lon": 25.38677
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sirvintos",
+                    "type": "admin2",
+                    "aliases": [
+                      "89",
+                      "Sirvintos",
+                      "Sirvintos District Municipality"
+                    ],
+                    "lat": 55.05,
+                    "lon": 24.95,
+                    "children": [
+                      {
+                        "name": "Širvintos",
+                        "type": "admin3",
+                        "lat": 55.044,
+                        "lon": 24.95446
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Svencionys",
+                    "type": "admin2",
+                    "aliases": [
+                      "86",
+                      "Svencionys",
+                      "Svencionys District Municipality"
+                    ],
+                    "lat": 55.15,
+                    "lon": 26.16667,
+                    "children": [
+                      {
+                        "name": "Pabradė",
+                        "type": "admin3",
+                        "lat": 54.981,
+                        "lon": 25.761
+                      },
+                      {
+                        "name": "Švenčionėliai",
+                        "type": "admin3",
+                        "lat": 55.16163,
+                        "lon": 26.00177
+                      },
+                      {
+                        "name": "Švenčionys",
+                        "type": "admin3",
+                        "lat": 55.135,
+                        "lon": 26.159
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Trakai",
+                    "type": "admin2",
+                    "aliases": [
+                      "79",
+                      "Gorad Trakaj",
+                      "Traka"
+                    ],
+                    "lat": 54.63333,
+                    "lon": 24.93333,
+                    "children": [
+                      {
+                        "name": "Lentvaris",
+                        "type": "admin3",
+                        "lat": 54.64364,
+                        "lon": 25.05162
+                      },
+                      {
+                        "name": "Rūdiškės",
+                        "type": "admin3",
+                        "lat": 54.51609,
+                        "lon": 24.83084
+                      },
+                      {
+                        "name": "Senieji Trakai",
+                        "type": "admin3",
+                        "lat": 54.609,
+                        "lon": 24.98
+                      },
+                      {
+                        "name": "Trakai",
+                        "type": "admin3",
+                        "lat": 54.63783,
+                        "lon": 24.93433
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ukmergė",
+                    "type": "admin2",
+                    "aliases": [
+                      "81",
+                      "Ukmerge",
+                      "Ukmerge District Municipality"
+                    ],
+                    "lat": 55.25,
+                    "lon": 24.75,
+                    "children": [
+                      {
+                        "name": "Ukmerge",
+                        "type": "admin3",
+                        "lat": 55.25,
+                        "lon": 24.75
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vilnius",
+                    "type": "admin2",
+                    "aliases": [
+                      "13",
+                      "Gorod Vil'nyus",
+                      "Gorod Vilnius"
+                    ],
+                    "lat": 54.68333,
+                    "lon": 25.31667,
+                    "children": [
+                      {
+                        "name": "Antakalnis",
+                        "type": "admin3",
+                        "lat": 54.70781,
+                        "lon": 25.31706
+                      },
+                      {
+                        "name": "Fabijoniškės",
+                        "type": "admin3",
+                        "lat": 54.73333,
+                        "lon": 25.24167
+                      },
+                      {
+                        "name": "Justiniškės",
+                        "type": "admin3",
+                        "lat": 54.71664,
+                        "lon": 25.2174
+                      },
+                      {
+                        "name": "Karoliniškės",
+                        "type": "admin3",
+                        "lat": 54.69034,
+                        "lon": 25.21903
+                      },
+                      {
+                        "name": "Lazdynai",
+                        "type": "admin3",
+                        "lat": 54.66815,
+                        "lon": 25.20684
+                      },
+                      {
+                        "name": "Naujamiestis",
+                        "type": "admin3",
+                        "lat": 54.67951,
+                        "lon": 25.26855
+                      },
+                      {
+                        "name": "Naujininkai",
+                        "type": "admin3",
+                        "lat": 54.66425,
+                        "lon": 25.28418
+                      },
+                      {
+                        "name": "Naujoji Vilnia",
+                        "type": "admin3",
+                        "lat": 54.69515,
+                        "lon": 25.41969
+                      },
+                      {
+                        "name": "Pašilaičiai",
+                        "type": "admin3",
+                        "lat": 54.73429,
+                        "lon": 25.21912
+                      },
+                      {
+                        "name": "Pilaitė",
+                        "type": "admin3",
+                        "lat": 54.69981,
+                        "lon": 25.18393
+                      },
+                      {
+                        "name": "Rasos",
+                        "type": "admin3",
+                        "lat": 54.67877,
+                        "lon": 25.31173
+                      },
+                      {
+                        "name": "Šeškinė",
+                        "type": "admin3",
+                        "lat": 54.70972,
+                        "lon": 25.25053
+                      },
+                      {
+                        "name": "Vilkpėdė",
+                        "type": "admin3",
+                        "lat": 54.66969,
+                        "lon": 25.2477
+                      },
+                      {
+                        "name": "Vilnius",
+                        "type": "admin3",
+                        "lat": 54.68916,
+                        "lon": 25.2798
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vilnius District Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "41",
+                      "Vilniaus rajonas",
+                      "Vilniaus rajono savivaldybe"
+                    ],
+                    "lat": 54.7476,
+                    "lon": 25.5025,
+                    "children": [
+                      {
+                        "name": "Baltoji Vokė",
+                        "type": "admin3",
+                        "lat": 54.60002,
+                        "lon": 25.19318
+                      },
+                      {
+                        "name": "Grigiškės",
+                        "type": "admin3",
+                        "lat": 54.68333,
+                        "lon": 25.08333
+                      },
+                      {
+                        "name": "Nemenčinė",
+                        "type": "admin3",
+                        "lat": 54.84776,
+                        "lon": 25.46992
+                      },
+                      {
+                        "name": "Nemėžis",
+                        "type": "admin3",
+                        "lat": 54.63629,
+                        "lon": 25.35455
+                      },
+                      {
+                        "name": "Rudamina",
+                        "type": "admin3",
+                        "lat": 54.59306,
+                        "lon": 25.35047
+                      },
+                      {
+                        "name": "Skaidiškės",
+                        "type": "admin3",
+                        "lat": 54.61398,
+                        "lon": 25.39573
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

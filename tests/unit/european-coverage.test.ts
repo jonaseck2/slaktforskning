@@ -131,6 +131,33 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Aude, Occitanie, France', expectAdmin1: 'Occitanie', expectAdmin2: 'Aude', expectCountry: 'France' },
     ],
   },
+  {
+    countryCode: 'ee',
+    countryName: 'Estonia',
+    probes: [
+      { query: 'Harjumaa, Estonia', expectAdmin1: 'Harjumaa', expectCountry: 'Estonia' },
+      { query: 'Hiiumaa vald, Hiiumaa, Estonia', expectAdmin1: 'Hiiumaa', expectAdmin2: 'Hiiumaa vald', expectCountry: 'Estonia' },
+    ],
+  },
+  {
+    countryCode: 'lv',
+    countryName: 'Latvia',
+    probes: [
+      // GeoNames LV's ADM1 layer reflects the post-2021 reform with novadi as
+      // top-level units (43 of them). 587 ADM2 = sub-novads pagasti.
+      { query: 'Aizkraukle, Latvia', expectAdmin1: 'Aizkraukles novads', expectAdmin2: 'Aizkraukle', expectCountry: 'Latvia' },
+    ],
+  },
+  {
+    countryCode: 'lt',
+    countryName: 'Lithuania',
+    probes: [
+      // GeoNames LT keeps the historical apskritys layer (admin1) even though
+      // they were abolished as legal admin units in 2010. 60 savivaldybės.
+      { query: 'Alytus, Alytus County, Lithuania', expectAdmin1: 'Alytus County', expectAdmin2: 'Alytus', expectCountry: 'Lithuania' },
+      { query: 'Birštonas, Kaunas County, Lithuania', expectAdmin1: 'Kaunas County', expectAdmin2: 'Birštonas', expectCountry: 'Lithuania' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {

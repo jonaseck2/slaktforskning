@@ -1,0 +1,5585 @@
+{
+  "id": "lv-novadi",
+  "name": "Latvia Novadi and Pagasti",
+  "locale": "lv",
+  "description": "Latvia: 43 novadi/valstspilsētas (admin1) → 587 pagasti (admin2) → populated places ≥1000 pop. Lutheran draudzes deferred.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/LV.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥1000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Latvia",
+            "type": "country",
+            "aliases": [
+              "Latvija",
+              "Lettland"
+            ],
+            "lat": 56.9,
+            "lon": 24.6,
+            "children": [
+              {
+                "name": "Ādažu Novads",
+                "type": "admin1",
+                "aliases": [
+                  "Adazhi",
+                  "Adazi",
+                  "Adazi Municipality",
+                  "Adazu Novads"
+                ],
+                "lat": 57.113495,
+                "lon": 24.313635,
+                "children": [
+                  {
+                    "name": "Ādažu novads",
+                    "type": "admin2",
+                    "lat": 57.10939,
+                    "lon": 24.38033,
+                    "children": [
+                      {
+                        "name": "Ādaži",
+                        "type": "admin3",
+                        "lat": 57.0708,
+                        "lon": 24.33678
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Carnikavas novads",
+                    "type": "admin2",
+                    "lat": 57.1176,
+                    "lon": 24.24694,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Aizkraukles novads",
+                "type": "admin1",
+                "aliases": [
+                  "Aizkraukle Bələdiyyəsi",
+                  "Aizkraukle Kabupaten",
+                  "Aizkraukle Municipality",
+                  "Aizkraukle shahar hokimiyati"
+                ],
+                "lat": 56.55711,
+                "lon": 25.351769,
+                "children": [
+                  {
+                    "name": "Aiviekstes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aiviekste Parish",
+                      "Aiviekstes pagasts"
+                    ],
+                    "lat": 56.65915,
+                    "lon": 25.79127,
+                    "children": []
+                  },
+                  {
+                    "name": "Aizkraukle",
+                    "type": "admin2",
+                    "lat": 56.59229,
+                    "lon": 25.2463,
+                    "children": [
+                      {
+                        "name": "Aizkraukle",
+                        "type": "admin3",
+                        "lat": 56.60477,
+                        "lon": 25.25534
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Aizkraukles pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aizkraukle Parish",
+                      "Aizkraukles pagasts"
+                    ],
+                    "lat": 56.6448,
+                    "lon": 25.22991,
+                    "children": []
+                  },
+                  {
+                    "name": "Bebru pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bebri Parish",
+                      "Bebru pagasts"
+                    ],
+                    "lat": 56.73494,
+                    "lon": 25.45577,
+                    "children": []
+                  },
+                  {
+                    "name": "Daudzeses pagasts",
+                    "type": "admin2",
+                    "lat": 56.48061,
+                    "lon": 25.17296,
+                    "children": []
+                  },
+                  {
+                    "name": "Iršu pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Irsi Parish",
+                      "Irsu pagasts",
+                      "Irši Parish"
+                    ],
+                    "lat": 56.77909,
+                    "lon": 25.57063,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunjelgava",
+                    "type": "admin2",
+                    "lat": 56.61139,
+                    "lon": 25.08186,
+                    "children": [
+                      {
+                        "name": "Jaunjelgava",
+                        "type": "admin3",
+                        "lat": 56.61319,
+                        "lon": 25.08316
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jaunjelgavas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaunjelgava Parish",
+                      "Jaunjelgavas pagasts"
+                    ],
+                    "lat": 56.5946,
+                    "lon": 25.07059,
+                    "children": []
+                  },
+                  {
+                    "name": "Klintaines pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klintaine Parish",
+                      "Klintaines pagasts"
+                    ],
+                    "lat": 56.62454,
+                    "lon": 25.59423,
+                    "children": []
+                  },
+                  {
+                    "name": "Kokneses pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Koknese Parish",
+                      "Kokneses pagasts"
+                    ],
+                    "lat": 56.66526,
+                    "lon": 25.42394,
+                    "children": [
+                      {
+                        "name": "Koknese",
+                        "type": "admin3",
+                        "lat": 56.65163,
+                        "lon": 25.43637
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mazzalves pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mazzalve Parish",
+                      "Mazzalves pagasts"
+                    ],
+                    "lat": 56.39337,
+                    "lon": 25.01351,
+                    "children": []
+                  },
+                  {
+                    "name": "Neretas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nereta Parish",
+                      "Neretas pagasts"
+                    ],
+                    "lat": 56.22014,
+                    "lon": 25.31497,
+                    "children": [
+                      {
+                        "name": "Nereta",
+                        "type": "admin3",
+                        "lat": 56.20279,
+                        "lon": 25.30752
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pilskalnes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pilskalne Parish",
+                      "Pilskalnes pagasts"
+                    ],
+                    "lat": 56.22136,
+                    "lon": 25.15866,
+                    "children": []
+                  },
+                  {
+                    "name": "Pļaviņas",
+                    "type": "admin2",
+                    "lat": 56.61837,
+                    "lon": 25.72088,
+                    "children": [
+                      {
+                        "name": "Pļaviņas",
+                        "type": "admin3",
+                        "lat": 56.6178,
+                        "lon": 25.72552
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Seces pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sece Parish",
+                      "Seces pagasts"
+                    ],
+                    "lat": 56.53535,
+                    "lon": 25.37643,
+                    "children": []
+                  },
+                  {
+                    "name": "Sērenes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Serene Parish",
+                      "Serenes pagasts",
+                      "Sērene Parish"
+                    ],
+                    "lat": 56.56822,
+                    "lon": 25.1489,
+                    "children": []
+                  },
+                  {
+                    "name": "Skrīveru pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Skriveri Parish",
+                      "Skriveru pagasts",
+                      "Skrīveri Parish"
+                    ],
+                    "lat": 56.67245,
+                    "lon": 25.09735,
+                    "children": [
+                      {
+                        "name": "Skrīveri",
+                        "type": "admin3",
+                        "lat": 56.645,
+                        "lon": 25.12058
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Staburaga pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Staburaga pagasts",
+                      "Staburags Parish"
+                    ],
+                    "lat": 56.54237,
+                    "lon": 25.51537,
+                    "children": []
+                  },
+                  {
+                    "name": "Sunākstes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sunakste Parish",
+                      "Sunakstes pagasts",
+                      "Sunākste Parish"
+                    ],
+                    "lat": 56.46089,
+                    "lon": 25.46724,
+                    "children": []
+                  },
+                  {
+                    "name": "Vietalvas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vietalva Parish",
+                      "Vietalvas pagasts"
+                    ],
+                    "lat": 56.74166,
+                    "lon": 25.73967,
+                    "children": []
+                  },
+                  {
+                    "name": "Zalves pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zalve Parish",
+                      "Zalves pagasts"
+                    ],
+                    "lat": 56.33847,
+                    "lon": 25.19671,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Alūksnes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Alouksne",
+                  "Aluksne",
+                  "Aluksne Belediyesi",
+                  "Aluksne Bələdiyyəsi"
+                ],
+                "lat": 57.412039,
+                "lon": 27.068307,
+                "children": [
+                  {
+                    "name": "Alsviķu pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Alsviki Parish",
+                      "Alsviku pagasts",
+                      "Alsviķi Parish"
+                    ],
+                    "lat": 57.42861,
+                    "lon": 26.88247,
+                    "children": []
+                  },
+                  {
+                    "name": "Alūksne",
+                    "type": "admin2",
+                    "lat": 57.42631,
+                    "lon": 27.06663,
+                    "children": [
+                      {
+                        "name": "Alūksne",
+                        "type": "admin3",
+                        "lat": 57.4215,
+                        "lon": 27.04672
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Annas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Anna Parish",
+                      "Annas pagasts"
+                    ],
+                    "lat": 57.33753,
+                    "lon": 27.006,
+                    "children": []
+                  },
+                  {
+                    "name": "Ilzenes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ilzene Parish",
+                      "Ilzenes pagasts"
+                    ],
+                    "lat": 57.38494,
+                    "lon": 26.68009,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunalūksnes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaunaluksne Parish",
+                      "Jaunaluksnes pagasts",
+                      "Jaunalūksne Parish"
+                    ],
+                    "lat": 57.4206,
+                    "lon": 27.21688,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunannas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaunanna Parish",
+                      "Jaunannas pagasts"
+                    ],
+                    "lat": 57.28009,
+                    "lon": 27.11592,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunlaicenes pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaunlaicene Parish",
+                      "Jaunlaicenes pagasts"
+                    ],
+                    "lat": 57.53378,
+                    "lon": 26.88561,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalncempju pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kalncempji Parish",
+                      "Kalncempju pagasts"
+                    ],
+                    "lat": 57.33488,
+                    "lon": 26.88193,
+                    "children": []
+                  },
+                  {
+                    "name": "Liepnas pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Liepna Parish",
+                      "Liepnas pagasts"
+                    ],
+                    "lat": 57.34883,
+                    "lon": 27.51373,
+                    "children": []
+                  },
+                  {
+                    "name": "Malienas pagasts",
+                    "type": "admin2",
+                    "lat": 57.34524,
+                    "lon": 27.15432,
+                    "children": []
+                  },
+                  {
+                    "name": "Mālupes pagasts",
+                    "type": "admin2",
+                    "lat": 57.31745,
+                    "lon": 27.28887,
+                    "children": []
+                  },
+                  {
+                    "name": "Mārkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.50616,
+                    "lon": 27.20995,
+                    "children": []
+                  },
+                  {
+                    "name": "Pededzes pagasts",
+                    "type": "admin2",
+                    "lat": 57.48159,
+                    "lon": 27.44363,
+                    "children": []
+                  },
+                  {
+                    "name": "Veclaicenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.58609,
+                    "lon": 26.95068,
+                    "children": []
+                  },
+                  {
+                    "name": "Zeltiņu pagasts",
+                    "type": "admin2",
+                    "lat": 57.34953,
+                    "lon": 26.76747,
+                    "children": []
+                  },
+                  {
+                    "name": "Ziemera pagasts",
+                    "type": "admin2",
+                    "lat": 57.511,
+                    "lon": 27.02873,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Augšdaugavas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Augsdaugava",
+                  "Augsdaugava Municipaliteti",
+                  "Augsdaugava Municipalitety",
+                  "Augsdaugava Municipality"
+                ],
+                "lat": 55.953961,
+                "lon": 26.47975,
+                "children": [
+                  {
+                    "name": "Ambeļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.03838,
+                    "lon": 26.88996,
+                    "children": []
+                  },
+                  {
+                    "name": "Bebrenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.04859,
+                    "lon": 26.11347,
+                    "children": []
+                  },
+                  {
+                    "name": "Biķernieku pagasts",
+                    "type": "admin2",
+                    "lat": 55.97039,
+                    "lon": 26.86468,
+                    "children": []
+                  },
+                  {
+                    "name": "Demenes pagasts",
+                    "type": "admin2",
+                    "lat": 55.73619,
+                    "lon": 26.59082,
+                    "children": []
+                  },
+                  {
+                    "name": "Dubnas pagasts",
+                    "type": "admin2",
+                    "lat": 56.08316,
+                    "lon": 26.67278,
+                    "children": []
+                  },
+                  {
+                    "name": "Dvietes pagasts",
+                    "type": "admin2",
+                    "lat": 56.10529,
+                    "lon": 26.25649,
+                    "children": []
+                  },
+                  {
+                    "name": "Eglaines pagasts",
+                    "type": "admin2",
+                    "lat": 55.97115,
+                    "lon": 26.05202,
+                    "children": []
+                  },
+                  {
+                    "name": "Ilūkste",
+                    "type": "admin2",
+                    "lat": 55.97882,
+                    "lon": 26.31149,
+                    "children": [
+                      {
+                        "name": "Ilūkste",
+                        "type": "admin3",
+                        "lat": 55.97754,
+                        "lon": 26.29655
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kalkūnes pagasts",
+                    "type": "admin2",
+                    "lat": 55.83851,
+                    "lon": 26.43367,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalupes pagasts",
+                    "type": "admin2",
+                    "lat": 56.08599,
+                    "lon": 26.54861,
+                    "children": []
+                  },
+                  {
+                    "name": "Laucesas pagasts",
+                    "type": "admin2",
+                    "lat": 55.81516,
+                    "lon": 26.54092,
+                    "children": []
+                  },
+                  {
+                    "name": "Līksnas pagasts",
+                    "type": "admin2",
+                    "lat": 55.99462,
+                    "lon": 26.44842,
+                    "children": []
+                  },
+                  {
+                    "name": "Maļinovas pagasts",
+                    "type": "admin2",
+                    "lat": 55.99376,
+                    "lon": 26.67139,
+                    "children": []
+                  },
+                  {
+                    "name": "Medumu pagasts",
+                    "type": "admin2",
+                    "lat": 55.77211,
+                    "lon": 26.35736,
+                    "children": []
+                  },
+                  {
+                    "name": "Naujenes pagasts",
+                    "type": "admin2",
+                    "lat": 55.92848,
+                    "lon": 26.74433,
+                    "children": []
+                  },
+                  {
+                    "name": "Nīcgales pagasts",
+                    "type": "admin2",
+                    "lat": 56.15107,
+                    "lon": 26.40248,
+                    "children": []
+                  },
+                  {
+                    "name": "Pilskalnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.00236,
+                    "lon": 26.23736,
+                    "children": []
+                  },
+                  {
+                    "name": "Prodes pagasts",
+                    "type": "admin2",
+                    "lat": 56.05164,
+                    "lon": 25.92795,
+                    "children": []
+                  },
+                  {
+                    "name": "Salienas pagasts",
+                    "type": "admin2",
+                    "lat": 55.81199,
+                    "lon": 26.89229,
+                    "children": []
+                  },
+                  {
+                    "name": "Šēderes pagasts",
+                    "type": "admin2",
+                    "lat": 55.89117,
+                    "lon": 26.21536,
+                    "children": []
+                  },
+                  {
+                    "name": "Skrudalienas pagasts",
+                    "type": "admin2",
+                    "lat": 55.76293,
+                    "lon": 26.74065,
+                    "children": []
+                  },
+                  {
+                    "name": "Subate",
+                    "type": "admin2",
+                    "lat": 56.00748,
+                    "lon": 25.91066,
+                    "children": []
+                  },
+                  {
+                    "name": "Sventes pagasts",
+                    "type": "admin2",
+                    "lat": 55.90914,
+                    "lon": 26.35162,
+                    "children": []
+                  },
+                  {
+                    "name": "Tabores pagasts",
+                    "type": "admin2",
+                    "lat": 55.8636,
+                    "lon": 26.68564,
+                    "children": []
+                  },
+                  {
+                    "name": "Vaboles pagasts",
+                    "type": "admin2",
+                    "lat": 56.02743,
+                    "lon": 26.48969,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecsalienas pagasts",
+                    "type": "admin2",
+                    "lat": 55.84889,
+                    "lon": 26.81234,
+                    "children": []
+                  },
+                  {
+                    "name": "Višķu pagasts",
+                    "type": "admin2",
+                    "lat": 56.06866,
+                    "lon": 26.79081,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Balvu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Balvi Bələdiyyəsi",
+                  "Balvi Kabupaten",
+                  "Balvi Municipality",
+                  "Balvi municipaliteti"
+                ],
+                "lat": 57.068163,
+                "lon": 27.424326,
+                "children": [
+                  {
+                    "name": "Baltinavas novads",
+                    "type": "admin2",
+                    "lat": 56.91683,
+                    "lon": 27.61032,
+                    "children": []
+                  },
+                  {
+                    "name": "Balvi",
+                    "type": "admin2",
+                    "lat": 57.13149,
+                    "lon": 27.26041,
+                    "children": [
+                      {
+                        "name": "Balvi",
+                        "type": "admin3",
+                        "lat": 57.1313,
+                        "lon": 27.26583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Balvu pagasts",
+                    "type": "admin2",
+                    "lat": 57.09249,
+                    "lon": 27.23802,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērzkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.11217,
+                    "lon": 27.38571,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērzpils pagasts",
+                    "type": "admin2",
+                    "lat": 56.84321,
+                    "lon": 27.11083,
+                    "children": []
+                  },
+                  {
+                    "name": "Briežuciema pagasts",
+                    "type": "admin2",
+                    "lat": 56.97226,
+                    "lon": 27.55232,
+                    "children": []
+                  },
+                  {
+                    "name": "Krišjāņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.81983,
+                    "lon": 27.29767,
+                    "children": []
+                  },
+                  {
+                    "name": "Kubulu pagasts",
+                    "type": "admin2",
+                    "lat": 57.16594,
+                    "lon": 27.18295,
+                    "children": []
+                  },
+                  {
+                    "name": "Kupravas pagasts",
+                    "type": "admin2",
+                    "lat": 57.22986,
+                    "lon": 27.48839,
+                    "children": []
+                  },
+                  {
+                    "name": "Lazdukalna pagasts",
+                    "type": "admin2",
+                    "lat": 56.92422,
+                    "lon": 27.09918,
+                    "children": []
+                  },
+                  {
+                    "name": "Lazdulejas pagasts",
+                    "type": "admin2",
+                    "lat": 57.03044,
+                    "lon": 27.47516,
+                    "children": []
+                  },
+                  {
+                    "name": "Medņevas pagasts",
+                    "type": "admin2",
+                    "lat": 57.12081,
+                    "lon": 27.62285,
+                    "children": []
+                  },
+                  {
+                    "name": "Rugāju pagasts",
+                    "type": "admin2",
+                    "lat": 57.01835,
+                    "lon": 27.09705,
+                    "children": []
+                  },
+                  {
+                    "name": "Šķilbēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.05292,
+                    "lon": 27.65129,
+                    "children": []
+                  },
+                  {
+                    "name": "Susāju pagasts",
+                    "type": "admin2",
+                    "lat": 57.19097,
+                    "lon": 27.56913,
+                    "children": []
+                  },
+                  {
+                    "name": "Tilžas pagasts",
+                    "type": "admin2",
+                    "lat": 56.89748,
+                    "lon": 27.3675,
+                    "children": []
+                  },
+                  {
+                    "name": "Vectilžas pagasts",
+                    "type": "admin2",
+                    "lat": 56.98468,
+                    "lon": 27.35838,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecumu pagasts",
+                    "type": "admin2",
+                    "lat": 57.2121,
+                    "lon": 27.7848,
+                    "children": []
+                  },
+                  {
+                    "name": "Vīksnas pagasts",
+                    "type": "admin2",
+                    "lat": 57.22927,
+                    "lon": 27.38095,
+                    "children": []
+                  },
+                  {
+                    "name": "Viļaka",
+                    "type": "admin2",
+                    "lat": 57.18706,
+                    "lon": 27.68202,
+                    "children": [
+                      {
+                        "name": "Viļaka",
+                        "type": "admin3",
+                        "lat": 57.18458,
+                        "lon": 27.6722
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Žīguru pagasts",
+                    "type": "admin2",
+                    "lat": 57.29905,
+                    "lon": 27.69592,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Bauskas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bauska Bələdiyyəsi",
+                  "Bauska Kabupaten",
+                  "Bauska Municipality",
+                  "Bauska municipaliteti"
+                ],
+                "lat": 56.441655,
+                "lon": 24.330655,
+                "children": [
+                  {
+                    "name": "Bārbeles pagasts",
+                    "type": "admin2",
+                    "lat": 56.46293,
+                    "lon": 24.61081,
+                    "children": []
+                  },
+                  {
+                    "name": "Bauska",
+                    "type": "admin2",
+                    "lat": 56.40533,
+                    "lon": 24.19599,
+                    "children": [
+                      {
+                        "name": "Bauska",
+                        "type": "admin3",
+                        "lat": 56.4071,
+                        "lon": 24.18733
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Brunavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.30797,
+                    "lon": 24.43228,
+                    "children": []
+                  },
+                  {
+                    "name": "Ceraukstes pagasts",
+                    "type": "admin2",
+                    "lat": 56.37088,
+                    "lon": 24.29388,
+                    "children": []
+                  },
+                  {
+                    "name": "Codes pagasts",
+                    "type": "admin2",
+                    "lat": 56.46951,
+                    "lon": 24.20774,
+                    "children": []
+                  },
+                  {
+                    "name": "Dāviņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.50121,
+                    "lon": 24.35511,
+                    "children": []
+                  },
+                  {
+                    "name": "Gailīšu pagasts",
+                    "type": "admin2",
+                    "lat": 56.31651,
+                    "lon": 24.21213,
+                    "children": []
+                  },
+                  {
+                    "name": "Iecavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.608,
+                    "lon": 24.197,
+                    "children": [
+                      {
+                        "name": "Iecava",
+                        "type": "admin3",
+                        "lat": 56.59766,
+                        "lon": 24.20763
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Īslīces pagasts",
+                    "type": "admin2",
+                    "lat": 56.3305,
+                    "lon": 24.11364,
+                    "children": []
+                  },
+                  {
+                    "name": "Kurmenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.46317,
+                    "lon": 24.84151,
+                    "children": []
+                  },
+                  {
+                    "name": "Mežotnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.47106,
+                    "lon": 24.10215,
+                    "children": []
+                  },
+                  {
+                    "name": "Rundāles pagasts",
+                    "type": "admin2",
+                    "lat": 56.39605,
+                    "lon": 24.0357,
+                    "children": []
+                  },
+                  {
+                    "name": "Skaistkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.37767,
+                    "lon": 24.57124,
+                    "children": []
+                  },
+                  {
+                    "name": "Stelpes pagasts",
+                    "type": "admin2",
+                    "lat": 56.5245,
+                    "lon": 24.50996,
+                    "children": []
+                  },
+                  {
+                    "name": "Svitenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.37467,
+                    "lon": 23.92803,
+                    "children": []
+                  },
+                  {
+                    "name": "Valles pagasts",
+                    "type": "admin2",
+                    "lat": 56.52089,
+                    "lon": 24.81178,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecsaules pagasts",
+                    "type": "admin2",
+                    "lat": 56.41836,
+                    "lon": 24.41966,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecumnieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.61988,
+                    "lon": 24.50454,
+                    "children": [
+                      {
+                        "name": "Vecumnieki",
+                        "type": "admin3",
+                        "lat": 56.60608,
+                        "lon": 24.52232
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viesturu pagasts",
+                    "type": "admin2",
+                    "lat": 56.45236,
+                    "lon": 23.9393,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Cēsu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Cesis",
+                  "Bezirk Cēsis",
+                  "Cehsiski kraj",
+                  "Cesis"
+                ],
+                "lat": 57.21037,
+                "lon": 25.430008,
+                "children": [
+                  {
+                    "name": "Amatas pagasts",
+                    "type": "admin2",
+                    "lat": 57.16658,
+                    "lon": 25.31968,
+                    "children": []
+                  },
+                  {
+                    "name": "Cēsis",
+                    "type": "admin2",
+                    "lat": 57.31236,
+                    "lon": 25.26407,
+                    "children": [
+                      {
+                        "name": "Cēsis",
+                        "type": "admin3",
+                        "lat": 57.31188,
+                        "lon": 25.27456
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Drabešu pagasts",
+                    "type": "admin2",
+                    "lat": 57.24321,
+                    "lon": 25.2263,
+                    "children": [
+                      {
+                        "name": "Drabeši",
+                        "type": "admin3",
+                        "lat": 57.24316,
+                        "lon": 25.27748
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dzērbenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.21977,
+                    "lon": 25.66419,
+                    "children": []
+                  },
+                  {
+                    "name": "Inešu pagasts",
+                    "type": "admin2",
+                    "lat": 57.00876,
+                    "lon": 25.82731,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunpiebalgas pagasts",
+                    "type": "admin2",
+                    "lat": 57.14488,
+                    "lon": 26.02361,
+                    "children": []
+                  },
+                  {
+                    "name": "Kaives pagasts",
+                    "type": "admin2",
+                    "lat": 57.02525,
+                    "lon": 25.61162,
+                    "children": []
+                  },
+                  {
+                    "name": "Liepas pagasts",
+                    "type": "admin2",
+                    "lat": 57.39083,
+                    "lon": 25.44362,
+                    "children": []
+                  },
+                  {
+                    "name": "Līgatne",
+                    "type": "admin2",
+                    "lat": 57.23844,
+                    "lon": 25.04075,
+                    "children": [
+                      {
+                        "name": "Līgatne",
+                        "type": "admin3",
+                        "lat": 57.23429,
+                        "lon": 25.04059
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Līgatnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.18722,
+                    "lon": 25.05967,
+                    "children": []
+                  },
+                  {
+                    "name": "Mārsnēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.42413,
+                    "lon": 25.57452,
+                    "children": []
+                  },
+                  {
+                    "name": "Nītaures pagasts",
+                    "type": "admin2",
+                    "lat": 57.08187,
+                    "lon": 25.22294,
+                    "children": []
+                  },
+                  {
+                    "name": "Priekuļu pagasts",
+                    "type": "admin2",
+                    "lat": 57.33123,
+                    "lon": 25.39194,
+                    "children": [
+                      {
+                        "name": "Priekuļi",
+                        "type": "admin3",
+                        "lat": 57.315,
+                        "lon": 25.36147
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Raiskuma pagasts",
+                    "type": "admin2",
+                    "lat": 57.35669,
+                    "lon": 25.18405,
+                    "children": []
+                  },
+                  {
+                    "name": "Skujenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.08699,
+                    "lon": 25.47468,
+                    "children": []
+                  },
+                  {
+                    "name": "Stalbes pagasts",
+                    "type": "admin2",
+                    "lat": 57.42134,
+                    "lon": 25.03658,
+                    "children": []
+                  },
+                  {
+                    "name": "Straupes pagasts",
+                    "type": "admin2",
+                    "lat": 57.32696,
+                    "lon": 24.9626,
+                    "children": []
+                  },
+                  {
+                    "name": "Taurenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.13781,
+                    "lon": 25.66747,
+                    "children": []
+                  },
+                  {
+                    "name": "Vaives pagasts",
+                    "type": "admin2",
+                    "lat": 57.23351,
+                    "lon": 25.43029,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecpiebalgas pagasts",
+                    "type": "admin2",
+                    "lat": 57.07734,
+                    "lon": 25.78564,
+                    "children": []
+                  },
+                  {
+                    "name": "Veselavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.26744,
+                    "lon": 25.53359,
+                    "children": []
+                  },
+                  {
+                    "name": "Zaubes pagasts",
+                    "type": "admin2",
+                    "lat": 56.99192,
+                    "lon": 25.30425,
+                    "children": []
+                  },
+                  {
+                    "name": "Zosēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.16399,
+                    "lon": 25.84082,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Daugavpils",
+                "type": "admin1",
+                "aliases": [
+                  "Borisoglebsk",
+                  "Daugaupils",
+                  "Daugavpils",
+                  "Daugpelis"
+                ],
+                "lat": 55.89064,
+                "lon": 26.54189,
+                "children": [
+                  {
+                    "name": "Daugavpils",
+                    "type": "admin2",
+                    "lat": 55.89064,
+                    "lon": 26.54189,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Dienvidkurzemes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Dienvidkurzeme",
+                  "Cənub Kurzeme Munisipalligi",
+                  "Cənub Kurzeme Munisipallığı",
+                  "Dienvidkurzemes"
+                ],
+                "lat": 56.545685,
+                "lon": 21.415604,
+                "children": [
+                  {
+                    "name": "Aizpute",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ajzpute",
+                      "Hasenpoth",
+                      "Айзпуте"
+                    ],
+                    "lat": 56.71721,
+                    "lon": 21.60867,
+                    "children": [
+                      {
+                        "name": "Aizpute",
+                        "type": "admin3",
+                        "lat": 56.72108,
+                        "lon": 21.60156
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Aizputes pagasts",
+                    "type": "admin2",
+                    "lat": 56.69082,
+                    "lon": 21.52506,
+                    "children": []
+                  },
+                  {
+                    "name": "Bārtas pagasts",
+                    "type": "admin2",
+                    "lat": 56.37773,
+                    "lon": 21.32851,
+                    "children": []
+                  },
+                  {
+                    "name": "Bunkas pagasts",
+                    "type": "admin2",
+                    "lat": 56.52429,
+                    "lon": 21.52639,
+                    "children": []
+                  },
+                  {
+                    "name": "Cīravas pagasts",
+                    "type": "admin2",
+                    "lat": 56.74737,
+                    "lon": 21.38971,
+                    "children": []
+                  },
+                  {
+                    "name": "Dunalkas pagasts",
+                    "type": "admin2",
+                    "lat": 56.673,
+                    "lon": 21.33102,
+                    "children": []
+                  },
+                  {
+                    "name": "Dunikas pagasts",
+                    "type": "admin2",
+                    "lat": 56.27916,
+                    "lon": 21.31446,
+                    "children": []
+                  },
+                  {
+                    "name": "Durbe",
+                    "type": "admin2",
+                    "lat": 56.58654,
+                    "lon": 21.37887,
+                    "children": []
+                  },
+                  {
+                    "name": "Durbes pagasts",
+                    "type": "admin2",
+                    "lat": 56.57773,
+                    "lon": 21.4352,
+                    "children": []
+                  },
+                  {
+                    "name": "Embūtes pagasts",
+                    "type": "admin2",
+                    "lat": 56.50503,
+                    "lon": 21.82372,
+                    "children": []
+                  },
+                  {
+                    "name": "Gaviezes pagasts",
+                    "type": "admin2",
+                    "lat": 56.46938,
+                    "lon": 21.31337,
+                    "children": []
+                  },
+                  {
+                    "name": "Gramzdas pagasts",
+                    "type": "admin2",
+                    "lat": 56.35762,
+                    "lon": 21.65646,
+                    "children": []
+                  },
+                  {
+                    "name": "Grobiņa",
+                    "type": "admin2",
+                    "lat": 56.53875,
+                    "lon": 21.16682,
+                    "children": [
+                      {
+                        "name": "Grobiņa",
+                        "type": "admin3",
+                        "lat": 56.53521,
+                        "lon": 21.16782
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Grobiņas pagasts",
+                    "type": "admin2",
+                    "lat": 56.50822,
+                    "lon": 21.16919,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalētu pagasts",
+                    "type": "admin2",
+                    "lat": 56.33695,
+                    "lon": 21.49921,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalvenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.60827,
+                    "lon": 21.7069,
+                    "children": []
+                  },
+                  {
+                    "name": "Kazdangas pagasts",
+                    "type": "admin2",
+                    "lat": 56.70473,
+                    "lon": 21.70209,
+                    "children": []
+                  },
+                  {
+                    "name": "Lažas pagasts",
+                    "type": "admin2",
+                    "lat": 56.79677,
+                    "lon": 21.52865,
+                    "children": []
+                  },
+                  {
+                    "name": "Medzes pagasts",
+                    "type": "admin2",
+                    "lat": 56.61014,
+                    "lon": 21.15485,
+                    "children": []
+                  },
+                  {
+                    "name": "Nīcas pagasts",
+                    "type": "admin2",
+                    "lat": 56.31764,
+                    "lon": 21.072,
+                    "children": [
+                      {
+                        "name": "Nīca",
+                        "type": "admin3",
+                        "lat": 56.34601,
+                        "lon": 21.06401
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Otaņķu pagasts",
+                    "type": "admin2",
+                    "lat": 56.40889,
+                    "lon": 21.12364,
+                    "children": []
+                  },
+                  {
+                    "name": "Pāvilosta",
+                    "type": "admin2",
+                    "lat": 56.88534,
+                    "lon": 21.19861,
+                    "children": []
+                  },
+                  {
+                    "name": "Priekule",
+                    "type": "admin2",
+                    "lat": 56.44691,
+                    "lon": 21.59919,
+                    "children": [
+                      {
+                        "name": "Priekule",
+                        "type": "admin3",
+                        "lat": 56.44679,
+                        "lon": 21.58968
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Priekules pagasts",
+                    "type": "admin2",
+                    "lat": 56.45839,
+                    "lon": 21.62878,
+                    "children": []
+                  },
+                  {
+                    "name": "Rucavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.16653,
+                    "lon": 21.12998,
+                    "children": []
+                  },
+                  {
+                    "name": "Sakas pagasts",
+                    "type": "admin2",
+                    "lat": 56.85791,
+                    "lon": 21.28077,
+                    "children": []
+                  },
+                  {
+                    "name": "Tadaiķu pagasts",
+                    "type": "admin2",
+                    "lat": 56.58061,
+                    "lon": 21.31595,
+                    "children": []
+                  },
+                  {
+                    "name": "Vaiņodes pagasts",
+                    "type": "admin2",
+                    "lat": 56.4174,
+                    "lon": 21.83151,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecpils pagasts",
+                    "type": "admin2",
+                    "lat": 56.61609,
+                    "lon": 21.53452,
+                    "children": []
+                  },
+                  {
+                    "name": "Vērgales pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vergale Parish",
+                      "Vergales pagasts",
+                      "Vērgale Parish"
+                    ],
+                    "lat": 56.71574,
+                    "lon": 21.14182,
+                    "children": []
+                  },
+                  {
+                    "name": "Virgas pagasts",
+                    "type": "admin2",
+                    "lat": 56.43508,
+                    "lon": 21.46779,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Dobeles novads",
+                "type": "admin1",
+                "aliases": [
+                  "Dobel'skiy Rayon",
+                  "Dobele Bələdiyyəsi",
+                  "Dobele Kabupaten",
+                  "Dobele Municipality"
+                ],
+                "lat": 56.543947,
+                "lon": 23.138249,
+                "children": [
+                  {
+                    "name": "Annenieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.64851,
+                    "lon": 23.08235,
+                    "children": []
+                  },
+                  {
+                    "name": "Auce",
+                    "type": "admin2",
+                    "lat": 56.46049,
+                    "lon": 22.90434,
+                    "children": [
+                      {
+                        "name": "Auce",
+                        "type": "admin3",
+                        "lat": 56.45981,
+                        "lon": 22.90169
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Augstkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.40806,
+                    "lon": 23.37528,
+                    "children": []
+                  },
+                  {
+                    "name": "Auru pagasts",
+                    "type": "admin2",
+                    "lat": 56.58964,
+                    "lon": 23.24467,
+                    "children": []
+                  },
+                  {
+                    "name": "Bēnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.45833,
+                    "lon": 23.06924,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērzes pagasts",
+                    "type": "admin2",
+                    "lat": 56.65508,
+                    "lon": 23.3916,
+                    "children": []
+                  },
+                  {
+                    "name": "Bikstu pagasts",
+                    "type": "admin2",
+                    "lat": 56.67271,
+                    "lon": 22.93647,
+                    "children": []
+                  },
+                  {
+                    "name": "Bukaišu pagasts",
+                    "type": "admin2",
+                    "lat": 56.41292,
+                    "lon": 23.21847,
+                    "children": []
+                  },
+                  {
+                    "name": "Dobele",
+                    "type": "admin2",
+                    "lat": 56.62391,
+                    "lon": 23.28198,
+                    "children": [
+                      {
+                        "name": "Dobele",
+                        "type": "admin3",
+                        "lat": 56.62372,
+                        "lon": 23.2751
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dobeles pagasts",
+                    "type": "admin2",
+                    "lat": 56.68167,
+                    "lon": 23.25656,
+                    "children": []
+                  },
+                  {
+                    "name": "Īles pagasts",
+                    "type": "admin2",
+                    "lat": 56.55295,
+                    "lon": 22.99682,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunbērzes pagasts",
+                    "type": "admin2",
+                    "lat": 56.75608,
+                    "lon": 23.41166,
+                    "children": []
+                  },
+                  {
+                    "name": "Krimūnu pagasts",
+                    "type": "admin2",
+                    "lat": 56.5654,
+                    "lon": 23.39838,
+                    "children": []
+                  },
+                  {
+                    "name": "Lielauces pagasts",
+                    "type": "admin2",
+                    "lat": 56.52577,
+                    "lon": 22.84926,
+                    "children": []
+                  },
+                  {
+                    "name": "Naudītes pagasts",
+                    "type": "admin2",
+                    "lat": 56.55628,
+                    "lon": 23.15553,
+                    "children": []
+                  },
+                  {
+                    "name": "Penkules pagasts",
+                    "type": "admin2",
+                    "lat": 56.48815,
+                    "lon": 23.20588,
+                    "children": []
+                  },
+                  {
+                    "name": "Tērvetes pagasts",
+                    "type": "admin2",
+                    "lat": 56.47685,
+                    "lon": 23.34019,
+                    "children": [
+                      {
+                        "name": "Tērvete",
+                        "type": "admin3",
+                        "lat": 56.47989,
+                        "lon": 23.38895
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ukru pagasts",
+                    "type": "admin2",
+                    "lat": 56.36361,
+                    "lon": 23.09386,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecauces pagasts",
+                    "type": "admin2",
+                    "lat": 56.47859,
+                    "lon": 22.94684,
+                    "children": []
+                  },
+                  {
+                    "name": "Vītiņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.44928,
+                    "lon": 22.85015,
+                    "children": []
+                  },
+                  {
+                    "name": "Zebrenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.59861,
+                    "lon": 22.89369,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Gulbenes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Gulbene",
+                  "Bwrdeistref Gulbene",
+                  "Comune di Gulbene",
+                  "GJo thi tu tri Gulbene"
+                ],
+                "lat": 57.159681,
+                "lon": 26.605423,
+                "children": [
+                  {
+                    "name": "Beļavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.24379,
+                    "lon": 26.75156,
+                    "children": []
+                  },
+                  {
+                    "name": "Daukstu pagasts",
+                    "type": "admin2",
+                    "lat": 57.06604,
+                    "lon": 26.73081,
+                    "children": []
+                  },
+                  {
+                    "name": "Druvienas pagasts",
+                    "type": "admin2",
+                    "lat": 57.11071,
+                    "lon": 26.22954,
+                    "children": []
+                  },
+                  {
+                    "name": "Galgauskas pagasts",
+                    "type": "admin2",
+                    "lat": 57.1709,
+                    "lon": 26.57153,
+                    "children": []
+                  },
+                  {
+                    "name": "Gulbene",
+                    "type": "admin2",
+                    "lat": 57.17409,
+                    "lon": 26.75544,
+                    "children": [
+                      {
+                        "name": "Gulbene",
+                        "type": "admin3",
+                        "lat": 57.17767,
+                        "lon": 26.75291
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jaungulbenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.08433,
+                    "lon": 26.57209,
+                    "children": []
+                  },
+                  {
+                    "name": "Lejasciema pagasts",
+                    "type": "admin2",
+                    "lat": 57.29916,
+                    "lon": 26.50452,
+                    "children": []
+                  },
+                  {
+                    "name": "Līgo pagasts",
+                    "type": "admin2",
+                    "lat": 57.00536,
+                    "lon": 26.60762,
+                    "children": []
+                  },
+                  {
+                    "name": "Litenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.18056,
+                    "lon": 27.0249,
+                    "children": []
+                  },
+                  {
+                    "name": "Lizuma pagasts",
+                    "type": "admin2",
+                    "lat": 57.21282,
+                    "lon": 26.35247,
+                    "children": []
+                  },
+                  {
+                    "name": "Rankas pagasts",
+                    "type": "admin2",
+                    "lat": 57.21494,
+                    "lon": 26.17315,
+                    "children": []
+                  },
+                  {
+                    "name": "Stāmerienas pagasts",
+                    "type": "admin2",
+                    "lat": 57.24609,
+                    "lon": 26.93636,
+                    "children": []
+                  },
+                  {
+                    "name": "Stradu pagasts",
+                    "type": "admin2",
+                    "lat": 57.10768,
+                    "lon": 26.85754,
+                    "children": []
+                  },
+                  {
+                    "name": "Tirzas pagasts",
+                    "type": "admin2",
+                    "lat": 57.11907,
+                    "lon": 26.40839,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Jēkabpils novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Jakobstadt",
+                  "Ekabpils municipaliteti",
+                  "Ekabpils municipalitety",
+                  "Ekabpils'kij kraj"
+                ],
+                "lat": 56.351118,
+                "lon": 25.867744,
+                "children": [
+                  {
+                    "name": "Ābeļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.43294,
+                    "lon": 25.94931,
+                    "children": []
+                  },
+                  {
+                    "name": "Aknīste",
+                    "type": "admin2",
+                    "lat": 56.16044,
+                    "lon": 25.74498,
+                    "children": [
+                      {
+                        "name": "Aknīste",
+                        "type": "admin3",
+                        "lat": 56.16152,
+                        "lon": 25.74783
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Aknīstes pagasts",
+                    "type": "admin2",
+                    "lat": 56.18111,
+                    "lon": 25.75847,
+                    "children": []
+                  },
+                  {
+                    "name": "Asares pagasts",
+                    "type": "admin2",
+                    "lat": 56.13169,
+                    "lon": 25.91166,
+                    "children": []
+                  },
+                  {
+                    "name": "Atašienes pagasts",
+                    "type": "admin2",
+                    "lat": 56.54548,
+                    "lon": 26.45208,
+                    "children": []
+                  },
+                  {
+                    "name": "Dignājas pagasts",
+                    "type": "admin2",
+                    "lat": 56.3416,
+                    "lon": 26.11131,
+                    "children": []
+                  },
+                  {
+                    "name": "Dunavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.19714,
+                    "lon": 26.17753,
+                    "children": []
+                  },
+                  {
+                    "name": "Elkšņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.23033,
+                    "lon": 25.59995,
+                    "children": []
+                  },
+                  {
+                    "name": "Gārsenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.09821,
+                    "lon": 25.77952,
+                    "children": []
+                  },
+                  {
+                    "name": "Jēkabpils",
+                    "type": "admin2",
+                    "lat": 56.50132,
+                    "lon": 25.87005,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalna pagasts",
+                    "type": "admin2",
+                    "lat": 56.33033,
+                    "lon": 25.82138,
+                    "children": []
+                  },
+                  {
+                    "name": "Krustpils pagasts",
+                    "type": "admin2",
+                    "lat": 56.56856,
+                    "lon": 25.82775,
+                    "children": []
+                  },
+                  {
+                    "name": "Kūku pagasts",
+                    "type": "admin2",
+                    "lat": 56.5191,
+                    "lon": 26.01993,
+                    "children": []
+                  },
+                  {
+                    "name": "Leimaņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.29767,
+                    "lon": 25.90396,
+                    "children": []
+                  },
+                  {
+                    "name": "Mežāres pagasts",
+                    "type": "admin2",
+                    "lat": 56.55556,
+                    "lon": 26.22082,
+                    "children": []
+                  },
+                  {
+                    "name": "Rites pagasts",
+                    "type": "admin2",
+                    "lat": 56.19336,
+                    "lon": 25.48399,
+                    "children": []
+                  },
+                  {
+                    "name": "Rubenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.16604,
+                    "lon": 26.00982,
+                    "children": []
+                  },
+                  {
+                    "name": "Salas pagasts",
+                    "type": "admin2",
+                    "lat": 56.44651,
+                    "lon": 25.73798,
+                    "children": []
+                  },
+                  {
+                    "name": "Saukas pagasts",
+                    "type": "admin2",
+                    "lat": 56.28424,
+                    "lon": 25.41799,
+                    "children": []
+                  },
+                  {
+                    "name": "Sēlpils pagasts",
+                    "type": "admin2",
+                    "lat": 56.53955,
+                    "lon": 25.65595,
+                    "children": []
+                  },
+                  {
+                    "name": "Variešu pagasts",
+                    "type": "admin2",
+                    "lat": 56.60328,
+                    "lon": 26.01515,
+                    "children": []
+                  },
+                  {
+                    "name": "Viesīte",
+                    "type": "admin2",
+                    "lat": 56.34515,
+                    "lon": 25.55663,
+                    "children": [
+                      {
+                        "name": "Viesīte",
+                        "type": "admin3",
+                        "lat": 56.34751,
+                        "lon": 25.55514
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viesītes pagasts",
+                    "type": "admin2",
+                    "lat": 56.3657,
+                    "lon": 25.52624,
+                    "children": []
+                  },
+                  {
+                    "name": "Vīpes pagasts",
+                    "type": "admin2",
+                    "lat": 56.46962,
+                    "lon": 26.11702,
+                    "children": []
+                  },
+                  {
+                    "name": "Zasas pagasts",
+                    "type": "admin2",
+                    "lat": 56.27301,
+                    "lon": 26.02412,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Jelgava",
+                "type": "admin1",
+                "aliases": [
+                  "Elgav",
+                  "Elgava",
+                  "Gorad Elgava",
+                  "Jelgava"
+                ],
+                "lat": 56.65049,
+                "lon": 23.71645,
+                "children": [
+                  {
+                    "name": "Jelgava",
+                    "type": "admin2",
+                    "lat": 56.65049,
+                    "lon": 23.71645,
+                    "children": [
+                      {
+                        "name": "Jelgava",
+                        "type": "admin3",
+                        "lat": 56.65,
+                        "lon": 23.71278
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Jelgavas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Elgava municipaliteti",
+                  "Elgava municipalitety",
+                  "Jelgava Bələdiyyəsi",
+                  "Jelgava Kabupaten"
+                ],
+                "lat": 56.580807,
+                "lon": 23.698973,
+                "children": [
+                  {
+                    "name": "Cenu pagasts",
+                    "type": "admin2",
+                    "lat": 56.6996,
+                    "lon": 23.85347,
+                    "children": []
+                  },
+                  {
+                    "name": "Elejas pagasts",
+                    "type": "admin2",
+                    "lat": 56.41958,
+                    "lon": 23.70162,
+                    "children": []
+                  },
+                  {
+                    "name": "Glūdas pagasts",
+                    "type": "admin2",
+                    "lat": 56.61529,
+                    "lon": 23.54,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunsvirlaukas pagasts",
+                    "type": "admin2",
+                    "lat": 56.57013,
+                    "lon": 23.89188,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalnciema pagasts",
+                    "type": "admin2",
+                    "lat": 56.78718,
+                    "lon": 23.60223,
+                    "children": [
+                      {
+                        "name": "Kalnciems",
+                        "type": "admin3",
+                        "lat": 56.79908,
+                        "lon": 23.61503
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lielplatones pagasts",
+                    "type": "admin2",
+                    "lat": 56.45143,
+                    "lon": 23.6406,
+                    "children": []
+                  },
+                  {
+                    "name": "Līvbērzes pagasts",
+                    "type": "admin2",
+                    "lat": 56.70669,
+                    "lon": 23.56267,
+                    "children": []
+                  },
+                  {
+                    "name": "Ozolnieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.69156,
+                    "lon": 23.77333,
+                    "children": [
+                      {
+                        "name": "Ozolnieki",
+                        "type": "admin3",
+                        "lat": 56.68986,
+                        "lon": 23.7761
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Platones pagasts",
+                    "type": "admin2",
+                    "lat": 56.53753,
+                    "lon": 23.70732,
+                    "children": []
+                  },
+                  {
+                    "name": "Salgales pagasts",
+                    "type": "admin2",
+                    "lat": 56.6118,
+                    "lon": 23.99362,
+                    "children": []
+                  },
+                  {
+                    "name": "Sesavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.40372,
+                    "lon": 23.79907,
+                    "children": []
+                  },
+                  {
+                    "name": "Svētes pagasts",
+                    "type": "admin2",
+                    "lat": 56.56036,
+                    "lon": 23.62378,
+                    "children": []
+                  },
+                  {
+                    "name": "Valgundes pagasts",
+                    "type": "admin2",
+                    "lat": 56.81372,
+                    "lon": 23.62601,
+                    "children": [
+                      {
+                        "name": "Tīreļi",
+                        "type": "admin3",
+                        "lat": 56.83991,
+                        "lon": 23.58902
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vilces pagasts",
+                    "type": "admin2",
+                    "lat": 56.39306,
+                    "lon": 23.5268,
+                    "children": [
+                      {
+                        "name": "Vilce",
+                        "type": "admin3",
+                        "lat": 56.42032,
+                        "lon": 23.54781
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vircavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.5232,
+                    "lon": 23.82912,
+                    "children": []
+                  },
+                  {
+                    "name": "Zaļenieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.50807,
+                    "lon": 23.51205,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Jūrmala",
+                "type": "admin1",
+                "aliases": [
+                  "Jurmala",
+                  "Jūrmala"
+                ],
+                "lat": 56.95938,
+                "lon": 23.69339,
+                "children": [
+                  {
+                    "name": "Jūrmala",
+                    "type": "admin2",
+                    "lat": 56.95938,
+                    "lon": 23.69339,
+                    "children": [
+                      {
+                        "name": "Jūrmala",
+                        "type": "admin3",
+                        "lat": 56.968,
+                        "lon": 23.77038
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ķekavas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Kekava",
+                  "Bezirk Ķekava",
+                  "Gmina Kekava",
+                  "Gmina Ķekava"
+                ],
+                "lat": 56.78904,
+                "lon": 24.305516,
+                "children": [
+                  {
+                    "name": "Baldone",
+                    "type": "admin2",
+                    "lat": 56.74526,
+                    "lon": 24.40524,
+                    "children": [
+                      {
+                        "name": "Baldone",
+                        "type": "admin3",
+                        "lat": 56.74451,
+                        "lon": 24.40078
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Baldones pagasts",
+                    "type": "admin2",
+                    "lat": 56.73084,
+                    "lon": 24.37127,
+                    "children": []
+                  },
+                  {
+                    "name": "Baloži",
+                    "type": "admin2",
+                    "lat": 56.8715,
+                    "lon": 24.12797,
+                    "children": [
+                      {
+                        "name": "Baloži",
+                        "type": "admin3",
+                        "lat": 56.87643,
+                        "lon": 24.11825
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Daugmales pagasts",
+                    "type": "admin2",
+                    "lat": 56.80368,
+                    "lon": 24.44429,
+                    "children": []
+                  },
+                  {
+                    "name": "Ķekavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.79392,
+                    "lon": 24.17881,
+                    "children": [
+                      {
+                        "name": "Ķekava",
+                        "type": "admin3",
+                        "lat": 56.82662,
+                        "lon": 24.23
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Krāslavas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Kraslava Bələdiyyəsi",
+                  "Kraslava Kabupaten",
+                  "Kraslava Municipality",
+                  "Kraslava municipaliteti"
+                ],
+                "lat": 56.02021,
+                "lon": 27.417987,
+                "children": [
+                  {
+                    "name": "Andrupenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.14773,
+                    "lon": 27.36947,
+                    "children": []
+                  },
+                  {
+                    "name": "Andzeļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.18776,
+                    "lon": 27.52683,
+                    "children": []
+                  },
+                  {
+                    "name": "Asūnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.03447,
+                    "lon": 27.59734,
+                    "children": []
+                  },
+                  {
+                    "name": "Aulejas pagasts",
+                    "type": "admin2",
+                    "lat": 56.05143,
+                    "lon": 27.27226,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērziņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.08287,
+                    "lon": 27.84688,
+                    "children": []
+                  },
+                  {
+                    "name": "Dagda",
+                    "type": "admin2",
+                    "lat": 56.09706,
+                    "lon": 27.53189,
+                    "children": [
+                      {
+                        "name": "Dagda",
+                        "type": "admin3",
+                        "lat": 56.09512,
+                        "lon": 27.53723
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dagdas pagasts",
+                    "type": "admin2",
+                    "lat": 56.09941,
+                    "lon": 27.55178,
+                    "children": []
+                  },
+                  {
+                    "name": "Ezernieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.18055,
+                    "lon": 27.67617,
+                    "children": []
+                  },
+                  {
+                    "name": "Grāveru pagasts",
+                    "type": "admin2",
+                    "lat": 56.0583,
+                    "lon": 27.15393,
+                    "children": []
+                  },
+                  {
+                    "name": "Indras pagasts",
+                    "type": "admin2",
+                    "lat": 55.86935,
+                    "lon": 27.53912,
+                    "children": []
+                  },
+                  {
+                    "name": "Izvaltas pagasts",
+                    "type": "admin2",
+                    "lat": 55.96986,
+                    "lon": 27.01483,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalniešu pagasts",
+                    "type": "admin2",
+                    "lat": 55.89061,
+                    "lon": 27.36929,
+                    "children": []
+                  },
+                  {
+                    "name": "Kaplavas pagasts",
+                    "type": "admin2",
+                    "lat": 55.84299,
+                    "lon": 27.17089,
+                    "children": []
+                  },
+                  {
+                    "name": "Kastuļinas pagasts",
+                    "type": "admin2",
+                    "lat": 56.15925,
+                    "lon": 27.2094,
+                    "children": []
+                  },
+                  {
+                    "name": "Ķepovas pagasts",
+                    "type": "admin2",
+                    "lat": 56.01374,
+                    "lon": 27.75046,
+                    "children": []
+                  },
+                  {
+                    "name": "Kombuļu pagasts",
+                    "type": "admin2",
+                    "lat": 55.98277,
+                    "lon": 27.21646,
+                    "children": []
+                  },
+                  {
+                    "name": "Konstantinovas pagasts",
+                    "type": "admin2",
+                    "lat": 56.06895,
+                    "lon": 27.429,
+                    "children": []
+                  },
+                  {
+                    "name": "Krāslava",
+                    "type": "admin2",
+                    "lat": 55.89839,
+                    "lon": 27.16767,
+                    "children": [
+                      {
+                        "name": "Krāslava",
+                        "type": "admin3",
+                        "lat": 55.89514,
+                        "lon": 27.16799
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Krāslavas pagasts",
+                    "type": "admin2",
+                    "lat": 55.90569,
+                    "lon": 27.23758,
+                    "children": []
+                  },
+                  {
+                    "name": "Piedrujas pagasts",
+                    "type": "admin2",
+                    "lat": 55.81111,
+                    "lon": 27.49231,
+                    "children": []
+                  },
+                  {
+                    "name": "Robežnieku pagasts",
+                    "type": "admin2",
+                    "lat": 55.96277,
+                    "lon": 27.58567,
+                    "children": []
+                  },
+                  {
+                    "name": "Skaistas pagasts",
+                    "type": "admin2",
+                    "lat": 55.98358,
+                    "lon": 27.38634,
+                    "children": []
+                  },
+                  {
+                    "name": "Šķaunes pagasts",
+                    "type": "admin2",
+                    "lat": 56.16254,
+                    "lon": 27.94977,
+                    "children": []
+                  },
+                  {
+                    "name": "Šķeltovas pagasts",
+                    "type": "admin2",
+                    "lat": 56.04399,
+                    "lon": 27.03978,
+                    "children": []
+                  },
+                  {
+                    "name": "Svariņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.10215,
+                    "lon": 27.71845,
+                    "children": []
+                  },
+                  {
+                    "name": "Ūdrīšu pagasts",
+                    "type": "admin2",
+                    "lat": 55.91813,
+                    "lon": 27.06409,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Kuldīgas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Kuldiga Bələdiyyəsi",
+                  "Kuldiga Kabupaten",
+                  "Kuldiga Municipality",
+                  "Kuldiga municipalitety"
+                ],
+                "lat": 56.868113,
+                "lon": 21.927645,
+                "children": [
+                  {
+                    "name": "Alsungas novads",
+                    "type": "admin2",
+                    "lat": 56.97503,
+                    "lon": 21.55536,
+                    "children": []
+                  },
+                  {
+                    "name": "Ēdoles pagasts",
+                    "type": "admin2",
+                    "lat": 57.05136,
+                    "lon": 21.68317,
+                    "children": []
+                  },
+                  {
+                    "name": "Gudenieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.8867,
+                    "lon": 21.62013,
+                    "children": []
+                  },
+                  {
+                    "name": "Īvandes pagasts",
+                    "type": "admin2",
+                    "lat": 56.97006,
+                    "lon": 21.78364,
+                    "children": []
+                  },
+                  {
+                    "name": "Kabiles pagasts",
+                    "type": "admin2",
+                    "lat": 56.9602,
+                    "lon": 22.35337,
+                    "children": []
+                  },
+                  {
+                    "name": "Kuldīga",
+                    "type": "admin2",
+                    "lat": 56.96786,
+                    "lon": 21.96885,
+                    "children": [
+                      {
+                        "name": "Kuldīga",
+                        "type": "admin3",
+                        "lat": 56.97399,
+                        "lon": 21.95721
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kurmāles pagasts",
+                    "type": "admin2",
+                    "lat": 56.90973,
+                    "lon": 21.85427,
+                    "children": []
+                  },
+                  {
+                    "name": "Laidu pagasts",
+                    "type": "admin2",
+                    "lat": 56.75167,
+                    "lon": 21.84073,
+                    "children": []
+                  },
+                  {
+                    "name": "Nīkrāces pagasts",
+                    "type": "admin2",
+                    "lat": 56.56099,
+                    "lon": 21.92835,
+                    "children": []
+                  },
+                  {
+                    "name": "Padures pagasts",
+                    "type": "admin2",
+                    "lat": 57.0364,
+                    "lon": 21.86275,
+                    "children": []
+                  },
+                  {
+                    "name": "Pelču pagasts",
+                    "type": "admin2",
+                    "lat": 56.90594,
+                    "lon": 22.00047,
+                    "children": []
+                  },
+                  {
+                    "name": "Raņķu pagasts",
+                    "type": "admin2",
+                    "lat": 56.78118,
+                    "lon": 21.99326,
+                    "children": []
+                  },
+                  {
+                    "name": "Rendas pagasts",
+                    "type": "admin2",
+                    "lat": 57.05939,
+                    "lon": 22.21713,
+                    "children": []
+                  },
+                  {
+                    "name": "Rudbāržu pagasts",
+                    "type": "admin2",
+                    "lat": 56.65376,
+                    "lon": 21.87861,
+                    "children": []
+                  },
+                  {
+                    "name": "Rumbas pagasts",
+                    "type": "admin2",
+                    "lat": 56.99617,
+                    "lon": 22.05533,
+                    "children": []
+                  },
+                  {
+                    "name": "Skrunda",
+                    "type": "admin2",
+                    "lat": 56.67158,
+                    "lon": 22.00927,
+                    "children": [
+                      {
+                        "name": "Skrunda",
+                        "type": "admin3",
+                        "lat": 56.67749,
+                        "lon": 22.01649
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Skrundas pagasts",
+                    "type": "admin2",
+                    "lat": 56.69699,
+                    "lon": 22.06831,
+                    "children": []
+                  },
+                  {
+                    "name": "Snēpeles pagasts",
+                    "type": "admin2",
+                    "lat": 56.84335,
+                    "lon": 21.94691,
+                    "children": []
+                  },
+                  {
+                    "name": "Turlavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.82761,
+                    "lon": 21.74377,
+                    "children": []
+                  },
+                  {
+                    "name": "Vārmes pagasts",
+                    "type": "admin2",
+                    "lat": 56.8563,
+                    "lon": 22.18922,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Liepāja",
+                "type": "admin1",
+                "aliases": [
+                  "Gorad Liepaja",
+                  "Leipuoje",
+                  "Lepai",
+                  "Libau"
+                ],
+                "lat": 56.54034,
+                "lon": 21.03037,
+                "children": [
+                  {
+                    "name": "Liepāja",
+                    "type": "admin2",
+                    "lat": 56.54034,
+                    "lon": 21.03037,
+                    "children": [
+                      {
+                        "name": "Karosta",
+                        "type": "admin3",
+                        "lat": 56.55128,
+                        "lon": 21.01287
+                      },
+                      {
+                        "name": "Liepāja",
+                        "type": "admin3",
+                        "lat": 56.50474,
+                        "lon": 21.01085
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Limbažu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Limbazhi municipaliteti",
+                  "Limbazhi municipalitety",
+                  "Limbazhskiy Rayon",
+                  "Limbazi Bələdiyyəsi"
+                ],
+                "lat": 57.654846,
+                "lon": 24.680034,
+                "children": [
+                  {
+                    "name": "Ainaži",
+                    "type": "admin2",
+                    "lat": 57.8586,
+                    "lon": 24.3556,
+                    "children": [
+                      {
+                        "name": "Ainaži",
+                        "type": "admin3",
+                        "lat": 57.86348,
+                        "lon": 24.35853
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ainažu pagasts",
+                    "type": "admin2",
+                    "lat": 57.87076,
+                    "lon": 24.50208,
+                    "children": []
+                  },
+                  {
+                    "name": "Aloja",
+                    "type": "admin2",
+                    "lat": 57.76795,
+                    "lon": 24.87747,
+                    "children": [
+                      {
+                        "name": "Aloja",
+                        "type": "admin3",
+                        "lat": 57.76723,
+                        "lon": 24.87743
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Alojas pagasts",
+                    "type": "admin2",
+                    "lat": 57.77819,
+                    "lon": 24.83669,
+                    "children": []
+                  },
+                  {
+                    "name": "Braslavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.73848,
+                    "lon": 25.01919,
+                    "children": []
+                  },
+                  {
+                    "name": "Brīvzemnieku pagasts",
+                    "type": "admin2",
+                    "lat": 57.66994,
+                    "lon": 24.95215,
+                    "children": []
+                  },
+                  {
+                    "name": "Katvaru pagasts",
+                    "type": "admin2",
+                    "lat": 57.58681,
+                    "lon": 24.81068,
+                    "children": []
+                  },
+                  {
+                    "name": "Liepupes pagasts",
+                    "type": "admin2",
+                    "lat": 57.48446,
+                    "lon": 24.46169,
+                    "children": []
+                  },
+                  {
+                    "name": "Limbaži",
+                    "type": "admin2",
+                    "lat": 57.51099,
+                    "lon": 24.71676,
+                    "children": [
+                      {
+                        "name": "Limbaži",
+                        "type": "admin3",
+                        "lat": 57.51287,
+                        "lon": 24.71941
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Limbažu pagasts",
+                    "type": "admin2",
+                    "lat": 57.4655,
+                    "lon": 24.69149,
+                    "children": []
+                  },
+                  {
+                    "name": "Pāles pagasts",
+                    "type": "admin2",
+                    "lat": 57.69498,
+                    "lon": 24.71457,
+                    "children": []
+                  },
+                  {
+                    "name": "Salacgrīva",
+                    "type": "admin2",
+                    "lat": 57.75647,
+                    "lon": 24.36216,
+                    "children": [
+                      {
+                        "name": "Salacgrīva",
+                        "type": "admin3",
+                        "lat": 57.75312,
+                        "lon": 24.35895
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Salacgrīvas pagasts",
+                    "type": "admin2",
+                    "lat": 57.73022,
+                    "lon": 24.48039,
+                    "children": []
+                  },
+                  {
+                    "name": "Skultes pagasts",
+                    "type": "admin2",
+                    "lat": 57.37217,
+                    "lon": 24.50957,
+                    "children": []
+                  },
+                  {
+                    "name": "Staicele",
+                    "type": "admin2",
+                    "lat": 57.83556,
+                    "lon": 24.75875,
+                    "children": []
+                  },
+                  {
+                    "name": "Staiceles pagasts",
+                    "type": "admin2",
+                    "lat": 57.89022,
+                    "lon": 24.73167,
+                    "children": []
+                  },
+                  {
+                    "name": "Umurgas pagasts",
+                    "type": "admin2",
+                    "lat": 57.50397,
+                    "lon": 24.9121,
+                    "children": []
+                  },
+                  {
+                    "name": "Vidrižu pagasts",
+                    "type": "admin2",
+                    "lat": 57.31571,
+                    "lon": 24.64803,
+                    "children": []
+                  },
+                  {
+                    "name": "Viļķenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.6111,
+                    "lon": 24.5796,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Līvānu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Livani",
+                  "Bezirk Līvāni",
+                  "Bwrdeistref Livani",
+                  "Bwrdeistref Līvāni"
+                ],
+                "lat": 56.36416,
+                "lon": 26.330657,
+                "children": [
+                  {
+                    "name": "Jersikas pagasts",
+                    "type": "admin2",
+                    "lat": 56.27184,
+                    "lon": 26.24433,
+                    "children": []
+                  },
+                  {
+                    "name": "Līvāni",
+                    "type": "admin2",
+                    "lat": 56.35586,
+                    "lon": 26.17884,
+                    "children": [
+                      {
+                        "name": "Līvāni",
+                        "type": "admin3",
+                        "lat": 56.35431,
+                        "lon": 26.17579
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rožupes pagasts",
+                    "type": "admin2",
+                    "lat": 56.36671,
+                    "lon": 26.34096,
+                    "children": []
+                  },
+                  {
+                    "name": "Rudzātu pagasts",
+                    "type": "admin2",
+                    "lat": 56.43761,
+                    "lon": 26.47861,
+                    "children": []
+                  },
+                  {
+                    "name": "Sutru pagasts",
+                    "type": "admin2",
+                    "lat": 56.30612,
+                    "lon": 26.50228,
+                    "children": []
+                  },
+                  {
+                    "name": "Turku pagasts",
+                    "type": "admin2",
+                    "lat": 56.44682,
+                    "lon": 26.23892,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Ludzas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Ljudza municipaliteti",
+                  "Ljudza municipalitety",
+                  "Ludza Bələdiyyəsi",
+                  "Ludza Kabupaten"
+                ],
+                "lat": 56.519764,
+                "lon": 27.828084,
+                "children": [
+                  {
+                    "name": "Blontu pagasts",
+                    "type": "admin2",
+                    "lat": 56.64171,
+                    "lon": 27.85826,
+                    "children": []
+                  },
+                  {
+                    "name": "Briģu pagasts",
+                    "type": "admin2",
+                    "lat": 56.44915,
+                    "lon": 28.06754,
+                    "children": []
+                  },
+                  {
+                    "name": "Ciblas pagasts",
+                    "type": "admin2",
+                    "lat": 56.53402,
+                    "lon": 27.91839,
+                    "children": []
+                  },
+                  {
+                    "name": "Cirmas pagasts",
+                    "type": "admin2",
+                    "lat": 56.52112,
+                    "lon": 27.58717,
+                    "children": []
+                  },
+                  {
+                    "name": "Goliševas pagasts",
+                    "type": "admin2",
+                    "lat": 56.76187,
+                    "lon": 27.89136,
+                    "children": []
+                  },
+                  {
+                    "name": "Isnaudas pagasts",
+                    "type": "admin2",
+                    "lat": 56.48466,
+                    "lon": 27.81625,
+                    "children": []
+                  },
+                  {
+                    "name": "Istras pagasts",
+                    "type": "admin2",
+                    "lat": 56.24359,
+                    "lon": 27.96685,
+                    "children": []
+                  },
+                  {
+                    "name": "Kārsava",
+                    "type": "admin2",
+                    "lat": 56.78688,
+                    "lon": 27.68175,
+                    "children": [
+                      {
+                        "name": "Kārsava",
+                        "type": "admin3",
+                        "lat": 56.78405,
+                        "lon": 27.68829
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lauderu pagasts",
+                    "type": "admin2",
+                    "lat": 56.32198,
+                    "lon": 27.96276,
+                    "children": []
+                  },
+                  {
+                    "name": "Līdumnieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.57986,
+                    "lon": 28.01384,
+                    "children": []
+                  },
+                  {
+                    "name": "Ludza",
+                    "type": "admin2",
+                    "lat": 56.54484,
+                    "lon": 27.7117,
+                    "children": [
+                      {
+                        "name": "Ludza",
+                        "type": "admin3",
+                        "lat": 56.53373,
+                        "lon": 27.72155
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Malnavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.79818,
+                    "lon": 27.76651,
+                    "children": []
+                  },
+                  {
+                    "name": "Mērdzenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.69662,
+                    "lon": 27.75055,
+                    "children": []
+                  },
+                  {
+                    "name": "Mežvidu pagasts",
+                    "type": "admin2",
+                    "lat": 56.69995,
+                    "lon": 27.56455,
+                    "children": []
+                  },
+                  {
+                    "name": "Nirzas pagasts",
+                    "type": "admin2",
+                    "lat": 56.38982,
+                    "lon": 27.92056,
+                    "children": []
+                  },
+                  {
+                    "name": "Ņukšu pagasts",
+                    "type": "admin2",
+                    "lat": 56.43283,
+                    "lon": 27.70959,
+                    "children": []
+                  },
+                  {
+                    "name": "Pasienes pagasts",
+                    "type": "admin2",
+                    "lat": 56.23562,
+                    "lon": 28.14588,
+                    "children": []
+                  },
+                  {
+                    "name": "Pildas pagasts",
+                    "type": "admin2",
+                    "lat": 56.36668,
+                    "lon": 27.76749,
+                    "children": []
+                  },
+                  {
+                    "name": "Pureņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.46254,
+                    "lon": 27.63462,
+                    "children": []
+                  },
+                  {
+                    "name": "Pušmucovas pagasts",
+                    "type": "admin2",
+                    "lat": 56.64485,
+                    "lon": 27.7228,
+                    "children": []
+                  },
+                  {
+                    "name": "Rundēnu pagasts",
+                    "type": "admin2",
+                    "lat": 56.26304,
+                    "lon": 27.78287,
+                    "children": []
+                  },
+                  {
+                    "name": "Salnavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.81289,
+                    "lon": 27.52939,
+                    "children": []
+                  },
+                  {
+                    "name": "Zaļesjes pagasts",
+                    "type": "admin2",
+                    "lat": 56.35425,
+                    "lon": 28.10276,
+                    "children": []
+                  },
+                  {
+                    "name": "Zilupe",
+                    "type": "admin2",
+                    "lat": 56.39074,
+                    "lon": 28.11617,
+                    "children": [
+                      {
+                        "name": "Zilupe",
+                        "type": "admin3",
+                        "lat": 56.38616,
+                        "lon": 28.12165
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Zvirgzdenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.57641,
+                    "lon": 27.71248,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Madonas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Madonas novads"
+                ],
+                "lat": 56.860135,
+                "lon": 26.204729,
+                "children": [
+                  {
+                    "name": "Aronas pagasts",
+                    "type": "admin2",
+                    "lat": 56.90622,
+                    "lon": 26.09668,
+                    "children": []
+                  },
+                  {
+                    "name": "Barkavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.73201,
+                    "lon": 26.59275,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērzaunes pagasts",
+                    "type": "admin2",
+                    "lat": 56.83016,
+                    "lon": 25.98727,
+                    "children": []
+                  },
+                  {
+                    "name": "Cesvaine",
+                    "type": "admin2",
+                    "lat": 56.96513,
+                    "lon": 26.31127,
+                    "children": [
+                      {
+                        "name": "Cesvaine",
+                        "type": "admin3",
+                        "lat": 56.96754,
+                        "lon": 26.30764
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cesvaines pagasts",
+                    "type": "admin2",
+                    "lat": 57.00904,
+                    "lon": 26.27641,
+                    "children": []
+                  },
+                  {
+                    "name": "Dzelzavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.99374,
+                    "lon": 26.47403,
+                    "children": []
+                  },
+                  {
+                    "name": "Ērgļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.91866,
+                    "lon": 25.60756,
+                    "children": [
+                      {
+                        "name": "Ērgļi",
+                        "type": "admin3",
+                        "lat": 56.89752,
+                        "lon": 25.63668
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Indrānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.9225,
+                    "lon": 26.67,
+                    "children": []
+                  },
+                  {
+                    "name": "Jumurdas pagasts",
+                    "type": "admin2",
+                    "lat": 56.93994,
+                    "lon": 25.7761,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalsnavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.73111,
+                    "lon": 25.93796,
+                    "children": []
+                  },
+                  {
+                    "name": "Ļaudonas pagasts",
+                    "type": "admin2",
+                    "lat": 56.692,
+                    "lon": 26.16577,
+                    "children": []
+                  },
+                  {
+                    "name": "Lazdonas pagasts",
+                    "type": "admin2",
+                    "lat": 56.82441,
+                    "lon": 26.19215,
+                    "children": []
+                  },
+                  {
+                    "name": "Liezēres pagasts",
+                    "type": "admin2",
+                    "lat": 57.01881,
+                    "lon": 26.03577,
+                    "children": [
+                      {
+                        "name": "Liezēre",
+                        "type": "admin3",
+                        "lat": 57.01823,
+                        "lon": 26.06395
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lubāna",
+                    "type": "admin2",
+                    "lat": 56.89846,
+                    "lon": 26.72028,
+                    "children": [
+                      {
+                        "name": "Lubāna",
+                        "type": "admin3",
+                        "lat": 56.90425,
+                        "lon": 26.71606
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Madona",
+                    "type": "admin2",
+                    "lat": 56.85458,
+                    "lon": 26.22387,
+                    "children": [
+                      {
+                        "name": "Madona",
+                        "type": "admin3",
+                        "lat": 56.85329,
+                        "lon": 26.21698
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mārcienas pagasts",
+                    "type": "admin2",
+                    "lat": 56.77373,
+                    "lon": 26.10154,
+                    "children": []
+                  },
+                  {
+                    "name": "Mētrienas pagasts",
+                    "type": "admin2",
+                    "lat": 56.6857,
+                    "lon": 26.35603,
+                    "children": []
+                  },
+                  {
+                    "name": "Ošupes pagasts",
+                    "type": "admin2",
+                    "lat": 56.81609,
+                    "lon": 26.76969,
+                    "children": []
+                  },
+                  {
+                    "name": "Praulienas pagasts",
+                    "type": "admin2",
+                    "lat": 56.80941,
+                    "lon": 26.36949,
+                    "children": []
+                  },
+                  {
+                    "name": "Sarkaņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.90591,
+                    "lon": 26.35701,
+                    "children": []
+                  },
+                  {
+                    "name": "Sausnējas pagasts",
+                    "type": "admin2",
+                    "lat": 56.82914,
+                    "lon": 25.6334,
+                    "children": []
+                  },
+                  {
+                    "name": "Vestienas pagasts",
+                    "type": "admin2",
+                    "lat": 56.86622,
+                    "lon": 25.849,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Mārupes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Marupe",
+                  "Marupes Novads",
+                  "Marure",
+                  "Mārupe"
+                ],
+                "lat": 56.899553,
+                "lon": 23.809427,
+                "children": [
+                  {
+                    "name": "Babītes pagasts",
+                    "type": "admin2",
+                    "lat": 56.89408,
+                    "lon": 23.81675,
+                    "children": [
+                      {
+                        "name": "Piņķi",
+                        "type": "admin3",
+                        "lat": 56.94189,
+                        "lon": 23.91365
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mārupes novads",
+                    "type": "admin2",
+                    "lat": 56.88647,
+                    "lon": 23.95908,
+                    "children": [
+                      {
+                        "name": "Jaunmārupe",
+                        "type": "admin3",
+                        "lat": 56.87459,
+                        "lon": 23.93869
+                      },
+                      {
+                        "name": "Mārupe",
+                        "type": "admin3",
+                        "lat": 56.90544,
+                        "lon": 24.05113
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Salas pagasts",
+                    "type": "admin2",
+                    "lat": 56.91811,
+                    "lon": 23.65245,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Ogres novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Ogre",
+                  "Gmina Ogre",
+                  "Municipi d'Ogre",
+                  "Municipio de Ogre"
+                ],
+                "lat": 56.794941,
+                "lon": 24.933477,
+                "children": [
+                  {
+                    "name": "Birzgales pagasts",
+                    "type": "admin2",
+                    "lat": 56.62642,
+                    "lon": 24.77918,
+                    "children": []
+                  },
+                  {
+                    "name": "Ikšķile",
+                    "type": "admin2",
+                    "lat": 56.83296,
+                    "lon": 24.50293,
+                    "children": [
+                      {
+                        "name": "Ikšķile",
+                        "type": "admin3",
+                        "lat": 56.83399,
+                        "lon": 24.49679
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jumpravas pagasts",
+                    "type": "admin2",
+                    "lat": 56.67194,
+                    "lon": 24.97676,
+                    "children": []
+                  },
+                  {
+                    "name": "Ķegums",
+                    "type": "admin2",
+                    "lat": 56.74079,
+                    "lon": 24.71837,
+                    "children": [
+                      {
+                        "name": "Ķegums",
+                        "type": "admin3",
+                        "lat": 56.7451,
+                        "lon": 24.72439
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ķeipenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.90619,
+                    "lon": 25.14104,
+                    "children": []
+                  },
+                  {
+                    "name": "Krapes pagasts",
+                    "type": "admin2",
+                    "lat": 56.73751,
+                    "lon": 25.19718,
+                    "children": []
+                  },
+                  {
+                    "name": "Lauberes pagasts",
+                    "type": "admin2",
+                    "lat": 56.83746,
+                    "lon": 25.01419,
+                    "children": []
+                  },
+                  {
+                    "name": "Lēdmanes pagasts",
+                    "type": "admin2",
+                    "lat": 56.76686,
+                    "lon": 24.988,
+                    "children": []
+                  },
+                  {
+                    "name": "Lielvārde",
+                    "type": "admin2",
+                    "lat": 56.71907,
+                    "lon": 24.81072,
+                    "children": [
+                      {
+                        "name": "Lielvārde",
+                        "type": "admin3",
+                        "lat": 56.72066,
+                        "lon": 24.80743
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lielvārdes pagasts",
+                    "type": "admin2",
+                    "lat": 56.71906,
+                    "lon": 24.89509,
+                    "children": []
+                  },
+                  {
+                    "name": "Madlienas pagasts",
+                    "type": "admin2",
+                    "lat": 56.81341,
+                    "lon": 25.19492,
+                    "children": []
+                  },
+                  {
+                    "name": "Mazozolu pagasts",
+                    "type": "admin2",
+                    "lat": 56.91856,
+                    "lon": 25.46093,
+                    "children": []
+                  },
+                  {
+                    "name": "Meņģeles pagasts",
+                    "type": "admin2",
+                    "lat": 56.81156,
+                    "lon": 25.4089,
+                    "children": []
+                  },
+                  {
+                    "name": "Ogre",
+                    "type": "admin2",
+                    "lat": 56.8129,
+                    "lon": 24.61782,
+                    "children": [
+                      {
+                        "name": "Ogre",
+                        "type": "admin3",
+                        "lat": 56.8162,
+                        "lon": 24.61401
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ogresgala pagasts",
+                    "type": "admin2",
+                    "lat": 56.80707,
+                    "lon": 24.72388,
+                    "children": []
+                  },
+                  {
+                    "name": "Rembates pagasts",
+                    "type": "admin2",
+                    "lat": 56.78007,
+                    "lon": 24.82572,
+                    "children": []
+                  },
+                  {
+                    "name": "Suntažu pagasts",
+                    "type": "admin2",
+                    "lat": 56.89066,
+                    "lon": 24.88473,
+                    "children": []
+                  },
+                  {
+                    "name": "Taurupes pagasts",
+                    "type": "admin2",
+                    "lat": 56.90305,
+                    "lon": 25.31905,
+                    "children": []
+                  },
+                  {
+                    "name": "Tīnūžu pagasts",
+                    "type": "admin2",
+                    "lat": 56.8624,
+                    "lon": 24.58799,
+                    "children": []
+                  },
+                  {
+                    "name": "Tomes pagasts",
+                    "type": "admin2",
+                    "lat": 56.74088,
+                    "lon": 24.62213,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Olaines novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Olaine",
+                  "Bwrdeistref Olaine",
+                  "Comune di Olaine",
+                  "GJo thi tu tri Olaine"
+                ],
+                "lat": 56.78357,
+                "lon": 23.95604,
+                "children": [
+                  {
+                    "name": "Olaine",
+                    "type": "admin2",
+                    "lat": 56.79041,
+                    "lon": 23.92568,
+                    "children": [
+                      {
+                        "name": "Olaine",
+                        "type": "admin3",
+                        "lat": 56.79583,
+                        "lon": 23.93726
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Olaines pagasts",
+                    "type": "admin2",
+                    "lat": 56.77673,
+                    "lon": 23.9864,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Preiļu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Preilu novads",
+                  "Preiļu novads"
+                ],
+                "lat": 56.297273,
+                "lon": 26.729359,
+                "children": [
+                  {
+                    "name": "Aglonas pagasts",
+                    "type": "admin2",
+                    "lat": 56.11862,
+                    "lon": 27.00738,
+                    "children": []
+                  },
+                  {
+                    "name": "Aizkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 56.20509,
+                    "lon": 26.75387,
+                    "children": []
+                  },
+                  {
+                    "name": "Galēnu pagasts",
+                    "type": "admin2",
+                    "lat": 56.45949,
+                    "lon": 26.8474,
+                    "children": []
+                  },
+                  {
+                    "name": "Pelēču pagasts",
+                    "type": "admin2",
+                    "lat": 56.14698,
+                    "lon": 26.75187,
+                    "children": []
+                  },
+                  {
+                    "name": "Preiļi",
+                    "type": "admin2",
+                    "lat": 56.29218,
+                    "lon": 26.72144,
+                    "children": [
+                      {
+                        "name": "Preiļi",
+                        "type": "admin3",
+                        "lat": 56.29444,
+                        "lon": 26.72459
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Preiļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.28559,
+                    "lon": 26.69328,
+                    "children": []
+                  },
+                  {
+                    "name": "Riebiņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.34696,
+                    "lon": 26.76109,
+                    "children": []
+                  },
+                  {
+                    "name": "Rožkalnu pagasts",
+                    "type": "admin2",
+                    "lat": 56.2057,
+                    "lon": 26.43671,
+                    "children": []
+                  },
+                  {
+                    "name": "Rušonas pagasts",
+                    "type": "admin2",
+                    "lat": 56.22867,
+                    "lon": 26.91526,
+                    "children": []
+                  },
+                  {
+                    "name": "Saunas pagasts",
+                    "type": "admin2",
+                    "lat": 56.3912,
+                    "lon": 26.61747,
+                    "children": []
+                  },
+                  {
+                    "name": "Silajāņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.35455,
+                    "lon": 26.90692,
+                    "children": []
+                  },
+                  {
+                    "name": "Sīļukalna pagasts",
+                    "type": "admin2",
+                    "lat": 56.5062,
+                    "lon": 26.68185,
+                    "children": []
+                  },
+                  {
+                    "name": "Stabulnieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.44273,
+                    "lon": 26.74385,
+                    "children": []
+                  },
+                  {
+                    "name": "Upmalas pagasts",
+                    "type": "admin2",
+                    "lat": 56.24245,
+                    "lon": 26.48136,
+                    "children": []
+                  },
+                  {
+                    "name": "Vārkavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.23269,
+                    "lon": 26.62064,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Rēzekne",
+                "type": "admin1",
+                "aliases": [
+                  "Rezekne",
+                  "Rēzekne"
+                ],
+                "lat": 56.51039,
+                "lon": 27.3385,
+                "children": [
+                  {
+                    "name": "Rēzekne",
+                    "type": "admin2",
+                    "lat": 56.51039,
+                    "lon": 27.3385,
+                    "children": [
+                      {
+                        "name": "Rēzekne",
+                        "type": "admin3",
+                        "lat": 56.51028,
+                        "lon": 27.34
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Rēzeknes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Rezekne Bələdiyyəsi",
+                  "Rezekne Kabupaten",
+                  "Rezekne Municipality",
+                  "Rezekne municipaliteti"
+                ],
+                "lat": 56.515242,
+                "lon": 27.216411,
+                "children": [
+                  {
+                    "name": "Audriņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.58801,
+                    "lon": 27.23383,
+                    "children": []
+                  },
+                  {
+                    "name": "Bērzgales pagasts",
+                    "type": "admin2",
+                    "lat": 56.62739,
+                    "lon": 27.4913,
+                    "children": []
+                  },
+                  {
+                    "name": "Čornajas pagasts",
+                    "type": "admin2",
+                    "lat": 56.39609,
+                    "lon": 27.42865,
+                    "children": []
+                  },
+                  {
+                    "name": "Dekšāres pagasts",
+                    "type": "admin2",
+                    "lat": 56.61258,
+                    "lon": 26.82243,
+                    "children": []
+                  },
+                  {
+                    "name": "Dricānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.66279,
+                    "lon": 27.19769,
+                    "children": []
+                  },
+                  {
+                    "name": "Feimaņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.27299,
+                    "lon": 27.0512,
+                    "children": []
+                  },
+                  {
+                    "name": "Gaigalavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.75687,
+                    "lon": 27.07054,
+                    "children": []
+                  },
+                  {
+                    "name": "Griškānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.4875,
+                    "lon": 27.42319,
+                    "children": []
+                  },
+                  {
+                    "name": "Ilzeskalna pagasts",
+                    "type": "admin2",
+                    "lat": 56.64685,
+                    "lon": 27.37793,
+                    "children": []
+                  },
+                  {
+                    "name": "Kantinieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.58437,
+                    "lon": 27.12427,
+                    "children": []
+                  },
+                  {
+                    "name": "Kaunatas pagasts",
+                    "type": "admin2",
+                    "lat": 56.30782,
+                    "lon": 27.59032,
+                    "children": []
+                  },
+                  {
+                    "name": "Lendžu pagasts",
+                    "type": "admin2",
+                    "lat": 56.5695,
+                    "lon": 27.49757,
+                    "children": []
+                  },
+                  {
+                    "name": "Lūznavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.35988,
+                    "lon": 27.27863,
+                    "children": []
+                  },
+                  {
+                    "name": "Mākoņkalna pagasts",
+                    "type": "admin2",
+                    "lat": 56.26813,
+                    "lon": 27.38365,
+                    "children": []
+                  },
+                  {
+                    "name": "Maltas pagasts",
+                    "type": "admin2",
+                    "lat": 56.31502,
+                    "lon": 27.18747,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.72218,
+                    "lon": 26.89925,
+                    "children": []
+                  },
+                  {
+                    "name": "Nautrēnu pagasts",
+                    "type": "admin2",
+                    "lat": 56.73817,
+                    "lon": 27.36877,
+                    "children": []
+                  },
+                  {
+                    "name": "Ozolaines pagasts",
+                    "type": "admin2",
+                    "lat": 56.43518,
+                    "lon": 27.2501,
+                    "children": []
+                  },
+                  {
+                    "name": "Ozolmuižas pagasts",
+                    "type": "admin2",
+                    "lat": 56.49903,
+                    "lon": 27.25013,
+                    "children": []
+                  },
+                  {
+                    "name": "Pušas pagasts",
+                    "type": "admin2",
+                    "lat": 56.23195,
+                    "lon": 27.20445,
+                    "children": []
+                  },
+                  {
+                    "name": "Rikavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.63485,
+                    "lon": 27.0034,
+                    "children": []
+                  },
+                  {
+                    "name": "Sakstagala pagasts",
+                    "type": "admin2",
+                    "lat": 56.52013,
+                    "lon": 27.11456,
+                    "children": []
+                  },
+                  {
+                    "name": "Silmalas pagasts",
+                    "type": "admin2",
+                    "lat": 56.41146,
+                    "lon": 27.05283,
+                    "children": []
+                  },
+                  {
+                    "name": "Sokolku pagasts",
+                    "type": "admin2",
+                    "lat": 56.50462,
+                    "lon": 26.99933,
+                    "children": []
+                  },
+                  {
+                    "name": "Stoļerovas pagasts",
+                    "type": "admin2",
+                    "lat": 56.41138,
+                    "lon": 27.56915,
+                    "children": []
+                  },
+                  {
+                    "name": "Stružānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.71445,
+                    "lon": 27.20516,
+                    "children": []
+                  },
+                  {
+                    "name": "Vērēmu pagasts",
+                    "type": "admin2",
+                    "lat": 56.56409,
+                    "lon": 27.36301,
+                    "children": []
+                  },
+                  {
+                    "name": "Viļāni",
+                    "type": "admin2",
+                    "lat": 56.54948,
+                    "lon": 26.92676,
+                    "children": [
+                      {
+                        "name": "Viļāni",
+                        "type": "admin3",
+                        "lat": 56.55253,
+                        "lon": 26.92449
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viļānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.54927,
+                    "lon": 26.91036,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Rīga",
+                "type": "admin1",
+                "aliases": [
+                  "Gorod Riga",
+                  "Riga",
+                  "Riia",
+                  "Riqa"
+                ],
+                "lat": 56.97808,
+                "lon": 24.12271,
+                "children": [
+                  {
+                    "name": "Rīga",
+                    "type": "admin2",
+                    "lat": 56.97808,
+                    "lon": 24.12271,
+                    "children": [
+                      {
+                        "name": "Berģi",
+                        "type": "admin3",
+                        "lat": 56.98639,
+                        "lon": 24.29917
+                      },
+                      {
+                        "name": "Bolderaja",
+                        "type": "admin3",
+                        "lat": 57.03132,
+                        "lon": 24.05571
+                      },
+                      {
+                        "name": "Čiekurkalns",
+                        "type": "admin3",
+                        "lat": 56.98441,
+                        "lon": 24.17255
+                      },
+                      {
+                        "name": "Dārzciems",
+                        "type": "admin3",
+                        "lat": 56.94563,
+                        "lon": 24.17459
+                      },
+                      {
+                        "name": "Daugavgrīva",
+                        "type": "admin3",
+                        "lat": 57.04315,
+                        "lon": 24.03613
+                      },
+                      {
+                        "name": "Jaunciems",
+                        "type": "admin3",
+                        "lat": 57.0391,
+                        "lon": 24.17413
+                      },
+                      {
+                        "name": "Mežaparks",
+                        "type": "admin3",
+                        "lat": 57.00008,
+                        "lon": 24.15997
+                      },
+                      {
+                        "name": "Mežciems",
+                        "type": "admin3",
+                        "lat": 56.96906,
+                        "lon": 24.23427
+                      },
+                      {
+                        "name": "Riga",
+                        "type": "admin3",
+                        "lat": 56.946,
+                        "lon": 24.10589
+                      },
+                      {
+                        "name": "Vecrīga",
+                        "type": "admin3",
+                        "lat": 56.94966,
+                        "lon": 24.10418
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ropažu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Ropazi",
+                  "Bezirk Ropaži",
+                  "Bwrdeistref Ropazi",
+                  "Bwrdeistref Ropaži"
+                ],
+                "lat": 57.004505,
+                "lon": 24.456075,
+                "children": [
+                  {
+                    "name": "Garkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.03066,
+                    "lon": 24.38152,
+                    "children": []
+                  },
+                  {
+                    "name": "Ropažu pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ropazi Parish",
+                      "Ropazu pagasts",
+                      "Ropaži Parish"
+                    ],
+                    "lat": 56.96631,
+                    "lon": 24.59688,
+                    "children": []
+                  },
+                  {
+                    "name": "Stopiņu pagasts",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stopini Parish",
+                      "Stopinu pagasts",
+                      "Stopiņi Parish"
+                    ],
+                    "lat": 56.93014,
+                    "lon": 24.3177,
+                    "children": [
+                      {
+                        "name": "Ulbroka",
+                        "type": "admin3",
+                        "lat": 56.9363,
+                        "lon": 24.30387
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vangaži",
+                    "type": "admin2",
+                    "lat": 57.09091,
+                    "lon": 24.5282,
+                    "children": [
+                      {
+                        "name": "Vangaži",
+                        "type": "admin3",
+                        "lat": 57.09358,
+                        "lon": 24.54468
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Salaspils novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Salaspils",
+                  "Bwrdeistref Salaspils",
+                  "GJo thi tu tri Salaspils",
+                  "Gmina Salaspils"
+                ],
+                "lat": 56.87969,
+                "lon": 24.333345,
+                "children": [
+                  {
+                    "name": "Salaspils",
+                    "type": "admin2",
+                    "lat": 56.86613,
+                    "lon": 24.35669,
+                    "children": [
+                      {
+                        "name": "Salaspils",
+                        "type": "admin3",
+                        "lat": 56.86014,
+                        "lon": 24.36544
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Salaspils pagasts",
+                    "type": "admin2",
+                    "lat": 56.89325,
+                    "lon": 24.31,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Saldus novads",
+                "type": "admin1",
+                "aliases": [
+                  "Saldus Rajons",
+                  "Saldus novads",
+                  "Saldusskiy Rayon"
+                ],
+                "lat": 56.613546,
+                "lon": 22.457898,
+                "children": [
+                  {
+                    "name": "Blīdenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.64321,
+                    "lon": 22.74573,
+                    "children": []
+                  },
+                  {
+                    "name": "Brocēni",
+                    "type": "admin2",
+                    "lat": 56.67818,
+                    "lon": 22.57634,
+                    "children": []
+                  },
+                  {
+                    "name": "Cieceres pagasts",
+                    "type": "admin2",
+                    "lat": 56.67887,
+                    "lon": 22.60162,
+                    "children": [
+                      {
+                        "name": "Brocēni",
+                        "type": "admin3",
+                        "lat": 56.6789,
+                        "lon": 22.56945
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ezeres pagasts",
+                    "type": "admin2",
+                    "lat": 56.43236,
+                    "lon": 22.33708,
+                    "children": []
+                  },
+                  {
+                    "name": "Gaiķu pagasts",
+                    "type": "admin2",
+                    "lat": 56.79171,
+                    "lon": 22.53729,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunauces pagasts",
+                    "type": "admin2",
+                    "lat": 56.45692,
+                    "lon": 22.66043,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunlutriņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.80393,
+                    "lon": 22.34975,
+                    "children": []
+                  },
+                  {
+                    "name": "Kursīšu pagasts",
+                    "type": "admin2",
+                    "lat": 56.51435,
+                    "lon": 22.38939,
+                    "children": []
+                  },
+                  {
+                    "name": "Lutriņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.73815,
+                    "lon": 22.33481,
+                    "children": []
+                  },
+                  {
+                    "name": "Nīgrandes pagasts",
+                    "type": "admin2",
+                    "lat": 56.45883,
+                    "lon": 22.04751,
+                    "children": []
+                  },
+                  {
+                    "name": "Novadnieku pagasts",
+                    "type": "admin2",
+                    "lat": 56.6103,
+                    "lon": 22.40819,
+                    "children": []
+                  },
+                  {
+                    "name": "Pampāļu pagasts",
+                    "type": "admin2",
+                    "lat": 56.55996,
+                    "lon": 22.1591,
+                    "children": []
+                  },
+                  {
+                    "name": "Remtes pagasts",
+                    "type": "admin2",
+                    "lat": 56.75052,
+                    "lon": 22.70911,
+                    "children": []
+                  },
+                  {
+                    "name": "Rubas pagasts",
+                    "type": "admin2",
+                    "lat": 56.41488,
+                    "lon": 22.5677,
+                    "children": []
+                  },
+                  {
+                    "name": "Saldus",
+                    "type": "admin2",
+                    "lat": 56.66442,
+                    "lon": 22.49038,
+                    "children": [
+                      {
+                        "name": "Saldus",
+                        "type": "admin3",
+                        "lat": 56.66363,
+                        "lon": 22.48807
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Saldus pagasts",
+                    "type": "admin2",
+                    "lat": 56.70583,
+                    "lon": 22.44916,
+                    "children": []
+                  },
+                  {
+                    "name": "Šķēdes pagasts",
+                    "type": "admin2",
+                    "lat": 56.88096,
+                    "lon": 22.40977,
+                    "children": []
+                  },
+                  {
+                    "name": "Vadakstes pagasts",
+                    "type": "admin2",
+                    "lat": 56.39066,
+                    "lon": 22.77974,
+                    "children": []
+                  },
+                  {
+                    "name": "Zaņas pagasts",
+                    "type": "admin2",
+                    "lat": 56.48347,
+                    "lon": 22.2071,
+                    "children": []
+                  },
+                  {
+                    "name": "Zirņu pagasts",
+                    "type": "admin2",
+                    "lat": 56.67368,
+                    "lon": 22.25185,
+                    "children": []
+                  },
+                  {
+                    "name": "Zvārdes pagasts",
+                    "type": "admin2",
+                    "lat": 56.55328,
+                    "lon": 22.60381,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Saulkrastu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Municipalite de Saulkrasti",
+                  "Municipalité de Saulkrasti",
+                  "Municipio de Saulkrasti",
+                  "Município de Saulkrasti"
+                ],
+                "lat": 57.242177,
+                "lon": 24.468783,
+                "children": [
+                  {
+                    "name": "Saulkrasti",
+                    "type": "admin2",
+                    "lat": 57.25844,
+                    "lon": 24.41122,
+                    "children": [
+                      {
+                        "name": "Saulkrasti",
+                        "type": "admin3",
+                        "lat": 57.26224,
+                        "lon": 24.41471
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Saulkrastu pagasts",
+                    "type": "admin2",
+                    "lat": 57.256,
+                    "lon": 24.448,
+                    "children": []
+                  },
+                  {
+                    "name": "Sējas novads",
+                    "type": "admin2",
+                    "lat": 57.21209,
+                    "lon": 24.54713,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Siguldas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Municipalite de Sigulda",
+                  "Municipalité de Sigulda",
+                  "Municipio de Sigulda",
+                  "Município de Sigulda"
+                ],
+                "lat": 57.13241,
+                "lon": 24.852255,
+                "children": [
+                  {
+                    "name": "Allažu pagasts",
+                    "type": "admin2",
+                    "lat": 57.04853,
+                    "lon": 24.78748,
+                    "children": []
+                  },
+                  {
+                    "name": "Inčukalna pagasts",
+                    "type": "admin2",
+                    "lat": 57.10285,
+                    "lon": 24.65706,
+                    "children": [
+                      {
+                        "name": "Inčukalns",
+                        "type": "admin3",
+                        "lat": 57.09867,
+                        "lon": 24.6863
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Krimuldas pagasts",
+                    "type": "admin2",
+                    "lat": 57.21323,
+                    "lon": 24.79456,
+                    "children": []
+                  },
+                  {
+                    "name": "Lēdurgas pagasts",
+                    "type": "admin2",
+                    "lat": 57.32215,
+                    "lon": 24.77997,
+                    "children": []
+                  },
+                  {
+                    "name": "Mālpils novads",
+                    "type": "admin2",
+                    "lat": 56.9938,
+                    "lon": 24.97257,
+                    "children": []
+                  },
+                  {
+                    "name": "Mores pagasts",
+                    "type": "admin2",
+                    "lat": 57.07517,
+                    "lon": 25.06196,
+                    "children": []
+                  },
+                  {
+                    "name": "Sigulda",
+                    "type": "admin2",
+                    "lat": 57.16026,
+                    "lon": 24.84469,
+                    "children": [
+                      {
+                        "name": "Sigulda",
+                        "type": "admin3",
+                        "lat": 57.15375,
+                        "lon": 24.85953
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Siguldas pagasts",
+                    "type": "admin2",
+                    "lat": 57.14329,
+                    "lon": 24.91975,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Smiltenes novads",
+                "type": "admin1",
+                "aliases": [
+                  "Municipalite de Smiltene",
+                  "Municipalité de Smiltene",
+                  "Municipio de Smiltene",
+                  "Município de Smiltene"
+                ],
+                "lat": 57.419496,
+                "lon": 26.138242,
+                "children": [
+                  {
+                    "name": "Ape",
+                    "type": "admin2",
+                    "lat": 57.53949,
+                    "lon": 26.70201,
+                    "children": []
+                  },
+                  {
+                    "name": "Apes pagasts",
+                    "type": "admin2",
+                    "lat": 57.52316,
+                    "lon": 26.72352,
+                    "children": []
+                  },
+                  {
+                    "name": "Bilskas pagasts",
+                    "type": "admin2",
+                    "lat": 57.48592,
+                    "lon": 26.05945,
+                    "children": []
+                  },
+                  {
+                    "name": "Blomes pagasts",
+                    "type": "admin2",
+                    "lat": 57.44691,
+                    "lon": 25.74018,
+                    "children": []
+                  },
+                  {
+                    "name": "Brantu pagasts",
+                    "type": "admin2",
+                    "lat": 57.37648,
+                    "lon": 25.79825,
+                    "children": []
+                  },
+                  {
+                    "name": "Drustu pagasts",
+                    "type": "admin2",
+                    "lat": 57.24312,
+                    "lon": 25.8922,
+                    "children": []
+                  },
+                  {
+                    "name": "Gaujienas pagasts",
+                    "type": "admin2",
+                    "lat": 57.51358,
+                    "lon": 26.4223,
+                    "children": []
+                  },
+                  {
+                    "name": "Grundzāles pagasts",
+                    "type": "admin2",
+                    "lat": 57.47222,
+                    "lon": 26.23241,
+                    "children": []
+                  },
+                  {
+                    "name": "Launkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.34426,
+                    "lon": 25.93173,
+                    "children": []
+                  },
+                  {
+                    "name": "Palsmanes pagasts",
+                    "type": "admin2",
+                    "lat": 57.38254,
+                    "lon": 26.16683,
+                    "children": []
+                  },
+                  {
+                    "name": "Raunas pagasts",
+                    "type": "admin2",
+                    "lat": 57.34204,
+                    "lon": 25.6411,
+                    "children": []
+                  },
+                  {
+                    "name": "Smiltene",
+                    "type": "admin2",
+                    "lat": 57.42073,
+                    "lon": 25.90397,
+                    "children": [
+                      {
+                        "name": "Smiltene",
+                        "type": "admin3",
+                        "lat": 57.42444,
+                        "lon": 25.90164
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Smiltenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.45787,
+                    "lon": 25.87614,
+                    "children": []
+                  },
+                  {
+                    "name": "Trapenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.45086,
+                    "lon": 26.59088,
+                    "children": []
+                  },
+                  {
+                    "name": "Variņu pagasts",
+                    "type": "admin2",
+                    "lat": 57.31623,
+                    "lon": 26.15574,
+                    "children": []
+                  },
+                  {
+                    "name": "Virešu pagasts",
+                    "type": "admin2",
+                    "lat": 57.39652,
+                    "lon": 26.37516,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Talsu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Talsinskiy Rayon",
+                  "Talsu novads"
+                ],
+                "lat": 57.29534,
+                "lon": 22.644808,
+                "children": [
+                  {
+                    "name": "Abavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.06295,
+                    "lon": 22.515,
+                    "children": []
+                  },
+                  {
+                    "name": "Ārlavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.38197,
+                    "lon": 22.67522,
+                    "children": []
+                  },
+                  {
+                    "name": "Balgales pagasts",
+                    "type": "admin2",
+                    "lat": 57.18241,
+                    "lon": 22.87518,
+                    "children": []
+                  },
+                  {
+                    "name": "Dundagas pagasts",
+                    "type": "admin2",
+                    "lat": 57.53975,
+                    "lon": 22.38597,
+                    "children": [
+                      {
+                        "name": "Dundaga",
+                        "type": "admin3",
+                        "lat": 57.50498,
+                        "lon": 22.35041
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ģibuļu pagasts",
+                    "type": "admin2",
+                    "lat": 57.20794,
+                    "lon": 22.37697,
+                    "children": []
+                  },
+                  {
+                    "name": "Īves pagasts",
+                    "type": "admin2",
+                    "lat": 57.43648,
+                    "lon": 22.52049,
+                    "children": []
+                  },
+                  {
+                    "name": "Kolkas pagasts",
+                    "type": "admin2",
+                    "lat": 57.69606,
+                    "lon": 22.44505,
+                    "children": []
+                  },
+                  {
+                    "name": "Ķūļciema pagasts",
+                    "type": "admin2",
+                    "lat": 57.24931,
+                    "lon": 23.01518,
+                    "children": []
+                  },
+                  {
+                    "name": "Laidzes pagasts",
+                    "type": "admin2",
+                    "lat": 57.29342,
+                    "lon": 22.63844,
+                    "children": []
+                  },
+                  {
+                    "name": "Laucienes pagasts",
+                    "type": "admin2",
+                    "lat": 57.2437,
+                    "lon": 22.82938,
+                    "children": []
+                  },
+                  {
+                    "name": "Lībagu pagasts",
+                    "type": "admin2",
+                    "lat": 57.17616,
+                    "lon": 22.56355,
+                    "children": []
+                  },
+                  {
+                    "name": "Lubes pagasts",
+                    "type": "admin2",
+                    "lat": 57.45003,
+                    "lon": 22.64174,
+                    "children": []
+                  },
+                  {
+                    "name": "Mērsraga novads",
+                    "type": "admin2",
+                    "lat": 57.32509,
+                    "lon": 23.04031,
+                    "children": [
+                      {
+                        "name": "Mērsrags",
+                        "type": "admin3",
+                        "lat": 57.33535,
+                        "lon": 23.12455
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rojas novads",
+                    "type": "admin2",
+                    "lat": 57.49079,
+                    "lon": 22.75311,
+                    "children": [
+                      {
+                        "name": "Roja",
+                        "type": "admin3",
+                        "lat": 57.50146,
+                        "lon": 22.80881
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sabile",
+                    "type": "admin2",
+                    "lat": 57.04756,
+                    "lon": 22.57147,
+                    "children": [
+                      {
+                        "name": "Sabile",
+                        "type": "admin3",
+                        "lat": 57.04577,
+                        "lon": 22.57261
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Stende",
+                    "type": "admin2",
+                    "lat": 57.14242,
+                    "lon": 22.53836,
+                    "children": [
+                      {
+                        "name": "Stende",
+                        "type": "admin3",
+                        "lat": 57.14497,
+                        "lon": 22.53482
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Strazdes pagasts",
+                    "type": "admin2",
+                    "lat": 57.13973,
+                    "lon": 22.7567,
+                    "children": []
+                  },
+                  {
+                    "name": "Talsi",
+                    "type": "admin2",
+                    "lat": 57.24516,
+                    "lon": 22.58604,
+                    "children": [
+                      {
+                        "name": "Talsi",
+                        "type": "admin3",
+                        "lat": 57.24562,
+                        "lon": 22.58137
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Valdemārpils",
+                    "type": "admin2",
+                    "lat": 57.36913,
+                    "lon": 22.59312,
+                    "children": [
+                      {
+                        "name": "Valdemārpils",
+                        "type": "admin3",
+                        "lat": 57.37068,
+                        "lon": 22.59188
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Valdgales pagasts",
+                    "type": "admin2",
+                    "lat": 57.35165,
+                    "lon": 22.40754,
+                    "children": []
+                  },
+                  {
+                    "name": "Vandzenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.33619,
+                    "lon": 22.82518,
+                    "children": []
+                  },
+                  {
+                    "name": "Virbu pagasts",
+                    "type": "admin2",
+                    "lat": 57.12958,
+                    "lon": 22.63177,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Tukuma novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Tukums",
+                  "Gmina Tukums",
+                  "Kraj Tukums",
+                  "Munisipalitas Tukums"
+                ],
+                "lat": 56.951577,
+                "lon": 22.998802,
+                "children": [
+                  {
+                    "name": "Cēres pagasts",
+                    "type": "admin2",
+                    "lat": 57.11337,
+                    "lon": 22.85179,
+                    "children": []
+                  },
+                  {
+                    "name": "Degoles pagasts",
+                    "type": "admin2",
+                    "lat": 56.87558,
+                    "lon": 23.13922,
+                    "children": []
+                  },
+                  {
+                    "name": "Džūkstes pagasts",
+                    "type": "admin2",
+                    "lat": 56.79041,
+                    "lon": 23.31385,
+                    "children": []
+                  },
+                  {
+                    "name": "Engures pagasts",
+                    "type": "admin2",
+                    "lat": 57.16952,
+                    "lon": 23.18798,
+                    "children": []
+                  },
+                  {
+                    "name": "Irlavas pagasts",
+                    "type": "admin2",
+                    "lat": 56.85332,
+                    "lon": 22.99358,
+                    "children": []
+                  },
+                  {
+                    "name": "Jaunpils pagasts",
+                    "type": "admin2",
+                    "lat": 56.74638,
+                    "lon": 22.96538,
+                    "children": [
+                      {
+                        "name": "Jaunpils",
+                        "type": "admin3",
+                        "lat": 56.73137,
+                        "lon": 23.01247
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jaunsātu pagasts",
+                    "type": "admin2",
+                    "lat": 56.96124,
+                    "lon": 22.91512,
+                    "children": []
+                  },
+                  {
+                    "name": "Kandava",
+                    "type": "admin2",
+                    "lat": 57.03895,
+                    "lon": 22.78057,
+                    "children": [
+                      {
+                        "name": "Kandava",
+                        "type": "admin3",
+                        "lat": 57.04087,
+                        "lon": 22.77466
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kandavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.03465,
+                    "lon": 22.73961,
+                    "children": []
+                  },
+                  {
+                    "name": "Lapmežciema pagasts",
+                    "type": "admin2",
+                    "lat": 57.00336,
+                    "lon": 23.46521,
+                    "children": []
+                  },
+                  {
+                    "name": "Lestenes pagasts",
+                    "type": "admin2",
+                    "lat": 56.77971,
+                    "lon": 23.13407,
+                    "children": []
+                  },
+                  {
+                    "name": "Matkules pagasts",
+                    "type": "admin2",
+                    "lat": 56.98465,
+                    "lon": 22.5529,
+                    "children": []
+                  },
+                  {
+                    "name": "Pūres pagasts",
+                    "type": "admin2",
+                    "lat": 57.05148,
+                    "lon": 22.92949,
+                    "children": []
+                  },
+                  {
+                    "name": "Sēmes pagasts",
+                    "type": "admin2",
+                    "lat": 57.06392,
+                    "lon": 23.11344,
+                    "children": []
+                  },
+                  {
+                    "name": "Slampes pagasts",
+                    "type": "admin2",
+                    "lat": 56.88196,
+                    "lon": 23.31206,
+                    "children": []
+                  },
+                  {
+                    "name": "Smārdes pagasts",
+                    "type": "admin2",
+                    "lat": 56.977,
+                    "lon": 23.30556,
+                    "children": []
+                  },
+                  {
+                    "name": "Tukums",
+                    "type": "admin2",
+                    "lat": 56.96542,
+                    "lon": 23.15281,
+                    "children": [
+                      {
+                        "name": "Tukums",
+                        "type": "admin3",
+                        "lat": 56.96764,
+                        "lon": 23.15554
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tumes pagasts",
+                    "type": "admin2",
+                    "lat": 56.96012,
+                    "lon": 23.06785,
+                    "children": []
+                  },
+                  {
+                    "name": "Vānes pagasts",
+                    "type": "admin2",
+                    "lat": 56.91008,
+                    "lon": 22.60169,
+                    "children": []
+                  },
+                  {
+                    "name": "Viesatu pagasts",
+                    "type": "admin2",
+                    "lat": 56.81509,
+                    "lon": 22.86498,
+                    "children": []
+                  },
+                  {
+                    "name": "Zantes pagasts",
+                    "type": "admin2",
+                    "lat": 56.84694,
+                    "lon": 22.72992,
+                    "children": []
+                  },
+                  {
+                    "name": "Zemītes pagasts",
+                    "type": "admin2",
+                    "lat": 56.90369,
+                    "lon": 22.81827,
+                    "children": []
+                  },
+                  {
+                    "name": "Zentenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.15943,
+                    "lon": 23.0371,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Valkas novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Valka",
+                  "Bwrdeistref Valka",
+                  "Comune di Valka",
+                  "Concello de Valka"
+                ],
+                "lat": 57.7237,
+                "lon": 25.93816,
+                "children": [
+                  {
+                    "name": "Ērģemes pagasts",
+                    "type": "admin2",
+                    "lat": 57.81846,
+                    "lon": 25.77847,
+                    "children": []
+                  },
+                  {
+                    "name": "Kārķu pagasts",
+                    "type": "admin2",
+                    "lat": 57.81948,
+                    "lon": 25.61953,
+                    "children": []
+                  },
+                  {
+                    "name": "Valka",
+                    "type": "admin2",
+                    "lat": 57.77463,
+                    "lon": 26.00565,
+                    "children": [
+                      {
+                        "name": "Valka",
+                        "type": "admin3",
+                        "lat": 57.7752,
+                        "lon": 26.01013
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Valkas pagasts",
+                    "type": "admin2",
+                    "lat": 57.74282,
+                    "lon": 25.99774,
+                    "children": []
+                  },
+                  {
+                    "name": "Vijciema pagasts",
+                    "type": "admin2",
+                    "lat": 57.59779,
+                    "lon": 26.00906,
+                    "children": []
+                  },
+                  {
+                    "name": "Zvārtavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.58902,
+                    "lon": 26.21851,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Valmiera",
+                "type": "admin1",
+                "aliases": [
+                  "Valmiera",
+                  "Valmiera Municipality",
+                  "Valmieras Rajons",
+                  "Valmiyerskiy Rayon"
+                ],
+                "lat": 57.729181,
+                "lon": 25.349467,
+                "children": [
+                  {
+                    "name": "Bērzaines pagasts",
+                    "type": "admin2",
+                    "lat": 57.62465,
+                    "lon": 25.20231,
+                    "children": []
+                  },
+                  {
+                    "name": "Brenguļu pagasts",
+                    "type": "admin2",
+                    "lat": 57.53271,
+                    "lon": 25.58448,
+                    "children": []
+                  },
+                  {
+                    "name": "Burtnieku pagasts",
+                    "type": "admin2",
+                    "lat": 57.68902,
+                    "lon": 25.29868,
+                    "children": []
+                  },
+                  {
+                    "name": "Dikļu pagasts",
+                    "type": "admin2",
+                    "lat": 57.58103,
+                    "lon": 25.05111,
+                    "children": []
+                  },
+                  {
+                    "name": "Ēveles pagasts",
+                    "type": "admin2",
+                    "lat": 57.71938,
+                    "lon": 25.58406,
+                    "children": []
+                  },
+                  {
+                    "name": "Ipiķu pagasts",
+                    "type": "admin2",
+                    "lat": 58.03144,
+                    "lon": 25.16454,
+                    "children": []
+                  },
+                  {
+                    "name": "Jērcēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.67539,
+                    "lon": 25.69368,
+                    "children": []
+                  },
+                  {
+                    "name": "Jeru pagasts",
+                    "type": "admin2",
+                    "lat": 57.8374,
+                    "lon": 25.33783,
+                    "children": []
+                  },
+                  {
+                    "name": "Kauguru pagasts",
+                    "type": "admin2",
+                    "lat": 57.48288,
+                    "lon": 25.47551,
+                    "children": []
+                  },
+                  {
+                    "name": "Kocēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.50994,
+                    "lon": 25.27881,
+                    "children": []
+                  },
+                  {
+                    "name": "Ķoņu pagasts",
+                    "type": "admin2",
+                    "lat": 57.94219,
+                    "lon": 25.36826,
+                    "children": []
+                  },
+                  {
+                    "name": "Lodes pagasts",
+                    "type": "admin2",
+                    "lat": 58.01685,
+                    "lon": 25.3583,
+                    "children": []
+                  },
+                  {
+                    "name": "Matīšu pagasts",
+                    "type": "admin2",
+                    "lat": 57.71294,
+                    "lon": 25.14849,
+                    "children": []
+                  },
+                  {
+                    "name": "Mazsalaca",
+                    "type": "admin2",
+                    "lat": 57.86219,
+                    "lon": 25.0521,
+                    "children": [
+                      {
+                        "name": "Mazsalaca",
+                        "type": "admin3",
+                        "lat": 57.86329,
+                        "lon": 25.05475
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mazsalacas pagasts",
+                    "type": "admin2",
+                    "lat": 57.89194,
+                    "lon": 25.07614,
+                    "children": []
+                  },
+                  {
+                    "name": "Naukšēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.89087,
+                    "lon": 25.52773,
+                    "children": []
+                  },
+                  {
+                    "name": "Plāņu pagasts",
+                    "type": "admin2",
+                    "lat": 57.59363,
+                    "lon": 25.84795,
+                    "children": []
+                  },
+                  {
+                    "name": "Ramatas pagasts",
+                    "type": "admin2",
+                    "lat": 57.97337,
+                    "lon": 24.99396,
+                    "children": []
+                  },
+                  {
+                    "name": "Rencēnu pagasts",
+                    "type": "admin2",
+                    "lat": 57.71435,
+                    "lon": 25.44937,
+                    "children": []
+                  },
+                  {
+                    "name": "Rūjiena",
+                    "type": "admin2",
+                    "lat": 57.89408,
+                    "lon": 25.33693,
+                    "children": [
+                      {
+                        "name": "Rūjiena",
+                        "type": "admin3",
+                        "lat": 57.89752,
+                        "lon": 25.33155
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Seda",
+                    "type": "admin2",
+                    "lat": 57.65275,
+                    "lon": 25.75,
+                    "children": [
+                      {
+                        "name": "Seda",
+                        "type": "admin3",
+                        "lat": 57.65042,
+                        "lon": 25.75089
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sēļu pagasts",
+                    "type": "admin2",
+                    "lat": 57.86901,
+                    "lon": 25.18806,
+                    "children": []
+                  },
+                  {
+                    "name": "Skaņkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.85701,
+                    "lon": 24.98452,
+                    "children": []
+                  },
+                  {
+                    "name": "Strenči",
+                    "type": "admin2",
+                    "lat": 57.62796,
+                    "lon": 25.69627,
+                    "children": []
+                  },
+                  {
+                    "name": "Trikātas pagasts",
+                    "type": "admin2",
+                    "lat": 57.54661,
+                    "lon": 25.69864,
+                    "children": []
+                  },
+                  {
+                    "name": "Vaidavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.43202,
+                    "lon": 25.27291,
+                    "children": []
+                  },
+                  {
+                    "name": "Valmiera",
+                    "type": "admin2",
+                    "lat": 57.53084,
+                    "lon": 25.42225,
+                    "children": [
+                      {
+                        "name": "Valmiera",
+                        "type": "admin3",
+                        "lat": 57.54108,
+                        "lon": 25.42751
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Valmieras pagasts",
+                    "type": "admin2",
+                    "lat": 57.59249,
+                    "lon": 25.4536,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecates pagasts",
+                    "type": "admin2",
+                    "lat": 57.79143,
+                    "lon": 25.14483,
+                    "children": []
+                  },
+                  {
+                    "name": "Vilpulkas pagasts",
+                    "type": "admin2",
+                    "lat": 57.95149,
+                    "lon": 25.21845,
+                    "children": []
+                  },
+                  {
+                    "name": "Zilākalna pagasts",
+                    "type": "admin2",
+                    "lat": 57.57676,
+                    "lon": 25.17372,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Varakļānu novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Varaklani",
+                  "Bezirk Varakļāni",
+                  "Bwrdeistref Varaklani",
+                  "Bwrdeistref Varakļāni"
+                ],
+                "lat": 56.61707,
+                "lon": 26.670837,
+                "children": [
+                  {
+                    "name": "Murmastienes pagasts",
+                    "type": "admin2",
+                    "lat": 56.65172,
+                    "lon": 26.57196,
+                    "children": []
+                  },
+                  {
+                    "name": "Varakļāni",
+                    "type": "admin2",
+                    "lat": 56.6061,
+                    "lon": 26.75932,
+                    "children": [
+                      {
+                        "name": "Varakļāni",
+                        "type": "admin3",
+                        "lat": 56.60826,
+                        "lon": 26.75377
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Varakļānu pagasts",
+                    "type": "admin2",
+                    "lat": 56.59339,
+                    "lon": 26.68123,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Ventspils",
+                "type": "admin1",
+                "aliases": [
+                  "Vehntspils",
+                  "Ventspelis",
+                  "Ventspilis",
+                  "Ventspils"
+                ],
+                "lat": 57.40671,
+                "lon": 21.60154,
+                "children": [
+                  {
+                    "name": "Ventspils",
+                    "type": "admin2",
+                    "lat": 57.40671,
+                    "lon": 21.60154,
+                    "children": [
+                      {
+                        "name": "Ventspils",
+                        "type": "admin3",
+                        "lat": 57.39485,
+                        "lon": 21.56121
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ventspils novads",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Ventspils",
+                  "Bwrdeistref Ventspils",
+                  "GJo thi tu tri Ventspils",
+                  "Gmina Windawa"
+                ],
+                "lat": 57.258615,
+                "lon": 21.782392,
+                "children": [
+                  {
+                    "name": "Ances pagasts",
+                    "type": "admin2",
+                    "lat": 57.52583,
+                    "lon": 22.04657,
+                    "children": []
+                  },
+                  {
+                    "name": "Jūrkalnes pagasts",
+                    "type": "admin2",
+                    "lat": 57.01992,
+                    "lon": 21.43629,
+                    "children": []
+                  },
+                  {
+                    "name": "Piltene",
+                    "type": "admin2",
+                    "lat": 57.22428,
+                    "lon": 21.69975,
+                    "children": []
+                  },
+                  {
+                    "name": "Piltenes pagasts",
+                    "type": "admin2",
+                    "lat": 57.24802,
+                    "lon": 21.73896,
+                    "children": []
+                  },
+                  {
+                    "name": "Popes pagasts",
+                    "type": "admin2",
+                    "lat": 57.42692,
+                    "lon": 21.87501,
+                    "children": []
+                  },
+                  {
+                    "name": "Puzes pagasts",
+                    "type": "admin2",
+                    "lat": 57.36433,
+                    "lon": 22.10522,
+                    "children": []
+                  },
+                  {
+                    "name": "Tārgales pagasts",
+                    "type": "admin2",
+                    "lat": 57.33616,
+                    "lon": 21.65543,
+                    "children": []
+                  },
+                  {
+                    "name": "Ugāles pagasts",
+                    "type": "admin2",
+                    "lat": 57.23775,
+                    "lon": 21.96986,
+                    "children": [
+                      {
+                        "name": "Ugāle",
+                        "type": "admin3",
+                        "lat": 57.27464,
+                        "lon": 22.03211
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Usmas pagasts",
+                    "type": "admin2",
+                    "lat": 57.22377,
+                    "lon": 22.15916,
+                    "children": []
+                  },
+                  {
+                    "name": "Užavas pagasts",
+                    "type": "admin2",
+                    "lat": 57.19669,
+                    "lon": 21.46594,
+                    "children": []
+                  },
+                  {
+                    "name": "Vārves pagasts",
+                    "type": "admin2",
+                    "lat": 57.28437,
+                    "lon": 21.54207,
+                    "children": []
+                  },
+                  {
+                    "name": "Ziru pagasts",
+                    "type": "admin2",
+                    "lat": 57.13927,
+                    "lon": 21.60963,
+                    "children": []
+                  },
+                  {
+                    "name": "Zlēku pagasts",
+                    "type": "admin2",
+                    "lat": 57.13469,
+                    "lon": 21.8672,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

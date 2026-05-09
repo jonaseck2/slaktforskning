@@ -1,0 +1,1755 @@
+{
+  "id": "ee-counties",
+  "name": "Estonia Maakonnad and Vallad",
+  "locale": "ee",
+  "description": "Estonia: 15 maakonnad (admin1) → 79 vallad/linnad (admin2) → populated places ≥1000 pop. Lutheran kihelkonnad deferred.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/EE.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥1000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Estonia",
+            "type": "country",
+            "aliases": [
+              "Eesti",
+              "Estland"
+            ],
+            "lat": 58.6,
+            "lon": 25,
+            "children": [
+              {
+                "name": "Harjumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comtat de Harju",
+                  "Condado de Harju",
+                  "Condato de Harju",
+                  "Condau de Harju"
+                ],
+                "lat": 59.365454,
+                "lon": 24.921651,
+                "children": [
+                  {
+                    "name": "Anija vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0141"
+                    ],
+                    "lat": 59.27644,
+                    "lon": 25.48168,
+                    "children": [
+                      {
+                        "name": "Kehra",
+                        "type": "admin3",
+                        "lat": 59.33611,
+                        "lon": 25.32111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Harku vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0198",
+                      "Harku Parish",
+                      "Harku vald"
+                    ],
+                    "lat": 59.39157,
+                    "lon": 24.46206,
+                    "children": [
+                      {
+                        "name": "Tabasalu",
+                        "type": "admin3",
+                        "lat": 59.42607,
+                        "lon": 24.5533
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jõelähtme vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0245",
+                      "Joelaehtme Parish",
+                      "Jõelähtme Parish"
+                    ],
+                    "lat": 59.43996,
+                    "lon": 25.13535,
+                    "children": [
+                      {
+                        "name": "Loo",
+                        "type": "admin3",
+                        "lat": 59.43123,
+                        "lon": 24.94949
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Keila linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0296"
+                    ],
+                    "lat": 59.31135,
+                    "lon": 24.38651,
+                    "children": [
+                      {
+                        "name": "Keila",
+                        "type": "admin3",
+                        "lat": 59.30361,
+                        "lon": 24.41306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kiili vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0305",
+                      "Kiili Parish"
+                    ],
+                    "lat": 59.29672,
+                    "lon": 24.85292,
+                    "children": [
+                      {
+                        "name": "Kiili",
+                        "type": "admin3",
+                        "lat": 59.30775,
+                        "lon": 24.83776
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kose vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0338"
+                    ],
+                    "lat": 59.18589,
+                    "lon": 25.11143,
+                    "children": []
+                  },
+                  {
+                    "name": "Kuusalu vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0353",
+                      "Kuusalu Parish"
+                    ],
+                    "lat": 59.47855,
+                    "lon": 25.59644,
+                    "children": [
+                      {
+                        "name": "Kuusalu",
+                        "type": "admin3",
+                        "lat": 59.44389,
+                        "lon": 25.44139
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lääne-Harju vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0431",
+                      "Laeaene-Harju Parish",
+                      "Laeaene-Harju vald"
+                    ],
+                    "lat": 59.25933,
+                    "lon": 24.08886,
+                    "children": [
+                      {
+                        "name": "Paldiski",
+                        "type": "admin3",
+                        "lat": 59.35667,
+                        "lon": 24.05306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Loksa linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0424"
+                    ],
+                    "lat": 59.57844,
+                    "lon": 25.71667,
+                    "children": [
+                      {
+                        "name": "Loksa",
+                        "type": "admin3",
+                        "lat": 59.57639,
+                        "lon": 25.72139
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Maardu linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0446"
+                    ],
+                    "lat": 59.46385,
+                    "lon": 24.9735,
+                    "children": [
+                      {
+                        "name": "Maardu",
+                        "type": "admin3",
+                        "lat": 59.46529,
+                        "lon": 24.98215
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Raasiku vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0651",
+                      "Raasiku Parish"
+                    ],
+                    "lat": 59.3235,
+                    "lon": 25.14727,
+                    "children": [
+                      {
+                        "name": "Aruküla",
+                        "type": "admin3",
+                        "lat": 59.36686,
+                        "lon": 25.07618
+                      },
+                      {
+                        "name": "Raasiku",
+                        "type": "admin3",
+                        "lat": 59.36639,
+                        "lon": 25.18306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rae vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0653",
+                      "Rae Parish"
+                    ],
+                    "lat": 59.33202,
+                    "lon": 24.93932,
+                    "children": [
+                      {
+                        "name": "Jüri",
+                        "type": "admin3",
+                        "lat": 59.35974,
+                        "lon": 24.92099
+                      },
+                      {
+                        "name": "Vaida",
+                        "type": "admin3",
+                        "lat": 59.28546,
+                        "lon": 24.97897
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Saku vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0719",
+                      "Saku Parish"
+                    ],
+                    "lat": 59.28069,
+                    "lon": 24.71649,
+                    "children": [
+                      {
+                        "name": "Saku",
+                        "type": "admin3",
+                        "lat": 59.30354,
+                        "lon": 24.66382
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Saue vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0726"
+                    ],
+                    "lat": 59.29255,
+                    "lon": 24.52503,
+                    "children": [
+                      {
+                        "name": "Laagri",
+                        "type": "admin3",
+                        "lat": 59.35083,
+                        "lon": 24.61418
+                      },
+                      {
+                        "name": "Riisipere",
+                        "type": "admin3",
+                        "lat": 59.11417,
+                        "lon": 24.31056
+                      },
+                      {
+                        "name": "Saue",
+                        "type": "admin3",
+                        "lat": 59.32258,
+                        "lon": 24.54967
+                      },
+                      {
+                        "name": "Turba",
+                        "type": "admin3",
+                        "lat": 59.08306,
+                        "lon": 24.225
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tallinn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0784"
+                    ],
+                    "lat": 59.43437,
+                    "lon": 24.76456,
+                    "children": [
+                      {
+                        "name": "Kose",
+                        "type": "admin3",
+                        "lat": 59.46001,
+                        "lon": 24.87824
+                      },
+                      {
+                        "name": "Männiku",
+                        "type": "admin3",
+                        "lat": 59.37528,
+                        "lon": 24.71806
+                      },
+                      {
+                        "name": "Nõmme",
+                        "type": "admin3",
+                        "lat": 59.37757,
+                        "lon": 24.68587
+                      },
+                      {
+                        "name": "Tallinn",
+                        "type": "admin3",
+                        "lat": 59.43696,
+                        "lon": 24.75353
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viimsi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0890",
+                      "Viimsi Parish"
+                    ],
+                    "lat": 59.50204,
+                    "lon": 24.84833,
+                    "children": [
+                      {
+                        "name": "Haabneeme",
+                        "type": "admin3",
+                        "lat": 59.51358,
+                        "lon": 24.82225
+                      },
+                      {
+                        "name": "Rummu",
+                        "type": "admin3",
+                        "lat": 59.53528,
+                        "lon": 24.79972
+                      },
+                      {
+                        "name": "Viimsi",
+                        "type": "admin3",
+                        "lat": 59.50502,
+                        "lon": 24.84807
+                      },
+                      {
+                        "name": "Viimsi",
+                        "type": "admin3",
+                        "lat": 59.50086,
+                        "lon": 24.86254
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Hiiumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comtat de Hiiu",
+                  "Condado de Hiiu",
+                  "County Hiiu",
+                  "Dago amt"
+                ],
+                "lat": 58.88804,
+                "lon": 22.63612,
+                "children": [
+                  {
+                    "name": "Hiiumaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0205",
+                      "Hiiumaa Parish"
+                    ],
+                    "lat": 58.88804,
+                    "lon": 22.63612,
+                    "children": [
+                      {
+                        "name": "Kärdla",
+                        "type": "admin3",
+                        "lat": 58.99778,
+                        "lon": 22.74917
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ida-Virumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Austrumviru aprinkis",
+                  "Austrumviru apriņķis",
+                  "Comitatul Ida-Viru",
+                  "Comtat dIda-Viru"
+                ],
+                "lat": 59.354627,
+                "lon": 27.574113,
+                "children": [
+                  {
+                    "name": "Alutaguse vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0130"
+                    ],
+                    "lat": 59.13787,
+                    "lon": 27.3839,
+                    "children": [
+                      {
+                        "name": "Iisaku",
+                        "type": "admin3",
+                        "lat": 59.10139,
+                        "lon": 27.30806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Jõhvi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0251",
+                      "Johvi Parish",
+                      "Jõhvi Parish"
+                    ],
+                    "lat": 59.35653,
+                    "lon": 27.39304,
+                    "children": [
+                      {
+                        "name": "Jõhvi",
+                        "type": "admin3",
+                        "lat": 59.35917,
+                        "lon": 27.42111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kohtla-Järve linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0321"
+                    ],
+                    "lat": 59.39535,
+                    "lon": 27.28111,
+                    "children": [
+                      {
+                        "name": "Kohtla-Järve",
+                        "type": "admin3",
+                        "lat": 59.39861,
+                        "lon": 27.27306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lüganuse vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0442",
+                      "Lueganuse Parish",
+                      "Lüganuse Parish"
+                    ],
+                    "lat": 59.39262,
+                    "lon": 27.07641,
+                    "children": [
+                      {
+                        "name": "Kiviõli",
+                        "type": "admin3",
+                        "lat": 59.35306,
+                        "lon": 26.97111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Narva linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0511"
+                    ],
+                    "lat": 59.36955,
+                    "lon": 28.11022,
+                    "children": [
+                      {
+                        "name": "Narva",
+                        "type": "admin3",
+                        "lat": 59.37722,
+                        "lon": 28.19028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Narva-Jõesuu linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0514"
+                    ],
+                    "lat": 59.44127,
+                    "lon": 28.02142,
+                    "children": [
+                      {
+                        "name": "Narva-Jõesuu",
+                        "type": "admin3",
+                        "lat": 59.45889,
+                        "lon": 28.04083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sillamäe linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0735",
+                      "Sillamaeggi",
+                      "Sillamaegi"
+                    ],
+                    "lat": 59.39562,
+                    "lon": 27.76417,
+                    "children": [
+                      {
+                        "name": "Sillamäe",
+                        "type": "admin3",
+                        "lat": 59.39697,
+                        "lon": 27.76331
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Toila vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0803",
+                      "Toila Parish"
+                    ],
+                    "lat": 59.34821,
+                    "lon": 27.56263,
+                    "children": [
+                      {
+                        "name": "Kohtla-Nõmme",
+                        "type": "admin3",
+                        "lat": 59.35167,
+                        "lon": 27.175
+                      },
+                      {
+                        "name": "Toila",
+                        "type": "admin3",
+                        "lat": 59.42127,
+                        "lon": 27.50807
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Järvamaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Jaerva",
+                  "Comitatul Järva",
+                  "Comtat de Jaerva",
+                  "Comtat de Järva"
+                ],
+                "lat": 58.870173,
+                "lon": 25.615873,
+                "children": [
+                  {
+                    "name": "Järva vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0255",
+                      "Jaerva Parish",
+                      "Jaerva vald"
+                    ],
+                    "lat": 58.98405,
+                    "lon": 25.82298,
+                    "children": [
+                      {
+                        "name": "Järva-Jaani",
+                        "type": "admin3",
+                        "lat": 59.03861,
+                        "lon": 25.88639
+                      },
+                      {
+                        "name": "Koeru",
+                        "type": "admin3",
+                        "lat": 58.96306,
+                        "lon": 26.03083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Paide linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0567"
+                    ],
+                    "lat": 58.88504,
+                    "lon": 25.56021,
+                    "children": [
+                      {
+                        "name": "Paide",
+                        "type": "admin3",
+                        "lat": 58.88768,
+                        "lon": 25.54042
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Türi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0834",
+                      "Tueri Parish",
+                      "Türi Parish"
+                    ],
+                    "lat": 58.74143,
+                    "lon": 25.46443,
+                    "children": [
+                      {
+                        "name": "Särevere",
+                        "type": "admin3",
+                        "lat": 58.79,
+                        "lon": 25.42806
+                      },
+                      {
+                        "name": "Türi",
+                        "type": "admin3",
+                        "lat": 58.80861,
+                        "lon": 25.4325
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Jõgevamaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Jogeva",
+                  "Comitatul Jõgeva",
+                  "Comtat de Jogeva",
+                  "Comtat de Jõgeva"
+                ],
+                "lat": 58.761373,
+                "lon": 26.421743,
+                "children": [
+                  {
+                    "name": "Jõgeva vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0247",
+                      "Jogeva Parish",
+                      "Jõgeva Parish"
+                    ],
+                    "lat": 58.78732,
+                    "lon": 26.38122,
+                    "children": [
+                      {
+                        "name": "Jõgeva",
+                        "type": "admin3",
+                        "lat": 58.74667,
+                        "lon": 26.39389
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mustvee vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0486",
+                      "Mustvee Parish",
+                      "Mustvee vald"
+                    ],
+                    "lat": 58.85613,
+                    "lon": 26.87444,
+                    "children": [
+                      {
+                        "name": "Mustvee",
+                        "type": "admin3",
+                        "lat": 58.84861,
+                        "lon": 26.93972
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Põltsamaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0618"
+                    ],
+                    "lat": 58.64067,
+                    "lon": 26.00957,
+                    "children": [
+                      {
+                        "name": "Põltsamaa",
+                        "type": "admin3",
+                        "lat": 58.6525,
+                        "lon": 25.97056
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Lääne-Virumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Laeaene-Viru",
+                  "Comitatul Lääne-Viru",
+                  "Comtat de Laeaene-Viru",
+                  "Comtat de Lääne-Viru"
+                ],
+                "lat": 59.31298,
+                "lon": 26.286143,
+                "children": [
+                  {
+                    "name": "Haljala vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0191"
+                    ],
+                    "lat": 59.45427,
+                    "lon": 26.22015,
+                    "children": [
+                      {
+                        "name": "Haljala",
+                        "type": "admin3",
+                        "lat": 59.43361,
+                        "lon": 26.26139
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kadrina vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0272"
+                    ],
+                    "lat": 59.37463,
+                    "lon": 26.0415,
+                    "children": [
+                      {
+                        "name": "Kadrina",
+                        "type": "admin3",
+                        "lat": 59.33472,
+                        "lon": 26.145
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rakvere linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0663"
+                    ],
+                    "lat": 59.34529,
+                    "lon": 26.36157,
+                    "children": [
+                      {
+                        "name": "Rakvere",
+                        "type": "admin3",
+                        "lat": 59.34808,
+                        "lon": 26.35784
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rakvere vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0661"
+                    ],
+                    "lat": 59.32457,
+                    "lon": 26.29757,
+                    "children": [
+                      {
+                        "name": "Sõmeru",
+                        "type": "admin3",
+                        "lat": 59.36111,
+                        "lon": 26.4375
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tapa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0792",
+                      "Tapa",
+                      "Tapa Parish"
+                    ],
+                    "lat": 59.23821,
+                    "lon": 25.84572,
+                    "children": [
+                      {
+                        "name": "Tamsalu",
+                        "type": "admin3",
+                        "lat": 59.15861,
+                        "lon": 26.11528
+                      },
+                      {
+                        "name": "Tapa",
+                        "type": "admin3",
+                        "lat": 59.26056,
+                        "lon": 25.95861
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Väike-Maarja vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0928"
+                    ],
+                    "lat": 59.06556,
+                    "lon": 26.31417,
+                    "children": [
+                      {
+                        "name": "Rakke",
+                        "type": "admin3",
+                        "lat": 58.98167,
+                        "lon": 26.25444
+                      },
+                      {
+                        "name": "Väike-Maarja",
+                        "type": "admin3",
+                        "lat": 59.12639,
+                        "lon": 26.25
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vinni vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0901"
+                    ],
+                    "lat": 59.23744,
+                    "lon": 26.62261,
+                    "children": [
+                      {
+                        "name": "Vinni",
+                        "type": "admin3",
+                        "lat": 59.29583,
+                        "lon": 26.43222
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viru-Nigula vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0903"
+                    ],
+                    "lat": 59.46387,
+                    "lon": 26.58585,
+                    "children": [
+                      {
+                        "name": "Aseri",
+                        "type": "admin3",
+                        "lat": 59.45256,
+                        "lon": 26.87163
+                      },
+                      {
+                        "name": "Kunda",
+                        "type": "admin3",
+                        "lat": 59.49861,
+                        "lon": 26.52611
+                      },
+                      {
+                        "name": "Kunda",
+                        "type": "admin3",
+                        "lat": 59.48333,
+                        "lon": 26.53333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Läänemaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Laeaene",
+                  "Comitatul Lääne",
+                  "Comtat de Laeaene",
+                  "Comtat de Lääne"
+                ],
+                "lat": 58.96537,
+                "lon": 23.503007,
+                "children": [
+                  {
+                    "name": "Haapsalu linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0184",
+                      "Hapsal"
+                    ],
+                    "lat": 58.9358,
+                    "lon": 23.53005,
+                    "children": [
+                      {
+                        "name": "Haapsalu",
+                        "type": "admin3",
+                        "lat": 58.93937,
+                        "lon": 23.54127
+                      },
+                      {
+                        "name": "Ridala",
+                        "type": "admin3",
+                        "lat": 58.87667,
+                        "lon": 23.61528
+                      },
+                      {
+                        "name": "Uuemõisa",
+                        "type": "admin3",
+                        "lat": 58.93944,
+                        "lon": 23.58944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lääne-Nigula vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0441"
+                    ],
+                    "lat": 58.96045,
+                    "lon": 23.74489,
+                    "children": []
+                  },
+                  {
+                    "name": "Vormsi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0907",
+                      "Vormsi Parish"
+                    ],
+                    "lat": 58.99986,
+                    "lon": 23.23408,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Pärnumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Paernu",
+                  "Comitatul Pärnu",
+                  "Comtat de Paernu",
+                  "Comtat de Pärnu"
+                ],
+                "lat": 58.343913,
+                "lon": 24.512794,
+                "children": [
+                  {
+                    "name": "Häädemeeste vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0214",
+                      "Haeaedemeeste Parish",
+                      "Häädemeeste Parish"
+                    ],
+                    "lat": 58.05004,
+                    "lon": 24.53832,
+                    "children": []
+                  },
+                  {
+                    "name": "Kihnu vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0303",
+                      "Kihnu Parish",
+                      "Kynoe"
+                    ],
+                    "lat": 58.13,
+                    "lon": 23.99002,
+                    "children": []
+                  },
+                  {
+                    "name": "Lääneranna vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0430",
+                      "Laeaeneranna Parish",
+                      "Laeaeneranna vald"
+                    ],
+                    "lat": 58.58909,
+                    "lon": 23.89627,
+                    "children": [
+                      {
+                        "name": "Lihula",
+                        "type": "admin3",
+                        "lat": 58.68139,
+                        "lon": 23.84528
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pärnu linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0624",
+                      "Pernau",
+                      "Pernava"
+                    ],
+                    "lat": 58.37901,
+                    "lon": 24.52784,
+                    "children": [
+                      {
+                        "name": "Audru",
+                        "type": "admin3",
+                        "lat": 58.40861,
+                        "lon": 24.37389
+                      },
+                      {
+                        "name": "Paikuse",
+                        "type": "admin3",
+                        "lat": 58.37917,
+                        "lon": 24.63444
+                      },
+                      {
+                        "name": "Pärnu",
+                        "type": "admin3",
+                        "lat": 58.38588,
+                        "lon": 24.49711
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Põhja-Pärnumaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0638",
+                      "Pohja-Paernumaa Parish",
+                      "Pohja-Paernumaa vald"
+                    ],
+                    "lat": 58.6346,
+                    "lon": 24.79186,
+                    "children": [
+                      {
+                        "name": "Pärnu-Jaagupi",
+                        "type": "admin3",
+                        "lat": 58.61052,
+                        "lon": 24.50689
+                      },
+                      {
+                        "name": "Vändra",
+                        "type": "admin3",
+                        "lat": 58.64806,
+                        "lon": 25.03611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Saarde vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0712",
+                      "Saarde Parish"
+                    ],
+                    "lat": 58.13802,
+                    "lon": 24.95564,
+                    "children": [
+                      {
+                        "name": "Kilingi-Nõmme",
+                        "type": "admin3",
+                        "lat": 58.15028,
+                        "lon": 24.96417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tori vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0809",
+                      "Tori Parish"
+                    ],
+                    "lat": 58.48663,
+                    "lon": 24.88961,
+                    "children": [
+                      {
+                        "name": "Sauga",
+                        "type": "admin3",
+                        "lat": 58.4272,
+                        "lon": 24.49496
+                      },
+                      {
+                        "name": "Sindi",
+                        "type": "admin3",
+                        "lat": 58.40056,
+                        "lon": 24.6675
+                      },
+                      {
+                        "name": "Tori",
+                        "type": "admin3",
+                        "lat": 58.47889,
+                        "lon": 24.82417
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Põlvamaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Polva",
+                  "Comitatul Põlva",
+                  "Comtat de Polva",
+                  "Comtat de Põlva"
+                ],
+                "lat": 58.057343,
+                "lon": 27.043243,
+                "children": [
+                  {
+                    "name": "Kanepi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0284",
+                      "Kanepi Parish"
+                    ],
+                    "lat": 57.98058,
+                    "lon": 26.76151,
+                    "children": []
+                  },
+                  {
+                    "name": "Põlva vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0622",
+                      "Commune de Polva",
+                      "Commune de Põlva"
+                    ],
+                    "lat": 58.08368,
+                    "lon": 26.98242,
+                    "children": [
+                      {
+                        "name": "Põlva",
+                        "type": "admin3",
+                        "lat": 58.06028,
+                        "lon": 27.06944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Räpina vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0708"
+                    ],
+                    "lat": 58.10777,
+                    "lon": 27.3858,
+                    "children": [
+                      {
+                        "name": "Räpina",
+                        "type": "admin3",
+                        "lat": 58.09806,
+                        "lon": 27.46361
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Raplamaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Rapla",
+                  "Comtat de Rapla",
+                  "Comte de Rapla",
+                  "Comté de Rapla"
+                ],
+                "lat": 58.98282,
+                "lon": 24.683887,
+                "children": [
+                  {
+                    "name": "Kehtna vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0293",
+                      "Kehtna Parish"
+                    ],
+                    "lat": 58.84274,
+                    "lon": 24.89002,
+                    "children": [
+                      {
+                        "name": "Järvakandi",
+                        "type": "admin3",
+                        "lat": 58.77889,
+                        "lon": 24.82583
+                      },
+                      {
+                        "name": "Kehtna",
+                        "type": "admin3",
+                        "lat": 58.93028,
+                        "lon": 24.87806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kohila vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0317",
+                      "Kohila Parish"
+                    ],
+                    "lat": 59.15283,
+                    "lon": 24.73337,
+                    "children": [
+                      {
+                        "name": "Kohila",
+                        "type": "admin3",
+                        "lat": 59.16806,
+                        "lon": 24.7575
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Märjamaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0503",
+                      "Maerjamaa Parish",
+                      "Märjamaa Parish"
+                    ],
+                    "lat": 58.90262,
+                    "lon": 24.39423,
+                    "children": [
+                      {
+                        "name": "Märjamaa",
+                        "type": "admin3",
+                        "lat": 58.90389,
+                        "lon": 24.43056
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rapla vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0668",
+                      "Rapla Parish"
+                    ],
+                    "lat": 59.03309,
+                    "lon": 24.71793,
+                    "children": [
+                      {
+                        "name": "Rapla",
+                        "type": "admin3",
+                        "lat": 59.00759,
+                        "lon": 24.79386
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Saaremaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comtat de Saare",
+                  "Condado de Saare",
+                  "County Saare",
+                  "Eparchia Saare"
+                ],
+                "lat": 58.255363,
+                "lon": 22.997377,
+                "children": [
+                  {
+                    "name": "Muhu vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0478",
+                      "Moon kommun"
+                    ],
+                    "lat": 58.58486,
+                    "lon": 23.25609,
+                    "children": []
+                  },
+                  {
+                    "name": "Ruhnu vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0689"
+                    ],
+                    "lat": 57.80309,
+                    "lon": 23.2425,
+                    "children": []
+                  },
+                  {
+                    "name": "Saaremaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0714",
+                      "Saaremaa Municipality",
+                      "Saaremaa Parish"
+                    ],
+                    "lat": 58.37814,
+                    "lon": 22.49354,
+                    "children": [
+                      {
+                        "name": "Kuressaare",
+                        "type": "admin3",
+                        "lat": 58.25382,
+                        "lon": 22.49217
+                      },
+                      {
+                        "name": "Orissaare",
+                        "type": "admin3",
+                        "lat": 58.55917,
+                        "lon": 23.08262
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Tartumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Tartu",
+                  "Comtat de Tartu",
+                  "Comte de Tartu",
+                  "Comté de Tartu"
+                ],
+                "lat": 58.34539,
+                "lon": 26.77337,
+                "children": [
+                  {
+                    "name": "Elva vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0171",
+                      "Elva Parish"
+                    ],
+                    "lat": 58.24564,
+                    "lon": 26.27258,
+                    "children": [
+                      {
+                        "name": "Elva",
+                        "type": "admin3",
+                        "lat": 58.2225,
+                        "lon": 26.42111
+                      },
+                      {
+                        "name": "Puhja",
+                        "type": "admin3",
+                        "lat": 58.34194,
+                        "lon": 26.31472
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kambja vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0283",
+                      "Kambja Parish"
+                    ],
+                    "lat": 58.20255,
+                    "lon": 26.68996,
+                    "children": [
+                      {
+                        "name": "Soinaste",
+                        "type": "admin3",
+                        "lat": 58.33889,
+                        "lon": 26.68972
+                      },
+                      {
+                        "name": "Ülenurme",
+                        "type": "admin3",
+                        "lat": 58.3162,
+                        "lon": 26.72517
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kastre vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0291",
+                      "Kastre Parish",
+                      "Kastre vald"
+                    ],
+                    "lat": 58.31259,
+                    "lon": 27.07713,
+                    "children": []
+                  },
+                  {
+                    "name": "Luunja vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0432",
+                      "Luunja Parish"
+                    ],
+                    "lat": 58.39178,
+                    "lon": 26.95574,
+                    "children": []
+                  },
+                  {
+                    "name": "Nõo vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0528",
+                      "Noo Parish",
+                      "Nõo Parish"
+                    ],
+                    "lat": 58.24199,
+                    "lon": 26.52499,
+                    "children": [
+                      {
+                        "name": "Nõo",
+                        "type": "admin3",
+                        "lat": 58.27556,
+                        "lon": 26.5375
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Peipsiääre vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0586",
+                      "Peipsiaeaere Parish",
+                      "Peipsiääre Parish"
+                    ],
+                    "lat": 58.51559,
+                    "lon": 27.18444,
+                    "children": []
+                  },
+                  {
+                    "name": "Tartu linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0793"
+                    ],
+                    "lat": 58.37498,
+                    "lon": 26.73256,
+                    "children": [
+                      {
+                        "name": "Tartu",
+                        "type": "admin3",
+                        "lat": 58.38062,
+                        "lon": 26.72509
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tartu vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0796"
+                    ],
+                    "lat": 58.478,
+                    "lon": 26.74956,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Valgamaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Valga",
+                  "Comtat de Valga",
+                  "Comte de Valga",
+                  "Comté de Valga"
+                ],
+                "lat": 57.928347,
+                "lon": 26.203993,
+                "children": [
+                  {
+                    "name": "Otepää vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0557",
+                      "Otepaeae Parish",
+                      "Otepää Parish"
+                    ],
+                    "lat": 58.02177,
+                    "lon": 26.45306,
+                    "children": [
+                      {
+                        "name": "Otepää",
+                        "type": "admin3",
+                        "lat": 58.05833,
+                        "lon": 26.49667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tõrva vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0824",
+                      "Torma Parish",
+                      "Torma vald"
+                    ],
+                    "lat": 57.98419,
+                    "lon": 25.88741,
+                    "children": [
+                      {
+                        "name": "Tõrva",
+                        "type": "admin3",
+                        "lat": 58.00278,
+                        "lon": 25.935
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Valga vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0855"
+                    ],
+                    "lat": 57.77908,
+                    "lon": 26.27151,
+                    "children": [
+                      {
+                        "name": "Valga",
+                        "type": "admin3",
+                        "lat": 57.77781,
+                        "lon": 26.0473
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Viljandimaa",
+                "type": "admin1",
+                "aliases": [
+                  "Condado de Viljandi",
+                  "County Viljandi",
+                  "Eparchia Vilgianti",
+                  "Hat Viljandi"
+                ],
+                "lat": 58.333483,
+                "lon": 25.472362,
+                "children": [
+                  {
+                    "name": "Mulgi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0480",
+                      "Mulgi Parish",
+                      "Mulgi vald"
+                    ],
+                    "lat": 58.12823,
+                    "lon": 25.42437,
+                    "children": [
+                      {
+                        "name": "Abja-Paluoja",
+                        "type": "admin3",
+                        "lat": 58.12528,
+                        "lon": 25.34972
+                      },
+                      {
+                        "name": "Karksi-Nuia",
+                        "type": "admin3",
+                        "lat": 58.10333,
+                        "lon": 25.56278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Põhja-Sakala vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0615",
+                      "Pohja-Sakala Parish",
+                      "Pohja-Sakala vald"
+                    ],
+                    "lat": 58.48547,
+                    "lon": 25.38037,
+                    "children": [
+                      {
+                        "name": "Suure-Jaani",
+                        "type": "admin3",
+                        "lat": 58.53611,
+                        "lon": 25.47056
+                      },
+                      {
+                        "name": "Võhma",
+                        "type": "admin3",
+                        "lat": 58.62833,
+                        "lon": 25.54833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viljandi linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0897",
+                      "Vilande",
+                      "Vīlande"
+                    ],
+                    "lat": 58.35631,
+                    "lon": 25.59368,
+                    "children": [
+                      {
+                        "name": "Viljandi",
+                        "type": "admin3",
+                        "lat": 58.36319,
+                        "lon": 25.59159
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Viljandi vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0899"
+                    ],
+                    "lat": 58.36392,
+                    "lon": 25.49103,
+                    "children": [
+                      {
+                        "name": "Viiratsi",
+                        "type": "admin3",
+                        "lat": 58.36,
+                        "lon": 25.63722
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Võrumaa",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatul Voru",
+                  "Comitatul Võru",
+                  "Comtat de Voru",
+                  "Comtat de Võru"
+                ],
+                "lat": 57.818218,
+                "lon": 27.014106,
+                "children": [
+                  {
+                    "name": "Antsla vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0142"
+                    ],
+                    "lat": 57.77738,
+                    "lon": 26.5952,
+                    "children": [
+                      {
+                        "name": "Vana-Antsla",
+                        "type": "admin3",
+                        "lat": 57.86611,
+                        "lon": 26.53222
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rõuge vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0698"
+                    ],
+                    "lat": 57.7278,
+                    "lon": 26.88033,
+                    "children": []
+                  },
+                  {
+                    "name": "Setomaa vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0732",
+                      "Setomaa Parish",
+                      "Setomaa vald"
+                    ],
+                    "lat": 57.8842,
+                    "lon": 27.61963,
+                    "children": []
+                  },
+                  {
+                    "name": "Võru linn",
+                    "type": "admin2",
+                    "aliases": [
+                      "0919"
+                    ],
+                    "lat": 57.83553,
+                    "lon": 27.00119,
+                    "children": [
+                      {
+                        "name": "Võru",
+                        "type": "admin3",
+                        "lat": 57.83389,
+                        "lon": 27.01944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Võru vald",
+                    "type": "admin2",
+                    "aliases": [
+                      "0917",
+                      "Voru Parish",
+                      "Võru Parish"
+                    ],
+                    "lat": 57.86618,
+                    "lon": 26.97418,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

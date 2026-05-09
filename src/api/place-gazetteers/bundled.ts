@@ -39,6 +39,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'be-provinces',
   // France
   'fr-departements',
+  // Baltic states
+  'ee-counties', 'lv-novadi', 'lt-savivaldybes',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -149,6 +151,10 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'be-provinces': { stripSuffixes: ['gemeente', 'commune', 'ville', 'stad'], stripPrefixes: ['provincie', 'province de', 'province du', 'commune de', 'ville de'] },
   // France — French civil-administrative suffixes
   'fr-departements': { stripSuffixes: ['commune', 'département', 'région', 'canton', 'ville', 'arrondissement'], stripPrefixes: ['commune de', 'département de', 'département du', 'région', 'arrondissement de', 'canton de', 'ville de'] },
+  // Baltic — local civil-administrative suffixes
+  'ee-counties': { stripSuffixes: ['maakond', 'vald', 'linn', 'kihelkond', 'kogudus', 'alev', 'alevik', 'küla'] },
+  'lv-novadi': { stripSuffixes: ['novads', 'pagasts', 'pilsēta', 'valstspilsēta', 'apriņķis', 'draudze', 'ciemats'] },
+  'lt-savivaldybes': { stripSuffixes: ['savivaldybė', 'savivaldybės', 'seniūnija', 'seniūnijos', 'apskritis', 'apskrities', 'parapija', 'parapijos', 'miestas', 'kaimas', 'rajonas', 'rajono'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,
