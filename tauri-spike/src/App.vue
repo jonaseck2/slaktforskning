@@ -1,160 +1,154 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { ref, onMounted } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
 
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
+interface DbStats { persons: number; events: number; places: number; sources: number }
+interface PersonRow {
+  id: string;
+  given_name: string | null;
+  surname: string | null;
+  sex: string;
 }
+
+const dbPath = ref('/Users/jonasahnstedt/git/slaktforskning/export-import/bengt.db');
+const dbOpen = ref(false);
+const stats = ref<DbStats | null>(null);
+const persons = ref<PersonRow[]>([]);
+const offset = ref(0);
+const pageSize = 100;
+const error = ref<string>('');
+const tickStart = ref(0);
+const lastQueryMs = ref(0);
+
+async function openDb() {
+  error.value = '';
+  try {
+    await invoke('db_open', { path: dbPath.value });
+    dbOpen.value = true;
+    stats.value = await invoke<DbStats>('db_stats');
+    // Spike: auto-load all rows for max-load measurement.
+    await loadAll();
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function loadPage() {
+  tickStart.value = performance.now();
+  try {
+    persons.value = await invoke<PersonRow[]>('persons_list', {
+      limit: pageSize,
+      offset: offset.value,
+    });
+    lastQueryMs.value = Math.round(performance.now() - tickStart.value);
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+async function nextPage() {
+  if (!stats.value) return;
+  if (offset.value + pageSize >= stats.value.persons) return;
+  offset.value += pageSize;
+  await loadPage();
+}
+
+async function prevPage() {
+  if (offset.value === 0) return;
+  offset.value = Math.max(0, offset.value - pageSize);
+  await loadPage();
+}
+
+async function loadAll() {
+  if (!stats.value) return;
+  tickStart.value = performance.now();
+  try {
+    const all: PersonRow[] = await invoke('persons_list', {
+      limit: stats.value.persons,
+      offset: 0,
+    });
+    persons.value = all;
+    lastQueryMs.value = Math.round(performance.now() - tickStart.value);
+  } catch (e) {
+    error.value = String(e);
+  }
+}
+
+onMounted(() => { openDb(); });
 </script>
 
 <template>
   <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
-
-    <div class="row">
-      <a href="https://vite.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
+    <h1>Slaktforskning Tauri spike</h1>
+    <div class="controls">
+      <input v-model="dbPath" placeholder="path to .db" style="width: 600px" />
+      <button @click="openDb">Open DB</button>
     </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
-
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
+    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="stats" class="stats">
+      <div>Persons: <b>{{ stats.persons.toLocaleString() }}</b></div>
+      <div>Events: <b>{{ stats.events.toLocaleString() }}</b></div>
+      <div>Places: <b>{{ stats.places.toLocaleString() }}</b></div>
+      <div>Sources: <b>{{ stats.sources.toLocaleString() }}</b></div>
+      <div>Last query: <b>{{ lastQueryMs }} ms</b></div>
+    </div>
+    <div v-if="dbOpen" class="pager">
+      <button @click="prevPage" :disabled="offset === 0">Prev</button>
+      <span>rows {{ offset + 1 }} – {{ Math.min(offset + pageSize, stats?.persons || 0) }}</span>
+      <button @click="nextPage" :disabled="!stats || offset + pageSize >= stats.persons">Next</button>
+      <button @click="loadAll" :disabled="!stats">Load all (stress test)</button>
+    </div>
+    <table v-if="persons.length" class="grid">
+      <thead><tr><th>Surname</th><th>Given</th><th>Sex</th><th>ID</th></tr></thead>
+      <tbody>
+        <tr v-for="p in persons" :key="p.id">
+          <td>{{ p.surname || '—' }}</td>
+          <td>{{ p.given_name || '—' }}</td>
+          <td>{{ p.sex }}</td>
+          <td class="id">{{ p.id.slice(0, 8) }}</td>
+        </tr>
+      </tbody>
+    </table>
   </main>
 </template>
 
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-
-</style>
 <style>
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #222;
+  background: #f5f5f7;
 }
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+* { box-sizing: border-box; }
+body, html { margin: 0; padding: 0; }
+.container { padding: 1rem 1.5rem; max-width: 1100px; }
+h1 { font-size: 1.25rem; margin: 0 0 0.75rem; }
+.controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.controls input {
+  padding: 0.4rem 0.6rem; border: 1px solid #ccc; border-radius: 4px;
+  font-family: monospace; font-size: 12px;
 }
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  padding: 0.4rem 0.9rem; border: 1px solid #999; border-radius: 4px;
+  background: #fff; cursor: pointer;
 }
-
-button {
-  cursor: pointer;
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.stats {
+  display: flex; gap: 1.5rem; padding: 0.5rem 1rem;
+  background: #fff; border: 1px solid #ddd; border-radius: 4px;
+  margin-bottom: 1rem;
 }
-
-button:hover {
-  border-color: #396cd8;
+.pager { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+.error { color: #c00; padding: 0.5rem; background: #fee; border-radius: 4px; }
+.grid {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border: 1px solid #ddd; border-radius: 4px; overflow: hidden;
 }
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+.grid th, .grid td {
+  padding: 0.35rem 0.6rem; text-align: left; border-bottom: 1px solid #eee;
+  font-size: 13px;
 }
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
+.grid th { background: #fafafa; font-weight: 600; }
+.grid tr:hover td { background: #f8f8f8; }
+.id { font-family: monospace; color: #888; font-size: 11px; }
 </style>
