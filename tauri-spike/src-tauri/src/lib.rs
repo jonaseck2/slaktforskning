@@ -3,7 +3,7 @@
 
 mod db;
 
-use db::{DbStats, PersonRow};
+use db::{AncestorNode, DbStats, PersonRow};
 
 #[tauri::command]
 fn db_open(path: String) -> Result<(), String> {
@@ -30,6 +30,11 @@ fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
     db::persons_list(limit, offset)
 }
 
+#[tauri::command]
+fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<AncestorNode>, String> {
+    db::get_ancestor_tree(&focus_id, max_depth)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -40,6 +45,7 @@ pub fn run() {
             db_is_open,
             db_stats,
             persons_list,
+            get_ancestor_tree,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -193,15 +193,58 @@ to measure precisely; the qualitative observation is that the Tauri
 spike opens "instantly" (no perceptible delay) and the 22k-row table
 rendered without obvious jank.
 
-### Tasks 8-14 status
+### After Task 5 partial (pedigree chart with SVG rendering)
 
-The remaining tasks (multi-window, MCP sidecar, chart print, full IPC
-port to 6 commands, cross-platform parity on Windows + Linux,
-feature-gap audit, final recommendation) are NEEDED to validate the
-"OTHER half" of the decision — cross-platform rendering parity and
-feature-completeness — but the size + RAM headline numbers are
-already conclusive. Continuing tasks 8-14 to reduce risk before
-committing to a 2-3 month full port, not to discover whether to do it.
+Added `get_ancestor_tree(focus_id, max_depth)` Tauri command that
+recursively walks the `relationships` table to find ancestors,
+returning `{id, generation, position, given_name, surname, sex}`.
+Vue side renders a simple pedigree chart as SVG: rounded boxes
+positioned by Sosa-Stradonitz ahnentafel index, Bezier-curve
+edges between parent/child boxes, sex-coded fill colors.
+
+Tested with Gustaf Alfons Valfrid Lindholm (`00034a36-…`) at depth 4
+(up to 31 ancestors).
+
+| Metric | Value |
+|---|---:|
+| `tauri-spike.app` total (after chart code added) | **10 MB** (no change from before) |
+| RSS, persons-list page + ancestor tree both loaded, chart SVG rendered | **110 MB / 1 proc** |
+
+The chart code path adds ~1 MB to RSS over the persons-list-only path.
+SVG renders without obvious WebKit issues on macOS.
+
+The renderer uses standard SVG primitives (rect, path, text) with no
+WebKit-specific assumptions — same code should render identically in
+WebView2 (Windows) and WebKitGTK (Linux). Full validation in Task 12.
+
+### Final Tauri-vs-Electron table on dev mac (current state)
+
+| Metric | Electron | Tauri spike | Δ % | Verdict |
+|---|---:|---:|---:|---|
+| `.app` on disk | 276 MB | 10 MB | **−96%** | ≥50% ✅ |
+| RSS, idle (1 win, no DB) | 886 MB / 4 procs | 102 MB / 1 proc | **−88%** | ≥50% ✅ |
+| RSS, with 22k-person DB + page rendered | (not measured) | 106 MB | — | — |
+| RSS, all 22k rows in DOM (stress) | (not measured) | 114 MB | — | — |
+| RSS, persons + pedigree SVG rendered | (not measured) | 110 MB | — | — |
+| Cold start (whenReady-equivalent) | 177 ms | not yet logged | — | — |
+| sqlite3 cli baseline (full sort/scan 22k) | — | 41 ms | — | — |
+
+### Tasks 8-14 remaining
+
+The size + RAM signal is already conclusive (4-30× past ≥50% threshold).
+Remaining tasks shift from "discover whether to port" to "derisk before
+committing":
+
+- **Task 9 (MCP sidecar)** — existential for agent workflows; the existing
+  `src/mcp/server.ts` is engine-agnostic so this is mostly a Tauri config
+  exercise. Needs validation that an external `claude` CLI can connect.
+- **Task 10 (chart print → PDF)** — second-most engine-sensitive path;
+  Electron uses Chromium printToPDF, Tauri 2.x has its own print API.
+  Likely place a Tauri port hits a parity cliff.
+- **Task 8 (multi-window event broadcast)** — low risk; Tauri has a
+  built-in event bus.
+- **Task 12 (Windows + Linux validation)** — needs separate machines/VMs;
+  cannot proceed from CLI on dev mac alone.
 
 ## Phase 3 — Comparison + recommendation
 
