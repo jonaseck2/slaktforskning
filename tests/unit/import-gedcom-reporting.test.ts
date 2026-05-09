@@ -514,6 +514,70 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
   });
 });
 
+describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)', () => {
+  // Closes silent-drop gaps surfaced by real-world testing — Heiner's torture
+  // test had CREM/BARM/BASM, FTM Habsburg had 18 ANUL + 7 _SEPR + MARL events.
+  const EVENT_GED = `
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Test /Person/
+1 CREM
+2 DATE 5 JUN 2020
+2 PLAC Some Crematorium
+1 BARM
+2 DATE 15 MAR 1933
+0 @I2@ INDI
+1 NAME Spouse /Person/
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 ANUL
+2 DATE 1 JAN 1950
+1 MARL
+2 DATE 30 DEC 1949
+1 _SEPR
+2 DATE 12 JUN 1948
+0 TRLR
+`.trim();
+
+  it('imports CREM, BARM, ANUL, MARL, _SEPR with the correct event_type values', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(EVENT_GED));
+    const rows = db.prepare(
+      'SELECT event_type FROM events ORDER BY event_type'
+    ).all([]) as Array<{ event_type: string }>;
+    const types = rows.map(r => r.event_type);
+    expect(types).toContain('cremation');
+    expect(types).toContain('bar_mitzvah');
+    expect(types).toContain('annulment');
+    expect(types).toContain('marriage_license');
+    expect(types).toContain('separation');
+  });
+
+  it('does not list these event tags in the report skipped list', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(EVENT_GED));
+    const droppedEventTags = report.skipped.filter(s =>
+      ['CREM', 'BARM', 'BASM', 'ANUL', 'MARL', '_SEPR'].includes(s.tag)
+    );
+    expect(droppedEventTags).toEqual([]);
+  });
+
+  it('round-trips the new event types through GEDCOM export', async () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(EVENT_GED));
+    const { exportGedcom } = await import('../../src/gedcom/exporter');
+    const { ged } = exportGedcom(db);
+    expect(ged).toMatch(/^1 CREM$/m);
+    expect(ged).toMatch(/^1 BARM$/m);
+    expect(ged).toMatch(/^1 ANUL$/m);
+    expect(ged).toMatch(/^1 MARL$/m);
+    expect(ged).toMatch(/^1 _SEPR$/m);
+  });
+});
+
 describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
   // Closes silent-drop gaps surfaced by real-world testing against
   // RootsMagic, Family Tree Maker, FamilyOrigins, and PAF exports.

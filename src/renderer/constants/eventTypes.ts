@@ -12,6 +12,12 @@ export const EVENT_TYPE_VALUES = [
   'title', 'religion', 'description', 'fact',
   // Lifecycle events for monarchs / nobility / formal name changes.
   'name_change', 'accession', 'coronation',
+  // Added 2026-05-09 (real-world dialect testing closed silent-drop gaps):
+  // CREM/BARM/BASM are GEDCOM 5.5/5.5.1 standard INDI events; ANUL/MARL are
+  // GEDCOM 5.5/5.5.1 standard FAM events; _SEPR is a non-standard but
+  // widely-emitted FAM event for separation (FTM, RootsMagic).
+  'cremation', 'bar_mitzvah', 'bas_mitzvah',
+  'annulment', 'separation', 'marriage_license',
   'other',
 ] as const;
 
@@ -30,11 +36,11 @@ export function isSpanEventType(type: string): type is SpanEventType {
 }
 
 export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
-  (t) => !['marriage', 'divorce', 'wedding'].includes(t),
+  (t) => !['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license'].includes(t),
 );
 
 export const RELATIONSHIP_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
-  ['marriage', 'divorce', 'wedding', 'census', 'other'].includes(t),
+  ['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license', 'census', 'other'].includes(t),
 );
 
 export const DATE_TYPE_VALUES = [

@@ -492,6 +492,12 @@ export default {
     name_change: 'Namnändring',
     accession: 'Trontillträde',
     coronation: 'Kröning',
+    cremation: 'Kremering',
+    bar_mitzvah: 'Bar mitsva',
+    bas_mitzvah: 'Bat mitsva',
+    annulment: 'Annullering',
+    separation: 'Hemskillnad',
+    marriage_license: 'Lysning',
     other: 'Övrigt',
   },
   timelineLabels: {

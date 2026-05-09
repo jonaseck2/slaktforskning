@@ -492,6 +492,12 @@ export default {
     name_change: 'Name change',
     accession: 'Accession to throne',
     coronation: 'Coronation',
+    cremation: 'Cremation',
+    bar_mitzvah: 'Bar Mitzvah',
+    bas_mitzvah: 'Bas Mitzvah',
+    annulment: 'Annulment',
+    separation: 'Separation',
+    marriage_license: 'Marriage license',
     other: 'Other',
   },
   timelineLabels: {

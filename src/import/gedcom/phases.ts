@@ -47,6 +47,9 @@ export const PERSON_EVENT_TAGS: Record<string, string> = {
   IMMI: 'immigration', NATU: 'naturalization', CENS: 'census',
   PROB: 'probate', WILL: 'will', GRAD: 'graduation', RETI: 'retirement',
   ENGA: 'engagement', ADOP: 'adoption',
+  // GEDCOM 5.5/5.5.1 standard INDI events. CREM and BARM/BASM are widely
+  // emitted by FTM, RootsMagic, Heiner's torture test, etc.
+  CREM: 'cremation', BARM: 'bar_mitzvah', BASM: 'bas_mitzvah',
   // Fact-shaped tags (line value preserved in events.value, not notes).
   // TITL routes through its own event_type rather than the legacy
   // TITL→occupation conversion so round-trip preserves the original tag.
@@ -55,7 +58,12 @@ export const PERSON_EVENT_TAGS: Record<string, string> = {
 };
 
 export const FAMILY_EVENT_TAGS: Record<string, string> = {
-  MARR: 'marriage', DIV: 'divorce', CENS: 'census', ENGA: 'engagement', EVEN: 'other',
+  MARR: 'marriage', DIV: 'divorce', CENS: 'census', ENGA: 'engagement',
+  // GEDCOM 5.5/5.5.1 standard FAM events (ANUL, MARL) plus the widely-used
+  // non-standard _SEPR for separation. Real-world: FTM Habsburg has 18 ANULs
+  // and 7 _SEPRs that were silently dropped before.
+  ANUL: 'annulment', MARL: 'marriage_license', _SEPR: 'separation',
+  EVEN: 'other',
 };
 
 const KNOWN_INDI_TAGS = new Set([
@@ -66,6 +74,7 @@ const KNOWN_INDI_TAGS = new Set([
   // PERSON_EVENT_TAGS keys:
   'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
+  'CREM', 'BARM', 'BASM',
   'TITL', 'RELI', 'DSCR', 'FACT', 'OBJE',
   // Holger custom tags imported as notes:
   'REMA', 'MISC',
@@ -75,6 +84,7 @@ const KNOWN_FAM_TAGS = new Set([
   'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
   // FAMILY_EVENT_TAGS keys:
   'MARR', 'DIV', 'CENS', 'ENGA', 'EVEN',
+  'ANUL', 'MARL', '_SEPR',
   'OBJE',
 ]);
 

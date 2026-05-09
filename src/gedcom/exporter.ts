@@ -38,6 +38,9 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   immigration: 'IMMI', naturalization: 'NATU', census: 'CENS',
   probate: 'PROB', will: 'WILL', graduation: 'GRAD', retirement: 'RETI',
   marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP',
+  // GEDCOM 5.5/5.5.1 standard tags. _SEPR is non-standard but widely emitted.
+  cremation: 'CREM', bar_mitzvah: 'BARM', bas_mitzvah: 'BASM',
+  annulment: 'ANUL', marriage_license: 'MARL', separation: '_SEPR',
   // Fact-shaped event types — line value is emitted on the same line as the tag.
   title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
   other: 'EVEN',
