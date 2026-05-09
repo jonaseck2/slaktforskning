@@ -514,6 +514,43 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
   });
 });
 
+describe('GEDCOM import - SEX value normalization', () => {
+  // Real-world files from FamilySearch GEDCOM 7.0 reference, webtreeprint,
+  // and others ship sex values our schema's CHECK (M/F/U) rejects:
+  //   - GEDCOM 7.0 introduces X (intersex/non-binary) and N (no entry)
+  //   - Some older files emit bare "1 SEX" (empty value)
+  //   - Some emit lowercase ("1 SEX m")
+  // None of these should crash the importer with a CHECK constraint failure.
+  function buildGed(sexLine: string): string {
+    return `0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Test /Person/\n${sexLine}\n0 TRLR`;
+  }
+
+  it('does not crash on GEDCOM 7.0 SEX X (intersex/non-binary)', () => {
+    const db = createTestDb();
+    expect(() => importGedcom(db, parseGedcom(buildGed('1 SEX X')))).not.toThrow();
+    const row = (db.prepare('SELECT sex FROM persons').get([]) as { sex: string } | undefined);
+    expect(row?.sex).toBe('U');
+  });
+
+  it('normalizes lowercase sex values to uppercase', () => {
+    const db = createTestDb();
+    importGedcom(db, parseGedcom(buildGed('1 SEX m')));
+    expect((db.prepare('SELECT sex FROM persons').get([]) as { sex: string }).sex).toBe('M');
+  });
+
+  it('treats bare "1 SEX" (empty value) as Unknown', () => {
+    const db = createTestDb();
+    expect(() => importGedcom(db, parseGedcom(buildGed('1 SEX')))).not.toThrow();
+    expect((db.prepare('SELECT sex FROM persons').get([]) as { sex: string }).sex).toBe('U');
+  });
+
+  it('discloses unsupported sex values in the report skipped list', () => {
+    const db = createTestDb();
+    const report = importGedcom(db, parseGedcom(buildGed('1 SEX X')));
+    expect(report.skipped.find(s => s.tag === 'SEX=X')?.count).toBe(1);
+  });
+});
+
 // ── GEDCOM 5.5.1 import — full ImportReport field coverage ───────────────────
 
 const FULL_GED = `

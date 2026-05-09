@@ -193,7 +193,16 @@ export function phaseIndividuals(ctx: ImportContext): void {
   for (const node of ctx.tree) {
     if (node.tag !== 'INDI' || !node.xref) continue;
 
-    const sex = (getChild(node, 'SEX')?.value ?? 'U') as 'M' | 'F' | 'U';
+    // Normalize SEX to schema's M / F / U vocabulary. Per GEDCOM 5.5.1 only
+    // M/F/U are valid; GEDCOM 7.0 adds X (intersex/non-binary) and N (no
+    // entry); some real-world files emit bare "1 SEX" (empty) or lowercase.
+    // Anything outside M/F maps to U so the importer doesn't crash on the
+    // schema's CHECK constraint. This is lossy — see the warning below.
+    const rawSex = getChild(node, 'SEX')?.value?.trim().toUpperCase() ?? '';
+    const sex: 'M' | 'F' | 'U' = rawSex === 'M' ? 'M' : rawSex === 'F' ? 'F' : 'U';
+    if (rawSex && rawSex !== 'M' && rawSex !== 'F' && rawSex !== 'U') {
+      ctx.skippedTags.set(`SEX=${rawSex}`, (ctx.skippedTags.get(`SEX=${rawSex}`) ?? 0) + 1);
+    }
     let notes = resolveNote(node, ctx.noteMap);
 
     // Genney 4.1: haplogroup tags -> append to notes
