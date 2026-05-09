@@ -17,7 +17,7 @@ Fixes landed in the same session as the test:
 | 5 | ✅ FIXED | `merge_persons` leaves duplicate events behind. Post-merge step now keeps the oldest row for single-cardinality event types (birth, baptism, christening, death, burial), transfers citations + media_links to the survivor, deletes the rest. |
 | 6 | ✅ FIXED | `merge_persons` adds a second `name_type='birth'` instead of demoting. Source birth names are now demoted to `aka` when the target already has one. |
 | 7 | ✅ FIXED | i18n missing for `eventTypes.accession` and `eventTypes.coronation` |
-| 8 | ❌ open | `add_source` may silently drop `abstract` (verification + same-shape fix) |
+| 8 | ✅ FIXED | `add_source` was silently dropping `abstract` + `call_number`. Same shape as #3 — INSERT statement out of sync with the Source type and tool inputSchema. Round-trip regression test added in `tests/unit/sources.test.ts`. |
 | 9 | ❌ open | `living` flag on persons born >130 yrs ago without death event |
 | 10 | ❌ open | Place type vocabulary too narrow for royal residences |
 | 11 | ❌ open | Other event-type i18n keys may be missing (`name_change`, `census`, etc.) |
