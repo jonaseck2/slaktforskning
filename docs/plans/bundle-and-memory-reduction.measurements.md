@@ -225,7 +225,26 @@ finalize. Two leak fixes shipped; the other three were already clean.
 
 ## After Task 13 (WASM heap smoke)
 
-(populated by Task 13 subagent — pre/post import heap deltas)
+The heap smoke test as specified (capture pre-import / post-import WASM
+heap during a 10k-person GEDCOM import via the packaged binary) requires
+GUI launch + live import + heap-snapshot inspection. **Deferred to user**
+for hands-on verification.
+
+Structural proof in lieu of a heap snapshot:
+- The audit (Tasks 8-12) found and finalized **20 leaking prepared
+  statements**, including **17 in `transformGenney`** that previously
+  leaked once per import call. Import test suites (`gedcom*` 14 files /
+  403 tests; `genney*` 6 files / 94 tests) pass after the fix — no
+  functional regression.
+- Net behaviour change: every Genney import previously leaked 17 prepared
+  statements per call to the WASM heap, accumulating across re-imports in
+  long-running sessions. After this plan, the leak is gone.
+
+User verification (recommended before merge):
+1. Launch the packaged binary.
+2. Import a large Genney `.backup` file (~30k rows).
+3. Watch Activity Monitor / Task Manager — Real Memory should not grow
+   unboundedly across repeated imports of the same file.
 
 ---
 
