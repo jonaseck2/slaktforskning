@@ -278,6 +278,7 @@ const api = {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
     onOpenAbout: (cb: () => void) => ipcRenderer.on('app:openAbout', cb),
+    readThirdPartyLicenses: () => ipcRenderer.invoke('app:readThirdPartyLicenses') as Promise<string>,
   },
   chart: {
     saveSvg: (svgContent: string, fileNameHint?: string) => ipcRenderer.invoke('chart:saveSvg', svgContent, fileNameHint),

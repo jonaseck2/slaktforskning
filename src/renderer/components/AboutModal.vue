@@ -18,22 +18,18 @@
         {{ $t('about.openSource') }}
         <a href="#" class="about-link" @click.prevent="openRepo">{{ $t('about.viewOnGitHub') }}</a>
       </p>
+      <p class="about-license">
+        <a href="#" class="about-link" @click.prevent="openLicenses">{{ $t('about.viewLicenses') }}</a>
+      </p>
     </div>
+    <LicensesViewerModal :visible="licensesVisible" @close="licensesVisible = false" />
   </BaseSubPanel>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import BaseSubPanel from './modals/BaseSubPanel.vue';
-
-declare const window: Window & {
-  api: {
-    app: {
-      getVersion: () => Promise<string>;
-      openExternal: (url: string) => Promise<void>;
-    };
-  };
-};
+import LicensesViewerModal from './LicensesViewerModal.vue';
 
 const REPO_URL = 'https://github.com/jonaseck2/slaktforskning';
 
@@ -41,6 +37,7 @@ const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 
 const version = ref('');
+const licensesVisible = ref(false);
 
 async function loadVersion() {
   if (!window.api?.app?.getVersion) return;
@@ -54,6 +51,7 @@ watch(() => props.visible, (v) => {
 }, { immediate: true });
 
 function close() { emit('close'); }
+function openLicenses() { licensesVisible.value = true; }
 function openRepo() {
   if (window.api?.app?.openExternal) {
     window.api.app.openExternal(REPO_URL);
