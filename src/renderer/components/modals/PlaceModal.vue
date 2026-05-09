@@ -145,7 +145,7 @@ async function handleSave() {
       parent_place_id: form.parent_place_id,
       latitude: form.latitude,
       longitude: form.longitude,
-      notes: form.notes || null,
+      notes: form.notes ?? '',
     };
     let place: Place;
     if (props.editingPlace) {

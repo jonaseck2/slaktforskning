@@ -226,7 +226,10 @@
           :collapsed="!sections.quality"
           @toggle="toggleSection('quality')"
         />
-        <div v-if="sections.quality" class="panel-section-body">
+        <!-- v-show keeps the child mounted while collapsed so its
+             defineExpose({ count }) is live — otherwise the (N) badge falls
+             back to 0 whenever the section is closed. -->
+        <div v-show="sections.quality" class="panel-section-body">
           <MediaChecksSection ref="checksSectionRef" :media-id="mediaId!" />
         </div>
       </div>

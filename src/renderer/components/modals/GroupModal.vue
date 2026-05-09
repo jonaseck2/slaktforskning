@@ -243,7 +243,7 @@ async function handleSave() {
     let group: Group;
     const payload = {
       name: form.name.trim(),
-      notes: form.notes.trim() || null,
+      notes: form.notes.trim(),
     };
     if (savedGroupId.value) {
       group = (await window.api.groups.update(savedGroupId.value, payload)) as Group;

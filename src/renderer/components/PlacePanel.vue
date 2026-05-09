@@ -186,10 +186,13 @@
         </div>
       </div>
 
-      <!-- Quality section -->
+      <!-- Quality section. v-show (not v-if) keeps the child mounted so its
+           defineExpose({ count }) is live — otherwise the (N) count badge
+           is 0 whenever the section is closed, contradicting the DB. The
+           child caches via useEntityData so the per-mount fetch is cheap. -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
-        <div v-if="sections.quality" class="panel-section-body">
+        <div v-show="sections.quality" class="panel-section-body">
           <PlaceChecksSection ref="checksSectionRef" :place-id="placeId!" />
         </div>
       </div>

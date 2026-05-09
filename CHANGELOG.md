@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: saving a group or research task with empty notes crashed with `NOT NULL constraint failed: groups.notes` / `research_tasks.notes` (same shape as v0.227.6's relationship fix); clearing the notes field on a place silently kept the old text. Modals (Group, Place, ResearchTask) no longer coerce empty strings to `null`, and the `update*` api functions coerce `null` → `''` for NOT-NULL text columns to match their `create*` siblings.
 - feat: open-source license attribution now travels with the app. Settings → About → "View open source notices" displays the full license text of every bundled third-party library (185 packages). The same `THIRD_PARTY_LICENSES.txt` plus a CycloneDX `sbom.cdx.json` are attached to every GitHub release as standalone supply-chain artifacts.
 - fix: SBOM workflow now includes Electron (and its electron-* runtime packages) — Electron is a devDependency in `package.json` but physically ships in the binary, so omitting it would mislead supply-chain auditors
 - fix: document dev-mode Vite path-traversal assumption in `app:readThirdPartyLicenses`; tighten `window.api.app` type to remove `as string` cast in licenses modal

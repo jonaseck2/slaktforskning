@@ -21,7 +21,7 @@ export function updateGroup(db: Database, id: string, data: { name?: string; not
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.name !== undefined) { fields.push('name = ?'); values.push(data.name); }
-  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
+  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes ?? ''); }
   if (fields.length === 0) return getGroup(db, id);
   values.push(id);
   runSql(db, `UPDATE groups SET ${fields.join(', ')} WHERE id = ?`, values);

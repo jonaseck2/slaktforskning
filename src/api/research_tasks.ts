@@ -60,9 +60,9 @@ export function updateResearchTask(db: Database, id: string, data: {
   const values: unknown[] = [];
   if (data.priority !== undefined) { fields.push('priority = ?'); values.push(data.priority); }
   if (data.status !== undefined) { fields.push('status = ?'); values.push(data.status); }
-  if (data.task !== undefined) { fields.push('task = ?'); values.push(data.task); }
-  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
-  if (data.result !== undefined) { fields.push('result = ?'); values.push(data.result); }
+  if (data.task !== undefined) { fields.push('task = ?'); values.push(data.task ?? ''); }
+  if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes ?? ''); }
+  if (data.result !== undefined) { fields.push('result = ?'); values.push(data.result ?? ''); }
   if (fields.length === 0) return getResearchTask(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);

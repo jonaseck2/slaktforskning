@@ -154,8 +154,8 @@ async function handleSave() {
       task: form.task.trim(),
       status: form.status,
       priority: form.priority,
-      notes: form.notes.trim() || null,
-      result: (form.status === 'done' || form.status === 'stopped') ? (form.result.trim() || null) : null,
+      notes: form.notes.trim(),
+      result: (form.status === 'done' || form.status === 'stopped') ? form.result.trim() : '',
     };
     let saved: ResearchTask;
     if (props.editingTask) {
