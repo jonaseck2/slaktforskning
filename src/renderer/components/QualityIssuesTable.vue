@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="quality-table-wrapper">
     <SectionEmpty v-if="issues.length === 0" :message="$t('empty.qualityIssues')" />
     <table v-else class="data-table table-resizable">
       <thead>
@@ -186,6 +186,14 @@ function entityRoute(r: QualityIssue, id: string): { path: string; query?: Recor
 </script>
 
 <style scoped>
+/* Wrapper around the resizable table — allows horizontal scrolling when
+   the user drags any column wider than the viewport. Without this, the
+   table-resizable rule in shared.css makes the table grow to its column
+   widths but the parent clips, hiding the right-most columns. */
+.quality-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
 .th-shrink, .td-shrink { width: 1%; max-width: none; white-space: nowrap; }
 .actions-cell { width: 1px; max-width: none; text-align: right; white-space: nowrap; vertical-align: middle; }
 .message-cell {

@@ -130,10 +130,22 @@
 /* Opt-in resizable columns. Pair with the `useResizableColumns` composable
    which binds inline `width: <px>px` on each `<th>`. `table-layout: fixed`
    makes the browser honor those exact widths instead of redistributing by
-   content. The user-drag affordance is `.col-resize-handle` on each header
-   cell (see below). Cells that overflow their fixed column clip with
-   ellipsis so a too-narrow column never breaks layout. */
-.data-table.table-resizable { table-layout: fixed; }
+   content. `width: auto` (overriding the base `.data-table { width: 100% }`)
+   means a wider-than-parent table grows to the sum of column widths and
+   overflows the wrapper — without this override, table-layout: fixed
+   silently scales every column down proportionally to fit the parent and
+   the user's drag has no visible effect (ask any "Issue column won't
+   resize" bug report). The wrapper around the table needs `overflow-x: auto`
+   to let the user scroll horizontally when widths exceed the viewport.
+   `min-width: 100%` keeps the table filling its container when the sum is
+   smaller than the parent. The user-drag affordance is `.col-resize-handle`
+   on each header cell (see below). Cells that overflow their fixed column
+   clip with ellipsis so a too-narrow column never breaks layout. */
+.data-table.table-resizable {
+  table-layout: fixed;
+  width: auto;
+  min-width: 100%;
+}
 .data-table.table-resizable th { position: relative; }
 .data-table.table-resizable th,
 .data-table.table-resizable td {
