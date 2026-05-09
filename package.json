@@ -19,7 +19,8 @@
     "pretest:e2e": "npm run package",
     "test:e2e": "playwright test",
     "build:static": "vite build --config vite.static.config.ts",
-    "dev:static": "vite --config vite.static.config.ts"
+    "dev:static": "vite --config vite.static.config.ts",
+    "build:third-party-licenses": "node scripts/build-third-party-licenses.mjs"
   },
   "keywords": [],
   "author": {
