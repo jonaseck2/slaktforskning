@@ -44,6 +44,9 @@ const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'import:holgerSelectFile', 'import:holgerSelectMedia',
   // import:holgerRun migrated to the registry as a worker channel.
   'archive:export', 'archive:import',
+  // Onboarding state lives in user settings.json (loadSettings / saveSettings need Electron),
+  // so these channels are registered via wrapHandler on the main thread.
+  'onboarding:getSeen', 'onboarding:markSeen', 'onboarding:reset',
 ]);
 
 function extractWrapHandlerChannels(dir: string): string[] {

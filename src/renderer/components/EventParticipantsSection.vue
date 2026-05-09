@@ -14,9 +14,11 @@
       {{ $t('events.participantsSaveFirstHint') }}
     </p>
     <template v-else>
-      <div v-if="extraParticipants.length === 0" class="ep-sec-empty">
-        {{ $t('events.participantsEmpty') }}
-      </div>
+      <SectionEmpty
+        v-if="extraParticipants.length === 0"
+        purpose-key="onboarding.empty.eventParticipants.purpose"
+        secondary-hint-key="onboarding.empty.eventParticipants.hint"
+      />
       <div
         v-for="row in extraParticipants"
         :key="row.id"
@@ -59,6 +61,7 @@ import { computed, ref, toRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
 import PersonPicker from './PersonPicker.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import { useEntityData } from '../composables/useEntityData';
 import { useToast } from '../composables/useToast';
 import { usePersonNameOptions } from '../stores/personNameOptions';

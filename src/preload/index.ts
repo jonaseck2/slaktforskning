@@ -291,6 +291,11 @@ const api = {
     onOpenAbout: (cb: () => void) => ipcRenderer.on('app:openAbout', cb),
     readThirdPartyLicenses: () => ipcRenderer.invoke('app:readThirdPartyLicenses') as Promise<string>,
   },
+  onboarding: {
+    getSeen: () => ipcRenderer.invoke('onboarding:getSeen') as Promise<Record<string, true>>,
+    markSeen: (key: string) => ipcRenderer.invoke('onboarding:markSeen', { key }) as Promise<void>,
+    reset: () => ipcRenderer.invoke('onboarding:reset') as Promise<void>,
+  },
   chart: {
     saveSvg: (svgContent: string, fileNameHint?: string) => ipcRenderer.invoke('chart:saveSvg', svgContent, fileNameHint),
     savePdf: (svgContent: string, pxWidth: number, pxHeight: number, fileNameHint?: string) => ipcRenderer.invoke('chart:savePdf', svgContent, pxWidth, pxHeight, fileNameHint),

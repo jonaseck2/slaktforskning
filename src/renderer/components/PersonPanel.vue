@@ -82,7 +82,12 @@
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.names')" :count="names.length" :collapsed="!sections.names" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addName') }" @toggle="toggleSection('names')" @action="openNameForm(null)" />
         <div v-if="sections.names" class="panel-section-body">
-          <SectionEmpty v-if="names.length === 0" :message="$t('empty.names')" />
+          <SectionEmpty
+            v-if="names.length === 0"
+            purpose-key="onboarding.empty.personNames.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.personNames.cta'"
+            @action="openNameForm(null)"
+          />
           <PersonNamesTable v-else :names="names" :birth-event-date="birthEventDate" :readonly="props.readonly" @edit="openNameForm" @delete="deleteName" @reorder="reorderNames" />
         </div>
       </div>
@@ -157,7 +162,12 @@
               @cancel="showGroupPicker = false"
             />
           </div>
-          <SectionEmpty v-if="groups.length === 0" :message="$t('empty.groups')" />
+          <SectionEmpty
+            v-if="groups.length === 0"
+            purpose-key="onboarding.empty.personGroups.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.personGroups.cta'"
+            @action="showGroupPicker = true"
+          />
           <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" @select="(id) => router.push('/groups/' + id)" />
         </div>
       </div>
@@ -175,6 +185,7 @@
             :person-id="personId!"
             :readonly="props.readonly"
             @select="openTaskForm"
+            @add-task="openTaskForm()"
           />
         </div>
       </div>

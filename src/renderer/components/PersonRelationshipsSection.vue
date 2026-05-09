@@ -1,5 +1,9 @@
 <template>
-  <SectionEmpty v-if="totalCount === 0" :message="$t('empty.relationships')" />
+  <SectionEmpty
+    v-if="totalCount === 0"
+    purpose-key="onboarding.empty.personRelationships.purpose"
+    secondary-hint-key="onboarding.empty.personRelationships.hint"
+  />
 
   <div v-else class="rels-groups">
     <!-- Parents — bio → adopted → foster → step → unknown, father then mother within each -->

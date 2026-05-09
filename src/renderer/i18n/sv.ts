@@ -120,6 +120,7 @@ export default {
     yes: 'Ja',
     no: 'Nej',
     notNow: 'Inte nu',
+    gotIt: 'Förstått',
     notes: 'Anteckningar',
     type: 'Typ',
     name: 'Namn',
@@ -1835,6 +1836,183 @@ export default {
     eventTypeSortAlphabetical: 'Bokstavsordning',
     eventTypeSortCanonical: 'Livsförlopp (födelse → död → ...)',
     eventTypeSortHint: 'Bestämmer ordningen i händelsetyp-listan när du lägger till eller redigerar en händelse.',
+  },
+  onboarding: {
+    empty: {
+      personNames: {
+        purpose: 'Här samlar du varje namn personen har burit — födelsenamn, gifta namn, alias — och lägger till, öppnar eller tar bort ett namn.',
+        cta: 'Lägg till namn',
+      },
+      personIdentifiers: {
+        purpose: 'Här samlar du externa ID:n för personen — FamilySearch, Ancestry, Riksarkivet, personnummer, GEDCOM REFN/RIN — och lägger till eller tar bort dem.',
+        cta: 'Lägg till ID',
+      },
+      personRelationships: {
+        purpose: 'Här ser du vilka personen är släkt med och hur, kan öppna en relation för att redigera typ och datum, och koppla bort en relation. Lägg till en släkting via genvägsknapparna i panelens överkant.',
+        hint: 'Lägg till en släkting via + Pappa / Mamma / Make/Maka / Son / Dotter ovan.',
+      },
+      personEvents: {
+        purpose: 'Här samlar du livshändelser som drabbat personen — typ, datum, plats — och lägger till, öppnar eller tar bort en händelse.',
+        cta: 'Lägg till händelse',
+      },
+      personTimeline: {
+        purpose: 'Här visas samma händelser som i Händelser-sektionen, kronologiskt ordnade. Härifrån kan du också gena till att lägga till en ny händelse.',
+        cta: 'Lägg till händelse',
+      },
+      personLifeMap: {
+        purpose: 'Här visas platserna för personens händelser på en karta. Härifrån kan du gena till att lägga till en ny händelse — vilket är så en ny plats hamnar på kartan.',
+        cta: 'Lägg till händelse',
+      },
+      personMedia: {
+        purpose: 'Här samlar du foton och dokument kopplade till personen, kopplar nya filer, markerar profilbild, ordnar om och kopplar bort media.',
+        cta: 'Bifoga media',
+      },
+      personMediaTimeline: {
+        purpose: 'Här visas samma media kronologiskt — efter mediadatum eller kopplat händelsedatum — användbart när du följer en livshistoria.',
+        hint: 'Bifoga media i Media-sektionen ovan.',
+      },
+      personGroups: {
+        purpose: 'Här ser du vilka grupper personen tillhör, lägger till personen i en befintlig eller ny grupp, och kopplar bort från en grupp.',
+        cta: 'Lägg till i grupp',
+      },
+      personResearchTasks: {
+        purpose: 'Här samlar du forskningsuppgifter för personen, växlar status på en uppgift, lägger till nya uppgifter och tar bort dem.',
+        cta: 'Lägg till uppgift',
+      },
+      personQualityChecks: {
+        purpose: 'Här visas härledda kvalitetskontroller för personen — saknade föräldrar, motsägelsefulla datum, okällgranskade händelser — och du kan hoppa direkt till sektionen som äger problemet. Tom sektion betyder inga problem.',
+      },
+      placeEvents: {
+        purpose: 'Här ser du varje registrerad händelse på platsen — födelser, dödsfall, vigslar, mantalslängder — med de personer som är inblandade. Lägg till nya händelser här när du upptäcker en i en källa.',
+        cta: 'Lägg till händelse',
+      },
+      placeTimeline: {
+        purpose: 'Här visas samma händelser som i Händelser-sektionen, kronologiskt — för att se kluster, luckor och rytmen i vad som hände på platsen över tid. Härifrån kan du också gena till att lägga till en ny händelse.',
+        cta: 'Lägg till händelse',
+      },
+      placePersons: {
+        purpose: 'Här ser du vilka som har bott eller verkat på platsen — namn, kön, årsspann för deras händelser här och antal händelser. Listan är härledd; det finns ingen Lägg till-knapp här.',
+        hint: 'För att registrera någon ny på platsen, lägg till en händelse under Händelser ovan.',
+      },
+      placeMedia: {
+        purpose: 'Här bifogar du foton och dokument som föreställer platsen — en byggnad, en sockenkyrka, en gård — och ordnar dem så att den bild du vill ha som platsens "ansikte" hamnar först.',
+        cta: 'Bifoga media',
+      },
+      placeMediaTimeline: {
+        purpose: 'Här ser du media bifogad till platsen kronologiskt — en sockenkyrka 1890 jämfört med 1950, en gård före och efter ombyggnad — så att visuell förändring på platsen blir tydlig vid en blick.',
+        hint: 'Bifoga media i Media-sektionen ovan.',
+      },
+      placeResearchTasks: {
+        purpose: 'Här samlar du öppna forskningsuppgifter kopplade till platsen, lägger till nya, redigerar dem och hoppar till uppgiftens fullständiga vy.',
+        cta: 'Lägg till uppgift',
+      },
+      placeQualityChecks: {
+        purpose: 'Här visas vad som saknas eller skaver kring platsens uppgifter — inga koordinater, ingen överordnad plats, otydlig gazetteer-matchning — så att du vet var nästa städsteg ligger. Tom sektion betyder inga problem.',
+      },
+      sourceCitations: {
+        purpose: 'Här granskar du varje påstående som källan har använts för att underbygga i hela databasen — vilka personer, händelser, relationer eller platser den stöttar — så att du kan upptäcka luckor och kontrollera att en enskild källa inte bär mer vikt än vad dess säkerhetsnivå motiverar.',
+        cta: 'Lägg till citat',
+      },
+      sourceMedia: {
+        purpose: 'Här bifogar du skanningar av själva källan — foto av sockenbokens uppslag, skärmbild från ArkivDigital, digital tidningsnotis — så att citatet inte bara är text utan stöttas av det synliga originalet.',
+        cta: 'Bifoga media',
+      },
+      sourceQualityChecks: {
+        purpose: 'Här ser du vad som saknas eller skaver i hur källan är beskriven — ingen titel, ingen källtyp, lösa citat utan transkription, inga skanningar — så att du vet var nästa städsteg ligger.',
+      },
+      eventMedia: {
+        purpose: 'Här bifogar du foton och dokument som hör till händelsen — en sockenboksskanning, ett bröllopsfoto, en tidningsnotis — så att registret är förankrat visuellt i källan.',
+        cta: 'Bifoga media',
+      },
+      relationshipMedia: {
+        purpose: 'Här bifogar du foton och dokument knutna till relationen — bröllopsfoto, vigselattest — så att relationen har egna visuella belägg.',
+        cta: 'Bifoga media',
+      },
+      researchTaskPersons: {
+        purpose: 'Här kopplar du de personer som forskningsuppgiften handlar om — vems uppgifter du behöver gräva mer i — och kopplar bort dem när frågan går vidare.',
+        cta: 'Koppla person',
+      },
+      researchTaskPlaces: {
+        purpose: 'Här kopplar du de platser som forskningsuppgiften berör — en socken vars böcker behöver granskas, en hamn vars passagerarlistor har ett svar — och kopplar bort dem när frågan går vidare.',
+        cta: 'Koppla plats',
+      },
+      researchTaskMedia: {
+        purpose: 'Här bifogar du skanningar, foton eller dokument som hör till uppgiften — en ledtråd du hittat, en skärmbild av ett register, en arbetsanteckning — så att hela spåret hålls samman med uppgiften.',
+        cta: 'Bifoga media',
+      },
+      groupPersons: {
+        purpose: 'Här samlar du de personer som hör till gruppen — ett hushåll, en passagerarlista, ett bröllopsfölje — så att klustret av personer kan nås från en namngiven post.',
+        cta: 'Lägg till person',
+      },
+      groupPlaces: {
+        purpose: 'Här samlar du de platser som hör till gruppen — socknar en församling omfattade, hamnar längs en emigrationsväg — så att klustret av platser kan nås från en namngiven post.',
+        cta: 'Lägg till plats',
+      },
+      groupMedia: {
+        purpose: 'Här samlar du media som hör till gruppen — foton av bröllopssällskapet, skanningar av passagerarlistan — så att klustret av filer kan nås från en namngiven post.',
+        cta: 'Bifoga media',
+      },
+      linkedPersons: {
+        purpose: 'Här kopplar du personer som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Lägg till person',
+      },
+      linkedPlaces: {
+        purpose: 'Här kopplar du platser som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Lägg till plats',
+      },
+      linkedMedia: {
+        purpose: 'Här bifogar du foton och dokument som hör till posten — och kopplar bort dem när de inte längre är relevanta.',
+        cta: 'Bifoga media',
+      },
+      mediaNotes: {
+        purpose: 'Här skriver du bildtext, kontext och anteckningar om mediafilen — vad föreställer den, varifrån kommer den, vem syns på bilden.',
+      },
+      mediaLinkedPersons: {
+        purpose: 'Här kopplar du mediafilen till de personer den föreställer eller berör — ansikten på bilden, brevförfattare, dokumentets ägare — så att samma fil dyker upp på varje persons sida.',
+        cta: 'Lägg till person',
+      },
+      mediaFaceTags: {
+        purpose: 'Här markerar du ansikten på fotot och knyter varje markering till en person — den beskurna delen blir personens profilbild överallt i appen.',
+        cta: 'Markera ansikte',
+      },
+      mediaLinkedPlaces: {
+        purpose: 'Här kopplar du mediafilen till de platser den visar eller berör — en gård, en kyrka, en hamn — så att platsen får en visuell identitet.',
+        cta: 'Lägg till plats',
+      },
+      mediaLinkedEvents: {
+        purpose: 'Här ser du händelserna som mediafilen dokumenterar — bröllopet på fotot, dopet i kyrkboksskanningen, begravningen på minneskortet.',
+        hint: 'Koppla mediafilen till en händelse genom att lägga till media på själva händelsen.',
+      },
+      eventParticipants: {
+        purpose: 'Här lägger du till övriga deltagare i händelsen — faddrar vid dop, vittnen vid vigsel, sörjande vid begravning — utöver händelsens primära person.',
+        hint: 'Skriv ett namn nedan för att lägga till en deltagare. Du kan välja en befintlig person eller skapa en ny.',
+      },
+    },
+    coach: {
+      hourglassFocus: {
+        tip: 'Klicka på en person för att titta på den. Dubbelklicka för att flytta fokus dit.',
+        dismiss: 'Förstått',
+      },
+      mediaReorder: {
+        tip: 'Dra rader för att sortera om — t.ex. barnbilder först, äldre sist.',
+        dismiss: 'Förstått',
+      },
+      faceTagging: {
+        tip: 'Klicka och dra på bilden för att markera ett ansikte. Knyt sedan markeringen till en person.',
+        dismiss: 'Förstått',
+      },
+    },
+    toast: {
+      mediaFirstAttach: {
+        body: 'Filen kopieras in i mappen <dbnamn>-media/ så att den följer med när du flyttar databasen.',
+      },
+    },
+    settings: {
+      resetTitle: 'Återställ introduktionshjälpen',
+      resetDescription: 'Visa instruktionsmeddelanden och vinjetter på nytt — som första gången du öppnade appen.',
+      resetButton: 'Återställ',
+      resetDoneToast: 'Introduktionen är återställd.',
+    },
   },
   about: {
     title: 'Om OurLegacy',

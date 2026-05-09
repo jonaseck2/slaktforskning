@@ -1,3 +1,4 @@
+<!-- Empty-state coaching N/A: WebsitePanel is a configuration form (export options, generation depth picker, redaction toggles), not a list-shaped section. The v-for usages are inside <select><option> elements for numeric choice ranges. See docs/plans/2026-05-09-onboarding-design.md §Scope deviations. -->
 <template>
   <EntityPanel
     entity-type="website"

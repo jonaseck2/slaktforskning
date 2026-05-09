@@ -632,12 +632,17 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     onGetVisiblePersons: () => {}, onSelectPerson: () => {},
     onFocusPerson: () => {}, onGetLayout: () => {}, removeAllChartHandlers: () => {},
   };
+  // Static SPA never triggers onboarding (read-only export); stub for shape
+  // parity so any composable that touches window.api.onboarding doesn't crash.
+  const onboarding = {
+    getSeen: async () => ({}), markSeen: noopVoid, reset: noopVoid,
+  };
 
   return {
     persons, places, events, eventParticipants, sources, citations, relationships,
     groups, repositories, researchTasks, reports, checks, media, mediaRegions,
     db, undo, shell, export: exportApi, print: printApi, csv, backup, gazetteers,
-    duplicates, gedcom, import: importApi, archive, website, chart,
+    duplicates, gedcom, import: importApi, archive, website, chart, onboarding,
     onDataChanged: () => {},
     offDataChanged: () => {},
   };

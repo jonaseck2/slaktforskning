@@ -12,7 +12,12 @@
 -->
 <template>
   <div>
-    <SectionEmpty v-if="identifiers.length === 0" :message="$t('empty.identifiers')" />
+    <SectionEmpty
+      v-if="identifiers.length === 0"
+      purpose-key="onboarding.empty.personIdentifiers.purpose"
+      :action-label-key="props.readonly ? undefined : 'onboarding.empty.personIdentifiers.cta'"
+      @action="openAddForm"
+    />
     <table v-else class="data-table identifiers-table">
       <thead>
         <tr>

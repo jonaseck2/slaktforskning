@@ -58,9 +58,12 @@
           <LinkedPersonsSection
             :links="personLinks"
             :show-picker="showPicker.person"
+            purpose-key="onboarding.empty.groupPersons.purpose"
+            action-label-key="onboarding.empty.groupPersons.cta"
             @add="(id) => addLink('person', id)"
             @remove="removeLink"
             @cancel-picker="showPicker.person = false"
+            @open-picker="openPicker('person')"
           />
         </div>
       </div>
@@ -79,9 +82,12 @@
           <LinkedPlacesSection
             :links="placeLinks"
             :show-picker="showPicker.place"
+            purpose-key="onboarding.empty.groupPlaces.purpose"
+            action-label-key="onboarding.empty.groupPlaces.cta"
             @add="(id) => addLink('place', id)"
             @remove="removeLink"
             @cancel-picker="showPicker.place = false"
+            @open-picker="openPicker('place')"
           />
         </div>
       </div>
@@ -100,9 +106,12 @@
           <LinkedMediaSection
             :links="mediaLinks"
             :show-picker="showPicker.media"
+            purpose-key="onboarding.empty.groupMedia.purpose"
+            action-label-key="onboarding.empty.groupMedia.cta"
             @add="(id) => addLink('media', id)"
             @remove="removeLink"
             @cancel-picker="showPicker.media = false"
+            @open-picker="openPicker('media')"
           />
         </div>
       </div>

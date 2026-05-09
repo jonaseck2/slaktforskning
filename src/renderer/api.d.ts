@@ -286,6 +286,11 @@ declare global {
         backup: () => Promise<{ success: boolean; path?: string; error?: string }>;
         restore: () => Promise<{ success: boolean; path?: string; error?: string }>;
       };
+      onboarding: {
+        getSeen(): Promise<Record<string, true>>;
+        markSeen(key: string): Promise<void>;
+        reset(): Promise<void>;
+      };
       onDataChanged: (cb: () => void) => void;
       offDataChanged: (cb: () => void) => void;
     };

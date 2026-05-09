@@ -6,7 +6,12 @@
       @committed="onCommitted"
       @cancelled="emit('cancelPicker')"
     />
-    <SectionEmpty v-if="rows.length === 0 && !showPicker" :message="$t('empty.media')" />
+    <SectionEmpty
+      v-if="rows.length === 0 && !showPicker"
+      :purpose-key="purposeKey ?? 'onboarding.empty.linkedMedia.purpose'"
+      :action-label-key="actionLabelKey ?? 'onboarding.empty.linkedMedia.cta'"
+      @action="emit('openPicker')"
+    />
     <table v-else-if="rows.length > 0" class="data-table">
       <thead>
         <tr>
@@ -57,12 +62,15 @@ interface Row {
 const props = defineProps<{
   links: LinkInput[];
   showPicker: boolean;
+  purposeKey?: string;
+  actionLabelKey?: string;
 }>();
 
 const emit = defineEmits<{
   add: [mediaId: string];
   remove: [linkId: string];
   cancelPicker: [];
+  openPicker: [];
 }>();
 
 const router = useRouter();

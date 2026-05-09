@@ -127,6 +127,7 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | PersonPanel — Header & add-relative shortcuts | 2026-05-02 |
 | PersonPanel — Person section (sex/notes) | 2026-05-02 |
 | PersonPanel — Names section | 2026-05-02 |
+| PersonPanel — Identifiers section | 2026-05-09 |
 | PersonPanel — Events section | 2026-05-02 |
 | PersonPanel — Timeline section | 2026-05-02 |
 | PersonPanel — Life Map section | 2026-05-02 |
@@ -233,6 +234,20 @@ Verification status as of the dates listed. Entries dated 2026-05-02 with a Purp
 | Names table: type chip (birth / married / alias / …) · given · surname · primary marker | `+ Add name` → opens **PersonNameModal** in add mode | Row click → opens **PersonNameModal** with name prefilled | `IconTrash` on row → ConfirmModal → deletes the name entirely. **Disabled** on the birth name (each person has exactly one). | n/a — names have no own panel |
 
 **Notes:** Trash icon (destroy verb): the row's name is gone forever. Birth name protection prevents losing the canonical identity.
+
+---
+
+### PersonPanel → Identifiers section
+**File:** `src/renderer/components/PersonPanel.vue`, `PersonIdentifiersSection.vue`
+**Verified:** 2026-05-09
+
+> **Purpose:** A user would use this section to *view* external identifiers attached to this person — FamilySearch ID, Ancestry ID, Riksarkivet reference, personnummer, GEDCOM REFN/RIN, other — and to *add* or *delete* one.
+
+| View | Add | Edit | Delete | Open |
+|---|---|---|---|---|
+| Table: type chip · monospaced value | `+ Identifier` → expands inline form (type select + value input). Saves on Enter or Save click. | Not offered — values are typically opaque tokens; replace by delete + add. | `IconTrash` on row → deletes the identifier. | n/a — identifiers have no own panel; clickable links are computed at render time via Link Rules. |
+
+**Notes:** Surfaced 2026-05-09 via `PersonIdentifiersSection` to close gap #14 (external identifiers had MCP CRUD + GEDCOM round-trip but no UI surface). Trash-verb is correct here: the row is the identifier.
 
 ---
 

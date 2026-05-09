@@ -6,7 +6,12 @@
       @committed="onCommitted"
       @cancelled="showAddRow = false"
     />
-    <SectionEmpty v-if="media.length === 0 && !showAddRow" :message="$t('empty.media')" />
+    <SectionEmpty
+      v-if="media.length === 0 && !showAddRow"
+      :purpose-key="emptyPurposeKey"
+      :action-label-key="props.readonly ? undefined : emptyCtaKey"
+      @action="attach"
+    />
     <table v-else-if="media.length > 0" class="data-table">
       <thead>
         <tr>
@@ -24,7 +29,11 @@
             <span v-else-if="isImageMedia(m.format, m.file_ref)" class="row-thumb-placeholder"></span>
             <span v-else class="row-thumb-icon">{{ (m.format || '?').toUpperCase() }}</span>
           </td>
-          <td v-if="!props.readonly" class="td-shrink order-cell">
+          <td
+            v-if="!props.readonly"
+            :ref="(el) => { if (idx === 0) dragHandleEl = el as HTMLElement | null; }"
+            class="td-shrink order-cell"
+          >
             <span v-if="idx === 0" class="profile-badge">{{ $t('media.profile') }}</span>
             <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
             <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
@@ -56,6 +65,16 @@
       @cancel="del.cancel"
       @confirm="del.confirm"
     />
+
+    <Coachmark
+      v-if="!props.readonly && media.length >= 2"
+      seen-key="coach.media.reorder"
+      :anchor-el="dragHandleEl"
+      tip-key="onboarding.coach.mediaReorder.tip"
+      dismiss-key="onboarding.coach.mediaReorder.dismiss"
+      placement="right"
+      :auto-dismiss-on="() => reorderedOnce"
+    />
   </div>
 </template>
 
@@ -68,6 +87,7 @@ import ConfirmModal from './ConfirmModal.vue';
 import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import IconUnlink from './ui/IconUnlink.vue';
+import Coachmark from './ui/Coachmark.vue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -94,8 +114,33 @@ const router = useRouter();
 const media = ref<MediaItem[]>([]);
 const showAddRow = ref(false);
 const thumbnails = ref<Record<string, string>>({});
+const dragHandleEl = ref<HTMLElement | null>(null);
+const reorderedOnce = ref(false);
 
 const excludeIds = computed(() => media.value.map(m => m.id));
+
+// Per-host empty-state coaching keys. Purpose copy differs per host because the
+// "why attach media here" intent differs (a place's hero photo vs a source's
+// scan vs a group's gallery). All four keys live under onboarding.empty.* in
+// sv.ts/en.ts.
+const emptyPurposeKey = computed(() => {
+  switch (props.entityType) {
+    case 'place': return 'onboarding.empty.placeMedia.purpose';
+    case 'source': return 'onboarding.empty.sourceMedia.purpose';
+    case 'event': return 'onboarding.empty.eventMedia.purpose';
+    case 'relationship': return 'onboarding.empty.relationshipMedia.purpose';
+    default: return 'onboarding.empty.personMedia.purpose';
+  }
+});
+const emptyCtaKey = computed(() => {
+  switch (props.entityType) {
+    case 'place': return 'onboarding.empty.placeMedia.cta';
+    case 'source': return 'onboarding.empty.sourceMedia.cta';
+    case 'event': return 'onboarding.empty.eventMedia.cta';
+    case 'relationship': return 'onboarding.empty.relationshipMedia.cta';
+    default: return 'onboarding.empty.personMedia.cta';
+  }
+});
 
 defineExpose({ attach, reload: load });
 
@@ -142,6 +187,7 @@ function unlink(linkId: string) { del.ask(linkId); }
 async function reorder(newOrder: MediaItem[]) {
   media.value = newOrder;
   await window.api.media.reorder(newOrder.map(m => m.link_id));
+  reorderedOnce.value = true;
 }
 
 function moveUp(idx: number) {

@@ -19,6 +19,9 @@
 import { ref } from 'vue';
 import MediaPicker from './MediaPicker.vue';
 import AppButton from './ui/AppButton.vue';
+import { useFirstMediaAttachToast } from '../composables/useFirstMediaAttachToast';
+
+const firstMediaAttach = useFirstMediaAttachToast();
 
 defineProps<{
   excludeIds?: string[];
@@ -44,6 +47,7 @@ async function onAttachFile(suggestedTitle: string) {
     | { canceled: false; media: { id: string } };
   if (result.canceled) return;
   emit('committed', { mediaId: result.media.id });
+  await firstMediaAttach.notifyIfFirst();
 }
 
 function cancel() {

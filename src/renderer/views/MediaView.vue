@@ -94,6 +94,15 @@
         @region-clicked="(id: string) => highlightedRegionId = id"
         @region-hovered="(id: string | null) => highlightedRegionId = id"
       />
+      <Coachmark
+        v-if="drawMode"
+        seen-key="coach.media.faceTagging"
+        :anchor-el="viewerCanvasEl"
+        tip-key="onboarding.coach.faceTagging.tip"
+        dismiss-key="onboarding.coach.faceTagging.dismiss"
+        placement="below"
+        :auto-dismiss-on="() => viewerRegionsLength > 0"
+      />
     </div>
     <template v-else>
 
@@ -218,12 +227,14 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import Coachmark from '../components/ui/Coachmark.vue';
 import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { useProfilePicStore } from '../stores/profilePic';
 import { usePagedList } from '../composables/usePagedList';
+import { useFirstMediaAttachToast } from '../composables/useFirstMediaAttachToast';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 const selectedStore = useSelectedPersonStore();
 const profilePicStore = useProfilePicStore();
@@ -236,6 +247,7 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const isStaticMode = import.meta.env.VITE_STATIC_MODE === 'true';
+const firstMediaAttach = useFirstMediaAttachToast();
 
 const listOpen = ref(localStorage.getItem(STORAGE_KEYS.mediaListOpen) !== 'false');
 function openList() {
@@ -321,6 +333,14 @@ const viewerItems = computed<MediaItem[]>(() => deepLinkItems.value ?? items.val
 const drawMode = ref(false);
 const highlightedRegionId = ref<string | null>(null);
 const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
+const viewerCanvasEl = computed<HTMLElement | null>(() => {
+  const exposed = viewerRef.value as unknown as { canvasEl?: HTMLElement | null } | null;
+  return exposed?.canvasEl ?? null;
+});
+const viewerRegionsLength = computed<number>(() => {
+  const exposed = viewerRef.value as unknown as { regions?: Array<unknown> } | null;
+  return exposed?.regions?.length ?? 0;
+});
 const panelRef = ref<InstanceType<typeof MediaPanel> | null>(null);
 const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);
@@ -554,6 +574,7 @@ async function attachFile() {
   const result = await window.api.media.attach();
   if (!(result as { canceled: boolean }).canceled) {
     await reload();
+    await firstMediaAttach.notifyIfFirst();
   }
 }
 

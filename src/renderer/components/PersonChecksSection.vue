@@ -1,5 +1,10 @@
 <template>
+  <SectionEmpty
+    v-if="issues.length === 0"
+    purpose-key="onboarding.empty.personQualityChecks.purpose"
+  />
   <QualityIssuesTable
+    v-else
     :issues="issues"
     :clickable-when="hasFixAction"
     :readonly="props.readonly"
@@ -10,6 +15,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
 import QualityIssuesTable, { type QualityIssue } from './QualityIssuesTable.vue';
+import SectionEmpty from './ui/SectionEmpty.vue';
 import { useEntityData } from '../composables/useEntityData';
 
 export type { QualityIssue as CheckResult } from './QualityIssuesTable.vue';

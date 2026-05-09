@@ -120,6 +120,7 @@ export default {
     yes: 'Yes',
     no: 'No',
     notNow: 'Not now',
+    gotIt: 'Got it',
     notes: 'Notes',
     type: 'Type',
     name: 'Name',
@@ -1856,6 +1857,183 @@ export default {
     eventTypeSortAlphabetical: 'Alphabetical',
     eventTypeSortCanonical: 'Life-arc (birth → death → ...)',
     eventTypeSortHint: 'Controls the order of the event-type picker when adding or editing an event.',
+  },
+  onboarding: {
+    empty: {
+      personNames: {
+        purpose: 'A user would use this section to view every name this person has gone by — birth name, married names, aliases — and to add, open, or delete a name.',
+        cta: 'Add name',
+      },
+      personIdentifiers: {
+        purpose: 'A user would use this section to view external identifiers attached to this person — FamilySearch, Ancestry, Riksarkivet, personnummer, GEDCOM REFN/RIN — and to add or delete one.',
+        cta: 'Add identifier',
+      },
+      personRelationships: {
+        purpose: 'A user would use this section to view who is related to this person and how, open a relationship to edit its type and dates, and unlink a relation. To add a relative, use the shortcut buttons in the panel header.',
+        hint: 'Add a relative using the + Father / Mother / Spouse / Son / Daughter buttons above.',
+      },
+      personEvents: {
+        purpose: 'A user would use this section to view events that happened to this person — type, date, place — and to add, open, or delete one.',
+        cta: 'Add event',
+      },
+      personTimeline: {
+        purpose: 'A user would use this section to view the same events from the Events section laid out chronologically, and to jump to add a new event.',
+        cta: 'Add event',
+      },
+      personLifeMap: {
+        purpose: 'A user would use this section to view the places of this person\'s events on a map, and to jump to add a new event — which is how a new place ends up on the map.',
+        cta: 'Add event',
+      },
+      personMedia: {
+        purpose: 'A user would use this section to view photos and documents linked to this person, attach new files, mark one as the profile photo, reorder, and unlink a media item.',
+        cta: 'Attach media',
+      },
+      personMediaTimeline: {
+        purpose: 'A user would use this section to view the same media chronologically — by media date or linked event date — useful when scanning a life story.',
+        hint: 'Attach media in the Media section above.',
+      },
+      personGroups: {
+        purpose: 'A user would use this section to view which groups this person belongs to, add this person to an existing or new group, and unlink them from a group.',
+        cta: 'Add to group',
+      },
+      personResearchTasks: {
+        purpose: 'A user would use this section to view research tasks for this person, cycle the status of a task inline, add a new task, and delete a task entirely.',
+        cta: 'Add task',
+      },
+      personQualityChecks: {
+        purpose: 'A user would use this section to see derived quality checks for this person — missing parents, contradictory dates, unsourced events — and jump straight to the section that owns the issue. An empty section means no issues were found.',
+      },
+      placeEvents: {
+        purpose: 'A user would use this section to view every recorded event at this place — births, deaths, marriages, censuses — with the people involved, and to add new events here when they discover one in a record.',
+        cta: 'Add event',
+      },
+      placeTimeline: {
+        purpose: 'A user would use this section to view the same events from the Events section laid out chronologically — to see clusters, gaps, and the rhythm of what happened at this place over time — and to jump to add a new event.',
+        cta: 'Add event',
+      },
+      placePersons: {
+        purpose: 'A user would use this section to see who lived at this place — name, sex, year range of their events here, and event count. The data is derived; there is no Add here.',
+        hint: 'To record someone new at this place, add an event in the Events section above.',
+      },
+      placeMedia: {
+        purpose: 'A user would use this section to attach photos and documents that depict this place — a building, a parish church, a farm — and to order them so the picture you want as the place\'s "face" leads.',
+        cta: 'Attach media',
+      },
+      placeMediaTimeline: {
+        purpose: 'A user would use this section to see the media attached to this place laid out on a timeline — a parish church photographed in 1890 vs 1950, a farm before and after rebuilding — so visual change at the place is legible at a glance.',
+        hint: 'Attach media in the Media section above.',
+      },
+      placeResearchTasks: {
+        purpose: 'A user would use this section to view open research tasks linked to this place, add a new task, edit a task, and jump to the task\'s full record.',
+        cta: 'Add task',
+      },
+      placeQualityChecks: {
+        purpose: 'A user would use this section to see what\'s missing or inconsistent about this place\'s record — no coordinates, no parent place, ambiguous gazetteer match — so they know where to direct cleanup. An empty section means no issues were found.',
+      },
+      sourceCitations: {
+        purpose: 'A user would use this section to audit every claim this source has been used to back up across the database — which persons, events, relationships, or places it underpins — so they can spot gaps and verify a single source isn\'t carrying more weight than its confidence allows.',
+        cta: 'Add citation',
+      },
+      sourceMedia: {
+        purpose: 'A user would use this section to attach scans of the source itself — a photo of the parish-book page, a screenshot from ArkivDigital, a digitised newspaper clipping — so the citation isn\'t just text but is backed by the visible record.',
+        cta: 'Attach media',
+      },
+      sourceQualityChecks: {
+        purpose: 'A user would use this section to see what\'s missing or shaky about how this source is described — no title, no source type, dangling citations with no transcription, no scans of the record — so they know where to direct their next bit of cleanup work.',
+      },
+      eventMedia: {
+        purpose: 'A user would use this section to attach photos and documents that depict this event — a parish-book scan, a wedding photograph, a newspaper clipping — so the record is anchored visually to the source.',
+        cta: 'Attach media',
+      },
+      relationshipMedia: {
+        purpose: 'A user would use this section to attach photos and documents tied to this relationship — a wedding photo, a marriage certificate scan — so the relationship has visual evidence of its own.',
+        cta: 'Attach media',
+      },
+      researchTaskPersons: {
+        purpose: 'A user would use this section to link the persons this research task is about — whose record needs more digging — and unlink them when the question moves on.',
+        cta: 'Link person',
+      },
+      researchTaskPlaces: {
+        purpose: 'A user would use this section to link the places this research task touches — a parish whose books need checking, a port whose passenger lists hold an answer — and unlink them when the question moves on.',
+        cta: 'Link place',
+      },
+      researchTaskMedia: {
+        purpose: 'A user would use this section to attach scans, photos, or documents that go with the task — a clue you found, a screenshot of a record, a working note — so the trail stays bundled with the task.',
+        cta: 'Attach media',
+      },
+      groupPersons: {
+        purpose: 'A user would use this section to gather the persons that belong in this group — a household, a passenger list, a wedding party — so the cluster of people is reachable from one named record.',
+        cta: 'Add person',
+      },
+      groupPlaces: {
+        purpose: 'A user would use this section to gather the places that belong in this group — parishes a congregation covered, ports along an emigration route — so the cluster of places is reachable from one named record.',
+        cta: 'Add place',
+      },
+      groupMedia: {
+        purpose: 'A user would use this section to gather the media that belong in this group — photographs of the wedding party, scans of the passenger list — so the cluster of files is reachable from one named record.',
+        cta: 'Attach media',
+      },
+      linkedPersons: {
+        purpose: 'A user would use this section to link persons related to this record — and unlink them when no longer relevant.',
+        cta: 'Add person',
+      },
+      linkedPlaces: {
+        purpose: 'A user would use this section to link places related to this record — and unlink them when no longer relevant.',
+        cta: 'Add place',
+      },
+      linkedMedia: {
+        purpose: 'A user would use this section to attach photos and documents related to this record — and unlink them when no longer relevant.',
+        cta: 'Attach media',
+      },
+      mediaNotes: {
+        purpose: 'A user would use this section to write a caption, context, and notes about this media — what it depicts, where it came from, who appears in it.',
+      },
+      mediaLinkedPersons: {
+        purpose: 'A user would use this section to link this media to the persons it depicts or relates to — faces in a photo, the letter\'s author, a document\'s owner — so the same file surfaces on every person\'s page.',
+        cta: 'Add person',
+      },
+      mediaFaceTags: {
+        purpose: 'A user would use this section to mark faces on a photo and link each region to a person — the cropped face becomes that person\'s profile photo everywhere in the app.',
+        cta: 'Mark face',
+      },
+      mediaLinkedPlaces: {
+        purpose: 'A user would use this section to link this media to the places it shows or concerns — a farm, a church, a harbor — so a place gets a visual identity.',
+        cta: 'Add place',
+      },
+      mediaLinkedEvents: {
+        purpose: 'A user would use this section to see the events this media documents — the wedding in the photo, the baptism in the parish-book scan, the funeral on the memorial card.',
+        hint: 'Link this media to an event by attaching media on the event itself.',
+      },
+      eventParticipants: {
+        purpose: 'A user would use this section to add other participants in this event — godparents at a baptism, witnesses at a wedding, mourners at a funeral — beyond the event\'s primary person.',
+        hint: 'Type a name below to add a participant. You can pick an existing person or create a new one.',
+      },
+    },
+    coach: {
+      hourglassFocus: {
+        tip: 'Click any person to view them. Double-click to set focus there.',
+        dismiss: 'Got it',
+      },
+      mediaReorder: {
+        tip: 'Drag rows to reorder — e.g. childhood photos first, later ones last.',
+        dismiss: 'Got it',
+      },
+      faceTagging: {
+        tip: 'Click and drag on the image to mark a face. Then link the marker to a person.',
+        dismiss: 'Got it',
+      },
+    },
+    toast: {
+      mediaFirstAttach: {
+        body: 'Your file is copied into the <dbname>-media/ folder so it travels with the database.',
+      },
+    },
+    settings: {
+      resetTitle: 'Reset onboarding hints',
+      resetDescription: 'Show empty-state coaching and coachmarks again — like the first time you opened the app.',
+      resetButton: 'Reset',
+      resetDoneToast: 'Onboarding has been reset.',
+    },
   },
   about: {
     title: 'About OurLegacy',

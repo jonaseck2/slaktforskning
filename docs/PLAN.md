@@ -22,9 +22,6 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
-#### Onboarding & Welcome Screen [backlog]
-First-run experience: welcome screen, getting started guidance, empty tree with "+" outline placeholder.
-
 #### Duplicates Panel — Places, Sources, Media [backlog]
 Extend the existing `/duplicates` view (persons-only today) to cover places, sources, and media. Reuse the `MergePersonsModal` compare-and-merge pattern. API needs `findDuplicate*` + `merge*` per entity. Make the duplicates view the landing target for all `DUPLICATE_*` quality rows.
 - Plan: TBD — needs a design pass (see brainstorming).

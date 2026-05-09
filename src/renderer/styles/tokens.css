@@ -224,6 +224,9 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
 
+  /* Z-index layers */
+  --z-coachmark: 950;  /* above panel content (~100), below modals (1000) */
+
   /* Report typography */
   --report-serif-stack: Georgia, 'Times New Roman', 'Liberation Serif', serif;
   --report-prose-leading: 1.65;

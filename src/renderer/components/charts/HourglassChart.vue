@@ -28,12 +28,14 @@
         <g
           v-for="box in layout.boxes"
           :key="box.person.id"
+          :ref="(el) => box.isFocal && setFocusBoxEl(el as Element | null)"
           v-memo="[box.x, box.y, box.w, box.h, box.isFocal, box.person.id, box.person.sex, box.person.living, box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname, box.person.birthDate, box.person.birthPlace, box.person.deathDate, box.person.deathPlace, box.person.photoUrl, props.colorMode, props.readonly, addBtnStyle]"
           :data-testid="'person-box-' + box.person.id"
           filter="url(#chart-shadow)"
           :class="['person-box', 'clickable']"
           :style="{ cursor: 'pointer' }"
           @click="$emit('navigate', box.person.id)"
+          @dblclick="onPersonDblClick(box.person.id)"
         >
           <!-- Box background -->
           <rect
@@ -208,6 +210,17 @@
       @close="showAddRelative = false"
       @cancel="showAddRelative = false"
     />
+
+    <!-- First-encounter coachmark anchored on the focus person box. Auto-dismisses
+         once the user double-clicks any person (focusChangedOnce flips true). -->
+    <Coachmark
+      seen-key="coach.hourglass.focus"
+      :anchor-el="focusBoxEl"
+      tip-key="onboarding.coach.hourglassFocus.tip"
+      dismiss-key="onboarding.coach.hourglassFocus.dismiss"
+      placement="below"
+      :auto-dismiss-on="() => focusChangedOnce"
+    />
   </div>
 </template>
 
@@ -226,6 +239,7 @@ import { useEntityData } from '../../composables/useEntityData';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
+import Coachmark from '../ui/Coachmark.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';
 import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 
@@ -240,7 +254,26 @@ const emit = defineEmits<{
   navigate: [id: string];
   reload: [];
   'person-context-menu': [payload: { personId: string; x: number; y: number }];
+  'focus-person': [id: string];
 }>();
+
+// Coachmark anchor — set to the focal person's <g> element via callback ref
+// inside the v-for. Stays null until the layout renders the focal box.
+const focusBoxEl = ref<HTMLElement | null>(null);
+function setFocusBoxEl(el: Element | null) {
+  // SVG <g> elements are Element, not HTMLElement, but Coachmark only calls
+  // getBoundingClientRect() on it — which is on Element — so the cast is safe.
+  focusBoxEl.value = (el as HTMLElement | null) ?? null;
+}
+
+// Flips on the first focus-switch double-click; drives the Coachmark's
+// auto-dismiss so the user only ever sees the hint once they've
+// successfully done the gesture (or until they restart with seen flag set).
+const focusChangedOnce = ref(false);
+function onPersonDblClick(personId: string) {
+  focusChangedOnce.value = true;
+  emit('focus-person', personId);
+}
 
 const loadingMore = ref(false);
 const collapsed = ref(new Set<string>());

@@ -8,6 +8,7 @@ import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
 import { registerUtilityHandlers } from './main-only';
 import { registerWebsiteExportHandlers } from './website-export';
+import { registerOnboardingHandlers } from './onboarding';
 
 export function registerIpcHandlers(): void {
   // Start the DB worker — fires and forgets; callWorker queues until worker signals ready
@@ -30,4 +31,5 @@ export function registerIpcHandlers(): void {
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerWebsiteExportHandlers();
+  registerOnboardingHandlers(wrapHandler);
 }
