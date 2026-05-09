@@ -176,7 +176,12 @@
           @action="openTaskForm()"
         />
         <div v-if="sections.tasks" class="panel-section-body">
-          <SectionEmpty v-if="researchTasks.length === 0" :message="$t('empty.researchTasks')" />
+          <SectionEmpty
+            v-if="researchTasks.length === 0"
+            purpose-key="onboarding.empty.placeResearchTasks.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.placeResearchTasks.cta'"
+            @action="openTaskForm()"
+          />
           <ResearchTasksTable
             v-else
             :tasks="researchTasks"

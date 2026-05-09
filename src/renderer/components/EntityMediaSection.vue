@@ -6,7 +6,12 @@
       @committed="onCommitted"
       @cancelled="showAddRow = false"
     />
-    <SectionEmpty v-if="media.length === 0 && !showAddRow" :message="$t('empty.media')" />
+    <SectionEmpty
+      v-if="media.length === 0 && !showAddRow"
+      :purpose-key="emptyPurposeKey"
+      :action-label-key="props.readonly ? undefined : emptyCtaKey"
+      @action="attach"
+    />
     <table v-else-if="media.length > 0" class="data-table">
       <thead>
         <tr>
@@ -113,6 +118,29 @@ const dragHandleEl = ref<HTMLElement | null>(null);
 const reorderedOnce = ref(false);
 
 const excludeIds = computed(() => media.value.map(m => m.id));
+
+// Per-host empty-state coaching keys. Purpose copy differs per host because the
+// "why attach media here" intent differs (a place's hero photo vs a source's
+// scan vs a group's gallery). All four keys live under onboarding.empty.* in
+// sv.ts/en.ts.
+const emptyPurposeKey = computed(() => {
+  switch (props.entityType) {
+    case 'place': return 'onboarding.empty.placeMedia.purpose';
+    case 'source': return 'onboarding.empty.sourceMedia.purpose';
+    case 'event': return 'onboarding.empty.eventMedia.purpose';
+    case 'relationship': return 'onboarding.empty.relationshipMedia.purpose';
+    default: return 'onboarding.empty.personMedia.purpose';
+  }
+});
+const emptyCtaKey = computed(() => {
+  switch (props.entityType) {
+    case 'place': return 'onboarding.empty.placeMedia.cta';
+    case 'source': return 'onboarding.empty.sourceMedia.cta';
+    case 'event': return 'onboarding.empty.eventMedia.cta';
+    case 'relationship': return 'onboarding.empty.relationshipMedia.cta';
+    default: return 'onboarding.empty.personMedia.cta';
+  }
+});
 
 defineExpose({ attach, reload: load });
 

@@ -1894,6 +1894,41 @@ export default {
       personQualityChecks: {
         purpose: 'A user would use this section to see derived quality checks for this person — missing parents, contradictory dates, unsourced events — and jump straight to the section that owns the issue. An empty section means no issues were found.',
       },
+      placeEvents: {
+        purpose: 'A user would use this section to view every recorded event at this place — births, deaths, marriages, censuses — with the people involved, and to add new events here when they discover one in a record.',
+        cta: 'Add event',
+      },
+      placeTimeline: {
+        purpose: 'A user would use this section to view the same events from the Events section laid out chronologically — to see clusters, gaps, and the rhythm of what happened at this place over time — and to jump to add a new event.',
+        cta: 'Add event',
+      },
+      placePersons: {
+        purpose: 'A user would use this section to see who lived at this place — name, sex, year range of their events here, and event count. The data is derived; there is no Add here.',
+        hint: 'To record someone new at this place, add an event in the Events section above.',
+      },
+      placeMedia: {
+        purpose: 'A user would use this section to attach photos and documents that depict this place — a building, a parish church, a farm — and to order them so the picture you want as the place\'s "face" leads.',
+        cta: 'Attach media',
+      },
+      placeMediaTimeline: {
+        purpose: 'A user would use this section to see the media attached to this place laid out on a timeline — a parish church photographed in 1890 vs 1950, a farm before and after rebuilding — so visual change at the place is legible at a glance.',
+        hint: 'Attach media in the Media section above.',
+      },
+      placeResearchTasks: {
+        purpose: 'A user would use this section to view open research tasks linked to this place, add a new task, edit a task, and jump to the task\'s full record.',
+        cta: 'Add task',
+      },
+      placeQualityChecks: {
+        purpose: 'A user would use this section to see what\'s missing or inconsistent about this place\'s record — no coordinates, no parent place, ambiguous gazetteer match — so they know where to direct cleanup. An empty section means no issues were found.',
+      },
+      eventMedia: {
+        purpose: 'A user would use this section to attach photos and documents that depict this event — a parish-book scan, a wedding photograph, a newspaper clipping — so the record is anchored visually to the source.',
+        cta: 'Attach media',
+      },
+      relationshipMedia: {
+        purpose: 'A user would use this section to attach photos and documents tied to this relationship — a wedding photo, a marriage certificate scan — so the relationship has visual evidence of its own.',
+        cta: 'Attach media',
+      },
     },
     coach: {
       hourglassFocus: {

@@ -1,6 +1,10 @@
 <template>
   <div>
-    <SectionEmpty v-if="persons.length === 0" :message="$t('empty.persons')" />
+    <SectionEmpty
+      v-if="persons.length === 0"
+      purpose-key="onboarding.empty.placePersons.purpose"
+      secondary-hint-key="onboarding.empty.placePersons.hint"
+    />
     <table v-else class="data-table">
       <thead>
         <tr>

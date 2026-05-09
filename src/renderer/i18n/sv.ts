@@ -1873,6 +1873,41 @@ export default {
       personQualityChecks: {
         purpose: 'Här visas härledda kvalitetskontroller för personen — saknade föräldrar, motsägelsefulla datum, okällgranskade händelser — och du kan hoppa direkt till sektionen som äger problemet. Tom sektion betyder inga problem.',
       },
+      placeEvents: {
+        purpose: 'Här ser du varje registrerad händelse på platsen — födelser, dödsfall, vigslar, mantalslängder — med de personer som är inblandade. Lägg till nya händelser här när du upptäcker en i en källa.',
+        cta: 'Lägg till händelse',
+      },
+      placeTimeline: {
+        purpose: 'Här visas samma händelser som i Händelser-sektionen, kronologiskt — för att se kluster, luckor och rytmen i vad som hände på platsen över tid. Härifrån kan du också gena till att lägga till en ny händelse.',
+        cta: 'Lägg till händelse',
+      },
+      placePersons: {
+        purpose: 'Här ser du vilka som har bott eller verkat på platsen — namn, kön, årsspann för deras händelser här och antal händelser. Listan är härledd; det finns ingen Lägg till-knapp här.',
+        hint: 'För att registrera någon ny på platsen, lägg till en händelse under Händelser ovan.',
+      },
+      placeMedia: {
+        purpose: 'Här bifogar du foton och dokument som föreställer platsen — en byggnad, en sockenkyrka, en gård — och ordnar dem så att den bild du vill ha som platsens "ansikte" hamnar först.',
+        cta: 'Bifoga media',
+      },
+      placeMediaTimeline: {
+        purpose: 'Här ser du media bifogad till platsen kronologiskt — en sockenkyrka 1890 jämfört med 1950, en gård före och efter ombyggnad — så att visuell förändring på platsen blir tydlig vid en blick.',
+        hint: 'Bifoga media i Media-sektionen ovan.',
+      },
+      placeResearchTasks: {
+        purpose: 'Här samlar du öppna forskningsuppgifter kopplade till platsen, lägger till nya, redigerar dem och hoppar till uppgiftens fullständiga vy.',
+        cta: 'Lägg till uppgift',
+      },
+      placeQualityChecks: {
+        purpose: 'Här visas vad som saknas eller skaver kring platsens uppgifter — inga koordinater, ingen överordnad plats, otydlig gazetteer-matchning — så att du vet var nästa städsteg ligger. Tom sektion betyder inga problem.',
+      },
+      eventMedia: {
+        purpose: 'Här bifogar du foton och dokument som hör till händelsen — en sockenboksskanning, ett bröllopsfoto, en tidningsnotis — så att registret är förankrat visuellt i källan.',
+        cta: 'Bifoga media',
+      },
+      relationshipMedia: {
+        purpose: 'Här bifogar du foton och dokument knutna till relationen — bröllopsfoto, vigselattest — så att relationen har egna visuella belägg.',
+        cta: 'Bifoga media',
+      },
     },
     coach: {
       hourglassFocus: {
