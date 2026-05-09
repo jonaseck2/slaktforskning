@@ -6,7 +6,7 @@ paths:
 
 # MCP Server Rules
 
-Loads when working in the MCP server. The `/mcp-dev` skill is the canonical reference for adding tools, the prime directive (pass-through, never synthesize defaults), and testing patterns.
+Loads when working in the MCP server. The `/slaktforskning-mcp-dev` skill is the canonical reference for adding tools, the prime directive (pass-through, never synthesize defaults), and testing patterns.
 
 ## Two entry points, two tool sets
 
@@ -54,7 +54,7 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 ## Adding a new tool
 
-The full template, prime directive (no synthesizing defaults — pass agent input straight through), the `registerTool()` API, and the `tests/unit/mcp.test.ts` `call()` helper are all in `/mcp-dev`. Quick reminders:
+The full template, prime directive (no synthesizing defaults — pass agent input straight through), the `registerTool()` API, and the `tests/unit/mcp.test.ts` `call()` helper are all in `/slaktforskning-mcp-dev`. Quick reminders:
 
 - The MCP tool is a **thin wrapper** — all logic stays in `src/api/`.
 - Use `registerTool()` not `tool()` (the 4-arg overload is deprecated).

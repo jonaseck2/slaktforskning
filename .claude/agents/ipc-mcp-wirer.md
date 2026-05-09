@@ -17,7 +17,7 @@ Before adding entries: read the existing `src/shared/channels/<domain>.ts` for t
 
 ## Resources
 
-`.claude/rules/ipc.md` auto-loads on these paths and carries the canonical pattern: one `defineChannel({ name, thread, mutating, handler })` covers main-thread `wrapHandler` AND worker dispatch automatically; the preload entry is hand-maintained; the static-api stub keeps parity. The `/mcp-dev` skill is canonical for MCP tools — use `registerTool()` (not the deprecated `tool()` 4-arg overload), Zod inputSchema with `.describe()` on every parameter, JSON via `JSON.stringify(result, null, 2)` in `content[0].text`, and the prime directive: **pass-through, never synthesize defaults** (e.g. don't infer `date_type='exact'` because `date_value` was supplied — let the api/schema default it).
+`.claude/rules/ipc.md` auto-loads on these paths and carries the canonical pattern: one `defineChannel({ name, thread, mutating, handler })` covers main-thread `wrapHandler` AND worker dispatch automatically; the preload entry is hand-maintained; the static-api stub keeps parity. The `/slaktforskning-mcp-dev` skill is canonical for MCP tools — use `registerTool()` (not the deprecated `tool()` 4-arg overload), Zod inputSchema with `.describe()` on every parameter, JSON via `JSON.stringify(result, null, 2)` in `content[0].text`, and the prime directive: **pass-through, never synthesize defaults** (e.g. don't infer `date_type='exact'` because `date_value` was supplied — let the api/schema default it).
 
 ## What to deliver
 
@@ -26,7 +26,7 @@ Before adding entries: read the existing `src/shared/channels/<domain>.ts` for t
 3. Stub in `src/static/static-api.ts`
 4. MCP tool registered with `registerTool()` in the prod or dev server
 5. The three coverage tests pass: `npx vitest run tests/unit/ipc-worker-coverage.test.ts tests/unit/preload-coverage.test.ts tests/unit/static-api-coverage.test.ts`
-6. Docs updated **in the same commit** per `/commit`'s bundle rule: `docs/IPC_REFERENCE.md` for the new `window.api.*` method, `docs/MCP.md` for the new MCP tool, `.claude/skills/mcp-dev/references/tools.md` for the MCP tool catalog if you added a tool, plus a CHANGELOG entry under `## Unreleased`
+6. Docs updated **in the same commit** per `/commit`'s bundle rule: `docs/IPC_REFERENCE.md` for the new `window.api.*` method, `docs/MCP.md` for the new MCP tool, `.claude/skills/slaktforskning-mcp-dev/references/tools.md` for the MCP tool catalog if you added a tool, plus a CHANGELOG entry under `## Unreleased`
 7. Commit via the `/commit` skill — convention: `feat(ipc): <description>` (or `feat(ipc+mcp)` if both)
 
 ## Status

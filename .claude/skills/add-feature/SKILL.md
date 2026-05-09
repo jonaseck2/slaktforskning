@@ -49,7 +49,7 @@ Follow this order. Each step builds on the previous.
 10. **Docs** — update `README.md`, `CLAUDE.md`, `CHANGELOG.md`, `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
 11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
     - New entity type or schema column → `data-modeling` skill
-    - New MCP tools → `mcp-dev` skill
+    - New MCP tools → `slaktforskning-mcp-dev` skill
     - New shared Vue component → `add-feature` skill (Shared components list)
     - New IPC channels → `add-feature` skill (IPC section) + `CLAUDE.md`
     - New data quality / check category → `add-feature` skill or dedicated skill
@@ -207,7 +207,7 @@ See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and I
 
 ## MCP Layer (Step 7)
 
-See `/mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split (`src/mcp/createProdServer.ts` for genealogy workflow tools, `src/mcp/createDevServer.ts` for UI/chart/seed tools), Zod inputSchema with `.describe()`, the thin-wrapper rule (all logic stays in `src/api/`), and the `tests/unit/mcp.test.ts` `call()` helper. The MCP-tool prime directive (pass-through, never synthesize defaults) lives there too.
+See `/slaktforskning-mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split (`src/mcp/createProdServer.ts` for genealogy workflow tools, `src/mcp/createDevServer.ts` for UI/chart/seed tools), Zod inputSchema with `.describe()`, the thin-wrapper rule (all logic stays in `src/api/`), and the `tests/unit/mcp.test.ts` `call()` helper. The MCP-tool prime directive (pass-through, never synthesize defaults) lives there too.
 
 ## Vue UI Layer (Step 8)
 

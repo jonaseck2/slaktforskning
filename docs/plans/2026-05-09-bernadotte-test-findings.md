@@ -27,7 +27,7 @@ Fixes landed in the same session as the test:
 | 15 | ✅ FIXED | `Uppgifter`/`Kvalitet` sections show (0) when collapsed because `v-if` unmounts the child whose `defineExpose({ count })` is the count source. Switched to `v-show` on PersonPanel + PlacePanel + MediaPanel. |
 | 16 | ✅ ADDED | `ui_get_dom` extended with `mode` (outerHTML/innerHTML/textContent/attributes), `all`, `limit` — agents can extract specific section counts in 200 bytes instead of dumping 300 KB. |
 | 17 | ✅ DONE | Quality-issue triage: 359 total → 232 are the date-parser bug (one fix), 65 are sloppy data (missing source citations), 41 are gazetteer/place-quality, 14 are real structural gaps, 7 are intentional fixtures or duplicates. No MCP-side data corruption. |
-| 18 | ✅ DONE | `mcp-dev` skill updated with 3 new pitfall sections (pass-through-in-branches, `mutating: true` matters, v-show vs v-if for `defineExpose({ count })` sections). |
+| 18 | ✅ DONE | `slaktforskning-mcp-dev` skill (formerly `mcp-dev`) updated with 3 new pitfall sections (pass-through-in-branches, `mutating: true` matters, v-show vs v-if for `defineExpose({ count })` sections). |
 | 19 | ✅ DONE | Norwegian royal house added to validate fixes — Haakon VII → Olav V → Harald V + Sonja → Crown Prince Haakon + Mette-Marit. Cross-family link via Crown Princess Märtha (daughter of my existing Prince Carl, Duke of Västergötland) to the Bernadotte side. Adoptive parent_child relationship Haakon → Marius Borg Høiby tested and renders correctly in the panel ("Adoptivförälder") and chart ("Adoptivt förhållande" dashed line). |
 
 ## Final database shape (end of session)

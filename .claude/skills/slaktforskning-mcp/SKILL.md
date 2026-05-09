@@ -1,6 +1,6 @@
 ---
 name: slaktforskning-mcp
-description: Use when the user asks you to do real genealogy research in the Släktforskning app via the MCP server — adding persons, building family trees, finding duplicates, citing sources, recording events with places, generating narratives. Distinct from mcp-dev (which is about extending the MCP server itself). Triggers on any agent-driven research task involving the slaktforskning or slaktforskning-dev MCP tools.
+description: Use when the user asks you to do real genealogy research in the Släktforskning app via the MCP server — adding persons, building family trees, finding duplicates, citing sources, recording events with places, generating narratives. Distinct from `slaktforskning-mcp-dev` (which is about extending the MCP server itself). Triggers on any agent-driven research task involving the slaktforskning or slaktforskning-dev MCP tools.
 ---
 
 # Släktforskning MCP — Genealogy Research Skill
@@ -286,11 +286,11 @@ Before you tell the user "I'm done":
 - [ ] You've shown the user a screenshot or a chart of the result, not just a tool-output dump.
 - [ ] Any data you couldn't fill in is captured as a `research_task` rather than left implicit.
 
-## Why this skill is separate from `mcp-dev`
+## Why this skill is separate from `slaktforskning-mcp-dev`
 
-`mcp-dev` is for the engineer who writes the MCP server. This skill is for the agent who *uses* it on real data. The two skill-sets share the underlying Prime Directive but the failure modes differ:
+`slaktforskning-mcp-dev` is for the engineer who writes the MCP server. This skill is for the agent who *uses* it on real data. The two skill-sets share the underlying Prime Directive but the failure modes differ:
 
-| `mcp-dev` cares about | This skill cares about |
+| `slaktforskning-mcp-dev` cares about | This skill cares about |
 |---|---|
 | Tool surface design, schema parity | Picking the right tool per workflow |
 | Pass-through (no synthesizing defaults) on the *tool* side | Pass-through (no fabricating data) on the *caller* side |
@@ -298,4 +298,4 @@ Before you tell the user "I'm done":
 | Test coverage, registry channels | `get_research_gaps` / `run_checks` self-checks |
 | Renderer cache refresh | Citation hygiene, post-batch verification |
 
-If you're extending the MCP server, read `mcp-dev`. If you're using it to help a genealogist, you're in the right skill.
+If you're extending the MCP server, read `slaktforskning-mcp-dev`. If you're using it to help a genealogist, you're in the right skill.
