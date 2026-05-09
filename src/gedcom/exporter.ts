@@ -38,9 +38,11 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   immigration: 'IMMI', naturalization: 'NATU', census: 'CENS',
   probate: 'PROB', will: 'WILL', graduation: 'GRAD', retirement: 'RETI',
   marriage: 'MARR', divorce: 'DIV', engagement: 'ENGA', adoption: 'ADOP',
-  // GEDCOM 5.5/5.5.1 standard tags. _SEPR is non-standard but widely emitted.
+  // GEDCOM 5.5/5.5.1 standard tags. _SEPR / _MILT are non-standard but
+  // widely emitted (FTM, RootsMagic).
   cremation: 'CREM', bar_mitzvah: 'BARM', bas_mitzvah: 'BASM',
   annulment: 'ANUL', marriage_license: 'MARL', separation: '_SEPR',
+  ordination: 'ORDN', military: '_MILT',
   // Fact-shaped event types — line value is emitted on the same line as the tag.
   title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
   other: 'EVEN',
@@ -380,9 +382,10 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
           lines.push(`1 RIN ${ident.identifier_value}`);
           break;
         case 'uid':
-          // _UID is a non-standard but ubiquitous tag (RootsMagic, FTM,
-          // Genney, MyHeritage all emit it). Round-trips through itself.
-          lines.push(`1 _UID ${ident.identifier_value}`);
+          // _UID is GEDCOM 5.5 non-standard but ubiquitous; bare UID is
+          // GEDCOM 7.0 standard. Emit the version-appropriate tag so the
+          // resulting file validates against its declared GEDCOM version.
+          lines.push(`1 ${version === '7.0' ? 'UID' : '_UID'} ${ident.identifier_value}`);
           break;
         case 'afn':
           // GEDCOM 5.5/5.5.1 standard tag.

@@ -48,8 +48,10 @@ export const PERSON_EVENT_TAGS: Record<string, string> = {
   PROB: 'probate', WILL: 'will', GRAD: 'graduation', RETI: 'retirement',
   ENGA: 'engagement', ADOP: 'adoption',
   // GEDCOM 5.5/5.5.1 standard INDI events. CREM and BARM/BASM are widely
-  // emitted by FTM, RootsMagic, Heiner's torture test, etc.
+  // emitted by FTM, RootsMagic, Heiner's torture test, etc. ORDN is GEDCOM
+  // standard for ordination. _MILT is FTM's non-standard military service tag.
   CREM: 'cremation', BARM: 'bar_mitzvah', BASM: 'bas_mitzvah',
+  ORDN: 'ordination', _MILT: 'military',
   // Fact-shaped tags (line value preserved in events.value, not notes).
   // TITL routes through its own event_type rather than the legacy
   // TITL→occupation conversion so round-trip preserves the original tag.
@@ -69,12 +71,12 @@ export const FAMILY_EVENT_TAGS: Record<string, string> = {
 const KNOWN_INDI_TAGS = new Set([
   'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
   'AFN', 'SSN', 'FSID',
-  '_UID', '_FSI', '_ANID', '_RAID', '_PNUMMER', '_YHAPLOGROUP', '_MHAPLOGROUP', '_GRP',
+  '_UID', 'UID', '_FSI', '_ANID', '_RAID', '_PNUMMER', '_YHAPLOGROUP', '_MHAPLOGROUP', '_GRP',
   'FAMC', 'FAMS', 'CHAN',
   // PERSON_EVENT_TAGS keys:
   'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
-  'CREM', 'BARM', 'BASM',
+  'CREM', 'BARM', 'BASM', 'ORDN', '_MILT',
   'TITL', 'RELI', 'DSCR', 'FACT', 'OBJE',
   // Holger custom tags imported as notes:
   'REMA', 'MISC',
@@ -367,9 +369,9 @@ export function phaseIndividuals(ctx: ImportContext): void {
     const rin = getChild(node, 'RIN');
     if (rin?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
 
-    // _UID — RootsMagic, Genney, FTM, others use this for cross-system sync.
-    // Standalone tag in every dialect that emits it; no profile gating.
-    const uid = getChild(node, '_UID');
+    // _UID (GEDCOM 5.5 non-standard, ubiquitous) and bare UID (GEDCOM 7.0
+    // standard). RootsMagic, Genney, FTM, MyHeritage all emit one or the other.
+    const uid = getChild(node, '_UID') ?? getChild(node, 'UID');
     if (uid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'uid', identifier_value: uid.value });
 
     // AFN — Ancestral File Number. GEDCOM 5.5/5.5.1 standard tag.
