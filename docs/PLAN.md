@@ -6,6 +6,12 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+#### European Gazetteer Roadmap [in-progress, 1 of 14 plans landed]
+End-to-end European place-resolution coverage — Tier 1 (DE, GB, IE, NL, BE, FR, EE, LV, LT, PL) gets parishes + boundaries; Tier 2 (~33 countries) gets admin1+admin2+localities; one `europe-historical` gazetteer for Habsburg / Russian Empire / partition entities.
+- Design: `docs/plans/2026-05-09-european-gazetteers-design.md`
+- DE upgrade landed: `docs/plans/archive/2026-05-09-de-gazetteer-upgrade.md` (de-gemeinden-boundaries + de-kirchgemeinden, v0.229.0)
+- 13 plans remaining: `docs/plans/2026-05-09-{gb,ie,nl,be,fr,ee,lv,lt,pl,tier2-{western,central,eastern},europe-historical}-gazetteer*.md`
+
 #### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
 Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
 - Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`

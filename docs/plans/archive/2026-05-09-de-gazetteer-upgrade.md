@@ -103,7 +103,7 @@ Per the project plans rule, verification is by user-observable outcome, not test
 **Files:**
 - (decisional only — record choices in this plan body)
 
-- [ ] **Step 1: Confirm BKG vg250 as the boundary source**
+- [x] **Step 1: Confirm BKG vg250 as the boundary source**
 
 BKG (Bundesamt für Kartographie und Geodäsie) publishes Verwaltungsgebiete 1:250000 (vg250) under **Datenlizenz Deutschland — Namensnennung — Version 2.0** since 2017, which is compatible with CC BY 4.0 attribution. URL: <https://daten.gdz.bkg.bund.de/produkte/vg/vg250_ebenen_0101/aktuell/> (file: `vg250_01-01.utm32s.gpkg.ebenen.zip`). The dataset includes Bundesland (LAN), Regierungsbezirk (RBZ), Kreis (KRS), Verwaltungsgemeinschaft (VWG), Gemeinde (GEM) layers.
 
@@ -111,7 +111,7 @@ We use only the LAN and KRS layers (boundary scope is Bundesland + Kreis per § 
 
 If the URL is no longer reachable at build time, fall back to the same dataset on Geofabrik or a Zenodo mirror; cite the actual URL in the script header.
 
-- [ ] **Step 2: Confirm Wikidata as the parish source — CORRECTED QIDs after validation gate (design § 3.2)**
+- [x] **Step 2: Confirm Wikidata as the parish source — CORRECTED QIDs after validation gate (design § 3.2)**
 
 The original drafted QIDs in this plan were wrong: Q1620908 = "historical region" (NOT Kirchengemeinde), Q73501 = "Bredevoort" (a Dutch town!). Validated replacements via `wbgetentities`:
 
@@ -126,15 +126,15 @@ License: CC0 1.0. Actual measured coverage from Task 5 build: 899 raw rows, 61 w
 
 **RCA:** the original plan QIDs were taken from desk research without API validation. The corrected QIDs were found by the Task 5 implementer subagent via `wbsearchentities` + sample-row inspection. Going forward, every Wikidata-sourced plan in this roadmap runs the QID-validation gate from design § 3.2 in its own Task 0.
 
-- [ ] **Step 3: Confirm normalize rule additions**
+- [x] **Step 3: Confirm normalize rule additions**
 
 `DE_RULES.stripSuffixes` currently has civil-administrative terms only. Add ecclesiastical: `Kirchgemeinde`, `Kirchengemeinde`, `Pfarrei`, `Pfarrgemeinde`, `Pfarrkirchengemeinde`, `Kirchspiel`, `Pfarrbezirk`, `Pfarrei-Verband`. Order: case-insensitive at runtime, longest-first to avoid `Pfarrei` matching before `Pfarrei-Verband`.
 
-- [ ] **Step 4: Confirm boundary simplification ratio**
+- [x] **Step 4: Confirm boundary simplification ratio**
 
 mapshaper `-simplify 5%` (95% reduction) — same as the original German plan and the Nordic precedents. The boundary purpose is uncertainty hint, not pin precision (per design § 1), so aggressive simplification is correct. Tune to 3% if rendered map looks bad in smoke-check.
 
-- [ ] **Step 5: No commit — informational task**
+- [x] **Step 5: No commit — informational task**
 
 ---
 
@@ -144,7 +144,7 @@ mapshaper `-simplify 5%` (95% reduction) — same as the original German plan an
 - Modify: `src/gazetteer-build/normalize-rules.ts`
 - Test: `tests/unit/normalize-rules.test.ts` (add cases — file may need creating; check first)
 
-- [ ] **Step 1: Locate or create the normalize-rules unit test**
+- [x] **Step 1: Locate or create the normalize-rules unit test**
 
 Run: `find tests -name "normalize-rules.test.ts"`. If it doesn't exist, create `tests/unit/normalize-rules.test.ts` with the boilerplate below. If it does, append cases to the existing DE describe block.
 
@@ -181,12 +181,12 @@ describe('DE_RULES — ecclesiastical suffixes', () => {
 });
 ```
 
-- [ ] **Step 2: Run the new tests, verify they FAIL**
+- [x] **Step 2: Run the new tests, verify they FAIL**
 
 Run: `npx vitest run tests/unit/normalize-rules.test.ts -t "ecclesiastical"`
 Expected: 4 FAIL with the suffixes still present in output (because they're not yet in `DE_RULES`).
 
-- [ ] **Step 3: Add the suffixes to `DE_RULES`**
+- [x] **Step 3: Add the suffixes to `DE_RULES`**
 
 Edit `src/gazetteer-build/normalize-rules.ts`. Replace the existing `DE_RULES` block with:
 
@@ -204,12 +204,12 @@ export const DE_RULES: GazetteerNormalizeRules = {
 };
 ```
 
-- [ ] **Step 4: Run tests, verify they PASS**
+- [x] **Step 4: Run tests, verify they PASS**
 
 Run: `npx vitest run tests/unit/normalize-rules.test.ts`
 Expected: all DE describe blocks PASS (existing + 4 new).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/gazetteer-build/normalize-rules.ts tests/unit/normalize-rules.test.ts
@@ -225,7 +225,7 @@ git commit -m "feat(gazetteer): add German ecclesiastical suffixes to DE_RULES"
 
 This is the test harness every subsequent country plan in the roadmap extends. It must be designed for extensibility — a per-country registry of probes, walked by a single `it.each()` driver.
 
-- [ ] **Step 1: Create the test file with a registry shape and DE entry**
+- [x] **Step 1: Create the test file with a registry shape and DE entry**
 
 Create `tests/unit/european-coverage.test.ts`:
 
@@ -310,12 +310,12 @@ describe('European country coverage probes', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test, verify the 4 admin1/admin2-only probes PASS against the existing point gazetteer**
+- [x] **Step 2: Run the test, verify the 4 admin1/admin2-only probes PASS against the existing point gazetteer**
 
 Run: `npx vitest run tests/unit/european-coverage.test.ts`
 Expected: all 4 DE probes PASS. They don't need boundaries or parishes — just admin1/admin2 from the existing `de-gemeinden`. If any FAIL, the existing point gazetteer has a regression that must be fixed before continuing this plan.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/european-coverage.test.ts
@@ -330,12 +330,12 @@ git commit -m "test(gazetteer): seed european-coverage probes with DE admin base
 - Create: `scripts/build-de-boundaries.ts`
 - Create (generated): `src/api/place-gazetteers/data/de-gemeinden-boundaries.json`
 
-- [ ] **Step 1: Verify GDAL + mapshaper available**
+- [x] **Step 1: Verify GDAL + mapshaper available**
 
 Run: `which ogr2ogr && which mapshaper || npm ls -g mapshaper`
 Expected: both binaries resolve. If `mapshaper` is missing, `npm i -D mapshaper` (it should be installed if Task 0's precondition holds — verify in `package.json`).
 
-- [ ] **Step 2: Download BKG vg250 dataset**
+- [x] **Step 2: Download BKG vg250 dataset**
 
 ```bash
 mkdir -p /tmp/bkg_vg250
@@ -349,7 +349,7 @@ Expected: at least one `.gpkg` file. The actual filename pattern is `DE_VG250.gp
 
 If the URL 404s, fall back to: <https://gdz.bkg.bund.de/index.php/default/open-data/verwaltungsgebiete-1-250-000-mit-einwohnerzahlen-stand-31-12-vg250-ew-31-12.html> and document the actual URL used in the script header.
 
-- [ ] **Step 3: Create `scripts/build-de-boundaries.ts`**
+- [x] **Step 3: Create `scripts/build-de-boundaries.ts`**
 
 Use `scripts/build-no-boundaries.ts` as the structural template. Key differences:
 
@@ -500,7 +500,7 @@ function main(): void {
 main();
 ```
 
-- [ ] **Step 4: Run the build script**
+- [x] **Step 4: Run the build script**
 
 ```bash
 npx tsx scripts/build-de-boundaries.ts
@@ -508,7 +508,7 @@ npx tsx scripts/build-de-boundaries.ts
 
 Expected: `[de-boundaries] Wrote 16 Bundesländer + ~400 Kreise.` and a fresh `src/api/place-gazetteers/data/de-gemeinden-boundaries.json`.
 
-- [ ] **Step 5: Verify bundle-size budget**
+- [x] **Step 5: Verify bundle-size budget**
 
 ```bash
 RAW=$(du -b src/api/place-gazetteers/data/de-gemeinden-boundaries.json | awk '{print $1}')
@@ -520,7 +520,7 @@ test "${GZIP}" -le 2621440 || (echo "GZIP exceeds 2.5 MB"; exit 1)
 
 If the budget is exceeded, raise `SIMPLIFY_PCT` to 3 (more aggressive simplification) and re-run Step 4 + Step 5.
 
-- [ ] **Step 6: Commit (pre-wiring)**
+- [x] **Step 6: Commit (pre-wiring)**
 
 ```bash
 git add scripts/build-de-boundaries.ts src/api/place-gazetteers/data/de-gemeinden-boundaries.json
@@ -537,7 +537,7 @@ git commit -m "feat(gazetteer): add de-gemeinden-boundaries (BKG vg250)"
 - Modify: `tests/unit/gazetteers.test.ts` (bump count + ID list)
 - Modify: `.claude/skills/gazetteers/SKILL.md` (add row)
 
-- [ ] **Step 1: Add the static import + entry in `bundled.ts`**
+- [x] **Step 1: Add the static import + entry in `bundled.ts`**
 
 Edit `src/api/place-gazetteers/bundled.ts`. Add:
 
@@ -547,11 +547,11 @@ import deGemeindenBoundaries from './data/de-gemeinden-boundaries.json';
 
 In `BUNDLED_GAZETTEERS`, in the German section, add `'de-gemeinden-boundaries'` after `'de-gemeinden'`. In the `loadGazetteer` switch (or registry), add the case mapping `'de-gemeinden-boundaries'` to the imported JSON. In `NORMALIZE_RULES_BY_ID`, add `'de-gemeinden-boundaries': DE_RULES`.
 
-- [ ] **Step 2: Update existing gazetteer count test**
+- [x] **Step 2: Update existing gazetteer count test**
 
 Edit `tests/unit/gazetteers.test.ts`. Bump the bundled count assertion by 1 and add `'de-gemeinden-boundaries'` to the expected IDs list.
 
-- [ ] **Step 3: Add a boundary probe to the European coverage test**
+- [x] **Step 3: Add a boundary probe to the European coverage test**
 
 Edit `tests/unit/european-coverage.test.ts`. In the DE probe set, append:
 
@@ -571,16 +571,16 @@ it('Lübeck has Kreis polygon (boundary gazetteer wired)', () => {
 });
 ```
 
-- [ ] **Step 4: Run tests, verify ALL PASS**
+- [x] **Step 4: Run tests, verify ALL PASS**
 
 Run: `npx vitest run tests/unit/european-coverage.test.ts tests/unit/gazetteers.test.ts`
 Expected: all DE probes PASS, the new geometry-presence assertion PASSES, count assertion PASSES.
 
-- [ ] **Step 5: Update the gazetteer skill doc**
+- [x] **Step 5: Update the gazetteer skill doc**
 
 Edit `.claude/skills/gazetteers/SKILL.md`. Add a row to the Boundary Gazetteers table for `de-gemeinden-boundaries`. Bump the bundled count in the overview prose.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/place-gazetteers/bundled.ts tests/unit/european-coverage.test.ts tests/unit/gazetteers.test.ts .claude/skills/gazetteers/SKILL.md
@@ -595,7 +595,7 @@ git commit -m "feat(gazetteer): wire de-gemeinden-boundaries into bundled set"
 - Create: `scripts/build-de-kirchgemeinden.ts`
 - Create (generated): `src/api/place-gazetteers/data/de-kirchgemeinden.json`
 
-- [ ] **Step 1: Validate the SPARQL query manually first**
+- [x] **Step 1: Validate the SPARQL query manually first**
 
 Open the Wikidata Query Service: <https://query.wikidata.org/>. Paste:
 
@@ -619,7 +619,7 @@ LIMIT 50
 
 Expected: 50 rows, mix of Catholic and Lutheran parishes, most with admin1, some with admin2, most with coords. If the query returns < 30 rows or the mix looks degenerate, refine the class filter (e.g. drop the `wdt:P279*` transitive closure) before scripting. Note any refinements in the script header.
 
-- [ ] **Step 2: Create `scripts/build-de-kirchgemeinden.ts`**
+- [x] **Step 2: Create `scripts/build-de-kirchgemeinden.ts`**
 
 Mirror `scripts/build-dk-parishes.ts` (Wikidata-sourced parishes) as the structural template. Differences:
 
@@ -796,7 +796,7 @@ function dedup(arr: string[]): string[] {
 main().catch(err => { console.error(err); process.exit(1); });
 ```
 
-- [ ] **Step 3: Run the build script**
+- [x] **Step 3: Run the build script**
 
 ```bash
 npx tsx scripts/build-de-kirchgemeinden.ts
@@ -804,7 +804,7 @@ npx tsx scripts/build-de-kirchgemeinden.ts
 
 Expected: 1k–5k parishes written. If < 500, the SPARQL query needs widening — check the manual query result; the class filter may be too narrow.
 
-- [ ] **Step 4: Verify bundle-size budget**
+- [x] **Step 4: Verify bundle-size budget**
 
 ```bash
 RAW=$(du -b src/api/place-gazetteers/data/de-kirchgemeinden.json | awk '{print $1}')
@@ -814,7 +814,7 @@ test "${RAW}" -le 5242880 || (echo "RAW exceeds 5 MB"; exit 1)
 test "${GZIP}" -le 1572864 || (echo "GZIP exceeds 1.5 MB"; exit 1)
 ```
 
-- [ ] **Step 5: Commit (pre-wiring)**
+- [x] **Step 5: Commit (pre-wiring)**
 
 ```bash
 git add scripts/build-de-kirchgemeinden.ts src/api/place-gazetteers/data/de-kirchgemeinden.json
@@ -831,7 +831,7 @@ git commit -m "feat(gazetteer): add de-kirchgemeinden (Wikidata, sparse first cu
 - Modify: `tests/unit/gazetteers.test.ts`
 - Modify: `.claude/skills/gazetteers/SKILL.md`
 
-- [ ] **Step 1: Add the static import + entry**
+- [x] **Step 1: Add the static import + entry**
 
 Edit `src/api/place-gazetteers/bundled.ts`. Add:
 
@@ -841,11 +841,11 @@ import deKirchgemeinden from './data/de-kirchgemeinden.json';
 
 Add `'de-kirchgemeinden'` to `BUNDLED_GAZETTEERS` (German section). Add the loader case. Add `'de-kirchgemeinden': DE_RULES` to `NORMALIZE_RULES_BY_ID`.
 
-- [ ] **Step 2: Bump gazetteers.test.ts**
+- [x] **Step 2: Bump gazetteers.test.ts**
 
 Bump count + add `'de-kirchgemeinden'` to expected IDs.
 
-- [ ] **Step 3: Add parish probes to european-coverage.test.ts**
+- [x] **Step 3: Add parish probes to european-coverage.test.ts**
 
 Append to the DE probe set. Pick three probes from the actual built-out gazetteer (open `de-kirchgemeinden.json` and pick three real parish names that span Lutheran/Catholic and span Bundesländer):
 
@@ -862,16 +862,16 @@ Append to the DE probe set. Pick three probes from the actual built-out gazettee
 
 If the Wikidata coverage doesn't include "St. Petri Lübeck" or "St. Maria München" (the user-goal probes), pick whichever parishes ARE present and update the user-goal § probes in this plan body to match. Better to commit honest probes than aspirational ones.
 
-- [ ] **Step 4: Run tests, verify ALL PASS**
+- [x] **Step 4: Run tests, verify ALL PASS**
 
 Run: `npx vitest run tests/unit/european-coverage.test.ts`
 Expected: all probes PASS — the four admin baseline probes, the boundary geometry assertion, and the new parish probes.
 
-- [ ] **Step 5: Update the skill doc**
+- [x] **Step 5: Update the skill doc**
 
 Edit `.claude/skills/gazetteers/SKILL.md`: add row to point gazetteer table for `de-kirchgemeinden`. Bump bundled count.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/place-gazetteers/bundled.ts tests/unit/european-coverage.test.ts tests/unit/gazetteers.test.ts .claude/skills/gazetteers/SKILL.md
@@ -888,12 +888,12 @@ git commit -m "feat(gazetteer): wire de-kirchgemeinden into bundled set"
 - Modify: `docs/PLAN.md` (move milestone to in-progress / done as appropriate)
 - Modify: this plan file (tick all checkboxes, then archive)
 
-- [ ] **Step 1: Run the full unit + lint pass**
+- [x] **Step 1: Run the full unit + lint pass**
 
 Run: `npm test && npm run lint`
 Expected: 0 lint errors, all tests pass.
 
-- [ ] **Step 2: Smoke-check in the running app (the verification gate)**
+- [x] **Step 2: Smoke-check in the running app (the verification gate)**
 
 Run: `npm start`. Open the place picker. Type each of the seven user-goal probes from § "User goal". For each:
 
@@ -903,7 +903,7 @@ Run: `npm start`. Open the place picker. Type each of the seven user-goal probes
 
 If any probe fails: do not proceed to Step 3. Diagnose, fix in the appropriate task, re-run from Task 4 / Task 6.
 
-- [ ] **Step 3: Bump version (minor) + CHANGELOG**
+- [x] **Step 3: Bump version (minor) + CHANGELOG**
 
 Edit `package.json`. Bump minor (e.g. `0.227.6` → `0.228.0`) — this plan ships two new gazetteers (feature, not patch).
 
@@ -917,22 +917,22 @@ Edit `CHANGELOG.md`. Add at the top:
 - Seed `tests/unit/european-coverage.test.ts` for roadmap-level coverage probes.
 ```
 
-- [ ] **Step 4: Update docs/PLAN.md**
+- [x] **Step 4: Update docs/PLAN.md**
 
 If `docs/PLAN.md` lists "European gazetteer roadmap" as planned/in-progress, update its block to reflect Phase 1 (DE) shipped. If it doesn't list the roadmap, add a one-paragraph block under in-progress citing this plan + the design doc.
 
-- [ ] **Step 5: Tick all plan checkboxes, archive plan**
+- [x] **Step 5: Tick all plan checkboxes, archive plan**
 
 Edit this plan file: every `- [ ]` becomes `- [x]`. Then `git mv docs/plans/2026-05-09-de-gazetteer-upgrade.md docs/plans/archive/`.
 
-- [ ] **Step 6: Final commit**
+- [x] **Step 6: Final commit**
 
 ```bash
 git add package.json CHANGELOG.md docs/PLAN.md docs/plans/archive/2026-05-09-de-gazetteer-upgrade.md
 git commit -m "chore: archive completed de-gazetteer-upgrade + version 0.228.0"
 ```
 
-- [ ] **Step 7: Hand off to `superpowers:finishing-a-development-branch`**
+- [x] **Step 7: Hand off to `superpowers:finishing-a-development-branch`**
 
 If working in a worktree (per the standard plan-execution flow), invoke that skill to merge to main.
 
@@ -940,12 +940,12 @@ If working in a worktree (per the standard plan-execution flow), invoke that ski
 
 ## Self-review checklist (the executing engineer ticks before close-out)
 
-- [ ] All seven user-goal probes resolve in the running app (Step 2 of Task 7).
-- [ ] `tests/unit/european-coverage.test.ts` is structured for extension (registry-driven, not hardcoded ifs) — future country plans only need to append to `EUROPEAN_PROBES`.
-- [ ] `de-gemeinden-boundaries.json` ≤ 8 MB raw / ≤ 2.5 MB gzip.
-- [ ] `de-kirchgemeinden.json` ≤ 5 MB raw / ≤ 1.5 MB gzip.
-- [ ] `DE_RULES` includes the eight ecclesiastical suffixes from Task 0 Step 3.
-- [ ] No `data/*.json` diffs that don't correspond to a script change (Prime Directive § "Sources are truth").
-- [ ] Build scripts each read ONE source (BKG-only, Wikidata-only). No source mixing inside a script.
-- [ ] Skill doc + CHANGELOG + version + `docs/PLAN.md` updated.
-- [ ] This plan file archived to `docs/plans/archive/`.
+- [x] All seven user-goal probes resolve in the running app (Step 2 of Task 7).
+- [x] `tests/unit/european-coverage.test.ts` is structured for extension (registry-driven, not hardcoded ifs) — future country plans only need to append to `EUROPEAN_PROBES`.
+- [x] `de-gemeinden-boundaries.json` ≤ 8 MB raw / ≤ 2.5 MB gzip.
+- [x] `de-kirchgemeinden.json` ≤ 5 MB raw / ≤ 1.5 MB gzip.
+- [x] `DE_RULES` includes the eight ecclesiastical suffixes from Task 0 Step 3.
+- [x] No `data/*.json` diffs that don't correspond to a script change (Prime Directive § "Sources are truth").
+- [x] Build scripts each read ONE source (BKG-only, Wikidata-only). No source mixing inside a script.
+- [x] Skill doc + CHANGELOG + version + `docs/PLAN.md` updated.
+- [x] This plan file archived to `docs/plans/archive/`.
