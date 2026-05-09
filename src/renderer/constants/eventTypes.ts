@@ -75,7 +75,12 @@ export const NAME_TYPE_VALUES = [
 
 export const PLACE_TYPE_VALUES = [
   'country', 'admin1', 'province', 'county', 'municipality', 'härad', 'parish',
-  'locality', 'farm', 'village', 'city', 'other',
+  'locality', 'farm', 'village', 'city',
+  // Building-level places — added 2026-05-09 after the Bernadotte test
+  // forced royal residences (Stockholms slott, Drottningholm, Solliden,
+  // Riddarholmskyrkan) into 'other'. Now they have first-class types.
+  'palace', 'castle', 'church',
+  'other',
 ] as const;
 
 export const RESEARCH_TASK_STATUS_VALUES = [

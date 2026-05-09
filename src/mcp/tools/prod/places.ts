@@ -18,7 +18,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     inputSchema: {
       name: z.string().describe('Place name as a single component (no commas). For "Chennai, India, World" pass name: "Chennai" + parent_chain: ["World", "India"].'),
       parent_chain: z.array(z.string()).optional().describe('Optional ancestor chain, root → leaf, EXCLUDING the leaf itself. e.g. for "Chennai" in India: ["World", "India"]. Missing rows are created; existing ones are reused (matched by parent + normalized name).'),
-      place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional().describe('Place type'),
+      place_type: z.enum(['country', 'admin1', 'province', 'county', 'municipality', 'härad', 'parish', 'locality', 'farm', 'village', 'city', 'palace', 'castle', 'church', 'other']).optional().describe('Place type'),
       parent_place_id: z.string().optional().describe('Parent place ID. Mutually exclusive with `parent_chain` — prefer `parent_chain` when you can name the ancestors.'),
       latitude: z.number().optional().describe('Latitude coordinate'),
       longitude: z.number().optional().describe('Longitude coordinate'),
@@ -111,7 +111,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     inputSchema: {
       id: z.string().describe('Place ID'),
       name: z.string().optional().describe('New name as a single component (no commas). To re-parent, use parent_place_id instead.'),
-      place_type: z.enum(['country', 'province', 'county', 'härad', 'parish', 'farm', 'village', 'city', 'other']).optional(),
+      place_type: z.enum(['country', 'admin1', 'province', 'county', 'municipality', 'härad', 'parish', 'locality', 'farm', 'village', 'city', 'palace', 'castle', 'church', 'other']).optional(),
       parent_place_id: z.string().optional(),
       latitude: z.number().optional(),
       longitude: z.number().optional(),
