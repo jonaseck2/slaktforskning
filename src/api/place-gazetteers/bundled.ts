@@ -33,6 +33,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'gb-civil-divisions',
   // Ireland
   'ie-counties',
+  // Netherlands
+  'nl-gemeenten',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -136,6 +138,9 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'gb-civil-divisions': GB_RULES,
   // Ireland — share GB normalize rules (English + civil-parish/county-of patterns)
   'ie-counties': GB_RULES,
+  // Netherlands — universal-only is fine; Provincie/Gemeente prefixes already
+  // stripped at build time and kept as aliases.
+  'nl-gemeenten': { stripSuffixes: [], stripPrefixes: ['provincie', 'gemeente'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

@@ -91,6 +91,19 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Sligo, Connacht, Ireland', expectAdmin1: 'Connacht', expectAdmin2: 'Sligo', expectCountry: 'Ireland' },
     ],
   },
+  {
+    countryCode: 'nl',
+    countryName: 'Netherlands',
+    probes: [
+      // GeoNames NL: 12 provinces (admin1) + 342 gemeenten (admin2) + populated
+      // places ≥1000 pop. "Provincie X" / "Gemeente X" prefixes stripped from
+      // canonical name and kept as aliases.
+      { query: 'Leiden, Zuid-Holland, Netherlands', expectAdmin1: 'Zuid-Holland', expectAdmin2: 'Leiden', expectCountry: 'Netherlands' },
+      { query: 'Hoorn, Noord-Holland, Netherlands', expectAdmin1: 'Noord-Holland', expectAdmin2: 'Hoorn', expectCountry: 'Netherlands' },
+      { query: 'Maastricht, Limburg, Netherlands', expectAdmin1: 'Limburg', expectAdmin2: 'Maastricht', expectCountry: 'Netherlands' },
+      { query: 'Groningen, Groningen, Netherlands', expectAdmin1: 'Groningen', expectAdmin2: 'Groningen', expectCountry: 'Netherlands' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {
