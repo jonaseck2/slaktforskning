@@ -200,6 +200,18 @@ export function findOrCreatePlaceWithChain(
     latitude?: number | null;
     longitude?: number | null;
   }>,
+  leafProps?: {
+    place_type?: Place['place_type'];
+    latitude?: number | null;
+    longitude?: number | null;
+    date_from?: string | null;
+    date_to?: string | null;
+    notes?: string;
+    street?: string | null;
+    postal_code?: string | null;
+    city?: string | null;
+    country?: string | null;
+  },
 ): Place {
   let parentId: string | null = null;
   for (const link of chain) {
@@ -222,13 +234,15 @@ export function findOrCreatePlaceWithChain(
     });
     parentId = created.id;
   }
-  // Now look up / create the leaf under the resolved parent
+  // Now look up / create the leaf under the resolved parent. Only apply
+  // leafProps when the leaf is newly created — existing places must not be
+  // silently overwritten by a findOrCreate call (use updatePlace explicitly).
   const leafNorm = normalize(name);
   const existingLeaf: Place | undefined = parentId === null
     ? queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [leafNorm])
     : queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [leafNorm, parentId]);
   if (existingLeaf) return existingLeaf;
-  return createPlace(db, { name: name.trim(), parent_place_id: parentId });
+  return createPlace(db, { name: name.trim(), parent_place_id: parentId, ...leafProps });
 }
 
 /**

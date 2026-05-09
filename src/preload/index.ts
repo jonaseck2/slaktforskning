@@ -5,13 +5,24 @@ import { contextBridge, ipcRenderer } from 'electron';
 // way to call back into the renderer from the preload's isolated context.
 const dataChangedListeners: Array<() => void> = [];
 
+function fireDataChanged(): void {
+  for (const cb of dataChangedListeners) cb();
+}
+
 function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
   return async (...args: T) => {
     const result = await fn(...args);
-    dataChangedListeners.forEach(cb => cb());
+    fireDataChanged();
     return result;
   };
 }
+
+// Listen for `data:changed` broadcasts originating from the DB worker — fired
+// after every mutating channel call, including MCP-driven ones that bypass
+// the preload `mutating()` wrapper. Without this subscription, list views
+// (Places, Groups, Tasks, Media) and panel sections cache the initial empty
+// fetch and never see MCP writes until a hard reload.
+ipcRenderer.on('data:changed', () => fireDataChanged());
 
 const api = {
   persons: {

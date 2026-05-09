@@ -10,6 +10,8 @@ export const EVENT_TYPE_VALUES = [
   'travel',
   // GEDCOM-X fact-shaped event types — line value lives in events.value.
   'title', 'religion', 'description', 'fact',
+  // Lifecycle events for monarchs / nobility / formal name changes.
+  'name_change', 'accession', 'coronation',
   'other',
 ] as const;
 

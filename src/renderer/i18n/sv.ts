@@ -482,6 +482,8 @@ export default {
     description: 'Beskrivning',
     fact: 'Faktum',
     name_change: 'Namnändring',
+    accession: 'Trontillträde',
+    coronation: 'Kröning',
     other: 'Övrigt',
   },
   timelineLabels: {

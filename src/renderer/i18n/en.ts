@@ -482,6 +482,8 @@ export default {
     description: 'Physical description',
     fact: 'Fact',
     name_change: 'Name change',
+    accession: 'Accession to throne',
+    coronation: 'Coronation',
     other: 'Other',
   },
   timelineLabels: {

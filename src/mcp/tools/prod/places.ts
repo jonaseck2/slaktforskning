@@ -28,17 +28,21 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     placeApi.assertLeafPlaceName(args.name);
-    const { parent_chain, ...rest } = args;
+    const { parent_chain, name, ...leafProps } = args;
     if (parent_chain && parent_chain.length > 0) {
       for (const link of parent_chain) placeApi.assertLeafPlaceName(link);
+      // Pass leafProps so user-authored place_type/lat/lon/notes/etc. are
+      // persisted on the newly created leaf — Prime Directive: never silently
+      // drop authored values.
       const place = placeApi.findOrCreatePlaceWithChain(
         getDb(),
-        rest.name,
+        name,
         parent_chain.map((n) => ({ name: n })),
+        leafProps,
       );
       return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
     }
-    const place = placeApi.createPlace(getDb(), rest);
+    const place = placeApi.createPlace(getDb(), { name, ...leafProps });
     return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
   });
 

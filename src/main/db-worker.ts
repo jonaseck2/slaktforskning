@@ -285,6 +285,15 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
     try {
       const result = await Promise.resolve(regCh.handler(getDb(), ...args));
       parentPort!.postMessage({ id, result: result ?? null });
+      // Broadcast a refresh signal to every renderer after any mutating
+      // channel call, regardless of caller. The preload's mutating() wrapper
+      // already fires dataChangedListeners for renderer-initiated mutations,
+      // but MCP-side mutations bypass preload entirely. Without this
+      // broadcast, list views (Places, Groups, Tasks, Media) and panel
+      // sections cache the initial empty fetch and never see MCP writes.
+      if (regCh.mutating) {
+        broadcast('data:changed', { channel });
+      }
     } catch (err) {
       parentPort!.postMessage({ id, error: err instanceof Error ? err.message : String(err) });
     }

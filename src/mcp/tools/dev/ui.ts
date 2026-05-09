@@ -53,6 +53,16 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
   );
 
   server.tool(
+    'ui_reload',
+    'Hard-reload the Electron renderer window (equivalent to Cmd+R). Use after MCP-side mutations to refresh list views (Places, Groups, Tasks, Media) that cache the initial empty fetch and never re-query — known dataChanged-listener gap. Drops all unsaved form state.',
+    {},
+    async () => {
+      await uiPost(uiBase, '/reload', {});
+      return { content: [{ type: 'text' as const, text: 'Renderer reloaded' }] };
+    }
+  );
+
+  server.tool(
     'ui_click',
     'Click a DOM element in the Electron app by CSS selector.',
     { selector: z.string().describe('CSS selector of the element to click') },

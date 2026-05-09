@@ -67,6 +67,12 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
         );
         json(res, 200, { ok: true });
 
+      } else if (method === 'POST' && url === '/reload') {
+        // Hard reload — drops all renderer state, re-fetches every list view.
+        // Use after MCP-side mutations to surface them in cached views.
+        win.webContents.reload();
+        json(res, 200, { ok: true });
+
       } else if (method === 'POST' && url === '/execute_js') {
         const body = await readBody(req) as { code: string };
         try {
