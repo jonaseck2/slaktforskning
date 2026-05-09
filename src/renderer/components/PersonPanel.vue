@@ -87,6 +87,16 @@
         </div>
       </div>
 
+      <!-- Identifierare section. v-show keeps the child mounted while
+           collapsed so its defineExpose({ count }) is live and the (N) badge
+           is accurate even before the user opens the section. -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('personDetail.identifiers')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addIdentifierShort') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
+        <div v-show="sections.identifiers" class="panel-section-body">
+          <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
+        </div>
+      </div>
+
       <!-- Händelser section -->
       <div class="panel-section">
         <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('events')" @action="triggerAddEvent" />
@@ -271,6 +281,7 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
 import PersonResearchTasksSection from './PersonResearchTasksSection.vue';
+import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
@@ -477,6 +488,7 @@ const { sections, toggleSection } = usePanelSections(
   {
     person: false,
     names: true,
+    identifiers: false,
     events: true,
     timeline: false,
     map: false,
@@ -502,6 +514,8 @@ const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 const researchSectionRef = ref<InstanceType<typeof PersonResearchTasksSection> | null>(null);
 const researchTaskCount = computed(() => researchSectionRef.value?.count ?? 0);
+const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
+const identifierCount = computed(() => identifiersSectionRef.value?.count ?? 0);
 
 // ── Cross-section add actions ───────────────────────────────────────────────
 
