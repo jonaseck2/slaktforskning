@@ -75,6 +75,32 @@ describe('sources', () => {
     expect(source.title).toBe('1880 US Federal Census');
   });
 
+  it('persists every authored field — abstract + call_number must round-trip', () => {
+    // Regression for the 2026-05-09 Bernadotte session: the INSERT used to
+    // omit `abstract` and `call_number` even though both were declared on
+    // the Source type and accepted by the MCP add_source tool. Authored
+    // values were silently dropped — Prime Directive violation.
+    const source = createSource(db, {
+      title: 'Pau parish register',
+      author: 'Béarn parish clerk',
+      publication_info: 'Pau, France, 1763',
+      repository: 'Archives Pyrénées-Atlantiques',
+      url: 'https://example.invalid/pau',
+      source_type: 'church_record',
+      call_number: 'AD64-Pau-Baptisms-1763',
+      abstract: 'Baptismal entry for Jean-Baptiste Bernadotte, 26 January 1763.',
+    });
+    const reread = getSource(db, source.id);
+    expect(reread?.title).toBe('Pau parish register');
+    expect(reread?.author).toBe('Béarn parish clerk');
+    expect(reread?.publication_info).toBe('Pau, France, 1763');
+    expect(reread?.repository).toBe('Archives Pyrénées-Atlantiques');
+    expect(reread?.url).toBe('https://example.invalid/pau');
+    expect(reread?.source_type).toBe('church_record');
+    expect(reread?.call_number).toBe('AD64-Pau-Baptisms-1763');
+    expect(reread?.abstract).toBe('Baptismal entry for Jean-Baptiste Bernadotte, 26 January 1763.');
+  });
+
   it('lists and gets sources', () => {
     createSource(db, { title: 'Source A' });
     createSource(db, { title: 'Source B' });

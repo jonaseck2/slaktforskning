@@ -9,10 +9,26 @@ export function createSource(
   data: Partial<Omit<Source, 'id' | 'created_at' | 'updated_at'>>
 ): Source {
   const id = uuid();
+  // Include `abstract` and `call_number` — both are declared on the Source
+  // type and accepted by the MCP `add_source` tool's inputSchema. The
+  // previous INSERT silently dropped them, which produced the same
+  // Prime-Directive violation as `add_place`'s leafProps drop. Surfaced
+  // by the 2026-05-09 Bernadotte test session and listed as gap #8 in
+  // docs/plans/2026-05-09-bernadotte-test-findings.md.
   runSql(db, `
-    INSERT INTO sources (id, title, author, publication_info, repository, url, source_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [id, data.title ?? '', data.author ?? '', data.publication_info ?? '', data.repository ?? '', data.url ?? '', data.source_type ?? '']);
+    INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    id,
+    data.title ?? '',
+    data.author ?? '',
+    data.publication_info ?? '',
+    data.repository ?? '',
+    data.url ?? '',
+    data.source_type ?? '',
+    data.call_number ?? null,
+    data.abstract ?? null,
+  ]);
   return getSource(db, id)!;
 }
 
