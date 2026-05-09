@@ -1851,7 +1851,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      faceTagging: {
+        tip: 'Click and drag on the image to mark a face. Then link the marker to a person.',
+        dismiss: 'Got it',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Reset onboarding hints',

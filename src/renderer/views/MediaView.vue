@@ -94,6 +94,15 @@
         @region-clicked="(id: string) => highlightedRegionId = id"
         @region-hovered="(id: string | null) => highlightedRegionId = id"
       />
+      <Coachmark
+        v-if="drawMode"
+        seen-key="coach.media.faceTagging"
+        :anchor-el="viewerCanvasEl"
+        tip-key="onboarding.coach.faceTagging.tip"
+        dismiss-key="onboarding.coach.faceTagging.dismiss"
+        placement="below"
+        :auto-dismiss-on="() => viewerRegionsLength > 0"
+      />
     </div>
     <template v-else>
 
@@ -218,6 +227,7 @@ import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import AppLoadingState from '../components/ui/AppLoadingState.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import Coachmark from '../components/ui/Coachmark.vue';
 import { mediaDisplayName, isImageMedia } from '../utils/mediaUtils';
 import { usePanelResize } from '../composables/usePanelResize';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
@@ -321,6 +331,14 @@ const viewerItems = computed<MediaItem[]>(() => deepLinkItems.value ?? items.val
 const drawMode = ref(false);
 const highlightedRegionId = ref<string | null>(null);
 const viewerRef = ref<InstanceType<typeof MediaViewer> | null>(null);
+const viewerCanvasEl = computed<HTMLElement | null>(() => {
+  const exposed = viewerRef.value as unknown as { canvasEl?: HTMLElement | null } | null;
+  return exposed?.canvasEl ?? null;
+});
+const viewerRegionsLength = computed<number>(() => {
+  const exposed = viewerRef.value as unknown as { regions?: Array<unknown> } | null;
+  return exposed?.regions?.length ?? 0;
+});
 const panelRef = ref<InstanceType<typeof MediaPanel> | null>(null);
 const selectedMediaId = ref<string | null>(null);
 const sentinel = ref<HTMLElement | null>(null);

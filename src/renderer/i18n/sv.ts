@@ -1830,7 +1830,12 @@ export default {
   },
   onboarding: {
     empty: {},
-    coach: {},
+    coach: {
+      faceTagging: {
+        tip: 'Klicka och dra på bilden för att markera ett ansikte. Knyt sedan markeringen till en person.',
+        dismiss: 'Förstått',
+      },
+    },
     toast: {},
     settings: {
       resetTitle: 'Återställ introduktionshjälpen',
