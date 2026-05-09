@@ -11,7 +11,7 @@ Fixes landed in the same session as the test:
 | # | Status | Item |
 |---|--------|------|
 | 1 | ✅ FIXED | List views don't refresh when MCP creates data |
-| 2 | ❌ open | `run_checks` date parser broken on day-month-year strings |
+| 2 | ❌ open | `run_checks` date parser broken on day-month-year strings (cause of 232 of 359 issues) |
 | 3 | ✅ FIXED | `add_place` silently discards `place_type`/`latitude`/`longitude`/`notes` |
 | 4 | ❌ open | Empty `default_person_id` → empty Family Tree on a fresh DB |
 | 5 | ❌ open | `merge_persons` leaves duplicate events behind |
@@ -24,7 +24,21 @@ Fixes landed in the same session as the test:
 | 12 | ✅ FIXED | `EVENT_TYPE_VALUES` constant missing `name_change`, `accession`, `coronation` |
 | 13 | ✅ ADDED | `ui_reload` MCP dev tool — Cmd+R via the bridge, lets the agent re-render after MCP-side mutations |
 | 14 | ❌ open | No `PersonIdentifiersSection` UI — identifiers only addable via MCP |
-| 15 | ❌ open | `PersonResearchTasksSection` shows (0) for MCP-created tasks until reload — should be free now that #1 lands but verify on next session |
+| 15 | ✅ FIXED | `Uppgifter`/`Kvalitet` sections show (0) when collapsed because `v-if` unmounts the child whose `defineExpose({ count })` is the count source. Switched to `v-show` on PersonPanel + PlacePanel + MediaPanel. |
+| 16 | ✅ ADDED | `ui_get_dom` extended with `mode` (outerHTML/innerHTML/textContent/attributes), `all`, `limit` — agents can extract specific section counts in 200 bytes instead of dumping 300 KB. |
+| 17 | ✅ DONE | Quality-issue triage: 359 total → 232 are the date-parser bug (one fix), 65 are sloppy data (missing source citations), 41 are gazetteer/place-quality, 14 are real structural gaps, 7 are intentional fixtures or duplicates. No MCP-side data corruption. |
+| 18 | ✅ DONE | `mcp-dev` skill updated with 3 new pitfall sections (pass-through-in-branches, `mutating: true` matters, v-show vs v-if for `defineExpose({ count })` sections). |
+| 19 | ✅ DONE | Norwegian royal house added to validate fixes — Haakon VII → Olav V → Harald V + Sonja → Crown Prince Haakon + Mette-Marit. Cross-family link via Crown Princess Märtha (daughter of my existing Prince Carl, Duke of Västergötland) to the Bernadotte side. Adoptive parent_child relationship Haakon → Marius Borg Høiby tested and renders correctly in the panel ("Adoptivförälder") and chart ("Adoptivt förhållande" dashed line). |
+
+## Final database shape (end of session)
+
+- **60 persons** (47 Bernadottes + 11 Norwegian + 2 connecting Danish)
+- **101 relationships** (couples + parent_child including 1 explicit `subtype: 'adopted'` and 1 `subtype: 'biological'`)
+- **131 events** across 9 generations on the Bernadotte side and 4 generations on the Norwegian side
+- **62 places** with full parent_chain hierarchy where authored (Sweden, Norway, Denmark, France, Germany, UK, Italy, Netherlands)
+- **90 media** including 12 group photos with multi-person face tags
+- **6 research tasks** demonstrating the Open / In progress / Stopped lifecycle
+- **240 quality issues** in the Kvalitet view, predominantly the documented date-parser false positives
 
 ## What got built
 
