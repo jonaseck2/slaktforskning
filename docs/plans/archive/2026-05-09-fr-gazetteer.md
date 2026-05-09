@@ -67,10 +67,10 @@ INSEE COG CSV/JSON + IGN ADMIN-EXPRESS GeoPackage + ogr2ogr + mapshaper + GeoNam
 
 ### Task 0: License audit + source decisions
 
-- [ ] INSEE COG (Etalab v2 license) — confirm latest year's CSV (e.g. `commune2025.csv`).
-- [ ] IGN ADMIN-EXPRESS — version pinned, fetched-date documented.
-- [ ] Population threshold for commune-with-polygon: top 2,000 by population (~63% of FR population).
-- [ ] FR_RULES suffixes: `Commune de`, `Ville de`, `Département de`, `Région`, `Arrondissement`, `Canton de`, `Paroisse de`, `Paroisse`, `Hameau`, `Lieu-dit`. Longest-first.
+- [x] INSEE COG (Etalab v2 license) — confirm latest year's CSV (e.g. `commune2025.csv`).
+- [x] IGN ADMIN-EXPRESS — version pinned, fetched-date documented.
+- [x] Population threshold for commune-with-polygon: top 2,000 by population (~63% of FR population).
+- [x] FR_RULES suffixes: `Commune de`, `Ville de`, `Département de`, `Région`, `Arrondissement`, `Canton de`, `Paroisse de`, `Paroisse`, `Hameau`, `Lieu-dit`. Longest-first.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -101,8 +101,8 @@ Mirror DE Task 7. Five user-goal probes. Diacritic resolve check. Minor version 
 
 ## Self-review checklist
 
-- [ ] All five user-goal probes resolve.
-- [ ] Diacritic-stripped queries resolve.
-- [ ] Paris arrondissements resolve as admin3 children of Paris.
-- [ ] Bundle within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All five user-goal probes resolve.
+- [x] Diacritic-stripped queries resolve.
+- [x] Paris arrondissements resolve as admin3 children of Paris.
+- [x] Bundle within budget.
+- [x] Plan archived; minor version bumped.

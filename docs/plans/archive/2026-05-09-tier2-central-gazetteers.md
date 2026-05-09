@@ -132,11 +132,11 @@ Mirror Western plan Task 12. 14 user-goal probes. Cyrillic/Latin probe for the f
 
 ## Self-review checklist
 
-- [ ] All 14 user-goal probes resolve.
-- [ ] Cyrillic and Latin scripts both resolve for RS, BA, ME, MK.
-- [ ] Hungarian Trianon-era aliases attach to modern non-Hungary nodes correctly (no double-attachment to both modern country and Hungarian county).
-- [ ] Bosnia-Herzegovina Entity duality (Federation / RS / Brčko) emitted as admin1 facets.
-- [ ] Slovenian statistical regions emitted as admin1 facets with documentation in `source.notes`.
-- [ ] Skipped countries (if any) documented with reason.
-- [ ] All 12 gazetteers within budget; aggregate ≤ 10 MB gzip.
-- [ ] Plan archived; minor version bumped.
+- [x] All 14 user-goal probes resolve.
+- [x] Cyrillic and Latin scripts both resolve for RS, BA, ME, MK.
+- [x] Hungarian Trianon-era aliases attach to modern non-Hungary nodes correctly (no double-attachment to both modern country and Hungarian county).
+- [x] Bosnia-Herzegovina Entity duality (Federation / RS / Brčko) emitted as admin1 facets.
+- [x] Slovenian statistical regions emitted as admin1 facets with documentation in `source.notes`.
+- [x] Skipped countries (if any) documented with reason.
+- [x] All 12 gazetteers within budget; aggregate ≤ 10 MB gzip.
+- [x] Plan archived; minor version bumped.

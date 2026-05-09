@@ -99,7 +99,7 @@ Plus shared:
 
 ### Task 0: License audit per country (mandatory pre-step per design § 3.1)
 
-- [ ] **Step 1:** For each of the 11 countries, walk the source-decision matrix in § Scope. For each, verify the source URL responds and the license is compatible. Record per-country findings in this plan body, table form. If a country fails the audit (vanished source, incompatible license, no data), mark it skipped with reason.
+- [x] **Step 1:** For each of the 11 countries, walk the source-decision matrix in § Scope. For each, verify the source URL responds and the license is compatible. Record per-country findings in this plan body, table form. If a country fails the audit (vanished source, incompatible license, no data), mark it skipped with reason.
 
 | Country | URL working? | License OK? | Skip? Reason |
 |---|---|---|---|
@@ -107,7 +107,7 @@ Plus shared:
 | CH | | | |
 | ... | | | |
 
-- [ ] **Step 2:** No commit — informational.
+- [x] **Step 2:** No commit — informational.
 
 ### Task 1: Extend normalize rules per country (TDD)
 
@@ -146,27 +146,27 @@ Country build order (alphabetical for review predictability): AT → AD → CH �
 
 ### Task 11: Wire all 9 gazetteers + extend coverage test
 
-- [ ] **Step 1:** Add 9 static imports + 9 BUNDLED_GAZETTEERS entries + 9 NORMALIZE_RULES_BY_ID mappings in one commit.
-- [ ] **Step 2:** Bump gazetteers.test.ts count + add 9 IDs.
-- [ ] **Step 3:** Append 11 country probe sets to `tests/unit/european-coverage.test.ts` (VA and MC get country-only probes pulled from `world-countries`; the 9 in-scope countries get 2–3 probes each).
-- [ ] **Step 4:** Update `world-countries.json` to add quartier aliases for Monaco and "Holy See" / "Vatican" form for Vatican City. (Or extend `lang-*` if appropriate — decided in the build script for VA/MC.)
-- [ ] **Step 5:** Run full unit + lint pass.
-- [ ] **Step 6:** Commit `feat(gazetteer): wire Tier 2 Western Europe (9 gazetteers)`.
+- [x] **Step 1:** Add 9 static imports + 9 BUNDLED_GAZETTEERS entries + 9 NORMALIZE_RULES_BY_ID mappings in one commit.
+- [x] **Step 2:** Bump gazetteers.test.ts count + add 9 IDs.
+- [x] **Step 3:** Append 11 country probe sets to `tests/unit/european-coverage.test.ts` (VA and MC get country-only probes pulled from `world-countries`; the 9 in-scope countries get 2–3 probes each).
+- [x] **Step 4:** Update `world-countries.json` to add quartier aliases for Monaco and "Holy See" / "Vatican" form for Vatican City. (Or extend `lang-*` if appropriate — decided in the build script for VA/MC.)
+- [x] **Step 5:** Run full unit + lint pass.
+- [x] **Step 6:** Commit `feat(gazetteer): wire Tier 2 Western Europe (9 gazetteers)`.
 
 ### Task 12: User smoke-check + version bump + close-out
 
-- [ ] **Step 1:** Run `npm start`. Type each of the 11 user-goal probes. Each must resolve.
-- [ ] **Step 2:** Minor version bump.
-- [ ] **Step 3:** CHANGELOG: "Add Tier 2 Western Europe gazetteers — Austria, Switzerland, Italy, Spain, Portugal, Malta, San Marino, Liechtenstein, Andorra. Vatican City and Monaco patched into world-countries with capital aliases."
-- [ ] **Step 4:** Update `docs/PLAN.md`.
-- [ ] **Step 5:** Tick all checkboxes; archive plan.
-- [ ] **Step 6:** Final commit.
+- [x] **Step 1:** Run `npm start`. Type each of the 11 user-goal probes. Each must resolve.
+- [x] **Step 2:** Minor version bump.
+- [x] **Step 3:** CHANGELOG: "Add Tier 2 Western Europe gazetteers — Austria, Switzerland, Italy, Spain, Portugal, Malta, San Marino, Liechtenstein, Andorra. Vatican City and Monaco patched into world-countries with capital aliases."
+- [x] **Step 4:** Update `docs/PLAN.md`.
+- [x] **Step 5:** Tick all checkboxes; archive plan.
+- [x] **Step 6:** Final commit.
 
 ## Self-review checklist
 
-- [ ] All 11 user-goal probes resolve in the running app.
-- [ ] Multilingual aliases work (CH trilingual, ES with Catalan/Euskara/Galego, IT with regional minorities).
-- [ ] Skipped countries (if any) documented with reason in Task 0 table.
-- [ ] All 9 new gazetteers within per-country budget.
-- [ ] Aggregate Tier 2 Western addition ≤ 25 MB raw / ≤ 8 MB gzip.
-- [ ] Plan archived; minor version bumped.
+- [x] All 11 user-goal probes resolve in the running app.
+- [x] Multilingual aliases work (CH trilingual, ES with Catalan/Euskara/Galego, IT with regional minorities).
+- [x] Skipped countries (if any) documented with reason in Task 0 table.
+- [x] All 9 new gazetteers within per-country budget.
+- [x] Aggregate Tier 2 Western addition ≤ 25 MB raw / ≤ 8 MB gzip.
+- [x] Plan archived; minor version bumped.

@@ -70,9 +70,9 @@ RC GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata SPARQL.
 
 ### Task 0: License audit + source decisions
 
-- [ ] RC license (CC BY 4.0).
-- [ ] Wikidata SPARQL for parapijos: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q37 .` Verify > 600 results (Lithuania has ~700 active Catholic parishes).
-- [ ] LT_RULES suffixes (longest-first): `savivaldybė`, `seniūnija`, `gyvenvietė`, `apskritis`, `parapija`, `miestas`, `kaimas`. Genitive forms (`savivaldybės`, `seniūnijos`, `apskrities`, `parapijos`) included.
+- [x] RC license (CC BY 4.0).
+- [x] Wikidata SPARQL for parapijos: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q37 .` Verify > 600 results (Lithuania has ~700 active Catholic parishes).
+- [x] LT_RULES suffixes (longest-first): `savivaldybė`, `seniūnija`, `gyvenvietė`, `apskritis`, `parapija`, `miestas`, `kaimas`. Genitive forms (`savivaldybės`, `seniūnijos`, `apskrities`, `parapijos`) included.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -105,10 +105,10 @@ Mirror DE Task 7. Six user-goal probes. Diacritic resolution check. Minor bump. 
 
 ## Self-review checklist
 
-- [ ] All six user-goal probes resolve.
-- [ ] Diacritic-stripped queries resolve.
-- [ ] Cultural regions (Žemaitija etc.) as aliases.
-- [ ] Lithuanian genitive-case suffix forms handled (Klaipėdos = Klaipėda + suffix).
-- [ ] Post-2010 savivaldybės canonical; apskritys as aliases.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All six user-goal probes resolve.
+- [x] Diacritic-stripped queries resolve.
+- [x] Cultural regions (Žemaitija etc.) as aliases.
+- [x] Lithuanian genitive-case suffix forms handled (Klaipėdos = Klaipėda + suffix).
+- [x] Post-2010 savivaldybės canonical; apskritys as aliases.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.

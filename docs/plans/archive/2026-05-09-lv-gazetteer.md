@@ -69,9 +69,9 @@ LĢIA GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata SPARQL.
 
 ### Task 0: License audit + source decisions
 
-- [ ] LĢIA license check (CC BY 4.0).
-- [ ] Wikidata SPARQL for draudzes: `?p wdt:P31/wdt:P279* wd:Q102496 . ?p wdt:P17 wd:Q211 .` Verify > 100 results.
-- [ ] LV_RULES suffixes (longest-first): `valstspilsēta`, `apriņķis`, `draudze`, `pilsēta`, `pagasts`, `novads`, `ciemats`. Plus prefix `Pilsēta`.
+- [x] LĢIA license check (CC BY 4.0).
+- [x] Wikidata SPARQL for draudzes: `?p wdt:P31/wdt:P279* wd:Q102496 . ?p wdt:P17 wd:Q211 .` Verify > 100 results.
+- [x] LV_RULES suffixes (longest-first): `valstspilsēta`, `apriņķis`, `draudze`, `pilsēta`, `pagasts`, `novads`, `ciemats`. Plus prefix `Pilsēta`.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -104,9 +104,9 @@ Mirror DE Task 7. Six user-goal probes. Diacritic resolution check. Cultural-reg
 
 ## Self-review checklist
 
-- [ ] All six user-goal probes resolve.
-- [ ] Diacritic-stripped queries resolve.
-- [ ] Cultural regions (Latgale, Vidzeme, Kurzeme, Zemgale) are aliases on relevant novads, not admin1 nodes.
-- [ ] Post-2021 novadi canonical; pre-reform names as aliases.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All six user-goal probes resolve.
+- [x] Diacritic-stripped queries resolve.
+- [x] Cultural regions (Latgale, Vidzeme, Kurzeme, Zemgale) are aliases on relevant novads, not admin1 nodes.
+- [x] Post-2021 novadi canonical; pre-reform names as aliases.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.

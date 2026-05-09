@@ -81,10 +81,10 @@ OSi townlands.ie REST + bulk dump + ogr2ogr + mapshaper + Wikidata SPARQL (Catho
 
 ### Task 0: License audit + source decisions
 
-- [ ] OSi townlands.ie license, attribution string for script header.
-- [ ] Wikidata Catholic parish query: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q27 .` (Ireland) — confirm > 500 results before scripting; widen via P31 wd:Q102496 if degraded.
-- [ ] IE_RULES suffixes: `Civil Parish of`, `Catholic Parish of`, `County of`, `Diocese of`, `Townland of`, `Townland`, `Civil Parish`, `Parish`, `Co.`, `County`. Longest-first.
-- [ ] No commit.
+- [x] OSi townlands.ie license, attribution string for script header.
+- [x] Wikidata Catholic parish query: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q27 .` (Ireland) — confirm > 500 results before scripting; widen via P31 wd:Q102496 if degraded.
+- [x] IE_RULES suffixes: `Civil Parish of`, `Catholic Parish of`, `County of`, `Diocese of`, `Townland of`, `Townland`, `Civil Parish`, `Parish`, `Co.`, `County`. Longest-first.
+- [x] No commit.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -128,9 +128,9 @@ Mirror DE Task 7. Verify the cross-gazetteer NI probe in the running app (type "
 
 ## Self-review checklist
 
-- [ ] All six user-goal probes resolve in the running app.
-- [ ] Cross-gazetteer NI duplication doesn't break either path.
-- [ ] Townland leaves are `type: 'other'` with `townland` alias (closed-vocab compliance).
-- [ ] Both gazetteers within budget.
-- [ ] Catholic parishes correctly attach under civil counties (not under dioceses).
-- [ ] Plan archived; minor version bumped.
+- [x] All six user-goal probes resolve in the running app.
+- [x] Cross-gazetteer NI duplication doesn't break either path.
+- [x] Townland leaves are `type: 'other'` with `townland` alias (closed-vocab compliance).
+- [x] Both gazetteers within budget.
+- [x] Catholic parishes correctly attach under civil counties (not under dioceses).
+- [x] Plan archived; minor version bumped.

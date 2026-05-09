@@ -70,10 +70,10 @@ GUS TERYT API + GUGiK PRG GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata
 
 ### Task 0: License audit + source decisions
 
-- [ ] GUS TERYT license (Polish public-sector info, CC BY 4.0 compatible).
-- [ ] GUGiK PRG license, attribution string.
-- [ ] Wikidata SPARQL for parafie: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q36 .` Verify > 4,000 results.
-- [ ] PL_RULES suffixes (longest-first): `województwo`, `powiat`, `parafia`, `dzielnica`, `gmina`, `miasto`, `osada`, `wieś`. Plus prefix `Gmina ` (case-insensitive, leading).
+- [x] GUS TERYT license (Polish public-sector info, CC BY 4.0 compatible).
+- [x] GUGiK PRG license, attribution string.
+- [x] Wikidata SPARQL for parafie: `?p wdt:P31/wdt:P279* wd:Q17143723 . ?p wdt:P17 wd:Q36 .` Verify > 4,000 results.
+- [x] PL_RULES suffixes (longest-first): `województwo`, `powiat`, `parafia`, `dzielnica`, `gmina`, `miasto`, `osada`, `wieś`. Plus prefix `Gmina ` (case-insensitive, leading).
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -102,12 +102,12 @@ Mirror DE Task 7. Six user-goal probes. Diacritic resolution check (ł, ż, ź, 
 
 ## Self-review checklist
 
-- [ ] All six user-goal probes resolve.
-- [ ] Diacritic-stripped queries resolve (Krakow → Kraków, Lodz → Łódź).
-- [ ] 1999 admin reform: pre-reform names appear as aliases on modern województwa.
-- [ ] Wikidata coverage gap (~50% of actual parishes) documented in `source.notes`.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All six user-goal probes resolve.
+- [x] Diacritic-stripped queries resolve (Krakow → Kraków, Lodz → Łódź).
+- [x] 1999 admin reform: pre-reform names appear as aliases on modern województwa.
+- [x] Wikidata coverage gap (~50% of actual parishes) documented in `source.notes`.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.
 
 ---
 

@@ -85,10 +85,10 @@ ONS Open Geography Portal REST API (ArcGIS FeatureServer, GeoJSON output) + CofE
 
 ### Task 0: Lock source decisions (license audit per design § 3.1)
 
-- [ ] **Step 1:** Confirm ONS Open Geography Portal as the civil-divisions source. URL: <https://geoportal.statistics.gov.uk/>. Verify OGL v3 attribution string for the script header.
-- [ ] **Step 2:** Confirm CofE Open Data as the C of E parish source. URL: <https://opendata.churchofengland.org/>. License: CC BY 4.0. If the portal is down or the schema is degraded, fall back to Wikidata SPARQL — document the choice in the script header.
-- [ ] **Step 3:** Confirm normalize rule additions. Order longest-first: `Civil Parish`, `Ecclesiastical Parish`, `Royal Burgh`, `Council Area`, `Principal Area`, `Ceremonial County`, `Burgh`, `Town`, `Village`, `Hamlet`, `Parish`, `Community`. Plus prefixes: `County of`, `City of`, `Borough of`.
-- [ ] **Step 4:** No commit — informational.
+- [x] **Step 1:** Confirm ONS Open Geography Portal as the civil-divisions source. URL: <https://geoportal.statistics.gov.uk/>. Verify OGL v3 attribution string for the script header.
+- [x] **Step 2:** Confirm CofE Open Data as the C of E parish source. URL: <https://opendata.churchofengland.org/>. License: CC BY 4.0. If the portal is down or the schema is degraded, fall back to Wikidata SPARQL — document the choice in the script header.
+- [x] **Step 3:** Confirm normalize rule additions. Order longest-first: `Civil Parish`, `Ecclesiastical Parish`, `Royal Burgh`, `Council Area`, `Principal Area`, `Ceremonial County`, `Burgh`, `Town`, `Village`, `Hamlet`, `Parish`, `Community`. Plus prefixes: `County of`, `City of`, `Borough of`.
+- [x] **Step 4:** No commit — informational.
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -120,16 +120,16 @@ Tasks 2.x mirror DE Task 3 steps 1–6 (download, build, run, budget gate, commi
 
 ### Task 3: Wire `gb-civil-divisions`, extend test (mirrors DE Task 4)
 
-- [ ] **Step 1:** Static import + `BUNDLED_GAZETTEERS` entry + `NORMALIZE_RULES_BY_ID['gb-civil-divisions'] = GB_RULES`.
-- [ ] **Step 2:** Bump `gazetteers.test.ts` count, add ID.
-- [ ] **Step 3:** Append GB probe set to `EUROPEAN_PROBES` in `european-coverage.test.ts`. Include the Swedish exonym probe (`Skottland`) — it asserts `lang-sv-*` translations propagate to GB.
-- [ ] **Step 4:** Run tests. Expected: GB probes pass.
-- [ ] **Step 5:** Skill doc + commit.
+- [x] **Step 1:** Static import + `BUNDLED_GAZETTEERS` entry + `NORMALIZE_RULES_BY_ID['gb-civil-divisions'] = GB_RULES`.
+- [x] **Step 2:** Bump `gazetteers.test.ts` count, add ID.
+- [x] **Step 3:** Append GB probe set to `EUROPEAN_PROBES` in `european-coverage.test.ts`. Include the Swedish exonym probe (`Skottland`) — it asserts `lang-sv-*` translations propagate to GB.
+- [x] **Step 4:** Run tests. Expected: GB probes pass.
+- [x] **Step 5:** Skill doc + commit.
 
 ### Task 4: Build `gb-cofe-parishes` (CofE Open Data)
 
-- [ ] **Step 1:** Fetch the CofE parish dataset (parishes + dioceses + archdeaconries). REST: <https://opendata.churchofengland.org/api/3/action/datastore_search?resource_id=...>. If portal is down, Wikidata fallback.
-- [ ] **Step 2:** Hierarchy: UK → England → diocese (custom type? — closest match is `admin2` since the diocese is the parish's organisational parent; OR add no admin2 and put the diocese in aliases. **Decision: skip diocese as a structural level; put diocese in parish aliases.** Rationale: the genealogist writes "St Mary's, Woodbridge" not "St Mary's, Diocese of St Edmundsbury and Ipswich, Woodbridge". Resolver matches by path containment; parent path is `England → Suffolk → Woodbridge → St Mary's` from the civil-divisions gazetteer; this gazetteer attaches the parish point at `England → St Mary's (in Woodbridge as alias)`.)
+- [x] **Step 1:** Fetch the CofE parish dataset (parishes + dioceses + archdeaconries). REST: <https://opendata.churchofengland.org/api/3/action/datastore_search?resource_id=...>. If portal is down, Wikidata fallback.
+- [x] **Step 2:** Hierarchy: UK → England → diocese (custom type? — closest match is `admin2` since the diocese is the parish's organisational parent; OR add no admin2 and put the diocese in aliases. **Decision: skip diocese as a structural level; put diocese in parish aliases.** Rationale: the genealogist writes "St Mary's, Woodbridge" not "St Mary's, Diocese of St Edmundsbury and Ipswich, Woodbridge". Resolver matches by path containment; parent path is `England → Suffolk → Woodbridge → St Mary's` from the civil-divisions gazetteer; this gazetteer attaches the parish point at `England → St Mary's (in Woodbridge as alias)`.)
 
 Wait — reconsidering. If the CofE gazetteer doesn't share the civil-divisions parent_path, the structural-merge contract puts St Mary's at a different node than where the genealogist looks. Better: emit CofE parishes under the civil-divisions hierarchy when the CofE record's parent civil parish is known. CofE records *do* include the civil parish field. So:
 
@@ -139,9 +139,9 @@ Wait — reconsidering. If the CofE gazetteer doesn't share the civil-divisions 
 
 This means the CofE gazetteer merges into `gb-civil-divisions` at parish level by name+type+parent_path. ✓ The contract handles it.
 
-- [ ] **Step 3:** Build script writes `gb-cofe-parishes.json`.
-- [ ] **Step 4:** Bundle-size gate.
-- [ ] **Step 5:** Commit.
+- [x] **Step 3:** Build script writes `gb-cofe-parishes.json`.
+- [x] **Step 4:** Bundle-size gate.
+- [x] **Step 5:** Commit.
 
 ### Task 5: Wire `gb-cofe-parishes`, add CofE probes
 
@@ -153,9 +153,9 @@ Mirrors DE Task 7. Minor version bump. CHANGELOG line. Plan archive. `npm start`
 
 ## Self-review checklist
 
-- [ ] All seven user-goal probes resolve in the running app.
-- [ ] CofE parishes correctly attach under their civil parishes (no orphan diocese-rooted parishes).
-- [ ] Both gazetteers within budget.
-- [ ] Swedish exonym `Skottland` → Scotland still works (lang-sv merge regression check).
-- [ ] No `type` outside the closed vocab in any leaf.
-- [ ] Plan archived; minor version bumped.
+- [x] All seven user-goal probes resolve in the running app.
+- [x] CofE parishes correctly attach under their civil parishes (no orphan diocese-rooted parishes).
+- [x] Both gazetteers within budget.
+- [x] Swedish exonym `Skottland` → Scotland still works (lang-sv merge regression check).
+- [x] No `type` outside the closed vocab in any leaf.
+- [x] Plan archived; minor version bumped.

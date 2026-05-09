@@ -69,10 +69,10 @@ Statbel + IGN-NGI GeoPackage + ogr2ogr + mapshaper + Wikidata SPARQL.
 
 ### Task 0: License audit + bilingual rule
 
-- [ ] Statbel + IGN-NGI license check.
-- [ ] Wikidata SPARQL for parishes — coverage check, expect ~600.
-- [ ] BE_RULES: `Gemeente`, `Commune`, `Ville`, `Stad`, `Arrondissement`, `Province de`, `Provincie`, `Parochie`, `Paroisse`.
-- [ ] **Bilingual canonicalization rule** (document in script header): for nodes in Vlaanderen → name=Dutch, alias=French; in Wallonie → name=French, alias=Dutch; in Brussels-Capital → name=hybrid bilingual (e.g. "Brussel-Stad / Bruxelles-Ville"), aliases include each unilingual form.
+- [x] Statbel + IGN-NGI license check.
+- [x] Wikidata SPARQL for parishes — coverage check, expect ~600.
+- [x] BE_RULES: `Gemeente`, `Commune`, `Ville`, `Stad`, `Arrondissement`, `Province de`, `Provincie`, `Parochie`, `Paroisse`.
+- [x] **Bilingual canonicalization rule** (document in script header): for nodes in Vlaanderen → name=Dutch, alias=French; in Wallonie → name=French, alias=Dutch; in Brussels-Capital → name=hybrid bilingual (e.g. "Brussel-Stad / Bruxelles-Ville"), aliases include each unilingual form.
 
 ### Task 1: Extend normalize rules (mirror DE Task 1)
 
@@ -105,8 +105,8 @@ Mirror DE Task 7. Six user-goal probes. Bilingual confirmation: type each probe 
 
 ## Self-review checklist
 
-- [ ] Bilingual aliases work both directions (Dutch ↔ French).
-- [ ] Eupen (German-speaking community) resolves with German name as canonical and French as alias (per Task 0 rule for Wallonie).
-- [ ] Brussels-Capital uses bilingual canonical form.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] Bilingual aliases work both directions (Dutch ↔ French).
+- [x] Eupen (German-speaking community) resolves with German name as canonical and French as alias (per Task 0 rule for Wallonie).
+- [x] Brussels-Capital uses bilingual canonical form.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.

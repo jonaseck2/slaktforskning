@@ -69,9 +69,9 @@ Maa-amet GeoPackage + ogr2ogr + mapshaper + GeoNames + Wikidata SPARQL.
 
 ### Task 0: License audit + source decisions
 
-- [ ] Maa-amet license (CC BY 3.0 EE) attribution string.
-- [ ] Wikidata SPARQL for kihelkonnad: `?p wdt:P31/wdt:P279* wd:Q102496 . ?p wdt:P17 wd:Q191 .` Verify > 80 results.
-- [ ] EE_RULES suffixes (longest-first): `kihelkond`, `kogudus`, `maakond`, `alev`, `alevik`, `linn`, `vald`, `küla`. Plus compound-form rule (handled in build script normalization, not the runtime rule list — but document the rule).
+- [x] Maa-amet license (CC BY 3.0 EE) attribution string.
+- [x] Wikidata SPARQL for kihelkonnad: `?p wdt:P31/wdt:P279* wd:Q102496 . ?p wdt:P17 wd:Q191 .` Verify > 80 results.
+- [x] EE_RULES suffixes (longest-first): `kihelkond`, `kogudus`, `maakond`, `alev`, `alevik`, `linn`, `vald`, `küla`. Plus compound-form rule (handled in build script normalization, not the runtime rule list — but document the rule).
 
 ### Task 1: Extend normalize rules (TDD)
 
@@ -104,8 +104,8 @@ Mirror DE Task 7. Six user-goal probes. Compound-form alias works. Minor bump. A
 
 ## Self-review checklist
 
-- [ ] Compound suffixes (`Tartumaa`) and split forms (`Tartu maakond`) both resolve.
-- [ ] Post-2017 valds are canonical; pre-reform names are aliases.
-- [ ] Setomaa appears as alias on relevant valds.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] Compound suffixes (`Tartumaa`) and split forms (`Tartu maakond`) both resolve.
+- [x] Post-2017 valds are canonical; pre-reform names are aliases.
+- [x] Setomaa appears as alias on relevant valds.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.

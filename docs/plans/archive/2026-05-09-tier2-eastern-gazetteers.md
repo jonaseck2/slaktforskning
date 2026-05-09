@@ -133,13 +133,13 @@ Mirror Western plan Task 12. 15 user-goal probes. Script-duality probe for the f
 
 ## Self-review checklist
 
-- [ ] All 15 user-goal probes resolve.
-- [ ] Cyrillic / Greek / Latin both resolve for BG, RU-EU, BY, UA, GR.
-- [ ] FO and GL emitted as standalone roots; not under DK.
-- [ ] Russia partial-territory rule (administrative-centre-determines-bucket) consistently applied.
-- [ ] Belarus license audit either passed or Wikidata fallback used.
-- [ ] All 11 gazetteers within budget; aggregate ≤ 10 MB gzip.
-- [ ] Plan archived; minor version bumped.
+- [x] All 15 user-goal probes resolve.
+- [x] Cyrillic / Greek / Latin both resolve for BG, RU-EU, BY, UA, GR.
+- [x] FO and GL emitted as standalone roots; not under DK.
+- [x] Russia partial-territory rule (administrative-centre-determines-bucket) consistently applied.
+- [x] Belarus license audit either passed or Wikidata fallback used.
+- [x] All 11 gazetteers within budget; aggregate ≤ 10 MB gzip.
+- [x] Plan archived; minor version bumped.
 
 ---
 

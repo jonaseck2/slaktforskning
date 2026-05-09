@@ -73,9 +73,9 @@ Kadaster BRT GeoPackage + ogr2ogr + mapshaper + Wikidata SPARQL. License: CC0 + 
 
 ### Task 0: License audit + source decisions
 
-- [ ] Confirm Kadaster BRT or CBS Open Data as the boundary + admin source. Both CC0. Pick whichever has the cleanest GeoPackage download (probably Kadaster's BRT250).
-- [ ] Wikidata SPARQL for historical gemeenten: `?p wdt:P31 wd:Q2039348 . ?p wdt:P582 ?endTime` — Q2039348 is **"municipality of the Netherlands"** (validated, covers BOTH active and dissolved), so the `P582` (end-time) clause is what selects *former* gemeenten specifically. Without it, the query returns the ~342 active municipalities, not the ~1,200 historical ones we want. Verify > 1,000 results.
-- [ ] NL_RULES: `Gemeente`, `Stad`, `Dorp`, `Kerkdorp`, `Provincie`, `Buurt`, plus prefix `Provincie van`. Longest-first.
+- [x] Confirm Kadaster BRT or CBS Open Data as the boundary + admin source. Both CC0. Pick whichever has the cleanest GeoPackage download (probably Kadaster's BRT250).
+- [x] Wikidata SPARQL for historical gemeenten: `?p wdt:P31 wd:Q2039348 . ?p wdt:P582 ?endTime` — Q2039348 is **"municipality of the Netherlands"** (validated, covers BOTH active and dissolved), so the `P582` (end-time) clause is what selects *former* gemeenten specifically. Without it, the query returns the ~342 active municipalities, not the ~1,200 historical ones we want. Verify > 1,000 results.
+- [x] NL_RULES: `Gemeente`, `Stad`, `Dorp`, `Kerkdorp`, `Provincie`, `Buurt`, plus prefix `Provincie van`. Longest-first.
 
 ### Task 1: Extend normalize rules (TDD, mirror DE Task 1)
 
@@ -107,8 +107,8 @@ Mirror DE Task 7. Five user-goal probes. Minor version bump. Archive.
 
 ## Self-review checklist
 
-- [ ] All five user-goal probes resolve.
-- [ ] Historical gemeenten attach under modern parents (Smilde → Midden-Drenthe).
-- [ ] Hoorn-NH vs Hoorn-Fr disambiguates correctly via parent path.
-- [ ] Both gazetteers within budget.
-- [ ] Plan archived; minor version bumped.
+- [x] All five user-goal probes resolve.
+- [x] Historical gemeenten attach under modern parents (Smilde → Midden-Drenthe).
+- [x] Hoorn-NH vs Hoorn-Fr disambiguates correctly via parent path.
+- [x] Both gazetteers within budget.
+- [x] Plan archived; minor version bumped.
