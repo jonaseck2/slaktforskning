@@ -235,11 +235,21 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
 
   const moved: Record<string, number> = {};
 
-  // 1. Person names — move all, re-sort
+  // 1. Person names — move all, re-sort. Source rows whose name_type is
+  // 'birth' get demoted to 'aka' on transfer because a person can only have
+  // one canonical birth name and the target's pre-existing birth name is
+  // the canonical one. Without this demotion, two `name_type='birth'` rows
+  // ended up on the merged person — surfaced by the 2026-05-09 Bernadotte
+  // duplicate test (Karl XIV Johan + "Jean Baptiste Bernadotte" merge).
   const existingNameCount = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM person_names WHERE person_id = ?', [targetId])?.n ?? 0;
-  const sourceNames = queryAll<{ id: string; sort_order: number }>(db, 'SELECT id, sort_order FROM person_names WHERE person_id = ?', [sourceId]);
+  const targetHasBirthName = (queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM person_names WHERE person_id = ? AND name_type = 'birth'", [targetId])?.n ?? 0) > 0;
+  const sourceNames = queryAll<{ id: string; sort_order: number; name_type: string }>(db, 'SELECT id, sort_order, name_type FROM person_names WHERE person_id = ?', [sourceId]);
   for (const name of sourceNames) {
-    runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, name.id]);
+    if (targetHasBirthName && name.name_type === 'birth') {
+      runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ?, name_type = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, 'aka', name.id]);
+    } else {
+      runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, name.id]);
+    }
   }
   moved.person_names = sourceNames.length;
 
@@ -353,6 +363,36 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
       runSql(db, `UPDATE persons SET ${updates.join(', ')} WHERE id = ?`, vals);
     }
   }
+
+  // 9b. Dedupe single-cardinality events. After step 3 the target person
+  // may now own two birth events / two death events / etc. — one from each
+  // side of the merge. Keep the older row (target's original) and delete
+  // the duplicates, transferring citations + media links to the survivor
+  // so no authored data is lost. Without this step, a panel showed Karl
+  // XIV Johan with two identical birth events after the duplicate test.
+  const SINGLE_CARDINALITY_TYPES = ['birth', 'baptism', 'christening', 'death', 'burial'] as const;
+  let eventsDeduped = 0;
+  for (const eventType of SINGLE_CARDINALITY_TYPES) {
+    const dupes = queryAll<{ id: string; created_at: string }>(db, `
+      SELECT e.id, e.created_at
+      FROM events e
+      JOIN event_participants ep ON ep.event_id = e.id
+      WHERE ep.person_id = ? AND e.event_type = ?
+      ORDER BY e.created_at ASC
+    `, [targetId, eventType]);
+    if (dupes.length <= 1) continue;
+    // Keep the first (oldest) row; delete the rest, transferring child
+    // records onto the survivor.
+    const survivor = dupes[0];
+    for (let i = 1; i < dupes.length; i++) {
+      const stale = dupes[i];
+      runSql(db, 'UPDATE citations SET event_id = ? WHERE event_id = ?', [survivor.id, stale.id]);
+      runSql(db, "UPDATE media_links SET entity_id = ? WHERE entity_type = 'event' AND entity_id = ?", [survivor.id, stale.id]);
+      runSql(db, 'DELETE FROM events WHERE id = ?', [stale.id]);
+      eventsDeduped++;
+    }
+  }
+  moved.events_deduped = eventsDeduped;
 
   // 10. Delete source person (CASCADE handles any remaining FKs like media_links)
   runSql(db, 'DELETE FROM persons WHERE id = ?', [sourceId]);

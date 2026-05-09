@@ -390,3 +390,70 @@ describe('findDuplicates edge cases', () => {
     expect(dupes).toHaveLength(2);
   });
 });
+
+// Regression coverage for the post-merge dedupe rules added 2026-05-09 after
+// the Bernadotte test session showed that merging two persons with their own
+// birth events left two birth events on the survivor.
+describe('mergePersons — post-merge dedupe', () => {
+  it('demotes source primary birth name to aka instead of leaving two birth rows', () => {
+    const target = createPerson(db, { given_name: 'Jean-Baptiste Jules', surname: 'Bernadotte' });
+    const source = createPerson(db, { given_name: 'Jean Baptiste', surname: 'Bernadotte' });
+
+    mergePersons(db, target.id, source.id);
+
+    const names = getPersonNames(db, target.id);
+    const birthNames = names.filter(n => n.name_type === 'birth');
+    expect(birthNames.length).toBe(1);
+    expect(birthNames[0].given_name).toBe('Jean-Baptiste Jules');
+    // The source's primary name survives as an aka, not lost
+    expect(names.some(n => n.given_name === 'Jean Baptiste' && n.name_type === 'aka')).toBe(true);
+  });
+
+  it('keeps target birth event and deletes the duplicate from source, transferring citations', () => {
+    const target = createPerson(db, { given_name: 'Karl', surname: 'X' });
+    const source = createPerson(db, { given_name: 'Karl', surname: 'X' });
+    const targetBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1763-01-26' });
+    const sourceBirth = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1763-01-26' });
+    addEventParticipant(db, { event_id: targetBirth.id, person_id: target.id, role: 'primary' });
+    addEventParticipant(db, { event_id: sourceBirth.id, person_id: source.id, role: 'primary' });
+
+    // Add a citation to the SOURCE's birth event so we can verify it's
+    // transferred to the survivor (target's birth event), not lost.
+    const src = createSource(db, { title: 'Pau parish register', source_type: 'church_record' });
+    createCitation(db, { source_id: src.id, event_id: sourceBirth.id, page: 'f. 14r' });
+
+    const result = mergePersons(db, target.id, source.id);
+    expect(result.moved.events_deduped).toBe(1);
+
+    // Target now has exactly ONE birth event, and it is the original target's.
+    const remaining = queryAll<{ id: string; event_type: string }>(db,
+      `SELECT e.id, e.event_type FROM events e
+       JOIN event_participants ep ON ep.event_id = e.id
+       WHERE ep.person_id = ? AND e.event_type = 'birth'`, [target.id]);
+    expect(remaining.length).toBe(1);
+    expect(remaining[0].id).toBe(targetBirth.id);
+
+    // Citation was transferred to the survivor — not deleted.
+    const citationsAfter = queryAll<{ id: string; event_id: string }>(db,
+      'SELECT id, event_id FROM citations WHERE source_id = ?', [src.id]);
+    expect(citationsAfter.length).toBe(1);
+    expect(citationsAfter[0].event_id).toBe(targetBirth.id);
+  });
+
+  it('does not dedupe events that allow multiple per person (e.g. census, residence)', () => {
+    const target = createPerson(db, { given_name: 'Karl', surname: 'X' });
+    const source = createPerson(db, { given_name: 'Karl', surname: 'X' });
+    const targetCensus = createEvent(db, { event_type: 'census', date_type: 'exact', date_value: '1860' });
+    const sourceCensus = createEvent(db, { event_type: 'census', date_type: 'exact', date_value: '1870' });
+    addEventParticipant(db, { event_id: targetCensus.id, person_id: target.id, role: 'primary' });
+    addEventParticipant(db, { event_id: sourceCensus.id, person_id: source.id, role: 'primary' });
+
+    mergePersons(db, target.id, source.id);
+
+    const censuses = queryAll<{ id: string }>(db,
+      `SELECT e.id FROM events e
+       JOIN event_participants ep ON ep.event_id = e.id
+       WHERE ep.person_id = ? AND e.event_type = 'census'`, [target.id]);
+    expect(censuses.length).toBe(2); // both kept — census can repeat
+  });
+});
