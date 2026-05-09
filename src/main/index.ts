@@ -6,6 +6,11 @@ import { registerIpcHandlers } from './ipc';
 import { callWorker, terminateWorker } from './ipc/worker-client';
 import { startUiServer, stopUiServer } from './ui-server';
 
+const STARTUP_T0 = Date.now();
+app.whenReady().then(() => {
+  console.log(`[startup] app ready in ${Date.now() - STARTUP_T0} ms`);
+});
+
 // Suppress EPIPE errors (occur when stdout pipe closes, e.g. during E2E tests).
 // Without this, a single console.log to a closed pipe kills the main process.
 process.on('uncaughtException', (err) => {
