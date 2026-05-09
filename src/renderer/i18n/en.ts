@@ -1850,7 +1850,51 @@ export default {
     eventTypeSortHint: 'Controls the order of the event-type picker when adding or editing an event.',
   },
   onboarding: {
-    empty: {},
+    empty: {
+      personNames: {
+        purpose: 'A user would use this section to view every name this person has gone by — birth name, married names, aliases — and to add, open, or delete a name.',
+        cta: 'Add name',
+      },
+      personIdentifiers: {
+        purpose: 'A user would use this section to view external identifiers attached to this person — FamilySearch, Ancestry, Riksarkivet, personnummer, GEDCOM REFN/RIN — and to add or delete one.',
+        cta: 'Add identifier',
+      },
+      personRelationships: {
+        purpose: 'A user would use this section to view who is related to this person and how, open a relationship to edit its type and dates, and unlink a relation. To add a relative, use the shortcut buttons in the panel header.',
+        hint: 'Add a relative using the + Father / Mother / Spouse / Son / Daughter buttons above.',
+      },
+      personEvents: {
+        purpose: 'A user would use this section to view events that happened to this person — type, date, place — and to add, open, or delete one.',
+        cta: 'Add event',
+      },
+      personTimeline: {
+        purpose: 'A user would use this section to view the same events from the Events section laid out chronologically, and to jump to add a new event.',
+        cta: 'Add event',
+      },
+      personLifeMap: {
+        purpose: 'A user would use this section to view the places of this person\'s events on a map, and to jump to add a new event — which is how a new place ends up on the map.',
+        cta: 'Add event',
+      },
+      personMedia: {
+        purpose: 'A user would use this section to view photos and documents linked to this person, attach new files, mark one as the profile photo, reorder, and unlink a media item.',
+        cta: 'Attach media',
+      },
+      personMediaTimeline: {
+        purpose: 'A user would use this section to view the same media chronologically — by media date or linked event date — useful when scanning a life story.',
+        hint: 'Attach media in the Media section above.',
+      },
+      personGroups: {
+        purpose: 'A user would use this section to view which groups this person belongs to, add this person to an existing or new group, and unlink them from a group.',
+        cta: 'Add to group',
+      },
+      personResearchTasks: {
+        purpose: 'A user would use this section to view research tasks for this person, cycle the status of a task inline, add a new task, and delete a task entirely.',
+        cta: 'Add task',
+      },
+      personQualityChecks: {
+        purpose: 'A user would use this section to see derived quality checks for this person — missing parents, contradictory dates, unsourced events — and jump straight to the section that owns the issue. An empty section means no issues were found.',
+      },
+    },
     coach: {},
     toast: {},
     settings: {

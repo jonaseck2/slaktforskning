@@ -1829,7 +1829,51 @@ export default {
     eventTypeSortHint: 'Bestämmer ordningen i händelsetyp-listan när du lägger till eller redigerar en händelse.',
   },
   onboarding: {
-    empty: {},
+    empty: {
+      personNames: {
+        purpose: 'Här samlar du varje namn personen har burit — födelsenamn, gifta namn, alias — och lägger till, öppnar eller tar bort ett namn.',
+        cta: 'Lägg till namn',
+      },
+      personIdentifiers: {
+        purpose: 'Här samlar du externa ID:n för personen — FamilySearch, Ancestry, Riksarkivet, personnummer, GEDCOM REFN/RIN — och lägger till eller tar bort dem.',
+        cta: 'Lägg till ID',
+      },
+      personRelationships: {
+        purpose: 'Här ser du vilka personen är släkt med och hur, kan öppna en relation för att redigera typ och datum, och koppla bort en relation. Lägg till en släkting via genvägsknapparna i panelens överkant.',
+        hint: 'Lägg till en släkting via + Pappa / Mamma / Make/Maka / Son / Dotter ovan.',
+      },
+      personEvents: {
+        purpose: 'Här samlar du livshändelser som drabbat personen — typ, datum, plats — och lägger till, öppnar eller tar bort en händelse.',
+        cta: 'Lägg till händelse',
+      },
+      personTimeline: {
+        purpose: 'Här visas samma händelser som i Händelser-sektionen, kronologiskt ordnade. Härifrån kan du också gena till att lägga till en ny händelse.',
+        cta: 'Lägg till händelse',
+      },
+      personLifeMap: {
+        purpose: 'Här visas platserna för personens händelser på en karta. Härifrån kan du gena till att lägga till en ny händelse — vilket är så en ny plats hamnar på kartan.',
+        cta: 'Lägg till händelse',
+      },
+      personMedia: {
+        purpose: 'Här samlar du foton och dokument kopplade till personen, kopplar nya filer, markerar profilbild, ordnar om och kopplar bort media.',
+        cta: 'Bifoga media',
+      },
+      personMediaTimeline: {
+        purpose: 'Här visas samma media kronologiskt — efter mediadatum eller kopplat händelsedatum — användbart när du följer en livshistoria.',
+        hint: 'Bifoga media i Media-sektionen ovan.',
+      },
+      personGroups: {
+        purpose: 'Här ser du vilka grupper personen tillhör, lägger till personen i en befintlig eller ny grupp, och kopplar bort från en grupp.',
+        cta: 'Lägg till i grupp',
+      },
+      personResearchTasks: {
+        purpose: 'Här samlar du forskningsuppgifter för personen, växlar status på en uppgift, lägger till nya uppgifter och tar bort dem.',
+        cta: 'Lägg till uppgift',
+      },
+      personQualityChecks: {
+        purpose: 'Här visas härledda kvalitetskontroller för personen — saknade föräldrar, motsägelsefulla datum, okällgranskade händelser — och du kan hoppa direkt till sektionen som äger problemet. Tom sektion betyder inga problem.',
+      },
+    },
     coach: {},
     toast: {},
     settings: {

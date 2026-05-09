@@ -6,7 +6,12 @@
       @committed="onCommitted"
       @cancelled="showAddRow = false"
     />
-    <SectionEmpty v-if="media.length === 0 && !showAddRow" :message="$t('empty.media')" />
+    <SectionEmpty
+      v-if="media.length === 0 && !showAddRow"
+      purpose-key="onboarding.empty.personMedia.purpose"
+      :action-label-key="props.readonly ? undefined : 'onboarding.empty.personMedia.cta'"
+      @action="attach"
+    />
     <table v-else-if="media.length > 0" class="data-table">
       <thead>
         <tr>

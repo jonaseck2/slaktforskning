@@ -1,6 +1,11 @@
 <template>
   <div>
-    <SectionEmpty v-if="tasks.length === 0" :message="$t('empty.researchTasks')" />
+    <SectionEmpty
+      v-if="tasks.length === 0"
+      purpose-key="onboarding.empty.personResearchTasks.purpose"
+      :action-label-key="props.readonly ? undefined : 'onboarding.empty.personResearchTasks.cta'"
+      @action="emit('addTask')"
+    />
     <ResearchTasksTable
       v-else
       :tasks="tasks"
@@ -44,6 +49,11 @@ const emit = defineEmits<{
   /** Internal data changed (status cycle, delete). Parent may reload its
    * own count caches. */
   updated: [];
+  /** Empty-state CTA clicked — parent opens the same Add-task flow as
+   * the section-header action. Per CTA fulfillment: the host person ID
+   * is implicit (this section is mounted with `:person-id` and the parent's
+   * handler creates a task linked to that id). */
+  addTask: [];
 }>();
 
 const idRef = computed(() => props.personId ?? null);
