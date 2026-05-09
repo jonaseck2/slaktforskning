@@ -134,6 +134,22 @@ export function registerImportHandlers(
     return { canceled: false, path: result.filePaths[0] };
   });
 
+  // RootsMagic .rmgc import — file picker only; the import itself is a
+  // worker channel registered in src/shared/channels/import.ts.
+  wrapHandler('import:rootsmagicSelectFile', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select RootsMagic database',
+      defaultPath: getDefaultDir(),
+      properties: ['openFile'],
+      filters: [
+        { name: 'RootsMagic database', extensions: ['rmgc', 'rmtree'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || !result.filePaths.length) return { canceled: true };
+    return { canceled: false, path: result.filePaths[0] };
+  });
+
   // import:holgerRun is registered via the channel registry as a worker channel
   // (src/shared/channels/import.ts). The whole import — bulk media copy, GEDCOM
   // parse + import, media consolidation — runs in the DB worker thread, so the

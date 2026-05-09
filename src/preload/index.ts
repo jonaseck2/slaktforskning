@@ -108,6 +108,10 @@ const api = {
     holgerRun: (opts: unknown) => ipcRenderer.invoke('import:holgerRun', opts),
     onHolgerProgress: (cb: (msg: string) => void) =>
       ipcRenderer.on('import:holgerProgress', (_e, data: { message: string }) => cb(data.message)),
+    rootsmagicSelectFile: () => ipcRenderer.invoke('import:rootsmagicSelectFile'),
+    rootsmagicRun: (opts: unknown) => ipcRenderer.invoke('import:rootsmagicRun', opts),
+    onRootsmagicProgress: (cb: (msg: string) => void) =>
+      ipcRenderer.on('import:rootsmagicProgress', (_e, data: { message: string }) => cb(data.message)),
   },
   db: {
     getCurrent: () => ipcRenderer.invoke('db:getCurrent'),

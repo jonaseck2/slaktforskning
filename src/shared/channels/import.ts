@@ -5,6 +5,7 @@ import { unzipSync } from 'fflate';
 import { defineChannel } from './registry';
 import { importFromHolger } from '../../import/holger/index';
 import { importFromGenney, discoverTables } from '../../import/genney/index';
+import { importFromRootsMagic } from '../../import/rootsmagic/index';
 import { bulkCopyMediaFolder, consolidateMediaFolder } from '../../api/media_consolidate';
 import { getMediaDir } from '../../api/media';
 import { broadcast } from '../../main/db-worker-broadcast';
@@ -173,6 +174,35 @@ defineChannel({
         return { gedcomFallback: true, gedcomPath: result.gedcomFallbackPath };
       }
 
+      await consolidateMediaFolder(db, dbPath);
+      return { imported: true, summary: result.summary };
+    });
+  },
+});
+
+/**
+ * RootsMagic .rmgc import. Runs in the worker thread because the .rmgc
+ * is opened as SQLite via the same node-sqlite3-wasm module the worker
+ * already uses. Progress messages flow worker → main → all renderers via
+ * the broadcast primitive on topic 'import:rootsmagicProgress'.
+ */
+defineChannel({
+  name: 'import:rootsmagicRun',
+  thread: 'worker',
+  mutating: true,
+  handler: async (db, opts: { sourcePath: string }) => {
+    if (!opts?.sourcePath) {
+      return { success: false, error: 'sourcePath is required' } as const;
+    }
+    return withImportLifecycle('rootsmagic', async () => {
+      const dbPath = getWorkerDbPath();
+      const result = await importFromRootsMagic(db, opts.sourcePath, {
+        onProgress: (msg: string) => broadcast('import:rootsmagicProgress', { message: msg }),
+      });
+      // RootsMagic stores media file paths Windows-style ("C:\\..."); after
+      // import, consolidate copies any reachable absolute paths into our
+      // <dbname>-media/ and rewrites the refs. Idempotent for the typical
+      // case where media is missing on this machine.
       await consolidateMediaFolder(db, dbPath);
       return { imported: true, summary: result.summary };
     });

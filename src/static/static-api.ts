@@ -624,6 +624,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     genneyCheckDocker: async () => false, genneySelectDerby: noop, genneySelectArchive: noop,
     genneySelectMedia: noop, genneyDiscover: noop, genneyRun: noop, onProgress: () => {},
     holgerSelectFile: noop, holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
+    rootsmagicSelectFile: noop, rootsmagicRun: noop, onRootsmagicProgress: () => {},
   };
   const archive = { export: noop, import: noop };
   const website = { export: noop, previewSnapshot: noop };

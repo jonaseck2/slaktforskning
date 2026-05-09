@@ -11,6 +11,7 @@
     </template>
     <GenneyImportSection v-if="activeTab === 'genney'" />
     <HolgerImportSection v-if="activeTab === 'holger'" />
+    <RootsMagicImportSection v-if="activeTab === 'rootsmagic'" />
     <ArchiveSection v-if="activeTab === 'archive'" />
     <CsvExportSection v-if="activeTab === 'csv'" />
   </div>
@@ -24,6 +25,7 @@ import GedcomImportSection from '../components/import/GedcomImportSection.vue';
 import GedcomExportSection from '../components/import/GedcomExportSection.vue';
 import GenneyImportSection from '../components/import/GenneyImportSection.vue';
 import HolgerImportSection from '../components/import/HolgerImportSection.vue';
+import RootsMagicImportSection from '../components/import/RootsMagicImportSection.vue';
 import ArchiveSection from '../components/import/ArchiveSection.vue';
 import CsvExportSection from '../components/import/CsvExportSection.vue';
 
@@ -35,6 +37,7 @@ const filterOptions = computed(() => [
   { value: 'gedcom', label: t('importExport.gedcomTitle') },
   { value: 'genney', label: t('importExport.genneyTitle') },
   { value: 'holger', label: t('importExport.holgerTitle') },
+  { value: 'rootsmagic', label: t('importExport.rootsmagicTitle') },
   { value: 'archive', label: t('importExport.archiveTitle') },
   { value: 'csv', label: t('csv.title') },
 ]);
