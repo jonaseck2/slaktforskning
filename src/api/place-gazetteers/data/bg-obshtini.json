@@ -1,0 +1,4576 @@
+{
+  "id": "bg-obshtini",
+  "name": "Bulgaria Oblasti + Obshtini",
+  "locale": "bg",
+  "description": "Bulgaria: 28 oblasti (admin1) + 265 obshtini (admin2) + populated places ≥5000 pop. Cyrillic + Latin via altNames.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/BG.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Bulgaria",
+            "type": "country",
+            "aliases": [
+              "България",
+              "Republika Bulgaria"
+            ],
+            "lat": 42.7,
+            "lon": 25.5,
+            "children": [
+              {
+                "name": "Blagoevgrad",
+                "type": "admin1",
+                "aliases": [
+                  "BG413",
+                  "Blagoevgrad",
+                  "Blagoevgradski Okrug",
+                  "Blagoevgradski Okrŭg"
+                ],
+                "lat": 41.757034,
+                "lon": 23.507701,
+                "children": [
+                  {
+                    "name": "Hadzhidimovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hadzhidimovo",
+                      "Khadzhidimovo",
+                      "Obshhina Khadzhidimovo"
+                    ],
+                    "lat": 41.5,
+                    "lon": 23.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Bansko",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bansko",
+                      "Gradska Obshtina Bansko",
+                      "Obshhina Bansko"
+                    ],
+                    "lat": 41.8,
+                    "lon": 23.6,
+                    "children": [
+                      {
+                        "name": "Bansko",
+                        "type": "admin3",
+                        "lat": 41.8361,
+                        "lon": 23.48745
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Belitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belica",
+                      "Belishka Obshtina",
+                      "Belitsa"
+                    ],
+                    "lat": 42.01667,
+                    "lon": 23.58333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Blagoevgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Blagoevgrad",
+                      "Gradska Obshtina Blagoevgrad",
+                      "Obshhina Blagoevgrad"
+                    ],
+                    "lat": 42.01667,
+                    "lon": 23.16667,
+                    "children": [
+                      {
+                        "name": "Blagoevgrad",
+                        "type": "admin3",
+                        "lat": 42.01457,
+                        "lon": 23.09804
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Garmen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Garmen",
+                      "Gurmen",
+                      "Gŭrmen"
+                    ],
+                    "lat": 41.7,
+                    "lon": 23.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Gotse Delchev",
+                    "type": "admin2",
+                    "aliases": [
+                      "Goce Delchev",
+                      "Gotse Delchev",
+                      "Gradska Obshtina Gotse Delchev"
+                    ],
+                    "lat": 41.63333,
+                    "lon": 23.68333,
+                    "children": [
+                      {
+                        "name": "Gotse Delchev",
+                        "type": "admin3",
+                        "lat": 41.56667,
+                        "lon": 23.73333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kresna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kresna",
+                      "Kresna",
+                      "Obshhina Kresna"
+                    ],
+                    "lat": 41.76667,
+                    "lon": 23.23333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Petrich",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Petrich",
+                      "Obshhina Petrich",
+                      "Obshtina Petrich"
+                    ],
+                    "lat": 41.45,
+                    "lon": 23.16667,
+                    "children": [
+                      {
+                        "name": "Petrich",
+                        "type": "admin3",
+                        "lat": 41.39846,
+                        "lon": 23.20702
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Razlog",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Razlog",
+                      "Obshhina Razlog",
+                      "Obshtina Razlog"
+                    ],
+                    "lat": 41.95,
+                    "lon": 23.46667,
+                    "children": [
+                      {
+                        "name": "Razlog",
+                        "type": "admin3",
+                        "lat": 41.8863,
+                        "lon": 23.46714
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sandanski",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sandanski",
+                      "Obshhina Sandanski",
+                      "Obshtina Sandanski"
+                    ],
+                    "lat": 41.56667,
+                    "lon": 23.45,
+                    "children": [
+                      {
+                        "name": "Sandanski",
+                        "type": "admin3",
+                        "lat": 41.56667,
+                        "lon": 23.28333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Satovcha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Satovcha",
+                      "Obshtina Satovcha",
+                      "Satovcha"
+                    ],
+                    "lat": 41.59848,
+                    "lon": 24.00781,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Simitli",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Simitli",
+                      "Obshhina Simitli",
+                      "Obshtina Simitli"
+                    ],
+                    "lat": 41.88333,
+                    "lon": 23.16667,
+                    "children": [
+                      {
+                        "name": "Simitli",
+                        "type": "admin3",
+                        "lat": 41.88333,
+                        "lon": 23.11667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Strumyani",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Strumjani",
+                      "Obshtina Gara Ograzhden",
+                      "Obshtina Ilindentsi"
+                    ],
+                    "lat": 41.63333,
+                    "lon": 23.2,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Yakoruda",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Yakoruda",
+                      "Jakoruda",
+                      "Obshhina Jakoruda"
+                    ],
+                    "lat": 42.08333,
+                    "lon": 23.7,
+                    "children": [
+                      {
+                        "name": "Yakoruda",
+                        "type": "admin3",
+                        "lat": 42.02528,
+                        "lon": 23.68417
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Burgas",
+                "type": "admin1",
+                "aliases": [
+                  "BG341",
+                  "Burgas",
+                  "Burgaska Oblast",
+                  "Burgaski Okrug"
+                ],
+                "lat": 42.508555,
+                "lon": 27.375691,
+                "children": [
+                  {
+                    "name": "Obshtina Aytos",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ajtos",
+                      "Aytos",
+                      "Gradska Obshtina Aytos"
+                    ],
+                    "lat": 42.7,
+                    "lon": 27.25,
+                    "children": [
+                      {
+                        "name": "Aytos",
+                        "type": "admin3",
+                        "lat": 42.70322,
+                        "lon": 27.25464
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Burgas",
+                    "type": "admin2",
+                    "aliases": [
+                      "Burgas",
+                      "Gradska Obshtina Burgas",
+                      "Obshhina Burgas"
+                    ],
+                    "lat": 42.5,
+                    "lon": 27.46667,
+                    "children": [
+                      {
+                        "name": "Burgas",
+                        "type": "admin3",
+                        "lat": 42.50651,
+                        "lon": 27.46886
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kameno",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kameno",
+                      "Kameno",
+                      "Obshhina Kameno"
+                    ],
+                    "lat": 42.51667,
+                    "lon": 27.18333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Karnobat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Karnobat",
+                      "Gradska Obshtína Karnobat",
+                      "Karnobat"
+                    ],
+                    "lat": 42.65,
+                    "lon": 26.98333,
+                    "children": [
+                      {
+                        "name": "Karnobat",
+                        "type": "admin3",
+                        "lat": 42.65,
+                        "lon": 26.98333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Malko Tarnovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Malko Turnovo",
+                      "Gradska Obshtina Malko Tŭrnovo",
+                      "Malko Tarnovo"
+                    ],
+                    "lat": 42.08333,
+                    "lon": 27.53333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Nesebar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Nesebur",
+                      "Gradska Obshtina Nesebŭr",
+                      "Nesebar"
+                    ],
+                    "lat": 42.78333,
+                    "lon": 27.73333,
+                    "children": [
+                      {
+                        "name": "Nesebar",
+                        "type": "admin3",
+                        "lat": 42.65921,
+                        "lon": 27.73602
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Pomorie",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pomorie",
+                      "Obshhina Pomorie",
+                      "Obshtina Pomorie"
+                    ],
+                    "lat": 42.73333,
+                    "lon": 27.55,
+                    "children": [
+                      {
+                        "name": "Pomorie",
+                        "type": "admin3",
+                        "lat": 42.56326,
+                        "lon": 27.62986
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Primorsko",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Primorsko",
+                      "Obshtina Primorsko",
+                      "Primorsko"
+                    ],
+                    "lat": 42.25,
+                    "lon": 27.63333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Ruen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Ruen",
+                      "Obshtina Ruen",
+                      "Ruen"
+                    ],
+                    "lat": 42.88333,
+                    "lon": 27.25,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Sozopol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sozopol",
+                      "Obshhina Sozopol",
+                      "Obshtina Sozopol"
+                    ],
+                    "lat": 42.31123,
+                    "lon": 27.51733,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Sredets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Grudovo",
+                      "Obshhina Sredec",
+                      "Obshtina Grudovo"
+                    ],
+                    "lat": 42.26667,
+                    "lon": 27.13333,
+                    "children": [
+                      {
+                        "name": "Sredets",
+                        "type": "admin3",
+                        "lat": 42.34747,
+                        "lon": 27.17898
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sungurlare",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sungurlare",
+                      "Obshhina Sungurlare",
+                      "Obshtina Sungurlare"
+                    ],
+                    "lat": 42.83333,
+                    "lon": 26.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Tsarevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Carevo",
+                      "Gradska Obshtina Michurin",
+                      "Obshhina Carevo"
+                    ],
+                    "lat": 42.1,
+                    "lon": 27.81667,
+                    "children": [
+                      {
+                        "name": "Tsarevo",
+                        "type": "admin3",
+                        "lat": 42.16955,
+                        "lon": 27.84541
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Gabrovo",
+                "type": "admin1",
+                "aliases": [
+                  "BG322",
+                  "Distretto di Gabrovo",
+                  "Gabrouskaja voblasc'",
+                  "Gabrova"
+                ],
+                "lat": 42.941668,
+                "lon": 25.354168,
+                "children": [
+                  {
+                    "name": "Obshtina Dryanovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Drjanovo",
+                      "Dryanovo",
+                      "Gradska Obshtina Dryanovo"
+                    ],
+                    "lat": 43,
+                    "lon": 25.46667,
+                    "children": [
+                      {
+                        "name": "Dryanovo",
+                        "type": "admin3",
+                        "lat": 42.97897,
+                        "lon": 25.4785
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Gabrovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gabrovo",
+                      "Gradska Obshtina Gabrovo",
+                      "Obshhina Gabrovo"
+                    ],
+                    "lat": 42.9,
+                    "lon": 25.3,
+                    "children": [
+                      {
+                        "name": "Gabrovo",
+                        "type": "admin3",
+                        "lat": 42.87419,
+                        "lon": 25.31823
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sevlievo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sevlievo",
+                      "Obshhina Sevlievo",
+                      "Obshtina Sevlievo"
+                    ],
+                    "lat": 43.01667,
+                    "lon": 25.1,
+                    "children": [
+                      {
+                        "name": "Sevlievo",
+                        "type": "admin3",
+                        "lat": 43.02295,
+                        "lon": 25.10364
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Tryavna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Tryavna",
+                      "Obshhina Trjavna",
+                      "Obshtina Tryavna"
+                    ],
+                    "lat": 42.85,
+                    "lon": 25.55,
+                    "children": [
+                      {
+                        "name": "Tryavna",
+                        "type": "admin3",
+                        "lat": 42.86667,
+                        "lon": 25.5
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Haskovo",
+                "type": "admin1",
+                "aliases": [
+                  "BG422",
+                  "Haskovo",
+                  "Khaskovo",
+                  "Khaskovska Oblast"
+                ],
+                "lat": 41.86212,
+                "lon": 25.883333,
+                "children": [
+                  {
+                    "name": "Obshtina Dimitrovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dimitrovgrad",
+                      "Gradska Obshtina Dimitrovgrad",
+                      "Obshhina Dimitrovgrad"
+                    ],
+                    "lat": 42.05,
+                    "lon": 25.6,
+                    "children": [
+                      {
+                        "name": "Dimitrovgrad",
+                        "type": "admin3",
+                        "lat": 42.05,
+                        "lon": 25.6
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Harmanli",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kharmanli",
+                      "Harmanli",
+                      "Kharmanli"
+                    ],
+                    "lat": 41.93333,
+                    "lon": 25.98333,
+                    "children": [
+                      {
+                        "name": "Harmanli",
+                        "type": "admin3",
+                        "lat": 41.93233,
+                        "lon": 25.90172
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Haskovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Khaskovo",
+                      "Haskovo",
+                      "Khaskovo"
+                    ],
+                    "lat": 41.88333,
+                    "lon": 25.61667,
+                    "children": [
+                      {
+                        "name": "Haskovo",
+                        "type": "admin3",
+                        "lat": 41.93415,
+                        "lon": 25.55557
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Ivaylovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Ivaylovgrad",
+                      "Ivajlovgrad",
+                      "Ivaylovgrad"
+                    ],
+                    "lat": 41.48333,
+                    "lon": 26,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Lyubimets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Lyubimets",
+                      "Ljubimec",
+                      "Lyubimets"
+                    ],
+                    "lat": 41.81667,
+                    "lon": 26.05,
+                    "children": [
+                      {
+                        "name": "Lyubimets",
+                        "type": "admin3",
+                        "lat": 41.84432,
+                        "lon": 26.08115
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Madzharovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Madzharovo",
+                      "Obshhina Madzharovo",
+                      "Obshtina Madzharovo"
+                    ],
+                    "lat": 41.68333,
+                    "lon": 25.9,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Mineralni Bani",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mineralni Bani",
+                      "Mineralni bani",
+                      "Obshhina Mineralni Bani"
+                    ],
+                    "lat": 41.9,
+                    "lon": 25.33333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Simeonovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Maritsa",
+                      "Gradska Obshtina Simeonovgrad",
+                      "Obshhina Simeonovgrad"
+                    ],
+                    "lat": 42.05,
+                    "lon": 25.88333,
+                    "children": [
+                      {
+                        "name": "Simeonovgrad",
+                        "type": "admin3",
+                        "lat": 42.03333,
+                        "lon": 25.83333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Stambolovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Stambolovo",
+                      "Obshtina Stambolovo",
+                      "Stambolovo"
+                    ],
+                    "lat": 41.73333,
+                    "lon": 25.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Svilengrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Svilengrad",
+                      "Obshhina Svilengrad",
+                      "Obshtina Svilengrad"
+                    ],
+                    "lat": 41.86667,
+                    "lon": 26.31667,
+                    "children": [
+                      {
+                        "name": "Svilengrad",
+                        "type": "admin3",
+                        "lat": 41.76836,
+                        "lon": 26.19775
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Topolovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Topolovgrad",
+                      "Obshhina Topolovgrad",
+                      "Obshtina Topolovgrad"
+                    ],
+                    "lat": 42.08333,
+                    "lon": 26.33333,
+                    "children": [
+                      {
+                        "name": "Topolovgrad",
+                        "type": "admin3",
+                        "lat": 42.08333,
+                        "lon": 26.33333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Lovech",
+                "type": "admin1",
+                "aliases": [
+                  "BG315",
+                  "Lovech",
+                  "Loveshka Oblast",
+                  "Loveshki Okrug"
+                ],
+                "lat": 43.054166,
+                "lon": 24.572918,
+                "children": [
+                  {
+                    "name": "Obshtina Apriltsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aprilci",
+                      "Apriltsi",
+                      "Gradska Obshtina Apriltsi"
+                    ],
+                    "lat": 42.83333,
+                    "lon": 24.91667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Letnitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Letnitsa",
+                      "Letnica",
+                      "Letnitsa"
+                    ],
+                    "lat": 43.28333,
+                    "lon": 25.08333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Lovech",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Lovech",
+                      "Lovech",
+                      "Obshhina Lovech"
+                    ],
+                    "lat": 43.16667,
+                    "lon": 24.8,
+                    "children": [
+                      {
+                        "name": "Lovech",
+                        "type": "admin3",
+                        "lat": 43.13227,
+                        "lon": 24.71763
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Lukovit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Lukovit",
+                      "Lukovit",
+                      "Obshhina Lukovit"
+                    ],
+                    "lat": 43.18333,
+                    "lon": 24.25,
+                    "children": [
+                      {
+                        "name": "Lukovit",
+                        "type": "admin3",
+                        "lat": 43.2,
+                        "lon": 24.16667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Teteven",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Teteven",
+                      "Obshhina Teteven",
+                      "Obshtina Teteven"
+                    ],
+                    "lat": 42.91667,
+                    "lon": 24.26667,
+                    "children": [
+                      {
+                        "name": "Teteven",
+                        "type": "admin3",
+                        "lat": 42.91667,
+                        "lon": 24.26667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Troyan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Troyan",
+                      "Obshhina Trojan",
+                      "Obshtina Troyan"
+                    ],
+                    "lat": 42.88333,
+                    "lon": 24.71667,
+                    "children": [
+                      {
+                        "name": "Troyan",
+                        "type": "admin3",
+                        "lat": 42.89427,
+                        "lon": 24.71589
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Ugarchin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Ugurchin",
+                      "Gradska Obshtina Ugŭrchin",
+                      "Obshhina Ugurchin"
+                    ],
+                    "lat": 43.1,
+                    "lon": 24.41667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Yablanitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Yablanitsa",
+                      "Jablanica",
+                      "Obshhina Jablanica"
+                    ],
+                    "lat": 43.06667,
+                    "lon": 24.13333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Dobrich",
+                "type": "admin1",
+                "aliases": [
+                  "BG332",
+                  "Dobrich",
+                  "Oblast Dobrich",
+                  "Tolbukhin"
+                ],
+                "lat": 43.649286,
+                "lon": 27.975784,
+                "children": [
+                  {
+                    "name": "Obshtina Balchik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Balchik",
+                      "Gradska Obshtina Balchik",
+                      "Obshhina Balchik"
+                    ],
+                    "lat": 43.5,
+                    "lon": 28.13333,
+                    "children": [
+                      {
+                        "name": "Balchik",
+                        "type": "admin3",
+                        "lat": 43.42166,
+                        "lon": 28.15848
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dobrich",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dobrich",
+                      "Grad Dobrich",
+                      "Gradska Obshtina Dobrich"
+                    ],
+                    "lat": 43.57763,
+                    "lon": 27.80628,
+                    "children": [
+                      {
+                        "name": "Dobrich",
+                        "type": "admin3",
+                        "lat": 43.56491,
+                        "lon": 27.83138
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dobrich-Selska",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dobrich-Selska",
+                      "Obshhina Dobrich-Selska",
+                      "Obshtina Dobrich-Selska"
+                    ],
+                    "lat": 43.63333,
+                    "lon": 27.73333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina General Toshevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "General Toshevo",
+                      "Gradska Obshtina General-Toshevo",
+                      "Obshhina General Toshevo"
+                    ],
+                    "lat": 43.73333,
+                    "lon": 28.08333,
+                    "children": [
+                      {
+                        "name": "General Toshevo",
+                        "type": "admin3",
+                        "lat": 43.70123,
+                        "lon": 28.03787
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kavarna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kavarna",
+                      "Kavarna",
+                      "Kavarna (Obchtina)"
+                    ],
+                    "lat": 43.5,
+                    "lon": 28.38333,
+                    "children": [
+                      {
+                        "name": "Kavarna",
+                        "type": "admin3",
+                        "lat": 43.43601,
+                        "lon": 28.33953
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Krushari",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krushari",
+                      "Obshhina Krushari",
+                      "Obshtina Krushari"
+                    ],
+                    "lat": 43.88333,
+                    "lon": 27.75,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Shabla",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Shabla",
+                      "Obshhina Shabla",
+                      "Obshtina Shabla"
+                    ],
+                    "lat": 43.61667,
+                    "lon": 28.51667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Tervel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Tervel",
+                      "Obshhina Tervel",
+                      "Obshtina Tervel"
+                    ],
+                    "lat": 43.75,
+                    "lon": 27.4,
+                    "children": [
+                      {
+                        "name": "Tervel",
+                        "type": "admin3",
+                        "lat": 43.74789,
+                        "lon": 27.40911
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Kardzhali",
+                "type": "admin1",
+                "aliases": [
+                  "BG425",
+                  "Kardzhali",
+                  "Kurdzhali",
+                  "Kurdzhaliyski Okrug"
+                ],
+                "lat": 41.558307,
+                "lon": 25.376759,
+                "children": [
+                  {
+                    "name": "Obshtina Ardino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ardino",
+                      "Gradska Obshtina Ardino",
+                      "Obshhina Ardino"
+                    ],
+                    "lat": 41.6,
+                    "lon": 25.15,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chernoochene",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chernoochene",
+                      "Obshhina Chernoochene",
+                      "Obshtina Chernoochene"
+                    ],
+                    "lat": 41.78333,
+                    "lon": 25.25,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dzhebel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dzhebel",
+                      "Gradska Obshtina Dzhebel",
+                      "Obshhina Dzhebel"
+                    ],
+                    "lat": 41.5,
+                    "lon": 25.26667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kardzhali",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kurdzhali",
+                      "Gradska Obshtina Kŭrdzhali",
+                      "Kardzhali"
+                    ],
+                    "lat": 41.68333,
+                    "lon": 25.43333,
+                    "children": [
+                      {
+                        "name": "Kardzhali",
+                        "type": "admin3",
+                        "lat": 41.64502,
+                        "lon": 25.36578
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kirkovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kirkovo",
+                      "Obshhina Kirkovo",
+                      "Obshtina Kirkovo"
+                    ],
+                    "lat": 41.35816,
+                    "lon": 25.33731,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Krumovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Krumovgrad",
+                      "Krumovgrad",
+                      "Obshhina Krumovgrad"
+                    ],
+                    "lat": 41.45,
+                    "lon": 25.7,
+                    "children": [
+                      {
+                        "name": "Krumovgrad",
+                        "type": "admin3",
+                        "lat": 41.47127,
+                        "lon": 25.65485
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Momchilgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Momchilgrad",
+                      "Momchilgrad",
+                      "Obshhina Momchilgrad"
+                    ],
+                    "lat": 41.53333,
+                    "lon": 25.5,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Kyustendil",
+                "type": "admin1",
+                "aliases": [
+                  "BG415",
+                  "Kjustendil",
+                  "Kyustendil",
+                  "Kyustendilski Okrug"
+                ],
+                "lat": 42.257306,
+                "lon": 22.99334,
+                "children": [
+                  {
+                    "name": "Obshtina Boboshevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Boboshevo",
+                      "Obshhina Bobochevo",
+                      "Obshhina Boboshevo"
+                    ],
+                    "lat": 42.18333,
+                    "lon": 23.02731,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Bobov Dol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bobov Dol",
+                      "Gradska Obshtina Bobovdol",
+                      "Obshhina Bobov Dol"
+                    ],
+                    "lat": 42.31667,
+                    "lon": 22.98333,
+                    "children": [
+                      {
+                        "name": "Bobov Dol",
+                        "type": "admin3",
+                        "lat": 42.36378,
+                        "lon": 22.99827
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dupnitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dupnica",
+                      "Dupnitsa",
+                      "Gradska Obshtina Stanke Dimitrov"
+                    ],
+                    "lat": 42.28333,
+                    "lon": 23.15,
+                    "children": [
+                      {
+                        "name": "Dupnitsa",
+                        "type": "admin3",
+                        "lat": 42.26478,
+                        "lon": 23.11723
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kocherinovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kocherinovo",
+                      "Kocherinovo",
+                      "Obshhina Kocherinovo"
+                    ],
+                    "lat": 42.09909,
+                    "lon": 23.02942,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kyustendil",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kyustendil",
+                      "Kjustendil",
+                      "Kyustendil"
+                    ],
+                    "lat": 42.28333,
+                    "lon": 22.68333,
+                    "children": [
+                      {
+                        "name": "Kyustendil",
+                        "type": "admin3",
+                        "lat": 42.28314,
+                        "lon": 22.69224
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Nevestino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nevestino",
+                      "Obshhina Nevestino",
+                      "Obshtina Nevestino"
+                    ],
+                    "lat": 42.16667,
+                    "lon": 22.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Rila",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Rila",
+                      "Obshhina Rila",
+                      "Obshtina Rila"
+                    ],
+                    "lat": 42.15,
+                    "lon": 23.31667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Sapareva Banya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Sapareva Banja",
+                      "Obshtina Sapareva Banya",
+                      "Sapareva Banya"
+                    ],
+                    "lat": 42.28333,
+                    "lon": 23.31667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Treklyano",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Trekljano",
+                      "Obshtina Treklyano",
+                      "Trekljano"
+                    ],
+                    "lat": 42.55,
+                    "lon": 22.6,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Montana",
+                "type": "admin1",
+                "aliases": [
+                  "BG312",
+                  "Mikhaylovgradska Oblast",
+                  "Mikhaylovgradski Okrug",
+                  "Mikhaylovgradski Okrŭg"
+                ],
+                "lat": 43.521214,
+                "lon": 23.213635,
+                "children": [
+                  {
+                    "name": "Obshtina Berkovitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berkovica",
+                      "Berkovitsa",
+                      "Gradska Obshtina Berkovitsa"
+                    ],
+                    "lat": 43.26667,
+                    "lon": 23.15,
+                    "children": [
+                      {
+                        "name": "Berkovitsa",
+                        "type": "admin3",
+                        "lat": 43.23741,
+                        "lon": 23.12509
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Boychinovtsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bojchinovci",
+                      "Boychinovtsi",
+                      "Gradska Obshtina Boychinovtsi"
+                    ],
+                    "lat": 43.53333,
+                    "lon": 23.43333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Brusartsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brusarci",
+                      "Brusartsi",
+                      "Obshhina Brusarci"
+                    ],
+                    "lat": 43.66667,
+                    "lon": 23.06667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chiprovtsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chiprovci",
+                      "Chiprovtsi",
+                      "Gradska Obshtina Chiprovtsi"
+                    ],
+                    "lat": 43.41667,
+                    "lon": 22.9,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Georgi Damyanovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Georgi Damjanovo",
+                      "Georgi Damyanovo",
+                      "Obshhina Georgi Damjanovo"
+                    ],
+                    "lat": 43.35,
+                    "lon": 23,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Lom",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Lom",
+                      "Lom",
+                      "Obshhina Lom"
+                    ],
+                    "lat": 43.81667,
+                    "lon": 23.23333,
+                    "children": [
+                      {
+                        "name": "Lom",
+                        "type": "admin3",
+                        "lat": 43.8317,
+                        "lon": 23.23793
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Medkovets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Medkovec",
+                      "Medkovets",
+                      "Obshhina Medkovec"
+                    ],
+                    "lat": 43.65,
+                    "lon": 23.18333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Montana",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Mikhaylovgrad",
+                      "Montana",
+                      "Obshhina Montana"
+                    ],
+                    "lat": 43.46667,
+                    "lon": 23.2,
+                    "children": [
+                      {
+                        "name": "Montana",
+                        "type": "admin3",
+                        "lat": 43.41285,
+                        "lon": 23.22174
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Valchedram",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vulchedrum",
+                      "Gradska Obshtina Vŭlchedrŭm",
+                      "Obshhina Vulchedrum"
+                    ],
+                    "lat": 43.71667,
+                    "lon": 23.51667,
+                    "children": [
+                      {
+                        "name": "Valchedram",
+                        "type": "admin3",
+                        "lat": 43.69281,
+                        "lon": 23.44518
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Varshets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vurshets",
+                      "Gradska Obshtina Vŭrshets",
+                      "Obshhina Vurshec"
+                    ],
+                    "lat": 43.21667,
+                    "lon": 23.33333,
+                    "children": [
+                      {
+                        "name": "Varshets",
+                        "type": "admin3",
+                        "lat": 43.19356,
+                        "lon": 23.2868
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Yakimovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jakimovo",
+                      "Obshhina Jakimovo",
+                      "Obshtina Yakimovo"
+                    ],
+                    "lat": 43.63333,
+                    "lon": 23.33333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Pleven",
+                "type": "admin1",
+                "aliases": [
+                  "BG314",
+                  "Oblast Pleven",
+                  "Pleven",
+                  "Plevenski Okrug"
+                ],
+                "lat": 43.492423,
+                "lon": 24.616666,
+                "children": [
+                  {
+                    "name": "Obshtina Belene",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belene",
+                      "Gradska Obshtina Belene",
+                      "Obshhina Belene"
+                    ],
+                    "lat": 43.63333,
+                    "lon": 25.13333,
+                    "children": [
+                      {
+                        "name": "Belene",
+                        "type": "admin3",
+                        "lat": 43.65062,
+                        "lon": 25.1343
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Cherven Bryag",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cherven Bryag",
+                      "Cherven brjag",
+                      "Gradska Obshtina Cherven Bryag"
+                    ],
+                    "lat": 43.33333,
+                    "lon": 24.13333,
+                    "children": [
+                      {
+                        "name": "Cherven Bryag",
+                        "type": "admin3",
+                        "lat": 43.27884,
+                        "lon": 24.08251
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dolna Mitropolia",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dolna Mitropolia",
+                      "Dolna Mitropolija",
+                      "Dolna Mitropoliya"
+                    ],
+                    "lat": 43.58333,
+                    "lon": 24.41667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dolni Dabnik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dolni Dabnik",
+                      "Dolni Dubnik",
+                      "Dolni Dŭbnik"
+                    ],
+                    "lat": 43.36667,
+                    "lon": 24.41667,
+                    "children": [
+                      {
+                        "name": "Dolni Dabnik",
+                        "type": "admin3",
+                        "lat": 43.4,
+                        "lon": 24.43333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Gulyantsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Guljanci",
+                      "Gulyantsi",
+                      "Obshhina Guljanci"
+                    ],
+                    "lat": 43.68333,
+                    "lon": 24.65,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Iskar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pelovo",
+                      "Iskar",
+                      "Iskur"
+                    ],
+                    "lat": 43.5,
+                    "lon": 24.28333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Knezha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Knezha",
+                      "Knezha",
+                      "Obshhina Knezha"
+                    ],
+                    "lat": 43.5,
+                    "lon": 24.11667,
+                    "children": [
+                      {
+                        "name": "Knezha",
+                        "type": "admin3",
+                        "lat": 43.5,
+                        "lon": 24.08333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Levski",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Levski",
+                      "Levski",
+                      "Obshhina Levski"
+                    ],
+                    "lat": 43.43333,
+                    "lon": 25.1,
+                    "children": [
+                      {
+                        "name": "Levski",
+                        "type": "admin3",
+                        "lat": 43.36667,
+                        "lon": 25.13333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Nikopol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Nikopol",
+                      "Nikopol",
+                      "Obshhina Nikopol"
+                    ],
+                    "lat": 43.6,
+                    "lon": 24.93333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Pleven",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pleven",
+                      "Obshhina Pleven",
+                      "Obshtina Pleven"
+                    ],
+                    "lat": 43.4,
+                    "lon": 24.7,
+                    "children": [
+                      {
+                        "name": "Pleven",
+                        "type": "admin3",
+                        "lat": 43.41791,
+                        "lon": 24.61666
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Pordim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pordim",
+                      "Obshhina Pordim",
+                      "Obshtina Pordim"
+                    ],
+                    "lat": 43.38333,
+                    "lon": 24.9,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Razgrad",
+                "type": "admin1",
+                "aliases": [
+                  "BG324",
+                  "Oblast Razgrad",
+                  "Razgrad",
+                  "Razgradska Oblast"
+                ],
+                "lat": 43.642859,
+                "lon": 26.588094,
+                "children": [
+                  {
+                    "name": "Obshtina Isperih",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Isperikh",
+                      "Isperih",
+                      "Isperikh"
+                    ],
+                    "lat": 43.71667,
+                    "lon": 26.83333,
+                    "children": [
+                      {
+                        "name": "Isperih",
+                        "type": "admin3",
+                        "lat": 43.71667,
+                        "lon": 26.83333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kubrat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kubrat",
+                      "Kubrat",
+                      "Obshhina Kubrat"
+                    ],
+                    "lat": 43.86667,
+                    "lon": 26.48333,
+                    "children": [
+                      {
+                        "name": "Kubrat",
+                        "type": "admin3",
+                        "lat": 43.79658,
+                        "lon": 26.50063
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Loznitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Loznitsa",
+                      "Loznica",
+                      "Loznitsa"
+                    ],
+                    "lat": 43.41667,
+                    "lon": 26.58333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Razgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Razgrad",
+                      "Obshhina Razgrad",
+                      "Obshtina Razgrad"
+                    ],
+                    "lat": 43.53333,
+                    "lon": 26.51667,
+                    "children": [
+                      {
+                        "name": "Razgrad",
+                        "type": "admin3",
+                        "lat": 43.53331,
+                        "lon": 26.51849
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Samuil",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Simitli",
+                      "Obshtina Samuil",
+                      "Samuil"
+                    ],
+                    "lat": 43.6,
+                    "lon": 26.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Tsar Kaloyan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Car Kalojan",
+                      "Obshhina Car Kalojan",
+                      "Obshtina Khlebarovo"
+                    ],
+                    "lat": 43.6,
+                    "lon": 26.21667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Zavet",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Zavet",
+                      "Obshhina Zavet",
+                      "Obshtina Zavet"
+                    ],
+                    "lat": 43.76667,
+                    "lon": 26.68333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Ruse",
+                "type": "admin1",
+                "aliases": [
+                  "BG323",
+                  "Oblast Ruse",
+                  "Ruse",
+                  "Rusenski Okrug"
+                ],
+                "lat": 43.668751,
+                "lon": 25.989582,
+                "children": [
+                  {
+                    "name": "Obshtina Borovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Borovo",
+                      "Obshhina Borovo",
+                      "Obshtina Borovo"
+                    ],
+                    "lat": 43.6,
+                    "lon": 25.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Byala",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bjala",
+                      "Byala",
+                      "Gradska Obshtina Byala"
+                    ],
+                    "lat": 43.41667,
+                    "lon": 25.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dve Mogili",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dve Mogili",
+                      "Gradska Obshtina Dve Mogili",
+                      "Obshhina Dve Mogili"
+                    ],
+                    "lat": 43.51667,
+                    "lon": 25.96667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Ivanovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ivanovo",
+                      "Obshhina Ivanovo",
+                      "Obshtina Gara Ivanovo"
+                    ],
+                    "lat": 43.7,
+                    "lon": 25.98333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Ruse",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Ruse",
+                      "Obshhina Ruse",
+                      "Obshtina Ruse"
+                    ],
+                    "lat": 43.85,
+                    "lon": 26.08333,
+                    "children": [
+                      {
+                        "name": "Ruse",
+                        "type": "admin3",
+                        "lat": 43.84872,
+                        "lon": 25.9534
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Slivo Pole",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Slivo Pole",
+                      "Obshtina Slivo Pole",
+                      "Slivo Pole"
+                    ],
+                    "lat": 43.96667,
+                    "lon": 26.3,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Tsenovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cenovo",
+                      "Obshhina Cenovo",
+                      "Obshtina Tsenovo"
+                    ],
+                    "lat": 43.58333,
+                    "lon": 25.61667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Vetovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vetovo",
+                      "Obshhina Vetovo",
+                      "Obshtina Vetovo"
+                    ],
+                    "lat": 43.71667,
+                    "lon": 26.33333,
+                    "children": [
+                      {
+                        "name": "Vetovo",
+                        "type": "admin3",
+                        "lat": 43.7,
+                        "lon": 26.26667
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Shumen",
+                "type": "admin1",
+                "aliases": [
+                  "BG333",
+                  "Oblast Shumen",
+                  "Shumen",
+                  "Shumenski Okrug"
+                ],
+                "lat": 43.341667,
+                "lon": 27.028334,
+                "children": [
+                  {
+                    "name": "Obshtina Hitrino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hitrino",
+                      "Khitrino",
+                      "Obshhina Khitrino"
+                    ],
+                    "lat": 43.43333,
+                    "lon": 26.91667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kaolinovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kaolinovo",
+                      "Kaolinovo",
+                      "Obshhina Kaolinovo"
+                    ],
+                    "lat": 43.61667,
+                    "lon": 27.11667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kaspichan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kaspichan",
+                      "Kaspichan",
+                      "Obshhina Kaspichan"
+                    ],
+                    "lat": 43.3,
+                    "lon": 27.18333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Nikola-Kozlevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nikola Kozlevo",
+                      "Nikola-Kozlevo",
+                      "Obshhina Nikola-Kozlevo"
+                    ],
+                    "lat": 43.58333,
+                    "lon": 27.26667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Novi Pazar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Novi Pazar",
+                      "Novi Pazar",
+                      "Novi pazar"
+                    ],
+                    "lat": 43.41667,
+                    "lon": 27.21667,
+                    "children": [
+                      {
+                        "name": "Novi Pazar",
+                        "type": "admin3",
+                        "lat": 43.35,
+                        "lon": 27.2
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Shumen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Shumen",
+                      "Obshhina Shumen",
+                      "Obshtina Kolarovgrad"
+                    ],
+                    "lat": 43.26667,
+                    "lon": 26.98333,
+                    "children": [
+                      {
+                        "name": "Shumen",
+                        "type": "admin3",
+                        "lat": 43.27064,
+                        "lon": 26.92286
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Smyadovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Smyadovo",
+                      "Obshhina Smjadovo",
+                      "Obshtina Smyadovo"
+                    ],
+                    "lat": 43.05,
+                    "lon": 27.05,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Varbitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vurbitsa",
+                      "Gradska Obshtina Vŭrbitsa",
+                      "Obshhina Vurbica"
+                    ],
+                    "lat": 43.01667,
+                    "lon": 26.75,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Veliki Preslav",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Preslav",
+                      "Obshhina Veliki Preslav",
+                      "Obshtina Preslav"
+                    ],
+                    "lat": 43.18333,
+                    "lon": 26.86667,
+                    "children": [
+                      {
+                        "name": "Veliki Preslav",
+                        "type": "admin3",
+                        "lat": 43.16667,
+                        "lon": 26.81667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Venets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Venec",
+                      "Obshtina Venets",
+                      "Venec"
+                    ],
+                    "lat": 43.55,
+                    "lon": 26.93333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Silistra",
+                "type": "admin1",
+                "aliases": [
+                  "BG325",
+                  "Oblast Silistra",
+                  "Silistra",
+                  "Silistrenski Okrug"
+                ],
+                "lat": 43.952381,
+                "lon": 27.085713,
+                "children": [
+                  {
+                    "name": "Obshtina Alfatar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Alfatar",
+                      "Gradska Obshtina Alfatar",
+                      "Obshhina Alfatar"
+                    ],
+                    "lat": 43.9,
+                    "lon": 27.33333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dulovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dulovo",
+                      "Gradska Obshtina Dulovo",
+                      "Obshhina Dulovo"
+                    ],
+                    "lat": 43.81667,
+                    "lon": 27.08333,
+                    "children": [
+                      {
+                        "name": "Dulovo",
+                        "type": "admin3",
+                        "lat": 43.81667,
+                        "lon": 27.15
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Glavinitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Glavinica",
+                      "Glavinitsa",
+                      "Obshhina Glavinica"
+                    ],
+                    "lat": 43.95,
+                    "lon": 26.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kaynardzha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kajnardzha",
+                      "Kaynardzha",
+                      "Obshhina Kajnardzha"
+                    ],
+                    "lat": 43.95,
+                    "lon": 27.53333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Silistra",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Silistra",
+                      "Obshhina Silistra",
+                      "Obshtina Silistra"
+                    ],
+                    "lat": 44.03333,
+                    "lon": 27.2,
+                    "children": [
+                      {
+                        "name": "Silistra",
+                        "type": "admin3",
+                        "lat": 44.1171,
+                        "lon": 27.26056
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sitovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Sitovo",
+                      "Obshtina Sitovo",
+                      "Sitovo"
+                    ],
+                    "lat": 44.01667,
+                    "lon": 27,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Tutrakan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Tutrakan",
+                      "Obshhina Tutrakan",
+                      "Obshtina Tutrakan"
+                    ],
+                    "lat": 44,
+                    "lon": 26.6,
+                    "children": [
+                      {
+                        "name": "Tutrakan",
+                        "type": "admin3",
+                        "lat": 44.04906,
+                        "lon": 26.61206
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Sliven",
+                "type": "admin1",
+                "aliases": [
+                  "BG342",
+                  "Oblast Sliven",
+                  "Sliven",
+                  "Slivenski Okrug"
+                ],
+                "lat": 42.683333,
+                "lon": 26.204168,
+                "children": [
+                  {
+                    "name": "Obshtina Kotel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kotel",
+                      "Kotel",
+                      "Obshhina Kotel"
+                    ],
+                    "lat": 42.88333,
+                    "lon": 26.45,
+                    "children": [
+                      {
+                        "name": "Kotel",
+                        "type": "admin3",
+                        "lat": 42.88333,
+                        "lon": 26.45
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Nova Zagora",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Nova Zagora",
+                      "Nova Zagora",
+                      "Obshhina Nova Zgora"
+                    ],
+                    "lat": 42.45,
+                    "lon": 26.05,
+                    "children": [
+                      {
+                        "name": "Nova Zagora",
+                        "type": "admin3",
+                        "lat": 42.48333,
+                        "lon": 26.01667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sliven",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sliven",
+                      "Obshhina Sliven",
+                      "Obshtina Sliven"
+                    ],
+                    "lat": 42.66667,
+                    "lon": 26.31667,
+                    "children": [
+                      {
+                        "name": "Sliven",
+                        "type": "admin3",
+                        "lat": 42.68607,
+                        "lon": 26.32558
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Tvarditsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Tvurditsa",
+                      "Gradska Obshtina Tvŭrditsa",
+                      "Obshhina Tvurdica"
+                    ],
+                    "lat": 42.73333,
+                    "lon": 26,
+                    "children": [
+                      {
+                        "name": "Tvarditsa",
+                        "type": "admin3",
+                        "lat": 42.7,
+                        "lon": 25.9
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Smolyan",
+                "type": "admin1",
+                "aliases": [
+                  "BG424",
+                  "Oblast Smoljan",
+                  "Oblast Smolyan",
+                  "Smoljan"
+                ],
+                "lat": 41.595618,
+                "lon": 24.724715,
+                "children": [
+                  {
+                    "name": "Obshtina Banite",
+                    "type": "admin2",
+                    "aliases": [
+                      "Banite",
+                      "Banska Obshtina",
+                      "Ludzha"
+                    ],
+                    "lat": 41.7,
+                    "lon": 25,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Borino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Borino",
+                      "Obshhina Borino",
+                      "Obshtina Borino"
+                    ],
+                    "lat": 41.64834,
+                    "lon": 24.31694,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chepelare",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chepelare",
+                      "Gradska Obshtina Cheplare",
+                      "Obshhina Chepelare"
+                    ],
+                    "lat": 41.8,
+                    "lon": 24.68333,
+                    "children": [
+                      {
+                        "name": "Chepelare",
+                        "type": "admin3",
+                        "lat": 41.73333,
+                        "lon": 24.68333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Devin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Devin",
+                      "Gradska Obshtina Devin",
+                      "Obshhina Devin"
+                    ],
+                    "lat": 41.74346,
+                    "lon": 24.40192,
+                    "children": [
+                      {
+                        "name": "Devin",
+                        "type": "admin3",
+                        "lat": 41.74327,
+                        "lon": 24.40003
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dospat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dospat",
+                      "Gradska Obshtina Dospat",
+                      "Obshhina Dospat"
+                    ],
+                    "lat": 41.63228,
+                    "lon": 24.18765,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Madan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Madan",
+                      "Madan",
+                      "Obshhina Madan"
+                    ],
+                    "lat": 41.53333,
+                    "lon": 24.96667,
+                    "children": [
+                      {
+                        "name": "Madan",
+                        "type": "admin3",
+                        "lat": 41.49869,
+                        "lon": 24.93973
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Nedelino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Nedelino",
+                      "Nedelino",
+                      "Nedelinska Obshtina"
+                    ],
+                    "lat": 41.46894,
+                    "lon": 25.09481,
+                    "children": [
+                      {
+                        "name": "Nedelino",
+                        "type": "admin3",
+                        "lat": 41.45602,
+                        "lon": 25.08008
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Rudozem",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Rudozem",
+                      "Obshhina Rudozem",
+                      "Obshtina Rudozem"
+                    ],
+                    "lat": 41.45439,
+                    "lon": 24.8369,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Smolyan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Smolyan",
+                      "Obshhina Smoljan",
+                      "Obshtina Smolyan"
+                    ],
+                    "lat": 41.57516,
+                    "lon": 24.71302,
+                    "children": [
+                      {
+                        "name": "Smolyan",
+                        "type": "admin3",
+                        "lat": 41.57439,
+                        "lon": 24.71204
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Zlatograd",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Zlatograd",
+                      "Obshhina Zlatograd",
+                      "Obshina Zlatograd"
+                    ],
+                    "lat": 41.40028,
+                    "lon": 25.04591,
+                    "children": [
+                      {
+                        "name": "Zlatograd",
+                        "type": "admin3",
+                        "lat": 41.3795,
+                        "lon": 25.09605
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Stara Zagora",
+                "type": "admin1",
+                "aliases": [
+                  "BG344",
+                  "Oblast Stara Zagora",
+                  "Stara Zagora",
+                  "Starozagorski Okrug"
+                ],
+                "lat": 42.43813,
+                "lon": 25.596865,
+                "children": [
+                  {
+                    "name": "Obshtina Bratya Daskalovi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bratja Daskalovi",
+                      "Bratya Daskalovi",
+                      "Obshhina Bratja Daskalovi"
+                    ],
+                    "lat": 42.3,
+                    "lon": 25.21667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chirpan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chirpan",
+                      "Gradska Obshtina Chirpan",
+                      "Obshhina Chirpan"
+                    ],
+                    "lat": 42.23333,
+                    "lon": 25.38333,
+                    "children": [
+                      {
+                        "name": "Chirpan",
+                        "type": "admin3",
+                        "lat": 42.2,
+                        "lon": 25.33333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Galabovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Galabovo",
+                      "Gradska Obshtina Gulubovo",
+                      "Gradska Obshtina Gŭlŭbovo"
+                    ],
+                    "lat": 42.15,
+                    "lon": 25.96667,
+                    "children": [
+                      {
+                        "name": "Gŭlŭbovo",
+                        "type": "admin3",
+                        "lat": 42.13333,
+                        "lon": 25.85
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Gurkovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Gurkovo",
+                      "Gurkovo",
+                      "Obshhina Gurkovo"
+                    ],
+                    "lat": 42.71667,
+                    "lon": 25.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kazanlŭk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kazanluk",
+                      "Gradska Obshtina Kazanlŭk",
+                      "Kazanlak"
+                    ],
+                    "lat": 42.61943,
+                    "lon": 25.39885,
+                    "children": [
+                      {
+                        "name": "Kazanlak",
+                        "type": "admin3",
+                        "lat": 42.61667,
+                        "lon": 25.4
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Maglizh",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Muglizh",
+                      "Gradska Obshtina Mŭglizh",
+                      "Maglizh"
+                    ],
+                    "lat": 42.63333,
+                    "lon": 25.61667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Nikolaevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nikolaevo",
+                      "Obshtina Nikolaevo",
+                      "obshhina Nikolaevo"
+                    ],
+                    "lat": 42.6,
+                    "lon": 25.78333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Opan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Opan",
+                      "Obshtina Opan",
+                      "Opan"
+                    ],
+                    "lat": 42.21667,
+                    "lon": 25.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Pavel Banya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pavel Banya",
+                      "Obshhina Pavel Banja",
+                      "Obshtina Pavel Banya"
+                    ],
+                    "lat": 42.63333,
+                    "lon": 25.13333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Radnevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Radnevo",
+                      "Obshhina Radnevo",
+                      "Obshtina Radnevo"
+                    ],
+                    "lat": 42.3,
+                    "lon": 25.93333,
+                    "children": [
+                      {
+                        "name": "Radnevo",
+                        "type": "admin3",
+                        "lat": 42.3,
+                        "lon": 25.93333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Stara Zagora",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Stara Zagora",
+                      "Obshhina Stara Zagora",
+                      "Obshtina Stara Zagora"
+                    ],
+                    "lat": 42.41667,
+                    "lon": 25.63333,
+                    "children": [
+                      {
+                        "name": "Stara Zagora",
+                        "type": "admin3",
+                        "lat": 42.43205,
+                        "lon": 25.64262
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Targovishte",
+                "type": "admin1",
+                "aliases": [
+                  "BG334",
+                  "Oblast Targovishte",
+                  "Oblast Turgovishhe",
+                  "Oblast Turgovishte"
+                ],
+                "lat": 43.253334,
+                "lon": 26.326666,
+                "children": [
+                  {
+                    "name": "Obshtina Antonovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Antonovo",
+                      "Gradska Obshtina Antonovo",
+                      "Obshhina Antonovo"
+                    ],
+                    "lat": 43.11667,
+                    "lon": 26.2,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Omurtag",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Omurtag",
+                      "Obshhina Omurtag",
+                      "Obshtina Omurtag"
+                    ],
+                    "lat": 43.08333,
+                    "lon": 26.48333,
+                    "children": [
+                      {
+                        "name": "Omurtag",
+                        "type": "admin3",
+                        "lat": 43.1,
+                        "lon": 26.41667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Opaka",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Opaka",
+                      "Obshtina Opaka",
+                      "Opaka"
+                    ],
+                    "lat": 43.46667,
+                    "lon": 26.15,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Popovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Popovo",
+                      "Obshhina Popovo",
+                      "Obshtina Popovo"
+                    ],
+                    "lat": 43.35,
+                    "lon": 26.23333,
+                    "children": [
+                      {
+                        "name": "Popovo",
+                        "type": "admin3",
+                        "lat": 43.35,
+                        "lon": 26.23333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Targovishte",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Turgovishte",
+                      "Gradska Obshtina Tŭrgovishte",
+                      "Obshhina Turgovishhe"
+                    ],
+                    "lat": 43.25,
+                    "lon": 26.56667,
+                    "children": [
+                      {
+                        "name": "Targovishte",
+                        "type": "admin3",
+                        "lat": 43.2512,
+                        "lon": 26.57215
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Veliko Tarnovo",
+                "type": "admin1",
+                "aliases": [
+                  "BG321",
+                  "Oblast Veliko Tarnovo",
+                  "Oblast Veliko Turnovo",
+                  "Oblast Veliko Tŭrnovo"
+                ],
+                "lat": 43.201575,
+                "lon": 25.663201,
+                "children": [
+                  {
+                    "name": "Obshtina Elena",
+                    "type": "admin2",
+                    "aliases": [
+                      "Elena",
+                      "Gradska Obshtina Elena",
+                      "Obshhina Elena"
+                    ],
+                    "lat": 42.91667,
+                    "lon": 25.95,
+                    "children": [
+                      {
+                        "name": "Elena",
+                        "type": "admin3",
+                        "lat": 42.93333,
+                        "lon": 25.88333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Gorna Oryahovitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorna Orjakhovica",
+                      "Gorna Oryahovitsa",
+                      "Gorna Oryakhovitsa"
+                    ],
+                    "lat": 43.21667,
+                    "lon": 25.75,
+                    "children": [
+                      {
+                        "name": "Gorna Oryahovitsa",
+                        "type": "admin3",
+                        "lat": 43.12778,
+                        "lon": 25.70167
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Lyaskovets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Lyaskovets",
+                      "Ljaskovec",
+                      "Lyaskovets"
+                    ],
+                    "lat": 43.13333,
+                    "lon": 25.85,
+                    "children": [
+                      {
+                        "name": "Lyaskovets",
+                        "type": "admin3",
+                        "lat": 43.11111,
+                        "lon": 25.72833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Pavlikeni",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pavlikeni",
+                      "Obshhina Pavlikeni",
+                      "Obshtina Pavlikeni"
+                    ],
+                    "lat": 43.28333,
+                    "lon": 25.35,
+                    "children": [
+                      {
+                        "name": "Pavlikeni",
+                        "type": "admin3",
+                        "lat": 43.24278,
+                        "lon": 25.32194
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Polski Trambesh",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Polski Trumbesh",
+                      "Gradska Obshtina Polski Trŭmbesh",
+                      "Obshhina Polski Trumbesh"
+                    ],
+                    "lat": 43.35,
+                    "lon": 25.58333,
+                    "children": [
+                      {
+                        "name": "Polski Trambesh",
+                        "type": "admin3",
+                        "lat": 43.37233,
+                        "lon": 25.63525
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Strazhitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Strazhitsa",
+                      "Obshhina Strazhica",
+                      "Obshtina Strazhitsa"
+                    ],
+                    "lat": 43.26667,
+                    "lon": 25.98333,
+                    "children": [
+                      {
+                        "name": "Strazhitsa",
+                        "type": "admin3",
+                        "lat": 43.23333,
+                        "lon": 25.96667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Suhindol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sukhindol",
+                      "Obshhina Sukhindol",
+                      "Obshtina Suhindol"
+                    ],
+                    "lat": 43.16667,
+                    "lon": 25.2,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Svishtov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Svishtov",
+                      "Obshhina Svishhov",
+                      "Obshtina Svishtov"
+                    ],
+                    "lat": 43.53333,
+                    "lon": 25.35,
+                    "children": [
+                      {
+                        "name": "Svishtov",
+                        "type": "admin3",
+                        "lat": 43.61875,
+                        "lon": 25.35033
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Veliko Tŭrnovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Veliko Turnovo",
+                      "Gradska Obshtina Veliko Tŭrnovo",
+                      "Obshhina Veliko Trnovo"
+                    ],
+                    "lat": 43.08241,
+                    "lon": 25.63202,
+                    "children": [
+                      {
+                        "name": "Veliko Tŭrnovo",
+                        "type": "admin3",
+                        "lat": 43.08124,
+                        "lon": 25.62904
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Zlataritsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Zlataritsa",
+                      "Obshhina Zlatarica",
+                      "Obshtina Zlataritsa"
+                    ],
+                    "lat": 43.06667,
+                    "lon": 25.98333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Vidin",
+                "type": "admin1",
+                "aliases": [
+                  "BG311",
+                  "Oblast Vidin",
+                  "Vidin",
+                  "Vidinski Okrug"
+                ],
+                "lat": 43.845455,
+                "lon": 22.703031,
+                "children": [
+                  {
+                    "name": "Obshtina Belogradchik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belogradchik",
+                      "Gradska Obshtina Belogradchik",
+                      "Obshhina Belogradchik"
+                    ],
+                    "lat": 43.65,
+                    "lon": 22.6,
+                    "children": [
+                      {
+                        "name": "Belogradchik",
+                        "type": "admin3",
+                        "lat": 43.62722,
+                        "lon": 22.68361
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Boynitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bojnica",
+                      "Boynitsa",
+                      "Obshhina Bojnica"
+                    ],
+                    "lat": 44,
+                    "lon": 22.55,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Bregovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bregovo",
+                      "Obshhina Bregovo",
+                      "Obshtina Bregovo"
+                    ],
+                    "lat": 44.11667,
+                    "lon": 22.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chuprene",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chuprene",
+                      "Obshhina Chuprene",
+                      "Obshtina Chuprene"
+                    ],
+                    "lat": 43.5,
+                    "lon": 22.71667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dimovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dimovo",
+                      "Gradska Obshtina Dimovo",
+                      "Obshhina Dimovo"
+                    ],
+                    "lat": 43.75,
+                    "lon": 22.81667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Gramada",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Gramada",
+                      "Gramada",
+                      "Obshhina Gramada"
+                    ],
+                    "lat": 43.83333,
+                    "lon": 22.65,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kula",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kula",
+                      "Kula",
+                      "Obshhina Kula"
+                    ],
+                    "lat": 43.9,
+                    "lon": 22.56667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Makresh",
+                    "type": "admin2",
+                    "aliases": [
+                      "Makresh",
+                      "Obshhina Makresh",
+                      "Obshtina Makresh"
+                    ],
+                    "lat": 43.78333,
+                    "lon": 22.56667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Novo Selo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Novo Selo",
+                      "Obshhina Novo Selo",
+                      "Obshtina Novo Selo"
+                    ],
+                    "lat": 44.11667,
+                    "lon": 22.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Ruzhintsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Ruzhinci",
+                      "Obshtina Ruzhintsi",
+                      "Ruzhinci"
+                    ],
+                    "lat": 43.65,
+                    "lon": 22.9,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Vidin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vidin",
+                      "Obshhina Vidin",
+                      "Obshtina Vidin"
+                    ],
+                    "lat": 44,
+                    "lon": 22.83333,
+                    "children": [
+                      {
+                        "name": "Vidin",
+                        "type": "admin3",
+                        "lat": 43.99159,
+                        "lon": 22.88236
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Vratsa",
+                "type": "admin1",
+                "aliases": [
+                  "BG313",
+                  "Oblast Vraca",
+                  "Oblast Vratsa",
+                  "Vraca"
+                ],
+                "lat": 43.44737,
+                "lon": 23.765309,
+                "children": [
+                  {
+                    "name": "Obshtina Borovan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Borovan",
+                      "Obshhina Borovan",
+                      "Obshtina Borovan"
+                    ],
+                    "lat": 43.43333,
+                    "lon": 23.75,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Byala Slatina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bjala Slatina",
+                      "Byala Slatina",
+                      "Gradska Obshtina Byala Slatina"
+                    ],
+                    "lat": 43.46667,
+                    "lon": 23.93333,
+                    "children": [
+                      {
+                        "name": "Byala Slatina",
+                        "type": "admin3",
+                        "lat": 43.46667,
+                        "lon": 23.93333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Hayredin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hayredin",
+                      "Khajredin",
+                      "Khayredin"
+                    ],
+                    "lat": 43.58333,
+                    "lon": 23.66667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kozloduy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kozloduy",
+                      "Kozloduj",
+                      "Kozloduy"
+                    ],
+                    "lat": 43.71667,
+                    "lon": 23.73333,
+                    "children": [
+                      {
+                        "name": "Kozloduy",
+                        "type": "admin3",
+                        "lat": 43.77691,
+                        "lon": 23.73001
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Krivodol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Krivodol",
+                      "Krivodol",
+                      "Obshhina Krivodol"
+                    ],
+                    "lat": 43.38333,
+                    "lon": 23.48333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Mezdra",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Mezdra",
+                      "Mezdra",
+                      "Obshhina Mezdra"
+                    ],
+                    "lat": 43.13333,
+                    "lon": 23.73333,
+                    "children": [
+                      {
+                        "name": "Mezdra",
+                        "type": "admin3",
+                        "lat": 43.15,
+                        "lon": 23.7
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Mizia",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Miziya",
+                      "Mizia",
+                      "Mizija"
+                    ],
+                    "lat": 43.63333,
+                    "lon": 23.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Oryahovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Oryakhovo",
+                      "Obshhina Orjakhovo",
+                      "Obshtina Orekhovo"
+                    ],
+                    "lat": 43.69038,
+                    "lon": 23.98643,
+                    "children": [
+                      {
+                        "name": "Oryahovo",
+                        "type": "admin3",
+                        "lat": 43.73805,
+                        "lon": 23.95874
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Roman",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Roman",
+                      "Obshhina Roman",
+                      "Obshtina Roman"
+                    ],
+                    "lat": 43.15,
+                    "lon": 23.91667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Vratsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vratsa",
+                      "Obshhina Vraca",
+                      "Obshtina Vratsa"
+                    ],
+                    "lat": 43.28333,
+                    "lon": 23.6,
+                    "children": [
+                      {
+                        "name": "Vratsa",
+                        "type": "admin3",
+                        "lat": 43.21052,
+                        "lon": 23.56312
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Oblast Yambol",
+                "type": "admin1",
+                "aliases": [
+                  "BG343",
+                  "Jambol",
+                  "Oblast Jambol",
+                  "Oblast Yambol"
+                ],
+                "lat": 42.316666,
+                "lon": 26.64,
+                "children": [
+                  {
+                    "name": "Obshtina Bolyarovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Boljarovo",
+                      "Bolyarovo",
+                      "Gradska Obshtina Bolyarovo"
+                    ],
+                    "lat": 42.15,
+                    "lon": 26.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Elhovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Elhovo",
+                      "Elkhovo",
+                      "Gradska Obshtina Elkhovo"
+                    ],
+                    "lat": 42.11667,
+                    "lon": 26.61667,
+                    "children": [
+                      {
+                        "name": "Elhovo",
+                        "type": "admin3",
+                        "lat": 42.16667,
+                        "lon": 26.56667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Straldzha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Straldzha",
+                      "Obshhina Straldzha",
+                      "Obshtina Straldzha"
+                    ],
+                    "lat": 42.48333,
+                    "lon": 26.78333,
+                    "children": [
+                      {
+                        "name": "Straldzha",
+                        "type": "admin3",
+                        "lat": 42.6,
+                        "lon": 26.68333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Tundzha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Tundzha",
+                      "Tundzha",
+                      "obshhina Tundzha"
+                    ],
+                    "lat": 42.35,
+                    "lon": 26.45,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Yambol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Yambol",
+                      "Jambol",
+                      "Obshhina Jambol"
+                    ],
+                    "lat": 42.48333,
+                    "lon": 26.5,
+                    "children": [
+                      {
+                        "name": "Yambol",
+                        "type": "admin3",
+                        "lat": 42.48243,
+                        "lon": 26.50006
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Pazardzhik",
+                "type": "admin1",
+                "aliases": [
+                  "BG423",
+                  "Oblast Pazardzhik",
+                  "Pazardzhik",
+                  "Pazardzhishki Okrug"
+                ],
+                "lat": 42.133305,
+                "lon": 24.172952,
+                "children": [
+                  {
+                    "name": "Obshtina Batak",
+                    "type": "admin2",
+                    "aliases": [
+                      "Batak",
+                      "Gradska Obshtina Batak",
+                      "Obshhina Batak"
+                    ],
+                    "lat": 41.86667,
+                    "lon": 24.21667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Belovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belovo",
+                      "Gradska Obshtina Belovo",
+                      "Obshhina Belovo"
+                    ],
+                    "lat": 42.2,
+                    "lon": 23.93333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Bratsigovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bracigovo",
+                      "Bratsigovo",
+                      "Gradska Obshtina Bratsigovo"
+                    ],
+                    "lat": 42,
+                    "lon": 24.4,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Lesichovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lesichevska Obshtina",
+                      "Lesichovo",
+                      "Obshhina Lesichovo"
+                    ],
+                    "lat": 42.36667,
+                    "lon": 24.15,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Panagyurishte",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Panagyurishte",
+                      "Obshhina Panagjurishhe",
+                      "Obshtina Panagyurishte"
+                    ],
+                    "lat": 42.5,
+                    "lon": 24.16667,
+                    "children": [
+                      {
+                        "name": "Panagyurishte",
+                        "type": "admin3",
+                        "lat": 42.49518,
+                        "lon": 24.19021
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Pazardzhik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pazardzhik",
+                      "Obshhina Pazardzhik",
+                      "Obshtina Pazardzhik"
+                    ],
+                    "lat": 42.2,
+                    "lon": 24.33333,
+                    "children": [
+                      {
+                        "name": "Pazardzhik",
+                        "type": "admin3",
+                        "lat": 42.19934,
+                        "lon": 24.33318
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Peshtera",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Peshtera",
+                      "Obshhina Peshhera",
+                      "Obshtina Peshtera"
+                    ],
+                    "lat": 42.03333,
+                    "lon": 24.3,
+                    "children": [
+                      {
+                        "name": "Peshtera",
+                        "type": "admin3",
+                        "lat": 42.03372,
+                        "lon": 24.29995
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Rakitovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Rakitovo",
+                      "Obshhina Rakitovo",
+                      "Obshtina Rakitovo"
+                    ],
+                    "lat": 41.99965,
+                    "lon": 24.10877,
+                    "children": [
+                      {
+                        "name": "Rakitovo",
+                        "type": "admin3",
+                        "lat": 41.99012,
+                        "lon": 24.0873
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Septemvri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Septemvri",
+                      "Obshhina Septemvri",
+                      "Obshtina Septemvri"
+                    ],
+                    "lat": 42.26667,
+                    "lon": 24.13333,
+                    "children": [
+                      {
+                        "name": "Septemvri",
+                        "type": "admin3",
+                        "lat": 42.22016,
+                        "lon": 24.11854
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Strelcha",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Strelcha",
+                      "Obshhina Strelcha",
+                      "Obshtina Strelcha"
+                    ],
+                    "lat": 42.46667,
+                    "lon": 24.36667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Velingrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Velingrad",
+                      "Obshhina Velingrad",
+                      "Obshtina Velingrad"
+                    ],
+                    "lat": 41.96667,
+                    "lon": 23.93333,
+                    "children": [
+                      {
+                        "name": "Velingrad",
+                        "type": "admin3",
+                        "lat": 42.02754,
+                        "lon": 23.99155
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sarnitsa Obshtina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Surnica",
+                      "Sarnitsa",
+                      "Surnica"
+                    ],
+                    "lat": 41.73333,
+                    "lon": 24.03333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Pernik",
+                "type": "admin1",
+                "aliases": [
+                  "BG414",
+                  "Dimitrovo",
+                  "Dimitrovski Okrug",
+                  "Dimitrovski Okrŭg"
+                ],
+                "lat": 42.611225,
+                "lon": 22.855177,
+                "children": [
+                  {
+                    "name": "Obshtina Breznik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Breznik",
+                      "Gradska Obshtina Breznik",
+                      "Obshhina Breznik"
+                    ],
+                    "lat": 42.71667,
+                    "lon": 22.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kovachevtsi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kovachevci",
+                      "Kovachevska Obshtina",
+                      "Kovachevtsi"
+                    ],
+                    "lat": 42.55,
+                    "lon": 22.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Pernik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Pernik",
+                      "Obshhina Pernik",
+                      "Obshtina Dimitrovo"
+                    ],
+                    "lat": 42.61667,
+                    "lon": 23.08333,
+                    "children": [
+                      {
+                        "name": "Pernik",
+                        "type": "admin3",
+                        "lat": 42.59671,
+                        "lon": 23.03318
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Radomir",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Radomir",
+                      "Obshhina Radomir",
+                      "Obshtina Radomir"
+                    ],
+                    "lat": 42.46667,
+                    "lon": 23.01667,
+                    "children": [
+                      {
+                        "name": "Radomir",
+                        "type": "admin3",
+                        "lat": 42.54565,
+                        "lon": 22.96553
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Zemen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Zemen",
+                      "Obshhina Zemen",
+                      "Obshtina Zemen"
+                    ],
+                    "lat": 42.55067,
+                    "lon": 22.7144,
+                    "children": []
+                  },
+                  {
+                    "name": "Tran",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Trun",
+                      "Gradska Obshtina Trŭn",
+                      "Obshhina Trun"
+                    ],
+                    "lat": 42.76667,
+                    "lon": 22.63333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Plovdiv",
+                "type": "admin1",
+                "aliases": [
+                  "BG421",
+                  "Oblast Plovdiv",
+                  "Plovdiv",
+                  "Plovdivska Oblast"
+                ],
+                "lat": 42.209839,
+                "lon": 24.778423,
+                "children": [
+                  {
+                    "name": "Obshtina Asenovgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Asenovgrad",
+                      "Gradska Obshtina Asenovgrad",
+                      "Obshhina Asenovgrad"
+                    ],
+                    "lat": 41.95,
+                    "lon": 24.96667,
+                    "children": [
+                      {
+                        "name": "Asenovgrad",
+                        "type": "admin3",
+                        "lat": 42.01667,
+                        "lon": 24.86667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Brezovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brezovo",
+                      "Gradska Obshtina Brezovo",
+                      "Obshhina Brezovo"
+                    ],
+                    "lat": 42.4,
+                    "lon": 25.05,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Hisarya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Khisarya",
+                      "Hisarya",
+                      "Khisarja"
+                    ],
+                    "lat": 42.5,
+                    "lon": 24.6,
+                    "children": [
+                      {
+                        "name": "Hisarya",
+                        "type": "admin3",
+                        "lat": 42.5,
+                        "lon": 24.7
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kaloyanovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kalojanovo",
+                      "Kaloyanovo",
+                      "Obshhina Kalojanovo"
+                    ],
+                    "lat": 42.38333,
+                    "lon": 24.81667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Karlovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Karlovo",
+                      "Karlovo",
+                      "Obshhina Karlovo"
+                    ],
+                    "lat": 42.68333,
+                    "lon": 24.66667,
+                    "children": [
+                      {
+                        "name": "Karlovo",
+                        "type": "admin3",
+                        "lat": 42.63333,
+                        "lon": 24.8
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Krichim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krichim",
+                      "Obshtina Krichim",
+                      "obshhina Krichim"
+                    ],
+                    "lat": 42.00439,
+                    "lon": 24.47235,
+                    "children": [
+                      {
+                        "name": "Krichim",
+                        "type": "admin3",
+                        "lat": 42.05,
+                        "lon": 24.46667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Kuklen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kuklen",
+                      "Куклен"
+                    ],
+                    "lat": 42.03725,
+                    "lon": 24.77949,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Laki",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Luki",
+                      "Gradska Obshtina Lŭki",
+                      "Laki"
+                    ],
+                    "lat": 41.81667,
+                    "lon": 24.85,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Maritsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Marica",
+                      "Maritsa",
+                      "Obshtina Maritsa"
+                    ],
+                    "lat": 42.23333,
+                    "lon": 24.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Parvomay",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Purvomay",
+                      "Gradska Obshtina Pŭrvomay",
+                      "Obshhina Purvomaj"
+                    ],
+                    "lat": 42.03333,
+                    "lon": 25.2,
+                    "children": [
+                      {
+                        "name": "Parvomay",
+                        "type": "admin3",
+                        "lat": 42.1,
+                        "lon": 25.21667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Perushtitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Perushtitsa",
+                      "Perushhica",
+                      "Perushtitsa"
+                    ],
+                    "lat": 42.06667,
+                    "lon": 24.55,
+                    "children": [
+                      {
+                        "name": "Perushtitsa",
+                        "type": "admin3",
+                        "lat": 42.05,
+                        "lon": 24.55
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Plovdiv",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Plovdiv",
+                      "Obshhina Plovdiv",
+                      "Obshtina Plovdiv"
+                    ],
+                    "lat": 42.15,
+                    "lon": 24.75,
+                    "children": [
+                      {
+                        "name": "Plovdiv",
+                        "type": "admin3",
+                        "lat": 42.15387,
+                        "lon": 24.75001
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Rakovski",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Rakovski",
+                      "Obshhina Rakovski",
+                      "Obshtina General Nikolaevo"
+                    ],
+                    "lat": 42.26667,
+                    "lon": 24.98333,
+                    "children": [
+                      {
+                        "name": "Rakovski",
+                        "type": "admin3",
+                        "lat": 42.28819,
+                        "lon": 24.96779
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Rodopi",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Rodopi",
+                      "Rodopi",
+                      "obshhina Rodopi"
+                    ],
+                    "lat": 42.03333,
+                    "lon": 24.68333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Sadovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Sadovo",
+                      "Obshhina Sadovo",
+                      "Obshtina Sadovo"
+                    ],
+                    "lat": 42.13333,
+                    "lon": 25,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Saedinenie",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Suedinenie",
+                      "Gradska Obshtina Sŭedinenie",
+                      "Obshhina Suedinenie"
+                    ],
+                    "lat": 42.31667,
+                    "lon": 24.58333,
+                    "children": [
+                      {
+                        "name": "Saedinenie",
+                        "type": "admin3",
+                        "lat": 42.26667,
+                        "lon": 24.55
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Sopot",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sopot",
+                      "Сопот"
+                    ],
+                    "lat": 42.65214,
+                    "lon": 24.7431,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Stamboliyski",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Stamboliyski",
+                      "Stambolijski",
+                      "Stamboliyski"
+                    ],
+                    "lat": 42.11667,
+                    "lon": 24.51667,
+                    "children": [
+                      {
+                        "name": "Stamboliyski",
+                        "type": "admin3",
+                        "lat": 42.13333,
+                        "lon": 24.53333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Sofia",
+                "type": "admin1",
+                "aliases": [
+                  "BG412",
+                  "Distretto di Sofia",
+                  "Oblast Sofia",
+                  "Oblast Sofija"
+                ],
+                "lat": 42.71894,
+                "lon": 23.728788,
+                "children": [
+                  {
+                    "name": "Ihtiman",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Ikhtiman",
+                      "Ihtiman",
+                      "Ikhtiman"
+                    ],
+                    "lat": 42.43333,
+                    "lon": 23.81667,
+                    "children": [
+                      {
+                        "name": "Ihtiman",
+                        "type": "admin3",
+                        "lat": 42.43821,
+                        "lon": 23.81608
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Anton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Anton",
+                      "Obshtina Anton",
+                      "obshhina Anton"
+                    ],
+                    "lat": 42.76667,
+                    "lon": 24.3,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Botevgrad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Botevgrad",
+                      "Gradska Obshtina Botevgrad",
+                      "Obshhina Botevgrad"
+                    ],
+                    "lat": 42.95,
+                    "lon": 23.75,
+                    "children": [
+                      {
+                        "name": "Botevgrad",
+                        "type": "admin3",
+                        "lat": 42.90799,
+                        "lon": 23.79274
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Bozhurishte",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bozhurishhe",
+                      "Bozhurishte",
+                      "Obshhina Bozhurishhe"
+                    ],
+                    "lat": 42.78333,
+                    "lon": 23.11667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chavdar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chavdar",
+                      "Obshtina Chavdar",
+                      "obshhina Chavdar"
+                    ],
+                    "lat": 42.61667,
+                    "lon": 24.08333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Chelopech",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chelopech",
+                      "Obshtina Chelopech",
+                      "obshhina Chelopech"
+                    ],
+                    "lat": 42.71667,
+                    "lon": 24.06667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dolna Banya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dolna Banya",
+                      "Dolna banja",
+                      "Gradska Obshtina Dolna Banya"
+                    ],
+                    "lat": 42.3,
+                    "lon": 23.76667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dragoman",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dragoman",
+                      "Gradska Obshtina Dragoman",
+                      "Obshhina Dragoman"
+                    ],
+                    "lat": 42.93333,
+                    "lon": 22.93333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Elin Pelin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Elin Pelin",
+                      "Gradska Obshtina Elin Pelin",
+                      "Obshhina Elin Pelin"
+                    ],
+                    "lat": 42.66667,
+                    "lon": 23.6,
+                    "children": [
+                      {
+                        "name": "Elin Pelin",
+                        "type": "admin3",
+                        "lat": 42.66667,
+                        "lon": 23.6
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Etropole",
+                    "type": "admin2",
+                    "aliases": [
+                      "Etropole",
+                      "Gradska Obshtina Etropole",
+                      "Obshhina Etropole"
+                    ],
+                    "lat": 42.85,
+                    "lon": 24.03333,
+                    "children": [
+                      {
+                        "name": "Etropole",
+                        "type": "admin3",
+                        "lat": 42.8328,
+                        "lon": 23.99636
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Godech",
+                    "type": "admin2",
+                    "aliases": [
+                      "Godech",
+                      "Gradska Obshtina Godech",
+                      "Obshhina Godech"
+                    ],
+                    "lat": 43.06667,
+                    "lon": 23.06667,
+                    "children": [
+                      {
+                        "name": "Godech",
+                        "type": "admin3",
+                        "lat": 43.01682,
+                        "lon": 23.04852
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Gorna Malina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorna Malina",
+                      "Obshhina Gorna Malina",
+                      "Obshtina Gorna Malina"
+                    ],
+                    "lat": 42.71667,
+                    "lon": 23.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Koprivshtitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Koprivshtitsa",
+                      "Koprivshhica",
+                      "Koprivshtitsa"
+                    ],
+                    "lat": 42.61667,
+                    "lon": 24.38333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kostenets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kostenets",
+                      "Kostenec",
+                      "Kostenets"
+                    ],
+                    "lat": 42.3,
+                    "lon": 23.86667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Kostinbrod",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Kostinbrod",
+                      "Kostinbrod",
+                      "Obshtina Kostinbrod"
+                    ],
+                    "lat": 42.88333,
+                    "lon": 23.2,
+                    "children": [
+                      {
+                        "name": "Kostinbrod",
+                        "type": "admin3",
+                        "lat": 42.81667,
+                        "lon": 23.21667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Mirkovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mirkovo",
+                      "Obshtina Mirkovo",
+                      "obshhina Mirkovo"
+                    ],
+                    "lat": 42.66667,
+                    "lon": 23.96667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Pirdop",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Pirdop",
+                      "Pirdop",
+                      "obshhina Pirdop"
+                    ],
+                    "lat": 42.7,
+                    "lon": 24.23333,
+                    "children": [
+                      {
+                        "name": "Pirdop",
+                        "type": "admin3",
+                        "lat": 42.7,
+                        "lon": 24.18333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Pravets",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshtina Pravets",
+                      "Pravec",
+                      "Pravets"
+                    ],
+                    "lat": 42.96667,
+                    "lon": 23.98333,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Samokov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Samokov",
+                      "Obshhina Samokov",
+                      "Obshtina Samokov"
+                    ],
+                    "lat": 42.33333,
+                    "lon": 23.55,
+                    "children": [
+                      {
+                        "name": "Samokov",
+                        "type": "admin3",
+                        "lat": 42.33855,
+                        "lon": 23.55805
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Slivnitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Slivnitsa",
+                      "Obshhina Slivnica",
+                      "Obshtina Slivnitsa"
+                    ],
+                    "lat": 42.85,
+                    "lon": 22.98333,
+                    "children": [
+                      {
+                        "name": "Slivnitsa",
+                        "type": "admin3",
+                        "lat": 42.85182,
+                        "lon": 23.03792
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Svoge",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Svoge",
+                      "Obshhina Svoge",
+                      "Obshtina Svoge"
+                    ],
+                    "lat": 43,
+                    "lon": 23.4,
+                    "children": [
+                      {
+                        "name": "Svoge",
+                        "type": "admin3",
+                        "lat": 42.96667,
+                        "lon": 23.35
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Zlatitsa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Srednogorie",
+                      "Obshhina Zlatica",
+                      "Obshtina Zlatitsa"
+                    ],
+                    "lat": 42.7,
+                    "lon": 24.13333,
+                    "children": [
+                      {
+                        "name": "Zlatitsa",
+                        "type": "admin3",
+                        "lat": 42.71667,
+                        "lon": 24.13333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Sofia-Grad",
+                "type": "admin1",
+                "aliases": [
+                  "BG411",
+                  "Oblast Grad Sofiya",
+                  "Oblast Sofia-Grad",
+                  "Oblast Sofija grad"
+                ],
+                "lat": 42.68647,
+                "lon": 23.30561,
+                "children": [
+                  {
+                    "name": "Stolichna Obshtina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ajuntament de la Capital",
+                      "Ctolichna Obshhina",
+                      "Cтолична Oбщина"
+                    ],
+                    "lat": 42.68647,
+                    "lon": 23.30561,
+                    "children": [
+                      {
+                        "name": "Lozen",
+                        "type": "admin3",
+                        "lat": 42.6027,
+                        "lon": 23.47589
+                      },
+                      {
+                        "name": "Sofia",
+                        "type": "admin3",
+                        "lat": 42.69751,
+                        "lon": 23.32415
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Varna",
+                "type": "admin1",
+                "aliases": [
+                  "BG331",
+                  "Oblast Varna",
+                  "Okrug Stalin",
+                  "Okrŭg Stalin"
+                ],
+                "lat": 43.186436,
+                "lon": 27.637543,
+                "children": [
+                  {
+                    "name": "Obshtina Aksakovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aksakovo",
+                      "Obshhina Aksakovo",
+                      "Obshtina Aksakovo"
+                    ],
+                    "lat": 43.31667,
+                    "lon": 27.85,
+                    "children": [
+                      {
+                        "name": "Aksakovo",
+                        "type": "admin3",
+                        "lat": 43.25907,
+                        "lon": 27.81755
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Avren",
+                    "type": "admin2",
+                    "aliases": [
+                      "Avren",
+                      "Avrenska Obshtina",
+                      "Obshhina Avren"
+                    ],
+                    "lat": 43.1,
+                    "lon": 27.71667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Beloslav",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beloslav",
+                      "Obshhina Beloslav",
+                      "Obshtina Beloslav"
+                    ],
+                    "lat": 43.2,
+                    "lon": 27.73333,
+                    "children": [
+                      {
+                        "name": "Beloslav",
+                        "type": "admin3",
+                        "lat": 43.18717,
+                        "lon": 27.70352
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Byala",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bjala",
+                      "Byala",
+                      "Obshhina Bjala"
+                    ],
+                    "lat": 42.88333,
+                    "lon": 27.81667,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Dalgopol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dalgopol",
+                      "Dulgopol",
+                      "Dŭlgopol"
+                    ],
+                    "lat": 43.05,
+                    "lon": 27.35,
+                    "children": [
+                      {
+                        "name": "Dalgopol",
+                        "type": "admin3",
+                        "lat": 43.05,
+                        "lon": 27.35
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Devnya",
+                    "type": "admin2",
+                    "aliases": [
+                      "Devnja",
+                      "Devnya",
+                      "Gradska Obshtina Devnya"
+                    ],
+                    "lat": 43.22056,
+                    "lon": 27.60052,
+                    "children": [
+                      {
+                        "name": "Devnya",
+                        "type": "admin3",
+                        "lat": 43.22222,
+                        "lon": 27.56944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Dolni Chiflik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dolni Chiflik",
+                      "Gradska Obshtina Georgi Traykov",
+                      "Obshhina Dolni Chiflik"
+                    ],
+                    "lat": 42.96667,
+                    "lon": 27.68333,
+                    "children": [
+                      {
+                        "name": "Dolni Chiflik",
+                        "type": "admin3",
+                        "lat": 42.99296,
+                        "lon": 27.71596
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Provadia",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Provadiya",
+                      "Obshhina Provadija",
+                      "Obshtina Provadia"
+                    ],
+                    "lat": 43.18333,
+                    "lon": 27.4,
+                    "children": [
+                      {
+                        "name": "Provadia",
+                        "type": "admin3",
+                        "lat": 43.18333,
+                        "lon": 27.43333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Suvorovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Suvorovo",
+                      "Obshtina Suvorovo",
+                      "Suvorovo"
+                    ],
+                    "lat": 43.33333,
+                    "lon": 27.65,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Valchidol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Vulchidol",
+                      "Gradska Obshtina Vŭlchidol",
+                      "Obshhina Vulchidol"
+                    ],
+                    "lat": 43.45,
+                    "lon": 27.5,
+                    "children": []
+                  },
+                  {
+                    "name": "Obshtina Varna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gradska Obshtina Varna",
+                      "Obshhina Varna",
+                      "Obshtina Varna"
+                    ],
+                    "lat": 43.21667,
+                    "lon": 27.91667,
+                    "children": [
+                      {
+                        "name": "Asparuhovo",
+                        "type": "admin3",
+                        "lat": 43.18067,
+                        "lon": 27.88823
+                      },
+                      {
+                        "name": "Varna",
+                        "type": "admin3",
+                        "lat": 43.21912,
+                        "lon": 27.91024
+                      },
+                      {
+                        "name": "Zlatni Pyasatsi",
+                        "type": "admin3",
+                        "lat": 43.285,
+                        "lon": 28.0418
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Obshtina Vetrino",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obshhina Vetrino",
+                      "Obshtina Vetrino",
+                      "Vetrino"
+                    ],
+                    "lat": 43.31667,
+                    "lon": 27.43333,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

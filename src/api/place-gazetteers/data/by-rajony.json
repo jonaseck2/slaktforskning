@@ -1,0 +1,2086 @@
+{
+  "id": "by-rajony",
+  "name": "Belarus Voblasci + Rajony",
+  "locale": "by",
+  "description": "Belarus: 7 voblasci (admin1, including Minsk City) + 158 rajony (admin2) + populated places ≥5000 pop. Cyrillic + Łacinka via altNames.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/BY.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Belarus",
+            "type": "country",
+            "aliases": [
+              "Беларусь",
+              "Bielaruś"
+            ],
+            "lat": 53.7,
+            "lon": 27.9,
+            "children": [
+              {
+                "name": "Brest Oblast",
+                "type": "admin1",
+                "aliases": [
+                  "Brehsckaja Voblasc'",
+                  "Brehstskaja Voblasts'",
+                  "Brest",
+                  "Brest Oblast"
+                ],
+                "lat": 52.408528,
+                "lon": 25.240463,
+                "children": [
+                  {
+                    "name": "Baranovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baranavichy",
+                      "Baranavicki Rajon",
+                      "Baranavitski Rayon"
+                    ],
+                    "lat": 53.16692,
+                    "lon": 25.90962,
+                    "children": []
+                  },
+                  {
+                    "name": "Brestskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brehscki Rajon",
+                      "Brest",
+                      "Brest District"
+                    ],
+                    "lat": 51.95266,
+                    "lon": 23.76268,
+                    "children": []
+                  },
+                  {
+                    "name": "Byarozawski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berezovskij Rajon",
+                      "Berezovskiy Rayon",
+                      "Berjozovskij rajon"
+                    ],
+                    "lat": 52.51227,
+                    "lon": 25.03616,
+                    "children": []
+                  },
+                  {
+                    "name": "Drogichinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dragichenskij rajon",
+                      "Dragichynski Rajon",
+                      "Drahichyn"
+                    ],
+                    "lat": 52.18099,
+                    "lon": 25.08442,
+                    "children": []
+                  },
+                  {
+                    "name": "Gantsevichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gancavicki Rajon",
+                      "Gancevichskij Rajon",
+                      "Gankovichskij rajon"
+                    ],
+                    "lat": 52.68888,
+                    "lon": 26.50917,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Baranavichy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baranovichi",
+                      "Baranovichy District",
+                      "Gorad Baranavichy"
+                    ],
+                    "lat": 53.13492,
+                    "lon": 25.97059,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Brest",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brest",
+                      "Gorad Brehst",
+                      "Gorod Brest"
+                    ],
+                    "lat": 52.11087,
+                    "lon": 23.71208,
+                    "children": []
+                  },
+                  {
+                    "name": "Ivacevicki rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ivacehvicki rajon",
+                      "Ivacevichskij Rajon",
+                      "Ivacevicki Rajon"
+                    ],
+                    "lat": 52.68782,
+                    "lon": 25.57413,
+                    "children": []
+                  },
+                  {
+                    "name": "Ivanovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ivanauski Rajon",
+                      "Ivanava",
+                      "Ivanava District"
+                    ],
+                    "lat": 52.18156,
+                    "lon": 25.5778,
+                    "children": []
+                  },
+                  {
+                    "name": "Kamianiecki rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kameneckij Rajon",
+                      "Kamenets",
+                      "Kamenets District"
+                    ],
+                    "lat": 52.45066,
+                    "lon": 23.67736,
+                    "children": []
+                  },
+                  {
+                    "name": "Kobrinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kobrinskij Rajon",
+                      "Kobrinskiy Rayon",
+                      "Kobryn"
+                    ],
+                    "lat": 52.1887,
+                    "lon": 24.52641,
+                    "children": []
+                  },
+                  {
+                    "name": "Luninetskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Luninecki Rajon",
+                      "Lunineckij Rajon",
+                      "Luninets"
+                    ],
+                    "lat": 52.36658,
+                    "lon": 26.95345,
+                    "children": []
+                  },
+                  {
+                    "name": "Lyakhovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ljakhavicki Rajon",
+                      "Ljakhovichskij Rajon",
+                      "Lyakhavichy"
+                    ],
+                    "lat": 52.93006,
+                    "lon": 26.18249,
+                    "children": []
+                  },
+                  {
+                    "name": "Maloritskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Malarycki Rajon",
+                      "Malaryta",
+                      "Malaryta District"
+                    ],
+                    "lat": 51.83812,
+                    "lon": 24.11719,
+                    "children": []
+                  },
+                  {
+                    "name": "Pinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pinsk",
+                      "Pinsk District",
+                      "Pinski Rajon"
+                    ],
+                    "lat": 52.20728,
+                    "lon": 26.17671,
+                    "children": []
+                  },
+                  {
+                    "name": "Pruzhanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pruzhanski Rajon",
+                      "Pruzhanski Rayon",
+                      "Pruzhanskij Rajon"
+                    ],
+                    "lat": 52.60505,
+                    "lon": 24.42735,
+                    "children": []
+                  },
+                  {
+                    "name": "Stolinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stolin",
+                      "Stolin District",
+                      "Stolinski Rajon"
+                    ],
+                    "lat": 51.93736,
+                    "lon": 27.06079,
+                    "children": []
+                  },
+                  {
+                    "name": "Žabinkaŭski rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zabinkauski Rajon",
+                      "Zhabinka",
+                      "Zhabinka District"
+                    ],
+                    "lat": 52.2128,
+                    "lon": 24.06993,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Grodno Oblast",
+                "type": "admin1",
+                "aliases": [
+                  "Gardino sritis",
+                  "Grodnenskaja",
+                  "Grodnenskaja Oblast'",
+                  "Grodnenskaya"
+                ],
+                "lat": 53.663538,
+                "lon": 25.177827,
+                "children": [
+                  {
+                    "name": "Astraviecki rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Astravecki rajon",
+                      "Astraviecki rajon",
+                      "Astravyets District"
+                    ],
+                    "lat": 54.66667,
+                    "lon": 26,
+                    "children": []
+                  },
+                  {
+                    "name": "Berestovitskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berastavicki Rajon",
+                      "Berestovickij Rajon",
+                      "Berestovitskiy Rayon"
+                    ],
+                    "lat": 53.25993,
+                    "lon": 23.96017,
+                    "children": []
+                  },
+                  {
+                    "name": "Dyatlovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Djatlovskij Rajon",
+                      "Dyatlovskiy Rayon",
+                      "Dzjatlauski Rajon"
+                    ],
+                    "lat": 53.42628,
+                    "lon": 25.38292,
+                    "children": []
+                  },
+                  {
+                    "name": "Grodnenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gardino rajonas",
+                      "Grodnas rajons",
+                      "Grodnens'kij rajon"
+                    ],
+                    "lat": 53.70808,
+                    "lon": 23.96711,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Hrodna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gardinas",
+                      "Gorad Grodna",
+                      "Gorod Grodno"
+                    ],
+                    "lat": 53.68303,
+                    "lon": 23.83102,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Lida",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Lida",
+                      "Horad Lida",
+                      "Lida"
+                    ],
+                    "lat": 53.88333,
+                    "lon": 25.29972,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Navahrudak",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Novogrudok",
+                      "Horad Navahrudak",
+                      "Naugardukas"
+                    ],
+                    "lat": 53.6,
+                    "lon": 25.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Slonim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Slonim",
+                      "Horad Slonim",
+                      "Slonim"
+                    ],
+                    "lat": 53.08667,
+                    "lon": 25.32194,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Smarhon’",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Smargon'",
+                      "Gorod Smorgon'",
+                      "Gorod Smorgon’"
+                    ],
+                    "lat": 54.48361,
+                    "lon": 26.4,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Vawkavysk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Volkovysk",
+                      "Horad Vawkavysk",
+                      "Vaukavysk"
+                    ],
+                    "lat": 53.15194,
+                    "lon": 24.45556,
+                    "children": []
+                  },
+                  {
+                    "name": "Iwyewski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Iueuski Rajon",
+                      "Iv'evskij Rajon",
+                      "Iv'yevskiy Rayon"
+                    ],
+                    "lat": 53.99011,
+                    "lon": 25.91235,
+                    "children": []
+                  },
+                  {
+                    "name": "Korelichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karehlicki Rajon",
+                      "Karelichy",
+                      "Karelichy District"
+                    ],
+                    "lat": 53.49275,
+                    "lon": 26.24281,
+                    "children": []
+                  },
+                  {
+                    "name": "Lidskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lida",
+                      "Lida District",
+                      "Lidski Rajon"
+                    ],
+                    "lat": 53.7971,
+                    "lon": 25.25899,
+                    "children": []
+                  },
+                  {
+                    "name": "Mostovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mastouski Rajon",
+                      "Mastowski Rayon",
+                      "Masty District"
+                    ],
+                    "lat": 53.40204,
+                    "lon": 24.59377,
+                    "children": []
+                  },
+                  {
+                    "name": "Navahrudski rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Navagrudski rajon",
+                      "Navahrudak",
+                      "Navahrudak District"
+                    ],
+                    "lat": 53.66667,
+                    "lon": 25.75,
+                    "children": []
+                  },
+                  {
+                    "name": "Oshmyanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ashmjanski Rajon",
+                      "Ashmyanski Rayon",
+                      "Ashmyany"
+                    ],
+                    "lat": 54.37672,
+                    "lon": 25.91059,
+                    "children": []
+                  },
+                  {
+                    "name": "Shchuchinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Shchuchinskiy Rayon",
+                      "Shchuchyn",
+                      "Shchuchyn District"
+                    ],
+                    "lat": 53.69828,
+                    "lon": 24.68812,
+                    "children": []
+                  },
+                  {
+                    "name": "Slonimskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Slonim",
+                      "Slonim District",
+                      "Slonimski Rajon"
+                    ],
+                    "lat": 53.07153,
+                    "lon": 25.26449,
+                    "children": []
+                  },
+                  {
+                    "name": "Smorgonskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Smargonski Rajon",
+                      "Smarhon",
+                      "Smarhon District"
+                    ],
+                    "lat": 54.49903,
+                    "lon": 26.39545,
+                    "children": []
+                  },
+                  {
+                    "name": "Svislochskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Svislach",
+                      "Svislach District",
+                      "Svislacki Rajon"
+                    ],
+                    "lat": 52.91589,
+                    "lon": 24.25331,
+                    "children": []
+                  },
+                  {
+                    "name": "Volkovysskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vaukavyski Rajon",
+                      "Vawkavysk",
+                      "Vawkavysk District"
+                    ],
+                    "lat": 53.18727,
+                    "lon": 24.38384,
+                    "children": []
+                  },
+                  {
+                    "name": "Voronovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Voranauski Rajon",
+                      "Voranava",
+                      "Voranava District"
+                    ],
+                    "lat": 54.07204,
+                    "lon": 25.14225,
+                    "children": []
+                  },
+                  {
+                    "name": "Zel’venskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zehl'venski Rajon",
+                      "Zel'va",
+                      "Zel'va District"
+                    ],
+                    "lat": 53.1424,
+                    "lon": 24.84228,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Homyel’ Voblasc’",
+                "type": "admin1",
+                "aliases": [
+                  "Gobanimo Gomel",
+                  "Gomel",
+                  "Gomel Oblast",
+                  "Gomel viloyati"
+                ],
+                "lat": 52.394119,
+                "lon": 29.948007,
+                "children": [
+                  {
+                    "name": "Aktsyabrski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Akciabrski District",
+                      "Akcjabrski Rajon",
+                      "Aktsyabr"
+                    ],
+                    "lat": 52.64143,
+                    "lon": 28.91531,
+                    "children": []
+                  },
+                  {
+                    "name": "Braginskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Braginski Rajon",
+                      "Braginskij Rajon",
+                      "Braginskiy Rayon"
+                    ],
+                    "lat": 51.64919,
+                    "lon": 30.36279,
+                    "children": []
+                  },
+                  {
+                    "name": "Buda-Koshelevskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Buda-Kasaliouski Rajon",
+                      "Buda-Kashaljouski Rajon",
+                      "Buda-Kashalyova District"
+                    ],
+                    "lat": 52.70843,
+                    "lon": 30.56726,
+                    "children": []
+                  },
+                  {
+                    "name": "Checherskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cacersk",
+                      "Cacersk District",
+                      "Chachehrski Rajon"
+                    ],
+                    "lat": 52.94092,
+                    "lon": 31.00721,
+                    "children": []
+                  },
+                  {
+                    "name": "Chojnicki rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chojnicki rajon",
+                      "Khoiniki District",
+                      "Khojnicki rajon"
+                    ],
+                    "lat": 51.91667,
+                    "lon": 29.91667,
+                    "children": []
+                  },
+                  {
+                    "name": "Dobrush City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dobrush",
+                      "Dobrush City",
+                      "Gorod Dobrush"
+                    ],
+                    "lat": 52.40944,
+                    "lon": 31.32278,
+                    "children": []
+                  },
+                  {
+                    "name": "Dobrush District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dobrus Rajon",
+                      "Dobrush District",
+                      "Dobrushski Rayon"
+                    ],
+                    "lat": 52.33333,
+                    "lon": 31.41667,
+                    "children": []
+                  },
+                  {
+                    "name": "Gomel’skiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gomel District",
+                      "Gomel'ski Rajon",
+                      "Gomel'skij Rajon"
+                    ],
+                    "lat": 52.32017,
+                    "lon": 30.96655,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Homyel’",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gomel'",
+                      "Gomel’",
+                      "Gorad Gomel'"
+                    ],
+                    "lat": 52.44167,
+                    "lon": 30.98333,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Kalinkavichy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Kalinkovichi",
+                      "Horad Kalinkavichy",
+                      "Kalinkavichy"
+                    ],
+                    "lat": 52.13333,
+                    "lon": 29.32889,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Mazyr",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Mozyr'",
+                      "Gorod Mozyr’",
+                      "Horad Mazyr"
+                    ],
+                    "lat": 52.05,
+                    "lon": 29.26667,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Zhlobin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Zhlobin",
+                      "Horad Zhlobin",
+                      "Zhlobin"
+                    ],
+                    "lat": 52.89222,
+                    "lon": 30.02806,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalinkovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kalinkavichy District",
+                      "Kalinkavichy District",
+                      "Kalinkavicki Rajon"
+                    ],
+                    "lat": 52.23433,
+                    "lon": 29.4425,
+                    "children": []
+                  },
+                  {
+                    "name": "Kormyanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karma",
+                      "Karma District",
+                      "Karmianski Rajon"
+                    ],
+                    "lat": 53.13046,
+                    "lon": 30.83862,
+                    "children": []
+                  },
+                  {
+                    "name": "Lel’chitskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lel'chanski rajon",
+                      "Lel'chenskij rajon",
+                      "Lel'chickij Rajon"
+                    ],
+                    "lat": 51.78495,
+                    "lon": 28.12541,
+                    "children": []
+                  },
+                  {
+                    "name": "Loyevskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Loeuski Rajon",
+                      "Loevskij Rajon",
+                      "Loyevskiy Rayon"
+                    ],
+                    "lat": 51.9711,
+                    "lon": 30.64704,
+                    "children": []
+                  },
+                  {
+                    "name": "Mozyrskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mazyr District",
+                      "Mazyr Raion",
+                      "Mazyrski Raion"
+                    ],
+                    "lat": 51.9831,
+                    "lon": 29.02778,
+                    "children": []
+                  },
+                  {
+                    "name": "Narovlyanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Naraulianski Rajon",
+                      "Narauljanski Rajon",
+                      "Narawlyanski Rayon"
+                    ],
+                    "lat": 51.61614,
+                    "lon": 29.48991,
+                    "children": []
+                  },
+                  {
+                    "name": "Petrikovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Petrikovskij Rajon",
+                      "Petrikovskiy Rayon",
+                      "Petrykauskaga Rayon"
+                    ],
+                    "lat": 52.28524,
+                    "lon": 28.5678,
+                    "children": []
+                  },
+                  {
+                    "name": "Rahachow City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Rogachev",
+                      "Horad Rahachow",
+                      "Ragachou"
+                    ],
+                    "lat": 53.085,
+                    "lon": 30.05,
+                    "children": []
+                  },
+                  {
+                    "name": "Rahachow District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ragachouski rajon",
+                      "Rahachow",
+                      "Rahachow District"
+                    ],
+                    "lat": 53.16667,
+                    "lon": 30.16667,
+                    "children": []
+                  },
+                  {
+                    "name": "Rechitskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rechickij Rajon",
+                      "Rechitskiy Rayon",
+                      "Rechytsa"
+                    ],
+                    "lat": 52.31101,
+                    "lon": 30.2431,
+                    "children": []
+                  },
+                  {
+                    "name": "Svietlahorsk City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Svetlogorsk",
+                      "Horad Svyetlahorsk",
+                      "Svetlagorsk"
+                    ],
+                    "lat": 52.62917,
+                    "lon": 29.73389,
+                    "children": []
+                  },
+                  {
+                    "name": "Svietlahorsk District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Parichskiy Rayon",
+                      "Svetlagorski rajon",
+                      "Svetlogorskij rajon"
+                    ],
+                    "lat": 52.75,
+                    "lon": 29.5,
+                    "children": []
+                  },
+                  {
+                    "name": "Uvarovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Uvaravicki rajon",
+                      "Uvarovichskij rajon",
+                      "Uvarovichskiy Rayon"
+                    ],
+                    "lat": 52.58333,
+                    "lon": 30.66667,
+                    "children": []
+                  },
+                  {
+                    "name": "Vetkovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vetka District",
+                      "Vetkauski Rajon",
+                      "Vetkovskij Rajon"
+                    ],
+                    "lat": 52.70927,
+                    "lon": 31.25966,
+                    "children": []
+                  },
+                  {
+                    "name": "Yel’skiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "El'ski Rajon",
+                      "El'skij Rajon",
+                      "Jelsk Rajon"
+                    ],
+                    "lat": 51.69812,
+                    "lon": 28.89937,
+                    "children": []
+                  },
+                  {
+                    "name": "Zhitkovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zhitkovichskij Rajon",
+                      "Zhitkovichskiy Rayon",
+                      "Zhytkavichy"
+                    ],
+                    "lat": 52.24247,
+                    "lon": 27.80049,
+                    "children": []
+                  },
+                  {
+                    "name": "Zhlobinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zhlobin",
+                      "Zhlobin District",
+                      "Zhlobinski Rajon"
+                    ],
+                    "lat": 52.8123,
+                    "lon": 29.9511,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Horad Minsk",
+                "type": "admin1",
+                "aliases": [
+                  "Bin-su-khek",
+                  "Bín-su-khek",
+                  "Dooʼawoshii Yílį́",
+                  "Gorad Minsk"
+                ],
+                "lat": 53.887562,
+                "lon": 27.582099,
+                "children": [
+                  {
+                    "name": "Frunzyenski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Frunzenski rajon",
+                      "Frunzenskij rajon",
+                      "Frunzenskiy Rayon"
+                    ],
+                    "lat": 53.90056,
+                    "lon": 27.495,
+                    "children": []
+                  },
+                  {
+                    "name": "Kastrychnitski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kaganovichskij rajon",
+                      "Kaganovicki rajon",
+                      "Kastrychnicki rajon"
+                    ],
+                    "lat": 53.85667,
+                    "lon": 27.54139,
+                    "children": []
+                  },
+                  {
+                    "name": "Lyeninski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Leninski rajon",
+                      "Leninskij rajon",
+                      "Leninskiy Rayon"
+                    ],
+                    "lat": 53.85944,
+                    "lon": 27.58778,
+                    "children": []
+                  },
+                  {
+                    "name": "Maskowski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Maskouski rajon",
+                      "Maskowski District",
+                      "Maskowski Rayon"
+                    ],
+                    "lat": 53.87417,
+                    "lon": 27.50278,
+                    "children": []
+                  },
+                  {
+                    "name": "Partyzanski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Partizanskij rajon",
+                      "Partizanskiy Rayon",
+                      "Partyzanski District"
+                    ],
+                    "lat": 53.88028,
+                    "lon": 27.67,
+                    "children": []
+                  },
+                  {
+                    "name": "Pyershamayski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pershamajski rajon",
+                      "Pervomajskij rajon",
+                      "Pervomayskiy Rayon"
+                    ],
+                    "lat": 53.91944,
+                    "lon": 27.62222,
+                    "children": []
+                  },
+                  {
+                    "name": "Savyetski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Savecki rajon",
+                      "Savyetski District",
+                      "Savyetski Rayon"
+                    ],
+                    "lat": 53.91778,
+                    "lon": 27.59417,
+                    "children": []
+                  },
+                  {
+                    "name": "Tsentral’ny Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cehntral'ny rajon",
+                      "Central'nyj rajon",
+                      "Tsentral'ny Rayon"
+                    ],
+                    "lat": 53.91778,
+                    "lon": 27.56333,
+                    "children": []
+                  },
+                  {
+                    "name": "Zavodski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stalinski rajon",
+                      "Stalinskij rajon",
+                      "Stalinskiy Rayon"
+                    ],
+                    "lat": 53.86194,
+                    "lon": 27.66222,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Minsk Oblast",
+                "type": "admin1",
+                "aliases": [
+                  "Khu vuc Minsk",
+                  "Khu vực Minsk",
+                  "Mins'ka oblast'",
+                  "Minschy oblaest"
+                ],
+                "lat": 53.75245,
+                "lon": 27.516793,
+                "children": [
+                  {
+                    "name": "Barysaw",
+                    "type": "admin2",
+                    "aliases": [
+                      "Barysau",
+                      "Borisov",
+                      "Horad Barysaw"
+                    ],
+                    "lat": 54.22556,
+                    "lon": 28.49139,
+                    "children": []
+                  },
+                  {
+                    "name": "Berezinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berazino Raion",
+                      "Berezinskij Rajon",
+                      "Berezinskiy Rayon"
+                    ],
+                    "lat": 53.82931,
+                    "lon": 29.0474,
+                    "children": []
+                  },
+                  {
+                    "name": "Borisovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Barysauski Rajon",
+                      "Barysauski rajon Borisovskij rajon",
+                      "Barysaw"
+                    ],
+                    "lat": 54.3254,
+                    "lon": 28.54435,
+                    "children": [
+                      {
+                        "name": "Barysaw",
+                        "type": "admin3",
+                        "lat": 54.2279,
+                        "lon": 28.505
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Chervenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chehrven'ski Rajon",
+                      "Chervenskij Rajon",
+                      "Chervenskiy Rayon"
+                    ],
+                    "lat": 53.74531,
+                    "lon": 28.43752,
+                    "children": []
+                  },
+                  {
+                    "name": "Dzerzhinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dzerzhinskij Rajon",
+                      "Dzerzhinskiy Rayon",
+                      "Dzjarzhynski Rajon"
+                    ],
+                    "lat": 53.69126,
+                    "lon": 27.15148,
+                    "children": [
+                      {
+                        "name": "Fanipol",
+                        "type": "admin3",
+                        "lat": 53.74998,
+                        "lon": 27.33338
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Horad Dzyarzhynsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dzerzhinsk",
+                      "Dzjarzhynsk",
+                      "Gorod Dzerzhinsk"
+                    ],
+                    "lat": 53.685,
+                    "lon": 27.14194,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Slutsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Slutsk",
+                      "Horad Slutsk",
+                      "Sluck"
+                    ],
+                    "lat": 53.02722,
+                    "lon": 27.56194,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Vilyeyka",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Vilejka",
+                      "Gorod Vileyka",
+                      "Horad Vilyeyka"
+                    ],
+                    "lat": 54.4975,
+                    "lon": 26.92111,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Zaslawye",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Zaslavl'",
+                      "Gorod Zaslavl’",
+                      "Horad Zaslawye"
+                    ],
+                    "lat": 54,
+                    "lon": 27.28333,
+                    "children": []
+                  },
+                  {
+                    "name": "Kapyĺski Rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kapyl",
+                      "Kapyl District",
+                      "Kapyl Raion"
+                    ],
+                    "lat": 53.16667,
+                    "lon": 27.08333,
+                    "children": []
+                  },
+                  {
+                    "name": "Kletskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klecki Rajon",
+                      "Kleckij Rajon",
+                      "Kletsk"
+                    ],
+                    "lat": 52.94764,
+                    "lon": 26.68628,
+                    "children": []
+                  },
+                  {
+                    "name": "Krupskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krupki",
+                      "Krupki District",
+                      "Krupki Raion"
+                    ],
+                    "lat": 54.33127,
+                    "lon": 29.16298,
+                    "children": []
+                  },
+                  {
+                    "name": "Logoyskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lagojski Rajon",
+                      "Lahoysk",
+                      "Lahoysk District"
+                    ],
+                    "lat": 54.35988,
+                    "lon": 27.81206,
+                    "children": [
+                      {
+                        "name": "Logoysk",
+                        "type": "admin3",
+                        "lat": 54.2064,
+                        "lon": 27.8512
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lyubanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ljubanski Rajon",
+                      "Ljubanskij Rajon",
+                      "Lyuban"
+                    ],
+                    "lat": 52.71772,
+                    "lon": 28.10306,
+                    "children": []
+                  },
+                  {
+                    "name": "Maladzyechna City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Maladzechna",
+                      "Gorod Molodechno",
+                      "Horad Maladzyechna"
+                    ],
+                    "lat": 54.31667,
+                    "lon": 26.84972,
+                    "children": []
+                  },
+                  {
+                    "name": "Maladzyechna District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Maladzechanski Rajon",
+                      "Maladzyechanski Rayon",
+                      "Maladzyechna"
+                    ],
+                    "lat": 54.25,
+                    "lon": 26.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Minskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Minsk",
+                      "Minsk District",
+                      "Minsk Raion"
+                    ],
+                    "lat": 53.93301,
+                    "lon": 27.51189,
+                    "children": []
+                  },
+                  {
+                    "name": "Molodechnenskij Rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Maladzechanskaja voblasc'",
+                      "Maladzechanski Voblasj",
+                      "Molodechenskaja oblast'"
+                    ],
+                    "lat": 54.75,
+                    "lon": 26.75,
+                    "children": []
+                  },
+                  {
+                    "name": "Myadel’skiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mjadel'skij Rajon",
+                      "Mjadzel'ski Rajon",
+                      "Myadel'skiy Rayon"
+                    ],
+                    "lat": 54.83451,
+                    "lon": 26.95251,
+                    "children": []
+                  },
+                  {
+                    "name": "Nesvizhskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nesvizhskij Rajon",
+                      "Nesvizhskiy Rayon",
+                      "Njasvizhski Rajon"
+                    ],
+                    "lat": 53.23138,
+                    "lon": 26.6068,
+                    "children": []
+                  },
+                  {
+                    "name": "Pukhavichy Raion",
+                    "type": "admin2",
+                    "aliases": [
+                      "Puchavicy",
+                      "Puchavicy District",
+                      "Puchavičy"
+                    ],
+                    "lat": 53.5,
+                    "lon": 28,
+                    "children": []
+                  },
+                  {
+                    "name": "Salihorsk City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Soligorsk",
+                      "Horad Salihorsk",
+                      "Saligorsk"
+                    ],
+                    "lat": 52.8,
+                    "lon": 27.53333,
+                    "children": []
+                  },
+                  {
+                    "name": "Salihorsk District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Saligorski rajon",
+                      "Salihorsk",
+                      "Salihorsk District"
+                    ],
+                    "lat": 52.66667,
+                    "lon": 27.41667,
+                    "children": []
+                  },
+                  {
+                    "name": "Slutskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Slucki Rajon",
+                      "Sluckij Rajon",
+                      "Slutsk"
+                    ],
+                    "lat": 53.08778,
+                    "lon": 27.59795,
+                    "children": []
+                  },
+                  {
+                    "name": "Smolevichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Smaljavicki Rajon",
+                      "Smaljavickki Rajon",
+                      "Smalyavichy"
+                    ],
+                    "lat": 54.00191,
+                    "lon": 28.14448,
+                    "children": []
+                  },
+                  {
+                    "name": "Starodorozhskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Staradarozhski Rajon",
+                      "Staradarozhski Rayon",
+                      "Starodorozhskij Rajon"
+                    ],
+                    "lat": 53.04501,
+                    "lon": 28.22262,
+                    "children": []
+                  },
+                  {
+                    "name": "Stolbtsovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Staubcouski Rajon",
+                      "Stawbtsowski Rayon",
+                      "Stolbcovskij Rajon"
+                    ],
+                    "lat": 53.62684,
+                    "lon": 26.65103,
+                    "children": []
+                  },
+                  {
+                    "name": "Uzdenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Uzda",
+                      "Uzda District",
+                      "Uzdenskij Rajon"
+                    ],
+                    "lat": 53.44386,
+                    "lon": 27.29975,
+                    "children": []
+                  },
+                  {
+                    "name": "Vileyskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vilejski Rajon",
+                      "Vilejskij Rajon",
+                      "Vileyka"
+                    ],
+                    "lat": 54.5,
+                    "lon": 27.08333,
+                    "children": []
+                  },
+                  {
+                    "name": "Volozhinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Valozhyn",
+                      "Valozhyn District",
+                      "Valozhyn Raion"
+                    ],
+                    "lat": 54.03611,
+                    "lon": 26.62222,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Mogilyov Oblast",
+                "type": "admin1",
+                "aliases": [
+                  "Magiljouskaja Voblasc'",
+                  "Mahiliow",
+                  "Mahilyowskaya Voblasts'",
+                  "Mahilyowskaya Voblastsʼ"
+                ],
+                "lat": 53.610677,
+                "lon": 30.432089,
+                "children": [
+                  {
+                    "name": "Belynichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belynichskij Rajon",
+                      "Belynichskiy Rayon",
+                      "Bjalynicki Rajon"
+                    ],
+                    "lat": 53.92779,
+                    "lon": 29.69505,
+                    "children": []
+                  },
+                  {
+                    "name": "Bobruyskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Babrujsk",
+                      "Babrujski Rajon",
+                      "Babruysk"
+                    ],
+                    "lat": 53.08333,
+                    "lon": 29.16667,
+                    "children": []
+                  },
+                  {
+                    "name": "Bykhovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bychaw Raion",
+                      "Bykhauski Rajon",
+                      "Bykhaw"
+                    ],
+                    "lat": 53.47739,
+                    "lon": 30.23762,
+                    "children": []
+                  },
+                  {
+                    "name": "Chausskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chauskij rajon",
+                      "Chausskij Rajon",
+                      "Chausskiy Rayon"
+                    ],
+                    "lat": 53.7955,
+                    "lon": 30.91455,
+                    "children": []
+                  },
+                  {
+                    "name": "Cherikovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chehrykauski Rajon",
+                      "Cherikovskij Rajon",
+                      "Cherikovskiy Rayon"
+                    ],
+                    "lat": 53.58063,
+                    "lon": 31.37336,
+                    "children": []
+                  },
+                  {
+                    "name": "Dribinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dribinskij Rajon",
+                      "Dribinskiy Rayon",
+                      "Drybin"
+                    ],
+                    "lat": 54.08199,
+                    "lon": 30.95863,
+                    "children": []
+                  },
+                  {
+                    "name": "Glusskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gluski Rajon",
+                      "Glusskij Rajon",
+                      "Glusskiy Rayon"
+                    ],
+                    "lat": 52.89109,
+                    "lon": 28.68645,
+                    "children": []
+                  },
+                  {
+                    "name": "Goretskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Goracki Rajon",
+                      "Goreckij Rajon",
+                      "Goretskiy Rayon"
+                    ],
+                    "lat": 54.22582,
+                    "lon": 31.00069,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Asipovichy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Asipovichy",
+                      "Gorod Osipovichi",
+                      "Horad Asipovichy"
+                    ],
+                    "lat": 53.29333,
+                    "lon": 28.64222,
+                    "children": []
+                  },
+                  {
+                    "name": "Khotimskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Khocimski Rajon",
+                      "Khotimskij Rajon",
+                      "Khotimskiy Rayon"
+                    ],
+                    "lat": 53.38133,
+                    "lon": 32.4573,
+                    "children": []
+                  },
+                  {
+                    "name": "Kirawsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kirausk",
+                      "Kirovsk",
+                      "Кировск"
+                    ],
+                    "lat": 53.27292,
+                    "lon": 29.47426,
+                    "children": []
+                  },
+                  {
+                    "name": "Kirovskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kirauski Rajon",
+                      "Kirawsk",
+                      "Kirawsk District"
+                    ],
+                    "lat": 53.31733,
+                    "lon": 29.56901,
+                    "children": []
+                  },
+                  {
+                    "name": "Klichevskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klichauski Rajon",
+                      "Klichaw",
+                      "Klichaw District"
+                    ],
+                    "lat": 53.53417,
+                    "lon": 29.3536,
+                    "children": []
+                  },
+                  {
+                    "name": "Klimovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klimavichy",
+                      "Klimavichy District",
+                      "Klimavichy Raion"
+                    ],
+                    "lat": 53.59821,
+                    "lon": 32.04804,
+                    "children": []
+                  },
+                  {
+                    "name": "Kostyukovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kascjukovicki Rajon",
+                      "Kastsyukovichy",
+                      "Kastsyukovichy District"
+                    ],
+                    "lat": 53.26654,
+                    "lon": 32.01015,
+                    "children": []
+                  },
+                  {
+                    "name": "Krasnopol’skiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krasnapol'ski Rajon",
+                      "Krasnapol'ski Rayon",
+                      "Krasnapolle"
+                    ],
+                    "lat": 53.28417,
+                    "lon": 31.38861,
+                    "children": []
+                  },
+                  {
+                    "name": "Krichevskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krichevskij Rajon",
+                      "Krichevskiy Rayon",
+                      "Krychauski Rajon"
+                    ],
+                    "lat": 53.7412,
+                    "lon": 31.62776,
+                    "children": []
+                  },
+                  {
+                    "name": "Kruglyanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Krugljanski Rajon",
+                      "Krugljanskij Rajon",
+                      "Kruglyanskiy Rayon"
+                    ],
+                    "lat": 54.19669,
+                    "lon": 29.71229,
+                    "children": []
+                  },
+                  {
+                    "name": "Mahilyow",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorod Mogilev",
+                      "Horad Mahilyow",
+                      "Magiljou"
+                    ],
+                    "lat": 53.91389,
+                    "lon": 30.33639,
+                    "children": []
+                  },
+                  {
+                    "name": "Mahilyowski Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Magiljouski Rajon",
+                      "Mahilyow Raion",
+                      "Mahilyowski Rayon"
+                    ],
+                    "lat": 53.83725,
+                    "lon": 30.28754,
+                    "children": []
+                  },
+                  {
+                    "name": "Mstislavskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mscislauski Rajon",
+                      "Mstislavskij Rajon",
+                      "Mstislavskiy Rayon"
+                    ],
+                    "lat": 54.00846,
+                    "lon": 31.51922,
+                    "children": [
+                      {
+                        "name": "Mscislau",
+                        "type": "admin3",
+                        "lat": 54.0185,
+                        "lon": 31.7217
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Osipovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Asipovichy",
+                      "Asipovichy District",
+                      "Asipovichy Raion"
+                    ],
+                    "lat": 53.3402,
+                    "lon": 28.66371,
+                    "children": []
+                  },
+                  {
+                    "name": "Škloŭski Rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Shklouski rajon",
+                      "Shklovskij rajon",
+                      "Shklovskiy Rayon"
+                    ],
+                    "lat": 54.16667,
+                    "lon": 30.33333,
+                    "children": []
+                  },
+                  {
+                    "name": "Slavgorodskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Propoyskiy Rayon",
+                      "Slaugaradski Rajon",
+                      "Slavgorodskij Rajon"
+                    ],
+                    "lat": 53.44034,
+                    "lon": 30.91368,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Vitebsk Oblast",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Vitebsk",
+                  "Khu vuc Vitebsk",
+                  "Khu vực Vitebsk",
+                  "Provincia de Vitebsk"
+                ],
+                "lat": 55.174098,
+                "lon": 28.98557,
+                "children": [
+                  {
+                    "name": "Beshenkovichskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beshankovichy",
+                      "Beshankovichy District",
+                      "Beshankovicki Rajon"
+                    ],
+                    "lat": 55,
+                    "lon": 29.5,
+                    "children": []
+                  },
+                  {
+                    "name": "Braslaŭski rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Braslauski Rajon",
+                      "Braslauski rajon",
+                      "Braslavskij rajon"
+                    ],
+                    "lat": 55.55972,
+                    "lon": 27,
+                    "children": []
+                  },
+                  {
+                    "name": "Chashnikskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chashnicki Rajon",
+                      "Chashnickij rajon",
+                      "Chashniki"
+                    ],
+                    "lat": 54.74016,
+                    "lon": 29.15501,
+                    "children": [
+                      {
+                        "name": "Novolukoml’",
+                        "type": "admin3",
+                        "lat": 54.66192,
+                        "lon": 29.15016
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dokshitskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dokshickij Rajon",
+                      "Dokshitskiy Rayon",
+                      "Dokshycki Rajon"
+                    ],
+                    "lat": 54.8479,
+                    "lon": 27.89193,
+                    "children": []
+                  },
+                  {
+                    "name": "Dubrovenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dubrouna District",
+                      "Dubrovenski Rajon",
+                      "Dubrovenskij Rajon"
+                    ],
+                    "lat": 54.60024,
+                    "lon": 30.85787,
+                    "children": []
+                  },
+                  {
+                    "name": "Gorodokskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Garadocki Rajon",
+                      "Gorodeckij rajon",
+                      "Gorodokskij Rajon"
+                    ],
+                    "lat": 55.61781,
+                    "lon": 30.09793,
+                    "children": []
+                  },
+                  {
+                    "name": "Hlybocki Rajon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Glubokskij rajon",
+                      "Glubokskiy Rayon",
+                      "Glybocki rajon"
+                    ],
+                    "lat": 55.16667,
+                    "lon": 27.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Lyepyel’",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Lepel'",
+                      "Gorod Lepel'",
+                      "Gorod Lepel’"
+                    ],
+                    "lat": 54.88333,
+                    "lon": 28.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Navapolatsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Navapolack",
+                      "Gorod Novopolock",
+                      "Gorod Novopolotsk"
+                    ],
+                    "lat": 55.52917,
+                    "lon": 28.64306,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Polatsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Polack",
+                      "Gorod Polotsk",
+                      "Horad Polatsk"
+                    ],
+                    "lat": 55.48556,
+                    "lon": 28.80417,
+                    "children": []
+                  },
+                  {
+                    "name": "Horad Vitsyebsk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gorad Vicebsk",
+                      "Gorod Vitebsk",
+                      "Horad Vitsyebsk"
+                    ],
+                    "lat": 55.1925,
+                    "lon": 30.19444,
+                    "children": []
+                  },
+                  {
+                    "name": "Lepel’skiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lepel'ski Rajon",
+                      "Lepel'skij Rajon",
+                      "Lepel'skiy Rayon"
+                    ],
+                    "lat": 54.8361,
+                    "lon": 28.67028,
+                    "children": []
+                  },
+                  {
+                    "name": "Lioznenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Liozna",
+                      "Liozna District",
+                      "Liozna Raion"
+                    ],
+                    "lat": 55.01623,
+                    "lon": 30.68596,
+                    "children": [
+                      {
+                        "name": "Liozno",
+                        "type": "admin3",
+                        "lat": 55.0199,
+                        "lon": 30.7969
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Miorskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Miorskij Rajon",
+                      "Miorskiy Rayon",
+                      "Miyorski Rayon"
+                    ],
+                    "lat": 55.5884,
+                    "lon": 27.80494,
+                    "children": []
+                  },
+                  {
+                    "name": "Orshanskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arshanski Rajon",
+                      "Arshanski Rayon",
+                      "Orsha"
+                    ],
+                    "lat": 54.54166,
+                    "lon": 30.3654,
+                    "children": []
+                  },
+                  {
+                    "name": "Polotskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Polacki Rajon",
+                      "Polatsk Raion",
+                      "Polatski Rayon"
+                    ],
+                    "lat": 55.52127,
+                    "lon": 28.84515,
+                    "children": []
+                  },
+                  {
+                    "name": "Postavskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pastauski Rajon",
+                      "Pastavy",
+                      "Pastavy District"
+                    ],
+                    "lat": 55.10387,
+                    "lon": 26.9107,
+                    "children": []
+                  },
+                  {
+                    "name": "Rossonskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rasonski Rajon",
+                      "Rasonski Rayon",
+                      "Rasony"
+                    ],
+                    "lat": 55.88906,
+                    "lon": 28.8653,
+                    "children": []
+                  },
+                  {
+                    "name": "Sennenskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Senneckij rajon",
+                      "Sennenski Rajon",
+                      "Sennenskij Rajon"
+                    ],
+                    "lat": 54.80914,
+                    "lon": 29.9005,
+                    "children": []
+                  },
+                  {
+                    "name": "Sharkovshchinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sharkaushchyna",
+                      "Sharkaushchyna Raion",
+                      "Sharkaushchynski Rajon"
+                    ],
+                    "lat": 55.38341,
+                    "lon": 27.53922,
+                    "children": []
+                  },
+                  {
+                    "name": "Shumilinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Shumilina",
+                      "Shumilina District",
+                      "Shumilina Raion"
+                    ],
+                    "lat": 55.31918,
+                    "lon": 29.46737,
+                    "children": []
+                  },
+                  {
+                    "name": "Tolochinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Talachyn",
+                      "Talachyn District",
+                      "Talachyn Raion"
+                    ],
+                    "lat": 54.44572,
+                    "lon": 29.74611,
+                    "children": []
+                  },
+                  {
+                    "name": "Ushachskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ushachskij Rajon",
+                      "Ushachskiy Rayon",
+                      "Ushachy"
+                    ],
+                    "lat": 55.13432,
+                    "lon": 28.6591,
+                    "children": [
+                      {
+                        "name": "Ushachi",
+                        "type": "admin3",
+                        "lat": 55.17611,
+                        "lon": 28.61949
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Verkhnedvinskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Drissenskiy Rayon",
+                      "Verkhnedvinskij Rajon",
+                      "Verkhnedvinskiy Rayon"
+                    ],
+                    "lat": 55.87246,
+                    "lon": 28.12037,
+                    "children": []
+                  },
+                  {
+                    "name": "Vitebskiy Rayon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vicebski Rajon",
+                      "Vitebsk",
+                      "Vitebsk District"
+                    ],
+                    "lat": 55.26857,
+                    "lon": 30.3811,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

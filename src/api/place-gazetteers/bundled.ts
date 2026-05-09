@@ -50,6 +50,9 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'cz-okresy', 'sk-okresy', 'hu-jarasok', 'si-obcine', 'hr-zupanije',
   'ba-opstine', 'rs-okruzi', 'me-opstine', 'mk-opstini', 'al-bashkite',
   'xk-komunat', 'lu-communes',
+  // Tier 2 Eastern Europe
+  'bg-obshtini', 'ro-judete', 'md-raioane', 'gr-dimoi', 'cy-eparchies',
+  'by-rajony', 'ua-oblasti', 'fo-kommunur', 'gl-kommune',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -190,6 +193,16 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'al-bashkite': { stripSuffixes: ['qark', 'bashki', 'njësia administrative'] },
   'xk-komunat': { stripSuffixes: ['komuna', 'distrikti'] },
   'lu-communes': { stripSuffixes: ['canton', 'commune', 'ville', 'district'], stripPrefixes: ['canton de', 'commune de', 'ville de', 'district de'] },
+  // Tier 2 Eastern Europe
+  'bg-obshtini': { stripSuffixes: ['oblast', 'obshtina', 'naseleno mjasto', 'град', 'общи́на', 'област'], stripPrefixes: ['град'] },
+  'ro-judete': { stripSuffixes: ['județ', 'comună', 'municipiu', 'oraș', 'sat'], stripPrefixes: ['județul'] },
+  'md-raioane': { stripSuffixes: ['raion', 'municipiu', 'comună', 'sat'] },
+  'gr-dimoi': { stripSuffixes: ['Periféria', 'Dímos', 'Periferiakí enótita', 'Koinótita', 'Περιφέρεια', 'Δήμος', 'Κοινότητα'] },
+  'cy-eparchies': { stripSuffixes: ['Eparchia', 'Επαρχία', 'Δήμος', 'Belediye'] },
+  'by-rajony': { stripSuffixes: ['voblast', 'rayon', 'sielsavet', 'voblasć', 'вобласьць', 'раён'] },
+  'ua-oblasti': { stripSuffixes: ['oblast', 'hromada', 'rayon', 'selyshche', 'область', 'громада', 'район'] },
+  'fo-kommunur': { stripSuffixes: ['kommuna', 'kommunu'] },
+  'gl-kommune': { stripSuffixes: ['kommune', 'Kommunia'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

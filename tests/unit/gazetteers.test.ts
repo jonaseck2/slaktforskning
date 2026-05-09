@@ -7,8 +7,8 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 62 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(62);
+  it('loads all 71 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(71);
   });
 
   const dataIds = [
@@ -28,6 +28,8 @@ describe('bundled gazetteers', () => {
     'cz-okresy', 'sk-okresy', 'hu-jarasok', 'si-obcine', 'hr-zupanije',
     'ba-opstine', 'rs-okruzi', 'me-opstine', 'mk-opstini', 'al-bashkite',
     'xk-komunat', 'lu-communes',
+    'bg-obshtini', 'ro-judete', 'md-raioane', 'gr-dimoi', 'cy-eparchies',
+    'by-rajony', 'ua-oblasti', 'fo-kommunur', 'gl-kommune',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',

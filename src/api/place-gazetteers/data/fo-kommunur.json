@@ -1,0 +1,476 @@
+{
+  "id": "fo-kommunur",
+  "name": "Faroe Islands Kommunur",
+  "locale": "fo",
+  "description": "Faroe Islands (Danish dependency, treated as standalone gazetteer per roadmap § 2.1): 6 sýslur/regions (admin1) + 29 kommunur (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/FO.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Faroe Islands",
+            "type": "country",
+            "aliases": [
+              "Føroyar",
+              "Færøerne"
+            ],
+            "lat": 62,
+            "lon": -7,
+            "children": [
+              {
+                "name": "Eysturoyar sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Ejsturi",
+                  "Ejstүraj",
+                  "Eysturoy",
+                  "Eysturoy region"
+                ],
+                "lat": 62.169068,
+                "lon": -6.823866,
+                "children": [
+                  {
+                    "name": "Eiði",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aji",
+                      "Eidhi",
+                      "Eidi Municipality"
+                    ],
+                    "lat": 62.30086,
+                    "lon": -7.08541,
+                    "children": []
+                  },
+                  {
+                    "name": "Eystur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Eystur Municipality"
+                    ],
+                    "lat": 62.20747,
+                    "lon": -6.79367,
+                    "children": []
+                  },
+                  {
+                    "name": "Nes",
+                    "type": "admin2",
+                    "aliases": [
+                      "Naes",
+                      "Nes",
+                      "Næs"
+                    ],
+                    "lat": 62.09553,
+                    "lon": -6.72089,
+                    "children": []
+                  },
+                  {
+                    "name": "Runavík",
+                    "type": "admin2",
+                    "lat": 62.10677,
+                    "lon": -6.7202,
+                    "children": []
+                  },
+                  {
+                    "name": "Sjóvar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sjovar Municipality",
+                      "Sjóvar Municipality"
+                    ],
+                    "lat": 62.13471,
+                    "lon": -6.79916,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Norðoyar sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Norderoernes Syssel",
+                  "Norderøernes Syssel",
+                  "Nordojar",
+                  "Nordoyar"
+                ],
+                "lat": 62.308504,
+                "lon": -6.520932,
+                "children": [
+                  {
+                    "name": "Fugloy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Founkloi",
+                      "Fugley",
+                      "Fuglo"
+                    ],
+                    "lat": 62.33686,
+                    "lon": -6.29791,
+                    "children": []
+                  },
+                  {
+                    "name": "Hvannasund",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hvannasund",
+                      "Kvannesund"
+                    ],
+                    "lat": 62.29667,
+                    "lon": -6.55334,
+                    "children": []
+                  },
+                  {
+                    "name": "Klaksvik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klaksvig",
+                      "Klaksvik",
+                      "Klaksvikar"
+                    ],
+                    "lat": 62.22636,
+                    "lon": -6.54922,
+                    "children": [
+                      {
+                        "name": "Klaksvík",
+                        "type": "admin3",
+                        "lat": 62.22655,
+                        "lon": -6.58901
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kunoy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kuno",
+                      "Kunoy",
+                      "Kunø"
+                    ],
+                    "lat": 62.31964,
+                    "lon": -6.67419,
+                    "children": []
+                  },
+                  {
+                    "name": "Viðareiði",
+                    "type": "admin2",
+                    "aliases": [
+                      "Viderejde",
+                      "Vidhareidhi",
+                      "Viðareiði"
+                    ],
+                    "lat": 62.36299,
+                    "lon": -6.53,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Sandoyar Sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Sandaj",
+                  "Sandi",
+                  "Sando Syssel",
+                  "Sandoj"
+                ],
+                "lat": 61.831816,
+                "lon": -6.77465,
+                "children": [
+                  {
+                    "name": "Húsavík",
+                    "type": "admin2",
+                    "aliases": [
+                      "Husavik",
+                      "Husavikar",
+                      "Husavikar kommuna"
+                    ],
+                    "lat": 61.81207,
+                    "lon": -6.68037,
+                    "children": []
+                  },
+                  {
+                    "name": "Sandur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sand",
+                      "Sandur"
+                    ],
+                    "lat": 61.84449,
+                    "lon": -6.80603,
+                    "children": []
+                  },
+                  {
+                    "name": "Skálavík",
+                    "type": "admin2",
+                    "aliases": [
+                      "Skalavik",
+                      "Skalevig",
+                      "Skálavík"
+                    ],
+                    "lat": 61.83055,
+                    "lon": -6.67557,
+                    "children": []
+                  },
+                  {
+                    "name": "Skopun",
+                    "type": "admin2",
+                    "aliases": [
+                      "Skopen",
+                      "Skopun",
+                      "Skopun Municipality"
+                    ],
+                    "lat": 61.90372,
+                    "lon": -6.88671,
+                    "children": []
+                  },
+                  {
+                    "name": "Skúvoy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Skuo",
+                      "Skuvoy",
+                      "Skuø"
+                    ],
+                    "lat": 61.76825,
+                    "lon": -6.82457,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Streymoyar Sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Strejmi",
+                  "Streymoy",
+                  "Streymoy region",
+                  "Streymoyar sysla"
+                ],
+                "lat": 62.154398,
+                "lon": -6.954484,
+                "children": [
+                  {
+                    "name": "Fuglafjørður",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fuglafjordhur",
+                      "Fuglafjørður",
+                      "Fuglefjord"
+                    ],
+                    "lat": 62.25322,
+                    "lon": -6.80054,
+                    "children": []
+                  },
+                  {
+                    "name": "Kvívík",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kvivig",
+                      "Kvivik",
+                      "Kvivik Municipality"
+                    ],
+                    "lat": 62.13005,
+                    "lon": -7.04636,
+                    "children": []
+                  },
+                  {
+                    "name": "Sunda",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sunda Municipality"
+                    ],
+                    "lat": 62.20523,
+                    "lon": -6.98181,
+                    "children": []
+                  },
+                  {
+                    "name": "Tórshavn",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kalbak",
+                      "Thorshavn",
+                      "Torshavn"
+                    ],
+                    "lat": 62.01927,
+                    "lon": -6.77444,
+                    "children": [
+                      {
+                        "name": "Tórshavn",
+                        "type": "admin3",
+                        "lat": 62.00973,
+                        "lon": -6.77164
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Vestmanna",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vestmanhavn",
+                      "Vestmanna",
+                      "Vestmanna Municipality"
+                    ],
+                    "lat": 62.16422,
+                    "lon": -7.16927,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Suðuroyar sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Sudero syssel",
+                  "Suderø syssel",
+                  "Suduri",
+                  "Suduroy"
+                ],
+                "lat": 61.512217,
+                "lon": -6.8128,
+                "children": [
+                  {
+                    "name": "Fámjin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Famien",
+                      "Famjin",
+                      "Famjin Municipality"
+                    ],
+                    "lat": 61.52106,
+                    "lon": -6.86852,
+                    "children": []
+                  },
+                  {
+                    "name": "Hov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hov",
+                      "Hov Municipality",
+                      "Hove"
+                    ],
+                    "lat": 61.51582,
+                    "lon": -6.76895,
+                    "children": []
+                  },
+                  {
+                    "name": "Hvalbøur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hvalba",
+                      "Hvalba Municipality",
+                      "Hvalbour"
+                    ],
+                    "lat": 61.59987,
+                    "lon": -6.96739,
+                    "children": []
+                  },
+                  {
+                    "name": "Porkeri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Porkere",
+                      "Porkeri",
+                      "Porkeri Municipality"
+                    ],
+                    "lat": 61.49158,
+                    "lon": -6.7717,
+                    "children": []
+                  },
+                  {
+                    "name": "Sunnbøur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sumba",
+                      "Sumba Municipality",
+                      "Sumbo"
+                    ],
+                    "lat": 61.42498,
+                    "lon": -6.71883,
+                    "children": []
+                  },
+                  {
+                    "name": "Tvøroyri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tvoroyrar Kommuna",
+                      "Tvøroyrar Kommuna"
+                    ],
+                    "lat": 61.56457,
+                    "lon": -6.78543,
+                    "children": []
+                  },
+                  {
+                    "name": "Vágur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vag",
+                      "Vagur",
+                      "Vagur Municipality"
+                    ],
+                    "lat": 61.46764,
+                    "lon": -6.80878,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Vága Sýsla",
+                "type": "admin1",
+                "aliases": [
+                  "Vaga sysla",
+                  "Vagar",
+                  "Vagar region",
+                  "Vago Syssel"
+                ],
+                "lat": 62.07592,
+                "lon": -7.23209,
+                "children": [
+                  {
+                    "name": "Sørvágur",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sorvag",
+                      "Sorvagur",
+                      "Sørvágur"
+                    ],
+                    "lat": 62.06917,
+                    "lon": -7.30247,
+                    "children": []
+                  },
+                  {
+                    "name": "Vága Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "FAE",
+                      "Vaga",
+                      "Vaga Municipality"
+                    ],
+                    "lat": 62.08267,
+                    "lon": -7.16171,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

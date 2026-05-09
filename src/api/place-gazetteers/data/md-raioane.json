@@ -1,0 +1,926 @@
+{
+  "id": "md-raioane",
+  "name": "Moldova Raioane",
+  "locale": "md",
+  "description": "Moldova: 37 raioane (admin1; no admin2 layer) + populated places ≥5000 pop. Includes Transnistria and Gagauzia per Wikidata model.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/MD.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Moldova",
+            "type": "country",
+            "aliases": [
+              "Republica Moldova",
+              "Молдова"
+            ],
+            "lat": 47,
+            "lon": 28.8,
+            "children": [
+              {
+                "name": "Administrative-Territorial Units of the Left Bank of the Dniester",
+                "type": "admin1",
+                "aliases": [
+                  "Administraj-Teritoriaj Unuoj de la Maldekstra Flanko de Dnestro",
+                  "Administrala-Teritoriala Subdividuro di Sinistrarivala Dnister",
+                  "Administrative territoriale enheder pa venstre bred af Dnestr",
+                  "Administrative territoriale enheder på venstre bred af Dnestr"
+                ],
+                "lat": 47.115149,
+                "lon": 29.446979,
+                "children": [
+                  {
+                    "name": "Blijnii Hutor",
+                    "type": "admin2",
+                    "lat": 46.88754,
+                    "lon": 29.64651
+                  },
+                  {
+                    "name": "Camenca",
+                    "type": "admin2",
+                    "lat": 48.03233,
+                    "lon": 28.69899
+                  },
+                  {
+                    "name": "Dnestrovsc",
+                    "type": "admin2",
+                    "lat": 46.624,
+                    "lon": 29.906
+                  },
+                  {
+                    "name": "Dubăsari",
+                    "type": "admin2",
+                    "lat": 47.26562,
+                    "lon": 29.16667
+                  },
+                  {
+                    "name": "Hryhoriopol",
+                    "type": "admin2",
+                    "lat": 47.15413,
+                    "lon": 29.30008
+                  },
+                  {
+                    "name": "Pervomaisc",
+                    "type": "admin2",
+                    "lat": 46.73253,
+                    "lon": 29.9617
+                  },
+                  {
+                    "name": "Rîbniţa",
+                    "type": "admin2",
+                    "lat": 47.76817,
+                    "lon": 29.01
+                  },
+                  {
+                    "name": "Slobozia",
+                    "type": "admin2",
+                    "lat": 46.72927,
+                    "lon": 29.70446
+                  },
+                  {
+                    "name": "Tiraspol",
+                    "type": "admin2",
+                    "lat": 46.84275,
+                    "lon": 29.6284
+                  }
+                ]
+              },
+              {
+                "name": "Anenii Noi",
+                "type": "admin1",
+                "aliases": [
+                  "AneNij-Noj",
+                  "Aneni Nojas rajons",
+                  "Anenii Noi",
+                  "Anenii Noi District"
+                ],
+                "lat": 46.87795,
+                "lon": 29.23503,
+                "children": [
+                  {
+                    "name": "Anenii Noi",
+                    "type": "admin2",
+                    "lat": 46.87795,
+                    "lon": 29.23503
+                  }
+                ]
+              },
+              {
+                "name": "Basarabeasca",
+                "type": "admin1",
+                "aliases": [
+                  "Basarabeasca",
+                  "Basarabeasca District",
+                  "Basarabeasca jaras",
+                  "Basarabeasca járás"
+                ],
+                "lat": 46.33352,
+                "lon": 28.96165,
+                "children": [
+                  {
+                    "name": "Basarabeasca",
+                    "type": "admin2",
+                    "lat": 46.33352,
+                    "lon": 28.96165
+                  }
+                ]
+              },
+              {
+                "name": "Briceni",
+                "type": "admin1",
+                "aliases": [
+                  "Brican rayonu",
+                  "Briceni",
+                  "Briceni District",
+                  "Briceni ili"
+                ],
+                "lat": 48.36302,
+                "lon": 27.07847,
+                "children": [
+                  {
+                    "name": "Briceni",
+                    "type": "admin2",
+                    "lat": 48.36302,
+                    "lon": 27.07847
+                  }
+                ]
+              },
+              {
+                "name": "Cantemir",
+                "type": "admin1",
+                "aliases": [
+                  "Cantemir",
+                  "Cantemir District",
+                  "Cantemir jaras",
+                  "Cantemir járás"
+                ],
+                "lat": 46.4252,
+                "lon": 28.42676,
+                "children": [
+                  {
+                    "name": "Iargara",
+                    "type": "admin2",
+                    "lat": 46.4252,
+                    "lon": 28.42676
+                  }
+                ]
+              },
+              {
+                "name": "Cimişlia",
+                "type": "admin1",
+                "aliases": [
+                  "Chimishlijs'kij rajon",
+                  "Chimishlijski rajon",
+                  "Chimishlijskij rajon",
+                  "Chimishliyskiy Rayon"
+                ],
+                "lat": 46.52629,
+                "lon": 28.7649,
+                "children": [
+                  {
+                    "name": "Cimişlia",
+                    "type": "admin2",
+                    "lat": 46.52629,
+                    "lon": 28.7649
+                  }
+                ]
+              },
+              {
+                "name": "Criuleni",
+                "type": "admin1",
+                "aliases": [
+                  "Criuleni",
+                  "Criuleni District",
+                  "Criuleni ili",
+                  "Criulenin kaupunginosa"
+                ],
+                "lat": 47.2134,
+                "lon": 29.15847,
+                "children": [
+                  {
+                    "name": "Criuleni",
+                    "type": "admin2",
+                    "lat": 47.2134,
+                    "lon": 29.15847
+                  }
+                ]
+              },
+              {
+                "name": "Donduşeni",
+                "type": "admin1",
+                "aliases": [
+                  "Dandzjushanski rajon",
+                  "Distret de Donduseni",
+                  "Distret de Dondușeni",
+                  "Distrito de Donduseni"
+                ],
+                "lat": 48.29948,
+                "lon": 27.656515,
+                "children": [
+                  {
+                    "name": "Briceni",
+                    "type": "admin2",
+                    "lat": 48.35628,
+                    "lon": 27.70293
+                  },
+                  {
+                    "name": "Donduşeni",
+                    "type": "admin2",
+                    "lat": 48.24268,
+                    "lon": 27.6101
+                  }
+                ]
+              },
+              {
+                "name": "Făleşti",
+                "type": "admin1",
+                "aliases": [
+                  "Districte de Falesti",
+                  "Districte de Falești",
+                  "Distrito de Falesti",
+                  "Distrito de Fălești"
+                ],
+                "lat": 47.57667,
+                "lon": 27.71264,
+                "children": [
+                  {
+                    "name": "Fălești",
+                    "type": "admin2",
+                    "lat": 47.57667,
+                    "lon": 27.71264
+                  }
+                ]
+              },
+              {
+                "name": "Floreşti",
+                "type": "admin1",
+                "aliases": [
+                  "Distrito de Floresti",
+                  "Distrito de Florești",
+                  "Flarehshcki rajon",
+                  "Florescio rajonas"
+                ],
+                "lat": 47.89168,
+                "lon": 28.29339,
+                "children": [
+                  {
+                    "name": "Floreşti",
+                    "type": "admin2",
+                    "lat": 47.89168,
+                    "lon": 28.29339
+                  }
+                ]
+              },
+              {
+                "name": "Gagauzia",
+                "type": "admin1",
+                "aliases": [
+                  "Autonome Territoriale Einheit Gagausien",
+                  "Autonomous Territorial Unit of Gagauzia",
+                  "Avtonom Territoriali Boeluemlueue Gagauziya",
+                  "Avtonom Territoriali Bölümlüü Gagauziya"
+                ],
+                "lat": 46.037233,
+                "lon": 28.621768,
+                "children": [
+                  {
+                    "name": "Ceadîr-Lunga",
+                    "type": "admin2",
+                    "lat": 46.06169,
+                    "lon": 28.83078
+                  },
+                  {
+                    "name": "Comrat",
+                    "type": "admin2",
+                    "lat": 46.29488,
+                    "lon": 28.65713
+                  },
+                  {
+                    "name": "Congaz",
+                    "type": "admin2",
+                    "lat": 46.10744,
+                    "lon": 28.59303
+                  },
+                  {
+                    "name": "Vulcăneşti",
+                    "type": "admin2",
+                    "lat": 45.68492,
+                    "lon": 28.40613
+                  }
+                ]
+              },
+              {
+                "name": "Glodeni",
+                "type": "admin1",
+                "aliases": [
+                  "Distrito de Glodeni",
+                  "Glodeni",
+                  "Glodeni District",
+                  "Glodeni ili"
+                ],
+                "lat": 47.77467,
+                "lon": 27.51753,
+                "children": [
+                  {
+                    "name": "Glodeni",
+                    "type": "admin2",
+                    "lat": 47.77467,
+                    "lon": 27.51753
+                  }
+                ]
+              },
+              {
+                "name": "Hînceşti",
+                "type": "admin1",
+                "aliases": [
+                  "Chin'kesti",
+                  "Distret de Hincesti",
+                  "Distret de Hîncești",
+                  "Distrito de Hincesti"
+                ],
+                "lat": 46.794535,
+                "lon": 28.398575,
+                "children": [
+                  {
+                    "name": "Dancu",
+                    "type": "admin2",
+                    "lat": 46.75818,
+                    "lon": 28.20716
+                  },
+                  {
+                    "name": "Hînceşti",
+                    "type": "admin2",
+                    "lat": 46.83089,
+                    "lon": 28.58999
+                  }
+                ]
+              },
+              {
+                "name": "Ialoveni",
+                "type": "admin1",
+                "aliases": [
+                  "Distrito de Ialoveni",
+                  "Ialoveni",
+                  "Ialoveni District",
+                  "Ialoveni ili"
+                ],
+                "lat": 46.94357,
+                "lon": 28.78153,
+                "children": [
+                  {
+                    "name": "Ialoveni",
+                    "type": "admin2",
+                    "lat": 46.94357,
+                    "lon": 28.78153
+                  }
+                ]
+              },
+              {
+                "name": "Leova",
+                "type": "admin1",
+                "aliases": [
+                  "Distrito de Leova",
+                  "Leova",
+                  "Leova District",
+                  "Leova ili"
+                ],
+                "lat": 46.48195,
+                "lon": 28.25298,
+                "children": [
+                  {
+                    "name": "Leova",
+                    "type": "admin2",
+                    "lat": 46.48195,
+                    "lon": 28.25298
+                  }
+                ]
+              },
+              {
+                "name": "Municipiul Bălţi",
+                "type": "admin1",
+                "aliases": [
+                  "Balti",
+                  "Bălţi",
+                  "Municipiul Balti",
+                  "Municipiul Bălţi"
+                ],
+                "lat": 47.76291,
+                "lon": 27.92854,
+                "children": [
+                  {
+                    "name": "Bălţi",
+                    "type": "admin2",
+                    "lat": 47.76291,
+                    "lon": 27.92854
+                  }
+                ]
+              },
+              {
+                "name": "Municipiul Bender",
+                "type": "admin1",
+                "aliases": [
+                  "Bender",
+                  "Bender Municipality",
+                  "Bender kˌalalykˌ okrugi",
+                  "Bender shaardyk okrugu"
+                ],
+                "lat": 46.83158,
+                "lon": 29.47671,
+                "children": [
+                  {
+                    "name": "Bender",
+                    "type": "admin2",
+                    "lat": 46.83158,
+                    "lon": 29.47671
+                  }
+                ]
+              },
+              {
+                "name": "Municipiul Chişinău",
+                "type": "admin1",
+                "aliases": [
+                  "Chishinau shahar",
+                  "Chisinau",
+                  "Chisinau Municipality",
+                  "Chişinău"
+                ],
+                "lat": 47.047187,
+                "lon": 28.887835,
+                "children": [
+                  {
+                    "name": "Chisinau",
+                    "type": "admin2",
+                    "lat": 47.00902,
+                    "lon": 28.85938
+                  },
+                  {
+                    "name": "Ciorescu",
+                    "type": "admin2",
+                    "lat": 47.13,
+                    "lon": 28.88937
+                  },
+                  {
+                    "name": "Codru",
+                    "type": "admin2",
+                    "lat": 46.97648,
+                    "lon": 28.819
+                  },
+                  {
+                    "name": "Cricova",
+                    "type": "admin2",
+                    "lat": 47.13835,
+                    "lon": 28.86156
+                  },
+                  {
+                    "name": "Durleşti",
+                    "type": "admin2",
+                    "lat": 47.02156,
+                    "lon": 28.76303
+                  },
+                  {
+                    "name": "Sîngera",
+                    "type": "admin2",
+                    "lat": 46.91557,
+                    "lon": 28.96673
+                  },
+                  {
+                    "name": "Stăuceni",
+                    "type": "admin2",
+                    "lat": 47.09643,
+                    "lon": 28.86791
+                  },
+                  {
+                    "name": "Vadul lui Vodă",
+                    "type": "admin2",
+                    "lat": 47.09009,
+                    "lon": 29.0757
+                  }
+                ]
+              },
+              {
+                "name": "Nisporeni",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Nisporeni",
+                  "Distrito de Nisporeni",
+                  "Nisperonu rajons",
+                  "Nisporeni"
+                ],
+                "lat": 47.08025,
+                "lon": 28.17098,
+                "children": [
+                  {
+                    "name": "Nisporeni",
+                    "type": "admin2",
+                    "lat": 47.08025,
+                    "lon": 28.17098
+                  }
+                ]
+              },
+              {
+                "name": "Orhei",
+                "type": "admin1",
+                "aliases": [
+                  "Arrondissement Orhei",
+                  "Condado de Orhei",
+                  "Distretto di Orhei",
+                  "Districte dOrhei"
+                ],
+                "lat": 47.38503,
+                "lon": 28.82535,
+                "children": [
+                  {
+                    "name": "Orhei",
+                    "type": "admin2",
+                    "lat": 47.38503,
+                    "lon": 28.82535
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Cahul",
+                "type": "admin1",
+                "aliases": [
+                  "Cahul",
+                  "Cahul District",
+                  "Cahul jaras",
+                  "Cahul járás"
+                ],
+                "lat": 45.90456,
+                "lon": 28.19516,
+                "children": [
+                  {
+                    "name": "Cahul",
+                    "type": "admin2",
+                    "lat": 45.90456,
+                    "lon": 28.19516
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Călăraşi",
+                "type": "admin1",
+                "aliases": [
+                  "Calarasi",
+                  "Călăraşi",
+                  "Kalarashskiy Rayon",
+                  "Raionul Calarasi"
+                ],
+                "lat": 47.25548,
+                "lon": 28.30953,
+                "children": [
+                  {
+                    "name": "Călăraşi",
+                    "type": "admin2",
+                    "lat": 47.25548,
+                    "lon": 28.30953
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Căuşeni",
+                "type": "admin1",
+                "aliases": [
+                  "Causeni",
+                  "Căuşeni",
+                  "Kaushanskiy Rayon",
+                  "Raionul Causeni"
+                ],
+                "lat": 46.71017,
+                "lon": 29.513845,
+                "children": [
+                  {
+                    "name": "Căuşeni",
+                    "type": "admin2",
+                    "lat": 46.63738,
+                    "lon": 29.41087
+                  },
+                  {
+                    "name": "Chiţcani",
+                    "type": "admin2",
+                    "lat": 46.78296,
+                    "lon": 29.61682
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Drochia",
+                "type": "admin1",
+                "aliases": [
+                  "Arrondissement Drochia",
+                  "Condado de Drochia",
+                  "Drochia",
+                  "Drokia"
+                ],
+                "lat": 48.03686,
+                "lon": 27.81242,
+                "children": [
+                  {
+                    "name": "Drochia",
+                    "type": "admin2",
+                    "lat": 48.03686,
+                    "lon": 27.81242
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Dubăsari",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Dubasari",
+                  "Degmada Dubasari",
+                  "Distret de Dubasari",
+                  "Distret de Dubăsari"
+                ],
+                "lat": 47.25,
+                "lon": 29.11667,
+                "children": []
+              },
+              {
+                "name": "Raionul Edineţ",
+                "type": "admin1",
+                "aliases": [
+                  "Arrondissement Edinet",
+                  "Arrondissement Edineţ",
+                  "Condado de Edinet",
+                  "Condado de Edineţ"
+                ],
+                "lat": 48.17319,
+                "lon": 27.30075,
+                "children": [
+                  {
+                    "name": "Edineţ",
+                    "type": "admin2",
+                    "lat": 48.17319,
+                    "lon": 27.30075
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Ocniţa",
+                "type": "admin1",
+                "aliases": [
+                  "Arrondissement Ocnita",
+                  "Arrondissement Ocniţa",
+                  "Condado de Ocnita",
+                  "Condado de Ocniţa"
+                ],
+                "lat": 48.40758,
+                "lon": 27.61888,
+                "children": [
+                  {
+                    "name": "Ocniţa",
+                    "type": "admin2",
+                    "lat": 48.38231,
+                    "lon": 27.43864
+                  },
+                  {
+                    "name": "Otaci",
+                    "type": "admin2",
+                    "lat": 48.43285,
+                    "lon": 27.79912
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Soroca",
+                "type": "admin1",
+                "aliases": [
+                  "Degmada Soroca",
+                  "Distrik Soroca",
+                  "Distrito de Soroca",
+                  "Garaffaa Soroca"
+                ],
+                "lat": 48.15659,
+                "lon": 28.28489,
+                "children": [
+                  {
+                    "name": "Soroca",
+                    "type": "admin2",
+                    "lat": 48.15659,
+                    "lon": 28.28489
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Ștefan Vodă",
+                "type": "admin1",
+                "aliases": [
+                  "Raionul Stefan Voda",
+                  "Raionul Ștefan Vodă",
+                  "Stefan Voda",
+                  "Stefan-Voda"
+                ],
+                "lat": 46.51294,
+                "lon": 29.66223,
+                "children": [
+                  {
+                    "name": "Ştefan Vodă",
+                    "type": "admin2",
+                    "lat": 46.51294,
+                    "lon": 29.66223
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Străşeni",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Straseni",
+                  "Distret de Strășeni",
+                  "Distrito de Straseni",
+                  "Distrito de Strășeni"
+                ],
+                "lat": 47.14216,
+                "lon": 28.60774,
+                "children": [
+                  {
+                    "name": "Strășeni",
+                    "type": "admin2",
+                    "lat": 47.14216,
+                    "lon": 28.60774
+                  }
+                ]
+              },
+              {
+                "name": "Raionul Ungheni",
+                "type": "admin1",
+                "aliases": [
+                  "Arrondissement Ungheni",
+                  "Condado de Ungheni",
+                  "Distretto di Ungheni",
+                  "Districte dUngheni"
+                ],
+                "lat": 47.21023,
+                "lon": 27.80013,
+                "children": [
+                  {
+                    "name": "Ungheni",
+                    "type": "admin2",
+                    "lat": 47.21023,
+                    "lon": 27.80013
+                  }
+                ]
+              },
+              {
+                "name": "Rezina",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Rezina",
+                  "Distrito de Rezina",
+                  "Okres Rezina",
+                  "Quan Rezina"
+                ],
+                "lat": 47.74857,
+                "lon": 28.96769,
+                "children": [
+                  {
+                    "name": "Rezina",
+                    "type": "admin2",
+                    "lat": 47.74857,
+                    "lon": 28.96769
+                  }
+                ]
+              },
+              {
+                "name": "Rîşcani",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Riscani",
+                  "Distret de Rîșcani",
+                  "Distrito de Riscani",
+                  "Distrito de Rîșcani"
+                ],
+                "lat": 47.94829,
+                "lon": 27.56669,
+                "children": [
+                  {
+                    "name": "Rîşcani",
+                    "type": "admin2",
+                    "lat": 47.94829,
+                    "lon": 27.56669
+                  }
+                ]
+              },
+              {
+                "name": "Sîngerei",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Singerei",
+                  "Distret de Sîngerei",
+                  "Distrito de Singerei",
+                  "Distrito de Sîngerei"
+                ],
+                "lat": 47.64637,
+                "lon": 28.09402,
+                "children": [
+                  {
+                    "name": "Bilicenii Vechi",
+                    "type": "admin2",
+                    "lat": 47.6558,
+                    "lon": 28.04734
+                  },
+                  {
+                    "name": "Sîngerei",
+                    "type": "admin2",
+                    "lat": 47.63694,
+                    "lon": 28.1407
+                  }
+                ]
+              },
+              {
+                "name": "Şoldăneşti",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Soldanesti",
+                  "Distret de Soldanesti",
+                  "Distret de Șoldănești",
+                  "Districte de Soldanesti"
+                ],
+                "lat": 47.81618,
+                "lon": 28.79841,
+                "children": [
+                  {
+                    "name": "Şoldăneşti",
+                    "type": "admin2",
+                    "lat": 47.81618,
+                    "lon": 28.79841
+                  }
+                ]
+              },
+              {
+                "name": "Taraclia",
+                "type": "admin1",
+                "aliases": [
+                  "Distret de Taraclia",
+                  "Distrito de Taraclia",
+                  "Okres Taraclia",
+                  "Quan Taraclia"
+                ],
+                "lat": 46.025735,
+                "lon": 28.815595,
+                "children": [
+                  {
+                    "name": "Taraclia",
+                    "type": "admin2",
+                    "lat": 45.90321,
+                    "lon": 28.66628
+                  },
+                  {
+                    "name": "Tvardița",
+                    "type": "admin2",
+                    "lat": 46.14826,
+                    "lon": 28.96491
+                  }
+                ]
+              },
+              {
+                "name": "Teleneşti",
+                "type": "admin1",
+                "aliases": [
+                  "Celjaneshcki rajon",
+                  "Distret de Telenesti",
+                  "Distret de Telenești",
+                  "Distrito de Telenesti"
+                ],
+                "lat": 47.50352,
+                "lon": 28.320825,
+                "children": [
+                  {
+                    "name": "Mîndreşti",
+                    "type": "admin2",
+                    "lat": 47.50525,
+                    "lon": 28.27687
+                  },
+                  {
+                    "name": "Teleneşti",
+                    "type": "admin2",
+                    "lat": 47.50179,
+                    "lon": 28.36478
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

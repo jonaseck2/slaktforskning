@@ -1,0 +1,139 @@
+{
+  "id": "gl-kommune",
+  "name": "Greenland Kommunit",
+  "locale": "gl",
+  "description": "Greenland (Danish dependency, standalone gazetteer): 5 kommunit (admin1) + 3 admin2 + populated places ≥5000 pop. Genealogical relevance: Inuit + Danish-Greenlandic family lines.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/GL.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "North America",
+        "type": "continent",
+        "lat": 50,
+        "lon": -100,
+        "children": [
+          {
+            "name": "Greenland",
+            "type": "country",
+            "aliases": [
+              "Kalaallit Nunaat",
+              "Grønland"
+            ],
+            "lat": 72,
+            "lon": -42,
+            "children": [
+              {
+                "name": "Avannaata",
+                "type": "admin1",
+                "aliases": [
+                  "Avannaata",
+                  "Avannata",
+                  "Avinnata",
+                  "abhannata"
+                ],
+                "lat": 69.21536,
+                "lon": -51.08301,
+                "children": []
+              },
+              {
+                "name": "Kujalleq",
+                "type": "admin1",
+                "aliases": [
+                  "Kommune Kujalleq",
+                  "Kujalek",
+                  "Kujallek",
+                  "Kujalleq"
+                ],
+                "lat": 60.350227,
+                "lon": -45.412513,
+                "children": [
+                  {
+                    "name": "Nanortalik Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nanortalik",
+                      "Nanortalik Kommune",
+                      "Nanortalik Municipality"
+                    ],
+                    "lat": 60.11723,
+                    "lon": -44.96542,
+                    "children": []
+                  },
+                  {
+                    "name": "Narsaq Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "Narsap Kommunia",
+                      "Narsaq",
+                      "Narsaq Municipality"
+                    ],
+                    "lat": 60.26678,
+                    "lon": -45.10545,
+                    "children": []
+                  },
+                  {
+                    "name": "Qaqortoq Municipality",
+                    "type": "admin2",
+                    "aliases": [
+                      "Julianehaab Distrikt",
+                      "Julianehab",
+                      "Julianehab District"
+                    ],
+                    "lat": 60.66667,
+                    "lon": -46.16667,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Qeqertalik",
+                "type": "admin1",
+                "lat": 68.70716,
+                "lon": -52.84289,
+                "children": []
+              },
+              {
+                "name": "Qeqqata",
+                "type": "admin1",
+                "aliases": [
+                  "Kekata",
+                  "Kekkata",
+                  "Kekketa",
+                  "Kˌekˌkˌata"
+                ],
+                "lat": 66.94142,
+                "lon": -53.66374,
+                "children": []
+              },
+              {
+                "name": "Sermersooq",
+                "type": "admin1",
+                "aliases": [
+                  "Kommuneqarfik Sermersooq",
+                  "Sermersok",
+                  "Sermersook",
+                  "Sermersooq"
+                ],
+                "lat": 64.18284,
+                "lon": -51.71831,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
