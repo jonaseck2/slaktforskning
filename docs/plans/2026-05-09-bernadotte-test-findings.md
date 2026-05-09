@@ -13,9 +13,9 @@ Fixes landed in the same session as the test:
 | 1 | ✅ FIXED | List views don't refresh when MCP creates data |
 | 2 | ✅ FIXED | `run_checks` date parser broken on day-month-year strings (was the cause of 232 of 359 issues). New `parseLooseDate` / `extractYear` / `dateDefinitelyAfter` helpers handle ISO, free-text English, and Swedish month names. `checks-relationships.ts` + `checks-chronology.ts` refactored to use them; SUBSTR(date_value, 1, 4) anti-pattern eliminated. Regression test in `tests/unit/check-utils-parse-loose-date.test.ts` (16 cases). **Requires app + MCP restart to take effect.** |
 | 3 | ✅ FIXED | `add_place` silently discards `place_type`/`latitude`/`longitude`/`notes` |
-| 4 | ❌ open | Empty `default_person_id` → empty Family Tree on a fresh DB |
-| 5 | ❌ open | `merge_persons` leaves duplicate events behind |
-| 6 | ❌ open | `merge_persons` adds a second `name_type='birth'` instead of demoting |
+| 4 | ✅ FIXED | Empty `default_person_id` → empty Family Tree on a fresh DB. PersonsView now route-replaces to the first person (alphabetical by surname) when the setting is null and persons exist; nothing persisted, render-time only. |
+| 5 | ✅ FIXED | `merge_persons` leaves duplicate events behind. Post-merge step now keeps the oldest row for single-cardinality event types (birth, baptism, christening, death, burial), transfers citations + media_links to the survivor, deletes the rest. |
+| 6 | ✅ FIXED | `merge_persons` adds a second `name_type='birth'` instead of demoting. Source birth names are now demoted to `aka` when the target already has one. |
 | 7 | ✅ FIXED | i18n missing for `eventTypes.accession` and `eventTypes.coronation` |
 | 8 | ❌ open | `add_source` may silently drop `abstract` (verification + same-shape fix) |
 | 9 | ❌ open | `living` flag on persons born >130 yrs ago without death event |
