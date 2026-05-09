@@ -1,0 +1,1135 @@
+{
+  "id": "mk-opstini",
+  "name": "North Macedonia Opštini",
+  "locale": "mk",
+  "description": "North Macedonia: 71 opštini (admin1 in GeoNames; statistical regions deferred) + 10 admin2 + populated places ≥5000 pop. Cyrillic + Latin via altNames.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/MK.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "North Macedonia",
+            "type": "country",
+            "aliases": [
+              "Северна Македонија",
+              "Republika e Maqedonisë së Veriut"
+            ],
+            "lat": 41.6,
+            "lon": 21.7,
+            "children": [
+              {
+                "name": "Berovo",
+                "type": "admin1",
+                "aliases": [
+                  "Berovo",
+                  "Opshtina Berovo",
+                  "Opstina Berovo",
+                  "Opština Berovo"
+                ],
+                "lat": 41.7097,
+                "lon": 22.84796,
+                "children": []
+              },
+              {
+                "name": "Bitola",
+                "type": "admin1",
+                "aliases": [
+                  "Bitola",
+                  "Manastir",
+                  "Manastır",
+                  "Opshtina Bitola"
+                ],
+                "lat": 41.01667,
+                "lon": 21.31667,
+                "children": []
+              },
+              {
+                "name": "Bogdanci",
+                "type": "admin1",
+                "aliases": [
+                  "Bogdanci",
+                  "Bogdanci Chhi",
+                  "Bogdanci Chhī",
+                  "Bogdanci Kommune"
+                ],
+                "lat": 41.2,
+                "lon": 22.6,
+                "children": []
+              },
+              {
+                "name": "Bogovinje",
+                "type": "admin1",
+                "aliases": [
+                  "Bogovin'e",
+                  "Bogovina",
+                  "Bogovine",
+                  "Bogovinje"
+                ],
+                "lat": 41.95028,
+                "lon": 20.88222,
+                "children": []
+              },
+              {
+                "name": "Bosilovo",
+                "type": "admin1",
+                "aliases": [
+                  "Bosilovo",
+                  "Bosilovo Chhi",
+                  "Bosilovo Chhī",
+                  "Bosilovo Municipality"
+                ],
+                "lat": 41.46667,
+                "lon": 22.78333,
+                "children": []
+              },
+              {
+                "name": "Brvenica",
+                "type": "admin1",
+                "aliases": [
+                  "Brvenica",
+                  "Brvenica Municipality",
+                  "Brvenicja",
+                  "Brvenitsa"
+                ],
+                "lat": 41.88333,
+                "lon": 21.03333,
+                "children": []
+              },
+              {
+                "name": "Češinovo-Obleševo",
+                "type": "admin1",
+                "aliases": [
+                  "Cesinovo",
+                  "Cesinovo-Oblesevo",
+                  "Cheshinovo-Obleshevo",
+                  "Gmina Czeszinowo-Obleszewo"
+                ],
+                "lat": 41.9,
+                "lon": 22.26667,
+                "children": []
+              },
+              {
+                "name": "Debar",
+                "type": "admin1",
+                "aliases": [
+                  "Debar",
+                  "Debari",
+                  "Opshtina Debar",
+                  "Opstina Debar"
+                ],
+                "lat": 41.5325,
+                "lon": 20.58444,
+                "children": []
+              },
+              {
+                "name": "Debarca",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Debarca",
+                  "Comuna Debarca",
+                  "Debarca",
+                  "Debarca Municipality"
+                ],
+                "lat": 41.33417,
+                "lon": 20.82222,
+                "children": []
+              },
+              {
+                "name": "Demir Hisar",
+                "type": "admin1",
+                "aliases": [
+                  "Demir Hisar",
+                  "Demir Khisar",
+                  "Demiri Ҳisor",
+                  "Opshtina Demir Khisar"
+                ],
+                "lat": 41.28083,
+                "lon": 21.14389,
+                "children": []
+              },
+              {
+                "name": "Demir Kapija",
+                "type": "admin1",
+                "aliases": [
+                  "Demir Kapija",
+                  "Demir Kˌapiҷa",
+                  "Opshtina Demir Kapija",
+                  "Opstina Demir Kapija"
+                ],
+                "lat": 41.38333,
+                "lon": 22.25,
+                "children": []
+              },
+              {
+                "name": "Dolneni",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Dolneni",
+                  "Dimos Ntolneni",
+                  "Dolneni",
+                  "Dolneni Chhi"
+                ],
+                "lat": 41.48333,
+                "lon": 21.43333,
+                "children": []
+              },
+              {
+                "name": "Gevgelija",
+                "type": "admin1",
+                "aliases": [
+                  "Gevgelija",
+                  "Opshtina Gevgelija",
+                  "Opstina Gevgelija",
+                  "Opština Gevgelija"
+                ],
+                "lat": 41.2,
+                "lon": 22.4,
+                "children": []
+              },
+              {
+                "name": "Gostivar",
+                "type": "admin1",
+                "aliases": [
+                  "Gostivar",
+                  "Gostivar'",
+                  "Gostivara",
+                  "Gostivaras"
+                ],
+                "lat": 41.79306,
+                "lon": 20.83222,
+                "children": []
+              },
+              {
+                "name": "Grad Skopje",
+                "type": "admin1",
+                "aliases": [
+                  "Grad Skop'e",
+                  "Grad Skopje",
+                  "Qrad Skopje",
+                  "Skopje"
+                ],
+                "lat": 42.017978,
+                "lon": 21.421659,
+                "children": [
+                  {
+                    "name": "Aerodrom",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aehrodrom",
+                      "Aerodrom",
+                      "Aerodrom Municipality"
+                    ],
+                    "lat": 41.98806,
+                    "lon": 21.45944,
+                    "children": []
+                  },
+                  {
+                    "name": "Butel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Botel",
+                      "Boutel",
+                      "Butel"
+                    ],
+                    "lat": 42.08194,
+                    "lon": 21.46889,
+                    "children": [
+                      {
+                        "name": "Butel",
+                        "type": "admin3",
+                        "lat": 42.03083,
+                        "lon": 21.44667
+                      },
+                      {
+                        "name": "Radishani",
+                        "type": "admin3",
+                        "lat": 42.06111,
+                        "lon": 21.44778
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Čair",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cair",
+                      "Chair",
+                      "Komuna e Cairit"
+                    ],
+                    "lat": 42.01059,
+                    "lon": 21.44009,
+                    "children": [
+                      {
+                        "name": "Čair",
+                        "type": "admin3",
+                        "lat": 42.01528,
+                        "lon": 21.44111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Gazi Baba",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gazi Baba",
+                      "Gazi Baba Municipality",
+                      "Gazi baba"
+                    ],
+                    "lat": 42.05,
+                    "lon": 21.51667,
+                    "children": []
+                  },
+                  {
+                    "name": "Kisela Voda",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kisela Voda",
+                      "Opshtina Kisela Voda",
+                      "Opstina Kisela Voda"
+                    ],
+                    "lat": 41.95,
+                    "lon": 21.51667,
+                    "children": [
+                      {
+                        "name": "Kisela Voda",
+                        "type": "admin3",
+                        "lat": 41.94889,
+                        "lon": 21.50278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Opština Centar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Centar",
+                      "Opshtina Centar",
+                      "Opstina Centar"
+                    ],
+                    "lat": 42.005,
+                    "lon": 21.42889,
+                    "children": []
+                  },
+                  {
+                    "name": "Opstina Gjorce Petrov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dorce Petrov",
+                      "Gjorche Petrov",
+                      "Opshtina GJorche Petrov"
+                    ],
+                    "lat": 42.06086,
+                    "lon": 21.31927,
+                    "children": [
+                      {
+                        "name": "Gjorče Petro",
+                        "type": "admin3",
+                        "lat": 42.00778,
+                        "lon": 21.35306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Opština Karpoš",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karpos",
+                      "Karposh",
+                      "Karpoš"
+                    ],
+                    "lat": 42,
+                    "lon": 21.38333,
+                    "children": []
+                  },
+                  {
+                    "name": "Saraj",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Sarajit",
+                      "Municipio de Saraj",
+                      "Opcina Saraj"
+                    ],
+                    "lat": 41.98333,
+                    "lon": 21.26667,
+                    "children": [
+                      {
+                        "name": "Kondovo",
+                        "type": "admin3",
+                        "lat": 42.01151,
+                        "lon": 21.31427
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Šuto Orizari",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chouto Orizari",
+                      "Gmina Szuto Orizari",
+                      "Komuna e Shutkes"
+                    ],
+                    "lat": 42.05,
+                    "lon": 21.41667,
+                    "children": [
+                      {
+                        "name": "Šuto Orizare",
+                        "type": "admin3",
+                        "lat": 42.04,
+                        "lon": 21.425
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Gradsko",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Gradsko",
+                  "Dimos Nkrantsko",
+                  "GJo thi tu tri Gradsko",
+                  "Gmina Gradsko"
+                ],
+                "lat": 41.6,
+                "lon": 21.91667,
+                "children": []
+              },
+              {
+                "name": "Ilinden",
+                "type": "admin1",
+                "aliases": [
+                  "Belimbegovo",
+                  "Bwrdeistref Ilinden",
+                  "Dimos Ilinten",
+                  "GJo thi tu tri Ilinden"
+                ],
+                "lat": 42,
+                "lon": 21.63333,
+                "children": []
+              },
+              {
+                "name": "Jegunovce",
+                "type": "admin1",
+                "aliases": [
+                  "Egunovce",
+                  "Jegunovce",
+                  "Jegunovce Municipality",
+                  "Komuna e Jegunocit"
+                ],
+                "lat": 42.11306,
+                "lon": 21.14528,
+                "children": []
+              },
+              {
+                "name": "Karbinci",
+                "type": "admin1",
+                "aliases": [
+                  "Dimos Karmpintsi",
+                  "Karbinci",
+                  "Karbinci Chhi",
+                  "Karbinci Chhī"
+                ],
+                "lat": 41.8,
+                "lon": 22.28333,
+                "children": []
+              },
+              {
+                "name": "Kavadarci",
+                "type": "admin1",
+                "aliases": [
+                  "Kavadarci",
+                  "Opshtina Kavadarci",
+                  "Opstina Kavadarci",
+                  "Opština Kavadarci"
+                ],
+                "lat": 41.285,
+                "lon": 22.00139,
+                "children": []
+              },
+              {
+                "name": "Kratovo",
+                "type": "admin1",
+                "aliases": [
+                  "Kratovo",
+                  "Opshtina Kratovo",
+                  "Opstina Kratovo",
+                  "Opština Kratovo"
+                ],
+                "lat": 42.08333,
+                "lon": 22.16667,
+                "children": []
+              },
+              {
+                "name": "Kriva Palanka",
+                "type": "admin1",
+                "aliases": [
+                  "Kriva Palanka",
+                  "Opshtina Kriva Palanka",
+                  "Opstina Kriva Palanka",
+                  "Opština Kriva Palanka"
+                ],
+                "lat": 42.25,
+                "lon": 22.33333,
+                "children": []
+              },
+              {
+                "name": "Kumanovo",
+                "type": "admin1",
+                "aliases": [
+                  "Kumanovo",
+                  "Opshtina Kumanovo",
+                  "Opstina Kumanovo",
+                  "Opština Kumanovo"
+                ],
+                "lat": 42.08944,
+                "lon": 21.77278,
+                "children": []
+              },
+              {
+                "name": "Lozovo",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Lozovo",
+                  "Cumali",
+                  "Cumalı",
+                  "Dimos Lozovo"
+                ],
+                "lat": 41.75,
+                "lon": 21.93333,
+                "children": []
+              },
+              {
+                "name": "Makedonska Kamenica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Makedonska Kamenica",
+                  "Dimos Makentonska Kamenitsa",
+                  "GJo thi tu tri Makedonska Kamenica",
+                  "Gmina Makedonska Kamenica"
+                ],
+                "lat": 42.05,
+                "lon": 22.58333,
+                "children": []
+              },
+              {
+                "name": "Makedonski Brod",
+                "type": "admin1",
+                "aliases": [
+                  "Makedonski Brod",
+                  "Opshtina Makedonski Brod",
+                  "Opstina Makedonski Brod",
+                  "Opština Makedonski Brod"
+                ],
+                "lat": 41.65556,
+                "lon": 21.23333,
+                "children": []
+              },
+              {
+                "name": "Mogila",
+                "type": "admin1",
+                "aliases": [
+                  "Mogila",
+                  "Opshtina Mogila",
+                  "Opstina Mogila",
+                  "Opština Mogila"
+                ],
+                "lat": 41.15806,
+                "lon": 21.43556,
+                "children": []
+              },
+              {
+                "name": "Negotino",
+                "type": "admin1",
+                "aliases": [
+                  "Negotino",
+                  "Opshtina Negotino",
+                  "Opstina Negotino",
+                  "Opština Negotino"
+                ],
+                "lat": 41.51667,
+                "lon": 22.15,
+                "children": []
+              },
+              {
+                "name": "Novaci",
+                "type": "admin1",
+                "aliases": [
+                  "Novaci",
+                  "Novaҳo",
+                  "Opshtina Novaci",
+                  "Opstina Novaci"
+                ],
+                "lat": 41.01944,
+                "lon": 21.6675,
+                "children": []
+              },
+              {
+                "name": "Novo Selo",
+                "type": "admin1",
+                "aliases": [
+                  "Novo Selo",
+                  "Opshtina Novo Selo",
+                  "Opstina Novo Selo",
+                  "Opština Novo Selo"
+                ],
+                "lat": 41.41667,
+                "lon": 22.9,
+                "children": []
+              },
+              {
+                "name": "Ohrid",
+                "type": "admin1",
+                "aliases": [
+                  "Ohrid",
+                  "Okhrid",
+                  "Opshtina Okhrid",
+                  "Opstina Ohrid"
+                ],
+                "lat": 41.13083,
+                "lon": 20.87028,
+                "children": []
+              },
+              {
+                "name": "Opština Aračinovo",
+                "type": "admin1",
+                "aliases": [
+                  "Arachinova",
+                  "Arachinovo",
+                  "Aracinovo",
+                  "Aratchinova"
+                ],
+                "lat": 42.05,
+                "lon": 21.58333,
+                "children": []
+              },
+              {
+                "name": "Opština Čaška",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Caska",
+                  "Bwrdeistref Čaška",
+                  "Casjka",
+                  "Caska"
+                ],
+                "lat": 41.59833,
+                "lon": 21.59028,
+                "children": []
+              },
+              {
+                "name": "Opština Centar Župa",
+                "type": "admin1",
+                "aliases": [
+                  "Centar Zhupa",
+                  "Centar Zupa",
+                  "Centar Župa",
+                  "Opshtina Centar Zhupa"
+                ],
+                "lat": 41.46667,
+                "lon": 20.58333,
+                "children": []
+              },
+              {
+                "name": "Opština Čučer-Sandevo",
+                "type": "admin1",
+                "aliases": [
+                  "Chuchari Sandevo",
+                  "Chucher Sandevo",
+                  "Chucher-Sandevo",
+                  "Cucer-Sandevo"
+                ],
+                "lat": 42.16667,
+                "lon": 21.41667,
+                "children": []
+              },
+              {
+                "name": "Opština Delčevo",
+                "type": "admin1",
+                "aliases": [
+                  "Delcevo",
+                  "Delchevo",
+                  "Delčevo",
+                  "Opshtina Delchevo"
+                ],
+                "lat": 41.93333,
+                "lon": 22.76667,
+                "children": []
+              },
+              {
+                "name": "Opština Dojran",
+                "type": "admin1",
+                "aliases": [
+                  "Dojran",
+                  "Duҷron",
+                  "Opshtina Dojran",
+                  "Star Dojran"
+                ],
+                "lat": 41.23333,
+                "lon": 22.7,
+                "children": []
+              },
+              {
+                "name": "Opština Kičevo",
+                "type": "admin1",
+                "aliases": [
+                  "Kicevo",
+                  "Kichevo",
+                  "Kičevo",
+                  "Opshtina Kichevo"
+                ],
+                "lat": 41.51667,
+                "lon": 20.95,
+                "children": []
+              },
+              {
+                "name": "Opština Kočani",
+                "type": "admin1",
+                "aliases": [
+                  "Kocani",
+                  "Kochani",
+                  "Kočani",
+                  "Opshtina Kochani"
+                ],
+                "lat": 41.98333,
+                "lon": 22.4,
+                "children": []
+              },
+              {
+                "name": "Opština Konče",
+                "type": "admin1",
+                "aliases": [
+                  "Konce",
+                  "Konche",
+                  "Konče",
+                  "Opshtina Konche"
+                ],
+                "lat": 41.53333,
+                "lon": 22.4,
+                "children": []
+              },
+              {
+                "name": "Opština Krivogaštani",
+                "type": "admin1",
+                "aliases": [
+                  "Krivogashtani",
+                  "Krivogastani",
+                  "Krivogaštani",
+                  "Opshtina Krivogashtani"
+                ],
+                "lat": 41.33333,
+                "lon": 21.36667,
+                "children": []
+              },
+              {
+                "name": "Opština Kruševo",
+                "type": "admin1",
+                "aliases": [
+                  "Krusevo",
+                  "Krushevo",
+                  "Kruševo",
+                  "Opshtina Krushevo"
+                ],
+                "lat": 41.36667,
+                "lon": 21.26667,
+                "children": []
+              },
+              {
+                "name": "Opština Lipkovo",
+                "type": "admin1",
+                "aliases": [
+                  "Lipkovo",
+                  "Opshtina Lipkovo",
+                  "Opstina Lipkovo",
+                  "Opština Lipkovo"
+                ],
+                "lat": 42.16667,
+                "lon": 21.6,
+                "children": []
+              },
+              {
+                "name": "Opština Mavrovo i Rostuše",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Mavrovo and Rostusa",
+                  "Bwrdeistref Mavrovo and Rostuša",
+                  "Dimos Mavrovo kai Rostousa",
+                  "GJo thi tu tri Mavrovo va Rostusa"
+                ],
+                "lat": 41.65778,
+                "lon": 20.68389,
+                "children": []
+              },
+              {
+                "name": "Opština Pehčevo",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Pekhchevo",
+                  "Opstina Pehcevo",
+                  "Opština Pehčevo",
+                  "Pehcevo"
+                ],
+                "lat": 41.78333,
+                "lon": 22.91667,
+                "children": []
+              },
+              {
+                "name": "Opština Probištip",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Probishtip",
+                  "Opstina Probistip",
+                  "Opština Probištip",
+                  "Probishtip"
+                ],
+                "lat": 41.96667,
+                "lon": 22.15,
+                "children": []
+              },
+              {
+                "name": "Opština Radoviš",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Radovish",
+                  "Opstina Radovis",
+                  "Opština Radoviš",
+                  "Radovis"
+                ],
+                "lat": 41.65,
+                "lon": 22.5,
+                "children": []
+              },
+              {
+                "name": "Opština Rankovce",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Rankovce",
+                  "Opstina Rankovce",
+                  "Opština Rankovce",
+                  "Rankovce"
+                ],
+                "lat": 42.21667,
+                "lon": 22.15,
+                "children": []
+              },
+              {
+                "name": "Opština Sopište",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Sopishte",
+                  "Opstina Sopiste",
+                  "Opština Sopište",
+                  "Sopishte"
+                ],
+                "lat": 41.89,
+                "lon": 21.32,
+                "children": []
+              },
+              {
+                "name": "Opština Staro Nagoričane",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Staro Nagorichane",
+                  "Opstina Staro Nagoricane",
+                  "Opština Staro Nagoričane",
+                  "Staro Nagoricane"
+                ],
+                "lat": 42.23333,
+                "lon": 21.93333,
+                "children": []
+              },
+              {
+                "name": "Opština Štip",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Shtip",
+                  "Opstina Stip",
+                  "Opština Štip",
+                  "Shtip"
+                ],
+                "lat": 41.7,
+                "lon": 22.2,
+                "children": []
+              },
+              {
+                "name": "Opština Studeničani",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Studenichani",
+                  "Opstina Studenicani",
+                  "Opština Studeničani",
+                  "Studenicani"
+                ],
+                "lat": 41.83333,
+                "lon": 21.43333,
+                "children": []
+              },
+              {
+                "name": "Opština Vevčani",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Vevchani",
+                  "Opstina Vevcani",
+                  "Opština Vevčani",
+                  "Vevcani"
+                ],
+                "lat": 41.23333,
+                "lon": 20.58333,
+                "children": []
+              },
+              {
+                "name": "Opština Vrapčište",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Vrapchishte",
+                  "Opstina Vrapciste",
+                  "Opština Vrapčište",
+                  "Vrapchishte"
+                ],
+                "lat": 41.85,
+                "lon": 20.85,
+                "children": []
+              },
+              {
+                "name": "Opština Želino",
+                "type": "admin1",
+                "aliases": [
+                  "Jelino",
+                  "Opshtina Zhelino",
+                  "Opstina Zelino",
+                  "Opština Želino"
+                ],
+                "lat": 41.93333,
+                "lon": 21.13333,
+                "children": []
+              },
+              {
+                "name": "Petrovec",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Petrovec",
+                  "Opstina Petrovec",
+                  "Opština Petrovec",
+                  "Petrovec"
+                ],
+                "lat": 41.91667,
+                "lon": 21.71667,
+                "children": []
+              },
+              {
+                "name": "Plasnica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Plasnica",
+                  "Dimos Plasnitsa",
+                  "GJo thi tu tri Plasnica",
+                  "Gmina Plasnica"
+                ],
+                "lat": 41.45,
+                "lon": 21.11667,
+                "children": []
+              },
+              {
+                "name": "Prilep",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Prilep",
+                  "Opstina Prilep",
+                  "Opština Prilep",
+                  "Prilep"
+                ],
+                "lat": 41.28778,
+                "lon": 21.67583,
+                "children": []
+              },
+              {
+                "name": "Resen",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Resen",
+                  "Dimos Resnas",
+                  "GJo thi tu tri Resen",
+                  "Gmina Resen"
+                ],
+                "lat": 41.03333,
+                "lon": 21.01667,
+                "children": []
+              },
+              {
+                "name": "Rosoman",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Rosoman",
+                  "Dimos Rosoman",
+                  "Gmina Rosoman",
+                  "Komuna e Rosomanit"
+                ],
+                "lat": 41.51,
+                "lon": 21.92,
+                "children": []
+              },
+              {
+                "name": "Struga",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Struga",
+                  "Opstina Struga",
+                  "Opština Struga",
+                  "Struga"
+                ],
+                "lat": 41.28139,
+                "lon": 20.63361,
+                "children": []
+              },
+              {
+                "name": "Strumica",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Strumica",
+                  "Opstina Strumica",
+                  "Opština Strumica",
+                  "Strumica"
+                ],
+                "lat": 41.41111,
+                "lon": 22.64639,
+                "children": []
+              },
+              {
+                "name": "Sveti Nikole",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Sveti Nikole",
+                  "Dimos Sveti Nikole",
+                  "GJo thi tu tri Sveti Nikole",
+                  "Gmina Sveti Nikole"
+                ],
+                "lat": 41.9,
+                "lon": 21.98333,
+                "children": []
+              },
+              {
+                "name": "Tearce",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Tearce",
+                  "Dimos Teartse",
+                  "GJo thi tu tri Tearce",
+                  "Gmina Tearce"
+                ],
+                "lat": 42.1,
+                "lon": 21.05,
+                "children": []
+              },
+              {
+                "name": "Tetovo",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Tetovo",
+                  "Opstina Tetovo",
+                  "Opština Tetovo",
+                  "Tetovo"
+                ],
+                "lat": 42.04444,
+                "lon": 20.9025,
+                "children": []
+              },
+              {
+                "name": "Valandovo",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Valandovo",
+                  "Dimos Valantovou",
+                  "Gmina Walandowo",
+                  "Gmina Wałandowo"
+                ],
+                "lat": 41.33444,
+                "lon": 22.53222,
+                "children": []
+              },
+              {
+                "name": "Vasilevo",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Vasilevo",
+                  "Opstina Vasilevo",
+                  "Opština Vasilevo",
+                  "Vasilevo"
+                ],
+                "lat": 41.53333,
+                "lon": 22.66667,
+                "children": []
+              },
+              {
+                "name": "Veles",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Veles",
+                  "Opstina Veles",
+                  "Opština Veles",
+                  "Veles"
+                ],
+                "lat": 41.77583,
+                "lon": 21.76278,
+                "children": []
+              },
+              {
+                "name": "Vinica",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Vinica",
+                  "Opstina Vinica",
+                  "Opština Vinica",
+                  "Vinica"
+                ],
+                "lat": 41.85917,
+                "lon": 22.58417,
+                "children": []
+              },
+              {
+                "name": "Zelenikovo",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Zelenikovo",
+                  "Opstina Zelenikovo",
+                  "Opština Zelenikovo",
+                  "Zelenikogo"
+                ],
+                "lat": 41.83333,
+                "lon": 21.58333,
+                "children": []
+              },
+              {
+                "name": "Zrnovci",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Zrnovci",
+                  "Dimos Zrnovtsi",
+                  "GJo thi tu tri Zrnovci",
+                  "Gmina Zrnovci"
+                ],
+                "lat": 41.83333,
+                "lon": 22.45,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

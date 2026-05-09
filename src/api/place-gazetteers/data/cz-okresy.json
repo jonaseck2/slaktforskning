@@ -1,0 +1,3585 @@
+{
+  "id": "cz-okresy",
+  "name": "Czechia Kraje + Okresy",
+  "locale": "cz",
+  "description": "Czechia: 14 kraje (admin1) + 98 okresy (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/CZ.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Czechia",
+            "type": "country",
+            "aliases": [
+              "Česko",
+              "Czech Republic",
+              "Tschechien"
+            ],
+            "lat": 49.8,
+            "lon": 15.5,
+            "children": [
+              {
+                "name": "Hlavní město Praha",
+                "type": "admin1",
+                "aliases": [
+                  "CZ010",
+                  "Capital City of Prague",
+                  "City of Prague",
+                  "Hauptstadt Prag"
+                ],
+                "lat": 50.075412,
+                "lon": 14.470915,
+                "children": [
+                  {
+                    "name": "Praha 1",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 1"
+                    ],
+                    "lat": 50.08802,
+                    "lon": 14.42166,
+                    "children": [
+                      {
+                        "name": "Malá Strana",
+                        "type": "admin3",
+                        "lat": 50.08774,
+                        "lon": 14.40449
+                      },
+                      {
+                        "name": "Staré Město",
+                        "type": "admin3",
+                        "lat": 50.087,
+                        "lon": 14.42024
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 10",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 10"
+                    ],
+                    "lat": 50.06788,
+                    "lon": 14.46118,
+                    "children": [
+                      {
+                        "name": "Malešice",
+                        "type": "admin3",
+                        "lat": 50.08471,
+                        "lon": 14.50938
+                      },
+                      {
+                        "name": "Staré Strašnice",
+                        "type": "admin3",
+                        "lat": 50.07649,
+                        "lon": 14.51037
+                      },
+                      {
+                        "name": "Vršovice",
+                        "type": "admin3",
+                        "lat": 50.06732,
+                        "lon": 14.46026
+                      },
+                      {
+                        "name": "Záběhlice",
+                        "type": "admin3",
+                        "lat": 50.0573,
+                        "lon": 14.5038
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 11",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 11"
+                    ],
+                    "lat": 50.03178,
+                    "lon": 14.50719,
+                    "children": [
+                      {
+                        "name": "Chodov",
+                        "type": "admin3",
+                        "lat": 50.03669,
+                        "lon": 14.50444
+                      },
+                      {
+                        "name": "Háje",
+                        "type": "admin3",
+                        "lat": 50.03611,
+                        "lon": 14.52672
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 12",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 12"
+                    ],
+                    "lat": 50.00564,
+                    "lon": 14.40462,
+                    "children": [
+                      {
+                        "name": "Libuš",
+                        "type": "admin3",
+                        "lat": 50.00956,
+                        "lon": 14.46196
+                      },
+                      {
+                        "name": "Modřany",
+                        "type": "admin3",
+                        "lat": 50.01116,
+                        "lon": 14.4096
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 13",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 13"
+                    ],
+                    "lat": 50.05163,
+                    "lon": 14.34231,
+                    "children": [
+                      {
+                        "name": "Stodůlky",
+                        "type": "admin3",
+                        "lat": 50.05,
+                        "lon": 14.31667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 14",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 14"
+                    ],
+                    "lat": 50.10682,
+                    "lon": 14.55731,
+                    "children": [
+                      {
+                        "name": "Černý Most",
+                        "type": "admin3",
+                        "lat": 50.10475,
+                        "lon": 14.57974
+                      },
+                      {
+                        "name": "Hloubětín",
+                        "type": "admin3",
+                        "lat": 50.10621,
+                        "lon": 14.53723
+                      },
+                      {
+                        "name": "Kyje",
+                        "type": "admin3",
+                        "lat": 50.09729,
+                        "lon": 14.5477
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 15",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 15"
+                    ],
+                    "lat": 50.0524,
+                    "lon": 14.53156,
+                    "children": [
+                      {
+                        "name": "Horní Měcholupy",
+                        "type": "admin3",
+                        "lat": 50.05,
+                        "lon": 14.56667
+                      },
+                      {
+                        "name": "Hostivař",
+                        "type": "admin3",
+                        "lat": 50.04862,
+                        "lon": 14.5244
+                      },
+                      {
+                        "name": "Petrovice",
+                        "type": "admin3",
+                        "lat": 50.03399,
+                        "lon": 14.54676
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 16",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 16"
+                    ],
+                    "lat": 49.98357,
+                    "lon": 14.3611,
+                    "children": [
+                      {
+                        "name": "Radotín",
+                        "type": "admin3",
+                        "lat": 49.98985,
+                        "lon": 14.36572
+                      },
+                      {
+                        "name": "Zbraslav",
+                        "type": "admin3",
+                        "lat": 49.97604,
+                        "lon": 14.39329
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 17",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 17"
+                    ],
+                    "lat": 50.06535,
+                    "lon": 14.30806,
+                    "children": [
+                      {
+                        "name": "Řepy",
+                        "type": "admin3",
+                        "lat": 50.07064,
+                        "lon": 14.30051
+                      },
+                      {
+                        "name": "Zlíčín",
+                        "type": "admin3",
+                        "lat": 50.06182,
+                        "lon": 14.28965
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 18",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 18"
+                    ],
+                    "lat": 50.13659,
+                    "lon": 14.51225,
+                    "children": [
+                      {
+                        "name": "Čakovice",
+                        "type": "admin3",
+                        "lat": 50.15128,
+                        "lon": 14.52393
+                      },
+                      {
+                        "name": "Letňany",
+                        "type": "admin3",
+                        "lat": 50.13333,
+                        "lon": 14.51667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 19",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 19"
+                    ],
+                    "lat": 50.13422,
+                    "lon": 14.54744,
+                    "children": [
+                      {
+                        "name": "Kbely",
+                        "type": "admin3",
+                        "lat": 50.13333,
+                        "lon": 14.55
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 2",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 2"
+                    ],
+                    "lat": 50.07546,
+                    "lon": 14.43595,
+                    "children": [
+                      {
+                        "name": "Královské Vinohrady",
+                        "type": "admin3",
+                        "lat": 50.07438,
+                        "lon": 14.44367
+                      },
+                      {
+                        "name": "Nové Město",
+                        "type": "admin3",
+                        "lat": 50.07829,
+                        "lon": 14.42089
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 20",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 20"
+                    ],
+                    "lat": 50.11568,
+                    "lon": 14.61122,
+                    "children": [
+                      {
+                        "name": "Horní Počernice",
+                        "type": "admin3",
+                        "lat": 50.1121,
+                        "lon": 14.61036
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 21",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 21"
+                    ],
+                    "lat": 50.07521,
+                    "lon": 14.66898,
+                    "children": [
+                      {
+                        "name": "Újezd nad Lesy",
+                        "type": "admin3",
+                        "lat": 50.07648,
+                        "lon": 14.6595
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 22",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 22"
+                    ],
+                    "lat": 50.03256,
+                    "lon": 14.5986,
+                    "children": [
+                      {
+                        "name": "Uhříněves",
+                        "type": "admin3",
+                        "lat": 50.02885,
+                        "lon": 14.59948
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 3",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 3"
+                    ],
+                    "lat": 50.08512,
+                    "lon": 14.45226,
+                    "children": [
+                      {
+                        "name": "Žižkov",
+                        "type": "admin3",
+                        "lat": 50.08333,
+                        "lon": 14.45
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 4",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 4"
+                    ],
+                    "lat": 50.06213,
+                    "lon": 14.43921,
+                    "children": [
+                      {
+                        "name": "Braník",
+                        "type": "admin3",
+                        "lat": 50.03498,
+                        "lon": 14.41518
+                      },
+                      {
+                        "name": "Krč",
+                        "type": "admin3",
+                        "lat": 50.0416,
+                        "lon": 14.44573
+                      },
+                      {
+                        "name": "Kunratice",
+                        "type": "admin3",
+                        "lat": 50.01364,
+                        "lon": 14.48341
+                      },
+                      {
+                        "name": "Michle",
+                        "type": "admin3",
+                        "lat": 50.04795,
+                        "lon": 14.46217
+                      },
+                      {
+                        "name": "Nusle",
+                        "type": "admin3",
+                        "lat": 50.06458,
+                        "lon": 14.4399
+                      },
+                      {
+                        "name": "Podolí",
+                        "type": "admin3",
+                        "lat": 50.05504,
+                        "lon": 14.42033
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 5",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 5"
+                    ],
+                    "lat": 50.07416,
+                    "lon": 14.40286,
+                    "children": [
+                      {
+                        "name": "Hlubočepy",
+                        "type": "admin3",
+                        "lat": 50.04364,
+                        "lon": 14.40162
+                      },
+                      {
+                        "name": "Jinonice",
+                        "type": "admin3",
+                        "lat": 50.05042,
+                        "lon": 14.37835
+                      },
+                      {
+                        "name": "Košíře",
+                        "type": "admin3",
+                        "lat": 50.06708,
+                        "lon": 14.36328
+                      },
+                      {
+                        "name": "Smíchov",
+                        "type": "admin3",
+                        "lat": 50.07204,
+                        "lon": 14.40415
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 6",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 6"
+                    ],
+                    "lat": 50.10089,
+                    "lon": 14.39535,
+                    "children": [
+                      {
+                        "name": "Dejvice",
+                        "type": "admin3",
+                        "lat": 50.10079,
+                        "lon": 14.39071
+                      },
+                      {
+                        "name": "Ruzyně",
+                        "type": "admin3",
+                        "lat": 50.09033,
+                        "lon": 14.31287
+                      },
+                      {
+                        "name": "Střešovice",
+                        "type": "admin3",
+                        "lat": 50.09526,
+                        "lon": 14.38268
+                      },
+                      {
+                        "name": "Suchdol",
+                        "type": "admin3",
+                        "lat": 50.14136,
+                        "lon": 14.38367
+                      },
+                      {
+                        "name": "Veleslavín",
+                        "type": "admin3",
+                        "lat": 50.09151,
+                        "lon": 14.35776
+                      },
+                      {
+                        "name": "Vokovice",
+                        "type": "admin3",
+                        "lat": 50.09856,
+                        "lon": 14.34488
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 7",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 7"
+                    ],
+                    "lat": 50.09977,
+                    "lon": 14.42445,
+                    "children": [
+                      {
+                        "name": "Holešovice",
+                        "type": "admin3",
+                        "lat": 50.10468,
+                        "lon": 14.44946
+                      },
+                      {
+                        "name": "Troja",
+                        "type": "admin3",
+                        "lat": 50.11659,
+                        "lon": 14.42458
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 8",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 8"
+                    ],
+                    "lat": 50.10665,
+                    "lon": 14.475,
+                    "children": [
+                      {
+                        "name": "Bohnice",
+                        "type": "admin3",
+                        "lat": 50.13333,
+                        "lon": 14.41667
+                      },
+                      {
+                        "name": "Čimice",
+                        "type": "admin3",
+                        "lat": 50.13757,
+                        "lon": 14.43279
+                      },
+                      {
+                        "name": "Dolní Chabry",
+                        "type": "admin3",
+                        "lat": 50.14633,
+                        "lon": 14.44848
+                      },
+                      {
+                        "name": "Karlín",
+                        "type": "admin3",
+                        "lat": 50.09272,
+                        "lon": 14.44711
+                      },
+                      {
+                        "name": "Kobylisy",
+                        "type": "admin3",
+                        "lat": 50.12366,
+                        "lon": 14.45209
+                      },
+                      {
+                        "name": "Libeň",
+                        "type": "admin3",
+                        "lat": 50.10819,
+                        "lon": 14.47457
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Praha 9",
+                    "type": "admin2",
+                    "aliases": [
+                      "Praha 9"
+                    ],
+                    "lat": 50.10753,
+                    "lon": 14.50157,
+                    "children": [
+                      {
+                        "name": "Prosek",
+                        "type": "admin3",
+                        "lat": 50.11525,
+                        "lon": 14.50685
+                      },
+                      {
+                        "name": "Střížkov",
+                        "type": "admin3",
+                        "lat": 50.12674,
+                        "lon": 14.49363
+                      },
+                      {
+                        "name": "Vysočany",
+                        "type": "admin3",
+                        "lat": 50.10938,
+                        "lon": 14.51667
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Jihočeský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "Boemia del Sud",
+                  "Boemia do Sul",
+                  "Boemia meridionale",
+                  "Boheme-du-Sud"
+                ],
+                "lat": 49.130953,
+                "lon": 14.376191,
+                "children": [
+                  {
+                    "name": "Okres České Budějovice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ceske Budejovice",
+                      "Ceske Budejovice District",
+                      "Ceske Budejovice-i jaras"
+                    ],
+                    "lat": 49,
+                    "lon": 14.5,
+                    "children": [
+                      {
+                        "name": "České Budějovice",
+                        "type": "admin3",
+                        "lat": 48.97447,
+                        "lon": 14.47434
+                      },
+                      {
+                        "name": "Týn nad Vltavou",
+                        "type": "admin3",
+                        "lat": 49.2234,
+                        "lon": 14.42057
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Český Krumlov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cesky Krumlov",
+                      "Cesky Krumlov District",
+                      "Cesky Krumlov-i jaras"
+                    ],
+                    "lat": 48.75,
+                    "lon": 14.33333,
+                    "children": [
+                      {
+                        "name": "Český Krumlov",
+                        "type": "admin3",
+                        "lat": 48.81091,
+                        "lon": 14.31521
+                      },
+                      {
+                        "name": "Kaplice",
+                        "type": "admin3",
+                        "lat": 48.73881,
+                        "lon": 14.49449
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Jindřichův Hradec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Jindrichuv Hradec",
+                      "Daerah Jindřichův Hradec",
+                      "Distretto di Jindrichuv Hradec"
+                    ],
+                    "lat": 49.08333,
+                    "lon": 15.16667,
+                    "children": [
+                      {
+                        "name": "Dačice",
+                        "type": "admin3",
+                        "lat": 49.08154,
+                        "lon": 15.43727
+                      },
+                      {
+                        "name": "Jindřichův Hradec",
+                        "type": "admin3",
+                        "lat": 49.14404,
+                        "lon": 15.00301
+                      },
+                      {
+                        "name": "Třeboň",
+                        "type": "admin3",
+                        "lat": 49.00364,
+                        "lon": 14.77065
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Písek",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Pisek",
+                      "Daerah Písek",
+                      "Distretto di Pisek"
+                    ],
+                    "lat": 49.4,
+                    "lon": 14.2,
+                    "children": [
+                      {
+                        "name": "Milevsko",
+                        "type": "admin3",
+                        "lat": 49.45089,
+                        "lon": 14.36
+                      },
+                      {
+                        "name": "Písek",
+                        "type": "admin3",
+                        "lat": 49.3088,
+                        "lon": 14.1475
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Prachatice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Prachatice",
+                      "Distretto di Prachatice",
+                      "District de Prachatice"
+                    ],
+                    "lat": 49,
+                    "lon": 13.86667,
+                    "children": [
+                      {
+                        "name": "Prachatice",
+                        "type": "admin3",
+                        "lat": 49.01292,
+                        "lon": 13.99752
+                      },
+                      {
+                        "name": "Vimperk",
+                        "type": "admin3",
+                        "lat": 49.05857,
+                        "lon": 13.78286
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Strakonice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Strakonice",
+                      "Distretto di Strakonice",
+                      "District de Strakonice"
+                    ],
+                    "lat": 49.26667,
+                    "lon": 13.9,
+                    "children": [
+                      {
+                        "name": "Blatná",
+                        "type": "admin3",
+                        "lat": 49.42489,
+                        "lon": 13.88176
+                      },
+                      {
+                        "name": "Strakonice",
+                        "type": "admin3",
+                        "lat": 49.26141,
+                        "lon": 13.90237
+                      },
+                      {
+                        "name": "Vodňany",
+                        "type": "admin3",
+                        "lat": 49.14789,
+                        "lon": 14.17513
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Tábor",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Tabor",
+                      "Daerah Tábor",
+                      "Distretto di Tabor"
+                    ],
+                    "lat": 49.41667,
+                    "lon": 14.66667,
+                    "children": [
+                      {
+                        "name": "Sezimovo Ústí",
+                        "type": "admin3",
+                        "lat": 49.38519,
+                        "lon": 14.6848
+                      },
+                      {
+                        "name": "Soběslav",
+                        "type": "admin3",
+                        "lat": 49.25993,
+                        "lon": 14.71861
+                      },
+                      {
+                        "name": "Tábor",
+                        "type": "admin3",
+                        "lat": 49.41441,
+                        "lon": 14.6578
+                      },
+                      {
+                        "name": "Veselí nad Lužnicí",
+                        "type": "admin3",
+                        "lat": 49.1843,
+                        "lon": 14.69734
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Jihomoravský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "Brnensky Kraj",
+                  "Brno Region",
+                  "Brněnský Kraj",
+                  "CZ064"
+                ],
+                "lat": 49.072133,
+                "lon": 16.687559,
+                "children": [
+                  {
+                    "name": "Město Brno",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brmo-Mesto",
+                      "Brmo-Město",
+                      "Brno-Mesto"
+                    ],
+                    "lat": 49.19954,
+                    "lon": 16.60755,
+                    "children": [
+                      {
+                        "name": "Bohunice",
+                        "type": "admin3",
+                        "lat": 49.16734,
+                        "lon": 16.57751
+                      },
+                      {
+                        "name": "Brno",
+                        "type": "admin3",
+                        "lat": 49.19522,
+                        "lon": 16.60796
+                      },
+                      {
+                        "name": "Brno střed",
+                        "type": "admin3",
+                        "lat": 49.19343,
+                        "lon": 16.60712
+                      },
+                      {
+                        "name": "Brno-jih",
+                        "type": "admin3",
+                        "lat": 49.1745,
+                        "lon": 16.6228
+                      },
+                      {
+                        "name": "Bystrc",
+                        "type": "admin3",
+                        "lat": 49.22645,
+                        "lon": 16.5303
+                      },
+                      {
+                        "name": "Černovice",
+                        "type": "admin3",
+                        "lat": 49.18232,
+                        "lon": 16.63716
+                      },
+                      {
+                        "name": "Kohoutovice",
+                        "type": "admin3",
+                        "lat": 49.19449,
+                        "lon": 16.54146
+                      },
+                      {
+                        "name": "Komín",
+                        "type": "admin3",
+                        "lat": 49.21967,
+                        "lon": 16.55236
+                      },
+                      {
+                        "name": "Královo Pole",
+                        "type": "admin3",
+                        "lat": 49.22522,
+                        "lon": 16.58987
+                      },
+                      {
+                        "name": "Líšeň",
+                        "type": "admin3",
+                        "lat": 49.20711,
+                        "lon": 16.69484
+                      },
+                      {
+                        "name": "Maloměřice",
+                        "type": "admin3",
+                        "lat": 49.22219,
+                        "lon": 16.65819
+                      },
+                      {
+                        "name": "Medlánky",
+                        "type": "admin3",
+                        "lat": 49.24002,
+                        "lon": 16.57082
+                      },
+                      {
+                        "name": "Nový Lískovec",
+                        "type": "admin3",
+                        "lat": 49.18316,
+                        "lon": 16.5612
+                      },
+                      {
+                        "name": "Řečkovice",
+                        "type": "admin3",
+                        "lat": 49.25212,
+                        "lon": 16.58146
+                      },
+                      {
+                        "name": "Slatina",
+                        "type": "admin3",
+                        "lat": 49.17598,
+                        "lon": 16.6878
+                      },
+                      {
+                        "name": "Starý Lískovec",
+                        "type": "admin3",
+                        "lat": 49.16425,
+                        "lon": 16.56146
+                      },
+                      {
+                        "name": "Tuřany",
+                        "type": "admin3",
+                        "lat": 49.14758,
+                        "lon": 16.66798
+                      },
+                      {
+                        "name": "Vinohrady",
+                        "type": "admin3",
+                        "lat": 49.20655,
+                        "lon": 16.66317
+                      },
+                      {
+                        "name": "Žabovřesky",
+                        "type": "admin3",
+                        "lat": 49.21395,
+                        "lon": 16.57253
+                      },
+                      {
+                        "name": "Žebětín",
+                        "type": "admin3",
+                        "lat": 49.20706,
+                        "lon": 16.4879
+                      },
+                      {
+                        "name": "Židenice",
+                        "type": "admin3",
+                        "lat": 49.19654,
+                        "lon": 16.64738
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Blansko",
+                    "type": "admin2",
+                    "aliases": [
+                      "Blansko",
+                      "Blansko District",
+                      "Blansko aprinkis"
+                    ],
+                    "lat": 49.37399,
+                    "lon": 16.6436,
+                    "children": [
+                      {
+                        "name": "Blansko",
+                        "type": "admin3",
+                        "lat": 49.36304,
+                        "lon": 16.64446
+                      },
+                      {
+                        "name": "Boskovice",
+                        "type": "admin3",
+                        "lat": 49.48751,
+                        "lon": 16.65997
+                      },
+                      {
+                        "name": "Letovice",
+                        "type": "admin3",
+                        "lat": 49.54709,
+                        "lon": 16.57357
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Břeclav",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Lundenburg",
+                      "Breclav",
+                      "Breclav District"
+                    ],
+                    "lat": 48.75958,
+                    "lon": 16.8726,
+                    "children": [
+                      {
+                        "name": "Břeclav",
+                        "type": "admin3",
+                        "lat": 48.75897,
+                        "lon": 16.88203
+                      },
+                      {
+                        "name": "Hustopeče",
+                        "type": "admin3",
+                        "lat": 48.94085,
+                        "lon": 16.73762
+                      },
+                      {
+                        "name": "Mikulov",
+                        "type": "admin3",
+                        "lat": 48.80556,
+                        "lon": 16.6378
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Brno-venkov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brno-venkov",
+                      "Okres Brno-venkov"
+                    ],
+                    "lat": 49.16667,
+                    "lon": 16.5,
+                    "children": [
+                      {
+                        "name": "Ivančice",
+                        "type": "admin3",
+                        "lat": 49.10144,
+                        "lon": 16.37752
+                      },
+                      {
+                        "name": "Kuřim",
+                        "type": "admin3",
+                        "lat": 49.29852,
+                        "lon": 16.53144
+                      },
+                      {
+                        "name": "Modřice",
+                        "type": "admin3",
+                        "lat": 49.11928,
+                        "lon": 16.60446
+                      },
+                      {
+                        "name": "Pohořelice",
+                        "type": "admin3",
+                        "lat": 48.98119,
+                        "lon": 16.52445
+                      },
+                      {
+                        "name": "Rosice",
+                        "type": "admin3",
+                        "lat": 49.18232,
+                        "lon": 16.38787
+                      },
+                      {
+                        "name": "Šlapanice",
+                        "type": "admin3",
+                        "lat": 49.16863,
+                        "lon": 16.72731
+                      },
+                      {
+                        "name": "Tišnov",
+                        "type": "admin3",
+                        "lat": 49.34872,
+                        "lon": 16.42438
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Hodonín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Hodonin",
+                      "Daerah Hodonín",
+                      "Distretto di Hodonin"
+                    ],
+                    "lat": 48.86471,
+                    "lon": 17.13284,
+                    "children": [
+                      {
+                        "name": "Dubňany",
+                        "type": "admin3",
+                        "lat": 48.91694,
+                        "lon": 17.09004
+                      },
+                      {
+                        "name": "Hodonín",
+                        "type": "admin3",
+                        "lat": 48.84893,
+                        "lon": 17.13244
+                      },
+                      {
+                        "name": "Kyjov",
+                        "type": "admin3",
+                        "lat": 49.01018,
+                        "lon": 17.12253
+                      },
+                      {
+                        "name": "Strážnice",
+                        "type": "admin3",
+                        "lat": 48.90102,
+                        "lon": 17.3168
+                      },
+                      {
+                        "name": "Veselí nad Moravou",
+                        "type": "admin3",
+                        "lat": 48.95363,
+                        "lon": 17.37648
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Vyškov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Vyskov",
+                      "Daerah Vyškov",
+                      "Distretto di Vyskov"
+                    ],
+                    "lat": 49.27844,
+                    "lon": 16.99362,
+                    "children": [
+                      {
+                        "name": "Bučovice",
+                        "type": "admin3",
+                        "lat": 49.14896,
+                        "lon": 17.00191
+                      },
+                      {
+                        "name": "Rousínov",
+                        "type": "admin3",
+                        "lat": 49.20128,
+                        "lon": 16.88215
+                      },
+                      {
+                        "name": "Slavkov u Brna",
+                        "type": "admin3",
+                        "lat": 49.15325,
+                        "lon": 16.87649
+                      },
+                      {
+                        "name": "Vyškov",
+                        "type": "admin3",
+                        "lat": 49.27747,
+                        "lon": 16.99897
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Znojmo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Znojmo",
+                      "Distretto di Znojmo",
+                      "District de Znojmo"
+                    ],
+                    "lat": 48.862,
+                    "lon": 16.0627,
+                    "children": [
+                      {
+                        "name": "Moravský Krumlov",
+                        "type": "admin3",
+                        "lat": 49.04893,
+                        "lon": 16.31169
+                      },
+                      {
+                        "name": "Znojmo",
+                        "type": "admin3",
+                        "lat": 48.8555,
+                        "lon": 16.0488
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Karlovarský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ041",
+                  "Carlsbad Region",
+                  "Karlova krai",
+                  "Karlova viloyati"
+                ],
+                "lat": 50.155557,
+                "lon": 12.71111,
+                "children": [
+                  {
+                    "name": "Okres Cheb",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cheb",
+                      "Cheb District",
+                      "Chebi jaras"
+                    ],
+                    "lat": 50.08333,
+                    "lon": 12.5,
+                    "children": [
+                      {
+                        "name": "Aš",
+                        "type": "admin3",
+                        "lat": 50.22387,
+                        "lon": 12.19499
+                      },
+                      {
+                        "name": "Cheb",
+                        "type": "admin3",
+                        "lat": 50.07963,
+                        "lon": 12.37392
+                      },
+                      {
+                        "name": "Františkovy Lázně",
+                        "type": "admin3",
+                        "lat": 50.12033,
+                        "lon": 12.35174
+                      },
+                      {
+                        "name": "Mariánské Lázně",
+                        "type": "admin3",
+                        "lat": 49.96459,
+                        "lon": 12.70118
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Karlovy Vary",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karlovy Vary",
+                      "Okres Karlovy Vary"
+                    ],
+                    "lat": 50.16667,
+                    "lon": 13,
+                    "children": [
+                      {
+                        "name": "Karlovy Vary",
+                        "type": "admin3",
+                        "lat": 50.23271,
+                        "lon": 12.87117
+                      },
+                      {
+                        "name": "Nejdek",
+                        "type": "admin3",
+                        "lat": 50.32242,
+                        "lon": 12.72936
+                      },
+                      {
+                        "name": "Ostrov",
+                        "type": "admin3",
+                        "lat": 50.30592,
+                        "lon": 12.93907
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Sokolov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Sokolov",
+                      "Distretto di Sokolov",
+                      "District de Sokolov"
+                    ],
+                    "lat": 50.21667,
+                    "lon": 12.63333,
+                    "children": [
+                      {
+                        "name": "Chodov",
+                        "type": "admin3",
+                        "lat": 50.24018,
+                        "lon": 12.74551
+                      },
+                      {
+                        "name": "Habartov",
+                        "type": "admin3",
+                        "lat": 50.18297,
+                        "lon": 12.55054
+                      },
+                      {
+                        "name": "Horní Slavkov",
+                        "type": "admin3",
+                        "lat": 50.13863,
+                        "lon": 12.80758
+                      },
+                      {
+                        "name": "Kraslice",
+                        "type": "admin3",
+                        "lat": 50.32372,
+                        "lon": 12.51747
+                      },
+                      {
+                        "name": "Sokolov",
+                        "type": "admin3",
+                        "lat": 50.1813,
+                        "lon": 12.6401
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kraj Vysočina",
+                "type": "admin1",
+                "aliases": [
+                  "CZ063",
+                  "Jihlava Region",
+                  "Jihlavsky Kraj",
+                  "Jihlavský Kraj"
+                ],
+                "lat": 49.41,
+                "lon": 15.659998,
+                "children": [
+                  {
+                    "name": "Okres Havlíčkův Brod",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Havlickuv Brod",
+                      "Daerah Havlíčkův Brod",
+                      "Distretto di Havlickuv Brod"
+                    ],
+                    "lat": 49.66667,
+                    "lon": 15.58333,
+                    "children": [
+                      {
+                        "name": "Chotěboř",
+                        "type": "admin3",
+                        "lat": 49.72072,
+                        "lon": 15.67018
+                      },
+                      {
+                        "name": "Havlíčkův Brod",
+                        "type": "admin3",
+                        "lat": 49.6069,
+                        "lon": 15.57937
+                      },
+                      {
+                        "name": "Ledeč nad Sázavou",
+                        "type": "admin3",
+                        "lat": 49.69517,
+                        "lon": 15.27772
+                      },
+                      {
+                        "name": "Světlá nad Sázavou",
+                        "type": "admin3",
+                        "lat": 49.66801,
+                        "lon": 15.40393
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Jihlava",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jihlava",
+                      "Okres Jihlava"
+                    ],
+                    "lat": 49.33333,
+                    "lon": 15.58333,
+                    "children": [
+                      {
+                        "name": "Jihlava",
+                        "type": "admin3",
+                        "lat": 49.3961,
+                        "lon": 15.59124
+                      },
+                      {
+                        "name": "Polná",
+                        "type": "admin3",
+                        "lat": 49.487,
+                        "lon": 15.71881
+                      },
+                      {
+                        "name": "Telč",
+                        "type": "admin3",
+                        "lat": 49.18418,
+                        "lon": 15.45275
+                      },
+                      {
+                        "name": "Třešť",
+                        "type": "admin3",
+                        "lat": 49.29092,
+                        "lon": 15.48211
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Pelhřimov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Pelhrimov",
+                      "Daerah Pelhřimov",
+                      "Distretto di Pelhrimov"
+                    ],
+                    "lat": 49.41667,
+                    "lon": 15.16667,
+                    "children": [
+                      {
+                        "name": "Humpolec",
+                        "type": "admin3",
+                        "lat": 49.54152,
+                        "lon": 15.35932
+                      },
+                      {
+                        "name": "Pacov",
+                        "type": "admin3",
+                        "lat": 49.47076,
+                        "lon": 15.00168
+                      },
+                      {
+                        "name": "Pelhřimov",
+                        "type": "admin3",
+                        "lat": 49.43134,
+                        "lon": 15.22336
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Třebíč",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Trebic",
+                      "Daerah Třebíč",
+                      "Distretto di Trebic"
+                    ],
+                    "lat": 49.13333,
+                    "lon": 15.93333,
+                    "children": [
+                      {
+                        "name": "Moravské Budějovice",
+                        "type": "admin3",
+                        "lat": 49.05209,
+                        "lon": 15.80864
+                      },
+                      {
+                        "name": "Třebíč",
+                        "type": "admin3",
+                        "lat": 49.21492,
+                        "lon": 15.88166
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Žďár nad Sázavou",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Zgar nad Sazavou",
+                      "Daerah Žďár nad Sázavou",
+                      "Distretto di Zgar nad Sazavou"
+                    ],
+                    "lat": 49.5,
+                    "lon": 16.03333,
+                    "children": [
+                      {
+                        "name": "Bystřice nad Pernštejnem",
+                        "type": "admin3",
+                        "lat": 49.52295,
+                        "lon": 16.26147
+                      },
+                      {
+                        "name": "Nové Město na Moravě",
+                        "type": "admin3",
+                        "lat": 49.56144,
+                        "lon": 16.07418
+                      },
+                      {
+                        "name": "Velká Bíteš",
+                        "type": "admin3",
+                        "lat": 49.28838,
+                        "lon": 16.22742
+                      },
+                      {
+                        "name": "Velké Meziříčí",
+                        "type": "admin3",
+                        "lat": 49.35522,
+                        "lon": 16.01224
+                      },
+                      {
+                        "name": "Žďár nad Sázavou",
+                        "type": "admin3",
+                        "lat": 49.56263,
+                        "lon": 15.93924
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Královéhradecký kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ052",
+                  "Gradec Kralove tөbəge",
+                  "Hradec Kralove Region",
+                  "Hradec Kralove vilayəti"
+                ],
+                "lat": 50.38,
+                "lon": 15.873334,
+                "children": [
+                  {
+                    "name": "Okres Hradec Králové",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arevmtaprahyan srjan",
+                      "Daerah Hradec Kralove",
+                      "Daerah Hradec Králové"
+                    ],
+                    "lat": 50.25,
+                    "lon": 15.66667,
+                    "children": [
+                      {
+                        "name": "Chlumec nad Cidlinou",
+                        "type": "admin3",
+                        "lat": 50.1544,
+                        "lon": 15.46026
+                      },
+                      {
+                        "name": "Hradec Králové",
+                        "type": "admin3",
+                        "lat": 50.20923,
+                        "lon": 15.83277
+                      },
+                      {
+                        "name": "Nový Bydžov",
+                        "type": "admin3",
+                        "lat": 50.2415,
+                        "lon": 15.49082
+                      },
+                      {
+                        "name": "Třebechovice pod Orebem",
+                        "type": "admin3",
+                        "lat": 50.20097,
+                        "lon": 15.99223
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Jičín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Jicin",
+                      "Daerah Jičín",
+                      "Distretto di Jicin"
+                    ],
+                    "lat": 50.41667,
+                    "lon": 15.41667,
+                    "children": [
+                      {
+                        "name": "Hořice",
+                        "type": "admin3",
+                        "lat": 50.36609,
+                        "lon": 15.63183
+                      },
+                      {
+                        "name": "Jičín",
+                        "type": "admin3",
+                        "lat": 50.43723,
+                        "lon": 15.35162
+                      },
+                      {
+                        "name": "Nová Paka",
+                        "type": "admin3",
+                        "lat": 50.49449,
+                        "lon": 15.51503
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Náchod",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Nachod",
+                      "Daerah Náchod",
+                      "Distretto di Nachod"
+                    ],
+                    "lat": 50.41667,
+                    "lon": 16.16667,
+                    "children": [
+                      {
+                        "name": "Broumov",
+                        "type": "admin3",
+                        "lat": 50.58566,
+                        "lon": 16.33181
+                      },
+                      {
+                        "name": "Červený Kostelec",
+                        "type": "admin3",
+                        "lat": 50.47626,
+                        "lon": 16.09289
+                      },
+                      {
+                        "name": "Česká Skalice",
+                        "type": "admin3",
+                        "lat": 50.39467,
+                        "lon": 16.04276
+                      },
+                      {
+                        "name": "Hronov",
+                        "type": "admin3",
+                        "lat": 50.47968,
+                        "lon": 16.1823
+                      },
+                      {
+                        "name": "Jaroměř",
+                        "type": "admin3",
+                        "lat": 50.3562,
+                        "lon": 15.92136
+                      },
+                      {
+                        "name": "Náchod",
+                        "type": "admin3",
+                        "lat": 50.4167,
+                        "lon": 16.16289
+                      },
+                      {
+                        "name": "Nové Město nad Metují",
+                        "type": "admin3",
+                        "lat": 50.34456,
+                        "lon": 16.15147
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Rychnov nad Kněžnou",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arrondiment de Rychnov nad Kneznou",
+                      "Arrondiment de Rychnov nad Kněžnou",
+                      "Daerah Rychnov nad Kneznou"
+                    ],
+                    "lat": 50.23333,
+                    "lon": 16.28333,
+                    "children": [
+                      {
+                        "name": "Dobruška",
+                        "type": "admin3",
+                        "lat": 50.29201,
+                        "lon": 16.16001
+                      },
+                      {
+                        "name": "Kostelec nad Orlicí",
+                        "type": "admin3",
+                        "lat": 50.12267,
+                        "lon": 16.21319
+                      },
+                      {
+                        "name": "Rychnov nad Kněžnou",
+                        "type": "admin3",
+                        "lat": 50.16284,
+                        "lon": 16.27488
+                      },
+                      {
+                        "name": "Týniště nad Orlicí",
+                        "type": "admin3",
+                        "lat": 50.15136,
+                        "lon": 16.0777
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Trutnov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Trutnov",
+                      "Distretto di Trutnov",
+                      "District de Trutnov"
+                    ],
+                    "lat": 50.58333,
+                    "lon": 15.83333,
+                    "children": [
+                      {
+                        "name": "Dvůr Králové nad Labem",
+                        "type": "admin3",
+                        "lat": 50.43172,
+                        "lon": 15.81402
+                      },
+                      {
+                        "name": "Trutnov",
+                        "type": "admin3",
+                        "lat": 50.56101,
+                        "lon": 15.9127
+                      },
+                      {
+                        "name": "Úpice",
+                        "type": "admin3",
+                        "lat": 50.51237,
+                        "lon": 16.01607
+                      },
+                      {
+                        "name": "Vrchlabí",
+                        "type": "admin3",
+                        "lat": 50.62697,
+                        "lon": 15.60937
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Liberecký kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ051",
+                  "Liberec Region",
+                  "Liberec krai",
+                  "Liberec tөbəge"
+                ],
+                "lat": 50.716668,
+                "lon": 15.104168,
+                "children": [
+                  {
+                    "name": "Okres Česká Lípa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ceska Lipa",
+                      "Ceska Lipa District",
+                      "Ceska Lipa-i jaras"
+                    ],
+                    "lat": 50.66667,
+                    "lon": 14.66667,
+                    "children": [
+                      {
+                        "name": "Česká Lípa",
+                        "type": "admin3",
+                        "lat": 50.68551,
+                        "lon": 14.53764
+                      },
+                      {
+                        "name": "Doksy",
+                        "type": "admin3",
+                        "lat": 50.56471,
+                        "lon": 14.65553
+                      },
+                      {
+                        "name": "Mimoň",
+                        "type": "admin3",
+                        "lat": 50.65869,
+                        "lon": 14.72474
+                      },
+                      {
+                        "name": "Nový Bor",
+                        "type": "admin3",
+                        "lat": 50.75761,
+                        "lon": 14.55555
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Jablonec nad Nisou",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Jablonec nad Nisou",
+                      "Distretto di Jablonec nad Nisou",
+                      "District de Jablonec nad Nisou"
+                    ],
+                    "lat": 50.75,
+                    "lon": 15.25,
+                    "children": [
+                      {
+                        "name": "Jablonec nad Nisou",
+                        "type": "admin3",
+                        "lat": 50.72431,
+                        "lon": 15.17108
+                      },
+                      {
+                        "name": "Tanvald",
+                        "type": "admin3",
+                        "lat": 50.73735,
+                        "lon": 15.30585
+                      },
+                      {
+                        "name": "Železný Brod",
+                        "type": "admin3",
+                        "lat": 50.64274,
+                        "lon": 15.25408
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Liberec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Liberec",
+                      "Distretto di Liberec",
+                      "District de Liberec"
+                    ],
+                    "lat": 50.83333,
+                    "lon": 15.08333,
+                    "children": [
+                      {
+                        "name": "Chrastava",
+                        "type": "admin3",
+                        "lat": 50.81693,
+                        "lon": 14.96884
+                      },
+                      {
+                        "name": "Frýdlant",
+                        "type": "admin3",
+                        "lat": 50.92139,
+                        "lon": 15.07974
+                      },
+                      {
+                        "name": "Hrádek nad Nisou",
+                        "type": "admin3",
+                        "lat": 50.85279,
+                        "lon": 14.84455
+                      },
+                      {
+                        "name": "Liberec",
+                        "type": "admin3",
+                        "lat": 50.76711,
+                        "lon": 15.05619
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Semily",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Semily",
+                      "Distretto di Semily",
+                      "District de Semily"
+                    ],
+                    "lat": 50.61667,
+                    "lon": 15.41667,
+                    "children": [
+                      {
+                        "name": "Jilemnice",
+                        "type": "admin3",
+                        "lat": 50.6089,
+                        "lon": 15.50653
+                      },
+                      {
+                        "name": "Lomnice nad Popelkou",
+                        "type": "admin3",
+                        "lat": 50.53062,
+                        "lon": 15.37341
+                      },
+                      {
+                        "name": "Semily",
+                        "type": "admin3",
+                        "lat": 50.60191,
+                        "lon": 15.33552
+                      },
+                      {
+                        "name": "Turnov",
+                        "type": "admin3",
+                        "lat": 50.58356,
+                        "lon": 15.15186
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Moravskoslezský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ080",
+                  "Maehrisch-Schlesische Region",
+                  "Moravia-Silezia vilayəti",
+                  "Moravian and Silesian Region"
+                ],
+                "lat": 49.791665,
+                "lon": 18.097223,
+                "children": [
+                  {
+                    "name": "Okres Bruntál",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bruntal",
+                      "Bruntal District",
+                      "Bruntal'"
+                    ],
+                    "lat": 50,
+                    "lon": 17.41667,
+                    "children": [
+                      {
+                        "name": "Bruntál",
+                        "type": "admin3",
+                        "lat": 49.98844,
+                        "lon": 17.4647
+                      },
+                      {
+                        "name": "Krnov",
+                        "type": "admin3",
+                        "lat": 50.08967,
+                        "lon": 17.70385
+                      },
+                      {
+                        "name": "Rýmařov",
+                        "type": "admin3",
+                        "lat": 49.93183,
+                        "lon": 17.27177
+                      },
+                      {
+                        "name": "Vrbno pod Pradědem",
+                        "type": "admin3",
+                        "lat": 50.12095,
+                        "lon": 17.38316
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Frýdek-Místek",
+                    "type": "admin2",
+                    "aliases": [
+                      "Frydek-Mistek",
+                      "Frýdek-Místek",
+                      "Okres Frydek-Mistek"
+                    ],
+                    "lat": 49.58333,
+                    "lon": 18.5,
+                    "children": [
+                      {
+                        "name": "Bystřice",
+                        "type": "admin3",
+                        "lat": 49.63657,
+                        "lon": 18.72038
+                      },
+                      {
+                        "name": "Frýdek-Místek",
+                        "type": "admin3",
+                        "lat": 49.68333,
+                        "lon": 18.35
+                      },
+                      {
+                        "name": "Frýdlant nad Ostravicí",
+                        "type": "admin3",
+                        "lat": 49.5928,
+                        "lon": 18.35967
+                      },
+                      {
+                        "name": "Jablunkov",
+                        "type": "admin3",
+                        "lat": 49.57672,
+                        "lon": 18.76458
+                      },
+                      {
+                        "name": "Třinec",
+                        "type": "admin3",
+                        "lat": 49.67763,
+                        "lon": 18.67078
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Karviná",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karvina",
+                      "Karviná",
+                      "Okres Karvina"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 18.5,
+                    "children": [
+                      {
+                        "name": "Bohumín",
+                        "type": "admin3",
+                        "lat": 49.90411,
+                        "lon": 18.35755
+                      },
+                      {
+                        "name": "Český Těšín",
+                        "type": "admin3",
+                        "lat": 49.74613,
+                        "lon": 18.62613
+                      },
+                      {
+                        "name": "Dolní Lutyně",
+                        "type": "admin3",
+                        "lat": 49.89876,
+                        "lon": 18.42815
+                      },
+                      {
+                        "name": "Havířov",
+                        "type": "admin3",
+                        "lat": 49.77984,
+                        "lon": 18.43688
+                      },
+                      {
+                        "name": "Karviná",
+                        "type": "admin3",
+                        "lat": 49.854,
+                        "lon": 18.54169
+                      },
+                      {
+                        "name": "Orlová",
+                        "type": "admin3",
+                        "lat": 49.84527,
+                        "lon": 18.43011
+                      },
+                      {
+                        "name": "Petřvald",
+                        "type": "admin3",
+                        "lat": 49.831,
+                        "lon": 18.3894
+                      },
+                      {
+                        "name": "Rychvald",
+                        "type": "admin3",
+                        "lat": 49.86625,
+                        "lon": 18.37626
+                      },
+                      {
+                        "name": "Starý Bohumín",
+                        "type": "admin3",
+                        "lat": 49.9169,
+                        "lon": 18.33619
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Nový Jičín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arrondiment de Novy Jicin",
+                      "Arrondiment de Nový Jičín",
+                      "Daerah Novy Jicin"
+                    ],
+                    "lat": 49.66667,
+                    "lon": 18,
+                    "children": [
+                      {
+                        "name": "Bílovec",
+                        "type": "admin3",
+                        "lat": 49.75639,
+                        "lon": 18.01581
+                      },
+                      {
+                        "name": "Frenštát pod Radhoštěm",
+                        "type": "admin3",
+                        "lat": 49.54835,
+                        "lon": 18.21078
+                      },
+                      {
+                        "name": "Fulnek",
+                        "type": "admin3",
+                        "lat": 49.71238,
+                        "lon": 17.90319
+                      },
+                      {
+                        "name": "Kopřivnice",
+                        "type": "admin3",
+                        "lat": 49.59947,
+                        "lon": 18.1448
+                      },
+                      {
+                        "name": "Nový Jičín",
+                        "type": "admin3",
+                        "lat": 49.59438,
+                        "lon": 18.01028
+                      },
+                      {
+                        "name": "Odry",
+                        "type": "admin3",
+                        "lat": 49.66255,
+                        "lon": 17.83084
+                      },
+                      {
+                        "name": "Příbor",
+                        "type": "admin3",
+                        "lat": 49.64094,
+                        "lon": 18.14499
+                      },
+                      {
+                        "name": "Studénka",
+                        "type": "admin3",
+                        "lat": 49.72342,
+                        "lon": 18.07853
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Opava",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Opava",
+                      "Distretto di Opava",
+                      "District dOpava"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 17.91667,
+                    "children": [
+                      {
+                        "name": "Hlučín",
+                        "type": "admin3",
+                        "lat": 49.89795,
+                        "lon": 18.19196
+                      },
+                      {
+                        "name": "Hradec nad Moravicí",
+                        "type": "admin3",
+                        "lat": 49.87042,
+                        "lon": 17.87843
+                      },
+                      {
+                        "name": "Kravaře",
+                        "type": "admin3",
+                        "lat": 49.93203,
+                        "lon": 18.00472
+                      },
+                      {
+                        "name": "Opava",
+                        "type": "admin3",
+                        "lat": 49.93866,
+                        "lon": 17.90257
+                      },
+                      {
+                        "name": "Vítkov",
+                        "type": "admin3",
+                        "lat": 49.77445,
+                        "lon": 17.74941
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Ostrava-město",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Ostrava-mesto",
+                      "Okres Ostrava-město",
+                      "Ostrava"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 18.25,
+                    "children": [
+                      {
+                        "name": "Ostrava",
+                        "type": "admin3",
+                        "lat": 49.83465,
+                        "lon": 18.28204
+                      },
+                      {
+                        "name": "Šenov",
+                        "type": "admin3",
+                        "lat": 49.79315,
+                        "lon": 18.37607
+                      },
+                      {
+                        "name": "Vratimov",
+                        "type": "admin3",
+                        "lat": 49.76995,
+                        "lon": 18.31015
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Olomoucký kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ071",
+                  "Olmuetzer Region",
+                  "Olmützer Region",
+                  "Ololmouc krai"
+                ],
+                "lat": 49.783334,
+                "lon": 17.2,
+                "children": [
+                  {
+                    "name": "Okres Jeseník",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Jesenik",
+                      "Daerah Jeseník",
+                      "Distretto di Jesenik"
+                    ],
+                    "lat": 50.25,
+                    "lon": 17.16667,
+                    "children": [
+                      {
+                        "name": "Jeseník",
+                        "type": "admin3",
+                        "lat": 50.22937,
+                        "lon": 17.20464
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Olomouc",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Olomouc",
+                      "Distretto di Olomouc",
+                      "District dOlomouc"
+                    ],
+                    "lat": 49.66667,
+                    "lon": 17.25,
+                    "children": [
+                      {
+                        "name": "Litovel",
+                        "type": "admin3",
+                        "lat": 49.70121,
+                        "lon": 17.07615
+                      },
+                      {
+                        "name": "Olomouc",
+                        "type": "admin3",
+                        "lat": 49.59552,
+                        "lon": 17.25175
+                      },
+                      {
+                        "name": "Šternberk",
+                        "type": "admin3",
+                        "lat": 49.73044,
+                        "lon": 17.29889
+                      },
+                      {
+                        "name": "Uničov",
+                        "type": "admin3",
+                        "lat": 49.77092,
+                        "lon": 17.12144
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Přerov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Prerov",
+                      "Daerah Přerov",
+                      "Distretto di Prerov"
+                    ],
+                    "lat": 49.5,
+                    "lon": 17.55,
+                    "children": [
+                      {
+                        "name": "Hranice",
+                        "type": "admin3",
+                        "lat": 49.54796,
+                        "lon": 17.73469
+                      },
+                      {
+                        "name": "Kojetín",
+                        "type": "admin3",
+                        "lat": 49.35179,
+                        "lon": 17.30207
+                      },
+                      {
+                        "name": "Lipník nad Bečvou",
+                        "type": "admin3",
+                        "lat": 49.52721,
+                        "lon": 17.58594
+                      },
+                      {
+                        "name": "Přerov",
+                        "type": "admin3",
+                        "lat": 49.45511,
+                        "lon": 17.4509
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Prostějov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Prostejov",
+                      "Daerah Prostějov",
+                      "Distretto di Prostejov"
+                    ],
+                    "lat": 49.5,
+                    "lon": 17.03333,
+                    "children": [
+                      {
+                        "name": "Prostějov",
+                        "type": "admin3",
+                        "lat": 49.47188,
+                        "lon": 17.11184
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Šumperk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Sumperk",
+                      "Daerah Šumperk",
+                      "Distretto di Sumperk"
+                    ],
+                    "lat": 50,
+                    "lon": 17,
+                    "children": [
+                      {
+                        "name": "Mohelnice",
+                        "type": "admin3",
+                        "lat": 49.77698,
+                        "lon": 16.91946
+                      },
+                      {
+                        "name": "Šumperk",
+                        "type": "admin3",
+                        "lat": 49.96528,
+                        "lon": 16.97061
+                      },
+                      {
+                        "name": "Zábřeh",
+                        "type": "admin3",
+                        "lat": 49.8826,
+                        "lon": 16.87223
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Pardubický kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ053",
+                  "Pardubice Region",
+                  "Pardubice krai",
+                  "Pardubice tөbəge"
+                ],
+                "lat": 49.912498,
+                "lon": 16.154165,
+                "children": [
+                  {
+                    "name": "Okres Chrudim",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chrudim",
+                      "Chrudim District",
+                      "Chrudimi jaras"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 15.83333,
+                    "children": [
+                      {
+                        "name": "Chrudim",
+                        "type": "admin3",
+                        "lat": 49.95109,
+                        "lon": 15.79558
+                      },
+                      {
+                        "name": "Hlinsko",
+                        "type": "admin3",
+                        "lat": 49.76213,
+                        "lon": 15.90756
+                      },
+                      {
+                        "name": "Skuteč",
+                        "type": "admin3",
+                        "lat": 49.84347,
+                        "lon": 15.99655
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Pardubice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Pardubice",
+                      "Distretto di Pardubice",
+                      "District de Pardubice"
+                    ],
+                    "lat": 50.08333,
+                    "lon": 15.75,
+                    "children": [
+                      {
+                        "name": "Holice",
+                        "type": "admin3",
+                        "lat": 50.06601,
+                        "lon": 15.9859
+                      },
+                      {
+                        "name": "Pardubice",
+                        "type": "admin3",
+                        "lat": 50.04075,
+                        "lon": 15.77659
+                      },
+                      {
+                        "name": "Přelouč",
+                        "type": "admin3",
+                        "lat": 50.03985,
+                        "lon": 15.56031
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Svitavy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Svitavy",
+                      "Distretto di Svitavy",
+                      "District de Svitavy"
+                    ],
+                    "lat": 49.73333,
+                    "lon": 16.5,
+                    "children": [
+                      {
+                        "name": "Litomyšl",
+                        "type": "admin3",
+                        "lat": 49.86809,
+                        "lon": 16.31298
+                      },
+                      {
+                        "name": "Moravská Třebová",
+                        "type": "admin3",
+                        "lat": 49.75793,
+                        "lon": 16.66426
+                      },
+                      {
+                        "name": "Polička",
+                        "type": "admin3",
+                        "lat": 49.71465,
+                        "lon": 16.26543
+                      },
+                      {
+                        "name": "Svitavy",
+                        "type": "admin3",
+                        "lat": 49.75594,
+                        "lon": 16.46829
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Ústí nad Orlicí",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Usti nad Orlici",
+                      "Daerah Ústí nad Orlicí",
+                      "Distretto di Usti nad Orlici"
+                    ],
+                    "lat": 50,
+                    "lon": 16.53333,
+                    "children": [
+                      {
+                        "name": "Česká Třebová",
+                        "type": "admin3",
+                        "lat": 49.90436,
+                        "lon": 16.44413
+                      },
+                      {
+                        "name": "Choceň",
+                        "type": "admin3",
+                        "lat": 50.00161,
+                        "lon": 16.22303
+                      },
+                      {
+                        "name": "Lanškroun",
+                        "type": "admin3",
+                        "lat": 49.91217,
+                        "lon": 16.6119
+                      },
+                      {
+                        "name": "Letohrad",
+                        "type": "admin3",
+                        "lat": 50.0358,
+                        "lon": 16.49879
+                      },
+                      {
+                        "name": "Ústí nad Orlicí",
+                        "type": "admin3",
+                        "lat": 49.97387,
+                        "lon": 16.39361
+                      },
+                      {
+                        "name": "Vysoké Mýto",
+                        "type": "admin3",
+                        "lat": 49.9532,
+                        "lon": 16.16169
+                      },
+                      {
+                        "name": "Žamberk",
+                        "type": "admin3",
+                        "lat": 50.08601,
+                        "lon": 16.46738
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Plzeňský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ032",
+                  "Pil'zen tөbəge",
+                  "Pilsner Region",
+                  "Pilzen vilayəti"
+                ],
+                "lat": 49.65,
+                "lon": 13.266669,
+                "children": [
+                  {
+                    "name": "Okres Domažlice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Domazlice",
+                      "Daerah Domažlice",
+                      "Distretto di Domazlice"
+                    ],
+                    "lat": 49.5,
+                    "lon": 12.91667,
+                    "children": [
+                      {
+                        "name": "Domažlice",
+                        "type": "admin3",
+                        "lat": 49.44049,
+                        "lon": 12.92976
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Klatovy",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Klatovy",
+                      "Distretto di Klatovy",
+                      "District de Klatovy"
+                    ],
+                    "lat": 49.25,
+                    "lon": 13.41667,
+                    "children": [
+                      {
+                        "name": "Horažďovice",
+                        "type": "admin3",
+                        "lat": 49.32069,
+                        "lon": 13.701
+                      },
+                      {
+                        "name": "Klatovy",
+                        "type": "admin3",
+                        "lat": 49.39552,
+                        "lon": 13.29505
+                      },
+                      {
+                        "name": "Nýrsko",
+                        "type": "admin3",
+                        "lat": 49.29387,
+                        "lon": 13.14353
+                      },
+                      {
+                        "name": "Sušice",
+                        "type": "admin3",
+                        "lat": 49.23106,
+                        "lon": 13.52018
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Plzeň-jih",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kreis Pilsen-Sued",
+                      "Kreis Pilsen-Süd",
+                      "Okres Plzen-jih"
+                    ],
+                    "lat": 49.58333,
+                    "lon": 13.5,
+                    "children": [
+                      {
+                        "name": "Dobřany",
+                        "type": "admin3",
+                        "lat": 49.65482,
+                        "lon": 13.29307
+                      },
+                      {
+                        "name": "Přeštice",
+                        "type": "admin3",
+                        "lat": 49.57298,
+                        "lon": 13.3335
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Plzeň-město",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mesto Plzen",
+                      "Město Plzeň",
+                      "Okres Plzen-mesto"
+                    ],
+                    "lat": 49.75,
+                    "lon": 13.36667,
+                    "children": [
+                      {
+                        "name": "Pilsen",
+                        "type": "admin3",
+                        "lat": 49.74747,
+                        "lon": 13.37759
+                      },
+                      {
+                        "name": "Starý Plzenec",
+                        "type": "admin3",
+                        "lat": 49.69768,
+                        "lon": 13.4735
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Plzeň-sever",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kreis Nord-Pilsen",
+                      "Okres Plzen-sever",
+                      "Okres Plzeň-sever"
+                    ],
+                    "lat": 49.91667,
+                    "lon": 13.25,
+                    "children": [
+                      {
+                        "name": "Nýřany",
+                        "type": "admin3",
+                        "lat": 49.71145,
+                        "lon": 13.21185
+                      },
+                      {
+                        "name": "Třemošná",
+                        "type": "admin3",
+                        "lat": 49.81584,
+                        "lon": 13.39499
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Rokycany",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Rokycany",
+                      "Distretto di Rokycany",
+                      "District de Rokycany"
+                    ],
+                    "lat": 49.78333,
+                    "lon": 13.66667,
+                    "children": [
+                      {
+                        "name": "Rokycany",
+                        "type": "admin3",
+                        "lat": 49.7427,
+                        "lon": 13.59459
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Tachov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Tachov",
+                      "Distretto di Tachov",
+                      "District de Tachov"
+                    ],
+                    "lat": 49.76667,
+                    "lon": 12.75,
+                    "children": [
+                      {
+                        "name": "Planá",
+                        "type": "admin3",
+                        "lat": 49.86816,
+                        "lon": 12.74378
+                      },
+                      {
+                        "name": "Stříbro",
+                        "type": "admin3",
+                        "lat": 49.75565,
+                        "lon": 12.997
+                      },
+                      {
+                        "name": "Tachov",
+                        "type": "admin3",
+                        "lat": 49.79528,
+                        "lon": 12.63365
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Středočeský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "Boemia Central",
+                  "Boemia Centrala",
+                  "Boemia centrale",
+                  "Bogemijai Markazi"
+                ],
+                "lat": 50.011196,
+                "lon": 14.561808,
+                "children": [
+                  {
+                    "name": "Okres Benešov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beneshov",
+                      "Benesov",
+                      "Benesov District"
+                    ],
+                    "lat": 49.66667,
+                    "lon": 14.75,
+                    "children": [
+                      {
+                        "name": "Benešov",
+                        "type": "admin3",
+                        "lat": 49.78162,
+                        "lon": 14.68697
+                      },
+                      {
+                        "name": "Týnec nad Sázavou",
+                        "type": "admin3",
+                        "lat": 49.83348,
+                        "lon": 14.58983
+                      },
+                      {
+                        "name": "Vlašim",
+                        "type": "admin3",
+                        "lat": 49.70632,
+                        "lon": 14.89881
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Beroun",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beroun",
+                      "Beroun District",
+                      "Berouni jaras"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 14.08333,
+                    "children": [
+                      {
+                        "name": "Beroun",
+                        "type": "admin3",
+                        "lat": 49.96382,
+                        "lon": 14.072
+                      },
+                      {
+                        "name": "Hořovice",
+                        "type": "admin3",
+                        "lat": 49.83597,
+                        "lon": 13.90268
+                      },
+                      {
+                        "name": "Králův Dvůr",
+                        "type": "admin3",
+                        "lat": 49.94981,
+                        "lon": 14.03445
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kladno",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Kladno",
+                      "Distretto di Kladno",
+                      "District de Kladno"
+                    ],
+                    "lat": 50.16667,
+                    "lon": 14.16667,
+                    "children": [
+                      {
+                        "name": "Kladno",
+                        "type": "admin3",
+                        "lat": 50.14734,
+                        "lon": 14.10285
+                      },
+                      {
+                        "name": "Slaný",
+                        "type": "admin3",
+                        "lat": 50.23046,
+                        "lon": 14.08693
+                      },
+                      {
+                        "name": "Stochov",
+                        "type": "admin3",
+                        "lat": 50.14631,
+                        "lon": 13.96345
+                      },
+                      {
+                        "name": "Unhošť",
+                        "type": "admin3",
+                        "lat": 50.08535,
+                        "lon": 14.13007
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kolín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kolin",
+                      "Kolín",
+                      "Okres Kolin"
+                    ],
+                    "lat": 50,
+                    "lon": 15,
+                    "children": [
+                      {
+                        "name": "Český Brod",
+                        "type": "admin3",
+                        "lat": 50.0742,
+                        "lon": 14.86081
+                      },
+                      {
+                        "name": "Kolín",
+                        "type": "admin3",
+                        "lat": 50.02806,
+                        "lon": 15.1998
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kutná Hora",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berouni srjan",
+                      "Daerah Kutna Hora",
+                      "Daerah Kutná Hora"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 15.25,
+                    "children": [
+                      {
+                        "name": "Čáslav",
+                        "type": "admin3",
+                        "lat": 49.91099,
+                        "lon": 15.38972
+                      },
+                      {
+                        "name": "Kutná Hora",
+                        "type": "admin3",
+                        "lat": 49.94839,
+                        "lon": 15.26816
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Mělník",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Melnik",
+                      "Daerah Mělník",
+                      "Distretto di Melnik"
+                    ],
+                    "lat": 50.33333,
+                    "lon": 14.5,
+                    "children": [
+                      {
+                        "name": "Kralupy nad Vltavou",
+                        "type": "admin3",
+                        "lat": 50.24107,
+                        "lon": 14.31149
+                      },
+                      {
+                        "name": "Mělník",
+                        "type": "admin3",
+                        "lat": 50.3505,
+                        "lon": 14.47411
+                      },
+                      {
+                        "name": "Neratovice",
+                        "type": "admin3",
+                        "lat": 50.25926,
+                        "lon": 14.51759
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Mladá Boleslav",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Mlada Boleslav",
+                      "Daerah Mladá Boleslav",
+                      "Distretto di Mlada Boleslav"
+                    ],
+                    "lat": 50.41667,
+                    "lon": 14.91667,
+                    "children": [
+                      {
+                        "name": "Bakov nad Jizerou",
+                        "type": "admin3",
+                        "lat": 50.4823,
+                        "lon": 14.94149
+                      },
+                      {
+                        "name": "Benátky nad Jizerou",
+                        "type": "admin3",
+                        "lat": 50.29085,
+                        "lon": 14.82343
+                      },
+                      {
+                        "name": "Mladá Boleslav",
+                        "type": "admin3",
+                        "lat": 50.41135,
+                        "lon": 14.90318
+                      },
+                      {
+                        "name": "Mnichovo Hradiště",
+                        "type": "admin3",
+                        "lat": 50.5272,
+                        "lon": 14.97134
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Nymburk",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Nymburk",
+                      "Distretto di Nymburk",
+                      "District de Nymburk"
+                    ],
+                    "lat": 50.16667,
+                    "lon": 15.16667,
+                    "children": [
+                      {
+                        "name": "Lysá nad Labem",
+                        "type": "admin3",
+                        "lat": 50.20143,
+                        "lon": 14.83281
+                      },
+                      {
+                        "name": "Milovice",
+                        "type": "admin3",
+                        "lat": 50.22596,
+                        "lon": 14.88863
+                      },
+                      {
+                        "name": "Nymburk",
+                        "type": "admin3",
+                        "lat": 50.18605,
+                        "lon": 15.04167
+                      },
+                      {
+                        "name": "Poděbrady",
+                        "type": "admin3",
+                        "lat": 50.14242,
+                        "lon": 15.11881
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Praha-východ",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Praha-vychod",
+                      "Okres Praha-východ",
+                      "Praha-vychod"
+                    ],
+                    "lat": 50.11768,
+                    "lon": 14.70836,
+                    "children": [
+                      {
+                        "name": "Brandýs nad Labem-Stará Boleslav",
+                        "type": "admin3",
+                        "lat": 50.18709,
+                        "lon": 14.66326
+                      },
+                      {
+                        "name": "Čelákovice",
+                        "type": "admin3",
+                        "lat": 50.16038,
+                        "lon": 14.75005
+                      },
+                      {
+                        "name": "Odolena Voda",
+                        "type": "admin3",
+                        "lat": 50.23341,
+                        "lon": 14.41078
+                      },
+                      {
+                        "name": "Říčany",
+                        "type": "admin3",
+                        "lat": 49.99168,
+                        "lon": 14.65427
+                      },
+                      {
+                        "name": "Úvaly",
+                        "type": "admin3",
+                        "lat": 50.07394,
+                        "lon": 14.7308
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Praha-západ",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Praha-zapad",
+                      "Okres Praha-západ",
+                      "Praha-zapad"
+                    ],
+                    "lat": 49.83333,
+                    "lon": 14.33333,
+                    "children": [
+                      {
+                        "name": "Černošice",
+                        "type": "admin3",
+                        "lat": 49.96008,
+                        "lon": 14.31979
+                      },
+                      {
+                        "name": "Hostivice",
+                        "type": "admin3",
+                        "lat": 50.08158,
+                        "lon": 14.25856
+                      },
+                      {
+                        "name": "Jesenice",
+                        "type": "admin3",
+                        "lat": 49.96814,
+                        "lon": 14.5135
+                      },
+                      {
+                        "name": "Jílové u Prahy",
+                        "type": "admin3",
+                        "lat": 49.89545,
+                        "lon": 14.49333
+                      },
+                      {
+                        "name": "Mníšek pod Brdy",
+                        "type": "admin3",
+                        "lat": 49.8665,
+                        "lon": 14.26176
+                      },
+                      {
+                        "name": "Roztoky",
+                        "type": "admin3",
+                        "lat": 50.15841,
+                        "lon": 14.3976
+                      },
+                      {
+                        "name": "Rudná",
+                        "type": "admin3",
+                        "lat": 50.03502,
+                        "lon": 14.23435
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Příbram",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Pribram",
+                      "Daerah Příbram",
+                      "Distretto di Pribram"
+                    ],
+                    "lat": 49.66667,
+                    "lon": 14.16667,
+                    "children": [
+                      {
+                        "name": "Dobříš",
+                        "type": "admin3",
+                        "lat": 49.78113,
+                        "lon": 14.16717
+                      },
+                      {
+                        "name": "Příbram",
+                        "type": "admin3",
+                        "lat": 49.68988,
+                        "lon": 14.01043
+                      },
+                      {
+                        "name": "Sedlčany",
+                        "type": "admin3",
+                        "lat": 49.66057,
+                        "lon": 14.42664
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Rakovník",
+                    "type": "admin2",
+                    "aliases": [
+                      "Arevelaprahyan srjan",
+                      "Daerah Rakovnik",
+                      "Daerah Rakovník"
+                    ],
+                    "lat": 50.1,
+                    "lon": 13.7,
+                    "children": [
+                      {
+                        "name": "Nové Strašecí",
+                        "type": "admin3",
+                        "lat": 50.15272,
+                        "lon": 13.90043
+                      },
+                      {
+                        "name": "Rakovník",
+                        "type": "admin3",
+                        "lat": 50.1037,
+                        "lon": 13.7334
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ústecký kraj",
+                "type": "admin1",
+                "aliases": [
+                  "Aussiger Region",
+                  "CZ042",
+                  "Regiao de Usti nad Labem",
+                  "Region d'Usti nad Labem"
+                ],
+                "lat": 50.561293,
+                "lon": 13.86094,
+                "children": [
+                  {
+                    "name": "Okres Chomutov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Chomutov",
+                      "Chomutov District",
+                      "Chomutovi jaras"
+                    ],
+                    "lat": 50.41667,
+                    "lon": 13.33333,
+                    "children": [
+                      {
+                        "name": "Chomutov",
+                        "type": "admin3",
+                        "lat": 50.46048,
+                        "lon": 13.41779
+                      },
+                      {
+                        "name": "Jirkov",
+                        "type": "admin3",
+                        "lat": 50.49979,
+                        "lon": 13.44769
+                      },
+                      {
+                        "name": "Kadaň",
+                        "type": "admin3",
+                        "lat": 50.38333,
+                        "lon": 13.26667
+                      },
+                      {
+                        "name": "Klášterec nad Ohří",
+                        "type": "admin3",
+                        "lat": 50.3886,
+                        "lon": 13.18342
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Děčín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezirk Tetschen",
+                      "Daerah Decin",
+                      "Daerah Děčín"
+                    ],
+                    "lat": 50.82905,
+                    "lon": 14.34325,
+                    "children": [
+                      {
+                        "name": "Česká Kamenice",
+                        "type": "admin3",
+                        "lat": 50.7978,
+                        "lon": 14.41767
+                      },
+                      {
+                        "name": "Děčín",
+                        "type": "admin3",
+                        "lat": 50.78215,
+                        "lon": 14.21478
+                      },
+                      {
+                        "name": "Jílové",
+                        "type": "admin3",
+                        "lat": 50.76082,
+                        "lon": 14.10383
+                      },
+                      {
+                        "name": "Rumburk",
+                        "type": "admin3",
+                        "lat": 50.95151,
+                        "lon": 14.55699
+                      },
+                      {
+                        "name": "Šluknov",
+                        "type": "admin3",
+                        "lat": 51.00369,
+                        "lon": 14.45258
+                      },
+                      {
+                        "name": "Varnsdorf",
+                        "type": "admin3",
+                        "lat": 50.91154,
+                        "lon": 14.61824
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Litoměřice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Litomerice",
+                      "Daerah Litoměřice",
+                      "Distretto di Litomerice"
+                    ],
+                    "lat": 50.5,
+                    "lon": 14.16667,
+                    "children": [
+                      {
+                        "name": "Litoměřice",
+                        "type": "admin3",
+                        "lat": 50.53348,
+                        "lon": 14.1318
+                      },
+                      {
+                        "name": "Lovosice",
+                        "type": "admin3",
+                        "lat": 50.51504,
+                        "lon": 14.05103
+                      },
+                      {
+                        "name": "Roudnice nad Labem",
+                        "type": "admin3",
+                        "lat": 50.42528,
+                        "lon": 14.26175
+                      },
+                      {
+                        "name": "Štětí",
+                        "type": "admin3",
+                        "lat": 50.45298,
+                        "lon": 14.37421
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Louny",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Louny",
+                      "Distretto di Louny",
+                      "District de Louny"
+                    ],
+                    "lat": 50.33333,
+                    "lon": 13.66667,
+                    "children": [
+                      {
+                        "name": "Louny",
+                        "type": "admin3",
+                        "lat": 50.35699,
+                        "lon": 13.79667
+                      },
+                      {
+                        "name": "Podbořany",
+                        "type": "admin3",
+                        "lat": 50.22937,
+                        "lon": 13.41192
+                      },
+                      {
+                        "name": "Žatec",
+                        "type": "admin3",
+                        "lat": 50.32717,
+                        "lon": 13.54577
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Most",
+                    "type": "admin2",
+                    "aliases": [
+                      "Brux",
+                      "Brüx",
+                      "Daerah Most"
+                    ],
+                    "lat": 50.55,
+                    "lon": 13.63333,
+                    "children": [
+                      {
+                        "name": "Litvínov",
+                        "type": "admin3",
+                        "lat": 50.6042,
+                        "lon": 13.61812
+                      },
+                      {
+                        "name": "Most",
+                        "type": "admin3",
+                        "lat": 50.50301,
+                        "lon": 13.63617
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Teplice",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Teplice",
+                      "Distretto di Teplice",
+                      "District de Teplice"
+                    ],
+                    "lat": 50.63333,
+                    "lon": 13.83333,
+                    "children": [
+                      {
+                        "name": "Bílina",
+                        "type": "admin3",
+                        "lat": 50.54854,
+                        "lon": 13.77535
+                      },
+                      {
+                        "name": "Dubí",
+                        "type": "admin3",
+                        "lat": 50.68558,
+                        "lon": 13.78561
+                      },
+                      {
+                        "name": "Duchcov",
+                        "type": "admin3",
+                        "lat": 50.60376,
+                        "lon": 13.74621
+                      },
+                      {
+                        "name": "Krupka",
+                        "type": "admin3",
+                        "lat": 50.68449,
+                        "lon": 13.85815
+                      },
+                      {
+                        "name": "Teplice",
+                        "type": "admin3",
+                        "lat": 50.6404,
+                        "lon": 13.82451
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Ústí nad Labem",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Usti nad Labem",
+                      "Okres Ústí nad Labem",
+                      "Usti nad Labem"
+                    ],
+                    "lat": 50.66667,
+                    "lon": 14.05,
+                    "children": [
+                      {
+                        "name": "Ústí nad Labem",
+                        "type": "admin3",
+                        "lat": 50.6607,
+                        "lon": 14.03227
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Zlínský kraj",
+                "type": "admin1",
+                "aliases": [
+                  "CZ072",
+                  "Zlin",
+                  "Zliner Region",
+                  "Zlinsky"
+                ],
+                "lat": 49.233335,
+                "lon": 17.729165,
+                "children": [
+                  {
+                    "name": "Okres Kroměříž",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Kromeriz",
+                      "Daerah Kroměříž",
+                      "Distretto di Kromeriz"
+                    ],
+                    "lat": 49.33333,
+                    "lon": 17.5,
+                    "children": [
+                      {
+                        "name": "Bystřice pod Hostýnem",
+                        "type": "admin3",
+                        "lat": 49.39924,
+                        "lon": 17.67401
+                      },
+                      {
+                        "name": "Chropyně",
+                        "type": "admin3",
+                        "lat": 49.35644,
+                        "lon": 17.36451
+                      },
+                      {
+                        "name": "Holešov",
+                        "type": "admin3",
+                        "lat": 49.33331,
+                        "lon": 17.57832
+                      },
+                      {
+                        "name": "Hulín",
+                        "type": "admin3",
+                        "lat": 49.31689,
+                        "lon": 17.46374
+                      },
+                      {
+                        "name": "Kroměříž",
+                        "type": "admin3",
+                        "lat": 49.29785,
+                        "lon": 17.39312
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Uherské Hradiště",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Uherske Hradiste",
+                      "Daerah Uherské Hradiště",
+                      "Distretto di Uherske Hradiste"
+                    ],
+                    "lat": 49.01667,
+                    "lon": 17.55,
+                    "children": [
+                      {
+                        "name": "Kunovice",
+                        "type": "admin3",
+                        "lat": 49.04499,
+                        "lon": 17.47011
+                      },
+                      {
+                        "name": "Staré Město",
+                        "type": "admin3",
+                        "lat": 49.07515,
+                        "lon": 17.43338
+                      },
+                      {
+                        "name": "Uherské Hradiště",
+                        "type": "admin3",
+                        "lat": 49.06975,
+                        "lon": 17.45969
+                      },
+                      {
+                        "name": "Uherský Brod",
+                        "type": "admin3",
+                        "lat": 49.02513,
+                        "lon": 17.64715
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Vsetín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Vsetin",
+                      "Daerah Vsetín",
+                      "Distretto di Vsetin"
+                    ],
+                    "lat": 49.36667,
+                    "lon": 18.08333,
+                    "children": [
+                      {
+                        "name": "Rožnov pod Radhoštěm",
+                        "type": "admin3",
+                        "lat": 49.45853,
+                        "lon": 18.14302
+                      },
+                      {
+                        "name": "Valašské Meziříčí",
+                        "type": "admin3",
+                        "lat": 49.47181,
+                        "lon": 17.97113
+                      },
+                      {
+                        "name": "Vsetín",
+                        "type": "admin3",
+                        "lat": 49.33871,
+                        "lon": 17.99619
+                      },
+                      {
+                        "name": "Zubří",
+                        "type": "admin3",
+                        "lat": 49.46603,
+                        "lon": 18.09249
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Zlín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Zlin",
+                      "Daerah Zlín",
+                      "Distretto di Zlin"
+                    ],
+                    "lat": 49.21667,
+                    "lon": 17.78333,
+                    "children": [
+                      {
+                        "name": "Brumov-Bylnice",
+                        "type": "admin3",
+                        "lat": 49.09177,
+                        "lon": 18.02238
+                      },
+                      {
+                        "name": "Luhačovice",
+                        "type": "admin3",
+                        "lat": 49.09982,
+                        "lon": 17.75747
+                      },
+                      {
+                        "name": "Napajedla",
+                        "type": "admin3",
+                        "lat": 49.17156,
+                        "lon": 17.51194
+                      },
+                      {
+                        "name": "Otrokovice",
+                        "type": "admin3",
+                        "lat": 49.20934,
+                        "lon": 17.53944
+                      },
+                      {
+                        "name": "Slavičín",
+                        "type": "admin3",
+                        "lat": 49.08799,
+                        "lon": 17.87349
+                      },
+                      {
+                        "name": "Valašské Klobouky",
+                        "type": "admin3",
+                        "lat": 49.14064,
+                        "lon": 18.0076
+                      },
+                      {
+                        "name": "Zlín",
+                        "type": "admin3",
+                        "lat": 49.22645,
+                        "lon": 17.67065
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

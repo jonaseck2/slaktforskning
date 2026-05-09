@@ -1,0 +1,460 @@
+{
+  "id": "me-opstine",
+  "name": "Montenegro Opštine",
+  "locale": "me",
+  "description": "Montenegro: 25 opštine (admin1; no admin2 layer in GeoNames) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/ME.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1 only."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Montenegro",
+            "type": "country",
+            "aliases": [
+              "Crna Gora",
+              "Црна Гора"
+            ],
+            "lat": 42.7,
+            "lon": 19.4,
+            "children": [
+              {
+                "name": "Andrijevica",
+                "type": "admin1",
+                "aliases": [
+                  "Andrijevica",
+                  "Opshtina Andrijevica",
+                  "Opstina Andrijevica",
+                  "Opština Andrijevica"
+                ],
+                "lat": 42.71833,
+                "lon": 19.75861,
+                "children": []
+              },
+              {
+                "name": "Bar",
+                "type": "admin1",
+                "aliases": [
+                  "Bar",
+                  "Opshtina Bar",
+                  "Opstina Bar",
+                  "Opština Bar"
+                ],
+                "lat": 42.0937,
+                "lon": 19.09841,
+                "children": [
+                  {
+                    "name": "Bar",
+                    "type": "admin2",
+                    "lat": 42.0937,
+                    "lon": 19.09841
+                  }
+                ]
+              },
+              {
+                "name": "Berane",
+                "type": "admin1",
+                "aliases": [
+                  "Berane",
+                  "Opshtina Berane",
+                  "Opstina Berane",
+                  "Opstina Ivangrad"
+                ],
+                "lat": 42.84333,
+                "lon": 19.87281,
+                "children": [
+                  {
+                    "name": "Berane",
+                    "type": "admin2",
+                    "lat": 42.84333,
+                    "lon": 19.87281
+                  }
+                ]
+              },
+              {
+                "name": "Bijelo Polje",
+                "type": "admin1",
+                "aliases": [
+                  "Akova",
+                  "Bielo Pole",
+                  "Bielo Polie",
+                  "Bielo pole"
+                ],
+                "lat": 43.03834,
+                "lon": 19.74758,
+                "children": [
+                  {
+                    "name": "Bijelo Polje",
+                    "type": "admin2",
+                    "lat": 43.03834,
+                    "lon": 19.74758
+                  }
+                ]
+              },
+              {
+                "name": "Budva",
+                "type": "admin1",
+                "aliases": [
+                  "Budva",
+                  "Opshtina Budva",
+                  "Opstina Budva",
+                  "Opština Budva"
+                ],
+                "lat": 42.28721,
+                "lon": 18.83922,
+                "children": [
+                  {
+                    "name": "Budva",
+                    "type": "admin2",
+                    "lat": 42.28721,
+                    "lon": 18.83922
+                  }
+                ]
+              },
+              {
+                "name": "Cetinje",
+                "type": "admin1",
+                "aliases": [
+                  "Cetine",
+                  "Cetinje",
+                  "Opshtina Cetine",
+                  "Prijestonica Cetine"
+                ],
+                "lat": 42.39063,
+                "lon": 18.91417,
+                "children": [
+                  {
+                    "name": "Cetinje",
+                    "type": "admin2",
+                    "lat": 42.39063,
+                    "lon": 18.91417
+                  }
+                ]
+              },
+              {
+                "name": "Danilovgrad",
+                "type": "admin1",
+                "aliases": [
+                  "Danilovgrad",
+                  "Opstina Danilovgrad",
+                  "Optshina Danilovgrad",
+                  "Opština Danilovgrad"
+                ],
+                "lat": 42.55384,
+                "lon": 19.14608,
+                "children": [
+                  {
+                    "name": "Danilovgrad",
+                    "type": "admin2",
+                    "lat": 42.55384,
+                    "lon": 19.14608
+                  }
+                ]
+              },
+              {
+                "name": "Gusinje",
+                "type": "admin1",
+                "aliases": [
+                  "Comuna Gusinje",
+                  "Gemeinde Gusinje",
+                  "Gmina Gusinje",
+                  "Guci"
+                ],
+                "lat": 42.55714,
+                "lon": 19.83368,
+                "children": []
+              },
+              {
+                "name": "Herceg Novi",
+                "type": "admin1",
+                "aliases": [
+                  "Castelnuovo",
+                  "Castrum Novum",
+                  "Gerceg-Novi",
+                  "Gertseg-Novi"
+                ],
+                "lat": 42.45306,
+                "lon": 18.5375,
+                "children": [
+                  {
+                    "name": "Herceg Novi",
+                    "type": "admin2",
+                    "lat": 42.45306,
+                    "lon": 18.5375
+                  }
+                ]
+              },
+              {
+                "name": "Kotor",
+                "type": "admin1",
+                "aliases": [
+                  "Cataro",
+                  "Catharum",
+                  "Cattaro",
+                  "Càtaro"
+                ],
+                "lat": 42.43742,
+                "lon": 18.76829,
+                "children": [
+                  {
+                    "name": "Dobrota",
+                    "type": "admin2",
+                    "lat": 42.45417,
+                    "lon": 18.76833
+                  },
+                  {
+                    "name": "Kotor",
+                    "type": "admin2",
+                    "lat": 42.42067,
+                    "lon": 18.76825
+                  }
+                ]
+              },
+              {
+                "name": "Mojkovac",
+                "type": "admin1",
+                "aliases": [
+                  "Moikovacas",
+                  "Mojkovac",
+                  "Mojkovaci",
+                  "Moykovats"
+                ],
+                "lat": 42.95917,
+                "lon": 19.58833,
+                "children": []
+              },
+              {
+                "name": "Opština Kolašin",
+                "type": "admin1",
+                "aliases": [
+                  "Kolashin",
+                  "Kolasin",
+                  "Kolašin",
+                  "Opshtina Kolashin"
+                ],
+                "lat": 42.83722,
+                "lon": 19.51556,
+                "children": []
+              },
+              {
+                "name": "Opština Nikšić",
+                "type": "admin1",
+                "aliases": [
+                  "Nikshic",
+                  "Niksic",
+                  "Nikšić",
+                  "Opshtina Nikshic"
+                ],
+                "lat": 42.7731,
+                "lon": 18.94446,
+                "children": [
+                  {
+                    "name": "Nikšić",
+                    "type": "admin2",
+                    "lat": 42.7731,
+                    "lon": 18.94446
+                  }
+                ]
+              },
+              {
+                "name": "Opština Plav",
+                "type": "admin1",
+                "lat": 42.58611,
+                "lon": 19.92833,
+                "children": []
+              },
+              {
+                "name": "Opština Plužine",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Pluzhine",
+                  "Opstina Pluzine",
+                  "Opština Plužine",
+                  "Pluzhine"
+                ],
+                "lat": 43.17417,
+                "lon": 18.81694,
+                "children": []
+              },
+              {
+                "name": "Opština Rožaje",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Rozaje",
+                  "Bwrdeistref Rožaje",
+                  "Comuna Rozaje",
+                  "Comuna Rožaje"
+                ],
+                "lat": 42.83299,
+                "lon": 20.16652,
+                "children": [
+                  {
+                    "name": "Rožaje",
+                    "type": "admin2",
+                    "lat": 42.83299,
+                    "lon": 20.16652
+                  }
+                ]
+              },
+              {
+                "name": "Opština Šavnik",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Shavnik",
+                  "Opstina Savnik",
+                  "Opština Šavnik",
+                  "Savnik"
+                ],
+                "lat": 42.95639,
+                "lon": 19.09389,
+                "children": []
+              },
+              {
+                "name": "Opština Žabljak",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Zhablak",
+                  "Opstina Zabljak",
+                  "Opština Žabljak",
+                  "Zabljak"
+                ],
+                "lat": 43.15722,
+                "lon": 19.12333,
+                "children": []
+              },
+              {
+                "name": "Petnjica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Petnjica",
+                  "Comuna Petnjica",
+                  "Gemeinde Petnjica",
+                  "Gmejna Petnjica"
+                ],
+                "lat": 42.947,
+                "lon": 20.01397,
+                "children": []
+              },
+              {
+                "name": "Pljevlja",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Plevla",
+                  "Opstina Pljevlja",
+                  "Opština Pljevlja",
+                  "Plevla"
+                ],
+                "lat": 43.3567,
+                "lon": 19.35843,
+                "children": [
+                  {
+                    "name": "Pljevlja",
+                    "type": "admin2",
+                    "lat": 43.3567,
+                    "lon": 19.35843
+                  }
+                ]
+              },
+              {
+                "name": "Podgorica",
+                "type": "admin1",
+                "aliases": [
+                  "Glavni Grad Podgorica",
+                  "Opstina Podgorica",
+                  "Opstina Titograd",
+                  "Opština Podgorica"
+                ],
+                "lat": 42.44124,
+                "lon": 19.26309,
+                "children": [
+                  {
+                    "name": "Podgorica",
+                    "type": "admin2",
+                    "lat": 42.44124,
+                    "lon": 19.26309
+                  }
+                ]
+              },
+              {
+                "name": "Tivat",
+                "type": "admin1",
+                "aliases": [
+                  "Opshtina Tivat",
+                  "Opstina Tivat",
+                  "Opština Tivat",
+                  "Tivat"
+                ],
+                "lat": 42.43623,
+                "lon": 18.69361,
+                "children": [
+                  {
+                    "name": "Tivat",
+                    "type": "admin2",
+                    "lat": 42.43623,
+                    "lon": 18.69361
+                  }
+                ]
+              },
+              {
+                "name": "Tuzi",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Tuzi",
+                  "Comuna Tuzi",
+                  "Gemeinde Tuzi",
+                  "Gmina Tuzi"
+                ],
+                "lat": 42.36355,
+                "lon": 19.32931,
+                "children": []
+              },
+              {
+                "name": "Ulcinj",
+                "type": "admin1",
+                "aliases": [
+                  "Komuna e Ulqinit",
+                  "Opshtina Ulcin",
+                  "Opstina Ulcinj",
+                  "Opština Ulcinj"
+                ],
+                "lat": 41.92936,
+                "lon": 19.22436,
+                "children": [
+                  {
+                    "name": "Ulcinj",
+                    "type": "admin2",
+                    "lat": 41.92936,
+                    "lon": 19.22436
+                  }
+                ]
+              },
+              {
+                "name": "Zeta",
+                "type": "admin1",
+                "lat": 42.3299,
+                "lon": 19.24558,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

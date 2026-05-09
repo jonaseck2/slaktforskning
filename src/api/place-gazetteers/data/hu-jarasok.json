@@ -1,0 +1,2822 @@
+{
+  "id": "hu-jarasok",
+  "name": "Hungary Megyék + Járások",
+  "locale": "hu",
+  "description": "Hungary: 20 megyék (admin1, including Budapest) + 197 járások (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/HU.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Hungary",
+            "type": "country",
+            "aliases": [
+              "Magyarország",
+              "Ungarn",
+              "Hongrie"
+            ],
+            "lat": 47.2,
+            "lon": 19.5,
+            "children": [
+              {
+                "name": "Bács-Kiskun county",
+                "type": "admin1",
+                "aliases": [
+                  "Bac Kiskun",
+                  "Bac Kiskunas",
+                  "Bac-Kiskun",
+                  "Bacas-Kiskunas mege"
+                ],
+                "lat": 46.538345,
+                "lon": 19.434593,
+                "children": [
+                  {
+                    "name": "Bácsalmási Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bacsalmasi Jaras",
+                      "Bácsalmási Járás"
+                    ],
+                    "lat": 46.10167,
+                    "lon": 19.33063,
+                    "children": []
+                  },
+                  {
+                    "name": "Bajai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bajai Jaras",
+                      "Bajai Járás"
+                    ],
+                    "lat": 46.14507,
+                    "lon": 19.01359,
+                    "children": []
+                  },
+                  {
+                    "name": "Jánoshalmai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Janoshalmai Jaras",
+                      "Jánoshalmai Járás"
+                    ],
+                    "lat": 46.28283,
+                    "lon": 19.31742,
+                    "children": []
+                  },
+                  {
+                    "name": "Kalocsai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kalocsai Jaras",
+                      "Kalocsai Járás"
+                    ],
+                    "lat": 46.55646,
+                    "lon": 19.04211,
+                    "children": []
+                  },
+                  {
+                    "name": "Kecskeméti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kecskemeti Jaras",
+                      "Kecskeméti Járás"
+                    ],
+                    "lat": 46.88283,
+                    "lon": 19.58701,
+                    "children": []
+                  },
+                  {
+                    "name": "Kiskőrösi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kiskorosi Jaras",
+                      "Kiskőrösi Járás"
+                    ],
+                    "lat": 46.63309,
+                    "lon": 19.33726,
+                    "children": []
+                  },
+                  {
+                    "name": "Kiskunfélegyházi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kiskunfelegyhazi Jaras",
+                      "Kiskunfélegyházi Járás"
+                    ],
+                    "lat": 46.65721,
+                    "lon": 19.77006,
+                    "children": []
+                  },
+                  {
+                    "name": "Kiskunhalasi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kiskunhalasi Jaras",
+                      "Kiskunhalasi Járás"
+                    ],
+                    "lat": 46.35832,
+                    "lon": 19.53067,
+                    "children": []
+                  },
+                  {
+                    "name": "Kiskunmajsai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kiskunmajsai Jaras",
+                      "Kiskunmajsai Járás"
+                    ],
+                    "lat": 46.49608,
+                    "lon": 19.72316,
+                    "children": []
+                  },
+                  {
+                    "name": "Kunszentmiklósi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kunszentmiklosi Jaras",
+                      "Kunszentmiklósi Járás"
+                    ],
+                    "lat": 46.9481,
+                    "lon": 19.15563,
+                    "children": []
+                  },
+                  {
+                    "name": "Tiszakécskei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tiszakecskei Jaras",
+                      "Tiszakécskei Járás"
+                    ],
+                    "lat": 46.86013,
+                    "lon": 19.97298,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Baranya county",
+                "type": "admin1",
+                "aliases": [
+                  "Baranja",
+                  "Baranja Audandygy",
+                  "Baranja Chiltesi",
+                  "Baranya"
+                ],
+                "lat": 46.058083,
+                "lon": 18.232334,
+                "children": [
+                  {
+                    "name": "Bólyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bolyi Jaras",
+                      "Bólyi Járás"
+                    ],
+                    "lat": 45.98075,
+                    "lon": 18.48449,
+                    "children": []
+                  },
+                  {
+                    "name": "Hegyháti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hegyhati Jaras",
+                      "Hegyháti Járás"
+                    ],
+                    "lat": 46.27247,
+                    "lon": 18.13758,
+                    "children": []
+                  },
+                  {
+                    "name": "Komlói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komloi Jaras",
+                      "Komlói Járás"
+                    ],
+                    "lat": 46.22019,
+                    "lon": 18.2862,
+                    "children": []
+                  },
+                  {
+                    "name": "Mohácsi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mohacsi Jaras",
+                      "Mohácsi Járás"
+                    ],
+                    "lat": 46.02004,
+                    "lon": 18.68,
+                    "children": []
+                  },
+                  {
+                    "name": "Pécsi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pecsi Jaras",
+                      "Pécsi Járás"
+                    ],
+                    "lat": 46.0799,
+                    "lon": 18.25253,
+                    "children": []
+                  },
+                  {
+                    "name": "Pécsváradi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pecsvaradi Jaras",
+                      "Pécsváradi Járás"
+                    ],
+                    "lat": 46.16782,
+                    "lon": 18.45456,
+                    "children": []
+                  },
+                  {
+                    "name": "Sellyei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sellyei Jaras",
+                      "Sellyei Járás"
+                    ],
+                    "lat": 45.86955,
+                    "lon": 17.89827,
+                    "children": []
+                  },
+                  {
+                    "name": "Siklósi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Siklosi Jaras",
+                      "Siklósi Járás"
+                    ],
+                    "lat": 45.84981,
+                    "lon": 18.31052,
+                    "children": []
+                  },
+                  {
+                    "name": "Szentlőrinci Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szentlorinci Jaras",
+                      "Szentlőrinci Járás"
+                    ],
+                    "lat": 46.04694,
+                    "lon": 18.01528,
+                    "children": []
+                  },
+                  {
+                    "name": "Szigetvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szigetvari Jaras",
+                      "Szigetvári Járás"
+                    ],
+                    "lat": 46.07336,
+                    "lon": 17.80391,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Bekes County",
+                "type": "admin1",
+                "aliases": [
+                  "Bekes",
+                  "Bekes County",
+                  "Bekes Megye",
+                  "Bekes Sahsiyyəti"
+                ],
+                "lat": 46.749533,
+                "lon": 21.026639,
+                "children": [
+                  {
+                    "name": "Békéscsabai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bekescsabai Jaras",
+                      "Békéscsabai Járás"
+                    ],
+                    "lat": 46.68133,
+                    "lon": 21.07413,
+                    "children": []
+                  },
+                  {
+                    "name": "Békési Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bekesi Jaras",
+                      "Békési Járás"
+                    ],
+                    "lat": 46.83317,
+                    "lon": 21.1,
+                    "children": []
+                  },
+                  {
+                    "name": "Gyomaendrődi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gyomaendrodi Jaras",
+                      "Gyomaendrődi Járás"
+                    ],
+                    "lat": 46.98216,
+                    "lon": 20.84851,
+                    "children": []
+                  },
+                  {
+                    "name": "Gyulai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gyulai Jaras",
+                      "Gyulai Járás"
+                    ],
+                    "lat": 46.58626,
+                    "lon": 21.22454,
+                    "children": []
+                  },
+                  {
+                    "name": "Mezőkovácsházai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mezokovacshazai Jaras",
+                      "Mezőkovácsházai Járás"
+                    ],
+                    "lat": 46.40888,
+                    "lon": 21.00318,
+                    "children": []
+                  },
+                  {
+                    "name": "Orosházi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Oroshazi jaras",
+                      "Orosházi járás"
+                    ],
+                    "lat": 46.56355,
+                    "lon": 20.73357,
+                    "children": []
+                  },
+                  {
+                    "name": "Sarkadi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sarkadi Jaras",
+                      "Sarkadi Járás"
+                    ],
+                    "lat": 46.86154,
+                    "lon": 21.44875,
+                    "children": []
+                  },
+                  {
+                    "name": "Szarvasi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szarvasi Jaras",
+                      "Szarvasi Járás"
+                    ],
+                    "lat": 46.82891,
+                    "lon": 20.63707,
+                    "children": []
+                  },
+                  {
+                    "name": "Szeghalmi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szeghalmi Jaras",
+                      "Szeghalmi Járás"
+                    ],
+                    "lat": 47,
+                    "lon": 21.17,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Borsod-Abauj Zemplen county",
+                "type": "admin1",
+                "aliases": [
+                  "Borshod-Abauj-Zemplen",
+                  "Borsod-Abauj Zemplen county",
+                  "Borsod-Abauj-Zemplen",
+                  "Borsod-Abauj-Zemplen ili"
+                ],
+                "lat": 48.20612,
+                "lon": 21.012089,
+                "children": [
+                  {
+                    "name": "Cigándi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cigandi Jaras",
+                      "Cigándi Járás"
+                    ],
+                    "lat": 48.30338,
+                    "lon": 21.87651,
+                    "children": []
+                  },
+                  {
+                    "name": "Edelényi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Edelenyi Jaras",
+                      "Edelényi Járás"
+                    ],
+                    "lat": 48.40864,
+                    "lon": 20.77506,
+                    "children": []
+                  },
+                  {
+                    "name": "Encsi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Encsi Jaras",
+                      "Encsi Járás"
+                    ],
+                    "lat": 48.39948,
+                    "lon": 21.08169,
+                    "children": []
+                  },
+                  {
+                    "name": "Gönci Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gonci Jaras",
+                      "Gönci Járás"
+                    ],
+                    "lat": 48.39948,
+                    "lon": 21.28307,
+                    "children": []
+                  },
+                  {
+                    "name": "Kazincbarcikai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kazincbarcikai Jaras",
+                      "Kazincbarcikai Járás"
+                    ],
+                    "lat": 48.26371,
+                    "lon": 20.57978,
+                    "children": []
+                  },
+                  {
+                    "name": "Mezőcsáti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mezocsati Jaras",
+                      "Mezőcsáti Járás"
+                    ],
+                    "lat": 47.79841,
+                    "lon": 20.91693,
+                    "children": []
+                  },
+                  {
+                    "name": "Mezőkövesdi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mezokovesdi Jaras",
+                      "Mezőkövesdi Járás"
+                    ],
+                    "lat": 47.84876,
+                    "lon": 20.63623,
+                    "children": []
+                  },
+                  {
+                    "name": "Miskolci Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Miskolci Jaras",
+                      "Miskolci Járás"
+                    ],
+                    "lat": 48.08675,
+                    "lon": 20.77353,
+                    "children": [
+                      {
+                        "name": "Diósgyőr",
+                        "type": "admin3",
+                        "lat": 48.1,
+                        "lon": 20.68333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ózdi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ozdi Jaras",
+                      "Ózdi Járás"
+                    ],
+                    "lat": 48.18133,
+                    "lon": 20.24874,
+                    "children": []
+                  },
+                  {
+                    "name": "Putnoki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Putnoki Jaras",
+                      "Putnoki Járás"
+                    ],
+                    "lat": 48.33694,
+                    "lon": 20.46384,
+                    "children": []
+                  },
+                  {
+                    "name": "Sárospataki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sarospataki Jaras",
+                      "Sárospataki Járás"
+                    ],
+                    "lat": 48.29575,
+                    "lon": 21.52716,
+                    "children": []
+                  },
+                  {
+                    "name": "Sátoraljaújhelyi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Satoraljaujhely District",
+                      "Satoraljaujhelyi jaras",
+                      "Sátoraljaújhely District"
+                    ],
+                    "lat": 48.45898,
+                    "lon": 21.54394,
+                    "children": [
+                      {
+                        "name": "Sátoraljaújhely",
+                        "type": "admin3",
+                        "lat": 48.39492,
+                        "lon": 21.65871
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Szerencsi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szerencsi Jaras",
+                      "Szerencsi Járás"
+                    ],
+                    "lat": 48.14929,
+                    "lon": 21.16865,
+                    "children": []
+                  },
+                  {
+                    "name": "Szikszói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szikszoi Jaras",
+                      "Szikszói Járás"
+                    ],
+                    "lat": 48.30032,
+                    "lon": 20.95507,
+                    "children": []
+                  },
+                  {
+                    "name": "Tiszaújvárosi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tiszaujvarosi Jaras",
+                      "Tiszaújvárosi Járás"
+                    ],
+                    "lat": 47.92656,
+                    "lon": 20.99321,
+                    "children": []
+                  },
+                  {
+                    "name": "Tokaji Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tokaji Jaras",
+                      "Tokaji Járás"
+                    ],
+                    "lat": 48.14014,
+                    "lon": 21.37002,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Budapest",
+                "type": "admin1",
+                "aliases": [
+                  "Budapest",
+                  "HU110",
+                  "budapeseuteu",
+                  "부다페스트"
+                ],
+                "lat": 47.487026,
+                "lon": 19.092343,
+                "children": [
+                  {
+                    "name": "Budapest I.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Varkeruelet",
+                      "Várkerület"
+                    ],
+                    "lat": 47.4975,
+                    "lon": 19.03961,
+                    "children": [
+                      {
+                        "name": "Budapest I. kerület",
+                        "type": "admin3",
+                        "lat": 47.49705,
+                        "lon": 19.03961
+                      },
+                      {
+                        "name": "Gellérthegy",
+                        "type": "admin3",
+                        "lat": 47.48333,
+                        "lon": 19.05
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest II.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 02. Kerulet",
+                      "Budapest 02. Kerület",
+                      "Budapest 2nd District"
+                    ],
+                    "lat": 47.51722,
+                    "lon": 19.02218,
+                    "children": [
+                      {
+                        "name": "Budapest II. kerület",
+                        "type": "admin3",
+                        "lat": 47.51984,
+                        "lon": 19.02218
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest III.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Obuda-Bekasmegyer",
+                      "Óbuda-Békásmegyer"
+                    ],
+                    "lat": 47.5674,
+                    "lon": 19.04501,
+                    "children": [
+                      {
+                        "name": "Budapest III. kerület",
+                        "type": "admin3",
+                        "lat": 47.54157,
+                        "lon": 19.04501
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest IV.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ujpest",
+                      "Újpest"
+                    ],
+                    "lat": 47.56667,
+                    "lon": 19.08909,
+                    "children": [
+                      {
+                        "name": "Budapest IV. kerület",
+                        "type": "admin3",
+                        "lat": 47.56182,
+                        "lon": 19.08909
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest IX.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ferencvaros",
+                      "Ferencváros"
+                    ],
+                    "lat": 47.466,
+                    "lon": 19.09081,
+                    "children": [
+                      {
+                        "name": "Ferencváros",
+                        "type": "admin3",
+                        "lat": 47.47754,
+                        "lon": 19.09081
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest V.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belvaros-Lipotvaros",
+                      "Belváros-Lipótváros"
+                    ],
+                    "lat": 47.5,
+                    "lon": 19.05115,
+                    "children": [
+                      {
+                        "name": "Budapest V. kerület",
+                        "type": "admin3",
+                        "lat": 47.49958,
+                        "lon": 19.05115
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest VI.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Terezvaros",
+                      "Terézváros",
+                      "Theresa Town"
+                    ],
+                    "lat": 47.50972,
+                    "lon": 19.06583,
+                    "children": [
+                      {
+                        "name": "Budapest VI. kerület",
+                        "type": "admin3",
+                        "lat": 47.50369,
+                        "lon": 19.06583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest VII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Elisabethstadt",
+                      "Elizabethtown",
+                      "Erzsebetvaros"
+                    ],
+                    "lat": 47.50056,
+                    "lon": 19.07218,
+                    "children": [
+                      {
+                        "name": "Erzsébetváros",
+                        "type": "admin3",
+                        "lat": 47.50207,
+                        "lon": 19.07218
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest VIII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 08. Kerulet",
+                      "Budapest 08. Kerület",
+                      "Budapest 8th District"
+                    ],
+                    "lat": 47.48944,
+                    "lon": 19.07012,
+                    "children": [
+                      {
+                        "name": "Budapest VIII. kerület",
+                        "type": "admin3",
+                        "lat": 47.48919,
+                        "lon": 19.07012
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest X.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kobanya",
+                      "Kőbánya"
+                    ],
+                    "lat": 47.47639,
+                    "lon": 19.15835,
+                    "children": [
+                      {
+                        "name": "Kőbánya",
+                        "type": "admin3",
+                        "lat": 47.48427,
+                        "lon": 19.13913
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XI.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 11. Kerulet",
+                      "Budapest 11. Kerület",
+                      "Budapest 11th District"
+                    ],
+                    "lat": 47.475,
+                    "lon": 19.03605,
+                    "children": [
+                      {
+                        "name": "Budapest XI. kerület",
+                        "type": "admin3",
+                        "lat": 47.47603,
+                        "lon": 19.03605
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bergland",
+                      "Hegyvidek",
+                      "Hegyvidék"
+                    ],
+                    "lat": 47.5,
+                    "lon": 19.01493,
+                    "children": [
+                      {
+                        "name": "Budapest XII. kerület",
+                        "type": "admin3",
+                        "lat": 47.49192,
+                        "lon": 19.01493
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XIII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 13. Kerulet",
+                      "Budapest 13. Kerület",
+                      "Budapest 13th District"
+                    ],
+                    "lat": 47.5186,
+                    "lon": 19.06976,
+                    "children": [
+                      {
+                        "name": "Angyalföld",
+                        "type": "admin3",
+                        "lat": 47.54765,
+                        "lon": 19.07973
+                      },
+                      {
+                        "name": "Budapest XIII. kerület",
+                        "type": "admin3",
+                        "lat": 47.52978,
+                        "lon": 19.08068
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XIV.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bergland",
+                      "Budapest 14. Kerulet",
+                      "Budapest 14. Kerület"
+                    ],
+                    "lat": 47.5,
+                    "lon": 19.10549,
+                    "children": [
+                      {
+                        "name": "Zugló",
+                        "type": "admin3",
+                        "lat": 47.51758,
+                        "lon": 19.10549
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XIX.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kispest"
+                    ],
+                    "lat": 47.45,
+                    "lon": 19.14943,
+                    "children": [
+                      {
+                        "name": "Budapest XIX. kerület",
+                        "type": "admin3",
+                        "lat": 47.45293,
+                        "lon": 19.14943
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XV.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 15. Kerulet",
+                      "Budapest 15. Kerület",
+                      "Budapest 15th District"
+                    ],
+                    "lat": 47.56667,
+                    "lon": 19.11681,
+                    "children": [
+                      {
+                        "name": "Budapest XV. kerület",
+                        "type": "admin3",
+                        "lat": 47.56263,
+                        "lon": 19.11681
+                      },
+                      {
+                        "name": "Pestújhely",
+                        "type": "admin3",
+                        "lat": 47.5398,
+                        "lon": 19.13363
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XVI.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budapest 16. Kerulet",
+                      "Budapest 16. Kerület",
+                      "Budapest 16th District"
+                    ],
+                    "lat": 47.5154,
+                    "lon": 19.17028,
+                    "children": [
+                      {
+                        "name": "Budapest XVI. kerület",
+                        "type": "admin3",
+                        "lat": 47.51482,
+                        "lon": 19.17028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XVII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rakosmente",
+                      "Rákosmente"
+                    ],
+                    "lat": 47.4803,
+                    "lon": 19.25388,
+                    "children": [
+                      {
+                        "name": "Budapest XVII. kerület",
+                        "type": "admin3",
+                        "lat": 47.47997,
+                        "lon": 19.25388
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XVIII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pestszentlorinc-Pestszentimre",
+                      "Pestszentlőrinc-Pestszentimre",
+                      "Sankt Lorenz-Sankt Emmerich"
+                    ],
+                    "lat": 47.43333,
+                    "lon": 19.17595,
+                    "children": [
+                      {
+                        "name": "Budapest XVIII. kerület",
+                        "type": "admin3",
+                        "lat": 47.44417,
+                        "lon": 19.17595
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XX.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pesterzsebet",
+                      "Pesterzsébet"
+                    ],
+                    "lat": 47.43333,
+                    "lon": 19.10093,
+                    "children": [
+                      {
+                        "name": "Budapest XX. kerület",
+                        "type": "admin3",
+                        "lat": 47.43674,
+                        "lon": 19.10093
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XXI.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Csepel",
+                      "Tschepele"
+                    ],
+                    "lat": 47.41667,
+                    "lon": 19.07098,
+                    "children": [
+                      {
+                        "name": "Budapest XXI. kerület",
+                        "type": "admin3",
+                        "lat": 47.42215,
+                        "lon": 19.06641
+                      },
+                      {
+                        "name": "Csepel-Belváros",
+                        "type": "admin3",
+                        "lat": 47.43031,
+                        "lon": 19.06842
+                      },
+                      {
+                        "name": "Csepel-Csillagtelep",
+                        "type": "admin3",
+                        "lat": 47.40918,
+                        "lon": 19.05944
+                      },
+                      {
+                        "name": "Csepel-Erdősor",
+                        "type": "admin3",
+                        "lat": 47.40749,
+                        "lon": 19.07583
+                      },
+                      {
+                        "name": "Csepel-Kertváros",
+                        "type": "admin3",
+                        "lat": 47.42015,
+                        "lon": 19.08463
+                      },
+                      {
+                        "name": "Csepel-Királyerdő",
+                        "type": "admin3",
+                        "lat": 47.40253,
+                        "lon": 19.09182
+                      },
+                      {
+                        "name": "Csepel-Szabótelep",
+                        "type": "admin3",
+                        "lat": 47.43497,
+                        "lon": 19.07638
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XXII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budafok-Teteny",
+                      "Budafok-Tétény"
+                    ],
+                    "lat": 47.425,
+                    "lon": 19.04016,
+                    "children": [
+                      {
+                        "name": "Budafok",
+                        "type": "admin3",
+                        "lat": 47.42393,
+                        "lon": 19.03635
+                      },
+                      {
+                        "name": "Budapest XXII. kerület",
+                        "type": "admin3",
+                        "lat": 47.42698,
+                        "lon": 19.04016
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Budapest XXIII.",
+                    "type": "admin2",
+                    "aliases": [
+                      "Markt",
+                      "Soroksar",
+                      "Soroksár"
+                    ],
+                    "lat": 47.3964,
+                    "lon": 19.11492,
+                    "children": [
+                      {
+                        "name": "Budapest XXIII. kerület",
+                        "type": "admin3",
+                        "lat": 47.39788,
+                        "lon": 19.11492
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Csongrád megye",
+                "type": "admin1",
+                "aliases": [
+                  "Csongrad",
+                  "Csongrad County",
+                  "Csongrád",
+                  "HU333"
+                ],
+                "lat": 46.439087,
+                "lon": 20.190694,
+                "children": [
+                  {
+                    "name": "Csongrádi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Csongradi Jaras",
+                      "Csongrádi Járás"
+                    ],
+                    "lat": 46.66146,
+                    "lon": 20.08792,
+                    "children": []
+                  },
+                  {
+                    "name": "Hódmezővásárhelyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hodmezovasarhelyi Jaras",
+                      "Hódmezővásárhelyi Járás"
+                    ],
+                    "lat": 46.43301,
+                    "lon": 20.37598,
+                    "children": []
+                  },
+                  {
+                    "name": "Kisteleki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kisteleki Jaras",
+                      "Kisteleki Járás"
+                    ],
+                    "lat": 46.48835,
+                    "lon": 19.99568,
+                    "children": []
+                  },
+                  {
+                    "name": "Makói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Makoi Jaras",
+                      "Makói Járás"
+                    ],
+                    "lat": 46.26698,
+                    "lon": 20.542,
+                    "children": []
+                  },
+                  {
+                    "name": "Mórahalmi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Morahalmi Jaras",
+                      "Mórahalmi Járás"
+                    ],
+                    "lat": 46.2684,
+                    "lon": 19.82256,
+                    "children": []
+                  },
+                  {
+                    "name": "Szegedi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szegedi Jaras",
+                      "Szegedi Járás"
+                    ],
+                    "lat": 46.29536,
+                    "lon": 20.13758,
+                    "children": []
+                  },
+                  {
+                    "name": "Szentesi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szentesi Jaras",
+                      "Szentesi Járás"
+                    ],
+                    "lat": 46.66005,
+                    "lon": 20.37314,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Fejér megye",
+                "type": "admin1",
+                "aliases": [
+                  "Departemento Fejer",
+                  "Departemento Fejér",
+                  "Fejer",
+                  "Fejer Audandygy"
+                ],
+                "lat": 47.150622,
+                "lon": 18.545258,
+                "children": [
+                  {
+                    "name": "Bicskei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bicskei Jaras",
+                      "Bicskei Járás"
+                    ],
+                    "lat": 47.4338,
+                    "lon": 18.56757,
+                    "children": []
+                  },
+                  {
+                    "name": "Dunaújvárosi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dunaujvarosi Jaras",
+                      "Dunaújvárosi Járás"
+                    ],
+                    "lat": 47.02801,
+                    "lon": 18.82997,
+                    "children": []
+                  },
+                  {
+                    "name": "Enyingi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Enyingi Jaras",
+                      "Enyingi Járás"
+                    ],
+                    "lat": 46.8724,
+                    "lon": 18.30975,
+                    "children": []
+                  },
+                  {
+                    "name": "Gárdonyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gardonyi Jaras",
+                      "Gárdonyi Járás"
+                    ],
+                    "lat": 47.22785,
+                    "lon": 18.63622,
+                    "children": []
+                  },
+                  {
+                    "name": "Martonvásári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Martonvasari Jaras",
+                      "Martonvásári Járás"
+                    ],
+                    "lat": 47.2904,
+                    "lon": 18.79945,
+                    "children": []
+                  },
+                  {
+                    "name": "Móri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mori Jaras",
+                      "Móri Járás"
+                    ],
+                    "lat": 47.34685,
+                    "lon": 18.19838,
+                    "children": []
+                  },
+                  {
+                    "name": "Sárbogárdi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sarbogardi Jaras",
+                      "Sárbogárdi Járás"
+                    ],
+                    "lat": 46.84036,
+                    "lon": 18.60723,
+                    "children": [
+                      {
+                        "name": "Sárbogárd",
+                        "type": "admin3",
+                        "lat": 46.88692,
+                        "lon": 18.62041
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Székesfehérvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szekesfehervari Jaras",
+                      "Székesfehérvári Járás"
+                    ],
+                    "lat": 47.16531,
+                    "lon": 18.41349,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Győr-Moson-Sopron megye",
+                "type": "admin1",
+                "aliases": [
+                  "D'jor-Moshon-Shopron",
+                  "D'or-Moshon-Shopron",
+                  "Gyor-Moson-Sopron",
+                  "Gyor-Moson-Sopron megye"
+                ],
+                "lat": 47.608027,
+                "lon": 17.335494,
+                "children": [
+                  {
+                    "name": "Csornai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Csornai Jaras",
+                      "Csornai Járás"
+                    ],
+                    "lat": 47.58403,
+                    "lon": 17.26041,
+                    "children": []
+                  },
+                  {
+                    "name": "Győri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gyori Jaras",
+                      "Győri Járás"
+                    ],
+                    "lat": 47.67273,
+                    "lon": 17.67936,
+                    "children": []
+                  },
+                  {
+                    "name": "Kapuvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kapuvari Jaras",
+                      "Kapuvári Járás"
+                    ],
+                    "lat": 47.56705,
+                    "lon": 17.04056,
+                    "children": []
+                  },
+                  {
+                    "name": "Mosonmagyaróvári járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mosonmagyarovar District",
+                      "Mosonmagyarovari jaras",
+                      "Mosonmagyaróvár District"
+                    ],
+                    "lat": 47.85767,
+                    "lon": 17.28212,
+                    "children": []
+                  },
+                  {
+                    "name": "Pannonhalmi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pannonhalmi Jaras",
+                      "Pannonhalmi Járás"
+                    ],
+                    "lat": 47.45571,
+                    "lon": 17.81335,
+                    "children": []
+                  },
+                  {
+                    "name": "Soproni Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Soproni Jaras",
+                      "Soproni Járás"
+                    ],
+                    "lat": 47.60385,
+                    "lon": 16.75654,
+                    "children": []
+                  },
+                  {
+                    "name": "Téti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Teti Jaras",
+                      "Téti Járás"
+                    ],
+                    "lat": 47.51515,
+                    "lon": 17.51612,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Hajdú-Bihar",
+                "type": "admin1",
+                "aliases": [
+                  "Bihar",
+                  "Chatzntou-Bichar",
+                  "Comitatus Hajdonicalis et Bihariensis",
+                  "Condado han Hajdu-Bihar"
+                ],
+                "lat": 47.528461,
+                "lon": 21.510634,
+                "children": [
+                  {
+                    "name": "Balmazújvárosi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Balmazujvarosi Jaras",
+                      "Balmazújvárosi Járás"
+                    ],
+                    "lat": 47.6184,
+                    "lon": 21.14882,
+                    "children": []
+                  },
+                  {
+                    "name": "Berettyóújfalui Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Berettyoujfalui Jaras",
+                      "Berettyóújfalui Járás"
+                    ],
+                    "lat": 47.14109,
+                    "lon": 21.55233,
+                    "children": [
+                      {
+                        "name": "Berettyóújfalu",
+                        "type": "admin3",
+                        "lat": 47.22362,
+                        "lon": 21.53656
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Debreceni Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Debreceni Jaras",
+                      "Debreceni Járás"
+                    ],
+                    "lat": 47.52706,
+                    "lon": 21.66869,
+                    "children": []
+                  },
+                  {
+                    "name": "Derecskei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Derecskei Jaras",
+                      "Derecskei Járás"
+                    ],
+                    "lat": 47.38194,
+                    "lon": 21.74836,
+                    "children": []
+                  },
+                  {
+                    "name": "Hadjúszoboszlói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hadjuszoboszloi Jaras",
+                      "Hadjúszoboszlói Járás"
+                    ],
+                    "lat": 47.4811,
+                    "lon": 21.31,
+                    "children": []
+                  },
+                  {
+                    "name": "Hajdúböszörményi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hajduboszormenyi Jaras",
+                      "Hajdúböszörményi Járás"
+                    ],
+                    "lat": 47.74,
+                    "lon": 21.5,
+                    "children": []
+                  },
+                  {
+                    "name": "Hajdúhadházi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hajduhadhazi Jaras",
+                      "Hajdúhadházi Járás"
+                    ],
+                    "lat": 47.67,
+                    "lon": 21.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Hajdúnánási Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hajdunanasi Jaras",
+                      "Hajdúnánási Járás"
+                    ],
+                    "lat": 47.8335,
+                    "lon": 21.25256,
+                    "children": []
+                  },
+                  {
+                    "name": "Nyíradonyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nyiradonyi Jaras",
+                      "Nyíradonyi Járás"
+                    ],
+                    "lat": 47.57873,
+                    "lon": 22.01381,
+                    "children": []
+                  },
+                  {
+                    "name": "Püspökladányi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Puspokladanyi Jaras",
+                      "Püspökladányi Járás"
+                    ],
+                    "lat": 47.31279,
+                    "lon": 21.21177,
+                    "children": [
+                      {
+                        "name": "Kaba",
+                        "type": "admin3",
+                        "lat": 47.35,
+                        "lon": 21.28333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Heves megye",
+                "type": "admin1",
+                "aliases": [
+                  "Chevss",
+                  "Condado de Heves",
+                  "Condado han Heves",
+                  "Gevesh"
+                ],
+                "lat": 47.832413,
+                "lon": 20.179869,
+                "children": [
+                  {
+                    "name": "Bélapátfalvai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belapatfalvai Jaras",
+                      "Bélapátfalvai Járás"
+                    ],
+                    "lat": 48.06386,
+                    "lon": 20.36163,
+                    "children": []
+                  },
+                  {
+                    "name": "Egri járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Eger District",
+                      "Egri jaras",
+                      "Egri járás"
+                    ],
+                    "lat": 47.92961,
+                    "lon": 20.37383,
+                    "children": []
+                  },
+                  {
+                    "name": "Füzesabonyi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fuezesabonyi jaras",
+                      "Füzesabonyi járás"
+                    ],
+                    "lat": 47.72671,
+                    "lon": 20.42875,
+                    "children": []
+                  },
+                  {
+                    "name": "Gyöngyösi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gyongyosi Jaras",
+                      "Gyöngyösi Járás"
+                    ],
+                    "lat": 47.79079,
+                    "lon": 19.9543,
+                    "children": []
+                  },
+                  {
+                    "name": "Hatvani Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hatvani Jaras",
+                      "Hatvani Járás"
+                    ],
+                    "lat": 47.69468,
+                    "lon": 19.72852,
+                    "children": []
+                  },
+                  {
+                    "name": "Hevesi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hevesi Jaras",
+                      "Hevesi Járás"
+                    ],
+                    "lat": 47.61535,
+                    "lon": 20.31739,
+                    "children": []
+                  },
+                  {
+                    "name": "Pétervásárai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Petervasarai Jaras",
+                      "Pétervásárai Járás"
+                    ],
+                    "lat": 48.00589,
+                    "lon": 20.09466,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Jász-Nagykun-Szolnok",
+                "type": "admin1",
+                "aliases": [
+                  "Condado han Jasz-Nagykun-Szolnok",
+                  "Condado han Jász-Nagykun-Szolnok",
+                  "Dzhas-Nadzhikun-Solnok",
+                  "HU322"
+                ],
+                "lat": 47.284223,
+                "lon": 20.413007,
+                "children": [
+                  {
+                    "name": "Jászapáti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaszapati Jaras",
+                      "Jászapáti Járás"
+                    ],
+                    "lat": 47.456,
+                    "lon": 20.136,
+                    "children": []
+                  },
+                  {
+                    "name": "Jászberényi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jaszberenyi Jaras",
+                      "Jászberényi Járás"
+                    ],
+                    "lat": 47.565,
+                    "lon": 19.86887,
+                    "children": []
+                  },
+                  {
+                    "name": "Karcagi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Karcagi Jaras",
+                      "Karcagi Járás"
+                    ],
+                    "lat": 47.28583,
+                    "lon": 20.84218,
+                    "children": []
+                  },
+                  {
+                    "name": "Kunhegyesi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kunhegyes District",
+                      "Kunhegyesi Jaras",
+                      "Kunhegyesi Járás"
+                    ],
+                    "lat": 47.40329,
+                    "lon": 20.59199,
+                    "children": []
+                  },
+                  {
+                    "name": "Kunszentmártoni Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kunszentmartoni Jaras",
+                      "Kunszentmártoni Járás"
+                    ],
+                    "lat": 46.87698,
+                    "lon": 20.25179,
+                    "children": []
+                  },
+                  {
+                    "name": "Mezőtúri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mezoturi Jaras",
+                      "Mezőtúri Járás"
+                    ],
+                    "lat": 47.02495,
+                    "lon": 20.59046,
+                    "children": []
+                  },
+                  {
+                    "name": "Szolnoki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szolnoki Jaras",
+                      "Szolnoki Járás"
+                    ],
+                    "lat": 47.2248,
+                    "lon": 20.19839,
+                    "children": []
+                  },
+                  {
+                    "name": "Tiszafüredi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tiszafuredi Jaras",
+                      "Tiszafüredi Járás"
+                    ],
+                    "lat": 47.53907,
+                    "lon": 20.78879,
+                    "children": []
+                  },
+                  {
+                    "name": "Törökszentmiklósi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Torokszentmiklosi Jaras",
+                      "Törökszentmiklósi Járás"
+                    ],
+                    "lat": 47.18209,
+                    "lon": 20.44859,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Komárom-Esztergom",
+                "type": "admin1",
+                "aliases": [
+                  "Condado han Komarom-Esztergom",
+                  "Condado han Komárom-Esztergom",
+                  "HU212",
+                  "Judetul Komarom-Esztergom"
+                ],
+                "lat": 47.604157,
+                "lon": 18.309493,
+                "children": [
+                  {
+                    "name": "Esztergomi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Esztergomi Jaras",
+                      "Esztergomi Járás"
+                    ],
+                    "lat": 47.70535,
+                    "lon": 18.70334,
+                    "children": [
+                      {
+                        "name": "Dorog",
+                        "type": "admin3",
+                        "lat": 47.72095,
+                        "lon": 18.73641
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kisbéri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kisberi Jaras",
+                      "Kisbéri Járás"
+                    ],
+                    "lat": 47.4872,
+                    "lon": 18.02142,
+                    "children": []
+                  },
+                  {
+                    "name": "Komáromi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komaromi Jaras",
+                      "Komáromi Járás"
+                    ],
+                    "lat": 47.68552,
+                    "lon": 18.06413,
+                    "children": []
+                  },
+                  {
+                    "name": "Oroszlányi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Oroszlanyi Jaras",
+                      "Oroszlányi Járás"
+                    ],
+                    "lat": 47.50245,
+                    "lon": 18.25635,
+                    "children": []
+                  },
+                  {
+                    "name": "Tatabányai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tatabanyai Jaras",
+                      "Tatabányai Járás"
+                    ],
+                    "lat": 47.57568,
+                    "lon": 18.47451,
+                    "children": []
+                  },
+                  {
+                    "name": "Tatai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tatai Jaras",
+                      "Tatai Járás"
+                    ],
+                    "lat": 47.66874,
+                    "lon": 18.33721,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Nógrád megye",
+                "type": "admin1",
+                "aliases": [
+                  "HU313",
+                  "Nograd",
+                  "Nograd County",
+                  "Nógrád"
+                ],
+                "lat": 47.992417,
+                "lon": 19.55232,
+                "children": [
+                  {
+                    "name": "Balassagyarmati Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Balassagyarmati Jaras",
+                      "Balassagyarmati Járás"
+                    ],
+                    "lat": 48.01657,
+                    "lon": 19.30594,
+                    "children": []
+                  },
+                  {
+                    "name": "Bátonyterenyei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Batonyterenyei Jaras",
+                      "Bátonyterenyei Járás"
+                    ],
+                    "lat": 47.97691,
+                    "lon": 19.87345,
+                    "children": []
+                  },
+                  {
+                    "name": "Pásztói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pasztoi Jaras",
+                      "Pásztói Járás"
+                    ],
+                    "lat": 47.87012,
+                    "lon": 19.60648,
+                    "children": []
+                  },
+                  {
+                    "name": "Rétsági Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Retsagi Jaras",
+                      "Rétsági Járás"
+                    ],
+                    "lat": 47.91741,
+                    "lon": 19.16101,
+                    "children": []
+                  },
+                  {
+                    "name": "Salgótarjáni Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Salgotarjani Jaras",
+                      "Salgótarjáni Járás"
+                    ],
+                    "lat": 48.10048,
+                    "lon": 19.81548,
+                    "children": []
+                  },
+                  {
+                    "name": "Szécsényi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szecsenyi Jaras",
+                      "Szécsényi Járás"
+                    ],
+                    "lat": 48.07301,
+                    "lon": 19.55156,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Pest megye",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatus Pestiensis",
+                  "Comtat de Pest",
+                  "Condado de Pest",
+                  "Condado han Pest"
+                ],
+                "lat": 47.452018,
+                "lon": 19.255434,
+                "children": [
+                  {
+                    "name": "Aszódi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aszodi Jaras",
+                      "Aszódi Járás"
+                    ],
+                    "lat": 47.64738,
+                    "lon": 19.5424,
+                    "children": []
+                  },
+                  {
+                    "name": "Budakeszi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Budakeszi Jaras",
+                      "Budakeszi Járás"
+                    ],
+                    "lat": 47.49788,
+                    "lon": 18.8498,
+                    "children": [
+                      {
+                        "name": "Nagykovácsi",
+                        "type": "admin3",
+                        "lat": 47.5814,
+                        "lon": 18.88549
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ceglédi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cegledi Jaras",
+                      "Ceglédi Járás"
+                    ],
+                    "lat": 47.2,
+                    "lon": 19.82463,
+                    "children": []
+                  },
+                  {
+                    "name": "Dabasi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dabasi Jaras",
+                      "Dabasi Járás"
+                    ],
+                    "lat": 47.19,
+                    "lon": 19.33,
+                    "children": []
+                  },
+                  {
+                    "name": "Dunakeszi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dunakeszi Jaras",
+                      "Dunakeszi Járás"
+                    ],
+                    "lat": 47.63365,
+                    "lon": 19.16254,
+                    "children": []
+                  },
+                  {
+                    "name": "Érdi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Erdi Jaras",
+                      "Érdi Járás"
+                    ],
+                    "lat": 47.356,
+                    "lon": 18.90167,
+                    "children": []
+                  },
+                  {
+                    "name": "Gödöllői Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Godolloi Jaras",
+                      "Gödöllői Járás"
+                    ],
+                    "lat": 47.55127,
+                    "lon": 19.39595,
+                    "children": []
+                  },
+                  {
+                    "name": "Gyáli Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gyali Jaras",
+                      "Gyáli Járás"
+                    ],
+                    "lat": 47.359,
+                    "lon": 19.253,
+                    "children": []
+                  },
+                  {
+                    "name": "Monori Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Monori Jaras",
+                      "Monori Járás"
+                    ],
+                    "lat": 47.3499,
+                    "lon": 19.4768,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagykátai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagykatai Jaras",
+                      "Nagykátai Járás"
+                    ],
+                    "lat": 47.39109,
+                    "lon": 19.7392,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagykőrösi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagykorosi Jaras",
+                      "Nagykőrösi Járás"
+                    ],
+                    "lat": 47.03563,
+                    "lon": 19.79259,
+                    "children": []
+                  },
+                  {
+                    "name": "Pilisvörösvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Pilisvorosvari Jaras",
+                      "Pilisvörösvári Járás"
+                    ],
+                    "lat": 47.60925,
+                    "lon": 18.86658,
+                    "children": []
+                  },
+                  {
+                    "name": "Ráckevei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rackevei Jaras",
+                      "Ráckevei Járás"
+                    ],
+                    "lat": 47.15158,
+                    "lon": 19.01456,
+                    "children": []
+                  },
+                  {
+                    "name": "Szentendrei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szentendrei Jaras",
+                      "Szentendrei Járás"
+                    ],
+                    "lat": 47.71146,
+                    "lon": 19.02524,
+                    "children": [
+                      {
+                        "name": "Pomáz",
+                        "type": "admin3",
+                        "lat": 47.64227,
+                        "lon": 19.02784
+                      },
+                      {
+                        "name": "Szentendre",
+                        "type": "admin3",
+                        "lat": 47.66943,
+                        "lon": 19.07561
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Szigetszentmiklósi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szigetszentmiklosi Jaras",
+                      "Szigetszentmiklósi Járás"
+                    ],
+                    "lat": 47.30566,
+                    "lon": 19.02829,
+                    "children": []
+                  },
+                  {
+                    "name": "Szobi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szobi Jaras",
+                      "Szobi Járás"
+                    ],
+                    "lat": 47.93419,
+                    "lon": 18.85438,
+                    "children": []
+                  },
+                  {
+                    "name": "Váci Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vaci Jaras",
+                      "Váci Járás"
+                    ],
+                    "lat": 47.78316,
+                    "lon": 19.23882,
+                    "children": []
+                  },
+                  {
+                    "name": "Vecsési Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vecsesi Jaras",
+                      "Vecsési Járás"
+                    ],
+                    "lat": 47.42923,
+                    "lon": 19.30136,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Somogy megye",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatus Simigiensis",
+                  "Condado han Somogy",
+                  "HU232",
+                  "Hat Somogy"
+                ],
+                "lat": 46.466185,
+                "lon": 17.601691,
+                "children": [
+                  {
+                    "name": "Barcsi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Barcsi Jaras",
+                      "Barcsi Járás"
+                    ],
+                    "lat": 46.03687,
+                    "lon": 17.47434,
+                    "children": []
+                  },
+                  {
+                    "name": "Csurgói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Csurgoi Jaras",
+                      "Csurgói Járás"
+                    ],
+                    "lat": 46.29502,
+                    "lon": 17.10021,
+                    "children": []
+                  },
+                  {
+                    "name": "Fonyódi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fonjod",
+                      "Fonyodi Jaras",
+                      "Fonyódi Járás"
+                    ],
+                    "lat": 46.67289,
+                    "lon": 17.7,
+                    "children": []
+                  },
+                  {
+                    "name": "Kaposvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kaposvar",
+                      "Kaposvari Jaras",
+                      "Kaposvári Járás"
+                    ],
+                    "lat": 46.39791,
+                    "lon": 17.7699,
+                    "children": []
+                  },
+                  {
+                    "name": "Marcali Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Marcali Jaras",
+                      "Marcali Járás",
+                      "Martzal"
+                    ],
+                    "lat": 46.54382,
+                    "lon": 17.39203,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagyatádi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagyatadi Jaras",
+                      "Nagyatádi Járás"
+                    ],
+                    "lat": 46.252,
+                    "lon": 17.3752,
+                    "children": []
+                  },
+                  {
+                    "name": "Siófoki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Siofoki Jaras",
+                      "Siófoki Járás"
+                    ],
+                    "lat": 46.8506,
+                    "lon": 17.99625,
+                    "children": []
+                  },
+                  {
+                    "name": "Tabi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tabi Jaras",
+                      "Tabi Járás"
+                    ],
+                    "lat": 46.68037,
+                    "lon": 18.0056,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Szabolcs-Szatmár-Bereg",
+                "type": "admin1",
+                "aliases": [
+                  "Condado han Szabolcs-Szatmar-Bereg",
+                  "Condado han Szabolcs-Szatmár-Bereg",
+                  "HU323",
+                  "Judetul Szabolcs-Szatmar-Bereg"
+                ],
+                "lat": 48.021968,
+                "lon": 22.056645,
+                "children": [
+                  {
+                    "name": "Baktalórántházai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baktaloranthazai Jaras",
+                      "Baktalórántházai Járás"
+                    ],
+                    "lat": 48.00436,
+                    "lon": 22.02449,
+                    "children": []
+                  },
+                  {
+                    "name": "Csengeri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Csengeri Jaras",
+                      "Csengeri Járás"
+                    ],
+                    "lat": 47.83045,
+                    "lon": 22.5981,
+                    "children": [
+                      {
+                        "name": "Csenger",
+                        "type": "admin3",
+                        "lat": 47.83582,
+                        "lon": 22.68096
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Fehérgyarmati Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fehergyarmati Jaras",
+                      "Fehérgyarmati Járás"
+                    ],
+                    "lat": 48.00436,
+                    "lon": 22.63014,
+                    "children": []
+                  },
+                  {
+                    "name": "Ibrányi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ibranyi Jaras",
+                      "Ibrányi Járás"
+                    ],
+                    "lat": 48.12794,
+                    "lon": 21.69344,
+                    "children": []
+                  },
+                  {
+                    "name": "Kemecsei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kemecsei Jaras",
+                      "Kemecsei Járás"
+                    ],
+                    "lat": 48.10048,
+                    "lon": 21.88414,
+                    "children": []
+                  },
+                  {
+                    "name": "Kisvárdai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kisvardai Jaras",
+                      "Kisvárdai Járás"
+                    ],
+                    "lat": 48.221,
+                    "lon": 22.06415,
+                    "children": []
+                  },
+                  {
+                    "name": "Mátészalkai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mateszalkai Jaras",
+                      "Mátészalkai Járás"
+                    ],
+                    "lat": 47.92961,
+                    "lon": 22.31892,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagykállói Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagykallo District",
+                      "Nagykalloi Jaras",
+                      "Nagykálló District"
+                    ],
+                    "lat": 47.79994,
+                    "lon": 21.84753,
+                    "children": [
+                      {
+                        "name": "Nagykálló",
+                        "type": "admin3",
+                        "lat": 47.87491,
+                        "lon": 21.84082
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Nyírbátori Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nyirbatori Jaras",
+                      "Nyírbátori Járás"
+                    ],
+                    "lat": 47.77553,
+                    "lon": 22.11755,
+                    "children": []
+                  },
+                  {
+                    "name": "Nyíregyházi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nyiregyhazi Jaras",
+                      "Nyíregyházi Járás"
+                    ],
+                    "lat": 47.97691,
+                    "lon": 21.64463,
+                    "children": []
+                  },
+                  {
+                    "name": "Tiszavasvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tiszavasvari Jaras",
+                      "Tiszavasvári Járás"
+                    ],
+                    "lat": 47.98606,
+                    "lon": 21.36545,
+                    "children": []
+                  },
+                  {
+                    "name": "Vásárosnaményi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vasarosnamenyi Jaras",
+                      "Vásárosnaményi Járás"
+                    ],
+                    "lat": 48.17981,
+                    "lon": 22.35859,
+                    "children": []
+                  },
+                  {
+                    "name": "Záhonyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zahonyi Jaras",
+                      "Záhonyi Járás"
+                    ],
+                    "lat": 48.34914,
+                    "lon": 22.18925,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Tolna megye",
+                "type": "admin1",
+                "aliases": [
+                  "Comtat de Tolna",
+                  "Condado de Tolna",
+                  "Condado han Tolna",
+                  "Contea de Tolna"
+                ],
+                "lat": 46.479313,
+                "lon": 18.55638,
+                "children": [
+                  {
+                    "name": "Bonyhádi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bonyhadi Jaras",
+                      "Bonyhádi Járás"
+                    ],
+                    "lat": 46.33998,
+                    "lon": 18.49739,
+                    "children": []
+                  },
+                  {
+                    "name": "Dombóvári járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dombovar District",
+                      "Dombovari jaras",
+                      "Dombóvár District"
+                    ],
+                    "lat": 46.45592,
+                    "lon": 18.19076,
+                    "children": []
+                  },
+                  {
+                    "name": "Paksi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Paksi Jaras",
+                      "Paksi Járás"
+                    ],
+                    "lat": 46.66035,
+                    "lon": 18.78572,
+                    "children": [
+                      {
+                        "name": "Dunaföldvár",
+                        "type": "admin3",
+                        "lat": 46.80713,
+                        "lon": 18.92763
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Szekszárdi járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szekszardi Jaras",
+                      "Szekszárdi Járás"
+                    ],
+                    "lat": 46.33998,
+                    "lon": 18.67893,
+                    "children": []
+                  },
+                  {
+                    "name": "Tamási Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tamasi Jaras",
+                      "Tamási Járás"
+                    ],
+                    "lat": 46.65424,
+                    "lon": 18.35857,
+                    "children": []
+                  },
+                  {
+                    "name": "Tolnai járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tolnai Jaras",
+                      "Tolnai Járás"
+                    ],
+                    "lat": 46.42541,
+                    "lon": 18.82691,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Vas megye",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatus Castriferreus",
+                  "Condado han Vas",
+                  "HU222",
+                  "Hat Vas"
+                ],
+                "lat": 47.138187,
+                "lon": 16.722434,
+                "children": [
+                  {
+                    "name": "Celldömölki Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Celldomolki Jaras",
+                      "Celldömölki Járás"
+                    ],
+                    "lat": 47.25001,
+                    "lon": 17.13209,
+                    "children": []
+                  },
+                  {
+                    "name": "Körmendi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kormendi Jaras",
+                      "Körmendi Járás"
+                    ],
+                    "lat": 46.92164,
+                    "lon": 16.53291,
+                    "children": []
+                  },
+                  {
+                    "name": "Kőszegi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Koszegi Jaras",
+                      "Kőszegi Járás"
+                    ],
+                    "lat": 47.375,
+                    "lon": 16.6565,
+                    "children": []
+                  },
+                  {
+                    "name": "Sárvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sarvari Jaras",
+                      "Sárvári Járás"
+                    ],
+                    "lat": 47.23868,
+                    "lon": 16.93299,
+                    "children": []
+                  },
+                  {
+                    "name": "Szentgotthárdi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szentgotthardi Jaras",
+                      "Szentgotthárdi Járás"
+                    ],
+                    "lat": 46.93674,
+                    "lon": 16.30362,
+                    "children": []
+                  },
+                  {
+                    "name": "Szombathelyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Szombathelyi Jaras",
+                      "Szombathelyi Járás"
+                    ],
+                    "lat": 47.21037,
+                    "lon": 16.63954,
+                    "children": []
+                  },
+                  {
+                    "name": "Vasvári Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Vasvari Jaras",
+                      "Vasvári Járás"
+                    ],
+                    "lat": 47.03487,
+                    "lon": 16.85939,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Veszprém megye",
+                "type": "admin1",
+                "aliases": [
+                  "HU213",
+                  "Veszprem",
+                  "Veszprem County",
+                  "Veszprém"
+                ],
+                "lat": 47.105963,
+                "lon": 17.686406,
+                "children": [
+                  {
+                    "name": "Ajkai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ajkai Jaras",
+                      "Ajkai Járás"
+                    ],
+                    "lat": 47.07988,
+                    "lon": 17.56375,
+                    "children": []
+                  },
+                  {
+                    "name": "Balatonalmádi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Balatonalmadi Jaras",
+                      "Balatonalmádi Járás"
+                    ],
+                    "lat": 47.04174,
+                    "lon": 18.09617,
+                    "children": []
+                  },
+                  {
+                    "name": "Balatonfüredi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Balatonfuredi Jaras",
+                      "Balatonfüredi Járás"
+                    ],
+                    "lat": 46.93952,
+                    "lon": 17.79411,
+                    "children": []
+                  },
+                  {
+                    "name": "Devecseri Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Devecseri Jaras",
+                      "Devecseri Járás"
+                    ],
+                    "lat": 47.16836,
+                    "lon": 17.32271,
+                    "children": []
+                  },
+                  {
+                    "name": "Pápai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Papai Jaras",
+                      "Pápai Járás"
+                    ],
+                    "lat": 47.33769,
+                    "lon": 17.49663,
+                    "children": []
+                  },
+                  {
+                    "name": "Sümegi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Sumegi Jaras",
+                      "Sümegi Járás"
+                    ],
+                    "lat": 47.02648,
+                    "lon": 17.26779,
+                    "children": []
+                  },
+                  {
+                    "name": "Tapolcai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tapolcai Jaras",
+                      "Tapolcai Járás"
+                    ],
+                    "lat": 46.89833,
+                    "lon": 17.4951,
+                    "children": []
+                  },
+                  {
+                    "name": "Várpalotai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Varpalotai Jaras",
+                      "Várpalotai Járás"
+                    ],
+                    "lat": 47.18514,
+                    "lon": 18.12211,
+                    "children": []
+                  },
+                  {
+                    "name": "Veszprémi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Veszpremi Jaras",
+                      "Veszprémi Járás"
+                    ],
+                    "lat": 47.09666,
+                    "lon": 17.82157,
+                    "children": []
+                  },
+                  {
+                    "name": "Zirci Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zirci Jaras",
+                      "Zirci Járás"
+                    ],
+                    "lat": 47.28583,
+                    "lon": 17.88412,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Zala megye",
+                "type": "admin1",
+                "aliases": [
+                  "Comitatus Zaladiensis",
+                  "Condado han Zala",
+                  "Contea de Zala",
+                  "HU223"
+                ],
+                "lat": 46.6975,
+                "lon": 16.923092,
+                "children": [
+                  {
+                    "name": "Keszthelyi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Keszthelyi Jaras",
+                      "Keszthelyi Járás"
+                    ],
+                    "lat": 46.78356,
+                    "lon": 17.22381,
+                    "children": []
+                  },
+                  {
+                    "name": "Lenti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lenti Jaras",
+                      "Lenti Járás"
+                    ],
+                    "lat": 46.65649,
+                    "lon": 16.57443,
+                    "children": []
+                  },
+                  {
+                    "name": "Letenyei Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Letenyei Jaras",
+                      "Letenyei Járás"
+                    ],
+                    "lat": 46.50552,
+                    "lon": 16.76503,
+                    "children": []
+                  },
+                  {
+                    "name": "Nagykanizsai Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagykanizsai Jaras",
+                      "Nagykanizsai Járás"
+                    ],
+                    "lat": 46.51873,
+                    "lon": 17.04433,
+                    "children": [
+                      {
+                        "name": "Kiskanizsa",
+                        "type": "admin3",
+                        "lat": 46.45,
+                        "lon": 16.96667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Zalaegerszegi Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zalaegerszegi Jaras",
+                      "Zalaegerszegi Járás"
+                    ],
+                    "lat": 46.8,
+                    "lon": 16.83,
+                    "children": []
+                  },
+                  {
+                    "name": "Zalaszentgróti Járás",
+                    "type": "admin2",
+                    "aliases": [
+                      "Zalaszentgroti Jaras",
+                      "Zalaszentgróti Járás"
+                    ],
+                    "lat": 46.9207,
+                    "lon": 17.10095,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

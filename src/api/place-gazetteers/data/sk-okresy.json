@@ -1,0 +1,2046 @@
+{
+  "id": "sk-okresy",
+  "name": "Slovakia Kraje + Okresy",
+  "locale": "sk",
+  "description": "Slovakia: 8 kraje (admin1) + 79 okresy (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/SK.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Slovakia",
+            "type": "country",
+            "aliases": [
+              "Slovensko",
+              "Slovak Republic"
+            ],
+            "lat": 48.7,
+            "lon": 19.7,
+            "children": [
+              {
+                "name": "Banska Bystrica",
+                "type": "admin1",
+                "aliases": [
+                  "Bans'kobistric'kij kraj",
+                  "Banska Bistrica",
+                  "Banska Bistrica oblysy",
+                  "Banska Bistrica regiony"
+                ],
+                "lat": 48.506138,
+                "lon": 19.382562,
+                "children": [
+                  {
+                    "name": "Okres Banská Bystrica",
+                    "type": "admin2",
+                    "aliases": [
+                      "BB",
+                      "Banska Bystrica",
+                      "Banska Bystrica District"
+                    ],
+                    "lat": 48.73333,
+                    "lon": 19.15,
+                    "children": [
+                      {
+                        "name": "Banská Bystrica",
+                        "type": "admin3",
+                        "lat": 48.73947,
+                        "lon": 19.14932
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Banská Štiavnica",
+                    "type": "admin2",
+                    "aliases": [
+                      "BS",
+                      "Banska Stiavnica District",
+                      "Banská Štiavnica District"
+                    ],
+                    "lat": 48.44961,
+                    "lon": 18.9082,
+                    "children": [
+                      {
+                        "name": "Banská Štiavnica",
+                        "type": "admin3",
+                        "lat": 48.44858,
+                        "lon": 18.91003
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Brezno",
+                    "type": "admin2",
+                    "aliases": [
+                      "BR",
+                      "Brezno",
+                      "Brezno District"
+                    ],
+                    "lat": 48.8,
+                    "lon": 19.75,
+                    "children": [
+                      {
+                        "name": "Brezno",
+                        "type": "admin3",
+                        "lat": 48.80431,
+                        "lon": 19.63631
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Detva",
+                    "type": "admin2",
+                    "aliases": [
+                      "DT",
+                      "Detva District"
+                    ],
+                    "lat": 48.55985,
+                    "lon": 19.42044,
+                    "children": [
+                      {
+                        "name": "Detva",
+                        "type": "admin3",
+                        "lat": 48.56082,
+                        "lon": 19.41954
+                      },
+                      {
+                        "name": "Hriňová",
+                        "type": "admin3",
+                        "lat": 48.57787,
+                        "lon": 19.52574
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Krupina",
+                    "type": "admin2",
+                    "aliases": [
+                      "KA",
+                      "Krupina District"
+                    ],
+                    "lat": 48.35736,
+                    "lon": 19.06334,
+                    "children": [
+                      {
+                        "name": "Krupina",
+                        "type": "admin3",
+                        "lat": 48.3554,
+                        "lon": 19.06474
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Lučenec",
+                    "type": "admin2",
+                    "aliases": [
+                      "LC",
+                      "Losonci jaras",
+                      "Losonci járás"
+                    ],
+                    "lat": 48.33333,
+                    "lon": 19.66667,
+                    "children": [
+                      {
+                        "name": "Fiľakovo",
+                        "type": "admin3",
+                        "lat": 48.26757,
+                        "lon": 19.82473
+                      },
+                      {
+                        "name": "Lučenec",
+                        "type": "admin3",
+                        "lat": 48.33249,
+                        "lon": 19.66708
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Poltár",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Poltar",
+                      "Daerah Poltár",
+                      "Distretto di Poltar"
+                    ],
+                    "lat": 48.42895,
+                    "lon": 19.79488,
+                    "children": [
+                      {
+                        "name": "Poltár",
+                        "type": "admin3",
+                        "lat": 48.43094,
+                        "lon": 19.79408
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Revúca",
+                    "type": "admin2",
+                    "aliases": [
+                      "RA",
+                      "Revuca District",
+                      "Revúca District"
+                    ],
+                    "lat": 48.683,
+                    "lon": 20.11568,
+                    "children": [
+                      {
+                        "name": "Revúca",
+                        "type": "admin3",
+                        "lat": 48.68346,
+                        "lon": 20.11734
+                      },
+                      {
+                        "name": "Tornaľa",
+                        "type": "admin3",
+                        "lat": 48.41915,
+                        "lon": 20.32566
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Rimavská Sobota",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Rimavska Sobota",
+                      "Okres Rimavská Sobota",
+                      "RS"
+                    ],
+                    "lat": 48.38333,
+                    "lon": 20.03333,
+                    "children": [
+                      {
+                        "name": "Hnúšťa",
+                        "type": "admin3",
+                        "lat": 48.57257,
+                        "lon": 19.95395
+                      },
+                      {
+                        "name": "Rimavská Sobota",
+                        "type": "admin3",
+                        "lat": 48.38284,
+                        "lon": 20.02239
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Veľký Krtíš",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nagykuertoesi jaras",
+                      "Nagykürtösi járás",
+                      "Okres Vel'ky Krtis"
+                    ],
+                    "lat": 48.2,
+                    "lon": 19.35,
+                    "children": [
+                      {
+                        "name": "Veľký Krtíš",
+                        "type": "admin3",
+                        "lat": 48.21059,
+                        "lon": 19.35043
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Žarnovica",
+                    "type": "admin2",
+                    "aliases": [
+                      "ZC",
+                      "Zarnovica District",
+                      "Žarnovica District"
+                    ],
+                    "lat": 48.48438,
+                    "lon": 18.72076,
+                    "children": [
+                      {
+                        "name": "Nová Baňa",
+                        "type": "admin3",
+                        "lat": 48.42305,
+                        "lon": 18.64037
+                      },
+                      {
+                        "name": "Žarnovica",
+                        "type": "admin3",
+                        "lat": 48.48123,
+                        "lon": 18.71565
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Žiar nad Hronom",
+                    "type": "admin2",
+                    "aliases": [
+                      "Garamszentkereszti jaras",
+                      "Garamszentkereszti járás",
+                      "Okres Ziar nad Hronom"
+                    ],
+                    "lat": 48.58333,
+                    "lon": 18.86667,
+                    "children": [
+                      {
+                        "name": "Žiar nad Hronom",
+                        "type": "admin3",
+                        "lat": 48.59184,
+                        "lon": 18.84958
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Zvolen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Zvolen",
+                      "ZV",
+                      "Zolyomi jaras"
+                    ],
+                    "lat": 48.58333,
+                    "lon": 19.13333,
+                    "children": [
+                      {
+                        "name": "Zvolen",
+                        "type": "admin3",
+                        "lat": 48.57442,
+                        "lon": 19.15324
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Bratislava",
+                "type": "admin1",
+                "aliases": [
+                  "Bracislauski kraj",
+                  "Bratislav ajmag",
+                  "Bratislava",
+                  "Bratislava Chөlөө"
+                ],
+                "lat": 48.221019,
+                "lon": 17.150746,
+                "children": [
+                  {
+                    "name": "Okres Bratislava I",
+                    "type": "admin2",
+                    "aliases": [
+                      "B1",
+                      "Bratislava I District",
+                      "Pozsonyi I. jaras"
+                    ],
+                    "lat": 48.14653,
+                    "lon": 17.10584,
+                    "children": [
+                      {
+                        "name": "Staré Mesto",
+                        "type": "admin3",
+                        "lat": 48.15039,
+                        "lon": 17.09002
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Bratislava II",
+                    "type": "admin2",
+                    "aliases": [
+                      "B2",
+                      "Pozsonyi II. jaras",
+                      "Pozsonyi II. járás"
+                    ],
+                    "lat": 48.1528,
+                    "lon": 17.17764,
+                    "children": [
+                      {
+                        "name": "Podunajské Biskupice",
+                        "type": "admin3",
+                        "lat": 48.13246,
+                        "lon": 17.20963
+                      },
+                      {
+                        "name": "Vrakuňa",
+                        "type": "admin3",
+                        "lat": 48.1383,
+                        "lon": 17.20866
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Bratislava III",
+                    "type": "admin2",
+                    "aliases": [
+                      "B3",
+                      "Pozsonyi III. jaras",
+                      "Pozsonyi III. járás"
+                    ],
+                    "lat": 48.18543,
+                    "lon": 17.1379,
+                    "children": [
+                      {
+                        "name": "Bratislava - Vajnory",
+                        "type": "admin3",
+                        "lat": 48.20563,
+                        "lon": 17.20759
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Bratislava IV",
+                    "type": "admin2",
+                    "aliases": [
+                      "B4",
+                      "Pozsonyi IV. jaras",
+                      "Pozsonyi IV. járás"
+                    ],
+                    "lat": 48.22787,
+                    "lon": 16.99722,
+                    "children": [
+                      {
+                        "name": "Devínska Nová Ves",
+                        "type": "admin3",
+                        "lat": 48.20711,
+                        "lon": 16.9786
+                      },
+                      {
+                        "name": "Dlhé diely",
+                        "type": "admin3",
+                        "lat": 48.15454,
+                        "lon": 17.04607
+                      },
+                      {
+                        "name": "Dúbravka",
+                        "type": "admin3",
+                        "lat": 48.18872,
+                        "lon": 17.03521
+                      },
+                      {
+                        "name": "Karlova Ves",
+                        "type": "admin3",
+                        "lat": 48.15344,
+                        "lon": 17.05522
+                      },
+                      {
+                        "name": "Lamač",
+                        "type": "admin3",
+                        "lat": 48.19298,
+                        "lon": 17.05078
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Bratislava V",
+                    "type": "admin2",
+                    "aliases": [
+                      "B5",
+                      "Pozsonyi V. jaras",
+                      "Pozsonyi V. járás"
+                    ],
+                    "lat": 48.11122,
+                    "lon": 17.09444,
+                    "children": [
+                      {
+                        "name": "Petržalka",
+                        "type": "admin3",
+                        "lat": 48.12331,
+                        "lon": 17.12866
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Malacky",
+                    "type": "admin2",
+                    "aliases": [
+                      "MA",
+                      "Malackai jaras",
+                      "Malackai járás"
+                    ],
+                    "lat": 48.43458,
+                    "lon": 17.02166,
+                    "children": [
+                      {
+                        "name": "Malacky",
+                        "type": "admin3",
+                        "lat": 48.43604,
+                        "lon": 17.02188
+                      },
+                      {
+                        "name": "Stupava",
+                        "type": "admin3",
+                        "lat": 48.27474,
+                        "lon": 17.03173
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Pezinok",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bazini jaras",
+                      "Bazini járás",
+                      "Bazinium"
+                    ],
+                    "lat": 48.28785,
+                    "lon": 17.26799,
+                    "children": [
+                      {
+                        "name": "Modra",
+                        "type": "admin3",
+                        "lat": 48.33397,
+                        "lon": 17.30711
+                      },
+                      {
+                        "name": "Pezinok",
+                        "type": "admin3",
+                        "lat": 48.28986,
+                        "lon": 17.26664
+                      },
+                      {
+                        "name": "Šenkvice",
+                        "type": "admin3",
+                        "lat": 48.29817,
+                        "lon": 17.34959
+                      },
+                      {
+                        "name": "Slovenský Grob",
+                        "type": "admin3",
+                        "lat": 48.2576,
+                        "lon": 17.27428
+                      },
+                      {
+                        "name": "Svätý Jur",
+                        "type": "admin3",
+                        "lat": 48.25216,
+                        "lon": 17.21539
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Senec",
+                    "type": "admin2",
+                    "aliases": [
+                      "SC",
+                      "Senec District",
+                      "Szenci jaras"
+                    ],
+                    "lat": 48.22187,
+                    "lon": 17.40328,
+                    "children": [
+                      {
+                        "name": "Bernolákovo",
+                        "type": "admin3",
+                        "lat": 48.20068,
+                        "lon": 17.30186
+                      },
+                      {
+                        "name": "Chorvátsky Grob",
+                        "type": "admin3",
+                        "lat": 48.22787,
+                        "lon": 17.29094
+                      },
+                      {
+                        "name": "Chorvátsky Grob - Čierna Voda",
+                        "type": "admin3",
+                        "lat": 48.2249,
+                        "lon": 17.2324
+                      },
+                      {
+                        "name": "Dunajská Lužná",
+                        "type": "admin3",
+                        "lat": 48.08347,
+                        "lon": 17.26072
+                      },
+                      {
+                        "name": "Ivanka pri Dunaji",
+                        "type": "admin3",
+                        "lat": 48.18675,
+                        "lon": 17.2554
+                      },
+                      {
+                        "name": "Rovinka",
+                        "type": "admin3",
+                        "lat": 48.09783,
+                        "lon": 17.23632
+                      },
+                      {
+                        "name": "Senec",
+                        "type": "admin3",
+                        "lat": 48.21951,
+                        "lon": 17.40043
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Kosice",
+                "type": "admin1",
+                "aliases": [
+                  "Cassovia",
+                  "Daerah Kosice",
+                  "Daerah Košice",
+                  "Gewes Kosice"
+                ],
+                "lat": 48.747228,
+                "lon": 21.300772,
+                "children": [
+                  {
+                    "name": "Košice I",
+                    "type": "admin2",
+                    "aliases": [
+                      "K1",
+                      "Kassai I. jaras",
+                      "Kassai I. járás"
+                    ],
+                    "lat": 48.72914,
+                    "lon": 21.25004,
+                    "children": []
+                  },
+                  {
+                    "name": "Košice II",
+                    "type": "admin2",
+                    "aliases": [
+                      "K2",
+                      "Kassai II. jaras",
+                      "Kassai II. járás"
+                    ],
+                    "lat": 48.69753,
+                    "lon": 21.22273,
+                    "children": []
+                  },
+                  {
+                    "name": "Košice III",
+                    "type": "admin2",
+                    "aliases": [
+                      "K3",
+                      "Kassai III. jaras",
+                      "Kassai III. járás"
+                    ],
+                    "lat": 48.73242,
+                    "lon": 21.29047,
+                    "children": []
+                  },
+                  {
+                    "name": "Košice IV",
+                    "type": "admin2",
+                    "aliases": [
+                      "K4",
+                      "Kassai IV. jaras",
+                      "Kassai IV. járás"
+                    ],
+                    "lat": 48.68691,
+                    "lon": 21.2657,
+                    "children": []
+                  },
+                  {
+                    "name": "Okres Gelnica",
+                    "type": "admin2",
+                    "aliases": [
+                      "GL",
+                      "Gelnica District",
+                      "Goelnicbanyai jaras"
+                    ],
+                    "lat": 48.85207,
+                    "lon": 20.93385,
+                    "children": [
+                      {
+                        "name": "Gelnica",
+                        "type": "admin3",
+                        "lat": 48.85584,
+                        "lon": 20.93713
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kosice-okolie",
+                    "type": "admin2",
+                    "aliases": [
+                      "KS",
+                      "Kosice-okolie District",
+                      "Košice-okolie District"
+                    ],
+                    "lat": 48.77897,
+                    "lon": 21.41373,
+                    "children": [
+                      {
+                        "name": "Čaňa",
+                        "type": "admin3",
+                        "lat": 48.60994,
+                        "lon": 21.32622
+                      },
+                      {
+                        "name": "Moldava nad Bodvou",
+                        "type": "admin3",
+                        "lat": 48.61428,
+                        "lon": 20.99957
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Michalovce",
+                    "type": "admin2",
+                    "aliases": [
+                      "MI",
+                      "Michalovce",
+                      "Michalovce District"
+                    ],
+                    "lat": 48.75,
+                    "lon": 21.93333,
+                    "children": [
+                      {
+                        "name": "Michalovce",
+                        "type": "admin3",
+                        "lat": 48.75434,
+                        "lon": 21.9195
+                      },
+                      {
+                        "name": "Veľké Kapušany",
+                        "type": "admin3",
+                        "lat": 48.55197,
+                        "lon": 22.08036
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Rožňava",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Roznava",
+                      "Okres Rožňava",
+                      "RV"
+                    ],
+                    "lat": 48.66667,
+                    "lon": 20.53333,
+                    "children": [
+                      {
+                        "name": "Dobšiná",
+                        "type": "admin3",
+                        "lat": 48.82073,
+                        "lon": 20.36988
+                      },
+                      {
+                        "name": "Rožňava",
+                        "type": "admin3",
+                        "lat": 48.66009,
+                        "lon": 20.53758
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Sobrance",
+                    "type": "admin2",
+                    "aliases": [
+                      "SO",
+                      "Sobrance District",
+                      "Szobranci jaras"
+                    ],
+                    "lat": 48.74247,
+                    "lon": 22.18197,
+                    "children": [
+                      {
+                        "name": "Sobrance",
+                        "type": "admin3",
+                        "lat": 48.74455,
+                        "lon": 22.18136
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Spišská Nová Ves",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Spisska Nova Ves",
+                      "Okres Spišská Nová Ves",
+                      "SN"
+                    ],
+                    "lat": 48.95,
+                    "lon": 20.56667,
+                    "children": [
+                      {
+                        "name": "Krompachy",
+                        "type": "admin3",
+                        "lat": 48.91447,
+                        "lon": 20.87514
+                      },
+                      {
+                        "name": "Smižany",
+                        "type": "admin3",
+                        "lat": 48.95446,
+                        "lon": 20.52341
+                      },
+                      {
+                        "name": "Spišská Nová Ves",
+                        "type": "admin3",
+                        "lat": 48.94464,
+                        "lon": 20.56153
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Trebišov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Trebisov",
+                      "Okres Trebišov",
+                      "TV"
+                    ],
+                    "lat": 48.63333,
+                    "lon": 21.71667,
+                    "children": [
+                      {
+                        "name": "Kráľovský Chlmec",
+                        "type": "admin3",
+                        "lat": 48.42336,
+                        "lon": 21.97944
+                      },
+                      {
+                        "name": "Sečovce",
+                        "type": "admin3",
+                        "lat": 48.70074,
+                        "lon": 21.66104
+                      },
+                      {
+                        "name": "Trebišov",
+                        "type": "admin3",
+                        "lat": 48.62858,
+                        "lon": 21.71954
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Nitra",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Nitra",
+                  "Gewes Nitra",
+                  "Gobolka Nitra",
+                  "Kanda la Nitra"
+                ],
+                "lat": 48.197236,
+                "lon": 18.205449,
+                "children": [
+                  {
+                    "name": "Okres Komárno",
+                    "type": "admin2",
+                    "aliases": [
+                      "KN",
+                      "Komarno",
+                      "Komarno District"
+                    ],
+                    "lat": 47.76667,
+                    "lon": 18.13333,
+                    "children": [
+                      {
+                        "name": "Hurbanovo",
+                        "type": "admin3",
+                        "lat": 47.86984,
+                        "lon": 18.19233
+                      },
+                      {
+                        "name": "Kolárovo",
+                        "type": "admin3",
+                        "lat": 47.92294,
+                        "lon": 17.98467
+                      },
+                      {
+                        "name": "Komárno",
+                        "type": "admin3",
+                        "lat": 47.76356,
+                        "lon": 18.12263
+                      },
+                      {
+                        "name": "Nesvady",
+                        "type": "admin3",
+                        "lat": 47.92819,
+                        "lon": 18.12675
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Levice",
+                    "type": "admin2",
+                    "aliases": [
+                      "LV",
+                      "Levai jaras",
+                      "Levice"
+                    ],
+                    "lat": 48.21667,
+                    "lon": 18.6,
+                    "children": [
+                      {
+                        "name": "Levice",
+                        "type": "admin3",
+                        "lat": 48.21563,
+                        "lon": 18.60705
+                      },
+                      {
+                        "name": "Šahy",
+                        "type": "admin3",
+                        "lat": 48.07408,
+                        "lon": 18.94946
+                      },
+                      {
+                        "name": "Želiezovce",
+                        "type": "admin3",
+                        "lat": 48.05075,
+                        "lon": 18.65421
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Nitra",
+                    "type": "admin2",
+                    "aliases": [
+                      "NR",
+                      "Nitra",
+                      "Nitra District"
+                    ],
+                    "lat": 48.31667,
+                    "lon": 18.08333,
+                    "children": [
+                      {
+                        "name": "Nitra",
+                        "type": "admin3",
+                        "lat": 48.30763,
+                        "lon": 18.08453
+                      },
+                      {
+                        "name": "Vráble",
+                        "type": "admin3",
+                        "lat": 48.24371,
+                        "lon": 18.30846
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Nové Zámky",
+                    "type": "admin2",
+                    "aliases": [
+                      "NZ",
+                      "Nove Zamky",
+                      "Nove Zamky District"
+                    ],
+                    "lat": 47.98333,
+                    "lon": 18.16667,
+                    "children": [
+                      {
+                        "name": "Dvory nad Žitavou",
+                        "type": "admin3",
+                        "lat": 47.98946,
+                        "lon": 18.26717
+                      },
+                      {
+                        "name": "Komárno",
+                        "type": "admin3",
+                        "lat": 48.11667,
+                        "lon": 18.31667
+                      },
+                      {
+                        "name": "Nové Zámky",
+                        "type": "admin3",
+                        "lat": 47.98544,
+                        "lon": 18.16195
+                      },
+                      {
+                        "name": "Štúrovo",
+                        "type": "admin3",
+                        "lat": 47.79495,
+                        "lon": 18.7175
+                      },
+                      {
+                        "name": "Šurany",
+                        "type": "admin3",
+                        "lat": 48.08613,
+                        "lon": 18.18447
+                      },
+                      {
+                        "name": "Tvrdošovce",
+                        "type": "admin3",
+                        "lat": 48.0945,
+                        "lon": 18.06686
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Šaľa",
+                    "type": "admin2",
+                    "aliases": [
+                      "SA",
+                      "Sala District",
+                      "Šaľa District"
+                    ],
+                    "lat": 48.1477,
+                    "lon": 17.87306,
+                    "children": [
+                      {
+                        "name": "Šaľa",
+                        "type": "admin3",
+                        "lat": 48.15127,
+                        "lon": 17.88062
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Topoľčany",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Topol'cany",
+                      "Okres Topoľčany",
+                      "TO"
+                    ],
+                    "lat": 48.56667,
+                    "lon": 18.18333,
+                    "children": [
+                      {
+                        "name": "Topoľčany",
+                        "type": "admin3",
+                        "lat": 48.56361,
+                        "lon": 18.16712
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Zlaté Moravce",
+                    "type": "admin2",
+                    "aliases": [
+                      "ZM",
+                      "Zlate Moravce District",
+                      "Zlaté Moravce District"
+                    ],
+                    "lat": 48.38294,
+                    "lon": 18.39842,
+                    "children": [
+                      {
+                        "name": "Zlaté Moravce",
+                        "type": "admin3",
+                        "lat": 48.38553,
+                        "lon": 18.40063
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Presov",
+                "type": "admin1",
+                "aliases": [
+                  "Eperjesi koerzet",
+                  "Eperjesi körzet",
+                  "Epuries",
+                  "Gewes Presov"
+                ],
+                "lat": 49.114038,
+                "lon": 21.269804,
+                "children": [
+                  {
+                    "name": "Okres Bardejov",
+                    "type": "admin2",
+                    "aliases": [
+                      "BJ",
+                      "Bardejov",
+                      "Bardejov District"
+                    ],
+                    "lat": 49.28333,
+                    "lon": 21.28333,
+                    "children": [
+                      {
+                        "name": "Bardejov",
+                        "type": "admin3",
+                        "lat": 49.29175,
+                        "lon": 21.27271
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Humenné",
+                    "type": "admin2",
+                    "aliases": [
+                      "HE",
+                      "Humenne",
+                      "Humenne District"
+                    ],
+                    "lat": 48.93333,
+                    "lon": 21.91667,
+                    "children": [
+                      {
+                        "name": "Humenné",
+                        "type": "admin3",
+                        "lat": 48.93707,
+                        "lon": 21.91625
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kežmarok",
+                    "type": "admin2",
+                    "aliases": [
+                      "KK",
+                      "Kezmarok District",
+                      "Kežmarok District"
+                    ],
+                    "lat": 49.13593,
+                    "lon": 20.42929,
+                    "children": [
+                      {
+                        "name": "Kežmarok",
+                        "type": "admin3",
+                        "lat": 49.13571,
+                        "lon": 20.43352
+                      },
+                      {
+                        "name": "Lendak",
+                        "type": "admin3",
+                        "lat": 49.23441,
+                        "lon": 20.35646
+                      },
+                      {
+                        "name": "Spišská Belá",
+                        "type": "admin3",
+                        "lat": 49.18725,
+                        "lon": 20.45948
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Levoča",
+                    "type": "admin2",
+                    "aliases": [
+                      "LE",
+                      "Levoca District",
+                      "Levoča District"
+                    ],
+                    "lat": 49.01986,
+                    "lon": 20.57688,
+                    "children": [
+                      {
+                        "name": "Levoča",
+                        "type": "admin3",
+                        "lat": 49.02173,
+                        "lon": 20.59212
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Medzilaborce",
+                    "type": "admin2",
+                    "aliases": [
+                      "ML",
+                      "Medzilaborce District",
+                      "Mezolaborci jaras"
+                    ],
+                    "lat": 49.27062,
+                    "lon": 21.902,
+                    "children": [
+                      {
+                        "name": "Medzilaborce",
+                        "type": "admin3",
+                        "lat": 49.27195,
+                        "lon": 21.90073
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Poprad",
+                    "type": "admin2",
+                    "aliases": [
+                      "District de Poprad",
+                      "Districtul Poprad",
+                      "Okres Poprad"
+                    ],
+                    "lat": 49.05,
+                    "lon": 20.3,
+                    "children": [
+                      {
+                        "name": "Poprad",
+                        "type": "admin3",
+                        "lat": 49.06144,
+                        "lon": 20.29798
+                      },
+                      {
+                        "name": "Svit",
+                        "type": "admin3",
+                        "lat": 49.06014,
+                        "lon": 20.20695
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Prešov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Presov",
+                      "Daerah Prešov",
+                      "Distretto di Presov"
+                    ],
+                    "lat": 49,
+                    "lon": 21.25,
+                    "children": [
+                      {
+                        "name": "Prešov",
+                        "type": "admin3",
+                        "lat": 48.99923,
+                        "lon": 21.2355
+                      },
+                      {
+                        "name": "Veľký Šariš",
+                        "type": "admin3",
+                        "lat": 49.04114,
+                        "lon": 21.1993
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Sabinov",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kisszebeni jaras",
+                      "Kisszebeni járás",
+                      "SB"
+                    ],
+                    "lat": 49.10115,
+                    "lon": 21.09844,
+                    "children": [
+                      {
+                        "name": "Jarovnice",
+                        "type": "admin3",
+                        "lat": 49.05801,
+                        "lon": 21.05806
+                      },
+                      {
+                        "name": "Lipany",
+                        "type": "admin3",
+                        "lat": 49.15376,
+                        "lon": 20.96382
+                      },
+                      {
+                        "name": "Sabinov",
+                        "type": "admin3",
+                        "lat": 49.10309,
+                        "lon": 21.0988
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Snina",
+                    "type": "admin2",
+                    "aliases": [
+                      "SV",
+                      "Snina District",
+                      "Szinnai jaras"
+                    ],
+                    "lat": 48.98579,
+                    "lon": 22.15059,
+                    "children": [
+                      {
+                        "name": "Snina",
+                        "type": "admin3",
+                        "lat": 48.98857,
+                        "lon": 22.15099
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Stará Ĺubovňa",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Stara Lubovna",
+                      "Okres Stará Ĺubovňa",
+                      "SL"
+                    ],
+                    "lat": 49.3,
+                    "lon": 20.7,
+                    "children": [
+                      {
+                        "name": "Stará Ľubovňa",
+                        "type": "admin3",
+                        "lat": 49.29859,
+                        "lon": 20.6862
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Stropkov",
+                    "type": "admin2",
+                    "aliases": [
+                      "SP",
+                      "Stropkov District",
+                      "Sztropkoi jaras"
+                    ],
+                    "lat": 49.20249,
+                    "lon": 21.65025,
+                    "children": [
+                      {
+                        "name": "Stropkov",
+                        "type": "admin3",
+                        "lat": 49.20211,
+                        "lon": 21.65216
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Svidník",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Svidnik",
+                      "Okres Svidník",
+                      "SK"
+                    ],
+                    "lat": 49.3,
+                    "lon": 21.56667,
+                    "children": [
+                      {
+                        "name": "Svidník",
+                        "type": "admin3",
+                        "lat": 49.30819,
+                        "lon": 21.5703
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Vranov nad Topľou",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Vranov nad Topl'ou",
+                      "Okres Vranov nad Topl'ov",
+                      "Okres Vranov nad Topľou"
+                    ],
+                    "lat": 48.9,
+                    "lon": 21.68333,
+                    "children": [
+                      {
+                        "name": "Vranov nad Topľou",
+                        "type": "admin3",
+                        "lat": 48.88836,
+                        "lon": 21.68479
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Trencin",
+                "type": "admin1",
+                "aliases": [
+                  "Gobolka Trencin",
+                  "Kanda la Trencin",
+                  "Mintakˌai Trenchin",
+                  "Naannoo Trencin"
+                ],
+                "lat": 48.860987,
+                "lon": 18.193352,
+                "children": [
+                  {
+                    "name": "Okres Bánovce nad Bebravou",
+                    "type": "admin2",
+                    "aliases": [
+                      "BN",
+                      "Banovce nad Bebravou District",
+                      "Bánovce nad Bebravou District"
+                    ],
+                    "lat": 48.71908,
+                    "lon": 18.25773,
+                    "children": [
+                      {
+                        "name": "Bánovce nad Bebravou",
+                        "type": "admin3",
+                        "lat": 48.7213,
+                        "lon": 18.25754
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Ilava",
+                    "type": "admin2",
+                    "aliases": [
+                      "IL",
+                      "Ilava District",
+                      "Illavai jaras"
+                    ],
+                    "lat": 48.99641,
+                    "lon": 18.23374,
+                    "children": [
+                      {
+                        "name": "Dubnica nad Váhom",
+                        "type": "admin3",
+                        "lat": 48.95981,
+                        "lon": 18.16634
+                      },
+                      {
+                        "name": "Ilava",
+                        "type": "admin3",
+                        "lat": 48.99769,
+                        "lon": 18.2353
+                      },
+                      {
+                        "name": "Nová Dubnica",
+                        "type": "admin3",
+                        "lat": 48.93479,
+                        "lon": 18.14632
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Myjava",
+                    "type": "admin2",
+                    "aliases": [
+                      "MY",
+                      "Miavai jaras",
+                      "Miavai járás"
+                    ],
+                    "lat": 48.75,
+                    "lon": 17.58333,
+                    "children": [
+                      {
+                        "name": "Myjava",
+                        "type": "admin3",
+                        "lat": 48.75876,
+                        "lon": 17.56866
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Nové Mesto nad Váhom",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Nove Mesto nad Vahom",
+                      "Distretto di Nové Mesto nad Váhom",
+                      "Distrito de Nove Mesto nad Vahom"
+                    ],
+                    "lat": 48.75466,
+                    "lon": 17.83506,
+                    "children": [
+                      {
+                        "name": "Nové Mesto nad Váhom",
+                        "type": "admin3",
+                        "lat": 48.75763,
+                        "lon": 17.8309
+                      },
+                      {
+                        "name": "Stará Turá",
+                        "type": "admin3",
+                        "lat": 48.77721,
+                        "lon": 17.69433
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Partizánske",
+                    "type": "admin2",
+                    "aliases": [
+                      "PE",
+                      "Partizanske District",
+                      "Partizánske District"
+                    ],
+                    "lat": 48.62613,
+                    "lon": 18.37957,
+                    "children": [
+                      {
+                        "name": "Partizánske",
+                        "type": "admin3",
+                        "lat": 48.62861,
+                        "lon": 18.38455
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Považská Bystrica",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Povazska Bystrica",
+                      "Okres Považská Bystrica",
+                      "PB"
+                    ],
+                    "lat": 49.11667,
+                    "lon": 18.45,
+                    "children": [
+                      {
+                        "name": "Považská Bystrica",
+                        "type": "admin3",
+                        "lat": 49.12153,
+                        "lon": 18.42169
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Prievidza",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Prievidza",
+                      "PD",
+                      "Prievidza"
+                    ],
+                    "lat": 48.76667,
+                    "lon": 18.63333,
+                    "children": [
+                      {
+                        "name": "Bojnice",
+                        "type": "admin3",
+                        "lat": 48.78511,
+                        "lon": 18.5864
+                      },
+                      {
+                        "name": "Handlová",
+                        "type": "admin3",
+                        "lat": 48.7276,
+                        "lon": 18.76012
+                      },
+                      {
+                        "name": "Prievidza",
+                        "type": "admin3",
+                        "lat": 48.77446,
+                        "lon": 18.6275
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Púchov",
+                    "type": "admin2",
+                    "aliases": [
+                      "PU",
+                      "Puchov District",
+                      "Púchov District"
+                    ],
+                    "lat": 49.12406,
+                    "lon": 18.32477,
+                    "children": [
+                      {
+                        "name": "Beluša",
+                        "type": "admin3",
+                        "lat": 49.0649,
+                        "lon": 18.32685
+                      },
+                      {
+                        "name": "Púchov",
+                        "type": "admin3",
+                        "lat": 49.12494,
+                        "lon": 18.32597
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Trenčín",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Trencin",
+                      "Distretto di Trenčín",
+                      "Distrito de Trencin"
+                    ],
+                    "lat": 48.8952,
+                    "lon": 18.04264,
+                    "children": [
+                      {
+                        "name": "Nemšová",
+                        "type": "admin3",
+                        "lat": 48.96702,
+                        "lon": 18.11892
+                      },
+                      {
+                        "name": "Trenčín",
+                        "type": "admin3",
+                        "lat": 48.89452,
+                        "lon": 18.04436
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Trnava",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Trnava",
+                  "Gobolka Trnava",
+                  "Kanda la Trnava",
+                  "Krai tis Trnava"
+                ],
+                "lat": 48.429094,
+                "lon": 17.576596,
+                "children": [
+                  {
+                    "name": "Okres Dunajská Streda",
+                    "type": "admin2",
+                    "aliases": [
+                      "DS",
+                      "Dunajska Streda",
+                      "Dunajska Streda District"
+                    ],
+                    "lat": 47.99635,
+                    "lon": 17.60937,
+                    "children": [
+                      {
+                        "name": "Dunajská Streda",
+                        "type": "admin3",
+                        "lat": 47.99268,
+                        "lon": 17.61211
+                      },
+                      {
+                        "name": "Gabčíkovo",
+                        "type": "admin3",
+                        "lat": 47.89211,
+                        "lon": 17.57884
+                      },
+                      {
+                        "name": "Šamorín",
+                        "type": "admin3",
+                        "lat": 48.03015,
+                        "lon": 17.30972
+                      },
+                      {
+                        "name": "Veľký Meder",
+                        "type": "admin3",
+                        "lat": 47.85798,
+                        "lon": 17.76884
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Galanta",
+                    "type": "admin2",
+                    "aliases": [
+                      "GA",
+                      "Galanta",
+                      "Galanta District"
+                    ],
+                    "lat": 48.2,
+                    "lon": 17.71667,
+                    "children": [
+                      {
+                        "name": "Galanta",
+                        "type": "admin3",
+                        "lat": 48.19001,
+                        "lon": 17.72747
+                      },
+                      {
+                        "name": "Sereď",
+                        "type": "admin3",
+                        "lat": 48.29117,
+                        "lon": 17.73331
+                      },
+                      {
+                        "name": "Sládkovičovo",
+                        "type": "admin3",
+                        "lat": 48.20137,
+                        "lon": 17.63852
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Hlohovec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Hlohovec",
+                      "Distrito de Hlohovec",
+                      "Galgoci jaras"
+                    ],
+                    "lat": 48.41667,
+                    "lon": 17.75,
+                    "children": [
+                      {
+                        "name": "Hlohovec",
+                        "type": "admin3",
+                        "lat": 48.43174,
+                        "lon": 17.8031
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Piešťany",
+                    "type": "admin2",
+                    "aliases": [
+                      "PN",
+                      "Piestany District",
+                      "Piešťany District"
+                    ],
+                    "lat": 48.59064,
+                    "lon": 17.82679,
+                    "children": [
+                      {
+                        "name": "Piešťany",
+                        "type": "admin3",
+                        "lat": 48.59479,
+                        "lon": 17.82591
+                      },
+                      {
+                        "name": "Vrbové",
+                        "type": "admin3",
+                        "lat": 48.61973,
+                        "lon": 17.7226
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Senica",
+                    "type": "admin2",
+                    "aliases": [
+                      "Okres Senica",
+                      "SE",
+                      "Senica"
+                    ],
+                    "lat": 48.68333,
+                    "lon": 17.36667,
+                    "children": [
+                      {
+                        "name": "Senica",
+                        "type": "admin3",
+                        "lat": 48.67922,
+                        "lon": 17.36697
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Skalica",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Skalica",
+                      "Distrito de Skalica",
+                      "Okres Skalica"
+                    ],
+                    "lat": 48.75,
+                    "lon": 17.16667,
+                    "children": [
+                      {
+                        "name": "Holíč",
+                        "type": "admin3",
+                        "lat": 48.81105,
+                        "lon": 17.16238
+                      },
+                      {
+                        "name": "Skalica",
+                        "type": "admin3",
+                        "lat": 48.8449,
+                        "lon": 17.22635
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Trnava",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Trnava",
+                      "Distretto di Trnava",
+                      "District de Trnava"
+                    ],
+                    "lat": 48.36667,
+                    "lon": 17.6,
+                    "children": [
+                      {
+                        "name": "Trnava",
+                        "type": "admin3",
+                        "lat": 48.37773,
+                        "lon": 17.58603
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Zilina",
+                "type": "admin1",
+                "aliases": [
+                  "Daerah Zilina",
+                  "Daerah Žilina",
+                  "Gobolka Zilina",
+                  "Jilina bölgəsi"
+                ],
+                "lat": 49.200871,
+                "lon": 19.082543,
+                "children": [
+                  {
+                    "name": "Okres Bytča",
+                    "type": "admin2",
+                    "aliases": [
+                      "BY",
+                      "Bytca District",
+                      "Bytča District"
+                    ],
+                    "lat": 49.22267,
+                    "lon": 18.55844,
+                    "children": [
+                      {
+                        "name": "Bytča",
+                        "type": "admin3",
+                        "lat": 49.22404,
+                        "lon": 18.55878
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Čadca",
+                    "type": "admin2",
+                    "aliases": [
+                      "CA",
+                      "Cadca",
+                      "Okres Cadca"
+                    ],
+                    "lat": 49.43333,
+                    "lon": 18.78333,
+                    "children": [
+                      {
+                        "name": "Čadca",
+                        "type": "admin3",
+                        "lat": 49.43503,
+                        "lon": 18.78895
+                      },
+                      {
+                        "name": "Krásno nad Kysucou",
+                        "type": "admin3",
+                        "lat": 49.39572,
+                        "lon": 18.83431
+                      },
+                      {
+                        "name": "Oščadnica",
+                        "type": "admin3",
+                        "lat": 49.43572,
+                        "lon": 18.8819
+                      },
+                      {
+                        "name": "Raková",
+                        "type": "admin3",
+                        "lat": 49.44481,
+                        "lon": 18.73792
+                      },
+                      {
+                        "name": "Skalité",
+                        "type": "admin3",
+                        "lat": 49.49664,
+                        "lon": 18.89706
+                      },
+                      {
+                        "name": "Turzovka",
+                        "type": "admin3",
+                        "lat": 49.40429,
+                        "lon": 18.62258
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Dolný Kubín",
+                    "type": "admin2",
+                    "aliases": [
+                      "DK",
+                      "Dolny Kubin",
+                      "Dolny Kubin District"
+                    ],
+                    "lat": 49.2,
+                    "lon": 19.3,
+                    "children": [
+                      {
+                        "name": "Dolný Kubín",
+                        "type": "admin3",
+                        "lat": 49.20983,
+                        "lon": 19.30341
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Kysucké Nové Mesto",
+                    "type": "admin2",
+                    "aliases": [
+                      "KM",
+                      "Kysucke Nove Mesto District",
+                      "Kysucké Nové Mesto District"
+                    ],
+                    "lat": 49.30206,
+                    "lon": 18.78603,
+                    "children": [
+                      {
+                        "name": "Kysucké Nové Mesto",
+                        "type": "admin3",
+                        "lat": 49.3,
+                        "lon": 18.78333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Liptovský Mikuláš",
+                    "type": "admin2",
+                    "aliases": [
+                      "LM",
+                      "Liptovsky Mikulas",
+                      "Liptovský Mikuláš"
+                    ],
+                    "lat": 49.08333,
+                    "lon": 19.61667,
+                    "children": [
+                      {
+                        "name": "Liptovský Hrádok",
+                        "type": "admin3",
+                        "lat": 49.03962,
+                        "lon": 19.72335
+                      },
+                      {
+                        "name": "Liptovský Mikuláš",
+                        "type": "admin3",
+                        "lat": 49.08061,
+                        "lon": 19.62218
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Martin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Distretto di Martin",
+                      "Districtul Martin",
+                      "MT"
+                    ],
+                    "lat": 49.06667,
+                    "lon": 18.93333,
+                    "children": [
+                      {
+                        "name": "Martin",
+                        "type": "admin3",
+                        "lat": 49.06651,
+                        "lon": 18.92399
+                      },
+                      {
+                        "name": "Vrútky",
+                        "type": "admin3",
+                        "lat": 49.11328,
+                        "lon": 18.91714
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Namestovo",
+                    "type": "admin2",
+                    "aliases": [
+                      "NO",
+                      "Namestovo District",
+                      "Námestovo District"
+                    ],
+                    "lat": 49.40651,
+                    "lon": 19.4767,
+                    "children": [
+                      {
+                        "name": "Námestovo",
+                        "type": "admin3",
+                        "lat": 49.4079,
+                        "lon": 19.48032
+                      },
+                      {
+                        "name": "Rabča",
+                        "type": "admin3",
+                        "lat": 49.48602,
+                        "lon": 19.47618
+                      },
+                      {
+                        "name": "Zákamenné",
+                        "type": "admin3",
+                        "lat": 49.38859,
+                        "lon": 19.29294
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Ružomberok",
+                    "type": "admin2",
+                    "aliases": [
+                      "RK",
+                      "Ruzomberok District",
+                      "Ružomberok District"
+                    ],
+                    "lat": 49.07494,
+                    "lon": 19.30083,
+                    "children": [
+                      {
+                        "name": "Ružomberok",
+                        "type": "admin3",
+                        "lat": 49.0748,
+                        "lon": 19.30751
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Turčianske Teplice",
+                    "type": "admin2",
+                    "aliases": [
+                      "TR",
+                      "Turcianske Teplice District",
+                      "Turčianske Teplice District"
+                    ],
+                    "lat": 48.86283,
+                    "lon": 18.85759,
+                    "children": [
+                      {
+                        "name": "Turčianske Teplice",
+                        "type": "admin3",
+                        "lat": 48.86225,
+                        "lon": 18.86048
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Tvrdošín",
+                    "type": "admin2",
+                    "aliases": [
+                      "TS",
+                      "Tvrdosin District",
+                      "Tvrdošín District"
+                    ],
+                    "lat": 49.33421,
+                    "lon": 19.55461,
+                    "children": [
+                      {
+                        "name": "Trstená",
+                        "type": "admin3",
+                        "lat": 49.36101,
+                        "lon": 19.61249
+                      },
+                      {
+                        "name": "Tvrdošín",
+                        "type": "admin3",
+                        "lat": 49.337,
+                        "lon": 19.556
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Okres Žilina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Daerah Zilina",
+                      "Daerah Žilina",
+                      "Distretto di Zilina"
+                    ],
+                    "lat": 49.22303,
+                    "lon": 18.74044,
+                    "children": [
+                      {
+                        "name": "Rajec",
+                        "type": "admin3",
+                        "lat": 49.08899,
+                        "lon": 18.64007
+                      },
+                      {
+                        "name": "Žilina",
+                        "type": "admin3",
+                        "lat": 49.22315,
+                        "lon": 18.73941
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

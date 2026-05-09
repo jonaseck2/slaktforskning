@@ -1,0 +1,362 @@
+{
+  "id": "ba-opstine",
+  "name": "Bosnia and Herzegovina Općine",
+  "locale": "ba",
+  "description": "Bosnia and Herzegovina: 3 entities (Federation/Republika Srpska/Brčko District — admin1) + 18 cantons/regions (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/BA.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Bosnia and Herzegovina",
+            "type": "country",
+            "aliases": [
+              "Bosna i Hercegovina",
+              "Босна и Херцеговина"
+            ],
+            "lat": 43.9,
+            "lon": 17.7,
+            "children": [
+              {
+                "name": "Brčko District",
+                "type": "admin1",
+                "aliases": [
+                  "Akruga Brchko",
+                  "Brchko",
+                  "Brchko Distrikt",
+                  "Brchko Distrikt Bosne i Khercegovine"
+                ],
+                "lat": 44.83333,
+                "lon": 18.83333,
+                "children": []
+              },
+              {
+                "name": "Federation of Bosnia and Herzegovina",
+                "type": "admin1",
+                "aliases": [
+                  "Bosniak-Croat Federation",
+                  "Bosnija zhəne Gercegovina Federacijasy",
+                  "Bosniya va Gertsegovinna Federaciyasi",
+                  "Bosniya və Herseqovina Federasiyasi"
+                ],
+                "lat": 44.098798,
+                "lon": 17.839597,
+                "children": [
+                  {
+                    "name": "Bosansko-Podrinjski Kanton Goražde",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bosansko Podrinje Canton",
+                      "Bosansko-Podrinjska Zupanija Gorazde",
+                      "Bosansko-Podrinjska Županija Goražde"
+                    ],
+                    "lat": 43.65528,
+                    "lon": 18.8,
+                    "children": []
+                  },
+                  {
+                    "name": "Canton of Sarajevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Sarajevo",
+                      "Canton Sarajevo",
+                      "Canton de Sarajevo"
+                    ],
+                    "lat": 43.84333,
+                    "lon": 18.24222,
+                    "children": [
+                      {
+                        "name": "Ilidža",
+                        "type": "admin3",
+                        "lat": 43.83148,
+                        "lon": 18.30697
+                      },
+                      {
+                        "name": "Sarajevo",
+                        "type": "admin3",
+                        "lat": 43.84864,
+                        "lon": 18.35644
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hercegovačko-Neretvanski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hercegovacko-Neretvanska Zupanija",
+                      "Hercegovacko-Neretvanski Kanton",
+                      "Hercegovacko-neretvanska zupanija"
+                    ],
+                    "lat": 43.45722,
+                    "lon": 17.8125,
+                    "children": []
+                  },
+                  {
+                    "name": "Kanton 10",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canton 10",
+                      "Hercegbosanska Zupanija",
+                      "Hercegbosanska Županija"
+                    ],
+                    "lat": 43.97861,
+                    "lon": 16.85639,
+                    "children": [
+                      {
+                        "name": "Mostar",
+                        "type": "admin3",
+                        "lat": 43.34333,
+                        "lon": 17.80806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Posavski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Posavina",
+                      "Canton de Posavina",
+                      "Cantone di Posavina"
+                    ],
+                    "lat": 45.04299,
+                    "lon": 18.61791,
+                    "children": [
+                      {
+                        "name": "Odžak",
+                        "type": "admin3",
+                        "lat": 45.02461,
+                        "lon": 18.32107
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Srednjobosanski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Bosnia Central",
+                      "Cantone della Bosnia Centrale",
+                      "Cantó de Bòsnia Central"
+                    ],
+                    "lat": 44.09833,
+                    "lon": 17.65556,
+                    "children": [
+                      {
+                        "name": "Bugojno",
+                        "type": "admin3",
+                        "lat": 44.05722,
+                        "lon": 17.45083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tuzlanski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Tuzla",
+                      "Cantone di Tuzla",
+                      "Cantó de Tuzla"
+                    ],
+                    "lat": 44.545,
+                    "lon": 18.60167,
+                    "children": [
+                      {
+                        "name": "Banovići",
+                        "type": "admin3",
+                        "lat": 44.40596,
+                        "lon": 18.52648
+                      },
+                      {
+                        "name": "Lukavac",
+                        "type": "admin3",
+                        "lat": 44.54245,
+                        "lon": 18.52618
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Unsko-Sanski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bihac Canton",
+                      "Kanton 1",
+                      "Una-Sana Canton"
+                    ],
+                    "lat": 44.73694,
+                    "lon": 16.19361,
+                    "children": [
+                      {
+                        "name": "Bihać",
+                        "type": "admin3",
+                        "lat": 44.81694,
+                        "lon": 15.87083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Zapadnohercegovački Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kanton 8",
+                      "Kanton Herzegovina Barat",
+                      "Kanton West-Herzegowina"
+                    ],
+                    "lat": 43.40028,
+                    "lon": 17.42389,
+                    "children": []
+                  },
+                  {
+                    "name": "Zeničko-Dobojski Kanton",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Zenica-Doboj",
+                      "Cantone di Zenica-Doboj",
+                      "Cantó de Zenica-Doboj"
+                    ],
+                    "lat": 44.23,
+                    "lon": 18.19222,
+                    "children": [
+                      {
+                        "name": "Kakanj",
+                        "type": "admin3",
+                        "lat": 44.13311,
+                        "lon": 18.12292
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Republika Srpska",
+                "type": "admin1",
+                "aliases": [
+                  "Bosnia Serb Republic",
+                  "Jamhuri ya Srpska",
+                  "Jamhuriyar Srpska",
+                  "Jamhuuriyada Srpska"
+                ],
+                "lat": 44.596379,
+                "lon": 17.762438,
+                "children": [
+                  {
+                    "name": "Grad Istočno Sarajevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Grad Istochno Sarajevo",
+                      "Grad Istocno Sarajevo",
+                      "Grad Istočno Sarajevo"
+                    ],
+                    "lat": 43.89355,
+                    "lon": 18.63676,
+                    "children": []
+                  },
+                  {
+                    "name": "Mrkonjic Grad Jug Opcina",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mrkonjic Grad Jug",
+                      "Mrkonjić Grad Jug"
+                    ],
+                    "lat": 44.23056,
+                    "lon": 16.88556,
+                    "children": []
+                  },
+                  {
+                    "name": "Opština Krupa na Uni",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bosanska Krupa",
+                      "Krupa",
+                      "Krupa na Uni"
+                    ],
+                    "lat": 44.92972,
+                    "lon": 16.27528,
+                    "children": []
+                  },
+                  {
+                    "name": "Opština Modriča",
+                    "type": "admin2",
+                    "aliases": [
+                      "Modrica",
+                      "Modricha",
+                      "Modriča"
+                    ],
+                    "lat": 44.91583,
+                    "lon": 18.25278,
+                    "children": [
+                      {
+                        "name": "Modriča",
+                        "type": "admin3",
+                        "lat": 44.95781,
+                        "lon": 18.30202
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Opština Novi Grad",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bosanski Novi",
+                      "Novi Grad",
+                      "Opcina Bosanski Novi"
+                    ],
+                    "lat": 45.03167,
+                    "lon": 16.49639,
+                    "children": []
+                  },
+                  {
+                    "name": "Opština Vukosavlje",
+                    "type": "admin2",
+                    "aliases": [
+                      "Odzak",
+                      "Odžak",
+                      "Opcina Odzak"
+                    ],
+                    "lat": 45.00861,
+                    "lon": 18.24306,
+                    "children": []
+                  },
+                  {
+                    "name": "Skelani Opština",
+                    "type": "admin2",
+                    "lat": 43.99333,
+                    "lon": 19.47417,
+                    "children": []
+                  },
+                  {
+                    "name": "Stanari",
+                    "type": "admin2",
+                    "aliases": [
+                      "Opcina Stanari",
+                      "Opshtina Stanari",
+                      "Opstina Stanari"
+                    ],
+                    "lat": 44.76776,
+                    "lon": 17.8355,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

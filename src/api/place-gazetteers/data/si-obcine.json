@@ -1,0 +1,2996 @@
+{
+  "id": "si-obcine",
+  "name": "Slovenia Občine",
+  "locale": "si",
+  "description": "Slovenia: 212 občine (admin1 in GeoNames; no statistical-region layer) + 17 admin2 + populated places ≥5000 pop. Statistical regions deferred — Slovenia has no constitutional admin1.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/SI.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Slovenia",
+            "type": "country",
+            "aliases": [
+              "Slovenija"
+            ],
+            "lat": 46.1,
+            "lon": 14.8,
+            "children": [
+              {
+                "name": "Ankaran",
+                "type": "admin1",
+                "aliases": [
+                  "Ancarano",
+                  "Ankaran",
+                  "Ankaran Kong-sia",
+                  "Ankaran Kong-siā"
+                ],
+                "lat": 45.58333,
+                "lon": 13.73333,
+                "children": []
+              },
+              {
+                "name": "Komenda",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Komenda",
+                  "GJo thi tu tri Komenda",
+                  "Gemeinde Komenda",
+                  "Gmina Komenda"
+                ],
+                "lat": 46.20241,
+                "lon": 14.54456,
+                "children": []
+              },
+              {
+                "name": "Mirna",
+                "type": "admin1",
+                "aliases": [
+                  "Mirna",
+                  "Municipality of Mirna",
+                  "Obcina Mirna",
+                  "Občina Mirna"
+                ],
+                "lat": 45.95547,
+                "lon": 15.0627,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ajdovščina",
+                "type": "admin1",
+                "aliases": [
+                  "Aidossina",
+                  "Aidovscina",
+                  "Aidovščina",
+                  "Aidussina"
+                ],
+                "lat": 45.90694,
+                "lon": 13.92861,
+                "children": []
+              },
+              {
+                "name": "Municipality of Beltinci",
+                "type": "admin1",
+                "aliases": [
+                  "Beltinci",
+                  "Municipality of Beltinci",
+                  "Obcina Beltinci",
+                  "Občina Beltinci"
+                ],
+                "lat": 46.61472,
+                "lon": 16.23222,
+                "children": []
+              },
+              {
+                "name": "Municipality of Benedikt",
+                "type": "admin1",
+                "aliases": [
+                  "Benedikt",
+                  "Municipality of Benedikt",
+                  "Obcina Benedikt",
+                  "Občina Benedikt"
+                ],
+                "lat": 46.6174,
+                "lon": 15.88913,
+                "children": []
+              },
+              {
+                "name": "Municipality of Bistrica ob Sotli",
+                "type": "admin1",
+                "aliases": [
+                  "Bistrica ob Sotli",
+                  "Municipality of Bistrica ob Sotli",
+                  "Obcina Bistrica ob Sotli",
+                  "Občina Bistrica ob Sotli"
+                ],
+                "lat": 46.06001,
+                "lon": 15.64725,
+                "children": []
+              },
+              {
+                "name": "Municipality of Bled",
+                "type": "admin1",
+                "aliases": [
+                  "Bled",
+                  "Municipality of Bled",
+                  "Obcina Bled",
+                  "Občina Bled"
+                ],
+                "lat": 46.36825,
+                "lon": 14.11005,
+                "children": []
+              },
+              {
+                "name": "Municipality of Bloke",
+                "type": "admin1",
+                "aliases": [
+                  "Bloke",
+                  "Municipality of Bloke",
+                  "Obcina Bloke",
+                  "Občina Bloke"
+                ],
+                "lat": 45.78559,
+                "lon": 14.50663,
+                "children": []
+              },
+              {
+                "name": "Municipality of Bohinj",
+                "type": "admin1",
+                "aliases": [
+                  "Bochinio savivaldybe",
+                  "Bochinio savivaldybė",
+                  "Bochintz",
+                  "Boginzh Municipaliteti"
+                ],
+                "lat": 46.295,
+                "lon": 13.92389,
+                "children": []
+              },
+              {
+                "name": "Municipality of Borovnica",
+                "type": "admin1",
+                "aliases": [
+                  "Borovnica",
+                  "Borovnitsa",
+                  "Municipality of Borovnica",
+                  "Obcina Borovnica"
+                ],
+                "lat": 45.91444,
+                "lon": 14.37944,
+                "children": []
+              },
+              {
+                "name": "Municipality of Bovec",
+                "type": "admin1",
+                "aliases": [
+                  "Bovec",
+                  "Municipality of Bovec",
+                  "Obcina Bovec",
+                  "Občina Bovec"
+                ],
+                "lat": 46.33555,
+                "lon": 13.55644,
+                "children": []
+              },
+              {
+                "name": "Municipality of Braslovče",
+                "type": "admin1",
+                "aliases": [
+                  "Braslovce",
+                  "Braslovče",
+                  "Municipality of Braslovce",
+                  "Municipality of Braslovče"
+                ],
+                "lat": 46.27768,
+                "lon": 15.03682,
+                "children": []
+              },
+              {
+                "name": "Municipality of Brda",
+                "type": "admin1",
+                "aliases": [
+                  "Brda",
+                  "Municipality of Brda",
+                  "Obcina Brda",
+                  "Občina Brda"
+                ],
+                "lat": 46.0075,
+                "lon": 13.54333,
+                "children": []
+              },
+              {
+                "name": "Municipality of Brežice",
+                "type": "admin1",
+                "aliases": [
+                  "Brezice",
+                  "Brežice",
+                  "Municipality of Brezice",
+                  "Municipality of Brežice"
+                ],
+                "lat": 45.92889,
+                "lon": 15.62806,
+                "children": []
+              },
+              {
+                "name": "Municipality of Brezovica",
+                "type": "admin1",
+                "aliases": [
+                  "Brezovica",
+                  "Municipality of Brezovica",
+                  "Obcina Brezovica",
+                  "Občina Brezovica"
+                ],
+                "lat": 46.03333,
+                "lon": 14.41667,
+                "children": [
+                  {
+                    "name": "Rudnik District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Rudnik",
+                      "Ljubljana-Vic-Rudnik",
+                      "Ljubljana-Vič-Rudnik"
+                    ],
+                    "lat": 46.03333,
+                    "lon": 14.41667,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Municipality of Cankova",
+                "type": "admin1",
+                "aliases": [
+                  "Cankova",
+                  "Municipality of Cankova",
+                  "Obcina Cankova",
+                  "Občina Cankova"
+                ],
+                "lat": 46.72889,
+                "lon": 16.03167,
+                "children": []
+              },
+              {
+                "name": "Municipality of Cerklje na Gorenjskem",
+                "type": "admin1",
+                "aliases": [
+                  "Cerkl'e na Gorenskom",
+                  "Cerkle-na-Gorens'kem",
+                  "Cerklje na Gorenjskem",
+                  "Comuna Cerklje na Gorenjskem"
+                ],
+                "lat": 46.25,
+                "lon": 14.5,
+                "children": []
+              },
+              {
+                "name": "Municipality of Cerknica",
+                "type": "admin1",
+                "aliases": [
+                  "Cerknica",
+                  "Municipality of Cerknica",
+                  "Obcina Cerknica",
+                  "Občina Cerknica"
+                ],
+                "lat": 45.8,
+                "lon": 14.36667,
+                "children": []
+              },
+              {
+                "name": "Municipality of Cerkno",
+                "type": "admin1",
+                "aliases": [
+                  "Cerknas",
+                  "Cerkno",
+                  "Circhina",
+                  "Municipality of Cerkno"
+                ],
+                "lat": 46.125,
+                "lon": 13.97306,
+                "children": []
+              },
+              {
+                "name": "Municipality of Cerkvenjak",
+                "type": "admin1",
+                "aliases": [
+                  "Cerkvenjak",
+                  "Municipality of Cerkvenjak",
+                  "Obcina Cerkvenjak",
+                  "Občina Cerkvenjak"
+                ],
+                "lat": 46.56127,
+                "lon": 15.94199,
+                "children": []
+              },
+              {
+                "name": "Municipality of Cirkulane",
+                "type": "admin1",
+                "aliases": [
+                  "Cirkulane",
+                  "Municipality of Cirkulane",
+                  "Obcina Cirkulane",
+                  "Občina Cirkulane"
+                ],
+                "lat": 46.34065,
+                "lon": 15.99602,
+                "children": []
+              },
+              {
+                "name": "Municipality of Črenšovci",
+                "type": "admin1",
+                "aliases": [
+                  "Crensovci",
+                  "Municipality of Crensovci",
+                  "Municipality of Črenšovci",
+                  "Obcina Crensovci"
+                ],
+                "lat": 46.55722,
+                "lon": 16.29944,
+                "children": []
+              },
+              {
+                "name": "Municipality of Črna na Koroškem",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Crna na Koroskem",
+                  "Bwrdeistref Črna na Koroškem",
+                  "Chrna-na-Koroshkem",
+                  "Crna na Koroscom Bələdiyyəsi"
+                ],
+                "lat": 46.46417,
+                "lon": 14.82139,
+                "children": []
+              },
+              {
+                "name": "Municipality of Črnomelj",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Crnomelj",
+                  "Bwrdeistref Črnomelj",
+                  "Chrnomel'",
+                  "Comuna Crnomelj"
+                ],
+                "lat": 45.52389,
+                "lon": 15.19833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Destrnik",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Destrnik",
+                  "Destrnik",
+                  "Destrnik Kong-sia",
+                  "Destrnik Kong-siā"
+                ],
+                "lat": 46.48102,
+                "lon": 15.88023,
+                "children": []
+              },
+              {
+                "name": "Municipality of Divača",
+                "type": "admin1",
+                "aliases": [
+                  "Divaca",
+                  "Divača",
+                  "Municipality of Divaca",
+                  "Municipality of Divača"
+                ],
+                "lat": 45.68444,
+                "lon": 14.0225,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dobje",
+                "type": "admin1",
+                "aliases": [
+                  "Dobje",
+                  "Municipality of Dobje",
+                  "Obcina Dobje",
+                  "Občina Dobje"
+                ],
+                "lat": 46.13321,
+                "lon": 15.40135,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dobrepolje",
+                "type": "admin1",
+                "aliases": [
+                  "Dobrepolje",
+                  "Municipality of Dobrepolje",
+                  "Obcina Dobrepolje",
+                  "Občina Dobrepolje"
+                ],
+                "lat": 45.80444,
+                "lon": 14.74833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dobrna",
+                "type": "admin1",
+                "aliases": [
+                  "Comuna Dobrna",
+                  "Dobrna",
+                  "Gmina Dobrna",
+                  "Municipality of Dobrna"
+                ],
+                "lat": 46.35437,
+                "lon": 15.22603,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dobrova–Polhov Gradec",
+                "type": "admin1",
+                "aliases": [
+                  "Dobrova-Polhov Gradec",
+                  "Municipality of Dobrova-Polhov Gradec",
+                  "Municipality of Dobrova–Polhov Gradec",
+                  "Obcina Dobrova - Polhov Gradec"
+                ],
+                "lat": 46.0635,
+                "lon": 14.30884,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dobrovnik",
+                "type": "admin1",
+                "aliases": [
+                  "Dobronak",
+                  "Dobronak Kozseg",
+                  "Dobronak Község",
+                  "Dobrovnik"
+                ],
+                "lat": 46.65056,
+                "lon": 16.35194,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dol pri Ljubljani",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Dol pri Ljubljani",
+                  "Dol Pri Ljublanes pasvaldiba",
+                  "Dol Pri Ļjubļaņes pašvaldība",
+                  "Dol pri LJublani Municipaliteti"
+                ],
+                "lat": 46.0975,
+                "lon": 14.67361,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dolenjske Toplice",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Dolenjske Toplice",
+                  "Dolen's'ke Toplice",
+                  "Dolen'ske Topliche",
+                  "Dolen'ske-Toplice"
+                ],
+                "lat": 45.715,
+                "lon": 15.04972,
+                "children": []
+              },
+              {
+                "name": "Municipality of Domžale",
+                "type": "admin1",
+                "aliases": [
+                  "Domzale",
+                  "Domžale",
+                  "Municipality of Domzale",
+                  "Municipality of Domžale"
+                ],
+                "lat": 46.14258,
+                "lon": 14.62277,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dornava",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Dornava",
+                  "Dornava",
+                  "Dornava Kong-sia",
+                  "Dornava Kong-siā"
+                ],
+                "lat": 46.44544,
+                "lon": 15.99048,
+                "children": []
+              },
+              {
+                "name": "Municipality of Dravograd",
+                "type": "admin1",
+                "aliases": [
+                  "Dravograd",
+                  "Municipality of Dravograd",
+                  "Obcina Dravograd",
+                  "Občina Dravograd"
+                ],
+                "lat": 46.58333,
+                "lon": 15.03333,
+                "children": []
+              },
+              {
+                "name": "Municipality of Duplek",
+                "type": "admin1",
+                "aliases": [
+                  "Duplek",
+                  "Municipality of Duplek",
+                  "Obcina Duplek",
+                  "Občina Duplek"
+                ],
+                "lat": 46.51556,
+                "lon": 15.77,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gorenja Vas–Poljane",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Gorenja Vas-Poljane",
+                  "Bwrdeistref Gorenja Vas–Poljane",
+                  "GJo thi tu tri Gorenja Vas-Poljane",
+                  "Gmina Gorenja vas-Poljane"
+                ],
+                "lat": 46.11667,
+                "lon": 14.12556,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gorišnica",
+                "type": "admin1",
+                "aliases": [
+                  "Gorisnica",
+                  "Gorišnica",
+                  "Municipality of Gorisnica",
+                  "Municipality of Gorišnica"
+                ],
+                "lat": 46.40498,
+                "lon": 16.01161,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gorje",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Gorje",
+                  "Comuna Gorje",
+                  "Gmina Gorje",
+                  "Gor'e"
+                ],
+                "lat": 46.37924,
+                "lon": 14.06795,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gornja Radgona",
+                "type": "admin1",
+                "aliases": [
+                  "Gornja Radgona",
+                  "Municipality of Gornja Radgona",
+                  "Obcina Gornja Radgona",
+                  "Občina Gornja Radgona"
+                ],
+                "lat": 46.63489,
+                "lon": 15.95943,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gornji Grad",
+                "type": "admin1",
+                "aliases": [
+                  "Gornji Grad",
+                  "Municipality of Gornji Grad",
+                  "Obcina Gornji Grad",
+                  "Občina Gornji Grad"
+                ],
+                "lat": 46.28917,
+                "lon": 14.80083,
+                "children": []
+              },
+              {
+                "name": "Municipality of Gornji Petrovci",
+                "type": "admin1",
+                "aliases": [
+                  "Gornji Petrovci",
+                  "Municipality of Gornji Petrovci",
+                  "Obcina Gornji Petrovci",
+                  "Občina Gornji Petrovci"
+                ],
+                "lat": 46.8175,
+                "lon": 16.21333,
+                "children": []
+              },
+              {
+                "name": "Municipality of Grad",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Grad",
+                  "Felsolendva koezseg",
+                  "Felsőlendva község",
+                  "GJo thi tu tri Grad"
+                ],
+                "lat": 46.78694,
+                "lon": 16.09833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Grosuplje",
+                "type": "admin1",
+                "aliases": [
+                  "Grosuplje",
+                  "Municipality of Grosuplje",
+                  "Obcina Grosuplje",
+                  "Občina Grosuplje"
+                ],
+                "lat": 45.93639,
+                "lon": 14.66528,
+                "children": []
+              },
+              {
+                "name": "Municipality of Hajdina",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Hajdina",
+                  "Chatzntina",
+                  "Gmina Hajdina",
+                  "Haidina"
+                ],
+                "lat": 46.41752,
+                "lon": 15.8272,
+                "children": []
+              },
+              {
+                "name": "Municipality of Hoče-Slivnica",
+                "type": "admin1",
+                "aliases": [
+                  "Hoce-Slivnica",
+                  "Hoče-Slivnica",
+                  "Municipality of Hoce-Slivnica",
+                  "Municipality of Hoče–Slivnica"
+                ],
+                "lat": 46.49114,
+                "lon": 15.62378,
+                "children": []
+              },
+              {
+                "name": "Municipality of Hodoš",
+                "type": "admin1",
+                "aliases": [
+                  "Hodos",
+                  "Hodos Kozseg",
+                  "Hodos Község",
+                  "Hodoš"
+                ],
+                "lat": 46.82639,
+                "lon": 16.325,
+                "children": []
+              },
+              {
+                "name": "Municipality of Horjul",
+                "type": "admin1",
+                "aliases": [
+                  "Horjul",
+                  "Municipality of Horjul",
+                  "Obcina Horjul",
+                  "Občina Horjul"
+                ],
+                "lat": 46.02485,
+                "lon": 14.28471,
+                "children": []
+              },
+              {
+                "name": "Municipality of Hrastnik",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Hrastnik",
+                  "Chrastnik",
+                  "Comuna Hrastnik",
+                  "GJo thi tu tri Hrastnik"
+                ],
+                "lat": 46.13333,
+                "lon": 15.09972,
+                "children": []
+              },
+              {
+                "name": "Municipality of Hrpelje–Kozina",
+                "type": "admin1",
+                "aliases": [
+                  "Hrpelje-Kozina",
+                  "Municipality of Hrpelje-Kozina",
+                  "Municipality of Hrpelje–Kozina",
+                  "Obcina Hrpelje - Kozina"
+                ],
+                "lat": 45.57278,
+                "lon": 14.00472,
+                "children": []
+              },
+              {
+                "name": "Municipality of Idrija",
+                "type": "admin1",
+                "aliases": [
+                  "Idria",
+                  "Idrija",
+                  "Municipality of Idrija",
+                  "Obcina Idrija"
+                ],
+                "lat": 46,
+                "lon": 14,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ig",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Ig",
+                  "GJo thi tu tri Ig",
+                  "Gemeinde Ig",
+                  "Gmina Ig"
+                ],
+                "lat": 45.93583,
+                "lon": 14.51444,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ilirska Bistrica",
+                "type": "admin1",
+                "aliases": [
+                  "Bistertia Illyrica",
+                  "Bisterza",
+                  "Gmina Ilirska Bistrica",
+                  "Ilirs'ka Bistricja"
+                ],
+                "lat": 45.5675,
+                "lon": 14.29056,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ivančna Gorica",
+                "type": "admin1",
+                "aliases": [
+                  "Ivancna Gorica",
+                  "Ivančna Gorica",
+                  "Municipality of Ivancna Gorica",
+                  "Municipality of Ivančna Gorica"
+                ],
+                "lat": 45.91222,
+                "lon": 14.80722,
+                "children": []
+              },
+              {
+                "name": "Municipality of Izola",
+                "type": "admin1",
+                "aliases": [
+                  "Comuna Izola",
+                  "Comune di Isola",
+                  "Gmina Izola",
+                  "Insulae"
+                ],
+                "lat": 45.51123,
+                "lon": 13.65655,
+                "children": []
+              },
+              {
+                "name": "Municipality of Jesenice",
+                "type": "admin1",
+                "aliases": [
+                  "Jesenice",
+                  "Municipality of Jesenice",
+                  "Obcina Jesenice",
+                  "Občina Jesenice"
+                ],
+                "lat": 46.45253,
+                "lon": 14.07245,
+                "children": []
+              },
+              {
+                "name": "Municipality of Jezersko",
+                "type": "admin1",
+                "aliases": [
+                  "Jezersko",
+                  "Municipality of Jezersko",
+                  "Obcina Jezersko",
+                  "Občina Jezersko"
+                ],
+                "lat": 46.38925,
+                "lon": 14.48352,
+                "children": []
+              },
+              {
+                "name": "Municipality of Juršinci",
+                "type": "admin1",
+                "aliases": [
+                  "Jursinci",
+                  "Juršinci",
+                  "Municipality of Jursinci",
+                  "Municipality of Juršinci"
+                ],
+                "lat": 46.4875,
+                "lon": 15.97639,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kamnik",
+                "type": "admin1",
+                "aliases": [
+                  "Kamnik",
+                  "Municipality of Kamnik",
+                  "Obcina Kamnik",
+                  "Občina Kamnik"
+                ],
+                "lat": 46.24406,
+                "lon": 14.66721,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kanal ob Soči",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Kanal ob Soci",
+                  "Bwrdeistref Kanal ob Soči",
+                  "Canal d'Isonz",
+                  "Comuna Kanal ob Soci"
+                ],
+                "lat": 46.08972,
+                "lon": 13.64306,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kidričevo",
+                "type": "admin1",
+                "aliases": [
+                  "Kidricevo",
+                  "Kidričevo",
+                  "Municipality of Kidricevo",
+                  "Municipality of Kidričevo"
+                ],
+                "lat": 46.39889,
+                "lon": 15.75694,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kobarid",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Kobarid",
+                  "Caporeto",
+                  "Caporett",
+                  "Cjauret"
+                ],
+                "lat": 46.22492,
+                "lon": 13.64433,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kobilje",
+                "type": "admin1",
+                "aliases": [
+                  "Kobilje",
+                  "Municipality of Kobilje",
+                  "Obcina Kobilje",
+                  "Občina Kobilje"
+                ],
+                "lat": 46.68583,
+                "lon": 16.39333,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kočevje",
+                "type": "admin1",
+                "aliases": [
+                  "Kocevje",
+                  "Kočevje",
+                  "Municipality of Kocevje",
+                  "Municipality of Kočevje"
+                ],
+                "lat": 45.63028,
+                "lon": 14.90694,
+                "children": []
+              },
+              {
+                "name": "Municipality of Komen",
+                "type": "admin1",
+                "aliases": [
+                  "Komen",
+                  "Municipality of Komen",
+                  "Obcina Komen",
+                  "Občina Komen"
+                ],
+                "lat": 45.81861,
+                "lon": 13.74889,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kostanjevica na Krki",
+                "type": "admin1",
+                "aliases": [
+                  "Kostanjevica na Krki",
+                  "Municipality of Kostanjevica na Krki",
+                  "Obcina Kostanjevica na Krki",
+                  "Občina Kostanjevica na Krki"
+                ],
+                "lat": 45.83399,
+                "lon": 15.41912,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kostel",
+                "type": "admin1",
+                "aliases": [
+                  "Kostel",
+                  "Municipality of Kostel",
+                  "Obcina Kostel",
+                  "Občina Kostel"
+                ],
+                "lat": 45.48944,
+                "lon": 14.87111,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kozje",
+                "type": "admin1",
+                "aliases": [
+                  "Kozje",
+                  "Municipality of Kozje",
+                  "Obcina Kozje",
+                  "Občina Kozje"
+                ],
+                "lat": 46.07222,
+                "lon": 15.55694,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kranjska Gora",
+                "type": "admin1",
+                "aliases": [
+                  "Kranjska Gora",
+                  "Kranjska Qora",
+                  "Kranjskaya Gora",
+                  "Kranska Gora"
+                ],
+                "lat": 46.46028,
+                "lon": 13.83861,
+                "children": []
+              },
+              {
+                "name": "Municipality of Križevci",
+                "type": "admin1",
+                "aliases": [
+                  "Krizevci",
+                  "Križevci",
+                  "Municipality of Krizevci",
+                  "Municipality of Križevci"
+                ],
+                "lat": 46.56581,
+                "lon": 16.11784,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kungota",
+                "type": "admin1",
+                "aliases": [
+                  "Kungota",
+                  "Municipality of Kungota",
+                  "Obcina Kungota",
+                  "Občina Kungota"
+                ],
+                "lat": 46.64944,
+                "lon": 15.60972,
+                "children": []
+              },
+              {
+                "name": "Municipality of Kuzma",
+                "type": "admin1",
+                "aliases": [
+                  "Kuzma",
+                  "Municipality of Kuzma",
+                  "Obcina Kuzma",
+                  "Občina Kuzma"
+                ],
+                "lat": 46.84111,
+                "lon": 16.09528,
+                "children": []
+              },
+              {
+                "name": "Municipality of Laško",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Lasko",
+                  "Bwrdeistref Laško",
+                  "GJo thi tu tri Lasko",
+                  "Gemeinde Lasko"
+                ],
+                "lat": 46.13561,
+                "lon": 15.2529,
+                "children": []
+              },
+              {
+                "name": "Municipality of Lenart",
+                "type": "admin1",
+                "aliases": [
+                  "Lenart",
+                  "Municipality of Lenart",
+                  "Obcina Lenart",
+                  "Občina Lenart"
+                ],
+                "lat": 46.55799,
+                "lon": 15.81383,
+                "children": []
+              },
+              {
+                "name": "Municipality of Lendava",
+                "type": "admin1",
+                "aliases": [
+                  "Lendava",
+                  "Lendava-Lendva",
+                  "Lendva",
+                  "Lendva Kozseg"
+                ],
+                "lat": 46.5575,
+                "lon": 16.45694,
+                "children": []
+              },
+              {
+                "name": "Municipality of Litija",
+                "type": "admin1",
+                "aliases": [
+                  "Litija",
+                  "Municipality of Litija",
+                  "Obcina Litija",
+                  "Občina Litija"
+                ],
+                "lat": 46.07445,
+                "lon": 14.90724,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ljubno",
+                "type": "admin1",
+                "aliases": [
+                  "Ljubno",
+                  "Municipality of Ljubno",
+                  "Obcina Ljubno",
+                  "Občina Ljubno"
+                ],
+                "lat": 46.37389,
+                "lon": 14.83944,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ljutomer",
+                "type": "admin1",
+                "aliases": [
+                  "Comuna Ljutomer",
+                  "Gmina Ljutomer",
+                  "Ljutomer",
+                  "Municipality of Ljutomer"
+                ],
+                "lat": 46.51347,
+                "lon": 16.144,
+                "children": []
+              },
+              {
+                "name": "Municipality of Log–Dragomer",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Log-Dragomer",
+                  "Log-Dragomer",
+                  "Log–Dragomer",
+                  "Municipality of Log-Dragomer"
+                ],
+                "lat": 46.01537,
+                "lon": 14.37474,
+                "children": []
+              },
+              {
+                "name": "Municipality of Logatec",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Logatec",
+                  "Comune di Longatico",
+                  "Gemeinde Logatec",
+                  "Logatec"
+                ],
+                "lat": 45.92139,
+                "lon": 14.19583,
+                "children": []
+              },
+              {
+                "name": "Municipality of Loški Potok",
+                "type": "admin1",
+                "aliases": [
+                  "Loski Potok",
+                  "Loški Potok",
+                  "Municipality of Loski Potok",
+                  "Municipality of Loški Potok"
+                ],
+                "lat": 45.66,
+                "lon": 14.64528,
+                "children": []
+              },
+              {
+                "name": "Municipality of Lovrenc na Pohorju",
+                "type": "admin1",
+                "aliases": [
+                  "Lovrenc na Pohorju",
+                  "Municipality of Lovrenc na Pohorju",
+                  "Obcina Lovrenc na Pohorju",
+                  "Občina Lovrenc na Pohorju"
+                ],
+                "lat": 46.5227,
+                "lon": 15.38535,
+                "children": []
+              },
+              {
+                "name": "Municipality of Luče",
+                "type": "admin1",
+                "aliases": [
+                  "Luce",
+                  "Luče",
+                  "Municipality of Luce",
+                  "Municipality of Luče"
+                ],
+                "lat": 46.35119,
+                "lon": 14.73303,
+                "children": []
+              },
+              {
+                "name": "Municipality of Lukovica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Lukovica",
+                  "GJo thi tu tri Lukovica",
+                  "Gmina Lukovica",
+                  "Kotamadya Lukovica"
+                ],
+                "lat": 46.18333,
+                "lon": 14.76861,
+                "children": []
+              },
+              {
+                "name": "Municipality of Majšperk",
+                "type": "admin1",
+                "aliases": [
+                  "Majsperk",
+                  "Majšperk",
+                  "Municipality of Majsperk",
+                  "Municipality of Majšperk"
+                ],
+                "lat": 46.33231,
+                "lon": 15.75815,
+                "children": []
+              },
+              {
+                "name": "Municipality of Makole",
+                "type": "admin1",
+                "aliases": [
+                  "Makole",
+                  "Municipality of Makole",
+                  "Obcina Makole",
+                  "Občina Makole"
+                ],
+                "lat": 46.30956,
+                "lon": 15.67628,
+                "children": []
+              },
+              {
+                "name": "Municipality of Markovci",
+                "type": "admin1",
+                "aliases": [
+                  "Markovci",
+                  "Municipality of Markovci",
+                  "Obcina Markovci",
+                  "Občina Markovci"
+                ],
+                "lat": 46.39208,
+                "lon": 15.95065,
+                "children": []
+              },
+              {
+                "name": "Municipality of Medvode",
+                "type": "admin1",
+                "aliases": [
+                  "Medvode",
+                  "Municipality of Medvode",
+                  "Obcina Medvode",
+                  "Občina Medvode"
+                ],
+                "lat": 46.16667,
+                "lon": 14.43333,
+                "children": [
+                  {
+                    "name": "Šiška District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Siska",
+                      "Ljubljana-Siska",
+                      "Ljubljana-Šiška"
+                    ],
+                    "lat": 46.16667,
+                    "lon": 14.43333,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Municipality of Mengeš",
+                "type": "admin1",
+                "aliases": [
+                  "Menges",
+                  "Mengeš",
+                  "Municipality of Menges",
+                  "Municipality of Mengeš"
+                ],
+                "lat": 46.16146,
+                "lon": 14.56246,
+                "children": []
+              },
+              {
+                "name": "Municipality of Metlika",
+                "type": "admin1",
+                "aliases": [
+                  "Metlika",
+                  "Moettling",
+                  "Municipality of Metlika",
+                  "Möttling"
+                ],
+                "lat": 45.65645,
+                "lon": 15.31075,
+                "children": []
+              },
+              {
+                "name": "Municipality of Mežica",
+                "type": "admin1",
+                "aliases": [
+                  "Mezica",
+                  "Mežica",
+                  "Municipality of Mezica",
+                  "Municipality of Mežica"
+                ],
+                "lat": 46.52278,
+                "lon": 14.855,
+                "children": []
+              },
+              {
+                "name": "Municipality of Miklavž na Dravskem Polju",
+                "type": "admin1",
+                "aliases": [
+                  "Miklavz na Dravskem Polju",
+                  "Miklavž na Dravskem Polju",
+                  "Municipality of Miklavz na Dravskem Polju",
+                  "Municipality of Miklavž na Dravskem Polju"
+                ],
+                "lat": 46.48627,
+                "lon": 15.70952,
+                "children": []
+              },
+              {
+                "name": "Municipality of Miren–Kostanjevica",
+                "type": "admin1",
+                "aliases": [
+                  "Miren-Kostanjevica",
+                  "Municipality of Miren-Kostanjevica",
+                  "Municipality of Miren–Kostanjevica",
+                  "Obcina Miren - Kostanjevica"
+                ],
+                "lat": 45.85138,
+                "lon": 13.63931,
+                "children": []
+              },
+              {
+                "name": "Municipality of Mirna Peč",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Mirna Pec",
+                  "Bwrdeistref Mirna Peč",
+                  "Gemeinde Mirna Pec",
+                  "Gemeinde Mirna Peč"
+                ],
+                "lat": 45.85343,
+                "lon": 15.08434,
+                "children": []
+              },
+              {
+                "name": "Municipality of Mislinja",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Mislinja",
+                  "Mislana",
+                  "Mislina",
+                  "Mislinja"
+                ],
+                "lat": 46.45111,
+                "lon": 15.22389,
+                "children": []
+              },
+              {
+                "name": "Municipality of Mokronog–Trebelno",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Mokronog-Trebelno",
+                  "Bwrdeistref Mokronog–Trebelno",
+                  "Comuna Mokronog-Trebelno",
+                  "Gemeinde Mokronog-Trebelno"
+                ],
+                "lat": 45.91531,
+                "lon": 15.16111,
+                "children": []
+              },
+              {
+                "name": "Municipality of Moravče",
+                "type": "admin1",
+                "aliases": [
+                  "Moravce",
+                  "Moravče",
+                  "Municipality of Moravce",
+                  "Municipality of Moravče"
+                ],
+                "lat": 46.13361,
+                "lon": 14.755,
+                "children": []
+              },
+              {
+                "name": "Municipality of Moravske Toplice",
+                "type": "admin1",
+                "aliases": [
+                  "Alsomarac koezseg",
+                  "Alsómarác község",
+                  "Bwrdeistref Moravske Toplice",
+                  "Comuna Moravske Toplice"
+                ],
+                "lat": 46.7175,
+                "lon": 16.27361,
+                "children": []
+              },
+              {
+                "name": "Municipality of Mozirje",
+                "type": "admin1",
+                "aliases": [
+                  "Mozirje",
+                  "Municipality of Mozirje",
+                  "Obcina Mozirje",
+                  "Občina Mozirje"
+                ],
+                "lat": 46.3612,
+                "lon": 14.95797,
+                "children": []
+              },
+              {
+                "name": "Municipality of Muta",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Muta",
+                  "Muta",
+                  "Obcina Muta",
+                  "Občina Muta"
+                ],
+                "lat": 46.63056,
+                "lon": 15.13611,
+                "children": []
+              },
+              {
+                "name": "Municipality of Naklo",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Naklo",
+                  "Naklo",
+                  "Obcina Naklo",
+                  "Občina Naklo"
+                ],
+                "lat": 46.29361,
+                "lon": 14.28667,
+                "children": []
+              },
+              {
+                "name": "Municipality of Nazarje",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Nazarje",
+                  "Nazarje",
+                  "Obcina Nazarje",
+                  "Občina Nazarje"
+                ],
+                "lat": 46.28167,
+                "lon": 14.90917,
+                "children": []
+              },
+              {
+                "name": "Municipality of Odranci",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Odranci",
+                  "Obcina Odranci",
+                  "Občina Odranci",
+                  "Odranci"
+                ],
+                "lat": 46.58674,
+                "lon": 16.2731,
+                "children": []
+              },
+              {
+                "name": "Municipality of Oplotnica",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Oplotnica",
+                  "Kotamadya Oplotnica",
+                  "Municipality of Oplotnica",
+                  "Obcina Oplotnica"
+                ],
+                "lat": 46.37877,
+                "lon": 15.45228,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ormož",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Ormoz",
+                  "Municipality of Ormož",
+                  "Obcina Ormoz",
+                  "Občina Ormož"
+                ],
+                "lat": 46.43632,
+                "lon": 16.14099,
+                "children": []
+              },
+              {
+                "name": "Municipality of Osilnica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Osilnica",
+                  "Obcina Osilnica",
+                  "Občina Osilnica",
+                  "Osilnica"
+                ],
+                "lat": 45.54889,
+                "lon": 14.72833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Pesnica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Pesnica",
+                  "Gmina Pesnica",
+                  "Kotamadya Pesnica",
+                  "Maribor-Pesnica"
+                ],
+                "lat": 46.62583,
+                "lon": 15.71278,
+                "children": []
+              },
+              {
+                "name": "Municipality of Piran",
+                "type": "admin1",
+                "aliases": [
+                  "Comune di Pirano",
+                  "Municipality of Piran",
+                  "Obcina Piran",
+                  "Obcina Piran-Pirano"
+                ],
+                "lat": 45.48278,
+                "lon": 13.62694,
+                "children": []
+              },
+              {
+                "name": "Municipality of Pivka",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Pivka",
+                  "GJo thi tu tri Pivka",
+                  "Gemeinde Pivka",
+                  "Gmina Pivka"
+                ],
+                "lat": 45.68278,
+                "lon": 14.23556,
+                "children": []
+              },
+              {
+                "name": "Municipality of Podčetrtek",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Podcetrtek",
+                  "Municipality of Podčetrtek",
+                  "Obcina Podcetrtek",
+                  "Občina Podčetrtek"
+                ],
+                "lat": 46.14476,
+                "lon": 15.57703,
+                "children": []
+              },
+              {
+                "name": "Municipality of Podlehnik",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Podlehnik",
+                  "Obcina Podlehnik",
+                  "Občina Podlehnik",
+                  "Podlehnik"
+                ],
+                "lat": 46.31611,
+                "lon": 15.86653,
+                "children": []
+              },
+              {
+                "name": "Municipality of Podvelka",
+                "type": "admin1",
+                "aliases": [
+                  "Comuna Podvelka",
+                  "Gmina Podvelka",
+                  "Municipality of Podvelka",
+                  "Obcina Podvelka"
+                ],
+                "lat": 46.60076,
+                "lon": 15.35586,
+                "children": []
+              },
+              {
+                "name": "Municipality of Polzela",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Polzela",
+                  "Obcina Polzela",
+                  "Občina Polzela",
+                  "Polzela"
+                ],
+                "lat": 46.30429,
+                "lon": 15.08452,
+                "children": []
+              },
+              {
+                "name": "Municipality of Postojna",
+                "type": "admin1",
+                "aliases": [
+                  "Arae Postumiae",
+                  "Gmina Postojna",
+                  "Municipality of Postojna",
+                  "Obcina Postojna"
+                ],
+                "lat": 45.78556,
+                "lon": 14.17083,
+                "children": []
+              },
+              {
+                "name": "Municipality of Prebold",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Prebold",
+                  "GJo thi tu tri Prebold",
+                  "Gmina Prebold",
+                  "Kotamadya Prebold"
+                ],
+                "lat": 46.2173,
+                "lon": 15.09265,
+                "children": []
+              },
+              {
+                "name": "Municipality of Preddvor",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Preddvor",
+                  "Obcina Preddvor",
+                  "Občina Preddvor",
+                  "Preddvor"
+                ],
+                "lat": 46.32698,
+                "lon": 14.46444,
+                "children": []
+              },
+              {
+                "name": "Municipality of Prevalje",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Prevalje",
+                  "Municipality of Prevalje",
+                  "Obcina Prevalje",
+                  "Občina Prevalje"
+                ],
+                "lat": 46.55199,
+                "lon": 14.90116,
+                "children": []
+              },
+              {
+                "name": "Municipality of Puconci",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Puconci",
+                  "Obcina Puconci",
+                  "Občina Puconci",
+                  "Puconci"
+                ],
+                "lat": 46.74528,
+                "lon": 16.13889,
+                "children": []
+              },
+              {
+                "name": "Municipality of Rače–Fram",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Race-Fram",
+                  "Municipality of Rače–Fram",
+                  "Obcina Race-Fram",
+                  "Občina Rače-Fram"
+                ],
+                "lat": 46.45172,
+                "lon": 15.63285,
+                "children": []
+              },
+              {
+                "name": "Municipality of Radeče",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Radece",
+                  "Bwrdeistref Radeče",
+                  "Comuna Radece",
+                  "Comuna Radeče"
+                ],
+                "lat": 46.06556,
+                "lon": 15.14083,
+                "children": []
+              },
+              {
+                "name": "Municipality of Radenci",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Radenci",
+                  "Municipality of Radenci",
+                  "Obcina Radenci",
+                  "Občina Radenci"
+                ],
+                "lat": 46.62722,
+                "lon": 16.04833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Radlje ob Dravi",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Radlje ob Dravi",
+                  "Obcina Radlje ob Dravi",
+                  "Občina Radlje ob Dravi",
+                  "Opstina Radlje ob Dravi"
+                ],
+                "lat": 46.60725,
+                "lon": 15.25093,
+                "children": []
+              },
+              {
+                "name": "Municipality of Radovljica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Radovljica",
+                  "GJo thi tu tri Radovljica",
+                  "Gmina Radovljica",
+                  "Kotamadya Radovljica"
+                ],
+                "lat": 46.33778,
+                "lon": 14.19417,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ravne na Koroškem",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Ravne na Koroskem",
+                  "Municipality of Ravne na Koroškem",
+                  "Obcina Ravne na Koroskem",
+                  "Občina Ravne na Koroškem"
+                ],
+                "lat": 46.53179,
+                "lon": 14.97543,
+                "children": []
+              },
+              {
+                "name": "Municipality of Razkrižje",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Razkrizje",
+                  "Municipality of Razkrižje",
+                  "Obcina Razkrizje",
+                  "Občina Razkrižje"
+                ],
+                "lat": 46.52382,
+                "lon": 16.27194,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ribnica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Ribnica",
+                  "Obcina Ribnica",
+                  "Občina Ribnica",
+                  "Opstina Ribnica"
+                ],
+                "lat": 45.73738,
+                "lon": 14.71605,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ribnica na Pohorju",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Ribnica na Pohorju",
+                  "Obcina Ribnica na Pohorju",
+                  "Občina Ribnica na Pohorju",
+                  "Ribnica na Pohorju"
+                ],
+                "lat": 46.52533,
+                "lon": 15.26071,
+                "children": []
+              },
+              {
+                "name": "Municipality of Rogaška Slatina",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Rogaska Slatina",
+                  "Municipality of Rogaška Slatina",
+                  "Obcina Rogaska Slatina",
+                  "Občina Rogaška Slatina"
+                ],
+                "lat": 46.24667,
+                "lon": 15.62944,
+                "children": []
+              },
+              {
+                "name": "Municipality of Rogašovci",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Rogasovci",
+                  "Municipality of Rogašovci",
+                  "Obcina Rogasevci",
+                  "Obcina Rogasovci"
+                ],
+                "lat": 46.8025,
+                "lon": 16.02444,
+                "children": []
+              },
+              {
+                "name": "Municipality of Rogatec",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Rogatec",
+                  "Obcina Rogatec",
+                  "Občina Rogatec",
+                  "Rogatec"
+                ],
+                "lat": 46.24194,
+                "lon": 15.74083,
+                "children": []
+              },
+              {
+                "name": "Municipality of Ruše",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Ruse",
+                  "Bwrdeistref Ruše",
+                  "Comuna Ruse",
+                  "Comuna Ruše"
+                ],
+                "lat": 46.518,
+                "lon": 15.49044,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šalovci",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Salovci",
+                  "Municipality of Šalovci",
+                  "Obcina Salovci",
+                  "Občina Šalovci"
+                ],
+                "lat": 46.83111,
+                "lon": 16.27833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Selnica ob Dravi",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Selnica ob Dravi",
+                  "Obcina Selnica ob Dravi",
+                  "Občina Selnica ob Dravi",
+                  "Selnica ob Dravi"
+                ],
+                "lat": 46.58168,
+                "lon": 15.49539,
+                "children": []
+              },
+              {
+                "name": "Municipality of Semič",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Semic",
+                  "Municipality of Semič",
+                  "Obcina Semic",
+                  "Občina Semič"
+                ],
+                "lat": 45.65139,
+                "lon": 15.13472,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šempeter–Vrtojba",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sempeter-Vrtojba",
+                  "Municipality of Šempeter–Vrtojba",
+                  "Obcina Sempeter - Vrtojba",
+                  "Občina Šempeter - Vrtojba"
+                ],
+                "lat": 45.91194,
+                "lon": 13.65222,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šenčur",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sencur",
+                  "Municipality of Šenčur",
+                  "Obcina Sencur",
+                  "Občina Šenčur"
+                ],
+                "lat": 46.23808,
+                "lon": 14.42326,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šentilj",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sentilj",
+                  "Municipality of Šentilj",
+                  "Obcina Sentilj",
+                  "Občina Šentilj"
+                ],
+                "lat": 46.68833,
+                "lon": 15.7175,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šentjernej",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sentjernej",
+                  "Municipality of Šentjernej",
+                  "Obcina Sentjernej",
+                  "Občina Šentjernej"
+                ],
+                "lat": 45.82361,
+                "lon": 15.33361,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šentjur",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Sentjur",
+                  "Bwrdeistref Šentjur",
+                  "Comuna Sentjur",
+                  "Comuna Šentjur"
+                ],
+                "lat": 46.17889,
+                "lon": 15.43056,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sevnica",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Sevnica",
+                  "Comuna Sevnica",
+                  "Comune di Sevnica",
+                  "Conceyu de Sevnica"
+                ],
+                "lat": 46,
+                "lon": 15.3,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sežana",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sezana",
+                  "Municipality of Sežana",
+                  "Obcina Sezana",
+                  "Občina Sežana"
+                ],
+                "lat": 45.73472,
+                "lon": 13.88639,
+                "children": []
+              },
+              {
+                "name": "Municipality of Škocjan",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Skocjan",
+                  "Municipality of Škocjan",
+                  "Obcina Skocjan",
+                  "Občina Škocjan"
+                ],
+                "lat": 45.91972,
+                "lon": 15.30139,
+                "children": []
+              },
+              {
+                "name": "Municipality of Škofja Loka",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Skofja Loka",
+                  "Bwrdeistref Škofja Loka",
+                  "Comuna Skofja Loka",
+                  "Comuna Škofja Loka"
+                ],
+                "lat": 46.16306,
+                "lon": 14.28167,
+                "children": []
+              },
+              {
+                "name": "Municipality of Škofljica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Skofljica",
+                  "Municipality of Škofljica",
+                  "Obcina Skofljica",
+                  "Občina Škofljica"
+                ],
+                "lat": 45.95833,
+                "lon": 14.57722,
+                "children": []
+              },
+              {
+                "name": "Municipality of Slovenska Bistrica",
+                "type": "admin1",
+                "aliases": [
+                  "Bistrica Eslovena",
+                  "Bistrica Slovene",
+                  "Bistrica Slovenia",
+                  "Bistrica Slovenska"
+                ],
+                "lat": 46.42516,
+                "lon": 15.50667,
+                "children": []
+              },
+              {
+                "name": "Municipality of Slovenske Konjice",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Slovenske Konjice",
+                  "Konjice Eslovena",
+                  "Konjice Slovene",
+                  "Konjice Slovenia"
+                ],
+                "lat": 46.325,
+                "lon": 15.45556,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šmarje pri Jelšah",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Smarje pri Jelsah",
+                  "Municipality of Šmarje pri Jelšah",
+                  "Obcina Smarje pri Jelsah",
+                  "Občina Šmarje pri Jelšah"
+                ],
+                "lat": 46.21074,
+                "lon": 15.52499,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šmarješke Toplice",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Smarjeske Toplice",
+                  "Municipality of Šmarješke Toplice",
+                  "Obcina Smarjeske Toplice",
+                  "Občina Šmarješke Toplice"
+                ],
+                "lat": 45.88296,
+                "lon": 15.24499,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šmartno ob Paki",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Smartno ob Paki",
+                  "Municipality of Šmartno ob Paki",
+                  "Obcina Smartno ob Paki",
+                  "Občina Šmartno ob Paki"
+                ],
+                "lat": 46.34306,
+                "lon": 15.03056,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šmartno pri Litiji",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Smartno pri Litiji",
+                  "Municipality of Šmartno pri Litiji",
+                  "Obcina Smartno pri Litiji",
+                  "Občina Šmartno pri Litiji"
+                ],
+                "lat": 46.02627,
+                "lon": 14.84264,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sodražica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sodrazica",
+                  "Municipality of Sodražica",
+                  "Obcina Sodrazica",
+                  "Občina Sodražica"
+                ],
+                "lat": 45.75644,
+                "lon": 14.62213,
+                "children": []
+              },
+              {
+                "name": "Municipality of Solčava",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Solcava",
+                  "Bwrdeistref Solčava",
+                  "Gmina Solcava",
+                  "Gmina Solčava"
+                ],
+                "lat": 46.40624,
+                "lon": 14.65911,
+                "children": []
+              },
+              {
+                "name": "Municipality of Šoštanj",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sostanj",
+                  "Municipality of Šoštanj",
+                  "Obcina Sostanj",
+                  "Občina Šoštanj"
+                ],
+                "lat": 46.41306,
+                "lon": 15.00833,
+                "children": []
+              },
+              {
+                "name": "Municipality of Starše",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Starse",
+                  "Municipality of Starše",
+                  "Obcina Starse",
+                  "Občina Starše"
+                ],
+                "lat": 46.4553,
+                "lon": 15.7552,
+                "children": []
+              },
+              {
+                "name": "Municipality of Štore",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Store",
+                  "Municipality of Štore",
+                  "Obcina Store",
+                  "Občina Štore"
+                ],
+                "lat": 46.20111,
+                "lon": 15.32722,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sveta Ana",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Sveta Ana",
+                  "Gmina Sveta Ana",
+                  "Kotamadya Sveta Ana",
+                  "Municipality of Sveta Ana"
+                ],
+                "lat": 46.64752,
+                "lon": 15.83903,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sveta Trojica v Slovenskih Goricah",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sveta Trojica v Slovenskih Goricah",
+                  "Obcina Sveta Trojica v Slovenskih goricah",
+                  "Občina Sveta Trojica v Slovenskih goricah",
+                  "Sv. Trojica v Slov. Goricah"
+                ],
+                "lat": 46.56885,
+                "lon": 15.88916,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sveti Andraž v Slovenskih Goricah",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sveti Andraz v Slovenskih Goricah",
+                  "Municipality of Sveti Andraž v Slovenskih Goricah",
+                  "Obcina Sveti Andraz v Slovenskih goricah",
+                  "Občina Sveti Andraž v Slovenskih goricah"
+                ],
+                "lat": 46.52324,
+                "lon": 15.9528,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sveti Jurij ob Ščavnici",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sveti Jurij ob Scavnici",
+                  "Municipality of Sveti Jurij ob Ščavnici",
+                  "Obcina Sveti Jurij ob Scavnici",
+                  "Občina Sveti Jurij ob Ščavnici"
+                ],
+                "lat": 46.5675,
+                "lon": 16.02667,
+                "children": []
+              },
+              {
+                "name": "Municipality of Sveti Jurij v Slovenskih Goricah",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sveti Jurij v Slovenskih Goricah",
+                  "Obcina Sveti Jurij v Slovenskih goricah",
+                  "Občina Sveti Jurij v Slovenskih goricah",
+                  "Sveti Jurij v Slovenskih Goricah"
+                ],
+                "lat": 46.61313,
+                "lon": 15.79251,
+                "children": []
+              },
+              {
+                "name": "Municipality of Tabor",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Tabor",
+                  "Obcina Tabor",
+                  "Občina Tabor",
+                  "Tabor"
+                ],
+                "lat": 46.22235,
+                "lon": 15.01434,
+                "children": []
+              },
+              {
+                "name": "Municipality of Tišina",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Tisina",
+                  "Municipality of Tišina",
+                  "Obcina Tisina",
+                  "Občina Tišina"
+                ],
+                "lat": 46.66044,
+                "lon": 16.08093,
+                "children": []
+              },
+              {
+                "name": "Municipality of Tolmin",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Tolmin",
+                  "Obcina Tolmin",
+                  "Občina Tolmin",
+                  "Opstina Tolmin"
+                ],
+                "lat": 46.17947,
+                "lon": 13.71162,
+                "children": []
+              },
+              {
+                "name": "Municipality of Trbovlje",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Trbovlje",
+                  "Obcina Trbovlje",
+                  "Občina Trbovlje",
+                  "Opstina Trbovlje"
+                ],
+                "lat": 46.14167,
+                "lon": 15.04222,
+                "children": []
+              },
+              {
+                "name": "Municipality of Trebnje",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Trebnje",
+                  "Comuna Trebnje",
+                  "Comune di Trebnje",
+                  "GJo thi tu tri Trebnje"
+                ],
+                "lat": 45.91091,
+                "lon": 14.98773,
+                "children": []
+              },
+              {
+                "name": "Municipality of Trnovska Vas",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Trnovska Vas",
+                  "Obcina Trnovska vas",
+                  "Občina Trnovska vas",
+                  "Trnovska Vas"
+                ],
+                "lat": 46.51778,
+                "lon": 15.90444,
+                "children": []
+              },
+              {
+                "name": "Municipality of Tržič",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Trzic",
+                  "Municipality of Tržič",
+                  "Obcina Trzic",
+                  "Občina Tržič"
+                ],
+                "lat": 46.38417,
+                "lon": 14.32361,
+                "children": []
+              },
+              {
+                "name": "Municipality of Trzin",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Trzin",
+                  "Obcina Trzin",
+                  "Občina Trzin",
+                  "Trzin"
+                ],
+                "lat": 46.11506,
+                "lon": 14.55371,
+                "children": [
+                  {
+                    "name": "Črnuče District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Crnuce",
+                      "Crnuce District",
+                      "Četrtna skupnost Črnuče"
+                    ],
+                    "lat": 46.11506,
+                    "lon": 14.55371,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Municipality of Turnišče",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Turnisce",
+                  "Municipality of Turnišče",
+                  "Obcina Turnisce",
+                  "Občina Turnišče"
+                ],
+                "lat": 46.62194,
+                "lon": 16.31806,
+                "children": []
+              },
+              {
+                "name": "Municipality of Velika Polana",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Velika Polana",
+                  "Obcina Velika Polana",
+                  "Občina Velika Polana",
+                  "Velika Polana"
+                ],
+                "lat": 46.57861,
+                "lon": 16.35667,
+                "children": []
+              },
+              {
+                "name": "Municipality of Velike Lašče",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Velike Lasce",
+                  "Municipality of Velike Lašče",
+                  "Obcina Velike Lasce",
+                  "Občina Velike Lašče"
+                ],
+                "lat": 45.83917,
+                "lon": 14.58583,
+                "children": []
+              },
+              {
+                "name": "Municipality of Veržej",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Verzej",
+                  "Municipality of Veržej",
+                  "Obcina Verzej",
+                  "Občina Veržej"
+                ],
+                "lat": 46.58184,
+                "lon": 16.17121,
+                "children": []
+              },
+              {
+                "name": "Municipality of Videm",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Videm",
+                  "Obcina Videm",
+                  "Občina Videm",
+                  "Videm"
+                ],
+                "lat": 46.36414,
+                "lon": 15.88128,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vipava",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vipava",
+                  "Obcina Vipava",
+                  "Občina Vipava",
+                  "Vipava"
+                ],
+                "lat": 45.82361,
+                "lon": 13.98444,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vitanje",
+                "type": "admin1",
+                "aliases": [
+                  "Gmina Vitanje",
+                  "Municipality of Vitanje",
+                  "Obcina Vitanje",
+                  "Občina Vitanje"
+                ],
+                "lat": 46.40306,
+                "lon": 15.29472,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vodice",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vodice",
+                  "Obcina Vodice",
+                  "Občina Vodice",
+                  "Opcina Vodice"
+                ],
+                "lat": 46.17361,
+                "lon": 14.4925,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vojnik",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vojnik",
+                  "Obcina Vojnik",
+                  "Občina Vojnik",
+                  "Vojnik"
+                ],
+                "lat": 46.31713,
+                "lon": 15.31259,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vransko",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vransko",
+                  "Obcina Vransko",
+                  "Občina Vransko",
+                  "Vransko"
+                ],
+                "lat": 46.23508,
+                "lon": 14.94972,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vrhnika",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vrhnika",
+                  "Obcina Vrhnika",
+                  "Občina Vrhnika",
+                  "Opstina Vrhnika"
+                ],
+                "lat": 45.9614,
+                "lon": 14.29265,
+                "children": []
+              },
+              {
+                "name": "Municipality of Vuzenica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Vuzenica",
+                  "Obcina Vuzenica",
+                  "Občina Vuzenica",
+                  "Vuzenica"
+                ],
+                "lat": 46.56889,
+                "lon": 15.15222,
+                "children": []
+              },
+              {
+                "name": "Municipality of Zagorje ob Savi",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Zagorje ob Savi",
+                  "Comuna Zagorje ob Savi",
+                  "Gemeinde Zagorje ob Savi",
+                  "Gmina Zagorje ob Savi"
+                ],
+                "lat": 46.12974,
+                "lon": 14.96583,
+                "children": []
+              },
+              {
+                "name": "Municipality of Žalec",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Zalec",
+                  "Municipality of Žalec",
+                  "Obcina Zalec",
+                  "Občina Žalec"
+                ],
+                "lat": 46.25508,
+                "lon": 15.1727,
+                "children": []
+              },
+              {
+                "name": "Municipality of Zavrč",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Zavrc",
+                  "Municipality of Zavrč",
+                  "Obcina Zavrc",
+                  "Občina Zavrč"
+                ],
+                "lat": 46.35917,
+                "lon": 16.04528,
+                "children": []
+              },
+              {
+                "name": "Municipality of Železniki",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Zelezniki",
+                  "Bwrdeistref Železniki",
+                  "Gmina Zelezniki",
+                  "Gmina Železniki"
+                ],
+                "lat": 46.2125,
+                "lon": 14.10583,
+                "children": []
+              },
+              {
+                "name": "Municipality of Žetale",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Zetale",
+                  "Municipality of Žetale",
+                  "Obcina Zetale",
+                  "Občina Žetale"
+                ],
+                "lat": 46.28224,
+                "lon": 15.8058,
+                "children": []
+              },
+              {
+                "name": "Municipality of Žiri",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Ziri",
+                  "Municipality of Žiri",
+                  "Obcina Ziri",
+                  "Občina Žiri"
+                ],
+                "lat": 46.05167,
+                "lon": 14.11556,
+                "children": []
+              },
+              {
+                "name": "Municipality of Žirovnica",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Zirovnica",
+                  "Municipality of Žirovnica",
+                  "Obcina Zirovnica",
+                  "Občina Žirovnica"
+                ],
+                "lat": 46.41235,
+                "lon": 14.17567,
+                "children": []
+              },
+              {
+                "name": "Municipality of Zreče",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Zrece",
+                  "Bwrdeistref Zreče",
+                  "Gemeinde Zrece",
+                  "Gemeinde Zreče"
+                ],
+                "lat": 46.39389,
+                "lon": 15.38,
+                "children": []
+              },
+              {
+                "name": "Municipality of Žužemberk",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Zuzemberk",
+                  "Municipality of Žužemberk",
+                  "Obcina Zuzemberk",
+                  "Občina Žužemberk"
+                ],
+                "lat": 45.80472,
+                "lon": 14.94972,
+                "children": []
+              },
+              {
+                "name": "Občina Apače",
+                "type": "admin1",
+                "aliases": [
+                  "Apace",
+                  "Apače",
+                  "Municipality of Apace",
+                  "Municipality of Apače"
+                ],
+                "lat": 46.69445,
+                "lon": 15.87383,
+                "children": []
+              },
+              {
+                "name": "Občina Loška Dolina",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Loska Dolina",
+                  "Bwrdeistref Loška Dolina",
+                  "Comune di Loska Dolina",
+                  "Comune di Loška Dolina"
+                ],
+                "lat": 45.66611,
+                "lon": 14.50417,
+                "children": []
+              },
+              {
+                "name": "Občina Poljčane",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Poljcane",
+                  "Municipality of Poljčane",
+                  "Obcina Poljcane",
+                  "Občina Poljčane"
+                ],
+                "lat": 46.30275,
+                "lon": 15.59794,
+                "children": []
+              },
+              {
+                "name": "Občina Rečica ob Savinji",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Recica ob Savinji",
+                  "Municipality of Rečica ob Savinji",
+                  "Obcina Recica ob Savinji",
+                  "Občina Rečica ob Savinji"
+                ],
+                "lat": 46.32745,
+                "lon": 14.90523,
+                "children": []
+              },
+              {
+                "name": "Občina Renče-Vogrsko",
+                "type": "admin1",
+                "aliases": [
+                  "Commune di Ranziano-Voghersca",
+                  "Municipality of Rence-Vogrsko",
+                  "Municipality of Renče–Vogrsko",
+                  "Obcina Rence-Vogrsko"
+                ],
+                "lat": 45.8936,
+                "lon": 13.67564,
+                "children": []
+              },
+              {
+                "name": "Občina Šentrupert",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sentrupert",
+                  "Municipality of Šentrupert",
+                  "Obcina Sentrupert",
+                  "Občina Šentrupert"
+                ],
+                "lat": 45.98258,
+                "lon": 15.09001,
+                "children": []
+              },
+              {
+                "name": "Občina Središče ob Dravi",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sredisce ob Dravi",
+                  "Municipality of Središče ob Dravi",
+                  "Obcina Sredisce ob Dravi",
+                  "Občina Središče ob Dravi"
+                ],
+                "lat": 46.39983,
+                "lon": 16.25446,
+                "children": []
+              },
+              {
+                "name": "Občina Straža",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Straza",
+                  "Municipality of Straža",
+                  "Obcina Straza",
+                  "Občina Straža"
+                ],
+                "lat": 45.77737,
+                "lon": 15.08873,
+                "children": []
+              },
+              {
+                "name": "Občina Sveti Tomaž",
+                "type": "admin1",
+                "aliases": [
+                  "Municipality of Sveti Tomaz",
+                  "Municipality of Sveti Tomaž",
+                  "Obcina Sveti Tomaz",
+                  "Občina Sveti Tomaž"
+                ],
+                "lat": 46.47944,
+                "lon": 16.06202,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Celje",
+                "type": "admin1",
+                "aliases": [
+                  "Celje",
+                  "Mestna obcina Celje",
+                  "Mestna občina Celje",
+                  "Opstina Celje"
+                ],
+                "lat": 46.25,
+                "lon": 15.27028,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Koper",
+                "type": "admin1",
+                "aliases": [
+                  "Capodistria",
+                  "Comune Citta di Capodistria",
+                  "Comune Città di Capodistria",
+                  "Gorad Koper"
+                ],
+                "lat": 45.51833,
+                "lon": 13.82667,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Kranj",
+                "type": "admin1",
+                "aliases": [
+                  "Kranj",
+                  "Mestna obcina Kranj",
+                  "Mestna občina Kranj",
+                  "Opstina Kranj"
+                ],
+                "lat": 46.24691,
+                "lon": 14.35646,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Krško",
+                "type": "admin1",
+                "aliases": [
+                  "Krsko",
+                  "Krško",
+                  "Mestna obcina Krsko",
+                  "Mestna občina Krško"
+                ],
+                "lat": 45.95137,
+                "lon": 15.46063,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Ljubljana",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Ljubljana City",
+                  "Comuna urbana Ljubljana",
+                  "Comuna urbană Ljubljana",
+                  "Dimos Polis tis Lioumpliana"
+                ],
+                "lat": 46.063774,
+                "lon": 14.519234,
+                "children": [
+                  {
+                    "name": "Bežigrad District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bezigrad District",
+                      "Bežigrad District",
+                      "Cetrtna skupnost Bezigrad"
+                    ],
+                    "lat": 46.08333,
+                    "lon": 14.53333,
+                    "children": []
+                  },
+                  {
+                    "name": "Dravlje District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Dravlje",
+                      "Dravlje",
+                      "Dravlje District"
+                    ],
+                    "lat": 46.0729,
+                    "lon": 14.44741,
+                    "children": []
+                  },
+                  {
+                    "name": "Golovec District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Golovec",
+                      "Golovec Golovec",
+                      "Četrtna skupnost Golovec"
+                    ],
+                    "lat": 46.03969,
+                    "lon": 14.5507,
+                    "children": []
+                  },
+                  {
+                    "name": "Jarše District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Jarse",
+                      "Jarse",
+                      "Jarse District"
+                    ],
+                    "lat": 46.07345,
+                    "lon": 14.55431,
+                    "children": []
+                  },
+                  {
+                    "name": "Moste District",
+                    "type": "admin2",
+                    "lat": 46.04906,
+                    "lon": 14.54991,
+                    "children": []
+                  },
+                  {
+                    "name": "Opština Ljubljana-Center",
+                    "type": "admin2",
+                    "aliases": [
+                      "Center District",
+                      "Cetrtna skupnost Center",
+                      "Ljubljana-Center"
+                    ],
+                    "lat": 46.05,
+                    "lon": 14.53333,
+                    "children": []
+                  },
+                  {
+                    "name": "Polje District",
+                    "type": "admin2",
+                    "lat": 46.0644,
+                    "lon": 14.59192,
+                    "children": []
+                  },
+                  {
+                    "name": "Posavje District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Posavje",
+                      "Posavje",
+                      "Posavje District"
+                    ],
+                    "lat": 46.09412,
+                    "lon": 14.50539,
+                    "children": []
+                  },
+                  {
+                    "name": "Rožnik District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Roznik",
+                      "Roznik District",
+                      "Rožnik District"
+                    ],
+                    "lat": 46.05999,
+                    "lon": 14.46779,
+                    "children": []
+                  },
+                  {
+                    "name": "Šentvid District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Sentvid",
+                      "Sentvid District",
+                      "Četrtna skupnost Šentvid"
+                    ],
+                    "lat": 46.10559,
+                    "lon": 14.43329,
+                    "children": []
+                  },
+                  {
+                    "name": "Šmarna Gora District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Smarna gora",
+                      "Smarna Gora",
+                      "Smarna Gora District"
+                    ],
+                    "lat": 46.12499,
+                    "lon": 14.47037,
+                    "children": []
+                  },
+                  {
+                    "name": "Sostro District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Sostro",
+                      "Sostro District",
+                      "Četrtna skupnost Sostro"
+                    ],
+                    "lat": 46.04341,
+                    "lon": 14.67293,
+                    "children": []
+                  },
+                  {
+                    "name": "Trnovo District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Trnovo",
+                      "Trnovo",
+                      "Trnovo District"
+                    ],
+                    "lat": 46.02412,
+                    "lon": 14.48891,
+                    "children": []
+                  },
+                  {
+                    "name": "Vič District",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cetrtna skupnost Vic",
+                      "Vic District",
+                      "Vič District"
+                    ],
+                    "lat": 46.00779,
+                    "lon": 14.46968,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Urban Municipality of Maribor",
+                "type": "admin1",
+                "aliases": [
+                  "Bwrdeistref Maribor City",
+                  "Ceety Municipality o Maribor",
+                  "Cidade Municipal de Maribor",
+                  "Ciudad Maribor"
+                ],
+                "lat": 46.55611,
+                "lon": 15.64306,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Murska Sobota",
+                "type": "admin1",
+                "aliases": [
+                  "Mestna obcina Murska Sobota",
+                  "Mestna občina Murska Sobota",
+                  "Murska Sobota",
+                  "Opstina Murska Sobota"
+                ],
+                "lat": 46.65139,
+                "lon": 16.16056,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Nova Gorica",
+                "type": "admin1",
+                "aliases": [
+                  "Mestna obcina Nova Gorica",
+                  "Mestna občina Nova Gorica",
+                  "Nova Gorica",
+                  "Opstina Nova Gorica"
+                ],
+                "lat": 45.9652,
+                "lon": 13.72805,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Novo Mesto",
+                "type": "admin1",
+                "aliases": [
+                  "Mestna obcina Novo mesto",
+                  "Mestna občina Novo mesto",
+                  "Novo Mesto",
+                  "Opstina Novo Mesto"
+                ],
+                "lat": 45.7851,
+                "lon": 15.19833,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Ptuj",
+                "type": "admin1",
+                "aliases": [
+                  "Gorad Ptuj",
+                  "Mestna obcina Ptuj",
+                  "Mestna občina Ptuj",
+                  "Opstina Ptuj"
+                ],
+                "lat": 46.43417,
+                "lon": 15.87667,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Slovenj Gradec",
+                "type": "admin1",
+                "aliases": [
+                  "Mestna Obcina Slovenj Gradec",
+                  "Mestna Občina Slovenj Gradec",
+                  "Opstina Slovenj Gradec",
+                  "Opština Slovenj Gradec"
+                ],
+                "lat": 46.48861,
+                "lon": 15.08361,
+                "children": []
+              },
+              {
+                "name": "Urban Municipality of Velenje",
+                "type": "admin1",
+                "aliases": [
+                  "Mestna obcina Velenje",
+                  "Mestna občina Velenje",
+                  "Opstina Titovo Velenje",
+                  "Opstina Velenje"
+                ],
+                "lat": 46.36667,
+                "lon": 15.13333,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

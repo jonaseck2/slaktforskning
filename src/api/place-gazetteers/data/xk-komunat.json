@@ -1,0 +1,827 @@
+{
+  "id": "xk-komunat",
+  "name": "Kosovo Komunat",
+  "locale": "xk",
+  "description": "Kosovo: 7 districts (admin1) + 38 komunat (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/XK.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Kosovo",
+            "type": "country",
+            "aliases": [
+              "Kosova",
+              "Republika e Kosovës",
+              "Косово"
+            ],
+            "lat": 42.6,
+            "lon": 20.9,
+            "children": [
+              {
+                "name": "Ferizaj District",
+                "type": "admin1",
+                "aliases": [
+                  "Ferizaj",
+                  "Ferizaj District",
+                  "Ferizaj/Urosevac",
+                  "Ferizaj/Uroševac"
+                ],
+                "lat": 42.271106,
+                "lon": 21.133142,
+                "children": [
+                  {
+                    "name": "Hani i Elezit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Deneral Jankovic",
+                      "Hani i Elezit",
+                      "Komuna e Hanit te Elezit"
+                    ],
+                    "lat": 42.13886,
+                    "lon": 21.26571,
+                    "children": [
+                      {
+                        "name": "Hani i Elezit",
+                        "type": "admin3",
+                        "lat": 42.15,
+                        "lon": 21.29667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Ferizajt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ferizaj",
+                      "Komuna e Ferizajt"
+                    ],
+                    "lat": 42.36667,
+                    "lon": 21.13333,
+                    "children": [
+                      {
+                        "name": "Ferizaj",
+                        "type": "admin3",
+                        "lat": 42.37056,
+                        "lon": 21.15528
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Kaçanikut",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kacanik",
+                      "Kaçanik"
+                    ],
+                    "lat": 42.2,
+                    "lon": 21.25,
+                    "children": [
+                      {
+                        "name": "Kačanik",
+                        "type": "admin3",
+                        "lat": 42.23194,
+                        "lon": 21.25944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Shtimes",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Shtimes",
+                      "Shtime"
+                    ],
+                    "lat": 42.41667,
+                    "lon": 21.01667,
+                    "children": [
+                      {
+                        "name": "Shtime",
+                        "type": "admin3",
+                        "lat": 42.43306,
+                        "lon": 21.03972
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Opština Štrpce",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Shterpces",
+                      "Komuna e Shterrpcit",
+                      "Komuna e Shtërpcës"
+                    ],
+                    "lat": 42.23333,
+                    "lon": 21,
+                    "children": [
+                      {
+                        "name": "Štrpce",
+                        "type": "admin3",
+                        "lat": 42.23944,
+                        "lon": 21.02722
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Gjakova District",
+                "type": "admin1",
+                "aliases": [
+                  "Dzhakova",
+                  "GJakovicki okrug",
+                  "Gjakova",
+                  "Gjakova District"
+                ],
+                "lat": 42.452763,
+                "lon": 20.375193,
+                "children": [
+                  {
+                    "name": "Komuna e Deçanit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Decan",
+                      "Deçan",
+                      "Komuna e Decanit"
+                    ],
+                    "lat": 42.5391,
+                    "lon": 20.28816,
+                    "children": [
+                      {
+                        "name": "Deçan",
+                        "type": "admin3",
+                        "lat": 42.54018,
+                        "lon": 20.28793
+                      },
+                      {
+                        "name": "Isniq",
+                        "type": "admin3",
+                        "lat": 42.5575,
+                        "lon": 20.30278
+                      },
+                      {
+                        "name": "Strellc i Epërm",
+                        "type": "admin3",
+                        "lat": 42.57843,
+                        "lon": 20.29398
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Gjakovës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gjakove",
+                      "Gjakovë",
+                      "Komuna e Gjakoves"
+                    ],
+                    "lat": 42.38333,
+                    "lon": 20.38333,
+                    "children": [
+                      {
+                        "name": "Gjakovë",
+                        "type": "admin3",
+                        "lat": 42.38028,
+                        "lon": 20.43083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Junikut",
+                    "type": "admin2",
+                    "aliases": [
+                      "Junik",
+                      "Komuna e Junikut",
+                      "Opshtina Junik"
+                    ],
+                    "lat": 42.50529,
+                    "lon": 20.21261,
+                    "children": []
+                  },
+                  {
+                    "name": "Orahovac",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Rahovecit",
+                      "Opshtina Orakhovac",
+                      "Opstina Orahovac"
+                    ],
+                    "lat": 42.38333,
+                    "lon": 20.61667,
+                    "children": [
+                      {
+                        "name": "Orahovac",
+                        "type": "admin3",
+                        "lat": 42.39944,
+                        "lon": 20.65472
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Gjilan District",
+                "type": "admin1",
+                "aliases": [
+                  "Dzhilan",
+                  "Gjilan",
+                  "Gjilan District",
+                  "Gjilan/Gnjilane"
+                ],
+                "lat": 42.443415,
+                "lon": 21.484458,
+                "children": [
+                  {
+                    "name": "Kamenica",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kamenica",
+                      "Kamenice",
+                      "Kamenices"
+                    ],
+                    "lat": 42.6,
+                    "lon": 21.61667,
+                    "children": [
+                      {
+                        "name": "Kamenica",
+                        "type": "admin3",
+                        "lat": 42.57806,
+                        "lon": 21.58028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Gjilanit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gjilan",
+                      "Komuna e Gjilanit"
+                    ],
+                    "lat": 42.46667,
+                    "lon": 21.45,
+                    "children": [
+                      {
+                        "name": "Gjilan",
+                        "type": "admin3",
+                        "lat": 42.46045,
+                        "lon": 21.46986
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Kllokotit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kllokot",
+                      "Klokot",
+                      "Komuna e Kllokotit"
+                    ],
+                    "lat": 42.3446,
+                    "lon": 21.39373,
+                    "children": []
+                  },
+                  {
+                    "name": "Komuna e Parteshit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Parteshit",
+                      "Opshtina Partesh",
+                      "Opstina Partes"
+                    ],
+                    "lat": 42.40848,
+                    "lon": 21.47737,
+                    "children": []
+                  },
+                  {
+                    "name": "Komuna e Ranillugut",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Ranillugut",
+                      "Opshtina Ranilug",
+                      "Opstina Ranilug"
+                    ],
+                    "lat": 42.50741,
+                    "lon": 21.60231,
+                    "children": []
+                  },
+                  {
+                    "name": "Komuna e Vitisë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Vitise",
+                      "Komuna e Vitisë",
+                      "Viti"
+                    ],
+                    "lat": 42.33333,
+                    "lon": 21.36667,
+                    "children": [
+                      {
+                        "name": "Vitina",
+                        "type": "admin3",
+                        "lat": 42.32139,
+                        "lon": 21.35833
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Mitrovica District",
+                "type": "admin1",
+                "aliases": [
+                  "Kosovskomitrovachki okrug",
+                  "Mitrovica",
+                  "Mitrovica District",
+                  "Mitrovice/Kosovska Mitrovica"
+                ],
+                "lat": 42.908719,
+                "lon": 20.815254,
+                "children": [
+                  {
+                    "name": "Komuna e Leposaviqit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Leposaviqit",
+                      "Leposaviq"
+                    ],
+                    "lat": 43.11667,
+                    "lon": 20.78333,
+                    "children": [
+                      {
+                        "name": "Leposaviq",
+                        "type": "admin3",
+                        "lat": 43.10389,
+                        "lon": 20.80278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Mitrovicës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Mitrovices",
+                      "Komuna e Mitrovicës",
+                      "Mitrovica"
+                    ],
+                    "lat": 42.91667,
+                    "lon": 20.88333,
+                    "children": [
+                      {
+                        "name": "Mitrovicë",
+                        "type": "admin3",
+                        "lat": 42.88333,
+                        "lon": 20.86667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Skenderajt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Skenderajit",
+                      "Komuna e Skënderajit",
+                      "Skenderaj"
+                    ],
+                    "lat": 42.73333,
+                    "lon": 20.78333,
+                    "children": [
+                      {
+                        "name": "Srbica",
+                        "type": "admin3",
+                        "lat": 42.74667,
+                        "lon": 20.78861
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Zubin Potokut",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Zubin Potokut",
+                      "Zubin Potok"
+                    ],
+                    "lat": 42.91667,
+                    "lon": 20.63333,
+                    "children": [
+                      {
+                        "name": "Zubin Potok",
+                        "type": "admin3",
+                        "lat": 42.91444,
+                        "lon": 20.68972
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Zveçanit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Zvecanit",
+                      "Komuna e Zveçanit",
+                      "Opshtina Zvechan"
+                    ],
+                    "lat": 42.98271,
+                    "lon": 20.77523,
+                    "children": [
+                      {
+                        "name": "Zvečan",
+                        "type": "admin3",
+                        "lat": 42.9075,
+                        "lon": 20.84028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mitrovica Veriore",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mitrovica e Veriut",
+                      "North Kosovska Mitrovica",
+                      "North Mitrovica"
+                    ],
+                    "lat": 42.89498,
+                    "lon": 20.8649,
+                    "children": []
+                  },
+                  {
+                    "name": "Vushtrri",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Vushtrrise",
+                      "Komuna e Vushtrrisë",
+                      "Opshtina Vuchitrn"
+                    ],
+                    "lat": 42.8,
+                    "lon": 20.98333,
+                    "children": [
+                      {
+                        "name": "Vushtrri",
+                        "type": "admin3",
+                        "lat": 42.82306,
+                        "lon": 20.9675
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Pec District",
+                "type": "admin1",
+                "aliases": [
+                  "Bezirk Peja",
+                  "Pec",
+                  "Pech",
+                  "Pecki okrug"
+                ],
+                "lat": 42.669893,
+                "lon": 20.457767,
+                "children": [
+                  {
+                    "name": "Komuna e Istogut",
+                    "type": "admin2",
+                    "aliases": [
+                      "Istog",
+                      "Istogut",
+                      "Istok"
+                    ],
+                    "lat": 42.76667,
+                    "lon": 20.48333,
+                    "children": [
+                      {
+                        "name": "Istok",
+                        "type": "admin3",
+                        "lat": 42.78083,
+                        "lon": 20.4875
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Klines",
+                    "type": "admin2",
+                    "aliases": [
+                      "Klina",
+                      "Kline",
+                      "Klinë"
+                    ],
+                    "lat": 42.58333,
+                    "lon": 20.6,
+                    "children": [
+                      {
+                        "name": "Klina",
+                        "type": "admin3",
+                        "lat": 42.62167,
+                        "lon": 20.57778
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Pejës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Pejes",
+                      "Komuna e Pejës",
+                      "Municipality of Peja"
+                    ],
+                    "lat": 42.65968,
+                    "lon": 20.28997,
+                    "children": [
+                      {
+                        "name": "Pejë",
+                        "type": "admin3",
+                        "lat": 42.65913,
+                        "lon": 20.28828
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Pristina District",
+                "type": "admin1",
+                "aliases": [
+                  "Prishtina",
+                  "Prishtinski okrug",
+                  "Pristina",
+                  "Pristina Districte"
+                ],
+                "lat": 42.64309,
+                "lon": 21.136424,
+                "children": [
+                  {
+                    "name": "Komuna e Drenasit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gllogovc",
+                      "Gllogovcit",
+                      "Komuna e Drenasit"
+                    ],
+                    "lat": 42.6,
+                    "lon": 20.86667,
+                    "children": [
+                      {
+                        "name": "Glogovac",
+                        "type": "admin3",
+                        "lat": 42.62833,
+                        "lon": 20.89389
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Graçanicës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gracanica",
+                      "Gracanice",
+                      "Grachanica"
+                    ],
+                    "lat": 42.57389,
+                    "lon": 21.15167,
+                    "children": []
+                  },
+                  {
+                    "name": "Komuna e Obiliqit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kastriot",
+                      "Komuna e Obiliqit"
+                    ],
+                    "lat": 42.68333,
+                    "lon": 21.03333,
+                    "children": [
+                      {
+                        "name": "Obiliq",
+                        "type": "admin3",
+                        "lat": 42.68694,
+                        "lon": 21.07028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Prishtinës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Prishtines",
+                      "Komuna e Prishtinës",
+                      "Municipality of Prishtina"
+                    ],
+                    "lat": 42.7,
+                    "lon": 21.28333,
+                    "children": [
+                      {
+                        "name": "Pristina",
+                        "type": "admin3",
+                        "lat": 42.67272,
+                        "lon": 21.16688
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kosovo Polje",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fushe Kosove",
+                      "Fushë Kosovë",
+                      "Komuna e Fushe Kosoves"
+                    ],
+                    "lat": 42.62083,
+                    "lon": 21.03972,
+                    "children": [
+                      {
+                        "name": "Kosovo Polje",
+                        "type": "admin3",
+                        "lat": 42.66394,
+                        "lon": 21.09611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lipjan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Lipjanit",
+                      "Komuna e Lypianit",
+                      "Lipjan"
+                    ],
+                    "lat": 42.5,
+                    "lon": 21.11667,
+                    "children": [
+                      {
+                        "name": "Lipljan",
+                        "type": "admin3",
+                        "lat": 42.52167,
+                        "lon": 21.12583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Novo Brdo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Artane",
+                      "Artanë",
+                      "Komuna e Artanes"
+                    ],
+                    "lat": 42.56667,
+                    "lon": 21.4,
+                    "children": [
+                      {
+                        "name": "Novo Brdo",
+                        "type": "admin3",
+                        "lat": 42.6159,
+                        "lon": 21.43405
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Podujevo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Besianes",
+                      "Komuna e Besianës",
+                      "Komuna e Podujeves"
+                    ],
+                    "lat": 42.9,
+                    "lon": 21.2,
+                    "children": [
+                      {
+                        "name": "Podujeva",
+                        "type": "admin3",
+                        "lat": 42.91056,
+                        "lon": 21.19306
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Prizren District",
+                "type": "admin1",
+                "aliases": [
+                  "Prizren",
+                  "Prizren District",
+                  "Prizrenski okrug",
+                  "Rajoni i Prizrenit"
+                ],
+                "lat": 42.27961,
+                "lon": 20.741484,
+                "children": [
+                  {
+                    "name": "Komuna e Dragashit",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dragash",
+                      "Dragashit",
+                      "Komuna e Dragashit"
+                    ],
+                    "lat": 42,
+                    "lon": 20.65,
+                    "children": [
+                      {
+                        "name": "Dragash",
+                        "type": "admin3",
+                        "lat": 42.0265,
+                        "lon": 20.65333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Malisheves",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Malasit",
+                      "Malisheve",
+                      "Malisheves"
+                    ],
+                    "lat": 42.48861,
+                    "lon": 20.74667,
+                    "children": [
+                      {
+                        "name": "Llazicë",
+                        "type": "admin3",
+                        "lat": 42.55528,
+                        "lon": 20.76333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Mamushës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Mamushes",
+                      "Komuna e Mamushës",
+                      "Mamusa"
+                    ],
+                    "lat": 42.32611,
+                    "lon": 20.72742,
+                    "children": [
+                      {
+                        "name": "Mamuša",
+                        "type": "admin3",
+                        "lat": 42.33083,
+                        "lon": 20.72694
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Komuna e Thërandës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Therandes",
+                      "Komuna e Therandës",
+                      "Suhareke"
+                    ],
+                    "lat": 42.35,
+                    "lon": 20.85,
+                    "children": [
+                      {
+                        "name": "Suva Reka",
+                        "type": "admin3",
+                        "lat": 42.35861,
+                        "lon": 20.825
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Prizren",
+                    "type": "admin2",
+                    "aliases": [
+                      "Komuna e Prizrenit",
+                      "Opshtina Prizren",
+                      "Opstina Prizren"
+                    ],
+                    "lat": 42.23333,
+                    "lon": 20.73333,
+                    "children": [
+                      {
+                        "name": "Prizren",
+                        "type": "admin3",
+                        "lat": 42.21389,
+                        "lon": 20.73972
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

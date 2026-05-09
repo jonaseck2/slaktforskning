@@ -46,6 +46,10 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   // Tier 2 Western Europe
   'at-bezirke', 'ch-cantons', 'it-province', 'es-provincias', 'pt-distritos',
   'mt-localities', 'sm-castelli', 'li-gemeinden', 'ad-parroquies', 'mc-quartiers',
+  // Tier 2 Central Europe
+  'cz-okresy', 'sk-okresy', 'hu-jarasok', 'si-obcine', 'hr-zupanije',
+  'ba-opstine', 'rs-okruzi', 'me-opstine', 'mk-opstini', 'al-bashkite',
+  'xk-komunat', 'lu-communes',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -173,6 +177,19 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'li-gemeinden': { stripSuffixes: ['wahlkreis', 'gemeinde'] },
   'ad-parroquies': { stripSuffixes: ['parròquia'], stripPrefixes: ['parròquia de'] },
   'mc-quartiers': { stripSuffixes: ['quartier'] },
+  // Tier 2 Central Europe
+  'cz-okresy': { stripSuffixes: ['kraj', 'okres', 'obec', 'město'], stripPrefixes: ['hlavní město', 'okres'] },
+  'sk-okresy': { stripSuffixes: ['kraj', 'okres', 'obec', 'mesto'], stripPrefixes: ['hlavné mesto', 'okres'] },
+  'hu-jarasok': { stripSuffixes: ['megye', 'járás', 'város', 'község', 'kerület'], stripPrefixes: ['vármegye'] },
+  'si-obcine': { stripSuffixes: ['občina', 'mestna občina', 'statistična regija'], stripPrefixes: ['mestna občina', 'občina'] },
+  'hr-zupanije': { stripSuffixes: ['županija', 'općina', 'grad', 'naselje'], stripPrefixes: ['grad', 'općina'] },
+  'ba-opstine': { stripSuffixes: ['kanton', 'općina', 'opština', 'grad'], stripPrefixes: ['federacija', 'republika', 'grad'] },
+  'rs-okruzi': { stripSuffixes: ['okrug', 'opština', 'grad', 'округ', 'општина', 'град'] },
+  'me-opstine': { stripSuffixes: ['opština', 'glavni grad'] },
+  'mk-opstini': { stripSuffixes: ['општина', 'opština', 'регион', 'region'] },
+  'al-bashkite': { stripSuffixes: ['qark', 'bashki', 'njësia administrative'] },
+  'xk-komunat': { stripSuffixes: ['komuna', 'distrikti'] },
+  'lu-communes': { stripSuffixes: ['canton', 'commune', 'ville', 'district'], stripPrefixes: ['canton de', 'commune de', 'ville de', 'district de'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

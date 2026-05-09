@@ -1,0 +1,1491 @@
+{
+  "id": "lu-communes",
+  "name": "Luxembourg Districts + Cantons",
+  "locale": "lu",
+  "description": "Luxembourg: 12 cantons (admin1, ex-districts abolished 2015) + 105 communes (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/LU.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Luxembourg",
+            "type": "country",
+            "aliases": [
+              "Lëtzebuerg",
+              "Letzebuerg",
+              "Luxemburg"
+            ],
+            "lat": 49.8,
+            "lon": 6.1,
+            "children": [
+              {
+                "name": "Canton d'Echternach",
+                "type": "admin1",
+                "aliases": [
+                  "Canton d'Echternach",
+                  "Echternach",
+                  "Ekhternakh",
+                  "Externalax"
+                ],
+                "lat": 49.789308,
+                "lon": 6.377698,
+                "children": [
+                  {
+                    "name": "Beaufort",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bafor",
+                      "Beefort",
+                      "Befort"
+                    ],
+                    "lat": 49.83583,
+                    "lon": 6.29167,
+                    "children": []
+                  },
+                  {
+                    "name": "Bech",
+                    "type": "admin2",
+                    "lat": 49.74611,
+                    "lon": 6.36361,
+                    "children": []
+                  },
+                  {
+                    "name": "Berdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baeerdref",
+                      "Bäerdref"
+                    ],
+                    "lat": 49.81361,
+                    "lon": 6.35028,
+                    "children": []
+                  },
+                  {
+                    "name": "Consdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Konsdref"
+                    ],
+                    "lat": 49.77306,
+                    "lon": 6.33833,
+                    "children": []
+                  },
+                  {
+                    "name": "Echternach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Eechternoach",
+                      "Iechternach"
+                    ],
+                    "lat": 49.81307,
+                    "lon": 6.42185,
+                    "children": []
+                  },
+                  {
+                    "name": "Mompach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mompech"
+                    ],
+                    "lat": 49.74611,
+                    "lon": 6.465,
+                    "children": []
+                  },
+                  {
+                    "name": "Rosport",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Rouspert",
+                      "Rospor",
+                      "Rosport"
+                    ],
+                    "lat": 49.79778,
+                    "lon": 6.50417,
+                    "children": []
+                  },
+                  {
+                    "name": "Waldbillig",
+                    "type": "admin2",
+                    "aliases": [
+                      "Belleg",
+                      "Bëlleg",
+                      "Waldbelleg"
+                    ],
+                    "lat": 49.78889,
+                    "lon": 6.28667,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Canton d'Esch-sur-Alzette",
+                "type": "admin1",
+                "aliases": [
+                  "Es-sur-Alzet",
+                  "Esch",
+                  "Esch-sur-Alzette",
+                  "Esh-sjur-Al'zet"
+                ],
+                "lat": 49.519469,
+                "lon": 6.020523,
+                "children": [
+                  {
+                    "name": "Bettembourg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beetebuerg",
+                      "Bettembourg",
+                      "Bettemburg"
+                    ],
+                    "lat": 49.52345,
+                    "lon": 6.08307,
+                    "children": [
+                      {
+                        "name": "Bettembourg",
+                        "type": "admin3",
+                        "lat": 49.51861,
+                        "lon": 6.10278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Differdange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Deifferdang",
+                      "Differdange",
+                      "Differdingen"
+                    ],
+                    "lat": 49.52167,
+                    "lon": 5.88288,
+                    "children": [
+                      {
+                        "name": "Differdange",
+                        "type": "admin3",
+                        "lat": 49.52417,
+                        "lon": 5.89139
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dudelange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Diddeleng",
+                      "Dudelange",
+                      "Dudelingen"
+                    ],
+                    "lat": 49.48084,
+                    "lon": 6.08773,
+                    "children": [
+                      {
+                        "name": "Dudelange",
+                        "type": "admin3",
+                        "lat": 49.48056,
+                        "lon": 6.0875
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Esch-sur-Alzette",
+                    "type": "admin2",
+                    "lat": 49.49583,
+                    "lon": 5.98056,
+                    "children": [
+                      {
+                        "name": "Esch-sur-Alzette",
+                        "type": "admin3",
+                        "lat": 49.49583,
+                        "lon": 5.98056
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Frisange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Freiseng",
+                      "Frisingen",
+                      "Frizanzh"
+                    ],
+                    "lat": 49.515,
+                    "lon": 6.19167,
+                    "children": []
+                  },
+                  {
+                    "name": "Kayl",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Kayl",
+                      "Gemeinde Kayl",
+                      "Gemeng Kal"
+                    ],
+                    "lat": 49.47912,
+                    "lon": 6.031,
+                    "children": []
+                  },
+                  {
+                    "name": "Leudelange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Leideleng",
+                      "Leudelingen"
+                    ],
+                    "lat": 49.56833,
+                    "lon": 6.06528,
+                    "children": []
+                  },
+                  {
+                    "name": "Mondercange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Monnerech",
+                      "Mandehrkanzh",
+                      "Monderkanzas"
+                    ],
+                    "lat": 49.53306,
+                    "lon": 5.98833,
+                    "children": []
+                  },
+                  {
+                    "name": "Pétange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Petange",
+                      "Commune de Pétange",
+                      "Gemeinde Petingen"
+                    ],
+                    "lat": 49.5505,
+                    "lon": 5.85533,
+                    "children": [
+                      {
+                        "name": "Pétange",
+                        "type": "admin3",
+                        "lat": 49.55833,
+                        "lon": 5.88056
+                      },
+                      {
+                        "name": "Rodange",
+                        "type": "admin3",
+                        "lat": 49.54639,
+                        "lon": 5.84083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Reckange-sur-Mess",
+                    "type": "admin2",
+                    "aliases": [
+                      "Reckeng op der Mess"
+                    ],
+                    "lat": 49.5625,
+                    "lon": 6.00889,
+                    "children": []
+                  },
+                  {
+                    "name": "Roeser",
+                    "type": "admin2",
+                    "aliases": [
+                      "Reiser",
+                      "Réiser"
+                    ],
+                    "lat": 49.54222,
+                    "lon": 6.15,
+                    "children": []
+                  },
+                  {
+                    "name": "Rumelange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeinde Rumelingen",
+                      "Gemeinde Rümelingen",
+                      "Gemeng Remeleng"
+                    ],
+                    "lat": 49.46137,
+                    "lon": 6.01139,
+                    "children": []
+                  },
+                  {
+                    "name": "Sanem",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Sanem",
+                      "Gemeinde Sassenheim",
+                      "Gemeng Suessem"
+                    ],
+                    "lat": 49.53312,
+                    "lon": 5.9363,
+                    "children": [
+                      {
+                        "name": "Belvaux",
+                        "type": "admin3",
+                        "lat": 49.51014,
+                        "lon": 5.92414
+                      },
+                      {
+                        "name": "Soleuvre",
+                        "type": "admin3",
+                        "lat": 49.52148,
+                        "lon": 5.93781
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Schifflange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Schifflange",
+                      "Gemeinde Schifflingen",
+                      "Gemeng Scheffleng"
+                    ],
+                    "lat": 49.50556,
+                    "lon": 6.01489,
+                    "children": [
+                      {
+                        "name": "Schifflange",
+                        "type": "admin3",
+                        "lat": 49.50639,
+                        "lon": 6.01278
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Capellen",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Capellen",
+                  "Capellen",
+                  "Kanton Capellen",
+                  "Kanton Kapellen"
+                ],
+                "lat": 49.646949,
+                "lon": 5.971808,
+                "children": [
+                  {
+                    "name": "Dippach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Dippakh",
+                      "Dippech",
+                      "Dzipakh"
+                    ],
+                    "lat": 49.58833,
+                    "lon": 5.98333,
+                    "children": []
+                  },
+                  {
+                    "name": "Garnich",
+                    "type": "admin2",
+                    "lat": 49.61667,
+                    "lon": 5.9525,
+                    "children": []
+                  },
+                  {
+                    "name": "Hobscheid",
+                    "type": "admin2",
+                    "aliases": [
+                      "Habscht"
+                    ],
+                    "lat": 49.68861,
+                    "lon": 5.91472,
+                    "children": []
+                  },
+                  {
+                    "name": "Käerjeng",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Kaerjeng",
+                      "Commune de Käerjeng",
+                      "Gemeinde Kaerjeng"
+                    ],
+                    "lat": 49.58311,
+                    "lon": 5.89892,
+                    "children": []
+                  },
+                  {
+                    "name": "Kehlen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Kielen",
+                      "Kelen",
+                      "Kielen"
+                    ],
+                    "lat": 49.66833,
+                    "lon": 6.03583,
+                    "children": []
+                  },
+                  {
+                    "name": "Koerich",
+                    "type": "admin2",
+                    "aliases": [
+                      "Kaeerch",
+                      "Käerch"
+                    ],
+                    "lat": 49.67,
+                    "lon": 5.95,
+                    "children": []
+                  },
+                  {
+                    "name": "Kopstal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Koplescht"
+                    ],
+                    "lat": 49.66444,
+                    "lon": 6.07306,
+                    "children": []
+                  },
+                  {
+                    "name": "Mamer",
+                    "type": "admin2",
+                    "lat": 49.6275,
+                    "lon": 6.02333,
+                    "children": [
+                      {
+                        "name": "Mamer",
+                        "type": "admin3",
+                        "lat": 49.6275,
+                        "lon": 6.02333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Septfontaines",
+                    "type": "admin2",
+                    "aliases": [
+                      "Simmer",
+                      "Simmern"
+                    ],
+                    "lat": 49.70111,
+                    "lon": 5.96722,
+                    "children": []
+                  },
+                  {
+                    "name": "Steinfort",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Stengefort",
+                      "Shtajnfort",
+                      "Steinfortas"
+                    ],
+                    "lat": 49.66139,
+                    "lon": 5.91917,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Clervaux",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Clervaux",
+                  "Clerf",
+                  "Clervaux",
+                  "Kanton Clerf"
+                ],
+                "lat": 50.077296,
+                "lon": 6.023648,
+                "children": [
+                  {
+                    "name": "Clervaux",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Clervaux",
+                      "Canton de Clervaux",
+                      "Cantone di Clervaux"
+                    ],
+                    "lat": 50.05472,
+                    "lon": 6.03139,
+                    "children": []
+                  },
+                  {
+                    "name": "Parc Hosingen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Parc Housen"
+                    ],
+                    "lat": 49.99744,
+                    "lon": 6.09067,
+                    "children": []
+                  },
+                  {
+                    "name": "Troisvierges",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Troisvierges",
+                      "Elwen",
+                      "Gemeinde Ulflingen"
+                    ],
+                    "lat": 50.14377,
+                    "lon": 6.00201,
+                    "children": []
+                  },
+                  {
+                    "name": "Weiswampach",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Waeisswampech",
+                      "Gemeng Wäisswampech",
+                      "Vajsvampakh"
+                    ],
+                    "lat": 50.13722,
+                    "lon": 6.075,
+                    "children": []
+                  },
+                  {
+                    "name": "Wincrange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Wentger",
+                      "Wintger",
+                      "Wëntger"
+                    ],
+                    "lat": 50.05333,
+                    "lon": 5.91917,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Diekirch",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Diekirch",
+                  "Diekirch",
+                  "Diekirx",
+                  "Dikirkh"
+                ],
+                "lat": 49.857438,
+                "lon": 6.12386,
+                "children": [
+                  {
+                    "name": "Bettendorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Betehndorf",
+                      "Bettendorf",
+                      "Bettenduerf"
+                    ],
+                    "lat": 49.87667,
+                    "lon": 6.21806,
+                    "children": []
+                  },
+                  {
+                    "name": "Bourscheid",
+                    "type": "admin2",
+                    "aliases": [
+                      "Buerschent",
+                      "Burscheid"
+                    ],
+                    "lat": 49.91,
+                    "lon": 6.06722,
+                    "children": []
+                  },
+                  {
+                    "name": "Commune de la Vallée de l'Ernz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Aerenzdallgemeng",
+                      "Arenzdallgemeng",
+                      "Commune de la Vallee de l'Ernz"
+                    ],
+                    "lat": 49.82149,
+                    "lon": 6.21746,
+                    "children": []
+                  },
+                  {
+                    "name": "Diekirch",
+                    "type": "admin2",
+                    "aliases": [
+                      "Diekirch",
+                      "Dikrech",
+                      "Dikrich"
+                    ],
+                    "lat": 49.87279,
+                    "lon": 6.14921,
+                    "children": [
+                      {
+                        "name": "Diekirch",
+                        "type": "admin3",
+                        "lat": 49.86687,
+                        "lon": 6.15451
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Erpeldange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Erpeldingen an der Sauer",
+                      "Lerpeldeng op der Sauer"
+                    ],
+                    "lat": 49.86472,
+                    "lon": 6.11472,
+                    "children": []
+                  },
+                  {
+                    "name": "Ettelbruck",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ettelbreck",
+                      "Ettelbruck",
+                      "Ettelbréck"
+                    ],
+                    "lat": 49.84565,
+                    "lon": 6.08137,
+                    "children": [
+                      {
+                        "name": "Ettelbruck",
+                        "type": "admin3",
+                        "lat": 49.8475,
+                        "lon": 6.10417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Feulen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Feelen"
+                    ],
+                    "lat": 49.85,
+                    "lon": 6.01667,
+                    "children": []
+                  },
+                  {
+                    "name": "Mertzig",
+                    "type": "admin2",
+                    "aliases": [
+                      "Maeerzeg",
+                      "Mäerzeg"
+                    ],
+                    "lat": 49.83389,
+                    "lon": 6.0075,
+                    "children": []
+                  },
+                  {
+                    "name": "Reisdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Reisduerf",
+                      "Rajsdorf",
+                      "Reisduerf"
+                    ],
+                    "lat": 49.86861,
+                    "lon": 6.26778,
+                    "children": []
+                  },
+                  {
+                    "name": "Schieren",
+                    "type": "admin2",
+                    "lat": 49.83056,
+                    "lon": 6.09861,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Grevenmacher",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Grevenmacher",
+                  "Greiwemaacher",
+                  "Grevenmacher",
+                  "Grevenmakher"
+                ],
+                "lat": 49.68067,
+                "lon": 6.380776,
+                "children": [
+                  {
+                    "name": "Betzdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Betzder"
+                    ],
+                    "lat": 49.68333,
+                    "lon": 6.35,
+                    "children": []
+                  },
+                  {
+                    "name": "Biwer",
+                    "type": "admin2",
+                    "lat": 49.70278,
+                    "lon": 6.37472,
+                    "children": []
+                  },
+                  {
+                    "name": "Flaxweiler",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fluessweiler"
+                    ],
+                    "lat": 49.66167,
+                    "lon": 6.34361,
+                    "children": []
+                  },
+                  {
+                    "name": "Grevenmacher",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Grevenmacher",
+                      "Canton de Grevenmacher",
+                      "Cantone di Grevenmacher"
+                    ],
+                    "lat": 49.67459,
+                    "lon": 6.41269,
+                    "children": [
+                      {
+                        "name": "Grevenmacher",
+                        "type": "admin3",
+                        "lat": 49.67751,
+                        "lon": 6.44022
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Junglinster",
+                    "type": "admin2",
+                    "aliases": [
+                      "Jonglenster",
+                      "Jonglënster"
+                    ],
+                    "lat": 49.70722,
+                    "lon": 6.25306,
+                    "children": []
+                  },
+                  {
+                    "name": "Manternach",
+                    "type": "admin2",
+                    "lat": 49.70278,
+                    "lon": 6.42639,
+                    "children": []
+                  },
+                  {
+                    "name": "Mertert",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Maeertert",
+                      "Gemeng Mäertert",
+                      "Maeertert"
+                    ],
+                    "lat": 49.701,
+                    "lon": 6.48043,
+                    "children": []
+                  },
+                  {
+                    "name": "Wormeldange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Wuermeldeng",
+                      "Vormel'danzh",
+                      "Vormeldanzas"
+                    ],
+                    "lat": 49.61199,
+                    "lon": 6.40531,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Luxembourg",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Luxembourg",
+                  "Canton de Luxembourg-Campagne",
+                  "Kanton Letzebuerg",
+                  "Kanton Luxemburg"
+                ],
+                "lat": 49.613496,
+                "lon": 6.167534,
+                "children": [
+                  {
+                    "name": "Bertrange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bartreng"
+                    ],
+                    "lat": 49.61111,
+                    "lon": 6.05,
+                    "children": [
+                      {
+                        "name": "Bertrange",
+                        "type": "admin3",
+                        "lat": 49.61111,
+                        "lon": 6.05
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Contern",
+                    "type": "admin2",
+                    "lat": 49.58194,
+                    "lon": 6.22667,
+                    "children": []
+                  },
+                  {
+                    "name": "Hesperange",
+                    "type": "admin2",
+                    "lat": 49.56806,
+                    "lon": 6.15139,
+                    "children": [
+                      {
+                        "name": "Howald",
+                        "type": "admin3",
+                        "lat": 49.58387,
+                        "lon": 6.14277
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Niederanven",
+                    "type": "admin2",
+                    "aliases": [
+                      "Nidderaanwen",
+                      "Niederanwen"
+                    ],
+                    "lat": 49.6475,
+                    "lon": 6.26,
+                    "children": []
+                  },
+                  {
+                    "name": "Sandweiler",
+                    "type": "admin2",
+                    "lat": 49.61333,
+                    "lon": 6.21889,
+                    "children": []
+                  },
+                  {
+                    "name": "Schuttrange",
+                    "type": "admin2",
+                    "lat": 49.62056,
+                    "lon": 6.26861,
+                    "children": []
+                  },
+                  {
+                    "name": "Steinsel",
+                    "type": "admin2",
+                    "lat": 49.67694,
+                    "lon": 6.12389,
+                    "children": []
+                  },
+                  {
+                    "name": "Strassen",
+                    "type": "admin2",
+                    "lat": 49.62056,
+                    "lon": 6.07333,
+                    "children": [
+                      {
+                        "name": "Strassen",
+                        "type": "admin3",
+                        "lat": 49.62056,
+                        "lon": 6.07333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ville de Luxembourg",
+                    "type": "admin2",
+                    "aliases": [
+                      "Letzebuerg",
+                      "Luxembourg",
+                      "Luxemburg"
+                    ],
+                    "lat": 49.6093,
+                    "lon": 6.13204,
+                    "children": [
+                      {
+                        "name": "Belair",
+                        "type": "admin3",
+                        "lat": 49.6116,
+                        "lon": 6.10682
+                      },
+                      {
+                        "name": "Bonnevoie-Sud",
+                        "type": "admin3",
+                        "lat": 49.59679,
+                        "lon": 6.14719
+                      },
+                      {
+                        "name": "Cents",
+                        "type": "admin3",
+                        "lat": 49.61707,
+                        "lon": 6.16413
+                      },
+                      {
+                        "name": "Cessange",
+                        "type": "admin3",
+                        "lat": 49.58944,
+                        "lon": 6.10694
+                      },
+                      {
+                        "name": "Gare",
+                        "type": "admin3",
+                        "lat": 49.60175,
+                        "lon": 6.12971
+                      },
+                      {
+                        "name": "Gasperich",
+                        "type": "admin3",
+                        "lat": 49.58556,
+                        "lon": 6.12306
+                      },
+                      {
+                        "name": "Hollerich",
+                        "type": "admin3",
+                        "lat": 49.60314,
+                        "lon": 6.11423
+                      },
+                      {
+                        "name": "Kirchberg",
+                        "type": "admin3",
+                        "lat": 49.62389,
+                        "lon": 6.14944
+                      },
+                      {
+                        "name": "Limpertsberg",
+                        "type": "admin3",
+                        "lat": 49.62083,
+                        "lon": 6.12167
+                      },
+                      {
+                        "name": "Luxembourg",
+                        "type": "admin3",
+                        "lat": 49.60982,
+                        "lon": 6.13268
+                      },
+                      {
+                        "name": "Merl",
+                        "type": "admin3",
+                        "lat": 49.60333,
+                        "lon": 6.09556
+                      },
+                      {
+                        "name": "Neudorf-Weimershof",
+                        "type": "admin3",
+                        "lat": 49.6256,
+                        "lon": 6.16926
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Walferdange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Walfer",
+                      "Val'ferdanzh",
+                      "Walfer"
+                    ],
+                    "lat": 49.65833,
+                    "lon": 6.13722,
+                    "children": [
+                      {
+                        "name": "Walferdange",
+                        "type": "admin3",
+                        "lat": 49.66321,
+                        "lon": 6.13224
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Weiler-la-Tour",
+                    "type": "admin2",
+                    "lat": 49.54083,
+                    "lon": 6.20083,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Mersch",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Mersch",
+                  "Kanton Mersch",
+                  "Kanton Miersch",
+                  "Mers"
+                ],
+                "lat": 49.757048,
+                "lon": 6.126163,
+                "children": [
+                  {
+                    "name": "Berg",
+                    "type": "admin2",
+                    "lat": 49.81361,
+                    "lon": 6.08917,
+                    "children": []
+                  },
+                  {
+                    "name": "Bissen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Biissen"
+                    ],
+                    "lat": 49.7875,
+                    "lon": 6.06944,
+                    "children": []
+                  },
+                  {
+                    "name": "Boevange-sur-Attert",
+                    "type": "admin2",
+                    "aliases": [
+                      "Beiwen-Atert",
+                      "Bevanzh-sjur-Atehr",
+                      "Bevanzh-sjur-Attert"
+                    ],
+                    "lat": 49.77528,
+                    "lon": 6.01556,
+                    "children": []
+                  },
+                  {
+                    "name": "Fischbach",
+                    "type": "admin2",
+                    "lat": 49.73972,
+                    "lon": 6.18722,
+                    "children": []
+                  },
+                  {
+                    "name": "Heffingen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Hiefenech"
+                    ],
+                    "lat": 49.7625,
+                    "lon": 6.24139,
+                    "children": []
+                  },
+                  {
+                    "name": "Larochette",
+                    "type": "admin2",
+                    "lat": 49.78476,
+                    "lon": 6.21779,
+                    "children": []
+                  },
+                  {
+                    "name": "Lintgen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lentgen",
+                      "Lëntgen"
+                    ],
+                    "lat": 49.71583,
+                    "lon": 6.13361,
+                    "children": []
+                  },
+                  {
+                    "name": "Lorentzweiler",
+                    "type": "admin2",
+                    "aliases": [
+                      "Luerenzweiler"
+                    ],
+                    "lat": 49.69472,
+                    "lon": 6.1425,
+                    "children": []
+                  },
+                  {
+                    "name": "Mersch",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Mersch",
+                      "Canton de Mersch",
+                      "Cantone di Mersch"
+                    ],
+                    "lat": 49.74889,
+                    "lon": 6.10611,
+                    "children": []
+                  },
+                  {
+                    "name": "Nommern",
+                    "type": "admin2",
+                    "aliases": [
+                      "Noumer"
+                    ],
+                    "lat": 49.78694,
+                    "lon": 6.17472,
+                    "children": []
+                  },
+                  {
+                    "name": "Tuntange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Tenten",
+                      "Tuentingen",
+                      "Tënten"
+                    ],
+                    "lat": 49.71778,
+                    "lon": 6.01028,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Redange",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Redange",
+                  "Kanton Redange",
+                  "Kanton Redingen",
+                  "Redange"
+                ],
+                "lat": 49.785643,
+                "lon": 5.925548,
+                "children": [
+                  {
+                    "name": "Beckerich",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bekerikh",
+                      "Bekerykh",
+                      "Bekkerikh"
+                    ],
+                    "lat": 49.73056,
+                    "lon": 5.88722,
+                    "children": []
+                  },
+                  {
+                    "name": "Commune de Préizerdaul",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bettborn",
+                      "Commune de Bettborn",
+                      "Commune de Preizerdaul"
+                    ],
+                    "lat": 49.80114,
+                    "lon": 5.93299,
+                    "children": []
+                  },
+                  {
+                    "name": "Ell",
+                    "type": "admin2",
+                    "aliases": [
+                      "Ehl'",
+                      "Ehll'",
+                      "Ell'"
+                    ],
+                    "lat": 49.76389,
+                    "lon": 5.85722,
+                    "children": []
+                  },
+                  {
+                    "name": "Grosbous",
+                    "type": "admin2",
+                    "lat": 49.82778,
+                    "lon": 5.96722,
+                    "children": []
+                  },
+                  {
+                    "name": "Rambrouch",
+                    "type": "admin2",
+                    "aliases": [
+                      "Rambruch",
+                      "Rammerech",
+                      "Rammerich"
+                    ],
+                    "lat": 49.83083,
+                    "lon": 5.845,
+                    "children": []
+                  },
+                  {
+                    "name": "Redange-sur-Attert",
+                    "type": "admin2",
+                    "lat": 49.76556,
+                    "lon": 5.89083,
+                    "children": []
+                  },
+                  {
+                    "name": "Saeul",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Sell",
+                      "Gemeng Sëll",
+                      "Saehl'"
+                    ],
+                    "lat": 49.72722,
+                    "lon": 5.98639,
+                    "children": []
+                  },
+                  {
+                    "name": "Useldange",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Useldeng",
+                      "Jusel'danzh",
+                      "Juzel'danzh"
+                    ],
+                    "lat": 49.76972,
+                    "lon": 5.98222,
+                    "children": []
+                  },
+                  {
+                    "name": "Vichten",
+                    "type": "admin2",
+                    "aliases": [
+                      "Viichten"
+                    ],
+                    "lat": 49.80306,
+                    "lon": 6,
+                    "children": []
+                  },
+                  {
+                    "name": "Wahl",
+                    "type": "admin2",
+                    "aliases": [
+                      "Wal"
+                    ],
+                    "lat": 49.83667,
+                    "lon": 5.90639,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Remich",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Remich",
+                  "Kanton Reimech",
+                  "Kanton Remich",
+                  "Kanton Réimech"
+                ],
+                "lat": 49.543715,
+                "lon": 6.326076,
+                "children": [
+                  {
+                    "name": "Bous",
+                    "type": "admin2",
+                    "lat": 49.55389,
+                    "lon": 6.32917,
+                    "children": []
+                  },
+                  {
+                    "name": "Dalheim",
+                    "type": "admin2",
+                    "lat": 49.54083,
+                    "lon": 6.25972,
+                    "children": []
+                  },
+                  {
+                    "name": "Lenningen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Lenneng"
+                    ],
+                    "lat": 49.59861,
+                    "lon": 6.36806,
+                    "children": []
+                  },
+                  {
+                    "name": "Mondorf-les-Bains",
+                    "type": "admin2",
+                    "lat": 49.505,
+                    "lon": 6.28111,
+                    "children": []
+                  },
+                  {
+                    "name": "Remich",
+                    "type": "admin2",
+                    "lat": 49.545,
+                    "lon": 6.36694,
+                    "children": []
+                  },
+                  {
+                    "name": "Schengen",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Schengen",
+                      "Gemeinde Schengen",
+                      "Gemeng Schengen"
+                    ],
+                    "lat": 49.48861,
+                    "lon": 6.35167,
+                    "children": [
+                      {
+                        "name": "Schengen",
+                        "type": "admin3",
+                        "lat": 49.47,
+                        "lon": 6.362
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Stadtbredimus",
+                    "type": "admin2",
+                    "aliases": [
+                      "Stadbriedemes"
+                    ],
+                    "lat": 49.56278,
+                    "lon": 6.36444,
+                    "children": []
+                  },
+                  {
+                    "name": "Waldbredimus",
+                    "type": "admin2",
+                    "aliases": [
+                      "Waldbriedemes"
+                    ],
+                    "lat": 49.555,
+                    "lon": 6.2875,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Vianden",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Vianden",
+                  "Kanton Veianen",
+                  "Kanton Vianden",
+                  "Veianen"
+                ],
+                "lat": 49.93713,
+                "lon": 6.182687,
+                "children": [
+                  {
+                    "name": "Putscheid",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Petscht",
+                      "Gemeng Pëtscht",
+                      "Petscht"
+                    ],
+                    "lat": 49.96083,
+                    "lon": 6.14306,
+                    "children": []
+                  },
+                  {
+                    "name": "Tandel",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Tandel",
+                      "Tandel'",
+                      "tandl"
+                    ],
+                    "lat": 49.91556,
+                    "lon": 6.19611,
+                    "children": []
+                  },
+                  {
+                    "name": "Vianden",
+                    "type": "admin2",
+                    "lat": 49.935,
+                    "lon": 6.20889,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Wiltz",
+                "type": "admin1",
+                "aliases": [
+                  "Canton de Wiltz",
+                  "Kanton Wiltz",
+                  "Kanton Wolz",
+                  "Vil'c"
+                ],
+                "lat": 49.937503,
+                "lon": 5.91316,
+                "children": [
+                  {
+                    "name": "Boulaide",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bauschelt",
+                      "Bauschleiden"
+                    ],
+                    "lat": 49.88778,
+                    "lon": 5.81639,
+                    "children": []
+                  },
+                  {
+                    "name": "Esch-sur-Sûre",
+                    "type": "admin2",
+                    "lat": 49.91139,
+                    "lon": 5.93639,
+                    "children": []
+                  },
+                  {
+                    "name": "Goesdorf",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Goesdorf",
+                      "Geisdref",
+                      "Gemeinde Goesdorf"
+                    ],
+                    "lat": 49.92167,
+                    "lon": 5.96833,
+                    "children": []
+                  },
+                  {
+                    "name": "Kiischpelt",
+                    "type": "admin2",
+                    "aliases": [
+                      "Commune de Kiischpelt",
+                      "Gemeinde Kiischpelt",
+                      "Gemeng Kiischpelt"
+                    ],
+                    "lat": 49.97835,
+                    "lon": 6.0076,
+                    "children": []
+                  },
+                  {
+                    "name": "Lac de la Haute-Sûre",
+                    "type": "admin2",
+                    "aliases": [
+                      "Gemeng Lac de la Haute-Sure",
+                      "Gemeng Lac de la Haute-Sûre",
+                      "Lak-de-la-Ot-Sjur"
+                    ],
+                    "lat": 49.91667,
+                    "lon": 5.83333,
+                    "children": []
+                  },
+                  {
+                    "name": "Wiltz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canto de Wiltz",
+                      "Canton de Wiltz",
+                      "Cantone di Wiltz"
+                    ],
+                    "lat": 49.97888,
+                    "lon": 5.9398,
+                    "children": []
+                  },
+                  {
+                    "name": "Winseler",
+                    "type": "admin2",
+                    "aliases": [
+                      "Wanseler"
+                    ],
+                    "lat": 49.96778,
+                    "lon": 5.89028,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

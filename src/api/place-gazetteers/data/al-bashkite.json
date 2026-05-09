@@ -1,0 +1,1309 @@
+{
+  "id": "al-bashkite",
+  "name": "Albania Qarqe + Bashkite",
+  "locale": "al",
+  "description": "Albania: 12 qarqe (admin1) + 61 bashkite (admin2) + populated places ≥5000 pop.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/AL.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥5000 pop + A/ADM1/ADM2."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Albania",
+            "type": "country",
+            "aliases": [
+              "Shqipëria",
+              "Republika e Shqipërisë"
+            ],
+            "lat": 41.2,
+            "lon": 20,
+            "children": [
+              {
+                "name": "Qarku i Beratit",
+                "type": "admin1",
+                "aliases": [
+                  "AL031",
+                  "Berat",
+                  "Berat County",
+                  "Berat okrugi"
+                ],
+                "lat": 40.687482,
+                "lon": 20.002732,
+                "children": [
+                  {
+                    "name": "Bashkia Berat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Berat"
+                    ],
+                    "lat": 40.69997,
+                    "lon": 19.94983,
+                    "children": [
+                      {
+                        "name": "Berat",
+                        "type": "admin3",
+                        "lat": 40.70583,
+                        "lon": 19.95222
+                      },
+                      {
+                        "name": "Otllak",
+                        "type": "admin3",
+                        "lat": 40.74389,
+                        "lon": 19.93528
+                      },
+                      {
+                        "name": "Ura Vajgurore",
+                        "type": "admin3",
+                        "lat": 40.76889,
+                        "lon": 19.87778
+                      },
+                      {
+                        "name": "Velabisht",
+                        "type": "admin3",
+                        "lat": 40.70167,
+                        "lon": 19.93222
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Kuçovë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kucove",
+                      "Bashkia Kuçovë"
+                    ],
+                    "lat": 40.82489,
+                    "lon": 19.9535,
+                    "children": [
+                      {
+                        "name": "Kozarë",
+                        "type": "admin3",
+                        "lat": 40.83083,
+                        "lon": 19.90056
+                      },
+                      {
+                        "name": "Kuçovë",
+                        "type": "admin3",
+                        "lat": 40.80028,
+                        "lon": 19.91667
+                      },
+                      {
+                        "name": "Perondi",
+                        "type": "admin3",
+                        "lat": 40.77889,
+                        "lon": 19.92306
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Poliçan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Polican",
+                      "Bashkia Poliçan"
+                    ],
+                    "lat": 40.58608,
+                    "lon": 20.04535,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Skrapar",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Skrapar"
+                    ],
+                    "lat": 40.56036,
+                    "lon": 20.25477,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Ura Vajgurore",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Ura Vajgurore"
+                    ],
+                    "lat": 40.76611,
+                    "lon": 19.81021,
+                    "children": [
+                      {
+                        "name": "Kutalli",
+                        "type": "admin3",
+                        "lat": 40.78389,
+                        "lon": 19.78667
+                      },
+                      {
+                        "name": "Poshnjë",
+                        "type": "admin3",
+                        "lat": 40.78028,
+                        "lon": 19.84417
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Dibrës",
+                "type": "admin1",
+                "aliases": [
+                  "AL011",
+                  "Bezirk Diber",
+                  "Bezirk Dibër",
+                  "Comte de Diber"
+                ],
+                "lat": 41.581738,
+                "lon": 20.195065,
+                "children": [
+                  {
+                    "name": "Bashkia Bulqizë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Bulqize",
+                      "Bashkia Bulqizë"
+                    ],
+                    "lat": 41.47152,
+                    "lon": 20.33192,
+                    "children": [
+                      {
+                        "name": "Bulqizë",
+                        "type": "admin3",
+                        "lat": 41.49167,
+                        "lon": 20.22194
+                      },
+                      {
+                        "name": "Shupenzë",
+                        "type": "admin3",
+                        "lat": 41.53,
+                        "lon": 20.42361
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Dibër",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Diber",
+                      "Bashkia Dibër",
+                      "Opshtina Debar"
+                    ],
+                    "lat": 41.714,
+                    "lon": 20.36499,
+                    "children": [
+                      {
+                        "name": "Peshkopi",
+                        "type": "admin3",
+                        "lat": 41.685,
+                        "lon": 20.42858
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Klos",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Klos"
+                    ],
+                    "lat": 41.50826,
+                    "lon": 20.07107,
+                    "children": [
+                      {
+                        "name": "Klos",
+                        "type": "admin3",
+                        "lat": 41.50694,
+                        "lon": 20.08667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Mat",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Mat"
+                    ],
+                    "lat": 41.63317,
+                    "lon": 20.01228,
+                    "children": [
+                      {
+                        "name": "Burrel",
+                        "type": "admin3",
+                        "lat": 41.61028,
+                        "lon": 20.00889
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Durrësit",
+                "type": "admin1",
+                "aliases": [
+                  "AL012",
+                  "Bezirk Durres",
+                  "Bezirk Durrës",
+                  "Comte de Durres"
+                ],
+                "lat": 41.421307,
+                "lon": 19.600793,
+                "children": [
+                  {
+                    "name": "Bashkia Durrës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Durres",
+                      "Bashkia Durrës"
+                    ],
+                    "lat": 41.42743,
+                    "lon": 19.4869,
+                    "children": [
+                      {
+                        "name": "Durrës",
+                        "type": "admin3",
+                        "lat": 41.32355,
+                        "lon": 19.45469
+                      },
+                      {
+                        "name": "Manzë",
+                        "type": "admin3",
+                        "lat": 41.42861,
+                        "lon": 19.59306
+                      },
+                      {
+                        "name": "Sukth",
+                        "type": "admin3",
+                        "lat": 41.38056,
+                        "lon": 19.53778
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Krujë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kruje",
+                      "Bashkia Krujë"
+                    ],
+                    "lat": 41.50091,
+                    "lon": 19.72571,
+                    "children": [
+                      {
+                        "name": "Fushë-Krujë",
+                        "type": "admin3",
+                        "lat": 41.47833,
+                        "lon": 19.71778
+                      },
+                      {
+                        "name": "Krujë",
+                        "type": "admin3",
+                        "lat": 41.50917,
+                        "lon": 19.79278
+                      },
+                      {
+                        "name": "Nikël",
+                        "type": "admin3",
+                        "lat": 41.44417,
+                        "lon": 19.74833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Shijak",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Shijak"
+                    ],
+                    "lat": 41.33558,
+                    "lon": 19.58977,
+                    "children": [
+                      {
+                        "name": "Shijak",
+                        "type": "admin3",
+                        "lat": 41.34556,
+                        "lon": 19.56722
+                      },
+                      {
+                        "name": "Xhafzotaj",
+                        "type": "admin3",
+                        "lat": 41.34444,
+                        "lon": 19.5475
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Elbasanit",
+                "type": "admin1",
+                "aliases": [
+                  "AL021",
+                  "Bezirk Elbasan",
+                  "Comte d'Elbasan",
+                  "Comté d'Elbasan"
+                ],
+                "lat": 41.030636,
+                "lon": 20.116731,
+                "children": [
+                  {
+                    "name": "Bashkia Belsh",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Belsh"
+                    ],
+                    "lat": 40.93144,
+                    "lon": 19.88369,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Cërrik",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Cerrik",
+                      "Bashkia Cërrik"
+                    ],
+                    "lat": 40.97552,
+                    "lon": 19.99759,
+                    "children": [
+                      {
+                        "name": "Cërrik",
+                        "type": "admin3",
+                        "lat": 41.03167,
+                        "lon": 19.97583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Elbasan",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Elbasan"
+                    ],
+                    "lat": 41.10412,
+                    "lon": 20.09679,
+                    "children": [
+                      {
+                        "name": "Elbasan",
+                        "type": "admin3",
+                        "lat": 41.11138,
+                        "lon": 20.08224
+                      },
+                      {
+                        "name": "Papër",
+                        "type": "admin3",
+                        "lat": 41.05167,
+                        "lon": 19.96083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Gramsh",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Gramsh"
+                    ],
+                    "lat": 40.84694,
+                    "lon": 20.2364,
+                    "children": [
+                      {
+                        "name": "Gramsh",
+                        "type": "admin3",
+                        "lat": 40.86972,
+                        "lon": 20.18444
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Librazhd",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Librazhd"
+                    ],
+                    "lat": 41.22903,
+                    "lon": 20.35397,
+                    "children": [
+                      {
+                        "name": "Hotolisht",
+                        "type": "admin3",
+                        "lat": 41.15667,
+                        "lon": 20.39722
+                      },
+                      {
+                        "name": "Librazhd",
+                        "type": "admin3",
+                        "lat": 41.17944,
+                        "lon": 20.315
+                      },
+                      {
+                        "name": "Librazhd-Qendër",
+                        "type": "admin3",
+                        "lat": 41.19694,
+                        "lon": 20.33556
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Peqin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Peqin"
+                    ],
+                    "lat": 41.07105,
+                    "lon": 19.80654,
+                    "children": [
+                      {
+                        "name": "Peqin",
+                        "type": "admin3",
+                        "lat": 41.04611,
+                        "lon": 19.75111
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Prrenjas",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Prrenjas",
+                      "Opshtina Prenas",
+                      "Општина Прењас"
+                    ],
+                    "lat": 41.05635,
+                    "lon": 20.44214,
+                    "children": [
+                      {
+                        "name": "Përrenjas",
+                        "type": "admin3",
+                        "lat": 41.07306,
+                        "lon": 20.54889
+                      },
+                      {
+                        "name": "Rajcë",
+                        "type": "admin3",
+                        "lat": 41.09028,
+                        "lon": 20.57639
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Fierit",
+                "type": "admin1",
+                "aliases": [
+                  "AL032",
+                  "Bezirk Fier",
+                  "Comte de Fier",
+                  "Comté de Fier"
+                ],
+                "lat": 40.75876,
+                "lon": 19.646108,
+                "children": [
+                  {
+                    "name": "Bashkia Divjakë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Divjake",
+                      "Bashkia Divjakë"
+                    ],
+                    "lat": 40.95716,
+                    "lon": 19.52364,
+                    "children": [
+                      {
+                        "name": "Divjakë",
+                        "type": "admin3",
+                        "lat": 40.99667,
+                        "lon": 19.52944
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Fier",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Fier"
+                    ],
+                    "lat": 40.72937,
+                    "lon": 19.4869,
+                    "children": [
+                      {
+                        "name": "Fier",
+                        "type": "admin3",
+                        "lat": 40.7251,
+                        "lon": 19.55823
+                      },
+                      {
+                        "name": "Fier-Çifçi",
+                        "type": "admin3",
+                        "lat": 40.71667,
+                        "lon": 19.56667
+                      },
+                      {
+                        "name": "Zharrëz",
+                        "type": "admin3",
+                        "lat": 40.70917,
+                        "lon": 19.64972
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Lushnje",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Lushnje",
+                      "Bashkia Lushnjes",
+                      "Bashkia Lushnjë"
+                    ],
+                    "lat": 40.90939,
+                    "lon": 19.71469,
+                    "children": [
+                      {
+                        "name": "Golem",
+                        "type": "admin3",
+                        "lat": 40.96778,
+                        "lon": 19.68528
+                      },
+                      {
+                        "name": "Lushnjë",
+                        "type": "admin3",
+                        "lat": 40.94194,
+                        "lon": 19.705
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Mallakastër",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Mallakaster",
+                      "Bashkia Mallakastër"
+                    ],
+                    "lat": 40.55669,
+                    "lon": 19.77347,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Patos",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Patos"
+                    ],
+                    "lat": 40.67793,
+                    "lon": 19.65591,
+                    "children": [
+                      {
+                        "name": "Patos",
+                        "type": "admin3",
+                        "lat": 40.68333,
+                        "lon": 19.61944
+                      },
+                      {
+                        "name": "Patos Fshat",
+                        "type": "admin3",
+                        "lat": 40.64278,
+                        "lon": 19.65083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Roskovec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Roskovec"
+                    ],
+                    "lat": 40.72202,
+                    "lon": 19.72204,
+                    "children": [
+                      {
+                        "name": "Roskovec",
+                        "type": "admin3",
+                        "lat": 40.7375,
+                        "lon": 19.70222
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Gjirokastrës",
+                "type": "admin1",
+                "aliases": [
+                  "AL033",
+                  "Bezirk Gjirokaster",
+                  "Bezirk Gjirokastër",
+                  "Comte de Gjirokaster"
+                ],
+                "lat": 40.214021,
+                "lon": 20.164363,
+                "children": [
+                  {
+                    "name": "Bashkia Dropull",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Dropull"
+                    ],
+                    "lat": 39.98584,
+                    "lon": 20.30529,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Gjirokastër",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Gjirokaster",
+                      "Bashkia Gjirokastër"
+                    ],
+                    "lat": 40.12775,
+                    "lon": 20.07291,
+                    "children": [
+                      {
+                        "name": "Gjirokastër",
+                        "type": "admin3",
+                        "lat": 40.07583,
+                        "lon": 20.13889
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Kelcyrë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kelcyre",
+                      "Bashkia Kelcyrë"
+                    ],
+                    "lat": 40.36196,
+                    "lon": 20.16476,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Libohovë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Libohove",
+                      "Bashkia Libohovë"
+                    ],
+                    "lat": 40.10754,
+                    "lon": 20.25753,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Memaliaj",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Memaliaj"
+                    ],
+                    "lat": 40.41524,
+                    "lon": 19.96911,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Përmet",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Permet",
+                      "Bashkia Përmet",
+                      "Premedi"
+                    ],
+                    "lat": 40.23246,
+                    "lon": 20.41091,
+                    "children": [
+                      {
+                        "name": "Përmet",
+                        "type": "admin3",
+                        "lat": 40.23361,
+                        "lon": 20.35167
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Tepelenë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Tepelene",
+                      "Bashkia Tepelenë"
+                    ],
+                    "lat": 40.26736,
+                    "lon": 19.97003,
+                    "children": [
+                      {
+                        "name": "Tepelenë",
+                        "type": "admin3",
+                        "lat": 40.29583,
+                        "lon": 20.01917
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Korçës",
+                "type": "admin1",
+                "aliases": [
+                  "AL034",
+                  "Bezirk Korce",
+                  "Bezirk Korçë",
+                  "Comte de Korce"
+                ],
+                "lat": 40.66752,
+                "lon": 20.71341,
+                "children": [
+                  {
+                    "name": "Bashkia Devoll",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Devoll"
+                    ],
+                    "lat": 40.60078,
+                    "lon": 20.93814,
+                    "children": [
+                      {
+                        "name": "Bilisht",
+                        "type": "admin3",
+                        "lat": 40.6275,
+                        "lon": 20.99
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Kolonjë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kolonje",
+                      "Bashkia Kolonjë"
+                    ],
+                    "lat": 40.3142,
+                    "lon": 20.61482,
+                    "children": [
+                      {
+                        "name": "Ersekë",
+                        "type": "admin3",
+                        "lat": 40.33778,
+                        "lon": 20.67889
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Korçë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Korce",
+                      "Bashkia Korçë"
+                    ],
+                    "lat": 40.57506,
+                    "lon": 20.62952,
+                    "children": [
+                      {
+                        "name": "Korçë",
+                        "type": "admin3",
+                        "lat": 40.61861,
+                        "lon": 20.78083
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Maliq",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Maliq"
+                    ],
+                    "lat": 40.75508,
+                    "lon": 20.60748,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Pogradec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Pogradec",
+                      "Podgradec",
+                      "Pogradec"
+                    ],
+                    "lat": 40.92409,
+                    "lon": 20.59645,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Pustec",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Pustec",
+                      "Opshtina Pustec",
+                      "Општина Пустец"
+                    ],
+                    "lat": 40.83591,
+                    "lon": 20.89405,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Kukësit",
+                "type": "admin1",
+                "aliases": [
+                  "AL013",
+                  "Bezirk Kukes",
+                  "Bezirk Kukës",
+                  "Comte de Kukes"
+                ],
+                "lat": 42.180603,
+                "lon": 20.28539,
+                "children": [
+                  {
+                    "name": "Bashkia Has",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Has"
+                    ],
+                    "lat": 42.19897,
+                    "lon": 20.37234,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Kukës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kukes",
+                      "Bashkia Kukës"
+                    ],
+                    "lat": 41.98221,
+                    "lon": 20.41643,
+                    "children": [
+                      {
+                        "name": "Kukës",
+                        "type": "admin3",
+                        "lat": 42.07694,
+                        "lon": 20.42194
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Tropojë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Tropoje",
+                      "Bashkia Tropojë"
+                    ],
+                    "lat": 42.36063,
+                    "lon": 20.0674,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Lezhës",
+                "type": "admin1",
+                "aliases": [
+                  "AL014",
+                  "Bezirk Lezhe",
+                  "Bezirk Lezhë",
+                  "Comte de Lezhe"
+                ],
+                "lat": 41.748293,
+                "lon": 19.779597,
+                "children": [
+                  {
+                    "name": "Bashkia Kurbin",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kurbin"
+                    ],
+                    "lat": 41.62215,
+                    "lon": 19.70734,
+                    "children": [
+                      {
+                        "name": "Laç",
+                        "type": "admin3",
+                        "lat": 41.63556,
+                        "lon": 19.71306
+                      },
+                      {
+                        "name": "Mamurras",
+                        "type": "admin3",
+                        "lat": 41.5775,
+                        "lon": 19.69222
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Lezhë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Lezhe",
+                      "Bashkia Lezhë"
+                    ],
+                    "lat": 41.8132,
+                    "lon": 19.64121,
+                    "children": [
+                      {
+                        "name": "Lezhë",
+                        "type": "admin3",
+                        "lat": 41.78361,
+                        "lon": 19.64361
+                      },
+                      {
+                        "name": "Shëngjin",
+                        "type": "admin3",
+                        "lat": 41.81361,
+                        "lon": 19.59389
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Mirditë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Mirdite",
+                      "Bashkia Mirditë"
+                    ],
+                    "lat": 41.80953,
+                    "lon": 19.99024,
+                    "children": [
+                      {
+                        "name": "Rrëshen",
+                        "type": "admin3",
+                        "lat": 41.7675,
+                        "lon": 19.87556
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Shkodrës",
+                "type": "admin1",
+                "aliases": [
+                  "AL015",
+                  "Bezirk Shkoder",
+                  "Bezirk Shkodër",
+                  "Comte de Shkoder"
+                ],
+                "lat": 42.147536,
+                "lon": 19.778616,
+                "children": [
+                  {
+                    "name": "Bashkia Fushë Arrës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Fushe Arres",
+                      "Bashkia Fushë Arrës"
+                    ],
+                    "lat": 42.14753,
+                    "lon": 20.04168,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Malësi e Madhe",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Malesi e Madhe",
+                      "Bashkia Malësi e Madhe"
+                    ],
+                    "lat": 42.36798,
+                    "lon": 19.58977,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Pukë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Puke",
+                      "Bashkia Pukë"
+                    ],
+                    "lat": 42.02997,
+                    "lon": 19.92778,
+                    "children": [
+                      {
+                        "name": "Pukë",
+                        "type": "admin3",
+                        "lat": 42.04444,
+                        "lon": 19.89972
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Shkodër",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Shkoder",
+                      "Bashkia Shkodër"
+                    ],
+                    "lat": 42.14386,
+                    "lon": 19.63386,
+                    "children": [
+                      {
+                        "name": "Shkodër",
+                        "type": "admin3",
+                        "lat": 42.06828,
+                        "lon": 19.51258
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Vau i Dejës",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Vau i Dejes",
+                      "Bashkia Vau i Dejës"
+                    ],
+                    "lat": 42.04834,
+                    "lon": 19.69999,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Qarku i Vlorës",
+                "type": "admin1",
+                "aliases": [
+                  "AL035",
+                  "Bezirk Vlore",
+                  "Bezirk Vlorë",
+                  "Comte de Vlore"
+                ],
+                "lat": 40.046126,
+                "lon": 19.905857,
+                "children": [
+                  {
+                    "name": "Bashkia Delvinë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Delvine",
+                      "Bashkia Delvinë"
+                    ],
+                    "lat": 39.99824,
+                    "lon": 20.04903,
+                    "children": [
+                      {
+                        "name": "Delvinë",
+                        "type": "admin3",
+                        "lat": 39.95111,
+                        "lon": 20.09778
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Finiq",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Finiq"
+                    ],
+                    "lat": 39.84393,
+                    "lon": 20.16659,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Himarë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Himare",
+                      "Bashkia Himarë"
+                    ],
+                    "lat": 40.11581,
+                    "lon": 19.81389,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Konispol",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Konispol"
+                    ],
+                    "lat": 39.70064,
+                    "lon": 20.13353,
+                    "children": []
+                  },
+                  {
+                    "name": "Bashkia Sarandë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Sarande",
+                      "Bashkia Sarandë"
+                    ],
+                    "lat": 39.85583,
+                    "lon": 20.02046,
+                    "children": [
+                      {
+                        "name": "Sarandë",
+                        "type": "admin3",
+                        "lat": 39.87534,
+                        "lon": 20.00477
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Selenicë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Selenice",
+                      "Bashkia Selenicë"
+                    ],
+                    "lat": 40.39503,
+                    "lon": 19.65958,
+                    "children": [
+                      {
+                        "name": "Selenicë",
+                        "type": "admin3",
+                        "lat": 40.53056,
+                        "lon": 19.63583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Vlorë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Vlore",
+                      "Bashkia Vlorë"
+                    ],
+                    "lat": 40.4134,
+                    "lon": 19.49792,
+                    "children": [
+                      {
+                        "name": "Novoselë",
+                        "type": "admin3",
+                        "lat": 40.625,
+                        "lon": 19.46694
+                      },
+                      {
+                        "name": "Vlorë",
+                        "type": "admin3",
+                        "lat": 40.4696,
+                        "lon": 19.48379
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Tirana",
+                "type": "admin1",
+                "aliases": [
+                  "AL022",
+                  "Qarku Tirane",
+                  "Qarku i Tiranes",
+                  "Qarku i Tiranës"
+                ],
+                "lat": 41.268162,
+                "lon": 19.699628,
+                "children": [
+                  {
+                    "name": "Bashkia Kamëz",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kamez",
+                      "Bashkia Kamëz"
+                    ],
+                    "lat": 41.37232,
+                    "lon": 19.78542,
+                    "children": [
+                      {
+                        "name": "Kamëz",
+                        "type": "admin3",
+                        "lat": 41.38167,
+                        "lon": 19.76028
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Kavajë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Kavaje",
+                      "Bashkia Kavajë"
+                    ],
+                    "lat": 41.18127,
+                    "lon": 19.55579,
+                    "children": [
+                      {
+                        "name": "Kavajë",
+                        "type": "admin3",
+                        "lat": 41.18556,
+                        "lon": 19.55694
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Rrogozhinë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Rrogozhine",
+                      "Bashkia Rrogozhinë"
+                    ],
+                    "lat": 41.09034,
+                    "lon": 19.5861,
+                    "children": [
+                      {
+                        "name": "Rrogozhinë",
+                        "type": "admin3",
+                        "lat": 41.07639,
+                        "lon": 19.66528
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Tiranë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Tirane",
+                      "Bashkia Tiranë"
+                    ],
+                    "lat": 41.29884,
+                    "lon": 19.8938,
+                    "children": [
+                      {
+                        "name": "Ndroq",
+                        "type": "admin3",
+                        "lat": 41.26389,
+                        "lon": 19.65583
+                      },
+                      {
+                        "name": "Petrelë",
+                        "type": "admin3",
+                        "lat": 41.25306,
+                        "lon": 19.85306
+                      },
+                      {
+                        "name": "Tirana",
+                        "type": "admin3",
+                        "lat": 41.32744,
+                        "lon": 19.81866
+                      },
+                      {
+                        "name": "Zall-Herr",
+                        "type": "admin3",
+                        "lat": 41.38944,
+                        "lon": 19.8275
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bashkia Vorë",
+                    "type": "admin2",
+                    "aliases": [
+                      "Bashkia Vore",
+                      "Bashkia Vorë"
+                    ],
+                    "lat": 41.39804,
+                    "lon": 19.67703,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
