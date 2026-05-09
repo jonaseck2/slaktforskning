@@ -1,7 +1,12 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
-import { loadPersonEvents, dateDefinitelyAfter, personIdsWithEvent, TODAY } from './check-utils';
+import { loadPersonEvents, dateDefinitelyAfter, personIdsWithEvent, TODAY, extractYear, parseLooseDate } from './check-utils';
+
+const TODAY_PARSED = parseLooseDate(TODAY)!;
+function dateInFuture(s: string): boolean {
+  return dateDefinitelyAfter(s, TODAY);
+}
 
 export function checkBirthAfterDeath(db: Database): CheckResult[] {
   const births = loadPersonEvents(db, 'birth');
@@ -27,6 +32,11 @@ export function checkBirthAfterDeath(db: Database): CheckResult[] {
 }
 
 export function checkEventAfterDeath(db: Database): CheckResult[] {
+  // Pre-filter on cheap shape (death + non-death event for same person), then
+  // compare dates in JS via parseLooseDate so free-form date_value strings
+  // ("26 Jan 1763" etc.) are handled correctly. The previous SUBSTR(0,4)
+  // string compare assumed ISO and produced ~13 false EVENT_AFTER_DEATH hits
+  // per session on the Bernadotte test database.
   const rows = queryAll<{ person_id: string; event_id: string; event_type: string; event_date: string; death_id: string; death_date: string }>(db, `
     SELECT p.id AS person_id,
            e.id AS event_id, e.event_type, e.date_value AS event_date,
@@ -40,20 +50,18 @@ export function checkEventAfterDeath(db: Database): CheckResult[] {
       AND e.event_type NOT IN ('death','burial','will','probate')
       AND e.date_type NOT IN ('unknown')
       AND e.date_value IS NOT NULL
-      AND (SUBSTR(e.date_value, 1, 4) > SUBSTR(d.date_value, 1, 4)
-           OR (SUBSTR(e.date_value, 1, 4) = SUBSTR(d.date_value, 1, 4)
-               AND LENGTH(e.date_value) >= 10 AND LENGTH(d.date_value) >= 10
-               AND e.date_value > d.date_value))
   `);
 
-  return rows.map(r => ({
-    code: 'EVENT_AFTER_DEATH',
-    severity: 'error' as CheckSeverity,
-    message: `${r.event_type} (${r.event_date}) occurs after death date (${r.death_date})`,
-    messageParams: { eventType: r.event_type, eventDate: r.event_date, deathDate: r.death_date },
-    personIds: [r.person_id],
-    eventIds: [r.event_id, r.death_id],
-  }));
+  return rows
+    .filter(r => dateDefinitelyAfter(r.event_date, r.death_date))
+    .map(r => ({
+      code: 'EVENT_AFTER_DEATH',
+      severity: 'error' as CheckSeverity,
+      message: `${r.event_type} (${r.event_date}) occurs after death date (${r.death_date})`,
+      messageParams: { eventType: r.event_type, eventDate: r.event_date, deathDate: r.death_date },
+      personIds: [r.person_id],
+      eventIds: [r.event_id, r.death_id],
+    }));
 }
 
 export function checkBurialBeforeDeath(db: Database): CheckResult[] {
@@ -86,8 +94,9 @@ export function checkLifespan(db: Database): CheckResult[] {
   for (const [personId, deathList] of deaths) {
     for (const d of deathList) {
       for (const b of births.get(personId) ?? []) {
-        const birthYear = parseInt(b.date_value.substring(0, 4), 10);
-        const deathYear = parseInt(d.date_value.substring(0, 4), 10);
+        const birthYear = extractYear(b.date_value);
+        const deathYear = extractYear(d.date_value);
+        if (birthYear === null || deathYear === null) continue;
         if (deathYear - birthYear > 105) {
           rows.push({ person_id: personId, birth_year: birthYear, death_year: deathYear, birth_id: b.event_id, death_id: d.event_id });
         }
@@ -124,16 +133,21 @@ export function checkLifespan(db: Database): CheckResult[] {
 export function checkFutureDates(db: Database): CheckResult[] {
   const results: CheckResult[] = [];
 
+  // Filter all candidate births/deaths in JS via dateDefinitelyAfter so
+  // free-form date_value strings ("26 Jan 1763") aren't compared
+  // lexicographically against TODAY (which would silently flag historical
+  // dates as "future" because '2' > '1' in ASCII). Keeps the SQL filter
+  // narrow and lets parseLooseDate do the actual chronological compare.
   const births = queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
     SELECT p.id AS person_id, e.id AS event_id, e.date_value
     FROM persons p
     JOIN event_participants ep ON ep.person_id = p.id
     JOIN events e ON e.id = ep.event_id AND e.event_type = 'birth'
       AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND e.date_value > ?
-  `, [TODAY]);
+  `);
 
   for (const r of births) {
+    if (!dateInFuture(r.date_value)) continue;
     results.push({
       code: 'FUTURE_BIRTH',
       severity: 'error',
@@ -150,10 +164,10 @@ export function checkFutureDates(db: Database): CheckResult[] {
     JOIN event_participants ep ON ep.person_id = p.id
     JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
       AND e.date_type IN ('exact','calculated') AND e.date_value IS NOT NULL
-      AND e.date_value > ?
-  `, [TODAY]);
+  `);
 
   for (const r of deaths) {
+    if (!dateInFuture(r.date_value)) continue;
     results.push({
       code: 'FUTURE_DEATH',
       severity: 'error',

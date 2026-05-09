@@ -1,27 +1,31 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
-import { loadPersonEvents } from './check-utils';
+import { loadPersonEvents, extractYear } from './check-utils';
 
 export function checkParenthoodAge(db: Database): CheckResult[] {
-  // In parent_child relationships: person1_id = parent, person2_id = child
+  // In parent_child relationships: person1_id = parent, person2_id = child.
+  // Years are extracted in JS via extractYear() so we don't depend on
+  // SUBSTR(date_value, 1, 4) returning a numeric prefix — that assumed ISO
+  // and silently parsed the day-of-month as the year on free-form strings
+  // like "26 Jan 1763". See parseLooseDate in check-utils.ts.
   const rows = queryAll<{
     rel_id: string;
     parent_id: string;
     child_id: string;
     parent_sex: string;
-    parent_birth_year: number;
-    child_birth_year: number;
-    parent_death_year: number | null;
+    parent_birth_value: string | null;
+    child_birth_value: string | null;
+    parent_death_value: string | null;
   }>(db, `
     SELECT
       r.id AS rel_id,
       r.person1_id AS parent_id,
       r.person2_id AS child_id,
       p_parent.sex AS parent_sex,
-      CAST(SUBSTR(b_parent.date_value, 1, 4) AS INTEGER) AS parent_birth_year,
-      CAST(SUBSTR(b_child.date_value, 1, 4) AS INTEGER) AS child_birth_year,
-      CAST(SUBSTR(d_parent.date_value, 1, 4) AS INTEGER) AS parent_death_year
+      b_parent.date_value AS parent_birth_value,
+      b_child.date_value AS child_birth_value,
+      d_parent.date_value AS parent_death_value
     FROM relationships r
     JOIN persons p_parent ON p_parent.id = r.person1_id
     LEFT JOIN event_participants ep_parent_b ON ep_parent_b.person_id = r.person1_id
@@ -38,7 +42,22 @@ export function checkParenthoodAge(db: Database): CheckResult[] {
       AND r.person2_id IS NOT NULL
       AND b_parent.date_value IS NOT NULL
       AND b_child.date_value IS NOT NULL
-  `);
+  `).map(row => ({
+    ...row,
+    parent_birth_year: extractYear(row.parent_birth_value),
+    child_birth_year: extractYear(row.child_birth_value),
+    parent_death_year: extractYear(row.parent_death_value),
+  })).filter(row =>
+    row.parent_birth_year !== null && row.child_birth_year !== null,
+  ) as Array<{
+    rel_id: string;
+    parent_id: string;
+    child_id: string;
+    parent_sex: string;
+    parent_birth_year: number;
+    child_birth_year: number;
+    parent_death_year: number | null;
+  }>;
 
   const results: CheckResult[] = [];
 
@@ -122,9 +141,9 @@ export function checkParenthoodAge(db: Database): CheckResult[] {
 
 export function checkSiblingAgeLarge(db: Database): CheckResult[] {
   // Single query: all parent-child pairs with child birth years
-  const rows = queryAll<{ parent_id: string; person_id: string; birth_year: number; rel_id: string }>(db, `
+  const rawRows = queryAll<{ parent_id: string; person_id: string; birth_value: string; rel_id: string }>(db, `
     SELECT r.person1_id AS parent_id, r.person2_id AS person_id,
-           CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year,
+           b.date_value AS birth_value,
            r.id AS rel_id
     FROM relationships r
     JOIN event_participants ep ON ep.person_id = r.person2_id
@@ -132,6 +151,9 @@ export function checkSiblingAgeLarge(db: Database): CheckResult[] {
       AND b.date_type IN ('exact','calculated','about') AND b.date_value IS NOT NULL
     WHERE r.type = 'parent_child' AND r.person1_id IS NOT NULL AND r.person2_id IS NOT NULL
   `);
+  const rows = rawRows
+    .map(r => ({ ...r, birth_year: extractYear(r.birth_value) }))
+    .filter((r): r is typeof r & { birth_year: number } => r.birth_year !== null);
 
   // Group by parent in JavaScript
   const byParent = new Map<string, Array<{ person_id: string; birth_year: number; rel_id: string }>>();
@@ -335,11 +357,11 @@ export function checkMarriageAge(db: Database): CheckResult[] {
     const personBirths = births.get(personId);
     if (!personBirths) continue;
     for (const m of personMarriages) {
-      const marriageYear = parseInt(m.date_value.substring(0, 4), 10);
-      if (isNaN(marriageYear)) continue;
+      const marriageYear = extractYear(m.date_value);
+      if (marriageYear === null) continue;
       for (const b of personBirths) {
-        const birthYear = parseInt(b.date_value.substring(0, 4), 10);
-        if (isNaN(birthYear)) continue;
+        const birthYear = extractYear(b.date_value);
+        if (birthYear === null) continue;
         const age = marriageYear - birthYear;
         if (age < 12) {
           results.push({
