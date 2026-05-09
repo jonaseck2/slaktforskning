@@ -28,7 +28,7 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   // Icelandic
   'is-sveitarfelog',
   // German
-  'de-gemeinden',
+  'de-gemeinden', 'de-kirchgemeinden',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -126,6 +126,7 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'is-sveitarfelog-boundaries': IS_RULES,
   // German
   'de-gemeinden': DE_RULES,
+  'de-kirchgemeinden': DE_RULES,
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

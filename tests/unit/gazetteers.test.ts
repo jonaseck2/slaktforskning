@@ -7,15 +7,15 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 29 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(29);
+  it('loads all 30 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(30);
   });
 
   const dataIds = [
     'sv-socknar', 'sv-forsamlingar', 'sv-orter', 'sv-gardar', 'sv-kyrkor', 'sv-landskap', 'sv-sockenstad-boundaries',
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
-    'de-gemeinden',
+    'de-gemeinden', 'de-kirchgemeinden',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',
