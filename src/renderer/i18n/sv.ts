@@ -1874,7 +1874,12 @@ export default {
         purpose: 'Här visas härledda kvalitetskontroller för personen — saknade föräldrar, motsägelsefulla datum, okällgranskade händelser — och du kan hoppa direkt till sektionen som äger problemet. Tom sektion betyder inga problem.',
       },
     },
-    coach: {},
+    coach: {
+      hourglassFocus: {
+        tip: 'Klicka på en person för att titta på den. Dubbelklicka för att flytta fokus dit.',
+        dismiss: 'Förstått',
+      },
+    },
     toast: {
       mediaFirstAttach: {
         body: 'Filen kopieras in i mappen <dbnamn>-media/ så att den följer med när du flyttar databasen.',

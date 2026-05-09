@@ -1895,7 +1895,12 @@ export default {
         purpose: 'A user would use this section to see derived quality checks for this person — missing parents, contradictory dates, unsourced events — and jump straight to the section that owns the issue. An empty section means no issues were found.',
       },
     },
-    coach: {},
+    coach: {
+      hourglassFocus: {
+        tip: 'Click any person to view them. Double-click to set focus there.',
+        dismiss: 'Got it',
+      },
+    },
     toast: {
       mediaFirstAttach: {
         body: 'Your file is copied into the <dbname>-media/ folder so it travels with the database.',
