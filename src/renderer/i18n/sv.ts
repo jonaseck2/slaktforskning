@@ -1919,6 +1919,18 @@ export default {
         purpose: 'Här bifogar du foton och dokument knutna till relationen — bröllopsfoto, vigselattest — så att relationen har egna visuella belägg.',
         cta: 'Bifoga media',
       },
+      researchTaskPersons: {
+        purpose: 'Här kopplar du de personer som forskningsuppgiften handlar om — vems uppgifter du behöver gräva mer i — och kopplar bort dem när frågan går vidare.',
+        cta: 'Koppla person',
+      },
+      researchTaskPlaces: {
+        purpose: 'Här kopplar du de platser som forskningsuppgiften berör — en socken vars böcker behöver granskas, en hamn vars passagerarlistor har ett svar — och kopplar bort dem när frågan går vidare.',
+        cta: 'Koppla plats',
+      },
+      researchTaskMedia: {
+        purpose: 'Här bifogar du skanningar, foton eller dokument som hör till uppgiften — en ledtråd du hittat, en skärmbild av ett register, en arbetsanteckning — så att hela spåret hålls samman med uppgiften.',
+        cta: 'Bifoga media',
+      },
       groupPersons: {
         purpose: 'Här samlar du de personer som hör till gruppen — ett hushåll, en passagerarlista, ett bröllopsfölje — så att klustret av personer kan nås från en namngiven post.',
         cta: 'Lägg till person',

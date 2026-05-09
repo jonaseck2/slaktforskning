@@ -1940,6 +1940,18 @@ export default {
         purpose: 'A user would use this section to attach photos and documents tied to this relationship — a wedding photo, a marriage certificate scan — so the relationship has visual evidence of its own.',
         cta: 'Attach media',
       },
+      researchTaskPersons: {
+        purpose: 'A user would use this section to link the persons this research task is about — whose record needs more digging — and unlink them when the question moves on.',
+        cta: 'Link person',
+      },
+      researchTaskPlaces: {
+        purpose: 'A user would use this section to link the places this research task touches — a parish whose books need checking, a port whose passenger lists hold an answer — and unlink them when the question moves on.',
+        cta: 'Link place',
+      },
+      researchTaskMedia: {
+        purpose: 'A user would use this section to attach scans, photos, or documents that go with the task — a clue you found, a screenshot of a record, a working note — so the trail stays bundled with the task.',
+        cta: 'Attach media',
+      },
       groupPersons: {
         purpose: 'A user would use this section to gather the persons that belong in this group — a household, a passenger list, a wedding party — so the cluster of people is reachable from one named record.',
         cta: 'Add person',
