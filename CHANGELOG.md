@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: `THIRD_PARTY_LICENSES.txt` is now auto-generated and bundled into the packaged app at `Resources/THIRD_PARTY_LICENSES.txt`
 - fix: `npm ls` warnings (peer-dep advisories, extraneous-package notices) are now forwarded to stderr instead of being silently discarded during license generation
 - fix: editing a relationship's subtype (e.g. father → adopted father) crashed with `NOT NULL constraint failed: relationships.notes` when the notes field was empty. RelationshipModal sent `null` for empty notes and `updateRelationship` wrote it through to the NOT-NULL column; both now coerce empty notes to `''` to match `createRelationship`'s contract.
 - chore: pure preview-injection helper extracted from `src/main/preview-protocol.ts` into `src/main/preview-html-inject.ts` and unit-tested (marker-present / marker-missing / placement-before-module / `</script>` escape / null-snapshot / dist-static survives viteSingleFile). Adds a Static SPA gotcha + memory rule capturing the silent-string-replace anti-pattern that produced v0.227.5 — never let a build-artifact mutation no-op silently; throw if the marker isn't found.
