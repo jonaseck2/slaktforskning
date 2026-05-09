@@ -97,8 +97,52 @@ boots, but no UI was visually inspected).
 
 ## After Task 5 (binary codec round-trip)
 
-(populated by the Task 5 subagent — totals from running the codec across all
-34 bundled gazetteers)
+Round-tripped every JSON in `src/api/place-gazetteers/data/` through
+`encodeGazetteer → decodeGazetteer`. All 35 files round-trip cleanly (id and
+name match; tests in `tests/unit/gazetteer-binary-codec.test.ts` pass). Sizes
+below for the 10 largest sources (sorted by raw JSON size); totals across all
+35 files at the bottom.
+
+| File                                         | JSON | BIN  | JSON.gz |
+|----------------------------------------------|-----:|-----:|--------:|
+| sv-orter.json                                | 5789K | 568K |    319K |
+| fi-kunnat.json                               | 5779K | 554K |    409K |
+| us-all-states.json                           | 5636K | 520K |    454K |
+| de-gemeinden-boundaries.json                 | 5538K | 344K |    350K |
+| gb-civil-divisions.json                      | 5461K | 337K |    326K |
+| ca-provinces.json                            | 4913K | 528K |    385K |
+| us-immigration-states.json                   | 4713K | 478K |    362K |
+| is-sveitarfelog-boundaries.json              | 3729K | 1588K|    783K |
+| sv-sockenstad-boundaries.json                | 3649K | 1419K|    979K |
+| sv-gardar.json                               | 3225K | 322K |    174K |
+
+### Totals (all 35 files)
+- **Raw JSON:** 64.49 MB
+- **JSON.gz** (current shipping format via `vite-plugin-compression` in
+  `.vite/build/gazetteers/*.json.gz`): **7.30 MB**
+- **Binary (.glb) raw:** 11.88 MB
+- **Binary (.glb) gzipped:** **5.58 MB** ← shipped at this size if Task 6
+  re-runs `vite-plugin-compression` over the binary output
+- Binary brotli (reference): 4.65 MB
+
+### Verdict — does the binary beat the current format?
+
+Yes, on disk: gzipped binary is **5.58 MB vs 7.30 MB gzipped JSON**, a 1.7 MB
+(23.5%) reduction in shipped bytes. The savings come from string interning
+(every repeated "admin1" / country name / etc. costs 1 byte in the body), int32
+delta-encoded geometry, and not paying for JSON's `{`, `"`, `:`, `,`, key names
+on every node. Brotli could push it further (4.65 MB) but isn't trivial to wire
+into the existing renderer fetch path; deferred to Task 6/7 if needed.
+
+Two exceptions worth noting where the binary form is *no smaller* than raw JSON
+(meaning string interning didn't help because the file is mostly unique-string
+arrays of translation entries, not a hierarchical place tree):
+- `lang-world-historical.json`: 1976K → 1976K
+- `lang-sv-wikidata.json`: 36K → 36K
+
+These still gzip well, so the shipped bytes are unaffected. Future optimisation:
+encode the `translations` map structurally (vu32 counts + interned keys/values)
+instead of via the JSON-blob fallback. Out of scope for this task.
 
 ---
 
