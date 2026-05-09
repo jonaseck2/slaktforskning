@@ -73,7 +73,7 @@ Not a follow-up to a failed prior attempt. One pre-existing rule that applies an
 - Modify: `package.json` (add npm script)
 - Modify: `.gitignore` (ignore generated file)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/unit/scripts.thirdPartyLicenses.test.ts`:
 
@@ -121,12 +121,12 @@ describe('build-third-party-licenses script', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/unit/scripts.thirdPartyLicenses.test.ts`
 Expected: FAIL — script doesn't exist yet.
 
-- [ ] **Step 3: Implement the script**
+- [x] **Step 3: Implement the script**
 
 Create `scripts/build-third-party-licenses.mjs`:
 
@@ -266,7 +266,7 @@ function main() {
 main();
 ```
 
-- [ ] **Step 4: Add npm script and gitignore entry**
+- [x] **Step 4: Add npm script and gitignore entry**
 
 In `package.json`, add to `scripts`:
 
@@ -282,12 +282,12 @@ THIRD_PARTY_LICENSES.txt
 sbom.cdx.json
 ```
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `npx vitest run tests/unit/scripts.thirdPartyLicenses.test.ts`
 Expected: PASS — all five assertions green. If a package throws "No LICENSE file found", inspect the package and either (a) confirm it really has no license (legal red flag — surface to maintainer) or (b) add it to `KNOWN_LICENSE_HINTS` with the actual filename.
 
-- [ ] **Step 6: Verify lint and full test suite**
+- [x] **Step 6: Verify lint and full test suite**
 
 ```bash
 npm run lint
@@ -296,7 +296,7 @@ npm test
 
 Both must pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/build-third-party-licenses.mjs tests/unit/scripts.thirdPartyLicenses.test.ts package.json .gitignore
@@ -310,7 +310,7 @@ git commit -m "feat: generate THIRD_PARTY_LICENSES.txt from prod deps"
 **Files:**
 - Modify: `forge.config.ts`
 
-- [ ] **Step 1: Add Forge generateAssets hook + extraResource entry**
+- [x] **Step 1: Add Forge generateAssets hook + extraResource entry**
 
 Open `forge.config.ts`. The existing `packagerConfig` has `extraResource: ['./dist-static']` at line 16. Add the licenses file there, and add a `hooks` block that runs the script before packaging:
 
@@ -336,7 +336,7 @@ const config: ForgeConfig = {
 
 If a `hooks` block already exists, merge the `generateAssets` entry into it instead of duplicating.
 
-- [ ] **Step 2: Verify packaging produces the file in the right place**
+- [x] **Step 2: Verify packaging produces the file in the right place**
 
 ```bash
 npm run package
@@ -352,7 +352,7 @@ test -f out/OurLegacy-darwin-*/OurLegacy.app/Contents/Resources/THIRD_PARTY_LICE
 
 Expected: `OK` printed.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add forge.config.ts
@@ -373,7 +373,7 @@ git commit -m "feat: bundle THIRD_PARTY_LICENSES.txt into packaged app"
 - Modify: `src/renderer/i18n/sv.ts`
 - Modify: `src/renderer/i18n/en.ts`
 
-- [ ] **Step 1: Define the IPC channel**
+- [x] **Step 1: Define the IPC channel**
 
 In `src/shared/channels/app.ts`, add a new channel definition next to the existing `app:getVersion` / `app:openExternal` entries:
 
@@ -386,7 +386,7 @@ export const APP_READ_THIRD_PARTY_LICENSES = defineChannel<void, string>({
 
 Use the existing pattern in the file (match the surrounding `defineChannel` calls verbatim — same generic shape, same `runOn` field).
 
-- [ ] **Step 2: Implement the main-thread handler**
+- [x] **Step 2: Implement the main-thread handler**
 
 In `src/main/ipc/app.ts`, register a handler:
 
@@ -417,7 +417,7 @@ ipcMain.handle('app:readThirdPartyLicenses', () => {
 
 (Match the surrounding code style. If the existing handlers in this file use a thin wrapper or registry, follow that pattern instead — don't introduce a parallel registration scheme.)
 
-- [ ] **Step 3: Wire preload + renderer typings**
+- [x] **Step 3: Wire preload + renderer typings**
 
 In `src/preload/index.ts`, add to the `app` namespace inside `contextBridge.exposeInMainWorld('api', { app: { ... } })`:
 
@@ -431,7 +431,7 @@ In `src/renderer/api.d.ts`, add to the `app` member:
 readThirdPartyLicenses: () => Promise<string>;
 ```
 
-- [ ] **Step 4: Verify preload coverage tests pass**
+- [x] **Step 4: Verify preload coverage tests pass**
 
 ```bash
 npx vitest run tests/unit/preload-coverage.test.ts tests/unit/ipc-worker-coverage.test.ts
@@ -439,7 +439,7 @@ npx vitest run tests/unit/preload-coverage.test.ts tests/unit/ipc-worker-coverag
 
 Expected: PASS. These tests assert that every channel registered in `src/shared/channels/` has both a preload entry and runs in the right context (main vs worker).
 
-- [ ] **Step 5: Add i18n keys**
+- [x] **Step 5: Add i18n keys**
 
 In `src/renderer/i18n/sv.ts`, find the `about: { ... }` block (around line 1820) and add three keys:
 
@@ -465,7 +465,7 @@ licensesTitle: 'Open source notices',
 licensesElectronNote: 'Electron and Chromium ship their own license files in the application resources folder.',
 ```
 
-- [ ] **Step 6: Create LicensesViewerModal**
+- [x] **Step 6: Create LicensesViewerModal**
 
 Create `src/renderer/components/LicensesViewerModal.vue`:
 
@@ -564,7 +564,7 @@ function close() { emit('close'); }
 </style>
 ```
 
-- [ ] **Step 7: Extend AboutModal with the link**
+- [x] **Step 7: Extend AboutModal with the link**
 
 Modify `src/renderer/components/AboutModal.vue`. After the existing `<p class="about-license">` block (around line 17–20), add:
 
@@ -583,7 +583,7 @@ const licensesVisible = ref(false);
 function openLicenses() { licensesVisible.value = true; }
 ```
 
-- [ ] **Step 8: Smoke-check in dev mode**
+- [x] **Step 8: Smoke-check in dev mode**
 
 ```bash
 npm run build:third-party-licenses   # produce the file at repo root for dev
@@ -592,7 +592,7 @@ npm start
 
 In the running app: navigate to **Settings**, click the *Om OurLegacy / About OurLegacy* link, then click *Visa öppen källkod-information / View open source notices*. The modal should open with the licenses text scrolling. Vue, Electron, vue-i18n, etc. should appear as headings.
 
-- [ ] **Step 9: Run lint, unit tests, e2e**
+- [x] **Step 9: Run lint, unit tests, e2e**
 
 ```bash
 npm run lint
@@ -602,7 +602,7 @@ npx playwright test
 
 All must pass. The new IPC + preload entry will be exercised by `tests/unit/preload-coverage.test.ts`.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/shared/channels/app.ts src/main/ipc/app.ts src/preload/index.ts src/renderer/api.d.ts \
@@ -618,7 +618,7 @@ git commit -m "feat: surface third-party license notices in About modal"
 **Files:**
 - Modify: `.github/workflows/release.yml`
 
-- [ ] **Step 1: Add SBOM step + license file to the release job**
+- [x] **Step 1: Add SBOM step + license file to the release job**
 
 Open `.github/workflows/release.yml`. The `release` job (around line 76) currently downloads artifacts from the build matrix and creates the GitHub Release. Modify it to:
 1. Generate `sbom.cdx.json` from `package.json` / `package-lock.json` (no need to install full deps in this job — the lockfile is enough).
@@ -662,7 +662,7 @@ Replace the existing `release` job with:
 
 The `npm sbom` flag was added in npm 10.x (Node 22 ships npm 10+); it produces CycloneDX 1.5+ JSON natively, no extra package needed. The post-generation `JSON.parse` smoke-checks that the output is valid JSON.
 
-- [ ] **Step 2: Verify the workflow YAML is syntactically valid**
+- [x] **Step 2: Verify the workflow YAML is syntactically valid**
 
 ```bash
 npx yaml-lint .github/workflows/release.yml || npx js-yaml .github/workflows/release.yml > /dev/null
@@ -670,7 +670,7 @@ npx yaml-lint .github/workflows/release.yml || npx js-yaml .github/workflows/rel
 
 (Either lint passes, or the YAML parses cleanly. If neither tool is available, install nothing — just visually confirm indentation and structure match the rest of the file.)
 
-- [ ] **Step 3: Smoke-check the SBOM step locally**
+- [x] **Step 3: Smoke-check the SBOM step locally**
 
 ```bash
 npm sbom --sbom-format=cyclonedx --omit=dev > /tmp/sbom.cdx.json
@@ -680,7 +680,7 @@ rm /tmp/sbom.cdx.json
 
 Expected: prints `format: CycloneDX specVersion: 1.x components: <N>` with N matching roughly the number of prod deps.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/release.yml
@@ -699,15 +699,15 @@ git commit -m "ci: attach SBOM + third-party-licenses to GitHub releases"
 - Move: `docs/plans/2026-05-09-third-party-licenses-and-sbom.md` → `docs/plans/archive/`
 - Modify: this plan file (tick all checkboxes before archiving)
 
-- [ ] **Step 1: Tick every checkbox in this plan**
+- [x] **Step 1: Tick every checkbox in this plan**
 
 Edit this file and change every `- [ ]` to `- [x]` (Tasks 1–5, all steps, all self-review checks). Don't archive yet — the bump commit needs the closed plan first.
 
-- [ ] **Step 2: Bump version**
+- [x] **Step 2: Bump version**
 
 This is a feature (UI surface + CI artifact). Minor bump in `package.json`. If current is `0.227.6`, bump to `0.228.0`.
 
-- [ ] **Step 3: Add CHANGELOG entry**
+- [x] **Step 3: Add CHANGELOG entry**
 
 Prepend under `## Unreleased`:
 
@@ -718,7 +718,7 @@ Prepend under `## Unreleased`:
 - Attach `sbom.cdx.json` (CycloneDX) and `THIRD_PARTY_LICENSES.txt` to every GitHub release.
 ```
 
-- [ ] **Step 4: Update docs/PLAN.md and the archive index**
+- [x] **Step 4: Update docs/PLAN.md and the archive index**
 
 In `docs/PLAN.md`: there's no current "Open source housekeeping" entry, so nothing to remove. No change needed unless the maintainer wants a one-line note in a "Recently shipped" section.
 
@@ -731,13 +731,13 @@ Bundle a generated `THIRD_PARTY_LICENSES.txt` into the packaged app and surface 
 
 (Match the existing entry format in that file.)
 
-- [ ] **Step 5: Move the plan to archive**
+- [x] **Step 5: Move the plan to archive**
 
 ```bash
 git mv docs/plans/2026-05-09-third-party-licenses-and-sbom.md docs/plans/archive/2026-05-09-third-party-licenses-and-sbom.md
 ```
 
-- [ ] **Step 6: Final commit + merge**
+- [x] **Step 6: Final commit + merge**
 
 ```bash
 git add package.json CHANGELOG.md docs/PLAN.md docs/plans/archive/PLAN.md docs/plans/archive/2026-05-09-third-party-licenses-and-sbom.md
@@ -750,8 +750,8 @@ Then follow the project's `superpowers:finishing-a-development-branch` Option 1 
 
 ## Self-review checklist
 
-- [ ] **Spec coverage:** every section in §Scope ("Desktop app binaries", "GitHub Release artifacts") has at least one task. Static SPA scope deviation is documented in §Scope and not in any task — correct.
-- [ ] **Placeholder scan:** no "TBD", "implement later", "appropriate error handling" without concrete try/catch + toast key. Every code step has a real code block.
-- [ ] **Type consistency:** `app:readThirdPartyLicenses` is the channel name used in `src/shared/channels/app.ts`, `src/main/ipc/app.ts` `ipcMain.handle`, and `src/preload/index.ts` `ipcRenderer.invoke`. The renderer surface is `window.api.app.readThirdPartyLicenses()`. Consistent across all files.
-- [ ] **No silent string-replace:** the script throws on missing license files instead of skipping. The `injectSnapshotIntoHtml` rule (which this plan does not touch) is not affected.
-- [ ] **User-observable verification:** §Verification names the in-app smoke check (open Settings → About → View notices) and the GitHub Release page check (download `sbom.cdx.json`, parse it). Test suites are explicitly named as hygiene-not-verification.
+- [x] **Spec coverage:** every section in §Scope ("Desktop app binaries", "GitHub Release artifacts") has at least one task. Static SPA scope deviation is documented in §Scope and not in any task — correct.
+- [x] **Placeholder scan:** no "TBD", "implement later", "appropriate error handling" without concrete try/catch + toast key. Every code step has a real code block.
+- [x] **Type consistency:** `app:readThirdPartyLicenses` is the channel name used in `src/shared/channels/app.ts`, `src/main/ipc/app.ts` `ipcMain.handle`, and `src/preload/index.ts` `ipcRenderer.invoke`. The renderer surface is `window.api.app.readThirdPartyLicenses()`. Consistent across all files.
+- [x] **No silent string-replace:** the script throws on missing license files instead of skipping. The `injectSnapshotIntoHtml` rule (which this plan does not touch) is not affected.
+- [x] **User-observable verification:** §Verification names the in-app smoke check (open Settings → About → View notices) and the GitHub Release page check (download `sbom.cdx.json`, parse it). Test suites are explicitly named as hygiene-not-verification.

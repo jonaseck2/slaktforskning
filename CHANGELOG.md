@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- feat: open-source license attribution now travels with the app. Settings → About → "View open source notices" displays the full license text of every bundled third-party library (185 packages). The same `THIRD_PARTY_LICENSES.txt` plus a CycloneDX `sbom.cdx.json` are attached to every GitHub release as standalone supply-chain artifacts.
+- fix: SBOM workflow now includes Electron (and its electron-* runtime packages) — Electron is a devDependency in `package.json` but physically ships in the binary, so omitting it would mislead supply-chain auditors
 - fix: document dev-mode Vite path-traversal assumption in `app:readThirdPartyLicenses`; tighten `window.api.app` type to remove `as string` cast in licenses modal
 
 - feat: `THIRD_PARTY_LICENSES.txt` is now auto-generated and bundled into the packaged app at `Resources/THIRD_PARTY_LICENSES.txt`
