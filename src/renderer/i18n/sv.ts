@@ -1879,6 +1879,10 @@ export default {
         tip: 'Klicka på en person för att titta på den. Dubbelklicka för att flytta fokus dit.',
         dismiss: 'Förstått',
       },
+      mediaReorder: {
+        tip: 'Dra rader för att sortera om — t.ex. barnbilder först, äldre sist.',
+        dismiss: 'Förstått',
+      },
     },
     toast: {
       mediaFirstAttach: {

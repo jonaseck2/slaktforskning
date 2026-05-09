@@ -1900,6 +1900,10 @@ export default {
         tip: 'Click any person to view them. Double-click to set focus there.',
         dismiss: 'Got it',
       },
+      mediaReorder: {
+        tip: 'Drag rows to reorder — e.g. childhood photos first, later ones last.',
+        dismiss: 'Got it',
+      },
     },
     toast: {
       mediaFirstAttach: {
