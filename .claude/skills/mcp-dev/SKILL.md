@@ -226,6 +226,52 @@ server.registerTool('tool_name', {
 5. Add the matching `window.api.<domain>.<method>` line manually to `src/preload/index.ts` (and a stub in `src/static/static-api.ts`)
 6. Test: `npm test && npx playwright test`
 
+## Common pitfalls (real bugs we shipped)
+
+### 1. Pass-through dropped in a branching code path
+
+The Prime Directive ("never synthesize") catches the inference case, but it does not catch the silent-drop case where a tool accepts a field, the agent supplies it, and one branch of the wrapper just doesn't pass it on.
+
+Concrete bug from the 2026-05-09 Bernadotte test session: `add_place` accepted `place_type` / `latitude` / `longitude` / `notes` etc. The no-`parent_chain` branch destructured `...rest` and forwarded them to `createPlace`. The `parent_chain` branch only forwarded `name`. Result: every chained-place call silently lost four authored fields. The MCP tool reported success and returned a row with all four fields null.
+
+The fix shape is to extend the api function with a `leafProps` parameter and forward `rest` through:
+
+```typescript
+// MCP tool
+}, async (args) => {
+  const { parent_chain, name, ...leafProps } = args;
+  if (parent_chain && parent_chain.length > 0) {
+    return placeApi.findOrCreatePlaceWithChain(getDb(), name,
+      parent_chain.map((n) => ({ name: n })),
+      leafProps,                                     // ← was missing
+    );
+  }
+  return placeApi.createPlace(getDb(), { name, ...leafProps });
+});
+```
+
+**Rule:** if a tool's `inputSchema` declares a field, every branch in the handler must pass it on (or document why not in a code comment). When you write a tool that has multiple call paths, write a unit test that asserts every declared field round-trips through every path.
+
+### 2. `mutating: true` is what makes the renderer notice
+
+A worker channel marked `mutating: true` does two things:
+
+1. The renderer's preload `mutating()` wrapper fires `dataChangedListeners` after the call returns — this is what `useEntityData` and `usePagedList` listen for to refresh.
+2. As of `c3f12d95`, the worker also broadcasts `data:changed` to all renderer windows on completion — so MCP-side mutations refresh list views the same way renderer-initiated ones do.
+
+**A new mutating channel that forgets the flag will:**
+- Save to the DB correctly,
+- Return the right value,
+- And leave every list view stale until the user hard-reloads.
+
+This is the single most expensive failure mode in MCP-driven testing — the agent thinks the seed step "didn't work" because the panel still says (0). The data is in the DB; the renderer just never heard. Always set `mutating: true` on any registry channel that performs a write, and verify by clicking through the list view after the call (or by running `tests/unit/data-changed-broadcast.test.ts`).
+
+### 3. UI sections that compute their count via `defineExpose({ count })` need `v-show`, not `v-if`
+
+When a panel section component is the source of truth for its count badge (parent reads `sectionRef.value?.count ?? 0`), `v-if`-collapsing the section unmounts the child and the count falls back to 0 — making the panel header lie. Surfaced for `Uppgifter` and `Kvalitet` on PersonPanel / PlacePanel / MediaPanel during the Bernadotte test.
+
+The fix: switch to `v-show` so the child stays mounted while the body is hidden via `display: none`. The child's `useEntityData` caches its first fetch, so the per-mount cost is one IPC. The right long-term fix is for the parent to fetch a lightweight COUNT for these sections too (matching how `events`, `media`, `relationships`, `groups` work), but `v-show` is the single-line patch.
+
 ## Current MCP Tools
 
 See `docs/MCP.md` for the full tool reference grouped by domain. Source files are always authoritative:
