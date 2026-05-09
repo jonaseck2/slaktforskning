@@ -1,0 +1,509 @@
+{
+  "id": "de-kirchgemeinden",
+  "name": "Tyskland: Kirchengemeinden & Pfarreien",
+  "locale": "de",
+  "description": "German Lutheran Kirchengemeinden and Catholic Pfarreien for genealogy research. Sourced from Wikidata; sparse first cut — coverage will grow as Wikidata fills in.",
+  "source": {
+    "name": "Wikidata",
+    "url": "https://www.wikidata.org/",
+    "license": "CC0 1.0",
+    "fetched": "2026-05-09",
+    "notes": "SPARQL fetch over P31 ∈ {Q20820021 ecclesiastical municipality, Q17143723 Catholic parish, Q102496 parish}, filtered P17 = Q183 (Germany). admin1 (Bundesland) resolved via P131+ → Q1221156. Parishes lacking admin1 are skipped. Wikidata coverage of German parishes is incomplete (~23,500 actual exist); this is a sparse first cut."
+  },
+  "kind": "point",
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 54,
+        "lon": 15,
+        "children": [
+          {
+            "name": "Germany",
+            "type": "country",
+            "aliases": [
+              "Tyskland",
+              "Deutschland",
+              "DE"
+            ],
+            "lat": 51.281875,
+            "lon": 9.757582,
+            "children": [
+              {
+                "name": "Baden-Württemberg",
+                "type": "admin1",
+                "lat": 48.629153,
+                "lon": 9.040196,
+                "children": [
+                  {
+                    "name": "Adventgemeinde",
+                    "type": "parish",
+                    "lat": 48.51197,
+                    "lon": 9.052804
+                  },
+                  {
+                    "name": "Gemeinde Russische Kirche",
+                    "type": "parish",
+                    "lat": 48.784,
+                    "lon": 9.16353
+                  },
+                  {
+                    "name": "Mariä Himmelfahrt",
+                    "type": "parish",
+                    "lat": 48.678799,
+                    "lon": 8.893717
+                  },
+                  {
+                    "name": "St. Paulus",
+                    "type": "parish",
+                    "lat": 48.541841,
+                    "lon": 9.050733
+                  }
+                ]
+              },
+              {
+                "name": "Bayern",
+                "type": "admin1",
+                "lat": 48.552468,
+                "lon": 11.492492,
+                "children": [
+                  {
+                    "name": "Pfarrei Hohenbercha",
+                    "type": "parish",
+                    "lat": 48.39264,
+                    "lon": 11.57284,
+                    "aliases": [
+                      "Hohenbercha"
+                    ]
+                  },
+                  {
+                    "name": "Pfarrei Ingolstadt-Unsernherrn-St. Salvator",
+                    "type": "parish",
+                    "lat": 48.72652,
+                    "lon": 11.44273,
+                    "aliases": [
+                      "Ingolstadt-Unsernherrn-St. Salvator"
+                    ]
+                  },
+                  {
+                    "name": "Pfarrei St. Anna",
+                    "type": "parish",
+                    "lat": 48.14171,
+                    "lon": 11.58977,
+                    "aliases": [
+                      "St. Anna"
+                    ]
+                  },
+                  {
+                    "name": "Pfarrei St. Petrus Canisius Ingolstadt",
+                    "type": "parish",
+                    "lat": 48.74058,
+                    "lon": 11.44997,
+                    "aliases": [
+                      "St. Petrus Canisius Ingolstadt"
+                    ]
+                  },
+                  {
+                    "name": "Pfarrei Zur Schönen Unserer Lieben Frau und St. Moritz Ingolstadt",
+                    "type": "parish",
+                    "lat": 48.76089,
+                    "lon": 11.40715,
+                    "aliases": [
+                      "Zur Schönen Unserer Lieben Frau und St. Moritz Ingolstadt"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Hamburg",
+                "type": "admin1",
+                "lat": 53.564302,
+                "lon": 9.906339,
+                "children": [
+                  {
+                    "name": "Ev.-Luth. Auferstehungskirchengemeinde Hamburg-Lurup",
+                    "type": "parish",
+                    "lat": 53.591847,
+                    "lon": 9.871275
+                  },
+                  {
+                    "name": "Ev.-Luth. Christus-Kirchengemeinde Hamburg-Othmarschen",
+                    "type": "parish",
+                    "lat": 53.553242,
+                    "lon": 9.892345
+                  },
+                  {
+                    "name": "Ev.-Luth. Emmaus-Kirchengemeinde Hamburg-Lurup",
+                    "type": "parish",
+                    "lat": 53.60241,
+                    "lon": 9.87316
+                  },
+                  {
+                    "name": "Ev.-Luth. Haupt-Kirchengemeinde St. Trinitatis Altona",
+                    "type": "parish",
+                    "lat": 53.548759,
+                    "lon": 9.950008
+                  },
+                  {
+                    "name": "Ev.-Luth. Hauptkirche St. Katharinen",
+                    "type": "parish",
+                    "lat": 53.545959,
+                    "lon": 9.99445,
+                    "aliases": [
+                      "Evangelisch-Lutherische Kirchengemeinde Ev.-Luth. Hauptkirche St. Katharinen",
+                      "Kirchengemeinde Ev.-Luth. Hauptkirche St. Katharinen"
+                    ]
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde „Zu den 12 Aposteln in Hamburg-Lurup“",
+                    "type": "parish",
+                    "lat": 53.59981,
+                    "lon": 9.88718
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Altona-Ost",
+                    "type": "parish",
+                    "lat": 53.560013,
+                    "lon": 9.954136
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Blankenese",
+                    "type": "parish",
+                    "lat": 53.561605,
+                    "lon": 9.81317
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Bugenhagen-Groß Flottbek (Kirche in Flottbek)",
+                    "type": "parish",
+                    "lat": 53.565889,
+                    "lon": 9.87733
+                  },
+                  {
+                    "name": "Ev.-luth. Kirchengemeinde Eimsbüttel",
+                    "type": "parish",
+                    "lat": 53.570027,
+                    "lon": 9.961708
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Nienstedten",
+                    "type": "parish",
+                    "lat": 53.552893,
+                    "lon": 9.843434
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Ottensen - Christianskirche-Osterkirche",
+                    "type": "parish",
+                    "lat": 53.547753,
+                    "lon": 9.932607
+                  },
+                  {
+                    "name": "Ev.-luth. Kirchengemeinde St. Georg-Borgfelde",
+                    "type": "parish",
+                    "lat": 53.556925,
+                    "lon": 10.007491
+                  },
+                  {
+                    "name": "Ev.-luth. Kirchengemeinde St. Nikolai zu Hamburg-Finkenwerder",
+                    "type": "parish",
+                    "lat": 53.527204,
+                    "lon": 9.866546
+                  },
+                  {
+                    "name": "Ev.-luth. Kirchengemeinde St. Pauli",
+                    "type": "parish",
+                    "lat": 53.546907,
+                    "lon": 9.956584
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde St. Simeon Alt-Osdorf (St. Simeon)",
+                    "type": "parish",
+                    "lat": 53.570682,
+                    "lon": 9.845325
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Sülldorf-Iserbrook",
+                    "type": "parish",
+                    "lat": 53.57916,
+                    "lon": 9.797605
+                  },
+                  {
+                    "name": "Ev.-Luth. Luther-Kirchengemeinde Hamburg-Bahrenfeld",
+                    "type": "parish",
+                    "lat": 53.570822,
+                    "lon": 9.905137
+                  },
+                  {
+                    "name": "Ev.-Luth. Maria-Magdalena-Kirchengemeinde (MMK)",
+                    "type": "parish",
+                    "lat": 53.587687,
+                    "lon": 9.848347
+                  },
+                  {
+                    "name": "Ev.-Luth. Melanchthon-Kirchengemeinde Hamburg-Groß Flottbek",
+                    "type": "parish",
+                    "lat": 53.565463,
+                    "lon": 9.888167
+                  },
+                  {
+                    "name": "Ev.-Luth. Paul-Gerhardt Kirchengemeinde Altona",
+                    "type": "parish",
+                    "lat": 53.561807,
+                    "lon": 9.921997
+                  },
+                  {
+                    "name": "Ev.-Luth. Paulus-Kirchengemeinde Altona",
+                    "type": "parish",
+                    "lat": 53.567758,
+                    "lon": 9.946685
+                  },
+                  {
+                    "name": "Ev.-Luth. St. Petri-Kirchengemeinde Altona",
+                    "type": "parish",
+                    "lat": 53.549441,
+                    "lon": 9.938271
+                  },
+                  {
+                    "name": "Ev.-Luth. Tabita-Kirchengemeinde Ottensen-Othmarschen",
+                    "type": "parish",
+                    "lat": 53.554111,
+                    "lon": 9.918632
+                  },
+                  {
+                    "name": "Jerusalem-Gemeinde zu Hamburg",
+                    "type": "parish",
+                    "lat": 53.569374,
+                    "lon": 9.966889,
+                    "aliases": [
+                      "Evangelisch-Lutherische Kirchengemeinde Jerusalem-Gemeinde zu Hamburg",
+                      "Kirchengemeinde Jerusalem-Gemeinde zu Hamburg"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Hessen",
+                "type": "admin1",
+                "lat": 50.0248,
+                "lon": 8.121257,
+                "children": [
+                  {
+                    "name": "St. Peter und Paul",
+                    "type": "parish",
+                    "lat": 50.0248,
+                    "lon": 8.121257
+                  }
+                ]
+              },
+              {
+                "name": "Niedersachsen",
+                "type": "admin1",
+                "lat": 52.409512,
+                "lon": 9.340371,
+                "children": [
+                  {
+                    "name": "Benstrup, Steinrieden, Madlage",
+                    "type": "parish",
+                    "lat": 52.773201,
+                    "lon": 7.795106
+                  },
+                  {
+                    "name": "St. Augustinus",
+                    "type": "parish",
+                    "lat": 52.34061,
+                    "lon": 9.71793,
+                    "aliases": [
+                      "Pfarrei St. Augustinus",
+                      "Katholische Pfarrei St. Augustinus"
+                    ]
+                  },
+                  {
+                    "name": "St. Johannes Bosco",
+                    "type": "parish",
+                    "lat": 52.32547,
+                    "lon": 9.73599
+                  },
+                  {
+                    "name": "St. Maria Pattensen",
+                    "type": "parish",
+                    "lat": 52.2683,
+                    "lon": 9.76056
+                  },
+                  {
+                    "name": "St. Maximilian Kolbe",
+                    "type": "parish",
+                    "lat": 52.33998,
+                    "lon": 9.69227
+                  }
+                ]
+              },
+              {
+                "name": "Nordrhein-Westfalen",
+                "type": "admin1",
+                "lat": 51.59618,
+                "lon": 7.285979,
+                "children": [
+                  {
+                    "name": "Kirchspiel Datteln",
+                    "type": "parish",
+                    "lat": 51.653059,
+                    "lon": 7.346258,
+                    "aliases": [
+                      "Datteln"
+                    ]
+                  },
+                  {
+                    "name": "Pfarrei St. Dionysius",
+                    "type": "parish",
+                    "lat": 51.5393,
+                    "lon": 7.2257,
+                    "aliases": [
+                      "St. Dionysius"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Sachsen",
+                "type": "admin1",
+                "lat": 51.128781,
+                "lon": 13.24812,
+                "children": [
+                  {
+                    "name": "Nicolaistraße 1; 3, Grimma",
+                    "type": "parish",
+                    "lat": 51.236241,
+                    "lon": 12.726819
+                  },
+                  {
+                    "name": "St. Petrus",
+                    "type": "parish",
+                    "lat": 51.02132,
+                    "lon": 13.76942
+                  }
+                ]
+              },
+              {
+                "name": "Schleswig-Holstein",
+                "type": "admin1",
+                "lat": 54.349805,
+                "lon": 9.625902,
+                "children": [
+                  {
+                    "name": "Adelby",
+                    "type": "parish",
+                    "lat": 54.7819,
+                    "lon": 9.46667
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Borby",
+                    "type": "parish",
+                    "lat": 54.480188,
+                    "lon": 9.838867
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Büdelsdorf",
+                    "type": "parish",
+                    "lat": 54.31666,
+                    "lon": 9.687493
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Bünsdorf",
+                    "type": "parish",
+                    "lat": 54.36951,
+                    "lon": 9.74336
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Fockbek",
+                    "type": "parish",
+                    "lat": 54.308142,
+                    "lon": 9.592155
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Hütten",
+                    "type": "parish",
+                    "lat": 54.431,
+                    "lon": 9.70279
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Jevenstedt",
+                    "type": "parish",
+                    "lat": 54.23222,
+                    "lon": 9.66483
+                  },
+                  {
+                    "name": "Ev.-luth. Kirchengemeinde Keitum auf Sylt",
+                    "type": "parish",
+                    "lat": 54.896911,
+                    "lon": 8.368066
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Kosel",
+                    "type": "parish",
+                    "lat": 54.506453,
+                    "lon": 9.752981
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Rendsburg",
+                    "type": "parish",
+                    "lat": 54.305441,
+                    "lon": 9.66573
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde St. Johannes Schacht-Audorf",
+                    "type": "parish",
+                    "lat": 54.310383,
+                    "lon": 9.717356
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde St. Michaelis Osterrönfeld",
+                    "type": "parish",
+                    "lat": 54.28982,
+                    "lon": 9.694944
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde St. Nicolai Eckernförde",
+                    "type": "parish",
+                    "lat": 54.467472,
+                    "lon": 9.837848
+                  },
+                  {
+                    "name": "Ev.-Luth. Kirchengemeinde Westerrönfeld",
+                    "type": "parish",
+                    "lat": 54.281637,
+                    "lon": 9.650956
+                  },
+                  {
+                    "name": "Ev.-Luth. Pauls-Kirchengemeinde zu Schenefeld",
+                    "type": "parish",
+                    "lat": 53.6066,
+                    "lon": 9.855092
+                  },
+                  {
+                    "name": "Ev.-Luth. Stephanskirchengemeinde Schenefeld/Hamburg",
+                    "type": "parish",
+                    "lat": 53.600345,
+                    "lon": 9.82419
+                  },
+                  {
+                    "name": "Kirchspiel Husby",
+                    "type": "parish",
+                    "lat": 54.762,
+                    "lon": 9.577,
+                    "aliases": [
+                      "Husby"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
