@@ -10,7 +10,7 @@
  * App name in the header: "OurLegacy" (the public product name; the package is
  * named "slaktforskning" internally).
  */
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +28,23 @@ const KNOWN_LICENSE_HINTS = new Map([
 ]);
 
 /**
+ * Run `npm ls <args> --json` and return the parsed JSON tree.
+ * Forwards any stderr to our process's stderr so warnings (peer-dep advisories,
+ * extraneous-package notices, lifecycle complaints) are never silently swallowed.
+ * Throws with combined stderr on non-zero exit.
+ */
+function npmLs(args) {
+  const r = spawnSync('npm', ['ls', ...args, '--json'], { cwd: ROOT, encoding: 'utf8' });
+  if (r.stderr && r.stderr.trim()) {
+    process.stderr.write(r.stderr);
+  }
+  if (r.status !== 0) {
+    throw new Error(`npm ls ${args.join(' ')} exited ${r.status}\n${r.stderr ?? ''}`);
+  }
+  return JSON.parse(r.stdout);
+}
+
+/**
  * Walk the dep tree once, collecting the union of: production deps + Electron
  * (which is a devDep but ships in the binary). Output is a flat map keyed by
  * `<name>@<version>` for stable ordering.
@@ -35,20 +52,12 @@ const KNOWN_LICENSE_HINTS = new Map([
 function collectDependencies() {
   const out = new Map();
 
-  const prodRaw = execFileSync(
-    'npm', ['ls', '--omit=dev', '--all', '--json'],
-    { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] }
-  ).toString();
-  const prodTree = JSON.parse(prodRaw);
+  const prodTree = npmLs(['--omit=dev', '--all']);
   walk(prodTree, out, ROOT);
 
   // Electron + electron-* runtime packages: dev deps that physically ship in
   // the binary's resources folder. Pull them via a targeted query.
-  const electronRaw = execFileSync(
-    'npm', ['ls', 'electron', '--all', '--json'],
-    { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] }
-  ).toString();
-  const electronTree = JSON.parse(electronRaw);
+  const electronTree = npmLs(['electron', '--all']);
   walk(electronTree, out, ROOT);
 
   return out;
