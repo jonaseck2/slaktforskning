@@ -81,7 +81,11 @@ export function updateRelationship(
   const values: unknown[] = [];
   for (const [key, value] of Object.entries(data)) {
     fields.push(`${key} = ?`);
-    values.push(value ?? null);
+    if (key === 'notes') {
+      values.push(value ?? '');
+    } else {
+      values.push(value ?? null);
+    }
   }
   if (fields.length === 0) return getRelationship(db, id);
   fields.push("updated_at = datetime('now')");

@@ -107,13 +107,6 @@ export function registerWebsiteExportHandlers(): void {
       redactLiving: boolean;
       mediaPersonOnly: boolean;
     };
-    // 'split' (default) writes index.html + data.json.gz alongside it — best
-    // for hosted deployment (GitHub Pages, S3). The browser fetches data.json.gz
-    // and decompresses it via DecompressionStream.
-    // 'portable' writes a single index.html with the snapshot embedded as
-    // base64-gzip in a <script> tag — best for emailing or opening locally
-    // by double-click (file:// blocks fetch, so split mode can't load there).
-    mode?: 'split' | 'portable';
     _outputDir?: string;
   }) => {
     let out: string;
@@ -201,28 +194,21 @@ export function registerWebsiteExportHandlers(): void {
       snapshot.mediaRegions = [];
     }
 
-    // 4. Write the snapshot — gzipped in either mode. Done after the copy pass
-    //    so the snapshot only references media that actually shipped.
+    // 4. Embed the gzipped snapshot as base64 in an inline <script> in
+    //    index.html. The bootstrap reads window.__SNAPSHOT_GZ__ and
+    //    decompresses in-page so the file works from file:// (double-click,
+    //    email, USB stick) and from any static host without needing a server
+    //    fetch round-trip.
     const json = JSON.stringify(snapshot);
     const gz = gzipSync(Buffer.from(json), { level: 9 });
-    const mode = opts.mode ?? 'split';
-    if (mode === 'portable') {
-      // Embed gz+base64 directly in index.html via an inline <script>. The
-      // bootstrap reads window.__SNAPSHOT_GZ__ and decompresses in-page so
-      // the file works from a file:// URL with no host required.
-      const indexHtmlPath = path.join(out, 'index.html');
-      const html = await fsp.readFile(indexHtmlPath, 'utf8');
-      const tag = `<script>window.__SNAPSHOT_GZ__=${JSON.stringify(gz.toString('base64'))};</script>`;
-      const injected = html.includes('</head>')
-        ? html.replace('</head>', `${tag}</head>`)
-        : `${tag}${html}`;
-      await fsp.writeFile(indexHtmlPath, injected);
-    } else {
-      // Split mode: data.json.gz lives alongside index.html. The bootstrap
-      // fetches it (only works under http(s)) and decompresses on the client.
-      await fsp.writeFile(path.join(out, 'data.json.gz'), gz);
-    }
+    const indexHtmlPath = path.join(out, 'index.html');
+    const html = await fsp.readFile(indexHtmlPath, 'utf8');
+    const tag = `<script>window.__SNAPSHOT_GZ__=${JSON.stringify(gz.toString('base64'))};</script>`;
+    const injected = html.includes('</head>')
+      ? html.replace('</head>', `${tag}</head>`)
+      : `${tag}${html}`;
+    await fsp.writeFile(indexHtmlPath, injected);
 
-    return { canceled: false, outputDir: out, mode };
+    return { canceled: false, outputDir: out };
   });
 }

@@ -523,7 +523,7 @@ async function performSave() {
       person1_id: form.person1_id,
       person2_id: form.person2_id,
       subtype: form.subtype || null,
-      notes: form.notes || null,
+      notes: form.notes ?? '',
     };
     if (savedRelationshipId.value) {
       rel = (await window.api.relationships.update(savedRelationshipId.value, payload)) as RelationshipData;
