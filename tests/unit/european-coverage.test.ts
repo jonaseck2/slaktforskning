@@ -79,6 +79,18 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Westminster, England, United Kingdom', expectAdmin1: 'England', expectLeaf: 'Westminster', expectCountry: 'United Kingdom' },
     ],
   },
+  {
+    countryCode: 'ie',
+    countryName: 'Ireland',
+    probes: [
+      // GeoNames IE: 4 historical provinces (admin1) + 26 RoI counties (admin2)
+      // + populated places ≥1000 pop. NI counties live in gb-civil-divisions.
+      { query: 'Wicklow, Leinster, Ireland', expectAdmin1: 'Leinster', expectAdmin2: 'Wicklow', expectCountry: 'Ireland' },
+      { query: 'Cork, Munster, Ireland', expectAdmin1: 'Munster', expectAdmin2: 'Cork', expectCountry: 'Ireland' },
+      { query: 'Dublin City, Leinster, Ireland', expectAdmin1: 'Leinster', expectAdmin2: 'Dublin City', expectCountry: 'Ireland' },
+      { query: 'Sligo, Connacht, Ireland', expectAdmin1: 'Connacht', expectAdmin2: 'Sligo', expectCountry: 'Ireland' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {

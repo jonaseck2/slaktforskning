@@ -31,6 +31,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'de-gemeinden', 'de-kirchgemeinden', 'de-gemeinden-boundaries',
   // British Isles
   'gb-civil-divisions',
+  // Ireland
+  'ie-counties',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -132,6 +134,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'de-gemeinden-boundaries': DE_RULES,
   // British Isles
   'gb-civil-divisions': GB_RULES,
+  // Ireland — share GB normalize rules (English + civil-parish/county-of patterns)
+  'ie-counties': GB_RULES,
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

@@ -1,0 +1,2756 @@
+{
+  "id": "ie-counties",
+  "name": "Ireland (RoI) Provinces, Counties, and Populated Places",
+  "locale": "en-IE",
+  "description": "Republic of Ireland: 4 historical provinces (admin1) → 26 counties (admin2) → populated places ≥1000 pop. Northern Ireland counties live in gb-civil-divisions.",
+  "kind": "point",
+  "source": {
+    "name": "GeoNames",
+    "url": "https://download.geonames.org/export/dump/IE.zip",
+    "license": "CC BY 4.0",
+    "attribution": "Source: GeoNames.org (CC BY 4.0), fetched 2026-05-09",
+    "fetched": "2026-05-09",
+    "notes": "Filter: P (populated place) ≥1000 pop + A/ADM1/ADM2. Civil parishes, townlands, Catholic parishes deferred."
+  },
+  "root": {
+    "name": "World",
+    "type": "world",
+    "lat": 0,
+    "lon": 0,
+    "children": [
+      {
+        "name": "Europe",
+        "type": "continent",
+        "lat": 50,
+        "lon": 10,
+        "children": [
+          {
+            "name": "Ireland",
+            "type": "country",
+            "aliases": [
+              "Éire",
+              "Republic of Ireland",
+              "Irland",
+              "Irlande",
+              "Irlanda"
+            ],
+            "lat": 53.5,
+            "lon": -8,
+            "children": [
+              {
+                "name": "Leinster",
+                "type": "admin1",
+                "aliases": [
+                  "Cúige Laighean"
+                ],
+                "lat": 53.215191,
+                "lon": -6.814284,
+                "children": [
+                  {
+                    "name": "An Longfort",
+                    "type": "admin2",
+                    "aliases": [
+                      "Co Longford",
+                      "Contae an Longfoirt",
+                      "Longford"
+                    ],
+                    "lat": 53.66667,
+                    "lon": -7.75,
+                    "children": [
+                      {
+                        "name": "Ballymahon",
+                        "type": "admin3",
+                        "lat": 53.56667,
+                        "lon": -7.76667
+                      },
+                      {
+                        "name": "Edgeworthstown",
+                        "type": "admin3",
+                        "lat": 53.7,
+                        "lon": -7.61667
+                      },
+                      {
+                        "name": "Lanesborough",
+                        "type": "admin3",
+                        "lat": 53.66667,
+                        "lon": -7.98333
+                      },
+                      {
+                        "name": "Longford",
+                        "type": "admin3",
+                        "lat": 53.72536,
+                        "lon": -7.79823
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Carlow",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Carlow",
+                      "Ceatharlach",
+                      "Contae Cheatharlach"
+                    ],
+                    "lat": 52.66667,
+                    "lon": -6.83333,
+                    "children": [
+                      {
+                        "name": "Bagenalstown",
+                        "type": "admin3",
+                        "lat": 52.70031,
+                        "lon": -6.96181
+                      },
+                      {
+                        "name": "Carlow",
+                        "type": "admin3",
+                        "lat": 52.84083,
+                        "lon": -6.92611
+                      },
+                      {
+                        "name": "Tullow",
+                        "type": "admin3",
+                        "lat": 52.80028,
+                        "lon": -6.73694
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dublin City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Baile Atha Cliath",
+                      "Baile Átha Cliath"
+                    ],
+                    "lat": 53.35512,
+                    "lon": -6.24922,
+                    "children": [
+                      {
+                        "name": "Artane",
+                        "type": "admin3",
+                        "lat": 53.38712,
+                        "lon": -6.2138
+                      },
+                      {
+                        "name": "Ballyfermot",
+                        "type": "admin3",
+                        "lat": 53.34283,
+                        "lon": -6.3548
+                      },
+                      {
+                        "name": "Ballymun",
+                        "type": "admin3",
+                        "lat": 53.39807,
+                        "lon": -6.26693
+                      },
+                      {
+                        "name": "Beaumont",
+                        "type": "admin3",
+                        "lat": 53.38721,
+                        "lon": -6.22713
+                      },
+                      {
+                        "name": "Bonnybrook",
+                        "type": "admin3",
+                        "lat": 53.39835,
+                        "lon": -6.20749
+                      },
+                      {
+                        "name": "Cabra",
+                        "type": "admin3",
+                        "lat": 53.36694,
+                        "lon": -6.29444
+                      },
+                      {
+                        "name": "Chapelizod",
+                        "type": "admin3",
+                        "lat": 53.34846,
+                        "lon": -6.34301
+                      },
+                      {
+                        "name": "Cherry Orchard",
+                        "type": "admin3",
+                        "lat": 53.33605,
+                        "lon": -6.37799
+                      },
+                      {
+                        "name": "Clonskeagh",
+                        "type": "admin3",
+                        "lat": 53.31467,
+                        "lon": -6.23148
+                      },
+                      {
+                        "name": "Coolock",
+                        "type": "admin3",
+                        "lat": 53.3887,
+                        "lon": -6.19998
+                      },
+                      {
+                        "name": "Crumlin",
+                        "type": "admin3",
+                        "lat": 53.32154,
+                        "lon": -6.31439
+                      },
+                      {
+                        "name": "Darndale",
+                        "type": "admin3",
+                        "lat": 53.39948,
+                        "lon": -6.18886
+                      },
+                      {
+                        "name": "Dollymount",
+                        "type": "admin3",
+                        "lat": 53.36489,
+                        "lon": -6.18032
+                      },
+                      {
+                        "name": "Donaghmede",
+                        "type": "admin3",
+                        "lat": 53.39845,
+                        "lon": -6.16179
+                      },
+                      {
+                        "name": "Donnybrook",
+                        "type": "admin3",
+                        "lat": 53.31375,
+                        "lon": -6.22274
+                      },
+                      {
+                        "name": "Donnycarney",
+                        "type": "admin3",
+                        "lat": 53.3735,
+                        "lon": -6.20976
+                      },
+                      {
+                        "name": "Drumcondra",
+                        "type": "admin3",
+                        "lat": 53.37058,
+                        "lon": -6.25298
+                      },
+                      {
+                        "name": "Dublin",
+                        "type": "admin3",
+                        "lat": 53.33306,
+                        "lon": -6.24889
+                      },
+                      {
+                        "name": "Fairview",
+                        "type": "admin3",
+                        "lat": 53.36597,
+                        "lon": -6.23985
+                      },
+                      {
+                        "name": "Finglas",
+                        "type": "admin3",
+                        "lat": 53.38917,
+                        "lon": -6.29694
+                      },
+                      {
+                        "name": "Glasnevin",
+                        "type": "admin3",
+                        "lat": 53.37851,
+                        "lon": -6.28028
+                      },
+                      {
+                        "name": "Killester",
+                        "type": "admin3",
+                        "lat": 53.37322,
+                        "lon": -6.20431
+                      },
+                      {
+                        "name": "Marino",
+                        "type": "admin3",
+                        "lat": 53.37022,
+                        "lon": -6.23646
+                      },
+                      {
+                        "name": "Raheny",
+                        "type": "admin3",
+                        "lat": 53.38681,
+                        "lon": -6.18067
+                      },
+                      {
+                        "name": "Rathgar",
+                        "type": "admin3",
+                        "lat": 53.31457,
+                        "lon": -6.275
+                      },
+                      {
+                        "name": "Rathmines",
+                        "type": "admin3",
+                        "lat": 53.32028,
+                        "lon": -6.26333
+                      },
+                      {
+                        "name": "Rialto",
+                        "type": "admin3",
+                        "lat": 53.33625,
+                        "lon": -6.29718
+                      },
+                      {
+                        "name": "Ringsend",
+                        "type": "admin3",
+                        "lat": 53.34194,
+                        "lon": -6.22639
+                      },
+                      {
+                        "name": "Sandymount",
+                        "type": "admin3",
+                        "lat": 53.32815,
+                        "lon": -6.22224
+                      },
+                      {
+                        "name": "Walkinstown",
+                        "type": "admin3",
+                        "lat": 53.32964,
+                        "lon": -6.33963
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dún Laoghaire-Rathdown",
+                    "type": "admin2",
+                    "lat": 53.29436,
+                    "lon": -6.13489,
+                    "children": [
+                      {
+                        "name": "Balally",
+                        "type": "admin3",
+                        "lat": 53.27504,
+                        "lon": -6.23594
+                      },
+                      {
+                        "name": "Ballinteer",
+                        "type": "admin3",
+                        "lat": 53.27409,
+                        "lon": -6.25397
+                      },
+                      {
+                        "name": "Blackrock",
+                        "type": "admin3",
+                        "lat": 53.3015,
+                        "lon": -6.1778
+                      },
+                      {
+                        "name": "Booterstown",
+                        "type": "admin3",
+                        "lat": 53.30447,
+                        "lon": -6.19985
+                      },
+                      {
+                        "name": "Cabinteely",
+                        "type": "admin3",
+                        "lat": 53.26973,
+                        "lon": -6.16058
+                      },
+                      {
+                        "name": "Dalkey",
+                        "type": "admin3",
+                        "lat": 53.27833,
+                        "lon": -6.10028
+                      },
+                      {
+                        "name": "Dún Laoghaire",
+                        "type": "admin3",
+                        "lat": 53.29395,
+                        "lon": -6.13586
+                      },
+                      {
+                        "name": "Dundrum",
+                        "type": "admin3",
+                        "lat": 53.29067,
+                        "lon": -6.25714
+                      },
+                      {
+                        "name": "Foxrock",
+                        "type": "admin3",
+                        "lat": 53.26667,
+                        "lon": -6.17417
+                      },
+                      {
+                        "name": "Loughlinstown",
+                        "type": "admin3",
+                        "lat": 53.24389,
+                        "lon": -6.13306
+                      },
+                      {
+                        "name": "Milltown",
+                        "type": "admin3",
+                        "lat": 53.31301,
+                        "lon": -6.2453
+                      },
+                      {
+                        "name": "Monkstown",
+                        "type": "admin3",
+                        "lat": 53.29308,
+                        "lon": -6.15312
+                      },
+                      {
+                        "name": "Mount Merrion",
+                        "type": "admin3",
+                        "lat": 53.30008,
+                        "lon": -6.21504
+                      },
+                      {
+                        "name": "Sallynoggin",
+                        "type": "admin3",
+                        "lat": 53.27917,
+                        "lon": -6.14058
+                      },
+                      {
+                        "name": "Sandyford",
+                        "type": "admin3",
+                        "lat": 53.2747,
+                        "lon": -6.2253
+                      },
+                      {
+                        "name": "Shankill",
+                        "type": "admin3",
+                        "lat": 53.22611,
+                        "lon": -6.12444
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Fingal",
+                    "type": "admin2",
+                    "aliases": [
+                      "Fingal County"
+                    ],
+                    "lat": 53.45909,
+                    "lon": -6.21942,
+                    "children": [
+                      {
+                        "name": "An Ros",
+                        "type": "admin3",
+                        "lat": 53.52424,
+                        "lon": -6.10497
+                      },
+                      {
+                        "name": "Balbriggan",
+                        "type": "admin3",
+                        "lat": 53.60846,
+                        "lon": -6.1831
+                      },
+                      {
+                        "name": "Baldoyle",
+                        "type": "admin3",
+                        "lat": 53.39972,
+                        "lon": -6.12583
+                      },
+                      {
+                        "name": "Balrothery",
+                        "type": "admin3",
+                        "lat": 53.58828,
+                        "lon": -6.18728
+                      },
+                      {
+                        "name": "Bayside",
+                        "type": "admin3",
+                        "lat": 53.38895,
+                        "lon": -6.14041
+                      },
+                      {
+                        "name": "Blanchardstown",
+                        "type": "admin3",
+                        "lat": 53.38806,
+                        "lon": -6.37556
+                      },
+                      {
+                        "name": "Castleknock",
+                        "type": "admin3",
+                        "lat": 53.37483,
+                        "lon": -6.36336
+                      },
+                      {
+                        "name": "Donabate",
+                        "type": "admin3",
+                        "lat": 53.48722,
+                        "lon": -6.15194
+                      },
+                      {
+                        "name": "Hartstown",
+                        "type": "admin3",
+                        "lat": 53.39306,
+                        "lon": -6.42694
+                      },
+                      {
+                        "name": "Howth",
+                        "type": "admin3",
+                        "lat": 53.38778,
+                        "lon": -6.06528
+                      },
+                      {
+                        "name": "Kinsealy-Drinan",
+                        "type": "admin3",
+                        "lat": 53.44395,
+                        "lon": -6.20334
+                      },
+                      {
+                        "name": "Lusk",
+                        "type": "admin3",
+                        "lat": 53.52743,
+                        "lon": -6.16423
+                      },
+                      {
+                        "name": "Malahide",
+                        "type": "admin3",
+                        "lat": 53.45083,
+                        "lon": -6.15444
+                      },
+                      {
+                        "name": "Mulhuddart",
+                        "type": "admin3",
+                        "lat": 53.40361,
+                        "lon": -6.40111
+                      },
+                      {
+                        "name": "Portmarnock",
+                        "type": "admin3",
+                        "lat": 53.42306,
+                        "lon": -6.1375
+                      },
+                      {
+                        "name": "Portraine",
+                        "type": "admin3",
+                        "lat": 53.49667,
+                        "lon": -6.11111
+                      },
+                      {
+                        "name": "Skerries",
+                        "type": "admin3",
+                        "lat": 53.58278,
+                        "lon": -6.10833
+                      },
+                      {
+                        "name": "Sutton",
+                        "type": "admin3",
+                        "lat": 53.38947,
+                        "lon": -6.11059
+                      },
+                      {
+                        "name": "Swords",
+                        "type": "admin3",
+                        "lat": 53.45972,
+                        "lon": -6.21806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kildare",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cill Dara",
+                      "Co Kildare",
+                      "Contae Chill Dara"
+                    ],
+                    "lat": 53.16667,
+                    "lon": -6.75,
+                    "children": [
+                      {
+                        "name": "Athgarvan",
+                        "type": "admin3",
+                        "lat": 53.15229,
+                        "lon": -6.78173
+                      },
+                      {
+                        "name": "Athy",
+                        "type": "admin3",
+                        "lat": 52.99139,
+                        "lon": -6.98028
+                      },
+                      {
+                        "name": "Castledermot",
+                        "type": "admin3",
+                        "lat": 52.90889,
+                        "lon": -6.84222
+                      },
+                      {
+                        "name": "Celbridge",
+                        "type": "admin3",
+                        "lat": 53.34165,
+                        "lon": -6.54419
+                      },
+                      {
+                        "name": "Cherryville",
+                        "type": "admin3",
+                        "lat": 53.15694,
+                        "lon": -6.96667
+                      },
+                      {
+                        "name": "Clane",
+                        "type": "admin3",
+                        "lat": 53.29139,
+                        "lon": -6.68917
+                      },
+                      {
+                        "name": "Confey",
+                        "type": "admin3",
+                        "lat": 53.37923,
+                        "lon": -6.49052
+                      },
+                      {
+                        "name": "Derrinturn",
+                        "type": "admin3",
+                        "lat": 53.34167,
+                        "lon": -6.94111
+                      },
+                      {
+                        "name": "Droichead Nua",
+                        "type": "admin3",
+                        "lat": 53.18194,
+                        "lon": -6.79667
+                      },
+                      {
+                        "name": "Eadestown",
+                        "type": "admin3",
+                        "lat": 53.20274,
+                        "lon": -6.57768
+                      },
+                      {
+                        "name": "Johnstown",
+                        "type": "admin3",
+                        "lat": 53.23833,
+                        "lon": -6.62222
+                      },
+                      {
+                        "name": "Kilcock",
+                        "type": "admin3",
+                        "lat": 53.40222,
+                        "lon": -6.67083
+                      },
+                      {
+                        "name": "Kilcullen",
+                        "type": "admin3",
+                        "lat": 53.13028,
+                        "lon": -6.74444
+                      },
+                      {
+                        "name": "Kildare",
+                        "type": "admin3",
+                        "lat": 53.15611,
+                        "lon": -6.91444
+                      },
+                      {
+                        "name": "Kill",
+                        "type": "admin3",
+                        "lat": 53.25139,
+                        "lon": -6.59167
+                      },
+                      {
+                        "name": "Leixlip",
+                        "type": "admin3",
+                        "lat": 53.36583,
+                        "lon": -6.49556
+                      },
+                      {
+                        "name": "Maynooth",
+                        "type": "admin3",
+                        "lat": 53.385,
+                        "lon": -6.59361
+                      },
+                      {
+                        "name": "Monasterevin",
+                        "type": "admin3",
+                        "lat": 53.14056,
+                        "lon": -7.06639
+                      },
+                      {
+                        "name": "Moone",
+                        "type": "admin3",
+                        "lat": 52.97556,
+                        "lon": -6.815
+                      },
+                      {
+                        "name": "Naas",
+                        "type": "admin3",
+                        "lat": 53.21583,
+                        "lon": -6.66694
+                      },
+                      {
+                        "name": "Old Kilcullen",
+                        "type": "admin3",
+                        "lat": 53.10639,
+                        "lon": -6.76528
+                      },
+                      {
+                        "name": "Oughterard",
+                        "type": "admin3",
+                        "lat": 53.2775,
+                        "lon": -6.56389
+                      },
+                      {
+                        "name": "Prosperous",
+                        "type": "admin3",
+                        "lat": 53.29028,
+                        "lon": -6.75389
+                      },
+                      {
+                        "name": "Rathangan",
+                        "type": "admin3",
+                        "lat": 53.22139,
+                        "lon": -6.995
+                      },
+                      {
+                        "name": "Sallins",
+                        "type": "admin3",
+                        "lat": 53.24889,
+                        "lon": -6.66611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Kilkenny",
+                    "type": "admin2",
+                    "aliases": [
+                      "Canicopolis",
+                      "Cantae Chill Chainnigh",
+                      "Cill Chainnigh",
+                      "Keeill Chennee",
+                      "Kilkeni",
+                      "Kilkenis",
+                      "Kilkenni",
+                      "ji er ken ni",
+                      "kilkeni",
+                      "kirukeni",
+                      "klkyny",
+                      "kylkny",
+                      "Килкени",
+                      "Килкенни",
+                      "Кілкенні",
+                      "کلکینی",
+                      "کیلکنی",
+                      "კილკენი",
+                      "キルケニー",
+                      "基尔肯尼",
+                      "킬케니"
+                    ],
+                    "lat": 52.58333,
+                    "lon": -7.25,
+                    "children": [
+                      {
+                        "name": "Ballyragget",
+                        "type": "admin3",
+                        "lat": 52.78889,
+                        "lon": -7.33028
+                      },
+                      {
+                        "name": "Callan",
+                        "type": "admin3",
+                        "lat": 52.545,
+                        "lon": -7.39111
+                      },
+                      {
+                        "name": "Castlecomer",
+                        "type": "admin3",
+                        "lat": 52.80611,
+                        "lon": -7.21056
+                      },
+                      {
+                        "name": "Graiguenamanagh",
+                        "type": "admin3",
+                        "lat": 52.54028,
+                        "lon": -6.95472
+                      },
+                      {
+                        "name": "Kilkenny",
+                        "type": "admin3",
+                        "lat": 52.65417,
+                        "lon": -7.25222
+                      },
+                      {
+                        "name": "Mooncoin",
+                        "type": "admin3",
+                        "lat": 52.28944,
+                        "lon": -7.24833
+                      },
+                      {
+                        "name": "Piltown",
+                        "type": "admin3",
+                        "lat": 52.35333,
+                        "lon": -7.34028
+                      },
+                      {
+                        "name": "Thomastown",
+                        "type": "admin3",
+                        "lat": 52.52667,
+                        "lon": -7.13722
+                      },
+                      {
+                        "name": "Urlingford",
+                        "type": "admin3",
+                        "lat": 52.72056,
+                        "lon": -7.5825
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Laois",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae Laoighise",
+                      "Contae Laoise",
+                      "Laoighis",
+                      "Leix",
+                      "Queen's"
+                    ],
+                    "lat": 53,
+                    "lon": -7.4,
+                    "children": [
+                      {
+                        "name": "Abbeyleix",
+                        "type": "admin3",
+                        "lat": 52.91331,
+                        "lon": -7.34456
+                      },
+                      {
+                        "name": "Ballylinan",
+                        "type": "admin3",
+                        "lat": 52.94497,
+                        "lon": -7.04073
+                      },
+                      {
+                        "name": "Mountmellick",
+                        "type": "admin3",
+                        "lat": 53.11361,
+                        "lon": -7.32
+                      },
+                      {
+                        "name": "Mountrath",
+                        "type": "admin3",
+                        "lat": 52.99889,
+                        "lon": -7.47278
+                      },
+                      {
+                        "name": "Portarlington",
+                        "type": "admin3",
+                        "lat": 53.16222,
+                        "lon": -7.19111
+                      },
+                      {
+                        "name": "Portlaoise",
+                        "type": "admin3",
+                        "lat": 53.03441,
+                        "lon": -7.29979
+                      },
+                      {
+                        "name": "Rathdowney",
+                        "type": "admin3",
+                        "lat": 52.85472,
+                        "lon": -7.58028
+                      },
+                      {
+                        "name": "Stradbally",
+                        "type": "admin3",
+                        "lat": 53.01556,
+                        "lon": -7.15278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Louth",
+                    "type": "admin2",
+                    "aliases": [
+                      "Co Louth",
+                      "Contae Lu",
+                      "Contae Lú"
+                    ],
+                    "lat": 53.83333,
+                    "lon": -6.5,
+                    "children": [
+                      {
+                        "name": "Ardee",
+                        "type": "admin3",
+                        "lat": 53.85972,
+                        "lon": -6.54056
+                      },
+                      {
+                        "name": "Blackrock",
+                        "type": "admin3",
+                        "lat": 53.96405,
+                        "lon": -6.36514
+                      },
+                      {
+                        "name": "Carlingford",
+                        "type": "admin3",
+                        "lat": 54.04,
+                        "lon": -6.18833
+                      },
+                      {
+                        "name": "Castlebellingham",
+                        "type": "admin3",
+                        "lat": 53.90083,
+                        "lon": -6.39028
+                      },
+                      {
+                        "name": "Clogherhead",
+                        "type": "admin3",
+                        "lat": 53.79361,
+                        "lon": -6.2375
+                      },
+                      {
+                        "name": "Drogheda",
+                        "type": "admin3",
+                        "lat": 53.71889,
+                        "lon": -6.34778
+                      },
+                      {
+                        "name": "Dromiskin",
+                        "type": "admin3",
+                        "lat": 53.92538,
+                        "lon": -6.40292
+                      },
+                      {
+                        "name": "Dundalk",
+                        "type": "admin3",
+                        "lat": 54,
+                        "lon": -6.41667
+                      },
+                      {
+                        "name": "Dunleer",
+                        "type": "admin3",
+                        "lat": 53.835,
+                        "lon": -6.39611
+                      },
+                      {
+                        "name": "Termonfeckin",
+                        "type": "admin3",
+                        "lat": 53.76333,
+                        "lon": -6.26778
+                      },
+                      {
+                        "name": "Tullyallen",
+                        "type": "admin3",
+                        "lat": 53.73611,
+                        "lon": -6.42278
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Meath",
+                    "type": "admin2",
+                    "aliases": [
+                      "Co Meath",
+                      "Contae na Mi",
+                      "Contae na Mí"
+                    ],
+                    "lat": 53.66667,
+                    "lon": -6.66667,
+                    "children": [
+                      {
+                        "name": "Ashbourne",
+                        "type": "admin3",
+                        "lat": 53.51163,
+                        "lon": -6.39821
+                      },
+                      {
+                        "name": "Athboy",
+                        "type": "admin3",
+                        "lat": 53.62327,
+                        "lon": -6.91434
+                      },
+                      {
+                        "name": "Ballivor",
+                        "type": "admin3",
+                        "lat": 53.53167,
+                        "lon": -6.96111
+                      },
+                      {
+                        "name": "Duleek",
+                        "type": "admin3",
+                        "lat": 53.65667,
+                        "lon": -6.41917
+                      },
+                      {
+                        "name": "Dunboyne",
+                        "type": "admin3",
+                        "lat": 53.41901,
+                        "lon": -6.47375
+                      },
+                      {
+                        "name": "Dunshaughlin",
+                        "type": "admin3",
+                        "lat": 53.5125,
+                        "lon": -6.54
+                      },
+                      {
+                        "name": "Enfield",
+                        "type": "admin3",
+                        "lat": 53.41419,
+                        "lon": -6.83229
+                      },
+                      {
+                        "name": "Kells",
+                        "type": "admin3",
+                        "lat": 53.72639,
+                        "lon": -6.87917
+                      },
+                      {
+                        "name": "Kentstown",
+                        "type": "admin3",
+                        "lat": 53.62754,
+                        "lon": -6.52674
+                      },
+                      {
+                        "name": "Laytown",
+                        "type": "admin3",
+                        "lat": 53.68194,
+                        "lon": -6.23917
+                      },
+                      {
+                        "name": "Longwood",
+                        "type": "admin3",
+                        "lat": 53.45389,
+                        "lon": -6.92194
+                      },
+                      {
+                        "name": "Navan",
+                        "type": "admin3",
+                        "lat": 53.65278,
+                        "lon": -6.68139
+                      },
+                      {
+                        "name": "Newtown Trim",
+                        "type": "admin3",
+                        "lat": 53.55611,
+                        "lon": -6.77
+                      },
+                      {
+                        "name": "Oldcastle",
+                        "type": "admin3",
+                        "lat": 53.76648,
+                        "lon": -7.16284
+                      },
+                      {
+                        "name": "Ratoath",
+                        "type": "admin3",
+                        "lat": 53.50806,
+                        "lon": -6.4625
+                      },
+                      {
+                        "name": "Slane",
+                        "type": "admin3",
+                        "lat": 53.71,
+                        "lon": -6.54333
+                      },
+                      {
+                        "name": "Stamullin",
+                        "type": "admin3",
+                        "lat": 53.62889,
+                        "lon": -6.26833
+                      },
+                      {
+                        "name": "Trim",
+                        "type": "admin3",
+                        "lat": 53.555,
+                        "lon": -6.79167
+                      }
+                    ]
+                  },
+                  {
+                    "name": "South Dublin",
+                    "type": "admin2",
+                    "lat": 53.28595,
+                    "lon": -6.37739,
+                    "children": [
+                      {
+                        "name": "Ballyboden",
+                        "type": "admin3",
+                        "lat": 53.28056,
+                        "lon": -6.31639
+                      },
+                      {
+                        "name": "Clondalkin",
+                        "type": "admin3",
+                        "lat": 53.32444,
+                        "lon": -6.39722
+                      },
+                      {
+                        "name": "Firhouse",
+                        "type": "admin3",
+                        "lat": 53.28167,
+                        "lon": -6.33917
+                      },
+                      {
+                        "name": "Greenhills",
+                        "type": "admin3",
+                        "lat": 53.33467,
+                        "lon": -6.30302
+                      },
+                      {
+                        "name": "Jobstown",
+                        "type": "admin3",
+                        "lat": 53.27866,
+                        "lon": -6.40803
+                      },
+                      {
+                        "name": "Knocklyon",
+                        "type": "admin3",
+                        "lat": 53.2803,
+                        "lon": -6.3313
+                      },
+                      {
+                        "name": "Lucan",
+                        "type": "admin3",
+                        "lat": 53.35736,
+                        "lon": -6.44859
+                      },
+                      {
+                        "name": "Newcastle",
+                        "type": "admin3",
+                        "lat": 53.30111,
+                        "lon": -6.50222
+                      },
+                      {
+                        "name": "Oldbawn",
+                        "type": "admin3",
+                        "lat": 53.27556,
+                        "lon": -6.3675
+                      },
+                      {
+                        "name": "Palmerstown",
+                        "type": "admin3",
+                        "lat": 53.35019,
+                        "lon": -6.37778
+                      },
+                      {
+                        "name": "Rathcoole",
+                        "type": "admin3",
+                        "lat": 53.28278,
+                        "lon": -6.47278
+                      },
+                      {
+                        "name": "Rathfarnham",
+                        "type": "admin3",
+                        "lat": 53.30056,
+                        "lon": -6.28278
+                      },
+                      {
+                        "name": "Saggart",
+                        "type": "admin3",
+                        "lat": 53.28028,
+                        "lon": -6.44444
+                      },
+                      {
+                        "name": "South Dublin",
+                        "type": "admin3",
+                        "lat": 53.29026,
+                        "lon": -6.34151
+                      },
+                      {
+                        "name": "Tallaght",
+                        "type": "admin3",
+                        "lat": 53.2859,
+                        "lon": -6.37344
+                      },
+                      {
+                        "name": "Templeogue",
+                        "type": "admin3",
+                        "lat": 53.29528,
+                        "lon": -6.30889
+                      },
+                      {
+                        "name": "Terenure",
+                        "type": "admin3",
+                        "lat": 53.30972,
+                        "lon": -6.28528
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Uíbh Fhailí",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae Uibh Fhaili",
+                      "Contae Uíbh Fhailí",
+                      "Offaly",
+                      "King's",
+                      "Offally"
+                    ],
+                    "lat": 53.25,
+                    "lon": -7.5,
+                    "children": [
+                      {
+                        "name": "Banagher",
+                        "type": "admin3",
+                        "lat": 53.18861,
+                        "lon": -7.98667
+                      },
+                      {
+                        "name": "Birr",
+                        "type": "admin3",
+                        "lat": 53.09139,
+                        "lon": -7.91333
+                      },
+                      {
+                        "name": "Clara",
+                        "type": "admin3",
+                        "lat": 53.3425,
+                        "lon": -7.61389
+                      },
+                      {
+                        "name": "Daingean",
+                        "type": "admin3",
+                        "lat": 53.29611,
+                        "lon": -7.28944
+                      },
+                      {
+                        "name": "Edenderry",
+                        "type": "admin3",
+                        "lat": 53.33948,
+                        "lon": -7.04752
+                      },
+                      {
+                        "name": "Ferbane",
+                        "type": "admin3",
+                        "lat": 53.26944,
+                        "lon": -7.82694
+                      },
+                      {
+                        "name": "Tullamore",
+                        "type": "admin3",
+                        "lat": 53.27389,
+                        "lon": -7.48889
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Westmeath",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae na hIarmhi",
+                      "Contae na hIarmhí"
+                    ],
+                    "lat": 53.5,
+                    "lon": -7.5,
+                    "children": [
+                      {
+                        "name": "An Muileann gCearr",
+                        "type": "admin3",
+                        "lat": 53.52466,
+                        "lon": -7.3385
+                      },
+                      {
+                        "name": "Athlone",
+                        "type": "admin3",
+                        "lat": 53.42278,
+                        "lon": -7.93722
+                      },
+                      {
+                        "name": "Castlepollard",
+                        "type": "admin3",
+                        "lat": 53.67935,
+                        "lon": -7.29736
+                      },
+                      {
+                        "name": "Kilbeggan",
+                        "type": "admin3",
+                        "lat": 53.36944,
+                        "lon": -7.50333
+                      },
+                      {
+                        "name": "Killucan",
+                        "type": "admin3",
+                        "lat": 53.51439,
+                        "lon": -7.14194
+                      },
+                      {
+                        "name": "Kinnegad",
+                        "type": "admin3",
+                        "lat": 53.45222,
+                        "lon": -7.09972
+                      },
+                      {
+                        "name": "Moate",
+                        "type": "admin3",
+                        "lat": 53.55,
+                        "lon": -7.71667
+                      },
+                      {
+                        "name": "Moate",
+                        "type": "admin3",
+                        "lat": 53.39389,
+                        "lon": -7.71722
+                      },
+                      {
+                        "name": "Rathwire",
+                        "type": "admin3",
+                        "lat": 53.50767,
+                        "lon": -7.1351
+                      },
+                      {
+                        "name": "Rochfortbridge",
+                        "type": "admin3",
+                        "lat": 53.41417,
+                        "lon": -7.29611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wexford",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae Loch Garman"
+                    ],
+                    "lat": 52.5,
+                    "lon": -6.66667,
+                    "children": [
+                      {
+                        "name": "Ballinroad",
+                        "type": "admin3",
+                        "lat": 52.51789,
+                        "lon": -6.40619
+                      },
+                      {
+                        "name": "Ballygerry",
+                        "type": "admin3",
+                        "lat": 52.24917,
+                        "lon": -6.35739
+                      },
+                      {
+                        "name": "Bunclody",
+                        "type": "admin3",
+                        "lat": 52.6553,
+                        "lon": -6.65359
+                      },
+                      {
+                        "name": "Castlebridge",
+                        "type": "admin3",
+                        "lat": 52.38639,
+                        "lon": -6.44944
+                      },
+                      {
+                        "name": "Castletown",
+                        "type": "admin3",
+                        "lat": 52.72233,
+                        "lon": -6.18905
+                      },
+                      {
+                        "name": "Courtown",
+                        "type": "admin3",
+                        "lat": 52.64424,
+                        "lon": -6.22899
+                      },
+                      {
+                        "name": "Enniscorthy",
+                        "type": "admin3",
+                        "lat": 52.50083,
+                        "lon": -6.55778
+                      },
+                      {
+                        "name": "Ferns",
+                        "type": "admin3",
+                        "lat": 52.58833,
+                        "lon": -6.49972
+                      },
+                      {
+                        "name": "Gorey",
+                        "type": "admin3",
+                        "lat": 52.67472,
+                        "lon": -6.2925
+                      },
+                      {
+                        "name": "New Ross",
+                        "type": "admin3",
+                        "lat": 52.39667,
+                        "lon": -6.93667
+                      },
+                      {
+                        "name": "Rosslare",
+                        "type": "admin3",
+                        "lat": 52.27184,
+                        "lon": -6.38989
+                      },
+                      {
+                        "name": "Wexford",
+                        "type": "admin3",
+                        "lat": 52.33417,
+                        "lon": -6.4575
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Wicklow",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cill Mhantain",
+                      "Cill Mhantáin",
+                      "Contae Chill Mhantain",
+                      "Contae Chill Mhantáin"
+                    ],
+                    "lat": 53,
+                    "lon": -6.41667,
+                    "children": [
+                      {
+                        "name": "Arklow",
+                        "type": "admin3",
+                        "lat": 52.79443,
+                        "lon": -6.14958
+                      },
+                      {
+                        "name": "Ashford",
+                        "type": "admin3",
+                        "lat": 53.00833,
+                        "lon": -6.11139
+                      },
+                      {
+                        "name": "Aughrim",
+                        "type": "admin3",
+                        "lat": 52.85333,
+                        "lon": -6.3275
+                      },
+                      {
+                        "name": "Baltinglass",
+                        "type": "admin3",
+                        "lat": 52.93722,
+                        "lon": -6.70917
+                      },
+                      {
+                        "name": "Blessington",
+                        "type": "admin3",
+                        "lat": 53.17,
+                        "lon": -6.5325
+                      },
+                      {
+                        "name": "Bray",
+                        "type": "admin3",
+                        "lat": 53.20278,
+                        "lon": -6.09833
+                      },
+                      {
+                        "name": "Carnew",
+                        "type": "admin3",
+                        "lat": 52.70806,
+                        "lon": -6.49444
+                      },
+                      {
+                        "name": "Charlesland",
+                        "type": "admin3",
+                        "lat": 53.12771,
+                        "lon": -6.06347
+                      },
+                      {
+                        "name": "Enniskerry",
+                        "type": "admin3",
+                        "lat": 53.1925,
+                        "lon": -6.16917
+                      },
+                      {
+                        "name": "Greystones",
+                        "type": "admin3",
+                        "lat": 53.14083,
+                        "lon": -6.06306
+                      },
+                      {
+                        "name": "Kilcoole",
+                        "type": "admin3",
+                        "lat": 53.10278,
+                        "lon": -6.065
+                      },
+                      {
+                        "name": "Kilmacanoge",
+                        "type": "admin3",
+                        "lat": 53.16722,
+                        "lon": -6.13361
+                      },
+                      {
+                        "name": "Kilpedder",
+                        "type": "admin3",
+                        "lat": 53.10917,
+                        "lon": -6.10667
+                      },
+                      {
+                        "name": "Kilquade",
+                        "type": "admin3",
+                        "lat": 53.09743,
+                        "lon": -6.08411
+                      },
+                      {
+                        "name": "Little Bray",
+                        "type": "admin3",
+                        "lat": 53.20444,
+                        "lon": -6.12083
+                      },
+                      {
+                        "name": "Newtownmountkennedy",
+                        "type": "admin3",
+                        "lat": 53.09052,
+                        "lon": -6.11149
+                      },
+                      {
+                        "name": "Rathdrum",
+                        "type": "admin3",
+                        "lat": 52.93179,
+                        "lon": -6.22945
+                      },
+                      {
+                        "name": "Rathnew",
+                        "type": "admin3",
+                        "lat": 52.99056,
+                        "lon": -6.08528
+                      },
+                      {
+                        "name": "Valleymount",
+                        "type": "admin3",
+                        "lat": 53.10389,
+                        "lon": -6.55361
+                      },
+                      {
+                        "name": "Wicklow",
+                        "type": "admin3",
+                        "lat": 52.975,
+                        "lon": -6.04944
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Munster",
+                "type": "admin1",
+                "aliases": [
+                  "Cúige Mumhan"
+                ],
+                "lat": 52.345326,
+                "lon": -8.48784,
+                "children": [
+                  {
+                    "name": "Clare",
+                    "type": "admin2",
+                    "aliases": [
+                      "Co Clare",
+                      "Contae an Chlair",
+                      "Contae an Chláir"
+                    ],
+                    "lat": 52.83333,
+                    "lon": -9,
+                    "children": [
+                      {
+                        "name": "Ardnacrusha",
+                        "type": "admin3",
+                        "lat": 52.70908,
+                        "lon": -8.61431
+                      },
+                      {
+                        "name": "Ennis",
+                        "type": "admin3",
+                        "lat": 52.84361,
+                        "lon": -8.98639
+                      },
+                      {
+                        "name": "Ennistimon",
+                        "type": "admin3",
+                        "lat": 52.94472,
+                        "lon": -9.29222
+                      },
+                      {
+                        "name": "Kilkee",
+                        "type": "admin3",
+                        "lat": 52.67976,
+                        "lon": -9.64344
+                      },
+                      {
+                        "name": "Killaloe",
+                        "type": "admin3",
+                        "lat": 52.80667,
+                        "lon": -8.44361
+                      },
+                      {
+                        "name": "Kilrush",
+                        "type": "admin3",
+                        "lat": 52.64011,
+                        "lon": -9.48509
+                      },
+                      {
+                        "name": "Newmarket on Fergus",
+                        "type": "admin3",
+                        "lat": 52.76,
+                        "lon": -8.89556
+                      },
+                      {
+                        "name": "Shannon",
+                        "type": "admin3",
+                        "lat": 52.70389,
+                        "lon": -8.86417
+                      },
+                      {
+                        "name": "Sixmilebridge",
+                        "type": "admin3",
+                        "lat": 52.74139,
+                        "lon": -8.77417
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cork",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Cork",
+                      "Contae Chorcai",
+                      "Contae Chorcaí",
+                      "Corcaigh"
+                    ],
+                    "lat": 51.96667,
+                    "lon": -8.58333,
+                    "children": [
+                      {
+                        "name": "Aghada",
+                        "type": "admin3",
+                        "lat": 51.83917,
+                        "lon": -8.21222
+                      },
+                      {
+                        "name": "Ballincollig",
+                        "type": "admin3",
+                        "lat": 51.88333,
+                        "lon": -8.58333
+                      },
+                      {
+                        "name": "Bandon",
+                        "type": "admin3",
+                        "lat": 51.74694,
+                        "lon": -8.7425
+                      },
+                      {
+                        "name": "Bantry",
+                        "type": "admin3",
+                        "lat": 51.68025,
+                        "lon": -9.45254
+                      },
+                      {
+                        "name": "Blarney",
+                        "type": "admin3",
+                        "lat": 51.93333,
+                        "lon": -8.56667
+                      },
+                      {
+                        "name": "Carrigaline",
+                        "type": "admin3",
+                        "lat": 51.81167,
+                        "lon": -8.39861
+                      },
+                      {
+                        "name": "Carrigtwohill",
+                        "type": "admin3",
+                        "lat": 51.90833,
+                        "lon": -8.26333
+                      },
+                      {
+                        "name": "Castlemartyr",
+                        "type": "admin3",
+                        "lat": 51.91028,
+                        "lon": -8.05389
+                      },
+                      {
+                        "name": "Charleville",
+                        "type": "admin3",
+                        "lat": 52.35,
+                        "lon": -8.68333
+                      },
+                      {
+                        "name": "Clonakilty",
+                        "type": "admin3",
+                        "lat": 51.62306,
+                        "lon": -8.87056
+                      },
+                      {
+                        "name": "Cloyne",
+                        "type": "admin3",
+                        "lat": 51.86278,
+                        "lon": -8.12444
+                      },
+                      {
+                        "name": "Cobh",
+                        "type": "admin3",
+                        "lat": 51.85046,
+                        "lon": -8.2948
+                      },
+                      {
+                        "name": "Cork",
+                        "type": "admin3",
+                        "lat": 51.89797,
+                        "lon": -8.47061
+                      },
+                      {
+                        "name": "Crosshaven",
+                        "type": "admin3",
+                        "lat": 51.79833,
+                        "lon": -8.30083
+                      },
+                      {
+                        "name": "Douglas",
+                        "type": "admin3",
+                        "lat": 51.87444,
+                        "lon": -8.435
+                      },
+                      {
+                        "name": "Dunmanway",
+                        "type": "admin3",
+                        "lat": 51.71667,
+                        "lon": -9.11667
+                      },
+                      {
+                        "name": "Fermoy",
+                        "type": "admin3",
+                        "lat": 52.13583,
+                        "lon": -8.27583
+                      },
+                      {
+                        "name": "Glanmire",
+                        "type": "admin3",
+                        "lat": 51.91583,
+                        "lon": -8.39972
+                      },
+                      {
+                        "name": "Kanturk",
+                        "type": "admin3",
+                        "lat": 52.16667,
+                        "lon": -8.9
+                      },
+                      {
+                        "name": "Killumney",
+                        "type": "admin3",
+                        "lat": 51.87243,
+                        "lon": -8.64781
+                      },
+                      {
+                        "name": "Kilworth",
+                        "type": "admin3",
+                        "lat": 52.17639,
+                        "lon": -8.24417
+                      },
+                      {
+                        "name": "Kinsale",
+                        "type": "admin3",
+                        "lat": 51.7075,
+                        "lon": -8.53056
+                      },
+                      {
+                        "name": "Macroom",
+                        "type": "admin3",
+                        "lat": 51.90663,
+                        "lon": -8.96968
+                      },
+                      {
+                        "name": "Mallow",
+                        "type": "admin3",
+                        "lat": 52.13333,
+                        "lon": -8.63333
+                      },
+                      {
+                        "name": "Midleton",
+                        "type": "admin3",
+                        "lat": 51.91526,
+                        "lon": -8.18052
+                      },
+                      {
+                        "name": "Millstreet",
+                        "type": "admin3",
+                        "lat": 52.05935,
+                        "lon": -9.06031
+                      },
+                      {
+                        "name": "Mitchelstown",
+                        "type": "admin3",
+                        "lat": 52.26583,
+                        "lon": -8.26806
+                      },
+                      {
+                        "name": "Passage West",
+                        "type": "admin3",
+                        "lat": 51.87083,
+                        "lon": -8.3355
+                      },
+                      {
+                        "name": "Rathcormac",
+                        "type": "admin3",
+                        "lat": 52.07694,
+                        "lon": -8.28194
+                      },
+                      {
+                        "name": "Skibbereen",
+                        "type": "admin3",
+                        "lat": 51.55,
+                        "lon": -9.26667
+                      },
+                      {
+                        "name": "Tower",
+                        "type": "admin3",
+                        "lat": 51.92599,
+                        "lon": -8.60747
+                      },
+                      {
+                        "name": "Watergrasshill",
+                        "type": "admin3",
+                        "lat": 52.01139,
+                        "lon": -8.34417
+                      },
+                      {
+                        "name": "Whitegate",
+                        "type": "admin3",
+                        "lat": 51.83056,
+                        "lon": -8.22972
+                      },
+                      {
+                        "name": "Youghal",
+                        "type": "admin3",
+                        "lat": 51.95,
+                        "lon": -7.85056
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Cork City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Corcaigh"
+                    ],
+                    "lat": 51.89755,
+                    "lon": -8.46773,
+                    "children": []
+                  },
+                  {
+                    "name": "Kerry",
+                    "type": "admin2",
+                    "aliases": [
+                      "Co Kerry",
+                      "Contae Chiarrai",
+                      "Contae Chiarraí",
+                      "KIR"
+                    ],
+                    "lat": 52.16667,
+                    "lon": -9.75,
+                    "children": [
+                      {
+                        "name": "Ballybunnion",
+                        "type": "admin3",
+                        "lat": 52.51108,
+                        "lon": -9.67097
+                      },
+                      {
+                        "name": "Cahersiveen",
+                        "type": "admin3",
+                        "lat": 51.94861,
+                        "lon": -10.22222
+                      },
+                      {
+                        "name": "Castleisland",
+                        "type": "admin3",
+                        "lat": 52.23333,
+                        "lon": -9.46667
+                      },
+                      {
+                        "name": "Dingle",
+                        "type": "admin3",
+                        "lat": 52.14083,
+                        "lon": -10.26889
+                      },
+                      {
+                        "name": "Kenmare",
+                        "type": "admin3",
+                        "lat": 51.88333,
+                        "lon": -9.58333
+                      },
+                      {
+                        "name": "Killarney",
+                        "type": "admin3",
+                        "lat": 52.0598,
+                        "lon": -9.50858
+                      },
+                      {
+                        "name": "Killorglin",
+                        "type": "admin3",
+                        "lat": 52.1,
+                        "lon": -9.78333
+                      },
+                      {
+                        "name": "Listowel",
+                        "type": "admin3",
+                        "lat": 52.44639,
+                        "lon": -9.485
+                      },
+                      {
+                        "name": "Tralee",
+                        "type": "admin3",
+                        "lat": 52.27042,
+                        "lon": -9.70264
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Limerick City and County Council",
+                    "type": "admin2",
+                    "aliases": [
+                      "Limerick"
+                    ],
+                    "lat": 52.6464,
+                    "lon": -8.63663,
+                    "children": [
+                      {
+                        "name": "Abbeyfeale",
+                        "type": "admin3",
+                        "lat": 52.38139,
+                        "lon": -9.3025
+                      },
+                      {
+                        "name": "Adare",
+                        "type": "admin3",
+                        "lat": 52.56194,
+                        "lon": -8.79556
+                      },
+                      {
+                        "name": "Annacotty",
+                        "type": "admin3",
+                        "lat": 52.66768,
+                        "lon": -8.53121
+                      },
+                      {
+                        "name": "Askeaton",
+                        "type": "admin3",
+                        "lat": 52.59972,
+                        "lon": -8.97556
+                      },
+                      {
+                        "name": "Caherconlish",
+                        "type": "admin3",
+                        "lat": 52.59361,
+                        "lon": -8.47028
+                      },
+                      {
+                        "name": "Castleconnell",
+                        "type": "admin3",
+                        "lat": 52.71389,
+                        "lon": -8.49944
+                      },
+                      {
+                        "name": "Castletroy",
+                        "type": "admin3",
+                        "lat": 52.67349,
+                        "lon": -8.55333
+                      },
+                      {
+                        "name": "Croom",
+                        "type": "admin3",
+                        "lat": 52.51944,
+                        "lon": -8.71778
+                      },
+                      {
+                        "name": "Kilmallock",
+                        "type": "admin3",
+                        "lat": 52.4,
+                        "lon": -8.57722
+                      },
+                      {
+                        "name": "Limerick",
+                        "type": "admin3",
+                        "lat": 52.66472,
+                        "lon": -8.62306
+                      },
+                      {
+                        "name": "Moroe",
+                        "type": "admin3",
+                        "lat": 52.65111,
+                        "lon": -8.39611
+                      },
+                      {
+                        "name": "Moyross",
+                        "type": "admin3",
+                        "lat": 52.68198,
+                        "lon": -8.63955
+                      },
+                      {
+                        "name": "Newcastle West",
+                        "type": "admin3",
+                        "lat": 52.44917,
+                        "lon": -9.06111
+                      },
+                      {
+                        "name": "Rathkeale",
+                        "type": "admin3",
+                        "lat": 52.52444,
+                        "lon": -8.93806
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Tipperary",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Tipperary",
+                      "Contae Thiobraid Arann",
+                      "Contae Thiobraid Árann",
+                      "Tiobraid Arann",
+                      "Tiobraid Árann"
+                    ],
+                    "lat": 52.66667,
+                    "lon": -7.83333,
+                    "children": [
+                      {
+                        "name": "Ballina",
+                        "type": "admin3",
+                        "lat": 52.80778,
+                        "lon": -8.43556
+                      },
+                      {
+                        "name": "Cahir",
+                        "type": "admin3",
+                        "lat": 52.37694,
+                        "lon": -7.92167
+                      },
+                      {
+                        "name": "Carrick-on-Suir",
+                        "type": "admin3",
+                        "lat": 52.34917,
+                        "lon": -7.41306
+                      },
+                      {
+                        "name": "Cashel",
+                        "type": "admin3",
+                        "lat": 52.51583,
+                        "lon": -7.88556
+                      },
+                      {
+                        "name": "Cluain Meala",
+                        "type": "admin3",
+                        "lat": 52.355,
+                        "lon": -7.70389
+                      },
+                      {
+                        "name": "Fethard",
+                        "type": "admin3",
+                        "lat": 52.46722,
+                        "lon": -7.69111
+                      },
+                      {
+                        "name": "Nenagh",
+                        "type": "admin3",
+                        "lat": 52.86284,
+                        "lon": -8.19953
+                      },
+                      {
+                        "name": "Nenagh Bridge",
+                        "type": "admin3",
+                        "lat": 52.88167,
+                        "lon": -8.19583
+                      },
+                      {
+                        "name": "Newport",
+                        "type": "admin3",
+                        "lat": 52.71111,
+                        "lon": -8.40972
+                      },
+                      {
+                        "name": "Roscrea",
+                        "type": "admin3",
+                        "lat": 52.95111,
+                        "lon": -7.80167
+                      },
+                      {
+                        "name": "Templemore",
+                        "type": "admin3",
+                        "lat": 52.79472,
+                        "lon": -7.83389
+                      },
+                      {
+                        "name": "Thurles",
+                        "type": "admin3",
+                        "lat": 52.68194,
+                        "lon": -7.80222
+                      },
+                      {
+                        "name": "Tipperary",
+                        "type": "admin3",
+                        "lat": 52.47333,
+                        "lon": -8.15583
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Waterford",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Waterford"
+                    ],
+                    "lat": 52.23999,
+                    "lon": -7.14386,
+                    "children": [
+                      {
+                        "name": "Dungarvan",
+                        "type": "admin3",
+                        "lat": 52.08806,
+                        "lon": -7.62528
+                      },
+                      {
+                        "name": "Dunmore East",
+                        "type": "admin3",
+                        "lat": 52.15108,
+                        "lon": -6.99872
+                      },
+                      {
+                        "name": "Lismore",
+                        "type": "admin3",
+                        "lat": 52.13667,
+                        "lon": -7.93083
+                      },
+                      {
+                        "name": "Portlaw",
+                        "type": "admin3",
+                        "lat": 52.28833,
+                        "lon": -7.32056
+                      },
+                      {
+                        "name": "Trá Mhór",
+                        "type": "admin3",
+                        "lat": 52.16235,
+                        "lon": -7.15244
+                      },
+                      {
+                        "name": "Waterford",
+                        "type": "admin3",
+                        "lat": 52.25833,
+                        "lon": -7.11194
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Connacht",
+                "type": "admin1",
+                "aliases": [
+                  "Connaught",
+                  "Cúige Chonnacht"
+                ],
+                "lat": 53.77295,
+                "lon": -8.702785,
+                "children": [
+                  {
+                    "name": "Galway",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Galway",
+                      "Contae na Gaillimhe",
+                      "Gaillimh"
+                    ],
+                    "lat": 53.33333,
+                    "lon": -9,
+                    "children": [
+                      {
+                        "name": "Athenry",
+                        "type": "admin3",
+                        "lat": 53.29639,
+                        "lon": -8.74306
+                      },
+                      {
+                        "name": "Ballinasloe",
+                        "type": "admin3",
+                        "lat": 53.3275,
+                        "lon": -8.21944
+                      },
+                      {
+                        "name": "Ballygar",
+                        "type": "admin3",
+                        "lat": 53.52162,
+                        "lon": -8.32738
+                      },
+                      {
+                        "name": "Bearna",
+                        "type": "admin3",
+                        "lat": 53.25194,
+                        "lon": -9.14972
+                      },
+                      {
+                        "name": "Claregalway",
+                        "type": "admin3",
+                        "lat": 53.33861,
+                        "lon": -8.945
+                      },
+                      {
+                        "name": "Clifden",
+                        "type": "admin3",
+                        "lat": 53.48907,
+                        "lon": -10.0191
+                      },
+                      {
+                        "name": "Galway",
+                        "type": "admin3",
+                        "lat": 53.27245,
+                        "lon": -9.05095
+                      },
+                      {
+                        "name": "Gort",
+                        "type": "admin3",
+                        "lat": 53.06639,
+                        "lon": -8.81667
+                      },
+                      {
+                        "name": "Loughrea",
+                        "type": "admin3",
+                        "lat": 53.19694,
+                        "lon": -8.56694
+                      },
+                      {
+                        "name": "Moycullen",
+                        "type": "admin3",
+                        "lat": 53.33783,
+                        "lon": -9.18002
+                      },
+                      {
+                        "name": "Oranmore",
+                        "type": "admin3",
+                        "lat": 53.26833,
+                        "lon": -8.92
+                      },
+                      {
+                        "name": "Oughterard",
+                        "type": "admin3",
+                        "lat": 53.41667,
+                        "lon": -9.33333
+                      },
+                      {
+                        "name": "Portumna",
+                        "type": "admin3",
+                        "lat": 53.08917,
+                        "lon": -8.21889
+                      },
+                      {
+                        "name": "Tuam",
+                        "type": "admin3",
+                        "lat": 53.51667,
+                        "lon": -8.85
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Galway City",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cathair na Gaillimhe",
+                      "City of Galway",
+                      "Gaillimh"
+                    ],
+                    "lat": 53.2877,
+                    "lon": -9.05004,
+                    "children": []
+                  },
+                  {
+                    "name": "Leitrim",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Leitrim",
+                      "Comitatul Leitrim",
+                      "Comitatus Letrimensis",
+                      "Comtat de Leitrim",
+                      "Comte de Leitrim",
+                      "Comté de Leitrim",
+                      "Condado de Leitrim",
+                      "Condau de Leitrim",
+                      "Condáu de Leitrim",
+                      "Contae Liatroma",
+                      "Contea di Leitrim",
+                      "Coontae Lheeahtrim",
+                      "Coonty Leitrim",
+                      "Graflando Leitrim",
+                      "Hrabstvi Leitrim",
+                      "Hrabství Leitrim",
+                      "Kontelezh Liatroim",
+                      "Leitrim konderria",
+                      "Leitrimin kreivikunta",
+                      "Leitrimo grafyste",
+                      "Leitrimo grafystė",
+                      "Liatroim",
+                      "Lijtrim",
+                      "Litrim",
+                      "Swydd Leitrim",
+                      "Vilojati Lijtrim",
+                      "Wilaya ya Leitrim",
+                      "li te li mu jun",
+                      "liteulim ju",
+                      "lytrym",
+                      "ritorimu zhou",
+                      "Вилояти Лийтрим",
+                      "Лийтрим",
+                      "Литрим",
+                      "Літрім",
+                      "ליטרים",
+                      "لیٹرم",
+                      "مقاطعة ليتريم",
+                      "کاؤنٹی لیٹریم",
+                      "ლიტრიმის საგრაფო",
+                      "リートリム州",
+                      "利特里姆郡",
+                      "리트림 주"
+                    ],
+                    "lat": 54.11667,
+                    "lon": -8,
+                    "children": [
+                      {
+                        "name": "Carrick-on-Shannon",
+                        "type": "admin3",
+                        "lat": 53.94694,
+                        "lon": -8.09
+                      },
+                      {
+                        "name": "Kinlough",
+                        "type": "admin3",
+                        "lat": 54.45,
+                        "lon": -8.28333
+                      },
+                      {
+                        "name": "Manorhamilton",
+                        "type": "admin3",
+                        "lat": 54.30639,
+                        "lon": -8.17611
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Mayo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Mayo County",
+                      "Contae Mhaigh Eo"
+                    ],
+                    "lat": 53.9,
+                    "lon": -9.25,
+                    "children": [
+                      {
+                        "name": "Ballina",
+                        "type": "admin3",
+                        "lat": 54.11667,
+                        "lon": -9.16667
+                      },
+                      {
+                        "name": "Ballinrobe",
+                        "type": "admin3",
+                        "lat": 53.63333,
+                        "lon": -9.23333
+                      },
+                      {
+                        "name": "Ballyhaunis",
+                        "type": "admin3",
+                        "lat": 53.76667,
+                        "lon": -8.76667
+                      },
+                      {
+                        "name": "Belmullet",
+                        "type": "admin3",
+                        "lat": 54.225,
+                        "lon": -9.99083
+                      },
+                      {
+                        "name": "Castlebar",
+                        "type": "admin3",
+                        "lat": 53.85,
+                        "lon": -9.3
+                      },
+                      {
+                        "name": "Charlestown",
+                        "type": "admin3",
+                        "lat": 53.96417,
+                        "lon": -8.79417
+                      },
+                      {
+                        "name": "Claremorris",
+                        "type": "admin3",
+                        "lat": 53.71667,
+                        "lon": -9
+                      },
+                      {
+                        "name": "Crossmolina",
+                        "type": "admin3",
+                        "lat": 54.1,
+                        "lon": -9.31667
+                      },
+                      {
+                        "name": "Foxford",
+                        "type": "admin3",
+                        "lat": 53.9807,
+                        "lon": -9.11551
+                      },
+                      {
+                        "name": "Kiltamagh",
+                        "type": "admin3",
+                        "lat": 53.85,
+                        "lon": -9
+                      },
+                      {
+                        "name": "Swinford",
+                        "type": "admin3",
+                        "lat": 53.93941,
+                        "lon": -8.94346
+                      },
+                      {
+                        "name": "Toormakeady",
+                        "type": "admin3",
+                        "lat": 53.65,
+                        "lon": -9.36667
+                      },
+                      {
+                        "name": "Westport",
+                        "type": "admin3",
+                        "lat": 53.8,
+                        "lon": -9.51667
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Roscommon",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae Ros Comain",
+                      "Contae Ros Comáin",
+                      "Ros Comain",
+                      "Ros Comáin"
+                    ],
+                    "lat": 53.75,
+                    "lon": -8.25,
+                    "children": [
+                      {
+                        "name": "Ballaghaderreen",
+                        "type": "admin3",
+                        "lat": 53.90134,
+                        "lon": -8.57507
+                      },
+                      {
+                        "name": "Boyle",
+                        "type": "admin3",
+                        "lat": 53.96667,
+                        "lon": -8.3
+                      },
+                      {
+                        "name": "Castlerea",
+                        "type": "admin3",
+                        "lat": 53.77258,
+                        "lon": -8.50307
+                      },
+                      {
+                        "name": "Roscommon",
+                        "type": "admin3",
+                        "lat": 53.63333,
+                        "lon": -8.18333
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Sligo",
+                    "type": "admin2",
+                    "aliases": [
+                      "Contae Shligigh",
+                      "Sligeach"
+                    ],
+                    "lat": 54.25,
+                    "lon": -8.66667,
+                    "children": [
+                      {
+                        "name": "Ballisodare",
+                        "type": "admin3",
+                        "lat": 54.2111,
+                        "lon": -8.50865
+                      },
+                      {
+                        "name": "Ballymote",
+                        "type": "admin3",
+                        "lat": 54.08333,
+                        "lon": -8.51667
+                      },
+                      {
+                        "name": "Ballysadare",
+                        "type": "admin3",
+                        "lat": 54.21167,
+                        "lon": -8.50944
+                      },
+                      {
+                        "name": "Collooney",
+                        "type": "admin3",
+                        "lat": 54.18382,
+                        "lon": -8.48911
+                      },
+                      {
+                        "name": "Inishcrone",
+                        "type": "admin3",
+                        "lat": 54.21591,
+                        "lon": -9.09197
+                      },
+                      {
+                        "name": "Sligo",
+                        "type": "admin3",
+                        "lat": 54.26969,
+                        "lon": -8.46943
+                      },
+                      {
+                        "name": "Strandhill",
+                        "type": "admin3",
+                        "lat": 54.27194,
+                        "lon": -8.59333
+                      },
+                      {
+                        "name": "Tobercurry",
+                        "type": "admin3",
+                        "lat": 54.05,
+                        "lon": -8.73333
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Ulster",
+                "type": "admin1",
+                "aliases": [
+                  "Cúige Uladh"
+                ],
+                "lat": 54.361113,
+                "lon": -7.416667,
+                "children": [
+                  {
+                    "name": "An Cabhán",
+                    "type": "admin2",
+                    "aliases": [
+                      "Cavan",
+                      "Co Cavan",
+                      "Contae an Chabhain",
+                      "Contae an Chabháin"
+                    ],
+                    "lat": 53.91667,
+                    "lon": -7.25,
+                    "children": [
+                      {
+                        "name": "Bailieborough",
+                        "type": "admin3",
+                        "lat": 53.91667,
+                        "lon": -6.96667
+                      },
+                      {
+                        "name": "Ballyconnell",
+                        "type": "admin3",
+                        "lat": 54.11667,
+                        "lon": -7.58333
+                      },
+                      {
+                        "name": "Ballyjamesduff",
+                        "type": "admin3",
+                        "lat": 53.86528,
+                        "lon": -7.20278
+                      },
+                      {
+                        "name": "Belturbet",
+                        "type": "admin3",
+                        "lat": 54.1,
+                        "lon": -7.45
+                      },
+                      {
+                        "name": "Cavan",
+                        "type": "admin3",
+                        "lat": 53.99083,
+                        "lon": -7.36056
+                      },
+                      {
+                        "name": "Cootehill",
+                        "type": "admin3",
+                        "lat": 54.0725,
+                        "lon": -7.08194
+                      },
+                      {
+                        "name": "Kingscourt",
+                        "type": "admin3",
+                        "lat": 53.90806,
+                        "lon": -6.80556
+                      },
+                      {
+                        "name": "Mullagh",
+                        "type": "admin3",
+                        "lat": 53.81306,
+                        "lon": -6.95139
+                      },
+                      {
+                        "name": "Virginia",
+                        "type": "admin3",
+                        "lat": 53.83389,
+                        "lon": -7.07556
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Donegal",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Donegal",
+                      "Contae Dhun na nGall",
+                      "Contae Dhún na nGall",
+                      "Dun na nGall",
+                      "Dún na nGall",
+                      "Tirconaill"
+                    ],
+                    "lat": 54.91667,
+                    "lon": -8,
+                    "children": [
+                      {
+                        "name": "Ballybofey",
+                        "type": "admin3",
+                        "lat": 54.8,
+                        "lon": -7.78333
+                      },
+                      {
+                        "name": "Ballyshannon",
+                        "type": "admin3",
+                        "lat": 54.5,
+                        "lon": -8.18333
+                      },
+                      {
+                        "name": "Buncrana",
+                        "type": "admin3",
+                        "lat": 55.13333,
+                        "lon": -7.45
+                      },
+                      {
+                        "name": "Bundoran",
+                        "type": "admin3",
+                        "lat": 54.47782,
+                        "lon": -8.28094
+                      },
+                      {
+                        "name": "Carndonagh",
+                        "type": "admin3",
+                        "lat": 55.25,
+                        "lon": -7.26667
+                      },
+                      {
+                        "name": "Convoy",
+                        "type": "admin3",
+                        "lat": 54.86083,
+                        "lon": -7.66556
+                      },
+                      {
+                        "name": "Derrybeg",
+                        "type": "admin3",
+                        "lat": 55.08333,
+                        "lon": -8.28944
+                      },
+                      {
+                        "name": "Donegal",
+                        "type": "admin3",
+                        "lat": 54.65378,
+                        "lon": -8.11134
+                      },
+                      {
+                        "name": "Dungloe",
+                        "type": "admin3",
+                        "lat": 54.95111,
+                        "lon": -8.35917
+                      },
+                      {
+                        "name": "Dunlewy",
+                        "type": "admin3",
+                        "lat": 55.01667,
+                        "lon": -8.1
+                      },
+                      {
+                        "name": "Gweedore",
+                        "type": "admin3",
+                        "lat": 55.05028,
+                        "lon": -8.23194
+                      },
+                      {
+                        "name": "Killybegs",
+                        "type": "admin3",
+                        "lat": 54.63333,
+                        "lon": -8.45
+                      },
+                      {
+                        "name": "Leifear",
+                        "type": "admin3",
+                        "lat": 54.83194,
+                        "lon": -7.48361
+                      },
+                      {
+                        "name": "Letterkenny",
+                        "type": "admin3",
+                        "lat": 54.95,
+                        "lon": -7.73333
+                      },
+                      {
+                        "name": "Moville",
+                        "type": "admin3",
+                        "lat": 55.19153,
+                        "lon": -7.03873
+                      },
+                      {
+                        "name": "Muff",
+                        "type": "admin3",
+                        "lat": 55.06667,
+                        "lon": -7.26667
+                      },
+                      {
+                        "name": "Newtown Cunningham",
+                        "type": "admin3",
+                        "lat": 54.99639,
+                        "lon": -7.51917
+                      },
+                      {
+                        "name": "Ramelton",
+                        "type": "admin3",
+                        "lat": 55.03673,
+                        "lon": -7.64923
+                      },
+                      {
+                        "name": "Raphoe",
+                        "type": "admin3",
+                        "lat": 54.87472,
+                        "lon": -7.59833
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Monaghan",
+                    "type": "admin2",
+                    "aliases": [
+                      "County Monaghan",
+                      "Contae Mhuineachain",
+                      "Contae Mhuineacháin",
+                      "Muineachan",
+                      "Muineachán"
+                    ],
+                    "lat": 54.25,
+                    "lon": -7,
+                    "children": [
+                      {
+                        "name": "Ballybay",
+                        "type": "admin3",
+                        "lat": 54.12611,
+                        "lon": -6.90056
+                      },
+                      {
+                        "name": "Carrickmacross",
+                        "type": "admin3",
+                        "lat": 53.97278,
+                        "lon": -6.71889
+                      },
+                      {
+                        "name": "Castleblayney",
+                        "type": "admin3",
+                        "lat": 54.11667,
+                        "lon": -6.73333
+                      },
+                      {
+                        "name": "Clones",
+                        "type": "admin3",
+                        "lat": 54.18333,
+                        "lon": -7.23333
+                      },
+                      {
+                        "name": "Monaghan",
+                        "type": "admin3",
+                        "lat": 54.24589,
+                        "lon": -6.97098
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
