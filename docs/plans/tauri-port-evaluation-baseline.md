@@ -89,7 +89,63 @@ first informs which of these are worth automating.
 
 ## Phase 2 — Tauri spike numbers
 
-(populated after the spike is built — Tasks 4 through 11)
+### Empty-app baseline (Task 4 — scaffold only, no views/DB/IPC ported yet)
+
+The Tauri 2.x scaffold (`cargo create-tauri-app --template vue-ts`) was
+built in release mode. This is the floor — any porting from Phase 2's
+later tasks adds Vue/Vite renderer bytes and Rust IPC LOC on top of
+this, but the OS-webview design means there's no Chromium framework to
+ship.
+
+| Metric | Value |
+|---|---:|
+| `tauri-spike.app` total | **8.3 MB** |
+| Inside: `Contents/MacOS/tauri-spike` (the Rust binary) | 8.2 MB |
+| Inside: `Contents/Resources` | 100 KB |
+| Inside: `Contents/Info.plist` | 4 KB |
+| Cold-start to window visible | ~1 s (no in-app log; observable, not yet measured precisely) |
+| RSS sum (idle, 1 window, no DB) | **102 MB across 1 process** |
+
+### Projected vs Electron (preliminary, before view porting)
+
+| Metric | Electron | Tauri (empty) | Δ |
+|---|---:|---:|---:|
+| `.app` on disk | 276 MB | 8.3 MB | **−268 MB / −97%** |
+| RSS sum (idle, 1 window, no DB) | 886 MB | 102 MB | **−784 MB / −88%** |
+| Process count | 4 | 1 | −3 |
+
+**Caveats:**
+- The Tauri spike has no views, no DB, no IPC commands ported yet. Adding the
+  renderer bundle (Vue 3 + Vite output) will add ~3 MB to disk; the gazetteer
+  payload (currently 7.6 MB as `.json.gz`) is identical in both, so a
+  fully-ported Tauri build is projected at ~20-25 MB on disk vs Electron's
+  276 MB — still a ~92% reduction.
+- RSS sum is not a perfect cross-process metric on macOS (each process's
+  column double-counts shared mach pages), so Electron's "886 MB" overstates
+  real memory cost. But Tauri's single-process model can't double-count
+  shared-mem because there's only one process — its 102 MB number is the
+  ceiling, not a sum-of-overlaps. The directional signal (massive reduction)
+  holds even after correcting for the RSS-sum bias.
+- These are dev-mac numbers (Apple Silicon, 36 GB RAM). Behavior on
+  constrained hardware is expected to scale linearly per the percentage
+  decision rule.
+
+### Decision rule against this preliminary signal
+
+| Headline metric | Δ % | Verdict |
+|---|---:|---|
+| Disk: app | −97% | **≥50% ✅** |
+| Memory: idle | −88% | **≥50% ✅** |
+
+Both headline rows that we can measure right now hit the **≥50%** "Go"
+bar by a wide margin. Cold start, loaded RAM, list scroll, and chart
+render still need the spike to be ported far enough to exercise them
+(Tasks 5-10).
+
+### Tasks 5-14 status
+
+(pending — porting views + rusqlite + IPC + multi-window + MCP +
+chart print, then capture spike numbers under realistic load)
 
 ## Phase 3 — Comparison + recommendation
 
