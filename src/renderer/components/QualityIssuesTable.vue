@@ -1,13 +1,24 @@
 <template>
   <div>
     <SectionEmpty v-if="issues.length === 0" :message="$t('empty.qualityIssues')" />
-    <table v-else class="data-table">
+    <table v-else class="data-table table-resizable">
       <thead>
         <tr>
-          <th class="th-shrink">{{ $t('quality.colSeverity') }}</th>
-          <th v-if="showEntity" class="entity-col">{{ $t('quality.colEntity') }}</th>
-          <th>{{ $t('quality.colIssue') }}</th>
-          <th v-if="!props.readonly" class="actions-cell">{{ $t('common.actions') }}</th>
+          <th :style="{ width: widths.severity + 'px' }">
+            {{ $t('quality.colSeverity') }}
+            <span class="col-resize-handle" @mousedown.prevent="startResize($event, 'severity')" />
+          </th>
+          <th v-if="showEntity" :style="{ width: widths.entity + 'px' }" class="entity-col">
+            {{ $t('quality.colEntity') }}
+            <span class="col-resize-handle" @mousedown.prevent="startResize($event, 'entity')" />
+          </th>
+          <th :style="{ width: widths.issue + 'px' }">
+            {{ $t('quality.colIssue') }}
+            <span class="col-resize-handle" @mousedown.prevent="startResize($event, 'issue')" />
+          </th>
+          <th v-if="!props.readonly" :style="{ width: widths.actions + 'px' }" class="actions-cell">
+            {{ $t('common.actions') }}
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -60,6 +71,17 @@
 import { useI18n } from 'vue-i18n';
 import { isIgnored, toggleIgnore, type IgnorableIssue } from '../utils/qualityIgnore';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import { useResizableColumns } from '../composables/useResizableColumns';
+
+const { widths, startResize } = useResizableColumns({
+  tableId: 'quality-issues',
+  columns: [
+    { key: 'severity', defaultWidth: 90,  minWidth: 60 },
+    { key: 'entity',   defaultWidth: 320, minWidth: 100 },
+    { key: 'issue',    defaultWidth: 480, minWidth: 120 },
+    { key: 'actions',  defaultWidth: 70,  minWidth: 50, maxWidth: 120 },
+  ],
+});
 
 export interface QualityIssue extends IgnorableIssue {
   severity: 'error' | 'warning' | 'notice';

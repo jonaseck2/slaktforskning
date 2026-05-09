@@ -127,6 +127,44 @@
   text-align: left;
 }
 
+/* Opt-in resizable columns. Pair with the `useResizableColumns` composable
+   which binds inline `width: <px>px` on each `<th>`. `table-layout: fixed`
+   makes the browser honor those exact widths instead of redistributing by
+   content. The user-drag affordance is `.col-resize-handle` on each header
+   cell (see below). Cells that overflow their fixed column clip with
+   ellipsis so a too-narrow column never breaks layout. */
+.data-table.table-resizable { table-layout: fixed; }
+.data-table.table-resizable th { position: relative; }
+.data-table.table-resizable th,
+.data-table.table-resizable td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+  /* Subtle on hover so the user discovers the affordance — invisible by
+     default to keep header rows clean. */
+  background: transparent;
+  transition: background 100ms ease;
+}
+.col-resize-handle:hover,
+body.col-resize-active .col-resize-handle {
+  background: var(--accent);
+}
+/* During a drag, kill pointer events on the rest of the table so spurious
+   hover/click signals don't fire and nothing else captures the mouse. */
+body.col-resize-active { cursor: col-resize; }
+body.col-resize-active * { pointer-events: none !important; }
+body.col-resize-active .col-resize-handle { pointer-events: auto !important; }
+
 /* Side-panel content must not push the panel wider than its column.
    .panel-section is a flex item (its parent is the column-flex panel
    root) so it defaults to min-width:auto = intrinsic content size,
