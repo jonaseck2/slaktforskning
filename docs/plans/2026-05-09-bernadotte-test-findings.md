@@ -11,7 +11,7 @@ Fixes landed in the same session as the test:
 | # | Status | Item |
 |---|--------|------|
 | 1 | ✅ FIXED | List views don't refresh when MCP creates data |
-| 2 | ❌ open | `run_checks` date parser broken on day-month-year strings (cause of 232 of 359 issues) |
+| 2 | ✅ FIXED | `run_checks` date parser broken on day-month-year strings (was the cause of 232 of 359 issues). New `parseLooseDate` / `extractYear` / `dateDefinitelyAfter` helpers handle ISO, free-text English, and Swedish month names. `checks-relationships.ts` + `checks-chronology.ts` refactored to use them; SUBSTR(date_value, 1, 4) anti-pattern eliminated. Regression test in `tests/unit/check-utils-parse-loose-date.test.ts` (16 cases). **Requires app + MCP restart to take effect.** |
 | 3 | ✅ FIXED | `add_place` silently discards `place_type`/`latitude`/`longitude`/`notes` |
 | 4 | ❌ open | Empty `default_person_id` → empty Family Tree on a fresh DB |
 | 5 | ❌ open | `merge_persons` leaves duplicate events behind |
