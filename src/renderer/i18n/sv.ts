@@ -1247,7 +1247,7 @@ export default {
   },
   importExport: {
     title: 'Import / Export',
-    genneyTitle: 'Genney',
+    genneyTitle: 'Importera Genney',
     genneyDesc: 'Importera direkt från Genneys .gcc / .backup-arkiv (kräver Docker), eller importera en GEDCOM-fil exporterad från Genney.',
     genneyGccButton: 'Importera .gcc',
     genneyBackupButton: 'Importera .backup',

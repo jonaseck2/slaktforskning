@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: Import / Export tab labelled "Genney" now reads "Import Genney" — matches the "Import Holger or OurKind", "Import RootsMagic", and "Import Gramps" tabs alongside it.
 - feat: native Gramps .gramps / .gpkg importer — opens a Gramps XML database directly (gunzipping on the fly when the file is gzipped) and reads researcher info, persons, names, families, parent-child relationships, events with dates and places, sources, citations, and media. No need to first export to GEDCOM. New top-level Import/Export tab "Import Gramps", same UX shape as the RootsMagic tab. MCP `import_file` auto-detects .gramps/.gpkg files. Validated against the official Gramps reference data.gramps fixture (60 persons, 21 families, 84 parent-child links, 125 events, 43 places, 4 sources, 6 media), researcher info preserved.
 - feat: MCP `import_file` tool now auto-detects RootsMagic .rmgc / .rmtree files and dispatches to the native importer — agents can drop a RootsMagic file onto an empty database without first exporting it to GEDCOM.
 - feat: RootsMagic .rmgc import is now a top-level Import/Export tab — pick a .rmgc file and click Import. Wired through the worker thread (IPC channel `import:rootsmagicRun`), with progress messages and a post-import report showing the per-entity counts. Builds on the transform layer landed in v0.244.0.
