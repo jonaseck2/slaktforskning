@@ -75,6 +75,16 @@ describe('relationships', () => {
     expect(updated!.notes).toBe('test');
   });
 
+  it('coerces null notes to empty string on update (NOT NULL column)', () => {
+    const rel = createRelationship(db, { type: 'parent_child', subtype: 'biological' });
+    const updated = updateRelationship(db, rel.id, {
+      subtype: 'adopted',
+      notes: null as unknown as string,
+    });
+    expect(updated!.subtype).toBe('adopted');
+    expect(updated!.notes).toBe('');
+  });
+
   it('deletes a relationship', () => {
     const rel = createRelationship(db, { type: 'couple' });
     expect(deleteRelationship(db, rel.id)).toBe(true);

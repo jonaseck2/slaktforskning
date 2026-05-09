@@ -43,40 +43,7 @@ function readPersons(snapshotJson: string): {
   return JSON.parse(snapshotJson);
 }
 
-test('website export (split mode) writes a working static site with data.json.gz', async () => {
-  const outDir = path.join(os.tmpdir(), `slakt-export-split-${Date.now()}`);
-  fs.mkdirSync(outDir, { recursive: true });
-
-  const personId = await seedFocusPerson();
-
-  await app.executeJs(`window.api.website.export(${JSON.stringify({
-    siteTitle: 'E2E Test Site',
-    focusPersonId: personId,
-    scope: { everyone: true },
-    options: { includeMedia: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
-    mode: 'split',
-    _outputDir: outDir,
-  })})`);
-
-  // Split mode: index.html + data.json.gz alongside it.
-  expect(fs.existsSync(path.join(outDir, 'index.html'))).toBe(true);
-  expect(fs.existsSync(path.join(outDir, 'data.json.gz'))).toBe(true);
-
-  // Old data.js shape must be gone.
-  expect(fs.existsSync(path.join(outDir, 'data.js'))).toBe(false);
-
-  // Decompress the snapshot the same way the static SPA bootstrap does and
-  // assert the seeded person round-tripped intact.
-  const json = gunzipSync(fs.readFileSync(path.join(outDir, 'data.json.gz'))).toString('utf8');
-  const data = readPersons(json);
-  expect(data.persons.length).toBeGreaterThanOrEqual(1);
-  expect(data.personNames.length).toBeGreaterThanOrEqual(1);
-  expect(data.personNames[0].given_name).toBe('Test');
-
-  fs.rmSync(outDir, { recursive: true, force: true });
-});
-
-test('website export (portable mode) embeds the snapshot inside index.html', async () => {
+test('website export embeds the snapshot inside index.html', async () => {
   const outDir = path.join(os.tmpdir(), `slakt-export-portable-${Date.now()}`);
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -87,11 +54,10 @@ test('website export (portable mode) embeds the snapshot inside index.html', asy
     focusPersonId: personId,
     scope: { everyone: true },
     options: { includeMedia: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
-    mode: 'portable',
     _outputDir: outDir,
   })})`);
 
-  // Portable mode: only index.html, no sibling data file.
+  // Single-file output: only index.html, no sibling data file.
   expect(fs.existsSync(path.join(outDir, 'index.html'))).toBe(true);
   expect(fs.existsSync(path.join(outDir, 'data.json.gz'))).toBe(false);
   expect(fs.existsSync(path.join(outDir, 'data.js'))).toBe(false);
