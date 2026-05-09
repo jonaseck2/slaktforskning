@@ -1848,6 +1848,17 @@ export default {
     eventTypeSortCanonical: 'Life-arc (birth → death → ...)',
     eventTypeSortHint: 'Controls the order of the event-type picker when adding or editing an event.',
   },
+  onboarding: {
+    empty: {},
+    coach: {},
+    toast: {},
+    settings: {
+      resetTitle: 'Reset onboarding hints',
+      resetDescription: 'Show empty-state coaching and coachmarks again — like the first time you opened the app.',
+      resetButton: 'Reset',
+      resetDoneToast: 'Onboarding has been reset.',
+    },
+  },
   about: {
     title: 'About OurLegacy',
     openLink: 'About OurLegacy',

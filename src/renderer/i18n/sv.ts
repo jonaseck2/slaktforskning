@@ -1827,6 +1827,17 @@ export default {
     eventTypeSortCanonical: 'Livsförlopp (födelse → död → ...)',
     eventTypeSortHint: 'Bestämmer ordningen i händelsetyp-listan när du lägger till eller redigerar en händelse.',
   },
+  onboarding: {
+    empty: {},
+    coach: {},
+    toast: {},
+    settings: {
+      resetTitle: 'Återställ introduktionshjälpen',
+      resetDescription: 'Visa instruktionsmeddelanden och vinjetter på nytt — som första gången du öppnade appen.',
+      resetButton: 'Återställ',
+      resetDoneToast: 'Introduktionen är återställd.',
+    },
+  },
   about: {
     title: 'Om OurLegacy',
     openLink: 'Om OurLegacy',
