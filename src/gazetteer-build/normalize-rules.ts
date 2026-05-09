@@ -38,7 +38,12 @@ export const EN_RULES: GazetteerNormalizeRules = {
 
 export const DE_RULES: GazetteerNormalizeRules = {
   stripSuffixes: [
+    // Civil-administrative
     'Land', 'Bezirk', 'Kreis', 'Landkreis', 'Stadtkreis',
     'Gemeinde', 'Stadt', 'Markt', 'Ortsteil',
+    // Ecclesiastical (added 2026-05-09 by de-gazetteer-upgrade plan)
+    'Kirchengemeinde', 'Kirchgemeinde',
+    'Pfarrkirchengemeinde', 'Pfarrgemeinde', 'Pfarrei-Verband', 'Pfarrei',
+    'Kirchspiel', 'Pfarrbezirk',
   ],
 };
