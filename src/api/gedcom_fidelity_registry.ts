@@ -432,19 +432,20 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'events.place_address': {
     v551: {
-      kind: 'lossy',
-      reason:
-        'exporter does not emit place_address (no GEDCOM tag wired up; ExportReport.excluded surfaces the loss). ' +
-        'Column resets to null on import.',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom _PLAC_ADDR sub-tag — emitted under PLAC at level 3 when a place is attached, ' +
+        'else directly under the event at level 2. Distinct from the place\'s standalone ADDR, ' +
+        'which carries the place\'s mailing address (not the event-specific address).',
     },
     v70: {
-      kind: 'lossy',
-      reason:
-        'exporter does not emit place_address (no GEDCOM tag wired up). Column resets to null on import.',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom _PLAC_ADDR sub-tag — emitted under PLAC at level 3 when a place is attached, ' +
+        'else directly under the event at level 2. Distinct from the place\'s standalone ADDR, ' +
+        'which carries the place\'s mailing address (not the event-specific address).',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },
 
   // ----- event_participants -----
