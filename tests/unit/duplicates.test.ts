@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
 import { findDuplicates, countDuplicates, mergePersons, ignoreDuplicate } from '../../src/api/duplicates';
+import { initializeSchema } from '../../src/api/schema';
 import { queryAll, queryOne, runSql } from '../../src/api/db';
 import { deletePerson } from '../../src/api/persons';
 import { createPerson, addPersonName, getPersonNames, getPerson, addPersonIdentifier, getPersonIdentifiers } from '../../src/api/persons';
@@ -155,12 +156,99 @@ describe('ignoreDuplicate', () => {
     const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
     ignoreDuplicate(db, a.id, b.id);
 
-    // FK ON DELETE CASCADE only fires when foreign_keys pragma is on (createTestDb sets it).
+    // The v0.220.0 polymorphism migration dropped the FK to persons; deletePerson
+    // now performs an explicit cleanup mirroring task_links / group_links.
     runSql(db, 'PRAGMA foreign_keys = ON');
     deletePerson(db, a.id);
 
     const count = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM ignored_duplicates')?.n;
     expect(count).toBe(0);
+  });
+});
+
+describe('ignored_duplicates polymorphism (v0.220.0)', () => {
+  it('persists every person ignore as entity_type=person', () => {
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    ignoreDuplicate(db, a.id, b.id);
+
+    const rows = queryAll<{ entity_type: string }>(db, 'SELECT entity_type FROM ignored_duplicates');
+    expect(rows).toEqual([{ entity_type: 'person' }]);
+  });
+
+  it('does not collide across entity types — ignoring a place pair with the same UUIDs as a person pair leaves the person pair visible', () => {
+    // User-observable goal check: the duplicates view tabs (persons / places / sources / media)
+    // must each be independent. Marking a place pair as ignored must NOT silently mark
+    // a person pair with the same UUIDs as ignored. The polymorphic key is (entity_type, id1, id2).
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const [lo, hi] = a.id < b.id ? [a.id, b.id] : [b.id, a.id];
+
+    // Insert a place-typed ignore row using the SAME pair of ids as the person pair.
+    // The polymorphic table accepts this — ids are no longer FK-constrained to persons.
+    runSql(
+      db,
+      "INSERT INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('place', ?, ?)",
+      [lo, hi],
+    );
+
+    // The person pair must still surface in findDuplicates.
+    const dupes = findDuplicates(db);
+    expect(dupes).toHaveLength(1);
+    expect(new Set([dupes[0].person1_id, dupes[0].person2_id])).toEqual(new Set([a.id, b.id]));
+
+    // Sanity: the place row is in the table, just filtered out by the person query.
+    const placeRows = queryAll<{ entity_type: string }>(
+      db, "SELECT entity_type FROM ignored_duplicates WHERE entity_type = 'place'"
+    );
+    expect(placeRows).toHaveLength(1);
+  });
+
+  it('migration is idempotent — running initializeSchema twice does not crash or double-add the column', () => {
+    // createTestDb() already ran initializeSchema once; running it again is the
+    // idempotency check.
+    expect(() => initializeSchema(db)).not.toThrow();
+    expect(() => initializeSchema(db)).not.toThrow();
+
+    // After three runs, the column shape must still be the migrated shape — not
+    // duplicated, not missing.
+    const cols = queryAll<{ name: string }>(db, 'PRAGMA table_info(ignored_duplicates)').map(c => c.name);
+    expect(cols.sort()).toEqual(['created_at', 'entity_type', 'person1_id', 'person2_id']);
+  });
+
+  it('migration preserves existing person ignores when upgrading from the pre-polymorphism shape', () => {
+    // Simulate a pre-v0.220.0 database: rebuild the table with the OLD shape
+    // (person1_id/person2_id PK, FK to persons, no entity_type), seed a row,
+    // then re-run initializeSchema and verify the row carries entity_type='person'.
+    const a = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const b = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const [lo, hi] = a.id < b.id ? [a.id, b.id] : [b.id, a.id];
+
+    runSql(db, 'PRAGMA foreign_keys = OFF');
+    runSql(db, 'DROP TABLE ignored_duplicates');
+    runSql(db, `
+      CREATE TABLE ignored_duplicates (
+        person1_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+        person2_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (person1_id, person2_id),
+        CHECK (person1_id < person2_id)
+      )
+    `);
+    runSql(db, 'PRAGMA foreign_keys = ON');
+    runSql(db, 'INSERT INTO ignored_duplicates (person1_id, person2_id) VALUES (?, ?)', [lo, hi]);
+
+    // Now run the migration ladder.
+    initializeSchema(db);
+
+    // Row must survive — and must carry entity_type='person' courtesy of the migration's INSERT default.
+    const rows = queryAll<{ entity_type: string; person1_id: string; person2_id: string }>(
+      db, 'SELECT entity_type, person1_id, person2_id FROM ignored_duplicates'
+    );
+    expect(rows).toEqual([{ entity_type: 'person', person1_id: lo, person2_id: hi }]);
+
+    // And findDuplicates honours the migrated row — the person pair is hidden.
+    expect(findDuplicates(db)).toHaveLength(0);
   });
 });
 

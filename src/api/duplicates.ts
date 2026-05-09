@@ -103,9 +103,11 @@ function collectDuplicateCandidates(db: Database): DuplicateCandidate[] {
   }
 
   // Pull the user-ignored pairs once and key them the same way as `seen` so the
-  // inner loop can skip them with no per-pair query.
+  // inner loop can skip them with no per-pair query. Filter to entity_type='person'
+  // so a place pair with the same UUIDs (vanishingly unlikely but possible)
+  // doesn't accidentally hide a person pair.
   const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
-    db, 'SELECT person1_id, person2_id FROM ignored_duplicates'
+    db, "SELECT person1_id, person2_id FROM ignored_duplicates WHERE entity_type = 'person'"
   );
   const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
 
@@ -214,7 +216,7 @@ export function ignoreDuplicate(db: Database, personAId: string, personBId: stri
   const [p1, p2] = personAId < personBId ? [personAId, personBId] : [personBId, personAId];
   runSql(
     db,
-    'INSERT OR IGNORE INTO ignored_duplicates (person1_id, person2_id) VALUES (?, ?)',
+    "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('person', ?, ?)",
     [p1, p2]
   );
 }

@@ -241,11 +241,17 @@ export function initializeSchema(db: Database): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    -- v0.220.0: ignored_duplicates is polymorphic. The pair columns keep
+    -- their legacy names (person1_id/person2_id) but no longer carry an
+    -- FK to persons; they hold whichever entity ids match entity_type.
+    -- Cleanup on row delete is done in deletePerson/deletePlace/deleteSource/
+    -- deleteMedia, mirroring the pattern used by group_links / task_links.
     CREATE TABLE IF NOT EXISTS ignored_duplicates (
-      person1_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-      person2_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL DEFAULT 'person' CHECK(entity_type IN ('person', 'place', 'source', 'media')),
+      person1_id TEXT NOT NULL,
+      person2_id TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      PRIMARY KEY (person1_id, person2_id),
+      PRIMARY KEY (entity_type, person1_id, person2_id),
       CHECK (person1_id < person2_id)
     );
   `);
@@ -559,6 +565,57 @@ export function initializeSchema(db: Database): void {
       runSql(db, 'DROP TABLE person_identifiers');
       runSql(db, 'ALTER TABLE person_identifiers_new RENAME TO person_identifiers');
       runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id)');
+    } finally {
+      runSql(db, 'PRAGMA foreign_keys = ON');
+    }
+  }
+
+  // v0.220.0: ignored_duplicates polymorphism. Older databases keyed the pair
+  // on (person1_id, person2_id) only and carried a hard FK to persons(id).
+  // The new shape adds an `entity_type` column (default 'person') and drops
+  // the persons FK so place/source/media pairs can also be ignored. Existing
+  // rows are preserved with entity_type='person' (the column DEFAULT). The
+  // FK drop requires a table rebuild — SQLite doesn't support DROP CONSTRAINT.
+  const ignoredCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(ignored_duplicates)').map(c => c.name);
+  const ignoredSql = (queryOne<{ sql: string }>(db,
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='ignored_duplicates'`
+  ))?.sql ?? '';
+  // Two triggers for migration:
+  //   (a) entity_type column missing — pre-polymorphic shape
+  //   (b) the table sql still has the old FK to persons (REFERENCES persons)
+  // Either condition means we need to rebuild. The fresh CREATE above already
+  // produces the new shape, but on an upgraded DB CREATE IF NOT EXISTS is a
+  // no-op so this rebuild block is the only path to the new shape.
+  const needsIgnoredRebuild = !ignoredCols.includes('entity_type') || ignoredSql.includes('REFERENCES persons');
+  if (needsIgnoredRebuild) {
+    runSql(db, 'DROP TABLE IF EXISTS ignored_duplicates_new');
+    runSql(db, 'PRAGMA foreign_keys = OFF');
+    try {
+      runSql(db, `
+        CREATE TABLE ignored_duplicates_new (
+          entity_type TEXT NOT NULL DEFAULT 'person' CHECK(entity_type IN ('person', 'place', 'source', 'media')),
+          person1_id TEXT NOT NULL,
+          person2_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (entity_type, person1_id, person2_id),
+          CHECK (person1_id < person2_id)
+        )
+      `);
+      // Carry every existing row forward as entity_type='person' (the only
+      // entity type the pre-polymorphic table supported).
+      if (ignoredCols.includes('entity_type')) {
+        runSql(db, `
+          INSERT INTO ignored_duplicates_new (entity_type, person1_id, person2_id, created_at)
+          SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates
+        `);
+      } else {
+        runSql(db, `
+          INSERT INTO ignored_duplicates_new (entity_type, person1_id, person2_id, created_at)
+          SELECT 'person', person1_id, person2_id, created_at FROM ignored_duplicates
+        `);
+      }
+      runSql(db, 'DROP TABLE ignored_duplicates');
+      runSql(db, 'ALTER TABLE ignored_duplicates_new RENAME TO ignored_duplicates');
     } finally {
       runSql(db, 'PRAGMA foreign_keys = ON');
     }
