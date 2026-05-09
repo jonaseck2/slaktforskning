@@ -405,8 +405,19 @@ async function load() {
     // Just check whether any persons exist — fetch one row, not the whole table.
     // The previous `persons.list()` call returned all 22k rows + their joined
     // names just to compare length to zero, hammering the worker on PersonsView mount.
-    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: unknown[]; total: number };
+    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: Array<{ id: string }>; total: number };
     noPersonsExist.value = probe.total === 0;
+    // Render-time fallback: when persons exist but the user hasn't set a
+    // tree subject yet, focus the first person (alphabetical by surname) so
+    // the tree never opens to a blank screen on a fresh import. Don't
+    // persist this — the user remains free to set their own subject. Per
+    // .claude/rules/plans.md "User goal first": surfaced by the 2026-05-09
+    // Bernadotte test session where opening the app on a fresh DB showed
+    // a blank Timglas chart and the user thought the tree was broken.
+    if (probe.total > 0 && probe.persons[0]?.id) {
+      router.replace('/persons/' + probe.persons[0].id);
+      return;
+    }
     noFocalPerson.value = probe.total > 0;
     return;
   }
@@ -418,8 +429,12 @@ async function load() {
     // Just check whether any persons exist — fetch one row, not the whole table.
     // The previous `persons.list()` call returned all 22k rows + their joined
     // names just to compare length to zero, hammering the worker on PersonsView mount.
-    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: unknown[]; total: number };
+    const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: Array<{ id: string }>; total: number };
     noPersonsExist.value = probe.total === 0;
+    if (probe.total > 0 && probe.persons[0]?.id) {
+      router.replace('/persons/' + probe.persons[0].id);
+      return;
+    }
     noFocalPerson.value = probe.total > 0;
     return;
   }
