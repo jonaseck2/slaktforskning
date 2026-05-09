@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -13,7 +14,12 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     executableName: 'slaktforskning',
-    extraResource: ['./dist-static'],
+    extraResource: ['./dist-static', './THIRD_PARTY_LICENSES.txt'],
+  },
+  hooks: {
+    generateAssets: async () => {
+      execFileSync('node', ['scripts/build-third-party-licenses.mjs'], { stdio: 'inherit' });
+    },
   },
   rebuildConfig: {},
   makers: [
