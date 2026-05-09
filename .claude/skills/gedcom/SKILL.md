@@ -112,6 +112,22 @@ From the GEDCOM-X spec, these are gaps in the current data model beyond what v0.
 - Date precision beyond current model (time of day, timezones, recurring dates, durations)
 - Attribution on individual data elements (who added which name variant)
 
+## Dialect coverage
+
+Major genealogy apps emit GEDCOM with their own dialect quirks. The repo carries two layers of test coverage to keep the GEDCOM importer honest about them:
+
+**Synthetic dialect fixtures** at `tests/fixtures/gedcom/dialects/` — one minimal `.ged` per app (RootsMagic, Gramps, Family Tree Maker, Legacy, MacFamilyTree, Family Historian, MyHeritage, PAF, Holger, Genney) carrying that app's `1 SOUR` signature plus characteristic custom tags. `tests/unit/import-gedcom-dialects.test.ts` asserts each imports without crashing and that no *core* GEDCOM tag (NAME, INDI, FAM, BIRT, DEAT, MARR, SEX, …) ends up in the report's skipped list.
+
+**Real-world samples (gitignored)** at `export-import/samples/`:
+- `familysearch-gedcom7/` — official FamilySearch GEDCOM 7.0 reference test files (24 files; download via `https://raw.githubusercontent.com/FamilySearch/GEDCOM.io/main/testfiles/gedcom70/<name>.ged`)
+- `gramps/sample.ged` — Gramps's official sample, real Gramps export
+- `heiner-torture/allged.ged` — Heiner Eichmann's GEDCOM 5.5 torture test
+- `d-jeffrey/` — 12 real exports tagged by source app (RootsMagic 8 Queen 4683 persons; FTM 20 Habsburg 34020 persons; PAF 2.2 royal92; Legacy ivar/tudor; FamilyOrigins washington; ANCESTRIS bourbon/kennedy)
+
+The diagnostic loop when adding new tag handling: walk all 36 samples through the importer, eyeball the per-file skipped-tag list, decide for each tag whether it's a real loss to fix (e.g. `_UID`/`AFN`/`SSN`/`FSID` → person identifiers, `CREM`/`BARM`/`ANUL`/`MARL`/`_SEPR` → new event types) or an intentional drop (LDS ordinances, app-internal flags like `_UPD` / `_PHOTO` / `_PPEXCLUDE`).
+
+After every importer change, the canonical "did anything break" check is: rerun the dialect tests + walk the real samples once more. If a previously-handled tag falls into the skipped list on a real sample, that's a regression.
+
 ## Date format
 
 ### GEDCOM 5.5.1 → app model
