@@ -15,6 +15,31 @@ const config: ForgeConfig = {
     asar: true,
     executableName: 'slaktforskning',
     extraResource: ['./dist-static', './THIRD_PARTY_LICENSES.txt'],
+    ignore: [
+      // tests and fixtures
+      /^\/tests($|\/)/,
+      // build scripts (only run at npm run package time, not at runtime)
+      /^\/scripts($|\/)/,
+      /^\/src\/gazetteer-build($|\/)/,
+      // docs and config
+      /^\/docs($|\/)/,
+      /^\/\.claude($|\/)/,
+      /^\/\.devcontainer($|\/)/,
+      /^\/\.github($|\/)/,
+      /^\/\.vscode($|\/)/,
+      // top-level non-runtime files
+      /^\/(README|CONTRIBUTING|CHANGELOG|LICENSE|CLAUDE)\.md$/,
+      /^\/playwright\.config\.ts$/,
+      /^\/vitest\.config\.mts$/,
+      /^\/eslint\.config\.[mt]?js$/,
+      /^\/tsconfig\.json$/,
+      /^\/forge\.config\.ts$/,
+      /^\/vite\.[a-z]+\.config\.ts$/,
+      // coverage / build artifacts that aren't the runtime bundle
+      /^\/coverage($|\/)/,
+      /^\/dist-static($|\/)/, // intentionally — extraResource above ships it explicitly
+      /^\/out($|\/)/,
+    ],
   },
   hooks: {
     generateAssets: async () => {
