@@ -35,8 +35,13 @@ export function useFirstEncounter(key: string) {
   return { seen: seenRef as Ref<boolean>, markSeen };
 }
 
-/** Test-only — clears the in-memory cache. Not exposed in production code paths. */
-export function __resetForTests(): void {
+/** Clears the in-memory cache so live components re-fetch from settings.
+ *  Used by SettingsView's "Reset onboarding" handler after `window.api.onboarding.reset()`,
+ *  and by tests to isolate per-test state. */
+export function resetCache(): void {
   cache.clear();
   snapshotPromise = null;
 }
+
+/** @deprecated Use `resetCache`. Kept as alias for existing test files. */
+export const __resetForTests = resetCache;

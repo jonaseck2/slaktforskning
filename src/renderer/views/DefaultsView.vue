@@ -47,15 +47,28 @@
       </label>
       <p class="defaults-hint">{{ $t('settings.display.showBirthNameParentheticalHelp') }}</p>
     </section>
+
+    <section class="defaults-section">
+      <h3>{{ $t('onboarding.settings.resetTitle') }}</h3>
+      <p class="defaults-hint">{{ $t('onboarding.settings.resetDescription') }}</p>
+      <button type="button" class="btn-cancel reset-onboarding-btn" @click="resetOnboarding">
+        {{ $t('onboarding.settings.resetButton') }}
+      </button>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { isEventTypeSortMode, type EventTypeSortMode } from '../utils/eventTypeSort';
 import { usePersonNameOptions } from '../stores/personNameOptions';
+import { resetCache as resetOnboardingCache } from '../composables/useFirstEncounter';
+import { useToast } from '../composables/useToast';
 
 const personNameOptions = usePersonNameOptions();
+const { t } = useI18n();
+const toast = useToast();
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -94,6 +107,17 @@ async function onBirthNameParentheticalToggle(e: Event) {
   // The store updates its ref synchronously and persists in the background,
   // so every open view reading from the store re-renders immediately.
   await personNameOptions.setShowBirthNameParenthetical(on);
+}
+
+async function resetOnboarding() {
+  try {
+    await window.api.onboarding.reset();
+    resetOnboardingCache();
+    toast.success(t('onboarding.settings.resetDoneToast'));
+  } catch (err) {
+    console.error('[DefaultsView] resetOnboarding failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
 }
 
 onMounted(load);
@@ -147,5 +171,8 @@ onMounted(load);
   height: 16px;
   accent-color: var(--accent);
   cursor: pointer;
+}
+.reset-onboarding-btn {
+  margin-top: var(--space-sm);
 }
 </style>
