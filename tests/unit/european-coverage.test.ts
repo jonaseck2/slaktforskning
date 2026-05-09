@@ -65,6 +65,20 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Ev.-Luth. Kirchengemeinde Borby, Schleswig-Holstein, Germany', expectAdmin1: 'Schleswig-Holstein', expectLeaf: 'Ev.-Luth. Kirchengemeinde Borby', expectLeafType: 'admin3', expectCountry: 'Germany' },
     ],
   },
+  {
+    countryCode: 'gb',
+    countryName: 'United Kingdom',
+    probes: [
+      // ONS Local Authority Districts at admin2: bare district name (e.g. "East Lothian"
+      // for Scotland's council areas, "Suffolk" — wait, Suffolk is a non-metropolitan
+      // county not a LAD; the LADs are the districts inside it). Pick LADs that exist
+      // in the BUC source: City of Edinburgh, Cardiff, Belfast, Westminster.
+      { query: 'City of Edinburgh, Scotland, United Kingdom', expectAdmin1: 'Scotland', expectLeaf: 'City of Edinburgh', expectCountry: 'United Kingdom' },
+      { query: 'Cardiff, Wales, United Kingdom', expectAdmin1: 'Wales', expectLeaf: 'Cardiff', expectCountry: 'United Kingdom' },
+      { query: 'Belfast, Northern Ireland, United Kingdom', expectAdmin1: 'Northern Ireland', expectLeaf: 'Belfast', expectCountry: 'United Kingdom' },
+      { query: 'Westminster, England, United Kingdom', expectAdmin1: 'England', expectLeaf: 'Westminster', expectCountry: 'United Kingdom' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {

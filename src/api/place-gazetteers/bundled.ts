@@ -9,7 +9,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import {
-  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES,
+  SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES, GB_RULES,
 } from '../../gazetteer-build/normalize-rules';
 import type { Gazetteer, GazetteerNode, GazetteerNormalizeRules } from './types';
 
@@ -29,6 +29,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'is-sveitarfelog',
   // German
   'de-gemeinden', 'de-kirchgemeinden', 'de-gemeinden-boundaries',
+  // British Isles
+  'gb-civil-divisions',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -128,6 +130,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'de-gemeinden': DE_RULES,
   'de-kirchgemeinden': DE_RULES,
   'de-gemeinden-boundaries': DE_RULES,
+  // British Isles
+  'gb-civil-divisions': GB_RULES,
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

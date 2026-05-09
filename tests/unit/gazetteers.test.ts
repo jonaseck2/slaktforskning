@@ -7,8 +7,8 @@ import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/
 describe('bundled gazetteers', () => {
   const gazetteers = getAllGazetteers();
 
-  it('loads all 31 bundled gazetteers', () => {
-    expect(gazetteers.length).toBe(31);
+  it('loads all 32 bundled gazetteers', () => {
+    expect(gazetteers.length).toBe(32);
   });
 
   const dataIds = [
@@ -16,6 +16,7 @@ describe('bundled gazetteers', () => {
     'dk-sogne', 'dk-sogne-dawa',
     'no-kommuner', 'fi-kunnat', 'is-sveitarfelog',
     'de-gemeinden', 'de-kirchgemeinden', 'de-gemeinden-boundaries',
+    'gb-civil-divisions',
     'us-immigration-states', 'us-all-states', 'ca-provinces',
     'world-countries', 'world-admin1',
     'world-historical',
