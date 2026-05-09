@@ -37,6 +37,8 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'nl-gemeenten',
   // Belgium
   'be-provinces',
+  // France
+  'fr-departements',
   // North American
   'us-immigration-states', 'us-all-states', 'ca-provinces',
   // Global
@@ -145,6 +147,8 @@ const NORMALIZE_RULES_BY_ID: Record<string, GazetteerNormalizeRules> = {
   'nl-gemeenten': { stripSuffixes: [], stripPrefixes: ['provincie', 'gemeente'] },
   // Belgium — bilingual prefixes
   'be-provinces': { stripSuffixes: ['gemeente', 'commune', 'ville', 'stad'], stripPrefixes: ['provincie', 'province de', 'province du', 'commune de', 'ville de'] },
+  // France — French civil-administrative suffixes
+  'fr-departements': { stripSuffixes: ['commune', 'département', 'région', 'canton', 'ville', 'arrondissement'], stripPrefixes: ['commune de', 'département de', 'département du', 'région', 'arrondissement de', 'canton de', 'ville de'] },
   // English / North American (admin1-style)
   'us-immigration-states': EN_RULES,
   'us-all-states': EN_RULES,

@@ -118,6 +118,19 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'West-Vlaanderen, Belgium', expectAdmin1: 'Vlaanderen', expectAdmin2: 'West-Vlaanderen', expectCountry: 'Belgium' },
     ],
   },
+  {
+    countryCode: 'fr',
+    countryName: 'France',
+    probes: [
+      // GeoNames FR: 13 metropolitan régions (admin1) + 96 départements (admin2)
+      // + populated places ≥10000 pop (admin3). Overseas departments excluded.
+      // ~35k communes deferred. Diacritics stripped by universal normalize.
+      { query: 'Bourg-en-Bresse, Ain, France', expectAdmin1: 'Auvergne-Rhône-Alpes', expectAdmin2: 'Ain', expectCountry: 'France' },
+      { query: 'Strasbourg, France', expectAdmin1: 'Grand Est', expectCountry: 'France' },
+      { query: 'Bretagne, France', expectAdmin1: 'Bretagne', expectCountry: 'France' },
+      { query: 'Aude, Occitanie, France', expectAdmin1: 'Occitanie', expectAdmin2: 'Aude', expectCountry: 'France' },
+    ],
+  },
 ];
 
 function assertHierarchyOrder(path: string[], expected: Array<string | undefined>, query: string): void {
