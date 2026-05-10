@@ -1,6 +1,14 @@
 <template>
   <div class="base-map-container" :style="containerStyle">
+    <!-- Defer LMap creation by two animation frames so the parent flex layout
+         has measured the container before Leaflet's `L.map(container)` reads
+         `getBoundingClientRect()` in `_initContainer`. Tauri/WebKit's paint
+         timing differs from Electron/Chromium — without this gate, the first
+         mount on /places fires an unhandled-rejection from `_initContainer`
+         (cosmetic; map still renders). The double-rAF is harmless on
+         Chromium where layout was already ready. -->
     <LMap
+      v-if="containerReady"
       ref="mapRef"
       :zoom="initialZoom"
       :center="initialCenter"
@@ -41,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onBeforeUnmount } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -80,7 +88,18 @@ const emit = defineEmits<{
 
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
 const mapReady = ref(false);
+// Gate LMap creation until two animation frames after our own mount so the
+// flex parent has measured the container. See template comment.
+const containerReady = ref(false);
 const maxZoom = 18;
+
+onMounted(() => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      containerReady.value = true;
+    });
+  });
+});
 
 // In static mode (file://), OSM blocks tile requests without a referrer.
 // CartoDB Voyager doesn't require a referrer and renders OSM data.
