@@ -8,6 +8,7 @@ import { loadSettings, saveSettings } from './settings';
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
+let dbOpenError: { path: string; message: string } | null = null;
 
 function openDatabase(dbPath: string): Database {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -28,8 +29,29 @@ function resolveDefaultPath(): string {
     || path.join(app.getPath('userData'), 'slaktforskning.db');
 }
 
+/** Try to open the resolved-default DB at app startup. On failure, record the
+ *  error so the renderer can surface it and route the user to Settings, instead
+ *  of crashing the main process before any window is shown. */
+export function tryOpenDatabaseAtStartup(): void {
+  currentDbPath = resolveDefaultPath();
+  try {
+    db = openDatabase(currentDbPath);
+    dbOpenError = null;
+  } catch (err) {
+    db = null;
+    dbOpenError = {
+      path: currentDbPath,
+      message: err instanceof Error ? err.message : String(err),
+    };
+    console.error(`[startup] failed to open database at ${currentDbPath}:`, err);
+  }
+}
+
 export function getDatabase(): Database {
   if (db) return db;
+  if (dbOpenError) {
+    throw new Error(`Database not open: ${dbOpenError.message}`);
+  }
   currentDbPath = resolveDefaultPath();
   db = openDatabase(currentDbPath);
   return db;
@@ -40,11 +62,26 @@ export function getCurrentDatabasePath(): string {
   return currentDbPath;
 }
 
+export function getDatabaseOpenError(): { path: string; message: string } | null {
+  return dbOpenError;
+}
+
 export function switchDatabase(newPath: string): void {
   closeDatabase();
   undoManager.clear();
-  db = openDatabase(newPath);
+  try {
+    db = openDatabase(newPath);
+  } catch (err) {
+    db = null;
+    dbOpenError = {
+      path: newPath,
+      message: err instanceof Error ? err.message : String(err),
+    };
+    currentDbPath = newPath;
+    throw err;
+  }
   currentDbPath = newPath;
+  dbOpenError = null;
 
   const settings = loadSettings();
   settings.lastDatabase = newPath;

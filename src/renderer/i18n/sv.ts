@@ -1679,6 +1679,8 @@ export default {
     saveFailed: 'Det gick inte att spara. Försök igen.',
     deleteFailed: 'Det gick inte att ta bort. Försök igen.',
     loadFailed: 'Det gick inte att ladda data. Försök igen.',
+    dbOpenFailed: 'Det gick inte att öppna databasen "{name}". Välj en annan i Inställningar.',
+    dbSwitchFailed: 'Det gick inte att öppna "{name}". Filen kan vara låst eller skadad.',
   },
   a11y: {
     skipToMain: 'Hoppa till huvudinnehåll',

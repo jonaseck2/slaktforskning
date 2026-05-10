@@ -2,7 +2,30 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import { callWorker, switchWorkerDb } from './worker-client';
+import { getDatabaseOpenError } from '../database';
 import type { WrapHandlerFn } from './wrap-handler';
+
+/** Wraps a switch attempt: roll the main-thread DB over, then the worker DB.
+ *  On worker failure, surface the error to the renderer instead of throwing
+ *  so the user can pick another path from Settings without seeing a raw IPC
+ *  rejection in the toast. */
+async function trySwitchDatabase(
+  newPath: string,
+  switchDatabase: (dbPath: string) => void,
+): Promise<{ ok: true; path: string; name: string } | { ok: false; error: string; path: string }> {
+  try {
+    switchDatabase(newPath);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err), path: newPath };
+  }
+  try {
+    await switchWorkerDb(newPath);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err), path: newPath };
+  }
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
+  return { ok: true, path: newPath, name: path.basename(newPath) };
+}
 
 export function registerDatabaseHandlers(
   _getDb: unknown,
@@ -24,6 +47,10 @@ export function registerDatabaseHandlers(
       .map(p => ({ path: p, name: path.basename(p) }));
   });
 
+  // Surfaces a startup DB open failure to the renderer so it can show a toast
+  // and route the user to Settings. Returns null when the DB opened cleanly.
+  wrapHandler('db:getStartupError', () => getDatabaseOpenError());
+
   // db:getSetting, db:setSetting, db:deleteSetting migrated to registry (src/shared/channels/database.ts)
 
   wrapHandler('shell:open-external', (url) => {
@@ -34,7 +61,12 @@ export function registerDatabaseHandlers(
     return shell.openExternal(urlStr);
   });
 
-  // Database switching — update both main-thread path tracker and worker DB
+  // Database switching — update both main-thread path tracker and worker DB.
+  // Each handler returns one of:
+  //   { canceled: true }                           — dialog was dismissed
+  //   { path, name }                               — switched cleanly
+  //   { error: string, path: string }              — open failed (locked / corrupt / missing)
+  // The renderer toasts on `error` rather than treating it as a hard rejection.
   ipcMain.handle('db:createNew', async () => {
     const currentDir = path.dirname(getCurrentDatabasePath());
     const result = await dialog.showSaveDialog({
@@ -43,17 +75,13 @@ export function registerDatabaseHandlers(
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    switchDatabase(result.filePath);
-    await switchWorkerDb(result.filePath);
-    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
-    return { path: result.filePath, name: path.basename(result.filePath) };
+    const r = await trySwitchDatabase(result.filePath, switchDatabase);
+    return r.ok ? { path: r.path, name: r.name } : { error: r.error, path: r.path };
   });
 
   ipcMain.handle('db:switchTo', async (_e, dbPath: string) => {
-    switchDatabase(dbPath);
-    await switchWorkerDb(dbPath);
-    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
-    return { path: dbPath, name: path.basename(dbPath) };
+    const r = await trySwitchDatabase(dbPath, switchDatabase);
+    return r.ok ? { path: r.path, name: r.name } : { error: r.error, path: r.path };
   });
 
   ipcMain.handle('db:openExisting', async () => {
@@ -65,10 +93,8 @@ export function registerDatabaseHandlers(
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-    switchDatabase(result.filePaths[0]);
-    await switchWorkerDb(result.filePaths[0]);
-    BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
-    return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
+    const r = await trySwitchDatabase(result.filePaths[0], switchDatabase);
+    return r.ok ? { path: r.path, name: r.name } : { error: r.error, path: r.path };
   });
 
   // Backup / Restore

@@ -1679,6 +1679,8 @@ export default {
     saveFailed: 'Could not save. Please try again.',
     deleteFailed: 'Could not delete. Please try again.',
     loadFailed: 'Could not load data. Please try again.',
+    dbOpenFailed: 'Could not open the database "{name}". Pick another from Settings.',
+    dbSwitchFailed: 'Could not open "{name}". The file may be locked or damaged.',
   },
   a11y: {
     skipToMain: 'Skip to main content',

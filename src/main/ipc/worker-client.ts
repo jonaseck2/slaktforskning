@@ -10,11 +10,13 @@ const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Err
 const callQueue: Array<() => void> = [];
 
 // Callbacks for lifecycle acknowledgements
-let switchedResolve: (() => void) | null = null;
+let switchedResolve: ((res: { ok: true } | { ok: false; error: string }) => void) | null = null;
 
 type WorkerMsg =
   | { type: 'ready' }
+  | { type: 'init-failed'; dbPath: string; error: string }
   | { type: 'switched' }
+  | { type: 'switch-failed'; dbPath: string; error: string }
   | { type: 'broadcast'; topic: string; payload: unknown }
   | { id: number; result: unknown }
   | { id: number; error: string };
@@ -40,8 +42,19 @@ export function startWorker(dbPath: string): void {
         // Flush any calls that arrived while starting up
         for (const fn of callQueue) fn();
         callQueue.length = 0;
+      } else if (msg.type === 'init-failed') {
+        // Worker failed to open the startup DB but stayed alive so it can
+        // service db-switch later. Mark it ready (so call dispatch doesn't
+        // hang forever) and let any queued calls fail with a clear error
+        // until the user picks a recovery path.
+        workerReady = true;
+        for (const fn of callQueue) fn();
+        callQueue.length = 0;
       } else if (msg.type === 'switched') {
-        switchedResolve?.();
+        switchedResolve?.({ ok: true });
+        switchedResolve = null;
+      } else if (msg.type === 'switch-failed') {
+        switchedResolve?.({ ok: false, error: msg.error });
         switchedResolve = null;
       } else if (msg.type === 'broadcast') {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -89,8 +102,11 @@ export function callWorker(channel: string, ...args: unknown[]): Promise<unknown
 
 export function switchWorkerDb(newPath: string): Promise<void> {
   if (!worker) return Promise.resolve();
-  return new Promise<void>((resolve) => {
-    switchedResolve = resolve;
+  return new Promise<void>((resolve, reject) => {
+    switchedResolve = (res) => {
+      if (res.ok) resolve();
+      else reject(new Error(res.error));
+    };
     worker!.postMessage({ type: 'db-switch', dbPath: newPath });
   });
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: a locked or broken database no longer crashes the app at startup — a red toast announces the failure and Settings opens automatically so you can pick another file.
 - fix(build): pin Node to <26 (24 LTS via .nvmrc) — Node 26 silently breaks Electron's postinstall on Windows.
 - feat(gazetteers): country chip set now lists actual countries (Sweden, Germany, …) with Multi-country and Language packs pinned at the end — the old "World" bucket lumped 25+ unrelated gazetteers together. Bulk Enable all / Disable all buttons act on the visible (filtered) subset, with a count showing how many of those are currently active.
 - fix(gazetteers): typing in Test Lookup no longer stutters — the per-source merge is memoised and the query is debounced.

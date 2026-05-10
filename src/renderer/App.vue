@@ -593,6 +593,22 @@ async function loadDuplicatesBadge() {
   } catch { /* ignore */ }
 }
 
+async function checkStartupDbError() {
+  // If the worker / main thread couldn't open the configured database (locked,
+  // corrupt, deleted), surface a red toast and route the user straight to
+  // Settings → Database so they can pick another. Without this, every list
+  // view fires its load IPC and shows nothing but error noise.
+  try {
+    const err = await window.api?.db?.getStartupError?.();
+    if (!err) return;
+    const name = err.path.split(/[\\/]/).pop() || err.path;
+    toast.error(t('errors.dbOpenFailed', { name }));
+    if (router.currentRoute.value.path !== '/settings') {
+      router.push('/settings');
+    }
+  } catch { /* best-effort — don't block boot if probe itself fails */ }
+}
+
 onMounted(() => {
   setTheme(currentTheme.value);
   setAppearance(appearance.value);
@@ -600,6 +616,7 @@ onMounted(() => {
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
   window.addEventListener('click', handleDocClick);
+  checkStartupDbError();
   loadDefaultPerson();
   personNameOptions.init();
   linkRulesStore.init();

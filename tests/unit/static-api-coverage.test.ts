@@ -84,7 +84,7 @@ describe('static API parity', () => {
     // the static SPA.  Derived from the inline blocks in src/preload/index.ts.
     const legacyExposed: string[] = [
       // db — non-setting db management stays on main thread
-      'db:getCurrent', 'db:getRecent', 'db:createNew', 'db:openExisting', 'db:switchTo',
+      'db:getCurrent', 'db:getRecent', 'db:getStartupError', 'db:createNew', 'db:openExisting', 'db:switchTo',
       // undo — undo/redo need BrowserWindow broadcasts, onChanged/onPerformed are event listeners
       'undo:undo', 'undo:redo',
       // shell / export / print / csv / backup

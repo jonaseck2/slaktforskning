@@ -103,8 +103,20 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PersonPicker from '../components/PersonPicker.vue';
 import { resetDefaultPersonId } from '../composables/useDefaultPerson';
+import { useToast } from '../composables/useToast';
 
 const { t } = useI18n();
+const toast = useToast();
+
+type SwitchResult = { path: string; name: string } | { error: string; path: string } | { canceled: true };
+
+function isError(r: SwitchResult): r is { error: string; path: string } {
+  return 'error' in r;
+}
+
+function basenameOf(p: string): string {
+  return p.split(/[\\/]/).pop() || p;
+}
 
 interface DbEntry { path: string; name: string }
 
@@ -165,27 +177,38 @@ async function setTreeSubject(personId: string | null) {
 }
 
 async function openPath(p: string) {
-  const result = await window.api.db.switchTo(p);
+  const result = await window.api.db.switchTo(p) as SwitchResult;
+  if (isError(result)) {
+    toast.error(t('errors.dbSwitchFailed', { name: basenameOf(result.path) }));
+    return;
+  }
+  if ('canceled' in result) return;
   resetDefaultPersonId();
   statusMsg.value = t('database.switchedTo', { name: result.name });
   setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function createNew() {
-  const result = await window.api.db.createNew();
-  if (!('canceled' in result)) {
-    resetDefaultPersonId();
-    statusMsg.value = t('database.switchedTo', { name: result.name });
-    setTimeout(() => { statusMsg.value = ''; }, 3000);
+  const result = await window.api.db.createNew() as SwitchResult;
+  if (isError(result)) {
+    toast.error(t('errors.dbSwitchFailed', { name: basenameOf(result.path) }));
+    return;
   }
+  if ('canceled' in result) return;
+  resetDefaultPersonId();
+  statusMsg.value = t('database.switchedTo', { name: result.name });
+  setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function openExisting() {
-  const result = await window.api.db.openExisting();
-  if (!('canceled' in result)) {
-    statusMsg.value = t('database.switchedTo', { name: result.name });
-    setTimeout(() => { statusMsg.value = ''; }, 3000);
+  const result = await window.api.db.openExisting() as SwitchResult;
+  if (isError(result)) {
+    toast.error(t('errors.dbSwitchFailed', { name: basenameOf(result.path) }));
+    return;
   }
+  if ('canceled' in result) return;
+  statusMsg.value = t('database.switchedTo', { name: result.name });
+  setTimeout(() => { statusMsg.value = ''; }, 3000);
 }
 
 async function backup() {

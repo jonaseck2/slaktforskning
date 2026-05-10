@@ -130,6 +130,7 @@ const api = {
   db: {
     getCurrent: () => ipcRenderer.invoke('db:getCurrent'),
     getRecent: () => ipcRenderer.invoke('db:getRecent'),
+    getStartupError: () => ipcRenderer.invoke('db:getStartupError') as Promise<{ path: string; message: string } | null>,
     createNew: () => ipcRenderer.invoke('db:createNew'),
     openExisting: () => ipcRenderer.invoke('db:openExisting'),
     switchTo: (dbPath: string) => ipcRenderer.invoke('db:switchTo', dbPath),

@@ -181,9 +181,10 @@ declare global {
       db: {
         getCurrent: () => Promise<{ path: string; name: string }>;
         getRecent: () => Promise<{ path: string; name: string }[]>;
-        createNew: () => Promise<{ path: string; name: string } | { canceled: true }>;
-        openExisting: () => Promise<{ path: string; name: string } | { canceled: true }>;
-        switchTo: (dbPath: string) => Promise<{ path: string; name: string }>;
+        getStartupError: () => Promise<{ path: string; message: string } | null>;
+        createNew: () => Promise<{ path: string; name: string } | { canceled: true } | { error: string; path: string }>;
+        openExisting: () => Promise<{ path: string; name: string } | { canceled: true } | { error: string; path: string }>;
+        switchTo: (dbPath: string) => Promise<{ path: string; name: string } | { error: string; path: string }>;
         onSwitched: (cb: () => void) => void;
       };
       places: {

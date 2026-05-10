@@ -261,23 +261,35 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
   if ('type' in msg) {
     try {
       if (msg.type === 'init') {
-        openDb(msg.dbPath);
-        parentPort!.postMessage({ type: 'ready' });
+        try {
+          openDb(msg.dbPath);
+          parentPort!.postMessage({ type: 'ready' });
+        } catch (err) {
+          // Stay alive on init failure (locked / corrupt DB / failed migration).
+          // The renderer asks main for the startup error and routes the user to
+          // Settings; the worker is still needed to service db:switchTo when the
+          // user picks a recovery path.
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`[db-worker] init failed for ${msg.dbPath}:`, err);
+          parentPort!.postMessage({ type: 'init-failed', dbPath: msg.dbPath, error: message });
+        }
       } else if (msg.type === 'db-switch') {
-        openDb(msg.dbPath);
-        undoManager.clear();
-        parentPort!.postMessage({ type: 'switched' });
+        try {
+          openDb(msg.dbPath);
+          undoManager.clear();
+          parentPort!.postMessage({ type: 'switched' });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`[db-worker] switch failed for ${msg.dbPath}:`, err);
+          parentPort!.postMessage({ type: 'switch-failed', dbPath: msg.dbPath, error: message });
+        }
       } else if (msg.type === 'import-start') {
         importInProgress = true;
       } else if (msg.type === 'import-end') {
         importInProgress = false;
       }
     } catch (err) {
-      // Without this, an openDb failure (corrupt DB, failed migration, lock
-      // race) takes the entire worker down with exit code 1 — leaving the
-      // user with "Worker exited with code 1" on every IPC and no clue why.
-      // Log loudly and rethrow so the parent's worker.on('error') still fires
-      // (the worker will still die, but with a visible error message).
+      // Anything that escapes the inner handlers above is genuinely fatal.
       console.error('[db-worker] lifecycle handler crashed:', err);
       throw err;
     }

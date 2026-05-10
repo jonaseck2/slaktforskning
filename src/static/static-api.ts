@@ -615,6 +615,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     onSwitched: () => {},
     getCurrent: async () => null,
     getRecent: async () => [],
+    getStartupError: async () => null,
     createNew: noop, openExisting: noop, switchTo: noop,
   };
 

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { app, BrowserWindow, dialog, Menu, shell } from 'electron';
 import started from 'electron-squirrel-startup';
-import { getDatabase, closeDatabase } from './database';
+import { tryOpenDatabaseAtStartup, closeDatabase } from './database';
 import { registerIpcHandlers } from './ipc';
 import { callWorker, terminateWorker } from './ipc/worker-client';
 import { startUiServer, stopUiServer } from './ui-server';
@@ -210,7 +210,10 @@ function buildMenu(): void {
 }
 
 app.on('ready', () => {
-  getDatabase();
+  // tryOpenDatabaseAtStartup never throws — a locked / corrupt DB records the
+  // error so the renderer can surface a toast and route the user to Settings,
+  // instead of taking the whole app down before any window is shown.
+  tryOpenDatabaseAtStartup();
   registerIpcHandlers();
   buildMenu();
   createWindow();
