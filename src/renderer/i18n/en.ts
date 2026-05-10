@@ -968,6 +968,7 @@ export default {
     ignore: 'Ignore',
     ignoreTooltip: 'Mark as not a duplicate — this pair won\'t reappear',
     ignored: 'Pair ignored',
+    pairNotFound: 'That duplicate pair was no longer in the list — it may have been merged or ignored since the quality check ran.',
     untitled: '(untitled)',
     tabs: {
       persons: 'Persons',

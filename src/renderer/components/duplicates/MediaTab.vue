@@ -67,6 +67,12 @@ import { usePagedList } from '../../composables/usePagedList';
 
 defineOptions({ name: 'DuplicatesMediaTab' });
 
+const props = defineProps<{
+  /** See PlacesTab for rationale. */
+  preopenPair?: [string, string] | null;
+}>();
+const emit = defineEmits<{ 'preopen-consumed': [] }>();
+
 interface DuplicateMediaCandidate {
   media1_id: string;
   media2_id: string;
@@ -155,6 +161,29 @@ async function ignorePair(d: DuplicateMediaCandidate) {
 
 onMounted(load);
 onActivated(load);
+
+// --- Quality-view deep link — see PlacesTab for full rationale. ---
+let preopenConsumed = false;
+watch(
+  () => [props.preopenPair, duplicates.value.length] as const,
+  () => {
+    if (preopenConsumed) return;
+    const pair = props.preopenPair;
+    if (!pair || duplicates.value.length === 0) return;
+    const [a, b] = pair;
+    const match = duplicates.value.find(
+      d => (d.media1_id === a && d.media2_id === b) || (d.media1_id === b && d.media2_id === a),
+    );
+    preopenConsumed = true;
+    if (match) {
+      mergeCandidate.value = match;
+    } else {
+      toast.info(t('duplicates.pairNotFound'));
+    }
+    emit('preopen-consumed');
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

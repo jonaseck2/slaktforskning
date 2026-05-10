@@ -11,6 +11,7 @@ export function checkPossibleDuplicatePerson(db: Database): CheckResult[] {
     message: `Möjliga dubblettpersoner (poäng ${c.score})`,
     messageParams: { score: c.score, count: 2 },
     personIds: [c.person1_id, c.person2_id],
+    landingPath: `/duplicates?tab=persons&pair=${c.person1_id}:${c.person2_id}`,
   }));
 }
 
@@ -72,6 +73,7 @@ export function checkDuplicatePlace(db: Database): CheckResult[] {
       messageParams: { count: g.placeIds.length, name: g.name },
       personIds: [],
       placeIds: g.placeIds,
+      landingPath: `/duplicates?tab=places&pair=${g.placeIds[0]}:${g.placeIds[1]}`,
     });
   }
   return results;
@@ -104,6 +106,7 @@ export function checkDuplicateMedia(db: Database): CheckResult[] {
       messageParams: { count: g.mediaIds.length, fileRef: g.fileRef },
       personIds: [],
       mediaIds: g.mediaIds,
+      landingPath: `/duplicates?tab=media&pair=${g.mediaIds[0]}:${g.mediaIds[1]}`,
     });
   }
   return results;
@@ -166,6 +169,7 @@ export function checkDuplicateSource(db: Database): CheckResult[] {
       messageParams: { count: sourceIds.length, label },
       personIds: [],
       sourceIds,
+      landingPath: `/duplicates?tab=sources&pair=${sourceIds[0]}:${sourceIds[1]}`,
     });
   }
   for (const ids of urlGroups.values()) emit(ids, 'samma URL');

@@ -968,6 +968,7 @@ export default {
     ignore: 'Ignorera',
     ignoreTooltip: 'Markera som inte en dubblett — paret visas inte igen',
     ignored: 'Paret ignoreras',
+    pairNotFound: 'Det dubblettparet finns inte längre i listan — det kan ha sammanfogats eller ignorerats sedan kvalitetskontrollen kördes.',
     untitled: '(namnlös)',
     tabs: {
       persons: 'Personer',

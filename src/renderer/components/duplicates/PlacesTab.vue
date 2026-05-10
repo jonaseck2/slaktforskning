@@ -67,6 +67,17 @@ import { usePagedList } from '../../composables/usePagedList';
 
 defineOptions({ name: 'DuplicatesPlacesTab' });
 
+const props = defineProps<{
+  /**
+   * Pair to pre-open the merge modal for, sourced from a quality-check
+   * deep link (`?pair=id1:id2`). Consumed once on first list load — the
+   * tab emits `preopen-consumed` so the parent can clear the pair param
+   * and avoid re-opening the modal on tab-switch.
+   */
+  preopenPair?: [string, string] | null;
+}>();
+const emit = defineEmits<{ 'preopen-consumed': [] }>();
+
 interface DuplicatePlaceCandidate {
   place1_id: string;
   place2_id: string;
@@ -148,6 +159,33 @@ async function ignorePair(d: DuplicatePlaceCandidate) {
 
 onMounted(load);
 onActivated(load);
+
+// --- Quality-view deep link: pre-open the merge modal for the pair param ---
+// `duplicates` populates after the first fetch; once it does, look up the
+// matching candidate (id1:id2 in either direction) and open the modal. If the
+// pair isn't on the loaded page, toast and tell the parent we're done so it
+// can clear the URL param.
+let preopenConsumed = false;
+watch(
+  () => [props.preopenPair, duplicates.value.length] as const,
+  () => {
+    if (preopenConsumed) return;
+    const pair = props.preopenPair;
+    if (!pair || duplicates.value.length === 0) return;
+    const [a, b] = pair;
+    const match = duplicates.value.find(
+      d => (d.place1_id === a && d.place2_id === b) || (d.place1_id === b && d.place2_id === a),
+    );
+    preopenConsumed = true;
+    if (match) {
+      mergeCandidate.value = match;
+    } else {
+      toast.info(t('duplicates.pairNotFound'));
+    }
+    emit('preopen-consumed');
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

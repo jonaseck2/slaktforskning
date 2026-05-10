@@ -173,4 +173,89 @@ describe('DuplicatesView (tab shell)', () => {
     const { wrapper } = await mountView('/duplicates?tab=places');
     expect(wrapper.text()).toContain('No duplicate places found.');
   });
+
+  // Task 8: quality-check landing. The genealogist clicks a "Duplicate place
+  // candidates" finding in QualityView; QualityView routes to
+  // `/duplicates?tab=places&pair=ID1:ID2`; the duplicates view must switch to
+  // the Places tab AND pre-open the merge modal for that exact pair.
+  describe('quality-check deep link (?pair=)', () => {
+    it('pre-opens the merge modal for the named place pair on mount', async () => {
+      const pair = {
+        place1_id: 'PLACE-A',
+        place2_id: 'PLACE-B',
+        place1_name: 'Stockholm',
+        place2_name: 'Stockholm',
+        place1_parent_id: null,
+        place2_parent_id: null,
+        score: 100,
+        reasons: ['identical-name-same-parent'],
+      };
+      api.duplicates.findPlaces.mockResolvedValueOnce([pair]);
+      api.duplicates.countPlaces.mockResolvedValueOnce(1);
+      const { wrapper } = await mountView('/duplicates?tab=places&pair=PLACE-A:PLACE-B');
+      // The merge modal stub renders only when the tab's mergeCandidate ref is set.
+      expect(wrapper.find('.merge-places-modal-stub').exists()).toBe(true);
+    });
+
+    it('matches the pair regardless of id order (id2:id1 also opens the modal)', async () => {
+      const pair = {
+        place1_id: 'PLACE-A',
+        place2_id: 'PLACE-B',
+        place1_name: 'Stockholm',
+        place2_name: 'Stockholm',
+        place1_parent_id: null,
+        place2_parent_id: null,
+        score: 100,
+        reasons: [],
+      };
+      api.duplicates.findPlaces.mockResolvedValueOnce([pair]);
+      api.duplicates.countPlaces.mockResolvedValueOnce(1);
+      const { wrapper } = await mountView('/duplicates?tab=places&pair=PLACE-B:PLACE-A');
+      expect(wrapper.find('.merge-places-modal-stub').exists()).toBe(true);
+    });
+
+    it('does not open the modal when the pair is not in the loaded list', async () => {
+      api.duplicates.findPlaces.mockResolvedValueOnce([]);
+      api.duplicates.countPlaces.mockResolvedValueOnce(0);
+      const { wrapper } = await mountView('/duplicates?tab=places&pair=GHOST-1:GHOST-2');
+      expect(wrapper.find('.merge-places-modal-stub').exists()).toBe(false);
+    });
+
+    it('strips the pair param from the URL after consumption', async () => {
+      const pair = {
+        place1_id: 'PLACE-A',
+        place2_id: 'PLACE-B',
+        place1_name: 'X',
+        place2_name: 'X',
+        place1_parent_id: null,
+        place2_parent_id: null,
+        score: 100,
+        reasons: [],
+      };
+      api.duplicates.findPlaces.mockResolvedValueOnce([pair]);
+      api.duplicates.countPlaces.mockResolvedValueOnce(1);
+      const { router } = await mountView('/duplicates?tab=places&pair=PLACE-A:PLACE-B');
+      await flushPromises();
+      // The pair has been consumed; the URL should no longer carry it (so a
+      // back/forward round-trip doesn't re-open the modal).
+      expect(router.currentRoute.value.query.pair).toBeUndefined();
+      expect(router.currentRoute.value.query.tab).toBe('places');
+    });
+
+    it('lands on persons tab + opens the merge modal for ?tab=persons&pair=', async () => {
+      const personPair = {
+        person1_id: 'P-1',
+        person2_id: 'P-2',
+        person1_name: 'Anna',
+        person2_name: 'Anna',
+        person1_birth: null,
+        person2_birth: null,
+        score: 90,
+        reasons: [],
+      };
+      api.duplicates.findPage.mockResolvedValueOnce({ items: [personPair], total: 1 });
+      const { wrapper } = await mountView('/duplicates?tab=persons&pair=P-1:P-2');
+      expect(wrapper.find('.merge-persons-modal-stub').exists()).toBe(true);
+    });
+  });
 });
