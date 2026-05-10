@@ -42,11 +42,29 @@ Squirrel auto-update) with Tauri equivalents.
 **Tech Stack:**
 - Tauri 2.x (latest stable at start of port)
 - Rust 1.95+ for the host process
-- rusqlite 0.33+ (bundled SQLite, WAL mode, FK enforcement)
+- rusqlite 0.33+ (bundled SQLite, **DELETE journaling**, FK enforcement) — DELETE not WAL because users routinely copy `.db` files around (email, USB, cloud) and `-wal`/`-shm` sidecars carrying uncommitted data are a UX footgun. See `.claude/skills/sqlite-wal/`.
 - tokio 1.x for sidecar process management (MCP server spawn)
 - Vue 3 + Vite (unchanged from current Electron build)
 - @tauri-apps/api 2.x for renderer-side `invoke()` calls
+- **`async`/`await` throughout `src/api/`** — see Architecture decision below
 - Existing test infrastructure: vitest + Playwright (Playwright supports Tauri natively)
+
+---
+
+## Architecture decision (2026-05-10): api/ becomes async
+
+After Phase 1 settled, a sync-vs-async impedance mismatch surfaced that the original plan glossed over: every existing `src/api/` function is **synchronous** (`function createPerson(db, …)`, `db.prepare(sql).run([…])`). Tauri's `invoke()` is **async** (returns `Promise`). A sync TS shim over async IPC needs either (a) `SharedArrayBuffer` + `Atomics.wait` gymnastics with COOP/COEP headers, or (b) shipping a Node sidecar that hosts the api/ unchanged.
+
+**Decided: option A — make `src/api/` async throughout.**
+
+- Cleanest end-state: api/ talks to Rust via `await invoke(...)` directly, no sidecar, no shared-memory tricks.
+- Disk + RAM wins land at the recommendation's ≥50% targets (Tauri's renderer alone, no Node sidecar) — option B would have shaved the RAM win to ~−60% and added ~50 MB of Node runtime to the bundle.
+- Cost: large diff. Every api/ function signature changes from `function X(...): T` to `async function X(...): Promise<T>`, and every caller (Vue stores, MCP tools, importers, Vue components, vitest tests) gets `await` sprinkled.
+- Risk mitigation: the refactor lands as a **separate, mechanical Phase 2.5 task** (see Task 5) before any Phase 3 IPC migration. After Phase 2.5 the api/ surface is async but the implementation still calls sync node-sqlite3-wasm under `Promise.resolve(...)` — tests stay green throughout. Per-domain Phase 3 tasks then swap each implementation from "sync DB call wrapped in Promise" to "real `await invoke(...)`" without touching signatures or callers.
+
+This decouples the **mechanical** signature refactor (large diff, easy to review) from the **behavioral** IPC migration (small per-domain PRs, isolated to one domain at a time).
+
+The cost estimate at the bottom of this plan revises **4-6 weeks → 6-8 weeks** to absorb Phase 2.5.
 
 ---
 
@@ -356,22 +374,21 @@ testable checkpoint. Phase boundaries are review gates.
       from `.claude/rules/api.md`). Each schema-version's missing-column
       check runs at DB-open time.
 
-#### Task 5: TS shim for the api/ layer's `Database` type
+#### Task 5: Async TS shim for the api/ layer's `Database` type (signatures-only refactor)
 
-- [ ] **Step 1:** New file `src/renderer/db-shim.ts`. Exports a
-      `Database`-shaped object whose `.prepare(sql).run(params)` and
-      `.prepare(sql).get/all(params)` methods invoke Tauri commands
-      `db_run`, `db_get`, `db_all`. Statement-finalize is no-op
-      because Rust handles it.
-- [ ] **Step 2:** The shim's `Database` matches `src/api/db.ts` helper
-      surface (`queryOne`, `queryAll`, `runSql`, `runSqlChanges`).
-- [ ] **Step 3:** Replace `import { Database } from 'node-sqlite3-wasm'`
-      across `src/api/` with the shim's path. Or: alias it via a
-      `tsconfig` `paths` entry so the api/ files don't change.
-- [ ] **Step 4:** Run `npm test` (vitest). All ~3500 unit tests must pass
-      against the rusqlite-via-shim path, run via Tauri dev mode.
+Per the **Architecture decision**: this task does the *mechanical* signature refactor across all of `src/api/` (and every caller), but leaves the underlying SQLite calls sync via `Promise.resolve()` wrappers. The IPC swap to `invoke(...)` happens per-domain in Phase 3.
 
-### Phase 3 — IPC migration (weeks 2 second half + 3 + 4)
+- [ ] **Step 1:** New file `src/renderer/db-shim.ts`. Exports an `AsyncDatabase` shape whose `.prepare(sql).run/get/all(params)` methods are **async** and return `Promise<Result>`. In Phase 2.5 they wrap the existing sync `node-sqlite3-wasm` call in `Promise.resolve()`. In Phase 3 they swap to `await invoke('db:run', { sql, params })` etc.
+- [ ] **Step 2:** Mirror the shim into `src/api/db.ts` helper surface: `queryOne` / `queryAll` / `runSql` / `runSqlChanges` all become `async`, return `Promise<T>`.
+- [ ] **Step 3:** Mechanical refactor across `src/api/` — every function `function X(db, ...): T` becomes `async function X(db, ...): Promise<T>`, every internal call gets `await`, every loop over rows iterates `for await` where appropriate. Codemod-friendly: the change is "add `async`, sprinkle `await` before every db.* call". Estimated: ~4-6 days.
+- [ ] **Step 4:** Mechanical refactor across callers — `src/import/`, `src/gedcom/`, `src/mcp/tools/`, every Vue component / Pinia store that uses `window.api.*`, every vitest test that calls api/ functions. ~3-5 days.
+- [ ] **Step 5:** Update `withStatementCache` to its async variant — the cache key + statement reuse logic is unchanged, only the call signature.
+- [ ] **Step 6:** Run `npm test`. All ~3500 unit tests must still pass — this refactor is signature-only, no behavior change. Failures here are the codemod missing an `await` somewhere; greenfield to fix.
+- [ ] **Step 7:** Run the existing Electron app via `npm run start`. It still works because the api/ is async-but-resolved-synchronously; Vue's reactivity tolerates `Promise` returns where it used to get values directly (everything was already `await window.api.*` at the IPC boundary).
+
+After this task: api/ surface is **async** but **still backed by node-sqlite3-wasm**. Electron build keeps working. Tauri build still uses the spike's stub. Phase 3 swaps the implementation per domain.
+
+### Phase 3 — IPC migration (weeks 3 + 4 + 5)
 
 The hottest part of the work. ~130 channels split into per-domain task batches.
 
@@ -583,10 +600,22 @@ The hottest part of the work. ~130 channels split into per-domain task batches.
 
 ## What this plan is NOT
 
-- It is not a "rewrite the genealogy logic" plan. The api/ layer is untouched.
-- It is not a "rewrite the renderer" plan. Vue components are untouched.
+- It is not a "rewrite the genealogy logic" plan. The api/ layer's behavior is untouched. **It is async-ified** (signature change `function X(): T` → `async function X(): Promise<T>`), but no logic moves; it's the smallest mechanical change that lets the same code run against Tauri's async `invoke()`.
+- It is not a "rewrite the renderer" plan. Vue components stay; they get `await` sprinkled at call sites, no logic changes.
 - It is not a "design new UX" plan. Pixel-for-pixel parity with current Electron app is the goal.
-- It is not a "drop Electron support immediately" plan. The Electron build path stays maintainable through Phase 7 in case rollback is needed.
+- It is not a "drop Electron support immediately" plan. The Electron build path stays maintainable through Phase 7 in case rollback is needed. The async refactor in Phase 2.5 explicitly preserves Electron compat (sync `node-sqlite3-wasm` calls under `Promise.resolve()` wrappers).
 - It is not "now we use Rust everywhere." Rust is the host process glue; business logic stays in TS.
 
 The whole point: dramatically lighter app, zero user-perceptible feature change, preserved agent workflows. If any phase is producing significant user-visible change, the plan has drifted and we pause.
+
+## Effort estimate
+
+- **Phase 1** (Tasks 1-3) — preparation: 1 week. *Done* (commits `3eaf7a58`, `a73f0f1c`, `d2ff641e`, `e4e5bfb2`).
+- **Phase 2** (Tasks 4-5) — DB layer + async signature refactor: 2 weeks (Task 4 ~1 week, Task 5 ~1.5 weeks because of the codemod across importers / vue / mcp / vitest tests).
+- **Phase 3** (Tasks 6-13) — per-domain IPC migration, now that signatures are already async: 2-3 weeks.
+- **Phase 4** (Tasks 14-17) — menus/dialog/print/shell/auto-update + signing: 1-1.5 weeks.
+- **Phase 5** (Tasks 18-19) — MCP sidecar packaging: 0.5 week.
+- **Phase 6** (Tasks 20-21) — vitest + Playwright migration: 0.5 week (most tests already pass after Phase 2.5).
+- **Phase 7-8** — cross-platform smoke + beta + release: 1 week.
+
+**Total: 6-8 weeks** (revised from original 4-6 weeks — Phase 2.5 adds 1-2 weeks for the async refactor, but Phase 3 gets faster because each per-domain task is now signature-stable and only has to swap implementations).
