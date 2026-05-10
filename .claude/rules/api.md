@@ -64,7 +64,7 @@ Every function takes `db: Database` as its first argument and returns domain typ
 
 - **UUIDs (v4)** for all primary keys
 - **ISO date strings** in DB; genealogy dates use `date_type` + `date_original` to preserve uncertainty (see Domain Types above)
-- **WAL mode** with **foreign keys enforced** — set in `src/main/database.ts` on connection open
+- **`PRAGMA foreign_keys = ON`** set in `src/api/schema.ts` on connection open. WAL mode is **not** in use (and cannot be — `node-sqlite3-wasm`'s custom VFS has `iVersion=1`, no shared-memory hooks). See the `sqlite-wal` skill for the constraint and the recovery path if a `.db` file ends up WAL-tagged from outside.
 
 `docs/IPC_REFERENCE.md` is the authoritative function-by-function reference; the source files are the truth.
 

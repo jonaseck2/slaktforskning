@@ -2,7 +2,15 @@ import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne, runSql } from './db';
 
 export function initializeSchema(db: Database): void {
-  db.exec('PRAGMA journal_mode = WAL');
+  // node-sqlite3-wasm's custom VFS implements sqlite3_io_methods.iVersion=1,
+  // which omits the shared-memory hooks WAL requires (xShmMap/xShmLock/...).
+  // PRAGMA journal_mode=WAL silently downgrades to DELETE under this build —
+  // see .claude/skills/sqlite-wal/. Running in DELETE mode (the SQLite
+  // default) is fine; the only loss is concurrent reader-while-writer,
+  // which we don't depend on. Don't add the pragma back: any .db file that
+  // becomes WAL-tagged (e.g. touched by a real-SQLite tool like rusqlite or
+  // the sqlite3 CLI) becomes unreadable to this build with bare
+  // SQLITE_CANTOPEN. `scripts/walfix.mjs` recovers such files.
   db.exec('PRAGMA foreign_keys = ON');
 
   db.exec(`
