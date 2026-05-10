@@ -125,6 +125,28 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
   );
 
   server.tool(
+    'ui_eval',
+    'Run an arbitrary JavaScript expression in the renderer and return its result. The expression must produce a JSON-serializable value (or a Promise of one). Async/await is fine. Use this for anything not covered by the structured ui_* tools — probing window.api shape, calling a polyfilled handler directly, inspecting Pinia state, reading localStorage, etc. Don\'t use TS type-assertions like `as any` — the script runs as plain JS.',
+    {
+      script: z.string().describe('JavaScript expression to evaluate. Wrap in a paren or IIFE for multi-statement bodies. Top-level await is supported via async IIFE: `(async () => { const r = await window.api.x(); return r; })()`'),
+    },
+    async ({ script }) => {
+      const result = await uiPost(uiBase, '/eval', { script });
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_console',
+    'Drain the renderer\'s captured console buffer (errors + warnings + log entries since the last drain, ring-buffered to 500 entries). Useful for "did anything go wrong on the last navigate / mutation". Each entry has { ts, level, args }.',
+    {},
+    async () => {
+      const text = await uiGet(uiBase, '/console');
+      return { content: [{ type: 'text' as const, text }] };
+    }
+  );
+
+  server.tool(
     'ui_export_pdf',
     'Export the current Electron window to a PDF file via Chromium printToPDF (A4, printable margins). Use when diagnosing print-layout issues — the same code path as the in-app PDF button.',
     { path: z.string().describe('Absolute filesystem path where the PDF will be written') },
