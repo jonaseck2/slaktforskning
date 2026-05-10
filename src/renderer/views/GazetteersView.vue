@@ -27,10 +27,10 @@
           :placeholder="$t('gazetteers.testPlaceholder')"
         />
       </div>
-      <div v-if="testQuery" class="test-scope-filter">
+      <div v-if="debouncedTestQuery" class="test-scope-filter">
         <FilterChips :model-value="testScope" :options="testScopeOptions" @update:model-value="setTestScope" />
       </div>
-      <div v-if="testQuery && results.length > 0" class="test-results">
+      <div v-if="debouncedTestQuery && results.length > 0" class="test-results">
         <div v-for="r in results" :key="r.gaz.id" class="test-result" :class="{ 'no-match': !r.result }">
           <div class="result-header">
             <span v-if="r.result" :class="['quality-badge', 'quality-' + r.result.matchQuality]">
@@ -50,7 +50,7 @@
           </template>
         </div>
       </div>
-      <SectionEmpty v-else-if="testQuery && results.length === 0" :message="$t('gazetteers.noMatch')" />
+      <SectionEmpty v-else-if="debouncedTestQuery && results.length === 0" :message="$t('gazetteers.noMatch')" />
     </div>
 
     <!-- Installed gazetteers -->
@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import AppButton from '../components/ui/AppButton.vue';
 import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
@@ -136,6 +136,21 @@ const config = ref<GazetteerConfig>({ enabledGazetteers: [] });
 const allBundled = ref<Gazetteer[]>([]);
 const allImported = ref<Gazetteer[]>([]);
 const testQuery = ref('');
+// Debounced mirror of testQuery — the resolver loop reads this so that fast
+// typing doesn't trigger one resolve per keystroke. 200 ms matches the
+// `usePagedList` convention used by every other filterable list view.
+const debouncedTestQuery = ref('');
+let queryDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(testQuery, (q) => {
+  if (queryDebounceTimer) clearTimeout(queryDebounceTimer);
+  queryDebounceTimer = setTimeout(() => {
+    debouncedTestQuery.value = q;
+    queryDebounceTimer = null;
+  }, 200);
+});
+onBeforeUnmount(() => {
+  if (queryDebounceTimer) clearTimeout(queryDebounceTimer);
+});
 const filterCountry = ref('');
 const filterKind = ref('');
 // Test-results scope: 'matched' shows only gazetteers that produced a hit;
@@ -196,29 +211,39 @@ const deleteModal = ref<{ visible: boolean; id: string; name: string; message: s
 });
 
 /**
- * Resolve against each enabled non-language gazetteer individually so the
- * user can see which source contributed each match. Each source is merged
- * with all enabled language gazetteers (for alias enrichment) before
- * resolution — that's what makes "Sovjetunionen" reach world-historical
- * via lang-world-historical. Sources with no hit are dropped unless
- * `testScope === 'all'`.
+ * Pre-merge each enabled non-language source with the enabled language
+ * gazetteers once per config change. `loadGazetteers` deep-clones the
+ * source tree on every merge; doing it inside the per-keystroke `results`
+ * computed turned typing into a ~25× tree-clone storm on the renderer
+ * thread. This computed only invalidates when the loaded gazetteers or
+ * enabled set change, so typing only pays the resolver cost.
  */
-const results = computed(() => {
-  const q = testQuery.value;
-  if (!q) return [];
+const mergedPerSource = computed(() => {
   const enabled = new Set(config.value.enabledGazetteers);
   const known = [...allBundled.value, ...allImported.value];
   const isLanguage = (g: Gazetteer): boolean => g.shape === 'language' || g.kind === 'language';
   const langIds = known.filter(g => enabled.has(g.id) && isLanguage(g)).map(g => g.id);
   const sources = known.filter(g => enabled.has(g.id) && !isLanguage(g));
-
-  const out: { gaz: Gazetteer; result: ReturnType<typeof resolvePlace> | null }[] = [];
-  for (const gaz of sources) {
-    const merged = loadGazetteers(
+  return sources.map(gaz => ({
+    gaz,
+    merged: loadGazetteers(
       { enabledGazetteers: [gaz.id, ...langIds] },
       allBundled.value,
       allImported.value,
-    );
+    ),
+  }));
+});
+
+/**
+ * Resolve against each pre-merged source so the user can see which source
+ * contributed each match. Sources with no hit are dropped unless
+ * `testScope === 'all'`.
+ */
+const results = computed(() => {
+  const q = debouncedTestQuery.value;
+  if (!q) return [];
+  const out: { gaz: Gazetteer; result: ReturnType<typeof resolvePlace> | null }[] = [];
+  for (const { gaz, merged } of mergedPerSource.value) {
     const result = resolvePlace(q, merged);
     if (result || testScope.value === 'all') out.push({ gaz, result });
   }
@@ -227,14 +252,9 @@ const results = computed(() => {
 
 const testScopeOptions = computed(() => {
   const matched = results.value.filter(r => r.result).length;
-  const enabledNonLang = (() => {
-    const enabled = new Set(config.value.enabledGazetteers);
-    const isLanguage = (g: Gazetteer): boolean => g.shape === 'language' || g.kind === 'language';
-    return [...allBundled.value, ...allImported.value].filter(g => enabled.has(g.id) && !isLanguage(g)).length;
-  })();
   return [
     { value: 'matched', label: t('gazetteers.scope.matched'), count: matched },
-    { value: 'all', label: t('gazetteers.scope.all'), count: enabledNonLang },
+    { value: 'all', label: t('gazetteers.scope.all'), count: mergedPerSource.value.length },
   ];
 });
 

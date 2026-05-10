@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix(gazetteers): typing in Test Lookup no longer stutters — the per-source merge is memoised and the query is debounced.
 - feat(duplicates): /duplicates view now covers persons, places, sources, and media in a four-tab shell. Each tab finds duplicate pairs (Levenshtein-tolerant heuristics scoped to entity-specific keys: parent_place_id for places, author for sources, file_ref for media), shows them in a list with score, and offers Compare-and-Merge modals mirroring the persons-tab pattern. The MergeMediaModal additionally has explicit "keep this file / discard this file" radio buttons per side — silently deleting either file would violate the Prime Directive. Merges are atomic and undoable: every touched row's pre-merge state is snapshotted; for media merges the deleted file's bytes are also captured so undo restores both row and file. New MCP tools `merge_places`, `merge_sources`, `merge_media`; `find_duplicates` extended with optional `entity` argument (default `'person'` for backwards-compat). `DUPLICATE_*` quality-check rows now deep-link into the right tab with the pair pre-opened in the compare-and-merge modal.
 - perf: media gallery pages and panel sections now render in seconds instead of minutes — thumbnails are resized to 256 px JPEGs and cached on disk, so repeat visits read ~50 KB per item.
 - fix: gallery's own scroll now triggers infinite scroll. It was a no-op when the left list was open — the user had to scroll the list panel for new items to appear.
