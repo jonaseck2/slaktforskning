@@ -12,15 +12,19 @@ static DB: Lazy<Mutex<Option<Connection>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn open_db(path: &str) -> Result<(), String> {
     let conn = Connection::open(path).map_err(|e| format!("open: {e}"))?;
-    // foreign_keys mirrors the Electron app. We deliberately do NOT issue
-    // PRAGMA journal_mode=WAL here, even though the Electron schema.ts
-    // string-matches such a pragma — node-sqlite3-wasm's custom VFS has
-    // iVersion=1, so WAL is silently dropped to DELETE on the Electron
-    // side. If the spike actually flipped the file to WAL via rusqlite,
-    // Electron would lose the ability to reopen its own DB
-    // (SQLITE_CANTOPEN). See docs/plans/tauri-port-evaluation-baseline.md
-    // and `walfix` (src/bin/walfix.rs) for the rescue path.
-    conn.execute_batch("PRAGMA foreign_keys = ON;")
+    // We run on DELETE journaling everywhere — settled for genealogy-app
+    // reasons (single user, 1-2 windows, no concurrency win to capture;
+    // users routinely copy the .db to email/USB/cloud, and -wal/-shm
+    // sidecars carrying uncommitted data are a UX footgun). Setting
+    // PRAGMA journal_mode=DELETE explicitly on every open also auto-
+    // recovers any file that some external tool (sqlite3 CLI, an old
+    // spike build, etc.) ever flipped to WAL — SQLite checkpoints any
+    // pending WAL frames into the main DB and downgrades the header
+    // bytes back to 1/1. Keeps cross-tool compat with the Electron build
+    // (node-sqlite3-wasm can't open WAL files) for as long as both
+    // builds coexist. See `examples/walfix.rs` for a standalone version
+    // of the same recovery logic.
+    conn.execute_batch("PRAGMA journal_mode = DELETE; PRAGMA foreign_keys = ON;")
         .map_err(|e| format!("pragma: {e}"))?;
     *DB.lock() = Some(conn);
     Ok(())

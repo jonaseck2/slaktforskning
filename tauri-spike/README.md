@@ -119,8 +119,15 @@ incremental and seconds.
 Three Rust modules glue Tauri to a real Släktforskning database:
 
 - `src-tauri/src/db.rs` — rusqlite 0.33 (bundled mode), opens a `.db`
-  file with WAL + foreign keys, exposes `db_open`, `db_close`,
-  `db_is_open`, `db_stats`, `persons_list`, `get_ancestor_tree`.
+  file in **DELETE journaling mode** + foreign keys enforced, exposes
+  `db_open`, `db_close`, `db_is_open`, `db_stats`, `persons_list`,
+  `get_ancestor_tree`. DELETE mode is deliberate (single-user genealogy
+  app + cross-tool compat with the Electron build's node-sqlite3-wasm,
+  which can't open WAL-tagged files). Every `db_open` issues an
+  explicit `PRAGMA journal_mode = DELETE` so a previously-WAL-tagged
+  file is checkpointed + downgraded on next access — see
+  `.claude/skills/sqlite-wal/` and `examples/walfix.rs` for the rescue
+  story behind that choice.
 - `src-tauri/src/mcp.rs` — spawns the existing `src/mcp/server.ts` of
   the parent repo as a sidecar, validates an MCP `initialize` round
   trip via stdio.
@@ -142,4 +149,21 @@ persons list + pedigree chart from real data.
 For first-time setup on Windows or Linux: copy a known-good DB from the
 main app's `~/Library/Application Support/slaktforskning/` (mac) /
 `%APPDATA%\slaktforskning\` (win) / `~/.local/share/slaktforskning/`
-(linux) — same SQLite schema, same WAL conventions.
+(linux) — same SQLite schema, same DELETE journaling.
+
+## Bundle targets
+
+`src-tauri/tauri.conf.json` `bundle.targets` is set to
+`["app", "appimage", "nsis"]` — the **portable formats per OS**:
+
+- **macOS `.app`** — drag-to-Applications folder; no separate `.dmg`
+  installer is produced.
+- **Linux `.AppImage`** — single self-extracting executable; no
+  `.deb` / `.rpm` installer (those land in Phase 7 of the full-port
+  plan if/when distro-specific repos become a release target).
+- **Windows `.exe` (NSIS self-extracting setup)** — easier than `.msi`
+  to distribute outside corporate environments; the raw
+  `target/release/<name>.exe` also works as a true portable binary.
+
+Switch back to `"all"` if you need the installer formats during signing
+/ notarization work in Phase 4.
