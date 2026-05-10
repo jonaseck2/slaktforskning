@@ -255,6 +255,105 @@ fn fs_read_bytes_base64(path: String) -> Result<String, String> {
     Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
 }
 
+/// Write raw bytes (base64-encoded for the JSON wire) to a file. Creates
+/// parent directories as needed. Used by archive export and per-media
+/// writes during archive import in the Tauri build.
+#[tauri::command]
+fn fs_write_bytes_base64(path: String, b64: String) -> Result<(), String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(b64.as_bytes())
+        .map_err(|e| format!("decode base64: {e}"))?;
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
+        }
+    }
+    std::fs::write(&path, bytes).map_err(|e| format!("write: {e}"))
+}
+
+/// Write a base64-encoded blob to a fresh file inside the OS temp directory
+/// and return its absolute path. Used when the renderer needs to hand a
+/// binary file (a .rmgc, an extracted .mdb, etc.) to a Rust command that
+/// requires a real on-disk path — typically to open it as a secondary
+/// SQLite connection. `name` is appended to a millisecond-precision prefix
+/// so concurrent imports don't collide; the renderer is responsible for
+/// calling `fs_remove_file` after the import completes.
+#[tauri::command(rename_all = "camelCase")]
+fn fs_write_temp_bytes_base64(name: String, b64: String) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(b64.as_bytes())
+        .map_err(|e| format!("decode: {e}"))?;
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let safe_name = name.replace(['/', '\\', '\0'], "_");
+    let path = std::env::temp_dir().join(format!("slaktforskning-{now}-{safe_name}"));
+    std::fs::write(&path, &bytes).map_err(|e| format!("write: {e}"))?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+/// Best-effort delete of a single file. Used to clean up temp files written
+/// by `fs_write_temp_bytes_base64` after an import completes (success or
+/// failure path). Missing-file errors are swallowed because the typical
+/// caller doesn't care whether the cleanup actually had work to do.
+#[tauri::command]
+fn fs_remove_file(path: String) -> Result<(), String> {
+    match std::fs::remove_file(&path) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(format!("remove: {e}")),
+    }
+}
+
+// ── Secondary read-only DB commands ────────────────────────────────────────
+// Open an arbitrary SQLite file (e.g. a .rmgc) as a read-only secondary
+// connection. The renderer drives the import via the SecondaryDatabase shim
+// in src/renderer/secondary-db-shim.ts, which mirrors the same Statement /
+// Database surface the importer's queryAll(rmDb, ...) calls expect. Used
+// today by the RootsMagic importer (Cluster R-RM) and intentionally
+// generic so Holger (Cluster R-H) and any future foreign-format importer
+// can reuse the same primitives without bespoke Rust additions.
+
+#[tauri::command(rename_all = "camelCase")]
+fn secondary_db_open(path: String) -> Result<u32, String> {
+    db::secondary_db_open(&path)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn secondary_db_close(handle: u32) {
+    db::secondary_db_close(handle)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn secondary_db_run(
+    handle: u32,
+    sql: String,
+    params: Option<Vec<JsonValue>>,
+) -> Result<RunResult, String> {
+    db::secondary_db_run(handle, &sql, &params.unwrap_or_default())
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn secondary_db_get(
+    handle: u32,
+    sql: String,
+    params: Option<Vec<JsonValue>>,
+) -> Result<Option<JsonValue>, String> {
+    db::secondary_db_get(handle, &sql, &params.unwrap_or_default())
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn secondary_db_all(
+    handle: u32,
+    sql: String,
+    params: Option<Vec<JsonValue>>,
+) -> Result<Vec<JsonValue>, String> {
+    db::secondary_db_all(handle, &sql, &params.unwrap_or_default())
+}
+
 /// Reveal a file or folder in the OS file manager.
 #[tauri::command]
 fn shell_reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
@@ -458,6 +557,14 @@ pub fn run() {
             fs_read_text,
             fs_write_text,
             fs_read_bytes_base64,
+            fs_write_bytes_base64,
+            fs_write_temp_bytes_base64,
+            fs_remove_file,
+            secondary_db_open,
+            secondary_db_close,
+            secondary_db_run,
+            secondary_db_get,
+            secondary_db_all,
             shell_reveal,
             read_bundled_resource,
             ui_server::ui_eval_response,
