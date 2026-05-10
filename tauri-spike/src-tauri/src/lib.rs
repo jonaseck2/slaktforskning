@@ -108,10 +108,50 @@ fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
     Ok(p.to_string_lossy().into_owned())
 }
 
+/// Returns the path of the currently-open DB, or None if none open. Backs
+/// `window.api.db.getCurrent()`.
+#[tauri::command]
+fn db_current_path() -> Option<String> {
+    db::current_path()
+}
+
+/// Show a native open-file dialog for picking a .db file. Returns the chosen
+/// absolute path, or None if the user cancelled. The renderer then re-opens
+/// the shim against this path. Backs `window.api.db.openExisting()`.
+#[tauri::command]
+async fn db_pick_existing(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("SQLite database", &["db", "sqlite", "sqlite3"])
+        .pick_file(move |chosen| {
+            let _ = tx.send(chosen.map(|p| p.to_string()));
+        });
+    rx.await.map_err(|e| format!("dialog cancelled: {e}"))
+}
+
+/// Show a native save-file dialog for creating a new .db. Returns the chosen
+/// absolute path, or None if the user cancelled. Backs `window.api.db.createNew()`.
+#[tauri::command]
+async fn db_pick_new(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("SQLite database", &["db"])
+        .set_file_name("family.db")
+        .save_file(move |chosen| {
+            let _ = tx.send(chosen.map(|p| p.to_string()));
+        });
+    rx.await.map_err(|e| format!("dialog cancelled: {e}"))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             db_open,
             db_close,
@@ -129,6 +169,9 @@ pub fn run() {
             db_get,
             db_all,
             default_db_path,
+            db_current_path,
+            db_pick_existing,
+            db_pick_new,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

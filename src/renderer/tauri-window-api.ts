@@ -14,7 +14,9 @@
 // src-tauri/src/db.rs.
 
 import { Database } from 'node-sqlite3-wasm';
+import { invoke } from '@tauri-apps/api/core';
 import { listChannels, getChannel } from '../shared/channels/registry';
+import { initializeSchema } from '../api/schema';
 
 // Side-effect imports register every channel on the registry at module load.
 // Without these, the registry is empty and listChannels() returns nothing.
@@ -77,6 +79,35 @@ export function mountWindowApi(db: Database): MountResult {
         };
   }
 
+  // Main-only channels that the registry walk can't satisfy because they
+  // require Tauri runtime services (file dialog, app data dir). Override the
+  // generated stubs with real implementations.
+  if (!api.db) api.db = {};
+  api.db.getCurrent = async () => {
+    const path = await invoke<string | null>('db_current_path');
+    if (!path) return null;
+    // Match the shape the renderer expects from the Electron build.
+    return { path, name: deriveDbName(path) };
+  };
+  api.db.openExisting = async () => {
+    const path = await invoke<string | null>('db_pick_existing');
+    if (!path) return { cancelled: true };
+    await switchDbTo(path, /* createSchema */ false);
+    return { path, name: deriveDbName(path) };
+  };
+  api.db.createNew = async () => {
+    const path = await invoke<string | null>('db_pick_new');
+    if (!path) return { cancelled: true };
+    await switchDbTo(path, /* createSchema */ true);
+    return { path, name: deriveDbName(path) };
+  };
+  api.db.switchTo = async (path: unknown) => {
+    if (typeof path !== 'string') throw new Error('switchTo: path must be string');
+    await switchDbTo(path, /* createSchema */ false);
+    return { path, name: deriveDbName(path) };
+  };
+  api.db.getRecent = async () => [];
+
   // window.api gets the polyfilled shape. The Electron-only
   // onDataChanged subscription mechanism is exposed too so existing
   // renderer composables (useEntityData, usePagedList) keep working.
@@ -86,4 +117,22 @@ export function mountWindowApi(db: Database): MountResult {
     api,
     onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
   };
+}
+
+function deriveDbName(path: string): string {
+  const base = path.split(/[\\/]/).pop() ?? path;
+  return base.replace(/\.(db|sqlite|sqlite3)$/i, '');
+}
+
+async function switchDbTo(path: string, createSchema: boolean): Promise<void> {
+  // Close + reopen the global rusqlite connection on the Rust side.
+  await invoke('db_close');
+  await invoke('db_open', { path });
+  // The shim's `dbInstance` is a renderer-side handle that proxies to the
+  // global Rust connection — no per-instance state, so no re-construction
+  // needed. Just (re-)init schema if creating new, then refresh the UI.
+  if (createSchema && dbInstance) {
+    await initializeSchema(dbInstance);
+  }
+  fireDataChanged();
 }

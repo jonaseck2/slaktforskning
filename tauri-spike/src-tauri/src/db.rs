@@ -16,6 +16,11 @@ use serde::Serialize;
 use serde_json::{json, Map, Value as JsonValue};
 
 static DB: Lazy<Mutex<Option<Connection>>> = Lazy::new(|| Mutex::new(None));
+static CURRENT_PATH: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+
+pub fn current_path() -> Option<String> {
+    CURRENT_PATH.lock().clone()
+}
 
 pub fn open_db(path: &str) -> Result<(), String> {
     let conn = Connection::open(path).map_err(|e| format!("open: {e}"))?;
@@ -34,11 +39,13 @@ pub fn open_db(path: &str) -> Result<(), String> {
     conn.execute_batch("PRAGMA journal_mode = DELETE; PRAGMA foreign_keys = ON;")
         .map_err(|e| format!("pragma: {e}"))?;
     *DB.lock() = Some(conn);
+    *CURRENT_PATH.lock() = Some(path.to_string());
     Ok(())
 }
 
 pub fn close_db() {
     *DB.lock() = None;
+    *CURRENT_PATH.lock() = None;
 }
 
 pub fn is_open() -> bool {
