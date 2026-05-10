@@ -6,30 +6,30 @@ import { defineChannel } from './registry';
 defineChannel({
   name: 'duplicates:findPlaces',
   thread: 'worker',
-  handler: (db, limit?: number, offset?: number) =>
-    duplicates.findDuplicatePlaces(db, limit, offset),
+  handler: async (db, limit?: number, offset?: number) =>
+    await duplicates.findDuplicatePlaces(db, limit, offset),
 });
 
 defineChannel({
   name: 'duplicates:countPlaces',
   thread: 'worker',
-  handler: (db) => duplicates.countDuplicatePlaces(db),
+  handler: async (db) => await duplicates.countDuplicatePlaces(db),
 });
 
 defineChannel({
   name: 'duplicates:ignorePlace',
   thread: 'worker',
   mutating: true,
-  handler: (db, placeAId: string, placeBId: string) =>
-    duplicates.ignoreDuplicatePlace(db, placeAId, placeBId),
+  handler: async (db, placeAId: string, placeBId: string) =>
+    await duplicates.ignoreDuplicatePlace(db, placeAId, placeBId),
 });
 
 defineChannel({
   name: 'duplicates:mergePlaces',
   thread: 'worker',
   mutating: true,
-  handler: (db, targetId: string, sourceId: string) =>
-    duplicates.mergePlaces(db, targetId, sourceId),
+  handler: async (db, targetId: string, sourceId: string) =>
+    await duplicates.mergePlaces(db, targetId, sourceId),
 });
 
 // ── Source duplicates ────────────────────────────────────────────────────────
@@ -37,30 +37,30 @@ defineChannel({
 defineChannel({
   name: 'duplicates:findSources',
   thread: 'worker',
-  handler: (db, limit?: number, offset?: number) =>
-    duplicates.findDuplicateSources(db, limit, offset),
+  handler: async (db, limit?: number, offset?: number) =>
+    await duplicates.findDuplicateSources(db, limit, offset),
 });
 
 defineChannel({
   name: 'duplicates:countSources',
   thread: 'worker',
-  handler: (db) => duplicates.countDuplicateSources(db),
+  handler: async (db) => await duplicates.countDuplicateSources(db),
 });
 
 defineChannel({
   name: 'duplicates:ignoreSource',
   thread: 'worker',
   mutating: true,
-  handler: (db, sourceAId: string, sourceBId: string) =>
-    duplicates.ignoreDuplicateSource(db, sourceAId, sourceBId),
+  handler: async (db, sourceAId: string, sourceBId: string) =>
+    await duplicates.ignoreDuplicateSource(db, sourceAId, sourceBId),
 });
 
 defineChannel({
   name: 'duplicates:mergeSources',
   thread: 'worker',
   mutating: true,
-  handler: (db, targetId: string, sourceId: string) =>
-    duplicates.mergeSources(db, targetId, sourceId),
+  handler: async (db, targetId: string, sourceId: string) =>
+    await duplicates.mergeSources(db, targetId, sourceId),
 });
 
 // ── Media duplicates ─────────────────────────────────────────────────────────
@@ -78,20 +78,20 @@ defineChannel({
 defineChannel({
   name: 'duplicates:findMedia',
   thread: 'worker',
-  handler: (db, limit?: number, offset?: number) =>
-    duplicates.findDuplicateMedia(db, limit, offset),
+  handler: async (db, limit?: number, offset?: number) =>
+    await duplicates.findDuplicateMedia(db, limit, offset),
 });
 
 defineChannel({
   name: 'duplicates:countMedia',
   thread: 'worker',
-  handler: (db) => duplicates.countDuplicateMedia(db),
+  handler: async (db) => await duplicates.countDuplicateMedia(db),
 });
 
 defineChannel({
   name: 'duplicates:ignoreMedia',
   thread: 'worker',
   mutating: true,
-  handler: (db, mediaAId: string, mediaBId: string) =>
-    duplicates.ignoreDuplicateMedia(db, mediaAId, mediaBId),
+  handler: async (db, mediaAId: string, mediaBId: string) =>
+    await duplicates.ignoreDuplicateMedia(db, mediaAId, mediaBId),
 });

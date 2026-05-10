@@ -12,19 +12,19 @@ import { defineChannel } from './registry';
 defineChannel({
   name: 'db:getSetting',
   thread: 'worker',
-  handler: (db, key: string) => getDbSetting(db, key),
+  handler: async (db, key: string) => await getDbSetting(db, key),
 });
 
 defineChannel({
   name: 'db:setSetting',
   thread: 'worker',
   mutating: false,  // settings changes don't need a full dataChanged broadcast
-  handler: (db, key: string, value: string) => { setDbSetting(db, key, value); },
+  handler: async (db, key: string, value: string) => { await setDbSetting(db, key, value); },
 });
 
 defineChannel({
   name: 'db:deleteSetting',
   thread: 'worker',
   mutating: false,  // settings changes don't need a full dataChanged broadcast
-  handler: (db, key: string) => { deleteDbSetting(db, key); },
+  handler: async (db, key: string) => { await deleteDbSetting(db, key); },
 });

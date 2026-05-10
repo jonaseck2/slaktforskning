@@ -3,7 +3,7 @@ import type { ChannelDef, WorkerChannelDef } from './types';
 type ChannelClient<C extends ChannelDef> =
   C extends WorkerChannelDef<infer Args, infer Result>
     ? (...args: Args) => Promise<Awaited<Result>>
-    : C extends { thread: 'main'; handler: (...args: infer Args) => infer Result }
+    : C extends { thread: 'main'; handler: async (...args: infer Args) => infer Result }
       ? (...args: Args) => Promise<Awaited<Result>>
       : never;
 
