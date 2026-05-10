@@ -945,8 +945,13 @@ export default {
       DUPLICATE_SOURCE: '{count} sources match {label}',
       LIKELY_INLINE_BIRTH_NAME: 'This name appears to contain an inline birth name — consider splitting into separate name records.',
       EVENT_DATE_ORIGINAL_NON_DATE: 'Date original field has no digit (contains free text): "{value}"',
+      EVENT_BEFORE_BIRTH: '{eventType} ({eventDate}) is dated before the person\'s birth ({birthDate})',
+      EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH: '{eventType} ({eventDate}) is dated after the person\'s death ({deathDate})',
     },
     eventDateOriginalNonDate: 'Date original field has no digit (contains free text)',
+    toast: {
+      eventOutsideLifespan: '{count} quality warning. See the Quality view. | {count} quality warnings. See the Quality view.',
+    },
   },
   duplicates: {
     title: 'Potential Duplicates',

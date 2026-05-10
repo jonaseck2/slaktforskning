@@ -210,6 +210,13 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   'checks:forMedia': (mediaId) => checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
 
+  // Save-time hook for event-creating modals. Synchronous, scoped to a
+  // single event id — no gazetteer or media-file I/O; safe to call from
+  // every save without rate-limiting. Returns the same `CheckResult[]`
+  // shape as the other check channels so the renderer can route the row
+  // straight into the Quality view.
+  'checks:runForEvent': (eventId) => checks.runChecksForEvent(getDb(), eventId as string),
+
   // Website export — buildSnapshot + resolveMediaPaths are still in the
   // legacy dispatch table because they're called from the website-export.ts
   // shims via callWorker() (not directly from the renderer). buildPreview

@@ -945,8 +945,13 @@ export default {
       DUPLICATE_SOURCE: '{count} källor matchar {label}',
       LIKELY_INLINE_BIRTH_NAME: 'Namnet verkar innehålla ett födelsenamn i parentes — överväg att dela upp i separata namnposter.',
       EVENT_DATE_ORIGINAL_NON_DATE: 'Originaltext på datumfält saknar siffra (innehåller fri text): "{value}"',
+      EVENT_BEFORE_BIRTH: '{eventType} ({eventDate}) ligger före personens födelse ({birthDate})',
+      EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH: '{eventType} ({eventDate}) ligger efter personens död ({deathDate})',
     },
     eventDateOriginalNonDate: 'Originaltext på datumfält saknar siffra (innehåller fri text)',
+    toast: {
+      eventOutsideLifespan: '{count} kvalitetsvarning. Se Kvalitet-vyn. | {count} kvalitetsvarningar. Se Kvalitet-vyn.',
+    },
   },
   duplicates: {
     title: 'Möjliga dubbletter',

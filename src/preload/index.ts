@@ -205,6 +205,7 @@ const api = {
     forPerson: (personId: string) => ipcRenderer.invoke('checks:forPerson', personId),
     forPlace: (placeId: string) => ipcRenderer.invoke('checks:forPlace', placeId),
     forMedia: (mediaId: string) => ipcRenderer.invoke('checks:forMedia', mediaId),
+    runForEvent: (eventId: string) => ipcRenderer.invoke('checks:runForEvent', eventId),
   },
   media: {
     list: () => ipcRenderer.invoke('media:list'),

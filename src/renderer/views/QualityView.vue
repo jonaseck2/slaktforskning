@@ -65,6 +65,7 @@ const CODE_CATEGORY: Record<string, string> = {
   UNSOURCED_BIRTH: 'quality', UNSOURCED_DEATH: 'quality',
   EVENT_DATE_ORIGINAL_NON_DATE: 'quality',
   BIRTH_AFTER_DEATH: 'chronology', EVENT_AFTER_DEATH: 'chronology', BURIAL_BEFORE_DEATH: 'chronology',
+  EVENT_BEFORE_BIRTH: 'chronology', EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH: 'chronology',
   FUTURE_BIRTH: 'chronology', FUTURE_DEATH: 'chronology', BAPTISM_LATE: 'chronology',
   DEATH_WITHOUT_BIRTH: 'chronology', NO_BIRTH_EVENT: 'chronology',
   LIFESPAN_OVER_120: 'chronology', LIFESPAN_OVER_105: 'chronology',

@@ -22,6 +22,7 @@ export function registerUtilityHandlers(
   wrapHandler('checks:forPerson', (...args) => callWorker('checks:forPerson', ...args));
   wrapHandler('checks:forPlace', (...args) => callWorker('checks:forPlace', ...args));
   wrapHandler('checks:forMedia', (...args) => callWorker('checks:forMedia', ...args));
+  wrapHandler('checks:runForEvent', (...args) => callWorker('checks:runForEvent', ...args));
 
   wrapHandler('export:openFolder', async (folderPath) => {
     await shell.openPath(folderPath as string);
