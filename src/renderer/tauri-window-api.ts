@@ -395,6 +395,30 @@ export function mountWindowApi(db: Database): MountResult {
   // fall back to window.print() which opens the native print dialog
   // (with a Save-as-PDF option in macOS / Windows). Argument is ignored
   // because the user picks the destination in the dialog.
+  // Chart bridge — useChartBridge composable registers callbacks via
+  // window.api.chart.onXxx(handler). In Electron those wire ipcRenderer.on;
+  // here we store them on a global so the UI server's /chart/* endpoints
+  // can eval them via `window.__chartBridge.<name>()`.
+  type ChartHandlers = {
+    getVisiblePersons?: () => unknown;
+    selectPerson?: (args: { person_id?: string; name?: string }) => unknown;
+    focusPerson?: (args: { person_id: string }) => unknown;
+    getLayout?: () => unknown;
+  };
+  const chartBridge: ChartHandlers = {};
+  (window as Window & { __chartBridge?: ChartHandlers }).__chartBridge = chartBridge;
+  if (!api.chart) api.chart = {};
+  api.chart.onGetVisiblePersons = (cb: unknown) => { chartBridge.getVisiblePersons = cb as () => unknown; };
+  api.chart.onSelectPerson = (cb: unknown) => { chartBridge.selectPerson = cb as (a: { person_id?: string; name?: string }) => unknown; };
+  api.chart.onFocusPerson = (cb: unknown) => { chartBridge.focusPerson = cb as (a: { person_id: string }) => unknown; };
+  api.chart.onGetLayout = (cb: unknown) => { chartBridge.getLayout = cb as () => unknown; };
+  api.chart.removeAllChartHandlers = () => {
+    delete chartBridge.getVisiblePersons;
+    delete chartBridge.selectPerson;
+    delete chartBridge.focusPerson;
+    delete chartBridge.getLayout;
+  };
+
   if (!api.print) api.print = {};
   api.print.print = async () => { window.print(); return { ok: true }; };
   api.print.exportPdf = async () => {

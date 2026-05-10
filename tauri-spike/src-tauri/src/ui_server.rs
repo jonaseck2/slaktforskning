@@ -307,6 +307,67 @@ async fn handle_health() -> Json<JsonValue> {
     Json(json!({ "ok": true, "server": "tauri-ui-server" }))
 }
 
+// Chart endpoints — call into window.__chartBridge.<fn>() which the renderer
+// populates via the `chart.onXxx` polyfills in tauri-window-api.ts.
+
+async fn handle_chart_persons(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+) -> Json<JsonValue> {
+    let script = "(window.__chartBridge && window.__chartBridge.getVisiblePersons) ? window.__chartBridge.getVisiblePersons() : { error: 'No chart is currently displayed' }";
+    match run_in_renderer(&app, script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+#[derive(Deserialize)]
+struct ChartSelectBody { person_id: Option<String>, name: Option<String> }
+async fn handle_chart_select(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+    Json(body): Json<ChartSelectBody>,
+) -> Json<JsonValue> {
+    let arg = serde_json::to_string(&serde_json::json!({ "person_id": body.person_id, "name": body.name })).unwrap();
+    let script = format!("(window.__chartBridge && window.__chartBridge.selectPerson) ? window.__chartBridge.selectPerson({arg}) : {{ error: 'No chart is currently displayed' }}");
+    match run_in_renderer(&app, &script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+#[derive(Deserialize)]
+struct ChartFocusBody { person_id: String }
+async fn handle_chart_focus(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+    Json(body): Json<ChartFocusBody>,
+) -> Json<JsonValue> {
+    let arg = serde_json::to_string(&serde_json::json!({ "person_id": body.person_id })).unwrap();
+    let script = format!("(window.__chartBridge && window.__chartBridge.focusPerson) ? window.__chartBridge.focusPerson({arg}) : {{ error: 'No chart is currently displayed' }}");
+    match run_in_renderer(&app, &script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+async fn handle_chart_layout(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+) -> Json<JsonValue> {
+    let script = "(window.__chartBridge && window.__chartBridge.getLayout) ? window.__chartBridge.getLayout() : { error: 'No chart is currently displayed' }";
+    match run_in_renderer(&app, script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+/// /export_pdf — programmatic Save-as-PDF. Tauri webview has no headless
+/// printToPDF; trigger window.print() in the renderer (same as the menu's
+/// Cmd+P would do). Caller still needs to interact with the print dialog.
+async fn handle_export_pdf(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+) -> Json<JsonValue> {
+    let _ = run_in_renderer(&app, "(window.print(), { ok: true })").await;
+    Json(json!({ "ok": true, "note": "Use Save-as-PDF in the native print dialog" }))
+}
+
 #[derive(Deserialize)]
 struct EvalBody { script: String }
 
@@ -381,6 +442,11 @@ pub fn spawn(app: AppHandle) {
             .route("/fill", post(handle_fill))
             .route("/dom", get(handle_dom))
             .route("/query_styles", post(handle_query_styles))
+            .route("/chart/persons", post(handle_chart_persons))
+            .route("/chart/select", post(handle_chart_select))
+            .route("/chart/focus", post(handle_chart_focus))
+            .route("/chart/layout", get(handle_chart_layout))
+            .route("/export_pdf", post(handle_export_pdf))
             .with_state(app.clone());
 
         let addr = format!("127.0.0.1:{port}");
