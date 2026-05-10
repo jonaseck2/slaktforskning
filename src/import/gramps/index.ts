@@ -22,6 +22,29 @@ export interface GrampsImportResult {
   summary: GrampsImportSummary;
 }
 
+export async function importFromGrampsBytes(
+  ourDb: Database,
+  bytes: Uint8Array,
+  options: GrampsImportOptions = {},
+): Promise<GrampsImportResult> {
+  const { onProgress = () => { /* noop */ } } = options;
+  onProgress('Importing…');
+  const buf = Buffer.from(bytes);
+  const xml = (buf[0] === 0x1f && buf[1] === 0x8b)
+    ? gunzipSync(buf).toString('utf-8')
+    : buf.toString('utf-8');
+  let summary = emptyGrampsSummary();
+  await runSql(ourDb, 'BEGIN IMMEDIATE');
+  try {
+    summary = await transformGramps(ourDb, xml);
+    await runSql(ourDb, 'COMMIT');
+  } catch (err) {
+    try { await runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
+    throw err;
+  }
+  return { summary };
+}
+
 export async function importFromGramps(
   ourDb: Database,
   filePath: string,

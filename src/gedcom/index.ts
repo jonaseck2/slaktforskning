@@ -1,4 +1,4 @@
-export { readGedcomFile } from './encoding';
+export { readGedcomFile, decodeGedcomBytes } from './encoding';
 export { parseGedcom } from './parser';
 export type { GedcomNode } from './parser';
 export { parseGedcomDate, formatGedcomDate } from './date';

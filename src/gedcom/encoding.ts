@@ -46,49 +46,59 @@ function looksLikeUtf8(buf: Buffer): boolean {
  *      - CHAR=UTF-8  → decode as utf-8
  *      - anything else (ANSI, ANSEL, ASCII, missing) → decode as latin1
  */
-export function readGedcomFile(filePath: string): string {
-  const buf = fs.readFileSync(filePath);
+/**
+ * Decode a buffer of GEDCOM bytes into a string, applying the encoding rules
+ * documented above. Split out from readGedcomFile so renderer-side callers
+ * (Tauri build) can supply bytes from invoke('fs_read_bytes_base64') instead
+ * of reading from disk.
+ */
+export function decodeGedcomBytes(buf: Buffer | Uint8Array): string {
+  const b = buf instanceof Buffer ? buf : Buffer.from(buf);
 
   // UTF-8 BOM
-  if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
-    return buf.toString('utf-8').slice(1); // strip BOM
+  if (b[0] === 0xEF && b[1] === 0xBB && b[2] === 0xBF) {
+    return b.toString('utf-8').slice(1); // strip BOM
   }
 
   // UTF-16 LE BOM
-  if (buf[0] === 0xFF && buf[1] === 0xFE) {
-    return buf.toString('utf16le');
+  if (b[0] === 0xFF && b[1] === 0xFE) {
+    return b.toString('utf16le');
   }
 
   // UTF-16 BE BOM
-  if (buf[0] === 0xFE && buf[1] === 0xFF) {
+  if (b[0] === 0xFE && b[1] === 0xFF) {
     // Node doesn't have 'utf16be'; swap bytes and decode as utf16le
-    const swapped = Buffer.alloc(buf.length);
-    for (let i = 0; i < buf.length - 1; i += 2) {
-      swapped[i]     = buf[i + 1];
-      swapped[i + 1] = buf[i];
+    const swapped = Buffer.alloc(b.length);
+    for (let i = 0; i < b.length - 1; i += 2) {
+      swapped[i]     = b[i + 1];
+      swapped[i + 1] = b[i];
     }
     return swapped.toString('utf16le');
   }
 
   // No BOM: peek at the first 500 bytes as ASCII to find the CHAR tag
-  const peek = buf.slice(0, 500).toString('ascii');
+  const peek = b.slice(0, 500).toString('ascii');
   const charMatch = peek.match(/\d CHAR\s+(\S+)/);
   const gedChar = charMatch?.[1]?.trim().toUpperCase() ?? '';
 
   if (gedChar === 'UTF-8') {
-    return buf.toString('utf-8');
+    return b.toString('utf-8');
   }
 
   // Heuristic: if the file looks like valid UTF-8 with multi-byte sequences,
   // decode as UTF-8 even without a BOM or CHAR tag. Many modern programs
   // (e.g. Holger 8) export UTF-8 without declaring it.
-  if (looksLikeUtf8(buf)) {
-    return buf.toString('utf-8');
+  if (looksLikeUtf8(b)) {
+    return b.toString('utf-8');
   }
 
   // ANSI, WINDOWS-1252, ANSEL, ASCII, or unknown → latin1
   // Latin-1 (ISO-8859-1) maps bytes 0x00–0xFF directly to U+0000–U+00FF.
   // Swedish ä (0xE4), ö (0xF6), å (0xE5) etc. are identical in latin1 and
   // Windows-1252, so this is correct for Nordic genealogy data.
-  return buf.toString('latin1');
+  return b.toString('latin1');
+}
+
+export function readGedcomFile(filePath: string): string {
+  return decodeGedcomBytes(fs.readFileSync(filePath));
 }

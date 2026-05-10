@@ -238,6 +238,74 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.gedcom) api.gedcom = {};
   api.gedcom.selectFile = () => pickFile('Select GEDCOM File', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
 
+  // GEDCOM import: read bytes via Rust, decode encoding-aware in JS, parse +
+  // import via the existing api/ functions. The Electron build's worker
+  // handler does the same flow but with sync fs.readFileSync; the renderer
+  // can't use fs so it goes through invoke('fs_read_bytes_base64').
+  api.gedcom.import = async (opts: unknown) => {
+    const o = opts as { filePath?: string; mediaDir?: string; profile?: 'standard' | 'minimal' } | undefined;
+    if (!o?.filePath) return { success: false, error: 'filePath is required' };
+    try {
+      const [enc, parserMod, importerMod] = await Promise.all([
+        import('../gedcom/encoding'),
+        import('../gedcom/parser'),
+        import('../import/gedcom'),
+      ]);
+      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const bytes = base64ToUint8Array(b64);
+      const text = enc.decodeGedcomBytes(bytes);
+      const tree = parserMod.parseGedcom(text);
+      const report = await importerMod.importGedcom(getDb(), tree, {
+        mediaDir: o.mediaDir,
+        profile: o.profile,
+      });
+      fireDataChanged();
+      return report;
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
+  // GEDCOM preview: same shape, returns a count summary without inserting.
+  api.gedcom.preview = async (opts: unknown) => {
+    const o = opts as { filePath?: string } | undefined;
+    if (!o?.filePath) return { success: false, error: 'filePath is required' };
+    try {
+      const [enc, parserMod, importerMod] = await Promise.all([
+        import('../gedcom/encoding'),
+        import('../gedcom/parser'),
+        import('../import/gedcom'),
+      ]);
+      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const bytes = base64ToUint8Array(b64);
+      const text = enc.decodeGedcomBytes(bytes);
+      const tree = parserMod.parseGedcom(text);
+      return importerMod.previewGedcomImport(tree);
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
+  // GEDCOM export: build the .ged in renderer, then write via Rust.
+  api.gedcom.export = async (opts: unknown) => {
+    const o = opts as { version?: '5.5.1' | '7.0'; exportOptions?: unknown } | undefined;
+    const version = o?.version === '7.0' ? '7.0' : '5.5.1';
+    const fileName = version === '7.0' ? 'family-tree-70.ged' : 'family-tree.ged';
+    const r = await saveFile('Export GEDCOM File', fileName, ['ged'], 'GEDCOM Files');
+    if (r.canceled || !r.path) return { canceled: true };
+    try {
+      const exporterMod = await import('../gedcom/exporter');
+      const { ged, report } = await exporterMod.exportGedcom(getDb(), {
+        version,
+        exportOptions: o?.exportOptions as Parameters<typeof exporterMod.exportGedcom>[1]['exportOptions'],
+      });
+      await invoke('fs_write_text', { path: r.path, contents: ged });
+      return { exported: true, filePath: r.path, report };
+    } catch (e) {
+      return { canceled: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
   if (!api.import) api.import = {};
   api.import.genneyCheckDocker = async () => ({ available: false });
   api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
@@ -246,21 +314,42 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.holgerSelectFile = () => pickFile('Välj Holger 8-databasfil', ['mdb'], 'Holger-databas');
   api.import.rootsmagicSelectFile = () => pickFile('Välj RootsMagic-databasfil', ['rmtree', 'rmgc'], 'RootsMagic-databas');
   api.import.grampsSelectFile = () => pickFile('Välj Gramps-databasfil', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
+  api.import.grampsRun = async (opts: unknown) => {
+    const o = opts as { filePath?: string } | undefined;
+    if (!o?.filePath) return { success: false, error: 'filePath is required' };
+    try {
+      const grampsMod = await import('../import/gramps');
+      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const bytes = base64ToUint8Array(b64);
+      const result = await grampsMod.importFromGrampsBytes(getDb(), bytes);
+      fireDataChanged();
+      return { success: true, summary: result.summary };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
+  // Holger / RootsMagic / Genney importers do extensive fs operations
+  // (directory walks, mdb→sqlite extraction, Docker/Java spawning) that
+  // need wholesale Rust-side replacements. They stay throw-on-call in the
+  // Tauri build until that work lands. The file picker still works so the
+  // UI doesn't crash; the run handler returns a clear error.
+  const notWired = (label: string) => async () => ({
+    success: false,
+    error: `${label} import is not yet wired in the Tauri build (deferred)`,
+  });
+  api.import.holgerRun = notWired('Holger');
+  api.import.rootsmagicRun = notWired('RootsMagic');
+  api.import.genneyRun = notWired('Genney');
+  api.import.genneyDiscover = async () => ({ success: false, error: 'genneyDiscover not yet wired in Tauri build' });
 
   if (!api.archive) api.archive = {};
-  api.archive.export = async () => {
-    const r = await saveFile('Spara arkiv', 'family-archive.zip', ['zip'], 'Zip-arkiv');
-    if (r.canceled || !r.path) return { canceled: true };
-    // The actual zip building happens in the renderer too — defer to api/archive
-    // when wired. For now, return the chosen path so the UI button doesn't
-    // throw. Tracked in tauri-port notes (deferred archive runner).
-    return { canceled: false, path: r.path };
-  };
-  api.archive.import = async () => {
-    const r = await pickFile('Välj arkivfil', ['zip'], 'Zip-arkiv');
-    if (r.canceled || !r.path) return { canceled: true };
-    return { canceled: false, path: r.path };
-  };
+  // Archive export/import iterate per-media-row and read/write files
+  // alongside zip building. Need a refactor to thread fs read/write
+  // callbacks through the api/archive_*.ts functions before wiring here.
+  // Tracked in the tauri-port notes (Phase 4 follow-up).
+  api.archive.export = notWired('Archive export');
+  api.archive.import = notWired('Archive import');
 
   if (!api.export) api.export = {};
   api.export.openFolder = async (folderPath: unknown) => {
@@ -285,12 +374,30 @@ export function mountWindowApi(db: Database): MountResult {
     return label;
   };
 
-  api.csv.export = async () => {
-    const r = await saveFile('Exportera CSV', 'persons.csv', ['csv'], 'CSV-filer');
+  api.csv.export = async (opts: unknown) => {
+    const o = opts as { entityType?: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' } | undefined;
+    if (!o?.entityType) return { success: false, error: 'entityType is required' };
+    const defaultNames: Record<string, string> = {
+      persons: 'persons.csv', events: 'events.csv', sources: 'sources.csv', places: 'places.csv',
+    };
+    const defaultName = defaultNames[o.entityType];
+    if (!defaultName) return { success: false, error: 'Unknown entityType: ' + o.entityType };
+    const r = await saveFile('Export CSV', defaultName, ['csv'], 'CSV Files');
     if (r.canceled || !r.path) return { canceled: true };
-    // CSV builder is in api/csv but writes to disk via fs. Defer the actual
-    // serialization wiring to a follow-up; return the chosen path.
-    return { canceled: false, path: r.path };
+    try {
+      // Reuse the csv:_exportRun worker channel — already in the registry,
+      // already polyfilled, runs the same api/ functions in renderer.
+      const ch = getChannel('csv:_exportRun');
+      if (!ch) return { success: false, error: 'csv:_exportRun not registered' };
+      const result = await (ch.handler as (db: Database, opts: unknown) => Promise<{ csv?: string; error?: string }>)(getDb(), o);
+      if (result.error) return { success: false, error: result.error };
+      const encoding = o.encoding ?? 'utf-8';
+      const csvOut = encoding === 'utf-8-bom' ? '﻿' + (result.csv ?? '') : (result.csv ?? '');
+      await invoke('fs_write_text', { path: r.path, contents: csvOut });
+      return { success: true, filePath: r.path };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
   };
 
   // window.api gets the polyfilled shape. The Electron-only
@@ -302,6 +409,13 @@ export function mountWindowApi(db: Database): MountResult {
     api,
     onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
   };
+}
+
+function base64ToUint8Array(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
 }
 
 function deriveDbName(path: string): string {
