@@ -21,6 +21,7 @@
     "build:static": "vite build --config vite.static.config.ts",
     "dev:static": "vite --config vite.static.config.ts",
     "build:third-party-licenses": "node scripts/build-third-party-licenses.mjs",
+    "build:mcp-sidecar": "node scripts/build-mcp-sidecar.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
@@ -49,6 +50,8 @@
     "@playwright/test": "^1.58.2",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.1",
+    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@yao-pkg/pkg": "^6.10.0",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/leaflet": "^1.9.21",
     "@types/uuid": "^10.0.0",

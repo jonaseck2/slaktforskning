@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "cd .. && npx vite --config vite.tauri-renderer.config.ts",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "cd .. && node scripts/build-third-party-licenses.mjs && npx vite build --config vite.tauri-renderer.config.ts",
+    "beforeBuildCommand": "cd .. && node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && npx vite build --config vite.tauri-renderer.config.ts",
     "frontendDist": "../dist-tauri"
   },
   "app": {
@@ -31,6 +31,31 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["../THIRD_PARTY_LICENSES.txt"]
+    "resources": ["../THIRD_PARTY_LICENSES.txt"],
+    "externalBin": ["../target/mcp-server"],
+    "macOS": {
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": "entitlements.plist",
+      "minimumSystemVersion": "12.0"
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com"
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/jonaseck2/slaktforskning/releases/latest/download/latest.json"
+      ],
+      "pubkey": "REPLACE_WITH_TAURI_SIGNER_PUBLIC_KEY"
+    }
   }
 }

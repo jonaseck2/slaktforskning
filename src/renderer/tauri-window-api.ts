@@ -441,8 +441,8 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
   api.import.genneySelectArchive = () => pickFile('Välj Genney-arkivfil (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
   api.import.genneySelectMedia = () => pickFolder('Select Genney media folder (optional)');
-  api.import.holgerSelectFile = () => pickFile('Välj Holger 8-databasfil', ['mdb'], 'Holger-databas');
-  api.import.holgerSelectMedia = () => pickFolder('Select Holger media folder (optional)');
+  api.import.holgerSelectFile = () => pickFile('Select Holger GEDCOM export', ['ged', 'zip'], 'GEDCOM / Zip');
+  api.import.holgerSelectMedia = () => pickFolder('Select OurKind Media folder (optional)');
   api.import.rootsmagicSelectFile = () => pickFile('Välj RootsMagic-databasfil', ['rmtree', 'rmgc'], 'RootsMagic-databas');
   api.import.grampsSelectFile = () => pickFile('Välj Gramps-databasfil', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
   api.import.grampsRun = async (opts: unknown) => {
@@ -507,16 +507,99 @@ export function mountWindowApi(db: Database): MountResult {
     }
   };
 
-  // Holger / Genney importers do extensive fs operations (directory
-  // walks, mdb→sqlite extraction, Docker/Java spawning) that need
-  // wholesale Rust-side replacements. They stay throw-on-call in the
-  // Tauri build until that work lands. The file picker still works so
-  // the UI doesn't crash; the run handler returns a clear error.
+  // Holger / OurKind import — three-step flow with Rust on each end:
+  //   1. holger_bulk_copy_media (if mediaDir provided): recursive copy of
+  //      the user's OurKind Media folder into <dbname>-media/. After this,
+  //      consolidate's fast path can hit existing dest files.
+  //   2. holger_extract_ged: pulls the .ged file out of a .zip or reads a
+  //      bare .ged / dir; returns bytes + an optional temp dir to clean up.
+  //   3. importFromHolgerWithBytes: pure-TS parser + Holger-profile
+  //      importGedcom call, with mediaDir set so Windows-style OBJE FILE
+  //      paths get remapped to the user's local Media folder. Authored
+  //      file_refs land in the DB as absolute paths into the user's
+  //      Media folder.
+  //   4. holger_consolidate_media: walks the media table, copies any
+  //      absolute file_ref into <dbname>-media/, rewrites the ref to the
+  //      relative form. Fast-paths every row whose ref is under the
+  //      bulk-copied source dir.
+  // Cleanup of the zip temp dir runs in the `finally` block so a failed
+  // import doesn't leave temp data on disk.
+  api.import.holgerRun = async (opts: unknown) => {
+    const o = opts as { sourcePath?: string; mediaDir?: string } | undefined;
+    if (!o?.sourcePath) return { success: false, error: 'sourcePath is required' };
+    let tempDir: string | null = null;
+    try {
+      const cur = await invoke<string | null>('db_current_path');
+      if (!cur) return { success: false, error: 'no DB open' };
+      const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
+      const dbBase = (cur.split(/[\\/]/).pop() ?? '').replace(/\.(db|sqlite|sqlite3)$/i, '');
+      const mediaFolderName = `${dbBase}-media`;
+      const destMediaDir = `${dbDir}/${mediaFolderName}`;
+
+      // Step 1 — bulk copy media folder if user provided one.
+      let bulkCopiedFromDir: string | undefined;
+      if (o.mediaDir) {
+        try {
+          const r = await invoke<{ copied: number; skipped: number; ms: number }>(
+            'holger_bulk_copy_media',
+            { srcDir: o.mediaDir, destDir: destMediaDir },
+          );
+          bulkCopiedFromDir = o.mediaDir;
+          console.log(`[holger] bulk_copy_media — copied=${r.copied} skipped=${r.skipped} in ${r.ms}ms`);
+        } catch (e) {
+          console.warn(`[holger] bulk_copy_media failed (will fall back to per-row copy): ${(e as Error)?.message ?? e}`);
+        }
+      }
+
+      // Step 2 — extract .ged bytes.
+      const extracted = await invoke<{ gedBytesB64: string; tempDir: string | null; gedName: string }>(
+        'holger_extract_ged',
+        { sourcePath: o.sourcePath },
+      );
+      tempDir = extracted.tempDir;
+      const gedBytes = base64ToUint8Array(extracted.gedBytesB64);
+      console.log(`[holger] extract_ged — ${extracted.gedName} (${gedBytes.length} bytes)`);
+
+      // Step 3 — parse + import. mediaDir = user's source Media folder so
+      // OBJE FILE paths get rewritten there; consolidate then copies into
+      // <dbname>-media/ via the fast path.
+      const holgerMod = await import('../import/holger/index');
+      const { report } = await holgerMod.importFromHolgerWithBytes(getDb(), gedBytes, {
+        mediaDir: o.mediaDir,
+      });
+
+      // Step 4 — copy + rewrite media file_refs.
+      const consol = await invoke<{ copied: number; skipped: number; missing: number; ms: number }>(
+        'holger_consolidate_media',
+        { dbPath: cur, bulkCopiedFromDir },
+      );
+      console.log(`[holger] consolidate_media — copied=${consol.copied} skipped=${consol.skipped} missing=${consol.missing} in ${consol.ms}ms`);
+
+      fireDataChanged();
+      return { success: true, report };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    } finally {
+      if (tempDir) {
+        try { await invoke('fs_remove_dir', { path: tempDir }); } catch { /* ignore */ }
+      }
+    }
+  };
+  // The "progress" listener used by the Electron build is a Tauri event
+  // listener subscribed via window.api.import.onHolgerProgress(cb). We
+  // don't broadcast progress messages from the Rust side yet — the
+  // import is fast enough on a modern Mac that a single "Importerar…"
+  // banner from the Vue UI is acceptable. Wire as no-op so the UI's
+  // listener registration doesn't crash.
+  api.import.onHolgerProgress = () => { /* not yet wired */ };
+
+  // Genney importer still does extensive fs operations (directory walks,
+  // Derby extraction via Docker/Java spawning) that need wholesale Rust-
+  // side replacements. Stays throw-on-call until that work lands.
   const notWired = (label: string) => async () => ({
     success: false,
     error: `${label} import is not yet wired in the Tauri build (deferred)`,
   });
-  api.import.holgerRun = notWired('Holger');
   api.import.genneyRun = notWired('Genney');
   api.import.genneyDiscover = async () => ({ success: false, error: 'genneyDiscover not yet wired in Tauri build' });
 
@@ -826,6 +909,48 @@ export function mountWindowApi(db: Database): MountResult {
       return await invoke<string>('read_bundled_resource', { name: 'THIRD_PARTY_LICENSES.txt' });
     } catch {
       return '';
+    }
+  };
+
+  // Auto-update polyfill. Calls the tauri-plugin-updater plugin via its
+  // invoke surface so we don't bloat the renderer bundle with the
+  // @tauri-apps/plugin-updater wrapper. Returns a normalized shape the
+  // renderer-side toast in main.ts consumes.
+  //
+  // In `tauri dev` (no signed update manifest reachable), the underlying
+  // invoke throws — we swallow the error and return { available: false }
+  // so the boot path doesn't crash. In packaged builds against a real
+  // GitHub Releases endpoint, errors are still swallowed (the user sees
+  // the warning in the console; we don't bother them with a toast for
+  // "couldn't reach update server").
+  api.app.checkForUpdates = async () => {
+    try {
+      const update = await invoke<
+        { available: boolean; currentVersion?: string; version?: string; body?: string } | null
+      >('plugin:updater|check');
+      if (!update || !update.available) {
+        return { available: false };
+      }
+      return {
+        available: true,
+        version: update.version ?? '',
+        body: update.body ?? '',
+      };
+    } catch (e) {
+      // Includes "no_update_available", network errors, manifest not signed
+      // (dev mode with placeholder pubkey), etc. Treat all as "no update".
+      console.warn('[updater] check failed:', e);
+      return { available: false };
+    }
+  };
+
+  api.app.downloadAndInstallUpdate = async () => {
+    try {
+      await invoke('plugin:updater|download_and_install');
+      return { ok: true };
+    } catch (e) {
+      console.error('[updater] download/install failed:', e);
+      return { ok: false, error: String(e) };
     }
   };
 

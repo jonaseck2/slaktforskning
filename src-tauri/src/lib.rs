@@ -2,6 +2,7 @@
 // surface to whatever extent the spike needs to prove end-to-end works.
 
 mod db;
+mod import;
 mod mcp;
 mod media;
 mod ui_server;
@@ -309,6 +310,42 @@ fn fs_remove_file(path: String) -> Result<(), String> {
     }
 }
 
+// ── Holger / OurKind import commands (Cluster R-H) ─────────────────────────
+// The renderer's polyfill in src/renderer/tauri-window-api.ts drives the
+// Holger import in three steps:
+//   1. holger_extract_ged: reads .ged bytes out of a .zip / .ged / directory
+//   2. (renderer parses + runs importFromHolgerWithBytes against the DB)
+//   3. holger_bulk_copy_media + holger_consolidate_media: stage the media
+//      folder under <dbname>-media/ and rewrite absolute file_ref values.
+// All three live in src-tauri/src/import.rs; these are the thin invoke
+// wrappers.
+
+#[tauri::command(rename_all = "camelCase")]
+fn holger_extract_ged(source_path: String) -> Result<import::ExtractGedResult, String> {
+    import::extract_ged(&source_path)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn holger_bulk_copy_media(src_dir: String, dest_dir: String) -> Result<import::BulkCopyResult, String> {
+    import::bulk_copy_media(&src_dir, &dest_dir)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn holger_consolidate_media(
+    db_path: String,
+    bulk_copied_from_dir: Option<String>,
+) -> Result<import::ConsolidateResult, String> {
+    import::consolidate_media(&db_path, bulk_copied_from_dir.as_deref())
+}
+
+/// Recursively delete a directory (e.g. the temp dir created when
+/// extracting a Holger backup zip). Used by the renderer's polyfill in
+/// the `finally` block of `api.import.holgerRun`. No-op when missing.
+#[tauri::command]
+fn fs_remove_dir(path: String) -> Result<(), String> {
+    import::remove_dir(&path)
+}
+
 // ── Secondary read-only DB commands ────────────────────────────────────────
 // Open an arbitrary SQLite file (e.g. a .rmgc) as a read-only secondary
 // connection. The renderer drives the import via the SecondaryDatabase shim
@@ -558,6 +595,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // Shell plugin powers `mcp::spawn_bundled_mcp` (sidecar API). It is
+        // intentionally minimal: capabilities/default.json grants no other
+        // shell permissions, so the renderer cannot run arbitrary commands.
+        .plugin(tauri_plugin_shell::init())
+        // Auto-updater. Endpoints + pubkey live in tauri.conf.json under
+        // `plugins.updater`. The renderer triggers checks via the
+        // `plugin:updater|check` invoke (see src/renderer/tauri-window-api.ts).
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             db_open,
             db_close,
@@ -587,6 +632,10 @@ pub fn run() {
             fs_write_bytes_base64,
             fs_write_temp_bytes_base64,
             fs_remove_file,
+            fs_remove_dir,
+            holger_extract_ged,
+            holger_bulk_copy_media,
+            holger_consolidate_media,
             secondary_db_open,
             secondary_db_close,
             secondary_db_run,

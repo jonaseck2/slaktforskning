@@ -17,6 +17,9 @@
 use serde::Serialize;
 use std::process::Stdio;
 use std::time::Duration;
+use tauri::AppHandle;
+use tauri_plugin_shell::process::CommandChild;
+use tauri_plugin_shell::ShellExt;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 use tokio::time::timeout;
@@ -111,4 +114,39 @@ pub async fn probe_mcp_sidecar(repo_root: &str, db_path: &str) -> McpProbe {
         elapsed_ms: start.elapsed().as_millis() as u64,
         error: None,
     }
+}
+
+/// Spawn the bundled MCP server sidecar (built by
+/// `scripts/build-mcp-sidecar.mjs` and shipped via tauri.conf.json
+/// `bundle.externalBin`). Tauri's shell plugin resolves the per-target
+/// binary name (e.g. `mcp-server-aarch64-apple-darwin`) automatically based
+/// on the host triple — `sidecar("mcp-server")` is the configured base name.
+///
+/// The caller is responsible for retaining the returned `CommandChild`
+/// (typically inside an app-managed state) so the child isn't dropped
+/// (which would terminate the MCP). `db_path` is forwarded via
+/// SLAKTFORSKNING_DB so the sidecar opens the same database the running
+/// app has open.
+///
+/// In dev (`tauri dev`) the sidecar binaries don't exist — Tauri's
+/// externalBin resolver returns an error, and callers should fall back to
+/// the existing `npx tsx` launcher (scripts/mcp-tauri.mjs).
+///
+/// Currently unused at runtime — the Rust-side wiring that calls this on
+/// app startup lands in a follow-up step once the rest of the MCP-via-app
+/// architecture is in place (audit §6 #17). Kept here so the sidecar build
+/// pipeline (scripts/build-mcp-sidecar.mjs) has a Rust caller to verify
+/// against, and so cargo check on this branch validates the
+/// tauri-plugin-shell sidecar API surface.
+#[allow(dead_code)]
+pub fn spawn_bundled_mcp(app: &AppHandle, db_path: &str) -> Result<CommandChild, String> {
+    let sidecar = app
+        .shell()
+        .sidecar("mcp-server")
+        .map_err(|e| format!("locate mcp-server sidecar: {e}"))?
+        .env("SLAKTFORSKNING_DB", db_path);
+    let (_rx, child) = sidecar
+        .spawn()
+        .map_err(|e| format!("spawn mcp-server sidecar: {e}"))?;
+    Ok(child)
 }

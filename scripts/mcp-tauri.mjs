@@ -56,6 +56,41 @@ if (active) {
   }
 }
 
+// Packaged vs dev split.
+//
+// In dev (`tauri dev` + `.mcp.json` pointing at this launcher), we spawn the
+// MCP via `npx tsx src/mcp/<server|devServer>.ts` — same as before. This is
+// what Claude / Cursor / etc. invoke through `.mcp.json`.
+//
+// In a packaged build, `scripts/build-mcp-sidecar.mjs` produces
+// `target/mcp-server-<triple>(.exe)` binaries that Tauri's externalBin
+// machinery copies next to the app binary. The Rust side (src-tauri/src/mcp.rs
+// `spawn_bundled_mcp`) launches the bundled sidecar when the app boots — the
+// MCP runs as a child of the app process, not invoked through this launcher.
+//
+// If both paths somehow co-exist on the same host (developer with a packaged
+// build installed who also runs `tauri dev`), the dev launcher always wins
+// because `.mcp.json` only sees this script.
+
+import { existsSync } from 'node:fs';
+
+const SIDECAR_TRIPLES = [
+  'aarch64-apple-darwin',
+  'x86_64-apple-darwin',
+  'x86_64-pc-windows-msvc.exe',
+  'x86_64-unknown-linux-gnu',
+];
+const sidecarBuilt = SIDECAR_TRIPLES.some((triple) =>
+  existsSync(path.join(repoRoot, 'target', `mcp-server-${triple}`)),
+);
+if (sidecarBuilt) {
+  process.stderr.write(
+    '[mcp-tauri] note: bundled MCP sidecar binaries exist in target/. ' +
+    'Packaged builds spawn that sidecar from Rust on app start; this launcher ' +
+    'still uses `npx tsx` for the dev path.\n',
+  );
+}
+
 const child = spawn('npx', ['tsx', entry], {
   stdio: 'inherit',
   env,

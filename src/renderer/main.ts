@@ -138,6 +138,28 @@ router.isReady().finally(() => {
   bootLog('router ready, mounting app');
   app.mount('#app');
   bootLog('app.mount returned');
+
+  // Tauri-only: one-shot update check after mount. The polyfill swallows
+  // all errors (including "no update available"), so the only path that
+  // surfaces UI here is when an update genuinely is ready. Console-only
+  // notification for now — a non-modal toast that lets the user trigger
+  // the install lands as a follow-up once the renderer has a global toast
+  // host wired (see docs/UX_INVENTORY.md for the planned shape).
+  if ('__TAURI_INTERNALS__' in window) {
+    setTimeout(() => {
+      const checker = (window.api?.app as { checkForUpdates?: () => Promise<{ available: boolean; version?: string; body?: string }> } | undefined)?.checkForUpdates;
+      if (typeof checker !== 'function') return;
+      checker().then((res) => {
+        if (res.available) {
+          // eslint-disable-next-line no-console
+          console.info(`[updater] update available: ${res.version}`, res.body);
+          // TODO: wire to a global toast / banner once the project has one.
+          // For now the renderer's Settings → About view can call
+          // api.app.downloadAndInstallUpdate() manually.
+        }
+      }).catch(() => { /* polyfill already swallows */ });
+    }, 5000);
+  }
 });
 
 // Expose router and i18n for MCP ui_navigate tool and E2E locale switching
