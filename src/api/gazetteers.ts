@@ -106,7 +106,7 @@ function validateGazetteer(obj: unknown): Gazetteer {
   return obj as Gazetteer;
 }
 
-export function importGazetteer(db: Database, jsonString: string): ImportGazetteerResult {
+export async function importGazetteer(db: Database, jsonString: string): Promise<ImportGazetteerResult> {
   if (Buffer.byteLength(jsonString, 'utf8') > MAX_JSON_BYTES) {
     throw new Error('Gazetteer JSON exceeds 50 MB size limit');
   }
@@ -128,7 +128,7 @@ export function importGazetteer(db: Database, jsonString: string): ImportGazette
   const sourceJson = gazetteer.source ? JSON.stringify(gazetteer.source) : null;
   const data = jsonString;
 
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO gazetteers (id, name, locale, description, source_json, data)
     VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
@@ -142,8 +142,8 @@ export function importGazetteer(db: Database, jsonString: string): ImportGazette
   return { id: gazetteer.id, name: gazetteer.name, locale: gazetteer.locale, nodeCount };
 }
 
-export function exportGazetteer(db: Database, id: string): string | null {
-  const row = queryOne<{ data: string }>(db, 'SELECT data FROM gazetteers WHERE id = ?', [id]);
+export async function exportGazetteer(db: Database, id: string): Promise<string | null> {
+  const row = await queryOne<{ data: string }>(db, 'SELECT data FROM gazetteers WHERE id = ?', [id]);
   if (row) {
     return row.data;
   }
@@ -156,25 +156,25 @@ export function exportGazetteer(db: Database, id: string): string | null {
   return null;
 }
 
-export function deleteGazetteer(db: Database, id: string): boolean {
+export async function deleteGazetteer(db: Database, id: string): Promise<boolean> {
   if (BUNDLED_IDS.has(id)) {
     return false;
   }
 
-  const existing = queryOne<{ id: string }>(db, 'SELECT id FROM gazetteers WHERE id = ?', [id]);
+  const existing = await queryOne<{ id: string }>(db, 'SELECT id FROM gazetteers WHERE id = ?', [id]);
   if (!existing) {
     return false;
   }
 
-  runSql(db, 'DELETE FROM gazetteers WHERE id = ?', [id]);
+  await runSql(db, 'DELETE FROM gazetteers WHERE id = ?', [id]);
 
-  const configJson = getDbSetting(db, 'gazetteer_config');
+  const configJson = await getDbSetting(db, 'gazetteer_config');
   if (configJson) {
     try {
       const config = JSON.parse(configJson) as { enabledGazetteers?: string[] };
       if (Array.isArray(config.enabledGazetteers)) {
         config.enabledGazetteers = config.enabledGazetteers.filter((gid: string) => gid !== id);
-        setDbSetting(db, 'gazetteer_config', JSON.stringify(config));
+        await setDbSetting(db, 'gazetteer_config', JSON.stringify(config));
       }
     } catch {
       // Malformed config — leave as-is
@@ -192,7 +192,7 @@ type GazetteerRow = {
   source_json: string | null;
 };
 
-export function listGazetteers(db: Database): GazetteerInfo[] {
+export async function listGazetteers(db: Database): Promise<GazetteerInfo[]> {
   const bundled = getAllGazetteers().map((g): GazetteerInfo => ({
     id: g.id,
     name: g.name,
@@ -204,7 +204,7 @@ export function listGazetteers(db: Database): GazetteerInfo[] {
     rootName: g.root.name,
   }));
 
-  const rows = queryAll<GazetteerRow & { data: string }>(db, 'SELECT id, name, locale, description, source_json, data FROM gazetteers ORDER BY created_at');
+  const rows = await queryAll<GazetteerRow & { data: string }>(db, 'SELECT id, name, locale, description, source_json, data FROM gazetteers ORDER BY created_at');
   const imported = rows.map((row): GazetteerInfo => {
     let kind: 'point' | 'boundary' | 'language' | undefined;
     let rootName: string | undefined;
@@ -228,8 +228,8 @@ export function listGazetteers(db: Database): GazetteerInfo[] {
   return [...bundled, ...imported];
 }
 
-export function getImportedGazetteers(db: Database): Gazetteer[] {
-  const rows = queryAll<{ data: string }>(db, 'SELECT data FROM gazetteers ORDER BY created_at');
+export async function getImportedGazetteers(db: Database): Promise<Gazetteer[]> {
+  const rows = await queryAll<{ data: string }>(db, 'SELECT data FROM gazetteers ORDER BY created_at');
   return rows.map(row => JSON.parse(row.data) as Gazetteer);
 }
 

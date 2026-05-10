@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne, runSql } from './db';
 
-export function initializeSchema(db: Database): void {
+export async function initializeSchema(db: Database): Promise<void> {
   // node-sqlite3-wasm's custom VFS implements sqlite3_io_methods.iVersion=1,
   // which omits the shared-memory hooks WAL requires (xShmMap/xShmLock/...).
   // PRAGMA journal_mode=WAL silently downgrades to DELETE under this build —
@@ -265,12 +265,12 @@ export function initializeSchema(db: Database): void {
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
-  const eventCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)').map(c => c.name);
+  const eventCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)')).map(c => c.name);
   if (!eventCols.includes('relationship_id')) {
     db.exec(`ALTER TABLE events ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
 
-  const citationCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(citations)').map(c => c.name);
+  const citationCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(citations)')).map(c => c.name);
   if (!citationCols.includes('relationship_id')) {
     db.exec(`ALTER TABLE citations ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
@@ -282,12 +282,12 @@ export function initializeSchema(db: Database): void {
   // the parent → name FK semantics: deleting the name takes its citations
   // with it. See docs/plans/2026-05-06-name-citation-and-validity.md.
   if (!citationCols.includes('person_name_id')) {
-    runSql(db, 'ALTER TABLE citations ADD COLUMN person_name_id TEXT REFERENCES person_names(id) ON DELETE CASCADE');
+    await runSql(db, 'ALTER TABLE citations ADD COLUMN person_name_id TEXT REFERENCES person_names(id) ON DELETE CASCADE');
   }
 
   // v0.4.0 places column migrations — idempotent
   // v0.3.1 migration: person_names gained name_prefix, name_suffix, patronymic_base, name_qualifier
-  const personNamesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(person_names)').map(c => c.name);
+  const personNamesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(person_names)')).map(c => c.name);
   if (!personNamesCols.includes('name_prefix')) {
     db.exec(`ALTER TABLE person_names ADD COLUMN name_prefix TEXT`);
   }
@@ -309,7 +309,7 @@ export function initializeSchema(db: Database): void {
     db.exec('ALTER TABLE person_names ADD COLUMN nickname TEXT');
   }
 
-  const placesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(places)').map(c => c.name);
+  const placesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(places)')).map(c => c.name);
   if (!placesCols.includes('place_type')) {
     db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
   }
@@ -348,7 +348,7 @@ export function initializeSchema(db: Database): void {
   }
 
   // v0.7.0 sources: call_number + abstract
-  const sourcesCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(sources)').map(c => c.name);
+  const sourcesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(sources)')).map(c => c.name);
   if (!sourcesCols.includes('call_number')) {
     db.exec('ALTER TABLE sources ADD COLUMN call_number TEXT');
   }
@@ -357,20 +357,20 @@ export function initializeSchema(db: Database): void {
   }
 
   // v0.8.0 media: is_missing flag for files that couldn't be found/extracted
-  const mediaCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(media)').map(c => c.name);
+  const mediaCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(media)')).map(c => c.name);
   if (!mediaCols.includes('is_missing')) {
     db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.9.0 media_links: sort_order for user-controlled ordering
-  const mediaLinkCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(media_links)').map(c => c.name);
+  const mediaLinkCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(media_links)')).map(c => c.name);
   if (!mediaLinkCols.includes('sort_order')) {
     db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.79.0 name_type: add 'name_change' to CHECK constraint
   // SQLite CHECK constraints are baked into the schema — must recreate the table to relax them.
-  const nameTypeCheck = (queryOne<{ sql: string }>(db,
+  const nameTypeCheck = (await queryOne<{ sql: string }>(db,
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_names'`
   ))?.sql ?? '';
   if (!nameTypeCheck.includes('name_change')) {
@@ -379,10 +379,10 @@ export function initializeSchema(db: Database): void {
     // ON DELETE CASCADE). The table redefinition pattern must run with FKs
     // disabled — this is the SQLite-recommended approach (sqlite.org/lang_altertable.html
     // step 12). Children re-bind to the renamed table.
-    runSql(db, 'DROP TABLE IF EXISTS person_names_new');
-    runSql(db, 'PRAGMA foreign_keys = OFF');
+    await runSql(db, 'DROP TABLE IF EXISTS person_names_new');
+    await runSql(db, 'PRAGMA foreign_keys = OFF');
     try {
-      runSql(db, `
+      await runSql(db, `
         CREATE TABLE person_names_new (
           id TEXT PRIMARY KEY,
           person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
@@ -400,23 +400,23 @@ export function initializeSchema(db: Database): void {
           nickname TEXT
         )
       `);
-      runSql(db, 'INSERT INTO person_names_new SELECT id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname FROM person_names');
-      runSql(db, 'DROP TABLE person_names');
-      runSql(db, 'ALTER TABLE person_names_new RENAME TO person_names');
+      await runSql(db, 'INSERT INTO person_names_new SELECT id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname FROM person_names');
+      await runSql(db, 'DROP TABLE person_names');
+      await runSql(db, 'ALTER TABLE person_names_new RENAME TO person_names');
     } finally {
-      runSql(db, 'PRAGMA foreign_keys = ON');
+      await runSql(db, 'PRAGMA foreign_keys = ON');
     }
   }
 
   // v0.80.0: research_tasks.person_id → task_links; group_members → group_links
   // Generic link tables let tasks and groups attach persons, places, and media.
-  const researchTaskCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(research_tasks)').map(c => c.name);
+  const researchTaskCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(research_tasks)')).map(c => c.name);
   if (researchTaskCols.includes('person_id')) {
-    const existingTasks = queryAll<{ id: string; person_id: string | null }>(
+    const existingTasks = await queryAll<{ id: string; person_id: string | null }>(
       db, 'SELECT id, person_id FROM research_tasks WHERE person_id IS NOT NULL'
     );
     for (const t of existingTasks) {
-      runSql(db,
+      await runSql(db,
         `INSERT OR IGNORE INTO task_links (id, task_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`,
         [crypto.randomUUID(), t.id, t.person_id!]
       );
@@ -425,10 +425,10 @@ export function initializeSchema(db: Database): void {
     // cascade-deleted by `DROP TABLE research_tasks` (SQLite issues an
     // implicit DELETE during DROP when foreign_keys=ON; task_links.task_id
     // → research_tasks(id) ON DELETE CASCADE would wipe them).
-    runSql(db, 'PRAGMA foreign_keys = OFF');
+    await runSql(db, 'PRAGMA foreign_keys = OFF');
     try {
-      runSql(db, 'DROP INDEX IF EXISTS idx_research_tasks_person_id');
-      runSql(db, `
+      await runSql(db, 'DROP INDEX IF EXISTS idx_research_tasks_person_id');
+      await runSql(db, `
         CREATE TABLE research_tasks_new (
           id TEXT PRIMARY KEY,
           priority INTEGER NOT NULL DEFAULT 0,
@@ -440,31 +440,31 @@ export function initializeSchema(db: Database): void {
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
       `);
-      runSql(db, `
+      await runSql(db, `
         INSERT INTO research_tasks_new (id, priority, status, task, notes, result, created_at, updated_at)
           SELECT id, priority, status, task, notes, result, created_at, updated_at FROM research_tasks
       `);
-      runSql(db, 'DROP TABLE research_tasks');
-      runSql(db, 'ALTER TABLE research_tasks_new RENAME TO research_tasks');
+      await runSql(db, 'DROP TABLE research_tasks');
+      await runSql(db, 'ALTER TABLE research_tasks_new RENAME TO research_tasks');
     } finally {
-      runSql(db, 'PRAGMA foreign_keys = ON');
+      await runSql(db, 'PRAGMA foreign_keys = ON');
     }
   }
 
-  const groupMembersExists = queryOne<{ name: string }>(db,
+  const groupMembersExists = await queryOne<{ name: string }>(db,
     `SELECT name FROM sqlite_master WHERE type='table' AND name='group_members'`
   );
   if (groupMembersExists) {
-    const existingMembers = queryAll<{ group_id: string; person_id: string }>(
+    const existingMembers = await queryAll<{ group_id: string; person_id: string }>(
       db, 'SELECT group_id, person_id FROM group_members'
     );
     for (const m of existingMembers) {
-      runSql(db,
+      await runSql(db,
         `INSERT OR IGNORE INTO group_links (id, group_id, entity_type, entity_id, sort_order) VALUES (?, ?, 'person', ?, 0)`,
         [crypto.randomUUID(), m.group_id, m.person_id]
       );
     }
-    runSql(db, 'DROP TABLE group_members');
+    await runSql(db, 'DROP TABLE group_members');
   }
 
   // Indexes that depend on migrated columns — run after migrations
@@ -476,74 +476,74 @@ export function initializeSchema(db: Database): void {
   `);
 
   // Drop bad index that confuses the query planner on listPersonsPage
-  runSql(db, 'DROP INDEX IF EXISTS idx_person_names_sort_name');
+  await runSql(db, 'DROP INDEX IF EXISTS idx_person_names_sort_name');
 
   // Living flag is no longer stored — derived from birth/death events at read time.
   // GEDCOM standard has no LIVING tag (the old _LIVING was a non-standard extension).
-  const personsCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)').map(c => c.name);
+  const personsCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)')).map(c => c.name);
   if (personsCols.includes('living')) {
-    runSql(db, 'ALTER TABLE persons DROP COLUMN living');
+    await runSql(db, 'ALTER TABLE persons DROP COLUMN living');
   }
 
   // v0.162.6: collapse 'baptism' and 'christening' event types into 'christening'.
   // The two were duplicates in Swedish ("Dop") and a single canonical type avoids
   // double-listing in event-type pickers (BENGT #28d). Idempotent — no-op once
   // all rows already say 'christening'.
-  runSql(db, "UPDATE events SET event_type='christening' WHERE event_type='baptism'");
+  await runSql(db, "UPDATE events SET event_type='christening' WHERE event_type='baptism'");
 
   // v0.203.0 events: add `value` column (GEDCOM-X Fact.value / GEDCOM 5.5.1 line value)
   // and rename `description` -> `notes` so the column name reflects what it always
   // semantically held (free-form notes), now distinct from the fact's primary value.
   // See docs/plans/archive/2026-05-02-events-fact-value-design.md
-  const eventColsV203 = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)').map(c => c.name);
+  const eventColsV203 = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)')).map(c => c.name);
   if (!eventColsV203.includes('value')) {
-    runSql(db, 'ALTER TABLE events ADD COLUMN value TEXT');
+    await runSql(db, 'ALTER TABLE events ADD COLUMN value TEXT');
   }
   if (eventColsV203.includes('description') && !eventColsV203.includes('notes')) {
-    runSql(db, 'ALTER TABLE events RENAME COLUMN description TO notes');
+    await runSql(db, 'ALTER TABLE events RENAME COLUMN description TO notes');
   }
 
   // v0.211.0: place lookup indexes. findOrCreatePlace and findOrCreatePlaceWithChain
   // run thousands of `SELECT … WHERE normalized_name = ?` (and `WHERE parent_place_id
   // = ? AND normalized_name = ?`) per import. Without these indexes each lookup is a
   // full table scan, making large imports O(n²).
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_normalized_name ON places(normalized_name)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_parent_normalized ON places(parent_place_id, normalized_name)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_normalized_name ON places(normalized_name)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_places_parent_normalized ON places(parent_place_id, normalized_name)');
 
   // v0.218.0: persons.display_id — per-database integer ordering label, visible
   // to genealogists in the panel header and the persons list. Stable, sortable,
   // never recycled. Not GEDCOM-representable; re-assigned on import per
   // gedcom_fidelity_registry. See plan 2026-05-05-person-id-visibility.md.
-  const personsColsV218 = queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)').map(c => c.name);
+  const personsColsV218 = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(persons)')).map(c => c.name);
   if (!personsColsV218.includes('display_id')) {
-    runSql(db, 'ALTER TABLE persons ADD COLUMN display_id INTEGER');
+    await runSql(db, 'ALTER TABLE persons ADD COLUMN display_id INTEGER');
   }
   // Index creation must run unconditionally (idempotent via IF NOT EXISTS) so
   // both fresh DBs and pre-v0.218 DBs end up with it. Keeping the index inside
   // the inline CREATE TABLE block crashes initializeSchema on a pre-v0.218 DB
   // because the column doesn't exist yet at that point.
-  runSql(db, 'CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL');
+  await runSql(db, 'CREATE UNIQUE INDEX IF NOT EXISTS idx_persons_display_id ON persons(display_id) WHERE display_id IS NOT NULL');
   // Backfill any rows missing display_id. Runs on startup so importers that
   // bypass createPerson (Genney, restore-from-undo) get backfilled the next
   // time the database is opened. Cheap when nothing is missing — the WHERE
   // EXISTS check short-circuits and the UPDATE is skipped.
-  const missingDisplayId = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons WHERE display_id IS NULL')?.n ?? 0;
+  const missingDisplayId = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons WHERE display_id IS NULL'))?.n ?? 0;
   if (missingDisplayId > 0) {
-    runSql(db, 'BEGIN IMMEDIATE');
+    await runSql(db, 'BEGIN IMMEDIATE');
     try {
-      const maxRow = queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons');
+      const maxRow = await queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons');
       const startFrom = (maxRow?.m ?? 0) + 1;
-      const rows = queryAll<{ id: string }>(db, `
+      const rows = await queryAll<{ id: string }>(db, `
         SELECT id FROM persons
         WHERE display_id IS NULL
         ORDER BY created_at, id
       `);
       for (let i = 0; i < rows.length; i++) {
-        runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, rows[i].id]);
+        await runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, rows[i].id]);
       }
-      runSql(db, 'COMMIT');
+      await runSql(db, 'COMMIT');
     } catch (err) {
-      try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+      try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
       throw err;
     }
   }
@@ -552,14 +552,14 @@ export function initializeSchema(db: Database): void {
   // Real-world testing against RootsMagic / FTM / FamilyOrigins / PAF exports surfaced
   // these widely-used identifier tags being silently dropped on import. SQLite CHECK
   // constraints are baked in — must recreate the table to relax them.
-  const identifierCheck = (queryOne<{ sql: string }>(db,
+  const identifierCheck = (await queryOne<{ sql: string }>(db,
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='person_identifiers'`
   ))?.sql ?? '';
   if (identifierCheck && !identifierCheck.includes("'uid'")) {
-    runSql(db, 'DROP TABLE IF EXISTS person_identifiers_new');
-    runSql(db, 'PRAGMA foreign_keys = OFF');
+    await runSql(db, 'DROP TABLE IF EXISTS person_identifiers_new');
+    await runSql(db, 'PRAGMA foreign_keys = OFF');
     try {
-      runSql(db, `
+      await runSql(db, `
         CREATE TABLE person_identifiers_new (
           id TEXT PRIMARY KEY,
           person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
@@ -569,12 +569,12 @@ export function initializeSchema(db: Database): void {
           UNIQUE(person_id, identifier_type, identifier_value)
         )
       `);
-      runSql(db, 'INSERT INTO person_identifiers_new SELECT id, person_id, identifier_type, identifier_value, created_at FROM person_identifiers');
-      runSql(db, 'DROP TABLE person_identifiers');
-      runSql(db, 'ALTER TABLE person_identifiers_new RENAME TO person_identifiers');
-      runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id)');
+      await runSql(db, 'INSERT INTO person_identifiers_new SELECT id, person_id, identifier_type, identifier_value, created_at FROM person_identifiers');
+      await runSql(db, 'DROP TABLE person_identifiers');
+      await runSql(db, 'ALTER TABLE person_identifiers_new RENAME TO person_identifiers');
+      await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id)');
     } finally {
-      runSql(db, 'PRAGMA foreign_keys = ON');
+      await runSql(db, 'PRAGMA foreign_keys = ON');
     }
   }
 
@@ -585,7 +585,7 @@ export function initializeSchema(db: Database): void {
   // person — and is therefore exempt from the GEDCOM fidelity registry
   // (registered as `excluded` because it's a render-time cache, not
   // authored). See plan 2026-05-09-persons-list-aggregate-columns.
-  runSql(db, `
+  await runSql(db, `
     CREATE TABLE IF NOT EXISTS quality_issue_counts (
       person_id TEXT PRIMARY KEY REFERENCES persons(id) ON DELETE CASCADE,
       issue_count INTEGER NOT NULL DEFAULT 0,
@@ -596,13 +596,13 @@ export function initializeSchema(db: Database): void {
   // v0.236.0: indexes that speed up the persons-list aggregate-column query.
   // Each subquery in the new SELECT (event_count, relationship_count,
   // media_count, group_count, task_count, name_count) hits one of these.
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_event_participants_person_id ON event_participants(person_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person1_id ON relationships(person1_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person2_id ON relationships(person2_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_media_links_entity ON media_links(entity_type, entity_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_group_links_entity ON group_links(entity_type, entity_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_task_links_entity ON task_links(entity_type, entity_id)');
-  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_event_participants_person_id ON event_participants(person_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person1_id ON relationships(person1_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person2_id ON relationships(person2_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_media_links_entity ON media_links(entity_type, entity_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_group_links_entity ON group_links(entity_type, entity_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_task_links_entity ON task_links(entity_type, entity_id)');
+  await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id)');
 
   // v0.249.0: ignored_duplicates polymorphism. Older databases keyed the pair
   // on (person1_id, person2_id) only and carried a hard FK to persons(id).
@@ -610,8 +610,8 @@ export function initializeSchema(db: Database): void {
   // the persons FK so place/source/media pairs can also be ignored. Existing
   // rows are preserved with entity_type='person' (the column DEFAULT). The
   // FK drop requires a table rebuild — SQLite doesn't support DROP CONSTRAINT.
-  const ignoredCols = queryAll<{ name: string }>(db, 'PRAGMA table_info(ignored_duplicates)').map(c => c.name);
-  const ignoredSql = (queryOne<{ sql: string }>(db,
+  const ignoredCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(ignored_duplicates)')).map(c => c.name);
+  const ignoredSql = (await queryOne<{ sql: string }>(db,
     `SELECT sql FROM sqlite_master WHERE type='table' AND name='ignored_duplicates'`
   ))?.sql ?? '';
   // Two triggers for migration:
@@ -622,10 +622,10 @@ export function initializeSchema(db: Database): void {
   // no-op so this rebuild block is the only path to the new shape.
   const needsIgnoredRebuild = !ignoredCols.includes('entity_type') || ignoredSql.includes('REFERENCES persons');
   if (needsIgnoredRebuild) {
-    runSql(db, 'DROP TABLE IF EXISTS ignored_duplicates_new');
-    runSql(db, 'PRAGMA foreign_keys = OFF');
+    await runSql(db, 'DROP TABLE IF EXISTS ignored_duplicates_new');
+    await runSql(db, 'PRAGMA foreign_keys = OFF');
     try {
-      runSql(db, `
+      await runSql(db, `
         CREATE TABLE ignored_duplicates_new (
           entity_type TEXT NOT NULL DEFAULT 'person' CHECK(entity_type IN ('person', 'place', 'source', 'media')),
           person1_id TEXT NOT NULL,
@@ -638,20 +638,20 @@ export function initializeSchema(db: Database): void {
       // Carry every existing row forward as entity_type='person' (the only
       // entity type the pre-polymorphic table supported).
       if (ignoredCols.includes('entity_type')) {
-        runSql(db, `
+        await runSql(db, `
           INSERT INTO ignored_duplicates_new (entity_type, person1_id, person2_id, created_at)
           SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates
         `);
       } else {
-        runSql(db, `
+        await runSql(db, `
           INSERT INTO ignored_duplicates_new (entity_type, person1_id, person2_id, created_at)
           SELECT 'person', person1_id, person2_id, created_at FROM ignored_duplicates
         `);
       }
-      runSql(db, 'DROP TABLE ignored_duplicates');
-      runSql(db, 'ALTER TABLE ignored_duplicates_new RENAME TO ignored_duplicates');
+      await runSql(db, 'DROP TABLE ignored_duplicates');
+      await runSql(db, 'ALTER TABLE ignored_duplicates_new RENAME TO ignored_duplicates');
     } finally {
-      runSql(db, 'PRAGMA foreign_keys = ON');
+      await runSql(db, 'PRAGMA foreign_keys = ON');
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 
-export function getDbSetting(db: Database, key: string): string | null {
+export async function getDbSetting(db: Database, key: string): Promise<string | null> {
   const stmt = db.prepare('SELECT value FROM db_settings WHERE key = ?');
   try {
     const row = stmt.get([key]) as { value: string } | undefined;
@@ -10,7 +10,7 @@ export function getDbSetting(db: Database, key: string): string | null {
   }
 }
 
-export function setDbSetting(db: Database, key: string, value: string): void {
+export async function setDbSetting(db: Database, key: string, value: string): Promise<void> {
   const stmt = db.prepare('INSERT OR REPLACE INTO db_settings (key, value) VALUES (?, ?)');
   try {
     stmt.run([key, value]);
@@ -19,7 +19,7 @@ export function setDbSetting(db: Database, key: string, value: string): void {
   }
 }
 
-export function deleteDbSetting(db: Database, key: string): void {
+export async function deleteDbSetting(db: Database, key: string): Promise<void> {
   const stmt = db.prepare('DELETE FROM db_settings WHERE key = ?');
   try {
     stmt.run([key]);

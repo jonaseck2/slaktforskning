@@ -22,12 +22,12 @@ export interface ArchiveImportReport {
  * 4. Copy media files from archive to mediaDir
  * 5. Update media file_ref paths to point to copied files
  */
-export function importArchive(
+export async function importArchive(
   db: Database,
   archivePath: string,
   mediaDir: string,
   options?: ImportOptions,
-): ArchiveImportReport {
+): Promise<ArchiveImportReport> {
   const zipData = new Uint8Array(fs.readFileSync(archivePath));
   const entries = unzipSync(zipData);
 
@@ -61,7 +61,7 @@ export function importArchive(
     // Parse and import GEDCOM
     const text = readGedcomFile(tmpGedPath);
     const tree = parseGedcom(text);
-    const gedcomReport = importGedcom(db, tree, options);
+    const gedcomReport = await importGedcom(db, tree, options);
 
     // Extract media files
     let mediaImported = 0;
@@ -97,12 +97,12 @@ export function importArchive(
     // Rewrite file_ref paths to match the target media folder name
     const mediaFolderBase = path.basename(mediaDir);
     if (mediaFolderBase !== 'media') {
-      const mediaPaths = queryAll<{ id: string; file_ref: string }>(db, `
+      const mediaPaths = await queryAll<{ id: string; file_ref: string }>(db, `
         SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL AND file_ref LIKE 'media/%'
       `);
       for (const row of mediaPaths) {
         const newRef = row.file_ref.replace(/^media\//, `${mediaFolderBase}/`);
-        runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [newRef, row.id]);
+        await runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [newRef, row.id]);
       }
     }
 

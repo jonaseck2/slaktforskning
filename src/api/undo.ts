@@ -6,8 +6,13 @@
 
 export interface UndoAction {
   label: string;
-  undo: () => void;
-  redo: () => void;
+  // The callbacks may now do `await runSql(...)` etc. (api/db.ts helpers
+  // became async in Phase 2 Task 5). Returning Promise<void> instead of
+  // void lets UndoManager.undo() / .redo() await them, so a stack of
+  // SQL writes inside one undo step runs in order, not as a fire-and-
+  // forget burst.
+  undo: () => void | Promise<void>;
+  redo: () => void | Promise<void>;
 }
 
 export class UndoManager {
@@ -30,18 +35,18 @@ export class UndoManager {
     this.redoStack.length = 0;
   }
 
-  undo(): string | null {
+  async undo(): Promise<string | null> {
     const action = this.undoStack.pop();
     if (!action) return null;
-    action.undo();
+    await action.undo();
     this.redoStack.push(action);
     return action.label;
   }
 
-  redo(): string | null {
+  async redo(): Promise<string | null> {
     const action = this.redoStack.pop();
     if (!action) return null;
-    action.redo();
+    await action.redo();
     this.undoStack.push(action);
     return action.label;
   }
@@ -79,15 +84,16 @@ export class UndoManager {
     // Combine all grouped actions into a single undo step
     this.push({
       label,
-      undo: () => {
-        // Undo in reverse order
+      undo: async () => {
+        // Undo in reverse order; await so each step's SQL settles
+        // before the next step starts.
         for (let i = actions.length - 1; i >= 0; i--) {
-          actions[i].undo();
+          await actions[i].undo();
         }
       },
-      redo: () => {
+      redo: async () => {
         for (const action of actions) {
-          action.redo();
+          await action.redo();
         }
       },
     });

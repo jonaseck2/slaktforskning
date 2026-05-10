@@ -2,7 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import type { MediaRegion } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
-export function createMediaRegion(db: Database, data: {
+export async function createMediaRegion(db: Database, data: {
   media_id: string;
   person_id?: string | null;
   x: number;
@@ -10,9 +10,9 @@ export function createMediaRegion(db: Database, data: {
   width: number;
   height: number;
   label?: string | null;
-}): MediaRegion {
+}): Promise<MediaRegion> {
   const id = crypto.randomUUID();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO media_regions (id, media_id, person_id, x, y, width, height, label)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `, [
@@ -20,15 +20,15 @@ export function createMediaRegion(db: Database, data: {
     data.x, data.y, data.width, data.height,
     data.label ?? null,
   ]);
-  return queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id])!;
+  return (await queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id]))!;
 }
 
-export function getMediaRegions(db: Database, mediaId: string): MediaRegion[] {
-  return queryAll<MediaRegion>(db, 'SELECT * FROM media_regions WHERE media_id = ? ORDER BY created_at', [mediaId]);
+export async function getMediaRegions(db: Database, mediaId: string): Promise<MediaRegion[]> {
+  return await queryAll<MediaRegion>(db, 'SELECT * FROM media_regions WHERE media_id = ? ORDER BY created_at', [mediaId]);
 }
 
-export function getRegionsForPerson(db: Database, personId: string): (MediaRegion & { media_title: string })[] {
-  return queryAll<MediaRegion & { media_title: string }>(db, `
+export async function getRegionsForPerson(db: Database, personId: string): Promise<(MediaRegion & { media_title: string })[]> {
+  return await queryAll<MediaRegion & { media_title: string }>(db, `
     SELECT mr.*, m.title AS media_title
     FROM media_regions mr
     JOIN media m ON m.id = mr.media_id
@@ -37,15 +37,15 @@ export function getRegionsForPerson(db: Database, personId: string): (MediaRegio
   `, [personId]);
 }
 
-export function updateMediaRegion(db: Database, id: string, data: {
+export async function updateMediaRegion(db: Database, id: string, data: {
   person_id?: string | null;
   label?: string | null;
   x?: number;
   y?: number;
   width?: number;
   height?: number;
-}): MediaRegion | null {
-  const existing = queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id]);
+}): Promise<MediaRegion | null> {
+  const existing = await queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id]);
   if (!existing) return null;
 
   const updates: string[] = [];
@@ -67,10 +67,10 @@ export function updateMediaRegion(db: Database, id: string, data: {
   if (updates.length === 0) return existing;
 
   params.push(id);
-  runSql(db, `UPDATE media_regions SET ${updates.join(', ')} WHERE id = ?`, params);
-  return queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id]) ?? null;
+  await runSql(db, `UPDATE media_regions SET ${updates.join(', ')} WHERE id = ?`, params);
+  return (await queryOne<MediaRegion>(db, 'SELECT * FROM media_regions WHERE id = ?', [id])) ?? null;
 }
 
-export function deleteMediaRegion(db: Database, id: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM media_regions WHERE id = ?', [id]) > 0;
+export async function deleteMediaRegion(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM media_regions WHERE id = ?', [id])) > 0;
 }

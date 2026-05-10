@@ -33,11 +33,11 @@ function wrapCsv(lines: string[], options: CsvOptions): string {
   return options.encoding === 'utf-8-bom' ? '\uFEFF' + csv : csv;
 }
 
-export function exportPersonsCsv(db: Database, options: CsvOptions = {}): string {
+export async function exportPersonsCsv(db: Database, options: CsvOptions = {}): Promise<string> {
   const delimiter = options.delimiter ?? ',';
   const headers = ['id', 'given_name', 'surname', 'sex', 'living', 'birth_date', 'birth_place', 'death_date', 'death_place', 'notes'];
 
-  const rows = queryAll<{
+  const rows = await queryAll<{
     id: string;
     given_name: string | null;
     surname: string | null;
@@ -85,11 +85,11 @@ export function exportPersonsCsv(db: Database, options: CsvOptions = {}): string
   return wrapCsv(lines, options);
 }
 
-export function exportEventsCsv(db: Database, options: CsvOptions = {}): string {
+export async function exportEventsCsv(db: Database, options: CsvOptions = {}): Promise<string> {
   const delimiter = options.delimiter ?? ',';
   const headers = ['id', 'event_type', 'date_type', 'date_value', 'date_original', 'place_name', 'value', 'notes', 'person_names'];
 
-  const events = queryAll<{
+  const events = await queryAll<{
     id: string;
     event_type: string;
     date_type: string | null;
@@ -114,7 +114,7 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
   `);
 
   // Build participant names map
-  const participants = queryAll<{
+  const participants = await queryAll<{
     event_id: string;
     given_name: string | null;
     surname: string | null;
@@ -147,11 +147,11 @@ export function exportEventsCsv(db: Database, options: CsvOptions = {}): string 
   return wrapCsv(lines, options);
 }
 
-export function exportSourcesCsv(db: Database, options: CsvOptions = {}): string {
+export async function exportSourcesCsv(db: Database, options: CsvOptions = {}): Promise<string> {
   const delimiter = options.delimiter ?? ',';
   const headers = ['id', 'title', 'author', 'publication_info', 'repository', 'url', 'source_type', 'call_number', 'abstract'];
 
-  const rows = queryAll<{
+  const rows = await queryAll<{
     id: string;
     title: string | null;
     author: string | null;
@@ -174,11 +174,11 @@ export function exportSourcesCsv(db: Database, options: CsvOptions = {}): string
   return wrapCsv(lines, options);
 }
 
-export function exportPlacesCsv(db: Database, options: CsvOptions = {}): string {
+export async function exportPlacesCsv(db: Database, options: CsvOptions = {}): Promise<string> {
   const delimiter = options.delimiter ?? ',';
   const headers = ['id', 'name', 'place_type', 'parent_place_name', 'latitude', 'longitude', 'street', 'postal_code', 'city', 'country'];
 
-  const rows = queryAll<{
+  const rows = await queryAll<{
     id: string;
     name: string;
     place_type: string | null;

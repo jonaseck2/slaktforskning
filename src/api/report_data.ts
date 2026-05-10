@@ -217,23 +217,25 @@ export interface TimelineOptions {
 
 // ── Helpers ──
 
-function resolveEventPlace(db: Database, event: GenealogyEvent): EventWithPlace {
+async function resolveEventPlace(db: Database, event: GenealogyEvent): Promise<EventWithPlace> {
   let place_name: string | null = null;
   let place_path: string | null = null;
   if (event.place_id) {
-    const place = getPlace(db, event.place_id);
+    const place = await getPlace(db, event.place_id);
     place_name = place?.name ?? null;
-    place_path = getPlacePath(db, event.place_id);
+    place_path = await getPlacePath(db, event.place_id);
   }
   return { ...event, place_name, place_path };
 }
 
-function resolveEventsPlaces(db: Database, events: GenealogyEvent[]): EventWithPlace[] {
-  return events.map(e => resolveEventPlace(db, e));
+async function resolveEventsPlaces(db: Database, events: GenealogyEvent[]): Promise<EventWithPlace[]> {
+  const out: EventWithPlace[] = [];
+  for (const e of events) out.push(await resolveEventPlace(db, e));
+  return out;
 }
 
-function resolveCitationSource(db: Database, citation: Citation): CitationWithSource {
-  const source = getSource(db, citation.source_id);
+async function resolveCitationSource(db: Database, citation: Citation): Promise<CitationWithSource> {
+  const source = await getSource(db, citation.source_id);
   return {
     ...citation,
     source_title: source?.title ?? null,
@@ -369,11 +371,11 @@ function familyEventWithinLifetime(
   return true;
 }
 
-function buildFamilyMember(db: Database, personId: string): FamilyMember | null {
-  const person = getPerson(db, personId);
+async function buildFamilyMember(db: Database, personId: string): Promise<FamilyMember | null> {
+  const person = await getPerson(db, personId);
   if (!person) return null;
-  const names = getPersonNames(db, personId);
-  const personEvents = resolveEventsPlaces(db, getEventsForPerson(db, personId));
+  const names = await getPersonNames(db, personId);
+  const personEvents = await resolveEventsPlaces(db, await getEventsForPerson(db, personId));
   return {
     person,
     names,
@@ -389,25 +391,26 @@ function buildFamilyMember(db: Database, personId: string): FamilyMember | null 
  * relationships (with other person names), citations (with source titles),
  * groups, and research tasks.
  */
-export function getPersonSummary(db: Database, personId: string): PersonSummary | null {
-  const person = getPerson(db, personId);
+export async function getPersonSummary(db: Database, personId: string): Promise<PersonSummary | null> {
+  const person = await getPerson(db, personId);
   if (!person) return null;
 
-  const names = getPersonNames(db, personId);
-  const rawEvents = getEventsForPerson(db, personId);
-  const events = resolveEventsPlaces(db, rawEvents);
+  const names = await getPersonNames(db, personId);
+  const rawEvents = await getEventsForPerson(db, personId);
+  const events = await resolveEventsPlaces(db, rawEvents);
 
-  const rawRelationships = getRelationshipsOfPerson(db, personId);
-  const relationships: RelationshipSummary[] = rawRelationships.map(r => {
+  const rawRelationships = await getRelationshipsOfPerson(db, personId);
+  const relationships: RelationshipSummary[] = [];
+  for (const r of rawRelationships) {
     const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
     let otherNames: PersonName[] = [];
     let otherSex: string | null = null;
     let otherBirthDate: string | null = null;
     if (otherId) {
-      otherNames = getPersonNames(db, otherId);
-      const otherPerson = getPerson(db, otherId);
+      otherNames = await getPersonNames(db, otherId);
+      const otherPerson = await getPerson(db, otherId);
       otherSex = otherPerson?.sex ?? null;
-      const otherEvents = getEventsForPerson(db, otherId);
+      const otherEvents = await getEventsForPerson(db, otherId);
       const birthEvent = otherEvents.find(e => e.event_type === 'birth');
       otherBirthDate = birthEvent?.date_value ?? null;
     }
@@ -417,7 +420,7 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
     // relationship event.
     let partnershipStartDate: string | null = null;
     if (r.type === 'couple') {
-      const relEvents = getEventsForRelationship(db, r.id);
+      const relEvents = await getEventsForRelationship(db, r.id);
       const marriage = relEvents.find(e => e.event_type === 'marriage');
       partnershipStartDate = marriage?.date_value
         ?? relEvents.map(e => e.date_value).filter((d): d is string => !!d).sort()[0]
@@ -429,7 +432,7 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
     // incoming parent_child relations.
     let otherParentId: string | null = null;
     if (r.type === 'parent_child' && r.person1_id === personId && otherId) {
-      const childRels = getRelationshipsOfPerson(db, otherId);
+      const childRels = await getRelationshipsOfPerson(db, otherId);
       for (const cr of childRels) {
         if (cr.type !== 'parent_child') continue;
         // person1 = parent, person2 = child convention
@@ -440,7 +443,7 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
       }
     }
 
-    return {
+    relationships.push({
       ...r,
       other_person_id: otherId ?? null,
       other_person_names: otherNames,
@@ -448,14 +451,14 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
       other_person_birth_date: otherBirthDate,
       partnership_start_date: partnershipStartDate,
       other_parent_id: otherParentId,
-    };
-  });
+    });
+  }
 
-  const rawCitations = getCitationsForPerson(db, personId);
+  const rawCitations = await getCitationsForPerson(db, personId);
   // Also collect citations on the person's events
   const eventCitationIds = new Set(rawCitations.map(c => c.id));
   for (const event of rawEvents) {
-    const eventCitations = getCitationsForEvent(db, event.id);
+    const eventCitations = await getCitationsForEvent(db, event.id);
     for (const c of eventCitations) {
       if (!eventCitationIds.has(c.id)) {
         rawCitations.push(c);
@@ -463,10 +466,11 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
       }
     }
   }
-  const citations = rawCitations.map(c => resolveCitationSource(db, c));
+  const citations: CitationWithSource[] = [];
+  for (const c of rawCitations) citations.push(await resolveCitationSource(db, c));
 
-  const groups = getGroupsForPerson(db, personId);
-  const research_tasks = getResearchTasksForPerson(db, personId);
+  const groups = await getGroupsForPerson(db, personId);
+  const research_tasks = await getResearchTasksForPerson(db, personId);
 
   return { person, names, events, relationships, citations, groups, research_tasks };
 }
@@ -476,25 +480,25 @@ export function getPersonSummary(db: Database, personId: string): PersonSummary 
  * Children are found via parent_child relationships where either person1 or person2
  * of the couple is a parent.
  */
-export function getFamilyUnit(db: Database, relationshipId: string): FamilyUnit | null {
-  const relationship = queryAll<Relationship>(db,
+export async function getFamilyUnit(db: Database, relationshipId: string): Promise<FamilyUnit | null> {
+  const relationship = (await queryAll<Relationship>(db,
     'SELECT * FROM relationships WHERE id = ?', [relationshipId]
-  )[0] ?? null;
+  ))[0] ?? null;
   if (!relationship) return null;
 
-  const person1 = relationship.person1_id ? buildFamilyMember(db, relationship.person1_id) : null;
-  const person2 = relationship.person2_id ? buildFamilyMember(db, relationship.person2_id) : null;
+  const person1 = relationship.person1_id ? await buildFamilyMember(db, relationship.person1_id) : null;
+  const person2 = relationship.person2_id ? await buildFamilyMember(db, relationship.person2_id) : null;
 
-  const relEvents = getEventsForRelationship(db, relationshipId);
-  const relationship_events = resolveEventsPlaces(db, relEvents);
+  const relEvents = await getEventsForRelationship(db, relationshipId);
+  const relationship_events = await resolveEventsPlaces(db, relEvents);
 
   // Find children shared by both parents (person1_id = parent, person2_id = child convention).
   // We intersect each parent's children so only children common to the couple are included.
   const childIds = new Set<string>();
   const parentIds = [relationship.person1_id, relationship.person2_id].filter(Boolean) as string[];
 
-  function childrenOfParent(parentId: string): Set<string> {
-    const rows = queryAll<{ child_id: string }>(db,
+  async function childrenOfParent(parentId: string): Promise<Set<string>> {
+    const rows = await queryAll<{ child_id: string }>(db,
       `SELECT person2_id AS child_id FROM relationships
        WHERE type = 'parent_child' AND person1_id = ? AND person2_id IS NOT NULL`,
       [parentId]
@@ -503,10 +507,10 @@ export function getFamilyUnit(db: Database, relationshipId: string): FamilyUnit 
   }
 
   if (parentIds.length === 1) {
-    childrenOfParent(parentIds[0]).forEach(id => childIds.add(id));
+    (await childrenOfParent(parentIds[0])).forEach(id => childIds.add(id));
   } else if (parentIds.length === 2) {
-    const c1 = childrenOfParent(parentIds[0]);
-    const c2 = childrenOfParent(parentIds[1]);
+    const c1 = await childrenOfParent(parentIds[0]);
+    const c2 = await childrenOfParent(parentIds[1]);
     for (const id of c1) {
       if (c2.has(id)) childIds.add(id);
     }
@@ -514,7 +518,7 @@ export function getFamilyUnit(db: Database, relationshipId: string): FamilyUnit 
 
   const children: FamilyMember[] = [];
   for (const childId of childIds) {
-    const member = buildFamilyMember(db, childId);
+    const member = await buildFamilyMember(db, childId);
     if (member) children.push(member);
   }
 
@@ -525,19 +529,19 @@ export function getFamilyUnit(db: Database, relationshipId: string): FamilyUnit 
  * Returns a nested ancestor tree up to N generations.
  * Each node has person, names, birth/death/marriage events, and father/mother subtrees.
  */
-export function getAncestorTree(db: Database, personId: string, generations: number = 4): AncestorNode | null {
-  const person = getPerson(db, personId);
+export async function getAncestorTree(db: Database, personId: string, generations: number = 4): Promise<AncestorNode | null> {
+  const person = await getPerson(db, personId);
   if (!person) return null;
 
-  const names = getPersonNames(db, personId);
-  const personEvents = resolveEventsPlaces(db, getEventsForPerson(db, personId));
+  const names = await getPersonNames(db, personId);
+  const personEvents = await resolveEventsPlaces(db, await getEventsForPerson(db, personId));
 
   // Find marriage event from couple relationships
   let marriage_event: EventWithPlace | null = null;
-  const rels = getRelationshipsOfPerson(db, personId);
+  const rels = await getRelationshipsOfPerson(db, personId);
   for (const r of rels) {
     if (r.type === 'couple') {
-      const relEvents = resolveEventsPlaces(db, getEventsForRelationship(db, r.id));
+      const relEvents = await resolveEventsPlaces(db, await getEventsForRelationship(db, r.id));
       marriage_event = findEventByType(relEvents, 'marriage');
       if (marriage_event) break;
     }
@@ -562,18 +566,18 @@ export function getAncestorTree(db: Database, personId: string, generations: num
     const parentId = r.person2_id === personId ? r.person1_id : null;
     if (!parentId) continue;
 
-    const parentPerson = getPerson(db, parentId);
+    const parentPerson = await getPerson(db, parentId);
     if (!parentPerson) continue;
 
     if (parentPerson.sex === 'M' && !node.father) {
-      node.father = getAncestorTree(db, parentId, generations - 1);
+      node.father = await getAncestorTree(db, parentId, generations - 1);
     } else if (parentPerson.sex === 'F' && !node.mother) {
-      node.mother = getAncestorTree(db, parentId, generations - 1);
+      node.mother = await getAncestorTree(db, parentId, generations - 1);
     } else if (!node.father) {
       // Unknown sex — fill first available slot
-      node.father = getAncestorTree(db, parentId, generations - 1);
+      node.father = await getAncestorTree(db, parentId, generations - 1);
     } else if (!node.mother) {
-      node.mother = getAncestorTree(db, parentId, generations - 1);
+      node.mother = await getAncestorTree(db, parentId, generations - 1);
     }
   }
 
@@ -583,37 +587,39 @@ export function getAncestorTree(db: Database, personId: string, generations: num
 /**
  * Returns all events at a place, chronologically, with participant names and roles.
  */
-export function getPlaceHistory(db: Database, placeId: string): PlaceHistory | null {
-  const place = getPlace(db, placeId);
+export async function getPlaceHistory(db: Database, placeId: string): Promise<PlaceHistory | null> {
+  const place = await getPlace(db, placeId);
   if (!place) return null;
 
-  const rawEvents = queryAll<GenealogyEvent>(db,
+  const rawEvents = await queryAll<GenealogyEvent>(db,
     `SELECT * FROM events WHERE place_id = ? ORDER BY date_value ASC`,
     [placeId]
   );
 
-  const events: PlaceEventRecord[] = rawEvents.map(event => {
-    const eventWithPlace = resolveEventPlace(db, event);
-    const rawParticipants = getEventParticipants(db, event.id);
-    const participants = rawParticipants.map(ep => {
-      const names = getPersonNames(db, ep.person_id);
+  const events: PlaceEventRecord[] = [];
+  for (const event of rawEvents) {
+    const eventWithPlace = await resolveEventPlace(db, event);
+    const rawParticipants = await getEventParticipants(db, event.id);
+    const participants = [];
+    for (const ep of rawParticipants) {
+      const names = await getPersonNames(db, ep.person_id);
       const primary = getPrimaryName(names);
       const birthSurname = getBirthSurnameForDisplay(names);
-      return {
+      participants.push({
         person_id: ep.person_id,
         given_name: primary.given_name,
         surname: primary.surname,
         birth_surname: birthSurname,
         role: ep.role,
-      };
-    });
-    return { event: eventWithPlace, participants };
-  });
+      });
+    }
+    events.push({ event: eventWithPlace, participants });
+  }
 
   return {
     place_id: placeId,
     place_name: place.name,
-    place_path: getPlacePath(db, placeId),
+    place_path: await getPlacePath(db, placeId),
     events,
   };
 }
@@ -622,25 +628,25 @@ export function getPlaceHistory(db: Database, placeId: string): PlaceHistory | n
  * Analyzes a person's data for research gaps: missing birth, death, parents,
  * unsourced events, and events without places.
  */
-export function getResearchGaps(db: Database, personId: string): ResearchGaps | null {
-  const person = getPerson(db, personId);
+export async function getResearchGaps(db: Database, personId: string): Promise<ResearchGaps | null> {
+  const person = await getPerson(db, personId);
   if (!person) return null;
 
-  const names = getPersonNames(db, personId);
-  const rawEvents = getEventsForPerson(db, personId);
-  const events = resolveEventsPlaces(db, rawEvents);
+  const names = await getPersonNames(db, personId);
+  const rawEvents = await getEventsForPerson(db, personId);
+  const events = await resolveEventsPlaces(db, rawEvents);
 
   const hasBirth = events.some(e => e.event_type === 'birth');
   const hasDeath = events.some(e => e.event_type === 'death');
 
   // Check for parents
-  const rels = getRelationshipsOfPerson(db, personId);
+  const rels = await getRelationshipsOfPerson(db, personId);
   const isChild = rels.some(r => r.type === 'parent_child' && r.person2_id === personId);
 
   // Find unsourced events (no citations)
   const unsourced: EventWithPlace[] = [];
   for (const event of events) {
-    const citations = getCitationsForEvent(db, event.id);
+    const citations = await getCitationsForEvent(db, event.id);
     if (citations.length === 0) {
       unsourced.push(event);
     }
@@ -664,15 +670,15 @@ export function getResearchGaps(db: Database, personId: string): ResearchGaps | 
  * Returns a merged chronological timeline of a person's events plus family events
  * (spouse's birth/death, children's births/deaths).
  */
-export function getTimeline(
+export async function getTimeline(
   db: Database,
   personId: string,
   options: TimelineOptions = {},
-): TimelineEntry[] | null {
-  const person = getPerson(db, personId);
+): Promise<TimelineEntry[] | null> {
+  const person = await getPerson(db, personId);
   if (!person) return null;
 
-  const names = getPersonNames(db, personId);
+  const names = await getPersonNames(db, personId);
   const primaryName = getPrimaryName(names);
   const birthSurnameForDisplay = getBirthSurnameForDisplay(names);
 
@@ -682,13 +688,13 @@ export function getTimeline(
   // partner-name lookup on self couple events and for kin-event emission
   // further down. Hoisting out of the per-event loop keeps the timeline
   // O(rels) instead of O(events × rels).
-  const focalRels = getRelationshipsOfPerson(db, personId);
+  const focalRels = await getRelationshipsOfPerson(db, personId);
 
   // Cache partner data per couple-relationship-id so a person with
   // multiple events tied to the same marriage (e.g. marriage + divorce)
   // doesn't re-query names per event.
   const partnerByRelId = new Map<string, TimelinePartner | null>();
-  function lookupPartner(relationshipId: string): TimelinePartner | null {
+  async function lookupPartner(relationshipId: string): Promise<TimelinePartner | null> {
     if (partnerByRelId.has(relationshipId)) return partnerByRelId.get(relationshipId)!;
     const r = focalRels.find(rr => rr.id === relationshipId && rr.type === 'couple');
     if (!r) {
@@ -700,7 +706,7 @@ export function getTimeline(
       partnerByRelId.set(relationshipId, null);
       return null;
     }
-    const otherNames = getPersonNames(db, otherId);
+    const otherNames = await getPersonNames(db, otherId);
     const otherPrimary = getPrimaryName(otherNames);
     const otherBirthSurname = getBirthSurnameForDisplay(otherNames);
     const partner: TimelinePartner = {
@@ -716,10 +722,10 @@ export function getTimeline(
   // Person's own events. Self-events tied to a couple relationship
   // (marriage, divorce, etc.) carry an optional `partner` payload so the
   // renderer can compose "<event> — <partner>" labels at render time.
-  const ownEvents = resolveEventsPlaces(db, getEventsForPerson(db, personId));
+  const ownEvents = await resolveEventsPlaces(db, await getEventsForPerson(db, personId));
   for (const event of ownEvents) {
     const partner: TimelinePartner | null = event.relationship_id
-      ? lookupPartner(event.relationship_id)
+      ? await lookupPartner(event.relationship_id)
       : null;
     entries.push({
       event,
@@ -780,7 +786,7 @@ export function getTimeline(
     const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
     if (!otherId) continue;
 
-    const otherNames = getPersonNames(db, otherId);
+    const otherNames = await getPersonNames(db, otherId);
     const otherPrimary = getPrimaryName(otherNames);
     const otherBirthSurname = getBirthSurnameForDisplay(otherNames);
 
@@ -808,7 +814,7 @@ export function getTimeline(
       const isFoster = subtype === 'foster';
       const isStep = subtype === 'step';
       if (subjectIsParent) {
-        const childPerson = getPerson(db, otherId);
+        const childPerson = await getPerson(db, otherId);
         const childSex = childPerson?.sex ?? 'U';
         if (isFoster) {
           label = childSex === 'M' ? 'foster_son' : childSex === 'F' ? 'foster_daughter' : 'foster_child';
@@ -827,7 +833,7 @@ export function getTimeline(
       } else {
         // Subject is the child of `other` — emit only the parent's death,
         // labelled by the parent's sex AND the parent_child subtype.
-        const parentPerson = getPerson(db, otherId);
+        const parentPerson = await getPerson(db, otherId);
         const parentSex = parentPerson?.sex ?? 'U';
         if (isFoster) {
           label = parentSex === 'M' ? 'foster_father' : parentSex === 'F' ? 'foster_mother' : 'foster_parent';
@@ -851,7 +857,7 @@ export function getTimeline(
       continue;
     }
 
-    const otherEvents = resolveEventsPlaces(db, getEventsForPerson(db, otherId));
+    const otherEvents = await resolveEventsPlaces(db, await getEventsForPerson(db, otherId));
     for (const event of otherEvents) {
       if (!relevantTypes.includes(event.event_type)) continue;
 
@@ -887,7 +893,7 @@ export function getTimeline(
       const childId = r.person2_id;
       if (!childId) continue;
 
-      const childPerson = getPerson(db, childId);
+      const childPerson = await getPerson(db, childId);
       const childSex = childPerson?.sex ?? 'U';
       const childSubtype = (r.subtype ?? '').toLowerCase();
       const childLabel: TimelineRelationshipLabel =
@@ -896,14 +902,14 @@ export function getTimeline(
           : childSubtype === 'step'
           ? (childSex === 'M' ? 'step_son' : childSex === 'F' ? 'step_daughter' : 'step_child')
           : (childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child');
-      const childNames = getPersonNames(db, childId);
+      const childNames = await getPersonNames(db, childId);
       const childPrimary = getPrimaryName(childNames);
       const childBirthSurname = getBirthSurnameForDisplay(childNames);
 
-      const childRels = getRelationshipsOfPerson(db, childId);
+      const childRels = await getRelationshipsOfPerson(db, childId);
       for (const cr of childRels) {
         if (cr.type !== 'couple') continue;
-        const coupleEvents = resolveEventsPlaces(db, getEventsForRelationship(db, cr.id));
+        const coupleEvents = await resolveEventsPlaces(db, await getEventsForRelationship(db, cr.id));
         for (const event of coupleEvents) {
           if (event.event_type !== 'marriage') continue;
           // Strict lifetime: a child's marriage after the subject's death is
@@ -980,12 +986,12 @@ const MAX_LIFESPAN = 110;
  * placeName is the name of the place from the most recent event at or before
  * the target year that has a place_id.
  */
-export function getAliveInYear(db: Database, year: number): AliveInYearResult {
+export async function getAliveInYear(db: Database, year: number): Promise<AliveInYearResult> {
   // Bulk pre-load — replaces a per-person correlated-subquery storm that
   // saturated CPU and exhausted the WASM heap on real-sized trees.
-  const livingDerivation = loadLivingDerivation(db);
+  const livingDerivation = await loadLivingDerivation(db);
 
-  const birthYearRows = queryAll<{ person_id: string; year: number }>(db, `
+  const birthYearRows = await queryAll<{ person_id: string; year: number }>(db, `
     SELECT ep.person_id, MIN(CAST(substr(e.date_value, 1, 4) AS INTEGER)) AS year
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -994,7 +1000,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   `);
   const birthYearByPerson = new Map(birthYearRows.map(r => [r.person_id, r.year]));
 
-  const deathYearRows = queryAll<{ person_id: string; year: number }>(db, `
+  const deathYearRows = await queryAll<{ person_id: string; year: number }>(db, `
     SELECT ep.person_id, MIN(CAST(substr(e.date_value, 1, 4) AS INTEGER)) AS year
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -1003,7 +1009,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   `);
   const deathYearByPerson = new Map(deathYearRows.map(r => [r.person_id, r.year]));
 
-  const eventInYearRows = queryAll<{ person_id: string }>(db, `
+  const eventInYearRows = await queryAll<{ person_id: string }>(db, `
     SELECT DISTINCT ep.person_id
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -1013,7 +1019,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   const personsWithEventInYear = new Set(eventInYearRows.map(r => r.person_id));
 
   // Latest place at-or-before target year per person — single scan, JS reduce.
-  const placeRows = queryAll<{ person_id: string; date_value: string; place_name: string }>(db, `
+  const placeRows = await queryAll<{ person_id: string; date_value: string; place_name: string }>(db, `
     SELECT ep.person_id, e.date_value, pl.name AS place_name
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -1040,7 +1046,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     date_from: string | null;
     sort_order: number;
   };
-  const nameRows = queryAll<NameRow>(db, `
+  const nameRows = await queryAll<NameRow>(db, `
     SELECT id, person_id, given_name, surname, name_type, date_from, sort_order
     FROM person_names
   `);
@@ -1052,7 +1058,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
   }
 
   // Earliest primary-role birth event date per person — used to date 'birth' name_type.
-  const birthEventDateRows = queryAll<{ person_id: string; date_value: string }>(db, `
+  const birthEventDateRows = await queryAll<{ person_id: string; date_value: string }>(db, `
     SELECT ep.person_id, MIN(e.date_value) AS date_value
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -1113,7 +1119,7 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     return best?.surname ?? null;
   }
 
-  const personRows = queryAll<{ id: string; sex: 'M' | 'F' | 'U' }>(db, `SELECT id, sex FROM persons`);
+  const personRows = await queryAll<{ id: string; sex: 'M' | 'F' | 'U' }>(db, `SELECT id, sex FROM persons`);
 
   const alive: AliveInYearPerson[] = [];
   for (const p of personRows) {
@@ -1154,11 +1160,11 @@ export function getAliveInYear(db: Database, year: number): AliveInYearResult {
     });
   }
 
-  const coupleRows = queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db,
+  const coupleRows = await queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db,
     `SELECT id, person1_id, person2_id FROM relationships WHERE type = 'couple'`
   );
 
-  const parentChildRows = queryAll<{ parent_id: string | null; child_id: string | null }>(db,
+  const parentChildRows = await queryAll<{ parent_id: string | null; child_id: string | null }>(db,
     `SELECT person1_id AS parent_id, person2_id AS child_id
      FROM relationships WHERE type = 'parent_child'`
   );

@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import type { GenealogyEvent } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
-export function createEvent(
+export async function createEvent(
   db: Database,
   data: {
     event_type: string;
@@ -17,9 +17,9 @@ export function createEvent(
     value?: string | null;
     notes?: string;
   }
-): GenealogyEvent {
+): Promise<GenealogyEvent> {
   const id = uuid();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, value, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
@@ -35,15 +35,15 @@ export function createEvent(
     data.value ?? null,
     data.notes ?? ''
   ]);
-  return getEvent(db, id)!;
+  return (await getEvent(db, id))!;
 }
 
-export function getEvent(db: Database, id: string): GenealogyEvent | null {
-  return queryOne<GenealogyEvent>(db, `SELECT * FROM events WHERE id = ?`, [id]) ?? null;
+export async function getEvent(db: Database, id: string): Promise<GenealogyEvent | null> {
+  return (await queryOne<GenealogyEvent>(db, `SELECT * FROM events WHERE id = ?`, [id])) ?? null;
 }
 
-export function getEventsForPerson(db: Database, personId: string): (GenealogyEvent & { citation_count: number })[] {
-  return queryAll<GenealogyEvent & { citation_count: number }>(db, `
+export async function getEventsForPerson(db: Database, personId: string): Promise<(GenealogyEvent & { citation_count: number })[]> {
+  return await queryAll<GenealogyEvent & { citation_count: number }>(db, `
     SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count, p.name AS place_name
     FROM events e
     JOIN event_participants ep ON ep.event_id = e.id
@@ -54,8 +54,8 @@ export function getEventsForPerson(db: Database, personId: string): (GenealogyEv
   `, [personId, personId]);
 }
 
-export function getEventsForRelationship(db: Database, relationshipId: string): (GenealogyEvent & { citation_count: number })[] {
-  return queryAll<GenealogyEvent & { citation_count: number }>(db, `
+export async function getEventsForRelationship(db: Database, relationshipId: string): Promise<(GenealogyEvent & { citation_count: number })[]> {
+  return await queryAll<GenealogyEvent & { citation_count: number }>(db, `
     SELECT e.*, COALESCE(cc.cnt, 0) AS citation_count, p.name AS place_name
     FROM events e
     LEFT JOIN (SELECT event_id, COUNT(*) AS cnt FROM citations WHERE event_id IN (SELECT e2.id FROM events e2 WHERE e2.relationship_id = ?) GROUP BY event_id) cc ON cc.event_id = e.id
@@ -65,8 +65,8 @@ export function getEventsForRelationship(db: Database, relationshipId: string): 
   `, [relationshipId, relationshipId]);
 }
 
-export function getEventsForPlace(db: Database, placeId: string): (GenealogyEvent & { participant_names: string })[] {
-  return queryAll<GenealogyEvent & { participant_names: string }>(db, `
+export async function getEventsForPlace(db: Database, placeId: string): Promise<(GenealogyEvent & { participant_names: string })[]> {
+  return await queryAll<GenealogyEvent & { participant_names: string }>(db, `
     SELECT e.*,
       COALESCE(
         GROUP_CONCAT(
@@ -86,24 +86,24 @@ export function getEventsForPlace(db: Database, placeId: string): (GenealogyEven
   `, [placeId]);
 }
 
-export function updateEvent(
+export async function updateEvent(
   db: Database,
   id: string,
   data: Partial<Omit<GenealogyEvent, 'id' | 'created_at' | 'updated_at'>>
-): GenealogyEvent | null {
+): Promise<GenealogyEvent | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
   for (const [key, value] of Object.entries(data)) {
     fields.push(`${key} = ?`);
     values.push(value ?? null);
   }
-  if (fields.length === 0) return getEvent(db, id);
+  if (fields.length === 0) return await getEvent(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  runSql(db, `UPDATE events SET ${fields.join(', ')} WHERE id = ?`, values);
-  return getEvent(db, id);
+  await runSql(db, `UPDATE events SET ${fields.join(', ')} WHERE id = ?`, values);
+  return await getEvent(db, id);
 }
 
-export function deleteEvent(db: Database, id: string): boolean {
-  return runSqlChanges(db, `DELETE FROM events WHERE id = ?`, [id]) > 0;
+export async function deleteEvent(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, `DELETE FROM events WHERE id = ?`, [id])) > 0;
 }

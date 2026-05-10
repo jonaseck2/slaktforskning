@@ -8,9 +8,9 @@ export interface ScopeOptions {
   everyone?: boolean;
 }
 
-export function computeScope(db: Database, opts: ScopeOptions): Set<string> {
+export async function computeScope(db: Database, opts: ScopeOptions): Promise<Set<string>> {
   if (opts.everyone) {
-    const rows = queryAll<{ id: string }>(db, 'SELECT id FROM persons');
+    const rows = await queryAll<{ id: string }>(db, 'SELECT id FROM persons');
     return new Set(rows.map(r => r.id));
   }
   if (!opts.focusId) return new Set();
@@ -23,7 +23,7 @@ export function computeScope(db: Database, opts: ScopeOptions): Set<string> {
   for (let g = 0; g < ancestors; g++) {
     const next = new Set<string>();
     for (const id of frontier) {
-      const parents = queryAll<{ person1_id: string }>(
+      const parents = await queryAll<{ person1_id: string }>(
         db,
         "SELECT person1_id FROM relationships WHERE type='parent_child' AND person2_id=?",
         [id]
@@ -43,7 +43,7 @@ export function computeScope(db: Database, opts: ScopeOptions): Set<string> {
   for (let g = 0; g < descendants; g++) {
     const next = new Set<string>();
     for (const id of frontier) {
-      const children = queryAll<{ person2_id: string }>(
+      const children = await queryAll<{ person2_id: string }>(
         db,
         "SELECT person2_id FROM relationships WHERE type='parent_child' AND person1_id=?",
         [id]
@@ -62,7 +62,7 @@ export function computeScope(db: Database, opts: ScopeOptions): Set<string> {
   // Add spouses of everyone in scope
   const inScope = [...result];
   for (const id of inScope) {
-    const couples = queryAll<{ person1_id: string; person2_id: string }>(
+    const couples = await queryAll<{ person1_id: string; person2_id: string }>(
       db,
       "SELECT person1_id, person2_id FROM relationships WHERE type='couple' AND (person1_id=? OR person2_id=?)",
       [id, id]

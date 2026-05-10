@@ -22,16 +22,16 @@ export interface ArchiveExportReport {
  * - family_tree.ged (GEDCOM file with rewritten media paths)
  * - media/ directory with all referenced media files
  */
-export function exportArchive(
+export async function exportArchive(
   db: Database,
   outputPath: string,
   dbDir: string,
   options?: { gedcomVersion?: '5.5.1' | '7.0' },
-): ArchiveExportReport {
+): Promise<ArchiveExportReport> {
   const version = options?.gedcomVersion ?? '5.5.1';
-  const { ged, report: gedcomReport } = exportGedcom(db, version);
+  const { ged, report: gedcomReport } = await exportGedcom(db, version);
 
-  const allMedia = listMedia(db);
+  const allMedia = await listMedia(db);
   const zipEntries: Record<string, Uint8Array> = {};
   let mediaCount = 0;
   const missingMedia: string[] = [];

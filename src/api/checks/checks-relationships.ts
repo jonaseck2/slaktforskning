@@ -3,13 +3,13 @@ import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { loadPersonEvents, extractYear } from './check-utils';
 
-export function checkParenthoodAge(db: Database): CheckResult[] {
+export async function checkParenthoodAge(db: Database): Promise<CheckResult[]> {
   // In parent_child relationships: person1_id = parent, person2_id = child.
   // Years are extracted in JS via extractYear() so we don't depend on
   // SUBSTR(date_value, 1, 4) returning a numeric prefix — that assumed ISO
   // and silently parsed the day-of-month as the year on free-form strings
   // like "26 Jan 1763". See parseLooseDate in check-utils.ts.
-  const rows = queryAll<{
+  const rows = (await queryAll<{
     rel_id: string;
     parent_id: string;
     child_id: string;
@@ -42,7 +42,7 @@ export function checkParenthoodAge(db: Database): CheckResult[] {
       AND r.person2_id IS NOT NULL
       AND b_parent.date_value IS NOT NULL
       AND b_child.date_value IS NOT NULL
-  `).map(row => ({
+  `)).map(row => ({
     ...row,
     parent_birth_year: extractYear(row.parent_birth_value),
     child_birth_year: extractYear(row.child_birth_value),
@@ -139,9 +139,9 @@ export function checkParenthoodAge(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkSiblingAgeLarge(db: Database): CheckResult[] {
+export async function checkSiblingAgeLarge(db: Database): Promise<CheckResult[]> {
   // Single query: all parent-child pairs with child birth years
-  const rawRows = queryAll<{ parent_id: string; person_id: string; birth_value: string; rel_id: string }>(db, `
+  const rawRows = await queryAll<{ parent_id: string; person_id: string; birth_value: string; rel_id: string }>(db, `
     SELECT r.person1_id AS parent_id, r.person2_id AS person_id,
            b.date_value AS birth_value,
            r.id AS rel_id
@@ -182,8 +182,8 @@ export function checkSiblingAgeLarge(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkDuplicateParentChild(db: Database): CheckResult[] {
-  const rows = queryAll<{ rel_id: string; person1_id: string; person2_id: string }>(db, `
+export async function checkDuplicateParentChild(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ rel_id: string; person1_id: string; person2_id: string }>(db, `
     SELECT id AS rel_id, person1_id, person2_id
     FROM relationships
     WHERE type = 'parent_child'
@@ -202,8 +202,8 @@ export function checkDuplicateParentChild(db: Database): CheckResult[] {
   }));
 }
 
-export function checkMultipleBiologicalParents(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; cnt: number }>(db, `
+export async function checkMultipleBiologicalParents(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ person_id: string; cnt: number }>(db, `
     SELECT person2_id AS person_id, COUNT(*) AS cnt
     FROM relationships
     WHERE type = 'parent_child'
@@ -222,14 +222,14 @@ export function checkMultipleBiologicalParents(db: Database): CheckResult[] {
   }));
 }
 
-export function checkNoParents(db: Database): CheckResult[] {
+export async function checkNoParents(db: Database): Promise<CheckResult[]> {
   const hasParents = new Set(
-    queryAll<{ person2_id: string }>(db, `
+    (await queryAll<{ person2_id: string }>(db, `
       SELECT DISTINCT person2_id FROM relationships
       WHERE type = 'parent_child' AND person2_id IS NOT NULL
-    `).map(r => r.person2_id)
+    `)).map(r => r.person2_id)
   );
-  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+  const allPersonIds = await queryAll<{ id: string }>(db, `SELECT id FROM persons`);
   return allPersonIds
     .filter(r => !hasParents.has(r.id))
     .map(r => ({
@@ -241,9 +241,9 @@ export function checkNoParents(db: Database): CheckResult[] {
     }));
 }
 
-export function checkCircularAncestry(db: Database): CheckResult[] {
+export async function checkCircularAncestry(db: Database): Promise<CheckResult[]> {
   // Load all parent_child links once
-  const links = queryAll<{ child_id: string; parent_id: string }>(db, `
+  const links = await queryAll<{ child_id: string; parent_id: string }>(db, `
     SELECT person2_id AS child_id, person1_id AS parent_id
     FROM relationships
     WHERE type = 'parent_child'
@@ -319,9 +319,9 @@ export function checkCircularAncestry(db: Database): CheckResult[] {
   }));
 }
 
-export function checkDuplicateRelationship(db: Database): CheckResult[] {
+export async function checkDuplicateRelationship(db: Database): Promise<CheckResult[]> {
   // Load all relationships once, deduplicate in JS to avoid O(n²) self-join
-  const rows = queryAll<{ rel_id: string; type: string; person1_id: string; person2_id: string }>(db, `
+  const rows = await queryAll<{ rel_id: string; type: string; person1_id: string; person2_id: string }>(db, `
     SELECT id AS rel_id, type, person1_id, person2_id
     FROM relationships
     WHERE person1_id IS NOT NULL AND person2_id IS NOT NULL
@@ -348,9 +348,9 @@ export function checkDuplicateRelationship(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkMarriageAge(db: Database): CheckResult[] {
-  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
-  const births = loadPersonEvents(db, 'birth', ['exact', 'calculated', 'about']);
+export async function checkMarriageAge(db: Database): Promise<CheckResult[]> {
+  const marriages = await loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const births = await loadPersonEvents(db, 'birth', ['exact', 'calculated', 'about']);
 
   const results: CheckResult[] = [];
   for (const [personId, personMarriages] of marriages) {
@@ -388,9 +388,9 @@ export function checkMarriageAge(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkMarriageAfterDeath(db: Database): CheckResult[] {
-  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
-  const deaths = loadPersonEvents(db, 'death', ['exact', 'calculated']);
+export async function checkMarriageAfterDeath(db: Database): Promise<CheckResult[]> {
+  const marriages = await loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const deaths = await loadPersonEvents(db, 'death', ['exact', 'calculated']);
 
   const results: CheckResult[] = [];
   for (const [personId, personMarriages] of marriages) {
@@ -418,9 +418,9 @@ export function checkMarriageAfterDeath(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkMarriageBeforeBirth(db: Database): CheckResult[] {
-  const marriages = loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
-  const births = loadPersonEvents(db, 'birth', ['exact', 'calculated']);
+export async function checkMarriageBeforeBirth(db: Database): Promise<CheckResult[]> {
+  const marriages = await loadPersonEvents(db, 'marriage', ['exact', 'calculated']);
+  const births = await loadPersonEvents(db, 'birth', ['exact', 'calculated']);
 
   const results: CheckResult[] = [];
   for (const [personId, personMarriages] of marriages) {
@@ -448,8 +448,8 @@ export function checkMarriageBeforeBirth(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkCoupleWithSelf(db: Database): CheckResult[] {
-  const rows = queryAll<{ rel_id: string; person1_id: string }>(db, `
+export async function checkCoupleWithSelf(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ rel_id: string; person1_id: string }>(db, `
     SELECT id AS rel_id, person1_id
     FROM relationships
     WHERE type = 'couple'

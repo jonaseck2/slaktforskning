@@ -37,13 +37,13 @@ export interface CheckResult {
  * product in WASM SQLite that can take 100+ seconds on 20k-person databases.
  * Two separate queries + a JS join is dramatically faster.
  */
-export function loadPersonEvents(
+export async function loadPersonEvents(
   db: Database,
   eventType: string,
   dateTypes: string[] = ['exact', 'calculated'],
-): Map<string, Array<{ event_id: string; date_value: string }>> {
+): Promise<Map<string, Array<{ event_id: string; date_value: string }>>> {
   const placeholders = dateTypes.map(() => '?').join(', ');
-  const rows = queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
+  const rows = await queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
     SELECT ep.person_id, e.id AS event_id, e.date_value
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id
@@ -62,8 +62,8 @@ export function loadPersonEvents(
  * Used by NOT-EXISTS-style checks to avoid correlated subqueries that run
  * O(n) SQL lookups per row.
  */
-export function personIdsWithEvent(db: Database, eventType: string): Set<string> {
-  const rows = queryAll<{ person_id: string }>(db, `
+export async function personIdsWithEvent(db: Database, eventType: string): Promise<Set<string>> {
+  const rows = await queryAll<{ person_id: string }>(db, `
     SELECT DISTINCT ep.person_id
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id

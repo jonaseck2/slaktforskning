@@ -15,11 +15,11 @@ import { undoManager } from './undo';
 
 // ---- Person ----
 
-export function createPersonUndo(
+export async function createPersonUndo(
   db: Database,
   data: Parameters<typeof persons.createPerson>[1]
-): Person {
-  const result = persons.createPerson(db, data);
+): Promise<Person> {
+  const result = await persons.createPerson(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -30,15 +30,15 @@ export function createPersonUndo(
   return result;
 }
 
-export function updatePersonUndo(
+export async function updatePersonUndo(
   db: Database,
   id: string,
   data: Parameters<typeof persons.updatePerson>[2]
-): Person | null {
-  const old = persons.getPerson(db, id);
+): Promise<Person | null> {
+  const old = await persons.getPerson(db, id);
   if (!old) return null;
   const oldData = { sex: old.sex, notes: old.notes };
-  const result = persons.updatePerson(db, id, data);
+  const result = await persons.updatePerson(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updatePerson',
@@ -48,22 +48,22 @@ export function updatePersonUndo(
   return result;
 }
 
-export function deletePersonUndo(
+export async function deletePersonUndo(
   db: Database,
   id: string
-): boolean {
-  const person = persons.getPerson(db, id);
+): Promise<boolean> {
+  const person = await persons.getPerson(db, id);
   if (!person) return false;
-  const names = persons.getPersonNames(db, id);
-  const rels = relationships.getRelationshipsOfPerson(db, id);
-  const personEvents = events.getEventsForPerson(db, id);
+  const names = await persons.getPersonNames(db, id);
+  const rels = await relationships.getRelationshipsOfPerson(db, id);
+  const personEvents = await events.getEventsForPerson(db, id);
   const participantsByEvent: Record<string, EventParticipant[]> = {};
   for (const ev of personEvents) {
-    participantsByEvent[ev.id] = relationships.getEventParticipants(db, ev.id);
+    participantsByEvent[ev.id] = await relationships.getEventParticipants(db, ev.id);
   }
-  const identifiers = persons.getPersonIdentifiers(db, id);
+  const identifiers = await persons.getPersonIdentifiers(db, id);
 
-  const result = persons.deletePerson(db, id);
+  const result = await persons.deletePerson(db, id);
   if (!result) return false;
 
   undoManager.push({
@@ -126,11 +126,11 @@ export function deletePersonUndo(
   return true;
 }
 
-export function createPersonWithEventUndo(
+export async function createPersonWithEventUndo(
   db: Database,
   args: CreatePersonWithEventArgs,
-): CreatePersonWithEventResult {
-  const result = createPersonWithEventWorkflow(db, args);
+): Promise<CreatePersonWithEventResult> {
+  const result = await createPersonWithEventWorkflow(db, args);
   const personId = result.person.id;
   const eventId = result.event?.id ?? null;
   const citationId = result.citation?.id ?? null;
@@ -149,12 +149,12 @@ export function createPersonWithEventUndo(
 
 // ---- PersonName ----
 
-export function addPersonNameUndo(
+export async function addPersonNameUndo(
   db: Database,
   personId: string,
   data: Parameters<typeof persons.addPersonName>[2]
-): PersonName {
-  const result = persons.addPersonName(db, personId, data);
+): Promise<PersonName> {
+  const result = await persons.addPersonName(db, personId, data);
   const nameId = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -165,18 +165,18 @@ export function addPersonNameUndo(
   return result;
 }
 
-export function updatePersonNameUndo(
+export async function updatePersonNameUndo(
   db: Database,
   id: string,
   data: Parameters<typeof persons.updatePersonName>[2]
-): PersonName | null {
-  const oldName = queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]);
+): Promise<PersonName | null> {
+  const oldName = await queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]);
   if (!oldName) return null;
   const oldData: Record<string, unknown> = {};
   for (const key of Object.keys(data) as string[]) {
     oldData[key] = (oldName as Record<string, unknown>)[key];
   }
-  const result = persons.updatePersonName(db, id, data);
+  const result = await persons.updatePersonName(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updatePersonName',
@@ -186,13 +186,13 @@ export function updatePersonNameUndo(
   return result;
 }
 
-export function deletePersonNameUndo(
+export async function deletePersonNameUndo(
   db: Database,
   id: string
-): boolean {
-  const old = queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]);
+): Promise<boolean> {
+  const old = await queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]);
   if (!old) return false;
-  const result = persons.deletePersonName(db, id);
+  const result = await persons.deletePersonName(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.deletePersonName',
@@ -209,11 +209,11 @@ export function deletePersonNameUndo(
 
 // ---- Event ----
 
-export function createEventUndo(
+export async function createEventUndo(
   db: Database,
   data: Parameters<typeof events.createEvent>[1]
-): GenealogyEvent {
-  const result = events.createEvent(db, data);
+): Promise<GenealogyEvent> {
+  const result = await events.createEvent(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -224,18 +224,18 @@ export function createEventUndo(
   return result;
 }
 
-export function updateEventUndo(
+export async function updateEventUndo(
   db: Database,
   id: string,
   data: Parameters<typeof events.updateEvent>[2]
-): GenealogyEvent | null {
-  const old = events.getEvent(db, id);
+): Promise<GenealogyEvent | null> {
+  const old = await events.getEvent(db, id);
   if (!old) return null;
   const oldData: Record<string, unknown> = {};
   for (const key of Object.keys(data) as string[]) {
     oldData[key] = (old as Record<string, unknown>)[key];
   }
-  const result = events.updateEvent(db, id, data);
+  const result = await events.updateEvent(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateEvent',
@@ -245,14 +245,14 @@ export function updateEventUndo(
   return result;
 }
 
-export function deleteEventUndo(
+export async function deleteEventUndo(
   db: Database,
   id: string
-): boolean {
-  const old = events.getEvent(db, id);
+): Promise<boolean> {
+  const old = await events.getEvent(db, id);
   if (!old) return false;
-  const participants = relationships.getEventParticipants(db, id);
-  const result = events.deleteEvent(db, id);
+  const participants = await relationships.getEventParticipants(db, id);
+  const result = await events.deleteEvent(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteEvent',
@@ -279,11 +279,11 @@ export function deleteEventUndo(
 
 // ---- EventParticipant ----
 
-export function addEventParticipantUndo(
+export async function addEventParticipantUndo(
   db: Database,
   data: Parameters<typeof relationships.addEventParticipant>[1]
-): EventParticipant {
-  const result = relationships.addEventParticipant(db, data);
+): Promise<EventParticipant> {
+  const result = await relationships.addEventParticipant(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -294,13 +294,13 @@ export function addEventParticipantUndo(
   return result;
 }
 
-export function removeEventParticipantUndo(
+export async function removeEventParticipantUndo(
   db: Database,
   id: string
-): boolean {
-  const old = queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id]);
+): Promise<boolean> {
+  const old = await queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id]);
   if (!old) return false;
-  const result = relationships.removeEventParticipant(db, id);
+  const result = await relationships.removeEventParticipant(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.removeEventParticipant',
@@ -317,11 +317,11 @@ export function removeEventParticipantUndo(
 
 // ---- Relationship ----
 
-export function createRelationshipUndo(
+export async function createRelationshipUndo(
   db: Database,
   data: Parameters<typeof relationships.createRelationship>[1]
-): Relationship {
-  const result = relationships.createRelationship(db, data);
+): Promise<Relationship> {
+  const result = await relationships.createRelationship(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -332,18 +332,18 @@ export function createRelationshipUndo(
   return result;
 }
 
-export function updateRelationshipUndo(
+export async function updateRelationshipUndo(
   db: Database,
   id: string,
   data: Parameters<typeof relationships.updateRelationship>[2]
-): Relationship | null {
-  const old = relationships.getRelationship(db, id);
+): Promise<Relationship | null> {
+  const old = await relationships.getRelationship(db, id);
   if (!old) return null;
   const oldData: Record<string, unknown> = {};
   for (const key of Object.keys(data) as string[]) {
     oldData[key] = (old as Record<string, unknown>)[key];
   }
-  const result = relationships.updateRelationship(db, id, data);
+  const result = await relationships.updateRelationship(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateRelationship',
@@ -353,14 +353,14 @@ export function updateRelationshipUndo(
   return result;
 }
 
-export function deleteRelationshipUndo(
+export async function deleteRelationshipUndo(
   db: Database,
   id: string
-): boolean {
-  const old = relationships.getRelationship(db, id);
+): Promise<boolean> {
+  const old = await relationships.getRelationship(db, id);
   if (!old) return false;
-  const relEvents = events.getEventsForRelationship(db, id);
-  const result = relationships.deleteRelationship(db, id);
+  const relEvents = await events.getEventsForRelationship(db, id);
+  const result = await relationships.deleteRelationship(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteRelationship',
@@ -386,11 +386,11 @@ export function deleteRelationshipUndo(
 
 // ---- Source ----
 
-export function createSourceUndo(
+export async function createSourceUndo(
   db: Database,
   data: Parameters<typeof sources.createSource>[1]
-): Source {
-  const result = sources.createSource(db, data);
+): Promise<Source> {
+  const result = await sources.createSource(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -401,18 +401,18 @@ export function createSourceUndo(
   return result;
 }
 
-export function updateSourceUndo(
+export async function updateSourceUndo(
   db: Database,
   id: string,
   data: Parameters<typeof sources.updateSource>[2]
-): Source | null {
-  const old = sources.getSource(db, id);
+): Promise<Source | null> {
+  const old = await sources.getSource(db, id);
   if (!old) return null;
   const oldData: Record<string, unknown> = {};
   for (const key of Object.keys(data) as string[]) {
     oldData[key] = (old as Record<string, unknown>)[key];
   }
-  const result = sources.updateSource(db, id, data);
+  const result = await sources.updateSource(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateSource',
@@ -422,14 +422,14 @@ export function updateSourceUndo(
   return result;
 }
 
-export function deleteSourceUndo(
+export async function deleteSourceUndo(
   db: Database,
   id: string
-): boolean {
-  const old = sources.getSource(db, id);
+): Promise<boolean> {
+  const old = await sources.getSource(db, id);
   if (!old) return false;
-  const citations = sources.getCitationsForSource(db, id);
-  const result = sources.deleteSource(db, id);
+  const citations = await sources.getCitationsForSource(db, id);
+  const result = await sources.deleteSource(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteSource',
@@ -452,11 +452,11 @@ export function deleteSourceUndo(
 
 // ---- Citation ----
 
-export function createCitationUndo(
+export async function createCitationUndo(
   db: Database,
   data: Parameters<typeof sources.createCitation>[1]
-): Citation {
-  const result = sources.createCitation(db, data);
+): Promise<Citation> {
+  const result = await sources.createCitation(db, data);
   const id = result.id;
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
@@ -467,18 +467,18 @@ export function createCitationUndo(
   return result;
 }
 
-export function updateCitationUndo(
+export async function updateCitationUndo(
   db: Database,
   id: string,
   data: Parameters<typeof sources.updateCitation>[2]
-): Citation | null {
-  const old = sources.getCitation(db, id);
+): Promise<Citation | null> {
+  const old = await sources.getCitation(db, id);
   if (!old) return null;
   const oldData: Record<string, unknown> = {};
   for (const key of Object.keys(data) as string[]) {
     oldData[key] = (old as Record<string, unknown>)[key];
   }
-  const result = sources.updateCitation(db, id, data);
+  const result = await sources.updateCitation(db, id, data);
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateCitation',
@@ -488,13 +488,13 @@ export function updateCitationUndo(
   return result;
 }
 
-export function deleteCitationUndo(
+export async function deleteCitationUndo(
   db: Database,
   id: string
-): boolean {
-  const old = sources.getCitation(db, id);
+): Promise<boolean> {
+  const old = await sources.getCitation(db, id);
   if (!old) return false;
-  const result = sources.deleteCitation(db, id);
+  const result = await sources.deleteCitation(db, id);
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteCitation',

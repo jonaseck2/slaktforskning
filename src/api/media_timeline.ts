@@ -23,13 +23,13 @@ export interface MediaTimelineItem {
  * Items are deduplicated by media ID (preferring the version with a date),
  * then sorted with dated items first (by date_value), undated at end.
  */
-export function getMediaTimeline(
+export async function getMediaTimeline(
   db: Database,
   entityType: 'person' | 'place',
   entityId: string,
-): MediaTimelineItem[] {
+): Promise<MediaTimelineItem[]> {
   // 1. Get directly linked media (undated by default)
-  const directMedia = getMediaForEntity(db, entityType, entityId);
+  const directMedia = await getMediaForEntity(db, entityType, entityId);
   const items: MediaTimelineItem[] = directMedia.map(m => ({ media: m }));
 
   // 2. Get events and their media
@@ -44,10 +44,10 @@ export function getMediaTimeline(
   }>;
 
   if (entityType === 'person') {
-    events = getEventsForPerson(db, entityId);
+    events = await getEventsForPerson(db, entityId);
   } else {
     // For place: find events with this place_id
-    events = queryAll<{
+    events = await queryAll<{
       id: string;
       event_type: string;
       date_type: string;
@@ -59,12 +59,12 @@ export function getMediaTimeline(
   }
 
   for (const event of events) {
-    const eventMedia = getMediaForEntity(db, 'event', event.id);
+    const eventMedia = await getMediaForEntity(db, 'event', event.id);
 
     // Resolve place name if available
     let placeName: string | undefined;
     if (event.place_id) {
-      const place = queryAll<{ name: string }>(db,
+      const place = await queryAll<{ name: string }>(db,
         'SELECT name FROM places WHERE id = ?', [event.place_id]);
       if (place.length > 0) placeName = place[0].name;
     }

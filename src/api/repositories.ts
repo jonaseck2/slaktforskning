@@ -2,7 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import type { Repository } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 
-export function createRepository(db: Database, data: {
+export async function createRepository(db: Database, data: {
   name: string;
   address?: string | null;
   city?: string | null;
@@ -14,9 +14,9 @@ export function createRepository(db: Database, data: {
   web?: string | null;
   call_number?: string | null;
   notes?: string;
-}): Repository {
+}): Promise<Repository> {
   const id = crypto.randomUUID();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO repositories (id, name, address, city, postal_code, state, country, phone, email, web, call_number, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
@@ -26,44 +26,44 @@ export function createRepository(db: Database, data: {
     data.phone ?? null, data.email ?? null, data.web ?? null,
     data.call_number ?? null, data.notes ?? '',
   ]);
-  return queryOne<Repository>(db, 'SELECT * FROM repositories WHERE id = ?', [id])!;
+  return (await queryOne<Repository>(db, 'SELECT * FROM repositories WHERE id = ?', [id]))!;
 }
 
-export function getRepository(db: Database, id: string): Repository | null {
-  return queryOne<Repository>(db, 'SELECT * FROM repositories WHERE id = ?', [id]) ?? null;
+export async function getRepository(db: Database, id: string): Promise<Repository | null> {
+  return (await queryOne<Repository>(db, 'SELECT * FROM repositories WHERE id = ?', [id])) ?? null;
 }
 
-export function listRepositories(db: Database): Repository[] {
-  return queryAll<Repository>(db, 'SELECT * FROM repositories ORDER BY name');
+export async function listRepositories(db: Database): Promise<Repository[]> {
+  return await queryAll<Repository>(db, 'SELECT * FROM repositories ORDER BY name');
 }
 
-export function updateRepository(db: Database, id: string, data: Partial<Omit<Repository, 'id' | 'created_at'>>): Repository | null {
+export async function updateRepository(db: Database, id: string, data: Partial<Omit<Repository, 'id' | 'created_at'>>): Promise<Repository | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
   const allowed = ['name','address','city','postal_code','state','country','phone','email','web','call_number','notes'] as const;
   for (const key of allowed) {
     if (key in data) { fields.push(`${key} = ?`); values.push((data as Record<string, unknown>)[key] ?? null); }
   }
-  if (fields.length === 0) return getRepository(db, id);
+  if (fields.length === 0) return await getRepository(db, id);
   values.push(id);
-  runSql(db, `UPDATE repositories SET ${fields.join(', ')} WHERE id = ?`, values);
-  return getRepository(db, id);
+  await runSql(db, `UPDATE repositories SET ${fields.join(', ')} WHERE id = ?`, values);
+  return await getRepository(db, id);
 }
 
-export function deleteRepository(db: Database, id: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM repositories WHERE id = ?', [id]) > 0;
+export async function deleteRepository(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM repositories WHERE id = ?', [id])) > 0;
 }
 
-export function linkSourceRepository(db: Database, sourceId: string, repositoryId: string): void {
-  runSql(db, 'INSERT OR IGNORE INTO source_repositories (source_id, repository_id) VALUES (?, ?)', [sourceId, repositoryId]);
+export async function linkSourceRepository(db: Database, sourceId: string, repositoryId: string): Promise<void> {
+  await runSql(db, 'INSERT OR IGNORE INTO source_repositories (source_id, repository_id) VALUES (?, ?)', [sourceId, repositoryId]);
 }
 
-export function unlinkSourceRepository(db: Database, sourceId: string, repositoryId: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM source_repositories WHERE source_id = ? AND repository_id = ?', [sourceId, repositoryId]) > 0;
+export async function unlinkSourceRepository(db: Database, sourceId: string, repositoryId: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM source_repositories WHERE source_id = ? AND repository_id = ?', [sourceId, repositoryId])) > 0;
 }
 
-export function getRepositoriesForSource(db: Database, sourceId: string): Repository[] {
-  return queryAll<Repository>(db, `
+export async function getRepositoriesForSource(db: Database, sourceId: string): Promise<Repository[]> {
+  return await queryAll<Repository>(db, `
     SELECT r.* FROM repositories r
     JOIN source_repositories sr ON sr.repository_id = r.id
     WHERE sr.source_id = ?

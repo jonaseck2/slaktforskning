@@ -59,9 +59,9 @@ export interface Snapshot {
   settings: Record<string, string>;
 }
 
-export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
+export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promise<Snapshot> {
   // 1. Compute scope — the set of person IDs to include
-  const scopeSet = computeScope(db, opts.scope);
+  const scopeSet = await computeScope(db, opts.scope);
 
   // 2. Load only in-scope persons, then derive `living` in JS using two
   //    pre-aggregated set queries (death events + birth years). Replaces
@@ -73,12 +73,12 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   let persons: Person[] = [];
   if (scopeIds.length > 0) {
     const placeholders = scopeIds.map(() => '?').join(',');
-    const rawPersons = queryAll<Omit<Person, 'living'>>(
+    const rawPersons = await queryAll<Omit<Person, 'living'>>(
       db,
       `SELECT * FROM persons WHERE id IN (${placeholders})`,
       scopeIds,
     );
-    const derivation = loadLivingDerivation(db);
+    const derivation = await loadLivingDerivation(db);
     persons = rawPersons.map(r => ({ ...r, living: isLivingDerived(r.id, derivation) }));
   }
 
@@ -95,7 +95,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
 
   // 4. Load all supporting tables in bulk, filter by person/relationship scope
 
-  const allRelationships = queryAll<Relationship>(db, 'SELECT * FROM relationships');
+  const allRelationships = await queryAll<Relationship>(db, 'SELECT * FROM relationships');
   const relationships = allRelationships.filter(r => {
     const p1ok = !r.person1_id || finalPersonIds.has(r.person1_id);
     const p2ok = !r.person2_id || finalPersonIds.has(r.person2_id);
@@ -103,16 +103,16 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   });
   const relationshipIds = new Set(relationships.map(r => r.id));
 
-  const allPersonNames = queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY person_id, sort_order');
+  const allPersonNames = await queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY person_id, sort_order');
   const personNames = allPersonNames.filter(n => finalPersonIds.has(n.person_id));
 
-  const allPersonIdentifiers = queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers');
+  const allPersonIdentifiers = await queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers');
   const personIds = allPersonIdentifiers.filter(i => finalPersonIds.has(i.person_id));
 
   // Events: include events where at least one in-scope person participates,
   // or events linked to an in-scope relationship
-  const allEventParticipants = queryAll<EventParticipant>(db, 'SELECT * FROM event_participants');
-  const allEvents = queryAll<GenealogyEvent>(db, 'SELECT * FROM events');
+  const allEventParticipants = await queryAll<EventParticipant>(db, 'SELECT * FROM event_participants');
+  const allEvents = await queryAll<GenealogyEvent>(db, 'SELECT * FROM events');
 
   // Find event IDs that are relevant to our scope
   const scopedEventIds = new Set<string>();
@@ -136,7 +136,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   const referencedPlaceIds = new Set<string>(
     events.filter(e => e.place_id).map(e => e.place_id as string)
   );
-  const allPlaces = queryAll<Place>(db, 'SELECT * FROM places');
+  const allPlaces = await queryAll<Place>(db, 'SELECT * FROM places');
   const placesById = new Map(allPlaces.map(p => [p.id, p]));
   const placesRaw = allPlaces.filter(p => referencedPlaceIds.has(p.id));
 
@@ -144,11 +144,11 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   // at runtime so we bake coordinates into the snapshot.
   let gazetteers: ReturnType<typeof loadGazetteers> = [];
   try {
-    const configJson = getDbSetting(db, 'gazetteer_config');
+    const configJson = await getDbSetting(db, 'gazetteer_config');
     const config = configJson ? JSON.parse(configJson) as { enabledGazetteers?: string[] } : null;
     const enabled = config?.enabledGazetteers ?? [];
     if (enabled.length > 0) {
-      gazetteers = loadGazetteers({ enabledGazetteers: enabled }, getAllGazetteers(), getImportedGazetteers(db));
+      gazetteers = loadGazetteers({ enabledGazetteers: enabled }, getAllGazetteers(), await getImportedGazetteers(db));
     }
   } catch {
     // If gazetteer loading fails for any reason, ship places without resolved coords.
@@ -173,7 +173,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   });
 
   // Citations: include those linked to scoped events/persons/relationships
-  const allCitations = queryAll<Citation>(db, 'SELECT * FROM citations');
+  const allCitations = await queryAll<Citation>(db, 'SELECT * FROM citations');
   const citations = allCitations.filter(c =>
     (c.event_id && scopedEventIds.has(c.event_id)) ||
     (c.person_id && finalPersonIds.has(c.person_id)) ||
@@ -183,7 +183,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
 
   // Sources: include those referenced by scoped citations
   const referencedSourceIds = new Set(citations.map(c => c.source_id));
-  const allSources = queryAll<Source>(db, 'SELECT * FROM sources');
+  const allSources = await queryAll<Source>(db, 'SELECT * FROM sources');
   const sources = allSources.filter(s => referencedSourceIds.has(s.id));
 
   // Media
@@ -192,7 +192,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   let mediaRegions: MediaRegion[] = [];
 
   if (opts.options.includeMedia) {
-    const allMediaLinks = queryAll<MediaLink>(db, 'SELECT * FROM media_links');
+    const allMediaLinks = await queryAll<MediaLink>(db, 'SELECT * FROM media_links');
     const scopedMediaLinks = allMediaLinks.filter(ml => {
       if (ml.entity_type === 'person') return finalPersonIds.has(ml.entity_id);
       if (opts.options.mediaPersonOnly) return false;
@@ -206,11 +206,11 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
     // even if it has links to other entities (otherwise it'd be exported with
     // no link metadata, leaving an orphan file).
     const linkedMediaIds = new Set(scopedMediaLinks.map(ml => ml.media_id));
-    const allMedia = queryAll<Media>(db, 'SELECT * FROM media');
+    const allMedia = await queryAll<Media>(db, 'SELECT * FROM media');
     media = allMedia.filter(m => linkedMediaIds.has(m.id));
     mediaLinks = scopedMediaLinks;
 
-    const allMediaRegions = queryAll<MediaRegion>(db, 'SELECT * FROM media_regions');
+    const allMediaRegions = await queryAll<MediaRegion>(db, 'SELECT * FROM media_regions');
     mediaRegions = allMediaRegions.filter(r => linkedMediaIds.has(r.media_id));
   }
 
@@ -227,7 +227,7 @@ export function buildSnapshot(db: Database, opts: SnapshotOptions): Snapshot {
   // SPA reads this via the `personNameOptions` store; absent → defaults to
   // ON (matching renderer behaviour). We pass through the explicit author
   // choice when set so the exported site matches what the editor sees.
-  const birthNameRaw = getDbSetting(db, 'display_birth_name_parenthetical');
+  const birthNameRaw = await getDbSetting(db, 'display_birth_name_parenthetical');
   if (birthNameRaw === '1' || birthNameRaw === '0') {
     settings.display_birth_name_parenthetical = birthNameRaw;
   }

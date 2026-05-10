@@ -81,24 +81,24 @@ export function parsePreferredName(givenName: string | undefined | null): { give
  * `{ allowNameless: true }` AND must record a warning in their import report.
  * No other code path may pass that flag.
  */
-export function createPerson(
+export async function createPerson(
   db: Database,
   data: { sex?: Person['sex']; notes?: string; given_name?: string; surname?: string },
   options: { allowNameless?: boolean } = {}
-): Person {
+): Promise<Person> {
   const hasName = !!(data.given_name?.trim() || data.surname?.trim());
   if (!hasName && !options.allowNameless) {
     throw new Error('Cannot create person without a name. Provide given_name or surname.');
   }
 
   const id = uuid();
-  runSql(db,
+  await runSql(db,
     `INSERT INTO persons (id, sex, notes) VALUES (?, ?, ?)`,
     [id, data.sex ?? 'U', data.notes ?? '']
   );
   // Assign display_id = max + 1 for this database. UNIQUE index catches any
   // race; SQLite serializes within a single connection so this is safe.
-  runSql(db,
+  await runSql(db,
     `UPDATE persons SET display_id = (SELECT COALESCE(MAX(display_id), 0) + 1 FROM persons) WHERE id = ?`,
     [id]
   );
@@ -106,7 +106,7 @@ export function createPerson(
   if (hasName) {
     const nameId = uuid();
     const parsed = parsePreferredName(data.given_name);
-    runSql(db,
+    await runSql(db,
       `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order, preferred_name) VALUES (?, ?, ?, ?, 'birth', 0, ?)`,
       [nameId, id, parsed.given_name ?? '', data.surname ?? '', parsed.preferred_name]
     );
@@ -116,12 +116,12 @@ export function createPerson(
   // by definition. Calling getPerson() here ran two correlated EXISTS subqueries
   // against the growing events + event_participants tables on every INSERT, which
   // turned bulk imports into O(n²). Regression introduced in bad81619.
-  const row = queryOne<Omit<Person, 'living'>>(db, `SELECT * FROM persons WHERE id = ?`, [id])!;
+  const row = (await queryOne<Omit<Person, 'living'>>(db, `SELECT * FROM persons WHERE id = ?`, [id]))!;
   return { ...row, living: true };
 }
 
-export function getPerson(db: Database, id: string): Person | null {
-  const row = queryOne<Omit<Person, 'living'> & { living: number }>(
+export async function getPerson(db: Database, id: string): Promise<Person | null> {
+  const row = await queryOne<Omit<Person, 'living'> & { living: number }>(
     db,
     `SELECT p.*, ${livingSqlExpr('p')} AS living FROM persons p WHERE p.id = ?`,
     [id]
@@ -139,9 +139,9 @@ export function getDisplayGivenName(name: { given_name: string | null; preferred
   return name.given_name?.split(' ')[0] ?? '';
 }
 
-export function listPersons(db: Database): (Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[] {
+export async function listPersons(db: Database): Promise<(Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[]> {
   type Row = Omit<Person, 'living'> & { living: number; given_name: string; surname: string; preferred_name: string | null; nickname: string | null };
-  const rows = queryAll<Row>(db, `
+  const rows = await queryAll<Row>(db, `
     SELECT p.*, ${livingSqlExpr('p')} AS living,
            pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
@@ -151,43 +151,43 @@ export function listPersons(db: Database): (Person & { given_name: string; surna
   return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
-export function updatePerson(
+export async function updatePerson(
   db: Database,
   id: string,
   data: Partial<Pick<Person, 'sex' | 'notes'>>
-): Person | null {
+): Promise<Person | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.sex !== undefined) { fields.push('sex = ?'); values.push(data.sex); }
   if (data.notes !== undefined) { fields.push('notes = ?'); values.push(data.notes); }
-  if (fields.length === 0) return getPerson(db, id);
+  if (fields.length === 0) return await getPerson(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  runSql(db, `UPDATE persons SET ${fields.join(', ')} WHERE id = ?`, values);
-  return getPerson(db, id);
+  await runSql(db, `UPDATE persons SET ${fields.join(', ')} WHERE id = ?`, values);
+  return await getPerson(db, id);
 }
 
-export function deletePerson(db: Database, id: string): boolean {
+export async function deletePerson(db: Database, id: string): Promise<boolean> {
   // Clean up polymorphic link rows that don't have FK CASCADE
-  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
-  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
+  await runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
+  await runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
   // Polymorphic ignored-duplicate rows: the FK to persons was dropped in the
   // v0.220.0 migration to allow place/source/media pairs. Cleanup is now
   // explicit, mirroring task_links / group_links above.
-  runSqlChanges(
+  await runSqlChanges(
     db,
     `DELETE FROM ignored_duplicates WHERE entity_type = 'person' AND (person1_id = ? OR person2_id = ?)`,
     [id, id],
   );
-  return runSqlChanges(db, `DELETE FROM persons WHERE id = ?`, [id]) > 0;
+  return (await runSqlChanges(db, `DELETE FROM persons WHERE id = ?`, [id])) > 0;
 }
 
-export function searchPersons(
+export async function searchPersons(
   db: Database,
   query: string,
   relateeId?: string | null,
   limit = 20,
-): (Person & {
+): Promise<(Person & {
   given_name: string;
   surname: string;
   preferred_name: string | null;
@@ -201,7 +201,7 @@ export function searchPersons(
   relation_role: 'parent' | 'child' | 'partner' | 'sibling' | 'godparent' | null;
   birth_year: string | null;
   death_year: string | null;
-})[] {
+})[]> {
   // Split query into tokens so "Linda Ahnstedt" matches "Eva Linda* Marie f. Ahnstedt"
   const tokens = query.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return [];
@@ -233,7 +233,7 @@ export function searchPersons(
     birth_year: string | null;
     death_year: string | null;
   };
-  const rows = queryAll<Row>(db, `
+  const rows = await queryAll<Row>(db, `
     SELECT p.*, ${livingSqlExpr('p')} AS living,
       pn.given_name, pn.surname, pn.preferred_name, pn.nickname,
       ${birthSurnameSql('p.id')} AS birth_surname,
@@ -287,7 +287,7 @@ export function searchPersons(
   return rows.map(r => ({ ...r, living: r.living === 1 }));
 }
 
-export function addPersonName(
+export async function addPersonName(
   db: Database,
   personId: string,
   data: {
@@ -304,16 +304,16 @@ export function addPersonName(
     preferred_name?: string | null;
     nickname?: string | null;
   }
-): PersonName {
+): Promise<PersonName> {
   const id = uuid();
-  const maxOrder = queryOne<{ max_order: number }>(db,
+  const maxOrder = (await queryOne<{ max_order: number }>(db,
     `SELECT COALESCE(MAX(sort_order), -1) as max_order FROM person_names WHERE person_id = ?`,
     [personId]
-  )!;
+  ))!;
   const parsed = parsePreferredName(data.given_name);
   // Explicit preferred_name in data takes precedence over marker-parsed value
   const preferredName = data.preferred_name !== undefined ? data.preferred_name : parsed.preferred_name;
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO person_names
       (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
        name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname)
@@ -328,18 +328,18 @@ export function addPersonName(
     data.patronymic_base ?? null, data.name_qualifier ?? null,
     preferredName ?? null, data.nickname ?? null,
   ]);
-  return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id])!;
+  return (await queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]))!;
 }
 
-export function getPersonNames(db: Database, personId: string): PersonName[] {
-  return queryAll<PersonName>(db, `SELECT * FROM person_names WHERE person_id = ? ORDER BY sort_order`, [personId]);
+export async function getPersonNames(db: Database, personId: string): Promise<PersonName[]> {
+  return await queryAll<PersonName>(db, `SELECT * FROM person_names WHERE person_id = ? ORDER BY sort_order`, [personId]);
 }
 
-export function updatePersonName(
+export async function updatePersonName(
   db: Database,
   id: string,
   data: Partial<Pick<PersonName, 'given_name' | 'surname' | 'name_type' | 'date_from' | 'date_to' | 'name_prefix' | 'name_suffix' | 'patronymic_base' | 'name_qualifier' | 'preferred_name' | 'nickname' | 'sort_order'>>
-): PersonName | null {
+): Promise<PersonName | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
   if (data.given_name !== undefined) {
@@ -361,35 +361,35 @@ export function updatePersonName(
   if (data.preferred_name !== undefined) { fields.push('preferred_name = ?'); values.push(data.preferred_name); }
   if (data.nickname !== undefined) { fields.push('nickname = ?'); values.push(data.nickname); }
   if (data.sort_order !== undefined) { fields.push('sort_order = ?'); values.push(data.sort_order); }
-  if (fields.length === 0) return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]) ?? null;
+  if (fields.length === 0) return (await queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id])) ?? null;
   values.push(id);
-  runSql(db, `UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`, values);
-  return queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id]) ?? null;
+  await runSql(db, `UPDATE person_names SET ${fields.join(', ')} WHERE id = ?`, values);
+  return (await queryOne<PersonName>(db, `SELECT * FROM person_names WHERE id = ?`, [id])) ?? null;
 }
 
-export function deletePersonName(db: Database, id: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM person_names WHERE id = ?', [id]) > 0;
+export async function deletePersonName(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM person_names WHERE id = ?', [id])) > 0;
 }
 
-export function addPersonIdentifier(
+export async function addPersonIdentifier(
   db: Database,
   personId: string,
   data: { identifier_type: PersonIdentifier['identifier_type']; identifier_value: string }
-): PersonIdentifier {
+): Promise<PersonIdentifier> {
   const id = uuid();
-  runSql(db,
+  await runSql(db,
     `INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)`,
     [id, personId, data.identifier_type, data.identifier_value, new Date().toISOString()]
   );
-  return queryOne<PersonIdentifier>(db, 'SELECT * FROM person_identifiers WHERE id = ?', [id])!;
+  return (await queryOne<PersonIdentifier>(db, 'SELECT * FROM person_identifiers WHERE id = ?', [id]))!;
 }
 
-export function getPersonIdentifiers(db: Database, personId: string): PersonIdentifier[] {
-  return queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers WHERE person_id = ? ORDER BY created_at ASC', [personId]);
+export async function getPersonIdentifiers(db: Database, personId: string): Promise<PersonIdentifier[]> {
+  return await queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers WHERE person_id = ? ORDER BY created_at ASC', [personId]);
 }
 
-export function deletePersonIdentifier(db: Database, id: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM person_identifiers WHERE id = ?', [id]) > 0;
+export async function deletePersonIdentifier(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM person_identifiers WHERE id = ?', [id])) > 0;
 }
 
 export type PersonListItem = {
@@ -575,7 +575,7 @@ function orderByFragment(sortBy: ListPersonsSortBy, dir: 'ASC' | 'DESC'): string
   return `${AGG_SQL[sortBy]} ${dir}`;
 }
 
-export function listPersonsPage(
+export async function listPersonsPage(
   db: Database,
   limit: number,
   offset: number,
@@ -584,7 +584,7 @@ export function listPersonsPage(
   query?: string,
   sortBy2?: ListPersonsSortBy | null,
   sortDir2?: ListPersonsSortDir,
-): PersonListItem[] {
+): Promise<PersonListItem[]> {
   // Single SQL pass: select id + display fields + every aggregate count in
   // one correlated-subquery sweep. The plan demands "single SQL per page,
   // never per-row" — see .claude/rules/api.md "Bulk / Batch naming".
@@ -607,7 +607,7 @@ export function listPersonsPage(
   // `birth_surname` is a display-only correlated subquery — see
   // plan birth-name-display-and-quality-check. Computed at read time;
   // never persisted.
-  const page = queryAll<{
+  const page = await queryAll<{
     id: string;
     sex: string;
     display_id: number | null;
@@ -656,7 +656,7 @@ export function listPersonsPage(
   // Pass 2: fetch birth + death events for this page's persons only.
   const ids = page.map(r => r.id);
   const placeholders = ids.map(() => '?').join(',');
-  const eventRows = queryAll<{
+  const eventRows = await queryAll<{
     person_id: string;
     event_type: string;
     date_display: string | null;
@@ -718,12 +718,12 @@ export function listPersonsPage(
  * Missing entries (persons not yet seen by `refreshQualityIssueCounts`)
  * default to 0 in the returned map.
  */
-export function getQualityIssueCounts(db: Database, personIds: string[]): Record<string, number> {
+export async function getQualityIssueCounts(db: Database, personIds: string[]): Promise<Record<string, number>> {
   const result: Record<string, number> = {};
   for (const id of personIds) result[id] = 0;
   if (personIds.length === 0) return result;
   const placeholders = personIds.map(() => '?').join(',');
-  const rows = queryAll<{ person_id: string; issue_count: number }>(db,
+  const rows = await queryAll<{ person_id: string; issue_count: number }>(db,
     `SELECT person_id, issue_count FROM quality_issue_counts WHERE person_id IN (${placeholders})`,
     personIds,
   );
@@ -737,31 +737,31 @@ export function getQualityIssueCounts(db: Database, personIds: string[]): Record
  * `runAllChecks` and bucketing results by personId. Single transaction
  * — wipe + bulk insert. Idempotent.
  */
-export function refreshQualityIssueCounts(db: Database, counts: Record<string, number>): void {
-  runSql(db, 'BEGIN IMMEDIATE');
+export async function refreshQualityIssueCounts(db: Database, counts: Record<string, number>): Promise<void> {
+  await runSql(db, 'BEGIN IMMEDIATE');
   try {
-    runSql(db, 'DELETE FROM quality_issue_counts');
+    await runSql(db, 'DELETE FROM quality_issue_counts');
     for (const [personId, count] of Object.entries(counts)) {
       if (count > 0) {
-        runSql(db,
+        await runSql(db,
           'INSERT INTO quality_issue_counts (person_id, issue_count) VALUES (?, ?)',
           [personId, count],
         );
       }
     }
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
   }
 }
 
-export function countPersons(db: Database, query?: string): number {
+export async function countPersons(db: Database, query?: string): Promise<number> {
   const filter = buildPersonsFilterClause(query);
   if (!filter.where) {
-    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons')?.n ?? 0;
+    return (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons'))?.n ?? 0;
   }
-  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p ${filter.where}`, filter.params)?.n ?? 0;
+  return (await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p ${filter.where}`, filter.params))?.n ?? 0;
 }
 
 // Unsourced = no citations on any event the person participates in, AND no direct person citations
@@ -777,11 +777,11 @@ const UNSOURCED_FILTER = `
   )
 `;
 
-export function listUnsourcedPersonsPage(db: Database, limit: number, offset: number): PersonListItem[] {
+export async function listUnsourcedPersonsPage(db: Database, limit: number, offset: number): Promise<PersonListItem[]> {
   // `birth_surname` is a display-only correlated subquery — see
   // plan birth-name-display-and-quality-check. Computed at read time;
   // never persisted.
-  const page = queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
+  const page = await queryAll<{ id: string; sex: string; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
     SELECT p.id, p.sex,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname,
@@ -799,7 +799,7 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
 
   const ids = page.map(r => r.id);
   const placeholders = ids.map(() => '?').join(',');
-  const eventRows = queryAll<{
+  const eventRows = await queryAll<{
     person_id: string;
     event_type: string;
     date_display: string | null;
@@ -855,11 +855,11 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
   });
 }
 
-export function countUnsourcedPersons(db: Database): number {
-  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p WHERE ${UNSOURCED_FILTER}`)?.n ?? 0;
+export async function countUnsourcedPersons(db: Database): Promise<number> {
+  return (await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM persons p WHERE ${UNSOURCED_FILTER}`))?.n ?? 0;
 }
 
-export function searchPersonsWithDetails(db: Database, query: string): PersonListItem[] {
+export async function searchPersonsWithDetails(db: Database, query: string): Promise<PersonListItem[]> {
   const tokens = query.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return [];
 
@@ -873,7 +873,7 @@ export function searchPersonsWithDetails(db: Database, query: string): PersonLis
   const like = `%${query}%`;
   const tokenParams = tokens.flatMap(t => { const l = `%${t}%`; return [l, l, l]; });
 
-  return queryAll<PersonListItem>(db, `
+  return await queryAll<PersonListItem>(db, `
     ${PERSON_LIST_BASE_QUERY}
     WHERE p.notes LIKE ?
        OR (${tokenClauses})
@@ -881,10 +881,10 @@ export function searchPersonsWithDetails(db: Database, query: string): PersonLis
   `, [like, ...tokenParams]);
 }
 
-export function getPersonDisplayNames(db: Database, ids: string[]): Map<string, string> {
+export async function getPersonDisplayNames(db: Database, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const placeholders = ids.map(() => '?').join(',');
-  const rows = queryAll<{ person_id: string; given_name: string; surname: string }>(db, `
+  const rows = await queryAll<{ person_id: string; given_name: string; surname: string }>(db, `
     SELECT pn.person_id,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname

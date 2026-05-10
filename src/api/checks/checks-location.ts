@@ -20,9 +20,9 @@ function makeYieldBudget(budgetMs = 75): () => Promise<void> {
   };
 }
 
-export function checkSimultaneousDistantLocations(db: Database): CheckResult[] {
+export async function checkSimultaneousDistantLocations(db: Database): Promise<CheckResult[]> {
   // Find events for same person on same exact date with place lat/lon
-  const rows = queryAll<{
+  const rows = await queryAll<{
     person_id: string;
     event1_id: string;
     date_value: string;
@@ -74,7 +74,7 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
   if (gazetteers.length === 0) return [];
 
   // Places used in events that have no manual coordinates
-  const places = queryAll<{ id: string; name: string }>(db, `
+  const places = await queryAll<{ id: string; name: string }>(db, `
     SELECT DISTINCT p.id, p.name
     FROM places p
     JOIN events e ON e.place_id = p.id
@@ -87,7 +87,7 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
   // (an unused place with a dubious name isn't worth flagging).
   const placeIds = places.map(p => p.id);
   const placeholders = placeIds.map(() => '?').join(',');
-  const usedRows = queryAll<{ place_id: string }>(db, `
+  const usedRows = await queryAll<{ place_id: string }>(db, `
     SELECT DISTINCT e.place_id
     FROM events e
     WHERE e.place_id IN (${placeholders})
@@ -95,7 +95,7 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
   const placesInUse = new Set(usedRows.map(r => r.place_id));
 
   // Bulk-load all place hierarchy data for path building (avoids N+1 getPlacePath)
-  const allPlaceRows = queryAll<{ id: string; name: string; parent_place_id: string | null }>(db,
+  const allPlaceRows = await queryAll<{ id: string; name: string; parent_place_id: string | null }>(db,
     'SELECT id, name, parent_place_id FROM places'
   );
   const placeMap = new Map(allPlaceRows.map(r => [r.id, r]));
@@ -278,7 +278,7 @@ export async function checkPlaceMissingComma(
 
   // Same scope as checkGazetteerMatchQuality: places referenced by ≥1
   // event with no manual coordinates.
-  const places = queryAll<{ id: string; name: string }>(db, `
+  const places = await queryAll<{ id: string; name: string }>(db, `
     SELECT DISTINCT p.id, p.name
     FROM places p
     JOIN events e ON e.place_id = p.id
@@ -358,7 +358,7 @@ export async function checkPlaceNameNoRegion(
 ): Promise<CheckResult[]> {
   if (gazetteers.length === 0) return [];
 
-  const places = queryAll<{ id: string; name: string }>(db, `
+  const places = await queryAll<{ id: string; name: string }>(db, `
     SELECT DISTINCT p.id, p.name
     FROM places p
     JOIN events e ON e.place_id = p.id

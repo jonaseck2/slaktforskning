@@ -12,11 +12,11 @@ import { isInvalidDate } from './check-utils';
  * decides whether to fill in or remove. We never fabricate a "Unknown"
  * surname here — Prime Directive.
  */
-export function checkPersonNoName(db: Database): CheckResult[] {
+export async function checkPersonNoName(db: Database): Promise<CheckResult[]> {
   // Pull all rows and decide blankness in JS — SQLite's default TRIM only
   // strips ASCII space, not tab/CR/LF, and getting the WHERE clause to handle
   // every whitespace variant is harder to read than a JS .trim() per row.
-  const nameRows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+  const nameRows = await queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names
   `);
   const personsWithUsableName = new Set<string>();
@@ -25,7 +25,7 @@ export function checkPersonNoName(db: Database): CheckResult[] {
       personsWithUsableName.add(r.person_id);
     }
   }
-  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+  const allPersonIds = await queryAll<{ id: string }>(db, `SELECT id FROM persons`);
   return allPersonIds
     .filter(r => !personsWithUsableName.has(r.id))
     .map(r => ({
@@ -37,11 +37,11 @@ export function checkPersonNoName(db: Database): CheckResult[] {
     }));
 }
 
-export function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): CheckResult[] {
+export async function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'death'): Promise<CheckResult[]> {
   const code = eventType === 'birth' ? 'UNSOURCED_BIRTH' : 'UNSOURCED_DEATH';
   const messageLabel = eventType === 'birth' ? 'Födelsehändelsen' : 'Dödshändelsen';
 
-  const rows = queryAll<{ person_id: string; event_id: string }>(db, `
+  const rows = await queryAll<{ person_id: string; event_id: string }>(db, `
     SELECT ep.person_id, e.id AS event_id
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id AND e.event_type = ?
@@ -60,18 +60,18 @@ export function checkUnsourcedLifeEvent(db: Database, eventType: 'birth' | 'deat
   }));
 }
 
-export function checkInvalidDates(db: Database): CheckResult[] {
+export async function checkInvalidDates(db: Database): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
 
   // Check events.date_value and events.date_value_end
-  const eventRows = queryAll<{ id: string; date_value: string | null; date_value_end: string | null }>(db, `
+  const eventRows = await queryAll<{ id: string; date_value: string | null; date_value_end: string | null }>(db, `
     SELECT id, date_value, date_value_end FROM events
     WHERE date_value IS NOT NULL OR date_value_end IS NOT NULL
   `);
 
   // Build event→person map for personIds
   const eventPersonMap = new Map<string, string[]>();
-  const epRows = queryAll<{ event_id: string; person_id: string }>(db, `
+  const epRows = await queryAll<{ event_id: string; person_id: string }>(db, `
     SELECT event_id, person_id FROM event_participants
   `);
   for (const ep of epRows) {
@@ -112,8 +112,8 @@ export function checkInvalidDates(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkUnrelatedPerson(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string }>(db, `
+export async function checkUnrelatedPerson(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string }>(db, `
     SELECT p.id
     FROM persons p
     WHERE NOT EXISTS (
@@ -135,13 +135,13 @@ export function checkUnrelatedPerson(db: Database): CheckResult[] {
   }));
 }
 
-export function checkTextControlChars(db: Database): CheckResult[] {
+export async function checkTextControlChars(db: Database): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   // Regex: control chars U+0000–U+001F except tab (09), newline (0A), CR (0D)
   const controlCharRe = /[\x00-\x08\x0B\x0C\x0E-\x1F]/;
 
   // Person names
-  const nameRows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+  const nameRows = await queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names
   `);
   for (const r of nameRows) {
@@ -161,7 +161,7 @@ export function checkTextControlChars(db: Database): CheckResult[] {
   }
 
   // Person notes
-  const noteRows = queryAll<{ id: string; notes: string }>(db, `
+  const noteRows = await queryAll<{ id: string; notes: string }>(db, `
     SELECT id, notes FROM persons WHERE notes IS NOT NULL AND notes != ''
   `);
   for (const r of noteRows) {
@@ -177,11 +177,11 @@ export function checkTextControlChars(db: Database): CheckResult[] {
   }
 
   // Event notes
-  const eventRows = queryAll<{ id: string; notes: string }>(db, `
+  const eventRows = await queryAll<{ id: string; notes: string }>(db, `
     SELECT id, notes FROM events WHERE notes IS NOT NULL AND notes != ''
   `);
   const epMap = new Map<string, string[]>();
-  const allEps = queryAll<{ event_id: string; person_id: string }>(db, `SELECT event_id, person_id FROM event_participants`);
+  const allEps = await queryAll<{ event_id: string; person_id: string }>(db, `SELECT event_id, person_id FROM event_participants`);
   for (const ep of allEps) {
     if (!epMap.has(ep.event_id)) epMap.set(ep.event_id, []);
     epMap.get(ep.event_id)!.push(ep.person_id);
@@ -200,7 +200,7 @@ export function checkTextControlChars(db: Database): CheckResult[] {
   }
 
   // Source titles
-  const sourceRows = queryAll<{ id: string; title: string }>(db, `
+  const sourceRows = await queryAll<{ id: string; title: string }>(db, `
     SELECT id, title FROM sources WHERE title IS NOT NULL AND title != ''
   `);
   for (const r of sourceRows) {
@@ -219,8 +219,8 @@ export function checkTextControlChars(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkMultipleBirthNames(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; cnt: number }>(db, `
+export async function checkMultipleBirthNames(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ person_id: string; cnt: number }>(db, `
     SELECT person_id, COUNT(*) AS cnt
     FROM person_names
     WHERE name_type = 'birth'
@@ -236,7 +236,7 @@ export function checkMultipleBirthNames(db: Database): CheckResult[] {
   }));
 }
 
-export function checkLikelyInlineBirthName(db: Database): CheckResult[] {
+export async function checkLikelyInlineBirthName(db: Database): Promise<CheckResult[]> {
   // Detects user-typed strings like "Anna Andersson (f. Svensson)" packed into
   // a single given_name or surname field. Returns one row per matching
   // person_names record so the user can fix each by hand via the name-edit
@@ -245,7 +245,7 @@ export function checkLikelyInlineBirthName(db: Database): CheckResult[] {
   // PRIME DIRECTIVE: this check FLAGS, never TRANSFORMS. Do not split the
   // detected string back into person_names rows from any code path —
   // the user authored the inline form and the user must split it.
-  const rows = queryAll<{ id: string; person_id: string; given_name: string | null; surname: string | null }>(db, `
+  const rows = await queryAll<{ id: string; person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT id, person_id, given_name, surname FROM person_names
   `);
   // Require whitespace before the open-paren — a parenthetical at the start
@@ -282,11 +282,11 @@ export function checkLikelyInlineBirthName(db: Database): CheckResult[] {
  * PRIME DIRECTIVE: this check FLAGS, never TRANSFORMS. We do not auto-clear
  * the value — the user authored it and the user must remove it.
  */
-export function checkEventDateOriginalNonDate(db: Database): CheckResult[] {
+export async function checkEventDateOriginalNonDate(db: Database): Promise<CheckResult[]> {
   // SQLite's GLOB '*[0-9]*' matches any character in the digit class — fast
   // and index-free since we only filter non-empty rows. The trim guards
   // against rows that are pure whitespace (treated the same as empty).
-  const rows = queryAll<{ event_id: string; person_id: string | null; date_original: string }>(db, `
+  const rows = await queryAll<{ event_id: string; person_id: string | null; date_original: string }>(db, `
     SELECT e.id AS event_id, ep.person_id, e.date_original
     FROM events e
     LEFT JOIN event_participants ep
@@ -319,8 +319,8 @@ export function checkEventDateOriginalNonDate(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkPartialName(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
+export async function checkPartialName(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(db, `
     SELECT person_id, given_name, surname FROM person_names
   `);
   const results: CheckResult[] = [];

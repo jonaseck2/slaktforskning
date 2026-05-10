@@ -50,12 +50,12 @@ function guessMimeType(filePath: string): string {
  * max_dimension is accepted but resizing is not implemented (would require sharp or canvas).
  * Returns null if the media record or file is not found.
  */
-export function getMediaFileBase64(
+export async function getMediaFileBase64(
   db: Database,
   mediaId: string,
   _maxDimension?: number,
-): MediaFileBase64Result | null {
-  const media = queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [mediaId]);
+): Promise<MediaFileBase64Result | null> {
+  const media = await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [mediaId]);
   if (!media || !media.file_ref) return null;
 
   const filePath = media.file_ref;
@@ -73,8 +73,8 @@ export function getMediaFileBase64(
  * Find media items that have NO media_links with entity_type='person'.
  * Ordered by number of other entity links (most connected first).
  */
-export function getUntaggedMedia(db: Database, limit = 20): UntaggedMediaItem[] {
-  return queryAll<UntaggedMediaItem>(db, `
+export async function getUntaggedMedia(db: Database, limit = 20): Promise<UntaggedMediaItem[]> {
+  return await queryAll<UntaggedMediaItem>(db, `
     SELECT m.*,
       COUNT(ml.id) AS entity_link_count,
       COALESCE(GROUP_CONCAT(DISTINCT ml.entity_type), '') AS linked_entity_types
@@ -98,12 +98,12 @@ export function getUntaggedMedia(db: Database, limit = 20): UntaggedMediaItem[] 
  * - Media linked to relationships the person is in
  * - Media linked to family members (parents, children, spouses)
  */
-export function getMediaForPersonContext(db: Database, personId: string): MediaWithContext[] {
+export async function getMediaForPersonContext(db: Database, personId: string): Promise<MediaWithContext[]> {
   const results: MediaWithContext[] = [];
   const seen = new Set<string>();
 
   // 1. Media linked directly to person
-  const directMedia = queryAll<Media & { link_id: string }>(db, `
+  const directMedia = await queryAll<Media & { link_id: string }>(db, `
     SELECT m.*, ml.id AS link_id
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id
@@ -117,7 +117,7 @@ export function getMediaForPersonContext(db: Database, personId: string): MediaW
   }
 
   // 2. Media linked to events the person participated in
-  const eventMedia = queryAll<Media & { event_id: string; event_type: string }>(db, `
+  const eventMedia = await queryAll<Media & { event_id: string; event_type: string }>(db, `
     SELECT DISTINCT m.*, e.id AS event_id, e.event_type
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id AND ml.entity_type = 'event'
@@ -133,7 +133,7 @@ export function getMediaForPersonContext(db: Database, personId: string): MediaW
   }
 
   // 3. Media linked to relationships the person is in
-  const relMedia = queryAll<Media & { relationship_id: string; rel_type: string }>(db, `
+  const relMedia = await queryAll<Media & { relationship_id: string; rel_type: string }>(db, `
     SELECT DISTINCT m.*, r.id AS relationship_id, r.type AS rel_type
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id AND ml.entity_type = 'relationship'
@@ -148,7 +148,7 @@ export function getMediaForPersonContext(db: Database, personId: string): MediaW
   }
 
   // 4. Media linked to family members (via parent_child and couple relationships)
-  const familyMedia = queryAll<Media & { family_person_id: string; family_given_name: string | null; family_surname: string | null }>(db, `
+  const familyMedia = await queryAll<Media & { family_person_id: string; family_given_name: string | null; family_surname: string | null }>(db, `
     SELECT DISTINCT m.*, p.id AS family_person_id, pn.given_name AS family_given_name, pn.surname AS family_surname
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id AND ml.entity_type = 'person'
@@ -183,8 +183,8 @@ export interface PersonForMatching {
  * Get persons who have existing face region tags, with their region coordinates.
  * Used for face comparison — match new faces against known ones.
  */
-export function getPersonsForMatching(db: Database, limit = 50): PersonForMatching[] {
-  const rows = queryAll<{
+export async function getPersonsForMatching(db: Database, limit = 50): Promise<PersonForMatching[]> {
+  const rows = await queryAll<{
     person_id: string;
     given_name: string | null;
     surname: string | null;
@@ -238,12 +238,12 @@ export interface MediaTaggingStatus {
 /**
  * Get an overview of media tagging progress.
  */
-export function getMediaTaggingStatus(db: Database): MediaTaggingStatus {
-  const totalMedia = queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media', [])?.count ?? 0;
-  const taggedMedia = queryOne<{ count: number }>(db, `
+export async function getMediaTaggingStatus(db: Database): Promise<MediaTaggingStatus> {
+  const totalMedia = (await queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media', []))?.count ?? 0;
+  const taggedMedia = (await queryOne<{ count: number }>(db, `
     SELECT COUNT(DISTINCT mr.media_id) as count FROM media_regions mr
-  `, [])?.count ?? 0;
-  const totalRegions = queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media_regions', [])?.count ?? 0;
+  `, []))?.count ?? 0;
+  const totalRegions = (await queryOne<{ count: number }>(db, 'SELECT COUNT(*) as count FROM media_regions', []))?.count ?? 0;
 
   return {
     totalMedia,

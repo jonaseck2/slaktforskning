@@ -3,8 +3,8 @@ import { queryAll } from '../db';
 import { findDuplicates } from '../duplicates';
 import type { CheckResult, CheckSeverity } from './check-utils';
 
-export function checkPossibleDuplicatePerson(db: Database): CheckResult[] {
-  const candidates = findDuplicates(db);
+export async function checkPossibleDuplicatePerson(db: Database): Promise<CheckResult[]> {
+  const candidates = await findDuplicates(db);
   return candidates.map(c => ({
     code: 'POSSIBLE_DUPLICATE_PERSON',
     severity: 'notice' as CheckSeverity,
@@ -15,8 +15,8 @@ export function checkPossibleDuplicatePerson(db: Database): CheckResult[] {
   }));
 }
 
-export function checkDuplicateIdentifier(db: Database): CheckResult[] {
-  const rows = queryAll<{ identifier_type: string; identifier_value: string; person_id: string }>(db, `
+export async function checkDuplicateIdentifier(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ identifier_type: string; identifier_value: string; person_id: string }>(db, `
     SELECT identifier_type, identifier_value, person_id
     FROM person_identifiers
     WHERE (identifier_type, identifier_value) IN (
@@ -46,8 +46,8 @@ export function checkDuplicateIdentifier(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkDuplicatePlace(db: Database): CheckResult[] {
-  const rows = queryAll<{ normalized_name: string; parent_place_id: string | null; id: string; name: string }>(db, `
+export async function checkDuplicatePlace(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ normalized_name: string; parent_place_id: string | null; id: string; name: string }>(db, `
     SELECT normalized_name, parent_place_id, id, name
     FROM places
     WHERE (normalized_name, COALESCE(parent_place_id, '')) IN (
@@ -79,8 +79,8 @@ export function checkDuplicatePlace(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkDuplicateMedia(db: Database): CheckResult[] {
-  const rows = queryAll<{ file_ref: string; id: string; title: string | null }>(db, `
+export async function checkDuplicateMedia(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ file_ref: string; id: string; title: string | null }>(db, `
     SELECT file_ref, id, title
     FROM media
     WHERE file_ref IS NOT NULL AND file_ref != ''
@@ -112,9 +112,9 @@ export function checkDuplicateMedia(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkDuplicateSource(db: Database): CheckResult[] {
+export async function checkDuplicateSource(db: Database): Promise<CheckResult[]> {
   // Pass 1: same URL
-  const urlRows = queryAll<{ id: string; url: string }>(db, `
+  const urlRows = await queryAll<{ id: string; url: string }>(db, `
     SELECT id, url FROM sources
     WHERE url IS NOT NULL AND url != ''
       AND url IN (
@@ -132,7 +132,7 @@ export function checkDuplicateSource(db: Database): CheckResult[] {
   }
 
   // Pass 2: same (title, author, publication_info), all non-empty
-  const metaRows = queryAll<{ id: string; title: string; author: string; publication_info: string }>(db, `
+  const metaRows = await queryAll<{ id: string; title: string; author: string; publication_info: string }>(db, `
     SELECT id, title, author, publication_info FROM sources
     WHERE title IS NOT NULL AND title != ''
       AND author IS NOT NULL AND author != ''

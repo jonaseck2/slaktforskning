@@ -34,12 +34,12 @@ export interface PolymorphicLinkConfig {
  * Generic polymorphic link query: returns parent rows linked to a
  * (entityType, entityId) pair via the configured link table.
  */
-export function getLinkedEntities<T>(
+export async function getLinkedEntities<T>(
   db: Database,
   config: PolymorphicLinkConfig,
   entityType: PolymorphicEntityType,
   entityId: string,
-): T[] {
+): Promise<T[]> {
   const parentAlias = config.parentTable === 'research_tasks' ? 'rt' : config.parentTable[0];
   const linkAlias = config.parentTable === 'research_tasks' ? 'tl' : config.parentTable[0] + 'l';
   const sql = `
@@ -48,7 +48,7 @@ export function getLinkedEntities<T>(
     WHERE ${linkAlias}.entity_type = ? AND ${linkAlias}.entity_id = ?
     ORDER BY ${config.orderBy}
   `;
-  return queryAll<T>(db, sql, [entityType, entityId]);
+  return await queryAll<T>(db, sql, [entityType, entityId]);
 }
 
 export type CitationOwnerType = 'person' | 'place' | 'event' | 'relationship' | 'source' | 'person_name';
@@ -67,11 +67,11 @@ const CITATION_FK_COLUMN: Record<CitationOwnerType, string> = {
  * through a polymorphic link table. This helper picks the column based
  * on the owner type and returns matching citations.
  */
-export function getCitationsByOwner<T>(
+export async function getCitationsByOwner<T>(
   db: Database,
   ownerType: CitationOwnerType,
   ownerId: string,
-): T[] {
+): Promise<T[]> {
   const col = CITATION_FK_COLUMN[ownerType];
-  return queryAll<T>(db, `SELECT * FROM citations WHERE ${col} = ?`, [ownerId]);
+  return await queryAll<T>(db, `SELECT * FROM citations WHERE ${col} = ?`, [ownerId]);
 }
