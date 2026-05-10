@@ -1,25 +1,21 @@
 {
   "mcpServers": {
     "slaktforskning": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "tsx",
-        "src/mcp/server.ts"
+        "scripts/mcp-tauri.mjs",
+        "prod"
       ],
-      "cwd": ".",
-      "env": {
-        "SLAKTFORSKNING_DB_PATH": "/Users/jonasahnstedt/Library/Application Support/com.slaktforskning.tauri-spike/family.db"
-      }
+      "cwd": "."
     },
     "slaktforskning-dev": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "tsx",
-        "src/mcp/devServer.ts"
+        "scripts/mcp-tauri.mjs",
+        "dev"
       ],
       "cwd": ".",
       "env": {
-        "SLAKTFORSKNING_DB_PATH": "/Users/jonasahnstedt/Library/Application Support/com.slaktforskning.tauri-spike/family.db",
         "SLAKTFORSKNING_UI_PORT": "19241"
       }
     },

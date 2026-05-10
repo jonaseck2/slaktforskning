@@ -11,7 +11,6 @@ use parking_lot::Mutex;
 use serde::Deserialize;
 use serde_json::{json, Value as JsonValue};
 use std::collections::HashMap;
-use std::process::Command as StdCommand;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tokio::sync::oneshot;
@@ -79,10 +78,23 @@ struct ScreenshotBody {
 #[derive(Deserialize)]
 struct DomQuery {
     selector: Option<String>,
-    #[serde(default = "default_max_chars")]
-    max_chars: u32,
+    #[serde(default = "default_dom_mode")]
+    mode: String,
+    #[serde(default)]
+    all: Option<String>,
+    #[serde(default)]
+    limit: Option<u32>,
 }
-fn default_max_chars() -> u32 { 50_000 }
+fn default_dom_mode() -> String { "outerHTML".into() }
+
+#[derive(Deserialize)]
+struct QueryStylesBody {
+    selector: String,
+    #[serde(default)]
+    props: Option<Vec<String>>,
+    #[serde(default)]
+    limit: Option<u32>,
+}
 
 async fn handle_navigate(
     axum::extract::State(app): axum::extract::State<AppHandle>,
@@ -138,11 +150,56 @@ async fn handle_dom(
     axum::extract::State(app): axum::extract::State<AppHandle>,
     Query(q): Query<DomQuery>,
 ) -> Json<JsonValue> {
-    let sel = q.selector.unwrap_or_else(|| "body".into());
+    let all = matches!(q.all.as_deref(), Some("true") | Some("1"));
+    let mode = match q.mode.as_str() {
+        "innerHTML" | "textContent" | "attributes" | "outerHTML" => q.mode.clone(),
+        _ => "outerHTML".into(),
+    };
+    let limit = q.limit.map(|l| l.clamp(1, 200)).unwrap_or(if all { 50 } else { 1 });
+
+    if q.selector.is_none() {
+        // Full document — large; agent should usually scope.
+        let script = "document.documentElement.outerHTML";
+        match run_in_renderer(&app, script).await {
+            Ok(v) => return Json(v),
+            Err(e) => return Json(json!({ "error": e })),
+        }
+    }
+    let sel = q.selector.unwrap();
     let sel_json = serde_json::to_string(&sel).unwrap();
-    let max = q.max_chars;
+    let mode_json = serde_json::to_string(&mode).unwrap();
     let script = format!(
-        "(() => {{ const el = document.querySelector({sel_json}); if (!el) return {{ error: 'Element not found: ' + {sel_json} }}; const html = el.outerHTML.replace(/<style[^>]*>[\\s\\S]*?<\\/style>/g, ''); return {{ html: html.length > {max} ? html.slice(0, {max}) + '... [truncated]' : html, length: html.length }}; }})()"
+        "(() => {{ const els = [...document.querySelectorAll({sel_json})].slice(0, {limit}); if (els.length === 0) return {{ matches: [], total: 0 }}; const total = document.querySelectorAll({sel_json}).length; const extract = (el) => {{ switch ({mode_json}) {{ case 'innerHTML': return el.innerHTML; case 'textContent': return (el.textContent ?? '').trim(); case 'attributes': {{ const out = {{}}; for (const a of el.attributes) out[a.name] = a.value; return out; }} default: return el.outerHTML; }} }}; return {{ matches: els.map(extract), total }}; }})()"
+    );
+    match run_in_renderer(&app, &script).await {
+        Ok(v) => {
+            let matches = v.get("matches").cloned().unwrap_or(json!([]));
+            let total = v.get("total").and_then(|t| t.as_u64()).unwrap_or(0);
+            let arr = matches.as_array().cloned().unwrap_or_default();
+            if arr.is_empty() {
+                return Json(json!({ "error": format!("Element not found: {sel}") }));
+            }
+            if !all {
+                return Json(arr.into_iter().next().unwrap_or(JsonValue::Null));
+            }
+            Json(json!({ "matches": arr.clone(), "total": total, "returned": arr.len() }))
+        }
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+async fn handle_query_styles(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+    Json(body): Json<QueryStylesBody>,
+) -> Json<JsonValue> {
+    let sel_json = serde_json::to_string(&body.selector).unwrap();
+    let props_json = match &body.props {
+        Some(p) => serde_json::to_string(p).unwrap(),
+        None => "null".into(),
+    };
+    let limit = body.limit.map(|l| l.clamp(1, 20)).unwrap_or(5);
+    let script = format!(
+        "(() => {{ const DEFAULT_PROPS = ['display','position','overflow','overflowX','overflowY','height','minHeight','maxHeight','width','minWidth','maxWidth','flex','flexDirection','alignItems','justifyContent','gap','padding','margin','borderRadius','boxSizing','zIndex','top','right','bottom','left','transform','visibility','opacity']; const propList = {props_json} || DEFAULT_PROPS; const els = [...document.querySelectorAll({sel_json})].slice(0, {limit}); if (els.length === 0) return {{ matches: [], total: 0 }}; const total = document.querySelectorAll({sel_json}).length; return {{ total, matches: els.map((el, i) => {{ const cs = getComputedStyle(el); const r = el.getBoundingClientRect(); const computed = {{}}; for (const p of propList) computed[p] = cs[p]; return {{ index: i, tag: el.tagName.toLowerCase(), classes: [...el.classList], id: el.id || null, rect: {{ x: r.x, y: r.y, width: r.width, height: r.height, top: r.top, left: r.left, bottom: r.bottom, right: r.right }}, scroll: {{ scrollHeight: el.scrollHeight, scrollWidth: el.scrollWidth, scrollTop: el.scrollTop, scrollLeft: el.scrollLeft, clientHeight: el.clientHeight, clientWidth: el.clientWidth }}, computed, }}; }}), }}; }})()"
     );
     match run_in_renderer(&app, &script).await {
         Ok(v) => Json(v),
@@ -161,7 +218,8 @@ async fn handle_screenshot(
     let scale = win.scale_factor().unwrap_or(1.0);
     let inner_pos = win.inner_position().unwrap_or_default();
 
-    let (rect_x, rect_y, rect_w, rect_h) = if let Some(sel) = body.selector {
+    // Element-cropped rect in physical pixels, or None for whole window.
+    let rect_px: Option<(u32, u32, u32, u32)> = if let Some(sel) = body.selector {
         let sel_json = serde_json::to_string(&sel).unwrap();
         let pad = body.padding;
         let script = format!(
@@ -176,45 +234,94 @@ async fn handle_screenshot(
                 let y = v.get("y").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
                 let w = v.get("width").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
                 let h = v.get("height").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
-                // screencapture -R uses points (logical), Tauri's
-                // PhysicalPosition is in pixels — convert to points.
-                let abs_x = ((inner_pos.x as f64) / scale) as i32 + x;
-                let abs_y = ((inner_pos.y as f64) / scale) as i32 + y;
-                (abs_x, abs_y, w, h)
+                // inner_pos is physical pixels; CSS rect is points → multiply.
+                let abs_x = inner_pos.x + (x as f64 * scale) as i32;
+                let abs_y = inner_pos.y + (y as f64 * scale) as i32;
+                let abs_w = (w as f64 * scale) as i32;
+                let abs_h = (h as f64 * scale) as i32;
+                Some((abs_x.max(0) as u32, abs_y.max(0) as u32, abs_w.max(1) as u32, abs_h.max(1) as u32))
             }
             Err(e) => return Json(json!({ "error": e })),
         }
     } else {
-        let pos = win.outer_position().unwrap_or_default();
-        let size = win.outer_size().unwrap_or_default();
-        let to_pt = |px: i32| ((px as f64) / scale) as i32;
-        (to_pt(pos.x), to_pt(pos.y), to_pt(size.width as i32), to_pt(size.height as i32))
+        None
     };
 
-    let tmp = std::env::temp_dir().join(format!("tauri-shot-{}.png", uuid::Uuid::new_v4()));
-    let region = format!("{},{},{},{}", rect_x, rect_y, rect_w, rect_h);
-    let out = StdCommand::new("screencapture")
-        .args(["-x", "-R", &region, tmp.to_str().unwrap_or_default()])
-        .output();
-    match out {
-        Ok(o) if o.status.success() => {
-            match std::fs::read(&tmp) {
-                Ok(bytes) => {
-                    let _ = std::fs::remove_file(&tmp);
-                    use base64::Engine;
-                    let data = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                    Json(json!({ "data": data, "mimeType": "image/png" }))
-                }
-                Err(e) => Json(json!({ "error": format!("read png: {e}") })),
-            }
+    // Capture via xcap → ScreenCaptureKit on macOS. Same Screen Recording
+    // permission as screencapture, but the prompt fires once for the bundled
+    // .app instead of every shell-out, so a single Settings → Screen
+    // Recording grant sticks across rebuilds.
+    let monitors = match xcap::Monitor::all() {
+        Ok(m) => m,
+        Err(e) => return Json(json!({ "error": format!("xcap::Monitor::all: {e}") })),
+    };
+    let monitor = match monitors.into_iter().next() {
+        Some(m) => m,
+        None => return Json(json!({ "error": "no monitor available" })),
+    };
+    let img = match monitor.capture_image() {
+        Ok(i) => i,
+        Err(e) => return Json(json!({ "error": format!("capture_image: {e}") })),
+    };
+
+    let cropped: image::RgbaImage = match rect_px {
+        Some((x, y, w, h)) => {
+            let max_w = img.width();
+            let max_h = img.height();
+            let cx = x.min(max_w.saturating_sub(1));
+            let cy = y.min(max_h.saturating_sub(1));
+            let cw = w.min(max_w - cx);
+            let ch = h.min(max_h - cy);
+            image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image()
         }
-        Ok(o) => Json(json!({ "error": format!("screencapture exit {:?}: {} (region={})", o.status.code(), String::from_utf8_lossy(&o.stderr), region) })),
-        Err(e) => Json(json!({ "error": format!("spawn screencapture: {e}") })),
+        None => {
+            let win_pos = win.outer_position().unwrap_or_default();
+            let win_size = win.outer_size().unwrap_or_default();
+            let max_w = img.width();
+            let max_h = img.height();
+            let cx = (win_pos.x.max(0) as u32).min(max_w.saturating_sub(1));
+            let cy = (win_pos.y.max(0) as u32).min(max_h.saturating_sub(1));
+            let cw = win_size.width.min(max_w - cx);
+            let ch = win_size.height.min(max_h - cy);
+            image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image()
+        }
+    };
+
+    let mut buf = std::io::Cursor::new(Vec::new());
+    if let Err(e) = cropped.write_to(&mut buf, image::ImageFormat::Png) {
+        return Json(json!({ "error": format!("png encode: {e}") }));
     }
+    use base64::Engine;
+    let data = base64::engine::general_purpose::STANDARD.encode(buf.into_inner());
+    Json(json!({ "data": data, "mimeType": "image/png" }))
 }
 
 async fn handle_health() -> Json<JsonValue> {
     Json(json!({ "ok": true, "server": "tauri-ui-server" }))
+}
+
+/// /status — what the slaktforskning-dev MCP's `app_status` tool calls.
+/// Returns the current Vue route + window dimensions + DB path.
+async fn handle_status(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+) -> Json<JsonValue> {
+    let db_path = crate::db::current_path();
+    let script = "({ route: window.__vue_router ? window.__vue_router.currentRoute.value.fullPath : null, windowWidth: window.innerWidth, windowHeight: window.innerHeight })";
+    match run_in_renderer(&app, script).await {
+        Ok(mut v) => {
+            if let Some(obj) = v.as_object_mut() {
+                obj.insert("dbPath".into(), json!(db_path));
+            }
+            Json(v)
+        }
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
+/// /db_path — the active DB path. Useful for an MCP wrapper to align its
+/// own connection with whatever the running app currently has open.
+async fn handle_db_path() -> Json<JsonValue> {
+    Json(json!({ "path": crate::db::current_path() }))
 }
 
 pub fn spawn(app: AppHandle) {
@@ -226,12 +333,15 @@ pub fn spawn(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         let router = Router::new()
             .route("/", get(handle_health))
+            .route("/status", get(handle_status))
+            .route("/db_path", get(handle_db_path))
             .route("/screenshot", post(handle_screenshot))
             .route("/navigate", post(handle_navigate))
             .route("/reload", post(handle_reload))
             .route("/click", post(handle_click))
             .route("/fill", post(handle_fill))
             .route("/dom", get(handle_dom))
+            .route("/query_styles", post(handle_query_styles))
             .with_state(app.clone());
 
         let addr = format!("127.0.0.1:{port}");

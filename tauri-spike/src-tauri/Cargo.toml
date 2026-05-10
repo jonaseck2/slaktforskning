@@ -37,4 +37,6 @@ tokio = { version = "1", features = ["process", "io-util", "rt", "rt-multi-threa
 axum = "0.7"
 uuid = { version = "1", features = ["v4"] }
 base64 = "0.22"
+xcap = "0.9"
+image = { version = "0.25", default-features = false, features = ["png"] }
 
