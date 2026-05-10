@@ -1,7 +1,7 @@
 # Plan: Persons list — aggregate columns and secondary sort
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** in-progress (Phase 4 deferred)
 **Source:** Beta tester report 88 (May 7 batch); follow-up to earlier "person list extension" feedback (report 84)
 **Effort:** M
 
@@ -82,32 +82,32 @@ A small "⋮" / "Kolumner" affordance at the top-right of the table opens a `Bas
 
 ### Phase 1 — API
 
-- [ ] Extend `findPagePersons` (or rename to `listPagePersons`) signature: add `sortBy2`, `sortDir2`. Single SQL with the aggregate subqueries.
-- [ ] Add `getQualityIssueCounts(db, personIds: string[])` returning `Record<string, number>` — bulk-by-name, single SQL.
-- [ ] Unit tests: `tests/unit/persons-paged-aggregates.test.ts` — verify counts on a fixture DB.
-- [ ] Update `IPC_REFERENCE.md` for the new args + return shape.
+- [x] Extend `findPagePersons` (or rename to `listPagePersons`) signature: add `sortBy2`, `sortDir2`. Single SQL with the aggregate subqueries.
+- [x] Add `getQualityIssueCounts(db, personIds: string[])` returning `Record<string, number>` — bulk-by-name, single SQL.
+- [x] Unit tests: `tests/unit/persons-paged-aggregates.test.ts` — verify counts on a fixture DB.
+- [ ] Update `IPC_REFERENCE.md` for the new args + return shape. *(Deferred — IPC_REFERENCE.md hasn't been touched in this session; reference docs will be refreshed in the same pass that closes Phase 4.)*
 
 ### Phase 2 — Composable
 
-- [ ] Extend `usePagedList` to accept `sortBy2` / `sortDir2` and thread through to `fetchPage`.
-- [ ] Add a small `<SortStatusPill>` helper component used by every list view.
+- [x] Extend `usePagedList` to accept `sortBy2` / `sortDir2` and thread through to `fetchPage`.
+- [ ] Add a small `<SortStatusPill>` helper component used by every list view. *(Deferred along with Phase 4 — it is implemented inline in PersonsListTab as the only consumer today; extracting only makes sense once secondary-sort wiring lands across views.)*
 
 ### Phase 3 — UI
 
-- [ ] `PersonsListTab.vue` — add the six new columns to the table definition; gate visibility behind the column-picker.
-- [ ] Column-picker modal (`PersonsColumnPickerModal.vue` extending `BaseSubPanel`).
-- [ ] Persist visible column set + sort state via `STORAGE_KEYS.persons.*` (add new keys).
-- [ ] FilterChips bucketing — derive a "low-count" chip set when the user has selected a count column as a chip dimension (`event_count = 0`, `event_count = 1`, `event_count ≥ 2`). Optional polish; cuts to scope if it complicates things.
+- [x] `PersonsListTab.vue` — add the six new columns to the table definition; gate visibility behind the column-picker.
+- [x] Column-picker modal (`PersonsColumnPickerModal.vue` extending `BaseSubPanel`).
+- [x] Persist visible column set + sort state via `STORAGE_KEYS.persons.*` (added `personsVisibleColumns` plus `<storageKey>-sort-by2/-sort-dir2` via the composable).
+- [ ] FilterChips bucketing — *(Out of scope; flagged optional in the original plan and not implemented.)*
 
 ### Phase 4 — Apply secondary sort to other list views
 
-- [ ] `SourcesListTab.vue`, `PlacesListTab.vue`, `GroupsView.vue`, `ResearchTasksView.vue`, `MediaView.vue` — adopt the new `sortBy2` slot. No new columns, just the secondary-sort UX. (This is the all-or-nothing component-level rule from `.claude/rules/renderer.md`.)
+- [ ] `SourcesListTab.vue`, `PlacesListTab.vue`, `GroupsView.vue`, `ResearchTasksView.vue`, `MediaView.vue` — adopt the new `sortBy2` slot. **DEFERRED.** The composable accepts `sortBy2`/`sortDir2`, but each view's underlying `listPage` API + IPC handler does not yet thread a secondary sort. Wiring shift-click in those views without API support would silently swallow the secondary sort — exactly the "silent degradation across state" failure mode `.claude/rules/renderer.md` § "No silent degradation" warns against. Cross-entity secondary sort is a separate plan: extend each entity's `*Page` API + channel signature, then wire `(e) => toggleSort(col, { shift: e.shiftKey })` plus a status-pill on every header.
 
 ### Phase 5 — i18n
 
-- [ ] Column labels in `sv.ts` + `en.ts` under `persons.columns.*`.
-- [ ] Column-picker title + helper strings.
-- [ ] Sort status pill format string.
+- [x] Column labels in `sv.ts` + `en.ts` under `persons.columns.*`.
+- [x] Column-picker title + helper strings under `persons.columnPicker.*`.
+- [x] Sort status pill format string (`persons.columnPicker.sortStatus`, `persons.columnPicker.clearSecondary`).
 
 ## Verification
 
