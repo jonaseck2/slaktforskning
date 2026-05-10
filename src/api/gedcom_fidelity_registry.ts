@@ -494,29 +494,35 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'sources.updated_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
   'sources.call_number': {
     v551: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.call_number; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _CALL sub-tag under SOUR. Distinct from REPO.CALN, which carries ' +
+        'the repository\'s own call-number (a different column on a different table).',
     },
     v70: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.call_number; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _CALL sub-tag under SOUR. Distinct from REPO.CALN, which carries ' +
+        'the repository\'s own call-number (a different column on a different table).',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'sources.abstract': {
     v551: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.abstract; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _ABSTRACT sub-tag under SOUR — multi-line values are split across ' +
+        'CONT continuation lines on export; the parser rejoins them on import so ' +
+        'embedded newlines survive byte-identical.',
     },
     v70: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.abstract; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _ABSTRACT sub-tag under SOUR — multi-line values are split across ' +
+        'CONT continuation lines on export; the parser rejoins them on import so ' +
+        'embedded newlines survive byte-identical.',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
 
   // ----- citations -----

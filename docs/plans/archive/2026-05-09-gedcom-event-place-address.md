@@ -35,34 +35,34 @@ Lint + vitest passing is hygiene, not verification.
 
 **Files:** `src/gedcom/exporter.ts`, `tests/unit/gedcom.test.ts`
 
-- [ ] In the exporter's event emit path, after the existing `2 PLAC <name>` line, add a guarded emit for `_PLAC_ADDR` when `event.place_address` is non-empty:
+- [x] In the exporter's event emit path, after the existing `2 PLAC <name>` line, add a guarded emit for `_PLAC_ADDR` when `event.place_address` is non-empty:
   ```
   2 PLAC <place name>
   3 _PLAC_ADDR <event.place_address>
   ```
   The custom tag sits under PLAC at level 3 (PLAC is level 2 under EVEN). Use the existing string-escape helper (or whichever util the exporter uses for free-form text) so that newlines and high-Unicode characters survive.
-- [ ] Add a unit test that exports an event with a known `place_address` value and asserts the line `3 _PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige` appears in the GEDCOM output under the PLAC line for that event.
+- [x] Add a unit test that exports an event with a known `place_address` value and asserts the line `3 _PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige` appears in the GEDCOM output under the PLAC line for that event.
 
 ### Task 2: Importer reads `_PLAC_ADDR`
 
 **Files:** `src/import/gedcom/event.ts` (or wherever event PLAC parsing lives), `tests/unit/gedcom.test.ts`
 
-- [ ] In the event-importer phase, after parsing the standard PLAC, look for a `_PLAC_ADDR` child node and copy its value into `event.place_address`. If absent, leave `place_address` null (do not infer from ADDR — that's a different field).
-- [ ] Add a unit test: import a hand-crafted GEDCOM string containing the `_PLAC_ADDR` sub-tag and assert the event row has the expected `place_address` value.
+- [x] In the event-importer phase, after parsing the standard PLAC, look for a `_PLAC_ADDR` child node and copy its value into `event.place_address`. If absent, leave `place_address` null (do not infer from ADDR — that's a different field).
+- [x] Add a unit test: import a hand-crafted GEDCOM string containing the `_PLAC_ADDR` sub-tag and assert the event row has the expected `place_address` value.
 
 ### Task 3: Promote registry entry, run round-trip harness
 
 **Files:** `src/api/gedcom_fidelity_registry.ts`, `tests/helpers/gedcom_fidelity.ts` (no change expected, just verify it picks the entry up), `tests/unit/gedcom-fidelity-registry.test.ts`
 
-- [ ] Change the `events.place_address` entry's `v551` and `v70` blocks from `lossy` → `lossless-via:_PLAC_ADDR`. Update the `reason` text to describe the carrier.
-- [ ] Run the fidelity harness; verify the per-field round-trip case for `events.place_address` now passes.
+- [x] Change the `events.place_address` entry's `v551` and `v70` blocks from `lossy` → `lossless-via:_PLAC_ADDR`. Update the `reason` text to describe the carrier.
+- [x] Run the fidelity harness; verify the per-field round-trip case for `events.place_address` now passes.
 
 ### Task 4: Bump + archive
 
-- [ ] Tick all checkboxes in this plan.
-- [ ] Bump `package.json` patch (lossless promotion is a fix, not a feature).
-- [ ] Add CHANGELOG `## Unreleased` entry: "GEDCOM round-trip: `events.place_address` is now preserved via the custom `_PLAC_ADDR` sub-tag under PLAC."
-- [ ] Update `docs/PLAN.md`: remove the `events.place_address` backlog block.
-- [ ] Append entry to `docs/plans/archive/PLAN.md`.
-- [ ] `git mv` this plan to `docs/plans/archive/`.
-- [ ] Final commit + merge.
+- [x] Tick all checkboxes in this plan.
+- [x] Bump `package.json` patch (lossless promotion is a fix, not a feature).
+- [x] Add CHANGELOG `## Unreleased` entry: "GEDCOM round-trip: `events.place_address` is now preserved via the custom `_PLAC_ADDR` sub-tag under PLAC."
+- [x] Update `docs/PLAN.md`: remove the `events.place_address` backlog block.
+- [x] Append entry to `docs/plans/archive/PLAN.md`.
+- [x] `git mv` this plan to `docs/plans/archive/`.
+- [x] Final commit + merge.

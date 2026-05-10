@@ -29,24 +29,24 @@ Two columns on the `sources` table that are flagged `lossy` in the registry unde
 
 **Files:** `src/gedcom/exporter.ts`, `tests/unit/gedcom.test.ts`
 
-- [ ] Inside the SOUR emit block, after the existing AUTH/TITL/PUBL lines, conditionally emit:
+- [x] Inside the SOUR emit block, after the existing AUTH/TITL/PUBL lines, conditionally emit:
   ```
   1 _ABSTRACT <source.abstract>
   1 _CALL <source.call_number>
   ```
   Each line guarded by truthy/non-empty check.
-- [ ] Long abstracts may need CONT continuation lines; reuse the existing exporter helper that wraps NOTE values (look for the function the exporter uses for `NOTE` long-text emission — same pattern applies here).
-- [ ] Unit test: export a source with both fields set; assert both lines appear with the right level and value (long abstract: assert CONT continuation rebuilds correctly).
+- [x] Long abstracts may need CONT continuation lines; reuse the existing exporter helper that wraps NOTE values (look for the function the exporter uses for `NOTE` long-text emission — same pattern applies here).
+- [x] Unit test: export a source with both fields set; assert both lines appear with the right level and value (long abstract: assert CONT continuation rebuilds correctly).
 
 ### Task 2: Importer
 
 **Files:** `src/import/gedcom/source.ts` (or equivalent SOUR-record phase)
 
-- [ ] In the SOUR-record import phase, look for `_ABSTRACT` and `_CALL` children. Copy their joined value (CONT/CONC unwrapping via the existing helper) into `source.abstract` and `source.call_number`. If absent, leave null.
-- [ ] Unit test: import a SOUR record with both custom tags; assert both columns hold the expected values.
+- [x] In the SOUR-record import phase, look for `_ABSTRACT` and `_CALL` children. Copy their joined value (CONT/CONC unwrapping via the existing helper) into `source.abstract` and `source.call_number`. If absent, leave null.
+- [x] Unit test: import a SOUR record with both custom tags; assert both columns hold the expected values.
 
 ### Task 3: Registry + bump + archive
 
-- [ ] Promote both registry entries to lossless-via.
-- [ ] Run the fidelity harness; both per-field round-trip cases pass.
-- [ ] Patch bump, CHANGELOG entry, archive plan, update PLAN.md.
+- [x] Promote both registry entries to lossless-via.
+- [x] Run the fidelity harness; both per-field round-trip cases pass.
+- [x] Patch bump, CHANGELOG entry, archive plan, update PLAN.md.
