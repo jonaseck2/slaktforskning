@@ -78,6 +78,39 @@ if ('__TAURI_INTERNALS__' in window) {
     bootLog('schema ready, mounting window.api');
     mountWindowApi(db);
     bootLog('window.api mounted');
+
+    // Forward Rust menu events to renderer actions. Each menu item id
+    // dispatches to a window.api method or a router push.
+    const eventMod = await import('@tauri-apps/api/event');
+    await eventMod.listen('menu:item', async (e) => {
+      const id = String(e.payload);
+      try {
+        switch (id) {
+          case 'open-db': {
+            const result = await (window.api.db as { openExisting: () => Promise<unknown> }).openExisting();
+            console.log('[menu] open-db:', result);
+            break;
+          }
+          case 'new-db': {
+            const result = await (window.api.db as { createNew: () => Promise<unknown> }).createNew();
+            console.log('[menu] new-db:', result);
+            break;
+          }
+          case 'undo': await (window.api.undo as { undo: () => Promise<unknown> }).undo(); break;
+          case 'redo': await (window.api.undo as { redo: () => Promise<unknown> }).redo(); break;
+          case 'settings': window.location.hash = '#/settings'; break;
+          case 'nav-persons': window.location.hash = '#/persons'; break;
+          case 'nav-places': window.location.hash = '#/places'; break;
+          case 'nav-sources': window.location.hash = '#/sources'; break;
+          case 'nav-media': window.location.hash = '#/media'; break;
+          case 'nav-quality': window.location.hash = '#/quality'; break;
+          case 'nav-reports': window.location.hash = '#/reports'; break;
+          case 'close-window': window.close(); break;
+        }
+      } catch (err) {
+        console.error('[menu] handler failed for', id, err);
+      }
+    });
   } catch (e: unknown) {
     const err = e as { stack?: string; message?: string };
     bootLog('FATAL caught: ' + (err?.stack || err?.message || String(e)));

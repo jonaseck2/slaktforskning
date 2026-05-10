@@ -314,6 +314,84 @@ async fn db_pick_new(app: tauri::AppHandle) -> Result<Option<String>, String> {
     rx.await.map_err(|e| format!("dialog cancelled: {e}"))
 }
 
+/// Build the macOS menu bar with Cmd+N (new window) / Cmd+O (open DB) /
+/// Cmd+, (settings) / Cmd+Z (undo) / Cmd+Shift+Z (redo). Other platforms
+/// don't show the application menu but the accelerators still work.
+fn build_menu(app: &tauri::AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
+    use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
+
+    let about_meta = AboutMetadataBuilder::new()
+        .name(Some("Släktforskning".to_string()))
+        .version(Some(env!("CARGO_PKG_VERSION").to_string()))
+        .build();
+
+    let app_menu = SubmenuBuilder::new(app, "Släktforskning")
+        .item(&PredefinedMenuItem::about(app, Some("About Släktforskning"), Some(about_meta))?)
+        .separator()
+        .item(&MenuItemBuilder::with_id("settings", "Settings…").accelerator("CmdOrCtrl+,").build(app)?)
+        .separator()
+        .item(&PredefinedMenuItem::services(app, None)?)
+        .separator()
+        .item(&PredefinedMenuItem::hide(app, None)?)
+        .item(&PredefinedMenuItem::hide_others(app, None)?)
+        .item(&PredefinedMenuItem::show_all(app, None)?)
+        .separator()
+        .item(&PredefinedMenuItem::quit(app, None)?)
+        .build()?;
+
+    let file_menu = SubmenuBuilder::new(app, "File")
+        .item(&MenuItemBuilder::with_id("new-window", "New Window").accelerator("CmdOrCtrl+N").build(app)?)
+        .item(&MenuItemBuilder::with_id("open-db", "Open Database…").accelerator("CmdOrCtrl+O").build(app)?)
+        .item(&MenuItemBuilder::with_id("new-db", "New Database…").accelerator("CmdOrCtrl+Shift+N").build(app)?)
+        .separator()
+        .item(&MenuItemBuilder::with_id("close-window", "Close Window").accelerator("CmdOrCtrl+W").build(app)?)
+        .build()?;
+
+    let edit_menu = SubmenuBuilder::new(app, "Edit")
+        .item(&MenuItemBuilder::with_id("undo", "Undo").accelerator("CmdOrCtrl+Z").build(app)?)
+        .item(&MenuItemBuilder::with_id("redo", "Redo").accelerator("CmdOrCtrl+Shift+Z").build(app)?)
+        .separator()
+        .item(&PredefinedMenuItem::cut(app, None)?)
+        .item(&PredefinedMenuItem::copy(app, None)?)
+        .item(&PredefinedMenuItem::paste(app, None)?)
+        .item(&PredefinedMenuItem::select_all(app, None)?)
+        .build()?;
+
+    let view_menu = SubmenuBuilder::new(app, "View")
+        .item(&MenuItemBuilder::with_id("nav-persons", "Persons").accelerator("CmdOrCtrl+1").build(app)?)
+        .item(&MenuItemBuilder::with_id("nav-places", "Places").accelerator("CmdOrCtrl+2").build(app)?)
+        .item(&MenuItemBuilder::with_id("nav-sources", "Sources").accelerator("CmdOrCtrl+3").build(app)?)
+        .item(&MenuItemBuilder::with_id("nav-media", "Media").accelerator("CmdOrCtrl+4").build(app)?)
+        .item(&MenuItemBuilder::with_id("nav-quality", "Quality").accelerator("CmdOrCtrl+5").build(app)?)
+        .item(&MenuItemBuilder::with_id("nav-reports", "Reports").accelerator("CmdOrCtrl+6").build(app)?)
+        .separator()
+        .item(&PredefinedMenuItem::fullscreen(app, None)?)
+        .build()?;
+
+    let window_menu = SubmenuBuilder::new(app, "Window")
+        .item(&PredefinedMenuItem::minimize(app, None)?)
+        .item(&PredefinedMenuItem::maximize(app, None)?)
+        .build()?;
+
+    MenuBuilder::new(app)
+        .items(&[&app_menu, &file_menu, &edit_menu, &view_menu, &window_menu])
+        .build()
+}
+
+/// Open a new top-level window. Wired to the File → New Window menu item
+/// and Cmd+N. Each window mounts its own Vue app, gets its own
+/// window.api, and shares the same rusqlite connection in Rust.
+fn open_new_window(app: &tauri::AppHandle) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+    let label = format!("win-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0));
+    WebviewWindowBuilder::new(app, label, WebviewUrl::default())
+        .title("Släktforskning")
+        .inner_size(1280.0, 800.0)
+        .build()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -350,6 +428,26 @@ pub fn run() {
         ])
         .setup(|app| {
             ui_server::spawn(app.handle().clone());
+            // Build + apply the application menu. Menu events fan out to
+            // either a Rust handler (open-db, new-window) or are forwarded
+            // to the focused webview as a 'menu:item' event the renderer
+            // listens for (nav-*, undo, redo, settings).
+            let menu = build_menu(app.handle())?;
+            app.set_menu(menu)?;
+            let app_for_events = app.handle().clone();
+            app.on_menu_event(move |app, event| {
+                use tauri::Emitter;
+                let id = event.id().as_ref();
+                match id {
+                    "new-window" => { let _ = open_new_window(&app_for_events); }
+                    _ => {
+                        // Forward to renderer; the polyfill listens via
+                        // listen('menu:item', ...) and dispatches to the
+                        // matching window.api.* method.
+                        let _ = app.emit("menu:item", id.to_string());
+                    }
+                }
+            });
             Ok(())
         })
         .run(tauri::generate_context!())
