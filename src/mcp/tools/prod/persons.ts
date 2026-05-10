@@ -256,12 +256,41 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('find_duplicates', {
-    description: 'Find potential duplicate persons by comparing names and birth dates',
+    description:
+      'Find potential duplicate records by entity. Supported entities: ' +
+      '"person" (default; matches normalised given+surname plus close birth-date — Levenshtein on names), ' +
+      '"place" (same parent_place_id and equal/Levenshtein-≤2 normalised name), ' +
+      '"source" (equal/Levenshtein-≤2 normalised title), ' +
+      '"media" (same trimmed file_ref → score 100, OR equal/Levenshtein-≤2 normalised title → score capped at 99). ' +
+      'Pairs the user has dismissed via "ignore" do not reappear. ' +
+      'Returns the entity-specific candidate shape — see the response for the field set.',
     inputSchema: {
+      entity: z.enum(['person', 'place', 'source', 'media']).optional().describe(
+        'Which entity to find duplicates for. Defaults to "person" for backwards compatibility.',
+      ),
       limit: z.number().optional().describe('Maximum number of candidates to return (default: 100)'),
+      offset: z.number().optional().describe(
+        'Pagination offset for place/source/media (default: 0). Ignored for "person" — that path slices in-memory and does not paginate.',
+      ),
     },
   }, async (args) => {
-    const candidates = duplicates.findDuplicates(getDb(), args.limit);
+    const entity = args.entity ?? 'person';
+    const db = getDb();
+    let candidates: unknown;
+    switch (entity) {
+      case 'person':
+        candidates = duplicates.findDuplicates(db, args.limit);
+        break;
+      case 'place':
+        candidates = duplicates.findDuplicatePlaces(db, args.limit, args.offset);
+        break;
+      case 'source':
+        candidates = duplicates.findDuplicateSources(db, args.limit, args.offset);
+        break;
+      case 'media':
+        candidates = duplicates.findDuplicateMedia(db, args.limit, args.offset);
+        break;
+    }
     return { content: [{ type: 'text', text: JSON.stringify(candidates, null, 2) }] };
   });
 

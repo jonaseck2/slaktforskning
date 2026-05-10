@@ -6,6 +6,7 @@ import { startWorker, callWorker } from './worker-client';
 import { registerImportHandlers } from './import';
 import { registerDatabaseHandlers } from './database';
 import { registerMediaHandlers } from './media';
+import { registerDuplicatesHandlers } from './duplicates';
 import { registerUtilityHandlers } from './main-only';
 import { registerWebsiteExportHandlers } from './website-export';
 import { registerOnboardingHandlers } from './onboarding';
@@ -29,6 +30,7 @@ export function registerIpcHandlers(): void {
   registerImportHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerDatabaseHandlers(getDb, getCurrentDatabasePath, switchDatabase, loadSettings, wrapHandler);
   registerMediaHandlers(getDb, getCurrentDatabasePath, wrapHandler);
+  registerDuplicatesHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerUtilityHandlers(getDb, getCurrentDatabasePath, wrapHandler);
   registerWebsiteExportHandlers();
   registerOnboardingHandlers(wrapHandler);

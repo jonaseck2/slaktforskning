@@ -9,6 +9,7 @@ import './groups';
 import './repositories';
 import './research-tasks';
 import './reports';
+import './duplicates';
 import './media';
 import './gazetteers';
 import './database';

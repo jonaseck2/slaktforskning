@@ -327,6 +327,112 @@ describe('import_file', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Duplicates — non-person entity surfaces (Task 5 user-goal canary)
+// ---------------------------------------------------------------------------
+
+describe('duplicates entity surfaces', () => {
+  it('find_duplicates({entity:"place"}) returns place duplicates', async () => {
+    // Two places under the same parent with the same normalised name.
+    await call('add_place', { name: 'Stockholm', place_type: 'city' });
+    await call('add_place', { name: 'stockholm', place_type: 'city' });
+    const candidates = await call('find_duplicates', { entity: 'place' }) as any[];
+    expect(Array.isArray(candidates)).toBe(true);
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+    expect(candidates[0]).toHaveProperty('place1_id');
+    expect(candidates[0]).toHaveProperty('place2_id');
+    expect(candidates[0]).toHaveProperty('score');
+  });
+
+  it('find_duplicates({entity:"source"}) returns source duplicates', async () => {
+    await call('add_source', { title: 'Husförhörslängd' });
+    await call('add_source', { title: 'husförhörslängd' });
+    const candidates = await call('find_duplicates', { entity: 'source' }) as any[];
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+    expect(candidates[0]).toHaveProperty('source1_id');
+    expect(candidates[0]).toHaveProperty('source2_id');
+  });
+
+  it('find_duplicates({entity:"media"}) returns media duplicates', async () => {
+    // Seed two media rows linked to a person, with the same trimmed file_ref.
+    const person = await call('create_person', { given_name: 'A', surname: 'B' }) as any;
+    await call('attach_media', {
+      title: 'Photo',
+      file_ref: 'media/photo.jpg',
+      entity_type: 'person',
+      entity_id: person.person.id,
+    });
+    await call('attach_media', {
+      title: 'Photo (copy)',
+      file_ref: 'media/photo.jpg',
+      entity_type: 'person',
+      entity_id: person.person.id,
+    });
+    const candidates = await call('find_duplicates', { entity: 'media' }) as any[];
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+    expect(candidates[0]).toHaveProperty('media1_id');
+    expect(candidates[0]).toHaveProperty('media2_id');
+    expect(candidates[0].score).toBe(100); // same_file_ref → 100
+  });
+
+  it('find_duplicates() defaults to entity=person (backwards compat)', async () => {
+    await call('create_person', { given_name: 'Anna', surname: 'Svensson' });
+    await call('create_person', { given_name: 'Anna', surname: 'Svensson' });
+    const candidates = await call('find_duplicates', {}) as any[];
+    // Person-shaped fields, not place- or media-shaped
+    if (candidates.length > 0) {
+      expect(candidates[0]).toHaveProperty('person1_id');
+    }
+  });
+
+  it('merge_places merges two places and returns moved counts', async () => {
+    const p1 = await call('add_place', { name: 'Uppsala', place_type: 'city' }) as any;
+    const p2 = await call('add_place', { name: 'uppsala', place_type: 'city' }) as any;
+    const result = await call('merge_places', {
+      target_id: p1.id,
+      source_id: p2.id,
+    }) as any;
+    expect(result).toHaveProperty('moved');
+    expect(typeof result.moved).toBe('object');
+  });
+
+  it('merge_sources merges two sources and returns moved counts', async () => {
+    const s1 = await call('add_source', { title: 'Kyrkoarkiv' }) as any;
+    const s2 = await call('add_source', { title: 'kyrkoarkiv' }) as any;
+    const result = await call('merge_sources', {
+      target_id: s1.id,
+      source_id: s2.id,
+    }) as any;
+    expect(result).toHaveProperty('moved');
+  });
+
+  it('merge_media merges two media rows with keep_file=target (no fs side-effect when file_refs match)', async () => {
+    // Seed two media rows with the same file_ref → no file deletion happens
+    // (target's bytes are still referenced by the survivor, source has no
+    // distinct file to remove). Proves the MCP tool round-trips through the
+    // dbPath plumbing without crashing on sync I/O.
+    const person = await call('create_person', { given_name: 'C', surname: 'D' }) as any;
+    const m1 = await call('attach_media', {
+      title: 'M1',
+      file_ref: 'media/dup.jpg',
+      entity_type: 'person',
+      entity_id: person.person.id,
+    }) as any;
+    const m2 = await call('attach_media', {
+      title: 'M2',
+      file_ref: 'media/dup.jpg',
+      entity_type: 'person',
+      entity_id: person.person.id,
+    }) as any;
+    const result = await call('merge_media', {
+      target_id: m1.media.id,
+      source_id: m2.media.id,
+      keep_file: 'target',
+    }) as any;
+    expect(result).toHaveProperty('moved');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Coverage: every genealogy-essential tool is registered
 // ---------------------------------------------------------------------------
 
@@ -344,6 +450,8 @@ describe('mcp prod tool registry coverage', () => {
       'add_person_name', 'update_person_name', 'delete_person_name',
       'add_person_identifier', 'get_person_identifiers', 'delete_person_identifier',
       'merge_persons', 'find_duplicates',
+      // duplicate-merge tools for non-person entities
+      'merge_places', 'merge_sources', 'merge_media',
       // families / relationships / participants
       'add_relationship', 'add_child', 'get_family_unit', 'get_ancestor_tree',
       'update_relationship', 'delete_relationship',
