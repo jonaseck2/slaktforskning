@@ -3,6 +3,7 @@
 
 mod db;
 mod mcp;
+mod ui_server;
 
 use db::{AncestorNode, DbStats, PersonRow, RunResult};
 use mcp::McpProbe;
@@ -172,7 +173,12 @@ pub fn run() {
             db_current_path,
             db_pick_existing,
             db_pick_new,
+            ui_server::ui_eval_response,
         ])
+        .setup(|app| {
+            ui_server::spawn(app.handle().clone());
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

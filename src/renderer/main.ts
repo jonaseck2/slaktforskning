@@ -38,6 +38,13 @@ if ('__TAURI_INTERNALS__' in window) {
     const { initializeSchema } = schemaMod;
     const dbPath = await coreMod.invoke<string>('default_db_path');
     bootLog('db path: ' + dbPath);
+    // UI-server callback bridge for the dev MCP. Rust sends scripts via the
+    // webview that end with window.__taurisUiCallback(id, value), routing the
+    // value back to a pending oneshot on the Rust side.
+    (window as Window & { __taurisUiCallback?: (id: string, value: unknown) => void }).__taurisUiCallback =
+      (id: string, value: unknown) => {
+        coreMod.invoke('ui_eval_response', { id, value }).catch((e: unknown) => console.error('[ui-callback]', e));
+      };
     const db = new Database(dbPath);
     await db.opened;
     bootLog('db opened, initializing schema');

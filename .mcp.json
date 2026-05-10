@@ -6,7 +6,10 @@
         "tsx",
         "src/mcp/server.ts"
       ],
-      "cwd": "."
+      "cwd": ".",
+      "env": {
+        "SLAKTFORSKNING_DB_PATH": "/Users/jonasahnstedt/Library/Application Support/com.slaktforskning.tauri-spike/family.db"
+      }
     },
     "slaktforskning-dev": {
       "command": "npx",
@@ -14,7 +17,11 @@
         "tsx",
         "src/mcp/devServer.ts"
       ],
-      "cwd": "."
+      "cwd": ".",
+      "env": {
+        "SLAKTFORSKNING_DB_PATH": "/Users/jonasahnstedt/Library/Application Support/com.slaktforskning.tauri-spike/family.db",
+        "SLAKTFORSKNING_UI_PORT": "19241"
+      }
     },
     "github": {
       "command": "npx",
