@@ -78,6 +78,17 @@ async function loadChart() {
   } catch (e) { error.value = String(e); }
 }
 
+function printChart() {
+  // OS-native print pipeline. On macOS WebKit this opens NSPrintInfo
+  // dialog with a "Save as PDF" affordance. On Windows WebView2 it
+  // opens the Chromium-based print dialog. On Linux WebKitGTK it uses
+  // GTK print. Matches Tauri 2's recommended print path; in the full
+  // port the Electron app's webContents.printToPDF would route through
+  // this same surface (or via a Rust command that wraps WKWebView's
+  // createPDF API for headless / programmatic save).
+  window.print();
+}
+
 function openChart() {
   tab.value = 'chart';
   if (ancestors.value.length === 0) loadChart();
@@ -167,7 +178,7 @@ onMounted(() => { openDb(); });
 
     <!-- CHART -->
     <template v-else>
-      <div class="chart-controls">
+      <div class="chart-controls no-print">
         <label>Focus ID: <input v-model="focusId" style="width: 320px" /></label>
         <label>Generations:
           <select v-model.number="chartDepth">
@@ -178,6 +189,7 @@ onMounted(() => { openDb(); });
           </select>
         </label>
         <button @click="loadChart">Reload</button>
+        <button @click="printChart">Print / Save PDF</button>
         <span>Boxes drawn: <b>{{ ancestors.length }}</b></span>
       </div>
       <div class="chart-scroll">
@@ -274,4 +286,17 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .surname-text { font-size: 13px; fill: #555; }
 .gen-text { font-size: 10px; fill: #888; }
 .empty { padding: 2rem; color: #888; text-align: center; }
+
+/* Print path: hide UI chrome, let only the chart's SVG land on the page.
+   This is the same shape as src/renderer/views/ReportsView.vue's
+   @media print block in the Electron app — engine-independent CSS. */
+@media print {
+  body, html { background: #fff; }
+  h1, .tabs, .controls, .stats, .chart-controls, .no-print { display: none !important; }
+  .container { padding: 0; max-width: none; }
+  .chart-scroll { overflow: visible !important; border: none !important; border-radius: 0 !important; }
+  .chart-scroll svg { width: 100% !important; height: auto !important; }
+  /* Force colors to print in WebKit (the same property the Electron app uses). */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
 </style>
