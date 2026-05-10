@@ -123,16 +123,22 @@ export interface ResearchGaps {
 /**
  * Stable vocabulary for `TimelineEntry.relationship_label`.
  *
+ * Biological / adopted / unknown subtype:
  * - `'self'`     — the subject's own event (replaces the old `null`).
- * - `'father'` / `'mother'` — sex-known parent (Task 3 will start emitting these;
- *                              Task 1 only adds them to the union).
- * - `'parent'`   — parent with sex unknown (current emission for parent_child where
- *                  the subject is `person2_id`; Task 3 narrows to father/mother).
+ * - `'father'` / `'mother'` — sex-known parent.
+ * - `'parent'`   — parent with sex unknown.
  * - `'spouse'`   — couple-relationship partner.
- * - `'son'` / `'daughter'` — sex-known child (Task 4 will start emitting these).
- * - `'child'`    — child with sex unknown (current emission for parent_child where
- *                  the subject is `person1_id`).
+ * - `'son'` / `'daughter'` — sex-known child.
+ * - `'child'`    — child with sex unknown.
  * - `'sibling'`  — sibling relationship.
+ *
+ * Foster subtype (parent_child rows where subtype === 'foster'):
+ * - `'foster_father'` / `'foster_mother'` / `'foster_parent'`
+ * - `'foster_son'` / `'foster_daughter'` / `'foster_child'`
+ *
+ * Step subtype (parent_child rows where subtype === 'step'):
+ * - `'step_father'` / `'step_mother'` / `'step_parent'`
+ * - `'step_son'` / `'step_daughter'` / `'step_child'`
  */
 export type TimelineRelationshipLabel =
   | 'self'
@@ -143,7 +149,33 @@ export type TimelineRelationshipLabel =
   | 'son'
   | 'daughter'
   | 'child'
-  | 'sibling';
+  | 'sibling'
+  | 'foster_father'
+  | 'foster_mother'
+  | 'foster_parent'
+  | 'foster_son'
+  | 'foster_daughter'
+  | 'foster_child'
+  | 'step_father'
+  | 'step_mother'
+  | 'step_parent'
+  | 'step_son'
+  | 'step_daughter'
+  | 'step_child';
+
+/**
+ * Display-only partner data for self events tied to a couple relationship
+ * (marriage, divorce, wedding, engagement, separation, annulment).
+ * Populated at read time so the renderer can compose
+ * "Vigsel — Anna Andersson" labels without a second lookup.
+ * `null` for non-couple events.
+ */
+export interface TimelinePartner {
+  person_id: string;
+  given_name: string;
+  surname: string;
+  birth_surname: string | null;
+}
 
 export interface TimelineEntry {
   event: EventWithPlace;
@@ -157,6 +189,11 @@ export interface TimelineEntry {
    */
   person_birth_surname: string | null;
   relationship_label: TimelineRelationshipLabel;
+  /**
+   * Partner for self events tied to a couple relationship. `null` otherwise.
+   * Used by `composeTimelineLabel` to render "<event> — <partner>".
+   */
+  partner?: TimelinePartner | null;
 }
 
 /**
@@ -641,9 +678,49 @@ export function getTimeline(
 
   const entries: TimelineEntry[] = [];
 
-  // Person's own events
+  // Pre-fetch the focal person's relationships once. Used both for
+  // partner-name lookup on self couple events and for kin-event emission
+  // further down. Hoisting out of the per-event loop keeps the timeline
+  // O(rels) instead of O(events × rels).
+  const focalRels = getRelationshipsOfPerson(db, personId);
+
+  // Cache partner data per couple-relationship-id so a person with
+  // multiple events tied to the same marriage (e.g. marriage + divorce)
+  // doesn't re-query names per event.
+  const partnerByRelId = new Map<string, TimelinePartner | null>();
+  function lookupPartner(relationshipId: string): TimelinePartner | null {
+    if (partnerByRelId.has(relationshipId)) return partnerByRelId.get(relationshipId)!;
+    const r = focalRels.find(rr => rr.id === relationshipId && rr.type === 'couple');
+    if (!r) {
+      partnerByRelId.set(relationshipId, null);
+      return null;
+    }
+    const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
+    if (!otherId) {
+      partnerByRelId.set(relationshipId, null);
+      return null;
+    }
+    const otherNames = getPersonNames(db, otherId);
+    const otherPrimary = getPrimaryName(otherNames);
+    const otherBirthSurname = getBirthSurnameForDisplay(otherNames);
+    const partner: TimelinePartner = {
+      person_id: otherId,
+      given_name: otherPrimary.given_name,
+      surname: otherPrimary.surname,
+      birth_surname: otherBirthSurname,
+    };
+    partnerByRelId.set(relationshipId, partner);
+    return partner;
+  }
+
+  // Person's own events. Self-events tied to a couple relationship
+  // (marriage, divorce, etc.) carry an optional `partner` payload so the
+  // renderer can compose "<event> — <partner>" labels at render time.
   const ownEvents = resolveEventsPlaces(db, getEventsForPerson(db, personId));
   for (const event of ownEvents) {
+    const partner: TimelinePartner | null = event.relationship_id
+      ? lookupPartner(event.relationship_id)
+      : null;
     entries.push({
       event,
       person_id: personId,
@@ -651,6 +728,7 @@ export function getTimeline(
       person_surname: primaryName.surname,
       person_birth_surname: birthSurnameForDisplay,
       relationship_label: 'self',
+      partner,
     });
   }
 
@@ -696,8 +774,8 @@ export function getTimeline(
   // their lifetime), not a flat list of every family member's life events.
   const lifetime = readSubjectLifetime(ownEvents);
 
-  // Family events
-  const rels = getRelationshipsOfPerson(db, personId);
+  // Family events — reuse the already-fetched focalRels.
+  const rels = focalRels;
   for (const r of rels) {
     const otherId = r.person1_id === personId ? r.person2_id : r.person1_id;
     if (!otherId) continue;
@@ -718,23 +796,46 @@ export function getTimeline(
     } else if (r.type === 'parent_child') {
       // Convention: person1 = parent, person2 = child.
       subjectIsParent = r.person1_id === personId;
+      // Subtype tweaks the relationship label (foster_father, step_son, …)
+      // and gates whether the child's biological birth shows on the focal
+      // person's timeline. Per the timeline-kin-event-labelling plan: a
+      // foster/step parent did not participate in the child's biological
+      // birth, so that row is dropped — the foster_placement row surfaces
+      // in its place when dated. The same rule is symmetric for the child
+      // side (a foster/step parent's death surfaces with a foster/step
+      // label rather than the bare "Förälders död").
+      const subtype = (r.subtype ?? '').toLowerCase();
+      const isFoster = subtype === 'foster';
+      const isStep = subtype === 'step';
       if (subjectIsParent) {
-        // Task 4 + 5: subject is the parent of `other`. Emit child birth (so
-        // the user sees "what they built"), foster_placement (a parent_child
-        // birth-equivalent), and child death (a loss during the subject's
-        // lifetime — "this is who they lost"). Christenings and burials are
-        // excluded — they're a redundant copy of the EventList sitting next to
-        // the panel.
         const childPerson = getPerson(db, otherId);
         const childSex = childPerson?.sex ?? 'U';
-        label = childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
-        relevantTypes = ['birth', 'foster_placement', 'death'];
+        if (isFoster) {
+          label = childSex === 'M' ? 'foster_son' : childSex === 'F' ? 'foster_daughter' : 'foster_child';
+          // Foster: drop the biological birth — the focal person had no part
+          // in it. foster_placement surfaces in its place when dated.
+          relevantTypes = ['foster_placement', 'death'];
+        } else if (isStep) {
+          label = childSex === 'M' ? 'step_son' : childSex === 'F' ? 'step_daughter' : 'step_child';
+          // Step: same treatment — biological birth predates the step
+          // relationship by definition.
+          relevantTypes = ['foster_placement', 'death'];
+        } else {
+          label = childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+          relevantTypes = ['birth', 'foster_placement', 'death'];
+        }
       } else {
         // Subject is the child of `other` — emit only the parent's death,
-        // labelled by the parent's sex (per the user goal: "the deaths of their parents").
+        // labelled by the parent's sex AND the parent_child subtype.
         const parentPerson = getPerson(db, otherId);
         const parentSex = parentPerson?.sex ?? 'U';
-        label = parentSex === 'M' ? 'father' : parentSex === 'F' ? 'mother' : 'parent';
+        if (isFoster) {
+          label = parentSex === 'M' ? 'foster_father' : parentSex === 'F' ? 'foster_mother' : 'foster_parent';
+        } else if (isStep) {
+          label = parentSex === 'M' ? 'step_father' : parentSex === 'F' ? 'step_mother' : 'step_parent';
+        } else {
+          label = parentSex === 'M' ? 'father' : parentSex === 'F' ? 'mother' : 'parent';
+        }
         relevantTypes = ['death'];
       }
     } else if (r.type === 'sibling') {
@@ -788,8 +889,13 @@ export function getTimeline(
 
       const childPerson = getPerson(db, childId);
       const childSex = childPerson?.sex ?? 'U';
+      const childSubtype = (r.subtype ?? '').toLowerCase();
       const childLabel: TimelineRelationshipLabel =
-        childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child';
+        childSubtype === 'foster'
+          ? (childSex === 'M' ? 'foster_son' : childSex === 'F' ? 'foster_daughter' : 'foster_child')
+          : childSubtype === 'step'
+          ? (childSex === 'M' ? 'step_son' : childSex === 'F' ? 'step_daughter' : 'step_child')
+          : (childSex === 'M' ? 'son' : childSex === 'F' ? 'daughter' : 'child');
       const childNames = getPersonNames(db, childId);
       const childPrimary = getPrimaryName(childNames);
       const childBirthSurname = getBirthSurnameForDisplay(childNames);

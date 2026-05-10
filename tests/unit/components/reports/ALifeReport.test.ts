@@ -173,14 +173,15 @@ describe('ALifeReport', () => {
     });
 
     const labels = wrapper.findAll('.marker-label').map(n => n.text());
-    // Self birth — no suffix, place after middot
-    expect(labels.some(l => l.includes('Stockholm') && !l.includes('('))).toBe(true);
-    // Mother death — "mother" suffix, no place
-    expect(labels.some(l => l.includes('Maria') && l.includes('(mother)'))).toBe(true);
-    // Son birth — "son" suffix and place
-    expect(labels.some(l => l.includes('Lars') && l.includes('(son)') && l.includes('Uppsala'))).toBe(true);
-    // Spouse death — "spouse" suffix
-    expect(labels.some(l => l.includes('Karl') && l.includes('(spouse)'))).toBe(true);
+    // Self birth — bare event-type label, place after middot ("Birth · Stockholm").
+    expect(labels.some(l => l.includes('Birth') && l.includes('Stockholm'))).toBe(true);
+    // Mother death — "Parent's death — Maria Larsson" (relational prefix + name).
+    expect(labels.some(l => l.includes("Parent's death") && l.includes('Maria Larsson'))).toBe(true);
+    // Son birth — "Son's birth — Lars Andersson" (place is dropped from kin
+    // labels per the timeline-kin-event-labelling plan).
+    expect(labels.some(l => l.includes("Son's birth") && l.includes('Lars Andersson'))).toBe(true);
+    // Spouse death — "Partner's death — Karl Andersson".
+    expect(labels.some(l => l.includes("Partner's death") && l.includes('Karl Andersson'))).toBe(true);
   });
 
   it('passes optional categories to the timeline API when props enabled', async () => {

@@ -128,25 +128,25 @@ describe('PersonTimeline', () => {
     (window as unknown as { api: unknown }).api = makeApi(timelineFixture);
   });
 
-  it('renders self entries with no relationship suffix', async () => {
+  it('renders self birth as the bare event-type label (no relational prefix)', async () => {
     const wrapper = mount(PersonTimeline, {
       global: { plugins: [i18n] },
       props: { personId: 'subject' },
     });
     await flushPromises();
 
-    // Find the self entry — its row should NOT contain "(mother)" or "(son)" suffixes.
     const entries = wrapper.findAll('.timeline-entry');
     expect(entries.length).toBeGreaterThan(0);
 
-    // Birth row is the subject's own; it should have no .timeline-relationship span.
-    const birthRow = entries.find(e => e.text().includes('Birth'))!;
-    expect(birthRow.exists()).toBe(true);
-    expect(birthRow.find('.timeline-relationship').exists()).toBe(false);
-    expect(birthRow.classes()).not.toContain('is-family');
+    // Self entry is the row that is NOT marked is-family. It carries the
+    // bare event type ("Birth") in its event-badge — no "—" separator
+    // (no kin name to suffix).
+    const selfRow = entries.find(e => !e.classes().includes('is-family'))!;
+    expect(selfRow.exists()).toBe(true);
+    expect(selfRow.find('.event-badge').text()).toBe('Birth');
   });
 
-  it('renders mother entry with name and (mother) suffix', async () => {
+  it('renders kin death as relational prefix + kin name in the event-badge', async () => {
     const wrapper = mount(PersonTimeline, {
       global: { plugins: [i18n] },
       props: { personId: 'subject' },
@@ -154,15 +154,22 @@ describe('PersonTimeline', () => {
     await flushPromises();
 
     const entries = wrapper.findAll('.timeline-entry');
-    // Mother death is the only "Death" row in the fixture.
-    const motherRow = entries.find(e => e.text().includes('Death'))!;
+    // Mother death is the only is-family Death row.
+    const motherRow = entries.find(e =>
+      e.classes().includes('is-family') && e.text().includes('Maria'),
+    )!;
     expect(motherRow.exists()).toBe(true);
-    expect(motherRow.classes()).toContain('is-family');
-    expect(motherRow.find('.timeline-family-name').text()).toContain('Maria');
-    expect(motherRow.find('.timeline-relationship').text()).toBe('(mother)');
+    // Spec: "Förälders död — Maria Bergström" / "Parent's death — Maria Bergström".
+    // Composer collapses father/mother/parent → parentDeath label.
+    expect(motherRow.find('.event-badge').text()).toBe(
+      "Parent's death — Maria Bergström",
+    );
+    // The bare "Death" event-type should NOT appear standalone — the
+    // reader must see the relationship.
+    expect(motherRow.find('.event-badge').text()).not.toBe('Death');
   });
 
-  it('renders son entry with name and (son) suffix', async () => {
+  it('renders kin birth as son-birth phrase + kin name', async () => {
     const wrapper = mount(PersonTimeline, {
       global: { plugins: [i18n] },
       props: { personId: 'subject' },
@@ -170,13 +177,13 @@ describe('PersonTimeline', () => {
     await flushPromises();
 
     const entries = wrapper.findAll('.timeline-entry');
-    // Two "Birth" rows: subject's own (1850) and son's (1885). Pick the family one.
     const familyBirthRow = entries.find(
-      e => e.text().includes('Birth') && e.classes().includes('is-family'),
+      e => e.classes().includes('is-family') && e.text().includes('Erik'),
     )!;
     expect(familyBirthRow.exists()).toBe(true);
-    expect(familyBirthRow.find('.timeline-family-name').text()).toContain('Erik');
-    expect(familyBirthRow.find('.timeline-relationship').text()).toBe('(son)');
+    expect(familyBirthRow.find('.event-badge').text()).toBe(
+      "Son's birth — Erik Andersson",
+    );
   });
 
   it('clicking a family entry routes to that person, not EventModal', async () => {
@@ -189,7 +196,7 @@ describe('PersonTimeline', () => {
     expect(wrapper.find('.modal-overlay').exists()).toBe(false);
 
     const familyBirthRow = wrapper.findAll('.timeline-entry').find(
-      e => e.classes().includes('is-family') && e.text().includes('Birth'),
+      e => e.classes().includes('is-family') && e.text().includes('Erik'),
     )!;
     await familyBirthRow.trigger('click');
     await wrapper.vm.$nextTick();
