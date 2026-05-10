@@ -1,7 +1,7 @@
 # Plan: PersonNameModal — prefill given name, required-field signals, never-deceptive Save button
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** done
 **Source:** Beta tester report 92 (May 7 batch)
 **Effort:** S
 
@@ -67,24 +67,24 @@ Validate on every input change (reactive `computed` in `<script setup>`); no `su
 
 ### Phase 1 — Prefill
 
-- [ ] In `PersonNameModal.vue` setup: when `props.editingName == null`, fetch `person_names` for `props.personId`, pick the most-recent row, prefill `given_name` and `surname`. Use the same selector currently used for surname prefill (don't duplicate the SQL — refactor if needed).
-- [ ] Unit test in `tests/unit/personNameModal.test.ts`: with a person who has 2 prior names, the modal mounts with the latest `given_name` and `surname` already populated.
+- [x] In `PersonNameModal.vue` setup: when `props.editingName == null`, fetch `person_names` for `props.personId`, pick the most-recent row, prefill `given_name` and `surname`. Use the same selector currently used for surname prefill (don't duplicate the SQL — refactor if needed).
+- [x] Unit test in `tests/unit/personNameModal.test.ts`: with a person who has 2 prior names, the modal mounts with the latest `given_name` and `surname` already populated.
 
 ### Phase 2 — Required-field markers
 
-- [ ] Extract a tiny `<RequiredAsterisk />` primitive in `src/renderer/components/ui/` (single span, `aria-hidden="true"`, used everywhere later) — reuse from any existing primitive if one already exists.
-- [ ] Add per-field `Obligatoriskt` helper text — bind via a `helper` prop on `AppInput` if the primitive supports it; add the prop if not.
-- [ ] i18n keys `common.required` ('Obligatoriskt' / 'Required') and `personName.givenOrSurnameRequired`.
+- [x] Extract a tiny `<RequiredAsterisk />` primitive in `src/renderer/components/ui/` (single span, `aria-hidden="true"`, used everywhere later) — reuse from any existing primitive if one already exists.
+- [x] Add per-field `Obligatoriskt` helper text — bind via a `helper` prop on `AppInput` if the primitive supports it; add the prop if not.
+- [x] i18n keys `common.required` ('Obligatoriskt' / 'Required') and `personName.givenOrSurnameRequired`.
 
 ### Phase 3 — Save button hardening
 
-- [ ] Compute `validation: { ok: boolean; firstFailReason?: string }` from form state.
-- [ ] Bind Save button `:disabled="!validation.ok"`, `:aria-disabled="!validation.ok"`, `:title="validation.firstFailReason ?? ''"`.
-- [ ] If a click reaches a disabled save (rare but possible via screen reader / keyboard), implement the field-flash + focus + toast on `@click`.
+- [x] Compute `validation: { ok: boolean; firstFailReason?: string }` from form state.
+- [x] Bind Save button `:disabled="!validation.ok"`, `:aria-disabled="!validation.ok"`, `:title="validation.firstFailReason ?? ''"`.
+- [x] If a click reaches a disabled save (rare but possible via screen reader / keyboard), implement the field-flash + focus + toast on `@click`.
 
 ### Phase 4 — Test-coverage parity with new-person-dialog hardening
 
-- [ ] Mirror every behavioural test in `tests/unit/personModal.test.ts` (or wherever the new-person modal tests live) to the name modal: empty form → save disabled, fill given_name → save enabled, fill surname → save enabled, both empty → flash on click.
+- [x] Mirror every behavioural test in `tests/unit/personModal.test.ts` (or wherever the new-person modal tests live) to the name modal: empty form → save disabled, fill given_name → save enabled, fill surname → save enabled, both empty → flash on click.
 
 ## Verification
 

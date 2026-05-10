@@ -247,6 +247,7 @@
       :person-id="personId"
       :editing-name="editingName"
       :default-surname="primaryName?.surname ?? ''"
+      :default-given-name="primaryName?.given_name ?? ''"
       @cancel="cancelNameForm"
       @close="cancelNameForm"
       @saved="onNameSaved"

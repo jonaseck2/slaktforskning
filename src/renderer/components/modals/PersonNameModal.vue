@@ -4,35 +4,61 @@
     :title="displayTitle"
     :save-label="editingName ? $t('common.save') : $t('common.create')"
     :mode="mode"
+    :save-disabled="!validation.ok"
     @cancel="$emit('cancel')"
-    @save="handleSave"
+    @save="onSaveAttempt"
     @close="$emit('close')"
   >
     <div class="ep-fields">
       <!-- Given name -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('persons.givenName') }} *</span>
+        <span class="ep-field-label">
+          {{ $t('persons.givenName') }}
+          <span v-if="givenNameRequired" class="ep-required-asterisk" aria-hidden="true">*</span>
+        </span>
         <input
           ref="givenNameRef"
           class="ep-input"
+          :class="{ 'ep-input--flash': flashedField === 'given_name' }"
           v-model="form.given_name"
           type="text"
           :placeholder="$t('persons.givenName')"
-          @keydown.enter.prevent="handleSave"
+          :aria-required="givenNameRequired || undefined"
+          :aria-invalid="givenNameRequired || undefined"
+          :aria-describedby="givenNameRequired ? givenNameHelperId : undefined"
+          @keydown.enter.prevent="onSaveAttempt"
         />
         <span class="ep-field-hint">{{ $t('persons.givenNameHint') }}</span>
+        <span
+          v-if="givenNameRequired"
+          :id="givenNameHelperId"
+          class="ep-field-required-helper"
+        >{{ $t('common.required') }}</span>
       </div>
 
       <!-- Surname -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('persons.surname') }}</span>
+        <span class="ep-field-label">
+          {{ $t('persons.surname') }}
+          <span v-if="surnameRequired" class="ep-required-asterisk" aria-hidden="true">*</span>
+        </span>
         <input
+          ref="surnameRef"
           class="ep-input"
+          :class="{ 'ep-input--flash': flashedField === 'surname' }"
           v-model="form.surname"
           type="text"
           :placeholder="$t('persons.surname')"
-          @keydown.enter.prevent="handleSave"
+          :aria-required="surnameRequired || undefined"
+          :aria-invalid="surnameRequired || undefined"
+          :aria-describedby="surnameRequired ? surnameHelperId : undefined"
+          @keydown.enter.prevent="onSaveAttempt"
         />
+        <span
+          v-if="surnameRequired"
+          :id="surnameHelperId"
+          class="ep-field-required-helper"
+        >{{ $t('common.required') }}</span>
       </div>
 
       <!-- Name type segmented (alphabetical by translation) -->
@@ -213,7 +239,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, watch, nextTick, onMounted } from 'vue';
+import { reactive, ref, computed, watch, nextTick, onMounted, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
@@ -233,10 +259,12 @@ const props = withDefaults(defineProps<{
   personId: string;
   editingName?: NameRow | null;
   defaultSurname?: string;
+  defaultGivenName?: string;
 }>(), {
   mode: 'standalone',
   editingName: null,
   defaultSurname: undefined,
+  defaultGivenName: undefined,
 });
 
 const emit = defineEmits<{
@@ -255,6 +283,7 @@ const sortedNameTypes = computed(() => {
   );
 });
 const givenNameRef = ref<HTMLInputElement | null>(null);
+const surnameRef = ref<HTMLInputElement | null>(null);
 
 const form = reactive({
   given_name: '',
@@ -271,7 +300,7 @@ const form = reactive({
 });
 
 watch(() => props.editingName, (n) => {
-  form.given_name = n?.given_name ?? '';
+  form.given_name = n?.given_name ?? (props.defaultGivenName || '');
   form.surname = n?.surname ?? (props.defaultSurname || '');
   form.name_type = n?.name_type ?? 'married';
   form.name_prefix = n?.name_prefix ?? '';
@@ -283,6 +312,38 @@ watch(() => props.editingName, (n) => {
   form.date_from = n?.date_from ?? '';
   form.date_to = n?.date_to ?? '';
 }, { immediate: true });
+
+// ── Prefill given_name + surname from the most-recent existing name ──────
+//
+// User goal: when adding a name to a person who already has prior names,
+// open with both fields pre-populated from the displayed name (today's
+// behaviour for surname; new for given_name). The user can then edit just
+// the parts that change for the new name event.
+//
+// PRIME DIRECTIVE: this is a *suggestion*, never persisted on its own. The
+// save handler writes exactly what's in the form fields when the user
+// presses Save (or Cancel writes nothing).
+//
+// Uses pickDisplayedName so prefill matches what the user sees on the
+// person panel. Skipped in edit mode (the watch above already hydrated
+// from props.editingName) and skipped if the caller already supplied
+// defaultGivenName.
+async function prefillFromCurrentName() {
+  if (props.editingName) return;
+  if (form.given_name || form.surname) return; // already has values (caller-supplied or user-typed)
+  if (!window.api) return;
+  try {
+    const [namesResp, eventsResp] = await Promise.all([
+      window.api.persons.getNames(props.personId) as Promise<Array<NameRow & { date_from: string | null }>>,
+      window.api.events.forPerson(props.personId) as Promise<Array<{ event_type: string; date_value: string | null }>>,
+    ]);
+    if (namesResp.length === 0) return;
+    const current = pickDisplayedName(namesResp, eventsResp);
+    if (!current) return;
+    form.given_name = current.given_name ?? '';
+    form.surname = current.surname ?? '';
+  } catch { /* ignore */ }
+}
 
 // Visibility + label of the optional Date-to field, by name type.
 // `birth` and `name_change` hide it (a birth name doesn't end, and a
@@ -475,8 +536,65 @@ async function deleteCitation(id: string) {
   } catch { /* ignore */ }
 }
 
+// ── Validation + Save-button discipline ─────────────────────────────────
+//
+// User goal: the Save button is never a lie. If the form is invalid, Save
+// shows greyed-out (disabled). If the user reaches Save anyway (screen
+// reader, keyboard), the modal flashes the offending field, focuses it,
+// and surfaces an immediate, specific reason via toast.
+//
+// Constraint: at least one of given_name OR surname must be non-empty.
+// Mononyms exist; the importer/MCP audit (2026-05-04) explicitly preserves
+// "given only" and "surname only" as legitimate authored shapes.
+const validation = computed<{ ok: boolean; firstFailReason: string; firstFailField: 'given_name' | 'surname' | null }>(() => {
+  const g = form.given_name.trim();
+  const s = form.surname.trim();
+  if (g.length === 0 && s.length === 0) {
+    return {
+      ok: false,
+      firstFailReason: t('personName.givenOrSurnameRequired'),
+      firstFailField: 'given_name',
+    };
+  }
+  return { ok: true, firstFailReason: '', firstFailField: null };
+});
+
+const givenNameRequired = computed(() => !validation.value.ok);
+const surnameRequired = computed(() => !validation.value.ok);
+
+const givenNameHelperId = `${useId()}-given-required`;
+const surnameHelperId = `${useId()}-surname-required`;
+
+const flashedField = ref<'given_name' | 'surname' | null>(null);
+function flashField(field: 'given_name' | 'surname') {
+  flashedField.value = field;
+  setTimeout(() => {
+    if (flashedField.value === field) flashedField.value = null;
+  }, 1500);
+  const el = field === 'given_name' ? givenNameRef.value : surnameRef.value;
+  el?.focus();
+}
+
+// BaseSubPanel applies `:disabled` to the save button, so a normal mouse
+// click on a disabled button never reaches us. Keyboard / screen-reader
+// users CAN dispatch click events on `aria-disabled` buttons; this handler
+// also catches the Enter-key path bound on each input.
+function onSaveAttempt() {
+  if (!validation.value.ok) {
+    const field = validation.value.firstFailField;
+    if (field) flashField(field);
+    toast.error(validation.value.firstFailReason);
+    return;
+  }
+  void handleSave();
+}
+
 async function handleSave() {
-  if (!form.given_name.trim()) return;
+  if (!validation.value.ok) {
+    // Defence-in-depth — the @save handler is now onSaveAttempt, but if
+    // some other path calls handleSave directly we still refuse.
+    return;
+  }
   try {
     const { given_name: parsedGiven, preferred_name: parsedPreferred } = parseAsteriskNotation(form.given_name);
     const resolvedPreferred = form.preferred_name || parsedPreferred || null;
@@ -529,6 +647,7 @@ async function handleSave() {
 
 onMounted(async () => {
   await loadPersonName();
+  await prefillFromCurrentName();
   await loadCitations();
   await nextTick();
   givenNameRef.value?.focus();
@@ -557,5 +676,26 @@ onMounted(async () => {
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin-top: var(--space-xs);
+}
+.ep-required-asterisk {
+  color: var(--error-text);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.ep-field-required-helper {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--error-text);
+  font-weight: 600;
+  margin-top: var(--space-xs);
+}
+.ep-input--flash {
+  border-color: var(--error-text) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--error-text) 30%, transparent) !important;
+  animation: ep-input-flash 1.5s ease-out;
+}
+@keyframes ep-input-flash {
+  0%   { background: color-mix(in srgb, var(--error-text) 12%, var(--surface-bg)); }
+  100% { background: var(--surface-bg); }
 }
 </style>
