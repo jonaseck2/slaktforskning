@@ -12,10 +12,16 @@ static DB: Lazy<Mutex<Option<Connection>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn open_db(path: &str) -> Result<(), String> {
     let conn = Connection::open(path).map_err(|e| format!("open: {e}"))?;
-    // WAL + foreign keys, mirroring src/main/database.ts.
-    conn.execute_batch(
-        "PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;"
-    ).map_err(|e| format!("pragma: {e}"))?;
+    // foreign_keys mirrors the Electron app. We deliberately do NOT issue
+    // PRAGMA journal_mode=WAL here, even though the Electron schema.ts
+    // string-matches such a pragma — node-sqlite3-wasm's custom VFS has
+    // iVersion=1, so WAL is silently dropped to DELETE on the Electron
+    // side. If the spike actually flipped the file to WAL via rusqlite,
+    // Electron would lose the ability to reopen its own DB
+    // (SQLITE_CANTOPEN). See docs/plans/tauri-port-evaluation-baseline.md
+    // and `walfix` (src/bin/walfix.rs) for the rescue path.
+    conn.execute_batch("PRAGMA foreign_keys = ON;")
+        .map_err(|e| format!("pragma: {e}"))?;
     *DB.lock() = Some(conn);
     Ok(())
 }

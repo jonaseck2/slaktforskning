@@ -337,16 +337,35 @@ Both worth fixing on `main` regardless of the Tauri decision:
    Windows `npm.cmd` shim. Fixed in this branch's commit. Without it,
    `electron-forge start` and `electron-forge package` both crash at
    the `generateAssets` hook.
-2. **Electron's `app.getPath('userData')` resolution + node-sqlite3-wasm
-   on a non-ASCII directory name** (`%APPDATA%\Släktforskning\…`) →
-   "unable to open database file". The Tauri spike's rusqlite opened
-   the same Swedish-character path without issue. We worked around by
-   pointing Electron at an ASCII path via `SLAKTFORSKNING_DB`. This is
-   a latent Electron bug for Swedish/non-Latin app installs that the
-   `productName: "Släktforskning"` configuration triggers. Probably
-   filed as an upstream node-sqlite3-wasm UTF-8 path-encoding issue;
-   we should reproduce on a clean machine and either patch around it
-   in `database.ts` or upstream-issue node-sqlite3-wasm.
+2. **The "non-ASCII path" failure was actually WAL mode.** Investigated
+   2026-05-10 (see [.claude/skills/sqlite-wal](../../.claude/skills/sqlite-wal/SKILL.md)
+   for the full skill). Root cause:
+
+   - `node-sqlite3-wasm` is built with `-DSQLITE_OS_OTHER=1` and ships a
+     custom VFS whose `sqlite3_io_methods.iVersion = 1`. SQLite needs
+     `iVersion >= 2` for WAL's shared-memory hooks. WAL is therefore
+     unsupported by design on every OS.
+   - `PRAGMA journal_mode = WAL` (set in [src/api/schema.ts:5](../../src/api/schema.ts))
+     **silently downgrades to DELETE**. The Electron app has been
+     running in DELETE mode the entire time; no one noticed because
+     DELETE works fine.
+   - The Tauri spike's startup pragma (copied verbatim from schema.ts)
+     used real native SQLite via rusqlite, which DID honor the pragma —
+     so the file's header bytes 18/19 flipped to `2/2` (WAL marker).
+   - Once WAL-tagged, the file can no longer be opened by
+     `node-sqlite3-wasm` — bare `SQLITE_CANTOPEN`. Electron crashed at
+     startup until rescued.
+
+   Rescue: `tauri-spike/src-tauri/src/bin/walfix.rs` — a 30-line
+   rusqlite binary that checkpoints any WAL frames and runs
+   `PRAGMA journal_mode=DELETE` to flip the header back to `1/1`. Used
+   it on the user's `slaktforskning.db`; Electron opened normally
+   afterward; all 22,233 persons intact.
+
+   Spike's `db.rs` `open_db` no longer issues the WAL pragma. The
+   Electron `schema.ts` should follow (drop the no-op pragma or assert
+   the result) — tracked as a follow-up, not blocking the Tauri
+   recommendation.
 
 ## Phase 3 — Comparison + recommendation
 
