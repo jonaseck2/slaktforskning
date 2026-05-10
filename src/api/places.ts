@@ -2,6 +2,7 @@ import { Database } from 'node-sqlite3-wasm';
 import { Place } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 import { displayedNameIdSql } from './persons';
+import { deleteIgnoredDuplicatesForPlace } from './duplicates';
 
 function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -170,6 +171,10 @@ export function updatePlace(
 export function deletePlace(db: Database, id: string): boolean {
   runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
   runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
+  // v0.220.0: ignored_duplicates is polymorphic — clean place-typed pairs
+  // so a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
+  // Mirrors the pattern in deletePerson.
+  deleteIgnoredDuplicatesForPlace(db, id);
   return runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id]) > 0;
 }
 
