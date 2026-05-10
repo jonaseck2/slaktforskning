@@ -432,7 +432,7 @@ async function load() {
     // names just to compare length to zero, hammering the worker on PersonsView mount.
     const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { persons: Array<{ id: string }>; total: number };
     noPersonsExist.value = probe.total === 0;
-    if (probe.total > 0 && probe.persons[0]?.id) {
+    if (probe.total > 0 && probe.persons[0]?.id && probe.persons[0].id !== id) {
       router.replace('/persons/' + probe.persons[0].id);
       return;
     }

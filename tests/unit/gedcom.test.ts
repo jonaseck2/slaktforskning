@@ -256,7 +256,7 @@ describe('importGedcom (Genney profile)', () => {
     importGedcom(db, parseGedcom(ged), { profile: 'genney' });
     const persons = listPersons(db);
     const identifiers = getPersonIdentifiers(db, persons[0].id);
-    expect(identifiers.some(i => i.identifier_type === 'other' && i.identifier_value.includes('A1B2C3D4'))).toBe(true);
+    expect(identifiers.some(i => i.identifier_type === 'uid' && i.identifier_value.includes('A1B2C3D4'))).toBe(true);
   });
 
   it('appends _YHAPLOGROUP to person notes', () => {

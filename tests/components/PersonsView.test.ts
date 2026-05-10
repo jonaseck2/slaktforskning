@@ -130,17 +130,18 @@ describe('PersonsView', () => {
       expect(mockReplace).toHaveBeenCalledWith('/persons/default-id');
     });
 
-    it('falls back to persons.list when no route personId and no default_person_id', async () => {
+    it('redirects to first person when no route personId, no default_person_id, and persons exist', async () => {
       routeParams.personId = undefined;
-      // db.getSetting returns null (default mock)
+      // db.getSetting returns null (default mock); listPage returns 1 person.
 
       mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
-      expect(mockReplace).not.toHaveBeenCalled();
-      // Per renderer rules: never use un-paged list() for existence/probe.
-      // PersonsView falls back to listPage(1, 0, …) instead.
+      // Per the empty-tree-on-fresh-DB fix (709c4840): when persons exist
+      // but no tree subject is set, route-replace to the first person so
+      // the chart never opens to a blank screen.
       expect((window as any).api.persons.listPage).toHaveBeenCalled();
+      expect(mockReplace).toHaveBeenCalledWith('/persons/test-id');
     });
 
     it('redirects to default_person_id when route person is not found in current db', async () => {
@@ -153,17 +154,19 @@ describe('PersonsView', () => {
       expect(mockReplace).toHaveBeenCalledWith('/persons/default-id');
     });
 
-    it('falls back to persons.list when route person not found and no default_person_id', async () => {
+    it('redirects to first person when route person not found, no default_person_id, and a different person exists', async () => {
+      routeParams.personId = 'missing-id';
       (window as any).api.persons.get.mockResolvedValue(null);
-      // db.getSetting returns null (default mock)
+      // db.getSetting returns null (default mock); listPage returns id 'test-id'
+      // (different from the missing route id, so the loop guard does NOT apply).
 
       mount(PersonsView, { global: { plugins: [i18n, createPinia()] } });
       await flushPromises();
 
-      expect(mockReplace).not.toHaveBeenCalled();
-      // Per renderer rules: never use un-paged list() for existence/probe.
-      // PersonsView falls back to listPage(1, 0, …) instead.
+      // Same fallback as above — when the route id is invalid, redirect to
+      // the first existing person rather than rendering a blank chart.
       expect((window as any).api.persons.listPage).toHaveBeenCalled();
+      expect(mockReplace).toHaveBeenCalledWith('/persons/test-id');
     });
 
     it('does not redirect when route person is found', async () => {
