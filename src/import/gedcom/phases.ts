@@ -625,7 +625,18 @@ export function phaseAsso(ctx: ImportContext): void {
            (r.person1_id === otherPersonId && r.person2_id === personId))
         );
         if (existingRels.length === 0) {
-          createRelationship(ctx.db, { type: relType, person1_id: personId, person2_id: otherPersonId });
+          // Custom 2 _RELA_NOTE sub-tag under ASSO carries the genealogist's
+          // note on the relationship. The parser already unwraps CONT/CONC
+          // continuation lines into the joined node value, so multi-line
+          // notes (with embedded newlines) survive end-to-end. Couples ride
+          // _RELNOTES on FAM; this is the non-couple carrier.
+          const notes = getChild(assoNode, '_RELA_NOTE')?.value ?? '';
+          createRelationship(ctx.db, {
+            type: relType,
+            person1_id: personId,
+            person2_id: otherPersonId,
+            notes,
+          });
         }
       } else {
         ctx.assoDropCount++;
