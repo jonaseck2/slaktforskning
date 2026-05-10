@@ -633,6 +633,102 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
     const couples = listRelationships(db2).filter(r => r.type === 'couple');
     expect(couples[0].notes).toBe('Met at sea');
   });
+
+  it('sibling notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'half-siblings, same mother',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('2 _RELA_NOTE half-siblings, same mother');
+    const db2 = roundtrip(db);
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs).toHaveLength(1);
+    expect(sibs[0].notes).toBe('half-siblings, same mother');
+  });
+
+  it('godparent notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const godparent = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, godparent.id, { given_name: 'Erik' });
+    const child = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, child.id, { given_name: 'Stina' });
+    createRelationship(db, {
+      type: 'godparent',
+      person1_id: godparent.id,
+      person2_id: child.id,
+      notes: 'godfather and lifelong friend',
+    });
+    const db2 = roundtrip(db);
+    const rels = listRelationships(db2).filter(r => r.type === 'godparent');
+    expect(rels).toHaveLength(1);
+    expect(rels[0].notes).toBe('godfather and lifelong friend');
+  });
+
+  it('other-type relationship notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Sven' });
+    const p2 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Olof' });
+    createRelationship(db, {
+      type: 'other',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'business partner; co-owned the foundry 1872-1889',
+    });
+    const db2 = roundtrip(db);
+    const rels = listRelationships(db2).filter(r => r.type === 'other');
+    expect(rels).toHaveLength(1);
+    expect(rels[0].notes).toBe('business partner; co-owned the foundry 1872-1889');
+  });
+
+  it('multi-line sibling notes round-trip byte-identical via CONT continuation', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    const longNote = [
+      'Half-siblings, same mother (Maria Andersdotter).',
+      'Father unknown for Anna; Lars\' father is Erik Larsson.',
+      'Confirmed by parish records 1843-1851.',
+    ].join('\n');
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: longNote,
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('2 _RELA_NOTE Half-siblings, same mother (Maria Andersdotter).');
+    expect(ged).toContain('3 CONT Father unknown for Anna; Lars\' father is Erik Larsson.');
+    expect(ged).toContain('3 CONT Confirmed by parish records 1843-1851.');
+    const db2 = roundtrip(db);
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs[0].notes).toBe(longNote);
+  });
+
+  it('sibling notes survive 7.0 round-trip via _RELA_NOTE', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'half-siblings\nsame mother only',
+    });
+    const db2 = createTestDb();
+    importGedcom(db2, parseGedcom(exportGedcom(db, '7.0').ged));
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs).toHaveLength(1);
+    expect(sibs[0].notes).toBe('half-siblings\nsame mother only');
+  });
 });
 
 describe('Extended GEDCOM roundtrip — event participants', () => {

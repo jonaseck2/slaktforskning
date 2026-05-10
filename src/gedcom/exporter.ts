@@ -460,6 +460,21 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const otherXr = personXref.get(otherId);
       if (otherXr) {
         assoLines.push(`1 ASSO ${otherXr}`, `2 RELA ${capitalizeFirst(rel.type)}`);
+        // Custom 2 _RELA_NOTE sub-tag carries the genealogist's note on the
+        // relationship. ASSO has no standard NOTE child the importer reads
+        // back, so couple notes ride _RELNOTES on FAM and the sibling /
+        // godparent / other branch rides _RELA_NOTE here. Multi-line notes
+        // get split across CONT continuation lines so embedded newlines
+        // round-trip byte-identical. Emitted under both endpoints' ASSO
+        // blocks (the exporter writes the relationship under each person);
+        // the importer's deduplication ensures only one DB row results.
+        if (includeNotes && rel.notes) {
+          const noteLines = rel.notes.split(/\r?\n/);
+          assoLines.push(`2 _RELA_NOTE ${noteLines[0]}`);
+          for (let i = 1; i < noteLines.length; i++) {
+            assoLines.push(`3 CONT ${noteLines[i]}`);
+          }
+        }
       }
     }
 
