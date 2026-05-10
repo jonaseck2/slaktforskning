@@ -62,6 +62,27 @@
         <FilterChips :model-value="filterCountry" :options="countryOptions" @update:model-value="toggleCountry" />
         <FilterChips :model-value="filterKind" :options="kindOptions" @update:model-value="toggleKind" />
       </div>
+      <div v-if="filteredGazetteers.length > 0" class="filter-toolbar">
+        <span class="filter-toolbar-count">{{ $t('gazetteers.enabledOf', { enabled: filteredEnabledCount, total: filteredGazetteers.length }) }}</span>
+        <div class="filter-toolbar-actions">
+          <button
+            type="button"
+            class="btn-sm"
+            :disabled="filteredEnabledCount === filteredGazetteers.length"
+            @click="selectAllFiltered"
+          >
+            {{ $t('gazetteers.selectAllFiltered') }}
+          </button>
+          <button
+            type="button"
+            class="btn-sm"
+            :disabled="filteredEnabledCount === 0"
+            @click="deselectAllFiltered"
+          >
+            {{ $t('gazetteers.deselectAllFiltered') }}
+          </button>
+        </div>
+      </div>
       <div v-if="filteredGazetteers.length > 0" class="gazetteer-cards">
         <div v-for="gaz in filteredGazetteers" :key="gaz.id" class="gazetteer-card">
           <div class="gazetteer-card-header">
@@ -115,7 +136,7 @@ import SectionEmpty from '../components/ui/SectionEmpty.vue';
 import FilterChips from '../components/ui/FilterChips.vue';
 import { loadGazetteers } from '../../api/place-gazetteers/merge';
 import { resolvePlace } from '../../api/place-gazetteers/resolver';
-import type { GazetteerConfig, Gazetteer, GazetteerInfo } from '../../api/place-gazetteers/types';
+import type { GazetteerConfig, Gazetteer, GazetteerInfo, GazetteerNode } from '../../api/place-gazetteers/types';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
@@ -157,20 +178,75 @@ const filterKind = ref('');
 // 'all' shows every enabled gazetteer with an empty-state row when no hit.
 const testScope = ref<'matched' | 'all'>('matched');
 
+// Walk a gazetteer's tree to find the country it covers. Single-country
+// gazetteers (e.g. de-gemeinden — World > Europe > Germany > …) get bucketed
+// as that country. Gazetteers covering many countries (world-countries,
+// world-historical, europe-historical) collapse to a `__multi__` sentinel.
+// `rootName` alone — used previously — only ever surfaced "World" / "World
+// (Historical)", which lumped 25+ unrelated single-country gazetteers under
+// one chip. Render-only derivation, never written back.
+const MULTI_COUNTRY = '__multi__';
+const LANGUAGE_BUCKET = '__language__';
+
+function findSingleCountry(node: GazetteerNode): string | typeof MULTI_COUNTRY | null {
+  if (node.type === 'country') return node.name;
+  if (!node.children || node.children.length === 0) return null;
+  let found: string | null = null;
+  for (const c of node.children) {
+    const sub = findSingleCountry(c);
+    if (sub === MULTI_COUNTRY) return MULTI_COUNTRY;
+    if (sub) {
+      if (found && found !== sub) return MULTI_COUNTRY;
+      found = sub;
+    }
+  }
+  return found;
+}
+
+const idToCountry = computed<Map<string, string>>(() => {
+  const m = new Map<string, string>();
+  for (const g of [...allBundled.value, ...allImported.value]) {
+    if (g.shape === 'language' || g.kind === 'language') {
+      m.set(g.id, LANGUAGE_BUCKET);
+      continue;
+    }
+    if (!g.root) {
+      m.set(g.id, MULTI_COUNTRY);
+      continue;
+    }
+    const country = findSingleCountry(g.root);
+    m.set(g.id, country ?? MULTI_COUNTRY);
+  }
+  return m;
+});
+
+function countryLabel(value: string): string {
+  if (value === MULTI_COUNTRY) return t('gazetteers.multiCountry');
+  if (value === LANGUAGE_BUCKET) return t('gazetteers.languageBucket');
+  return value;
+}
+
 const countryOptions = computed(() => {
   const counts = new Map<string, number>();
   for (const g of gazetteerList.value) {
-    if (g.rootName) counts.set(g.rootName, (counts.get(g.rootName) || 0) + 1);
+    const country = idToCountry.value.get(g.id) ?? MULTI_COUNTRY;
+    counts.set(country, (counts.get(country) || 0) + 1);
   }
-  return [...counts.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([country, count]) => ({ value: country, label: country, count }));
+  // Concrete country names sort alphabetically; special buckets pin to the end
+  // so the user scans real countries first and "Multi-country / Language" never
+  // takes the leading slot.
+  const entries = [...counts.entries()];
+  const concrete = entries.filter(([k]) => k !== MULTI_COUNTRY && k !== LANGUAGE_BUCKET).sort((a, b) => a[0].localeCompare(b[0]));
+  const multi = entries.find(([k]) => k === MULTI_COUNTRY);
+  const lang = entries.find(([k]) => k === LANGUAGE_BUCKET);
+  const ordered = [...concrete, ...(multi ? [multi] : []), ...(lang ? [lang] : [])];
+  return ordered.map(([value, count]) => ({ value, label: countryLabel(value), count }));
 });
 
 const kindOptions = computed(() => {
   const counts = new Map<string, number>();
   const base = filterCountry.value
-    ? gazetteerList.value.filter(g => g.rootName === filterCountry.value)
+    ? gazetteerList.value.filter(g => (idToCountry.value.get(g.id) ?? MULTI_COUNTRY) === filterCountry.value)
     : gazetteerList.value;
   for (const g of base) {
     const kind = g.kind || 'point';
@@ -197,11 +273,37 @@ function toggleKind(value: string) {
 
 const filteredGazetteers = computed(() => {
   return gazetteerList.value.filter(g => {
-    if (filterCountry.value && g.rootName !== filterCountry.value) return false;
+    if (filterCountry.value && (idToCountry.value.get(g.id) ?? MULTI_COUNTRY) !== filterCountry.value) return false;
     if (filterKind.value && (g.kind || 'point') !== filterKind.value) return false;
     return true;
   });
 });
+
+// Bulk toggles operate on the visible (filtered) set so the user can flip a
+// whole country / kind subset in one click. Both helpers go through saveConfig
+// which invalidates the place resolver — same as the per-row checkbox.
+const filteredEnabledCount = computed(() => {
+  const enabled = new Set(config.value.enabledGazetteers);
+  return filteredGazetteers.value.filter(g => enabled.has(g.id)).length;
+});
+
+function selectAllFiltered() {
+  const filteredIds = filteredGazetteers.value.map(g => g.id);
+  if (filteredIds.length === 0) return;
+  const merged = new Set([...config.value.enabledGazetteers, ...filteredIds]);
+  config.value = { ...config.value, enabledGazetteers: [...merged] };
+  saveConfig();
+}
+
+function deselectAllFiltered() {
+  const filteredIds = new Set(filteredGazetteers.value.map(g => g.id));
+  if (filteredIds.size === 0) return;
+  config.value = {
+    ...config.value,
+    enabledGazetteers: config.value.enabledGazetteers.filter(id => !filteredIds.has(id)),
+  };
+  saveConfig();
+}
 
 const deleteModal = ref<{ visible: boolean; id: string; name: string; message: string }>({
   visible: false,
@@ -410,6 +512,33 @@ onMounted(loadAll);
   gap: 12px;
   margin-bottom: 12px;
   flex-wrap: wrap;
+}
+
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  background: var(--surface-bg);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.filter-toolbar-count {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.filter-toolbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-toolbar button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .gazetteer-cards {

@@ -1917,6 +1917,11 @@ export default {
     kindPoint: 'Punkt',
     kindBoundary: 'Gräns',
     kindLanguage: 'Språk',
+    multiCountry: 'Flera länder',
+    languageBucket: 'Språkpaket',
+    enabledOf: '{enabled} av {total} aktiverade',
+    selectAllFiltered: 'Aktivera alla',
+    deselectAllFiltered: 'Avaktivera alla',
   },
   undo: {
     createPerson: 'Skapa person',

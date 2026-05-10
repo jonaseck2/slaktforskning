@@ -1938,6 +1938,11 @@ export default {
     kindPoint: 'Point',
     kindBoundary: 'Boundary',
     kindLanguage: 'Language',
+    multiCountry: 'Multi-country',
+    languageBucket: 'Language packs',
+    enabledOf: '{enabled} of {total} enabled',
+    selectAllFiltered: 'Enable all',
+    deselectAllFiltered: 'Disable all',
   },
   undo: {
     createPerson: 'Create person',
