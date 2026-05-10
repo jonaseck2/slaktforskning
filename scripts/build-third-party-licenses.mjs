@@ -34,7 +34,11 @@ const KNOWN_LICENSE_HINTS = new Map([
  * Throws with combined stderr on non-zero exit.
  */
 function npmLs(args) {
-  const r = spawnSync('npm', ['ls', ...args, '--json'], { cwd: ROOT, encoding: 'utf8' });
+  // shell: true so the Windows shim (npm.cmd) resolves; harmless on POSIX.
+  // Spawning `npm.cmd` directly would EINVAL under Node ≥18.20 (CVE-2024-27980
+  // tightening). All args here are static literals, so the DEP0190 escaping
+  // concern doesn't apply.
+  const r = spawnSync('npm', ['ls', ...args, '--json'], { cwd: ROOT, encoding: 'utf8', shell: true });
   if (r.stderr && r.stderr.trim()) {
     process.stderr.write(r.stderr);
   }
