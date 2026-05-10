@@ -181,12 +181,10 @@ watch(sentinel, (el) => {
 });
 
 // --- Row navigation ---
-function isDuplicateCode(code: string): boolean {
-  return code === 'POSSIBLE_DUPLICATE_PERSON' || code.startsWith('DUPLICATE_');
-}
-
 function hasNavigation(r: QualityResult): boolean {
-  if (isDuplicateCode(r.code)) return false;
+  // DUPLICATE_* findings deep-link into the duplicates view via landingPath;
+  // every other check routes by primary entity id below.
+  if (r.landingPath) return true;
   return (
     (r.placeIds?.length ?? 0) > 0 ||
     (r.mediaIds?.length ?? 0) > 0 ||
@@ -196,6 +194,13 @@ function hasNavigation(r: QualityResult): boolean {
 }
 
 function navigateTo(r: QualityResult) {
+  // landingPath wins — DUPLICATE_* findings carry it so the genealogist lands
+  // on the duplicates view's right tab with the right pair pre-opened, not on
+  // the entity-specific page.
+  if (r.landingPath) {
+    router.push(r.landingPath);
+    return;
+  }
   if (r.placeIds && r.placeIds.length > 0) {
     router.push('/places/' + r.placeIds[0]);
     return;

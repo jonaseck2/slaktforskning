@@ -171,6 +171,14 @@ export function deletePerson(db: Database, id: string): boolean {
   // Clean up polymorphic link rows that don't have FK CASCADE
   runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
   runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [id]);
+  // Polymorphic ignored-duplicate rows: the FK to persons was dropped in the
+  // v0.220.0 migration to allow place/source/media pairs. Cleanup is now
+  // explicit, mirroring task_links / group_links above.
+  runSqlChanges(
+    db,
+    `DELETE FROM ignored_duplicates WHERE entity_type = 'person' AND (person1_id = ? OR person2_id = ?)`,
+    [id, id],
+  );
   return runSqlChanges(db, `DELETE FROM persons WHERE id = ?`, [id]) > 0;
 }
 

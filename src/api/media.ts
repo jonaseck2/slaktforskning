@@ -2,6 +2,7 @@ import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media, MediaLink, MediaLinkEntityType } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { deleteIgnoredDuplicatesForMedia } from './duplicates';
 
 /** Folder name convention: `foo.db` -> `foo-media`. Pure function of dbPath. */
 export function getMediaFolderName(dbPath: string): string {
@@ -147,6 +148,10 @@ export function countMissingMedia(db: Database, query?: string, filters?: MediaL
 export function deleteMedia(db: Database, id: string): boolean {
   runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
   runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
+  // v0.220.0: ignored_duplicates is polymorphic — clean media-typed pairs so
+  // a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
+  // Mirrors deletePerson / deletePlace / deleteSource.
+  deleteIgnoredDuplicatesForMedia(db, id);
   return runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id]) > 0;
 }
 

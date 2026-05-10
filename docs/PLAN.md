@@ -16,11 +16,6 @@ Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Cr
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
-#### Duplicates Panel — Places, Sources, Media [planned]
-Extend the existing `/duplicates` view (persons-only today) to cover places, sources, and media. Reuse the `MergePersonsModal` compare-and-merge pattern. API needs `findDuplicate*` + `merge*` per entity. Make the duplicates view the landing target for all `DUPLICATE_*` quality rows.
-- Design: [`plans/2026-05-09-duplicates-panel-design.md`](plans/2026-05-09-duplicates-panel-design.md)
-- Plan: [`plans/2026-05-09-duplicates-panel.md`](plans/2026-05-09-duplicates-panel.md)
-
 ---
 
 ## Considered, not now

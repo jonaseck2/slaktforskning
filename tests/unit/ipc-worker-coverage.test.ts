@@ -24,6 +24,10 @@ import { listChannels, channelRegistry } from '../../src/shared/channels';
 // they appear in the registry's listChannels() result and are dispatched via the registry loop in index.ts.
 const MAIN_THREAD_ONLY_CHANNELS = new Set([
   'media:attach', 'media:createFromFile', 'media:openFile', 'media:thumbnailDataUrl',
+  // duplicates:mergeMedia uses synchronous fs to delete the file on success
+  // and snapshot bytes for undo — must run on the main thread, not the DB
+  // worker (see .claude/rules/api.md "Worker-thread sync I/O").
+  'duplicates:mergeMedia',
   'db:getCurrent', 'db:getRecent',
   // db:createNew, db:switchTo, db:openExisting use ipcMain.handle directly — not caught by wrapHandler regex
   'backup:backup', 'backup:restore',

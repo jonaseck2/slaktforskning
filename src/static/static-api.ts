@@ -638,7 +638,13 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     list: async () => [], import: noop, export: noop, delete: noopFalse,
     getImported: async () => [], getSchema: async () => null, getBundled: async () => [],
   };
-  const duplicates = { find: async () => [], findPage: async () => ({ items: [], total: 0 }), count: async () => 0, merge: noop, ignore: noop };
+  const duplicates = {
+    find: async () => [], findPage: async () => ({ items: [], total: 0 }), count: async () => 0,
+    merge: noop, ignore: noop,
+    findPlaces: async () => [], countPlaces: async () => 0, ignorePlace: noop, mergePlaces: noop,
+    findSources: async () => [], countSources: async () => 0, ignoreSource: noop, mergeSources: noop,
+    findMedia: async () => [], countMedia: async () => 0, ignoreMedia: noop, mergeMedia: noop,
+  };
   const gedcom = { selectFile: noop, preview: noop, import: noop, export: noop };
   const importApi = {
     genneyCheckDocker: async () => false, genneySelectDerby: noop, genneySelectArchive: noop,

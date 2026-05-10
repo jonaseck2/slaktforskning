@@ -19,6 +19,8 @@ export interface QualityResult {
   resolvedLat?: number;
   resolvedLon?: number;
   matchedPath?: string;
+  /** Deep-link target — see CheckResult.landingPath in src/api/checks/check-utils.ts. */
+  landingPath?: string;
 }
 
 export const useQualityStore = defineStore('quality', () => {

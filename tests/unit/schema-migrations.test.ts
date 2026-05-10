@@ -59,7 +59,7 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
   media_regions:     ['id', 'media_id', 'person_id', 'x', 'y', 'width', 'height', 'label', 'created_at'],
   db_settings:       ['key', 'value'],
   gazetteers:        ['id', 'name', 'locale', 'description', 'source_json', 'data', 'created_at'],
-  ignored_duplicates:['person1_id', 'person2_id', 'created_at'],
+  ignored_duplicates:['entity_type', 'person1_id', 'person2_id', 'created_at'],
 };
 
 function tableCols(db: Database, table: string): string[] {

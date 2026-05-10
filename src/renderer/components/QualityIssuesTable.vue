@@ -91,6 +91,8 @@ export interface QualityIssue extends IgnorableIssue {
   placeNames?: string[];
   mediaTitles?: string[];
   sourceTitles?: string[];
+  /** Deep-link target — see CheckResult.landingPath in src/api/checks/check-utils.ts. */
+  landingPath?: string;
 }
 
 const props = defineProps<{

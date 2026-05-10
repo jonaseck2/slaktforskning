@@ -10,6 +10,7 @@ import { registerMediaTools } from './tools/prod/media';
 import { registerGroupTools } from './tools/prod/groups';
 import { registerRepositoryTools } from './tools/prod/repositories';
 import { registerDataManagementTools } from './tools/prod/data-management';
+import { registerDuplicateMergeTools } from './tools/prod/duplicates';
 
 export interface ProdServer {
   server: McpServer;
@@ -55,6 +56,7 @@ export function createProdServer(initialDb: Database, initialDbPath?: string): P
   registerGroupTools(server, ctx);
   registerRepositoryTools(server, ctx);
   registerDataManagementTools(server, utilCtx);
+  registerDuplicateMergeTools(server, utilCtx);
 
   return { server, getDb, getDbPath };
 }

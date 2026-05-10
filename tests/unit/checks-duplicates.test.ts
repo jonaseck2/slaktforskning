@@ -29,6 +29,11 @@ describe('POSSIBLE_DUPLICATE_PERSON', () => {
     expect(ids.has(p1.id)).toBe(true);
     expect(ids.has(p2.id)).toBe(true);
     expect(hit[0].severity).toBe('notice');
+    // Quality-check landing — see Task 8 of duplicates-panel plan.
+    expect(hit[0].landingPath).toBeDefined();
+    expect(hit[0].landingPath!.startsWith('/duplicates?tab=persons&pair=')).toBe(true);
+    const [id1, id2] = hit[0].landingPath!.split('pair=')[1].split(':');
+    expect(new Set([id1, id2])).toEqual(new Set([p1.id, p2.id]));
   });
 });
 
@@ -68,6 +73,12 @@ describe('DUPLICATE_PLACE', () => {
     const hit = results.filter(r => r.code === 'DUPLICATE_PLACE');
     expect(hit).toHaveLength(1);
     expect(new Set(hit[0].placeIds)).toEqual(new Set([a.id, b.id]));
+    // Quality-check landing — see Task 8 of duplicates-panel plan.
+    expect(hit[0].landingPath).toBeDefined();
+    const lp = hit[0].landingPath!;
+    expect(lp.startsWith('/duplicates?tab=places&pair=')).toBe(true);
+    const [id1, id2] = lp.split('pair=')[1].split(':');
+    expect(new Set([id1, id2])).toEqual(new Set([a.id, b.id]));
   });
 
   it('does not fire for same name under different parents', async () => {
@@ -91,6 +102,10 @@ describe('DUPLICATE_MEDIA', () => {
     const hit = results.filter(r => r.code === 'DUPLICATE_MEDIA');
     expect(hit).toHaveLength(1);
     expect(new Set(hit[0].mediaIds)).toEqual(new Set([a.id, b.id]));
+    expect(hit[0].landingPath).toBeDefined();
+    expect(hit[0].landingPath!.startsWith('/duplicates?tab=media&pair=')).toBe(true);
+    const [id1, id2] = hit[0].landingPath!.split('pair=')[1].split(':');
+    expect(new Set([id1, id2])).toEqual(new Set([a.id, b.id]));
   });
 
   it('does not fire for empty file_ref', async () => {
@@ -112,6 +127,10 @@ describe('DUPLICATE_SOURCE', () => {
     const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
     expect(hit).toHaveLength(1);
     expect(new Set(hit[0].sourceIds)).toEqual(new Set([a.id, b.id]));
+    expect(hit[0].landingPath).toBeDefined();
+    expect(hit[0].landingPath!.startsWith('/duplicates?tab=sources&pair=')).toBe(true);
+    const [id1, id2] = hit[0].landingPath!.split('pair=')[1].split(':');
+    expect(new Set([id1, id2])).toEqual(new Set([a.id, b.id]));
   });
 
   it('fires for two sources with the same (title, author, publication_info)', async () => {

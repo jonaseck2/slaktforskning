@@ -17,6 +17,15 @@ export interface CheckResult {
   resolvedLat?: number;
   resolvedLon?: number;
   matchedPath?: string;
+  /**
+   * Deep-link target for this finding. For DUPLICATE_* rows this routes the
+   * genealogist to the duplicates view's correct tab and pre-opens the
+   * compare-and-merge modal for the named pair, so they don't have to
+   * re-locate the row by hand.
+   *
+   * Format: '/duplicates?tab=<entity>&pair=<id1>:<id2>'.
+   */
+  landingPath?: string;
 }
 
 /**
