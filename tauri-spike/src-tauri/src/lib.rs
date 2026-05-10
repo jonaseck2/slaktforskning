@@ -4,8 +4,9 @@
 mod db;
 mod mcp;
 
-use db::{AncestorNode, DbStats, PersonRow};
+use db::{AncestorNode, DbStats, PersonRow, RunResult};
 use mcp::McpProbe;
+use serde_json::Value as JsonValue;
 
 #[tauri::command]
 fn db_open(path: String) -> Result<(), String> {
@@ -59,6 +60,37 @@ fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), Str
     app.emit("data:changed", kind).map_err(|e| e.to_string())
 }
 
+// ---------------------------------------------------------------------------
+// Generic primitives bound to Tauri commands. Mirrors src/api/db.ts surface
+// (queryOne / queryAll / runSql / runSqlChanges + db.exec). The renderer-side
+// TS shim invokes these via tauri::invoke after Phase 2.5 lands.
+// ---------------------------------------------------------------------------
+
+#[tauri::command(rename_all = "camelCase")]
+fn db_batch(sql: String) -> Result<(), String> {
+    db::db_batch(&sql)
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult, String> {
+    db::db_run(&sql, &params.unwrap_or_default())
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn db_run_changes(sql: String, params: Option<Vec<JsonValue>>) -> Result<u64, String> {
+    db::db_run_changes(&sql, &params.unwrap_or_default())
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn db_get(sql: String, params: Option<Vec<JsonValue>>) -> Result<Option<JsonValue>, String> {
+    db::db_get(&sql, &params.unwrap_or_default())
+}
+
+#[tauri::command(rename_all = "camelCase")]
+fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonValue>, String> {
+    db::db_all(&sql, &params.unwrap_or_default())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -73,6 +105,12 @@ pub fn run() {
             probe_mcp_sidecar,
             open_second_window,
             broadcast_data_changed,
+            // Generic primitives the TS shim invokes
+            db_batch,
+            db_run,
+            db_run_changes,
+            db_get,
+            db_all,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
