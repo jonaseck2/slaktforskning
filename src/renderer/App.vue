@@ -567,9 +567,22 @@ async function loadResearchBadge() {
 async function loadQualityBadge() {
   if (!window.api?.checks) return;
   try {
-    const results = await window.api.checks.runAll() as Array<{ severity: string }> | null;
+    const results = await window.api.checks.runAll() as Array<{ severity: string; personIds?: string[] }> | null;
     if (results === null) return;
     qualityErrorCount.value = results.filter(r => r.severity === 'error' || r.severity === 'warning').length;
+    // Persons-list "Kvalitet" column reads from a cache table that we
+    // refresh from the same runAll output. See plan
+    // 2026-05-09-persons-list-aggregate-columns.
+    if (window.api.persons?.refreshQualityIssueCounts) {
+      const counts: Record<string, number> = {};
+      for (const r of results) {
+        if (!r.personIds) continue;
+        for (const id of r.personIds) counts[id] = (counts[id] ?? 0) + 1;
+      }
+      try {
+        await window.api.persons.refreshQualityIssueCounts(counts);
+      } catch { /* cache refresh is best-effort */ }
+    }
   } catch { /* ignore */ }
 }
 

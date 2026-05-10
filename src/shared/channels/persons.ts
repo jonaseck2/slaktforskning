@@ -98,10 +98,35 @@ defineChannel({
 defineChannel({
   name: 'persons:listPage',
   thread: 'worker',
-  handler: (db, limit: number, offset: number, sortBy, sortDir, query?: string) => ({
-    persons: persons.listPersonsPage(db, limit, offset, sortBy, sortDir, query),
+  handler: (
+    db,
+    limit: number,
+    offset: number,
+    sortBy: persons.ListPersonsSortBy,
+    sortDir: persons.ListPersonsSortDir,
+    query?: string,
+    sortBy2?: persons.ListPersonsSortBy | null,
+    sortDir2?: persons.ListPersonsSortDir,
+  ) => ({
+    persons: persons.listPersonsPage(db, limit, offset, sortBy, sortDir, query, sortBy2 ?? null, sortDir2),
     total: persons.countPersons(db, query),
   }),
+});
+
+defineChannel({
+  name: 'persons:refreshQualityIssueCounts',
+  thread: 'worker',
+  // Not flagged `mutating: true` — this is a derived render-time cache,
+  // refreshing it should not trigger every list view to reload. The
+  // `quality_issue_counts` table is exempt from the GEDCOM fidelity
+  // registry for the same reason.
+  handler: (db, counts: Record<string, number>) => persons.refreshQualityIssueCounts(db, counts),
+});
+
+defineChannel({
+  name: 'persons:getQualityIssueCounts',
+  thread: 'worker',
+  handler: (db, personIds: string[]) => persons.getQualityIssueCounts(db, personIds),
 });
 
 defineChannel({

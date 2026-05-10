@@ -564,4 +564,29 @@ export function initializeSchema(db: Database): void {
     }
   }
 
+  // v0.236.0: quality_issue_counts cache table for the persons-list
+  // `Kvalitet` column. Refreshed by App.vue's loadQualityBadge debounce
+  // path (and by an explicit refresher when the column is enabled). The
+  // table holds derived data — a count of unresolved quality issues per
+  // person — and is therefore exempt from the GEDCOM fidelity registry
+  // (registered as `excluded` because it's a render-time cache, not
+  // authored). See plan 2026-05-09-persons-list-aggregate-columns.
+  runSql(db, `
+    CREATE TABLE IF NOT EXISTS quality_issue_counts (
+      person_id TEXT PRIMARY KEY REFERENCES persons(id) ON DELETE CASCADE,
+      issue_count INTEGER NOT NULL DEFAULT 0,
+      refreshed_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // v0.236.0: indexes that speed up the persons-list aggregate-column query.
+  // Each subquery in the new SELECT (event_count, relationship_count,
+  // media_count, group_count, task_count, name_count) hits one of these.
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_event_participants_person_id ON event_participants(person_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person1_id ON relationships(person1_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_relationships_person2_id ON relationships(person2_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_media_links_entity ON media_links(entity_type, entity_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_group_links_entity ON group_links(entity_type, entity_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_task_links_entity ON task_links(entity_type, entity_id)');
+  runSql(db, 'CREATE INDEX IF NOT EXISTS idx_person_names_person_id ON person_names(person_id)');
 }

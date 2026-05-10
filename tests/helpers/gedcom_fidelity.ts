@@ -30,6 +30,7 @@ export const VERSION_LABEL: Record<RegistryVersion, '5.5.1' | '7.0'> = {
 export const EXEMPT_TABLES: Record<string, string> = {
   gazetteers: 'gazetteer cache; pure derived data per Prime Directive #1',
   ignored_duplicates: 'per-DB UI state; no source-data analog',
+  quality_issue_counts: 'render-time cache for the persons-list quality column; refreshed from runAllChecks output, never authored',
   media_regions: 'face/region annotations; no GEDCOM 5.5.1 representation, 7.0 OBJE.CROP exporter not yet shipped — promote to registered entry when it does',
   db_settings: 'per-install preferences; user state, not genealogical data',
   person_names_new: 'migration artifact; should not exist in a settled DB',

@@ -403,6 +403,23 @@ export type PersonListItem = {
   birth_place: string | null;
   death_date: string | null;
   death_place: string | null;
+  /**
+   * Aggregate counts used by the persons-list "research-progress map"
+   * columns. All computed by correlated subqueries in the same SELECT
+   * as the row — never per-row IPC. See plan
+   * 2026-05-09-persons-list-aggregate-columns.
+   *
+   * `quality_count` is read from the `quality_issue_counts` cache table
+   * and may be `0` if the cache has never been populated. The cache is
+   * refreshed by App.vue's badge cycle and by an explicit refresher.
+   */
+  name_count: number;
+  event_count: number;
+  relationship_count: number;
+  media_count: number;
+  group_count: number;
+  task_count: number;
+  quality_count: number;
 };
 
 /**
@@ -428,6 +445,7 @@ const PERSON_LIST_BASE_QUERY = `
   SELECT
     p.id,
     p.sex,
+    p.display_id,
     COALESCE(pn.given_name, '') AS given_name,
     COALESCE(pn.surname, '')    AS surname,
     pn.preferred_name           AS preferred_name,
@@ -462,14 +480,50 @@ const PERSON_LIST_BASE_QUERY = `
       LEFT JOIN places pl ON pl.id = e.place_id
       WHERE ep.person_id = p.id
       LIMIT 1
-    ) AS death_place
+    ) AS death_place,
+    -- Aggregate columns kept at 0 in this snapshot view; full counts are
+    -- only surfaced from the paged list view that opts the user into them.
+    0 AS name_count,
+    0 AS event_count,
+    0 AS relationship_count,
+    0 AS media_count,
+    0 AS group_count,
+    0 AS task_count,
+    0 AS quality_count
   FROM persons p
   LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
 `;
 
 
-export type ListPersonsSortBy = 'surname' | 'given_name' | 'birth_date' | 'display_id';
+export type ListPersonsSortBy =
+  | 'surname'
+  | 'given_name'
+  | 'birth_date'
+  | 'display_id'
+  | 'sex'
+  | 'name_count'
+  | 'event_count'
+  | 'relationship_count'
+  | 'media_count'
+  | 'group_count'
+  | 'task_count'
+  | 'quality_count';
 export type ListPersonsSortDir = 'asc' | 'desc';
+
+/**
+ * SQL fragment for one aggregate-count expression. Used inside the SELECT
+ * (as a column) and inside ORDER BY (as a sort key). Kept in one place so
+ * the column value and the sort match exactly.
+ */
+const AGG_SQL: Record<Exclude<ListPersonsSortBy, 'surname' | 'given_name' | 'birth_date' | 'display_id' | 'sex'>, string> = {
+  name_count: '(SELECT COUNT(*) FROM person_names WHERE person_id = p.id)',
+  event_count: '(SELECT COUNT(*) FROM event_participants WHERE person_id = p.id)',
+  relationship_count: '(SELECT COUNT(*) FROM relationships WHERE person1_id = p.id OR person2_id = p.id)',
+  media_count: "(SELECT COUNT(*) FROM media_links WHERE entity_type = 'person' AND entity_id = p.id)",
+  group_count: "(SELECT COUNT(*) FROM group_links WHERE entity_type = 'person' AND entity_id = p.id)",
+  task_count: "(SELECT COUNT(*) FROM task_links WHERE entity_type = 'person' AND entity_id = p.id)",
+  quality_count: '(SELECT COALESCE(issue_count, 0) FROM quality_issue_counts WHERE person_id = p.id)',
+};
 
 function buildPersonsFilterClause(query: string | undefined): { where: string; params: unknown[] } {
   const tokens = (query ?? '').trim().split(/\s+/).filter(Boolean);
@@ -485,6 +539,34 @@ function buildPersonsFilterClause(query: string | undefined): { where: string; p
   return { where: `WHERE ${tokenClauses}`, params };
 }
 
+/**
+ * Builds the ORDER BY fragment for one sort dimension. Used for both the
+ * primary and secondary sort. `dir` is already pre-validated to ASC/DESC.
+ *
+ * For the count columns and `sex`, the natural sort key is the column's
+ * own value; for `name`-style keys we use the displayed name expression so
+ * the sort matches the rendered column.
+ */
+function orderByFragment(sortBy: ListPersonsSortBy, dir: 'ASC' | 'DESC'): string {
+  if (sortBy === 'given_name') {
+    return `COALESCE(NULLIF(TRIM(pn.preferred_name), ''), pn.given_name) ${dir}, pn.surname ${dir}`;
+  }
+  if (sortBy === 'birth_date') {
+    return `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}`;
+  }
+  if (sortBy === 'display_id') {
+    return `CASE WHEN p.display_id IS NULL THEN 1 ELSE 0 END, p.display_id ${dir}`;
+  }
+  if (sortBy === 'sex') {
+    return `p.sex ${dir}`;
+  }
+  if (sortBy === 'surname') {
+    return `pn.surname ${dir}, pn.given_name ${dir}`;
+  }
+  // Aggregate count columns
+  return `${AGG_SQL[sortBy]} ${dir}`;
+}
+
 export function listPersonsPage(
   db: Database,
   limit: number,
@@ -492,34 +574,61 @@ export function listPersonsPage(
   sortBy: ListPersonsSortBy = 'surname',
   sortDir: ListPersonsSortDir = 'asc',
   query?: string,
+  sortBy2?: ListPersonsSortBy | null,
+  sortDir2?: ListPersonsSortDir,
 ): PersonListItem[] {
-  // Pass 1: sort + paginate with only name + birth-date data — no death/place
-  // subqueries (those are pass 2). Correlated subqueries on all N persons
-  // before LIMIT caused O(4N) lookups on large DBs.
+  // Single SQL pass: select id + display fields + every aggregate count in
+  // one correlated-subquery sweep. The plan demands "single SQL per page,
+  // never per-row" — see .claude/rules/api.md "Bulk / Batch naming".
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
-  // NULL birth_dates sort last on asc, first on desc (CASE WHEN trick).
-  // For given_name sort, use COALESCE(NULLIF(TRIM(preferred_name), ''), given_name)
-  // so the sort key matches what the user sees in the row (display uses
-  // preferred_name when set; otherwise the full given_name). Read-only —
-  // never written back to the DB.
-  const orderBy = sortBy === 'given_name'
-    ? `COALESCE(NULLIF(TRIM(pn.preferred_name), ''), pn.given_name) ${dir}, pn.surname ${dir}`
-    : sortBy === 'birth_date'
-    ? `CASE WHEN bd.date_value IS NULL THEN 1 ELSE 0 END, bd.date_value ${dir}, pn.surname ASC, pn.given_name ASC`
-    : sortBy === 'display_id'
-    ? `CASE WHEN p.display_id IS NULL THEN 1 ELSE 0 END, p.display_id ${dir}`
-    : `pn.surname ${dir}, pn.given_name ${dir}`;
+  const dir2 = sortDir2 === 'desc' ? 'DESC' : 'ASC';
+  // Default tiebreaker chain: when sorting by a low-cardinality column
+  // (sex, any count), fall back to displayed-surname ASC then given_name
+  // ASC so rows within each bucket appear alphabetically, matching the
+  // user goal "sex-sort still has surnames in alphabetical order within
+  // each sex bucket". When the user explicitly sets a secondary, that
+  // wins; the surname/given fallback applies after BOTH user-selected
+  // sorts.
+  const primaryFrag = orderByFragment(sortBy, dir);
+  const secondaryFrag = sortBy2 && sortBy2 !== sortBy
+    ? orderByFragment(sortBy2, dir2)
+    : '';
+  const tiebreaker = 'pn.surname ASC, pn.given_name ASC';
+  const orderBy = [primaryFrag, secondaryFrag, tiebreaker].filter(Boolean).join(', ');
   const filter = buildPersonsFilterClause(query);
   // `birth_surname` is a display-only correlated subquery — see
   // plan birth-name-display-and-quality-check. Computed at read time;
   // never persisted.
-  const page = queryAll<{ id: string; sex: string; display_id: number | null; given_name: string; surname: string; preferred_name: string | null; nickname: string | null; birth_surname: string | null }>(db, `
+  const page = queryAll<{
+    id: string;
+    sex: string;
+    display_id: number | null;
+    given_name: string;
+    surname: string;
+    preferred_name: string | null;
+    nickname: string | null;
+    birth_surname: string | null;
+    name_count: number;
+    event_count: number;
+    relationship_count: number;
+    media_count: number;
+    group_count: number;
+    task_count: number;
+    quality_count: number;
+  }>(db, `
     SELECT p.id, p.sex, p.display_id,
            COALESCE(pn.given_name, '') AS given_name,
            COALESCE(pn.surname, '')    AS surname,
            pn.preferred_name           AS preferred_name,
            pn.nickname                 AS nickname,
-           ${birthSurnameSql('p.id')}  AS birth_surname
+           ${birthSurnameSql('p.id')}  AS birth_surname,
+           ${AGG_SQL.name_count}         AS name_count,
+           ${AGG_SQL.event_count}        AS event_count,
+           ${AGG_SQL.relationship_count} AS relationship_count,
+           ${AGG_SQL.media_count}        AS media_count,
+           ${AGG_SQL.group_count}        AS group_count,
+           ${AGG_SQL.task_count}         AS task_count,
+           ${AGG_SQL.quality_count}      AS quality_count
     FROM persons p
     LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     LEFT JOIN (
@@ -582,8 +691,61 @@ export function listPersonsPage(
       nickname: p.nickname,
       birth_surname: p.birth_surname,
       ...events,
+      name_count: p.name_count ?? 0,
+      event_count: p.event_count ?? 0,
+      relationship_count: p.relationship_count ?? 0,
+      media_count: p.media_count ?? 0,
+      group_count: p.group_count ?? 0,
+      task_count: p.task_count ?? 0,
+      quality_count: p.quality_count ?? 0,
     };
   });
+}
+
+/**
+ * Returns a Map from person_id to unresolved-quality-issue count, read from
+ * the `quality_issue_counts` cache table. Bulk-by-name per
+ * `.claude/rules/api.md` — single SQL with `IN (?,?,...)` regardless of N.
+ *
+ * Missing entries (persons not yet seen by `refreshQualityIssueCounts`)
+ * default to 0 in the returned map.
+ */
+export function getQualityIssueCounts(db: Database, personIds: string[]): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const id of personIds) result[id] = 0;
+  if (personIds.length === 0) return result;
+  const placeholders = personIds.map(() => '?').join(',');
+  const rows = queryAll<{ person_id: string; issue_count: number }>(db,
+    `SELECT person_id, issue_count FROM quality_issue_counts WHERE person_id IN (${placeholders})`,
+    personIds,
+  );
+  for (const row of rows) result[row.person_id] = row.issue_count;
+  return result;
+}
+
+/**
+ * Replace the entire `quality_issue_counts` table from a fresh
+ * person_id → count map. Caller is responsible for running
+ * `runAllChecks` and bucketing results by personId. Single transaction
+ * — wipe + bulk insert. Idempotent.
+ */
+export function refreshQualityIssueCounts(db: Database, counts: Record<string, number>): void {
+  runSql(db, 'BEGIN IMMEDIATE');
+  try {
+    runSql(db, 'DELETE FROM quality_issue_counts');
+    for (const [personId, count] of Object.entries(counts)) {
+      if (count > 0) {
+        runSql(db,
+          'INSERT INTO quality_issue_counts (person_id, issue_count) VALUES (?, ?)',
+          [personId, count],
+        );
+      }
+    }
+    runSql(db, 'COMMIT');
+  } catch (err) {
+    try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+    throw err;
+  }
 }
 
 export function countPersons(db: Database, query?: string): number {
@@ -665,13 +827,22 @@ export function listUnsourcedPersonsPage(db: Database, limit: number, offset: nu
     return {
       id: p.id,
       sex: p.sex as Person['sex'],
-      display_id: p.display_id,
+      display_id: null,
       given_name: p.given_name,
       surname: p.surname,
       preferred_name: p.preferred_name,
       nickname: p.nickname,
       birth_surname: p.birth_surname,
       ...events,
+      // Unsourced view doesn't surface aggregate columns — kept at 0 to
+      // maintain the PersonListItem shape consumers rely on.
+      name_count: 0,
+      event_count: 0,
+      relationship_count: 0,
+      media_count: 0,
+      group_count: 0,
+      task_count: 0,
+      quality_count: 0,
     };
   });
 }

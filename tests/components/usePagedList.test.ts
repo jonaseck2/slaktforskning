@@ -17,7 +17,7 @@ describe('usePagedList', () => {
     });
     await list.reload();
     expect(fetchPage).toHaveBeenCalledTimes(1);
-    expect(fetchPage).toHaveBeenCalledWith(100, 0, 'name', 'asc', '');
+    expect(fetchPage).toHaveBeenCalledWith(100, 0, 'name', 'asc', '', null, 'asc');
     expect(list.items.value).toHaveLength(2);
     expect(list.total.value).toBe(2);
     expect(list.hasMore.value).toBe(false);
@@ -61,7 +61,7 @@ describe('usePagedList', () => {
     await flushDebounce(50);
     await nextTick();
     expect(fetchPage).toHaveBeenCalledTimes(1);
-    expect(fetchPage).toHaveBeenCalledWith(100, 0, 'name', 'asc', 'and');
+    expect(fetchPage).toHaveBeenCalledWith(100, 0, 'name', 'asc', 'and', null, 'asc');
     expect(list.items.value).toEqual([{ id: 'match' }]);
   });
 

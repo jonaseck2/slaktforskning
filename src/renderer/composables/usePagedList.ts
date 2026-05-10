@@ -21,6 +21,12 @@ export interface PagedListOptions<T, SortBy extends string> {
   /**
    * The fetcher. Must return `{ items, total }` filtered+sorted server-side.
    * The composable guarantees only the latest call's result is applied.
+   *
+   * `sortBy2` / `sortDir2` are the user-selected secondary-sort key (see
+   * plan 2026-05-09-persons-list-aggregate-columns). `null` means no
+   * explicit secondary; the API still applies its built-in tiebreaker
+   * (surname, given_name) so adjacent rows with equal primary keys stay
+   * in a stable, useful order.
    */
   fetchPage: (
     limit: number,
@@ -28,6 +34,8 @@ export interface PagedListOptions<T, SortBy extends string> {
     sortBy: SortBy,
     sortDir: 'asc' | 'desc',
     query: string,
+    sortBy2: SortBy | null,
+    sortDir2: 'asc' | 'desc',
   ) => Promise<{ items: T[]; total: number }>;
   /** Optional callback after a fresh page (offset 0) loads. */
   onLoaded?: (items: T[]) => void;
@@ -47,10 +55,25 @@ export interface PagedListApi<T, SortBy extends string> {
   searchQuery: Ref<string>;
   sortBy: Ref<SortBy>;
   sortDir: Ref<'asc' | 'desc'>;
+  /**
+   * Secondary sort key. `null` when the user has not picked one — the
+   * API's built-in tiebreaker (surname, given_name on persons; entity-
+   * appropriate elsewhere) still applies. Set explicitly via shift-click
+   * on a column header, or via `setSecondarySort`.
+   */
+  sortBy2: Ref<SortBy | null>;
+  sortDir2: Ref<'asc' | 'desc'>;
   hasMore: Ref<boolean>;
   reload: () => Promise<void>;
   loadMore: () => Promise<void>;
-  toggleSort: (column: SortBy) => void;
+  /**
+   * Click handler for column headers. Plain click toggles the primary
+   * sort (or sets it if it's a different column). Shift-click sets the
+   * secondary sort (or toggles its direction).
+   */
+  toggleSort: (column: SortBy, opts?: { shift?: boolean }) => void;
+  /** Clear the secondary sort. */
+  clearSecondarySort: () => void;
   /** Wire the IntersectionObserver sentinel to trigger loadMore. */
   attachSentinel: (el: HTMLElement | null, root?: HTMLElement | null) => void;
 }
@@ -78,9 +101,17 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
   const initialSortDir = (opts.storageKey
     ? (localStorage.getItem(`${opts.storageKey}-sort-dir`) as 'asc' | 'desc' | null)
     : null) ?? opts.defaultSortDir ?? 'asc';
+  const initialSortBy2 = opts.storageKey
+    ? (localStorage.getItem(`${opts.storageKey}-sort-by2`) as SortBy | null)
+    : null;
+  const initialSortDir2 = (opts.storageKey
+    ? (localStorage.getItem(`${opts.storageKey}-sort-dir2`) as 'asc' | 'desc' | null)
+    : null) ?? 'asc';
 
   const sortBy = ref<SortBy>(initialSortBy) as Ref<SortBy>;
   const sortDir = ref<'asc' | 'desc'>(initialSortDir);
+  const sortBy2 = ref<SortBy | null>(initialSortBy2) as Ref<SortBy | null>;
+  const sortDir2 = ref<'asc' | 'desc'>(initialSortDir2);
 
   const hasMore = computed(() => items.value.length < total.value);
 
@@ -107,7 +138,15 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
     const seq = ++requestSeq;
     loading.value = true;
     try {
-      const result = await opts.fetchPage(PAGE_SIZE, 0, sortBy.value, sortDir.value, debouncedQuery.value);
+      const result = await opts.fetchPage(
+        PAGE_SIZE,
+        0,
+        sortBy.value,
+        sortDir.value,
+        debouncedQuery.value,
+        sortBy2.value,
+        sortDir2.value,
+      );
       if (seq !== requestSeq) return; // stale — newer request in flight
       items.value = result.items;
       total.value = result.total;
@@ -123,7 +162,15 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
     const seq = ++requestSeq;
     loading.value = true;
     try {
-      const result = await opts.fetchPage(PAGE_SIZE, offset.value, sortBy.value, sortDir.value, debouncedQuery.value);
+      const result = await opts.fetchPage(
+        PAGE_SIZE,
+        offset.value,
+        sortBy.value,
+        sortDir.value,
+        debouncedQuery.value,
+        sortBy2.value,
+        sortDir2.value,
+      );
       if (seq !== requestSeq) return;
       items.value = [...items.value, ...result.items];
       total.value = result.total;
@@ -134,22 +181,54 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
     }
   }
 
-  function toggleSort(column: SortBy) {
+  function persistSort() {
+    if (!opts.storageKey) return;
+    localStorage.setItem(`${opts.storageKey}-sort-by`, sortBy.value);
+    localStorage.setItem(`${opts.storageKey}-sort-dir`, sortDir.value);
+    if (sortBy2.value) {
+      localStorage.setItem(`${opts.storageKey}-sort-by2`, sortBy2.value);
+      localStorage.setItem(`${opts.storageKey}-sort-dir2`, sortDir2.value);
+    } else {
+      localStorage.removeItem(`${opts.storageKey}-sort-by2`);
+      localStorage.removeItem(`${opts.storageKey}-sort-dir2`);
+    }
+  }
+
+  function toggleSort(column: SortBy, options?: { shift?: boolean }) {
+    if (options?.shift) {
+      // Shift-click: set/toggle the secondary sort. If the column matches
+      // the primary, clear the secondary instead — a column can't be both.
+      if (sortBy.value === column) {
+        sortBy2.value = null;
+      } else if (sortBy2.value === column) {
+        sortDir2.value = sortDir2.value === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortBy2.value = column;
+        sortDir2.value = 'asc';
+      }
+      persistSort();
+      return;
+    }
     if (sortBy.value === column) {
       sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
     } else {
       sortBy.value = column;
       sortDir.value = 'asc';
+      // Promoting a column to primary clears it from secondary if it was
+      // there — a column can't be both.
+      if (sortBy2.value === column) sortBy2.value = null;
     }
-    if (opts.storageKey) {
-      localStorage.setItem(`${opts.storageKey}-sort-by`, sortBy.value);
-      localStorage.setItem(`${opts.storageKey}-sort-dir`, sortDir.value);
-    }
+    persistSort();
+  }
+
+  function clearSecondarySort() {
+    sortBy2.value = null;
+    persistSort();
   }
 
   // Re-fetch from offset 0 whenever the debounced query or sort changes.
   // We watch these together so a rapid filter+sort change is coalesced.
-  watch([debouncedQuery, sortBy, sortDir], () => {
+  watch([debouncedQuery, sortBy, sortDir, sortBy2, sortDir2], () => {
     void reload();
   });
 
@@ -199,10 +278,13 @@ export function usePagedList<T, SortBy extends string>(opts: PagedListOptions<T,
     searchQuery,
     sortBy,
     sortDir,
+    sortBy2,
+    sortDir2,
     hasMore,
     reload,
     loadMore,
     toggleSort,
+    clearSecondarySort,
     attachSentinel,
   };
 }

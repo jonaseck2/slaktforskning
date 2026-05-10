@@ -30,6 +30,7 @@ export const STORAGE_KEYS = {
   personsListWidth: 'persons-list-width',
   personsPanelOpen: 'persons-panel-open',
   personsPanelWidth: 'persons-panel-width',
+  personsVisibleColumns: 'persons-visible-columns',
   vizTab: 'viz-tab',
   vizPanelOpen: 'viz-panel-open',
   vizPanelWidth: 'viz-panel-width',
@@ -92,6 +93,38 @@ export const STORAGE_KEYS = {
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+
+/**
+ * The complete set of column keys the persons-list table understands.
+ * The four "always-visible" columns (`name`, `birth_date`, `death_date`,
+ * `display_id`) anchor the table; the rest are opt-in via the column
+ * picker. See plan 2026-05-09-persons-list-aggregate-columns.
+ *
+ * Persisted as a JSON `string[]` under `STORAGE_KEYS.personsVisibleColumns`.
+ */
+export type PersonsColumnKey =
+  | 'display_id'
+  | 'name'
+  | 'birth_date'
+  | 'death_date'
+  | 'sex'
+  | 'name_count'
+  | 'event_count'
+  | 'relationship_count'
+  | 'media_count'
+  | 'group_count'
+  | 'task_count'
+  | 'quality_count';
+
+export const PERSONS_DEFAULT_VISIBLE_COLUMNS: PersonsColumnKey[] = [
+  'display_id',
+  'name',
+  'birth_date',
+  'death_date',
+  'sex',
+];
+
+export const PERSONS_LOCKED_COLUMNS: PersonsColumnKey[] = ['name'];
 
 export function getJSON<T>(key: StorageKey, fallback: T): T {
   const raw = localStorage.getItem(key);
