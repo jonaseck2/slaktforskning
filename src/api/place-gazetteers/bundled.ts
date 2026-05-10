@@ -68,6 +68,12 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
   'ca-divisions-boundaries', 'world-boundaries',
 ];
 
+// In Tauri/web renderer mode there is no node:fs — compile-time glob the raw
+// JSONs so Vite bakes them into the renderer bundle (~70 MB raw gets gzipped
+// by Vite's build to ~10 MB). Resolved before module init runs the bundle
+// init for-loop. In Node mode (Electron main, worker, vitest, MCP server)
+// `import.meta.glob` is undefined so this stays empty and the fs-based
+// loadGazetteer below runs.
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 // Resolves to one of two locations depending on whether we're running from
@@ -76,6 +82,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 //   - Source: <src/api/place-gazetteers>/data/<id>.json (raw, authored truth)
 // The compressed sibling is preferred when present; falls back to raw for
 // vitest and any direct-source consumer.
+//
+// In the Tauri renderer build this file is aliased to
+// src/renderer/empty-gazetteers.ts (via vite.tauri-renderer.config.ts);
+// loadGazetteer below never runs there. See that file for the
+// import.meta.glob-based bundling path.
 function loadGazetteer(id: string): Gazetteer {
   const gzPath = resolve(HERE, 'gazetteers', `${id}.json.gz`);
   if (existsSync(gzPath)) {
