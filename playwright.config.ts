@@ -42,5 +42,11 @@ export default defineConfig({
       timeout: 60_000,
       retries: 1,
     },
+    {
+      name: 'duplicates',
+      testMatch: 'duplicates.spec.ts',
+      timeout: 60_000,
+      retries: 1,
+    },
   ],
 });
