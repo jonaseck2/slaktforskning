@@ -133,6 +133,7 @@ export default {
     monospaceLabel: 'Monospace',
     clearFilter: 'Clear filter',
     more: 'More',
+    required: 'Required',
     unlink: 'Unlink',
     unlinkTooltip: 'Unlink — both entities are kept',
     deleteTooltip: 'Delete permanently',
@@ -626,6 +627,9 @@ export default {
     dateToUsed: 'Used until',
     dateFromBirthEvent: 'Date taken from the birth event',
     reorderInversionBlocked: 'A more recent date cannot be placed before an older one',
+  },
+  personName: {
+    givenOrSurnameRequired: 'Enter given name or surname',
   },
   sex: { M: 'Male', F: 'Female', U: 'Unknown' },
   addRelated: { newPerson: 'New person', existingPerson: 'Existing person', modeHelper: 'Already in your tree? Find them. Otherwise, add a new person.', selectPerson: 'Select person', searchPlaceholder: 'Search name\u2026', birthDate: 'Birth date', birthPlace: 'Birth place', originalDate: 'Original date text', addSource: 'Source', sourcePlaceholder: 'Select source', page: 'Page / location', otherParent: 'Other parent', noOtherParent: 'None' },

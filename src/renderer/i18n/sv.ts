@@ -133,6 +133,7 @@ export default {
     monospaceLabel: 'Fast teckenbredd',
     clearFilter: 'Rensa filter',
     more: 'Mer',
+    required: 'Obligatoriskt',
     unlink: 'Koppla bort',
     unlinkTooltip: 'Koppla bort — båda objekten finns kvar',
     deleteTooltip: 'Radera permanent',
@@ -626,6 +627,9 @@ export default {
     dateToUsed: 'Användes till',
     dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
+  },
+  personName: {
+    givenOrSurnameRequired: 'Fyll i förnamn eller efternamn',
   },
   sex: { M: 'Man', F: 'Kvinna', U: 'Okänd' },
   addRelated: { newPerson: 'Ny person', existingPerson: 'Befintlig person', modeHelper: 'Finns hen redan i ditt träd? Hitta personen. Annars lägg till en ny.', selectPerson: 'Välj person', searchPlaceholder: 'Sök namn\u2026', birthDate: 'Födelsedatum', birthPlace: 'Födelseort', originalDate: 'Originaldatum', addSource: 'Källa', sourcePlaceholder: 'Välj källa', page: 'Sida / plats', otherParent: 'Andra föräldern', noOtherParent: 'Ingen' },
