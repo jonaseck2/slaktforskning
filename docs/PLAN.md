@@ -35,10 +35,6 @@ Things we thought about and decided against / deferred. Not backlog — listed o
 
 The registry in `src/api/gedcom_fidelity_registry.ts` declares 20+ fields as currently lossy. Each entry below describes an upgrade path to lossless status via custom GEDCOM tags. Priority is determined by user impact: couple subtypes (marriage, divorce) are higher priority than research-task metadata; group/task records are saved last and may be out of scope for v1.
 
-#### groups / group_links — custom `_GROUP` tag [planned]
-`groups` (name, notes) and `group_links` (entity_type, entity_id, sort_order) are currently dropped on export. Custom `_GROUP` top-level records + `_GROUP_LINK` sub-records carry the data losslessly. Medium user impact.
-- Plan: [`plans/2026-05-09-gedcom-groups-custom-tag.md`](plans/2026-05-09-gedcom-groups-custom-tag.md)
-
 #### Declared lossy, no promotion planned
 The Prime Directive requires honest disclosure, not lossless round-trip for every column. The following lossy fields are documented in `src/api/gedcom_fidelity_registry.ts` and surfaced via `ExportReport.excluded`; promotion is not planned. Reopen if a user requests it.
 - `media.is_printable` — UI convenience flag for reporting. User re-checks the box if they care.
