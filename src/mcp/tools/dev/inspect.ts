@@ -50,14 +50,14 @@ export function registerInspectTools(server: McpServer, ctx: InspectToolContext,
     'Get status of the running Electron app: current route, window size, and database path.',
     {},
     async () => {
-      const result = await uiGet(uiBase, '/status') as { route?: string; windowWidth?: number; windowHeight?: number; error?: string } | null;
+      const result = await uiGet(uiBase, '/status') as { route?: string; windowWidth?: number; windowHeight?: number; dbPath?: string; error?: string } | null;
       if (!result || (result as { error?: string }).error === 'No window available') {
         return { content: [{ type: 'text' as const, text: JSON.stringify({ running: false }, null, 2) }] };
       }
-      // Live DB path — follows `switch_database`. Falls back to env var (which
-      // only carries the *initial* path the MCP was launched with) when the
-      // dev server didn't pass `getDbPath` for backward compatibility.
-      const dbPath = getDbPath?.() ?? process.env.SLAKTFORSKNING_DB ?? null;
+      // Prefer the live dbPath from the running app (Tauri /status returns
+      // it, follows db.switchTo dialogs). Fall back to the MCP's own cache
+      // (set by switch_database tool calls), then the launch-time env var.
+      const dbPath = result.dbPath ?? getDbPath?.() ?? process.env.SLAKTFORSKNING_DB ?? null;
       return {
         content: [{
           type: 'text' as const,
