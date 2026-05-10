@@ -15,21 +15,29 @@ import type { Database } from 'node-sqlite3-wasm';
 
 type Finalizable = { finalize(): void };
 
+// Statement methods get awaited here so the helpers work against BOTH:
+//   - the real node-sqlite3-wasm Database (sync — `await syncCall()` returns
+//     the value directly through the await operator)
+//   - the Tauri-side shim Database from src/renderer/db-shim.ts (async —
+//     each invocation routes through Tauri to rusqlite)
+// vite.config.ts in the Tauri build aliases `node-sqlite3-wasm` to the shim;
+// the Electron build keeps the real package. Same api/ source, two backends.
+
 export async function queryOne<T>(db: Database, sql: string, params: unknown[] = []): Promise<T | undefined> {
   const stmt = db.prepare(sql);
-  try { return stmt.get(params) as T | undefined; }
+  try { return await stmt.get(params) as T | undefined; }
   finally { (stmt as unknown as Finalizable).finalize(); }
 }
 
 export async function queryAll<T>(db: Database, sql: string, params: unknown[] = []): Promise<T[]> {
   const stmt = db.prepare(sql);
-  try { return stmt.all(params) as T[]; }
+  try { return await stmt.all(params) as T[]; }
   finally { (stmt as unknown as Finalizable).finalize(); }
 }
 
 export async function runSql(db: Database, sql: string, params: unknown[] = []): Promise<void> {
   const stmt = db.prepare(sql);
-  try { stmt.run(params); }
+  try { await stmt.run(params); }
   finally { (stmt as unknown as Finalizable).finalize(); }
 }
 
@@ -38,6 +46,6 @@ export const queryRun = runSql;
 
 export async function runSqlChanges(db: Database, sql: string, params: unknown[] = []): Promise<number> {
   const stmt = db.prepare(sql);
-  try { return (stmt.run(params) as { changes: number }).changes; }
+  try { return ((await stmt.run(params)) as { changes: number }).changes; }
   finally { (stmt as unknown as Finalizable).finalize(); }
 }
