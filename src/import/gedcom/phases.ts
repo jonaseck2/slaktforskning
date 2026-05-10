@@ -190,6 +190,14 @@ export function phaseSources(ctx: ImportContext): void {
       })(),
       url: getChild(node, '_URL')?.value ?? '',
       source_type: getChild(node, '_STYPE')?.value ?? '',
+      // Custom _ABSTRACT / _CALL sub-tags carry the user-authored
+      // sources.abstract and sources.call_number fields. Long values are
+      // wrapped across CONT continuation lines on export; the parser already
+      // unwraps CONT/CONC into the node's joined .value, so reading the
+      // value directly preserves embedded newlines. Distinct from the
+      // repository's own REPO.CALN (different table, different column).
+      abstract: getChild(node, '_ABSTRACT')?.value ?? null,
+      call_number: getChild(node, '_CALL')?.value ?? null,
     });
     ctx.sourceMap.set(node.xref, src.id);
     const repoVal = getChild(node, 'REPO')?.value ?? '';
