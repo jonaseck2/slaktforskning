@@ -5,165 +5,95 @@
       <p class="duplicates-hint">{{ $t('duplicates.hint') }}</p>
     </div>
 
-    <AppLoadingState v-if="loading && duplicates.length === 0" :rows="5" />
-    <AppEmptyState v-else-if="duplicates.length === 0" icon="✅" :title="$t('empty.duplicates')" />
-    <template v-else>
-      <p class="count-label">{{ summaryText }}</p>
-      <div class="duplicates-list-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ $t('duplicates.keepPerson') }}</th>
-              <th>{{ $t('duplicates.mergePerson') }}</th>
-              <th>{{ $t('duplicates.score') }}</th>
-              <th class="actions-cell">{{ $t('common.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in duplicates" :key="d.person1_id + ':' + d.person2_id">
-              <td>
-                <div class="person-cell">
-                  <AppAvatar :person-id="d.person1_id" :given-name="d.person1_name" />
-                  <div>
-                    <router-link :to="'/persons/' + d.person1_id" class="person-link">{{ d.person1_name }}</router-link>
-                    <span v-if="d.person1_birth" class="birth-hint"> ({{ d.person1_birth }})</span>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="person-cell">
-                  <AppAvatar :person-id="d.person2_id" :given-name="d.person2_name" />
-                  <div>
-                    <router-link :to="'/persons/' + d.person2_id" class="person-link">{{ d.person2_name }}</router-link>
-                    <span v-if="d.person2_birth" class="birth-hint"> ({{ d.person2_birth }})</span>
-                  </div>
-                </div>
-              </td>
-              <td><span :class="'score-badge score-' + scoreLevel(d.score)">{{ d.score }}%</span></td>
-              <td class="actions-cell">
-                <AppButton size="sm" @click="openMerge(d)">{{ $t('duplicates.confirmMerge') }}</AppButton>
-                <button
-                  type="button"
-                  class="btn-sm btn-delete btn-ignore-pair"
-                  :title="$t('duplicates.ignoreTooltip')"
-                  :aria-label="$t('duplicates.ignore')"
-                  @click="ignorePair(d)"
-                >✕</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div ref="sentinel" class="scroll-sentinel"></div>
-      </div>
-    </template>
-
-    <MergePersonsModal
-      v-if="mergeCandidate"
-      :target="{ id: mergeCandidate.person1_id }"
-      :source="{ id: mergeCandidate.person2_id }"
-      :target-name="mergeCandidate.person1_name"
-      :source-name="mergeCandidate.person2_name"
-      :target-birth="mergeCandidate.person1_birth"
-      :source-birth="mergeCandidate.person2_birth"
-      :reasons="mergeCandidate.reasons"
-      @close="mergeCandidate = null"
-      @merged="onMerged"
+    <FilterChips
+      class="duplicates-tabs"
+      :model-value="activeTab"
+      :options="[
+        { value: 'persons', label: $t('duplicates.tabs.persons') },
+        { value: 'places',  label: $t('duplicates.tabs.places') },
+        { value: 'sources', label: $t('duplicates.tabs.sources') },
+        { value: 'media',   label: $t('duplicates.tabs.media') },
+      ]"
+      @update:model-value="setTab($event as TabName)"
     />
+
+    <!-- Tab bodies. We use v-show to keep the tab state alive between
+         switches (the persons → places → persons round-trip should not
+         re-fetch persons). The first activation lazily mounts the tab via
+         the `mounted[tab]` map. -->
+    <div class="duplicates-tab-body">
+      <PersonsTab v-if="mounted.persons" v-show="activeTab === 'persons'" />
+      <PlacesTab  v-if="mounted.places"  v-show="activeTab === 'places'" />
+      <SourcesTab v-if="mounted.sources" v-show="activeTab === 'sources'" />
+      <MediaTab   v-if="mounted.media"   v-show="activeTab === 'media'" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
-import { useI18n } from 'vue-i18n';
-import AppAvatar from '../components/ui/AppAvatar.vue';
-import AppButton from '../components/ui/AppButton.vue';
-import AppEmptyState from '../components/ui/AppEmptyState.vue';
-import AppLoadingState from '../components/ui/AppLoadingState.vue';
-import MergePersonsModal from '../components/MergePersonsModal.vue';
-import { useToast } from '../composables/useToast';
-import { usePagedList } from '../composables/usePagedList';
+import { ref, reactive, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import FilterChips from '../components/ui/FilterChips.vue';
+import PersonsTab from '../components/duplicates/PersonsTab.vue';
+import PlacesTab from '../components/duplicates/PlacesTab.vue';
+import SourcesTab from '../components/duplicates/SourcesTab.vue';
+import MediaTab from '../components/duplicates/MediaTab.vue';
 
 defineOptions({ name: 'DuplicatesView' });
 
-interface DuplicateCandidate {
-  person1_id: string;
-  person2_id: string;
-  person1_name: string;
-  person2_name: string;
-  person1_birth: string | null;
-  person2_birth: string | null;
-  score: number;
-  reasons: string[];
-}
+type TabName = 'persons' | 'places' | 'sources' | 'media';
 
-const { t } = useI18n();
-const toast = useToast();
+const VALID_TABS: TabName[] = ['persons', 'places', 'sources', 'media'];
 
-const mergeCandidate = ref<DuplicateCandidate | null>(null);
+const route = useRoute();
+const router = useRouter();
 
-const {
-  items: duplicates,
-  total,
-  loading,
-  reload: load,
-  attachSentinel,
-} = usePagedList<DuplicateCandidate, 'score'>({
-  defaultSortBy: 'score',
-  defaultSortDir: 'desc',
-  fetchPage: async (limit, offset) => {
-    try {
-      return await window.api.duplicates.findPage(limit, offset) as { items: DuplicateCandidate[]; total: number };
-    } catch (err) {
-      console.error('[DuplicatesView] fetchPage failed:', err);
-      toast.error(t('errors.loadFailed'));
-      return { items: [], total: 0 };
-    }
-  },
-});
-
-const sentinel = ref<HTMLElement | null>(null);
-watch(sentinel, (el) => attachSentinel(el));
-
-const summaryText = computed(() => {
-  const shown = duplicates.value.length;
-  if (total.value > shown) {
-    return t('duplicates.showingOf', { shown, total: total.value });
+function tabFromQuery(): TabName {
+  const q = route.query.tab;
+  if (typeof q === 'string' && (VALID_TABS as string[]).includes(q)) {
+    return q as TabName;
   }
-  return t('duplicates.totalPairs', { count: shown }, shown);
+  return 'persons';
+}
+
+const activeTab = ref<TabName>(tabFromQuery());
+
+// Cache: only mount a tab once it has been visited; thereafter keep it
+// alive (v-show) so switching back is instant and the page state persists.
+const mounted = reactive<Record<TabName, boolean>>({
+  persons: false,
+  places: false,
+  sources: false,
+  media: false,
 });
+mounted[activeTab.value] = true;
 
-function scoreLevel(score: number): string {
-  if (score >= 80) return 'high';
-  if (score >= 60) return 'medium';
-  return 'low';
-}
-
-function openMerge(d: DuplicateCandidate) {
-  mergeCandidate.value = d;
-}
-
-async function ignorePair(d: DuplicateCandidate) {
-  // Optimistic remove — same pair can't reappear because it's now persisted in
-  // ignored_duplicates, so no need to round-trip the whole list.
-  duplicates.value = duplicates.value.filter(x => !(x.person1_id === d.person1_id && x.person2_id === d.person2_id));
-  if (total.value > 0) total.value -= 1;
-  try {
-    await window.api.duplicates.ignore(d.person1_id, d.person2_id);
-    toast.success(t('duplicates.ignored'));
-  } catch (err) {
-    console.error('[DuplicatesView] ignore failed:', err);
-    toast.error(t('errors.saveFailed'));
-    await load();
+function setTab(tab: TabName) {
+  if (!VALID_TABS.includes(tab)) return;
+  activeTab.value = tab;
+  mounted[tab] = true;
+  // Preserve other query params (e.g. the future `pair=` deep-link from Task 8).
+  const nextQuery = { ...route.query, tab };
+  if (route.query.tab !== tab) {
+    router.replace({ query: nextQuery });
   }
 }
 
-async function onMerged() {
-  mergeCandidate.value = null;
-  await load();
-}
+// React to URL changes (back/forward, deep links).
+watch(() => route.query.tab, () => {
+  const next = tabFromQuery();
+  if (next !== activeTab.value) {
+    activeTab.value = next;
+    mounted[next] = true;
+  }
+});
 
-onMounted(load);
-onActivated(load);
+onMounted(() => {
+  // Make sure the URL matches the resolved tab so deep-link round-trips work.
+  if (route.query.tab !== activeTab.value) {
+    router.replace({ query: { ...route.query, tab: activeTab.value } });
+  }
+});
 </script>
 
 <style scoped>
@@ -179,23 +109,14 @@ onActivated(load);
   font-size: var(--font-sm);
   margin-top: var(--space-xs);
 }
-.duplicates-list-scroll {
+.duplicates-tabs {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+.duplicates-tab-body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
-/* Sticky table header is defined globally in shared.css `.data-table thead th`. */
-.person-cell { display: flex; align-items: center; gap: var(--space-sm); }
-.birth-hint { color: var(--text-muted); font-size: var(--font-xs); }
-.score-badge {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 10px;
-  font-size: var(--font-xs);
-  font-weight: 600;
-}
-.score-high { background: var(--error-bg); color: var(--error-text); }
-.score-medium { background: var(--warning-bg); color: var(--warning-text); }
-.score-low { background: var(--info-bg); color: var(--info-text); }
-.actions-cell { display: flex; gap: var(--space-sm); align-items: center; justify-content: flex-end; }
 </style>
