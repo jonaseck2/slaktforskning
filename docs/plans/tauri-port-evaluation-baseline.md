@@ -246,6 +246,108 @@ committing":
 - **Task 12 (Windows + Linux validation)** — needs separate machines/VMs;
   cannot proceed from CLI on dev mac alone.
 
+## Windows derisk — same-machine measurements
+
+Captured 2026-05-10 on the user's Windows 11 Pro daily-driver
+(10.0.26200, x64). Built and ran the same Tauri spike + Electron app
+against the same `slaktforskning.db` (22,233 persons, 64 MB) authored
+in the running Electron app earlier in the session. SVG pedigree chart
+visually verified as identical to macOS WebKit output by the user.
+
+### Toolchain prerequisites discovered
+
+The Windows build path needed:
+
+1. **Rust + cargo via rustup** (winget `Rustlang.Rustup`).
+2. **Microsoft C++ Build Tools 2022** plus the explicit
+   `Microsoft.VisualStudio.Component.VC.Tools.x86.x64` component (the
+   workload alone installs the IDE shell but NOT `cl.exe` / `link.exe`).
+   Verified via vswhere `-requires Microsoft.VisualCpp.Tools.HostX64.TargetX64`.
+3. **WebView2 Runtime** — pre-installed on Win 11.
+4. Build cargo from cmd or PowerShell, NOT Git Bash (Git Bash's
+   `/usr/bin/link` shadows MSVC's `link.exe`).
+
+Full instructions landed in `tauri-spike/README.md`.
+
+### Build artifacts
+
+| Artifact | Size |
+|---|---:|
+| `tauri-spike.exe` (release) | **10.23 MB** |
+| `tauri-spike_0.1.0_x64_en-US.msi` | **4.66 MB** |
+| `tauri-spike_0.1.0_x64-setup.exe` (NSIS) | **2.58 MB** |
+| Cargo cold-compile | 68 s |
+
+### Same-machine RSS comparison (bengt's DB loaded, ~22k persons)
+
+| Metric | Electron (dev) | Tauri spike (release) | Δ |
+|---|---:|---:|---:|
+| RSS sum, DB open + persons-list page rendered | **568 MB / 4 procs** | **362 MB / 7 procs** | **−36%** |
+| RSS sum, peak just after DB load | 808 MB | 374 MB | −54% |
+| Per-process biggest | 488 MB (Electron main) | 118 MB (WebView2 helper) | −76% |
+
+Process-count inversion: Electron-on-Windows runs 4 processes
+(main + GPU + network + renderer) but each is fatter. Tauri-on-Windows
+runs 7 processes (Rust host + WebView2 parent + GPU + renderer +
+utility + crashpad + helper) but each is leaner — the heaviest single
+WebView2 process tops out around 120 MB vs Electron's main at 490 MB.
+
+### Cross-OS architecture difference (important for the recommendation)
+
+The macOS measurements showed Tauri running as a **single process**
+(102 MB) versus Electron's 4 (886 MB). On Windows, Tauri is **not**
+single-process — WebView2 follows the same Chromium-style
+out-of-process renderer model Electron uses. The percentage advantage
+shrinks from −88% on macOS to −36% on Windows (loaded-RAM headline
+metric).
+
+The disk advantage holds regardless: 10 MB / 4.66 MB MSI / 2.58 MB
+NSIS, against ~280 MB Electron — still −96% to −99%.
+
+### Decision rule against Windows-only numbers
+
+| Headline metric | Windows Δ % | Verdict |
+|---|---:|---|
+| Disk: app | **−96%** (10 MB vs 280 MB) | ≥50% ✅ |
+| Disk: installer | **−98%** (2.58 MB NSIS vs likely 60-80 MB Squirrel) | ≥50% ✅ |
+| RSS, loaded (22k DB) | **−36%** | between ≥25% and ≥50% — Go with caveat |
+| RSS, peak | **−54%** | ≥50% ✅ |
+| Cold start | not measured precisely; user-observed "instant" for both | — |
+
+**Windows verdict alone**: still **Go**, but the runtime memory win is
+materially smaller than on macOS. The mac measurement was the rosier
+end of the range; Windows + Linux (Linux uses WebKitGTK which is
+in-process like macOS) will likely bracket the realistic average.
+
+### Cross-platform parity: visual
+
+User confirmed the spike's SVG pedigree chart renders correctly under
+WebView2 (Windows). Same colors (sex-coded boxes, focus stroke), same
+Bezier-curve edges, same generation labels. No engine-specific
+artifacts. Combined with the macOS WebKit screenshot already on file
+and the Playwright Chromium/WebKit comparison from Task 12, three of
+three target engines render the chart equivalently.
+
+### Two side-finds while Windows-porting
+
+Both worth fixing on `main` regardless of the Tauri decision:
+
+1. **`scripts/build-third-party-licenses.mjs` crashed on Windows** — the
+   `spawnSync('npm', ...)` call needed `shell: true` to resolve the
+   Windows `npm.cmd` shim. Fixed in this branch's commit. Without it,
+   `electron-forge start` and `electron-forge package` both crash at
+   the `generateAssets` hook.
+2. **Electron's `app.getPath('userData')` resolution + node-sqlite3-wasm
+   on a non-ASCII directory name** (`%APPDATA%\Släktforskning\…`) →
+   "unable to open database file". The Tauri spike's rusqlite opened
+   the same Swedish-character path without issue. We worked around by
+   pointing Electron at an ASCII path via `SLAKTFORSKNING_DB`. This is
+   a latent Electron bug for Swedish/non-Latin app installs that the
+   `productName: "Släktforskning"` configuration triggers. Probably
+   filed as an upstream node-sqlite3-wasm UTF-8 path-encoding issue;
+   we should reproduce on a clean machine and either patch around it
+   in `database.ts` or upstream-issue node-sqlite3-wasm.
+
 ## Phase 3 — Comparison + recommendation
 
 (written in `tauri-port-evaluation-recommendation.md` after both

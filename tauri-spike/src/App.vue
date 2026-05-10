@@ -18,7 +18,22 @@ interface AncestorNode {
   sex: string;
 }
 
-const dbPath = ref('/Users/jonasahnstedt/git/slaktforskning/export-import/bengt.db');
+// Default DB path differs per OS — Tauri's app data convention puts it
+// under %APPDATA%\Släktforskning on Windows, ~/Library/Application Support
+// on macOS, ~/.local/share on Linux. The spike doesn't ship a path picker,
+// so we hard-code the most common dev location per platform — override via
+// the input box if your real DB lives elsewhere.
+const DEFAULT_DB_BY_OS: Record<string, string> = {
+  // Windows %APPDATA% typically resolves to C:\Users\<name>\AppData\Roaming
+  windows: 'C:/Users/Jonas Ahnstedt/AppData/Roaming/Släktforskning/slaktforskning.db',
+  macos: '/Users/jonasahnstedt/git/slaktforskning/export-import/bengt.db',
+};
+function detectOs(): string {
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('windows')) return 'windows';
+  return 'macos';
+}
+const dbPath = ref(DEFAULT_DB_BY_OS[detectOs()]);
 const dbOpen = ref(false);
 const stats = ref<DbStats | null>(null);
 const persons = ref<PersonRow[]>([]);
@@ -28,8 +43,14 @@ const error = ref<string>('');
 const lastQueryMs = ref(0);
 const tab = ref<'list' | 'chart'>('chart');
 
-// chart state
-const focusId = ref('00034a36-0050-4e66-b6f5-9a93653fdadf');
+// Chart focus differs per DB. Override via the input box.
+//   bengt.db (mac dev):  00034a36-0050-4e66-b6f5-9a93653fdadf — Gustaf Alfons Valfrid Lindholm
+//   slaktforskning.db (win dev): 813c7e39-1407-4532-babb-27b4fe41d941 — Bengt Gunnar Persson, bytt t Sareld
+const DEFAULT_FOCUS_BY_OS: Record<string, string> = {
+  windows: '813c7e39-1407-4532-babb-27b4fe41d941',
+  macos: '00034a36-0050-4e66-b6f5-9a93653fdadf',
+};
+const focusId = ref(DEFAULT_FOCUS_BY_OS[detectOs()]);
 const ancestors = ref<AncestorNode[]>([]);
 const chartDepth = ref(4);
 const chartQueryMs = ref(0);

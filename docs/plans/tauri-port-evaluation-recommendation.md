@@ -41,11 +41,11 @@ Total Rust written: 87 + 116 + 40 = ~243 lines (`db.rs` + `mcp.rs` + new bits in
 
 Three things the spike doesn't validate, in order of risk:
 
-1. **Cross-platform rendering parity.** All measurements above are macOS WebKit. Windows ships WebView2 (Chromium-based, mostly compatible) and Linux ships WebKitGTK (slightly older WebKit fork). Most likely outcome: identical render of the persons list and pedigree, possibly minor font / scrollbar differences. **Mitigation: 1-2 hours on a Windows VM and a Linux VM, screenshot-compare the spike's two views.**
+1. **Cross-platform rendering parity.** ~~All measurements above are macOS WebKit.~~ **Resolved 2026-05-10:** Spike built and ran on Windows 11 (WebView2). User visually confirmed pedigree SVG renders identically. Cross-OS WebKit comparison via Playwright (chromium ↔ webkit) already captured in `tauri-port-evaluation-print-parity.md`. Linux WebKitGTK still pending separate machine.
 2. **Chart → PDF parity.** Electron's `webContents.printToPDF` produces identical PDFs across Windows/macOS/Linux because it uses Chromium everywhere. Tauri uses each OS's native print pipeline (NSPrintInfo on macOS, WebView2 print API on Windows, GTK on Linux). The chart-print path in `src/renderer/views/ReportsView.vue` may need adjustments, especially `@media print` CSS that today targets Chromium. **Mitigation: port one chart's print path in the spike, generate a PDF on each OS, visual diff.**
-3. **Loaded-RAM Electron comparison.** I have Electron's idle (886 MB) but didn't drive a 10k-person DB load through its UI to compare against Tauri's 106-114 MB. The Electron number under the same load is almost certainly 1.5-2.5 GB based on similar-shape Electron apps; the comparison would be dramatic. **Mitigation: load bengt.db in the running Electron app, capture RSS sum. ~5 minutes of GUI driving.**
+3. **Loaded-RAM Electron comparison.** ~~I have Electron's idle (886 MB) but didn't drive a 10k-person DB load through its UI to compare against Tauri's 106-114 MB.~~ **Resolved 2026-05-10 on Windows:** Electron 568 MB / 4 procs vs Tauri 362 MB / 7 procs with the same 22k-person DB loaded. The Windows runtime advantage is **−36%** — substantially smaller than the macOS −88%, because WebView2 on Windows uses Chromium's multi-process model (closer to Electron's architecture) whereas WKWebView on macOS is single-process.
 
-None of these is expected to invalidate the recommendation; all three are derisk-before-commit, not discovery.
+The Windows measurement tightens the recommendation: the runtime memory win is real but **OS-dependent**, ranging from a dramatic −88% on macOS WKWebView down to a meaningful −36% on Windows WebView2. The disk-size win (−96-99%) holds on every OS.
 
 ## The full port — updated cost estimate
 
