@@ -361,6 +361,20 @@ fn shell_reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
     app.opener().reveal_item_in_dir(&path).map_err(|e| format!("reveal: {e}"))
 }
 
+/// Returns the Cargo package version string (matches Cargo.toml `[package]
+/// version`). Backs `window.api.app.getVersion()` in the Tauri build.
+#[tauri::command]
+fn app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Copy an existing file to a new path. Used by `backup.backup` to save a
+/// snapshot of the active database. Both paths are absolute.
+#[tauri::command]
+fn fs_copy_file(src: String, dest: String) -> Result<(), String> {
+    std::fs::copy(&src, &dest).map(|_| ()).map_err(|e| format!("copy: {e}"))
+}
+
 /// Read a media file (resolved relative to the active DB's directory) and
 /// return a base64 data URL. Backs window.api.media.readAsDataUrl().
 #[tauri::command]
@@ -566,6 +580,8 @@ pub fn run() {
             secondary_db_get,
             secondary_db_all,
             shell_reveal,
+            app_version,
+            fs_copy_file,
             read_bundled_resource,
             ui_server::ui_eval_response,
         ])

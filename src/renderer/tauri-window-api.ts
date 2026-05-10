@@ -42,7 +42,18 @@ function getDb(): Database {
 // dataChangedListeners callbacks. Net effect: identical cross-window
 // reactivity to the Electron build, no main-side bridge required.
 const dataChangedListeners: Array<() => void> = [];
+// db:switched / undo:changed / undo:performed are discrete events the renderer
+// subscribes to via window.api.db.onSwitched / undo.onChanged / undo.onPerformed.
+// In Electron these are ipcRenderer.on(channel) wires; here we keep parallel
+// in-process listener registries and broadcast across windows via the Tauri
+// event bus, mirroring the data:changed pattern below.
+const dbSwitchedListeners: Array<() => void> = [];
+const undoChangedListeners: Array<() => void> = [];
+const undoPerformedListeners: Array<(data: { type: string; label: string }) => void> = [];
 let suppressNextRemoteFire = false;
+let suppressNextRemoteDbSwitched = false;
+let suppressNextRemoteUndoChanged = false;
+let suppressNextRemoteUndoPerformed = false;
 function fireDataChanged(): void {
   for (const cb of dataChangedListeners) cb();
   // Fire-and-forget cross-window broadcast.
@@ -51,12 +62,45 @@ function fireDataChanged(): void {
     emit('data:changed').catch(() => { /* ignore */ });
   }).catch(() => { /* ignore */ });
 }
+function fireDbSwitched(): void {
+  for (const cb of dbSwitchedListeners) cb();
+  import('@tauri-apps/api/event').then(({ emit }) => {
+    suppressNextRemoteDbSwitched = true;
+    emit('db:switched').catch(() => { /* ignore */ });
+  }).catch(() => { /* ignore */ });
+}
+function fireUndoChanged(): void {
+  for (const cb of undoChangedListeners) cb();
+  import('@tauri-apps/api/event').then(({ emit }) => {
+    suppressNextRemoteUndoChanged = true;
+    emit('undo:changed').catch(() => { /* ignore */ });
+  }).catch(() => { /* ignore */ });
+}
+function fireUndoPerformed(data: { type: string; label: string }): void {
+  for (const cb of undoPerformedListeners) cb(data);
+  import('@tauri-apps/api/event').then(({ emit }) => {
+    suppressNextRemoteUndoPerformed = true;
+    emit('undo:performed', data).catch(() => { /* ignore */ });
+  }).catch(() => { /* ignore */ });
+}
 
-// Set up the inverse — receive data:changed from other windows.
+// Set up the inverse — receive these events from other windows.
 import('@tauri-apps/api/event').then(({ listen }) => {
   listen('data:changed', () => {
     if (suppressNextRemoteFire) { suppressNextRemoteFire = false; return; }
     for (const cb of dataChangedListeners) cb();
+  }).catch(() => { /* ignore */ });
+  listen('db:switched', () => {
+    if (suppressNextRemoteDbSwitched) { suppressNextRemoteDbSwitched = false; return; }
+    for (const cb of dbSwitchedListeners) cb();
+  }).catch(() => { /* ignore */ });
+  listen('undo:changed', () => {
+    if (suppressNextRemoteUndoChanged) { suppressNextRemoteUndoChanged = false; return; }
+    for (const cb of undoChangedListeners) cb();
+  }).catch(() => { /* ignore */ });
+  listen<{ type: string; label: string }>('undo:performed', (event) => {
+    if (suppressNextRemoteUndoPerformed) { suppressNextRemoteUndoPerformed = false; return; }
+    for (const cb of undoPerformedListeners) cb(event.payload);
   }).catch(() => { /* ignore */ });
 }).catch(() => { /* ignore */ });
 
@@ -128,7 +172,27 @@ export function mountWindowApi(db: Database): MountResult {
     await switchDbTo(path, /* createSchema */ false);
     return { path, name: deriveDbName(path) };
   };
-  api.db.getRecent = async () => [];
+  // Recent databases — stored as JSON in db_settings under 'recent_dbs'.
+  // switchDbTo() prepends each newly-opened path with dedupe and a 10-entry
+  // cap, mirroring the Electron build's settings.json-backed list.
+  api.db.getRecent = async () => {
+    try {
+      const dbSet = await import('../api/db_settings');
+      const raw = await dbSet.getDbSetting(getDb(), 'recent_dbs');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as Array<{ path: string; name: string; lastOpenedAt?: string }>;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+  // Discrete db:switched event — onSwitched(cb) registers a callback that
+  // fires after every switchDbTo. Distinct from data:changed (which also
+  // fires) so subscribers like App.vue's window.location.reload listener
+  // can react specifically to a DB switch without piggy-backing.
+  api.db.onSwitched = (cb: unknown) => {
+    if (typeof cb === 'function') dbSwitchedListeners.push(cb as () => void);
+  };
 
   // Media: file picker + copy lives in Rust (renderer can't touch fs).
   // After the file is in <dbname>-media/, do the DB work via the api/ functions.
@@ -329,6 +393,7 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.genneySelectArchive = () => pickFile('Välj Genney-arkivfil (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
   api.import.genneySelectMedia = () => pickFolder('Select Genney media folder (optional)');
   api.import.holgerSelectFile = () => pickFile('Välj Holger 8-databasfil', ['mdb'], 'Holger-databas');
+  api.import.holgerSelectMedia = () => pickFolder('Select Holger media folder (optional)');
   api.import.rootsmagicSelectFile = () => pickFile('Välj RootsMagic-databasfil', ['rmtree', 'rmgc'], 'RootsMagic-databas');
   api.import.grampsSelectFile = () => pickFile('Välj Gramps-databasfil', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
   api.import.grampsRun = async (opts: unknown) => {
@@ -489,19 +554,62 @@ export function mountWindowApi(db: Database): MountResult {
   };
 
   if (!api.csv) api.csv = {};
+
+  // Backup: copy the active DB file to a user-chosen path. Mirrors the
+  // Electron handler (src/main/ipc/database.ts → backup:backup) which uses
+  // dialog.showSaveDialog + fs.copyFileSync. Restore picks an existing .db
+  // file then switchTo's it (which triggers the regular UI reload path).
+  if (!api.backup) api.backup = {};
+  api.backup.backup = async () => {
+    try {
+      const currentPath = await invoke<string | null>('db_current_path');
+      if (!currentPath) return { success: false, error: 'No database open' };
+      const base = (currentPath.split(/[\\/]/).pop() ?? 'family.db').replace(/\.db$/i, '');
+      const today = new Date().toISOString().slice(0, 10);
+      const defaultName = `${base}-backup-${today}.db`;
+      const r = await saveFile('Spara säkerhetskopia', defaultName, ['db'], 'SQLite Database');
+      if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
+      await invoke('fs_copy_file', { src: currentPath, dest: r.path });
+      return { success: true, path: r.path };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+  api.backup.restore = async () => {
+    try {
+      const r = await pickFile('Välj säkerhetskopia', ['db'], 'SQLite Database');
+      if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
+      await switchDbTo(r.path, /* createSchema */ false);
+      return { success: true, path: r.path };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
   // Undo / Redo — main-only in Electron because they post-call broadcast
   // data:changed to all BrowserWindows. In Tauri, the renderer fires the
-  // same fan-out via fireDataChanged().
+  // same fan-out via fireDataChanged() + the discrete undo events the
+  // Electron preload exposes (`undo:changed`, `undo:performed`).
   if (!api.undo) api.undo = {};
   api.undo.undo = async () => {
     const label = await undoManager.undo();
     fireDataChanged();
+    fireUndoChanged();
+    if (label) fireUndoPerformed({ type: 'undo', label });
     return label;
   };
   api.undo.redo = async () => {
     const label = await undoManager.redo();
     fireDataChanged();
+    fireUndoChanged();
+    if (label) fireUndoPerformed({ type: 'redo', label });
     return label;
+  };
+  api.undo.onChanged = (cb: unknown) => {
+    if (typeof cb === 'function') undoChangedListeners.push(cb as () => void);
+  };
+  api.undo.onPerformed = (cb: unknown) => {
+    if (typeof cb === 'function') undoPerformedListeners.push(cb as (data: { type: string; label: string }) => void);
   };
 
   // Print + PDF export. Tauri 2 doesn't have webContents.printToPDF —
@@ -531,6 +639,29 @@ export function mountWindowApi(db: Database): MountResult {
     delete chartBridge.focusPerson;
     delete chartBridge.getLayout;
   };
+  // Chart export — Reports view's "Save SVG" passes a serialised SVG
+  // string + filename hint. Mirrors the Electron handler shape in
+  // src/main/ipc/main-only.ts → chart:saveSvg.
+  api.chart.saveSvg = async (svgContent: unknown, fileNameHint?: unknown) => {
+    if (typeof svgContent !== 'string') return { success: false, error: 'svgContent must be string' };
+    const r = await saveFile('Save Wall Chart SVG', (typeof fileNameHint === 'string' ? fileNameHint : 'chart.svg'), ['svg'], 'SVG');
+    if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
+    try {
+      await invoke('fs_write_text', { path: r.path, contents: svgContent });
+      return { success: true, path: r.path };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+  // Chart PDF: Tauri 2 has no equivalent of Electron's hidden BrowserWindow
+  // + webContents.printToPDF. Fall back to window.print() (matches the
+  // existing print.exportPdf polyfill); user picks "Save as PDF" in the
+  // native dialog. Regression: filename hint and explicit page-size are
+  // ignored, and the user has to manually choose PDF in the print dialog.
+  api.chart.savePdf = async (_svgContent: unknown, _pxWidth: unknown, _pxHeight: unknown, _fileNameHint?: unknown) => {
+    window.print();
+    return { success: true, note: 'Use Save-as-PDF in the native print dialog' };
+  };
 
   if (!api.print) api.print = {};
   api.print.print = async () => { window.print(); return { ok: true }; };
@@ -541,7 +672,13 @@ export function mountWindowApi(db: Database): MountResult {
   };
 
   if (!api.app) api.app = {};
-  api.app.getVersion = async () => '0.0.1-tauri';
+  api.app.getVersion = async () => {
+    try {
+      return await invoke<string>('app_version');
+    } catch {
+      return 'unknown';
+    }
+  };
   api.app.openExternal = async (url: unknown) => {
     if (typeof url !== 'string') return;
     // Use the Rust opener plugin's invoke surface directly so we don't
@@ -563,13 +700,46 @@ export function mountWindowApi(db: Database): MountResult {
     }
   };
 
+  // Onboarding ("seen" callout state). The Electron build stores this in the
+  // per-user settings.json (src/main/ipc/onboarding.ts → loadSettings); the
+  // Tauri build keeps it per-DB in db_settings under a single JSON object so
+  // the data lives alongside the genealogist's database, not a sibling
+  // settings file Tauri doesn't have. Same shape as the Electron preload:
+  // getSeen → Record<string, true>, markSeen(key) → void.
   if (!api.onboarding) api.onboarding = {};
-  api.onboarding.reset = async () => {
-    // db_settings keys prefixed onboarding:* — clear them.
+  const ONBOARDING_KEY = 'onboarding-seen';
+  api.onboarding.getSeen = async () => {
     const dbSet = await import('../api/db_settings');
-    const all = (await dbSet.getDbSetting(getDb(), 'onboarding-keys')) as string | null;
-    const keys = all ? JSON.parse(all) as string[] : [];
-    for (const k of keys) await dbSet.deleteDbSetting(getDb(), k);
+    const raw = await dbSet.getDbSetting(getDb(), ONBOARDING_KEY);
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed as Record<string, true> : {};
+    } catch {
+      return {};
+    }
+  };
+  api.onboarding.markSeen = async (keyArg: unknown) => {
+    // Preload signature: markSeen(key: string) — no wrapping object.
+    const key = typeof keyArg === 'string'
+      ? keyArg
+      : (keyArg as { key?: string } | undefined)?.key;
+    if (!key) return;
+    const dbSet = await import('../api/db_settings');
+    const raw = await dbSet.getDbSetting(getDb(), ONBOARDING_KEY);
+    let current: Record<string, true> = {};
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') current = parsed as Record<string, true>;
+      } catch { /* ignore — start fresh */ }
+    }
+    current[key] = true;
+    await dbSet.setDbSetting(getDb(), ONBOARDING_KEY, JSON.stringify(current));
+  };
+  api.onboarding.reset = async () => {
+    const dbSet = await import('../api/db_settings');
+    await dbSet.deleteDbSetting(getDb(), ONBOARDING_KEY);
   };
 
   api.csv.export = async (opts: unknown) => {
@@ -657,5 +827,19 @@ async function switchDbTo(path: string, createSchema: boolean): Promise<void> {
   if (createSchema && dbInstance) {
     await initializeSchema(dbInstance);
   }
+  // Update recent-files list (per-DB store, so reads back the row from
+  // whichever DB is now active). Cap at 10 entries, dedupe by path,
+  // newest first. Failures are silent — recent-files is non-essential.
+  try {
+    if (dbInstance) {
+      const dbSet = await import('../api/db_settings');
+      const raw = await dbSet.getDbSetting(dbInstance, 'recent_dbs');
+      const existing = raw ? (JSON.parse(raw) as Array<{ path: string; name: string; lastOpenedAt?: string }>) : [];
+      const filtered = existing.filter(e => e?.path !== path);
+      const next = [{ path, name: deriveDbName(path), lastOpenedAt: new Date().toISOString() }, ...filtered].slice(0, 10);
+      await dbSet.setDbSetting(dbInstance, 'recent_dbs', JSON.stringify(next));
+    }
+  } catch { /* ignore — recent-files is best-effort */ }
+  fireDbSwitched();
   fireDataChanged();
 }
