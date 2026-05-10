@@ -391,6 +391,38 @@ export function mountWindowApi(db: Database): MountResult {
     return label;
   };
 
+  // Print + PDF export. Tauri 2 doesn't have webContents.printToPDF —
+  // fall back to window.print() which opens the native print dialog
+  // (with a Save-as-PDF option in macOS / Windows). Argument is ignored
+  // because the user picks the destination in the dialog.
+  if (!api.print) api.print = {};
+  api.print.print = async () => { window.print(); return { ok: true }; };
+  api.print.exportPdf = async () => {
+    // Same dialog as print.print — user clicks "Save as PDF" in it.
+    window.print();
+    return { ok: true, note: 'Use Save-as-PDF in the native print dialog' };
+  };
+
+  if (!api.app) api.app = {};
+  api.app.getVersion = async () => '0.0.1-tauri';
+  api.app.openExternal = async (url: unknown) => {
+    if (typeof url !== 'string') return;
+    // Use the Rust opener plugin's invoke surface directly so we don't
+    // pull another @tauri-apps/* npm package into the renderer.
+    await invoke('plugin:opener|open_url', { url }).catch(() => { /* ignore */ });
+  };
+  api.app.onOpenAbout = () => { /* menu wires this in main.ts */ };
+  api.app.readThirdPartyLicenses = async () => '';
+
+  if (!api.onboarding) api.onboarding = {};
+  api.onboarding.reset = async () => {
+    // db_settings keys prefixed onboarding:* — clear them.
+    const dbSet = await import('../api/db_settings');
+    const all = (await dbSet.getDbSetting(getDb(), 'onboarding-keys')) as string | null;
+    const keys = all ? JSON.parse(all) as string[] : [];
+    for (const k of keys) await dbSet.deleteDbSetting(getDb(), k);
+  };
+
   api.csv.export = async (opts: unknown) => {
     const o = opts as { entityType?: string; delimiter?: string; encoding?: 'utf-8' | 'utf-8-bom' } | undefined;
     if (!o?.entityType) return { success: false, error: 'entityType is required' };
