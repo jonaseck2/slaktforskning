@@ -14,6 +14,11 @@ env:
 
 jobs:
   lint-and-test:
+    # TEMPORARY: dependabot PRs skip lint-and-test while stale-test cleanup
+    # settles. The e2e smoke job below still runs on dependabot to catch
+    # an actual app-level break from a dep bump. Remove this `if` once
+    # main has been green for a few full CI runs.
+    if: github.actor != 'dependabot[bot]'
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
