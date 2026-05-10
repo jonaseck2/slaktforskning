@@ -11,7 +11,7 @@ import { i18n } from './setup';
 // create time. Bengt's regression: opening his Vigsel hid the field entirely
 // and there was no UI path to see who Inger was on this event.
 
-describe('EventModal — second-person picker in edit mode', () => {
+describe('EventModal — second-person picker in edit mode', async () => {
   const updateMock = vi.fn();
   const createMock = vi.fn();
   const addParticipantMock = vi.fn();

@@ -23,7 +23,7 @@ function setupApiMock(places: DbPlace[]) {
 
 function makeGaz(id: string, root: GazNode): Gaz { return { id, name: id, root }; }
 
-describe('usePlaceTree', () => {
+describe('usePlaceTree', async () => {
   beforeEach(() => {
     (window as any).api = undefined;
   });

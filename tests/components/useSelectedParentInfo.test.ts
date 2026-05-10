@@ -42,7 +42,7 @@ function coupleRel(p1: string, p2: string) {
   return { type: 'couple', person1_id: p1, person2_id: p2 };
 }
 
-describe('useSelectedParentInfo — null / undefined id', () => {
+describe('useSelectedParentInfo — null / undefined id', async () => {
   it('starts as null when id is null', async () => {
     const id = ref<string | null>(null);
     mockGetForPerson.mockResolvedValue([]);
@@ -76,7 +76,7 @@ describe('useSelectedParentInfo — null / undefined id', () => {
   });
 });
 
-describe('useSelectedParentInfo — no parents', () => {
+describe('useSelectedParentInfo — no parents', async () => {
   it('returns hasFather: false, hasMother: false when no parent_child rels exist', async () => {
     const id = ref<string | null>('child1');
     mockGetForPerson.mockResolvedValue([
@@ -110,7 +110,7 @@ describe('useSelectedParentInfo — no parents', () => {
   });
 });
 
-describe('useSelectedParentInfo — with one father', () => {
+describe('useSelectedParentInfo — with one father', async () => {
   it('returns hasFather: true, hasMother: false with a male parent', async () => {
     const id = ref<string | null>('child3');
     mockGetForPerson.mockResolvedValue([
@@ -124,7 +124,7 @@ describe('useSelectedParentInfo — with one father', () => {
   });
 });
 
-describe('useSelectedParentInfo — with one mother', () => {
+describe('useSelectedParentInfo — with one mother', async () => {
   it('returns hasFather: false, hasMother: true with a female parent', async () => {
     const id = ref<string | null>('child4');
     mockGetForPerson.mockResolvedValue([
@@ -138,7 +138,7 @@ describe('useSelectedParentInfo — with one mother', () => {
   });
 });
 
-describe('useSelectedParentInfo — with both parents', () => {
+describe('useSelectedParentInfo — with both parents', async () => {
   it('returns hasFather: true, hasMother: true with male and female parents', async () => {
     const id = ref<string | null>('child5');
     mockGetForPerson.mockResolvedValue([
@@ -180,7 +180,7 @@ describe('useSelectedParentInfo — with both parents', () => {
   });
 });
 
-describe('useSelectedParentInfo — reactivity on id change', () => {
+describe('useSelectedParentInfo — reactivity on id change', async () => {
   it('re-fetches when id changes to a new person', async () => {
     const id = ref<string | null>('p1');
     mockGetForPerson.mockResolvedValue([]);
@@ -199,7 +199,7 @@ describe('useSelectedParentInfo — reactivity on id change', () => {
   });
 });
 
-describe('useSelectedParentInfo — error handling', () => {
+describe('useSelectedParentInfo — error handling', async () => {
   it('sets info to null when getForPerson throws', async () => {
     const id = ref<string | null>('errChild');
     mockGetForPerson.mockRejectedValue(new Error('network error'));
@@ -218,7 +218,7 @@ describe('useSelectedParentInfo — error handling', () => {
   });
 });
 
-describe('useSelectedParentInfo — parent_child row with null person1_id', () => {
+describe('useSelectedParentInfo — parent_child row with null person1_id', async () => {
   it('filters out parent_child rows where person1_id is null', async () => {
     const id = ref<string | null>('child8');
     mockGetForPerson.mockResolvedValue([
@@ -232,7 +232,7 @@ describe('useSelectedParentInfo — parent_child row with null person1_id', () =
   });
 });
 
-describe('useSelectedParentInfo — mixed sex in parent list', () => {
+describe('useSelectedParentInfo — mixed sex in parent list', async () => {
   it('hasFather true, hasMother false when multiple male parents and no female', async () => {
     const id = ref<string | null>('child9');
     mockGetForPerson.mockResolvedValue([

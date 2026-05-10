@@ -75,7 +75,7 @@ describe('RelationshipsList — foster-terminology fix', () => {
   });
 });
 
-describe('RelationshipsList — row affordances (tooltips + trash icon)', () => {
+describe('RelationshipsList — row affordances (tooltips + trash icon)', async () => {
   it('role badge has Edit-relationship tooltip + aria-label (sv)', () => {
     const wrapper = mount(RelationshipsList, {
       global: { plugins: [makeI18n('sv')] },
@@ -134,7 +134,7 @@ describe('RelationshipsList — row affordances (tooltips + trash icon)', () => 
       global: { plugins: [makeI18n('sv')] },
       props: { rows: [makeRow('Förälder')] },
     });
-    await wrapper.find('[data-testid="rel-row-remove"]').trigger('click');
+    (await wrapper.find('[data-testid="rel-row-remove"]')).trigger('click');
     expect(wrapper.emitted('delete')?.[0]).toEqual(['rel-1']);
   });
 });

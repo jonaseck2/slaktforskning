@@ -28,7 +28,7 @@ describe('buildPreview', async () => {
     expect(result.personSample[0].id).toBe(p.id);
   });
 
-  it('returns empty result when scope is empty', () => {
+  it('returns empty result when scope is empty', async () => {
     // Scope with a non-existent focusId and 0 gens → empty set
     const result = await buildPreview(db, {
       siteTitle: 'Empty',

@@ -32,7 +32,7 @@ describe('db_settings', async () => {
   });
 
   it('deleteDbSetting is safe for missing key', async () => {
-    await expect(await deleteDbSetting(db, 'nonexistent')).resolves.not.toThrow();
+    await expect(deleteDbSetting(db, 'nonexistent')).resolves.not.toThrow();
   });
 
   it('handles JSON values', async () => {

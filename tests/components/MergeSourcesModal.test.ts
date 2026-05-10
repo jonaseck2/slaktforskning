@@ -45,7 +45,7 @@ const pair = {
   score: 88,
 };
 
-describe('MergeSourcesModal', () => {
+describe('MergeSourcesModal', async () => {
   let api: ApiMocks;
   beforeEach(() => { api = installApi(); });
 

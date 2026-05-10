@@ -60,7 +60,7 @@ async function clickToMergeAfterConfirm(w: ReturnType<typeof mount>) {
   await flushPromises();
 }
 
-describe('MergeMediaModal', () => {
+describe('MergeMediaModal', async () => {
   let api: ApiMocks;
   beforeEach(() => { api = installApi(); });
 

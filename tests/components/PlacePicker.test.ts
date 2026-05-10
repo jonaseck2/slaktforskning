@@ -33,7 +33,7 @@ function mountPicker(props: Partial<{ modelValue: string | null; placeholder: st
   });
 }
 
-describe('PlacePicker', () => {
+describe('PlacePicker', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

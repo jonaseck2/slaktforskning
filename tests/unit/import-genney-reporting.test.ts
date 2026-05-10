@@ -26,8 +26,8 @@ beforeEach(async () => {
   db = await createTestDb();
 });
 
-describe('Genney import reporting', () => {
-  it('summary has warnings and skipped arrays', () => {
+describe('Genney import reporting', async () => {
+  it('summary has warnings and skipped arrays', async () => {
     const tables = emptyTables();
     const summary = await transformGenney(db, tables);
     expect(Array.isArray(summary.warnings)).toBe(true);
@@ -36,7 +36,7 @@ describe('Genney import reporting', () => {
     expect(summary.skipped).toHaveLength(0);
   });
 
-  it('orphaned events (no OWNER_EVENT entry) appear in skipped', () => {
+  it('orphaned events (no OWNER_EVENT entry) appear in skipped', async () => {
     const tables = emptyTables();
     // Event with TYPE BIRT but no OWNER_EVENT and no EVENT.OWNER
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', DATE: null, DESCRIPTION: null, NOTE: null, CAUSE: null, ADDRESS: null, OWNER: null, PLACE: null }];
@@ -47,7 +47,7 @@ describe('Genney import reporting', () => {
     expect(entry!.count).toBeGreaterThan(0);
   });
 
-  it('citations with no CITATION_SOURCE entry are counted in skipped', () => {
+  it('citations with no CITATION_SOURCE entry are counted in skipped', async () => {
     const tables = emptyTables();
     // Citation exists but has no CITATION_SOURCE link → no source_id → silently skipped
     tables.CITATION = [{ RID: 'C1', WHEREINTEXT: 'p.1', TEXT: null, NOTE: null, CERTAINTY: 2, DATE: null }];
@@ -58,7 +58,7 @@ describe('Genney import reporting', () => {
     expect(entry!.count).toBeGreaterThanOrEqual(1);
   });
 
-  it('unknown EVENT.TYPE values appear in warnings', () => {
+  it('unknown EVENT.TYPE values appear in warnings', async () => {
     const tables = emptyTables();
     tables.PERSON = [{ RID: 'I1', SEX: 0 }];
     // EVENT with an unrecognised TYPE
@@ -69,7 +69,7 @@ describe('Genney import reporting', () => {
     expect(warning).toBeDefined();
   });
 
-  it('COUPLE_FAMILY rows with null link type appear in skipped', () => {
+  it('COUPLE_FAMILY rows with null link type appear in skipped', async () => {
     const tables = emptyTables();
     tables.PERSON = [
       { RID: 'I1', SEX: 0 }, // father
@@ -83,7 +83,7 @@ describe('Genney import reporting', () => {
     expect(entry!.count).toBeGreaterThan(0);
   });
 
-  it('unreferenced SPLACEs appear in skipped', () => {
+  it('unreferenced SPLACEs appear in skipped', async () => {
     const tables = emptyTables();
     // Two places; neither is referenced by any EVENT_PLACE
     tables.SPLACE = [
@@ -96,7 +96,7 @@ describe('Genney import reporting', () => {
     expect(entry!.count).toBe(2);
   });
 
-  it('source NOTE field drops appear in warnings', () => {
+  it('source NOTE field drops appear in warnings', async () => {
     const tables = emptyTables();
     tables.SOURCE = [
       { RID: 'S1', TITLE: 'Source with note', NOTE: 'Important note content' },

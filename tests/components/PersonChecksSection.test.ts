@@ -3,7 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import PersonChecksSection from '../../src/renderer/components/PersonChecksSection.vue';
 import { i18n } from './setup';
 
-describe('PersonChecksSection fix actions', () => {
+describe('PersonChecksSection fix actions', async () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();

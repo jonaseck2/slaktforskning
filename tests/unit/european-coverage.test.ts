@@ -192,7 +192,7 @@ function assertHierarchyOrder(path: string[], expected: Array<string | undefined
   }
 }
 
-describe('European country coverage probes', () => {
+describe('European country coverage probes', async () => {
   let gazetteers: Gazetteer[];
 
   beforeAll(() => {
@@ -202,9 +202,9 @@ describe('European country coverage probes', () => {
   });
 
   for (const country of EUROPEAN_PROBES) {
-    describe(`${country.countryName} (${country.countryCode})`, () => {
+    describe(`${country.countryName} (${country.countryCode})`, async () => {
       for (const probe of country.probes) {
-        it(`resolves "${probe.query}"`, () => {
+        it(`resolves "${probe.query}"`, async () => {
           const result = await resolvePlace(probe.query, gazetteers);
           expect(result, `no resolution for "${probe.query}"`).toBeTruthy();
           if (!result) return;
@@ -218,8 +218,8 @@ describe('European country coverage probes', () => {
     });
   }
 
-  describe('Germany — boundary geometry coverage (de-gemeinden-boundaries)', () => {
-    it('Bundesland Brandenburg resolves with a polygon attached', () => {
+  describe('Germany — boundary geometry coverage (de-gemeinden-boundaries)', async () => {
+    it('Bundesland Brandenburg resolves with a polygon attached', async () => {
       const result = await resolvePlace('Brandenburg, Germany', gazetteers);
       expect(result).toBeTruthy();
       if (!result) return;

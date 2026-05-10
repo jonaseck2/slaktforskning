@@ -186,8 +186,8 @@ describe('large_family.ged', async () => {
 // ──────────────────────────────────────────────
 // non_standard_tags.ged — custom extension tags
 // ──────────────────────────────────────────────
-describe('non_standard_tags.ged', () => {
-  it('imports successfully and reports unknown tags', () => {
+describe('non_standard_tags.ged', async () => {
+  it('imports successfully and reports unknown tags', async () => {
     const tree = parseGedcom(loadFixture('non_standard_tags.ged'));
     const report = await importGedcom(db, tree);
     expect(report.persons).toBe(2);
@@ -200,7 +200,7 @@ describe('non_standard_tags.ged', () => {
     expect(unknownTags).toContain('_WEBTAG');
   });
 
-  it('does not crash on custom tags', () => {
+  it('does not crash on custom tags', async () => {
     const tree = parseGedcom(loadFixture('non_standard_tags.ged'));
     // Should not throw
     expect(() => await importGedcom(db, tree)).not.toThrow();
@@ -211,7 +211,7 @@ describe('non_standard_tags.ged', () => {
 // malformed_dates.ged — non-standard date formats
 // ──────────────────────────────────────────────
 describe('malformed_dates.ged', async () => {
-  it('imports all persons without crashing', () => {
+  it('imports all persons without crashing', async () => {
     const tree = parseGedcom(loadFixture('malformed_dates.ged'));
     const report = await importGedcom(db, tree);
     expect(report.persons).toBe(7);
@@ -296,8 +296,8 @@ describe('mixed_line_endings.ged', async () => {
 // ──────────────────────────────────────────────
 // duplicate_xrefs.ged — same xref for multiple records
 // ──────────────────────────────────────────────
-describe('duplicate_xrefs.ged', () => {
-  it('imports without crashing', () => {
+describe('duplicate_xrefs.ged', async () => {
+  it('imports without crashing', async () => {
     const tree = parseGedcom(loadFixture('duplicate_xrefs.ged'));
     // The parser treats duplicate xrefs as separate nodes in the tree;
     // the importer creates a new person for each INDI node.
@@ -306,7 +306,7 @@ describe('duplicate_xrefs.ged', () => {
     expect(() => await importGedcom(db, tree)).not.toThrow();
   });
 
-  it('creates persons for all INDI records', () => {
+  it('creates persons for all INDI records', async () => {
     const tree = parseGedcom(loadFixture('duplicate_xrefs.ged'));
     const report = await importGedcom(db, tree);
     // Both @I1@ INDIs + @I2@ = 3 persons created in DB

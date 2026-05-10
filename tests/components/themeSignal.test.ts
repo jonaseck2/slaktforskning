@@ -31,7 +31,7 @@ function clearHtmlState() {
 
 afterEach(clearHtmlState);
 
-describe('useThemeSignal', () => {
+describe('useThemeSignal', async () => {
   it('increments themeVersion when html class changes', async () => {
     const version = useThemeSignal();
     const before = version.value;
@@ -56,7 +56,7 @@ describe('useThemeSignal', () => {
   });
 });
 
-describe('useChartColors(true) reacts to theme changes', () => {
+describe('useChartColors(true) reacts to theme changes', async () => {
   it('re-reads --text-primary when the class list changes', async () => {
     setHtmlVars({ '--text-primary': '#111111' });
     const colors = useChartColors(true);
@@ -83,7 +83,7 @@ describe('useChartColors(true) reacts to theme changes', () => {
   });
 });
 
-describe('useChartColors(false) stays invariant', () => {
+describe('useChartColors(false) stays invariant', async () => {
   it('does not track the theme signal — always returns EXPORT_COLORS by reference', async () => {
     const colors = useChartColors(false);
     const first = colors.value;
@@ -100,7 +100,7 @@ describe('useChartColors(false) stays invariant', () => {
   });
 });
 
-describe('useFanThemeColors', () => {
+describe('useFanThemeColors', async () => {
   it('re-reads readThemeColors / isDarkMode / isHighContrast on class change', async () => {
     setHtmlVars({
       '--accent': '#2d5a27',

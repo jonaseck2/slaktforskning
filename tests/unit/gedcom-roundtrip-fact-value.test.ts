@@ -47,7 +47,7 @@ function normalizeFacts(gedcomText: string): NormalizedFact[] {
 async function roundTrip(gedcomText: string): string {
   const db = await createTestDb();
   await importGedcom(db, parseGedcom(gedcomText));
-  return await exportGedcom(db, '5.5.1').ged;
+  return (await exportGedcom(db, '5.5.1')).ged;
 }
 
 describe('GEDCOM fact-value round-trip', async () => {

@@ -41,7 +41,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = makeApi();
 });
 
-describe('media-picker add-row consistency across 3 section flavors', () => {
+describe('media-picker add-row consistency across 3 section flavors', async () => {
   it('PersonMediaSection: attach() reveals MediaAddRow with MediaPicker inside', async () => {
     const wrapper = mount(PersonMediaSection, {
       global: { plugins: [i18n] },

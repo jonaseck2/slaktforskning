@@ -121,7 +121,7 @@ const timelineFixture = [
   },
 ];
 
-describe('PersonTimeline', () => {
+describe('PersonTimeline', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     routerPush.mockClear();

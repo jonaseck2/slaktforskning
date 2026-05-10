@@ -39,8 +39,8 @@ function buildEventCitationFixture(): GenneyTables {
   };
 }
 
-describe('transformGenney — person citations', () => {
-  it('converts a person-owned citation to a MENTION event + event citation', () => {
+describe('transformGenney — person citations', async () => {
+  it('converts a person-owned citation to a MENTION event + event citation', async () => {
     const summary = await transformGenney(db, buildPersonCitationFixture());
 
     // One MENTION event created
@@ -68,7 +68,7 @@ describe('transformGenney — person citations', () => {
     expect(summary.events).toBeGreaterThanOrEqual(1);
   });
 
-  it('leaves event-owned citations as event citations (no MENTION created)', () => {
+  it('leaves event-owned citations as event citations (no MENTION created)', async () => {
     const summary = await transformGenney(db, buildEventCitationFixture());
 
     const mentions = db.all('SELECT * FROM events WHERE event_type = ?', ['mention']) as unknown[];

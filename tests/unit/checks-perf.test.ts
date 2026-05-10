@@ -64,7 +64,7 @@ describe('runAllChecks gazetteer load fan-out', async () => {
 // and not re-walk.
 // ---------------------------------------------------------------------------
 
-describe('resolver name-depth cache', () => {
+describe('resolver name-depth cache', async () => {
   function buildBigGazetteer(): Gazetteer {
     // Wide-and-deep tree so the build walk is many times larger than any
     // single-name lookup walk inside findMatches. That lets us assert the
@@ -115,7 +115,7 @@ describe('resolver name-depth cache', () => {
     };
   }
 
-  it('does not rebuild the depth map on a second resolvePlace call with the same gazetteer', () => {
+  it('does not rebuild the depth map on a second resolvePlace call with the same gazetteer', async () => {
     const probe = instrumentChildrenAccess(buildBigGazetteer());
     const gazetteers = [probe.gaz];
 
@@ -135,7 +135,7 @@ describe('resolver name-depth cache', () => {
     expect(warm * 5).toBeLessThan(cold);
   });
 
-  it('reuses the cached per-gazetteer depth map even when the surrounding array changes', () => {
+  it('reuses the cached per-gazetteer depth map even when the surrounding array changes', async () => {
     // The bug we are guarding against: callers that hand resolvePlace a fresh
     // gazetteer array each call (loadGazetteers does this) would invalidate
     // an array-identity-keyed cache. The per-root WeakMap must survive that.
@@ -161,7 +161,7 @@ describe('resolver name-depth cache', () => {
 // comparisons should go through pre-normalized index entries.
 // ---------------------------------------------------------------------------
 
-describe('resolver findMatches — name-normalization call count', () => {
+describe('resolver findMatches — name-normalization call count', async () => {
   function makeGaz() {
     // 3-level tree: 1 root → 5 countries → 8 regions each = 40 leaves.
     // Each leaf has one alias. Two leaves share the name "Springfield"

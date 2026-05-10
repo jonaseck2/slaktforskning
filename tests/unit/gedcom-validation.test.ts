@@ -38,8 +38,8 @@ const SAMPLE_WITH_LDS = `0 HEAD
 2 DATE 2 FEB 2001
 0 TRLR`;
 
-describe('ValidationReport', () => {
-  describe('rawCounts', () => {
+describe('ValidationReport', async () => {
+  describe('rawCounts', async () => {
     it('correctly counts INDI, FAM, SOUR, REPO, SUBM records', () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
@@ -51,7 +51,7 @@ describe('ValidationReport', () => {
       expect(report.rawCounts.submitters).toBe(1);
     });
 
-    it('counts zero for missing record types', () => {
+    it('counts zero for missing record types', async () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Solo /Person/\n0 TRLR`);
       const report = await importGedcom(db, tree);
 
@@ -62,8 +62,8 @@ describe('ValidationReport', () => {
     });
   });
 
-  describe('unmappedData', () => {
-    it('does not include REPO entries in unmappedData (REPO records are now imported)', () => {
+  describe('unmappedData', async () => {
+    it('does not include REPO entries in unmappedData (REPO records are now imported)', async () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
 
@@ -71,7 +71,7 @@ describe('ValidationReport', () => {
       expect(repoEntry).toBeUndefined();
     });
 
-    it('does not include SUBM entries in unmappedData (SUBM is now matched to a person)', () => {
+    it('does not include SUBM entries in unmappedData (SUBM is now matched to a person)', async () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
 
@@ -79,7 +79,7 @@ describe('ValidationReport', () => {
       expect(submEntry).toBeUndefined();
     });
 
-    it('does not include REPO entry when no REPO records', () => {
+    it('does not include REPO entry when no REPO records', async () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Solo /Person/\n0 TRLR`);
       const report = await importGedcom(db, tree);
 
@@ -87,7 +87,7 @@ describe('ValidationReport', () => {
       expect(repoEntry).toBeUndefined();
     });
 
-    it('includes LDS ordinances when present', () => {
+    it('includes LDS ordinances when present', async () => {
       const tree = parseGedcom(SAMPLE_WITH_LDS);
       const report = await importGedcom(db, tree);
 
@@ -97,15 +97,15 @@ describe('ValidationReport', () => {
     });
   });
 
-  describe('modelLimitations', () => {
-    it('does not include ASSO in modelLimitations when no ASSO nodes are present', () => {
+  describe('modelLimitations', async () => {
+    it('does not include ASSO in modelLimitations when no ASSO nodes are present', async () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
 
       expect(report.modelLimitations.some(l => l.includes('ASSO'))).toBe(false);
     });
 
-    it('does not include ASSO in modelLimitations for minimal GEDCOM', () => {
+    it('does not include ASSO in modelLimitations for minimal GEDCOM', async () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 TRLR`);
       const report = await importGedcom(db, tree);
 
@@ -113,7 +113,7 @@ describe('ValidationReport', () => {
     });
   });
 
-  describe('tagStats', () => {
+  describe('tagStats', async () => {
     it('mirrors skipped field (same tags, different shape)', () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME John /Smith/\n1 _CUSTOM unknown tag\n0 TRLR`);
       const report = await importGedcom(db, tree);
@@ -127,7 +127,7 @@ describe('ValidationReport', () => {
       }
     });
 
-    it('tagStats is empty when all tags are recognized', () => {
+    it('tagStats is empty when all tags are recognized', async () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
 

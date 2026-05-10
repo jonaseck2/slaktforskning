@@ -84,7 +84,7 @@ const REL_EVENTS: Record<string, Array<{ event_type: string; date_value: string 
   'r-p2': [{ event_type: 'marriage', date_value: '1861-09-01' }],
 };
 
-describe('PersonRelationshipsSection', () => {
+describe('PersonRelationshipsSection', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
 

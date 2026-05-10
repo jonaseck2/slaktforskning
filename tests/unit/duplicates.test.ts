@@ -207,8 +207,8 @@ describe('ignored_duplicates polymorphism (v0.220.0)', async () => {
   it('migration is idempotent — running initializeSchema twice does not crash or double-add the column', async () => {
     // await createTestDb() already ran initializeSchema once; running it again is the
     // idempotency check.
-    await expect(await initializeSchema(db)).resolves.not.toThrow();
-    await expect(await initializeSchema(db)).resolves.not.toThrow();
+    await expect(initializeSchema(db)).resolves.not.toThrow();
+    await expect(initializeSchema(db)).resolves.not.toThrow();
 
     // After three runs, the column shape must still be the migrated shape — not
     // duplicated, not missing.

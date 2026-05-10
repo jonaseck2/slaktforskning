@@ -21,7 +21,7 @@ async function flushPromises() {
   await nextTick();
 }
 
-describe('usePagedList — onDataChanged reactivity', () => {
+describe('usePagedList — onDataChanged reactivity', async () => {
   it('reloads (debounced) when onDataChanged fires', async () => {
     vi.useFakeTimers();
     try {

@@ -4,7 +4,7 @@ import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 import type { GazetteerConfig, Gazetteer } from '../../src/api/place-gazetteers/types';
 
-describe('bundled gazetteers', () => {
+describe('bundled gazetteers', async () => {
   const gazetteers = getAllGazetteers();
 
   it('loads all 72 bundled gazetteers', () => {
@@ -126,7 +126,7 @@ describe('bundled gazetteers', () => {
     expect(wh.root.children!.length).toBeGreaterThan(200);
   });
 
-  it('world-historical resolves Soviet Union', () => {
+  it('world-historical resolves Soviet Union', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['world-historical'] },
       getAllGazetteers(),
@@ -136,7 +136,7 @@ describe('bundled gazetteers', () => {
     expect(result!.matchedNode.name).toBe('Soviet Union');
   });
 
-  it('world-historical resolves "Sovjetunionen" via lang-world-historical', () => {
+  it('world-historical resolves "Sovjetunionen" via lang-world-historical', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['world-historical', 'lang-world-historical'] },
       getAllGazetteers(),
@@ -214,28 +214,28 @@ describe('boundary gazetteers', () => {
   });
 });
 
-describe('cross-country place resolution', () => {
+describe('cross-country place resolution', async () => {
   const allEnabled: GazetteerConfig = {
     enabledGazetteers: getAllGazetteers().map(g => g.id),
   };
   const gazetteers = loadGazetteers(allEnabled, getAllGazetteers());
 
-  it('resolves a Danish parish', () => {
+  it('resolves a Danish parish', async () => {
     const result = await resolvePlace('Roskilde, Danmark', gazetteers);
     expect(result).not.toBeNull();
   });
 
-  it('resolves a Norwegian place', () => {
+  it('resolves a Norwegian place', async () => {
     const result = await resolvePlace('Oslo, Norge', gazetteers);
     expect(result).not.toBeNull();
   });
 
-  it('resolves a US state', () => {
+  it('resolves a US state', async () => {
     const result = await resolvePlace('Minnesota, United States', gazetteers);
     expect(result).not.toBeNull();
   });
 
-  it('resolves a country by ISO code alias', () => {
+  it('resolves a country by ISO code alias', async () => {
     const result = await resolvePlace('SE', gazetteers);
     expect(result).not.toBeNull();
   });
@@ -247,13 +247,13 @@ describe('cross-country place resolution', () => {
     expect(result!.matchedPath).toContain('Ontario');
   });
 
-  it('resolves "Canada" by its English name', () => {
+  it('resolves "Canada" by its English name', async () => {
     const result = await resolvePlace('Canada', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Canada');
   });
 
-  it('resolves "USA" via Swedish language gazetteer alias for United States', () => {
+  it('resolves "USA" via Swedish language gazetteer alias for United States', async () => {
     // Scope explicitly: lang-world-historical pulled in many multilingual
     // labels for "Union of South Africa" — including the literal "USA" — so
     // when both world-historical and the modern country gazetteers are enabled
@@ -269,12 +269,12 @@ describe('cross-country place resolution', () => {
   });
 });
 
-describe('language gazetteer integration', () => {
+describe('language gazetteer integration', async () => {
   // Translations injected by lang-sv-geonames must reach the resolver when
   // language gazetteers are explicitly included alongside data gazetteers.
   // QualityView (src/api/checks/index.ts) appends language gazetteers to the
   // user's gazetteer_config so this works regardless of user preference.
-  it('Skottland → Scotland via lang-sv-geonames + world-admin1', () => {
+  it('Skottland → Scotland via lang-sv-geonames + world-admin1', async () => {
     const gazetteers = loadGazetteers(
       {
         enabledGazetteers: [
@@ -289,7 +289,7 @@ describe('language gazetteer integration', () => {
     expect(result!.matchedPath).toContain('Scotland');
   });
 
-  it('Tyskland → Germany via lang-sv-geonames + world-countries', () => {
+  it('Tyskland → Germany via lang-sv-geonames + world-countries', async () => {
     const gazetteers = loadGazetteers(
       {
         enabledGazetteers: [
@@ -305,7 +305,7 @@ describe('language gazetteer integration', () => {
   });
 });
 
-describe('Swedish exonym expansion', () => {
+describe('Swedish exonym expansion', async () => {
   // Gazetteers with full language support enabled.
   // Loaded in beforeAll to avoid synchronous errors during Vitest's collection
   // phase (describe-scope errors are swallowed silently, causing tests to
@@ -326,42 +326,42 @@ describe('Swedish exonym expansion', () => {
 
   // ── Admin1-level exonyms (GeoNames) ───────────────────────────────
 
-  it('resolves "Flandern" to Belgium > Flanders via lang-sv-geonames', () => {
+  it('resolves "Flandern" to Belgium > Flanders via lang-sv-geonames', async () => {
     const result = await resolvePlace('Flandern', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Belgium');
     expect(result!.matchedPath).toContain('Flanders');
   });
 
-  it('resolves "Brysselregionen" to Belgium > Brussels Capital via lang-sv-geonames', () => {
+  it('resolves "Brysselregionen" to Belgium > Brussels Capital via lang-sv-geonames', async () => {
     const result = await resolvePlace('Brysselregionen', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Belgium');
     expect(result!.matchedPath).toContain('Brussels Capital');
   });
 
-  it('resolves "Toscana" to Italy > Tuscany via lang-sv-wikidata', () => {
+  it('resolves "Toscana" to Italy > Tuscany via lang-sv-wikidata', async () => {
     const result = await resolvePlace('Toscana', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Italy');
     expect(result!.matchedPath).toContain('Tuscany');
   });
 
-  it('resolves "Bayern" to Germany > Bavaria via lang-sv-wikidata', () => {
+  it('resolves "Bayern" to Germany > Bavaria via lang-sv-wikidata', async () => {
     const result = await resolvePlace('Bayern', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Germany');
     expect(result!.matchedPath).toContain('Bavaria');
   });
 
-  it('resolves "Katalonien" to Spain > Catalonia via lang-sv-wikidata', () => {
+  it('resolves "Katalonien" to Spain > Catalonia via lang-sv-wikidata', async () => {
     const result = await resolvePlace('Katalonien', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Spain');
     expect(result!.matchedPath).toContain('Catalonia');
   });
 
-  it('resolves "Skottland" to United Kingdom > Scotland via lang-sv-wikidata', () => {
+  it('resolves "Skottland" to United Kingdom > Scotland via lang-sv-wikidata', async () => {
     const result = await resolvePlace('Skottland', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('United Kingdom');
@@ -397,7 +397,7 @@ describe('Swedish exonym expansion', () => {
 
   // ── Negative-control ─────────────────────────────────────────────
 
-  it('does NOT resolve "Åhlborg" (typo of Aalborg) via a Swedish exonym alias', () => {
+  it('does NOT resolve "Åhlborg" (typo of Aalborg) via a Swedish exonym alias', async () => {
     // "Åhlborg" is a typo not present in GeoNames or Wikidata. The path
     // component "Åhlborg" should not appear in any resolved match.
     const result = await resolvePlace('Åhlborg, Danmark', gazetteers);
@@ -409,8 +409,8 @@ describe('Swedish exonym expansion', () => {
   });
 });
 
-describe('per-gazetteer normalization rules', () => {
-  it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', () => {
+describe('per-gazetteer normalization rules', async () => {
+  it('strips Swedish "kommun" suffix when matching against sv-orter (SV_RULES)', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-orter'] },
       getAllGazetteers(),
@@ -421,7 +421,7 @@ describe('per-gazetteer normalization rules', () => {
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-orter');
   });
 
-  it('strips Danish "Sogn" suffix when matching against dk-sogne (DK_RULES)', () => {
+  it('strips Danish "Sogn" suffix when matching against dk-sogne (DK_RULES)', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['dk-sogne'] },
       getAllGazetteers(),
@@ -432,7 +432,7 @@ describe('per-gazetteer normalization rules', () => {
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('dk-sogne');
   });
 
-  it('treats hyphens and spaces as equivalent (universal rule)', () => {
+  it('treats hyphens and spaces as equivalent (universal rule)', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-socknar', 'sv-forsamlingar', 'sv-orter'] },
       getAllGazetteers(),
@@ -446,7 +446,7 @@ describe('per-gazetteer normalization rules', () => {
     expect(hyphen!.lon).toBe(spaced!.lon);
   });
 
-  it('splits on period-before-uppercase to handle "Minn.USA" (universal rule)', () => {
+  it('splits on period-before-uppercase to handle "Minn.USA" (universal rule)', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['world-countries', 'us-all-states'] },
       getAllGazetteers(),
@@ -458,7 +458,7 @@ describe('per-gazetteer normalization rules', () => {
     expect(pathStr).toMatch(/united states|usa/);
   });
 
-  it('strips parens and matches a token within a single component (universal rule + token-scan)', () => {
+  it('strips parens and matches a token within a single component (universal rule + token-scan)', async () => {
     // Restrict to dk-sogne so the token-scan path must pick up "Roskilde" from
     // the single component "(Roskilde) Danmark" → universal-normalized to
     // "roskilde danmark" — neither parens nor the country tail prevent the
@@ -473,7 +473,7 @@ describe('per-gazetteer normalization rules', () => {
     expect(pathStr).toContain('roskilde');
   });
 
-  it('does NOT strip "kommun" against world-countries (no SV_RULES on that gazetteer)', () => {
+  it('does NOT strip "kommun" against world-countries (no SV_RULES on that gazetteer)', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['world-countries'] },
       getAllGazetteers(),
@@ -488,7 +488,7 @@ describe('per-gazetteer normalization rules', () => {
   });
 });
 
-describe('sv-landskap resolution', () => {
+describe('sv-landskap resolution', async () => {
   // Walk down to the Sweden node so the per-landskap assertions still work
   // after the World > Europe > Sweden > <landskap> migration.
   function svLandskapChildren() {
@@ -517,7 +517,7 @@ describe('sv-landskap resolution', () => {
     }
   });
 
-  it('resolves "Ångermanland" to sv-landskap', () => {
+  it('resolves "Ångermanland" to sv-landskap', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-landskap'] },
       getAllGazetteers(),
@@ -528,7 +528,7 @@ describe('sv-landskap resolution', () => {
     expect(result!.matchedNode.name).toBe('Ångermanland');
   });
 
-  it('resolves "Bohuslän" to the landskap gazetteer', () => {
+  it('resolves "Bohuslän" to the landskap gazetteer', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-landskap'] },
       getAllGazetteers(),
@@ -539,7 +539,7 @@ describe('sv-landskap resolution', () => {
     expect(result!.matchedNode.name).toBe('Bohuslän');
   });
 
-  it('strips "landskap" suffix — "Skåne landskap" matches the same as "Skåne"', () => {
+  it('strips "landskap" suffix — "Skåne landskap" matches the same as "Skåne"', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-landskap'] },
       getAllGazetteers(),
@@ -553,7 +553,7 @@ describe('sv-landskap resolution', () => {
     expect(a!.lon).toBe(b!.lon);
   });
 
-  it('"Skåne län" still resolves to the modern Skåne (via sv-orter) and not the landskap', () => {
+  it('"Skåne län" still resolves to the modern Skåne (via sv-orter) and not the landskap', async () => {
     // sv-orter has SV_RULES which strips "län"; sv-landskap children don't
     // include "Skåne län" as a name. The landskap node name is just "Skåne".
     // With both gazetteers enabled, the one that can specifically match "Skåne"
@@ -567,7 +567,7 @@ describe('sv-landskap resolution', () => {
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-orter');
   });
 
-  it('"Skåne" (bare) resolves from sv-landskap when only sv-landskap is enabled', () => {
+  it('"Skåne" (bare) resolves from sv-landskap when only sv-landskap is enabled', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-landskap'] },
       getAllGazetteers(),
@@ -577,7 +577,7 @@ describe('sv-landskap resolution', () => {
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('sv-landskap');
   });
 
-  it('"Skåne" (bare) also resolves from sv-orter when only sv-orter is enabled', () => {
+  it('"Skåne" (bare) also resolves from sv-orter when only sv-orter is enabled', async () => {
     const gazetteers = loadGazetteers(
       { enabledGazetteers: ['sv-orter'] },
       getAllGazetteers(),
@@ -588,26 +588,26 @@ describe('sv-landskap resolution', () => {
   });
 });
 
-describe('de-gemeinden resolution', () => {
+describe('de-gemeinden resolution', async () => {
   const gazetteers = loadGazetteers(
     { enabledGazetteers: ['de-gemeinden'] },
     getAllGazetteers(),
   );
 
-  it('resolves "Hamburg" to a German node', () => {
+  it('resolves "Hamburg" to a German node', async () => {
     const result = await resolvePlace('Hamburg', gazetteers);
     expect(result).not.toBeNull();
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
   });
 
-  it('resolves "Bayern" to the Bundesland', () => {
+  it('resolves "Bayern" to the Bundesland', async () => {
     const result = await resolvePlace('Bayern', gazetteers);
     expect(result).not.toBeNull();
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');
     expect(result!.matchedPath).toContain('Bayern');
   });
 
-  it('strips German suffixes — "Landkreis Schwabach" matches the same as "Schwabach"', () => {
+  it('strips German suffixes — "Landkreis Schwabach" matches the same as "Schwabach"', async () => {
     const a = await resolvePlace('Landkreis Schwabach', gazetteers);
     const b = await resolvePlace('Schwabach', gazetteers);
     expect(a).not.toBeNull();
@@ -618,7 +618,7 @@ describe('de-gemeinden resolution', () => {
     expect(a!.lon).toBe(b!.lon);
   });
 
-  it('resolves "Schleswig-Holstein" without breaking on the hyphen', () => {
+  it('resolves "Schleswig-Holstein" without breaking on the hyphen', async () => {
     const result = await resolvePlace('Schleswig-Holstein', gazetteers);
     expect(result).not.toBeNull();
     expect((result!.matchedNode as { __contributors?: string[] }).__contributors ?? []).toContain('de-gemeinden');

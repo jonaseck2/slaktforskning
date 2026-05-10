@@ -14,7 +14,7 @@ vi.mock('vue-router', () => ({
 // given selectedPersonId. If a future change introduces a second source of
 // truth (e.g. wiring :focused-person to HourglassChart the way PedigreeChart
 // does it), this test fails and forces the de-duplication conversation.
-describe('HourglassChart — single-focus invariant', () => {
+describe('HourglassChart — single-focus invariant', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {

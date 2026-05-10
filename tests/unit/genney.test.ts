@@ -124,7 +124,7 @@ describe('transformGenney — persons', async () => {
     expect(person.notes).toContain('remark text');
   });
 
-  it('returns correct person count in summary', () => {
+  it('returns correct person count in summary', async () => {
     const tables = emptyTables();
     tables.PERSON = [
       { RID: 'I1', SEX: 0, GIVENNAME: 'Lars' },
@@ -254,7 +254,7 @@ describe('transformGenney — events', async () => {
     expect(places[0].place_type).toBe('parish');
   });
 
-  it('returns correct event count in summary', () => {
+  it('returns correct event count in summary', async () => {
     const tables = emptyTables();
     tables.PERSON = [{ RID: 'I1', SEX: 0, GIVENNAME: 'Lars' }];
     tables.EVENT = [

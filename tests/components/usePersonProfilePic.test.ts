@@ -98,7 +98,7 @@ describe('usePersonProfilePic — null / undefined personId', () => {
   });
 });
 
-describe('usePersonProfilePic — api returns null (no profile pic)', () => {
+describe('usePersonProfilePic — api returns null (no profile pic)', async () => {
   it('src stays null after load completes with no profile pic', async () => {
     installWindowApi({ profilePicRef: vi.fn().mockResolvedValue(null) });
     const id = ref<string | null>('p1');
@@ -116,7 +116,7 @@ describe('usePersonProfilePic — api returns null (no profile pic)', () => {
   });
 });
 
-describe('usePersonProfilePic — api returns a region-tagged profile pic', () => {
+describe('usePersonProfilePic — api returns a region-tagged profile pic', async () => {
   it('src becomes the cropped data URL after load', async () => {
     installWindowApi({
       profilePicRef: vi.fn().mockResolvedValue({
@@ -166,7 +166,7 @@ describe('usePersonProfilePic — api returns a region-tagged profile pic', () =
   });
 });
 
-describe('usePersonProfilePic — api returns mediaRef without region (no face tag)', () => {
+describe('usePersonProfilePic — api returns mediaRef without region (no face tag)', async () => {
   it('falls back to raw media url when mediaRef has no region', async () => {
     installWindowApi({
       profilePicRef: vi.fn().mockResolvedValue({ mediaId: 'm1', region: null }),
@@ -179,7 +179,7 @@ describe('usePersonProfilePic — api returns mediaRef without region (no face t
   });
 });
 
-describe('usePersonProfilePic — personId change triggers re-fetch', () => {
+describe('usePersonProfilePic — personId change triggers re-fetch', async () => {
   it('re-fetches and updates src when personId changes to a new value', async () => {
     const profilePicRef = vi.fn()
       .mockResolvedValueOnce(null)        // p1: no pic
@@ -221,7 +221,7 @@ describe('usePersonProfilePic — personId change triggers re-fetch', () => {
   });
 });
 
-describe('usePersonProfilePic — error during crop (resolveOne catch branch)', () => {
+describe('usePersonProfilePic — error during crop (resolveOne catch branch)', async () => {
   // The resolveOne() helper in the store has its own try/catch for crop
   // failures. The outer try in ensureLoaded also catches now (regression
   // guard for v0.179.7) — see the next describe block.
@@ -259,7 +259,7 @@ describe('usePersonProfilePic — error during crop (resolveOne catch branch)', 
   });
 });
 
-describe('usePersonProfilePic — profilePicRef itself rejects (outer catch)', () => {
+describe('usePersonProfilePic — profilePicRef itself rejects (outer catch)', async () => {
   // Regression guard for v0.179.7. Before the fix, a rejection from
   // profilePicRef bypassed resolveOne's catch, leaving the store entry
   // pinned at status='loading' forever (the dedup guard then blocked
@@ -286,7 +286,7 @@ describe('usePersonProfilePic — profilePicRef itself rejects (outer catch)', (
   });
 });
 
-describe('usePersonProfilePic — same personId does not refetch', () => {
+describe('usePersonProfilePic — same personId does not refetch', async () => {
   it('calls profilePicRef only once when the same id is used by two composable instances', async () => {
     const profilePicRef = vi.fn().mockResolvedValue(null);
     installWindowApi({ profilePicRef });

@@ -59,7 +59,7 @@ const eventUndatedDeath = {
   participant_names: 'Erik Andersson',
 };
 
-describe('PlaceTimeline', () => {
+describe('PlaceTimeline', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Fixture deliberately unsorted so the chronological-order assertion

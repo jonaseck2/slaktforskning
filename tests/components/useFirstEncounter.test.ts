@@ -35,12 +35,12 @@ const Probe = defineComponent({
   },
 });
 
-describe('useFirstEncounter', () => {
+describe('useFirstEncounter', async () => {
   it('starts unseen, transitions to seen after markSeen()', async () => {
     const w = mount(Probe, { props: { k: 'coach.test.alpha' } });
     await flushPromises();
     expect(w.get('[data-test="seen"]').text()).toBe('false');
-    await w.get('[data-test="mark"]').trigger('click');
+    (await w.get('[data-test="mark"]')).trigger('click');
     await flushPromises();
     expect(w.get('[data-test="seen"]').text()).toBe('true');
     expect(apiMock.onboarding.markSeen).toHaveBeenCalledWith('coach.test.alpha');
@@ -57,7 +57,7 @@ describe('useFirstEncounter', () => {
     const w1 = mount(Probe, { props: { k: 'coach.test.gamma' } });
     const w2 = mount(Probe, { props: { k: 'coach.test.gamma' } });
     await flushPromises();
-    await w1.get('[data-test="mark"]').trigger('click');
+    (await w1.get('[data-test="mark"]')).trigger('click');
     await flushPromises();
     expect(w2.get('[data-test="seen"]').text()).toBe('true');
   });

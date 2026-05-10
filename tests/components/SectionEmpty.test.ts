@@ -19,7 +19,7 @@ const i18n = createI18n({
 
 const opts = { global: { plugins: [i18n] } };
 
-describe('SectionEmpty', () => {
+describe('SectionEmpty', async () => {
   it('legacy message-only mode renders as before', () => {
     const w = mount(SectionEmpty, { props: { message: 'Inga poster.' }, ...opts });
     expect(w.text()).toContain('Inga poster.');
@@ -33,7 +33,7 @@ describe('SectionEmpty', () => {
     });
     expect(w.text()).toContain('Här ser du saker.');
     expect(w.find('.section-empty--coaching').exists()).toBe(true);
-    await w.get('button.section-empty__action').trigger('click');
+    (await w.get('button.section-empty__action')).trigger('click');
     expect(w.emitted('action')).toBeTruthy();
   });
 

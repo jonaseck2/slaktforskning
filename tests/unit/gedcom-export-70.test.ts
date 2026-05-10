@@ -18,18 +18,18 @@ describe('isStandardGedcomDate', () => {
   it('rejects empty string', () => { expect(isStandardGedcomDate('')).toBe(false); });
 });
 
-describe('exportGedcom 7.0 — header', () => {
-  it('emits GEDC VERS 7.0 and no CHAR tag', () => {
+describe('exportGedcom 7.0 — header', async () => {
+  it('emits GEDC VERS 7.0 and no CHAR tag', async () => {
     const { ged: out } = await exportGedcom(db, '7.0');
     expect(out).toContain('2 VERS 7.0');
     expect(out).not.toContain('1 CHAR UTF-8');
   });
-  it('5.5.1 export is unchanged', () => {
+  it('5.5.1 export is unchanged', async () => {
     const { ged: out } = await exportGedcom(db, '5.5.1');
     expect(out).toContain('2 VERS 5.5.1');
     expect(out).toContain('1 CHAR UTF-8');
   });
-  it('default (no arg) is 5.5.1', () => {
+  it('default (no arg) is 5.5.1', async () => {
     const { ged: out } = await exportGedcom(db);
     expect(out).toContain('2 VERS 5.5.1');
   });

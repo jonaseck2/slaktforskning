@@ -170,7 +170,7 @@ describe('archive import', async () => {
     fs.writeFileSync(archivePath, zipData);
 
     const db2 = await createTestDb();
-    await expect(await importArchive(db2, archivePath, path.join(tmpDir, 'media'))).rejects.toThrow('No .ged file found');
+    await expect(importArchive(db2, archivePath, path.join(tmpDir, 'media'))).rejects.toThrow('No .ged file found');
   });
 
   it('imports .ged file from a subdirectory in the archive', async () => {

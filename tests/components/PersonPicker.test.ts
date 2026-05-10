@@ -19,7 +19,7 @@ function mountPicker(props: Partial<{ modelValue: string | null; placeholder: st
   });
 }
 
-describe('PersonPicker', () => {
+describe('PersonPicker', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

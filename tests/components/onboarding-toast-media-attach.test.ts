@@ -47,14 +47,14 @@ const Probe = defineComponent({
   },
 });
 
-describe('useFirstMediaAttachToast', () => {
+describe('useFirstMediaAttachToast', async () => {
   it('shows toast and marks seen on first successful attach', async () => {
     const toast = useToast();
     const w = mount(Probe);
     await flushPromises(); // let useFirstEncounter's onMounted snapshot resolve
     expect(toast.toasts.length).toBe(0);
 
-    await w.get('[data-test="attach"]').trigger('click');
+    (await w.get('[data-test="attach"]')).trigger('click');
     await flushPromises();
 
     expect(toast.toasts.length).toBe(1);
@@ -69,7 +69,7 @@ describe('useFirstMediaAttachToast', () => {
     await flushPromises();
 
     // First attach — toast appears.
-    await w.get('[data-test="attach"]').trigger('click');
+    (await w.get('[data-test="attach"]')).trigger('click');
     await flushPromises();
     expect(toast.toasts.length).toBe(1);
 
@@ -78,7 +78,7 @@ describe('useFirstMediaAttachToast', () => {
     expect(toast.toasts.length).toBe(0);
 
     // Second attach — no toast.
-    await w.get('[data-test="attach"]').trigger('click');
+    (await w.get('[data-test="attach"]')).trigger('click');
     await flushPromises();
     expect(toast.toasts.length).toBe(0);
 
@@ -92,7 +92,7 @@ describe('useFirstMediaAttachToast', () => {
     const w = mount(Probe);
     await flushPromises();
 
-    await w.get('[data-test="attach"]').trigger('click');
+    (await w.get('[data-test="attach"]')).trigger('click');
     await flushPromises();
 
     expect(toast.toasts.length).toBe(0);

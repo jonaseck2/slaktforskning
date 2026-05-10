@@ -13,7 +13,7 @@ import { i18n } from './setup';
  * attribute on the save button. Lint and type-check are hygiene; they cannot
  * prove this behavior.
  */
-describe('PersonModal — Save is disabled until an identifier is provided', () => {
+describe('PersonModal — Save is disabled until an identifier is provided', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {

@@ -11,7 +11,7 @@ import { i18n } from './setup';
 // baptism, mourners on a funeral, witnesses on a wedding. Today only
 // couple events expose any "other persons" UI.
 
-describe('EventParticipantsSection', () => {
+describe('EventParticipantsSection', async () => {
   const getForEventMock = vi.fn();
   const addMock = vi.fn();
   const removeMock = vi.fn();

@@ -71,7 +71,7 @@ function findSaveButton(wrapper: ReturnType<typeof mount>) {
   return wrapper.find('button.ep-save-btn');
 }
 
-describe('RelationshipModal — Save is visibly disabled until the form is valid', () => {
+describe('RelationshipModal — Save is visibly disabled until the form is valid', async () => {
   it('create mode: Save is disabled with no persons picked, enables when both are picked', async () => {
     const wrapper = mount(RelationshipModal, {
       global: { plugins: [i18n] },
@@ -145,7 +145,7 @@ describe('RelationshipModal — Save is visibly disabled until the form is valid
   });
 });
 
-describe('RelationshipModal — save error surfaces the underlying detail', () => {
+describe('RelationshipModal — save error surfaces the underlying detail', async () => {
   it('toast.error contains the rejected error message, not just the generic prefix', async () => {
     api.relationships.update.mockRejectedValueOnce(new Error('FOREIGN KEY constraint failed'));
 

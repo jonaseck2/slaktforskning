@@ -82,7 +82,7 @@ function findCoachmark(): Element | null {
   return document.body.querySelector('.coachmark');
 }
 
-describe('Hourglass focus-switch coachmark', () => {
+describe('Hourglass focus-switch coachmark', async () => {
   it('renders on first chart open when no seen flag is set', async () => {
     await mountChart();
     const el = findCoachmark();

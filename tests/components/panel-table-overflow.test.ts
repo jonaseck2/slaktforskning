@@ -41,7 +41,7 @@ const longEvent = {
   value: null,
 };
 
-describe('panel-table column overflow (.panel-section .data-table)', () => {
+describe('panel-table column overflow (.panel-section .data-table)', async () => {
   let styleEl: HTMLStyleElement;
   let wrapperHost: HTMLDivElement;
   const mockForPerson = vi.fn();

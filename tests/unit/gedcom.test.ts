@@ -401,7 +401,7 @@ describe('importGedcom (Genney profile)', async () => {
 // Exporter
 // ──────────────────────────────────────────────
 describe('exportGedcom', async () => {
-  it('produces valid GEDCOM with HEAD and TRLR', () => {
+  it('produces valid GEDCOM with HEAD and TRLR', async () => {
     const { ged } = await exportGedcom(db);
     expect(ged.startsWith('0 HEAD')).toBe(true);
     expect(ged.trimEnd().endsWith('0 TRLR')).toBe(true);
@@ -1166,7 +1166,7 @@ describe('GEDCOM import completeness', async () => {
     expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
   });
 
-  it('ImportReport contains correct counts', () => {
+  it('ImportReport contains correct counts', async () => {
     const ged = `0 HEAD
 1 GEDC
 2 VERS 5.5.1

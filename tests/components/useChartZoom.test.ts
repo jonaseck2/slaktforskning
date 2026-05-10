@@ -84,7 +84,7 @@ describe('useChartZoom -- initial state', () => {
   });
 });
 
-describe('useChartZoom -- localStorage persistence', () => {
+describe('useChartZoom -- localStorage persistence', async () => {
   it('persists zoom changes to localStorage', async () => {
     const { zoom } = useChartZoom(1, 'persist-key');
     zoom.value = 1.8;
@@ -109,7 +109,7 @@ describe('useChartZoom -- resetZoom', () => {
   });
 });
 
-describe('useChartZoom -- zoomIn / zoomOut', () => {
+describe('useChartZoom -- zoomIn / zoomOut', async () => {
   it('zoomIn multiplies zoom by 1.25 when no scrollRef', () => {
     const { zoom, zoomIn } = useChartZoom(1);
     zoomIn();
@@ -155,7 +155,7 @@ describe('useChartZoom -- zoomIn / zoomOut', () => {
   });
 });
 
-describe('useChartZoom -- onWheel', () => {
+describe('useChartZoom -- onWheel', async () => {
   it('ignores wheel events without ctrlKey or metaKey', () => {
     const { zoom, onWheel } = useChartZoom(1);
     // No ctrlKey / metaKey — should be ignored.
@@ -341,7 +341,7 @@ describe('useChartZoom -- drag-to-pan', () => {
   });
 });
 
-describe('useChartZoom -- applyZoom scrollRef null guard in nextTick', () => {
+describe('useChartZoom -- applyZoom scrollRef null guard in nextTick', async () => {
   it('does not throw when scrollRef becomes null between applyZoom and nextTick', async () => {
     const z = useChartZoom(1);
     const el = makeScroller();
