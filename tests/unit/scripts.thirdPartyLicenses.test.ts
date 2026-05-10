@@ -7,10 +7,13 @@ const ROOT = join(__dirname, '..', '..');
 const OUTPUT = join(ROOT, 'THIRD_PARTY_LICENSES.txt');
 
 describe('build-third-party-licenses script', () => {
+  // The license walker scans every node_modules entry; under contention with
+  // ~40 other parallel test files it can exceed the default 10 s hook timeout
+  // even though it finishes in ~3 s in isolation. Give it room.
   beforeAll(() => {
     if (existsSync(OUTPUT)) rmSync(OUTPUT);
     execFileSync('node', ['scripts/build-third-party-licenses.mjs'], { cwd: ROOT, stdio: 'pipe' });
-  });
+  }, 60_000);
 
   it('produces an output file', () => {
     expect(existsSync(OUTPUT)).toBe(true);

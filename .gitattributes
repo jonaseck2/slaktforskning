@@ -1,0 +1,29 @@
+# Force LF line endings on every platform — overrides any developer's
+# core.autocrlf setting. Tests that read source files (e.g. duplicates regex
+# self-checks) assume LF, and Windows checkouts with autocrlf=true would
+# otherwise hand back CRLF from the working tree even though the index is LF.
+* text=auto eol=lf
+
+# Binary types — never modify, never line-end-convert.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.bmp  binary
+*.ico  binary
+*.icns binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.wasm binary
+*.db   binary
+*.mp3  binary
+# GEDCOM fixtures are real exporter output — preserve byte-for-byte so
+# round-trip and dialect tests see exactly what each tool produced.
+*.ged  binary
+*.mp4  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
