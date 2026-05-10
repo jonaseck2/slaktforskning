@@ -425,12 +425,20 @@ export function phaseIndividuals(ctx: ImportContext): void {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+        // GEDCOM 7.0 carrier for transcription on non-event/non-name hosts.
+        // Standard DATA/TEXT is not read at this level (it's only read for
+        // event-level and name-level citations); the exporter writes _TRANS
+        // here under v7.0 so person/family/place transcriptions round-trip.
+        // Multi-line transcriptions are unwrapped from CONT continuation by
+        // the parser into the joined node value.
+        const transcription = getChild(sour, '_TRANS')?.value ?? '';
         createCitation(ctx.db, {
           source_id: srcId,
           person_id: person.id,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
+          transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
       }
@@ -564,12 +572,15 @@ export function phaseFamilies(ctx: ImportContext): void {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+        // _TRANS carrier — see person-level citation block above for rationale.
+        const transcription = getChild(sour, '_TRANS')?.value ?? '';
         createCitation(ctx.db, {
           source_id: srcId,
           relationship_id: couple.id,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
+          transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
       }
@@ -672,12 +683,15 @@ export function phasePlaceCitations(ctx: ImportContext): void {
       const page = getChild(sour, 'PAGE')?.value ?? '';
       const citNotes = getChild(sour, 'NOTE')?.value ?? '';
       const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+      // _TRANS carrier — see person-level citation block in phaseIndividuals.
+      const transcription = getChild(sour, '_TRANS')?.value ?? '';
       createCitation(ctx.db, {
         source_id: srcId,
         place_id: place.id,
         page,
         confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
         notes: citNotes || undefined,
+        transcription: transcription || undefined,
         date_accessed: date_accessed || undefined,
       });
     }
