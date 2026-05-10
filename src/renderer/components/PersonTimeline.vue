@@ -19,22 +19,18 @@
             }"
             tabindex="0"
             role="button"
-            :aria-label="entryAriaLabel(item)"
+            :aria-label="item.label.aria"
             @click="handleEntryClick(item)"
             @keydown.enter="handleEntryClick(item)"
             @keydown.space.prevent="handleEntryClick(item)"
           >
             <div class="timeline-date">{{ item.dateDisplay }}</div>
             <div class="timeline-dot" :class="'dot-' + item.event.event_type"></div>
+            <div class="timeline-age" aria-hidden="true">{{ formatAge(item.age) }}</div>
             <div class="timeline-content">
-              <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
-              <template v-if="item.relationshipLabel !== 'self'">
-                <!-- Display only — see plan birth-name-display-and-quality-check. -->
-                <span class="timeline-family-name">{{ displayPersonName(item) || $t('common.unknown') }}</span>
-                <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
-              </template>
-              <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
-              <span v-if="item.age !== null" class="timeline-age">({{ item.age }})</span>
+              <span class="event-badge">{{ item.label.primary }}</span>
+              <span v-if="item.label.secondary" class="timeline-place">{{ item.label.secondary }}</span>
+              <span v-else-if="item.placeName && item.relationshipLabel === 'self'" class="timeline-place">{{ item.placeName }}</span>
               <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
               <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
               <span v-if="item.event.citation_count" class="cite-badge" :title="$t('events.citeSources')">{{ item.event.citation_count }}</span>
@@ -53,23 +49,20 @@
           :class="{ 'is-family': item.relationshipLabel !== 'self' }"
           tabindex="0"
           role="button"
-          :aria-label="entryAriaLabel(item)"
+          :aria-label="item.label.aria"
           @click="handleEntryClick(item)"
           @keydown.enter="handleEntryClick(item)"
           @keydown.space.prevent="handleEntryClick(item)"
         >
           <div class="timeline-date">????</div>
           <div class="timeline-dot dot-undated"></div>
+          <div class="timeline-age" aria-hidden="true"></div>
           <div class="timeline-content">
-            <span class="event-badge">{{ $t('eventTypes.' + item.event.event_type) }}</span>
-            <template v-if="item.relationshipLabel !== 'self'">
-              <!-- Display only — see plan birth-name-display-and-quality-check. -->
-              <span class="timeline-family-name">{{ displayPersonName(item) || $t('common.unknown') }}</span>
-              <span class="timeline-relationship">({{ $t('timelineLabels.' + item.relationshipLabel) }})</span>
-            </template>
-            <span v-if="item.placeName" class="timeline-place">{{ item.placeName }}</span>
+            <span class="event-badge">{{ item.label.primary }}</span>
+            <span v-if="item.label.secondary" class="timeline-place">{{ item.label.secondary }}</span>
+            <span v-else-if="item.placeName && item.relationshipLabel === 'self'" class="timeline-place">{{ item.placeName }}</span>
             <span v-if="item.event.value" class="timeline-value">{{ item.event.value }}</span>
-              <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
+            <LinkedText v-if="item.event.notes" :text="item.event.notes" class="timeline-desc" />
             <span v-if="item.event.citation_count" class="cite-badge">{{ item.event.citation_count }}</span>
           </div>
         </div>
@@ -110,6 +103,7 @@ import { isSpanEventType } from '../constants/eventTypes';
 import { useEntityData } from '../composables/useEntityData';
 import { formatFullName } from '../utils/nameUtils';
 import { usePersonNameOptions } from '../stores/personNameOptions';
+import { composeTimelineLabel, type ComposedLabel } from '../utils/timelineLabel';
 import type { TimelineEntry, TimelineRelationshipLabel } from '../../api/report_data';
 import type { NameRow } from './PersonNamesTable.vue';
 
@@ -135,9 +129,9 @@ interface TimelineItem {
   relationshipLabel: TimelineRelationshipLabel;
   personId: string;
   /**
-   * Plain "Given Surname" — birth-name parenthetical is appended at render
-   * time in `displayPersonName(item)` so the global toggle re-renders the
-   * timeline without a data reload.
+   * Plain "Given Surname" — birth-name parenthetical is composed in
+   * `composeTimelineLabel` so the global toggle re-renders the timeline
+   * without a data reload.
    */
   personName: string;
   /** Display only — see plan birth-name-display-and-quality-check. */
@@ -146,8 +140,21 @@ interface TimelineItem {
   placeName: string | null;
   isApproximate: boolean;
   year: number | null;
+  /**
+   * Focal person's age at the time of this event (years). Computed for
+   * every dated entry — `self` and kin alike — so the age column never
+   * has to lie about what it represents (i.e. the focal person, not the
+   * kin person). `null` when birth year unknown or event undated.
+   */
   age: number | null;
   gapYears: number | null;
+  /**
+   * Pre-composed visual + ARIA label (relationship-aware). See
+   * `composeTimelineLabel` for the spec table.
+   */
+  label: ComposedLabel;
+  /** Original timeline entry — kept for re-composing on toggle changes. */
+  rawEntry: TimelineEntry;
 }
 
 const props = defineProps<{ personId: string }>();
@@ -199,46 +206,45 @@ function resolvePlaceName(event: EventRow): string | null {
   return null;
 }
 
-function entryAriaLabel(item: TimelineItem): string {
-  const eventLabel = t('eventTypes.' + item.event.event_type);
-  if (item.relationshipLabel === 'self') {
-    return t('a11y.editItem', { item: eventLabel });
-  }
-  // Family entries: read out as "<event> – <person> (<relationship>)"
-  const rel = t('timelineLabels.' + item.relationshipLabel);
-  const name = displayPersonName(item) || t('common.unknown');
-  return `${eventLabel} – ${name} (${rel})`;
+/**
+ * Render-time formatter for the focal person's age column. Negative values
+ * (event before birth — common for siblings/parents born earlier) prefix
+ * with the U+2212 "minus sign" to read better than a hyphen.
+ */
+function formatAge(age: number | null): string {
+  if (age === null) return '';
+  if (age < 0) return `−${Math.abs(age)}`;
+  return String(age);
 }
 
 /**
- * Plain-string display name with optional birth-surname parenthetical.
- * Reads `personNameOptions.showBirthNameParenthetical` at call time so the
- * global toggle re-renders the timeline without a data reload.
- * Display only — see plan birth-name-display-and-quality-check.
+ * Raw item shape with everything except the composed label (the label is
+ * derived in a `computed` so the birth-name toggle re-renders the timeline
+ * without a data reload).
  */
-function displayPersonName(item: TimelineItem): string {
-  const base = item.personName;
-  if (!personNameOptions.showBirthNameParenthetical) return base;
-  const b = (item.personBirthSurname ?? '').trim();
-  if (!b) return base;
-  return `${base} (${t('common.bornAbbrev')} ${b})`;
+type RawTimelineItem = Omit<TimelineItem, 'label'>;
+
+interface RawTimelineData {
+  dated: RawTimelineItem[];
+  undated: RawTimelineItem[];
 }
 
 const idRef = computed(() => props.personId ?? null);
-const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, async (id) => {
+const { data: rawData, loading, error, reload } = useEntityData<RawTimelineData>(idRef, async (id) => {
   const entries = (await window.api.reports.timeline(id)) as TimelineEntry[] | null;
   if (!entries) return { dated: [], undated: [] };
 
-  // Find the subject's birth year (used for age column on the subject's own
-  // events). Family events do not show an age — the age column is "this
-  // person's age at the time of the event" and only makes sense for `self`.
+  // Focal person's birth year — used for the age column on EVERY entry
+  // (kin events included). The age column always reads as "the focal
+  // person's age when this happened", so a kin event predating the focal's
+  // birth shows a negative age (rendered with U+2212).
   const ownBirthEntry = entries.find(
     e => e.relationship_label === 'self' && e.event.event_type === 'birth',
   );
   const birthYear = extractYear(ownBirthEntry?.event.date_value ?? null);
 
-  const dated: TimelineItem[] = [];
-  const undated: TimelineItem[] = [];
+  const dated: RawTimelineItem[] = [];
+  const undated: RawTimelineItem[] = [];
 
   for (const entry of entries) {
     // The TimelineEntry.event from reports.timeline carries every field
@@ -247,22 +253,23 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
     const event = entry.event as unknown as EventRow;
     const year = extractYear(event.date_value);
     const isApproximate = ['about', 'before', 'after', 'between', 'calculated'].includes(event.date_type);
-    const age = (
-      year !== null && birthYear !== null
-      && entry.relationship_label === 'self'
-      && event.event_type !== 'birth'
-    )
+
+    // Age applies to every dated event except the focal's own birth (which
+    // would always read 0 and crowd the column). Negative ages are valid —
+    // they describe events that happened before the focal was born.
+    const isFocalBirth = entry.relationship_label === 'self' && event.event_type === 'birth';
+    const age = (year !== null && birthYear !== null && !isFocalBirth)
       ? year - birthYear
       : null;
 
     // Display only — see plan birth-name-display-and-quality-check.
-    // Birth-name parenthetical is appended at render time so toggling the
-    // global setting re-renders the timeline without a data reload.
+    // The full name is held here as the composer's input; birth-name
+    // parenthetical is applied inside the composer at render time.
     const baseName = formatFullName({
       given_name: entry.person_given_name,
       surname: entry.person_surname,
     });
-    const item: TimelineItem = {
+    const item: RawTimelineItem = {
       event,
       relationshipLabel: entry.relationship_label,
       personId: entry.person_id,
@@ -274,6 +281,7 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
       year,
       age,
       gapYears: null,
+      rawEntry: entry,
     };
 
     if (year !== null) dated.push(item);
@@ -302,8 +310,16 @@ const { data, loading, error, reload } = useEntityData<TimelineData>(idRef, asyn
   return { dated, undated };
 });
 
-const datedEvents = computed<TimelineItem[]>(() => data.value?.dated ?? []);
-const undatedEvents = computed<TimelineItem[]>(() => data.value?.undated ?? []);
+/** Compose a visual label for one raw item — reactive to the toggle. */
+function withLabel(item: RawTimelineItem): TimelineItem {
+  const label = composeTimelineLabel(item.rawEntry, t, {
+    showBirthNameParenthetical: personNameOptions.showBirthNameParenthetical,
+  });
+  return { ...item, label };
+}
+
+const datedEvents = computed<TimelineItem[]>(() => (rawData.value?.dated ?? []).map(withLabel));
+const undatedEvents = computed<TimelineItem[]>(() => (rawData.value?.undated ?? []).map(withLabel));
 
 watch(error, (err) => {
   if (err) console.error('[PersonTimeline] load failed:', err);
@@ -479,8 +495,13 @@ defineExpose({ reload });
 }
 
 .timeline-age {
+  flex-shrink: 0;
+  min-width: 3ch;
+  text-align: right;
   font-size: var(--font-xs);
-  color: var(--color-text-muted, #64748b);
+  color: var(--text-secondary, #64748b);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
 }
 
 .timeline-value {

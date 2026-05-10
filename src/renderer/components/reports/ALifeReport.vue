@@ -119,11 +119,12 @@ import TimelineBar, { type TimelineItem } from './primitives/TimelineBar.vue';
 import MediaChronological, { type MediaDisplayItem } from './primitives/MediaChronological.vue';
 import LinkedText from '../LinkedText.vue';
 import { useMediaChronological, type MediaEntityRef } from '../../composables/useMediaChronological';
-import { formatFullName, formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
+import { formatFullNameWithBirthName, getDisplayName } from '../../utils/nameUtils';
 import { redactPerson } from '../../utils/reportPrivacy';
 import { useToast } from '../../composables/useToast';
 import { isSpanEventType } from '../../constants/eventTypes';
 import type { TimelineEntry } from '../../../api/report_data';
+import { composeTimelineLabel } from '../../utils/timelineLabel';
 import { sortPersonRelations, type RelationRow, type RelationsSortGroup } from '../../../api/sortPersonRelations';
 
 const props = withDefaults(defineProps<{
@@ -432,27 +433,26 @@ const timelineItems = computed<TimelineItem[]>(() => {
   for (const entry of timelineEntries.value) {
     const year = extractYear(entry.event.date_value);
     if (year == null) continue;
-    const place = entry.event.place_name;
-    const typeLabel = eventTypeLabel(entry.event.event_type);
 
+    // Compose the relational label via the shared composer so the report
+    // and the live timeline panel never drift apart. See
+    // docs/plans/2026-05-09-timeline-kin-event-labelling.md.
+    const composed = composeTimelineLabel(entry, t, {
+      showBirthNameParenthetical: props.showBirthNameParenthetical,
+    });
+    const place = entry.event.place_name;
+    // Self events: keep the legacy "<type> · <place>" prose flow, but use
+    // the composed primary line so couple events read "<type> — <partner>".
+    // Kin events: place is dropped from the primary line per spec.
+    let label: string;
     if (entry.relationship_label === 'self') {
-      const label = place ? `${typeLabel} · ${place}` : typeLabel;
-      items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
+      label = composed.secondary
+        ? `${composed.primary} · ${composed.secondary}`
+        : (place ? `${composed.primary} · ${place}` : composed.primary);
     } else {
-      const baseName = formatFullName({
-        given_name: entry.person_given_name,
-        surname: entry.person_surname,
-      });
-      const birth = entry.person_birth_surname;
-      const namePart = (baseName
-        ? (props.showBirthNameParenthetical && birth ? `${baseName} (${t('common.bornAbbrev')} ${birth})` : baseName)
-        : t('common.unknown'));
-      const relSuffix = ` (${t(`timelineLabels.${entry.relationship_label}`)})`;
-      const label = place
-        ? `${typeLabel}: ${namePart}${relSuffix} · ${place}`
-        : `${typeLabel}: ${namePart}${relSuffix}`;
-      items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
+      label = composed.primary;
     }
+    items.push({ id: entry.event.id, year, eventType: entry.event.event_type, label });
   }
   items.sort((a, b) => a.year - b.year);
   return items;
