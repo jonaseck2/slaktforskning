@@ -541,12 +541,34 @@ function seedGroups(db: Database, col: string, value: unknown): string {
 function seedGroupLinks(db: Database, col: string, value: unknown): string {
   const groupId = crypto.randomUUID();
   runSql(db, `INSERT INTO groups (id, name, notes) VALUES (?, ?, ?)`, [groupId, 'G', '']);
-  const personId = insertPersonWithDefaultName(db);
+  // Pick the entity_type the row actually carries — so the FK target matches
+  // what _GROUP_LINK ultimately emits/imports under that type. The
+  // CONSTRAINED_SENTINELS map sets entity_type='place' when seeding the
+  // entity_type column; for any other column under test, we keep 'person'.
+  const seededType = col === 'entity_type' ? (value as string) : 'person';
+  let entityId: string;
+  if (seededType === 'place') {
+    entityId = crypto.randomUUID();
+    runSql(
+      db,
+      `INSERT INTO places (id, name, normalized_name) VALUES (?, ?, ?)`,
+      [entityId, 'Bjorkvik', 'bjorkvik'],
+    );
+  } else if (seededType === 'media') {
+    entityId = crypto.randomUUID();
+    runSql(
+      db,
+      `INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [entityId, null, 'Photo', null, '', 0, 0],
+    );
+  } else {
+    entityId = insertPersonWithDefaultName(db);
+  }
   const id = col === 'id' ? String(value) : crypto.randomUUID();
   const overrides: Record<string, unknown> = {
     group_id: groupId,
-    entity_type: 'person',
-    entity_id: personId,
+    entity_type: seededType,
+    entity_id: entityId,
     sort_order: 0,
   };
   if (!['id', 'group_id', 'entity_id', 'created_at'].includes(col)) {

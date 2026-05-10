@@ -20,15 +20,17 @@ describe('GEDCOM export — ExportReport', () => {
     expect(entry!.count).toBe(1);
   });
 
-  it('reports excluded Groups', () => {
+  it('does not report Groups as excluded (now lossless via _GROUP / _GROUP_LINK)', () => {
     const db = createTestDb();
     const p = createPerson(db, { given_name: 'Lars' });
     const g = createGroup(db, { name: 'Emigrants' });
     addGroupLink(db, g.id, 'person', p.id);
-    const { report } = exportGedcom(db);
-    const entry = report.excluded.find(e => e.category.includes('Group'));
-    expect(entry).toBeTruthy();
-    expect(entry!.count).toBe(1);
+    const { ged, report } = exportGedcom(db);
+    // No longer reported as excluded — the data is preserved end-to-end.
+    expect(report.excluded.find(e => e.category.includes('Group'))).toBeUndefined();
+    // And the GEDCOM file actually carries the records.
+    expect(ged).toContain('0 @G1@ _GROUP');
+    expect(ged).toContain('1 _GROUP_LINK');
   });
 
   it('returns empty excluded list when no excluded entities exist', () => {

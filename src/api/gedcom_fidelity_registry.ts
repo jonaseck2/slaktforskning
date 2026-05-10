@@ -598,112 +598,48 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'citations.person_name_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
 
   // ----- groups -----
-  'groups.id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups have no GEDCOM 5.5.1 representation; entire row is dropped on export. Surfaced in ExportReport.excluded.',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups have no GEDCOM 7.0 representation; entire row is dropped on export.',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'groups.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'groups.name': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NAME sub-tag' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NAME sub-tag' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'groups.notes': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NOTE sub-tag (multi-line via CONT)' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NOTE sub-tag (multi-line via CONT)' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'groups.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
   // ----- group_links -----
-  'group_links.id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships are not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships are not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
-  'group_links.group_id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'group_links.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'group_links.group_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'group_links.entity_type': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 1 _GROUP_LINK / 2 TYPE sub-record under _GROUP' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 1 _GROUP_LINK / 2 TYPE sub-record under _GROUP' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
-  'group_links.entity_id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'group_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'group_links.sort_order': {
+    // Membership order within a group is preserved by emit order — the
+    // exporter walks getGroupLinks (which orders by entity_type, sort_order,
+    // created_at) and the importer's addGroupLink rebases sort_order to
+    // (per-type MAX + 1) on insert. The literal integer doesn't survive
+    // because the importer rebases per (group, entity_type) starting from 0
+    // — but the *relative* order does. Match the precedent of
+    // person_names.sort_order: declare lossy with expectedAfterRoundTrip = 0
+    // (the column resets, the visible order is preserved by emit position).
     v551: {
       kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
+      reason: '_GROUP_LINK emit order preserves visible membership order, but sort_order column itself rebases to 0 on import',
+      expectedAfterRoundTrip: () => 0,
     },
     v70: {
       kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
+      reason: '_GROUP_LINK emit order preserves visible membership order, but sort_order column itself rebases to 0 on import',
+      expectedAfterRoundTrip: () => 0,
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { importer: IMPORTER_PHASES },
   },
   'group_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
