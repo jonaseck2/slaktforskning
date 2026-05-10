@@ -1,6 +1,6 @@
 ---
 name: performance-profiling
-description: Use when diagnosing slow operations, CPU saturation, or hangs in the Electron app — especially after import or during quality checks. Covers CPU profiling setup, cpuprofile analysis, and the known SQLite WASM bottleneck patterns in this codebase.
+description: Use when diagnosing slow operations, CPU saturation, or hangs — in either the Tauri app or the legacy Electron build. Covers CPU profiling setup for the renderer (DevTools — works on both Chromium and WebKitGTK webviews), the host process (Electron main via --inspect-brk; Tauri Rust binary via cargo flamegraph / samply), cpuprofile analysis, and the known SQLite bottleneck patterns in this codebase.
 ---
 
 # Performance Profiling for Släktforskning
@@ -13,7 +13,19 @@ CPU profiles tell you exactly which functions consumed the time, with sample cou
 
 ---
 
+## Where bottlenecks live by runtime
+
+| Layer | Tauri | Electron (legacy) |
+|---|---|---|
+| Renderer (Vue, JS, layout, paint) | Chromium DevTools — Performance tab against the WebKitGTK webview | Chromium DevTools — Performance tab against the Electron renderer |
+| Host process (DB, fs, native dialogs) | Rust async commands in `src-tauri/src/` — profile the Rust binary with `cargo flamegraph` or `samply` | Node.js worker thread (`src/main/db-worker.ts`) — `--inspect-brk` + Chrome DevTools attach, or the in-process `inspector.Session` helper below |
+| SQLite | rusqlite (full native) — same SQL hot-paths as Electron | node-sqlite3-wasm (WASM, single-threaded) — same SQL hot-paths as Tauri, plus WASM-heap finalize concerns (see `/sqlite-finalize`) |
+
+**Renderer-side profiling is identical across runtimes** — both webviews are Chromium-family (Tauri uses WKWebView on macOS / WebKitGTK on Linux / WebView2 on Windows). The DevTools workflow below works for either. Where the runtimes diverge is the host process: in Electron, the worker thread is JavaScript and you instrument it inline; in Tauri, the host is a Rust binary and you profile it with native tooling.
+
 ## Step 1: Instrument the Suspect Operation
+
+### Electron — JavaScript host (`src/main/db-worker.ts` etc.)
 
 Add the profiling helper to whichever file owns the operation you're investigating — typically `src/main/db-worker.ts` for DB-touching channels (where the bottleneck almost always lives), or `src/main/ipc/<domain>.ts` for main-thread channels:
 
@@ -69,6 +81,40 @@ return captureProfile('checks-runAll', () => {
 ```
 
 Run `npm start`, trigger the operation. Look for `[profile] label: Nms → /path/to/file.cpuprofile` in the terminal.
+
+### Tauri — Rust host (`src-tauri/src/*.rs`)
+
+Build the app with debug symbols in a release-class profile, then drive it with native sampling profilers. Two options on macOS / Linux:
+
+**`samply` (recommended — Firefox Profiler-compatible flamegraph):**
+
+```bash
+cargo install samply
+# Build a release-with-debug binary
+cd src-tauri && cargo build --release --features tauri/devtools
+# Run under samply (replace path with the actual binary)
+samply record ./target/release/slaktforskning
+# When the operation completes, samply opens https://profiler.firefox.com with the trace loaded.
+```
+
+**`cargo flamegraph` (one PNG/SVG, simple):**
+
+```bash
+cargo install flamegraph
+# macOS needs DTrace permissions; Linux needs perf
+cd src-tauri && cargo flamegraph --release --bin slaktforskning
+# Outputs flamegraph.svg in the current directory. Open in a browser.
+```
+
+For both: rebuild with `[profile.release] debug = true` in `Cargo.toml` if symbols are missing — the default release strip leaves nothing useful in the trace.
+
+What you're looking for in the Rust profile:
+- Wide `rusqlite::Statement::execute` / `query_map` frames → SQL bottleneck (use `EXPLAIN QUERY PLAN` to confirm + add an index in `src/api/schema.ts`).
+- Wide `serde_json` frames in `db_run` / `db_all` / `db_get` → row payloads are large; consider a more selective `SELECT` from the api/-layer caller.
+- Wide `tokio::fs` frames in import paths → bulk file copies; switch to `media_bulk_copy` Rust command (planned, see Cluster M).
+- Wide `xcap::Window::capture_image` → screenshot endpoint hot-path; not a normal-app bottleneck (only fires from the dev MCP).
+
+The renderer-side profile (next section) is the same regardless of runtime — Chromium DevTools attached to whichever webview is running the Vue app.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: slaktforskning-mcp-dev
-description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire defineChannel + preload + static-api, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Use when modifying anything in src/mcp/, src/shared/channels/, src/preload/index.ts, or when verifying that an existing MCP tool round-trips correctly. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
+description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire defineChannel + preload/Tauri-polyfill + static-api, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Also covers the dev MCP HTTP bridge (Tauri ui_server.rs / Electron ui-server.ts) used by ui_screenshot / ui_click / ui_eval / chart_*. Use when modifying anything in src/mcp/, src/shared/channels/, src/preload/index.ts, src/renderer/tauri-window-api.ts, src-tauri/src/ui_server.rs, or src/main/ui-server.ts. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
 ---
 
 # Släktforskning MCP — Server-Dev Skill
@@ -250,8 +250,8 @@ server.registerTool('tool_name', {
 1. Implement the function in `src/api/*.ts`
 2. Write unit tests in `tests/unit/`
 3. Add the MCP tool in `src/mcp/createProdServer.ts` (or `createDevServer.ts` for dev-only tools)
-4. Add the IPC channel via `defineChannel()` in `src/shared/channels/<domain>.ts`
-5. Add the matching `window.api.<domain>.<method>` line manually to `src/preload/index.ts` (and a stub in `src/static/static-api.ts`)
+4. Add the IPC channel via `defineChannel()` in `src/shared/channels/<domain>.ts` — picked up automatically by `tauri-window-api.ts` auto-walk in the Tauri build
+5. **Electron only:** add the matching `window.api.<domain>.<method>` line manually to `src/preload/index.ts`. **Tauri only:** add a polyfill to `src/renderer/tauri-window-api.ts` if the channel needs native services (file dialog, fs, shell). Both runtimes: add a stub in `src/static/static-api.ts`.
 6. Test: `npm test && npx playwright test`
 
 ## Common pitfalls (real bugs we shipped)
@@ -320,3 +320,54 @@ In `.claude/settings.local.json` — use the dev server for development work:
   }
 }
 ```
+
+---
+
+## The dev MCP HTTP bridge (Tauri vs Electron parity)
+
+The dev MCP tools (`ui_screenshot`, `ui_click`, `ui_navigate`, `ui_get_dom`, `ui_query_styles`, `ui_eval`, `ui_console`, `chart_*`) all run in the **MCP server process**, which is a separate Node.js process from the running app. They reach the running app via a small HTTP control plane on **port 19241** (configurable via `SLAKTFORSKNING_UI_PORT`).
+
+The bridge has the same **shape** in both runtimes — same port, same JSON shape, same `slaktforskning-dev` MCP toolset works against either — but radically different sizes:
+
+| Runtime | File | Endpoints | Why this size |
+|---|---|---|---|
+| Tauri | `src-tauri/src/ui_server.rs` (~196 lines, axum + tokio) | `/`, `/db_path`, `/eval`, `/screenshot` (4 total) | Irreducible bridge — the dev MCP owns the tool inventory; Rust only exposes the primitives that can't be done from JS (native window screenshot, db-path probe, run-script-in-renderer). Everything else is built in JS and shipped via `/eval`. |
+| Electron (legacy) | `src/main/ui-server.ts` (~10+ endpoints) | adds `/navigate`, `/reload`, `/click`, `/fill`, `/dom`, `/query_styles`, `/console` | Pre-dates the script-injection architecture. Each high-level endpoint built its own renderer-side script via `webContents.send` + `ipcMain.once` reply. Kept as-is for parity while Electron is supported; will retire alongside the rest of `src/main/`. |
+
+**The MCP server itself (`src/mcp/server.ts`, `src/mcp/devServer.ts`) is engine-agnostic** — only the bridge transport differs. The prod MCP doesn't touch the bridge at all (it talks to the DB directly via rusqlite when run alongside Tauri, or via node-sqlite3-wasm when run alongside Electron).
+
+### How a dev MCP tool actually works (the script-injection pattern)
+
+Every dev tool in `src/mcp/tools/dev/*.ts` follows the same shape:
+
+1. Build a JavaScript expression as a string (the script that should run inside the renderer's window).
+2. POST it to `<uiBase>/eval` via the shared `runScript(uiBase, script)` helper in `src/mcp/tools/dev/util.ts`.
+3. Return the resulting JSON to the agent.
+
+```typescript
+// src/mcp/tools/dev/ui.ts (sketch)
+server.registerTool('ui_click', { ... }, async ({ selector }) => {
+  const script = `(() => {
+    const el = document.querySelector(${JSON.stringify(selector)});
+    if (!el) return { ok: false, error: 'no element' };
+    el.click();
+    return { ok: true };
+  })()`;
+  const result = await runScript(uiBase, script);
+  return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+});
+```
+
+This means **adding a new dev MCP tool almost never needs Rust changes**. Build the script, POST to the renderer-script endpoint, return the result. Add it to `src/mcp/tools/dev/ui.ts` (or a new file under `src/mcp/tools/dev/` for a new tool category) and that's it.
+
+You only need to touch Rust (`src-tauri/src/ui_server.rs` + `src-tauri/src/lib.rs`) if you need a Tauri-native capability the renderer can't reach — native window screenshot (already done via the `xcap` crate behind `/screenshot`), file-system probes that bypass the polyfill layer, multi-window orchestration. If a tool can be expressed as a renderer-side script, build it that way.
+
+### Startup probe: how the dev MCP finds the running app's DB
+
+`scripts/mcp-tauri.mjs` (registered in `.mcp.json`) is the launcher used in the Tauri build. On startup it `GET`s `http://127.0.0.1:19241/db_path` to ask the running app which DB is open, then sets `SLAKTFORSKNING_DB` accordingly before launching `npx tsx src/mcp/devServer.ts`. Falls back to the Tauri default DB path if no app is running.
+
+**Caveat:** the MCP server's idea of "current DB" is set at startup and doesn't follow live `db:switchTo` calls in the running app. If the user switches DB while the MCP is up, restart the MCP (or implement audit item #1 from `docs/plans/2026-05-10-tauri-full-port-notes.md`).
+
+### Console capture
+
+The Tauri renderer's `main.ts` wraps `console.{log,warn,error,info}` + `window.error` + `unhandledrejection` into a 500-entry ring buffer. The dev MCP's `ui_console` tool reads `__taurisConsole.drain()` via the script-injection endpoint — no separate Rust endpoint needed. Same UX as Electron's older `/console` HTTP endpoint, lower surface area in Rust.

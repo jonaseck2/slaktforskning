@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Add a new feature, entity type, or field to the Släktforskning codebase. Use this skill whenever implementing any new data model change, CRUD operation, IPC channel, MCP tool, or Vue UI component — even if the user just says "add X" or "implement Y". Covers the full stack: schema, API, IPC, preload, MCP, Vue.
+description: Add a new feature, entity type, or field to the Släktforskning codebase. Use this skill whenever implementing any new data model change, CRUD operation, IPC channel, MCP tool, or Vue UI component — even if the user just says "add X" or "implement Y". Covers the full stack: schema, API, IPC channel (auto-walk vs Tauri polyfill), MCP, Vue.
 ---
 
 # Adding a Feature to Släktforskning
@@ -41,13 +41,14 @@ Follow this order. Each step builds on the previous.
 2. **Schema** — add/alter tables in `src/api/schema.ts`; new tables use `CREATE TABLE IF NOT EXISTS`; new columns on existing tables **must** use a migration guard block (see below)
 3. **API functions** — implement CRUD in `src/api/*.ts` (pure TS, `db: Database` as first arg, no Electron deps)
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
-5. **IPC handler** — register via `defineChannel()` in `src/shared/channels/<domain>.ts` (covers main-thread + worker dispatch automatically)
-6. **Preload** — expose on `window.api.*` in `src/preload/index.ts`
-7. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
-8. **Vue UI** — build component or extend view in `src/renderer/`
-9. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
-10. **Docs** — update `README.md`, `CLAUDE.md`, `CHANGELOG.md`, `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
-11. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
+5. **IPC channel** — register via `defineChannel()` in `src/shared/channels/<domain>.ts`. In the Tauri build, `tauri-window-api.ts` walks the registry and auto-wires the channel into `window.api.*` — usually nothing more is needed. **Add a polyfill** only if the channel needs Tauri-native services (file dialog, fs read/write, native shell, second window). Polyfill = an override in `src/renderer/tauri-window-api.ts` that calls `invoke('<rust_command>')`. If you added a polyfill, also add a row to `tests/unit/tauri-channel-coverage.test.ts` (per the test-migration plan — asserts every registry channel either auto-walks or has an explicit polyfill). See `/tauri-bridge` for the polyfill recipe.
+
+> **Electron vs Tauri parity.** In the legacy Electron build, the preload (`src/preload/index.ts`) exposes a hand-maintained `window.api.<domain>.<method>` map and `tests/unit/preload-coverage.test.ts` enforces parity. In Tauri there is no preload world — `tauri-window-api.ts` is the equivalent: registry auto-walk + targeted polyfills + `tauri-channel-coverage.test.ts` as the parity gate. While both runtimes are supported, both layers exist; an `add-feature` change has to keep both in sync until Electron retires (see `docs/plans/2026-05-10-tauri-port-completion-plan.md`).
+6. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
+7. **Vue UI** — build component or extend view in `src/renderer/`
+8. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
+9. **Docs** — update `README.md`, `CLAUDE.md`, `CHANGELOG.md`, `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/IPC_REFERENCE.md`, `docs/MCP.md`
+10. **Skills** — update every skill whose content is affected by this feature. This is not optional. Skills are how future agents know how to work in this codebase. Ask: which skills reference the layer I just changed?
     - New entity type or schema column → `data-modeling` skill
     - New MCP tools → `slaktforskning-mcp-dev` skill
     - New shared Vue component → `add-feature` skill (Shared components list)
@@ -145,13 +146,13 @@ See `/test` for the unit-test template, the `createTestDb()` helper, the per-CRU
 
 Run after writing: `npm test -- --coverage` — coverage thresholds (80% lines and functions on `src/api/`) must still pass.
 
-## IPC Layer (Steps 5-6)
+## IPC Layer (Step 5)
 
 ### Adding a new IPC channel
 
-All DB-touching channels run in the Worker Thread. The codebase uses a registry pattern: one `defineChannel` call covers worker dispatch + main-thread `wrapHandler` registration. The renderer-side preload is **NOT** registry-driven — it must be edited manually.
+All DB-touching channels are declared via `defineChannel` in `src/shared/channels/<domain>.ts`. The Tauri build's `tauri-window-api.ts` walks the registry on startup and wires every channel into `window.api.*` directly — no preload, no contextBridge. The legacy Electron build still routes the same channels through a worker thread + hand-maintained preload map; both runtimes share the same `defineChannel` declaration.
 
-**1. Channel definition** (`src/shared/channels/<domain>.ts`) — single entry registers handler on both threads:
+**1. Channel definition** (`src/shared/channels/<domain>.ts`) — single entry covers both runtimes:
 ```typescript
 defineChannel({
   name: 'things:create',
@@ -169,47 +170,65 @@ defineChannel({
 
 The barrel (`src/shared/channels/index.ts`) must import the domain file once if it's new — one line.
 
-**2. ⚠️ Preload** (`src/preload/index.ts`) — **HAND-MAINTAINED, must be edited manually.** Adding a `defineChannel` does NOT auto-expose it on `window.api`; the renderer will hit `is not a function` at runtime. Add a matching line under the domain block:
+**2. Renderer wiring — Tauri (auto-walk, preferred path).** `src/renderer/tauri-window-api.ts` iterates the registry at startup and assigns each `name: 'foo:bar'` channel to `window.api.foo.bar`. Mutating channels automatically fire `fireDataChanged()` after the handler resolves — no manual wrapper. For pure DB channels you ship nothing extra; the auto-walk picks them up.
+
+**Add a polyfill only when** the channel needs Tauri-native services that the api/-layer can't reach (file dialog, fs read/write, native shell, multi-window). Override the auto-walked entry in `tauri-window-api.ts`:
+
+```typescript
+api.things.exportToFile = async (id: string) => {
+  const r = await invoke<{ path: string } | null>('dialog_pick', { kind: 'save', title: 'Export', defaultName: 'thing.json' });
+  if (!r?.path) return null;
+  const json = JSON.stringify(things.getThing(getDb(), id));
+  await invoke('fs_write_text', { path: r.path, contents: json });
+  return r.path;
+};
+```
+
+The polyfill must call `fireDataChanged()` itself if the channel is mutating (the auto-walk wrapper is bypassed). See `/tauri-bridge` for the full polyfill recipe.
+
+**3. Renderer wiring — Electron (legacy, still required).** Edit `src/preload/index.ts` to add a matching line under the domain block:
 ```typescript
 things: {
   create: mutating((data: unknown) => ipcRenderer.invoke('things:create', data)),
   delete: mutating((id: string) => ipcRenderer.invoke('things:delete', id)),
 },
 ```
-Wrap mutating channels with the local `mutating()` helper so `onDataChanged` listeners fire.
+Wrap mutating channels with the local `mutating()` helper so `onDataChanged` listeners fire. `tests/unit/preload-coverage.test.ts` enforces parity — adding a `defineChannel` without a preload entry fails CI.
 
-**3. Static API stub** (`src/static/static-api.ts`) — every registry channel needs a stub on the static-mode api, even if it's a no-op for the read-only website export. The `tests/unit/static-api-coverage.test.ts` parity check fails CI if you skip this.
+**4. Static API stub** (`src/static/static-api.ts`) — every registry channel needs a stub on the static-mode api, even if it's a no-op for the read-only website export. The `tests/unit/static-api-coverage.test.ts` parity check fails CI if you skip this.
 
-**4. Vue component** — use it:
+**5. Vue component** — use it:
 ```typescript
 await window.api.things.create({ name: 'test' });
 ```
 
 After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api`.
 
-**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — use `defineChannel({ thread: 'main', ... })` or, when `electron`-specific APIs aren't available in shared code, register manually via `wrapHandler` in the appropriate `src/main/ipc/*.ts` file and add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`.
+**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — use `defineChannel({ thread: 'main', ... })` or, when `electron`-specific APIs aren't available in shared code, register manually via `wrapHandler` in the appropriate `src/main/ipc/*.ts` file and add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`. The Tauri side handles the same surface via Rust commands + a polyfill — see `/tauri-bridge`.
 
 ### Required tests after adding a channel
 
-Run these together — they catch the three places where a channel can be silently dropped:
+Run these together — they catch every place where a channel can be silently dropped across both runtimes:
 
 ```bash
 npx vitest run tests/unit/ipc-worker-coverage.test.ts \
                 tests/unit/preload-coverage.test.ts \
+                tests/unit/tauri-channel-coverage.test.ts \
                 tests/unit/static-api-coverage.test.ts
 ```
 
-- `ipc-worker-coverage` — every `wrapHandler` resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`
-- `preload-coverage` — every registry channel is exposed on the preload's `window.api` (parses preload as text)
+- `ipc-worker-coverage` (Electron) — every `wrapHandler` resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`
+- `preload-coverage` (Electron) — every registry channel is exposed on the preload's `window.api` (parses preload as text)
+- `tauri-channel-coverage` (Tauri) — every registry channel either auto-walks via `tauri-window-api.ts` or has an explicit polyfill
 - `static-api-coverage` — every registry channel has a stub in the static SPA api
 
 See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
 
-## MCP Layer (Step 7)
+## MCP Layer (Step 6)
 
 See `/slaktforskning-mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split (`src/mcp/createProdServer.ts` for genealogy workflow tools, `src/mcp/createDevServer.ts` for UI/chart/seed tools), Zod inputSchema with `.describe()`, the thin-wrapper rule (all logic stays in `src/api/`), and the `tests/unit/mcp.test.ts` `call()` helper. The MCP-tool prime directive (pass-through, never synthesize defaults) lives there too.
 
-## Vue UI Layer (Step 8)
+## Vue UI Layer (Step 7)
 
 For modal patterns, the three-sheet layout, paneled-view checklist, list view + side panel pattern, the shared component catalog (`BaseSubPanel`, pickers, `DateInput`, `EventModal`, `EventList`, `CitationModal`, `CitationBadge`, `AppButton`/`AppBadge`/etc.), the design tokens, and the `@media print` rules — see `/frontend-design`. It is the canonical reference; do not duplicate that knowledge here. CLAUDE.md's component table also lists every existing component by props/emits so you can find what to reuse.
 
@@ -384,14 +403,14 @@ Every new UI feature should be evaluated against the number of user actions (cli
 - `EventModal` "Save & Add Another" — batch event entry
 - Ghost placeholder boxes in `PedigreeChart` — click-to-add missing parents
 
-## UI Verification (Step 9 — REQUIRED for any UI change)
+## UI Verification (Step 8 — REQUIRED for any UI change)
 
 **Unit tests alone do not verify UI changes** (they miss modal lifecycle, route remount on key change, ref timing, async-gated rendering, event-bubble overlap). Before committing, verify in the running app.
 
 - Headless / CI: `npx playwright test --project=gui-xxx`
 - Interactive: ask the user to launch `npm start` (or `./.devcontainer/dev-debug.sh` for CDP), then drive the app with the `slaktforskning-dev` MCP tools (`ui_navigate`, `ui_screenshot`, `ui_click`, `ui_get_dom`).
 
-See `/test` for the full E2E architecture, the `AppDriver` API, and the common pitfalls list. See `/electron-dev` for the launch + native-MCP-vs-CDP decision tree. See `/commit` for the rule that UI changes must NOT be committed without visual verification.
+See `/test` for the full E2E architecture, the `AppDriver` API, and the common pitfalls list. See `/tauri-dev` for the launch + dev-loop reference. See `/commit` for the rule that UI changes must NOT be committed without visual verification.
 
 ## Before implementing a non-trivial feature
 

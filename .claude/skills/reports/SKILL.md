@@ -17,14 +17,34 @@ Use when working on: PDF export, SVG export, print button, print CSS, chart orie
 
 ## Print vs PDF: How They Work
 
-Both paths render the **main BrowserWindow** (the live app) — not a hidden window, not a re-serialized SVG.
+Both paths render the **main app window** (the live app) — not a hidden window, not a re-serialized SVG. The mechanism differs between runtimes; the user-observable surface is the same button.
+
+### Electron (legacy)
 
 | Handler | IPC channel | Electron API | Result |
 |---------|-------------|--------------|--------|
 | Print button | `print:print` | `webContents.print({ printBackground: true })` | System print dialog → printer / virtual PDF printer |
-| Export PDF | `print:exportPdf` | `webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: none })` | Save dialog → `.pdf` file |
+| Export PDF | `print:exportPdf` | `webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: none })` | Save dialog → `.pdf` file (header / footer / orientation / margins driven by code) |
 
 **Key: both must use `printBackground: true`** — charts are almost entirely background colors (SVG fills, CSS backgrounds). Without it, you get blank white output.
+
+### Tauri (current — regression vs Electron)
+
+| Handler | Polyfill | Mechanism | Result |
+|---|---|---|---|
+| Print button | `api.print.print` | `window.print()` | Native OS print dialog → printer |
+| Export PDF | `api.print.exportPdf` | `window.print()` (same) | Native OS print dialog → user picks "Save as PDF" → `.pdf` file |
+
+**Tauri 2 has no `webContents.printToPDF` equivalent.** Both buttons collapse to `window.print()` and surface the OS print dialog. The printer panel exposes "Save as PDF" as a destination choice on macOS, Windows, and most Linux desktops, so the user can still produce a PDF — they just have to take one extra click.
+
+**What is lost in the regression:**
+- The exporter cannot pass header/footer arguments (timestamp, page numbers, app branding). Anything injected via `webContents.printToPDF`'s header/footer args is silently ignored.
+- Orientation is not enforced from code — it's whatever the OS dialog defaults to (or whatever the user picks). Landscape charts (descendant, hourglass) need the user to flip orientation manually in the dialog.
+- File-naming hints are not honored; the user names the file in the OS save dialog.
+
+**Workaround for users:** when they click "Export PDF", instruct them — via a short toast or modal note — to choose "Save as PDF" from the destination picker in the dialog that opens. The user-observable goal (a chart saved as a PDF) still works; the path takes one extra click and one extra orientation flip for landscape charts.
+
+**Native PDF rendering is post-launch follow-up #29** in `docs/plans/2026-05-10-tauri-port-completion-audit.md`. Options on the table: Rust `printpdf` against a serialized DOM, headless-Chrome PDF sidecar, or accept the regression permanently. Defer until a release-cut blocker.
 
 ### The hidden BrowserWindow anti-pattern
 
