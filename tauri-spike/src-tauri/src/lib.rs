@@ -1,0 +1,79 @@
+// Tauri-spike entry. Wires DB commands. Mirrors the Electron app's IPC
+// surface to whatever extent the spike needs to prove end-to-end works.
+
+mod db;
+mod mcp;
+
+use db::{AncestorNode, DbStats, PersonRow};
+use mcp::McpProbe;
+
+#[tauri::command]
+fn db_open(path: String) -> Result<(), String> {
+    db::open_db(&path)
+}
+
+#[tauri::command]
+fn db_close() {
+    db::close_db();
+}
+
+#[tauri::command]
+fn db_is_open() -> bool {
+    db::is_open()
+}
+
+#[tauri::command]
+fn db_stats() -> Result<DbStats, String> {
+    db::db_stats()
+}
+
+#[tauri::command]
+fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
+    db::persons_list(limit, offset)
+}
+
+#[tauri::command]
+fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<AncestorNode>, String> {
+    db::get_ancestor_tree(&focus_id, max_depth)
+}
+
+#[tauri::command]
+async fn probe_mcp_sidecar(repo_root: String, db_path: String) -> McpProbe {
+    mcp::probe_mcp_sidecar(&repo_root, &db_path).await
+}
+
+#[tauri::command]
+fn open_second_window(app: tauri::AppHandle, label: String) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+    WebviewWindowBuilder::new(&app, label, WebviewUrl::default())
+        .title("Spike — second window")
+        .inner_size(900.0, 600.0)
+        .build()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), String> {
+    use tauri::Emitter;
+    app.emit("data:changed", kind).map_err(|e| e.to_string())
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![
+            db_open,
+            db_close,
+            db_is_open,
+            db_stats,
+            persons_list,
+            get_ancestor_tree,
+            probe_mcp_sidecar,
+            open_second_window,
+            broadcast_data_changed,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

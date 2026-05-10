@@ -20,7 +20,10 @@
     "test:e2e": "playwright test",
     "build:static": "vite build --config vite.static.config.ts",
     "dev:static": "vite --config vite.static.config.ts",
-    "build:third-party-licenses": "node scripts/build-third-party-licenses.mjs"
+    "build:third-party-licenses": "node scripts/build-third-party-licenses.mjs",
+    "tauri:install": "npm --prefix tauri-spike install",
+    "tauri:dev": "npm --prefix tauri-spike run tauri dev",
+    "tauri:build": "npm --prefix tauri-spike run tauri build"
   },
   "keywords": [],
   "author": {
