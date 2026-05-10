@@ -39,10 +39,6 @@ The registry in `src/api/gedcom_fidelity_registry.ts` declares 20+ fields as cur
 `groups` (name, notes) and `group_links` (entity_type, entity_id, sort_order) are currently dropped on export. Custom `_GROUP` top-level records + `_GROUP_LINK` sub-records carry the data losslessly. Medium user impact.
 - Plan: [`plans/2026-05-09-gedcom-groups-custom-tag.md`](plans/2026-05-09-gedcom-groups-custom-tag.md)
 
-#### relationships.notes — `_RELA_NOTE` on ASSO for non-couple types [planned]
-Couple notes already round-trip via `_COUPLE_NOTE` on FAM; sibling/godparent/other relationship notes are dropped because ASSO has no standard NOTE carrier. Custom `_RELA_NOTE` sub-tag under ASSO.
-- Plan: [`plans/2026-05-09-gedcom-relationship-notes.md`](plans/2026-05-09-gedcom-relationship-notes.md)
-
 #### citations.transcription — promote v7.0 to lossless via `_TRANS` [planned]
 Under v5.5.1, transcriptions on person/family/place-level citations are dropped (SOUR has no TEXT analog at those host levels). Under v7.0 we can carry it losslessly via `_TRANS`. Split the registry entry by version; v551 stays lossy with reason cited.
 - Plan: [`plans/2026-05-09-gedcom-citation-transcription-v70.md`](plans/2026-05-09-gedcom-citation-transcription-v70.md)

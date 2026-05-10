@@ -254,21 +254,34 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v551: {
       kind: 'lossy',
       reason:
-        "Couple notes emitted via custom 1 _RELNOTES under FAM and round-tripped. " +
-        "Non-couple relationship notes (sibling/godparent/other and parent_child) are NOT emitted " +
-        "and reset to '' on import.",
+        "Multi-carrier note: couple notes emit via custom 1 _RELNOTES under FAM; " +
+        "sibling / godparent / other notes emit via custom 2 _RELA_NOTE under ASSO. " +
+        "Multi-line notes are split across CONT continuation lines on export and rejoined " +
+        "by the parser on import, so embedded newlines round-trip byte-identical for those " +
+        "four types. parent_child notes remain lossy — the parent_child relationship rides " +
+        "FAMC/FAMS in GEDCOM and has no current NOTE carrier on those structures (tracked " +
+        "as a follow-up).",
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.type === 'couple' ? seeded : '';
+        const t = ctx?.row.type;
+        if (t === 'couple' || t === 'sibling' || t === 'godparent' || t === 'other') return seeded;
+        // parent_child: no carrier yet
+        return '';
       },
     },
     v70: {
       kind: 'lossy',
       reason:
-        "Couple notes emitted via custom 1 _RELNOTES under FAM and round-tripped. " +
-        "Non-couple relationship notes (sibling/godparent/other and parent_child) are NOT emitted " +
-        "and reset to '' on import.",
+        "Multi-carrier note: couple notes emit via custom 1 _RELNOTES under FAM; " +
+        "sibling / godparent / other notes emit via custom 2 _RELA_NOTE under ASSO. " +
+        "Multi-line notes are split across CONT continuation lines on export and rejoined " +
+        "by the parser on import, so embedded newlines round-trip byte-identical for those " +
+        "four types. parent_child notes remain lossy — the parent_child relationship rides " +
+        "FAMC/FAMS in GEDCOM and has no current NOTE carrier on those structures (tracked " +
+        "as a follow-up).",
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.type === 'couple' ? seeded : '';
+        const t = ctx?.row.type;
+        if (t === 'couple' || t === 'sibling' || t === 'godparent' || t === 'other') return seeded;
+        return '';
       },
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
