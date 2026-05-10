@@ -76,12 +76,56 @@ function emitPlaceSubTags(lines: string[], place: Place, subLevel: number): void
   lines.push(`${subLevel} _PLAC_ID ${place.id}`);
 }
 
-/** Emit a SOUR citation block at the given base level (2 for event citations, 1 for person/fam). */
-function emitCitationBlock(lines: string[], cit: Citation, srcXr: string, baseLevel: number): void {
+/**
+ * Emit a SOUR citation block at the given base level (2 for event/name citations,
+ * 1 for person/fam/place). `hostKind` plus `version` decide how transcription is
+ * carried so that it round-trips on every host kind under at least one version.
+ *
+ * Carriers, by version × host:
+ *   - event / name       → standard DATA/TEXT under SOUR (lossless under both
+ *                          5.5.1 and 7.0 — the importer reads DATA/TEXT in
+ *                          phaseEvents and the NAME-level citation loop).
+ *   - person / family /  → custom `_TRANS` sub-tag under SOUR, v7.0 only. The
+ *     place                non-event/name citation phases of the importer do
+ *                          not read DATA/TEXT back, so transcription would
+ *                          otherwise drop. Under 5.5.1 we still skip — see the
+ *                          gedcom_fidelity_registry entry for the rationale
+ *                          (third-party 5.5.1 parsers are stricter about
+ *                          unknown sub-tags inside SOUR cites).
+ *
+ * Option A is intentional: we emit `_TRANS` ONLY for non-event/non-name hosts
+ * under 7.0 — never alongside DATA/TEXT, and never under 5.5.1. That keeps the
+ * file minimal and removes any "which one wins on import" ambiguity.
+ */
+function emitCitationBlock(
+  lines: string[],
+  cit: Citation,
+  srcXr: string,
+  baseLevel: number,
+  version: '5.5.1' | '7.0',
+  hostKind: 'event' | 'name' | 'person' | 'relationship' | 'place',
+): void {
   lines.push(`${baseLevel} SOUR ${srcXr}`);
   if (cit.page) lines.push(`${baseLevel + 1} PAGE ${cit.page}`);
   lines.push(`${baseLevel + 1} QUAY ${cit.confidence}`);
-  if (cit.transcription) lines.push(`${baseLevel + 1} DATA`, `${baseLevel + 2} TEXT ${cit.transcription}`);
+  if (cit.transcription) {
+    if (hostKind === 'event' || hostKind === 'name') {
+      // Standard DATA/TEXT — already round-trips on both versions.
+      lines.push(`${baseLevel + 1} DATA`, `${baseLevel + 2} TEXT ${cit.transcription}`);
+    } else if (version === '7.0') {
+      // Custom _TRANS — v7.0 carrier for person / relationship / place hosts.
+      // Multi-line transcription splits across CONT continuation so embedded
+      // newlines round-trip byte-identical (e.g. parish-record blocks with
+      // multiple witness lines).
+      const tLines = cit.transcription.split(/\r?\n/);
+      lines.push(`${baseLevel + 1} _TRANS ${tLines[0]}`);
+      for (let i = 1; i < tLines.length; i++) {
+        lines.push(`${baseLevel + 2} CONT ${tLines[i]}`);
+      }
+    }
+    // 5.5.1 + non-event/name: transcription is intentionally dropped — see
+    // gedcom_fidelity_registry.ts citations.transcription v551 entry.
+  }
   if (cit.notes) lines.push(`${baseLevel + 1} NOTE ${cit.notes}`);
   if (cit.date_accessed) lines.push(`${baseLevel + 1} _ACCESSED ${cit.date_accessed}`);
 }
@@ -325,7 +369,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const nameCitations = getCitationsForPersonName(db, n.id);
         for (const cit of nameCitations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
         }
       }
     }
@@ -385,7 +429,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const citations = getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
       if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
@@ -486,7 +530,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const personCitations = getCitationsForPerson(db, p.id);
       for (const cit of personCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'person');
       }
     }
 
@@ -583,7 +627,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const citations = getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
       if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
@@ -594,7 +638,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const relCitations = getCitationsForRelationship(db, rel.id);
       for (const cit of relCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'relationship');
       }
     }
 
@@ -617,7 +661,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       lines.push(`1 _PLAC_ID ${place.id}`);
       for (const cit of placeCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'place');
       }
     }
   }

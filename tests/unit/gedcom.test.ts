@@ -1356,6 +1356,128 @@ describe('exportGedcom — round-trip improvements', () => {
     expect(ged).toContain('4 TEXT Born on the farm.');
   });
 
+  // ── _TRANS round-trip: person/relationship/place transcriptions under v7.0 ──
+  // The user goal: a parish-record transcription pasted on any citation host
+  // (event, name, person, relationship, place) survives export and re-import.
+  // Event/name already round-trip via DATA/TEXT under both 5.5.1 and 7.0; the
+  // remaining three host kinds are carried by custom 2 _TRANS sub-tag under
+  // SOUR — v7.0 only. The Swedish parish-record example from the plan:
+  //   "Petrus Andersson, hustru Cathrina Mårtensdotter, dotter Maria,
+  //    döpt i Adolf Fredrik 1786-04-12, faddrar…"
+  const PARISH = 'Petrus Andersson, hustru Cathrina Mårtensdotter, dotter Maria, döpt i Adolf Fredrik 1786-04-12, faddrar…';
+
+  it('round-trips person-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus', surname: 'Andersson' });
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    expect(persons.length).toBe(1);
+    const cits = getCitationsForPerson(fresh, persons[0].id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('round-trips relationship-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Vigselbok' });
+    const husband = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, husband.id, { given_name: 'Petrus', surname: 'Andersson' });
+    const wife = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, wife.id, { given_name: 'Cathrina', surname: 'Mårtensdotter' });
+    const rel = createRelationship(db, {
+      type: 'couple',
+      person1_id: husband.id,
+      person2_id: wife.id,
+    });
+    createCitation(db, { source_id: src.id, relationship_id: rel.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const rels = listRelationships(fresh);
+    expect(rels.length).toBe(1);
+    const cits = getCitationsForRelationship(fresh, rels[0].id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('round-trips place-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Sockenbeskrivning' });
+    const place = createPlace(db, { name: 'Adolf Fredrik' });
+    // Place-level citations require the place to be reachable — events on the
+    // place, or just emit standalone via the _PLAC top-level record. Anchor
+    // it to a person+event so the place isn't an orphan.
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    createCitation(db, { source_id: src.id, place_id: place.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const places = listPlaces(fresh);
+    const adolf = places.find(pl => pl.name === 'Adolf Fredrik');
+    expect(adolf).toBeDefined();
+    const cits = getCitationsForPlace(fresh, adolf!.id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('does NOT emit _TRANS under v5.5.1 (custom-tag tolerance is the v551 deviation)', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).not.toContain('_TRANS');
+    // Person-level citation under 5.5.1 also doesn't emit DATA/TEXT (that
+    // path is event/name only), so transcription is intentionally dropped on
+    // export — matching the registry's lossy declaration for v551.
+    expect(ged).not.toContain(`4 TEXT ${PARISH}`);
+  });
+
+  it('event-level citation transcription does NOT double-emit _TRANS under v7.0 (option A)', () => {
+    const src = createSource(db, { title: 'Parish record' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    const ev = createEvent(db, { event_type: 'birth' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    createCitation(db, { source_id: src.id, event_id: ev.id, transcription: 'Born on the farm.' });
+    const { ged } = exportGedcom(db, '7.0');
+    // Standard DATA/TEXT path is used (event-level is already lossless on 7.0);
+    // no _TRANS is emitted alongside. This keeps the file minimal and removes
+    // any "which one wins on import" ambiguity.
+    expect(ged).toContain('3 DATA');
+    expect(ged).toContain('4 TEXT Born on the farm.');
+    expect(ged).not.toContain('_TRANS');
+  });
+
+  it('round-trips multi-line person-level transcription via _TRANS+CONT under v7.0', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    const multiline = 'Line 1: Petrus Andersson döpt 1786-04-12.\nLine 2: faddrar Anders Persson, Maria Eriksdotter.\nLine 3: anteckning av kyrkoherde.';
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: multiline });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain('2 _TRANS Line 1: Petrus Andersson döpt 1786-04-12.');
+    expect(ged).toContain('3 CONT Line 2: faddrar Anders Persson, Maria Eriksdotter.');
+    expect(ged).toContain('3 CONT Line 3: anteckning av kyrkoherde.');
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const cits = getCitationsForPerson(fresh, persons[0].id);
+    expect(cits[0].transcription).toBe(multiline);
+  });
+
   it('exports repository as REPO record and links from SOUR', () => {
     const repo = createRepository(db, { name: 'National Archives', address: '114 88 Stockholm', city: 'Stockholm', country: 'Sweden' });
     const src = createSource(db, { title: 'Church records' });
