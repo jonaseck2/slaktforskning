@@ -101,7 +101,10 @@ async fn handle_navigate(
     Json(body): Json<NavigateBody>,
 ) -> Json<JsonValue> {
     let path_json = serde_json::to_string(&body.path).unwrap();
-    let script = format!("(window.__vue_router && window.__vue_router.push({path_json}), {{ ok: true }})");
+    // Await the router promise so back-to-back navigates don't race. Without
+    // this, a fast caller can fire two pushes before the first transition
+    // resolves and Vue gets stuck on the previous view's component.
+    let script = format!("(async () => {{ if (!window.__vue_router) return {{ error: 'no router' }}; await window.__vue_router.push({path_json}).catch(() => null); await new Promise(r => requestAnimationFrame(r)); return {{ ok: true, route: window.__vue_router.currentRoute.value.fullPath }}; }})()");
     match run_in_renderer(&app, &script).await {
         Ok(v) => Json(v),
         Err(e) => Json(json!({ "error": e })),
@@ -247,44 +250,48 @@ async fn handle_screenshot(
         None
     };
 
-    // Capture via xcap → ScreenCaptureKit on macOS. Same Screen Recording
-    // permission as screencapture, but the prompt fires once for the bundled
-    // .app instead of every shell-out, so a single Settings → Screen
-    // Recording grant sticks across rebuilds.
-    let monitors = match xcap::Monitor::all() {
-        Ok(m) => m,
-        Err(e) => return Json(json!({ "error": format!("xcap::Monitor::all: {e}") })),
+    // Capture the Tauri *window* (not the whole monitor) so screenshots
+    // come through even when our window is behind another app. Match by PID
+    // because window titles change with the loaded route.
+    let our_pid = std::process::id();
+    let windows = match xcap::Window::all() {
+        Ok(w) => w,
+        Err(e) => return Json(json!({ "error": format!("xcap::Window::all: {e}") })),
     };
-    let monitor = match monitors.into_iter().next() {
-        Some(m) => m,
-        None => return Json(json!({ "error": "no monitor available" })),
+    let our_win = windows.into_iter().find(|w| {
+        w.pid().map(|p| p == our_pid).unwrap_or(false)
+            && !w.is_minimized().unwrap_or(false)
+    });
+    let target = match our_win {
+        Some(w) => w,
+        None => return Json(json!({ "error": "could not locate own Tauri window in xcap list (process may not have a registered window yet)" })),
     };
-    let img = match monitor.capture_image() {
+    let img = match target.capture_image() {
         Ok(i) => i,
         Err(e) => return Json(json!({ "error": format!("capture_image: {e}") })),
     };
 
+    // The xcap window image already contains the chrome + content. For
+    // element-cropped captures we still want renderer-relative coords; the
+    // window's CSS-pixel content area starts at its origin in this bitmap
+    // (Tauri webviews fill the whole window — there's no native title bar
+    // padding inside the bitmap). Convert physical-pixel rect → in-image rect.
     let cropped: image::RgbaImage = match rect_px {
         Some((x, y, w, h)) => {
+            // x/y are absolute screen pixels (inner_pos + element rect); xcap
+            // returns the window image starting at the window's screen origin.
+            // Subtract the window's screen position to get in-image coords.
+            let win_x = target.x().unwrap_or(0).max(0) as u32 * (scale.round() as u32);
+            let win_y = target.y().unwrap_or(0).max(0) as u32 * (scale.round() as u32);
             let max_w = img.width();
             let max_h = img.height();
-            let cx = x.min(max_w.saturating_sub(1));
-            let cy = y.min(max_h.saturating_sub(1));
+            let cx = x.saturating_sub(win_x).min(max_w.saturating_sub(1));
+            let cy = y.saturating_sub(win_y).min(max_h.saturating_sub(1));
             let cw = w.min(max_w - cx);
             let ch = h.min(max_h - cy);
             image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image()
         }
-        None => {
-            let win_pos = win.outer_position().unwrap_or_default();
-            let win_size = win.outer_size().unwrap_or_default();
-            let max_w = img.width();
-            let max_h = img.height();
-            let cx = (win_pos.x.max(0) as u32).min(max_w.saturating_sub(1));
-            let cy = (win_pos.y.max(0) as u32).min(max_h.saturating_sub(1));
-            let cw = win_size.width.min(max_w - cx);
-            let ch = win_size.height.min(max_h - cy);
-            image::imageops::crop_imm(&img, cx, cy, cw, ch).to_image()
-        }
+        None => img,
     };
 
     let mut buf = std::io::Cursor::new(Vec::new());
@@ -298,6 +305,23 @@ async fn handle_screenshot(
 
 async fn handle_health() -> Json<JsonValue> {
     Json(json!({ "ok": true, "server": "tauri-ui-server" }))
+}
+
+#[derive(Deserialize)]
+struct EvalBody { script: String }
+
+/// /eval — debug-only escape hatch for the dev MCP. Runs an arbitrary script
+/// in the renderer and returns its value. Lets the agent inspect runtime
+/// state, call window.api.* directly, etc. without round-tripping through
+/// hardcoded endpoints.
+async fn handle_eval(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+    Json(body): Json<EvalBody>,
+) -> Json<JsonValue> {
+    match run_in_renderer(&app, &body.script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
 }
 
 /// /status — what the slaktforskning-dev MCP's `app_status` tool calls.
@@ -335,6 +359,7 @@ pub fn spawn(app: AppHandle) {
             .route("/", get(handle_health))
             .route("/status", get(handle_status))
             .route("/db_path", get(handle_db_path))
+            .route("/eval", post(handle_eval))
             .route("/screenshot", post(handle_screenshot))
             .route("/navigate", post(handle_navigate))
             .route("/reload", post(handle_reload))
