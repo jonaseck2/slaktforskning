@@ -38,43 +38,43 @@ The pattern this plan introduces is "carry an entire entity that has no GEDCOM e
 
 **Files:** `src/gedcom/exporter.ts`, `tests/unit/gedcom.test.ts`
 
-- [ ] After the standard records are written (HEAD, INDI, FAM, OBJE, PLAC, SOUR, REPO, NOTE, TRLR is last), insert a new emit phase before TRLR that walks `groups` rows. For each group, emit:
+- [x] After the standard records are written (HEAD, INDI, FAM, OBJE, PLAC, SOUR, REPO, NOTE, TRLR is last), insert a new emit phase before TRLR that walks `groups` rows. For each group, emit:
   ```
   0 @G001@ _GROUP
   1 NAME <group.name>
   1 NOTE <group.notes>
   ```
   Allocate xrefs `@G001@`, `@G002@` … via the existing xref-allocator pattern (used by INDI, FAM, etc.).
-- [ ] Inside each `_GROUP` block, walk the group's `group_links` rows ordered by `sort_order`. For each link, emit a sub-record naming the entity host:
+- [x] Inside each `_GROUP` block, walk the group's `group_links` rows ordered by `sort_order`. For each link, emit a sub-record naming the entity host:
   ```
   1 _GROUP_LINK
   2 TYPE person|place|media
   2 REF @I042@   (or @P017@, @M005@)
   ```
   The xref must resolve to the same record in the file (the importer relies on the existing xref maps to dereference).
-- [ ] Update `ExportReport.excluded` so that groups and group_links are no longer reported as excluded. The previously-emitted excluded message goes away once `_GROUP` is emitted.
-- [ ] Unit test: export a database with two groups (each with mixed-type members) and assert the GEDCOM output contains `0 @G001@ _GROUP`, `1 NAME …`, the right number of `1 _GROUP_LINK` blocks, and resolved xrefs to the right hosts.
+- [x] Update `ExportReport.excluded` so that groups and group_links are no longer reported as excluded. The previously-emitted excluded message goes away once `_GROUP` is emitted.
+- [x] Unit test: export a database with two groups (each with mixed-type members) and assert the GEDCOM output contains `0 @G001@ _GROUP`, `1 NAME …`, the right number of `1 _GROUP_LINK` blocks, and resolved xrefs to the right hosts.
 
 ### Task 2: Importer — read `_GROUP` records
 
 **Files:** `src/import/gedcom/groups.ts` (new file in the import pipeline) or extend an existing phase
 
-- [ ] Add a new import phase that runs after persons, places, and media (so xrefs resolve). For each top-level `_GROUP` record:
+- [x] Add a new import phase that runs after persons, places, and media (so xrefs resolve). For each top-level `_GROUP` record:
   - Insert a `groups` row with `id` = freshly-generated UUID, `name` = the NAME child, `notes` = NOTE child (CONT/CONC unwrapped).
   - For each `_GROUP_LINK` sub-record, resolve `REF` against the appropriate xref map (`person` → INDI map, `place` → PLAC map, `media` → OBJE map). Skip links whose xref doesn't resolve and surface them via `ImportReport.warnings` (don't silently drop).
   - Insert a `group_links` row using the resolved entity id and the link's emit position as `sort_order`.
-- [ ] Wire the new phase into the import pipeline at the right place.
-- [ ] Unit test: import a hand-crafted GEDCOM with two `_GROUP` records and verify the DB has two `groups` rows and the expected number of `group_links` rows pointing at the right entities.
+- [x] Wire the new phase into the import pipeline at the right place.
+- [x] Unit test: import a hand-crafted GEDCOM with two `_GROUP` records and verify the DB has two `groups` rows and the expected number of `group_links` rows pointing at the right entities.
 
 ### Task 3: Registry promotion + bump
 
 **Files:** `src/api/gedcom_fidelity_registry.ts`, `tests/unit/gedcom-fidelity-registry.test.ts`
 
-- [ ] Promote every non-audit `groups.*` and `group_links.*` entry from `lossy` to `lossless-via:_GROUP` (or `_GROUP_LINK` for sub-record-carried fields). Include `group_links.sort_order` in the promotion if currently lossy.
-- [ ] Run the fidelity harness; all per-field round-trip cases for groups + group_links pass.
-- [ ] Run the golden-DB-seed test; full DB equivalence for the `groups` and `group_links` tables.
-- [ ] Minor bump (this is a feature: round-trip-fidelity capability that didn't exist).
-- [ ] CHANGELOG `## Unreleased`: "GEDCOM round-trip: groups and group memberships are now preserved via custom `_GROUP` / `_GROUP_LINK` records under both 5.5.1 and 7.0."
-- [ ] Update PLAN.md (remove backlog block); append archive PLAN.md entry.
-- [ ] `git mv` plan + sibling design (none here) to archive.
-- [ ] Final commit + merge.
+- [x] Promote every non-audit `groups.*` and `group_links.*` entry from `lossy` to `lossless-via:_GROUP` (or `_GROUP_LINK` for sub-record-carried fields). Include `group_links.sort_order` in the promotion if currently lossy.
+- [x] Run the fidelity harness; all per-field round-trip cases for groups + group_links pass.
+- [x] Run the golden-DB-seed test; full DB equivalence for the `groups` and `group_links` tables.
+- [x] Minor bump (this is a feature: round-trip-fidelity capability that didn't exist).
+- [x] CHANGELOG `## Unreleased`: "GEDCOM round-trip: groups and group memberships are now preserved via custom `_GROUP` / `_GROUP_LINK` records under both 5.5.1 and 7.0."
+- [x] Update PLAN.md (remove backlog block); append archive PLAN.md entry.
+- [x] `git mv` plan + sibling design (none here) to archive.
+- [x] Final commit + merge.

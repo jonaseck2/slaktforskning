@@ -48,9 +48,14 @@ test('four-tab duplicates view: seed, switch tab, merge, gone', async () => {
     media1: string;  media2: string;
   }>(`(async () => {
     const a = window.api;
-    // Persons: same surname, given names differ by 1 character.
-    const p1 = await a.persons.create({ given_name: 'Anders', surname: 'Lindberg', sex: 'M', living: false });
-    const p2 = await a.persons.create({ given_name: 'Andres', surname: 'Lindberg', sex: 'M', living: false });
+    // Persons: identical name + birth date (score 100). The original seed
+    // ("Anders" vs "Andres" given names) actually scored 10 — completely
+    // different given names get a -20 penalty, leaving 30 (surname) - 20
+    // = 10, well below the >= 50 threshold. Identical name + birth_date
+    // is the most robust seed (30+40+30 = 100) regardless of how the
+    // heuristic tunes in future.
+    const p1 = await a.persons.create({ given_name: 'Anders', surname: 'Lindberg', sex: 'M', living: false, birth_date: '1850-01-01' });
+    const p2 = await a.persons.create({ given_name: 'Anders', surname: 'Lindberg', sex: 'M', living: false, birth_date: '1850-01-01' });
     // Places: same parent (null), names differ by 1 character.
     const pl1 = await a.places.create({ name: 'Stockholm', place_type: 'city' });
     const pl2 = await a.places.create({ name: 'Stockhom',  place_type: 'city' });
