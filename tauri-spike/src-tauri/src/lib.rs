@@ -91,6 +91,23 @@ fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonValue>,
     db::db_all(&sql, &params.unwrap_or_default())
 }
 
+/// Returns the absolute path to the default database file inside the app's
+/// per-user data directory. Creates the parent dir if missing. The renderer
+/// uses this on first boot so the spike persists across launches without a
+/// file picker.
+#[tauri::command]
+fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
+    use std::fs;
+    use tauri::Manager;
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("create_dir_all: {e}"))?;
+    let p = dir.join("family.db");
+    Ok(p.to_string_lossy().into_owned())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -111,6 +128,7 @@ pub fn run() {
             db_run_changes,
             db_get,
             db_all,
+            default_db_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

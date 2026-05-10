@@ -1,21 +1,11 @@
-// Visible boot log so failures at module-init time aren't an invisible blank
-// screen. Vue replaces #app's content on mount; this <pre> survives until
-// then because we render it as a sibling.
-const bootDiv = document.createElement('pre');
-bootDiv.id = 'boot-log';
-bootDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px;font:11px monospace;color:#222;background:#ffd;z-index:99999;white-space:pre-wrap;max-height:50vh;overflow:auto';
-bootDiv.textContent = '[boot] main.ts entered\n';
-document.body.appendChild(bootDiv);
-const bootLog = (msg: string) => { bootDiv.textContent += '[boot] ' + msg + '\n'; };
-window.addEventListener('error', (e) => bootLog('ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno));
-window.addEventListener('unhandledrejection', (e) => {
-  const r = e.reason;
-  bootLog('UNHANDLED type=' + typeof r + ' name=' + (r?.name || '?') + ' msg=' + (r?.message || '?'));
-  if (r?.stack) bootLog('STACK: ' + r.stack);
-  if (r && typeof r === 'object') {
-    try { bootLog('JSON: ' + JSON.stringify(r, Object.getOwnPropertyNames(r))); } catch { /* ignore */ }
-  }
-});
+// Boot log goes to console only — devtools (right-click → Inspect Element)
+// is the canonical surface. Cargo.toml has features = ["devtools"] so it
+// works in release builds too. Errors that crash before mount surface via
+// console.error in the inspector.
+const bootLog = (msg: string) => { console.log('[boot]', msg); };
+bootLog('main.ts entered');
+window.addEventListener('error', (e) => console.error('[boot] ERROR:', e.message, '@', e.filename + ':' + e.lineno));
+window.addEventListener('unhandledrejection', (e) => console.error('[boot] UNHANDLED:', e.reason));
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
@@ -36,16 +26,19 @@ bootLog('static imports done');
 if ('__TAURI_INTERNALS__' in window) {
   bootLog('tauri detected, dynamic imports starting');
   try {
-    const [shimMod, apiMod, schemaMod] = await Promise.all([
+    const [shimMod, apiMod, schemaMod, coreMod] = await Promise.all([
       import('node-sqlite3-wasm').catch(e => { bootLog('shim import threw: ' + (e?.stack || e?.message || e)); throw e; }),
       import('./tauri-window-api').catch(e => { bootLog('window-api import threw: ' + (e?.stack || e?.message || e)); throw e; }),
       import('../api/schema').catch(e => { bootLog('schema import threw: ' + (e?.stack || e?.message || e)); throw e; }),
+      import('@tauri-apps/api/core'),
     ]);
-    bootLog('dynamic imports done, opening db');
+    bootLog('dynamic imports done, resolving db path');
     const { Database } = shimMod;
     const { mountWindowApi } = apiMod;
     const { initializeSchema } = schemaMod;
-    const db = new Database(':memory:');
+    const dbPath = await coreMod.invoke<string>('default_db_path');
+    bootLog('db path: ' + dbPath);
+    const db = new Database(dbPath);
     await db.opened;
     bootLog('db opened, initializing schema');
     await initializeSchema(db);
