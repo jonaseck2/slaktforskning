@@ -23,7 +23,8 @@
         :title="$t('common.monospacedTooltip')"
         @click="toggle"
       >
-        <span class="mono-toggle-t" :class="{ 'is-mono': !monospaced }">iWi</span>
+        <span class="mono-toggle-t" :class="{ 'is-mono': !monospaced }" aria-hidden="true">iWi</span>
+        <span class="mono-toggle-label">{{ $t('common.monospaceLabel') }}</span>
       </AppButton>
     </div>
     <PersonNotesSection :person-id="personId" :monospaced="monospaced" />
