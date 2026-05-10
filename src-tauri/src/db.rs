@@ -11,12 +11,32 @@
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use rusqlite::types::{Value as SqlValue, ValueRef};
-use rusqlite::Connection;
+use rusqlite::{Connection, OpenFlags};
 use serde::Serialize;
 use serde_json::{json, Map, Value as JsonValue};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 static DB: Lazy<Mutex<Option<Connection>>> = Lazy::new(|| Mutex::new(None));
 static CURRENT_PATH: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+
+// ---------------------------------------------------------------------------
+// Secondary read-only connections (Cluster R-RM, R-H, future foreign DB
+// imports). The primary DB is the user's active Släktforskning database; a
+// secondary connection is something we read FROM during an import — the
+// .rmgc file for RootsMagic, the .mdb-extracted .sqlite for Holger, etc.
+// Renderer-side import code calls these via the SecondaryDatabase shim
+// (src/renderer/secondary-db-shim.ts), which mirrors the same Statement /
+// Database surface api/db.ts queryAll/queryOne talk to. A HashMap of
+// (handle → Connection) lets multiple imports run sequentially without
+// stepping on the primary, and an atomic counter mints handles. Connections
+// are explicitly closed by the renderer when the import finishes (or when
+// the renderer crashes — Tauri tears down the process and the OS reclaims).
+// ---------------------------------------------------------------------------
+
+static SECONDARY_DBS: Lazy<Mutex<HashMap<u32, Connection>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+static SECONDARY_HANDLE_NEXT: AtomicU32 = AtomicU32::new(1);
 
 pub fn current_path() -> Option<String> {
     CURRENT_PATH.lock().clone()
@@ -342,4 +362,119 @@ pub fn db_all(sql: &str, params: &[JsonValue]) -> Result<Vec<JsonValue>, String>
     rows_iter
         .collect::<rusqlite::Result<Vec<_>>>()
         .map_err(|e| format!("collect: {e}"))
+}
+
+// ---------------------------------------------------------------------------
+// Secondary read-only DB primitives — same shape as db_run / db_get / db_all
+// but parameterised by a handle. The renderer's SecondaryDatabase shim
+// (src/renderer/secondary-db-shim.ts) calls these via tauri::invoke. Used by
+// the RootsMagic importer (Cluster R-RM) to read .rmgc rows without touching
+// the primary DB connection. Other foreign-format importers (Cluster R-H
+// Holger, future Family Tree Maker, etc.) will reuse this surface unchanged.
+// ---------------------------------------------------------------------------
+
+/// Open `path` as a read-only SQLite database and return a fresh handle.
+/// SQLITE_OPEN_NO_MUTEX is intentional — the renderer never invokes two
+/// commands against the same handle in parallel (Tauri serialises invokes
+/// per-window) and the parking_lot Mutex around the HashMap covers the
+/// cross-handle case. SQLITE_OPEN_URI is left off so a path that happens to
+/// look like a `file:` URI is treated as a literal filename.
+pub fn secondary_db_open(path: &str) -> Result<u32, String> {
+    let conn = Connection::open_with_flags(
+        path,
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )
+    .map_err(|e| format!("secondary open: {e}"))?;
+    let handle = SECONDARY_HANDLE_NEXT.fetch_add(1, Ordering::SeqCst);
+    SECONDARY_DBS.lock().insert(handle, conn);
+    Ok(handle)
+}
+
+/// Drop a previously opened secondary connection. No-op if the handle is
+/// already gone — the renderer's `finally { close(); }` path may double-fire.
+pub fn secondary_db_close(handle: u32) {
+    SECONDARY_DBS.lock().remove(&handle);
+}
+
+fn with_secondary<R>(
+    handle: u32,
+    f: impl FnOnce(&Connection) -> Result<R, String>,
+) -> Result<R, String> {
+    let guard = SECONDARY_DBS.lock();
+    let conn = guard
+        .get(&handle)
+        .ok_or_else(|| format!("secondary db handle {handle} not open"))?;
+    f(conn)
+}
+
+/// Same as db_run but on a secondary handle. Read-only mode means INSERT /
+/// UPDATE / DELETE will fail at the rusqlite layer — that's the intended
+/// guarantee against accidentally writing to the source file.
+pub fn secondary_db_run(
+    handle: u32,
+    sql: &str,
+    params: &[JsonValue],
+) -> Result<RunResult, String> {
+    let bound = coerce_params(params)?;
+    with_secondary(handle, |conn| {
+        let mut stmt = conn.prepare_cached(sql).map_err(|e| format!("prepare: {e}"))?;
+        let changes = stmt
+            .execute(rusqlite::params_from_iter(bound.iter()))
+            .map_err(|e| format!("run: {e}"))?;
+        Ok(RunResult {
+            changes: changes as u64,
+            last_insert_rowid: conn.last_insert_rowid(),
+        })
+    })
+}
+
+/// Same as db_get but on a secondary handle.
+pub fn secondary_db_get(
+    handle: u32,
+    sql: &str,
+    params: &[JsonValue],
+) -> Result<Option<JsonValue>, String> {
+    let bound = coerce_params(params)?;
+    with_secondary(handle, |conn| {
+        let mut stmt = conn.prepare_cached(sql).map_err(|e| format!("prepare: {e}"))?;
+        let names: Vec<String> = stmt
+            .column_names()
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        let mut rows = stmt
+            .query(rusqlite::params_from_iter(bound.iter()))
+            .map_err(|e| format!("query: {e}"))?;
+        match rows.next().map_err(|e| format!("next: {e}"))? {
+            Some(row) => Ok(Some(
+                row_to_json_object(row, &names).map_err(|e| format!("row: {e}"))?,
+            )),
+            None => Ok(None),
+        }
+    })
+}
+
+/// Same as db_all but on a secondary handle.
+pub fn secondary_db_all(
+    handle: u32,
+    sql: &str,
+    params: &[JsonValue],
+) -> Result<Vec<JsonValue>, String> {
+    let bound = coerce_params(params)?;
+    with_secondary(handle, |conn| {
+        let mut stmt = conn.prepare_cached(sql).map_err(|e| format!("prepare: {e}"))?;
+        let names: Vec<String> = stmt
+            .column_names()
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
+        let rows_iter = stmt
+            .query_map(rusqlite::params_from_iter(bound.iter()), |row| {
+                row_to_json_object(row, &names)
+            })
+            .map_err(|e| format!("query: {e}"))?;
+        rows_iter
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(|e| format!("collect: {e}"))
+    })
 }
