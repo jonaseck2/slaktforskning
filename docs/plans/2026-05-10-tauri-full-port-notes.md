@@ -5,6 +5,7 @@ Running scratchpad of decisions made + things to revisit. Curated as I go so the
 ## Current state — what works end to end
 
 - Persistent rusqlite DB at `~/Library/Application Support/com.slaktforskning.tauri-spike/family.db` (DELETE journaling, no -wal/-shm sidecars). Verified by user: persons + citations write + survive restart.
+- **72 gazetteers loaded** in the renderer via `import.meta.glob('./data/*.json', { eager: true })` baked into the bundle by Vite (in `src/renderer/empty-gazetteers.ts`, which is the alias the tauri-renderer config points at when `bundled.ts` is imported). Country chips on /places, place picker suggestions, gazetteer-resolved coords all functional.
 - Vue renderer mounts via Tauri webview with **all 22 sidebar routes loading**. CRUD goes through `db-shim → invoke('db_run|db_get|db_all|db_batch') → rusqlite`.
 - File dialogs wired for **db.openExisting / db.createNew / db.switchTo / db.getCurrent**. UI's Settings → Database tab + Cmd+O work.
 - Media attach: file picker + `<dbname>-media/` copy via Rust `media_pick_and_copy`; renderer-side override calls `media.createMedia` + `media.addMediaLink` from `src/api/`.
@@ -52,7 +53,17 @@ UI-server endpoints added beyond the Electron parity set: `/eval` (run an arbitr
 
 4. **Import/export RUN handlers (gedcom:import, import:genneyRun, import:holgerRun, import:rootsmagicRun, import:grampsRun, archive:import, archive:export, csv:export, gedcom:export, website:exportRun).** All currently in the channel registry but their handlers `import * as fs from 'node:fs'` then read the chosen path synchronously — fails because the Tauri renderer polyfilled `node:fs`. Two fixes per importer: (a) pull `readFileSync(path)` calls behind a `readFileText(path)` shim that delegates to `invoke('fs_read_text')` in Tauri / sync `fs` in Electron; (b) replace `fs.cpSync` for media folders with a Rust `media_bulk_copy` command. The picker side (which `selectFile()` channel returns the path) is already wired.
 
-5. **Gazetteer loading is empty in the Tauri build.** `bundled.ts` does `readFileSync(import.meta.url + '/../gazetteers/<id>.json.gz')` against the `.vite/build/gazetteers/` sidecar. None of those gz files exist in the Tauri renderer bundle — the Vite tauri config doesn't run the gazetteer-compress plugin. Fix: either (a) port the compress plugin to `vite.tauri-renderer.config.ts` and emit gz files into `tauri-spike/dist/gazetteers/`, then load via `fetch('./gazetteers/<id>.json.gz')`, or (b) embed them in the Rust binary via `include_bytes!` and serve via a `gazetteer_load` Tauri command. (a) is simpler. User-visible impact today: place pickers offer no gazetteer suggestions, country chips on /places all collapse to "Okänt land" since gazetteer-derived country is unavailable.
+5. *(gazetteer loading: SHIPPED this session via import.meta.glob — see "Polyfills shipped this session")*
+
+6. **Leaflet `_initContainer` unhandledrejection** fires on /places mount. Map still renders + pin still shows; cosmetic. Likely a watch firing twice on Tauri's webview slower paint. Defer to dom-first-debugging when someone notices.
+
+7. **`Cmd+N` second window** — `WebviewWindowBuilder` exists but no menu accelerator wired. Multi-window data:changed sync (Tauri equivalent of Electron `BrowserWindow.send`) needs renderer-side `@tauri-apps/api/event` subscription on each window.
+
+8. **Native menu bar** — `tauri::menu::Menu`. Not wired. Default menu bar from Tauri is generic.
+
+9. **Print / PDF export** — Tauri 2 has no `webContents.printToPDF` equivalent. Options: (a) `window.print()` + native print dialog Save-as-PDF, (b) embed a Chromium-headless-PDF binary as sidecar. Defer (a) is fine for now.
+
+10. **`fileURLToPath` on `tauri://` URLs throws.** `bundled.ts` does this at module init in Node mode; vite-tauri-renderer aliases it out. Other files that do similar dance (`empty-genney.ts` aliased for the same reason): keep the pattern documented so the next module-init fs/url access doesn't quietly start crashing.
 
 6. **`Cmd+N` for second window** — Tauri has `WebviewWindowBuilder`; need to register an accelerator + handler. The first-window already has `__TAURI_INTERNALS__` detection wiring window.api on mount; the second window will too.
 
