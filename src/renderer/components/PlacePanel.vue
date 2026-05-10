@@ -72,7 +72,8 @@
                   :title="$t('common.monospacedTooltip')"
                   @click="toggleNotesMonospaced"
                 >
-                  <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }">iWi</span>
+                  <span class="mono-toggle-t" :class="{ 'is-mono': !notesMonospaced }" aria-hidden="true">iWi</span>
+                  <span class="mono-toggle-label">{{ $t('common.monospaceLabel') }}</span>
                 </AppButton>
               </div>
               <textarea

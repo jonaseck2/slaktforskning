@@ -58,18 +58,18 @@ Existing `common.monospacedTooltip` stays. Update the Swedish copy if it current
 
 ### Phase 1 — Sweep
 
-- [ ] `grep -rn '>iWi<' src/renderer/` and list every site. Confirm the four-surface scope or expand it.
+- [x] `grep -rn '>iWi<' src/renderer/` and list every site. Confirm the four-surface scope or expand it. (Three surfaces: PersonDetailsSection, PlacePanel, MediaPanel — no fourth.)
 
 ### Phase 2 — i18n + shared CSS
 
-- [ ] Add `common.monospaceLabel` to `sv.ts` (`'Fast teckenbredd'`) and `en.ts` (`'Monospace'`).
-- [ ] Update `common.monospacedTooltip` if its current wording is unclear.
-- [ ] Add `.mono-toggle-label` rule to `shared.css` — small, secondary text colour, `margin-inline-start: var(--space-xs)`.
+- [x] Add `common.monospaceLabel` to `sv.ts` (`'Fast teckenbredd'`) and `en.ts` (`'Monospace'`).
+- [x] Update `common.monospacedTooltip` if its current wording is unclear.
+- [x] Add `.mono-toggle-label` rule to `shared.css` — small, secondary text colour, `margin-inline-start: var(--space-xs)`.
 
 ### Phase 3 — Apply to all surfaces
 
-- [ ] Update each surface's mono-toggle markup. Same shape; one diff per file.
-- [ ] Verify no surface goes through a wrapping bug at narrow widths.
+- [x] Update each surface's mono-toggle markup. Same shape; one diff per file.
+- [x] Verify no surface goes through a wrapping bug at narrow widths.
 
 ### Phase 4 — Rich-text follow-up
 
