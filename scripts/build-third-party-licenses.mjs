@@ -7,6 +7,12 @@
  * we don't silently skip (per the no-silent-string-replace rule). If a package
  * legitimately has its license text in README only, add it to KNOWN_LICENSE_HINTS.
  *
+ * Also walks the Cargo.lock for the Tauri Rust shell (`src-tauri/`) via
+ * `cargo license --json --avoid-dev-deps` and merges those crates into the
+ * output as a separate section. If `cargo license` is not installed (or
+ * `cargo` itself is missing — npm-only contributors won't have a Rust
+ * toolchain), the script warns and emits npm-only output rather than failing.
+ *
  * App name in the header: "OurLegacy" (the public product name; the package is
  * named "slaktforskning" internally).
  */
@@ -17,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT = join(ROOT, 'THIRD_PARTY_LICENSES.txt');
+const TAURI_DIR = join(ROOT, 'src-tauri');
 const LICENSE_FILE_PATTERNS = /^(LICEN[SC]E|COPYING|NOTICE)(?:[-.].+)?$/i;
 
 // Packages whose license text lives in a non-standard file rather than a
@@ -131,15 +138,108 @@ function readLicenseFile(pkgPath, name) {
   return readFileSync(join(pkgPath, candidate), 'utf8');
 }
 
+/**
+ * Run `cargo license --json --avoid-dev-deps` against `src-tauri/` and return
+ * the parsed crate list. Returns null (with a warning) if cargo isn't on PATH
+ * or `cargo license` isn't installed — npm-only contributors shouldn't be
+ * required to install a Rust toolchain to regenerate this file. Also returns
+ * null if the Tauri dir doesn't exist.
+ *
+ * Each returned crate has the shape:
+ *   { name, version, authors, repository, license, license_file, description }
+ */
+function collectCargoCrates() {
+  if (!existsSync(TAURI_DIR)) {
+    console.warn(`[third-party-licenses] ${TAURI_DIR} not found; skipping Cargo crates.`);
+    return null;
+  }
+  // Probe `cargo --version` first so we can distinguish "no Rust toolchain"
+  // from "cargo-license not installed" in the warning.
+  const cargoCheck = spawnSync('cargo', ['--version'], { encoding: 'utf8', shell: true });
+  if (cargoCheck.status !== 0) {
+    console.warn('[third-party-licenses] `cargo` not on PATH; skipping Cargo crates. Install Rust to include them.');
+    return null;
+  }
+  const r = spawnSync('cargo', ['license', '--json', '--avoid-dev-deps'], {
+    cwd: TAURI_DIR,
+    encoding: 'utf8',
+    shell: true,
+    // cargo-license can produce a lot of stdout; don't truncate.
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (r.status !== 0) {
+    if ((r.stderr ?? '').includes('no such command') || (r.stderr ?? '').includes('not found')) {
+      console.warn('[third-party-licenses] `cargo-license` not installed; skipping Cargo crates.');
+      console.warn('[third-party-licenses] Install with: cargo install cargo-license');
+    } else {
+      console.warn(`[third-party-licenses] cargo license failed (status ${r.status}); skipping Cargo crates.`);
+      if (r.stderr) process.stderr.write(r.stderr);
+    }
+    return null;
+  }
+  try {
+    const crates = JSON.parse(r.stdout);
+    if (!Array.isArray(crates)) {
+      console.warn('[third-party-licenses] cargo license JSON was not an array; skipping.');
+      return null;
+    }
+    return crates;
+  } catch (e) {
+    console.warn(`[third-party-licenses] failed to parse cargo license JSON: ${e.message}`);
+    return null;
+  }
+}
+
+/**
+ * Best-effort license text for a Rust crate. cargo-license doesn't ship the
+ * license body; we rely on whatever it says in the SPDX `license` field.
+ * If a crate has bundled the text in a `license_file` we surface that path
+ * (cargo-license points at it but doesn't read it for us); the body itself
+ * lives in the registry sources cache outside our build, so we cite the SPDX
+ * identifier as the canonical statement and let the user expand via the
+ * standard SPDX text + crate repository link. This keeps the file standalone
+ * — no network fetch, no opaque cache lookup.
+ */
+function formatCargoCrate(crate) {
+  const name = crate.name ?? '<unknown>';
+  const version = crate.version ?? '0.0.0';
+  const license = crate.license ?? crate.license_file ?? 'UNKNOWN';
+  const repository = crate.repository ?? '';
+  const authors = (crate.authors ?? '').toString();
+  const description = (crate.description ?? '').toString().trim();
+
+  const out = [];
+  out.push(`## ${name}@${version}  (Rust crate)`);
+  out.push('');
+  out.push(`- License: ${license}`);
+  if (repository) out.push(`- Repository: ${repository}`);
+  if (authors) out.push(`- Authors: ${authors}`);
+  if (description) out.push(`- Description: ${description}`);
+  out.push('');
+  out.push('```');
+  out.push(`${name} v${version} is distributed under ${license}.`);
+  out.push('See the SPDX identifier above for the full license text and the');
+  out.push('crate repository for any project-specific NOTICE files.');
+  out.push('```');
+  out.push('');
+  return out;
+}
+
 function main() {
   const deps = collectDependencies();
-  const sorted = [...deps.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const sortedNpm = [...deps.entries()].sort(([a], [b]) => a.localeCompare(b));
   const ourPkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+
+  const cargoCrates = collectCargoCrates();
+  const sortedCargo = cargoCrates
+    ? [...cargoCrates].sort((a, b) => `${a.name}@${a.version}`.localeCompare(`${b.name}@${b.version}`))
+    : [];
 
   // Use the public-facing product name "OurLegacy" in the header; the npm
   // package is named "slaktforskning" internally but the app ships as OurLegacy.
   const productName = 'OurLegacy';
 
+  const totalCount = sortedNpm.length + sortedCargo.length;
   const lines = [];
   lines.push(`# Third-Party Licenses for ${productName} ${ourPkg.version}`);
   lines.push('');
@@ -149,12 +249,15 @@ function main() {
   lines.push(`Electron and Chromium ship their own license bundle inside the application resources;`);
   lines.push(`see \`LICENSES.chromium.html\` next to the application binary for those.`);
   lines.push('');
-  lines.push(`Generated by scripts/build-third-party-licenses.mjs from ${sorted.length} packages.`);
+  lines.push(`Generated by scripts/build-third-party-licenses.mjs from ${totalCount} packages`);
+  lines.push(`(${sortedNpm.length} npm + ${sortedCargo.length} Rust crates${cargoCrates ? '' : ' — Rust crates skipped, see warnings'}).`);
   lines.push('');
   lines.push('---');
   lines.push('');
+  lines.push('## npm packages');
+  lines.push('');
 
-  for (const [key, info] of sorted) {
+  for (const [key, info] of sortedNpm) {
     const meta = readPackageMeta(info.path);
     const licenseText = readLicenseFile(info.path, info.name);
     lines.push(`## ${key}`);
@@ -169,8 +272,23 @@ function main() {
     lines.push('');
   }
 
+  // Section divider between npm + Rust portions, per the cluster L spec.
+  if (sortedCargo.length > 0) {
+    lines.push('---');
+    lines.push('');
+    lines.push('## Rust crates (Tauri shell)');
+    lines.push('');
+    lines.push('The following Rust crates are linked into the Tauri-built native binary');
+    lines.push('(`src-tauri/`). cargo-license reports the SPDX license identifier for each;');
+    lines.push('the canonical license text for each SPDX id is available at https://spdx.org/licenses/.');
+    lines.push('');
+    for (const crate of sortedCargo) {
+      for (const ln of formatCargoCrate(crate)) lines.push(ln);
+    }
+  }
+
   writeFileSync(OUTPUT, lines.join('\n'), 'utf8');
-  console.log(`Wrote ${OUTPUT} (${sorted.length} packages, ${lines.join('\n').length} bytes)`);
+  console.log(`Wrote ${OUTPUT} (${sortedNpm.length} npm + ${sortedCargo.length} Rust = ${totalCount} packages, ${lines.join('\n').length} bytes)`);
 }
 
 main();

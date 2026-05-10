@@ -436,7 +436,19 @@ export function mountWindowApi(db: Database): MountResult {
     await invoke('plugin:opener|open_url', { url }).catch(() => { /* ignore */ });
   };
   api.app.onOpenAbout = () => { /* menu wires this in main.ts */ };
-  api.app.readThirdPartyLicenses = async () => '';
+  api.app.readThirdPartyLicenses = async () => {
+    // The file is bundled as a Tauri resource (see src-tauri/tauri.conf.json
+    // → bundle.resources). In packaged builds Tauri places it inside the
+    // app's Resources/_up_/ folder; the Rust command resolves both that
+    // and the flat layout. In `tauri dev` the resource isn't packaged, so
+    // invoke fails — return '' so Settings → About shows an empty viewer
+    // rather than a hard error.
+    try {
+      return await invoke<string>('read_bundled_resource', { name: 'THIRD_PARTY_LICENSES.txt' });
+    } catch {
+      return '';
+    }
+  };
 
   if (!api.onboarding) api.onboarding = {};
   api.onboarding.reset = async () => {

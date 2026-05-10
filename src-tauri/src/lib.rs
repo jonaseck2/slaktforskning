@@ -314,6 +314,41 @@ async fn db_pick_new(app: tauri::AppHandle) -> Result<Option<String>, String> {
     rx.await.map_err(|e| format!("dialog cancelled: {e}"))
 }
 
+/// Read a file shipped as a Tauri bundled resource (declared in
+/// `tauri.conf.json` under `bundle.resources`). Returns the file's UTF-8
+/// contents. Used by the renderer's `app.readThirdPartyLicenses` polyfill
+/// to surface the bundled THIRD_PARTY_LICENSES.txt; generic enough to be
+/// reused for any other text resource we ship later.
+///
+/// Tauri's `app.path().resource_dir()` gives the platform-specific resource
+/// root (on macOS that's `<bundle>.app/Contents/Resources/`). When a
+/// resource is declared with a `..` prefix (e.g. `../THIRD_PARTY_LICENSES.txt`
+/// because the file lives at the repo root next to `src-tauri/`), Tauri
+/// rewrites the leading `..` to a literal `_up_` directory inside the bundle.
+/// We try the flat name first (covers resources declared without `..`) and
+/// fall back to the `_up_` location.
+#[tauri::command]
+fn read_bundled_resource(app: tauri::AppHandle, name: String) -> Result<String, String> {
+    use tauri::Manager;
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("resource_dir: {e}"))?;
+    let candidates = [
+        resource_dir.join(&name),
+        resource_dir.join("_up_").join(&name),
+    ];
+    for p in &candidates {
+        if p.exists() {
+            return std::fs::read_to_string(p).map_err(|e| format!("read {}: {e}", p.display()));
+        }
+    }
+    Err(format!(
+        "bundled resource not found: {name} (looked in {:?})",
+        candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>()
+    ))
+}
+
 /// Build the macOS menu bar with Cmd+N (new window) / Cmd+O (open DB) /
 /// Cmd+, (settings) / Cmd+Z (undo) / Cmd+Shift+Z (redo). Other platforms
 /// don't show the application menu but the accelerators still work.
@@ -424,6 +459,7 @@ pub fn run() {
             fs_write_text,
             fs_read_bytes_base64,
             shell_reveal,
+            read_bundled_resource,
             ui_server::ui_eval_response,
         ])
         .setup(|app| {
