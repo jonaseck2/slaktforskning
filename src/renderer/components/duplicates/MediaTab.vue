@@ -45,6 +45,13 @@
         <div ref="sentinel" class="scroll-sentinel"></div>
       </div>
     </template>
+
+    <MergeMediaModal
+      v-if="mergeCandidate"
+      :pair="mergeCandidate"
+      @close="mergeCandidate = null"
+      @merged="onMerged"
+    />
   </div>
 </template>
 
@@ -54,6 +61,7 @@ import { useI18n } from 'vue-i18n';
 import AppButton from '../ui/AppButton.vue';
 import AppEmptyState from '../ui/AppEmptyState.vue';
 import AppLoadingState from '../ui/AppLoadingState.vue';
+import MergeMediaModal from '../MergeMediaModal.vue';
 import { useToast } from '../../composables/useToast';
 import { usePagedList } from '../../composables/usePagedList';
 
@@ -72,6 +80,8 @@ interface DuplicateMediaCandidate {
 
 const { t } = useI18n();
 const toast = useToast();
+
+const mergeCandidate = ref<DuplicateMediaCandidate | null>(null);
 
 const {
   items: duplicates,
@@ -122,10 +132,12 @@ function fileRefShort(ref: string | null): string {
 }
 
 function openMerge(d: DuplicateMediaCandidate) {
-  // Task 7 will wire this to MergeMediaModal (with the per-side keep-file
-  // radio for non-matching files). For now: log + toast.
-  console.log('[DuplicatesMediaTab] TODO Task 7 — MergeMediaModal not yet wired:', d);
-  toast.info(t('duplicates.mergeComingSoon'));
+  mergeCandidate.value = d;
+}
+
+async function onMerged() {
+  mergeCandidate.value = null;
+  await load();
 }
 
 async function ignorePair(d: DuplicateMediaCandidate) {

@@ -45,6 +45,13 @@
         <div ref="sentinel" class="scroll-sentinel"></div>
       </div>
     </template>
+
+    <MergeSourcesModal
+      v-if="mergeCandidate"
+      :pair="mergeCandidate"
+      @close="mergeCandidate = null"
+      @merged="onMerged"
+    />
   </div>
 </template>
 
@@ -54,6 +61,7 @@ import { useI18n } from 'vue-i18n';
 import AppButton from '../ui/AppButton.vue';
 import AppEmptyState from '../ui/AppEmptyState.vue';
 import AppLoadingState from '../ui/AppLoadingState.vue';
+import MergeSourcesModal from '../MergeSourcesModal.vue';
 import { useToast } from '../../composables/useToast';
 import { usePagedList } from '../../composables/usePagedList';
 
@@ -72,6 +80,8 @@ interface DuplicateSourceCandidate {
 
 const { t } = useI18n();
 const toast = useToast();
+
+const mergeCandidate = ref<DuplicateSourceCandidate | null>(null);
 
 const {
   items: duplicates,
@@ -115,9 +125,12 @@ function scoreLevel(score: number): string {
 }
 
 function openMerge(d: DuplicateSourceCandidate) {
-  // Task 7 will wire this to MergeSourcesModal. For now: log + toast.
-  console.log('[DuplicatesSourcesTab] TODO Task 7 — MergeSourcesModal not yet wired:', d);
-  toast.info(t('duplicates.mergeComingSoon'));
+  mergeCandidate.value = d;
+}
+
+async function onMerged() {
+  mergeCandidate.value = null;
+  await load();
 }
 
 async function ignorePair(d: DuplicateSourceCandidate) {

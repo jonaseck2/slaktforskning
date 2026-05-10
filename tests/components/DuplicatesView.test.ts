@@ -82,6 +82,9 @@ async function mountView(initialPath = '/duplicates') {
         // The persons tab loads MergePersonsModal under v-if; stub to avoid
         // pulling in BaseSubPanel + Teleport plumbing in this shell test.
         MergePersonsModal: { template: '<div class="merge-persons-modal-stub" />' },
+        MergePlacesModal: { template: '<div class="merge-places-modal-stub" />' },
+        MergeSourcesModal: { template: '<div class="merge-sources-modal-stub" />' },
+        MergeMediaModal: { template: '<div class="merge-media-modal-stub" />' },
         // Avatar loads its own profile-pic store; stub for shell test.
         AppAvatar: { template: '<div class="app-avatar-stub" />' },
       },
