@@ -36,12 +36,29 @@ function getDb(): Database {
 
 // data:changed broadcast — emit through Tauri's event bus so multiple windows
 // stay in sync. The Electron build does this via main → BrowserWindow.send;
-// Tauri does it via the renderer-thread emit on the @tauri-apps/api/event
-// surface. Wired separately in src/renderer/main.ts when this polyfill mounts.
+// in Tauri, every renderer that mutates calls `emit('data:changed')` which
+// fans out to ALL Tauri windows (sender included), and every renderer
+// `listen('data:changed')` translates incoming events into local
+// dataChangedListeners callbacks. Net effect: identical cross-window
+// reactivity to the Electron build, no main-side bridge required.
 const dataChangedListeners: Array<() => void> = [];
+let suppressNextRemoteFire = false;
 function fireDataChanged(): void {
   for (const cb of dataChangedListeners) cb();
+  // Fire-and-forget cross-window broadcast.
+  import('@tauri-apps/api/event').then(({ emit }) => {
+    suppressNextRemoteFire = true;  // local listener will receive our own emit
+    emit('data:changed').catch(() => { /* ignore */ });
+  }).catch(() => { /* ignore */ });
 }
+
+// Set up the inverse — receive data:changed from other windows.
+import('@tauri-apps/api/event').then(({ listen }) => {
+  listen('data:changed', () => {
+    if (suppressNextRemoteFire) { suppressNextRemoteFire = false; return; }
+    for (const cb of dataChangedListeners) cb();
+  }).catch(() => { /* ignore */ });
+}).catch(() => { /* ignore */ });
 
 // Convert 'persons:list' → ['persons', 'list'].
 function splitChannelName(name: string): [string, string] {
@@ -399,6 +416,19 @@ export function mountWindowApi(db: Database): MountResult {
       return { success: false, error: String((e as Error)?.message || e) };
     }
   };
+
+  // Top-level entries on window.api that the composables call directly.
+  // useEntityData / usePagedList / App.vue badge debouncer all call
+  // `window.api.onDataChanged(cb)`. Without this assignment the polyfill
+  // walks every channel but the cross-view reactivity contract breaks.
+  (api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged =
+    (cb: () => void) => { dataChangedListeners.push(cb); };
+  // Match the preload's name exactly (offDataChanged, not off).
+  (api as unknown as { offDataChanged: (cb: () => void) => void }).offDataChanged =
+    (cb: () => void) => {
+      const idx = dataChangedListeners.indexOf(cb);
+      if (idx >= 0) dataChangedListeners.splice(idx, 1);
+    };
 
   // window.api gets the polyfilled shape. The Electron-only
   // onDataChanged subscription mechanism is exposed too so existing
