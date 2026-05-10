@@ -751,6 +751,61 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     expect(listSources(db2)[0].repository).toBe('Riksarkivet');
   });
 
+  it('source.abstract survives roundtrip via _ABSTRACT', () => {
+    createSource(db, {
+      title: 'SSA Husförhörslängder',
+      abstract: 'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('1 _ABSTRACT Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].abstract).toBe(
+      'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.',
+    );
+  });
+
+  it('source.call_number survives roundtrip via _CALL', () => {
+    createSource(db, {
+      title: 'SSA Husförhörslängder',
+      call_number: 'KA-SE-SSA/0001/F-IIa-7-1843',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('1 _CALL KA-SE-SSA/0001/F-IIa-7-1843');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].call_number).toBe('KA-SE-SSA/0001/F-IIa-7-1843');
+  });
+
+  it('long source.abstract round-trips byte-identical via CONT continuation', () => {
+    // > 80 chars and across multiple lines — exercises CONT continuation
+    // emission (newline-separated lines emitted as `2 CONT <line>`).
+    const longAbstract = [
+      'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992 by the Genealogical Society of Utah.',
+      'Quality varies by parish; some volumes have water damage.',
+      'Index volumes (1750-1850) are filed under accession KA-SE-SSA/INDEX.',
+    ].join('\n');
+    createSource(db, { title: 'SSA microfilm series', abstract: longAbstract });
+    const { ged } = exportGedcom(db, '5.5.1');
+    // First line emitted on the _ABSTRACT line, remainder on CONT lines.
+    expect(ged).toContain('1 _ABSTRACT Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992 by the Genealogical Society of Utah.');
+    expect(ged).toContain('2 CONT Quality varies by parish; some volumes have water damage.');
+    expect(ged).toContain('2 CONT Index volumes (1750-1850) are filed under accession KA-SE-SSA/INDEX.');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].abstract).toBe(longAbstract);
+  });
+
+  it('source.abstract + call_number survive 7.0 round-trip', () => {
+    createSource(db, {
+      title: 'Stadsarkivet',
+      abstract: 'Multi-line abstract\nwith embedded newline.',
+      call_number: 'F-IIa-7-1843',
+    });
+    const db2 = createTestDb();
+    importGedcom(db2, parseGedcom(exportGedcom(db, '7.0').ged));
+    const out = listSources(db2)[0];
+    expect(out.abstract).toBe('Multi-line abstract\nwith embedded newline.');
+    expect(out.call_number).toBe('F-IIa-7-1843');
+  });
+
   it('citation notes survive roundtrip via NOTE on SOUR block', () => {
     const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
     addPersonName(db, p.id, { given_name: 'Erik' });

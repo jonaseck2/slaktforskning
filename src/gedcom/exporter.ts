@@ -249,6 +249,26 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     // probate_inventory, genealogist, peerage_register, encyclopedia) flow through
     // automatically because no static enum map gates the value on either side.
     if (src.source_type) lines.push(`1 _STYPE ${src.source_type}`);
+    // Source-level free-text fields. Lossless via custom sub-tags — neither
+    // GEDCOM 5.5.1 nor 7.0 reserves a standard tag here for the genealogist's
+    // own abstract / call-number authored on the source row (`REPO.CALN` is the
+    // *repository's* call-number, a different concept on a different table).
+    // Long abstracts get split across CONT continuation lines so the value
+    // round-trips byte-identical through GEDCOM line-length conventions.
+    if (src.abstract) {
+      const abstractLines = src.abstract.split(/\r?\n/);
+      lines.push(`1 _ABSTRACT ${abstractLines[0]}`);
+      for (let i = 1; i < abstractLines.length; i++) {
+        lines.push(`2 CONT ${abstractLines[i]}`);
+      }
+    }
+    if (src.call_number) {
+      const callLines = src.call_number.split(/\r?\n/);
+      lines.push(`1 _CALL ${callLines[0]}`);
+      for (let i = 1; i < callLines.length; i++) {
+        lines.push(`2 CONT ${callLines[i]}`);
+      }
+    }
     // Link to structured REPO records (use cached lookup)
     const linkedRepos = sourceReposCache.get(src.id) ?? [];
     for (const repo of linkedRepos) {
