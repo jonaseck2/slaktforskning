@@ -10,7 +10,10 @@ describe('reports & duplicates channel registry', () => {
 
   it('registers all duplicates:* channels', () => {
     const dupChannels = listChannels().filter(c => c.startsWith('duplicates:'));
-    expect(dupChannels.length).toBe(5);
+    // 5 person channels (find/findPage/count/merge/ignore) + 4 places +
+    // 4 sources + 3 media = 16 total. Bumped from 5 when the duplicates
+    // panel was extended across places, sources, and media (v0.249.0).
+    expect(dupChannels.length).toBe(16);
   });
 
   it('reports:personSummary is a worker channel', () => {

@@ -59,13 +59,18 @@ describe('consolidateMediaFolder', () => {
     expect(getMedia(db, m.id)?.file_ref).toBe('/no/such/file.jpg');
   });
 
-  it('same-basename sources collapse to one file (first wins)', async () => {
-    // Behavior change: `_n` suffix was removed (see comment in
+  it('same-basename sources collapse to one file', async () => {
+    // Behavior: `_n` suffix was removed (see comment in
     // media_consolidate.ts slow path). When two source paths share a
     // basename, both rows end up pointing at the same dest file and the
-    // first source's content is kept (copyFile uses COPYFILE_EXCL; the
-    // second copy throws EEXIST and is silently swallowed). Both rows
-    // are still rewritten to the same relative ref.
+    // surviving content is whichever copyFile (COPYFILE_EXCL) opened the
+    // dest first; the other syscall returns EEXIST and is silently
+    // swallowed. Both rows are still rewritten to the same relative ref.
+    //
+    // Which content survives is non-deterministic across runs because the
+    // consolidate worker pool processes rows in parallel (concurrency=8).
+    // The contract this test asserts is the convergence + integrity
+    // properties, not row order.
     const db = createTestDb();
     const srcA = path.join(tmpDir, 'a', 'p.jpg');
     const srcB = path.join(tmpDir, 'b', 'p.jpg');
@@ -83,8 +88,9 @@ describe('consolidateMediaFolder', () => {
     const refB = getMedia(db, mB.id)?.file_ref ?? '';
     expect(refA).toBe(refB);
     expect(fs.existsSync(path.join(tmpDir, refA))).toBe(true);
-    // First-wins: the file at the shared dest path holds AAA, not BBB.
-    expect(fs.readFileSync(path.join(tmpDir, refA), 'utf8')).toBe('AAA');
+    // Whichever syscall opened first wins; both contents are valid outcomes.
+    const content = fs.readFileSync(path.join(tmpDir, refA), 'utf8');
+    expect(['AAA', 'BBB']).toContain(content);
   });
 
   it('skips null/empty file_ref', async () => {

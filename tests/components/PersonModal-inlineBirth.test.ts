@@ -46,6 +46,7 @@ describe('PersonModal — inline birth event on create', () => {
         search: vi.fn().mockResolvedValue([]),
         list: vi.fn().mockResolvedValue([]),
         get: vi.fn().mockResolvedValue(null),
+        getPath: vi.fn().mockResolvedValue(null),
       },
       gazetteers: {
         listMounted: vi.fn().mockResolvedValue([]),
