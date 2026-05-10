@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import type { Source, Citation } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 import { getCitationsByOwner } from './links';
+import { deleteIgnoredDuplicatesForSource } from './duplicates';
 
 export function createSource(
   db: Database,
@@ -109,6 +110,10 @@ export function searchSources(db: Database, query: string): Source[] {
 }
 
 export function deleteSource(db: Database, id: string): boolean {
+  // v0.220.0: ignored_duplicates is polymorphic — clean source-typed pairs
+  // so a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
+  // Mirrors the pattern in deletePerson / deletePlace.
+  deleteIgnoredDuplicatesForSource(db, id);
   return runSqlChanges(db, `DELETE FROM sources WHERE id = ?`, [id]) > 0;
 }
 
