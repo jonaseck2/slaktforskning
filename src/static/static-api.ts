@@ -565,6 +565,19 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
       return mediaUrl(idx.mediaById.get(mediaId));
     },
     getFilePath: async (mediaId: string) => mediaUrl(idx.mediaById.get(mediaId)),
+    // The static export ships full-size images and lets the browser scale them
+    // in-place, so the thumbnail endpoint just produces a regular media URL.
+    // It's keyed by file_ref to match the Electron handler — the runtime caller
+    // passes whatever file_ref came back from listPage / forEntity. We look up
+    // the matching media row to honour the inlined-thumb cache used by the
+    // website-export preview.
+    thumbnailDataUrl: async (fileRef: string) => {
+      const m = Array.from(idx.mediaById.values()).find(it => it.file_ref === fileRef);
+      if (!m) return null;
+      const inlined = (snapshot.meta as { previewMediaDataUrls?: Record<string, string> }).previewMediaDataUrls?.[m.id];
+      if (inlined) return inlined;
+      return mediaUrl(m);
+    },
     profilePicRef: async (personId: string) => {
       // Use first media link for the person, sorted by sort_order
       const links = idx.mediaLinksByEntity.get(`person:${personId}`);

@@ -1,9 +1,17 @@
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { dialog, shell } from 'electron';
+import { dialog, nativeImage, shell } from 'electron';
 import * as media from '../../api/media';
 import { callWorker } from './worker-client';
 import type { WrapHandlerFn } from './wrap-handler';
+
+const DEFAULT_THUMB_WIDTH = 256;
+const THUMB_JPEG_QUALITY = 70;
+// Cache directory under <dbname>-media/. Hidden from user-facing media folder
+// listings; safe to delete (regenerated on next view). Per the media rules,
+// derived render artifacts may live alongside <dbname>-media/.
+const THUMB_CACHE_DIRNAME = '.thumbs';
 
 /**
  * Derive the media folder name from the database filename: `foo.db` → `foo-media`.
@@ -36,6 +44,56 @@ export function registerMediaHandlers(
   // wrapHandler registration still needed so ipcMain.handle is registered.
   wrapHandler('media:getFilePath', (...args) => callWorker('media:getFilePath', ...args));
   wrapHandler('media:readAsDataUrl', (...args) => callWorker('media:readAsDataUrl', ...args));
+
+  // Resized thumbnail data URL. Stays on the main thread (nativeImage is an
+  // Electron API; resizing on the worker would pin the single-threaded DB
+  // worker behind every other IPC). Cached to <dbname>-media/.thumbs/<sha1>.jpg
+  // so repeat visits do a 50 KB disk read instead of re-decoding the original
+  // (~MB) image — the resize+encode is the dominant cost on a 100-item page.
+  //
+  // The renderer passes file_ref directly (already in hand from listPage /
+  // forEntity) so this handler does not touch the database — the main-thread
+  // DB connection running concurrently with the worker's write transactions
+  // would race on SQLite's locks ("database is locked"). Both the file_ref
+  // resolution and the cached thumbnail are deterministic relocations of an
+  // authored value, never written back to the DB.
+  wrapHandler('media:thumbnailDataUrl', async (fileRefArg, widthArg) => {
+    const fileRef = typeof fileRefArg === 'string' ? fileRefArg : null;
+    if (!fileRef) return null;
+    const requested = typeof widthArg === 'number' && widthArg > 0 ? widthArg : DEFAULT_THUMB_WIDTH;
+
+    const dbPath = getCurrentDatabasePath();
+    const dbDir = path.dirname(dbPath);
+    const absPath = path.resolve(dbDir, fileRef);
+
+    const mediaFolder = media.getMediaFolderName(dbPath);
+    const cacheDir = path.join(dbDir, mediaFolder, THUMB_CACHE_DIRNAME);
+    const cacheKey = crypto.createHash('sha1').update(`${fileRef}|${requested}`).digest('hex');
+    const cachePath = path.join(cacheDir, `${cacheKey}.jpg`);
+
+    let jpeg: Buffer;
+    try {
+      jpeg = await fs.promises.readFile(cachePath);
+    } catch {
+      // Cache miss — read original, resize, persist.
+      let buf: Buffer;
+      try {
+        buf = await fs.promises.readFile(absPath);
+      } catch {
+        return null;
+      }
+      const img = nativeImage.createFromBuffer(buf);
+      if (img.isEmpty()) return null;
+      jpeg = img.resize({ width: requested, quality: 'good' }).toJPEG(THUMB_JPEG_QUALITY);
+      try {
+        await fs.promises.mkdir(cacheDir, { recursive: true });
+        await fs.promises.writeFile(cachePath, jpeg);
+      } catch {
+        // Failing to persist the cache is non-fatal — we still return the bytes.
+      }
+    }
+    return `data:image/jpeg;base64,${jpeg.toString('base64')}`;
+  });
 
   // Electron-specific operations — stay on main thread
   wrapHandler('media:attach', async (data) => {

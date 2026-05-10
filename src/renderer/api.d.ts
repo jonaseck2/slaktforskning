@@ -272,6 +272,7 @@ declare global {
         openFile: (id: string) => Promise<void>;
         getFilePath: (id: string) => Promise<string | null>;
         readAsDataUrl: (id: string) => Promise<string | null>;
+        thumbnailDataUrl: (fileRef: string, maxWidth?: number) => Promise<string | null>;
       };
       print: {
         print: () => Promise<void>;

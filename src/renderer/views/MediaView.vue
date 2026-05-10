@@ -106,7 +106,7 @@
     </div>
     <template v-else>
 
-    <div class="media-list-content">
+    <div class="media-list-content" ref="galleryScrollRef">
     <div v-if="!isStaticMode && !personFilterId" class="media-filter-row">
       <FilterChips :options="typeOptions" :model-value="typeFilter" @update:model-value="(v: string) => typeFilter = v as MediaTypeFilter" />
       <FilterChips :options="statusOptions" :model-value="statusFilter" @update:model-value="(v: string) => statusFilter = v as MediaStatusFilter" />
@@ -217,7 +217,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import MediaViewer from '../components/MediaViewer.vue';
@@ -361,6 +361,7 @@ function mapPageItems(raw: Array<{ id: string; title: string; file_ref: string |
 }
 
 type MediaSortBy = 'title' | 'format';
+const galleryScrollRef = ref<HTMLElement | null>(null);
 const {
   items,
   total,
@@ -368,7 +369,9 @@ const {
   searchQuery,
   sortBy,
   sortDir,
+  hasMore,
   reload,
+  loadMore,
   toggleSort,
   attachSentinel,
 } = usePagedList<MediaItem, MediaSortBy>({
@@ -415,8 +418,29 @@ const {
     void loadThumbnails(appended);
   },
 });
-watch(sentinel, (el) => attachSentinel(el));
-watch([listSentinel, listScrollRef], ([el, root]) => attachSentinel(el, root));
+// Two independent IntersectionObservers — one per visible scroll surface.
+// The gallery and the left list each have their own scrolling container, so
+// the user might scroll either and expect more items to load. usePagedList's
+// built-in attachSentinel only supports one observer (the latest call wins),
+// so we let it own the gallery sentinel and run a parallel observer for the
+// list sentinel that calls loadMore() directly. Both fire into the same
+// loadMore — duplicate calls are deduped by usePagedList's `loading` guard.
+watch([sentinel, galleryScrollRef], ([el, root]) => attachSentinel(el, root));
+
+let listObserver: IntersectionObserver | null = null;
+function tryLoadMore() {
+  if (hasMore.value && !loading.value) void loadMore();
+}
+watch([listSentinel, listScrollRef], ([el, root]) => {
+  if (listObserver) { listObserver.disconnect(); listObserver = null; }
+  if (!el) return;
+  listObserver = new IntersectionObserver(
+    (entries) => { if (entries[0].isIntersecting) tryLoadMore(); },
+    root ? { root, rootMargin: '600px 0px' } : { rootMargin: '600px 0px' },
+  );
+  listObserver.observe(el);
+});
+onUnmounted(() => { if (listObserver) listObserver.disconnect(); });
 watch([typeFilter, statusFilter, faceTagFilter], () => { void reload(); });
 
 async function maybeAutoSelect(loaded: MediaItem[]) {
@@ -439,14 +463,23 @@ async function maybeAutoSelect(loaded: MediaItem[]) {
 }
 
 async function loadThumbnails(mediaItems: MediaItem[]) {
-  for (const item of mediaItems) {
-    if (isImageMedia(item.format, item.file_ref) && !item.is_missing && !thumbnails.value[item.id]) {
-      const url = await window.api.media.readAsDataUrl(item.id) as string | null;
-      if (url) {
-        thumbnails.value[item.id] = url;
-      }
+  const targets = mediaItems.filter((item): item is MediaItem & { file_ref: string } =>
+    isImageMedia(item.format, item.file_ref)
+    && !item.is_missing
+    && !thumbnails.value[item.id]
+    && !!item.file_ref);
+  // Bounded-parallel: 8 in flight saturates Electron main without queueing
+  // large nativeImage encodes back-to-back. Sequential `for-await` over a
+  // 100-item page produced minute-long waits — see plan/perf fix.
+  const CONCURRENCY = 8;
+  let cursor = 0;
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, async () => {
+    while (cursor < targets.length) {
+      const item = targets[cursor++];
+      const url = await window.api.media.thumbnailDataUrl(item.file_ref) as string | null;
+      if (url) thumbnails.value[item.id] = url;
     }
-  }
+  }));
 }
 
 function selectMedia(id: string) {

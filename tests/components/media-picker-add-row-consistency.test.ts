@@ -26,6 +26,7 @@ function makeApi() {
       list: vi.fn().mockResolvedValue([]),
       get: vi.fn().mockResolvedValue(null),
       readAsDataUrl: vi.fn().mockResolvedValue(null),
+      thumbnailDataUrl: vi.fn().mockResolvedValue(null),
       addLink: vi.fn().mockResolvedValue(undefined),
       removeLink: vi.fn().mockResolvedValue(undefined),
       reorder: vi.fn().mockResolvedValue(undefined),

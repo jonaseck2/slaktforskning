@@ -150,14 +150,12 @@ async function load() {
 }
 
 async function loadThumbnails() {
-  for (const m of media.value) {
-    if (isImageMedia(m.format, m.file_ref) && !thumbnails.value[m.id]) {
-      const url = await window.api.media.readAsDataUrl(m.id) as string | null;
-      if (url) {
-        thumbnails.value[m.id] = url;
-      }
-    }
-  }
+  const targets = media.value.filter((m): m is typeof m & { file_ref: string } =>
+    isImageMedia(m.format, m.file_ref) && !thumbnails.value[m.id] && !!m.file_ref);
+  await Promise.all(targets.map(async m => {
+    const url = await window.api.media.thumbnailDataUrl(m.file_ref) as string | null;
+    if (url) thumbnails.value[m.id] = url;
+  }));
 }
 
 function openMedia(id: string) {

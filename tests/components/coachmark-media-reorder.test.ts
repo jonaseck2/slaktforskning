@@ -27,6 +27,7 @@ const apiMock = {
       { id: 'm2', title: 'Photo B', file_ref: null, format: 'jpg', link_id: 'l2', link_type: null, sort_order: 1, notes: '' },
     ]),
     readAsDataUrl: vi.fn(async () => null),
+    thumbnailDataUrl: vi.fn(async () => null),
     reorder: vi.fn(async () => undefined),
     addLink: vi.fn(async () => undefined),
     removeLink: vi.fn(async () => undefined),

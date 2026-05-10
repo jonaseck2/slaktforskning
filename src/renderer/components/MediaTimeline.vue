@@ -103,14 +103,16 @@ async function load() {
   if (!props.entityId) { items.value = []; return; }
   items.value = (await window.api.media.getTimeline(props.entityType, props.entityId)) as TimelineItem[];
 
-  // Load thumbnails for image media
+  // Load thumbnails for image media in parallel — sequential await over the
+  // full timeline blocks the UI for seconds on large entity media counts.
+  const targets = items.value.filter((i): i is typeof i & { media: typeof i.media & { file_ref: string } } =>
+    isImageMedia(i.media.format, i.media.file_ref) && !!i.media.file_ref);
+  const entries = await Promise.all(targets.map(async i => {
+    const url = await window.api.media.thumbnailDataUrl(i.media.file_ref) as string | null;
+    return url ? [i.media.id, url] as const : null;
+  }));
   const thumbs: Record<string, string> = {};
-  for (const item of items.value) {
-    if (isImageMedia(item.media.format, item.media.file_ref)) {
-      const url = await window.api.media.readAsDataUrl(item.media.id) as string | null;
-      if (url) thumbs[item.media.id] = url;
-    }
-  }
+  for (const e of entries) if (e) thumbs[e[0]] = e[1];
   thumbnails.value = thumbs;
 }
 
