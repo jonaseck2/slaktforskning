@@ -30,7 +30,7 @@ A genealogist who writes a note on a sibling, godparent, or "other" relationship
 
 **Files:** `src/gedcom/exporter.ts`
 
-- [ ] In the ASSO emit phase (where sibling / godparent / other relationships are written), if `relationship.notes` is non-empty, emit:
+- [x] In the ASSO emit phase (where sibling / godparent / other relationships are written), if `relationship.notes` is non-empty, emit:
   ```
   2 _RELA_NOTE <notes>
   ```
@@ -40,10 +40,10 @@ A genealogist who writes a note on a sibling, godparent, or "other" relationship
 
 **Files:** `src/import/gedcom/relationship.ts` (or whichever phase parses ASSO)
 
-- [ ] When parsing ASSO, look for `_RELA_NOTE` child. Copy its joined value into `relationships.notes` for the resulting row.
+- [x] When parsing ASSO, look for `_RELA_NOTE` child. Copy its joined value into `relationships.notes` for the resulting row.
 
 ### Task 3: Registry + bump
 
-- [ ] Update `relationships.notes` registry entry to reflect the new lossless-via status (with multi-carrier note: `_COUPLE_NOTE` for couples, `_RELA_NOTE` on ASSO for the rest).
-- [ ] Run harness; per-field round-trip passes for all relationship types.
-- [ ] Patch bump, CHANGELOG, archive.
+- [x] Update `relationships.notes` registry entry to reflect the new lossless-via status (with multi-carrier note: `_COUPLE_NOTE` for couples, `_RELA_NOTE` on ASSO for the rest).
+- [x] Run harness; per-field round-trip passes for all relationship types.
+- [x] Patch bump, CHANGELOG, archive.

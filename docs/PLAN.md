@@ -35,26 +35,6 @@ Things we thought about and decided against / deferred. Not backlog — listed o
 
 The registry in `src/api/gedcom_fidelity_registry.ts` declares 20+ fields as currently lossy. Each entry below describes an upgrade path to lossless status via custom GEDCOM tags. Priority is determined by user impact: couple subtypes (marriage, divorce) are higher priority than research-task metadata; group/task records are saved last and may be out of scope for v1.
 
-#### groups / group_links — custom `_GROUP` tag [planned]
-`groups` (name, notes) and `group_links` (entity_type, entity_id, sort_order) are currently dropped on export. Custom `_GROUP` top-level records + `_GROUP_LINK` sub-records carry the data losslessly. Medium user impact.
-- Plan: [`plans/2026-05-09-gedcom-groups-custom-tag.md`](plans/2026-05-09-gedcom-groups-custom-tag.md)
-
-#### events.place_address — custom `_PLAC_ADDR` sub-tag [planned]
-The `place_address` field (event-specific street/postal/city/country) is currently dropped under both GEDCOM 5.5.1 and 7.0. Custom `_PLAC_ADDR` sub-tag under PLAC carries it.
-- Plan: [`plans/2026-05-09-gedcom-event-place-address.md`](plans/2026-05-09-gedcom-event-place-address.md)
-
-#### sources.abstract, sources.call_number — custom `_ABSTRACT` and `_CALL` [planned]
-Source abstract and call_number are currently lossy. Custom `_ABSTRACT` and `_CALL` sub-tags under SOUR records preserve them. Medium priority. (`repositories.call_number` is a related but separate column — follow-up.)
-- Plan: [`plans/2026-05-09-gedcom-source-abstract-call-number.md`](plans/2026-05-09-gedcom-source-abstract-call-number.md)
-
-#### relationships.notes — `_RELA_NOTE` on ASSO for non-couple types [planned]
-Couple notes already round-trip via `_COUPLE_NOTE` on FAM; sibling/godparent/other relationship notes are dropped because ASSO has no standard NOTE carrier. Custom `_RELA_NOTE` sub-tag under ASSO.
-- Plan: [`plans/2026-05-09-gedcom-relationship-notes.md`](plans/2026-05-09-gedcom-relationship-notes.md)
-
-#### citations.transcription — promote v7.0 to lossless via `_TRANS` [planned]
-Under v5.5.1, transcriptions on person/family/place-level citations are dropped (SOUR has no TEXT analog at those host levels). Under v7.0 we can carry it losslessly via `_TRANS`. Split the registry entry by version; v551 stays lossy with reason cited.
-- Plan: [`plans/2026-05-09-gedcom-citation-transcription-v70.md`](plans/2026-05-09-gedcom-citation-transcription-v70.md)
-
 #### Declared lossy, no promotion planned
 The Prime Directive requires honest disclosure, not lossless round-trip for every column. The following lossy fields are documented in `src/api/gedcom_fidelity_registry.ts` and surfaced via `ExportReport.excluded`; promotion is not planned. Reopen if a user requests it.
 - `media.is_printable` — UI convenience flag for reporting. User re-checks the box if they care.

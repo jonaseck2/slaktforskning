@@ -11,9 +11,10 @@ import {
   getCitationsForPersonName,
 } from '../api/sources';
 import { getPlace, listPlaces } from '../api/places';
-import { getMediaForEntity } from '../api/media';
+import { getMedia, getMediaForEntity } from '../api/media';
 import { getRepositoriesForSource } from '../api/repositories';
-import type { Place, Citation, Repository } from '../api/types';
+import { listGroups, getGroupLinks } from '../api/groups';
+import type { Place, Citation, Repository, Media } from '../api/types';
 import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
@@ -76,12 +77,56 @@ function emitPlaceSubTags(lines: string[], place: Place, subLevel: number): void
   lines.push(`${subLevel} _PLAC_ID ${place.id}`);
 }
 
-/** Emit a SOUR citation block at the given base level (2 for event citations, 1 for person/fam). */
-function emitCitationBlock(lines: string[], cit: Citation, srcXr: string, baseLevel: number): void {
+/**
+ * Emit a SOUR citation block at the given base level (2 for event/name citations,
+ * 1 for person/fam/place). `hostKind` plus `version` decide how transcription is
+ * carried so that it round-trips on every host kind under at least one version.
+ *
+ * Carriers, by version × host:
+ *   - event / name       → standard DATA/TEXT under SOUR (lossless under both
+ *                          5.5.1 and 7.0 — the importer reads DATA/TEXT in
+ *                          phaseEvents and the NAME-level citation loop).
+ *   - person / family /  → custom `_TRANS` sub-tag under SOUR, v7.0 only. The
+ *     place                non-event/name citation phases of the importer do
+ *                          not read DATA/TEXT back, so transcription would
+ *                          otherwise drop. Under 5.5.1 we still skip — see the
+ *                          gedcom_fidelity_registry entry for the rationale
+ *                          (third-party 5.5.1 parsers are stricter about
+ *                          unknown sub-tags inside SOUR cites).
+ *
+ * Option A is intentional: we emit `_TRANS` ONLY for non-event/non-name hosts
+ * under 7.0 — never alongside DATA/TEXT, and never under 5.5.1. That keeps the
+ * file minimal and removes any "which one wins on import" ambiguity.
+ */
+function emitCitationBlock(
+  lines: string[],
+  cit: Citation,
+  srcXr: string,
+  baseLevel: number,
+  version: '5.5.1' | '7.0',
+  hostKind: 'event' | 'name' | 'person' | 'relationship' | 'place',
+): void {
   lines.push(`${baseLevel} SOUR ${srcXr}`);
   if (cit.page) lines.push(`${baseLevel + 1} PAGE ${cit.page}`);
   lines.push(`${baseLevel + 1} QUAY ${cit.confidence}`);
-  if (cit.transcription) lines.push(`${baseLevel + 1} DATA`, `${baseLevel + 2} TEXT ${cit.transcription}`);
+  if (cit.transcription) {
+    if (hostKind === 'event' || hostKind === 'name') {
+      // Standard DATA/TEXT — already round-trips on both versions.
+      lines.push(`${baseLevel + 1} DATA`, `${baseLevel + 2} TEXT ${cit.transcription}`);
+    } else if (version === '7.0') {
+      // Custom _TRANS — v7.0 carrier for person / relationship / place hosts.
+      // Multi-line transcription splits across CONT continuation so embedded
+      // newlines round-trip byte-identical (e.g. parish-record blocks with
+      // multiple witness lines).
+      const tLines = cit.transcription.split(/\r?\n/);
+      lines.push(`${baseLevel + 1} _TRANS ${tLines[0]}`);
+      for (let i = 1; i < tLines.length; i++) {
+        lines.push(`${baseLevel + 2} CONT ${tLines[i]}`);
+      }
+    }
+    // 5.5.1 + non-event/name: transcription is intentionally dropped — see
+    // gedcom_fidelity_registry.ts citations.transcription v551 entry.
+  }
   if (cit.notes) lines.push(`${baseLevel + 1} NOTE ${cit.notes}`);
   if (cit.date_accessed) lines.push(`${baseLevel + 1} _ACCESSED ${cit.date_accessed}`);
 }
@@ -249,6 +294,26 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     // probate_inventory, genealogist, peerage_register, encyclopedia) flow through
     // automatically because no static enum map gates the value on either side.
     if (src.source_type) lines.push(`1 _STYPE ${src.source_type}`);
+    // Source-level free-text fields. Lossless via custom sub-tags — neither
+    // GEDCOM 5.5.1 nor 7.0 reserves a standard tag here for the genealogist's
+    // own abstract / call-number authored on the source row (`REPO.CALN` is the
+    // *repository's* call-number, a different concept on a different table).
+    // Long abstracts get split across CONT continuation lines so the value
+    // round-trips byte-identical through GEDCOM line-length conventions.
+    if (src.abstract) {
+      const abstractLines = src.abstract.split(/\r?\n/);
+      lines.push(`1 _ABSTRACT ${abstractLines[0]}`);
+      for (let i = 1; i < abstractLines.length; i++) {
+        lines.push(`2 CONT ${abstractLines[i]}`);
+      }
+    }
+    if (src.call_number) {
+      const callLines = src.call_number.split(/\r?\n/);
+      lines.push(`1 _CALL ${callLines[0]}`);
+      for (let i = 1; i < callLines.length; i++) {
+        lines.push(`2 CONT ${callLines[i]}`);
+      }
+    }
     // Link to structured REPO records (use cached lookup)
     const linkedRepos = sourceReposCache.get(src.id) ?? [];
     for (const repo of linkedRepos) {
@@ -305,7 +370,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const nameCitations = getCitationsForPersonName(db, n.id);
         for (const cit of nameCitations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
         }
       }
     }
@@ -339,11 +404,24 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       // Write _EVID so importer can match ASSO blocks back to this event across databases
       lines.push(`2 _EVID ${ev.id}`);
+      let emittedPlac = false;
       if (ev.place_id) {
         const place = getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          emittedPlac = true;
+        }
+      }
+      // Event-specific free-text address. Lossless via custom _PLAC_ADDR sub-tag.
+      // Sits under PLAC at level 3 when a PLAC line was emitted; otherwise at level 2
+      // directly under the event so authored address data survives even when no place
+      // is attached. Distinct from the place's standalone ADDR/CITY/POST sub-tags.
+      if (ev.place_address) {
+        if (emittedPlac) {
+          lines.push(`3 _PLAC_ADDR ${ev.place_address}`);
+        } else {
+          lines.push(`2 _PLAC_ADDR ${ev.place_address}`);
         }
       }
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
@@ -352,7 +430,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const citations = getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
       if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
@@ -427,6 +505,21 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const otherXr = personXref.get(otherId);
       if (otherXr) {
         assoLines.push(`1 ASSO ${otherXr}`, `2 RELA ${capitalizeFirst(rel.type)}`);
+        // Custom 2 _RELA_NOTE sub-tag carries the genealogist's note on the
+        // relationship. ASSO has no standard NOTE child the importer reads
+        // back, so couple notes ride _RELNOTES on FAM and the sibling /
+        // godparent / other branch rides _RELA_NOTE here. Multi-line notes
+        // get split across CONT continuation lines so embedded newlines
+        // round-trip byte-identical. Emitted under both endpoints' ASSO
+        // blocks (the exporter writes the relationship under each person);
+        // the importer's deduplication ensures only one DB row results.
+        if (includeNotes && rel.notes) {
+          const noteLines = rel.notes.split(/\r?\n/);
+          assoLines.push(`2 _RELA_NOTE ${noteLines[0]}`);
+          for (let i = 1; i < noteLines.length; i++) {
+            assoLines.push(`3 CONT ${noteLines[i]}`);
+          }
+        }
       }
     }
 
@@ -438,7 +531,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const personCitations = getCitationsForPerson(db, p.id);
       for (const cit of personCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'person');
       }
     }
 
@@ -512,11 +605,21 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (gedcomType) lines.push(`2 TYPE ${gedcomType}`);
       emitDate(lines, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, 2, version);
       lines.push(`2 _EVID ${ev.id}`);
+      let emittedPlac = false;
       if (ev.place_id) {
         const place = getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          emittedPlac = true;
+        }
+      }
+      // See INDI-event emitter for rationale on level-3-vs-2 placement.
+      if (ev.place_address) {
+        if (emittedPlac) {
+          lines.push(`3 _PLAC_ADDR ${ev.place_address}`);
+        } else {
+          lines.push(`2 _PLAC_ADDR ${ev.place_address}`);
         }
       }
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
@@ -525,7 +628,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
         const citations = getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2);
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
       if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
@@ -536,7 +639,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       const relCitations = getCitationsForRelationship(db, rel.id);
       for (const cit of relCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'relationship');
       }
     }
 
@@ -544,22 +647,108 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     if (includeMedia) emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
   });
 
-  // ── Place-level citations via custom top-level _PLAC records ───────────────
-  // Other apps skip unrecognised level-0 record types per GEDCOM 5.5.1 spec.
-  if (includeSources) {
+  // ── Top-level _PLAC and OBJE records for places / media reachable from
+  //    citations or groups. Both kinds are emitted as level-0 custom (_PLAC)
+  //    or standard (OBJE) records before _GROUP so that _GROUP_LINK xrefs
+  //    have something to point at. Other apps skip unrecognised level-0
+  //    record types per GEDCOM 5.5.1 spec.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Determine which places and media need top-level records. Sources of demand:
+  //   - place-level citations (existing behaviour)
+  //   - group_links (entity_type ∈ person/place/media) — new in this plan
+  const allGroups = listGroups(db);
+  const groupLinksByGroup = new Map<string, ReturnType<typeof getGroupLinks>>();
+  const groupLinkedPlaceIds = new Set<string>();
+  const groupLinkedMediaIds = new Set<string>();
+  for (const grp of allGroups) {
+    const links = getGroupLinks(db, grp.id);
+    groupLinksByGroup.set(grp.id, links);
+    for (const link of links) {
+      if (link.entity_type === 'place') groupLinkedPlaceIds.add(link.entity_id);
+      else if (link.entity_type === 'media') groupLinkedMediaIds.add(link.entity_id);
+    }
+  }
+
+  // Build the set of place ids that need a `_PLAC` top-level record.
+  const placeXref = new Map<string, string>();
+  if (includeSources || groupLinkedPlaceIds.size > 0) {
     const allPlaces = listPlaces(db);
     let placeCounter = 0;
     for (const place of allPlaces) {
-      const placeCitations = getCitationsForPlace(db, place.id);
-      if (placeCitations.length === 0) continue;
+      const placeCitations = includeSources ? getCitationsForPlace(db, place.id) : [];
+      const isGroupLinked = groupLinkedPlaceIds.has(place.id);
+      if (placeCitations.length === 0 && !isGroupLinked) continue;
       placeCounter++;
-      lines.push(`0 @P${placeCounter}@ _PLAC`);
+      const pxr = `@P${placeCounter}@`;
+      placeXref.set(place.id, pxr);
+      lines.push(`0 ${pxr} _PLAC`);
       // NAME allows the importer to create the place by name when UUID lookup fails (cross-DB import)
       lines.push(`1 NAME ${place.name}`);
       lines.push(`1 _PLAC_ID ${place.id}`);
       for (const cit of placeCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1);
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'place');
+      }
+    }
+  }
+
+  // Top-level OBJE records for media linked from groups. Inline OBJE blocks
+  // (under INDI/FAM/event) carry no xref so they can't be referenced from
+  // _GROUP_LINK; we emit a dedicated top-level record per group-linked media
+  // and tag it with `_OBJE_ID` (the source DB UUID) so the importer can
+  // deduplicate when a media is linked from both a person and a group.
+  const mediaXref = new Map<string, string>();
+  if (groupLinkedMediaIds.size > 0 && includeMedia) {
+    let mediaCounter = 0;
+    for (const mediaId of groupLinkedMediaIds) {
+      const m: Media | null = getMedia(db, mediaId);
+      if (!m) continue;
+      mediaCounter++;
+      const mxr = `@M${mediaCounter}@`;
+      mediaXref.set(m.id, mxr);
+      lines.push(`0 ${mxr} OBJE`);
+      if (m.format) lines.push(`1 FORM ${m.format}`);
+      if (m.file_ref) lines.push(`1 FILE ${m.file_ref}`);
+      if (m.title) lines.push(`1 TITL ${m.title}`);
+      if (m.notes) lines.push(`1 NOTE ${m.notes}`);
+    }
+  }
+
+  // ── Top-level _GROUP records ───────────────────────────────────────────────
+  // Each `_GROUP` carries the user's group (name + notes) and a `_GROUP_LINK`
+  // sub-record per member. The link encodes its host entity kind in
+  // `2 TYPE person|place|media` and resolves the host via `2 REF @xref@`.
+  // Polymorphic xref resolution: persons → INDI xref map; places → _PLAC xref
+  // map (built above); media → OBJE xref map (built above for group-linked
+  // media). Members whose host has no xref (e.g. a place that wasn't seeded
+  // because it had no citations *and* no group link, which can only happen
+  // mid-export if listPlaces ever returns a stale set) are skipped — the
+  // importer surfaces this asymmetrically via warnings if it ever happens.
+  if (allGroups.length > 0) {
+    let groupCounter = 0;
+    for (const grp of allGroups) {
+      groupCounter++;
+      const gxr = `@G${groupCounter}@`;
+      lines.push(`0 ${gxr} _GROUP`);
+      if (grp.name) lines.push(`1 NAME ${grp.name}`);
+      if (grp.notes) {
+        const noteLines = grp.notes.split(/\r?\n/);
+        lines.push(`1 NOTE ${noteLines[0]}`);
+        for (let i = 1; i < noteLines.length; i++) {
+          lines.push(`2 CONT ${noteLines[i]}`);
+        }
+      }
+      const links = groupLinksByGroup.get(grp.id) ?? [];
+      for (const link of links) {
+        let refXr: string | undefined;
+        if (link.entity_type === 'person') refXr = personXref.get(link.entity_id);
+        else if (link.entity_type === 'place') refXr = placeXref.get(link.entity_id);
+        else if (link.entity_type === 'media') refXr = mediaXref.get(link.entity_id);
+        if (!refXr) continue;
+        lines.push(`1 _GROUP_LINK`);
+        lines.push(`2 TYPE ${link.entity_type}`);
+        lines.push(`2 REF ${refXr}`);
       }
     }
   }
@@ -568,10 +757,6 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
 
   // ── Build ExportReport ─────────────────────────────────────────────────────
   const researchTaskCount = ((db.get('SELECT COUNT(*) as n FROM research_tasks') as { n: number } | undefined)?.n ?? 0);
-  const groupCount = ((db.get('SELECT COUNT(*) as n FROM groups') as { n: number } | undefined)?.n ?? 0);
-  const placeAddressCount = ((db.get(
-    "SELECT COUNT(*) as n FROM events WHERE place_address IS NOT NULL AND place_address != ''"
-  ) as { n: number } | undefined)?.n ?? 0);
 
   const excluded: ExportReport['excluded'] = [];
   if (researchTaskCount > 0) excluded.push({
@@ -579,16 +764,8 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     count: researchTaskCount,
     reason: 'No equivalent concept in GEDCOM 5.5.1',
   });
-  if (groupCount > 0) excluded.push({
-    category: 'Groups and group membership',
-    count: groupCount,
-    reason: 'No equivalent concept in GEDCOM 5.5.1',
-  });
-  if (placeAddressCount > 0) excluded.push({
-    category: 'Event free-text addresses (place_address field)',
-    count: placeAddressCount,
-    reason: 'GEDCOM ADDR is on event records; no mapping implemented yet',
-  });
+  // events.place_address: now lossless via custom _PLAC_ADDR sub-tag (see emit sites above).
+  // groups / group_links: now lossless via custom _GROUP / _GROUP_LINK records (see emit sites above).
 
   // Count total events exported (across all persons and couples)
   const totalEventCount = ((db.get('SELECT COUNT(*) as n FROM events') as { n: number } | undefined)?.n ?? 0);

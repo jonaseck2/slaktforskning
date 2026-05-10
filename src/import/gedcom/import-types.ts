@@ -47,4 +47,6 @@ export interface ImportContext {
   submitterNames: string[];
   /** Contact info from the first SUBM record that has a NAME — used to populate researcher_* settings. */
   submitterContact: { address?: string; phone?: string; email?: string } | null;
+  /** Warnings from `_GROUP_LINK` REFs that didn't dereference (dangling xref). */
+  groupLinkWarnings: string[];
 }

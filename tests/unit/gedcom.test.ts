@@ -9,8 +9,9 @@ import { createEvent } from '../../src/api/events';
 import { getEventsForPerson } from '../../src/api/events';
 import { createSource, listSources, createCitation, getCitationsForPerson, getCitationsForRelationship, getCitationsForPlace, getCitationsForEvent } from '../../src/api/sources';
 import { createPlace, listPlaces, getPlace } from '../../src/api/places';
-import { createMedia, addMediaLink, getMediaForEntity } from '../../src/api/media';
+import { createMedia, addMediaLink, getMediaForEntity, listMedia } from '../../src/api/media';
 import { createRepository, linkSourceRepository } from '../../src/api/repositories';
+import { createGroup, addGroupLink, listGroups, getGroupLinks } from '../../src/api/groups';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
@@ -633,6 +634,102 @@ describe('Extended GEDCOM roundtrip — relationships', () => {
     const couples = listRelationships(db2).filter(r => r.type === 'couple');
     expect(couples[0].notes).toBe('Met at sea');
   });
+
+  it('sibling notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'half-siblings, same mother',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('2 _RELA_NOTE half-siblings, same mother');
+    const db2 = roundtrip(db);
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs).toHaveLength(1);
+    expect(sibs[0].notes).toBe('half-siblings, same mother');
+  });
+
+  it('godparent notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const godparent = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, godparent.id, { given_name: 'Erik' });
+    const child = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, child.id, { given_name: 'Stina' });
+    createRelationship(db, {
+      type: 'godparent',
+      person1_id: godparent.id,
+      person2_id: child.id,
+      notes: 'godfather and lifelong friend',
+    });
+    const db2 = roundtrip(db);
+    const rels = listRelationships(db2).filter(r => r.type === 'godparent');
+    expect(rels).toHaveLength(1);
+    expect(rels[0].notes).toBe('godfather and lifelong friend');
+  });
+
+  it('other-type relationship notes survive roundtrip via _RELA_NOTE on ASSO', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Sven' });
+    const p2 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Olof' });
+    createRelationship(db, {
+      type: 'other',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'business partner; co-owned the foundry 1872-1889',
+    });
+    const db2 = roundtrip(db);
+    const rels = listRelationships(db2).filter(r => r.type === 'other');
+    expect(rels).toHaveLength(1);
+    expect(rels[0].notes).toBe('business partner; co-owned the foundry 1872-1889');
+  });
+
+  it('multi-line sibling notes round-trip byte-identical via CONT continuation', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    const longNote = [
+      'Half-siblings, same mother (Maria Andersdotter).',
+      'Father unknown for Anna; Lars\' father is Erik Larsson.',
+      'Confirmed by parish records 1843-1851.',
+    ].join('\n');
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: longNote,
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('2 _RELA_NOTE Half-siblings, same mother (Maria Andersdotter).');
+    expect(ged).toContain('3 CONT Father unknown for Anna; Lars\' father is Erik Larsson.');
+    expect(ged).toContain('3 CONT Confirmed by parish records 1843-1851.');
+    const db2 = roundtrip(db);
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs[0].notes).toBe(longNote);
+  });
+
+  it('sibling notes survive 7.0 round-trip via _RELA_NOTE', () => {
+    const p1 = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p1.id, { given_name: 'Lars' });
+    const p2 = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p2.id, { given_name: 'Anna' });
+    createRelationship(db, {
+      type: 'sibling',
+      person1_id: p1.id,
+      person2_id: p2.id,
+      notes: 'half-siblings\nsame mother only',
+    });
+    const db2 = createTestDb();
+    importGedcom(db2, parseGedcom(exportGedcom(db, '7.0').ged));
+    const sibs = listRelationships(db2).filter(r => r.type === 'sibling');
+    expect(sibs).toHaveLength(1);
+    expect(sibs[0].notes).toBe('half-siblings\nsame mother only');
+  });
 });
 
 describe('Extended GEDCOM roundtrip — event participants', () => {
@@ -749,6 +846,61 @@ describe('Extended GEDCOM roundtrip — sources & citations', () => {
     createSource(db, { title: 'Census 1880', repository: 'Riksarkivet' });
     const db2 = roundtrip(db);
     expect(listSources(db2)[0].repository).toBe('Riksarkivet');
+  });
+
+  it('source.abstract survives roundtrip via _ABSTRACT', () => {
+    createSource(db, {
+      title: 'SSA Husförhörslängder',
+      abstract: 'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('1 _ABSTRACT Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].abstract).toBe(
+      'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992.',
+    );
+  });
+
+  it('source.call_number survives roundtrip via _CALL', () => {
+    createSource(db, {
+      title: 'SSA Husförhörslängder',
+      call_number: 'KA-SE-SSA/0001/F-IIa-7-1843',
+    });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('1 _CALL KA-SE-SSA/0001/F-IIa-7-1843');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].call_number).toBe('KA-SE-SSA/0001/F-IIa-7-1843');
+  });
+
+  it('long source.abstract round-trips byte-identical via CONT continuation', () => {
+    // > 80 chars and across multiple lines — exercises CONT continuation
+    // emission (newline-separated lines emitted as `2 CONT <line>`).
+    const longAbstract = [
+      'Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992 by the Genealogical Society of Utah.',
+      'Quality varies by parish; some volumes have water damage.',
+      'Index volumes (1750-1850) are filed under accession KA-SE-SSA/INDEX.',
+    ].join('\n');
+    createSource(db, { title: 'SSA microfilm series', abstract: longAbstract });
+    const { ged } = exportGedcom(db, '5.5.1');
+    // First line emitted on the _ABSTRACT line, remainder on CONT lines.
+    expect(ged).toContain('1 _ABSTRACT Photographic copies of the Stockholm city archive parish records, microfilmed 1987-1992 by the Genealogical Society of Utah.');
+    expect(ged).toContain('2 CONT Quality varies by parish; some volumes have water damage.');
+    expect(ged).toContain('2 CONT Index volumes (1750-1850) are filed under accession KA-SE-SSA/INDEX.');
+    const db2 = roundtrip(db);
+    expect(listSources(db2)[0].abstract).toBe(longAbstract);
+  });
+
+  it('source.abstract + call_number survive 7.0 round-trip', () => {
+    createSource(db, {
+      title: 'Stadsarkivet',
+      abstract: 'Multi-line abstract\nwith embedded newline.',
+      call_number: 'F-IIa-7-1843',
+    });
+    const db2 = createTestDb();
+    importGedcom(db2, parseGedcom(exportGedcom(db, '7.0').ged));
+    const out = listSources(db2)[0];
+    expect(out.abstract).toBe('Multi-line abstract\nwith embedded newline.');
+    expect(out.call_number).toBe('F-IIa-7-1843');
   });
 
   it('citation notes survive roundtrip via NOTE on SOUR block', () => {
@@ -945,6 +1097,75 @@ describe('GEDCOM import completeness', () => {
     expect(ged).toContain('1 ENGA');
   });
 
+  it('_PLAC_ADDR under PLAC is imported into events.place_address', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Erik /Lindqvist/
+1 BIRT
+2 DATE 1953
+2 PLAC Adolf Fredrik kyrka, Stockholm
+3 _PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth).toBeTruthy();
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
+  it('_PLAC_ADDR directly under event (no PLAC) is imported into events.place_address', () => {
+    const ged = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Anna /Persson/
+1 BIRT
+2 DATE 1900
+2 _PLAC_ADDR Backgatan 12, Lund
+0 TRLR`;
+    importGedcom(db, parseGedcom(ged));
+    const persons = listPersons(db);
+    const events = getEventsForPerson(db, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth).toBeTruthy();
+    expect(birth?.place_address).toBe('Backgatan 12, Lund');
+  });
+
+  it('events.place_address survives full export → import round-trip (5.5.1)', () => {
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Märta', surname: 'Eriksson' });
+    const ev = createEvent(db, { event_type: 'birth', date_original: '1900' });
+    db.run('UPDATE events SET place_address = ? WHERE id = ?', ['Tvärgatan 5, 35243 Växjö, Sverige', ev.id]);
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).toContain('_PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const events = getEventsForPerson(fresh, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
+  it('events.place_address survives full export → import round-trip (7.0)', () => {
+    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Märta', surname: 'Eriksson' });
+    const ev = createEvent(db, { event_type: 'birth', date_original: '1900' });
+    db.run('UPDATE events SET place_address = ? WHERE id = ?', ['Tvärgatan 5, 35243 Växjö, Sverige', ev.id]);
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain('_PLAC_ADDR Tvärgatan 5, 35243 Växjö, Sverige');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const events = getEventsForPerson(fresh, persons[0].id);
+    const birth = events.find(e => e.event_type === 'birth');
+    expect(birth?.place_address).toBe('Tvärgatan 5, 35243 Växjö, Sverige');
+  });
+
   it('ImportReport contains correct counts', () => {
     const ged = `0 HEAD
 1 GEDC
@@ -1136,6 +1357,128 @@ describe('exportGedcom — round-trip improvements', () => {
     expect(ged).toContain('4 TEXT Born on the farm.');
   });
 
+  // ── _TRANS round-trip: person/relationship/place transcriptions under v7.0 ──
+  // The user goal: a parish-record transcription pasted on any citation host
+  // (event, name, person, relationship, place) survives export and re-import.
+  // Event/name already round-trip via DATA/TEXT under both 5.5.1 and 7.0; the
+  // remaining three host kinds are carried by custom 2 _TRANS sub-tag under
+  // SOUR — v7.0 only. The Swedish parish-record example from the plan:
+  //   "Petrus Andersson, hustru Cathrina Mårtensdotter, dotter Maria,
+  //    döpt i Adolf Fredrik 1786-04-12, faddrar…"
+  const PARISH = 'Petrus Andersson, hustru Cathrina Mårtensdotter, dotter Maria, döpt i Adolf Fredrik 1786-04-12, faddrar…';
+
+  it('round-trips person-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus', surname: 'Andersson' });
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    expect(persons.length).toBe(1);
+    const cits = getCitationsForPerson(fresh, persons[0].id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('round-trips relationship-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Vigselbok' });
+    const husband = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, husband.id, { given_name: 'Petrus', surname: 'Andersson' });
+    const wife = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    addPersonName(db, wife.id, { given_name: 'Cathrina', surname: 'Mårtensdotter' });
+    const rel = createRelationship(db, {
+      type: 'couple',
+      person1_id: husband.id,
+      person2_id: wife.id,
+    });
+    createCitation(db, { source_id: src.id, relationship_id: rel.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const rels = listRelationships(fresh);
+    expect(rels.length).toBe(1);
+    const cits = getCitationsForRelationship(fresh, rels[0].id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('round-trips place-level citation transcription under v7.0 via _TRANS', () => {
+    const src = createSource(db, { title: 'Sockenbeskrivning' });
+    const place = createPlace(db, { name: 'Adolf Fredrik' });
+    // Place-level citations require the place to be reachable — events on the
+    // place, or just emit standalone via the _PLAC top-level record. Anchor
+    // it to a person+event so the place isn't an orphan.
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    createCitation(db, { source_id: src.id, place_id: place.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain(`2 _TRANS ${PARISH}`);
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const places = listPlaces(fresh);
+    const adolf = places.find(pl => pl.name === 'Adolf Fredrik');
+    expect(adolf).toBeDefined();
+    const cits = getCitationsForPlace(fresh, adolf!.id);
+    expect(cits.length).toBe(1);
+    expect(cits[0].transcription).toBe(PARISH);
+  });
+
+  it('does NOT emit _TRANS under v5.5.1 (custom-tag tolerance is the v551 deviation)', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: PARISH });
+    const { ged } = exportGedcom(db, '5.5.1');
+    expect(ged).not.toContain('_TRANS');
+    // Person-level citation under 5.5.1 also doesn't emit DATA/TEXT (that
+    // path is event/name only), so transcription is intentionally dropped on
+    // export — matching the registry's lossy declaration for v551.
+    expect(ged).not.toContain(`4 TEXT ${PARISH}`);
+  });
+
+  it('event-level citation transcription does NOT double-emit _TRANS under v7.0 (option A)', () => {
+    const src = createSource(db, { title: 'Parish record' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Lars' });
+    const ev = createEvent(db, { event_type: 'birth' });
+    addEventParticipant(db, { event_id: ev.id, person_id: p.id, role: 'primary' });
+    createCitation(db, { source_id: src.id, event_id: ev.id, transcription: 'Born on the farm.' });
+    const { ged } = exportGedcom(db, '7.0');
+    // Standard DATA/TEXT path is used (event-level is already lossless on 7.0);
+    // no _TRANS is emitted alongside. This keeps the file minimal and removes
+    // any "which one wins on import" ambiguity.
+    expect(ged).toContain('3 DATA');
+    expect(ged).toContain('4 TEXT Born on the farm.');
+    expect(ged).not.toContain('_TRANS');
+  });
+
+  it('round-trips multi-line person-level transcription via _TRANS+CONT under v7.0', () => {
+    const src = createSource(db, { title: 'Adolf Fredrik C:1' });
+    const p = createPerson(db, { sex: 'M' }, { allowNameless: true });
+    addPersonName(db, p.id, { given_name: 'Petrus' });
+    const multiline = 'Line 1: Petrus Andersson döpt 1786-04-12.\nLine 2: faddrar Anders Persson, Maria Eriksdotter.\nLine 3: anteckning av kyrkoherde.';
+    createCitation(db, { source_id: src.id, person_id: p.id, transcription: multiline });
+    const { ged } = exportGedcom(db, '7.0');
+    expect(ged).toContain('2 _TRANS Line 1: Petrus Andersson döpt 1786-04-12.');
+    expect(ged).toContain('3 CONT Line 2: faddrar Anders Persson, Maria Eriksdotter.');
+    expect(ged).toContain('3 CONT Line 3: anteckning av kyrkoherde.');
+
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const persons = listPersons(fresh);
+    const cits = getCitationsForPerson(fresh, persons[0].id);
+    expect(cits[0].transcription).toBe(multiline);
+  });
+
   it('exports repository as REPO record and links from SOUR', () => {
     const repo = createRepository(db, { name: 'National Archives', address: '114 88 Stockholm', city: 'Stockholm', country: 'Sweden' });
     const src = createSource(db, { title: 'Church records' });
@@ -1249,5 +1592,191 @@ describe('importGedcom (standard MAP/ADDR)', () => {
     expect(place!.city).toBe('Springfield');
     expect(place!.street).toBe('Main Street 5');
     expect(place!.country).toBe('USA');
+  });
+});
+
+// ──────────────────────────────────────────────
+// _GROUP / _GROUP_LINK round-trip (groups + group_links)
+// ──────────────────────────────────────────────
+describe('groups + group_links round-trip via _GROUP / _GROUP_LINK', () => {
+  /**
+   * Build a small DB matching the genealogist's example groups:
+   *   - "Maternal grandfather's emigrant cousins" — 3 persons
+   *   - "People I still need to verify" — 2 persons + 1 place
+   *   - "Photos from the 1920 reunion" — 2 media
+   * Mixed entity types per group exercise the polymorphic _GROUP_LINK xref.
+   */
+  function seedGenealogistGroups() {
+    const persons = [] as { id: string }[];
+    for (const [given, surname] of [['Anna', 'Eriksson'], ['Bertil', 'Eriksson'], ['Carl', 'Eriksson'], ['Dora', 'Andersson'], ['Erik', 'Andersson']]) {
+      const p = createPerson(db, { sex: 'U', notes: '' }, { allowNameless: true });
+      addPersonName(db, p.id, { given_name: given, surname, name_type: 'birth', sort_order: 0 });
+      persons.push(p);
+    }
+    const place = createPlace(db, { name: 'Bjorkvik', notes: '' });
+    const m1 = createMedia(db, { title: 'Reunion photo 1', is_printable: false });
+    const m2 = createMedia(db, { title: 'Reunion photo 2', is_printable: false });
+
+    const g1 = createGroup(db, {
+      name: "Maternal grandfather's emigrant cousins",
+      notes: 'Three cousins who emigrated to America in the 1880s',
+    });
+    addGroupLink(db, g1.id, 'person', persons[0].id);
+    addGroupLink(db, g1.id, 'person', persons[1].id);
+    addGroupLink(db, g1.id, 'person', persons[2].id);
+
+    const g2 = createGroup(db, {
+      name: 'People I still need to verify',
+      notes: 'Cited in parish records but not yet cross-checked.\nFollow up at Riksarkivet.',
+    });
+    addGroupLink(db, g2.id, 'person', persons[3].id);
+    addGroupLink(db, g2.id, 'person', persons[4].id);
+    addGroupLink(db, g2.id, 'place', place.id);
+
+    const g3 = createGroup(db, {
+      name: 'Photos from the 1920 reunion',
+      notes: '',
+    });
+    addGroupLink(db, g3.id, 'media', m1.id);
+    addGroupLink(db, g3.id, 'media', m2.id);
+
+    return { persons, place, m1, m2, g1, g2, g3 };
+  }
+
+  it('exporter emits _GROUP / _GROUP_LINK records for the genealogist scenario', () => {
+    seedGenealogistGroups();
+    const { ged } = exportGedcom(db, '5.5.1');
+
+    // Each group is a top-level _GROUP record with NAME.
+    expect(ged).toContain('0 @G1@ _GROUP');
+    expect(ged).toContain("1 NAME Maternal grandfather's emigrant cousins");
+    expect(ged).toContain('0 @G2@ _GROUP');
+    expect(ged).toContain('1 NAME People I still need to verify');
+    expect(ged).toContain('0 @G3@ _GROUP');
+    expect(ged).toContain('1 NAME Photos from the 1920 reunion');
+
+    // Multi-line notes split across CONT continuation
+    expect(ged).toContain('1 NOTE Cited in parish records but not yet cross-checked.');
+    expect(ged).toContain('2 CONT Follow up at Riksarkivet.');
+
+    // _GROUP_LINK records carry TYPE and REF
+    const groupLinkLines = (ged.match(/^1 _GROUP_LINK$/gm) || []).length;
+    expect(groupLinkLines).toBe(8); // 3 + 3 + 2
+
+    // Each TYPE appears the right number of times under _GROUP records.
+    const typePersonLines = (ged.match(/^2 TYPE person$/gm) || []).length;
+    const typePlaceLines = (ged.match(/^2 TYPE place$/gm) || []).length;
+    const typeMediaLines = (ged.match(/^2 TYPE media$/gm) || []).length;
+    expect(typePersonLines).toBe(5); // 3 in g1 + 2 in g2
+    expect(typePlaceLines).toBe(1);
+    expect(typeMediaLines).toBe(2);
+
+    // _PLAC and OBJE top-level records exist for any place / media that's
+    // group-linked — those carry the xrefs that _GROUP_LINK REFs point at.
+    expect(ged).toMatch(/^0 @P\d+@ _PLAC$/m);
+    expect(ged).toMatch(/^0 @M\d+@ OBJE$/m);
+
+    // Every REF resolves: extract the REF xrefs and verify each appears as a
+    // record header (`0 @<xref>@ <kind>`) earlier in the file.
+    const refs = Array.from(ged.matchAll(/^2 REF (@[^@]+@)$/gm)).map(m => m[1]);
+    expect(refs.length).toBe(8);
+    for (const ref of refs) {
+      const headerRe = new RegExp(`^0 ${ref.replace(/[.*+?^${}()|[\\]/g, '\\$&')} `, 'm');
+      expect(ged, `REF ${ref} should resolve to a record header`).toMatch(headerRe);
+    }
+  });
+
+  it('export report no longer flags groups as excluded', () => {
+    seedGenealogistGroups();
+    const { report } = exportGedcom(db, '5.5.1');
+    expect(report.excluded.find(e => /group/i.test(e.category))).toBeUndefined();
+    const { report: report70 } = exportGedcom(db, '7.0');
+    expect(report70.excluded.find(e => /group/i.test(e.category))).toBeUndefined();
+  });
+
+  it('round-trips groups and group memberships end-to-end (5.5.1)', () => {
+    const { g1, g2, g3, persons, place, m1, m2 } = seedGenealogistGroups();
+    const beforeNames = new Set([g1.name, g2.name, g3.name]);
+
+    const { ged } = exportGedcom(db, '5.5.1');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+
+    const groupsAfter = listGroups(fresh);
+    expect(new Set(groupsAfter.map(g => g.name))).toEqual(beforeNames);
+    expect(groupsAfter).toHaveLength(3);
+
+    // Find each group by name and assert membership counts + types.
+    const findGroup = (name: string) => groupsAfter.find(g => g.name === name)!;
+    const cousins = findGroup("Maternal grandfather's emigrant cousins");
+    const verify = findGroup('People I still need to verify');
+    const photos = findGroup('Photos from the 1920 reunion');
+
+    const cousinsLinks = getGroupLinks(fresh, cousins.id);
+    expect(cousinsLinks).toHaveLength(3);
+    expect(cousinsLinks.every(l => l.entity_type === 'person')).toBe(true);
+
+    const verifyLinks = getGroupLinks(fresh, verify.id);
+    expect(verifyLinks).toHaveLength(3);
+    expect(verifyLinks.filter(l => l.entity_type === 'person')).toHaveLength(2);
+    expect(verifyLinks.filter(l => l.entity_type === 'place')).toHaveLength(1);
+
+    const photosLinks = getGroupLinks(fresh, photos.id);
+    expect(photosLinks).toHaveLength(2);
+    expect(photosLinks.every(l => l.entity_type === 'media')).toBe(true);
+
+    // Notes survive (multi-line)
+    expect(verify.notes).toContain('Follow up at Riksarkivet');
+
+    // Sanity: persons / place / media re-exist in the fresh DB so the
+    // group_links FK is satisfied and a UI listing wouldn't show orphans.
+    expect(listPersons(fresh)).toHaveLength(persons.length);
+    expect(listPlaces(fresh).find(p => p.name === place.name)).toBeTruthy();
+    const freshMedia = listMedia(fresh);
+    // m1 / m2 are referenced — a single OBJE record per media survives.
+    expect(freshMedia.find(m => m.title === m1.title)).toBeTruthy();
+    expect(freshMedia.find(m => m.title === m2.title)).toBeTruthy();
+  });
+
+  it('round-trips groups end-to-end (7.0)', () => {
+    seedGenealogistGroups();
+    const { ged } = exportGedcom(db, '7.0');
+    const fresh = createTestDb();
+    importGedcom(fresh, parseGedcom(ged));
+    const groupsAfter = listGroups(fresh);
+    expect(groupsAfter).toHaveLength(3);
+    const totalLinks = groupsAfter
+      .map(g => getGroupLinks(fresh, g.id).length)
+      .reduce((a, b) => a + b, 0);
+    expect(totalLinks).toBe(8);
+  });
+
+  it('importer surfaces a warning when a _GROUP_LINK REF is dangling', () => {
+    // Hand-crafted GEDCOM with a person link to a non-existent xref
+    const ged = [
+      '0 HEAD',
+      '1 GEDC',
+      '2 VERS 5.5.1',
+      '1 CHAR UTF-8',
+      '0 @I1@ INDI',
+      '1 NAME Real /Person/',
+      '1 SEX M',
+      '0 @G1@ _GROUP',
+      '1 NAME Has a dangling member',
+      '1 _GROUP_LINK',
+      '2 TYPE person',
+      '2 REF @I1@',
+      '1 _GROUP_LINK',
+      '2 TYPE person',
+      '2 REF @I999@',
+      '0 TRLR',
+    ].join('\n');
+    const fresh = createTestDb();
+    const report = importGedcom(fresh, parseGedcom(ged));
+    const groupsAfter = listGroups(fresh);
+    expect(groupsAfter).toHaveLength(1);
+    const links = getGroupLinks(fresh, groupsAfter[0].id);
+    expect(links).toHaveLength(1); // only @I1@ resolved
+    expect(report.warnings.some(w => /_GROUP_LINK/.test(w) && /@I999@/.test(w))).toBe(true);
   });
 });

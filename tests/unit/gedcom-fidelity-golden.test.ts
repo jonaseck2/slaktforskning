@@ -23,6 +23,8 @@ import { createEvent } from '../../src/api/events';
 import { createRelationship, addEventParticipant } from '../../src/api/relationships';
 import { createSource, createCitation } from '../../src/api/sources';
 import { createRepository, linkSourceRepository } from '../../src/api/repositories';
+import { createGroup, addGroupLink } from '../../src/api/groups';
+import { createMedia } from '../../src/api/media';
 import {
   roundTrip,
   canonicaliseDb,
@@ -192,13 +194,48 @@ function seedComprehensive(db: Database): void {
   // Link source → repository (junction row in source_repositories).
   linkSourceRepository(db, src.id, repo.id);
 
+  // ── Two groups with mixed-type members (3 persons + 1 place + 2 media) ───
+  // Exercises the polymorphic _GROUP_LINK round-trip: every link kind in
+  // the same golden seed catches xref-resolution regressions across all
+  // three host kinds.
+  // Give media a file_ref so the importer's is_missing flag stays 0 (otherwise
+  // it flips to 1, matching the registry's media.is_missing lossy claim).
+  const m1 = createMedia(db, { title: 'Family photo 1', file_ref: 'goldenseed/photo1.jpg', is_printable: false });
+  const m2 = createMedia(db, { title: 'Family photo 2', file_ref: 'goldenseed/photo2.jpg', is_printable: false });
+
+  const g1 = createGroup(db, {
+    name: 'Emigrant cousins',
+    notes: 'Three cousins, one parish, one ship.\nNeed passenger list.',
+  });
+  addGroupLink(db, g1.id, 'person', p1.id);
+  addGroupLink(db, g1.id, 'person', p2.id);
+  // Add a third person purely to exercise > 2 person-links per group.
+  const p3 = createPerson(db, { sex: 'M', notes: '' }, { allowNameless: true });
+  addPersonName(db, p3.id, { given_name: 'Olof', surname: 'Larsson', name_type: 'birth', sort_order: 0 });
+  addGroupLink(db, g1.id, 'person', p3.id);
+  addGroupLink(db, g1.id, 'place', place.id);
+  addGroupLink(db, g1.id, 'media', m1.id);
+  addGroupLink(db, g1.id, 'media', m2.id);
+
+  const g2 = createGroup(db, {
+    name: 'Verify in Riksarkivet',
+    notes: '',
+  });
+  addGroupLink(db, g2.id, 'person', p1.id);
+  addGroupLink(db, g2.id, 'place', place.id);
+
+  void g2;
+
   // Note on intentional omissions:
-  //  - groups / group_links — registry: lossy, row dropped on export
   //  - research_tasks / task_links — registry: lossy, row dropped on export
   //  - media / media_links — registry: lossy on multiple columns
   //    (is_printable, link_type, sort_order); per-field test covers them.
-  // Including any of these here would force aggressive canonicaliseDb drops
-  // that defeat the point of the golden test (catching non-lossy regressions).
+  //    The two media rows above appear in the golden seed because they're
+  //    promoted to top-level OBJE records via _GROUP linkage (and therefore
+  //    re-imported); the canonicaliseDb sort + audit-strip handles them.
+  // Including any of the still-lossy tables here would force aggressive
+  // canonicaliseDb drops that defeat the point of the golden test (catching
+  // non-lossy regressions).
 }
 
 describe('GEDCOM fidelity golden-DB-seed round-trip', () => {

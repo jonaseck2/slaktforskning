@@ -254,21 +254,34 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v551: {
       kind: 'lossy',
       reason:
-        "Couple notes emitted via custom 1 _RELNOTES under FAM and round-tripped. " +
-        "Non-couple relationship notes (sibling/godparent/other and parent_child) are NOT emitted " +
-        "and reset to '' on import.",
+        "Multi-carrier note: couple notes emit via custom 1 _RELNOTES under FAM; " +
+        "sibling / godparent / other notes emit via custom 2 _RELA_NOTE under ASSO. " +
+        "Multi-line notes are split across CONT continuation lines on export and rejoined " +
+        "by the parser on import, so embedded newlines round-trip byte-identical for those " +
+        "four types. parent_child notes remain lossy — the parent_child relationship rides " +
+        "FAMC/FAMS in GEDCOM and has no current NOTE carrier on those structures (tracked " +
+        "as a follow-up).",
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.type === 'couple' ? seeded : '';
+        const t = ctx?.row.type;
+        if (t === 'couple' || t === 'sibling' || t === 'godparent' || t === 'other') return seeded;
+        // parent_child: no carrier yet
+        return '';
       },
     },
     v70: {
       kind: 'lossy',
       reason:
-        "Couple notes emitted via custom 1 _RELNOTES under FAM and round-tripped. " +
-        "Non-couple relationship notes (sibling/godparent/other and parent_child) are NOT emitted " +
-        "and reset to '' on import.",
+        "Multi-carrier note: couple notes emit via custom 1 _RELNOTES under FAM; " +
+        "sibling / godparent / other notes emit via custom 2 _RELA_NOTE under ASSO. " +
+        "Multi-line notes are split across CONT continuation lines on export and rejoined " +
+        "by the parser on import, so embedded newlines round-trip byte-identical for those " +
+        "four types. parent_child notes remain lossy — the parent_child relationship rides " +
+        "FAMC/FAMS in GEDCOM and has no current NOTE carrier on those structures (tracked " +
+        "as a follow-up).",
       expectedAfterRoundTrip: (seeded, ctx) => {
-        return ctx?.row.type === 'couple' ? seeded : '';
+        const t = ctx?.row.type;
+        if (t === 'couple' || t === 'sibling' || t === 'godparent' || t === 'other') return seeded;
+        return '';
       },
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
@@ -432,19 +445,20 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'events.place_address': {
     v551: {
-      kind: 'lossy',
-      reason:
-        'exporter does not emit place_address (no GEDCOM tag wired up; ExportReport.excluded surfaces the loss). ' +
-        'Column resets to null on import.',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom _PLAC_ADDR sub-tag — emitted under PLAC at level 3 when a place is attached, ' +
+        'else directly under the event at level 2. Distinct from the place\'s standalone ADDR, ' +
+        'which carries the place\'s mailing address (not the event-specific address).',
     },
     v70: {
-      kind: 'lossy',
-      reason:
-        'exporter does not emit place_address (no GEDCOM tag wired up). Column resets to null on import.',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom _PLAC_ADDR sub-tag — emitted under PLAC at level 3 when a place is attached, ' +
+        'else directly under the event at level 2. Distinct from the place\'s standalone ADDR, ' +
+        'which carries the place\'s mailing address (not the event-specific address).',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },
 
   // ----- event_participants -----
@@ -493,29 +507,35 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'sources.updated_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
   'sources.call_number': {
     v551: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.call_number; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _CALL sub-tag under SOUR. Distinct from REPO.CALN, which carries ' +
+        'the repository\'s own call-number (a different column on a different table).',
     },
     v70: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.call_number; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _CALL sub-tag under SOUR. Distinct from REPO.CALN, which carries ' +
+        'the repository\'s own call-number (a different column on a different table).',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'sources.abstract': {
     v551: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.abstract; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _ABSTRACT sub-tag under SOUR — multi-line values are split across ' +
+        'CONT continuation lines on export; the parser rejoins them on import so ' +
+        'embedded newlines survive byte-identical.',
     },
     v70: {
-      kind: 'lossy',
-      reason: 'exporter does not emit sources.abstract; column resets to null on import',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism:
+        'custom 1 _ABSTRACT sub-tag under SOUR — multi-line values are split across ' +
+        'CONT continuation lines on export; the parser rejoins them on import so ' +
+        'embedded newlines survive byte-identical.',
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
 
   // ----- citations -----
@@ -540,22 +560,22 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v551: {
       kind: 'lossy',
       reason:
-        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person-level, ' +
-        'family-level and place-level citation phases do NOT read DATA/TEXT back, so transcription is ' +
-        'preserved only when the citation is attached to an event or person_name.',
+        'event-level and name-level citations round-trip transcription via standard DATA/TEXT. Person-level, ' +
+        'family-level and place-level citation phases do NOT read DATA/TEXT back, and 5.5.1 is stricter about ' +
+        'unknown sub-tags inside SOUR cites — third-party 5.5.1 consumers historically reject custom tags at ' +
+        'this level — so we intentionally do not emit a custom carrier here. Promoting v5.5.1 would be a ' +
+        'separate plan focused on testing custom-tag tolerance against a panel of 5.5.1-consuming apps.',
       expectedAfterRoundTrip: (seeded, ctx) => {
         return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
       },
     },
     v70: {
-      kind: 'lossy',
-      reason:
-        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person/family/place ' +
-        'citation phases do not read DATA/TEXT back, so transcription is preserved only when the citation ' +
-        'is attached to an event or person_name.',
-      expectedAfterRoundTrip: (seeded, ctx) => {
-        return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
-      },
+      kind: 'lossless-via',
+      mechanism:
+        'standard DATA/TEXT under SOUR for event-level and name-level citations; custom 2 _TRANS sub-tag under ' +
+        'SOUR for person-level, family-level (relationship_id) and place-level citations — covers all four ' +
+        'host kinds, multi-line transcriptions ride CONT continuation under _TRANS so embedded newlines ' +
+        'round-trip byte-identical.',
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },
@@ -578,112 +598,48 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'citations.person_name_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
 
   // ----- groups -----
-  'groups.id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups have no GEDCOM 5.5.1 representation; entire row is dropped on export. Surfaced in ExportReport.excluded.',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups have no GEDCOM 7.0 representation; entire row is dropped on export.',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'groups.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'groups.name': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NAME sub-tag' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NAME sub-tag' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'groups.notes': {
-    v551: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'groups not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NOTE sub-tag (multi-line via CONT)' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 0 _GROUP top-level record + 1 NOTE sub-tag (multi-line via CONT)' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'groups.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
   // ----- group_links -----
-  'group_links.id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships are not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships are not emitted to GEDCOM; row is dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
-  'group_links.group_id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'group_links.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'group_links.group_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'group_links.entity_type': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
+    v551: { kind: 'lossless-via', mechanism: 'custom 1 _GROUP_LINK / 2 TYPE sub-record under _GROUP' },
+    v70: { kind: 'lossless-via', mechanism: 'custom 1 _GROUP_LINK / 2 TYPE sub-record under _GROUP' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
-  'group_links.entity_id': {
-    v551: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
-    },
-    ownedBy: { exporter: EXPORTER },
-  },
+  'group_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'group_links.sort_order': {
+    // Membership order within a group is preserved by emit order — the
+    // exporter walks getGroupLinks (which orders by entity_type, sort_order,
+    // created_at) and the importer's addGroupLink rebases sort_order to
+    // (per-type MAX + 1) on insert. The literal integer doesn't survive
+    // because the importer rebases per (group, entity_type) starting from 0
+    // — but the *relative* order does. Match the precedent of
+    // person_names.sort_order: declare lossy with expectedAfterRoundTrip = 0
+    // (the column resets, the visible order is preserved by emit position).
     v551: {
       kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
+      reason: '_GROUP_LINK emit order preserves visible membership order, but sort_order column itself rebases to 0 on import',
+      expectedAfterRoundTrip: () => 0,
     },
     v70: {
       kind: 'lossy',
-      reason: 'group memberships not emitted; row dropped',
-      expectedAfterRoundTrip: () => null,
+      reason: '_GROUP_LINK emit order preserves visible membership order, but sort_order column itself rebases to 0 on import',
+      expectedAfterRoundTrip: () => 0,
     },
-    ownedBy: { exporter: EXPORTER },
+    ownedBy: { importer: IMPORTER_PHASES },
   },
   'group_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 

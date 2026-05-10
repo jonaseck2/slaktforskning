@@ -190,6 +190,14 @@ export function phaseSources(ctx: ImportContext): void {
       })(),
       url: getChild(node, '_URL')?.value ?? '',
       source_type: getChild(node, '_STYPE')?.value ?? '',
+      // Custom _ABSTRACT / _CALL sub-tags carry the user-authored
+      // sources.abstract and sources.call_number fields. Long values are
+      // wrapped across CONT continuation lines on export; the parser already
+      // unwraps CONT/CONC into the node's joined .value, so reading the
+      // value directly preserves embedded newlines. Distinct from the
+      // repository's own REPO.CALN (different table, different column).
+      abstract: getChild(node, '_ABSTRACT')?.value ?? null,
+      call_number: getChild(node, '_CALL')?.value ?? null,
     });
     ctx.sourceMap.set(node.xref, src.id);
     const repoVal = getChild(node, 'REPO')?.value ?? '';
@@ -417,12 +425,20 @@ export function phaseIndividuals(ctx: ImportContext): void {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+        // GEDCOM 7.0 carrier for transcription on non-event/non-name hosts.
+        // Standard DATA/TEXT is not read at this level (it's only read for
+        // event-level and name-level citations); the exporter writes _TRANS
+        // here under v7.0 so person/family/place transcriptions round-trip.
+        // Multi-line transcriptions are unwrapped from CONT continuation by
+        // the parser into the joined node value.
+        const transcription = getChild(sour, '_TRANS')?.value ?? '';
         createCitation(ctx.db, {
           source_id: srcId,
           person_id: person.id,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
+          transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
       }
@@ -556,12 +572,15 @@ export function phaseFamilies(ctx: ImportContext): void {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+        // _TRANS carrier — see person-level citation block above for rationale.
+        const transcription = getChild(sour, '_TRANS')?.value ?? '';
         createCitation(ctx.db, {
           source_id: srcId,
           relationship_id: couple.id,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
+          transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
       }
@@ -617,7 +636,18 @@ export function phaseAsso(ctx: ImportContext): void {
            (r.person1_id === otherPersonId && r.person2_id === personId))
         );
         if (existingRels.length === 0) {
-          createRelationship(ctx.db, { type: relType, person1_id: personId, person2_id: otherPersonId });
+          // Custom 2 _RELA_NOTE sub-tag under ASSO carries the genealogist's
+          // note on the relationship. The parser already unwraps CONT/CONC
+          // continuation lines into the joined node value, so multi-line
+          // notes (with embedded newlines) survive end-to-end. Couples ride
+          // _RELNOTES on FAM; this is the non-couple carrier.
+          const notes = getChild(assoNode, '_RELA_NOTE')?.value ?? '';
+          createRelationship(ctx.db, {
+            type: relType,
+            person1_id: personId,
+            person2_id: otherPersonId,
+            notes,
+          });
         }
       } else {
         ctx.assoDropCount++;
@@ -653,15 +683,111 @@ export function phasePlaceCitations(ctx: ImportContext): void {
       const page = getChild(sour, 'PAGE')?.value ?? '';
       const citNotes = getChild(sour, 'NOTE')?.value ?? '';
       const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+      // _TRANS carrier — see person-level citation block in phaseIndividuals.
+      const transcription = getChild(sour, '_TRANS')?.value ?? '';
       createCitation(ctx.db, {
         source_id: srcId,
         place_id: place.id,
         page,
         confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
         notes: citNotes || undefined,
+        transcription: transcription || undefined,
         date_accessed: date_accessed || undefined,
       });
     }
+  }
+}
+
+// ── Phase 5b: _GROUP records (groups + group_links) ────────────────────────
+//
+// Counterpart to the exporter's _GROUP / _GROUP_LINK emission. Runs AFTER
+// phaseIndividuals (populates personMap), phaseObje (populates objeMap), and
+// phasePlaceCitations (populates placeIdMap for places carried by _PLAC
+// records) so that every _GROUP_LINK REF can dereference into the new DB.
+//
+// _GROUP_LINK shape:
+//   1 _GROUP_LINK
+//   2 TYPE person|place|media
+//   2 REF @I042@   (or @P017@, @M005@)
+//
+// Resolution rules:
+//   - person → personMap (built by phaseIndividuals from INDI xrefs).
+//   - place  → walk all _PLAC top-level records here to build a local xref→
+//              place_id map (placeIdMap stores oldPlaceId → newPlaceId, NOT
+//              xref → newPlaceId — different lookup).
+//   - media  → objeMap (built by phaseObje from OBJE xrefs).
+//
+// Unresolved REFs are reported via ctx.warnings rather than silently dropped,
+// so a corrupted GEDCOM (dangling xref) doesn't lose the user's group
+// membership without disclosure. See CLAUDE.md "Round-Trip Fidelity".
+export function phaseGroupRecords(ctx: ImportContext): void {
+  // Build a local xref → DB place_id map by walking every _PLAC record.
+  // The exporter writes a 1 _PLAC_ID <uuid> sub-tag on each _PLAC record;
+  // phasePlaceCitations (which has already run by this point) has populated
+  // placeIdMap[oldPlaceId] = currentDbPlaceId for every _PLAC record that
+  // mentions a `_PLAC_ID`. We translate that into xref → DB-place-id here.
+  const placeXrefToId = new Map<string, string>();
+  for (const node of ctx.tree) {
+    if (node.tag !== '_PLAC' || !node.xref) continue;
+    const oldPlaceId = getChild(node, '_PLAC_ID')?.value;
+    if (!oldPlaceId) continue;
+    // Try the placeIdMap first (set by phasePlaceCitations); fall back to a
+    // direct lookup against the source UUID for the rare case where the
+    // place existed in a same-DB reimport and the map skipped it.
+    const dbPlaceId = ctx.placeIdMap.get(oldPlaceId) ?? oldPlaceId;
+    if (getPlace(ctx.db, dbPlaceId)) {
+      placeXrefToId.set(node.xref, dbPlaceId);
+    } else {
+      // Place wasn't created yet (no citation seeded it AND _GROUP wants it).
+      // Create from NAME fallback now so the group link can resolve.
+      const placeName = getChild(node, 'NAME')?.value;
+      if (placeName) {
+        const place = ctx.resolvePlaceFn(ctx.db, placeName);
+        ctx.placeIdMap.set(oldPlaceId, place.id);
+        placeXrefToId.set(node.xref, place.id);
+      }
+    }
+  }
+
+  for (const node of ctx.tree) {
+    if (node.tag !== '_GROUP' || !node.xref) continue;
+    const name = getChild(node, 'NAME')?.value ?? '';
+    const notes = resolveNote(node, ctx.noteMap) || undefined;
+    const group = createGroup(ctx.db, { name, notes });
+
+    let linkPosition = 0;
+    for (const linkNode of getChildren(node, '_GROUP_LINK')) {
+      const type = getChild(linkNode, 'TYPE')?.value ?? '';
+      const ref = getChild(linkNode, 'REF')?.value ?? '';
+      if (!type || !ref) continue;
+
+      let entityId: string | undefined;
+      let entityType: 'person' | 'place' | 'media' | null = null;
+      if (type === 'person') {
+        entityId = ctx.personMap.get(ref);
+        entityType = 'person';
+      } else if (type === 'place') {
+        entityId = placeXrefToId.get(ref);
+        entityType = 'place';
+      } else if (type === 'media') {
+        entityId = ctx.objeMap.get(ref);
+        entityType = 'media';
+      }
+
+      if (!entityId || !entityType) {
+        ctx.groupLinkWarnings.push(
+          `_GROUP_LINK in group "${name}" has unresolved REF ${ref} (type=${type || '?'})`,
+        );
+        continue;
+      }
+      try {
+        addGroupLink(ctx.db, group.id, entityType, entityId);
+        linkPosition++;
+      } catch {
+        // Duplicate row (UNIQUE on group_id, entity_type, entity_id) — ignore.
+      }
+    }
+    void linkPosition; // sort_order is assigned by addGroupLink (per-type MAX+1)
   }
 }
 
