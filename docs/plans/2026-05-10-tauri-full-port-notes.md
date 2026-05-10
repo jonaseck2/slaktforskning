@@ -17,7 +17,26 @@ Running scratchpad of decisions made + things to revisit. Curated as I go so the
 
 ## Active blockers / in-progress
 
-- **Screenshot captures monitor pixels at the Tauri window's screen rect**, so when Claude Code occludes the Tauri window, screenshots return Claude Code pixels. Switching to `xcap::Window` window-specific capture so the Tauri pixels come through regardless of z-order. (in progress this session)
+- *(none right now)*
+
+## Polyfills shipped this session
+
+The Tauri-side `src/renderer/tauri-window-api.ts` now overrides every Electron main-only IPC channel that the renderer actually calls:
+
+- `db.{getCurrent, getRecent, openExisting, createNew, switchTo}` — Tauri dialog + rusqlite reopen
+- `media.{attach, readAsDataUrl, getFilePath}` — Rust file picker + bytes → DB insert via `media.createMedia`
+- `checks.{runAll, forPerson, forPlace, forMedia, runForEvent, cancel}` — calls `api/checks` directly (cancellation is a no-op for now; re-runs are fast on in-process rusqlite)
+- `undo.{undo, redo}` — calls `undoManager` + fires `data:changed` (state/beginGroup/endGroup come from the registry)
+- `gedcom.selectFile` — file picker
+- `gedcom.export` — pending, see deferred list
+- `import.{genneyCheckDocker, genneySelectDerby, genneySelectArchive, genneySelectMedia, holgerSelectFile, rootsmagicSelectFile, grampsSelectFile}` — file/folder pickers
+- `archive.{export, import}` — file pickers (the actual zip build/extract is deferred)
+- `csv.export` — file picker (the actual CSV build is deferred)
+- `export.openFolder` — `shell_reveal` to OS file manager
+
+Generic Rust commands wired for these: `dialog_pick({ kind, title, extensions, defaultName })`, `fs_read_text`, `fs_write_text`, `fs_read_bytes_base64`, `shell_reveal`, `media_pick_and_copy`, `media_read_as_data_url`, `default_db_path`, `db_current_path`, `db_pick_existing`, `db_pick_new`.
+
+UI-server endpoints added beyond the Electron parity set: `/eval` (run an arbitrary script + return its value), `/console` (drain captured console buffer). The renderer's `main.ts` wraps `console.{log, warn, error, info}` + `window.error` + `unhandledrejection` into a 500-entry ring buffer that `__taurisConsole.drain()` returns.
 
 ## Points to revisit (deferred but real)
 
@@ -31,9 +50,9 @@ Running scratchpad of decisions made + things to revisit. Curated as I go so the
 
 ### App functionality
 
-4. **GEDCOM import** still routes through the renderer-side parser, but the file picker + read needs to be a Rust command. Same pattern as media-attach: pick file → return path/bytes → renderer parses + inserts.
+4. **Import/export RUN handlers (gedcom:import, import:genneyRun, import:holgerRun, import:rootsmagicRun, import:grampsRun, archive:import, archive:export, csv:export, gedcom:export, website:exportRun).** All currently in the channel registry but their handlers `import * as fs from 'node:fs'` then read the chosen path synchronously — fails because the Tauri renderer polyfilled `node:fs`. Two fixes per importer: (a) pull `readFileSync(path)` calls behind a `readFileText(path)` shim that delegates to `invoke('fs_read_text')` in Tauri / sync `fs` in Electron; (b) replace `fs.cpSync` for media folders with a Rust `media_bulk_copy` command. The picker side (which `selectFile()` channel returns the path) is already wired.
 
-5. **CSV export, GEDCOM export, website export** need folder pickers + Rust write paths.
+5. **Gazetteer loading is empty in the Tauri build.** `bundled.ts` does `readFileSync(import.meta.url + '/../gazetteers/<id>.json.gz')` against the `.vite/build/gazetteers/` sidecar. None of those gz files exist in the Tauri renderer bundle — the Vite tauri config doesn't run the gazetteer-compress plugin. Fix: either (a) port the compress plugin to `vite.tauri-renderer.config.ts` and emit gz files into `tauri-spike/dist/gazetteers/`, then load via `fetch('./gazetteers/<id>.json.gz')`, or (b) embed them in the Rust binary via `include_bytes!` and serve via a `gazetteer_load` Tauri command. (a) is simpler. User-visible impact today: place pickers offer no gazetteer suggestions, country chips on /places all collapse to "Okänt land" since gazetteer-derived country is unavailable.
 
 6. **`Cmd+N` for second window** — Tauri has `WebviewWindowBuilder`; need to register an accelerator + handler. The first-window already has `__TAURI_INTERNALS__` detection wiring window.api on mount; the second window will too.
 

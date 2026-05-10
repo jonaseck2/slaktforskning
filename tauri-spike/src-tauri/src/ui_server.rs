@@ -324,6 +324,19 @@ async fn handle_eval(
     }
 }
 
+/// /console — drains the renderer's captured console buffer (errors +
+/// warnings + log entries from window.__taurisConsole). Wired by main.ts at
+/// boot. Useful for "did anything go wrong on the last navigate?".
+async fn handle_console(
+    axum::extract::State(app): axum::extract::State<AppHandle>,
+) -> Json<JsonValue> {
+    let script = "(() => { const buf = window.__taurisConsole?.drain?.() ?? []; return { entries: buf }; })()";
+    match run_in_renderer(&app, script).await {
+        Ok(v) => Json(v),
+        Err(e) => Json(json!({ "error": e })),
+    }
+}
+
 /// /status — what the slaktforskning-dev MCP's `app_status` tool calls.
 /// Returns the current Vue route + window dimensions + DB path.
 async fn handle_status(
@@ -360,6 +373,7 @@ pub fn spawn(app: AppHandle) {
             .route("/status", get(handle_status))
             .route("/db_path", get(handle_db_path))
             .route("/eval", post(handle_eval))
+            .route("/console", get(handle_console))
             .route("/screenshot", post(handle_screenshot))
             .route("/navigate", post(handle_navigate))
             .route("/reload", post(handle_reload))

@@ -21,6 +21,7 @@ import * as media from '../api/media';
 import * as checks from '../api/checks';
 import * as persons from '../api/persons';
 import { queryAll } from '../api/db';
+import { undoManager } from '../api/undo';
 
 // Side-effect imports register every channel on the registry at module load.
 // Without these, the registry is empty and listChannels() returns nothing.
@@ -223,6 +224,74 @@ export function mountWindowApi(db: Database): MountResult {
     return await checks.runChecksForEvent(getDb(), eventId);
   };
   api.checks.cancel = async () => { /* no cancellation surface here yet */ };
+
+  // File-dialog wrappers (Electron used dialog.showOpenDialog/SaveDialog on the
+  // main thread; Tauri uses tauri-plugin-dialog via a generic Rust command).
+  type Pick = { canceled: boolean; path?: string };
+  const pickFile = (title: string, exts?: string[], extLabel?: string): Promise<Pick> =>
+    invoke<Pick>('dialog_pick', { kind: 'openFile', title, extensions: exts, extensionLabel: extLabel });
+  const pickFolder = (title: string): Promise<Pick> =>
+    invoke<Pick>('dialog_pick', { kind: 'openDirectory', title });
+  const saveFile = (title: string, defaultName: string, exts?: string[], extLabel?: string): Promise<Pick> =>
+    invoke<Pick>('dialog_pick', { kind: 'saveFile', title, defaultName, extensions: exts, extensionLabel: extLabel });
+
+  if (!api.gedcom) api.gedcom = {};
+  api.gedcom.selectFile = () => pickFile('Select GEDCOM File', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
+
+  if (!api.import) api.import = {};
+  api.import.genneyCheckDocker = async () => ({ available: false });
+  api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
+  api.import.genneySelectArchive = () => pickFile('Välj Genney-arkivfil (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
+  api.import.genneySelectMedia = () => pickFolder('Select Genney media folder (optional)');
+  api.import.holgerSelectFile = () => pickFile('Välj Holger 8-databasfil', ['mdb'], 'Holger-databas');
+  api.import.rootsmagicSelectFile = () => pickFile('Välj RootsMagic-databasfil', ['rmtree', 'rmgc'], 'RootsMagic-databas');
+  api.import.grampsSelectFile = () => pickFile('Välj Gramps-databasfil', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
+
+  if (!api.archive) api.archive = {};
+  api.archive.export = async () => {
+    const r = await saveFile('Spara arkiv', 'family-archive.zip', ['zip'], 'Zip-arkiv');
+    if (r.canceled || !r.path) return { canceled: true };
+    // The actual zip building happens in the renderer too — defer to api/archive
+    // when wired. For now, return the chosen path so the UI button doesn't
+    // throw. Tracked in tauri-port notes (deferred archive runner).
+    return { canceled: false, path: r.path };
+  };
+  api.archive.import = async () => {
+    const r = await pickFile('Välj arkivfil', ['zip'], 'Zip-arkiv');
+    if (r.canceled || !r.path) return { canceled: true };
+    return { canceled: false, path: r.path };
+  };
+
+  if (!api.export) api.export = {};
+  api.export.openFolder = async (folderPath: unknown) => {
+    if (typeof folderPath !== 'string') return { ok: false };
+    await invoke('shell_reveal', { path: folderPath });
+    return { ok: true };
+  };
+
+  if (!api.csv) api.csv = {};
+  // Undo / Redo — main-only in Electron because they post-call broadcast
+  // data:changed to all BrowserWindows. In Tauri, the renderer fires the
+  // same fan-out via fireDataChanged().
+  if (!api.undo) api.undo = {};
+  api.undo.undo = async () => {
+    const label = await undoManager.undo();
+    fireDataChanged();
+    return label;
+  };
+  api.undo.redo = async () => {
+    const label = await undoManager.redo();
+    fireDataChanged();
+    return label;
+  };
+
+  api.csv.export = async () => {
+    const r = await saveFile('Exportera CSV', 'persons.csv', ['csv'], 'CSV-filer');
+    if (r.canceled || !r.path) return { canceled: true };
+    // CSV builder is in api/csv but writes to disk via fs. Defer the actual
+    // serialization wiring to a follow-up; return the chosen path.
+    return { canceled: false, path: r.path };
+  };
 
   // window.api gets the polyfilled shape. The Electron-only
   // onDataChanged subscription mechanism is exposed too so existing

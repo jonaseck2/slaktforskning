@@ -4,8 +4,34 @@
 // console.error in the inspector.
 const bootLog = (msg: string) => { console.log('[boot]', msg); };
 bootLog('main.ts entered');
-window.addEventListener('error', (e) => console.error('[boot] ERROR:', e.message, '@', e.filename + ':' + e.lineno));
-window.addEventListener('unhandledrejection', (e) => console.error('[boot] UNHANDLED:', e.reason));
+
+// Capture console + errors into a ring buffer the dev MCP /console endpoint
+// drains. Lets the agent see what went wrong on the last navigate without
+// poking at devtools.
+type ConsoleEntry = { ts: number; level: 'log'|'warn'|'error'|'info'; args: string };
+const buf: ConsoleEntry[] = [];
+const MAX = 500;
+const push = (level: ConsoleEntry['level'], args: unknown[]) => {
+  try {
+    const s = args.map(a => {
+      if (a instanceof Error) return a.stack || a.message;
+      if (typeof a === 'object') { try { return JSON.stringify(a); } catch { return String(a); } }
+      return String(a);
+    }).join(' ');
+    buf.push({ ts: Date.now(), level, args: s });
+    if (buf.length > MAX) buf.shift();
+  } catch { /* ignore */ }
+};
+const wrap = <K extends ConsoleEntry['level']>(k: K) => {
+  const orig = console[k];
+  console[k] = (...args: unknown[]) => { push(k, args); orig.apply(console, args as never); };
+};
+wrap('log'); wrap('warn'); wrap('error'); wrap('info');
+window.addEventListener('error', (e) => push('error', [`${e.message} @ ${e.filename}:${e.lineno}`]));
+window.addEventListener('unhandledrejection', (e) => push('error', ['unhandledrejection:', e.reason]));
+(window as Window & { __taurisConsole?: { drain: () => ConsoleEntry[] } }).__taurisConsole = {
+  drain: () => buf.splice(0, buf.length),
+};
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';

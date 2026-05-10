@@ -196,6 +196,72 @@ async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValue, String>
     }))
 }
 
+/// Generic file/folder picker. The renderer-side polyfill uses this to back
+/// every Electron `dialog.showOpenDialog` / `showSaveDialog` call site.
+#[tauri::command]
+async fn dialog_pick(
+    app: tauri::AppHandle,
+    kind: String,
+    title: Option<String>,
+    extensions: Option<Vec<String>>,
+    extension_label: Option<String>,
+    default_name: Option<String>,
+) -> Result<JsonValue, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let mut builder = app.dialog().file();
+    if let Some(t) = title { builder = builder.set_title(t); }
+    if let Some(name) = default_name { builder = builder.set_file_name(name); }
+    if let Some(exts) = extensions {
+        let label = extension_label.unwrap_or_else(|| "Files".into());
+        let refs: Vec<&str> = exts.iter().map(|s| s.as_str()).collect();
+        builder = builder.add_filter(&label, &refs);
+    }
+    match kind.as_str() {
+        "openFile" => {
+            builder.pick_file(move |chosen| { let _ = tx.send(chosen.map(|p| p.to_string())); });
+        }
+        "openDirectory" => {
+            builder.pick_folder(move |chosen| { let _ = tx.send(chosen.map(|p| p.to_string())); });
+        }
+        "saveFile" => {
+            builder.save_file(move |chosen| { let _ = tx.send(chosen.map(|p| p.to_string())); });
+        }
+        _ => return Err(format!("unknown pick kind: {kind}")),
+    }
+    let chosen = rx.await.map_err(|e| format!("dialog: {e}"))?;
+    Ok(serde_json::json!({ "canceled": chosen.is_none(), "path": chosen }))
+}
+
+/// Read a file as utf-8 text. Used by import flows that need to feed the
+/// chosen file's contents to a JS parser running in the renderer.
+#[tauri::command]
+fn fs_read_text(path: String) -> Result<String, String> {
+    std::fs::read_to_string(&path).map_err(|e| format!("read: {e}"))
+}
+
+/// Write utf-8 text to a file. Used by GEDCOM export.
+#[tauri::command]
+fn fs_write_text(path: String, contents: String) -> Result<(), String> {
+    std::fs::write(&path, contents).map_err(|e| format!("write: {e}"))
+}
+
+/// Read a file as raw bytes (returned as base64 since serde-json can't
+/// represent binary directly). Used for archive imports / binary parsing.
+#[tauri::command]
+fn fs_read_bytes_base64(path: String) -> Result<String, String> {
+    let bytes = std::fs::read(&path).map_err(|e| format!("read: {e}"))?;
+    use base64::Engine;
+    Ok(base64::engine::general_purpose::STANDARD.encode(bytes))
+}
+
+/// Reveal a file or folder in the OS file manager.
+#[tauri::command]
+fn shell_reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener().reveal_item_in_dir(&path).map_err(|e| format!("reveal: {e}"))
+}
+
 /// Read a media file (resolved relative to the active DB's directory) and
 /// return a base64 data URL. Backs window.api.media.readAsDataUrl().
 #[tauri::command]
@@ -275,6 +341,11 @@ pub fn run() {
             db_pick_new,
             media_pick_and_copy,
             media_read_as_data_url,
+            dialog_pick,
+            fs_read_text,
+            fs_write_text,
+            fs_read_bytes_base64,
+            shell_reveal,
             ui_server::ui_eval_response,
         ])
         .setup(|app| {
