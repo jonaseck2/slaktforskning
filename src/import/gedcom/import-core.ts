@@ -33,7 +33,7 @@ import {
   PERSON_EVENT_TAGS, FAMILY_EVENT_TAGS,
   phaseNotes, phaseObje, phaseRepo, phaseGroups,
   phaseSources, phaseIndividuals, phaseFamilies,
-  phaseAsso, phasePlaceCitations, phaseTodos, phaseSubmitters,
+  phaseAsso, phasePlaceCitations, phaseGroupRecords, phaseTodos, phaseSubmitters,
 } from './phases';
 
 // ── Public types (re-exported via index.ts) ─────────────────────────────────
@@ -131,6 +131,7 @@ function createImportContext(db: Database, tree: GedcomNode[], options?: ImportO
     firstPersonId: null,
     submitterNames: [],
     submitterContact: null,
+    groupLinkWarnings: [],
   };
 }
 
@@ -140,7 +141,7 @@ function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null } {
+): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] } {
   const ctx = createImportContext(db, tree, options);
 
   const runPhase = (name: string, fn: (c: typeof ctx) => void) => {
@@ -157,6 +158,7 @@ function doImportGedcom(
   runPhase('families',       phaseFamilies);
   runPhase('asso',           phaseAsso);
   runPhase('placeCitations', phasePlaceCitations);
+  runPhase('groupRecords',   phaseGroupRecords);
   runPhase('todos',          phaseTodos);
   runPhase('submitters',     phaseSubmitters);
   console.log(`[import-timing]   maps: noteMap=${ctx.noteMap.size} objeMap=${ctx.objeMap.size} sourceMap=${ctx.sourceMap.size} personMap=${ctx.personMap.size} placeIdMap=${ctx.placeIdMap.size}`);
@@ -178,6 +180,7 @@ function doImportGedcom(
     firstPersonId: ctx.firstPersonId,
     submitterNames: ctx.submitterNames,
     submitterContact: ctx.submitterContact,
+    groupLinkWarnings: ctx.groupLinkWarnings,
   };
 }
 
@@ -403,7 +406,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
   runSql(db, 'BEGIN');
-  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null };
+  let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
   try {
     partial = doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
@@ -531,6 +534,11 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     // because the family reference graph requires them (parent/spouse links).
     // Surfaced via the PERSON_NO_NAME quality check so the user can review.
     partial.warnings.push(`${partial.namelessPersonCount} INDI record(s) had no NAME tag — imported as nameless persons (visible under quality checks)`);
+  }
+  // Dangling _GROUP_LINK refs (per-link warnings) — disclosed individually so
+  // the user knows which group memberships were dropped.
+  for (const warning of partial.groupLinkWarnings) {
+    partial.warnings.push(warning);
   }
   if (options?.profile === 'holger') {
     const hdpCount = partial.skipped.find(s => s.tag === '_HDP')?.count ?? 0;
