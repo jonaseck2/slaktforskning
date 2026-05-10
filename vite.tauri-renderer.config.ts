@@ -1,6 +1,6 @@
-// Vite config that builds src/renderer/ for the Tauri spike's webview.
+// Vite config that builds src/renderer/ for the Tauri webview.
 // Differences vs vite.renderer.config.ts (which is owned by electron-forge):
-//   - Output goes to tauri-spike/dist (where tauri.conf.json's frontendDist
+//   - Output goes to dist-tauri/ (where tauri.conf.json's frontendDist
 //     points by default).
 //   - `node-sqlite3-wasm` is aliased to src/renderer/db-shim.ts so api/db.ts
 //     routes its db.prepare/run/get/all calls through Tauri invoke() to the
@@ -34,7 +34,7 @@ export default defineConfig({
   ],
   root: 'src/renderer',
   build: {
-    outDir: resolve('tauri-spike/dist'),
+    outDir: resolve('dist-tauri'),
     emptyOutDir: true,
     // Tauri targets modern WebKit (macOS) / WebView2 / WebKitGTK; top-level
     // await + dynamic imports are fine.

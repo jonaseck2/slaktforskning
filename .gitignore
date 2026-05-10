@@ -3,6 +3,9 @@ out/
 .vite/
 dist/
 dist-static/
+dist-tauri/
+src-tauri/target/
+src-tauri/gen/schemas/
 *.db
 .DS_Store
 test-results/

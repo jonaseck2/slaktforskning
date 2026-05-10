@@ -14,7 +14,7 @@ Running scratchpad of decisions made + things to revisit. Curated as I go so the
 - `/dom` supports `mode={outerHTML,innerHTML,textContent,attributes}` + `all=true` + `limit`, matching the Electron version's full surface.
 - Screenshot uses `xcap` crate (ScreenCaptureKit on macOS). One-time Screen Recording grant for the bundled .app sticks across rebuilds.
 - `scripts/mcp-tauri.mjs` is a launcher that asks the running app for its current DB path on startup (via `/db_path`) and points the MCP at it. Falls back to the Tauri spike's default if app isn't running.
-- Live-reload dev loop via `npm --prefix tauri-spike run tauri dev` — Vite HMR for renderer, ~3 s incremental Cargo for Rust changes. Massive speedup over the previous `pkill+build+open` cycle.
+- Live-reload dev loop via `npm run tauri:dev` — Vite HMR for renderer, ~3 s incremental Cargo for Rust changes. Massive speedup over the previous `pkill+build+open` cycle.
 
 ## Active blockers / in-progress
 
@@ -73,7 +73,7 @@ UI-server endpoints added beyond the Electron parity set: `/eval` (run an arbitr
 
 9. **Auto-update + signing.** Tauri has `tauri-plugin-updater` + signing config in `tauri.conf.json`. Defer until we cut the first 0.250.0 release.
 
-10. **MCP sidecar packaging.** Currently spawns `npx tsx src/mcp/server.ts` via shell (works in dev because Node + tsx are available). For a packaged distribution, need to bundle a Node binary + the MCP source as a Tauri sidecar (`bundle.externalBin`). The existing `tauri-spike/src-tauri/src/mcp.rs` proves the spawn pattern.
+10. **MCP sidecar packaging.** Currently spawns `npx tsx src/mcp/server.ts` via shell (works in dev because Node + tsx are available). For a packaged distribution, need to bundle a Node binary + the MCP source as a Tauri sidecar (`bundle.externalBin`). The existing `src-tauri/src/mcp.rs` proves the spawn pattern.
 
 ### Build / quality
 
@@ -83,12 +83,12 @@ UI-server endpoints added beyond the Electron parity set: `/eval` (run an arbitr
 
 13. **Vitest + Playwright suites still target the Electron build.** Migration is Phase 6 of the plan. Until then, `npm test` and `npm run test:e2e` still drive the old build paths.
 
-14. **`tauri-spike/` directory layout.** Plan called for collapsing this into a top-level `src-tauri/` once the spike graduates. Keep deferring until the spike is functionally complete; renaming on every rebuild is churn.
+14. *(directory collapse: SHIPPED — `tauri-spike/src-tauri/` graduated to top-level `src-tauri/`; renderer output now lands in `dist-tauri/`; root scripts use `tauri:dev` / `tauri:build` directly via the root-installed `@tauri-apps/cli`.)*
 
 ## Quick reference
 
-- Live-reload dev loop: `cd tauri-spike && npm run tauri dev` (logs to /tmp/tauri-dev.log if backgrounded).
-- Build a release `.app`: `npm --prefix tauri-spike run tauri build -- --bundles app`.
-- Renderer build only: `npx vite build --config vite.tauri-renderer.config.ts`.
-- DB lives at `~/Library/Application Support/com.slaktforskning.tauri-spike/family.db`.
+- Live-reload dev loop: `npm run tauri:dev` (logs to /tmp/tauri-dev.log if backgrounded).
+- Build a release `.app`: `npm run tauri:build -- --bundles app`.
+- Renderer build only: `npx vite build --config vite.tauri-renderer.config.ts` (output: `dist-tauri/`).
+- DB lives at `~/Library/Application Support/com.slaktforskning.tauri-spike/family.db` (bundle identifier preserved across the directory rename so existing user data isn't orphaned).
 - MCP launcher: `node scripts/mcp-tauri.mjs prod|dev` (registered in `.mcp.json`).
