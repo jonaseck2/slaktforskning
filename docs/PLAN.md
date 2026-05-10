@@ -6,13 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-#### Chart Layout Alignment — Universal Spouse Rendering [branch: chart-layout-alignment]
-Shared utilities, spouse data in all tree types, spouse boxes in all layouts. Crashes on selection — needs debugging before merge.
-- Spec: `docs/plans/2026-04-13-chart-layout-alignment-design.md`
-- Plan: `docs/plans/2026-04-13-chart-layout-alignment.md` (on branch)
-
----
-
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
