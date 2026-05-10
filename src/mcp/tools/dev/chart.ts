@@ -1,29 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { runScript } from './ui';
 
-async function uiPost(uiBase: string, path: string, body: unknown): Promise<unknown> {
-  let res: Response;
-  try {
-    res = await fetch(`${uiBase}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new Error('App UI not reachable — make sure the Electron app is running (npm start).');
-  }
-  return res.json();
-}
-
-async function uiGet(uiBase: string, path: string): Promise<unknown> {
-  let res: Response;
-  try {
-    res = await fetch(`${uiBase}${path}`);
-  } catch {
-    throw new Error('App UI not reachable — make sure the Electron app is running (npm start).');
-  }
-  return res.json();
-}
+// Chart tools call into window.__chartBridge.* which the renderer populates
+// via the chart.onXxx polyfills (Tauri) or the chart:* IPC bridge (Electron).
+// Both write to the same global. The dev MCP only knows about the global.
 
 export function registerChartTools(server: McpServer, uiBase: string): void {
   server.tool(
@@ -31,7 +12,7 @@ export function registerChartTools(server: McpServer, uiBase: string): void {
     'List all persons visible in the currently displayed family tree chart.',
     {},
     async () => {
-      const result = await uiPost(uiBase, '/chart/persons', {});
+      const result = await runScript(uiBase, '(window.__chartBridge && window.__chartBridge.getVisiblePersons) ? window.__chartBridge.getVisiblePersons() : { error: "No chart is currently displayed" }');
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -44,7 +25,9 @@ export function registerChartTools(server: McpServer, uiBase: string): void {
       name: z.string().optional().describe('Person name to search and select'),
     },
     async ({ person_id, name }) => {
-      const result = await uiPost(uiBase, '/chart/select', { person_id, name });
+      const arg = JSON.stringify({ person_id, name });
+      const script = `(window.__chartBridge && window.__chartBridge.selectPerson) ? window.__chartBridge.selectPerson(${arg}) : { error: 'No chart is currently displayed' }`;
+      const result = await runScript(uiBase, script);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -56,21 +39,26 @@ export function registerChartTools(server: McpServer, uiBase: string): void {
       person_id: z.string().describe('Person ID to focus the chart on'),
     },
     async ({ person_id }) => {
-      const result = await uiPost(uiBase, '/chart/focus', { person_id });
+      const arg = JSON.stringify({ person_id });
+      const script = `(window.__chartBridge && window.__chartBridge.focusPerson) ? window.__chartBridge.focusPerson(${arg}) : { error: 'No chart is currently displayed' }`;
+      const result = await runScript(uiBase, script);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
 
   server.tool(
     'chart_get_layout',
-    'Get the full layout data for the currently displayed family tree chart (all boxes and connectors).',
+    'Get the full layout data for the currently displayed family tree chart (boxes + connectors).',
     {},
     async () => {
-      const result = await uiGet(uiBase, '/chart/layout');
+      const result = await runScript(uiBase, '(window.__chartBridge && window.__chartBridge.getLayout) ? window.__chartBridge.getLayout() : { error: "No chart is currently displayed" }');
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
 
+  // chart_screenshot_person stays element-cropped via /screenshot — that's
+  // the irreducible Rust capture surface. The selector is computed in the
+  // renderer so the eval roundtrip stays out of the screenshot path.
   server.tool(
     'chart_screenshot_person',
     'Capture a screenshot of a specific person\'s box in the family tree chart.',
@@ -78,13 +66,17 @@ export function registerChartTools(server: McpServer, uiBase: string): void {
       person_id: z.string().describe('Person ID to screenshot'),
     },
     async ({ person_id }) => {
-      const result = await uiPost(uiBase, '/chart/screenshot', { person_id }) as { data?: string; mimeType?: string; error?: string };
+      const sel = `[data-person-box-id="${person_id.replace(/"/g, '\\"')}"]`;
+      const res = await fetch(`${uiBase}/screenshot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selector: sel, padding: 8 }),
+      });
+      const result = await res.json() as { data?: string; mimeType?: string; error?: string };
       if (result.data) {
-        return {
-          content: [{ type: 'image' as const, data: result.data, mimeType: (result.mimeType ?? 'image/png') as 'image/png' }],
-        };
+        return { content: [{ type: 'image' as const, data: result.data, mimeType: 'image/png' }] };
       }
-      return { content: [{ type: 'text' as const, text: result.error ?? JSON.stringify(result) }] };
+      return { content: [{ type: 'text' as const, text: result.error ?? 'No screenshot returned' }] };
     }
   );
 }

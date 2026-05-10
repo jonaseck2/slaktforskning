@@ -1,19 +1,19 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ToolContext } from '../prod/types';
 import { queryOne } from '../../../api/db';
+import { runScript } from './ui';
 
 interface InspectToolContext extends ToolContext {
   getDbPath?: () => string;
 }
 
-async function uiGet(uiBase: string, path: string): Promise<unknown> {
-  let res: Response;
+/** Read the active app's DB path from the bridge's /db_path endpoint. */
+async function liveDbPath(uiBase: string): Promise<string | null> {
   try {
-    res = await fetch(`${uiBase}${path}`);
-  } catch {
-    return null;
-  }
-  return res.json();
+    const res = await fetch(`${uiBase}/db_path`);
+    const body = await res.json() as { path?: string | null };
+    return body.path ?? null;
+  } catch { return null; }
 }
 
 export function registerInspectTools(server: McpServer, ctx: InspectToolContext, uiBase: string): void {
@@ -50,14 +50,18 @@ export function registerInspectTools(server: McpServer, ctx: InspectToolContext,
     'Get status of the running Electron app: current route, window size, and database path.',
     {},
     async () => {
-      const result = await uiGet(uiBase, '/status') as { route?: string; windowWidth?: number; windowHeight?: number; dbPath?: string; error?: string } | null;
-      if (!result || (result as { error?: string }).error === 'No window available') {
+      // Pull route + window dimensions through /eval. dbPath comes from the
+      // bridge's /db_path endpoint (live; follows db.switchTo dialogs).
+      let result: { route?: string; windowWidth?: number; windowHeight?: number; error?: string } | null;
+      try {
+        result = await runScript(uiBase, '({ route: window.__vue_router ? window.__vue_router.currentRoute.value.fullPath : null, windowWidth: window.innerWidth, windowHeight: window.innerHeight })') as typeof result;
+      } catch {
+        result = null;
+      }
+      if (!result || result.error === 'No window available') {
         return { content: [{ type: 'text' as const, text: JSON.stringify({ running: false }, null, 2) }] };
       }
-      // Prefer the live dbPath from the running app (Tauri /status returns
-      // it, follows db.switchTo dialogs). Fall back to the MCP's own cache
-      // (set by switch_database tool calls), then the launch-time env var.
-      const dbPath = result.dbPath ?? getDbPath?.() ?? process.env.SLAKTFORSKNING_DB ?? null;
+      const dbPath = (await liveDbPath(uiBase)) ?? getDbPath?.() ?? process.env.SLAKTFORSKNING_DB ?? null;
       return {
         content: [{
           type: 'text' as const,
