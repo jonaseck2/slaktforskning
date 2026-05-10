@@ -1,6 +1,6 @@
 /**
  * Tests for Genney import warnings/skipped reporting.
- * Calls transformGenney() directly with minimal fixture data
+ * Calls await transformGenney() directly with minimal fixture data
  * to trigger each silent-data-loss condition.
  */
 
@@ -22,14 +22,14 @@ function emptyTables(): GenneyTables {
 }
 
 let db: Database;
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
 describe('Genney import reporting', () => {
   it('summary has warnings and skipped arrays', () => {
     const tables = emptyTables();
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     expect(Array.isArray(summary.warnings)).toBe(true);
     expect(Array.isArray(summary.skipped)).toBe(true);
     expect(summary.warnings).toHaveLength(0);
@@ -41,7 +41,7 @@ describe('Genney import reporting', () => {
     // Event with TYPE BIRT but no OWNER_EVENT and no EVENT.OWNER
     tables.EVENT = [{ RID: 'E1', TYPE: 'BIRT', DATE: null, DESCRIPTION: null, NOTE: null, CAUSE: null, ADDRESS: null, OWNER: null, PLACE: null }];
     // No OWNER_EVENT entries
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const entry = summary.skipped.find(s => /orphan/i.test(s.category) || /owner/i.test(s.category) || /event/i.test(s.category));
     expect(entry).toBeDefined();
     expect(entry!.count).toBeGreaterThan(0);
@@ -52,7 +52,7 @@ describe('Genney import reporting', () => {
     // Citation exists but has no CITATION_SOURCE link → no source_id → silently skipped
     tables.CITATION = [{ RID: 'C1', WHEREINTEXT: 'p.1', TEXT: null, NOTE: null, CERTAINTY: 2, DATE: null }];
     // No CITATION_SOURCE entries → sourceRid will be undefined
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const entry = summary.skipped.find(s => /orphan/i.test(s.category) || /citation/i.test(s.category));
     expect(entry).toBeDefined();
     expect(entry!.count).toBeGreaterThanOrEqual(1);
@@ -64,7 +64,7 @@ describe('Genney import reporting', () => {
     // EVENT with an unrecognised TYPE
     tables.EVENT = [{ RID: 'E1', TYPE: 'UNKNOWNTYPE', DATE: null, DESCRIPTION: null, NOTE: null, CAUSE: null, ADDRESS: null, OWNER: 'I1', PLACE: null }];
     tables.OWNER_EVENT = [{ OWNER: 'I1', EVENT: 'E1', COUPLEFAMILY: null }];
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const warning = summary.warnings.find(w => /UNKNOWNTYPE/i.test(w));
     expect(warning).toBeDefined();
   });
@@ -77,7 +77,7 @@ describe('Genney import reporting', () => {
     ];
     // COUPLE_FAMILY with FATHER present but FATHERLINK is null → should be skipped
     tables.COUPLE_FAMILY = [{ PERSON: 'I2', FATHER: 'I1', MOTHER: null, FATHERLINK: null, MOTHERLINK: null }];
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const entry = summary.skipped.find(s => /parent/i.test(s.category) || /link/i.test(s.category) || /couple/i.test(s.category));
     expect(entry).toBeDefined();
     expect(entry!.count).toBeGreaterThan(0);
@@ -90,7 +90,7 @@ describe('Genney import reporting', () => {
       { RID: 1, NAME: 'Parish A', PARENT: null, LATITUD: null, LONGITUD: null },
       { RID: 2, NAME: 'Town B', PARENT: null, LATITUD: null, LONGITUD: null },
     ];
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const entry = summary.skipped.find(s => /place/i.test(s.category) || /unreferenced/i.test(s.category));
     expect(entry).toBeDefined();
     expect(entry!.count).toBe(2);
@@ -102,7 +102,7 @@ describe('Genney import reporting', () => {
       { RID: 'S1', TITLE: 'Source with note', NOTE: 'Important note content' },
       { RID: 'S2', TITLE: 'Source without note', NOTE: null },
     ];
-    const summary = transformGenney(db, tables);
+    const summary = await transformGenney(db, tables);
     const warning = summary.warnings.find(w => /note/i.test(w) || /source/i.test(w));
     expect(warning).toBeDefined();
     expect(warning).toMatch(/1 source/);
@@ -134,10 +134,10 @@ const GENNEY_GED = `
 0 TRLR
 `.trim();
 
-describe('Genney GEDCOM profile — ImportReport field coverage', () => {
-  it('returns ImportReport with correct counts via importGedcom profile=genney', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
+describe('Genney GEDCOM profile — ImportReport field coverage', async () => {
+  it('returns ImportReport with correct counts via importGedcom profile=genney', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
     expect(report.persons).toBe(2);
     expect(report.families).toBe(1);
     expect(report.sources).toBe(1);
@@ -146,9 +146,9 @@ describe('Genney GEDCOM profile — ImportReport field coverage', () => {
     expect(Array.isArray(report.unmappedData)).toBe(true);
   });
 
-  it('creates hierarchical place chain via Genney profile', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
+  it('creates hierarchical place chain via Genney profile', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(GENNEY_GED), { profile: 'genney' });
     const stmt = db.prepare('SELECT name FROM places');
     const places = stmt.all([]) as { name: string }[];
     (stmt as unknown as { finalize(): void }).finalize();

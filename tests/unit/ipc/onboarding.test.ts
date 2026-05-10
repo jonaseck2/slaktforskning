@@ -9,23 +9,23 @@ import {
   handleOnboardingReset,
 } from '../../../src/main/ipc/onboarding';
 
-beforeEach(() => {
+beforeEach(async () => {
   if (fs.existsSync('/tmp/sf-test-onboarding-ipc')) {
     fs.rmSync('/tmp/sf-test-onboarding-ipc', { recursive: true });
   }
 });
 
-describe('onboarding IPC handlers', () => {
-  it('getSeen returns {} on empty', () => {
+describe('onboarding IPC handlers', async () => {
+  it('getSeen returns {} on empty', async () => {
     expect(handleOnboardingGetSeen()).toEqual({});
   });
 
-  it('markSeen persists a key, getSeen returns it', () => {
+  it('markSeen persists a key, getSeen returns it', async () => {
     handleOnboardingMarkSeen({ key: 'coach.hourglass.focus' });
     expect(handleOnboardingGetSeen()).toEqual({ 'coach.hourglass.focus': true });
   });
 
-  it('reset clears all keys', () => {
+  it('reset clears all keys', async () => {
     handleOnboardingMarkSeen({ key: 'a' });
     handleOnboardingMarkSeen({ key: 'b' });
     handleOnboardingReset();

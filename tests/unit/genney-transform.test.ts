@@ -3,7 +3,7 @@ import { transformGenney, remapGenneyMediaPath, type GenneyTables } from '../../
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
-beforeEach(() => { db = createTestDb(); });
+beforeEach(async () => { db = await createTestDb(); });
 
 function emptyTables(): GenneyTables {
   return {
@@ -41,7 +41,7 @@ function buildEventCitationFixture(): GenneyTables {
 
 describe('transformGenney — person citations', () => {
   it('converts a person-owned citation to a MENTION event + event citation', () => {
-    const summary = transformGenney(db, buildPersonCitationFixture());
+    const summary = await transformGenney(db, buildPersonCitationFixture());
 
     // One MENTION event created
     const events = db.all('SELECT * FROM events WHERE event_type = ?', ['mention']) as Array<{ id: string }>;
@@ -69,7 +69,7 @@ describe('transformGenney — person citations', () => {
   });
 
   it('leaves event-owned citations as event citations (no MENTION created)', () => {
-    const summary = transformGenney(db, buildEventCitationFixture());
+    const summary = await transformGenney(db, buildEventCitationFixture());
 
     const mentions = db.all('SELECT * FROM events WHERE event_type = ?', ['mention']) as unknown[];
     expect(mentions).toHaveLength(0);

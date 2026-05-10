@@ -11,8 +11,8 @@ import { createCaptureServer, callTool, makeCtx } from './helpers/mcpHarness';
 let db: ReturnType<typeof createTestDb>;
 let tools: ReturnType<typeof createCaptureServer>['tools'];
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
   const cap = createCaptureServer();
   registerPlaceTools(cap.server, makeCtx(db));
   tools = cap.tools;
@@ -20,8 +20,8 @@ beforeEach(() => {
 
 // ── add_place ──────────────────────────────────────────────────────────────
 
-describe('add_place', () => {
-  it('registers the tool', () => {
+describe('add_place', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('add_place')).toBe(true);
   });
 
@@ -160,13 +160,13 @@ describe('add_place', () => {
 
 // ── search_places ──────────────────────────────────────────────────────────
 
-describe('search_places', () => {
-  it('registers the tool', () => {
+describe('search_places', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('search_places')).toBe(true);
   });
 
   it('returns empty array when no places match the query', async () => {
-    createPlace(db, { name: 'Linköping' });
+    await createPlace(db, { name: 'Linköping' });
 
     const result = await callTool<any[]>(tools, 'search_places', { query: 'Gothenburg' });
 
@@ -175,9 +175,9 @@ describe('search_places', () => {
   });
 
   it('returns matching places for a substring query', async () => {
-    createPlace(db, { name: 'Fröderyd' });
-    createPlace(db, { name: 'Frödinge' });
-    createPlace(db, { name: 'Linköping' });
+    await createPlace(db, { name: 'Fröderyd' });
+    await createPlace(db, { name: 'Frödinge' });
+    await createPlace(db, { name: 'Linköping' });
 
     const result = await callTool<any[]>(tools, 'search_places', { query: 'Fröd' });
 
@@ -189,8 +189,8 @@ describe('search_places', () => {
   });
 
   it('returns parent_name field for each result', async () => {
-    const parent = createPlace(db, { name: 'Kronobergs län', place_type: 'province' });
-    createPlace(db, { name: 'Kärda', place_type: 'parish', parent_place_id: parent.id });
+    const parent = await createPlace(db, { name: 'Kronobergs län', place_type: 'province' });
+    await createPlace(db, { name: 'Kärda', place_type: 'parish', parent_place_id: parent.id });
 
     const result = await callTool<Array<{ name: string; parent_name: string | null }>>(
       tools,
@@ -204,9 +204,9 @@ describe('search_places', () => {
   });
 
   it('returns up to 3 places when querying a common substring', async () => {
-    createPlace(db, { name: 'Söderby' });
-    createPlace(db, { name: 'Söderköping' });
-    createPlace(db, { name: 'Södertälje' });
+    await createPlace(db, { name: 'Söderby' });
+    await createPlace(db, { name: 'Söderköping' });
+    await createPlace(db, { name: 'Södertälje' });
 
     const result = await callTool<any[]>(tools, 'search_places', { query: 'söder' });
 
@@ -216,8 +216,8 @@ describe('search_places', () => {
 
 // ── get_place_history ──────────────────────────────────────────────────────
 
-describe('get_place_history', () => {
-  it('registers the tool', () => {
+describe('get_place_history', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('get_place_history')).toBe(true);
   });
 
@@ -229,7 +229,7 @@ describe('get_place_history', () => {
   });
 
   it('returns place history with empty events for a place that has none', async () => {
-    const place = createPlace(db, { name: 'Öregrund' });
+    const place = await createPlace(db, { name: 'Öregrund' });
 
     const result = await callTool<{
       place_id: string;
@@ -246,14 +246,14 @@ describe('get_place_history', () => {
   });
 
   it('returns events at the place with participant names and roles', async () => {
-    const place = createPlace(db, { name: 'Domkyrkan' });
-    const person = createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Larsson' });
-    const event = createEvent(db, {
+    const place = await createPlace(db, { name: 'Domkyrkan' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Larsson' });
+    const event = await createEvent(db, {
       event_type: 'baptism',
       date_original: '1850-03-01',
       place_id: place.id,
     });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
     const result = await callTool<{
       place_id: string;
@@ -273,8 +273,8 @@ describe('get_place_history', () => {
   });
 
   it('walks the place hierarchy for place_path', async () => {
-    const province = createPlace(db, { name: 'Jönköpings län', place_type: 'province' });
-    const parish = createPlace(db, { name: 'Fröderyd', place_type: 'parish', parent_place_id: province.id });
+    const province = await createPlace(db, { name: 'Jönköpings län', place_type: 'province' });
+    const parish = await createPlace(db, { name: 'Fröderyd', place_type: 'parish', parent_place_id: province.id });
 
     const result = await callTool<{ place_path: string }>(
       tools,
@@ -290,8 +290,8 @@ describe('get_place_history', () => {
 
 // ── resolve_place ──────────────────────────────────────────────────────────
 
-describe('resolve_place', () => {
-  it('registers the tool', () => {
+describe('resolve_place', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('resolve_place')).toBe(true);
   });
 
@@ -303,7 +303,7 @@ describe('resolve_place', () => {
 
   it('PRIME DIRECTIVE: gazetteer-only match does NOT persist to the places table', async () => {
     // Enable the world-countries gazetteer so we get a real gazetteer hit
-    setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
+    await setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
 
     // Confirm places table is empty before the call
     const before = db.prepare('SELECT COUNT(*) AS c FROM places').get([]) as { c: number };
@@ -322,7 +322,7 @@ describe('resolve_place', () => {
   });
 
   it('returns a result object (not "No match found") when a gazetteer is enabled and the name matches', async () => {
-    setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
+    await setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
 
     const result = await callTool<any>(tools, 'resolve_place', { name: 'Sweden' });
 
@@ -334,7 +334,7 @@ describe('resolve_place', () => {
   });
 
   it('still returns "No match found" for a gibberish name even with gazetteers enabled', async () => {
-    setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
+    await setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['world-countries'] }));
 
     const result = await callTool<string>(tools, 'resolve_place', {
       name: 'Zxqwerty12345Nonexistent',
@@ -350,16 +350,16 @@ describe('resolve_place', () => {
 
 // ── list_place_children ────────────────────────────────────────────────────
 
-describe('list_place_children', () => {
-  it('registers the tool', () => {
+describe('list_place_children', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('list_place_children')).toBe(true);
   });
 
   it('returns root-level places when parent_place_id is null', async () => {
-    const root1 = createPlace(db, { name: 'Sverige', place_type: 'country' });
-    createPlace(db, { name: 'Norge', place_type: 'country' });
+    const root1 = await createPlace(db, { name: 'Sverige', place_type: 'country' });
+    await createPlace(db, { name: 'Norge', place_type: 'country' });
     // A child — should NOT appear in the root listing
-    createPlace(db, { name: 'Stockholms län', parent_place_id: root1.id });
+    await createPlace(db, { name: 'Stockholms län', parent_place_id: root1.id });
 
     const result = await callTool<any[]>(tools, 'list_place_children', {
       parent_place_id: null,
@@ -372,11 +372,11 @@ describe('list_place_children', () => {
   });
 
   it('returns direct children of a given parent', async () => {
-    const parent = createPlace(db, { name: 'Sverige', place_type: 'country' });
-    const child1 = createPlace(db, { name: 'Stockholms län', parent_place_id: parent.id });
-    const child2 = createPlace(db, { name: 'Gotlands län', parent_place_id: parent.id });
+    const parent = await createPlace(db, { name: 'Sverige', place_type: 'country' });
+    const child1 = await createPlace(db, { name: 'Stockholms län', parent_place_id: parent.id });
+    const child2 = await createPlace(db, { name: 'Gotlands län', parent_place_id: parent.id });
     // Grandchild — should NOT appear at this level
-    createPlace(db, { name: 'Nacka', parent_place_id: child1.id });
+    await createPlace(db, { name: 'Nacka', parent_place_id: child1.id });
 
     const result = await callTool<any[]>(tools, 'list_place_children', {
       parent_place_id: parent.id,
@@ -395,7 +395,7 @@ describe('list_place_children', () => {
   });
 
   it('returns empty array when the parent has no children', async () => {
-    const leaf = createPlace(db, { name: 'Kärda', place_type: 'parish' });
+    const leaf = await createPlace(db, { name: 'Kärda', place_type: 'parish' });
 
     const result = await callTool<any[]>(tools, 'list_place_children', {
       parent_place_id: leaf.id,
@@ -406,12 +406,12 @@ describe('list_place_children', () => {
   });
 
   it('includes hasChildren flag indicating whether a child has its own children', async () => {
-    const root = createPlace(db, { name: 'Sverige' });
-    const mid = createPlace(db, { name: 'Jönköpings län', parent_place_id: root.id });
+    const root = await createPlace(db, { name: 'Sverige' });
+    const mid = await createPlace(db, { name: 'Jönköpings län', parent_place_id: root.id });
     // Give `mid` a child so hasChildren = true
-    createPlace(db, { name: 'Fröderyd', parent_place_id: mid.id });
+    await createPlace(db, { name: 'Fröderyd', parent_place_id: mid.id });
     // A leaf child with no grandchildren
-    createPlace(db, { name: 'Vetlanda', parent_place_id: root.id });
+    await createPlace(db, { name: 'Vetlanda', parent_place_id: root.id });
 
     const result = await callTool<Array<{ name: string; hasChildren: number | boolean }>>(
       tools,
@@ -432,8 +432,8 @@ describe('list_place_children', () => {
 
 // ── get_place_ancestors ────────────────────────────────────────────────────
 
-describe('get_place_ancestors', () => {
-  it('registers the tool', () => {
+describe('get_place_ancestors', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('get_place_ancestors')).toBe(true);
   });
 
@@ -446,7 +446,7 @@ describe('get_place_ancestors', () => {
   });
 
   it('returns a single-element array for a root-level place', async () => {
-    const root = createPlace(db, { name: 'Sverige', place_type: 'country' });
+    const root = await createPlace(db, { name: 'Sverige', place_type: 'country' });
 
     const result = await callTool<any[]>(tools, 'get_place_ancestors', {
       place_id: root.id,
@@ -458,9 +458,9 @@ describe('get_place_ancestors', () => {
   });
 
   it('returns the full ancestor chain in root-to-leaf order', async () => {
-    const country = createPlace(db, { name: 'Sverige', place_type: 'country' });
-    const province = createPlace(db, { name: 'Kronobergs län', place_type: 'province', parent_place_id: country.id });
-    const parish = createPlace(db, { name: 'Kärda', place_type: 'parish', parent_place_id: province.id });
+    const country = await createPlace(db, { name: 'Sverige', place_type: 'country' });
+    const province = await createPlace(db, { name: 'Kronobergs län', place_type: 'province', parent_place_id: country.id });
+    const parish = await createPlace(db, { name: 'Kärda', place_type: 'parish', parent_place_id: province.id });
 
     const result = await callTool<Array<{ id: string; name: string }>>(
       tools,
@@ -479,8 +479,8 @@ describe('get_place_ancestors', () => {
   });
 
   it('handles a two-level chain correctly', async () => {
-    const parent = createPlace(db, { name: 'Jönköpings län', place_type: 'province' });
-    const child = createPlace(db, { name: 'Fröderyd', place_type: 'parish', parent_place_id: parent.id });
+    const parent = await createPlace(db, { name: 'Jönköpings län', place_type: 'province' });
+    const child = await createPlace(db, { name: 'Fröderyd', place_type: 'parish', parent_place_id: parent.id });
 
     const result = await callTool<Array<{ id: string }>>(
       tools,
@@ -496,13 +496,13 @@ describe('get_place_ancestors', () => {
 
 // ── update_place ───────────────────────────────────────────────────────────
 
-describe('update_place', () => {
-  it('registers the tool', () => {
+describe('update_place', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('update_place')).toBe(true);
   });
 
   it('rejects a comma-separated name on update', async () => {
-    const place = createPlace(db, { name: 'Chennai' });
+    const place = await createPlace(db, { name: 'Chennai' });
     const tool = tools.get('update_place')!;
     await expect(
       tool.handler({ id: place.id, name: 'Chennai, India, World' }),
@@ -514,7 +514,7 @@ describe('update_place', () => {
   });
 
   it('accepts a single-component name on update', async () => {
-    const place = createPlace(db, { name: 'Madras' });
+    const place = await createPlace(db, { name: 'Madras' });
     await callTool(tools, 'update_place', { id: place.id, name: 'Chennai' });
 
     const row = db.prepare('SELECT * FROM places WHERE id = ?').get([place.id]) as any;
@@ -522,7 +522,7 @@ describe('update_place', () => {
   });
 
   it('updates other fields without touching name (no comma check needed)', async () => {
-    const place = createPlace(db, { name: 'Chennai' });
+    const place = await createPlace(db, { name: 'Chennai' });
     await callTool(tools, 'update_place', { id: place.id, place_type: 'city' });
 
     const row = db.prepare('SELECT * FROM places WHERE id = ?').get([place.id]) as any;

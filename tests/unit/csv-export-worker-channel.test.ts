@@ -21,15 +21,15 @@ describe('csv:_exportRun worker channel — registration', () => {
   });
 });
 
-describe('csv:_exportRun handler — end-to-end against in-memory DB', () => {
+describe('csv:_exportRun handler — end-to-end against in-memory DB', async () => {
   let db: ReturnType<typeof createTestDb>;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
   });
 
   it('returns CSV text for persons entityType with seeded row', async () => {
-    createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindström' });
+    await createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindström' });
 
     const ch = channelRegistry['csv:_exportRun'];
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
@@ -45,7 +45,7 @@ describe('csv:_exportRun handler — end-to-end against in-memory DB', () => {
   });
 
   it('honours utf-8-bom encoding option', async () => {
-    createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Test' });
+    await createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Test' });
     const ch = channelRegistry['csv:_exportRun'];
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
 

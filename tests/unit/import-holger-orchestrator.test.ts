@@ -28,16 +28,16 @@ const MIN_GED_TWO_PERSONS = `0 HEAD
 let tmpDir: string;
 let db: ReturnType<typeof createTestDb>;
 
-beforeEach(() => {
+beforeEach(async () => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holger-test-'));
-  db = createTestDb();
+  db = await createTestDb();
 });
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-describe('importFromHolger — .ged direct path', () => {
+describe('importFromHolger — .ged direct path', async () => {
   it('imports a .ged file directly and returns gedPath + report', async () => {
     const gedPath = path.join(tmpDir, 'tree.ged');
     fs.writeFileSync(gedPath, MIN_GED);
@@ -66,7 +66,7 @@ describe('importFromHolger — .ged direct path', () => {
   });
 });
 
-describe('importFromHolger — .zip path', () => {
+describe('importFromHolger — .zip path', async () => {
   it('extracts and imports from a .zip, using the largest .ged inside', async () => {
     const small = new TextEncoder().encode(MIN_GED);
     const big = new TextEncoder().encode(MIN_GED_TWO_PERSONS);
@@ -94,7 +94,7 @@ describe('importFromHolger — .zip path', () => {
   });
 });
 
-describe('importFromHolger — folder scan', () => {
+describe('importFromHolger — folder scan', async () => {
   it('walks a folder recursively to find a .ged file', async () => {
     const sub = path.join(tmpDir, 'a', 'b');
     fs.mkdirSync(sub, { recursive: true });
@@ -136,7 +136,7 @@ describe('importFromHolger — folder scan', () => {
   });
 });
 
-describe('importFromHolger — onProgress callback', () => {
+describe('importFromHolger — onProgress callback', async () => {
   it('invokes onProgress at least once during .ged import', async () => {
     const gedPath = path.join(tmpDir, 'tree.ged');
     fs.writeFileSync(gedPath, MIN_GED);
@@ -193,7 +193,7 @@ describe('importFromHolger — onProgress callback', () => {
   });
 });
 
-describe('importFromHolger — mediaDir remapping', () => {
+describe('importFromHolger — mediaDir remapping', async () => {
   it('remaps Windows-style FILE paths to mediaDir when mediaDir is provided', async () => {
     const gedWithMedia = `0 HEAD
 1 GEDC
@@ -243,7 +243,7 @@ describe('importFromHolger — mediaDir remapping', () => {
   });
 });
 
-describe('importFromHolger — unsupported file type', () => {
+describe('importFromHolger — unsupported file type', async () => {
   it('throws for an unsupported file extension', async () => {
     const badPath = path.join(tmpDir, 'tree.xml');
     fs.writeFileSync(badPath, '<gedcom/>');

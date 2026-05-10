@@ -20,7 +20,7 @@ const mockApi = {
   db: { getSetting: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   // FanChartReport calls fetchPedigreeTree which throws if persons.get returns null.
   // Return a minimal person for any id so the fan chart renders (or silently has no data).
@@ -41,7 +41,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('YourAncestorsReport', () => {
+describe('YourAncestorsReport', async () => {
   it('renders cover with root person name when tree and summary are available', async () => {
     const rootNode = {
       person: { id: 'p1', sex: 'F', living: false, notes: null },

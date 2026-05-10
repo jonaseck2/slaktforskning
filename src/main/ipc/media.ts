@@ -123,15 +123,15 @@ export function registerMediaHandlers(
 
     const fileRef = path.join(mediaFolder, path.basename(destPath));
     const ext = path.extname(destPath).slice(1).toLowerCase();
-    const db = getDb();
-    const item = media.createMedia(db, {
+    const db = await getDb();
+    const item = await media.createMedia(db, {
       file_ref: fileRef,
       title: path.basename(destPath, path.extname(destPath)),
       format: ext || null,
     });
 
     if (opts?.entityType && opts?.entityId) {
-      media.addMediaLink(db, {
+      await media.addMediaLink(db, {
         media_id: item.id,
         entity_type: opts.entityType as Parameters<typeof media.addMediaLink>[1]['entity_type'],
         entity_id: opts.entityId,
@@ -168,8 +168,8 @@ export function registerMediaHandlers(
 
     const fileRef = path.join(mediaFolder, path.basename(destPath));
     const ext = path.extname(destPath).slice(1).toLowerCase();
-    const db = getDb();
-    const item = media.createMedia(db, {
+    const db = await getDb();
+    const item = await media.createMedia(db, {
       file_ref: fileRef,
       title: opts?.suggestedTitle?.trim() || path.basename(destPath, path.extname(destPath)),
       format: ext || null,
@@ -179,7 +179,7 @@ export function registerMediaHandlers(
   });
 
   wrapHandler('media:openFile', async (id) => {
-    const item = media.getMedia(getDb(), id as string);
+    const item = await media.getMedia(await getDb(), id as string);
     if (!item || !item.file_ref) return { success: false, error: 'Media not found or no file_ref' };
     const dbDir = path.dirname(getCurrentDatabasePath());
     const absPath = path.resolve(dbDir, item.file_ref);

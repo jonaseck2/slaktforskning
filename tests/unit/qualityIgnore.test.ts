@@ -2,18 +2,18 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ignoreKey, isIgnored, toggleIgnore, resetIgnored, ignoredKeys } from '../../src/renderer/utils/qualityIgnore';
 import type { IgnorableIssue } from '../../src/renderer/utils/qualityIgnore';
 
-describe('qualityIgnore', () => {
-  beforeEach(() => {
+describe('qualityIgnore', async () => {
+  beforeEach(async () => {
     localStorage.clear();
     ignoredKeys.value.clear();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     localStorage.clear();
   });
 
-  describe('ignoreKey', () => {
-    it('generates a key from issue code and all IDs', () => {
+  describe('ignoreKey', async () => {
+    it('generates a key from issue code and all IDs', async () => {
       const issue: IgnorableIssue = {
         code: 'living_death_date',
         personIds: ['p1', 'p2'],
@@ -22,7 +22,7 @@ describe('qualityIgnore', () => {
       expect(key).toBe('living_death_date:p1,p2');
     });
 
-    it('sorts all IDs together regardless of source', () => {
+    it('sorts all IDs together regardless of source', async () => {
       const issue: IgnorableIssue = {
         code: 'place_coord_missing',
         personIds: ['p2', 'p1'],
@@ -33,7 +33,7 @@ describe('qualityIgnore', () => {
       expect(key).toBe('place_coord_missing:p1,p2,pl1,pl3');
     });
 
-    it('includes optional mediaIds when present', () => {
+    it('includes optional mediaIds when present', async () => {
       const issue: IgnorableIssue = {
         code: 'media_check',
         personIds: ['p1'],
@@ -43,7 +43,7 @@ describe('qualityIgnore', () => {
       expect(key).toBe('media_check:m1,m2,p1');
     });
 
-    it('includes optional sourceIds when present', () => {
+    it('includes optional sourceIds when present', async () => {
       const issue: IgnorableIssue = {
         code: 'source_check',
         personIds: ['p1'],
@@ -53,7 +53,7 @@ describe('qualityIgnore', () => {
       expect(key).toBe('source_check:p1,s1,s2');
     });
 
-    it('combines all optional ID types and sorts them all together', () => {
+    it('combines all optional ID types and sorts them all together', async () => {
       const issue: IgnorableIssue = {
         code: 'complex_check',
         personIds: ['p2', 'p1'],
@@ -66,7 +66,7 @@ describe('qualityIgnore', () => {
       expect(key).toBe('complex_check:m1,m2,p1,p2,pl1,s1');
     });
 
-    it('preserves code exactly', () => {
+    it('preserves code exactly', async () => {
       const issue: IgnorableIssue = {
         code: 'CustomCode_123',
         personIds: ['p1'],
@@ -76,8 +76,8 @@ describe('qualityIgnore', () => {
     });
   });
 
-  describe('isIgnored', () => {
-    it('returns false when issue is not in ignored set', () => {
+  describe('isIgnored', async () => {
+    it('returns false when issue is not in ignored set', async () => {
       const issue: IgnorableIssue = {
         code: 'test_code',
         personIds: ['p1'],
@@ -85,7 +85,7 @@ describe('qualityIgnore', () => {
       expect(isIgnored(issue)).toBe(false);
     });
 
-    it('returns true when issue key is in ignored set', () => {
+    it('returns true when issue key is in ignored set', async () => {
       const issue: IgnorableIssue = {
         code: 'test_code',
         personIds: ['p1'],
@@ -94,7 +94,7 @@ describe('qualityIgnore', () => {
       expect(isIgnored(issue)).toBe(true);
     });
 
-    it('checks using the generated key consistently', () => {
+    it('checks using the generated key consistently', async () => {
       const issue: IgnorableIssue = {
         code: 'code',
         personIds: ['p2', 'p1'], // Unsorted
@@ -107,8 +107,8 @@ describe('qualityIgnore', () => {
     });
   });
 
-  describe('toggleIgnore', () => {
-    it('adds issue key to ignored set when not present', () => {
+  describe('toggleIgnore', async () => {
+    it('adds issue key to ignored set when not present', async () => {
       const issue: IgnorableIssue = {
         code: 'test',
         personIds: ['p1'],
@@ -120,7 +120,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.has(key)).toBe(true);
     });
 
-    it('removes issue key from ignored set when already present', () => {
+    it('removes issue key from ignored set when already present', async () => {
       const issue: IgnorableIssue = {
         code: 'test',
         personIds: ['p1'],
@@ -133,7 +133,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.has(key)).toBe(false);
     });
 
-    it('persists toggled state to localStorage', () => {
+    it('persists toggled state to localStorage', async () => {
       const issue: IgnorableIssue = {
         code: 'persist_test',
         personIds: ['p1'],
@@ -145,7 +145,7 @@ describe('qualityIgnore', () => {
       expect(stored).toContain(key);
     });
 
-    it('updates localStorage when toggling on and off', () => {
+    it('updates localStorage when toggling on and off', async () => {
       const issue: IgnorableIssue = {
         code: 'toggle_test',
         personIds: ['p1'],
@@ -163,7 +163,7 @@ describe('qualityIgnore', () => {
       expect(stored).not.toContain(key);
     });
 
-    it('handles multiple keys independently', () => {
+    it('handles multiple keys independently', async () => {
       const issue1: IgnorableIssue = {
         code: 'code1',
         personIds: ['p1'],
@@ -185,7 +185,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.has(key2)).toBe(true);
     });
 
-    it('creates new Set on each toggle to maintain reactivity', () => {
+    it('creates new Set on each toggle to maintain reactivity', async () => {
       const issue: IgnorableIssue = {
         code: 'reactivity',
         personIds: ['p1'],
@@ -198,8 +198,8 @@ describe('qualityIgnore', () => {
     });
   });
 
-  describe('resetIgnored', () => {
-    it('reloads ignored keys from localStorage', () => {
+  describe('resetIgnored', async () => {
+    it('reloads ignored keys from localStorage', async () => {
       const key1 = 'code1:p1';
       const key2 = 'code2:p2';
       localStorage.setItem('quality:ignored', JSON.stringify([key1, key2]));
@@ -214,7 +214,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.size).toBe(2);
     });
 
-    it('resets to empty set when localStorage is empty', () => {
+    it('resets to empty set when localStorage is empty', async () => {
       ignoredKeys.value.add('something:p1');
       localStorage.removeItem('quality:ignored');
 
@@ -222,7 +222,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.size).toBe(0);
     });
 
-    it('replaces in-memory set with fresh data from localStorage', () => {
+    it('replaces in-memory set with fresh data from localStorage', async () => {
       const oldKey = 'old:p1';
       const newKey = 'new:p1';
       ignoredKeys.value.add(oldKey);
@@ -233,7 +233,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.has(newKey)).toBe(true);
     });
 
-    it('creates a new Set instance for reactivity', () => {
+    it('creates a new Set instance for reactivity', async () => {
       localStorage.setItem('quality:ignored', JSON.stringify(['key1']));
       const before = ignoredKeys.value;
       resetIgnored();
@@ -241,7 +241,7 @@ describe('qualityIgnore', () => {
       expect(before === after).toBe(false);
     });
 
-    it('handles invalid JSON gracefully by defaulting to empty', () => {
+    it('handles invalid JSON gracefully by defaulting to empty', async () => {
       localStorage.setItem('quality:ignored', 'not valid json');
       // Should not throw; defaults to []
       expect(() => {
@@ -250,8 +250,8 @@ describe('qualityIgnore', () => {
     });
   });
 
-  describe('integration: toggleIgnore → localStorage → resetIgnored', () => {
-    it('persists across toggle and reset cycles', () => {
+  describe('integration: toggleIgnore → localStorage → resetIgnored', async () => {
+    it('persists across toggle and reset cycles', async () => {
       const issue1: IgnorableIssue = {
         code: 'persistent',
         personIds: ['p1'],
@@ -277,7 +277,7 @@ describe('qualityIgnore', () => {
       expect(ignoredKeys.value.has(key2)).toBe(true);
     });
 
-    it('allows toggle after reset', () => {
+    it('allows toggle after reset', async () => {
       const issue: IgnorableIssue = {
         code: 'cycle',
         personIds: ['p1'],

@@ -32,9 +32,9 @@ const HEAVY_WORKER_CHANNELS = [
   'website:previewSnapshot',
 ];
 
-describe('main thread stays responsive during long-running operations', () => {
+describe('main thread stays responsive during long-running operations', async () => {
   for (const name of HEAVY_WORKER_CHANNELS) {
-    it(`${name} is registered as a worker channel`, () => {
+    it(`${name} is registered as a worker channel`, async () => {
       const ch = getChannel(name);
       expect(ch, `${name} must be registered`).toBeDefined();
       expect(ch!.thread, `${name} must run on the worker thread`).toBe('worker');

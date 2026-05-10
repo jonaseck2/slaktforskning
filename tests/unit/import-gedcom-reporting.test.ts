@@ -57,34 +57,34 @@ const ASSO_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import — ASSO reporting', () => {
-  it('reports dropped ASSO associations in unmappedData', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(ASSO_GED));
+describe('GEDCOM import — ASSO reporting', async () => {
+  it('reports dropped ASSO associations in unmappedData', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(ASSO_GED));
     const entry = report.unmappedData.find(u => u.category.includes('ASSO'));
     expect(entry).toBeTruthy();
     expect(entry!.count).toBe(1);
   });
 });
 
-describe('GEDCOM import — data integrity reporting', () => {
-  it('reports LDS ordinances in unmappedData with descriptive category', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(LDS_GED));
+describe('GEDCOM import — data integrity reporting', async () => {
+  it('reports LDS ordinances in unmappedData with descriptive category', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(LDS_GED));
     const entry = report.unmappedData.find(u => u.category.includes('LDS'));
     expect(entry).toBeTruthy();
     expect(entry!.count).toBeGreaterThan(0);
   });
 
-  it('reports TRAN translations in warnings', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(TRAN_GED));
+  it('reports TRAN translations in warnings', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(TRAN_GED));
     expect(report.warnings.some(w => w.includes('TRAN') || w.includes('translation'))).toBe(true);
   });
 
-  it('reports NO negative assertions in unmappedData', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(NO_GED));
+  it('reports NO negative assertions in unmappedData', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(NO_GED));
     const entry = report.unmappedData.find(u => u.category.includes('NO') || u.category.includes('negat'));
     expect(entry).toBeTruthy();
     expect(entry!.count).toBeGreaterThan(0);
@@ -93,7 +93,7 @@ describe('GEDCOM import — data integrity reporting', () => {
   // Plan 2026-05-04-new-person-dialog-hardening: nameless INDIs are preserved
   // (the source's reference graph may need them) but the user is disclosed via
   // a warning so the PERSON_NO_NAME quality check finds them.
-  it('preserves a NAME-less INDI as a nameless person and warns the user', () => {
+  it('preserves a NAME-less INDI as a nameless person and warns the user', async () => {
     const NAMELESS_GED = `
 0 HEAD
 1 GEDC
@@ -105,8 +105,8 @@ describe('GEDCOM import — data integrity reporting', () => {
 1 SEX M
 0 TRLR
 `.trim();
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(NAMELESS_GED));
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(NAMELESS_GED));
     expect(report.persons).toBe(2);
     // Both persons exist...
     const personRows = (db.prepare('SELECT id FROM persons').all([]) as Array<{ id: string }>);
@@ -121,27 +121,27 @@ describe('GEDCOM import — data integrity reporting', () => {
   });
 });
 
-describe('db_settings API', () => {
-  it('returns null for missing key', () => {
-    const db = createTestDb();
-    expect(getDbSetting(db, 'nonexistent')).toBeNull();
+describe('db_settings API', async () => {
+  it('returns null for missing key', async () => {
+    const db = await createTestDb();
+    expect(await getDbSetting(db, 'nonexistent')).toBeNull();
   });
-  it('stores and retrieves a value', () => {
-    const db = createTestDb();
-    setDbSetting(db, 'foo', 'bar');
-    expect(getDbSetting(db, 'foo')).toBe('bar');
+  it('stores and retrieves a value', async () => {
+    const db = await createTestDb();
+    await setDbSetting(db, 'foo', 'bar');
+    expect(await getDbSetting(db, 'foo')).toBe('bar');
   });
-  it('overwrites an existing value', () => {
-    const db = createTestDb();
-    setDbSetting(db, 'foo', 'first');
-    setDbSetting(db, 'foo', 'second');
-    expect(getDbSetting(db, 'foo')).toBe('second');
+  it('overwrites an existing value', async () => {
+    const db = await createTestDb();
+    await setDbSetting(db, 'foo', 'first');
+    await setDbSetting(db, 'foo', 'second');
+    expect(await getDbSetting(db, 'foo')).toBe('second');
   });
-  it('deletes a value', () => {
-    const db = createTestDb();
-    setDbSetting(db, 'foo', 'bar');
-    deleteDbSetting(db, 'foo');
-    expect(getDbSetting(db, 'foo')).toBeNull();
+  it('deletes a value', async () => {
+    const db = await createTestDb();
+    await setDbSetting(db, 'foo', 'bar');
+    await deleteDbSetting(db, 'foo');
+    expect(await getDbSetting(db, 'foo')).toBeNull();
   });
 });
 
@@ -162,25 +162,25 @@ const REPO_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - REPO records', () => {
-  it('imports REPO records as repositories', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(REPO_GED));
+describe('GEDCOM import - REPO records', async () => {
+  it('imports REPO records as repositories', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(REPO_GED));
     expect(report.repositories).toBe(1);
   });
 
-  it('links source to imported repository', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(REPO_GED));
+  it('links source to imported repository', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(REPO_GED));
     const stmt = db.prepare('SELECT r.name FROM repositories r JOIN source_repositories sr ON sr.repository_id = r.id JOIN sources s ON s.id = sr.source_id WHERE s.title = ?');
     const row = stmt.get(['Mantalslangder']) as { name: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
     expect(row?.name).toBe('Riksarkivet');
   });
 
-  it('does not report REPO records in unmappedData', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(REPO_GED));
+  it('does not report REPO records in unmappedData', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(REPO_GED));
     expect(report.unmappedData.find(u => u.category.includes('REPO'))).toBeUndefined();
   });
 });
@@ -203,25 +203,25 @@ const GRP_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - _GRP records (Genney)', () => {
-  it('imports _GRP records as groups', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(GRP_GED), { profile: 'genney' });
+describe('GEDCOM import - _GRP records (Genney)', async () => {
+  it('imports _GRP records as groups', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(GRP_GED), { profile: 'genney' });
     expect(report.groups).toBe(2);
   });
 
-  it('creates group memberships from 1 _GRP links on INDI', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(GRP_GED), { profile: 'genney' });
+  it('creates group memberships from 1 _GRP links on INDI', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(GRP_GED), { profile: 'genney' });
     const stmt = db.prepare(`SELECT COUNT(*) as n FROM group_links WHERE entity_type = 'person'`);
     const { n } = stmt.get([]) as { n: number };
     (stmt as unknown as { finalize(): void }).finalize();
     expect(n).toBe(3); // Lars in 2 groups, Karin in 1
   });
 
-  it('does not import _GRP records without genney profile', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(GRP_GED));
+  it('does not import _GRP records without genney profile', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(GRP_GED));
     expect(report.groups).toBe(0);
   });
 });
@@ -251,16 +251,16 @@ const TODO_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - _TODO records (Genney)', () => {
-  it('imports _TODO records as research tasks', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
+describe('GEDCOM import - _TODO records (Genney)', async () => {
+  it('imports _TODO records as research tasks', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
     expect(report.researchTasks).toBe(3);
   });
 
-  it('maps _STAT 0 to open and _STAT 1 to done', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
+  it('maps _STAT 0 to open and _STAT 1 to done', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
     const stmt = db.prepare('SELECT status FROM research_tasks WHERE task = ?');
     const openRow = stmt.get(['Mantalslangder']) as { status: string } | undefined;
     const doneRow = stmt.get(['Spara bakat']) as { status: string } | undefined;
@@ -269,18 +269,18 @@ describe('GEDCOM import - _TODO records (Genney)', () => {
     expect(doneRow?.status).toBe('done');
   });
 
-  it('links tasks to persons via _TARG', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
+  it('links tasks to persons via _TARG', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(TODO_GED), { profile: 'genney' });
     const stmt = db.prepare(`SELECT COUNT(*) as n FROM task_links WHERE entity_type = 'person'`);
     const { n } = stmt.get([]) as { n: number };
     (stmt as unknown as { finalize(): void }).finalize();
     expect(n).toBe(2);
   });
 
-  it('does not import _TODO records without genney profile', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(TODO_GED));
+  it('does not import _TODO records without genney profile', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(TODO_GED));
     expect(report.researchTasks).toBe(0);
   });
 });
@@ -310,11 +310,11 @@ const SUBM_AMBIGUOUS_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - SUBM to default_person_id', () => {
-  it('stores default_person_id when submitter name matches exactly one person', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_GED));
-    const defaultId = getDbSetting(db, 'default_person_id');
+describe('GEDCOM import - SUBM to default_person_id', async () => {
+  it('stores default_person_id when submitter name matches exactly one person', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_GED));
+    const defaultId = await getDbSetting(db, 'default_person_id');
     expect(defaultId).not.toBeNull();
     const stmt = db.prepare('SELECT given_name FROM person_names WHERE person_id = ?');
     const row = stmt.get([defaultId!]) as { given_name: string } | undefined;
@@ -322,19 +322,19 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
     expect(row?.given_name).toContain('Lars');
   });
 
-  it('does not store default_person_id when name matches multiple persons', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_AMBIGUOUS_GED));
-    expect(getDbSetting(db, 'default_person_id')).toBeNull();
+  it('does not store default_person_id when name matches multiple persons', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_AMBIGUOUS_GED));
+    expect(await getDbSetting(db, 'default_person_id')).toBeNull();
   });
 
-  it('does not report SUBM in unmappedData', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(SUBM_GED));
+  it('does not report SUBM in unmappedData', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(SUBM_GED));
     expect(report.unmappedData.find(u => u.category.includes('SUBM'))).toBeUndefined();
   });
 
-  it('matches given-name-only SUBM name to a single person', () => {
+  it('matches given-name-only SUBM name to a single person', async () => {
     const SUBM_GIVEN_ONLY = `
 0 HEAD
 0 @1@ SUBM
@@ -347,9 +347,9 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
 1 SEX F
 0 TRLR
 `.trim();
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_GIVEN_ONLY));
-    const defaultId = getDbSetting(db, 'default_person_id');
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_GIVEN_ONLY));
+    const defaultId = await getDbSetting(db, 'default_person_id');
     expect(defaultId).not.toBeNull();
     const stmt = db.prepare('SELECT given_name FROM person_names WHERE person_id = ?');
     const row = stmt.get([defaultId!]) as { given_name: string } | undefined;
@@ -357,7 +357,7 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
     expect(row?.given_name).toContain('Lars');
   });
 
-  it('does not match given-name-only SUBM when multiple persons share the name', () => {
+  it('does not match given-name-only SUBM when multiple persons share the name', async () => {
     const SUBM_GIVEN_AMBIG = `
 0 HEAD
 0 @1@ SUBM
@@ -368,9 +368,9 @@ describe('GEDCOM import - SUBM to default_person_id', () => {
 1 NAME Lars /Svensson/
 0 TRLR
 `.trim();
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_GIVEN_AMBIG));
-    expect(getDbSetting(db, 'default_person_id')).toBeNull();
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_GIVEN_AMBIG));
+    expect(await getDbSetting(db, 'default_person_id')).toBeNull();
   });
 });
 
@@ -395,32 +395,32 @@ const SUBM_FULL_CONTACT_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - SUBM contact info → researcher_* settings', () => {
-  it('populates researcher_name/address/phone/email from SUBM record', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
-    expect(getDbSetting(db, 'researcher_name')).toBe('Bengt Sareld');
-    expect(getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
-    expect(getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
-    expect(getDbSetting(db, 'researcher_email')).toBe('bengt@sareld.se');
+describe('GEDCOM import - SUBM contact info → researcher_* settings', async () => {
+  it('populates researcher_name/address/phone/email from SUBM record', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    expect(await getDbSetting(db, 'researcher_name')).toBe('Bengt Sareld');
+    expect(await getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
+    expect(await getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
+    expect(await getDbSetting(db, 'researcher_email')).toBe('bengt@sareld.se');
   });
 
-  it('does not overwrite researcher_* settings the user has already typed', () => {
-    const db = createTestDb();
-    setDbSetting(db, 'researcher_name', 'Pre-existing Name');
-    setDbSetting(db, 'researcher_email', 'mine@example.com');
-    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
-    expect(getDbSetting(db, 'researcher_name')).toBe('Pre-existing Name');
-    expect(getDbSetting(db, 'researcher_email')).toBe('mine@example.com');
+  it('does not overwrite researcher_* settings the user has already typed', async () => {
+    const db = await createTestDb();
+    await setDbSetting(db, 'researcher_name', 'Pre-existing Name');
+    await setDbSetting(db, 'researcher_email', 'mine@example.com');
+    await importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    expect(await getDbSetting(db, 'researcher_name')).toBe('Pre-existing Name');
+    expect(await getDbSetting(db, 'researcher_email')).toBe('mine@example.com');
     // Settings that were empty are still populated from SUBM.
-    expect(getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
-    expect(getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
+    expect(await getDbSetting(db, 'researcher_address')).toBe('Inneby kobbväg 10\n18495 Ljusterö\nSverige');
+    expect(await getDbSetting(db, 'researcher_phone')).toBe('0733-415330');
   });
 
-  it('still matches SUBM NAME against persons (tree subject) alongside contact import', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
-    const defaultId = getDbSetting(db, 'default_person_id');
+  it('still matches SUBM NAME against persons (tree subject) alongside contact import', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(SUBM_FULL_CONTACT_GED));
+    const defaultId = await getDbSetting(db, 'default_person_id');
     expect(defaultId).not.toBeNull();
     const stmt = db.prepare('SELECT given_name FROM person_names WHERE person_id = ?');
     const row = stmt.get([defaultId!]) as { given_name: string } | undefined;
@@ -428,22 +428,22 @@ describe('GEDCOM import - SUBM contact info → researcher_* settings', () => {
     expect(row?.given_name).toContain('Bengt');
   });
 
-  it('round-trips researcher_* settings through export → re-import', () => {
+  it('round-trips researcher_* settings through export → re-import', async () => {
     // Seed source DB with researcher info, export, parse + re-import into fresh DB.
-    const src = createTestDb();
-    setDbSetting(src, 'researcher_name', 'Jonas Ahnstedt');
-    setDbSetting(src, 'researcher_address', 'Storgatan 1\n123 45 Lund');
-    setDbSetting(src, 'researcher_phone', '+46 70 123 45 67');
-    setDbSetting(src, 'researcher_email', 'jonas@example.se');
-    const { ged } = exportGedcom(src);
+    const src = await createTestDb();
+    await setDbSetting(src, 'researcher_name', 'Jonas Ahnstedt');
+    await setDbSetting(src, 'researcher_address', 'Storgatan 1\n123 45 Lund');
+    await setDbSetting(src, 'researcher_phone', '+46 70 123 45 67');
+    await setDbSetting(src, 'researcher_email', 'jonas@example.se');
+    const { ged } = await exportGedcom(src);
 
-    const dst = createTestDb();
-    importGedcom(dst, parseGedcom(ged));
+    const dst = await createTestDb();
+    await importGedcom(dst, parseGedcom(ged));
 
-    expect(getDbSetting(dst, 'researcher_name')).toBe('Jonas Ahnstedt');
-    expect(getDbSetting(dst, 'researcher_address')).toBe('Storgatan 1\n123 45 Lund');
-    expect(getDbSetting(dst, 'researcher_phone')).toBe('+46 70 123 45 67');
-    expect(getDbSetting(dst, 'researcher_email')).toBe('jonas@example.se');
+    expect(await getDbSetting(dst, 'researcher_name')).toBe('Jonas Ahnstedt');
+    expect(await getDbSetting(dst, 'researcher_address')).toBe('Storgatan 1\n123 45 Lund');
+    expect(await getDbSetting(dst, 'researcher_phone')).toBe('+46 70 123 45 67');
+    expect(await getDbSetting(dst, 'researcher_email')).toBe('jonas@example.se');
   });
 });
 
@@ -460,23 +460,23 @@ const FALLBACK_DEFAULT_PERSON_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - default_person_id fallback to firstPersonId', () => {
-  it('persists default_person_id from firstPersonId when SUBM is missing (Holger profile)', () => {
+describe('GEDCOM import - default_person_id fallback to firstPersonId', async () => {
+  it('persists default_person_id from firstPersonId when SUBM is missing (Holger profile)', async () => {
     // Holger profile tracks firstPersonId as a fallback; verify it now flows
     // into db_settings.default_person_id (was previously only returned in
     // the report, so the chart was empty after the user navigated away).
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
     expect(report.defaultPersonId).toBeTruthy();
-    expect(getDbSetting(db, 'default_person_id')).toBe(report.defaultPersonId);
+    expect(await getDbSetting(db, 'default_person_id')).toBe(report.defaultPersonId);
   });
 
-  it('does not overwrite an existing default_person_id when re-importing', () => {
-    const db = createTestDb();
+  it('does not overwrite an existing default_person_id when re-importing', async () => {
+    const db = await createTestDb();
     // Pre-populate the setting (simulating a user importing into a populated DB).
-    setDbSetting(db, 'default_person_id', 'pre-existing-id');
-    importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
-    expect(getDbSetting(db, 'default_person_id')).toBe('pre-existing-id');
+    await setDbSetting(db, 'default_person_id', 'pre-existing-id');
+    await importGedcom(db, parseGedcom(FALLBACK_DEFAULT_PERSON_GED), { profile: 'holger' });
+    expect(await getDbSetting(db, 'default_person_id')).toBe('pre-existing-id');
   });
 });
 
@@ -492,10 +492,10 @@ const EVEN_TYPE_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM import - EVEN TYPE preservation', () => {
-  it('stores EVEN TYPE value in event notes (with marker for round-trip)', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(EVEN_TYPE_GED));
+describe('GEDCOM import - EVEN TYPE preservation', async () => {
+  it('stores EVEN TYPE value in event notes (with marker for round-trip)', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(EVEN_TYPE_GED));
     const stmt = db.prepare("SELECT notes FROM events WHERE event_type = 'other'");
     const row = stmt.get([]) as { notes: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
@@ -504,9 +504,9 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
     expect(row?.notes).toBe('TYPE: Efternamnsbyte');
   });
 
-  it('maps EVEN to event_type other', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(EVEN_TYPE_GED));
+  it('maps EVEN to event_type other', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(EVEN_TYPE_GED));
     const stmt = db.prepare("SELECT COUNT(*) as n FROM events WHERE event_type = 'other'");
     const { n } = stmt.get([]) as { n: number };
     (stmt as unknown as { finalize(): void }).finalize();
@@ -514,7 +514,7 @@ describe('GEDCOM import - EVEN TYPE preservation', () => {
   });
 });
 
-describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)', () => {
+describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)', async () => {
   // Closes silent-drop gaps surfaced by real-world testing — Heiner's torture
   // test had CREM/BARM/BASM, FTM Habsburg had 18 ANUL + 7 _SEPR + MARL events.
   const EVENT_GED = `
@@ -542,9 +542,9 @@ describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)'
 0 TRLR
 `.trim();
 
-  it('imports CREM, BARM, ANUL, MARL, _SEPR with the correct event_type values', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(EVENT_GED));
+  it('imports CREM, BARM, ANUL, MARL, _SEPR with the correct event_type values', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(EVENT_GED));
     const rows = db.prepare(
       'SELECT event_type FROM events ORDER BY event_type'
     ).all([]) as Array<{ event_type: string }>;
@@ -556,9 +556,9 @@ describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)'
     expect(types).toContain('separation');
   });
 
-  it('does not list these event tags in the report skipped list', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(EVENT_GED));
+  it('does not list these event tags in the report skipped list', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(EVENT_GED));
     const droppedEventTags = report.skipped.filter(s =>
       ['CREM', 'BARM', 'BASM', 'ANUL', 'MARL', '_SEPR'].includes(s.tag)
     );
@@ -566,10 +566,10 @@ describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)'
   });
 
   it('round-trips the new event types through GEDCOM export', async () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(EVENT_GED));
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(EVENT_GED));
     const { exportGedcom } = await import('../../src/gedcom/exporter');
-    const { ged } = exportGedcom(db);
+    const { ged } = await exportGedcom(db);
     expect(ged).toMatch(/^1 CREM$/m);
     expect(ged).toMatch(/^1 BARM$/m);
     expect(ged).toMatch(/^1 ANUL$/m);
@@ -578,7 +578,7 @@ describe('GEDCOM import - extended event types (CREM/BARM/BASM/ANUL/MARL/_SEPR)'
   });
 });
 
-describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
+describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', async () => {
   // Closes silent-drop gaps surfaced by real-world testing against
   // RootsMagic, Family Tree Maker, FamilyOrigins, and PAF exports.
   const IDS_GED = `
@@ -595,9 +595,9 @@ describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
 0 TRLR
 `.trim();
 
-  it('imports RIN, _UID, AFN, SSN, FSID into person_identifiers with the right types', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(IDS_GED));
+  it('imports RIN, _UID, AFN, SSN, FSID into person_identifiers with the right types', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(IDS_GED));
     const rows = db.prepare(
       'SELECT identifier_type, identifier_value FROM person_identifiers ORDER BY identifier_type'
     ).all([]) as Array<{ identifier_type: string; identifier_value: string }>;
@@ -609,9 +609,9 @@ describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
     expect(byType.familysearch).toBe('L1XK-2YZ');
   });
 
-  it('does not list these identifier tags in the report skipped list', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(IDS_GED));
+  it('does not list these identifier tags in the report skipped list', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(IDS_GED));
     const droppedIdentifierTags = report.skipped.filter(s =>
       ['RIN', '_UID', 'AFN', 'SSN', 'FSID'].includes(s.tag)
     );
@@ -619,10 +619,10 @@ describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
   });
 
   it('round-trips _UID, AFN, SSN through GEDCOM export', async () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(IDS_GED));
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(IDS_GED));
     const { exportGedcom } = await import('../../src/gedcom/exporter');
-    const { ged } = exportGedcom(db);
+    const { ged } = await exportGedcom(db);
     expect(ged).toMatch(/^1 _UID 8C8B5A7F1234567890ABCDEF12345678$/m);
     expect(ged).toMatch(/^1 AFN ABCD-EFG$/m);
     expect(ged).toMatch(/^1 SSN 123-45-6789$/m);
@@ -630,7 +630,7 @@ describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', () => {
   });
 });
 
-describe('GEDCOM import - SEX value normalization', () => {
+describe('GEDCOM import - SEX value normalization', async () => {
   // Real-world files from FamilySearch GEDCOM 7.0 reference, webtreeprint,
   // and others ship sex values our schema's CHECK (M/F/U) rejects:
   //   - GEDCOM 7.0 introduces X (intersex/non-binary) and N (no entry)
@@ -641,28 +641,28 @@ describe('GEDCOM import - SEX value normalization', () => {
     return `0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Test /Person/\n${sexLine}\n0 TRLR`;
   }
 
-  it('does not crash on GEDCOM 7.0 SEX X (intersex/non-binary)', () => {
-    const db = createTestDb();
-    expect(() => importGedcom(db, parseGedcom(buildGed('1 SEX X')))).not.toThrow();
+  it('does not crash on GEDCOM 7.0 SEX X (intersex/non-binary)', async () => {
+    const db = await createTestDb();
+    expect(() => await importGedcom(db, parseGedcom(buildGed('1 SEX X')))).not.toThrow();
     const row = (db.prepare('SELECT sex FROM persons').get([]) as { sex: string } | undefined);
     expect(row?.sex).toBe('U');
   });
 
-  it('normalizes lowercase sex values to uppercase', () => {
-    const db = createTestDb();
-    importGedcom(db, parseGedcom(buildGed('1 SEX m')));
+  it('normalizes lowercase sex values to uppercase', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(buildGed('1 SEX m')));
     expect((db.prepare('SELECT sex FROM persons').get([]) as { sex: string }).sex).toBe('M');
   });
 
-  it('treats bare "1 SEX" (empty value) as Unknown', () => {
-    const db = createTestDb();
-    expect(() => importGedcom(db, parseGedcom(buildGed('1 SEX')))).not.toThrow();
+  it('treats bare "1 SEX" (empty value) as Unknown', async () => {
+    const db = await createTestDb();
+    expect(() => await importGedcom(db, parseGedcom(buildGed('1 SEX')))).not.toThrow();
     expect((db.prepare('SELECT sex FROM persons').get([]) as { sex: string }).sex).toBe('U');
   });
 
-  it('discloses unsupported sex values in the report skipped list', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(buildGed('1 SEX X')));
+  it('discloses unsupported sex values in the report skipped list', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(buildGed('1 SEX X')));
     expect(report.skipped.find(s => s.tag === 'SEX=X')?.count).toBe(1);
   });
 });
@@ -702,10 +702,10 @@ const FULL_GED = `
 0 TRLR
 `.trim();
 
-describe('GEDCOM 5.5.1 import — full ImportReport field coverage', () => {
-  it('reports correct counts for all ImportReport fields', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(FULL_GED));
+describe('GEDCOM 5.5.1 import — full ImportReport field coverage', async () => {
+  it('reports correct counts for all ImportReport fields', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(FULL_GED));
     expect(report.persons).toBe(3);
     expect(report.families).toBe(1);
     expect(report.sources).toBe(2);
@@ -717,18 +717,18 @@ describe('GEDCOM 5.5.1 import — full ImportReport field coverage', () => {
     expect(report.unmappedData).toHaveLength(0);
   });
 
-  it('report.events contains birth, death, marriage counts', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(FULL_GED));
+  it('report.events contains birth, death, marriage counts', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(FULL_GED));
     expect(typeof report.events).toBe('object');
     expect(report.events['birth']).toBeGreaterThanOrEqual(1);
     expect(report.events['death']).toBeGreaterThanOrEqual(1);
     expect(report.events['marriage']).toBeGreaterThanOrEqual(1);
   });
 
-  it('report.version reflects the GEDCOM version header', () => {
-    const db = createTestDb();
-    const report = importGedcom(db, parseGedcom(FULL_GED));
+  it('report.version reflects the GEDCOM version header', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(FULL_GED));
     // GedcomVersion is a string type: '5.5.1' | '5.5.5' | '7.0' | 'unknown'
     expect(report.version).toBe('5.5.1');
   });

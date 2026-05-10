@@ -25,7 +25,7 @@ export function registerInspectTools(server: McpServer, ctx: InspectToolContext,
     {},
     async () => {
       const db = getDb();
-      const row = queryOne<{
+      const row = await queryOne<{
         persons: number;
         relationships: number;
         events: number;

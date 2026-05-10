@@ -14,7 +14,7 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
       person_id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const result = reportData.getResearchGaps(getDb(), args.person_id);
+    const result = await reportData.getResearchGaps(getDb(), args.person_id);
     return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Person not found' }] };
   });
 
@@ -31,16 +31,16 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
     },
   }, async (args) => {
     const db = getDb();
-    const task = researchTasks.createResearchTask(db, {
+    const task = await researchTasks.createResearchTask(db, {
       task: args.task,
       priority: args.priority,
       status: args.status,
       notes: args.notes,
     });
-    for (const personId of args.person_ids ?? []) researchTasks.addTaskLink(db, task.id, 'person', personId);
-    for (const placeId of args.place_ids ?? []) researchTasks.addTaskLink(db, task.id, 'place', placeId);
-    for (const mediaId of args.media_ids ?? []) researchTasks.addTaskLink(db, task.id, 'media', mediaId);
-    const links = researchTasks.getTaskLinks(db, task.id);
+    for (const personId of args.person_ids ?? []) await researchTasks.addTaskLink(db, task.id, 'person', personId);
+    for (const placeId of args.place_ids ?? []) await researchTasks.addTaskLink(db, task.id, 'place', placeId);
+    for (const mediaId of args.media_ids ?? []) await researchTasks.addTaskLink(db, task.id, 'media', mediaId);
+    const links = await researchTasks.getTaskLinks(db, task.id);
     return { content: [{ type: 'text', text: JSON.stringify({ ...task, links }, null, 2) }] };
   });
 
@@ -56,7 +56,7 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const task = researchTasks.updateResearchTask(getDb(), id, data);
+    const task = await researchTasks.updateResearchTask(getDb(), id, data);
     return { content: [{ type: 'text', text: task ? JSON.stringify(task, null, 2) : 'Research task not found' }] };
   });
 
@@ -66,7 +66,7 @@ export function registerResearchTools(server: McpServer, ctx: ToolContext): void
       id: z.string().describe('Research task ID'),
     },
   }, async (args) => {
-    const ok = researchTasks.deleteResearchTask(getDb(), args.id);
+    const ok = await researchTasks.deleteResearchTask(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Research task not found' }] };
   });
 

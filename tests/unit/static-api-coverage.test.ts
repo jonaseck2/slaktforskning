@@ -37,8 +37,8 @@ const emptySnapshot: Snapshot = {
 
 const staticApi = buildStaticApi(emptySnapshot);
 
-describe('static API parity', () => {
-  it('every registry channel has a stub in the static api', () => {
+describe('static API parity', async () => {
+  it('every registry channel has a stub in the static api', async () => {
     const missing: string[] = [];
     for (const name of Object.keys(channelRegistry)) {
       // Internal worker-only channels (names containing ':_') are dispatched
@@ -62,7 +62,7 @@ describe('static API parity', () => {
     }
   });
 
-  it('every registry channel handler is a function', () => {
+  it('every registry channel handler is a function', async () => {
     // Guards against someone writing defineChannel({ name, thread }) and
     // forgetting the handler property.
     const noHandler: string[] = [];
@@ -77,7 +77,7 @@ describe('static API parity', () => {
     ).toEqual([]);
   });
 
-  it('legacy renderer-callable channels have stubs in the static api', () => {
+  it('legacy renderer-callable channels have stubs in the static api', async () => {
     // These channels intentionally stay outside the registry (Electron-only
     // operations, BrowserWindow broadcasts, dialog, fs) but are exposed via
     // the preload as window.api.domain.method and therefore need a stub in

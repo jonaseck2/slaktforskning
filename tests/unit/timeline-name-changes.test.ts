@@ -6,22 +6,22 @@ import { createTestDb } from './helpers';
 
 let db: Database;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('getTimeline — name change derivation', () => {
-  it('emits a name_change entry for a non-birth name with date_from', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
-    addPersonName(db, p.id, {
+describe('getTimeline — name change derivation', async () => {
+  it('emits a name_change entry for a non-birth name with date_from', async () => {
+    const p = await createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
+    await addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Andersson', name_type: 'birth', sort_order: 0,
     });
-    addPersonName(db, p.id, {
+    await addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Lindberg', name_type: 'married',
       date_from: '1962-03-15', sort_order: 1,
     });
 
-    const entries = getTimeline(db, p.id)!;
+    const entries = (await getTimeline(db, p.id))!;
     const nameChange = entries.find(e => e.event.event_type === 'name_change');
     expect(nameChange).toBeDefined();
     expect(nameChange!.event.date_value).toBe('1962-03-15');
@@ -29,22 +29,22 @@ describe('getTimeline — name change derivation', () => {
     expect(nameChange!.event.notes).toContain('Anna Lindberg');
   });
 
-  it('emits NO name_change entry for a name with NULL date_from', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
-    addPersonName(db, p.id, {
+  it('emits NO name_change entry for a name with NULL date_from', async () => {
+    const p = await createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
+    await addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Lindberg', name_type: 'married', sort_order: 1,
     });
-    const entries = getTimeline(db, p.id)!;
+    const entries = (await getTimeline(db, p.id))!;
     expect(entries.find(e => e.event.event_type === 'name_change')).toBeUndefined();
   });
 
-  it('emits NO name_change entry for the birth name even with date_from set', () => {
-    const p = createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
-    addPersonName(db, p.id, {
+  it('emits NO name_change entry for the birth name even with date_from set', async () => {
+    const p = await createPerson(db, { sex: 'F', notes: '' }, { allowNameless: true });
+    await addPersonName(db, p.id, {
       given_name: 'Anna', surname: 'Andersson', name_type: 'birth',
       date_from: '1940-06-01', sort_order: 0,
     });
-    const entries = getTimeline(db, p.id)!;
+    const entries = (await getTimeline(db, p.id))!;
     expect(entries.find(e => e.event.event_type === 'name_change')).toBeUndefined();
   });
 });

@@ -10,20 +10,20 @@ import { createCaptureServer, callTool, makeCtx } from './helpers/mcpHarness';
 let db: ReturnType<typeof createTestDb>;
 let tools: ReturnType<typeof createCaptureServer>['tools'];
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
   const cap = createCaptureServer();
   registerMediaTools(cap.server, makeCtx(db));
   tools = cap.tools;
 });
 
-describe('attach_media', () => {
-  it('registers the tool', () => {
+describe('attach_media', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('attach_media')).toBe(true);
   });
 
   it('creates a media row and a media_link in one transaction', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindgren' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindgren' });
     const res = await callTool<{ media: { id: string; title: string }; link: { id: string; link_type: string | null } }>(
       tools,
       'attach_media',
@@ -55,9 +55,9 @@ describe('attach_media', () => {
   });
 
   it('attaches to an event entity', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Svensson' });
-    const event = createEvent(db, { event_type: 'birth', date_original: '1850' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Svensson' });
+    const event = await createEvent(db, { event_type: 'birth', date_original: '1850' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
     const res = await callTool<{ media: { id: string }; link: { id: string } }>(
       tools,
@@ -78,7 +78,7 @@ describe('attach_media', () => {
   });
 
   it('creates media with notes', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Lars', surname: 'Karlsson' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Lars', surname: 'Karlsson' });
     const res = await callTool<{ media: { id: string; notes: string } }>(
       tools,
       'attach_media',
@@ -116,14 +116,14 @@ describe('attach_media', () => {
   });
 });
 
-describe('tag_person_in_media', () => {
-  it('registers the tool', () => {
+describe('tag_person_in_media', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('tag_person_in_media')).toBe(true);
   });
 
   it('creates a media_region for an existing media item', async () => {
-    const media = createMedia(db, { title: 'Group photo' });
-    const person = createPerson(db, { sex: 'F', given_name: 'Maja', surname: 'Nilsson' });
+    const media = await createMedia(db, { title: 'Group photo' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Maja', surname: 'Nilsson' });
 
     const region = await callTool<{
       id: string;
@@ -163,7 +163,7 @@ describe('tag_person_in_media', () => {
   });
 
   it('creates a region without a person_id (anonymous region)', async () => {
-    const media = createMedia(db, { title: 'Old photo' });
+    const media = await createMedia(db, { title: 'Old photo' });
 
     const region = await callTool<{ id: string; person_id: string | null }>(
       tools,
@@ -186,9 +186,9 @@ describe('tag_person_in_media', () => {
   });
 
   it('creates multiple regions for the same media item', async () => {
-    const media = createMedia(db, { title: 'Family photo' });
-    const p1 = createPerson(db, { sex: 'M', given_name: 'Per', surname: 'Eriksson' });
-    const p2 = createPerson(db, { sex: 'F', given_name: 'Stina', surname: 'Eriksson' });
+    const media = await createMedia(db, { title: 'Family photo' });
+    const p1 = await createPerson(db, { sex: 'M', given_name: 'Per', surname: 'Eriksson' });
+    const p2 = await createPerson(db, { sex: 'F', given_name: 'Stina', surname: 'Eriksson' });
 
     await callTool(tools, 'tag_person_in_media', {
       media_id: media.id,
@@ -212,13 +212,13 @@ describe('tag_person_in_media', () => {
   });
 });
 
-describe('get_media_for_person_context', () => {
-  it('registers the tool', () => {
+describe('get_media_for_person_context', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('get_media_for_person_context')).toBe(true);
   });
 
   it('returns empty array for person with no media', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Nils', surname: 'Holm' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Nils', surname: 'Holm' });
 
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
       person_id: person.id,
@@ -229,9 +229,9 @@ describe('get_media_for_person_context', () => {
   });
 
   it('returns media directly linked to person', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Britta', surname: 'Andersson' });
-    const media = createMedia(db, { title: 'Portrait of Britta' });
-    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Britta', surname: 'Andersson' });
+    const media = await createMedia(db, { title: 'Portrait of Britta' });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
 
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
       person_id: person.id,
@@ -246,11 +246,11 @@ describe('get_media_for_person_context', () => {
   });
 
   it('returns media linked to events the person participated in', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Axel', surname: 'Blom' });
-    const event = createEvent(db, { event_type: 'baptism', date_original: '1880' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
-    const media = createMedia(db, { title: 'Baptism record' });
-    addMediaLink(db, { media_id: media.id, entity_type: 'event', entity_id: event.id });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Axel', surname: 'Blom' });
+    const event = await createEvent(db, { event_type: 'baptism', date_original: '1880' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    const media = await createMedia(db, { title: 'Baptism record' });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'event', entity_id: event.id });
 
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
       person_id: person.id,
@@ -264,11 +264,11 @@ describe('get_media_for_person_context', () => {
   });
 
   it('returns media linked to relationships the person is in', async () => {
-    const p1 = createPerson(db, { sex: 'M', given_name: 'Johan', surname: 'Berg' });
-    const p2 = createPerson(db, { sex: 'F', given_name: 'Karin', surname: 'Berg' });
-    const rel = createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
-    const media = createMedia(db, { title: 'Wedding photo' });
-    addMediaLink(db, { media_id: media.id, entity_type: 'relationship', entity_id: rel.id });
+    const p1 = await createPerson(db, { sex: 'M', given_name: 'Johan', surname: 'Berg' });
+    const p2 = await createPerson(db, { sex: 'F', given_name: 'Karin', surname: 'Berg' });
+    const rel = await createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
+    const media = await createMedia(db, { title: 'Wedding photo' });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'relationship', entity_id: rel.id });
 
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
       person_id: p1.id,
@@ -282,11 +282,11 @@ describe('get_media_for_person_context', () => {
   });
 
   it('returns media linked to family members', async () => {
-    const parent = createPerson(db, { sex: 'M', given_name: 'Olof', surname: 'Strand' });
-    const child = createPerson(db, { sex: 'F', given_name: 'Sigrid', surname: 'Strand' });
-    createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
-    const media = createMedia(db, { title: 'Family portrait' });
-    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: parent.id });
+    const parent = await createPerson(db, { sex: 'M', given_name: 'Olof', surname: 'Strand' });
+    const child = await createPerson(db, { sex: 'F', given_name: 'Sigrid', surname: 'Strand' });
+    await createRelationship(db, { type: 'parent_child', person1_id: parent.id, person2_id: child.id });
+    const media = await createMedia(db, { title: 'Family portrait' });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: parent.id });
 
     // Query from child's perspective — should find media of the parent (family member)
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
@@ -300,16 +300,16 @@ describe('get_media_for_person_context', () => {
   });
 
   it('deduplicates media that matches multiple contexts', async () => {
-    const p1 = createPerson(db, { sex: 'M', given_name: 'Gustav', surname: 'Lund' });
-    const p2 = createPerson(db, { sex: 'F', given_name: 'Helga', surname: 'Lund' });
-    createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
+    const p1 = await createPerson(db, { sex: 'M', given_name: 'Gustav', surname: 'Lund' });
+    const p2 = await createPerson(db, { sex: 'F', given_name: 'Helga', surname: 'Lund' });
+    await createRelationship(db, { type: 'couple', person1_id: p1.id, person2_id: p2.id });
 
-    const media = createMedia(db, { title: 'Couple photo' });
+    const media = await createMedia(db, { title: 'Couple photo' });
     // Link to both person directly AND via couple relationship to test deduplication
-    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: p1.id });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: p1.id });
     // Even though rel link is also present, the direct link should dedup it
     const rel = (db.prepare('SELECT id FROM relationships WHERE person1_id = ?').get([p1.id]) as any);
-    addMediaLink(db, { media_id: media.id, entity_type: 'relationship', entity_id: rel.id });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'relationship', entity_id: rel.id });
 
     const result = await callTool<any[]>(tools, 'get_media_for_person_context', {
       person_id: p1.id,
@@ -324,8 +324,8 @@ describe('get_media_for_person_context', () => {
   });
 });
 
-describe('update_media', () => {
-  it('registers the tool', () => {
+describe('update_media', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('update_media')).toBe(true);
   });
 
@@ -333,7 +333,7 @@ describe('update_media', () => {
     // Reproduces the agent gap: attach_media accepted a URL as file_ref, but the
     // renderer resolves file_ref against <dbname>-media/, so the row failed to
     // load. With update_media we can rewrite file_ref to the relocated file.
-    const broken = createMedia(db, {
+    const broken = await createMedia(db, {
       title: 'Forefront thumbnail',
       file_ref: 'https://i.ytimg.com/vi/5aHeuU8DxoQ/maxresdefault.jpg',
       format: 'jpg',
@@ -357,15 +357,15 @@ describe('update_media', () => {
   });
 });
 
-describe('delete_media', () => {
-  it('registers the tool', () => {
+describe('delete_media', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('delete_media')).toBe(true);
   });
 
   it('removes the media record (and any links) without affecting linked persons', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Jonas', surname: 'Test' });
-    const media = createMedia(db, { title: 'LinkedIn URL', file_ref: 'https://example.com/x' });
-    addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Jonas', surname: 'Test' });
+    const media = await createMedia(db, { title: 'LinkedIn URL', file_ref: 'https://example.com/x' });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
 
     const res = await callTool<string>(tools, 'delete_media', { id: media.id });
     expect(res).toBe('Deleted');

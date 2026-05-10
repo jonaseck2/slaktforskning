@@ -3,7 +3,7 @@
  *
  * Each country plan in docs/plans/2026-05-09-european-gazetteers-design.md
  * extends EUROPEAN_PROBES with its smoke list. The probes assert that
- * resolvePlace() returns the expected (admin1, admin2, leaf) tuple.
+ * await resolvePlace() returns the expected (admin1, admin2, leaf) tuple.
  *
  * This test guards regressions; the *gate* for shipping any country plan is
  * the user smoke-check in the running app. See the per-country plan's
@@ -205,7 +205,7 @@ describe('European country coverage probes', () => {
     describe(`${country.countryName} (${country.countryCode})`, () => {
       for (const probe of country.probes) {
         it(`resolves "${probe.query}"`, () => {
-          const result = resolvePlace(probe.query, gazetteers);
+          const result = await resolvePlace(probe.query, gazetteers);
           expect(result, `no resolution for "${probe.query}"`).toBeTruthy();
           if (!result) return;
           assertHierarchyOrder(result.matchedPath, [probe.expectCountry, probe.expectAdmin1, probe.expectAdmin2, probe.expectLeaf], probe.query);
@@ -220,7 +220,7 @@ describe('European country coverage probes', () => {
 
   describe('Germany — boundary geometry coverage (de-gemeinden-boundaries)', () => {
     it('Bundesland Brandenburg resolves with a polygon attached', () => {
-      const result = resolvePlace('Brandenburg, Germany', gazetteers);
+      const result = await resolvePlace('Brandenburg, Germany', gazetteers);
       expect(result).toBeTruthy();
       if (!result) return;
       const brandenburg = result.matchedNodes.find(n => n.name === 'Brandenburg' && n.type === 'admin1');

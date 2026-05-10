@@ -17,7 +17,7 @@ const mockApi = {
   db: { getSetting: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.media.forEntity.mockResolvedValue([]);
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
@@ -30,7 +30,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('LifeOnOnePageReport', () => {
+describe('LifeOnOnePageReport', async () => {
   it('renders name header with person primary name', async () => {
     mockApi.reports.personSummary.mockResolvedValue({
       person: { id: 'p1', sex: 'F', living: false, notes: null },

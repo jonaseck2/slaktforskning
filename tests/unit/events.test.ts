@@ -18,29 +18,29 @@ import { createTestDb } from './helpers';
 
 let db: Database.Database;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('events', () => {
-  it('gets an event by id', () => {
-    const event = createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
-    const fetched = getEvent(db, event.id);
+describe('events', async () => {
+  it('gets an event by id', async () => {
+    const event = await createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
+    const fetched = await getEvent(db, event.id);
     expect(fetched).not.toBeNull();
     expect(fetched!.id).toBe(event.id);
     expect(fetched!.event_type).toBe('birth');
   });
 
-  it('returns null for nonexistent event', () => {
-    expect(getEvent(db, 'nonexistent')).toBeNull();
+  it('returns null for nonexistent event', async () => {
+    expect(await getEvent(db, 'nonexistent')).toBeNull();
   });
 
-  it('deleteEvent returns false for nonexistent id', () => {
-    expect(deleteEvent(db, 'nonexistent')).toBe(false);
+  it('deleteEvent returns false for nonexistent id', async () => {
+    expect(await deleteEvent(db, 'nonexistent')).toBe(false);
   });
 
-  it('creates a birth event', () => {
-    const event = createEvent(db, {
+  it('creates a birth event', async () => {
+    const event = await createEvent(db, {
       event_type: 'birth',
       date_type: 'exact',
       date_value: '1845-06-12',
@@ -53,11 +53,11 @@ describe('events', () => {
     expect(event.date_original).toBe('12 JUN 1845');
   });
 
-  it('creates an event linked to a relationship', () => {
-    const a = createPerson(db, { given_name: 'Erik', surname: 'A', sex: 'M' });
-    const b = createPerson(db, { given_name: 'Anna', surname: 'B', sex: 'F' });
-    const rel = createRelationship(db, { type: 'couple', person1_id: a.id, person2_id: b.id, subtype: 'marriage' });
-    const event = createEvent(db, {
+  it('creates an event linked to a relationship', async () => {
+    const a = await createPerson(db, { given_name: 'Erik', surname: 'A', sex: 'M' });
+    const b = await createPerson(db, { given_name: 'Anna', surname: 'B', sex: 'F' });
+    const rel = await createRelationship(db, { type: 'couple', person1_id: a.id, person2_id: b.id, subtype: 'marriage' });
+    const event = await createEvent(db, {
       event_type: 'marriage',
       relationship_id: rel.id,
       date_type: 'about',
@@ -68,123 +68,123 @@ describe('events', () => {
     expect(event.date_type).toBe('about');
   });
 
-  it('gets events for a person via event_participants', () => {
-    const person = createPerson(db, { given_name: 'Test', surname: 'T' });
-    const e1 = createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
-    const e2 = createEvent(db, { event_type: 'death', date_value: '1870-05-10' });
-    addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
-    addEventParticipant(db, { event_id: e2.id, person_id: person.id, role: 'primary' });
+  it('gets events for a person via event_participants', async () => {
+    const person = await createPerson(db, { given_name: 'Test', surname: 'T' });
+    const e1 = await createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
+    const e2 = await createEvent(db, { event_type: 'death', date_value: '1870-05-10' });
+    await addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
+    await addEventParticipant(db, { event_id: e2.id, person_id: person.id, role: 'primary' });
 
-    const events = getEventsForPerson(db, person.id);
+    const events = await getEventsForPerson(db, person.id);
     expect(events).toHaveLength(2);
     expect(events[0].event_type).toBe('birth');
     expect(events[1].event_type).toBe('death');
   });
 
-  it('gets events for a relationship', () => {
-    const rel = createRelationship(db, { type: 'couple' });
-    createEvent(db, { event_type: 'marriage', relationship_id: rel.id });
-    const events = getEventsForRelationship(db, rel.id);
+  it('gets events for a relationship', async () => {
+    const rel = await createRelationship(db, { type: 'couple' });
+    await createEvent(db, { event_type: 'marriage', relationship_id: rel.id });
+    const events = await getEventsForRelationship(db, rel.id);
     expect(events).toHaveLength(1);
   });
 
-  it('updates an event', () => {
-    const event = createEvent(db, { event_type: 'birth' });
-    const updated = updateEvent(db, event.id, { notes: 'Updated notes', date_value: '1850-03-15' });
+  it('updates an event', async () => {
+    const event = await createEvent(db, { event_type: 'birth' });
+    const updated = await updateEvent(db, event.id, { notes: 'Updated notes', date_value: '1850-03-15' });
     expect(updated!.notes).toBe('Updated notes');
     expect(updated!.date_value).toBe('1850-03-15');
   });
 
-  it('deletes an event', () => {
-    const event = createEvent(db, { event_type: 'birth' });
-    expect(deleteEvent(db, event.id)).toBe(true);
-    expect(getEvent(db, event.id)).toBeNull();
+  it('deletes an event', async () => {
+    const event = await createEvent(db, { event_type: 'birth' });
+    expect(await deleteEvent(db, event.id)).toBe(true);
+    expect(await getEvent(db, event.id)).toBeNull();
   });
 
-  it('includes citation_count in getEventsForPerson', () => {
-    const person = createPerson(db, { given_name: 'Cite', surname: 'Test' });
-    const event = createEvent(db, { event_type: 'birth', date_value: '1900-01-01' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+  it('includes citation_count in getEventsForPerson', async () => {
+    const person = await createPerson(db, { given_name: 'Cite', surname: 'Test' });
+    const event = await createEvent(db, { event_type: 'birth', date_value: '1900-01-01' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
-    let events = getEventsForPerson(db, person.id);
+    let events = await getEventsForPerson(db, person.id);
     expect(events).toHaveLength(1);
     expect(events[0].citation_count).toBe(0);
 
-    const source = createSource(db, { title: 'Test Source' });
-    createCitation(db, { source_id: source.id, event_id: event.id });
+    const source = await createSource(db, { title: 'Test Source' });
+    await createCitation(db, { source_id: source.id, event_id: event.id });
 
-    events = getEventsForPerson(db, person.id);
+    events = await getEventsForPerson(db, person.id);
     expect(events[0].citation_count).toBe(1);
 
-    createCitation(db, { source_id: source.id, event_id: event.id, page: 'p.2' });
+    await createCitation(db, { source_id: source.id, event_id: event.id, page: 'p.2' });
 
-    events = getEventsForPerson(db, person.id);
+    events = await getEventsForPerson(db, person.id);
     expect(events[0].citation_count).toBe(2);
   });
 
-  it('includes citation_count in getEventsForRelationship', () => {
-    const rel = createRelationship(db, { type: 'couple' });
-    const event = createEvent(db, { event_type: 'marriage', relationship_id: rel.id });
+  it('includes citation_count in getEventsForRelationship', async () => {
+    const rel = await createRelationship(db, { type: 'couple' });
+    const event = await createEvent(db, { event_type: 'marriage', relationship_id: rel.id });
 
-    let events = getEventsForRelationship(db, rel.id);
+    let events = await getEventsForRelationship(db, rel.id);
     expect(events).toHaveLength(1);
     expect(events[0].citation_count).toBe(0);
 
-    const source = createSource(db, { title: 'Test Source' });
-    createCitation(db, { source_id: source.id, event_id: event.id });
+    const source = await createSource(db, { title: 'Test Source' });
+    await createCitation(db, { source_id: source.id, event_id: event.id });
 
-    events = getEventsForRelationship(db, rel.id);
+    events = await getEventsForRelationship(db, rel.id);
     expect(events[0].citation_count).toBe(1);
   });
 
-  it('creates a mention event', () => {
-    const ev = createEvent(db, { event_type: 'mention', date_type: 'unknown' });
+  it('creates a mention event', async () => {
+    const ev = await createEvent(db, { event_type: 'mention', date_type: 'unknown' });
     expect(ev.event_type).toBe('mention');
-    expect(getEvent(db, ev.id)?.event_type).toBe('mention');
+    expect((await getEvent(db, ev.id))?.event_type).toBe('mention');
   });
 
-  it('gets events for a place with participant names', () => {
-    const place = createPlace(db, { name: 'Stockholm' });
-    const person = createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
-    const e1 = createEvent(db, { event_type: 'birth', date_value: '1800-01-01', place_id: place.id });
-    addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
+  it('gets events for a place with participant names', async () => {
+    const place = await createPlace(db, { name: 'Stockholm' });
+    const person = await createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const e1 = await createEvent(db, { event_type: 'birth', date_value: '1800-01-01', place_id: place.id });
+    await addEventParticipant(db, { event_id: e1.id, person_id: person.id, role: 'primary' });
 
-    const events = getEventsForPlace(db, place.id);
+    const events = await getEventsForPlace(db, place.id);
     expect(events).toHaveLength(1);
     expect(events[0].event_type).toBe('birth');
     expect(events[0].participant_names).toContain('Erik');
     expect(events[0].participant_names).toContain('Svensson');
   });
 
-  it('getEventsForPlace returns empty for place with no events', () => {
-    const place = createPlace(db, { name: 'Empty Town' });
-    const events = getEventsForPlace(db, place.id);
+  it('getEventsForPlace returns empty for place with no events', async () => {
+    const place = await createPlace(db, { name: 'Empty Town' });
+    const events = await getEventsForPlace(db, place.id);
     expect(events).toHaveLength(0);
   });
 
-  it('creates an occupation event with fact value', () => {
-    const event = createEvent(db, {
+  it('creates an occupation event with fact value', async () => {
+    const event = await createEvent(db, {
       event_type: 'occupation',
       date_value: '1885',
       value: 'Carpenter',
       notes: 'Worked at the Stockholm shipyard',
     });
-    const fetched = getEvent(db, event.id);
+    const fetched = await getEvent(db, event.id);
     expect(fetched).not.toBeNull();
     expect(fetched!.value).toBe('Carpenter');
     expect(fetched!.notes).toBe('Worked at the Stockholm shipyard');
   });
 
-  it('value defaults to null when omitted', () => {
-    const event = createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
+  it('value defaults to null when omitted', async () => {
+    const event = await createEvent(db, { event_type: 'birth', date_value: '1800-01-01' });
     expect(event.value).toBeNull();
   });
 
-  it('updateEvent can set and clear value', () => {
-    const event = createEvent(db, { event_type: 'occupation', value: 'Smith' });
-    updateEvent(db, event.id, { value: 'Master Smith' });
-    expect(getEvent(db, event.id)!.value).toBe('Master Smith');
-    updateEvent(db, event.id, { value: null });
-    expect(getEvent(db, event.id)!.value).toBeNull();
+  it('updateEvent can set and clear value', async () => {
+    const event = await createEvent(db, { event_type: 'occupation', value: 'Smith' });
+    await updateEvent(db, event.id, { value: 'Master Smith' });
+    expect((await getEvent(db, event.id))!.value).toBe('Master Smith');
+    await updateEvent(db, event.id, { value: null });
+    expect((await getEvent(db, event.id))!.value).toBeNull();
   });
 });

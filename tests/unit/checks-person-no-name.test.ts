@@ -7,8 +7,8 @@ import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
 /**
@@ -18,34 +18,34 @@ beforeEach(() => {
  * exist but carry only whitespace or empty strings — the residue of past
  * importers that wrote a placeholder names row but no usable data).
  */
-function seedBlankName(personId: string, given: string | null, surname: string | null): void {
-  runSql(db,
+async function seedBlankName(personId: string, given: string | null, surname: string | null): void {
+  await runSql(db,
     `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order) VALUES (?, ?, ?, ?, 'birth', 0)`,
     [uuidv4(), personId, given, surname]
   );
 }
 
-describe('checkPersonNoName', () => {
-  it('flags persons with no person_names row, persons with all-blank names rows, and skips named persons', () => {
+describe('checkPersonNoName', async () => {
+  it('flags persons with no person_names row, persons with all-blank names rows, and skips named persons', async () => {
     // Case 1: persons row with NO names row at all
-    const noNamesPerson = createPerson(db, {}, { allowNameless: true }); // createPerson skips name insert when both are absent
+    const noNamesPerson = await createPerson(db, {}, { allowNameless: true }); // createPerson skips name insert when both are absent
 
     // Case 2a: persons row with a names row whose given+surname are empty strings
-    const emptyStringPerson = createPerson(db, {}, { allowNameless: true });
-    seedBlankName(emptyStringPerson.id, '', '');
+    const emptyStringPerson = await createPerson(db, {}, { allowNameless: true });
+    await seedBlankName(emptyStringPerson.id, '', '');
 
     // Case 2b: persons row with a names row whose given+surname are NULL
-    const nullNamePerson = createPerson(db, {}, { allowNameless: true });
-    seedBlankName(nullNamePerson.id, null, null);
+    const nullNamePerson = await createPerson(db, {}, { allowNameless: true });
+    await seedBlankName(nullNamePerson.id, null, null);
 
     // Case 2c: persons row with a names row whose fields are whitespace only
-    const whitespacePerson = createPerson(db, {}, { allowNameless: true });
-    seedBlankName(whitespacePerson.id, '   ', '\t');
+    const whitespacePerson = await createPerson(db, {}, { allowNameless: true });
+    await seedBlankName(whitespacePerson.id, '   ', '\t');
 
     // Case 3: named person — must NOT be flagged
-    const namedPerson = createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const namedPerson = await createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
 
-    const results = checkPersonNoName(db);
+    const results = await checkPersonNoName(db);
     const flaggedIds = new Set(results.flatMap(r => r.personIds));
 
     expect(flaggedIds.has(noNamesPerson.id)).toBe(true);
@@ -66,13 +66,13 @@ describe('checkPersonNoName', () => {
     }
   });
 
-  it('still flags a person whose only names row has only the partial-name pattern (given but no surname blank-only across rows)', () => {
+  it('still flags a person whose only names row has only the partial-name pattern (given but no surname blank-only across rows)', async () => {
     // A person can have one row with only given_name set — that's a PARTIAL_NAME
     // case, NOT a no-name case. checkPersonNoName must NOT fire here.
-    const p = createPerson(db, {}, { allowNameless: true });
-    seedBlankName(p.id, 'Erik', '');
+    const p = await createPerson(db, {}, { allowNameless: true });
+    await seedBlankName(p.id, 'Erik', '');
 
-    const results = checkPersonNoName(db);
+    const results = await checkPersonNoName(db);
     const flagged = results.filter(r => r.personIds.includes(p.id));
     expect(flagged).toHaveLength(0);
   });

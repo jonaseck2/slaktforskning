@@ -53,7 +53,7 @@ function getDbDir(): string {
   return nodePath.dirname(dbPath);
 }
 
-function openDb(filePath: string): void {
+async function openDb(filePath: string): Promise<void> {
   if (db) { try { db.close(); } catch { /* ignore */ } db = null; }
   nodeFs.mkdirSync(nodePath.dirname(filePath), { recursive: true });
   const lockPath = filePath + '.lock';
@@ -61,8 +61,10 @@ function openDb(filePath: string): void {
     nodeFs.rmSync(lockPath, { recursive: true });
   }
   const newDb = new Database(filePath);
+  // Raw connection PRAGMAs — fired through the connection's batch executor.
+  // Cannot use runSql here because the schema init also calls these helpers.
   newDb.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
-  initializeSchema(newDb);
+  await initializeSchema(newDb);
   db = newDb;
   dbPath = filePath;
 }
@@ -81,7 +83,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
 
   // media:getFilePath and media:readAsDataUrl require getDbDir() (worker-local).
   'media:getFilePath': async (id) => {
-    const item = media.getMedia(getDb(), id);
+    const item = await media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
     const absPath = nodePath.resolve(getDbDir(), item.file_ref);
     try {
@@ -92,7 +94,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     }
   },
   'media:readAsDataUrl': async (id) => {
-    const item = media.getMedia(getDb(), id);
+    const item = await media.getMedia(getDb(), id);
     if (!item?.file_ref) return null;
     const absPath = nodePath.resolve(getDbDir(), item.file_ref);
     const ext = nodePath.extname(absPath).toLowerCase().slice(1);
@@ -118,8 +120,8 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
   // undo:undo and undo:redo: the actual undo/redo operations are dispatched here,
   // but ipc/database.ts also broadcasts undo:changed after the call — that
   // broadcast requires BrowserWindow access that can't live in the registry.
-  'undo:undo': () => undoManager.undo(),
-  'undo:redo': () => undoManager.redo(),
+  'undo:undo': async () => await undoManager.undo(),
+  'undo:redo': async () => await undoManager.redo(),
 
   // checks: async with yield loop between each check (stays responsive during long runs);
   // also uses checksRunId and importInProgress (worker-local cancellation state).
@@ -158,13 +160,13 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     });
 
     const allIds = [...new Set(capped.flatMap(r => r.personIds))];
-    const nameMap = persons.getPersonDisplayNames(d, allIds);
+    const nameMap = await persons.getPersonDisplayNames(d, allIds);
 
     const allPlaceIds = [...new Set(capped.flatMap(r => r.placeIds ?? []))];
     const placeNameMap = new Map<string, string>();
     if (allPlaceIds.length > 0) {
       const ph = allPlaceIds.map(() => '?').join(',');
-      const rows = queryAll<{ id: string; name: string }>(d, `SELECT id, name FROM places WHERE id IN (${ph})`, allPlaceIds);
+      const rows = await queryAll<{ id: string; name: string }>(d, `SELECT id, name FROM places WHERE id IN (${ph})`, allPlaceIds);
       for (const r of rows) placeNameMap.set(r.id, r.name);
     }
 
@@ -172,7 +174,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     const mediaTitleMap = new Map<string, string>();
     if (allMediaIds.length > 0) {
       const ph = allMediaIds.map(() => '?').join(',');
-      const rows = queryAll<{ id: string; title: string | null; file_ref: string | null }>(d, `SELECT id, title, file_ref FROM media WHERE id IN (${ph})`, allMediaIds);
+      const rows = await queryAll<{ id: string; title: string | null; file_ref: string | null }>(d, `SELECT id, title, file_ref FROM media WHERE id IN (${ph})`, allMediaIds);
       for (const r of rows) mediaTitleMap.set(r.id, r.title || r.file_ref || '');
     }
 
@@ -180,7 +182,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     const sourceTitleMap = new Map<string, string>();
     if (allSourceIds.length > 0) {
       const ph = allSourceIds.map(() => '?').join(',');
-      const rows = queryAll<{ id: string; title: string | null }>(d, `SELECT id, title FROM sources WHERE id IN (${ph})`, allSourceIds);
+      const rows = await queryAll<{ id: string; title: string | null }>(d, `SELECT id, title FROM sources WHERE id IN (${ph})`, allSourceIds);
       for (const r of rows) sourceTitleMap.set(r.id, r.title || '');
     }
 
@@ -206,24 +208,24 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     return results;
   },
 
-  'checks:forPlace': (placeId) => checks.runChecksForPlace(getDb(), placeId, getDbDir()),
+  'checks:forPlace': async (placeId) => await checks.runChecksForPlace(getDb(), placeId, getDbDir()),
 
-  'checks:forMedia': (mediaId) => checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
+  'checks:forMedia': async (mediaId) => await checks.runChecksForMedia(getDb(), mediaId, getDbDir()),
 
   // Save-time hook for event-creating modals. Synchronous, scoped to a
   // single event id — no gazetteer or media-file I/O; safe to call from
   // every save without rate-limiting. Returns the same `CheckResult[]`
   // shape as the other check channels so the renderer can route the row
   // straight into the Quality view.
-  'checks:runForEvent': (eventId) => checks.runChecksForEvent(getDb(), eventId as string),
+  'checks:runForEvent': async (eventId) => await checks.runChecksForEvent(getDb(), eventId as string),
 
   // Website export — buildSnapshot + resolveMediaPaths are still in the
   // legacy dispatch table because they're called from the website-export.ts
   // shims via callWorker() (not directly from the renderer). buildPreview
   // moved to the registry as `website:previewSnapshot` (it IS called from
   // the renderer).
-  'website:buildSnapshot': (opts) => buildSnapshot(getDb(), opts),
-  'website:resolveMediaPaths': (mediaIds: string[]) => {
+  'website:buildSnapshot': async (opts) => await buildSnapshot(getDb(), opts),
+  'website:resolveMediaPaths': async (mediaIds: string[]) => {
     const result: Record<string, { absPath: string; mime: string }> = {};
     const mimeMap: Record<string, string> = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
@@ -232,7 +234,7 @@ const handlers: Record<string, (...args: any[]) => unknown> = {
     const db = getDb();
     const dbDir = getDbDir();
     for (const id of mediaIds) {
-      const item = media.getMedia(db, id);
+      const item = await media.getMedia(db, id);
       if (!item?.file_ref) continue;
       const absPath = nodePath.resolve(dbDir, item.file_ref);
       if (!nodeFs.existsSync(absPath)) continue;
@@ -261,10 +263,10 @@ parentPort.on('message', async (msg: LifecycleMsg | CallMsg) => {
   if ('type' in msg) {
     try {
       if (msg.type === 'init') {
-        openDb(msg.dbPath);
+        await openDb(msg.dbPath);
         parentPort!.postMessage({ type: 'ready' });
       } else if (msg.type === 'db-switch') {
-        openDb(msg.dbPath);
+        await openDb(msg.dbPath);
         undoManager.clear();
         parentPort!.postMessage({ type: 'switched' });
       } else if (msg.type === 'import-start') {

@@ -14,38 +14,38 @@ import { importGedcom } from '../../src/import/gedcom';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
-beforeEach(() => { db = createTestDb(); });
+beforeEach(async () => { db = await createTestDb(); });
 
-describe('GEDCOM round-trip: multiple person_names rows', () => {
-  it('preserves all five name_type values across export → import', () => {
+describe('GEDCOM round-trip: multiple person_names rows', async () => {
+  it('preserves all five name_type values across export → import', async () => {
     // 1. Create one person with NO default birth name (createPerson skips
     // person_names insert when both given_name and surname are absent).
-    const p = createPerson(db, { sex: 'F' }, { allowNameless: true });
+    const p = await createPerson(db, { sex: 'F' }, { allowNameless: true });
 
     // 2. Insert all five name_type rows with distinguishable surnames.
-    addPersonName(db, p.id, { given_name: 'Anna', surname: 'BirthSur',       name_type: 'birth',       sort_order: 0 });
-    addPersonName(db, p.id, { given_name: 'Anna', surname: 'MarriedSur',     name_type: 'married',     sort_order: 1 });
-    addPersonName(db, p.id, { given_name: 'Anna', surname: 'NameChangeSur',  name_type: 'name_change', sort_order: 2 });
-    addPersonName(db, p.id, { given_name: 'Anna', surname: 'AliasSur',       name_type: 'alias',       sort_order: 3 });
-    addPersonName(db, p.id, { given_name: 'Anna', surname: 'AkaSur',         name_type: 'aka',         sort_order: 4 });
+    await addPersonName(db, p.id, { given_name: 'Anna', surname: 'BirthSur',       name_type: 'birth',       sort_order: 0 });
+    await addPersonName(db, p.id, { given_name: 'Anna', surname: 'MarriedSur',     name_type: 'married',     sort_order: 1 });
+    await addPersonName(db, p.id, { given_name: 'Anna', surname: 'NameChangeSur',  name_type: 'name_change', sort_order: 2 });
+    await addPersonName(db, p.id, { given_name: 'Anna', surname: 'AliasSur',       name_type: 'alias',       sort_order: 3 });
+    await addPersonName(db, p.id, { given_name: 'Anna', surname: 'AkaSur',         name_type: 'aka',         sort_order: 4 });
 
-    const sourceNames = getPersonNames(db, p.id);
+    const sourceNames = await getPersonNames(db, p.id);
     expect(sourceNames).toHaveLength(5);
 
     // 3. Export.
-    const { ged } = exportGedcom(db, '5.5.1');
+    const { ged } = await exportGedcom(db, '5.5.1');
 
     // 4. Parse + import into a fresh DB.
-    const db2 = createTestDb();
+    const db2 = await createTestDb();
     const tree = parseGedcom(ged);
-    importGedcom(db2, tree);
+    await importGedcom(db2, tree);
 
     // 5. Find the imported person and assert all five name rows survived.
-    const persons = listPersons(db2);
+    const persons = await listPersons(db2);
     expect(persons).toHaveLength(1);
     const imported = persons[0];
 
-    const importedNames = getPersonNames(db2, imported.id);
+    const importedNames = await getPersonNames(db2, imported.id);
     expect(importedNames).toHaveLength(5);
 
     // Map by name_type and verify each row's surname round-tripped.

@@ -127,7 +127,7 @@ describe('sortByBirthOldestFirst — pure helper', () => {
   });
 });
 
-describe('fetchHourglassTreePerson — siblings and children sorted oldest-first', () => {
+describe('fetchHourglassTreePerson — siblings and children sorted oldest-first', async () => {
   beforeEach(() => {
     _resetPhotoCacheForTests();
     installApi();
@@ -146,7 +146,7 @@ describe('fetchHourglassTreePerson — siblings and children sorted oldest-first
   });
 });
 
-describe('fetchHourglassTree — siblings and children sorted oldest-first', () => {
+describe('fetchHourglassTree — siblings and children sorted oldest-first', async () => {
   beforeEach(() => {
     _resetPhotoCacheForTests();
     installApi();
@@ -162,7 +162,7 @@ describe('fetchHourglassTree — siblings and children sorted oldest-first', () 
   });
 });
 
-describe('fetchDescendantTree — children sorted oldest-first at every depth', () => {
+describe('fetchDescendantTree — children sorted oldest-first at every depth', async () => {
   beforeEach(() => {
     _resetPhotoCacheForTests();
     installApi();

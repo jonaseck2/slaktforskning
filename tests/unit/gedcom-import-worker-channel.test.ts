@@ -43,14 +43,14 @@ describe('gedcom:import / gedcom:preview worker channels', () => {
   });
 });
 
-describe('gedcom:import handler — end-to-end against in-memory DB', () => {
+describe('gedcom:import handler — end-to-end against in-memory DB', async () => {
   let tmpDir: string;
   let db: ReturnType<typeof createTestDb>;
   let importFlag: boolean;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-channel-test-'));
-    db = createTestDb();
+    db = await createTestDb();
     importFlag = false;
 
     const fakeDbPath = path.join(tmpDir, 'family.db');
@@ -97,13 +97,13 @@ describe('gedcom:import handler — end-to-end against in-memory DB', () => {
   });
 });
 
-describe('gedcom:preview handler — end-to-end', () => {
+describe('gedcom:preview handler — end-to-end', async () => {
   let tmpDir: string;
   let db: ReturnType<typeof createTestDb>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-preview-channel-test-'));
-    db = createTestDb();
+    db = await createTestDb();
   });
 
   afterEach(() => {

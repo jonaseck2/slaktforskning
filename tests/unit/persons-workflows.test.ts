@@ -9,13 +9,13 @@ import { createTestDb } from './helpers';
 
 let db: Database;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('createPersonWithEventWorkflow', () => {
-  it('creates a person-only record when no event fields are provided', () => {
-    const result = createPersonWithEventWorkflow(db, {
+describe('createPersonWithEventWorkflow', async () => {
+  it('creates a person-only record when no event fields are provided', async () => {
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Anna',
       surname: 'Lindström',
       sex: 'F',
@@ -23,11 +23,11 @@ describe('createPersonWithEventWorkflow', () => {
     expect(result.person.id).toBeTruthy();
     expect(result.event).toBeNull();
     expect(result.citation).toBeNull();
-    expect(events.getEventsForPerson(db, result.person.id)).toHaveLength(0);
+    expect(await events.getEventsForPerson(db, result.person.id)).toHaveLength(0);
   });
 
-  it('creates person + birth event + event_participant + place', () => {
-    const result = createPersonWithEventWorkflow(db, {
+  it('creates person + birth event + event_participant + place', async () => {
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Erik',
       surname: 'Svensson',
       sex: 'M',
@@ -46,17 +46,17 @@ describe('createPersonWithEventWorkflow', () => {
     expect(result.event!.event_type).toBe('birth');
     expect(result.event!.place_id).toBeTruthy();
 
-    const personEvents = events.getEventsForPerson(db, result.person.id);
+    const personEvents = await events.getEventsForPerson(db, result.person.id);
     expect(personEvents).toHaveLength(1);
     expect(personEvents[0].id).toBe(result.event!.id);
 
-    const place = places.getPlace(db, result.event!.place_id!);
+    const place = await places.getPlace(db, result.event!.place_id!);
     expect(place?.name).toBe('Stockholm');
   });
 
-  it('uses an existing place_id instead of creating one', () => {
-    const stockholm = places.createPlace(db, { name: 'Stockholm' });
-    const result = createPersonWithEventWorkflow(db, {
+  it('uses an existing place_id instead of creating one', async () => {
+    const stockholm = await places.createPlace(db, { name: 'Stockholm' });
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Erik',
       surname: 'Svensson',
       event: {
@@ -73,9 +73,9 @@ describe('createPersonWithEventWorkflow', () => {
     expect(result.event!.place_id).toBe(stockholm.id);
   });
 
-  it('creates a citation when source is provided', () => {
-    const src = sources.createSource(db, { title: 'Husförhörslängd 1850' });
-    const result = createPersonWithEventWorkflow(db, {
+  it('creates a citation when source is provided', async () => {
+    const src = await sources.createSource(db, { title: 'Husförhörslängd 1850' });
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Erik',
       surname: 'Svensson',
       event: {
@@ -96,9 +96,9 @@ describe('createPersonWithEventWorkflow', () => {
     expect(result.citation!.page).toBe('42');
   });
 
-  it('creates a citation with full fields (confidence, transcription, notes, date_accessed)', () => {
-    const src = sources.createSource(db, { title: 'Husförhörslängd 1850' });
-    const result = createPersonWithEventWorkflow(db, {
+  it('creates a citation with full fields (confidence, transcription, notes, date_accessed)', async () => {
+    const src = await sources.createSource(db, { title: 'Husförhörslängd 1850' });
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Erik',
       surname: 'Svensson',
       event: {
@@ -129,12 +129,12 @@ describe('createPersonWithEventWorkflow', () => {
     expect(result.citation!.date_accessed).toBe('2026-04-19');
   });
 
-  it('rolls back on failure — person is not created when event creation throws', () => {
+  it('rolls back on failure — person is not created when event creation throws', async () => {
     // Provide an invalid event_type through a type-cast to force a DB constraint failure.
     // If the event insert fails, the transaction must roll back — no person should exist.
-    const beforeCount = persons.listPersons(db).length;
-    expect(() => {
-      createPersonWithEventWorkflow(db, {
+    const beforeCount = (await persons.listPersons(db)).length;
+    await expect(async () => {
+      await createPersonWithEventWorkflow(db, {
         given_name: 'Erik',
         surname: 'Svensson',
         event: {
@@ -149,13 +149,13 @@ describe('createPersonWithEventWorkflow', () => {
           cause: null,
         },
       });
-    }).toThrow();
-    const afterCount = persons.listPersons(db).length;
+    }).rejects.toThrow();
+    const afterCount = (await persons.listPersons(db)).length;
     expect(afterCount).toBe(beforeCount);
   });
 
-  it('creates a person with only event_type (no date, no place)', () => {
-    const result = createPersonWithEventWorkflow(db, {
+  it('creates a person with only event_type (no date, no place)', async () => {
+    const result = await createPersonWithEventWorkflow(db, {
       given_name: 'Maria',
       surname: 'Olsson',
       event: {

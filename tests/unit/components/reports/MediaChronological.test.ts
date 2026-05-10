@@ -18,7 +18,7 @@ const mockApi = {
 const globalOpts = { plugins: [i18n] };
 const photoItem = { id: '1', title: 'Photo', notes: null, fileRef: '/a/b.jpg', format: 'image/jpeg', inferredDateISO: null };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
   mockApi.mediaRegions.getForMedia.mockResolvedValue([]);
@@ -26,8 +26,8 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('MediaChronological', () => {
-  it('filters out documents by default', () => {
+describe('MediaChronological', async () => {
+  it('filters out documents by default', async () => {
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
       props: {
@@ -40,7 +40,7 @@ describe('MediaChronological', () => {
     expect(wrapper.findAll('.media-item').length).toBe(1);
   });
 
-  it('includes documents when toggle on', () => {
+  it('includes documents when toggle on', async () => {
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
       props: {
@@ -54,12 +54,12 @@ describe('MediaChronological', () => {
     expect(wrapper.findAll('.media-item').length).toBe(2);
   });
 
-  it('renders nothing when items empty', () => {
+  it('renders nothing when items empty', async () => {
     const wrapper = mount(MediaChronological, { global: globalOpts, props: { items: [] } });
     expect(wrapper.find('.media-chronological').exists()).toBe(false);
   });
 
-  it('hides captions when showCaptions and showNotes false', () => {
+  it('hides captions when showCaptions and showNotes false', async () => {
     const wrapper = mount(MediaChronological, {
       global: globalOpts,
       props: {

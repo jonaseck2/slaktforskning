@@ -12,12 +12,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { broadcast, _setBroadcastTarget, _resetBroadcastTarget } from '../../src/main/db-worker-broadcast';
 
-describe('worker broadcast helper', () => {
-  beforeEach(() => {
+describe('worker broadcast helper', async () => {
+  beforeEach(async () => {
     _resetBroadcastTarget();
   });
 
-  it('posts { type: "broadcast", topic, payload } to the parentPort target', () => {
+  it('posts { type: "broadcast", topic, payload } to the parentPort target', async () => {
     const posted: unknown[] = [];
     _setBroadcastTarget({ postMessage: (msg: unknown) => posted.push(msg) });
 
@@ -28,7 +28,7 @@ describe('worker broadcast helper', () => {
     ]);
   });
 
-  it('forwards arbitrary topic + payload pairs', () => {
+  it('forwards arbitrary topic + payload pairs', async () => {
     const posted: unknown[] = [];
     _setBroadcastTarget({ postMessage: (msg: unknown) => posted.push(msg) });
 
@@ -41,7 +41,7 @@ describe('worker broadcast helper', () => {
     ]);
   });
 
-  it('throws if no broadcast target has been set', () => {
+  it('throws if no broadcast target has been set', async () => {
     expect(() => broadcast('any:topic', {})).toThrow(/broadcast target/i);
   });
 });

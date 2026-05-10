@@ -22,8 +22,8 @@ export { extractPatronymic };
  * Place-resolution function for Genney imports.
  * Uses Swedish hierarchical place resolution instead of the generic findOrCreate.
  */
-export function resolvePlaceFn(db: Database, name: string): Place {
-  return findOrCreateSwedishPlace(db, name);
+export async function resolvePlaceFn(db: Database, name: string): Promise<Place> {
+  return await findOrCreateSwedishPlace(db, name);
 }
 
 /**

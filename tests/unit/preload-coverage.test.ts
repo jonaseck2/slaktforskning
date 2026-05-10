@@ -27,8 +27,8 @@ for (const m of preloadSource.matchAll(/ipcRenderer\.(?:invoke|on)\(['"]([\w-]+:
   exposedChannels.add(m[1]);
 }
 
-describe('preload coverage', () => {
-  it('every registry channel is exposed on window.api', () => {
+describe('preload coverage', async () => {
+  it('every registry channel is exposed on window.api', async () => {
     const missing: string[] = [];
     for (const name of Object.keys(channelRegistry)) {
       // Internal worker-only channels (names containing ':_') are called from

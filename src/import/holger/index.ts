@@ -122,7 +122,7 @@ export async function importFromHolger(
     console.log(`[import-timing] parseGedcom — ${Date.now() - tParse}ms — ${tree.length} top-level nodes`);
     progress('Importing…');
     const tImport = Date.now();
-    const report = importGedcom(db, tree, {
+    const report = await importGedcom(db, tree, {
       profile: 'holger',
       ...(mediaDir ? { mediaDir } : {}),
     });

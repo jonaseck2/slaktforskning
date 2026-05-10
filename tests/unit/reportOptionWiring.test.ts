@@ -136,9 +136,9 @@ const KEEPSAKE_REPORTS = [
 // Suite 1 – Every defined prop is used somewhere in the component
 // ---------------------------------------------------------------------------
 
-describe('report component props: every defineProps entry must be referenced in the component', () => {
+describe('report component props: every defineProps entry must be referenced in the component', async () => {
   for (const { name, file } of REPORT_COMPONENTS) {
-    it(`${name}: no unused props`, () => {
+    it(`${name}: no unused props`, async () => {
       const content = readFile(file);
       const props = extractDefinedProps(content);
       if (props.length === 0) return;
@@ -153,11 +153,11 @@ describe('report component props: every defineProps entry must be referenced in 
 // Suite 2 – ReportsView bindings match component defineProps
 // ---------------------------------------------------------------------------
 
-describe('ReportsView: every :prop-name= binding must exist in the component defineProps', () => {
+describe('ReportsView: every :prop-name= binding must exist in the component defineProps', async () => {
   const viewBindings = extractReportsViewBindings();
 
   for (const { name, file } of REPORT_COMPONENTS) {
-    it(`${name}: all bound props are defined`, () => {
+    it(`${name}: all bound props are defined`, async () => {
       const bound = viewBindings.get(name);
       if (!bound?.length) return;
 
@@ -172,11 +172,11 @@ describe('ReportsView: every :prop-name= binding must exist in the component def
 // Suite 3 – Every boolean option prop in a keepsake report is bound in ReportsView
 // ---------------------------------------------------------------------------
 
-describe('ReportsView: every boolean option prop in a keepsake report must be bound', () => {
+describe('ReportsView: every boolean option prop in a keepsake report must be bound', async () => {
   const viewBindings = extractReportsViewBindings();
 
   for (const name of KEEPSAKE_REPORTS) {
-    it(`${name}: all boolean props are bound`, () => {
+    it(`${name}: all boolean props are bound`, async () => {
       const content = readFile(COMPONENT_FILE[name]);
       const typeBlock = content.match(/defineProps\s*<\s*\{([\s\S]*?)\}\s*>/)?.[1] ?? '';
       const allProps = extractDefinedProps(content);
@@ -194,8 +194,8 @@ describe('ReportsView: every boolean option prop in a keepsake report must be bo
 // Suite 4 – ReportPanel checkbox store fields all exist in the store
 // ---------------------------------------------------------------------------
 
-describe('ReportPanel: every v-model="store.X" field must be exported from useReportConfigStore', () => {
-  it('all panel checkbox fields are valid store exports', () => {
+describe('ReportPanel: every v-model="store.X" field must be exported from useReportConfigStore', async () => {
+  it('all panel checkbox fields are valid store exports', async () => {
     const storeContent = readFile('src/renderer/stores/reportConfig.ts');
     const exported = extractStoreExports(storeContent);
     const fields = extractPanelCheckboxFields();

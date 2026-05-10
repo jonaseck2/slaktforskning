@@ -13,15 +13,15 @@ import { createTestDb } from './helpers';
 
 let db: Database;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('media_regions CRUD', () => {
-  it('creates a region with all fields', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Anna' });
-    const region = createMediaRegion(db, {
+describe('media_regions CRUD', async () => {
+  it('creates a region with all fields', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Anna' });
+    const region = await createMediaRegion(db, {
       media_id: m.id,
       person_id: p.id,
       x: 0.1,
@@ -42,9 +42,9 @@ describe('media_regions CRUD', () => {
     expect(region.created_at).toBeTruthy();
   });
 
-  it('creates a region without person_id', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const region = createMediaRegion(db, {
+  it('creates a region without person_id', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const region = await createMediaRegion(db, {
       media_id: m.id,
       x: 0.5,
       y: 0.5,
@@ -56,143 +56,143 @@ describe('media_regions CRUD', () => {
     expect(region.label).toBeNull();
   });
 
-  it('lists regions for a media item', () => {
-    const m = createMedia(db, { title: 'group.jpg' });
-    createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
-    createMediaRegion(db, { media_id: m.id, x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
+  it('lists regions for a media item', async () => {
+    const m = await createMedia(db, { title: 'group.jpg' });
+    await createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    await createMediaRegion(db, { media_id: m.id, x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
 
-    const regions = getMediaRegions(db, m.id);
+    const regions = await getMediaRegions(db, m.id);
     expect(regions).toHaveLength(2);
   });
 
-  it('does not return regions from other media items', () => {
-    const m1 = createMedia(db, { title: 'a.jpg' });
-    const m2 = createMedia(db, { title: 'b.jpg' });
-    createMediaRegion(db, { media_id: m1.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
-    createMediaRegion(db, { media_id: m2.id, x: 0.3, y: 0.3, width: 0.2, height: 0.2 });
+  it('does not return regions from other media items', async () => {
+    const m1 = await createMedia(db, { title: 'a.jpg' });
+    const m2 = await createMedia(db, { title: 'b.jpg' });
+    await createMediaRegion(db, { media_id: m1.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    await createMediaRegion(db, { media_id: m2.id, x: 0.3, y: 0.3, width: 0.2, height: 0.2 });
 
-    expect(getMediaRegions(db, m1.id)).toHaveLength(1);
-    expect(getMediaRegions(db, m2.id)).toHaveLength(1);
+    expect(await getMediaRegions(db, m1.id)).toHaveLength(1);
+    expect(await getMediaRegions(db, m2.id)).toHaveLength(1);
   });
 
-  it('updates person_id and label', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Erik' });
-    const region = createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+  it('updates person_id and label', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Erik' });
+    const region = await createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
-    const updated = updateMediaRegion(db, region.id, { person_id: p.id, label: 'Erik' });
+    const updated = await updateMediaRegion(db, region.id, { person_id: p.id, label: 'Erik' });
     expect(updated).not.toBeNull();
     expect(updated!.person_id).toBe(p.id);
     expect(updated!.label).toBe('Erik');
   });
 
-  it('clears person_id with null', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Anna' });
-    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+  it('clears person_id with null', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Anna' });
+    const region = await createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
-    const updated = updateMediaRegion(db, region.id, { person_id: null });
+    const updated = await updateMediaRegion(db, region.id, { person_id: null });
     expect(updated!.person_id).toBeNull();
   });
 
-  it('updates only person_id without changing label', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Sven' });
-    const region = createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Original' });
+  it('updates only person_id without changing label', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Sven' });
+    const region = await createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Original' });
 
-    const updated = updateMediaRegion(db, region.id, { person_id: p.id });
+    const updated = await updateMediaRegion(db, region.id, { person_id: p.id });
     expect(updated!.person_id).toBe(p.id);
     expect(updated!.label).toBe('Original'); // unchanged
   });
 
-  it('updates only label without changing person_id', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Sven' });
-    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+  it('updates only label without changing person_id', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Sven' });
+    const region = await createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
-    const updated = updateMediaRegion(db, region.id, { label: 'New label' });
+    const updated = await updateMediaRegion(db, region.id, { label: 'New label' });
     expect(updated!.label).toBe('New label');
     expect(updated!.person_id).toBe(p.id); // unchanged
   });
 
-  it('returns existing region unchanged when no fields passed', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Erik' });
-    const region = createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Face' });
+  it('returns existing region unchanged when no fields passed', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Erik' });
+    const region = await createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2, label: 'Face' });
 
-    const updated = updateMediaRegion(db, region.id, {});
+    const updated = await updateMediaRegion(db, region.id, {});
     expect(updated!.id).toBe(region.id);
     expect(updated!.person_id).toBe(p.id);
     expect(updated!.label).toBe('Face');
   });
 
-  it('returns null when updating non-existent region', () => {
-    const result = updateMediaRegion(db, 'nonexistent', { label: 'test' });
+  it('returns null when updating non-existent region', async () => {
+    const result = await updateMediaRegion(db, 'nonexistent', { label: 'test' });
     expect(result).toBeNull();
   });
 
-  it('deletes a region', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const region = createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+  it('deletes a region', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const region = await createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
-    expect(deleteMediaRegion(db, region.id)).toBe(true);
-    expect(getMediaRegions(db, m.id)).toHaveLength(0);
+    expect(await deleteMediaRegion(db, region.id)).toBe(true);
+    expect(await getMediaRegions(db, m.id)).toHaveLength(0);
   });
 
-  it('returns false when deleting non-existent region', () => {
-    expect(deleteMediaRegion(db, 'nonexistent')).toBe(false);
+  it('returns false when deleting non-existent region', async () => {
+    expect(await deleteMediaRegion(db, 'nonexistent')).toBe(false);
   });
 });
 
-describe('cascade and SET NULL behavior', () => {
-  it('cascades delete when media is deleted', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
-    createMediaRegion(db, { media_id: m.id, x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
+describe('cascade and SET NULL behavior', async () => {
+  it('cascades delete when media is deleted', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    await createMediaRegion(db, { media_id: m.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    await createMediaRegion(db, { media_id: m.id, x: 0.5, y: 0.5, width: 0.2, height: 0.2 });
 
-    deleteMedia(db, m.id);
+    await deleteMedia(db, m.id);
 
-    expect(getMediaRegions(db, m.id)).toHaveLength(0);
+    expect(await getMediaRegions(db, m.id)).toHaveLength(0);
   });
 
-  it('sets person_id to NULL when person is deleted', () => {
-    const m = createMedia(db, { title: 'photo.jpg' });
-    const p = createPerson(db, { given_name: 'Anna' });
-    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+  it('sets person_id to NULL when person is deleted', async () => {
+    const m = await createMedia(db, { title: 'photo.jpg' });
+    const p = await createPerson(db, { given_name: 'Anna' });
+    await createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
 
-    deletePerson(db, p.id);
+    await deletePerson(db, p.id);
 
-    const regions = getMediaRegions(db, m.id);
+    const regions = await getMediaRegions(db, m.id);
     expect(regions).toHaveLength(1);
     expect(regions[0].person_id).toBeNull();
   });
 });
 
-describe('getRegionsForPerson', () => {
-  it('returns regions with media title', () => {
-    const m = createMedia(db, { title: 'Family photo 1950' });
-    const p = createPerson(db, { given_name: 'Sven' });
-    createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.3, height: 0.4 });
+describe('getRegionsForPerson', async () => {
+  it('returns regions with media title', async () => {
+    const m = await createMedia(db, { title: 'Family photo 1950' });
+    const p = await createPerson(db, { given_name: 'Sven' });
+    await createMediaRegion(db, { media_id: m.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.3, height: 0.4 });
 
-    const regions = getRegionsForPerson(db, p.id);
+    const regions = await getRegionsForPerson(db, p.id);
     expect(regions).toHaveLength(1);
     expect(regions[0].media_title).toBe('Family photo 1950');
     expect(regions[0].person_id).toBe(p.id);
   });
 
-  it('returns empty array for person with no regions', () => {
-    const p = createPerson(db, { given_name: 'Nobody' });
-    expect(getRegionsForPerson(db, p.id)).toHaveLength(0);
+  it('returns empty array for person with no regions', async () => {
+    const p = await createPerson(db, { given_name: 'Nobody' });
+    expect(await getRegionsForPerson(db, p.id)).toHaveLength(0);
   });
 
-  it('returns regions from multiple media items', () => {
-    const m1 = createMedia(db, { title: 'Photo A' });
-    const m2 = createMedia(db, { title: 'Photo B' });
-    const p = createPerson(db, { given_name: 'Eva' });
-    createMediaRegion(db, { media_id: m1.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
-    createMediaRegion(db, { media_id: m2.id, person_id: p.id, x: 0.3, y: 0.3, width: 0.2, height: 0.2 });
+  it('returns regions from multiple media items', async () => {
+    const m1 = await createMedia(db, { title: 'Photo A' });
+    const m2 = await createMedia(db, { title: 'Photo B' });
+    const p = await createPerson(db, { given_name: 'Eva' });
+    await createMediaRegion(db, { media_id: m1.id, person_id: p.id, x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+    await createMediaRegion(db, { media_id: m2.id, person_id: p.id, x: 0.3, y: 0.3, width: 0.2, height: 0.2 });
 
-    const regions = getRegionsForPerson(db, p.id);
+    const regions = await getRegionsForPerson(db, p.id);
     expect(regions).toHaveLength(2);
     expect(regions.map(r => r.media_title).sort()).toEqual(['Photo A', 'Photo B']);
   });

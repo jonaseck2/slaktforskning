@@ -24,8 +24,8 @@ export async function createPersonUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.createPerson',
-    undo: () => { persons.deletePerson(db, id); },
-    redo: () => { persons.createPerson(db, snapshot); },
+    undo: async () => { await persons.deletePerson(db, id); },
+    redo: async () => { await persons.createPerson(db, snapshot); },
   });
   return result;
 }
@@ -42,8 +42,8 @@ export async function updatePersonUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updatePerson',
-    undo: () => { persons.updatePerson(db, id, oldData); },
-    redo: () => { persons.updatePerson(db, id, newData); },
+    undo: async () => { await persons.updatePerson(db, id, oldData); },
+    redo: async () => { await persons.updatePerson(db, id, newData); },
   });
   return result;
 }
@@ -68,42 +68,42 @@ export async function deletePersonUndo(
 
   undoManager.push({
     label: 'undo.deletePerson',
-    undo: () => {
+    undo: async () => {
       // Restore the row exactly as it was, including display_id — undo means
       // "as if the delete never happened", not "create a new row with similar
       // data". The unique partial index on display_id permits this because
       // the delete freed the integer; if a concurrent write took it
       // (extremely unlikely on this single-user DB) the restore errors loudly,
       // which is the right behavior.
-      runSql(db,
+      await runSql(db,
         `INSERT INTO persons (id, sex, notes, display_id) VALUES (?, ?, ?, ?)`,
         [person.id, person.sex, person.notes, person.display_id]
       );
       for (const name of names) {
-        runSql(db,
+        await runSql(db,
           `INSERT INTO person_names (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [name.id, name.person_id, name.given_name, name.surname, name.name_type, name.date_from, name.date_to, name.sort_order, name.name_prefix, name.name_suffix, name.patronymic_base, name.name_qualifier, name.preferred_name, name.nickname]
         );
       }
       for (const ident of identifiers) {
-        runSql(db,
+        await runSql(db,
           `INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)`,
           [ident.id, ident.person_id, ident.identifier_type, ident.identifier_value, ident.created_at]
         );
       }
       for (const rel of rels) {
-        const existing = relationships.getRelationship(db, rel.id);
+        const existing = await relationships.getRelationship(db, rel.id);
         if (!existing) {
-          runSql(db,
+          await runSql(db,
             `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`,
             [rel.id, rel.type, rel.person1_id, rel.person2_id, rel.subtype, rel.notes]
           );
         }
       }
       for (const ev of personEvents) {
-        const existing = events.getEvent(db, ev.id);
+        const existing = await events.getEvent(db, ev.id);
         if (!existing) {
-          runSql(db,
+          await runSql(db,
             `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.value, ev.notes]
           );
@@ -111,7 +111,7 @@ export async function deletePersonUndo(
         const parts = participantsByEvent[ev.id] || [];
         for (const p of parts) {
           try {
-            runSql(db,
+            await runSql(db,
               `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`,
               [p.id, p.event_id, p.person_id, p.role]
             );
@@ -121,7 +121,7 @@ export async function deletePersonUndo(
         }
       }
     },
-    redo: () => { persons.deletePerson(db, id); },
+    redo: async () => { await persons.deletePerson(db, id); },
   });
   return true;
 }
@@ -137,12 +137,12 @@ export async function createPersonWithEventUndo(
   const snapshot = JSON.parse(JSON.stringify(args)) as CreatePersonWithEventArgs;
   undoManager.push({
     label: 'undo.createPersonWithEvent',
-    undo: () => {
-      if (citationId) sources.deleteCitation(db, citationId);
-      if (eventId) events.deleteEvent(db, eventId);
-      persons.deletePerson(db, personId);
+    undo: async () => {
+      if (citationId) await sources.deleteCitation(db, citationId);
+      if (eventId) await events.deleteEvent(db, eventId);
+      await persons.deletePerson(db, personId);
     },
-    redo: () => { createPersonWithEventWorkflow(db, snapshot); },
+    redo: async () => { await createPersonWithEventWorkflow(db, snapshot); },
   });
   return result;
 }
@@ -159,8 +159,8 @@ export async function addPersonNameUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.addPersonName',
-    undo: () => { persons.deletePersonName(db, nameId); },
-    redo: () => { persons.addPersonName(db, personId, snapshot); },
+    undo: async () => { await persons.deletePersonName(db, nameId); },
+    redo: async () => { await persons.addPersonName(db, personId, snapshot); },
   });
   return result;
 }
@@ -180,8 +180,8 @@ export async function updatePersonNameUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updatePersonName',
-    undo: () => { persons.updatePersonName(db, id, oldData as Parameters<typeof persons.updatePersonName>[2]); },
-    redo: () => { persons.updatePersonName(db, id, newData); },
+    undo: async () => { await persons.updatePersonName(db, id, oldData as Parameters<typeof persons.updatePersonName>[2]); },
+    redo: async () => { await persons.updatePersonName(db, id, newData); },
   });
   return result;
 }
@@ -196,13 +196,13 @@ export async function deletePersonNameUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.deletePersonName',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO person_names (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order, name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [old.id, old.person_id, old.given_name, old.surname, old.name_type, old.date_from, old.date_to, old.sort_order, old.name_prefix, old.name_suffix, old.patronymic_base, old.name_qualifier, old.preferred_name, old.nickname]
       );
     },
-    redo: () => { persons.deletePersonName(db, id); },
+    redo: async () => { await persons.deletePersonName(db, id); },
   });
   return true;
 }
@@ -218,8 +218,8 @@ export async function createEventUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.createEvent',
-    undo: () => { events.deleteEvent(db, id); },
-    redo: () => { events.createEvent(db, snapshot); },
+    undo: async () => { await events.deleteEvent(db, id); },
+    redo: async () => { await events.createEvent(db, snapshot); },
   });
   return result;
 }
@@ -239,8 +239,8 @@ export async function updateEventUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateEvent',
-    undo: () => { events.updateEvent(db, id, oldData as Parameters<typeof events.updateEvent>[2]); },
-    redo: () => { events.updateEvent(db, id, newData); },
+    undo: async () => { await events.updateEvent(db, id, oldData as Parameters<typeof events.updateEvent>[2]); },
+    redo: async () => { await events.updateEvent(db, id, newData); },
   });
   return result;
 }
@@ -256,14 +256,14 @@ export async function deleteEventUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteEvent',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [old.id, old.event_type, old.relationship_id, old.date_type, old.date_value, old.date_value_end, old.date_original, old.place_id, old.place_address, old.cause, old.value, old.notes]
       );
       for (const p of participants) {
         try {
-          runSql(db,
+          await runSql(db,
             `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`,
             [p.id, p.event_id, p.person_id, p.role]
           );
@@ -272,7 +272,7 @@ export async function deleteEventUndo(
         }
       }
     },
-    redo: () => { events.deleteEvent(db, id); },
+    redo: async () => { await events.deleteEvent(db, id); },
   });
   return true;
 }
@@ -288,8 +288,8 @@ export async function addEventParticipantUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.addEventParticipant',
-    undo: () => { relationships.removeEventParticipant(db, id); },
-    redo: () => { relationships.addEventParticipant(db, snapshot); },
+    undo: async () => { await relationships.removeEventParticipant(db, id); },
+    redo: async () => { await relationships.addEventParticipant(db, snapshot); },
   });
   return result;
 }
@@ -304,13 +304,13 @@ export async function removeEventParticipantUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.removeEventParticipant',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)`,
         [old.id, old.event_id, old.person_id, old.role]
       );
     },
-    redo: () => { relationships.removeEventParticipant(db, id); },
+    redo: async () => { await relationships.removeEventParticipant(db, id); },
   });
   return true;
 }
@@ -326,8 +326,8 @@ export async function createRelationshipUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.createRelationship',
-    undo: () => { relationships.deleteRelationship(db, id); },
-    redo: () => { relationships.createRelationship(db, snapshot); },
+    undo: async () => { await relationships.deleteRelationship(db, id); },
+    redo: async () => { await relationships.createRelationship(db, snapshot); },
   });
   return result;
 }
@@ -347,8 +347,8 @@ export async function updateRelationshipUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateRelationship',
-    undo: () => { relationships.updateRelationship(db, id, oldData as Parameters<typeof relationships.updateRelationship>[2]); },
-    redo: () => { relationships.updateRelationship(db, id, newData); },
+    undo: async () => { await relationships.updateRelationship(db, id, oldData as Parameters<typeof relationships.updateRelationship>[2]); },
+    redo: async () => { await relationships.updateRelationship(db, id, newData); },
   });
   return result;
 }
@@ -364,22 +364,22 @@ export async function deleteRelationshipUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteRelationship',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)`,
         [old.id, old.type, old.person1_id, old.person2_id, old.subtype, old.notes]
       );
       for (const ev of relEvents) {
-        const existing = events.getEvent(db, ev.id);
+        const existing = await events.getEvent(db, ev.id);
         if (!existing) {
-          runSql(db,
+          await runSql(db,
             `INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [ev.id, ev.event_type, ev.relationship_id, ev.date_type, ev.date_value, ev.date_value_end, ev.date_original, ev.place_id, ev.place_address, ev.cause, ev.value, ev.notes]
           );
         }
       }
     },
-    redo: () => { relationships.deleteRelationship(db, id); },
+    redo: async () => { await relationships.deleteRelationship(db, id); },
   });
   return true;
 }
@@ -395,8 +395,8 @@ export async function createSourceUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.createSource',
-    undo: () => { sources.deleteSource(db, id); },
-    redo: () => { sources.createSource(db, snapshot); },
+    undo: async () => { await sources.deleteSource(db, id); },
+    redo: async () => { await sources.createSource(db, snapshot); },
   });
   return result;
 }
@@ -416,8 +416,8 @@ export async function updateSourceUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateSource',
-    undo: () => { sources.updateSource(db, id, oldData as Parameters<typeof sources.updateSource>[2]); },
-    redo: () => { sources.updateSource(db, id, newData); },
+    undo: async () => { await sources.updateSource(db, id, oldData as Parameters<typeof sources.updateSource>[2]); },
+    redo: async () => { await sources.updateSource(db, id, newData); },
   });
   return result;
 }
@@ -433,19 +433,19 @@ export async function deleteSourceUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteSource',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [old.id, old.title, old.author, old.publication_info, old.repository, old.url, old.source_type, old.call_number, old.abstract]
       );
       for (const c of citations) {
-        runSql(db,
+        await runSql(db,
           `INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [c.id, c.source_id, c.page, c.date_accessed, c.confidence, c.transcription, c.notes, c.event_id, c.person_id, c.relationship_id, c.place_id]
         );
       }
     },
-    redo: () => { sources.deleteSource(db, id); },
+    redo: async () => { await sources.deleteSource(db, id); },
   });
   return true;
 }
@@ -461,8 +461,8 @@ export async function createCitationUndo(
   const snapshot = JSON.parse(JSON.stringify(data));
   undoManager.push({
     label: 'undo.createCitation',
-    undo: () => { sources.deleteCitation(db, id); },
-    redo: () => { sources.createCitation(db, snapshot); },
+    undo: async () => { await sources.deleteCitation(db, id); },
+    redo: async () => { await sources.createCitation(db, snapshot); },
   });
   return result;
 }
@@ -482,8 +482,8 @@ export async function updateCitationUndo(
   const newData = { ...data };
   undoManager.push({
     label: 'undo.updateCitation',
-    undo: () => { sources.updateCitation(db, id, oldData as Parameters<typeof sources.updateCitation>[2]); },
-    redo: () => { sources.updateCitation(db, id, newData); },
+    undo: async () => { await sources.updateCitation(db, id, oldData as Parameters<typeof sources.updateCitation>[2]); },
+    redo: async () => { await sources.updateCitation(db, id, newData); },
   });
   return result;
 }
@@ -498,13 +498,13 @@ export async function deleteCitationUndo(
   if (!result) return false;
   undoManager.push({
     label: 'undo.deleteCitation',
-    undo: () => {
-      runSql(db,
+    undo: async () => {
+      await runSql(db,
         `INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [old.id, old.source_id, old.page, old.date_accessed, old.confidence, old.transcription, old.notes, old.event_id, old.person_id, old.relationship_id, old.place_id, old.person_name_id]
       );
     },
-    redo: () => { sources.deleteCitation(db, id); },
+    redo: async () => { await sources.deleteCitation(db, id); },
   });
   return true;
 }

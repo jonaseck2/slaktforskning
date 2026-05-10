@@ -34,7 +34,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       // Pass leafProps so user-authored place_type/lat/lon/notes/etc. are
       // persisted on the newly created leaf — Prime Directive: never silently
       // drop authored values.
-      const place = placeApi.findOrCreatePlaceWithChain(
+      const place = await placeApi.findOrCreatePlaceWithChain(
         getDb(),
         name,
         parent_chain.map((n) => ({ name: n })),
@@ -42,7 +42,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       );
       return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
     }
-    const place = placeApi.createPlace(getDb(), { name, ...leafProps });
+    const place = await placeApi.createPlace(getDb(), { name, ...leafProps });
     return { content: [{ type: 'text', text: JSON.stringify(place, null, 2) }] };
   });
 
@@ -52,7 +52,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       query: z.string().describe('Search query'),
     },
   }, async (args) => {
-    const results = placeApi.searchPlaces(getDb(), args.query);
+    const results = await placeApi.searchPlaces(getDb(), args.query);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
@@ -62,7 +62,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       place_id: z.string().describe('Place ID'),
     },
   }, async (args) => {
-    const result = reportData.getPlaceHistory(getDb(), args.place_id);
+    const result = await reportData.getPlaceHistory(getDb(), args.place_id);
     return { content: [{ type: 'text', text: result ? JSON.stringify(result, null, 2) : 'Place not found' }] };
   });
 
@@ -73,11 +73,11 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const db = getDb();
-    const raw = getDbSetting(db, 'gazetteer_config');
+    const raw = await getDbSetting(db, 'gazetteer_config');
     const config: GazetteerConfig = raw
       ? JSON.parse(raw) as GazetteerConfig
       : { enabledGazetteers: [] };
-    const imported = getImportedGazetteers(db);
+    const imported = await getImportedGazetteers(db);
     const gazetteers = loadGazetteers(config, getAllGazetteers(), imported);
     const result = resolvePlace(args.name, gazetteers);
     if (!result) {
@@ -92,7 +92,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       parent_place_id: z.string().nullable().describe('Parent place ID, or null for root-level places'),
     },
   }, async (args) => {
-    const rows = placeApi.listPlaceChildren(getDb(), args.parent_place_id ?? null);
+    const rows = await placeApi.listPlaceChildren(getDb(), args.parent_place_id ?? null);
     return { content: [{ type: 'text', text: JSON.stringify(rows, null, 2) }] };
   });
 
@@ -102,7 +102,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       place_id: z.string().describe('Place ID'),
     },
   }, async (args) => {
-    const chain = placeApi.getPlaceAncestors(getDb(), args.place_id);
+    const chain = await placeApi.getPlaceAncestors(getDb(), args.place_id);
     return { content: [{ type: 'text', text: JSON.stringify(chain, null, 2) }] };
   });
 
@@ -126,7 +126,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
   }, async (args) => {
     const { id, ...data } = args;
     if (data.name !== undefined) placeApi.assertLeafPlaceName(data.name);
-    const place = placeApi.updatePlace(getDb(), id, data);
+    const place = await placeApi.updatePlace(getDb(), id, data);
     return { content: [{ type: 'text', text: place ? JSON.stringify(place, null, 2) : 'Place not found' }] };
   });
 
@@ -136,7 +136,7 @@ export function registerPlaceTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Place ID'),
     },
   }, async (args) => {
-    const ok = placeApi.deletePlace(getDb(), args.id);
+    const ok = await placeApi.deletePlace(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Place not found' }] };
   });
 }

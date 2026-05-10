@@ -30,7 +30,7 @@ const CORE_TAGS = new Set([
   'SOUR', 'SUBM', 'GEDC', 'VERS', 'FORM', 'CHAR', 'DEST',
 ]);
 
-describe('GEDCOM dialect coverage', () => {
+describe('GEDCOM dialect coverage', async () => {
   const fixtureFiles = readdirSync(DIALECTS_DIR).filter(f => f.endsWith('.ged')).sort();
 
   it('lists every expected dialect', () => {
@@ -49,31 +49,31 @@ describe('GEDCOM dialect coverage', () => {
   });
 
   for (const file of fixtureFiles) {
-    describe(file, () => {
+    describe(file, async () => {
       const ged = readFileSync(join(DIALECTS_DIR, file), 'utf-8');
       const tree = parseGedcom(ged);
 
-      it('imports without throwing and creates at least one person', () => {
-        const db = createTestDb();
+      it('imports without throwing and creates at least one person', async () => {
+        const db = await createTestDb();
         const isHolger = file === 'holger.ged';
-        const report = importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
+        const report = await importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
         expect(report.persons).toBeGreaterThan(0);
       });
 
-      it('reports an honest count of imported entities (matches DB row counts)', () => {
-        const db = createTestDb();
+      it('reports an honest count of imported entities (matches DB row counts)', async () => {
+        const db = await createTestDb();
         const isHolger = file === 'holger.ged';
-        const report = importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
+        const report = await importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
         const stmt = db.prepare('SELECT COUNT(*) as n FROM persons');
         const row = stmt.get([]) as { n: number };
         (stmt as unknown as { finalize(): void }).finalize();
         expect(report.persons).toBe(row.n);
       });
 
-      it('does not silently drop core GEDCOM tags', () => {
-        const db = createTestDb();
+      it('does not silently drop core GEDCOM tags', async () => {
+        const db = await createTestDb();
         const isHolger = file === 'holger.ged';
-        const report = importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
+        const report = await importGedcom(db, tree, isHolger ? { profile: 'holger' } : undefined);
         const droppedCore = report.skipped.filter(s => CORE_TAGS.has(s.tag));
         expect(droppedCore, `core tags ended up in skipped list: ${JSON.stringify(droppedCore)}`).toEqual([]);
       });

@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { redactPerson, decadeFloor } from '../../src/api/html_site/redact';
 
-describe('decadeFloor', () => {
-  it('floors year to decade', () => {
+describe('decadeFloor', async () => {
+  it('floors year to decade', async () => {
     expect(decadeFloor(1985)).toBe(1980);
     expect(decadeFloor(1980)).toBe(1980);
     expect(decadeFloor(2003)).toBe(2000);
   });
 });
 
-describe('redactPerson', () => {
+describe('redactPerson', async () => {
   const livingPerson = {
     id: 'p1',
     sex: 'F' as const,
@@ -23,7 +23,7 @@ describe('redactPerson', () => {
     death_year: null,
   };
 
-  it('redacts a living person, keeping name + sex + decade-floored birth', () => {
+  it('redacts a living person, keeping name + sex + decade-floored birth', async () => {
     const r = redactPerson(livingPerson);
     expect(r.id).toBe('p1');
     expect(r.sex).toBe('F');
@@ -35,7 +35,7 @@ describe('redactPerson', () => {
     expect(r.redacted).toBe(true);
   });
 
-  it('returns the input unchanged when not living', () => {
+  it('returns the input unchanged when not living', async () => {
     const p = { ...livingPerson, living: false };
     const r = redactPerson(p);
     expect(r.notes).toBe('private notes');
@@ -43,7 +43,7 @@ describe('redactPerson', () => {
     expect(r.redacted).toBe(false);
   });
 
-  it('handles missing birth_year gracefully', () => {
+  it('handles missing birth_year gracefully', async () => {
     const p = { ...livingPerson, birth_year: null };
     const r = redactPerson(p);
     expect(r.birth_year).toBeNull();

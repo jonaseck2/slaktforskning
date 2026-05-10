@@ -25,24 +25,24 @@ function loadFixture(name: string): string {
 }
 
 let db: ReturnType<typeof createTestDb>;
-beforeEach(() => { db = createTestDb(); });
+beforeEach(async () => { db = await createTestDb(); });
 
 // ──────────────────────────────────────────────
 // encoding.ged — UTF-8 characters preserved
 // ──────────────────────────────────────────────
-describe('encoding.ged', () => {
-  it('imports without error and preserves UTF-8 characters', () => {
+describe('encoding.ged', async () => {
+  it('imports without error and preserves UTF-8 characters', async () => {
     const tree = parseGedcom(loadFixture('encoding.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(2);
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     expect(persons.length).toBe(2);
 
     // Check Swedish characters
     const ake = persons.find(p => p.given_name?.includes('Åke'));
     expect(ake).toBeDefined();
-    const names = getPersonNames(db, ake!.id);
+    const names = await getPersonNames(db, ake!.id);
     expect(names[0].given_name).toBe('Åke Göran');
     expect(names[0].surname).toBe('Österberg');
 
@@ -58,13 +58,13 @@ describe('encoding.ged', () => {
     expect(person1?.notes).toContain('中文测试');
   });
 
-  it('preserves special characters in person2', () => {
+  it('preserves special characters in person2', async () => {
     const tree = parseGedcom(loadFixture('encoding.ged'));
-    importGedcom(db, tree);
-    const persons = listPersons(db);
+    await importGedcom(db, tree);
+    const persons = await listPersons(db);
     const arla = persons.find(p => p.surname === 'Björk');
     expect(arla).toBeDefined();
-    const names = getPersonNames(db, arla!.id);
+    const names = await getPersonNames(db, arla!.id);
     expect(names[0].given_name).toContain('Ärla');
     expect(names[0].given_name).toContain('Üllä');
   });
@@ -73,14 +73,14 @@ describe('encoding.ged', () => {
 // ──────────────────────────────────────────────
 // minimal.ged — smallest valid GEDCOM
 // ──────────────────────────────────────────────
-describe('minimal.ged', () => {
-  it('imports 1 person with no errors', () => {
+describe('minimal.ged', async () => {
+  it('imports 1 person with no errors', async () => {
     const tree = parseGedcom(loadFixture('minimal.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(1);
     expect(report.warnings.length).toBe(0);
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     expect(persons.length).toBe(1);
     expect(persons[0].given_name).toBe('Anna');
     expect(persons[0].surname).toBe('Svensson');
@@ -90,13 +90,13 @@ describe('minimal.ged', () => {
 // ──────────────────────────────────────────────
 // empty_fields.ged — records with empty/missing names
 // ──────────────────────────────────────────────
-describe('empty_fields.ged', () => {
-  it('creates persons even with empty or partial names', () => {
+describe('empty_fields.ged', async () => {
+  it('creates persons even with empty or partial names', async () => {
     const tree = parseGedcom(loadFixture('empty_fields.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(4);
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     expect(persons.length).toBe(4);
 
     // Person with NAME // should exist but have empty name parts
@@ -115,10 +115,10 @@ describe('empty_fields.ged', () => {
     expect(givenOnly).toBeDefined();
   });
 
-  it('creates person with no NAME tag at all', () => {
+  it('creates person with no NAME tag at all', async () => {
     const tree = parseGedcom(loadFixture('empty_fields.ged'));
-    importGedcom(db, tree);
-    const persons = listPersons(db);
+    await importGedcom(db, tree);
+    const persons = await listPersons(db);
     // @I4@ has no NAME tag — person created but with no person_names row
     expect(persons.length).toBe(4);
   });
@@ -127,13 +127,13 @@ describe('empty_fields.ged', () => {
 // ──────────────────────────────────────────────
 // deep_nesting.ged — multi-line CONT/CONC notes
 // ──────────────────────────────────────────────
-describe('deep_nesting.ged', () => {
-  it('preserves multi-line notes with CONT and CONC', () => {
+describe('deep_nesting.ged', async () => {
+  it('preserves multi-line notes with CONT and CONC', async () => {
     const tree = parseGedcom(loadFixture('deep_nesting.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(1);
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     const karl = persons[0];
     // CONT lines add newlines, CONC appends directly
     expect(karl.notes).toContain('Line 1 of a very long note.');
@@ -152,17 +152,17 @@ describe('deep_nesting.ged', () => {
 // ──────────────────────────────────────────────
 // large_family.ged — 1 couple with 22 children
 // ──────────────────────────────────────────────
-describe('large_family.ged', () => {
-  it('imports all persons and relationships', () => {
+describe('large_family.ged', async () => {
+  it('imports all persons and relationships', async () => {
     const tree = parseGedcom(loadFixture('large_family.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(24); // 2 parents + 22 children
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     expect(persons.length).toBe(24);
 
     // Check couple relationship exists
-    const rels = listRelationships(db);
+    const rels = await listRelationships(db);
     const couples = rels.filter(r => r.type === 'couple');
     expect(couples.length).toBe(1);
 
@@ -171,11 +171,11 @@ describe('large_family.ged', () => {
     expect(parentChild.length).toBe(44);
   });
 
-  it('does not create duplicate relationships', () => {
+  it('does not create duplicate relationships', async () => {
     const tree = parseGedcom(loadFixture('large_family.ged'));
-    importGedcom(db, tree);
+    await importGedcom(db, tree);
 
-    const rels = listRelationships(db);
+    const rels = await listRelationships(db);
     // All parent_child relationships should be unique
     const parentChild = rels.filter(r => r.type === 'parent_child');
     const uniquePairs = new Set(parentChild.map(r => `${r.person1_id}-${r.person2_id}`));
@@ -189,7 +189,7 @@ describe('large_family.ged', () => {
 describe('non_standard_tags.ged', () => {
   it('imports successfully and reports unknown tags', () => {
     const tree = parseGedcom(loadFixture('non_standard_tags.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(2);
 
     // Unknown tags should be in skipped/tagStats
@@ -203,17 +203,17 @@ describe('non_standard_tags.ged', () => {
   it('does not crash on custom tags', () => {
     const tree = parseGedcom(loadFixture('non_standard_tags.ged'));
     // Should not throw
-    expect(() => importGedcom(db, tree)).not.toThrow();
+    expect(() => await importGedcom(db, tree)).not.toThrow();
   });
 });
 
 // ──────────────────────────────────────────────
 // malformed_dates.ged — non-standard date formats
 // ──────────────────────────────────────────────
-describe('malformed_dates.ged', () => {
+describe('malformed_dates.ged', async () => {
   it('imports all persons without crashing', () => {
     const tree = parseGedcom(loadFixture('malformed_dates.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(7);
   });
 
@@ -262,12 +262,12 @@ describe('malformed_dates.ged', () => {
     expect(result.date_original).toBe('13th century');
   });
 
-  it('stores original text for all malformed dates', () => {
+  it('stores original text for all malformed dates', async () => {
     const tree = parseGedcom(loadFixture('malformed_dates.ged'));
-    importGedcom(db, tree);
-    const persons = listPersons(db);
+    await importGedcom(db, tree);
+    const persons = await listPersons(db);
     for (const person of persons) {
-      const events = getEventsForPerson(db, person.id);
+      const events = await getEventsForPerson(db, person.id);
       for (const event of events) {
         // Every event should have date_original preserved
         expect(event.date_original).toBeTruthy();
@@ -279,13 +279,13 @@ describe('malformed_dates.ged', () => {
 // ──────────────────────────────────────────────
 // mixed_line_endings.ged — different line ending styles
 // ──────────────────────────────────────────────
-describe('mixed_line_endings.ged', () => {
-  it('parses all records correctly regardless of line endings', () => {
+describe('mixed_line_endings.ged', async () => {
+  it('parses all records correctly regardless of line endings', async () => {
     const tree = parseGedcom(loadFixture('mixed_line_endings.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     expect(report.persons).toBe(2);
 
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     expect(persons.length).toBe(2);
     const names = persons.map(p => p.given_name).sort();
     expect(names).toContain('Anna');
@@ -303,12 +303,12 @@ describe('duplicate_xrefs.ged', () => {
     // the importer creates a new person for each INDI node.
     // The second @I1@ overwrites the first in the personMap, which is
     // acceptable behavior — the important thing is no crash.
-    expect(() => importGedcom(db, tree)).not.toThrow();
+    expect(() => await importGedcom(db, tree)).not.toThrow();
   });
 
   it('creates persons for all INDI records', () => {
     const tree = parseGedcom(loadFixture('duplicate_xrefs.ged'));
-    const report = importGedcom(db, tree);
+    const report = await importGedcom(db, tree);
     // Both @I1@ INDIs + @I2@ = 3 persons created in DB
     // (the personMap maps @I1@ to the last one, but both DB rows exist)
     expect(report.persons).toBe(3);
@@ -318,7 +318,7 @@ describe('duplicate_xrefs.ged', () => {
 // ──────────────────────────────────────────────
 // previewGedcomImport — preview without DB writes
 // ──────────────────────────────────────────────
-describe('previewGedcomImport', () => {
+describe('previewGedcomImport', async () => {
   it('returns correct counts for large_family.ged', () => {
     const tree = parseGedcom(loadFixture('large_family.ged'));
     const preview = previewGedcomImport(tree);
@@ -335,11 +335,11 @@ describe('previewGedcomImport', () => {
     expect(preview.estimatedSize).toBe('small');
   });
 
-  it('does not write to database', () => {
+  it('does not write to database', async () => {
     const tree = parseGedcom(loadFixture('large_family.ged'));
-    const personsBefore = listPersons(db).length;
+    const personsBefore = (await listPersons(db)).length;
     previewGedcomImport(tree);
-    const personsAfter = listPersons(db).length;
+    const personsAfter = (await listPersons(db)).length;
     expect(personsAfter).toBe(personsBefore);
   });
 

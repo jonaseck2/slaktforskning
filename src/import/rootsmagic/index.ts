@@ -34,12 +34,12 @@ export async function importFromRootsMagic(
   try {
     onProgress('Importing…');
     let summary = emptyRootsMagicSummary();
-    runSql(ourDb, 'BEGIN IMMEDIATE');
+    await runSql(ourDb, 'BEGIN IMMEDIATE');
     try {
-      summary = transformRootsMagic(ourDb, rmDb);
-      runSql(ourDb, 'COMMIT');
+      summary = await transformRootsMagic(ourDb, rmDb);
+      await runSql(ourDb, 'COMMIT');
     } catch (err) {
-      try { runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
+      try { await runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
       throw err;
     }
     return { summary };

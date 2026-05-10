@@ -5,7 +5,7 @@ import { getParentChildRoleLabel } from '../../src/renderer/utils/relationshipLa
 // resolved to without booting the i18n machinery.
 const idT = (key: string) => key;
 
-describe('getParentChildRoleLabel', () => {
+describe('getParentChildRoleLabel', async () => {
   it.each([
     ['parent', 'biological', 'relationshipRoles.parent_biological'],
     ['parent', 'adopted', 'relationshipRoles.parent_adopted'],
@@ -21,16 +21,16 @@ describe('getParentChildRoleLabel', () => {
     expect(getParentChildRoleLabel(idT, dir, sub)).toBe(expected);
   });
 
-  it('falls back to <direction>_unknown for null subtype', () => {
+  it('falls back to <direction>_unknown for null subtype', async () => {
     expect(getParentChildRoleLabel(idT, 'parent', null)).toBe('relationshipRoles.parent_unknown');
     expect(getParentChildRoleLabel(idT, 'child', null)).toBe('relationshipRoles.child_unknown');
   });
 
-  it('falls back to <direction>_unknown for undefined subtype', () => {
+  it('falls back to <direction>_unknown for undefined subtype', async () => {
     expect(getParentChildRoleLabel(idT, 'parent', undefined)).toBe('relationshipRoles.parent_unknown');
   });
 
-  it('falls back to <direction>_unknown for unrecognised subtype string', () => {
+  it('falls back to <direction>_unknown for unrecognised subtype string', async () => {
     expect(getParentChildRoleLabel(idT, 'child', 'wat')).toBe('relationshipRoles.child_unknown');
   });
 });

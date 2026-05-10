@@ -132,8 +132,8 @@ function emitCitationBlock(
 }
 
 /** Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for INDI/FAM, 2 for events. */
-function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event', entityId: string, baseLevel: number): void {
-  const mediaItems = getMediaForEntity(db, entityType, entityId);
+async function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event', entityId: string, baseLevel: number): Promise<void> {
+  const mediaItems = await getMediaForEntity(db, entityType, entityId);
   for (const m of mediaItems) {
     lines.push(`${baseLevel} OBJE`);
     if (m.format) lines.push(`${baseLevel + 1} FORM ${m.format}`);
@@ -178,11 +178,11 @@ function emitDate(
   }
 }
 
-export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', exportOptions?: ExportOptions): { ged: string; report: ExportReport } {
+export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', exportOptions?: ExportOptions): Promise<{ ged: string; report: ExportReport }> {
   const lines: string[] = [];
 
   // Resolve export options into a filtered dataset descriptor
-  const filterResult = exportOptions ? applyExportOptions(db, exportOptions) : null;
+  const filterResult = exportOptions ? await applyExportOptions(db, exportOptions) : null;
   const allowedPersonIds = filterResult?.personIds ?? null; // null = include all
   const includeMedia = filterResult?.includeMedia ?? true;
   const includeNotes = filterResult?.includeNotes ?? true;
@@ -199,11 +199,11 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   // file — not the proband / tree subject. The proband is tracked separately
   // via `default_person_id` (used for startup nav and import-time matching);
   // it has no native GEDCOM 5.5.1 tag and is not exported here.
-  const researcherName = getDbSetting(db, 'researcher_name');
+  const researcherName = await getDbSetting(db, 'researcher_name');
   if (researcherName && researcherName.trim()) {
-    const researcherAddress = getDbSetting(db, 'researcher_address');
-    const researcherPhone   = getDbSetting(db, 'researcher_phone');
-    const researcherEmail   = getDbSetting(db, 'researcher_email');
+    const researcherAddress = await getDbSetting(db, 'researcher_address');
+    const researcherPhone   = await getDbSetting(db, 'researcher_phone');
+    const researcherEmail   = await getDbSetting(db, 'researcher_email');
     lines.push('1 SUBM @SUBM@');
     lines.push(`0 @SUBM@ SUBM`);
     lines.push(`1 NAME ${researcherName.trim()}`);
@@ -223,9 +223,9 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     // Fall back to default_person_id for backwards-compat with files that
     // expect a SUBM NAME (e.g. Holger imports). This preserves round-trip
     // behaviour for users who haven't filled in researcher info yet.
-    const defaultPersonId = getDbSetting(db, 'default_person_id');
+    const defaultPersonId = await getDbSetting(db, 'default_person_id');
     if (defaultPersonId) {
-      const names = getPersonNames(db, defaultPersonId);
+      const names = await getPersonNames(db, defaultPersonId);
       const primary = names.find(n => n.preferred_name) ?? names[0];
       if (primary) {
         const fullName = [primary.given_name, primary.surname].filter(Boolean).join(' ');
@@ -237,21 +237,21 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   }
 
   // ── Repositories ───────────────────────────────────────────────────────────
-  const sources = includeSources ? listSources(db) : [];
+  const sources = includeSources ? await listSources(db) : [];
   // Collect all repositories used by any source, deduplicated by repo id
   // Cache per-source repository lookups to avoid duplicate queries
   const sourceReposCache = new Map<string, Repository[]>();
   const repoXref = new Map<string, string>();
   const allRepos = new Map<string, Repository>();
-  sources.forEach(src => {
-    const repos = getRepositoriesForSource(db, src.id);
+  for (const src of sources) {
+    const repos = await getRepositoriesForSource(db, src.id);
     sourceReposCache.set(src.id, repos);
     for (const repo of repos) {
       if (!allRepos.has(repo.id)) {
         allRepos.set(repo.id, repo);
       }
     }
-  });
+  }
   let repoCounter = 0;
   for (const [repoId, repo] of allRepos) {
     repoCounter++;
@@ -323,7 +323,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   });
 
   // ── Persons ────────────────────────────────────────────────────────────────
-  const allPersons = listPersons(db);
+  const allPersons = await listPersons(db);
   const persons = allowedPersonIds
     ? allPersons.filter(p => allowedPersonIds.has(p.id))
     : allPersons;
@@ -332,11 +332,12 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   const personXref = new Map<string, string>();
   persons.forEach((p, i) => personXref.set(p.id, `@I${i + 1}@`));
 
-  persons.forEach((p, i) => {
+  for (let i = 0; i < persons.length; i++) {
+    const p = persons[i];
     const xr = `@I${i + 1}@`;
     lines.push(`0 ${xr} INDI`);
 
-    const names = getPersonNames(db, p.id);
+    const names = await getPersonNames(db, p.id);
     for (const n of names) {
       const rawGiven = n.given_name ?? '';
       // Encode tilltalsnamn as asterisk in NAME for Genney compatibility
@@ -367,7 +368,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       // 5.5.1 and 7.0 NAME_PIECE structure). Importer routes these back into
       // citations.person_name_id.
       if (includeSources) {
-        const nameCitations = getCitationsForPersonName(db, n.id);
+        const nameCitations = await getCitationsForPersonName(db, n.id);
         for (const cit of nameCitations) {
           const srcXr = sourceXref.get(cit.source_id);
           if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
@@ -380,11 +381,11 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
 
     // Person events — only emit events where this person is the PRIMARY participant.
     // Non-primary participant roles are captured as ASSO blocks instead.
-    const events = getEventsForPerson(db, p.id);
+    const events = await getEventsForPerson(db, p.id);
     const assoLines: string[] = [];
     for (const ev of events) {
       if (ev.relationship_id) continue;
-      const participants = getEventParticipants(db, ev.id);
+      const participants = await getEventParticipants(db, ev.id);
       const isPrimary = participants.some(part => part.person_id === p.id && part.role === 'primary');
       // Skip events where this person is a secondary participant — those events
       // are owned by another person and will be emitted under their INDI.
@@ -406,7 +407,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       lines.push(`2 _EVID ${ev.id}`);
       let emittedPlac = false;
       if (ev.place_id) {
-        const place = getPlace(db, ev.place_id);
+        const place = await getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
@@ -427,13 +428,13 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
-        const citations = getCitationsForEvent(db, ev.id);
+        const citations = await getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
           if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
-      if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      if (includeMedia) await emitMediaBlocks(lines, db, 'event', ev.id, 2);
       // Collect ASSO blocks for non-primary participants in this event
       for (const part of participants) {
         if (part.person_id === p.id) continue;
@@ -449,7 +450,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
 
     // External identifiers
-    const identifiers = getPersonIdentifiers(db, p.id);
+    const identifiers = await getPersonIdentifiers(db, p.id);
     for (const ident of identifiers) {
       const refTag = version === '7.0' ? 'EXID' : 'REFN';
       switch (ident.identifier_type) {
@@ -497,7 +498,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
 
     // ASSO blocks for sibling / godparent / other relationships
-    const personRels = getRelationshipsOfPerson(db, p.id);
+    const personRels = await getRelationshipsOfPerson(db, p.id);
     for (const rel of personRels) {
       if (rel.type !== 'sibling' && rel.type !== 'godparent' && rel.type !== 'other') continue;
       const otherId = rel.person1_id === p.id ? rel.person2_id : rel.person1_id;
@@ -528,7 +529,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
 
     // Person-level citations (not tied to any specific event)
     if (includeSources) {
-      const personCitations = getCitationsForPerson(db, p.id);
+      const personCitations = await getCitationsForPerson(db, p.id);
       for (const cit of personCitations) {
         const srcXr = sourceXref.get(cit.source_id);
         if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'person');
@@ -536,11 +537,11 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
 
     // Person-level media
-    if (includeMedia) emitMediaBlocks(lines, db, 'person', p.id, 1);
-  });
+    if (includeMedia) await emitMediaBlocks(lines, db, 'person', p.id, 1);
+  }
 
   // ── Families ───────────────────────────────────────────────────────────────
-  const relationships = listRelationships(db);
+  const relationships = await listRelationships(db);
   const couples = relationships.filter(r => {
     if (r.type !== 'couple') return false;
     if (!allowedPersonIds) return true;
@@ -549,7 +550,8 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     const p2In = r.person2_id ? allowedPersonIds.has(r.person2_id) : false;
     return p1In || p2In;
   });
-  couples.forEach((rel, i) => {
+  for (let i = 0; i < couples.length; i++) {
+    const rel = couples[i];
     const xr = `@F${i + 1}@`;
     lines.push(`0 ${xr} FAM`);
     if (rel.person1_id) {
@@ -592,7 +594,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     if (includeNotes && rel.notes) lines.push(`1 _RELNOTES ${rel.notes}`);
 
     // Family events
-    const famEvents = getEventsForRelationship(db, rel.id);
+    const famEvents = await getEventsForRelationship(db, rel.id);
     for (const ev of famEvents) {
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
       const lineValueFirstLine = ev.value ? ev.value.split(/\r?\n/)[0] : '';
@@ -607,7 +609,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       lines.push(`2 _EVID ${ev.id}`);
       let emittedPlac = false;
       if (ev.place_id) {
-        const place = getPlace(db, ev.place_id);
+        const place = await getPlace(db, ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
@@ -625,18 +627,18 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
       if (includeNotes && notesBody) lines.push(`2 NOTE ${notesBody}`);
       if (ev.cause) lines.push(`2 CAUS ${ev.cause}`);
       if (includeSources) {
-        const citations = getCitationsForEvent(db, ev.id);
+        const citations = await getCitationsForEvent(db, ev.id);
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
           if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
         }
       }
-      if (includeMedia) emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      if (includeMedia) await emitMediaBlocks(lines, db, 'event', ev.id, 2);
     }
 
     // Relationship-level citations
     if (includeSources) {
-      const relCitations = getCitationsForRelationship(db, rel.id);
+      const relCitations = await getCitationsForRelationship(db, rel.id);
       for (const cit of relCitations) {
         const srcXr = sourceXref.get(cit.source_id);
         if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'relationship');
@@ -644,8 +646,8 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
 
     // Relationship-level media
-    if (includeMedia) emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
-  });
+    if (includeMedia) await emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
+  }
 
   // ── Top-level _PLAC and OBJE records for places / media reachable from
   //    citations or groups. Both kinds are emitted as level-0 custom (_PLAC)
@@ -657,12 +659,12 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   // Determine which places and media need top-level records. Sources of demand:
   //   - place-level citations (existing behaviour)
   //   - group_links (entity_type ∈ person/place/media) — new in this plan
-  const allGroups = listGroups(db);
-  const groupLinksByGroup = new Map<string, ReturnType<typeof getGroupLinks>>();
+  const allGroups = await listGroups(db);
+  const groupLinksByGroup = new Map<string, Awaited<ReturnType<typeof getGroupLinks>>>();
   const groupLinkedPlaceIds = new Set<string>();
   const groupLinkedMediaIds = new Set<string>();
   for (const grp of allGroups) {
-    const links = getGroupLinks(db, grp.id);
+    const links = await getGroupLinks(db, grp.id);
     groupLinksByGroup.set(grp.id, links);
     for (const link of links) {
       if (link.entity_type === 'place') groupLinkedPlaceIds.add(link.entity_id);
@@ -673,10 +675,10 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   // Build the set of place ids that need a `_PLAC` top-level record.
   const placeXref = new Map<string, string>();
   if (includeSources || groupLinkedPlaceIds.size > 0) {
-    const allPlaces = listPlaces(db);
+    const allPlaces = await listPlaces(db);
     let placeCounter = 0;
     for (const place of allPlaces) {
-      const placeCitations = includeSources ? getCitationsForPlace(db, place.id) : [];
+      const placeCitations = includeSources ? await getCitationsForPlace(db, place.id) : [];
       const isGroupLinked = groupLinkedPlaceIds.has(place.id);
       if (placeCitations.length === 0 && !isGroupLinked) continue;
       placeCounter++;
@@ -702,7 +704,7 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
   if (groupLinkedMediaIds.size > 0 && includeMedia) {
     let mediaCounter = 0;
     for (const mediaId of groupLinkedMediaIds) {
-      const m: Media | null = getMedia(db, mediaId);
+      const m: Media | null = await getMedia(db, mediaId);
       if (!m) continue;
       mediaCounter++;
       const mxr = `@M${mediaCounter}@`;

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import TimelineBar from '../../../../src/renderer/components/reports/primitives/TimelineBar.vue';
 
-describe('TimelineBar', () => {
-  it('renders items as markers', () => {
+describe('TimelineBar', async () => {
+  it('renders items as markers', async () => {
     const wrapper = mount(TimelineBar, {
       props: {
         items: [
@@ -16,7 +16,7 @@ describe('TimelineBar', () => {
     expect(wrapper.text()).toContain('Born 1850');
   });
 
-  it('positions markers proportionally', () => {
+  it('positions markers proportionally', async () => {
     const wrapper = mount(TimelineBar, {
       props: {
         items: [
@@ -30,12 +30,12 @@ describe('TimelineBar', () => {
     expect((markers[1].element as HTMLElement).style.left).toBe('100%');
   });
 
-  it('renders nothing when items empty', () => {
+  it('renders nothing when items empty', async () => {
     const wrapper = mount(TimelineBar, { props: { items: [] } });
     expect(wrapper.find('.timeline-bar').exists()).toBe(false);
   });
 
-  it('respects rangeStart and rangeEnd overrides', () => {
+  it('respects rangeStart and rangeEnd overrides', async () => {
     const wrapper = mount(TimelineBar, {
       props: {
         items: [{ id: '1', year: 1925, eventType: 'x', label: 'mid' }],

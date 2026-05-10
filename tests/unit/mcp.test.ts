@@ -21,7 +21,7 @@ async function call(name: string, args: Record<string, unknown> = {}): Promise<u
 }
 
 beforeEach(async () => {
-  const db = createTestDb();
+  const db = await createTestDb();
   const { server } = createProdServer(db, ':memory:');
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: 'test', version: '1.0.0' });
@@ -37,7 +37,7 @@ afterEach(async () => {
 // Persons
 // ---------------------------------------------------------------------------
 
-describe('persons', () => {
+describe('persons', async () => {
   it('creates a person and retrieves a summary', async () => {
     const result = await call('create_person', { given_name: 'Anna', surname: 'Svensson', sex: 'F' }) as any;
     expect(result.person.id).toBeDefined();
@@ -147,7 +147,7 @@ describe('persons', () => {
 // Places
 // ---------------------------------------------------------------------------
 
-describe('places', () => {
+describe('places', async () => {
   it('adds a place and searches for it', async () => {
     await call('add_place', { name: 'Stockholm', place_type: 'city' });
     await call('add_place', { name: 'Göteborg', place_type: 'city' });
@@ -161,7 +161,7 @@ describe('places', () => {
 // Sources
 // ---------------------------------------------------------------------------
 
-describe('sources', () => {
+describe('sources', async () => {
   it('adds a source and searches for it', async () => {
     await call('add_source', { title: 'Husförhörslängd' });
     await call('add_source', { title: 'Emigrantregister' });
@@ -175,7 +175,7 @@ describe('sources', () => {
 // Citations
 // ---------------------------------------------------------------------------
 
-describe('citations', () => {
+describe('citations', async () => {
   it('creates citation via cite tool and retrieves it for a person', async () => {
     const person = await call('create_person', { given_name: 'Anna', surname: 'Svensson' }) as any;
     const personId = person.person.id;
@@ -196,7 +196,7 @@ describe('citations', () => {
 // Events
 // ---------------------------------------------------------------------------
 
-describe('events', () => {
+describe('events', async () => {
   it('records an event for a person and retrieves it in timeline', async () => {
     const person = await call('create_person', { given_name: 'Lars', surname: 'Berg' }) as any;
     const personId = person.person.id;
@@ -247,7 +247,7 @@ describe('events', () => {
 // Families
 // ---------------------------------------------------------------------------
 
-describe('families', () => {
+describe('families', async () => {
   it('adds a child and retrieves family unit', async () => {
     const parent = await call('create_person', { given_name: 'Erik', surname: 'Svensson', sex: 'M' }) as any;
     const parentId = parent.person.id;
@@ -280,7 +280,7 @@ describe('families', () => {
 // Database switching
 // ---------------------------------------------------------------------------
 
-describe('database switching', () => {
+describe('database switching', async () => {
   it('get_current_database returns a path', async () => {
     const result = await call('get_current_database') as any;
     expect(typeof result.path).toBe('string');
@@ -307,7 +307,7 @@ describe('database switching', () => {
 // Import (GEDCOM)
 // ---------------------------------------------------------------------------
 
-describe('import_file', () => {
+describe('import_file', async () => {
   it('imports a minimal GEDCOM .ged file', async () => {
     const gedcom = '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Anna /Svensson/\n0 TRLR\n';
     const tmpPath = path.join(os.tmpdir(), `test-${Date.now()}.ged`);
@@ -330,7 +330,7 @@ describe('import_file', () => {
 // Duplicates — non-person entity surfaces (Task 5 user-goal canary)
 // ---------------------------------------------------------------------------
 
-describe('duplicates entity surfaces', () => {
+describe('duplicates entity surfaces', async () => {
   it('find_duplicates({entity:"place"}) returns place duplicates', async () => {
     // Two places under the same parent with the same normalised name.
     await call('add_place', { name: 'Stockholm', place_type: 'city' });
@@ -436,7 +436,7 @@ describe('duplicates entity surfaces', () => {
 // Coverage: every genealogy-essential tool is registered
 // ---------------------------------------------------------------------------
 
-describe('mcp prod tool registry coverage', () => {
+describe('mcp prod tool registry coverage', async () => {
   it('registers every tool the agent needs to author + curate a genealogy database', async () => {
     const tools = await client.listTools();
     const names = new Set(tools.tools.map(t => t.name));

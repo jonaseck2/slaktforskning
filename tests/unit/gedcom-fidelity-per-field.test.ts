@@ -26,9 +26,9 @@ import { createTestDb } from './helpers';
 
 const VERSIONS: RegistryVersion[] = ['v551', 'v70'];
 
-function getColumnType(table: string, col: string): string {
-  const db = createTestDb();
-  const info = queryAll<{ name: string; type: string }>(
+async function getColumnType(table: string, col: string): string {
+  const db = await createTestDb();
+  const info = await queryAll<{ name: string; type: string }>(
     db,
     `PRAGMA table_info(${table})`,
   );
@@ -37,10 +37,10 @@ function getColumnType(table: string, col: string): string {
   return found.type;
 }
 
-describe('GEDCOM fidelity per-field round-trip', () => {
+describe('GEDCOM fidelity per-field round-trip', async () => {
   for (const [key, fidelity] of Object.entries(GEDCOM_FIDELITY)) {
     const [table, col] = key.split('.');
-    describe(key, () => {
+    describe(key, async () => {
       for (const version of VERSIONS) {
         const status: FidelityStatus = fidelity[version];
         if (status.kind === 'excluded') {
@@ -49,15 +49,15 @@ describe('GEDCOM fidelity per-field round-trip', () => {
           continue;
         }
 
-        it(`${version}: round-trips`, () => {
-          const colType = getColumnType(table, col);
+        it(`${version}: round-trips`, async () => {
+          const colType = await getColumnType(table, col);
           const sentinel = makeSentinelValue(table, col, colType);
-          const db = createTestDb();
+          const db = await createTestDb();
           // Capture the seeded row's other column values BEFORE round-trip,
           // so lossy expectations that depend on row context (e.g. relationships.subtype
           // depends on relationships.type) can read them.
           seedRowWithColumn(db, table, col, sentinel);
-          const seededRows = queryAll<Record<string, unknown>>(db, `SELECT * FROM ${table}`);
+          const seededRows = await queryAll<Record<string, unknown>>(db, `SELECT * FROM ${table}`);
           const seededRow = seededRows[0] ?? {};
 
           const fresh = roundTrip(db, version);

@@ -25,8 +25,8 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
 
     db.exec('BEGIN');
     try {
-      const item = mediaApi.createMedia(db, mediaData);
-      const link = mediaApi.addMediaLink(db, {
+      const item = await mediaApi.createMedia(db, mediaData);
+      const link = await mediaApi.addMediaLink(db, {
         media_id: item.id,
         entity_type,
         entity_id,
@@ -52,7 +52,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       label: z.string().optional().describe('Optional label for the region'),
     },
   }, async (args) => {
-    const region = mediaRegions.createMediaRegion(getDb(), args);
+    const region = await mediaRegions.createMediaRegion(getDb(), args);
     return { content: [{ type: 'text', text: JSON.stringify(region, null, 2) }] };
   });
 
@@ -68,7 +68,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const media = mediaApi.updateMedia(getDb(), id, data);
+    const media = await mediaApi.updateMedia(getDb(), id, data);
     return { content: [{ type: 'text', text: media ? JSON.stringify(media, null, 2) : 'Media not found' }] };
   });
 
@@ -78,7 +78,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Media ID'),
     },
   }, async (args) => {
-    const ok = mediaApi.deleteMedia(getDb(), args.id);
+    const ok = await mediaApi.deleteMedia(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Media not found' }] };
   });
 
@@ -88,7 +88,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       person_id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const list = mediaAi.getMediaForPersonContext(getDb(), args.person_id);
+    const list = await mediaAi.getMediaForPersonContext(getDb(), args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -101,7 +101,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       link_type: z.string().optional().describe('Link type (e.g. "portrait", "document")'),
     },
   }, async (args) => {
-    const link = mediaApi.addMediaLink(getDb(), args);
+    const link = await mediaApi.addMediaLink(getDb(), args);
     return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
   });
 
@@ -111,7 +111,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       link_id: z.string().describe('media_link ID'),
     },
   }, async (args) => {
-    const ok = mediaApi.removeMediaLink(getDb(), args.link_id);
+    const ok = await mediaApi.removeMediaLink(getDb(), args.link_id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Link not found' }] };
   });
 
@@ -121,7 +121,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       link_ids: z.array(z.string()).describe('Ordered list of media_link IDs (lowest sort_order first). Should be the full set of links for one entity.'),
     },
   }, async (args) => {
-    mediaApi.reorderMediaLinks(getDb(), args.link_ids);
+    await mediaApi.reorderMediaLinks(getDb(), args.link_ids);
     return { content: [{ type: 'text', text: 'Reordered' }] };
   });
 
@@ -138,7 +138,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const region = mediaRegions.updateMediaRegion(getDb(), id, data);
+    const region = await mediaRegions.updateMediaRegion(getDb(), id, data);
     return { content: [{ type: 'text', text: region ? JSON.stringify(region, null, 2) : 'Region not found' }] };
   });
 
@@ -148,7 +148,7 @@ export function registerMediaTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('media_region ID'),
     },
   }, async (args) => {
-    const ok = mediaRegions.deleteMediaRegion(getDb(), args.id);
+    const ok = await mediaRegions.deleteMediaRegion(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Region not found' }] };
   });
 }

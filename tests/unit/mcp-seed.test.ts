@@ -6,94 +6,94 @@ import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('seedFamilyWorkflow', () => {
-  it('creates expected number of persons with default args (generations=2, children=2)', () => {
+describe('seedFamilyWorkflow', async () => {
+  it('creates expected number of persons with default args (generations=2, children=2)', async () => {
     // default: focal + spouse + 2 children + father + mother = 6
-    const result = seedFamilyWorkflow(db);
+    const result = await seedFamilyWorkflow(db);
     expect(result.focal_person_id).toBeTruthy();
     expect(result.person_ids).toHaveLength(6);
   });
 
-  it('creates correct person count for generations=1', () => {
+  it('creates correct person count for generations=1', async () => {
     // focal + spouse + 2 children = 4
-    const result = seedFamilyWorkflow(db, { generations: 1, children_per_family: 2 });
+    const result = await seedFamilyWorkflow(db, { generations: 1, children_per_family: 2 });
     expect(result.person_ids).toHaveLength(4);
   });
 
-  it('creates correct person count for generations=3', () => {
+  it('creates correct person count for generations=3', async () => {
     // focal + spouse + 2 children + father + mother + 4 grandparents = 10
-    const result = seedFamilyWorkflow(db, { generations: 3, children_per_family: 2 });
+    const result = await seedFamilyWorkflow(db, { generations: 3, children_per_family: 2 });
     expect(result.person_ids).toHaveLength(10);
   });
 
-  it('respects children_per_family', () => {
+  it('respects children_per_family', async () => {
     // focal + spouse + 3 children + father + mother = 7
-    const result = seedFamilyWorkflow(db, { generations: 2, children_per_family: 3 });
+    const result = await seedFamilyWorkflow(db, { generations: 2, children_per_family: 3 });
     expect(result.person_ids).toHaveLength(7);
   });
 
-  it('adds all seeded persons to __test__ group', () => {
-    const result = seedFamilyWorkflow(db);
-    const groups = groupApi.listGroups(db);
+  it('adds all seeded persons to __test__ group', async () => {
+    const result = await seedFamilyWorkflow(db);
+    const groups = await groupApi.listGroups(db);
     const testGroup = groups.find(g => g.name === '__test__');
     expect(testGroup).toBeTruthy();
-    const links = groupApi.getGroupLinks(db, testGroup!.id);
+    const links = await groupApi.getGroupLinks(db, testGroup!.id);
     const memberIds = links.filter(l => l.entity_type === 'person').map(l => l.entity_id);
     for (const id of result.person_ids) {
       expect(memberIds).toContain(id);
     }
   });
 
-  it('creates __test__ group only once when called twice', () => {
-    seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
-    seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
-    const groups = groupApi.listGroups(db);
+  it('creates __test__ group only once when called twice', async () => {
+    await seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
+    await seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
+    const groups = await groupApi.listGroups(db);
     const testGroups = groups.filter(g => g.name === '__test__');
     expect(testGroups).toHaveLength(1);
   });
 
-  it('focal person has a name', () => {
-    const result = seedFamilyWorkflow(db);
-    const names = personApi.getPersonNames(db, result.focal_person_id);
+  it('focal person has a name', async () => {
+    const result = await seedFamilyWorkflow(db);
+    const names = await personApi.getPersonNames(db, result.focal_person_id);
     expect(names.length).toBeGreaterThan(0);
     expect(names[0].given_name).toBeTruthy();
     expect(names[0].surname).toBeTruthy();
   });
 });
 
-describe('clearTestData', () => {
-  it('removes all seeded persons and the group', () => {
-    seedFamilyWorkflow(db);
-    const beforePersons = personApi.listPersons(db);
+describe('clearTestData', async () => {
+  it('removes all seeded persons and the group', async () => {
+    await seedFamilyWorkflow(db);
+    const beforePersons = await personApi.listPersons(db);
     expect(beforePersons.length).toBeGreaterThan(0);
 
-    const result = clearTestData(db);
+    const result = await clearTestData(db);
     expect(result.deleted_count).toBe(beforePersons.length);
 
-    const afterPersons = personApi.listPersons(db);
+    const afterPersons = await personApi.listPersons(db);
     expect(afterPersons).toHaveLength(0);
 
-    const groups = groupApi.listGroups(db);
+    const groups = await groupApi.listGroups(db);
     expect(groups.find(g => g.name === '__test__')).toBeUndefined();
   });
 
-  it('returns deleted_count=0 when no __test__ group exists', () => {
-    const result = clearTestData(db);
+  it('returns deleted_count=0 when no __test__ group exists', async () => {
+    const result = await clearTestData(db);
     expect(result.deleted_count).toBe(0);
   });
 
-  it('only deletes persons in __test__ group, not others', () => {
+  it('only deletes persons in __test__ group, not others', async () => {
     // Create a non-test person
-    personApi.createPerson(db, { given_name: 'Olle', surname: 'Testsson' });
-    seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
+    await personApi.createPerson(db, { given_name: 'Olle', surname: 'Testsson' });
+    await seedFamilyWorkflow(db, { generations: 1, children_per_family: 1 });
 
-    clearTestData(db);
+    await clearTestData(db);
 
-    const remaining = personApi.listPersons(db);
+    const remaining = await personApi.listPersons(db);
     // Only Olle should remain
     expect(remaining).toHaveLength(1);
     expect(remaining[0].given_name).toBe('Olle');

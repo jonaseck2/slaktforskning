@@ -31,18 +31,18 @@ import { createTestDb } from './helpers';
 // If a future refactor reintroduces per-check loading, this trips immediately.
 // ---------------------------------------------------------------------------
 
-describe('runAllChecks gazetteer load fan-out', () => {
+describe('runAllChecks gazetteer load fan-out', async () => {
   let db: Database;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
     // Seed a few unresolvable places attached to events so the
     // gazetteer-aware checks have work to do — empty DB short-circuits.
-    const person = createPerson(db, { sex: 'M', given_name: 'Test', surname: 'Person' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Test', surname: 'Person' });
     for (let i = 0; i < 10; i++) {
-      const place = createPlace(db, { name: `Unknown Place ${i}` });
-      const ev = createEvent(db, { event_type: 'birth', place_id: place.id });
-      addEventParticipant(db, { event_id: ev.id, person_id: person.id, role: 'primary' });
+      const place = await createPlace(db, { name: `Unknown Place ${i}` });
+      const ev = await createEvent(db, { event_type: 'birth', place_id: place.id });
+      await addEventParticipant(db, { event_id: ev.id, person_id: person.id, role: 'primary' });
     }
   });
 
@@ -120,13 +120,13 @@ describe('resolver name-depth cache', () => {
     const gazetteers = [probe.gaz];
 
     // Cold call — full tree walk to build depth map plus per-call match walk
-    resolvePlace('Stockholm', gazetteers);
+    await resolvePlace('Stockholm', gazetteers);
     const cold = probe.getCount();
 
     probe.reset();
 
     // Warm call — cache hit, only the per-call match walk runs.
-    resolvePlace('Stockholm', gazetteers);
+    await resolvePlace('Stockholm', gazetteers);
     const warm = probe.getCount();
 
     // Cold included the cache build (~600+ children accesses across the
@@ -141,9 +141,9 @@ describe('resolver name-depth cache', () => {
     // an array-identity-keyed cache. The per-root WeakMap must survive that.
     const probe = instrumentChildrenAccess(buildBigGazetteer());
 
-    resolvePlace('Stockholm', [probe.gaz]);   // builds and caches by root identity
+    await resolvePlace('Stockholm', [probe.gaz]);   // builds and caches by root identity
     probe.reset();
-    resolvePlace('Stockholm', [probe.gaz]);   // NEW array, SAME root → cache hit
+    await resolvePlace('Stockholm', [probe.gaz]);   // NEW array, SAME root → cache hit
 
     // No second tree walk: the only `children` accesses come from findMatches
     // descending the cached path. For a single component, that's a small
@@ -206,13 +206,13 @@ describe('resolver findMatches — name-normalization call count', () => {
 
     const wrappedGaz = { ...gaz, root: wrap(gaz.root) };
     // Prime the index — this read pass is allowed to be expensive.
-    resolvePlace('Springfield, SE', [wrappedGaz as any]);
+    await resolvePlace('Springfield, SE', [wrappedGaz as any]);
 
     // Now measure a SECOND call. With pre-normalized index entries, this
     // call should NOT touch node.name at all (everything compared via the
     // cached normName/normAliases).
     nameReads = 0;
-    resolvePlace('Springfield, SE', [wrappedGaz as any]);
+    await resolvePlace('Springfield, SE', [wrappedGaz as any]);
 
     // Lock in the post-fix invariant: zero name re-reads on a cached path.
     expect(nameReads).toBe(0);
@@ -227,7 +227,7 @@ describe('resolver findMatches — name-normalization call count', () => {
 // ~30ms busy work each (300ms total, budget 75ms → floor(300/75) = 4 yields).
 // ---------------------------------------------------------------------------
 
-describe('checks-location yield budget', () => {
+describe('checks-location yield budget', async () => {
   it('yields at least 3 times over a ~300ms loop at the 75ms budget', async () => {
     // Drive the helper directly — we don't need a full DB to test the budget.
     // Inline-import via dynamic import to read the un-exported helper would

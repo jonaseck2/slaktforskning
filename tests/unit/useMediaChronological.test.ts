@@ -6,8 +6,8 @@ const mockApi = { media: { forEntity: vi.fn() } };
 // @ts-expect-error test shim
 globalThis.window = { api: mockApi } as never;
 
-describe('useMediaChronological', () => {
-  beforeEach(() => {
+describe('useMediaChronological', async () => {
+  beforeEach(async () => {
     mockApi.media.forEntity.mockReset();
   });
 

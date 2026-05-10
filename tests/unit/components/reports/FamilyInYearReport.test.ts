@@ -10,13 +10,13 @@ const mockApi = {
   db: { getSetting: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.db.getSetting.mockResolvedValue(null);
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('FamilyInYearReport', () => {
+describe('FamilyInYearReport', async () => {
   it('renders cover with year title when data is loaded', async () => {
     mockApi.reports.aliveInYear.mockResolvedValue({
       year: 1850,

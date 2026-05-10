@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { redactPerson } from '../../src/renderer/utils/reportPrivacy';
 
-describe('redactPerson', () => {
-  it('hides identifiers for living persons regardless of toggle', () => {
+describe('redactPerson', async () => {
+  it('hides identifiers for living persons regardless of toggle', async () => {
     const r = redactPerson(
       { id: 'p1', living: true, identifiers: [{ type: 'personnummer', value: '19800101-0000' }] },
       { redactLiving: false },
@@ -10,7 +10,7 @@ describe('redactPerson', () => {
     expect(r.identifiers).toEqual([]);
   });
 
-  it('keeps identifiers for deceased persons', () => {
+  it('keeps identifiers for deceased persons', async () => {
     const r = redactPerson(
       { id: 'p1', living: false, identifiers: [{ type: 'riksarkivet', value: 'X' }] },
       { redactLiving: false },
@@ -18,12 +18,12 @@ describe('redactPerson', () => {
     expect(r.identifiers).toEqual([{ type: 'riksarkivet', value: 'X' }]);
   });
 
-  it('replaces birth year with decade when redactLiving is on', () => {
+  it('replaces birth year with decade when redactLiving is on', async () => {
     const r = redactPerson({ id: 'p1', living: true, birthYear: 1985 }, { redactLiving: true });
     expect(r.birthYear).toBe(1980);
   });
 
-  it('hides notes and portrait when redactLiving is on', () => {
+  it('hides notes and portrait when redactLiving is on', async () => {
     const r = redactPerson(
       { id: 'p1', living: true, notes: 'Private', portraitUrl: 'data:image/png;base64,...' },
       { redactLiving: true },
@@ -32,7 +32,7 @@ describe('redactPerson', () => {
     expect(r.portraitUrl).toBeNull();
   });
 
-  it('does nothing for deceased persons when redactLiving is on', () => {
+  it('does nothing for deceased persons when redactLiving is on', async () => {
     const r = redactPerson(
       { id: 'p1', living: false, notes: 'Public', birthYear: 1850 },
       { redactLiving: true },

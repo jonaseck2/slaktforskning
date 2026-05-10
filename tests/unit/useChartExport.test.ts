@@ -2,8 +2,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildExportSvgString, wrapWithTitle } from '../../src/renderer/composables/useChartExport';
 
-describe('buildExportSvgString', () => {
-  it('serializes an SVGElement to an XML string with namespace', () => {
+describe('buildExportSvgString', async () => {
+  it('serializes an SVGElement to an XML string with namespace', async () => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 100 100');
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -15,8 +15,8 @@ describe('buildExportSvgString', () => {
   });
 });
 
-describe('wrapWithTitle', () => {
-  it('prepends a <text> title element immediately after the opening <svg> tag', () => {
+describe('wrapWithTitle', async () => {
+  it('prepends a <text> title element immediately after the opening <svg> tag', async () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect/></svg>';
     const out = wrapWithTitle(svg, 'Pedigree \u2014 Jonas Ahnstedt');
     expect(out).toContain('<text');
@@ -25,7 +25,7 @@ describe('wrapWithTitle', () => {
     expect(out.indexOf('<text')).toBeLessThan(out.indexOf('<rect'));
   });
 
-  it('XML-escapes ampersands, <, >, quotes', () => {
+  it('XML-escapes ampersands, <, >, quotes', async () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
     const out = wrapWithTitle(svg, 'A & B <C> "D"');
     expect(out).toContain('A &amp; B &lt;C&gt; &quot;D&quot;');

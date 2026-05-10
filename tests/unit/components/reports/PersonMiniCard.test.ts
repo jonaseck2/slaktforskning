@@ -13,8 +13,8 @@ const i18n = createI18n({
 
 const globalPlugins = { plugins: [i18n] };
 
-describe('PersonMiniCard', () => {
-  it('renders full name', () => {
+describe('PersonMiniCard', async () => {
+  it('renders full name', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: { givenName: 'Anna', surname: 'Andersson', sex: 'F' },
@@ -22,7 +22,7 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).toContain('Anna Andersson');
   });
 
-  it('renders years label', () => {
+  it('renders years label', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: { givenName: 'E', surname: 'A', birthYear: 1850, deathYear: 1920 },
@@ -30,7 +30,7 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).toContain('1850–1920');
   });
 
-  it('shows initials when no portrait', () => {
+  it('shows initials when no portrait', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: { givenName: 'Erik', surname: 'Andersson' },
@@ -38,7 +38,7 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).toContain('EA');
   });
 
-  it('shows ahnentafel when provided', () => {
+  it('shows ahnentafel when provided', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: { givenName: 'X', surname: 'Y', ahnentafel: 4 },
@@ -46,12 +46,12 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).toContain('#4');
   });
 
-  it('renders dash when no name parts', () => {
+  it('renders dash when no name parts', async () => {
     const wrapper = mount(PersonMiniCard, { global: globalPlugins, props: {} });
     expect(wrapper.text()).toContain('—');
   });
 
-  it('appends "(b. …)" when birthSurname differs from surname and toggle is on', () => {
+  it('appends "(b. …)" when birthSurname differs from surname and toggle is on', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: {
@@ -64,7 +64,7 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).toContain('(b. Svensson)');
   });
 
-  it('omits "(b. …)" when toggle is off', () => {
+  it('omits "(b. …)" when toggle is off', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: {
@@ -77,7 +77,7 @@ describe('PersonMiniCard', () => {
     expect(wrapper.text()).not.toContain('(b. Svensson)');
   });
 
-  it('omits "(b. …)" when birthSurname matches surname', () => {
+  it('omits "(b. …)" when birthSurname matches surname', async () => {
     const wrapper = mount(PersonMiniCard, {
       global: globalPlugins,
       props: {

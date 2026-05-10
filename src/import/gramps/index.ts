@@ -39,12 +39,12 @@ export async function importFromGramps(
 
   onProgress('Importing…');
   let summary = emptyGrampsSummary();
-  runSql(ourDb, 'BEGIN IMMEDIATE');
+  await runSql(ourDb, 'BEGIN IMMEDIATE');
   try {
-    summary = transformGramps(ourDb, xml);
-    runSql(ourDb, 'COMMIT');
+    summary = await transformGramps(ourDb, xml);
+    await runSql(ourDb, 'COMMIT');
   } catch (err) {
-    try { runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
   }
   return { summary };

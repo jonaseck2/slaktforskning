@@ -33,19 +33,19 @@ export interface CreatePersonResult {
  * Find an existing source by exact title, or create a new one.
  * Exported as a shared helper for other workflow files.
  */
-export function findOrCreateSource(db: Database, title: string): Source {
-  const results = sourceApi.searchSources(db, title);
+export async function findOrCreateSource(db: Database, title: string): Promise<Source> {
+  const results = await sourceApi.searchSources(db, title);
   const exact = results.find(s => s.title === title);
   if (exact) return exact;
-  return sourceApi.createSource(db, { title });
+  return await sourceApi.createSource(db, { title });
 }
 
 /**
  * Core logic without transaction wrapper. Called directly by createPersonWorkflow
  * and also by other workflow functions (e.g. addChildWorkflow) inside their own transactions.
  */
-export function _createPersonCore(db: Database, args: CreatePersonArgs): CreatePersonResult {
-  const person = personApi.createPerson(db, {
+export async function _createPersonCore(db: Database, args: CreatePersonArgs): Promise<CreatePersonResult> {
+  const person = await personApi.createPerson(db, {
     sex: args.sex,
     notes: args.notes,
     given_name: args.given_name,
@@ -58,7 +58,7 @@ export function _createPersonCore(db: Database, args: CreatePersonArgs): CreateP
   if (args.birth_date || args.birth_place) {
     let place_id: string | null = null;
     if (args.birth_place) {
-      const place = placeApi.findOrCreatePlace(db, args.birth_place);
+      const place = await placeApi.findOrCreatePlace(db, args.birth_place);
       place_id = place.id;
     }
     // Pass through what the agent provided. Per CLAUDE.md prime directive,
@@ -66,14 +66,14 @@ export function _createPersonCore(db: Database, args: CreatePersonArgs): CreateP
     // explicitly state `birth_date_type` if they want a structured value.
     // When omitted: date_original holds the raw input; date_type defaults to
     // 'unknown' at the api/schema layer; date_value stays null.
-    birth_event = eventApi.createEvent(db, {
+    birth_event = await eventApi.createEvent(db, {
       event_type: 'birth',
       date_original: args.birth_date ?? '',
       date_type: args.birth_date_type as GenealogyEvent['date_type'] | undefined,
       date_value: args.birth_date_type ? args.birth_date ?? null : null,
       place_id,
     });
-    relationshipApi.addEventParticipant(db, {
+    await relationshipApi.addEventParticipant(db, {
       event_id: birth_event.id,
       person_id: person.id,
       role: 'primary',
@@ -81,8 +81,8 @@ export function _createPersonCore(db: Database, args: CreatePersonArgs): CreateP
   }
 
   if (args.source_title) {
-    const source = findOrCreateSource(db, args.source_title);
-    citation = sourceApi.createCitation(db, {
+    const source = await findOrCreateSource(db, args.source_title);
+    citation = await sourceApi.createCitation(db, {
       source_id: source.id,
       event_id: birth_event?.id ?? null,
       page: args.source_page,
@@ -98,7 +98,7 @@ export function _createPersonCore(db: Database, args: CreatePersonArgs): CreateP
 export async function createPersonWorkflow(db: Database, args: CreatePersonArgs): Promise<CreatePersonResult> {
   db.exec('BEGIN');
   try {
-    const result = _createPersonCore(db, args);
+    const result = await _createPersonCore(db, args);
     db.exec('COMMIT');
     return result;
   } catch (err) {
@@ -142,7 +142,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       limit: z.number().int().min(1).max(200).optional().describe('Maximum number of results to return (default: 20, max: 200)'),
     },
   }, async (args) => {
-    const results = personApi.searchPersons(getDb(), args.query, null, args.limit);
+    const results = await personApi.searchPersons(getDb(), args.query, null, args.limit);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
@@ -152,7 +152,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const summary = reportData.getPersonSummary(getDb(), args.id);
+    const summary = await reportData.getPersonSummary(getDb(), args.id);
     return { content: [{ type: 'text', text: summary ? JSON.stringify(summary, null, 2) : 'Person not found' }] };
   });
 
@@ -169,23 +169,23 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     const db = getDb();
     const { id, given_name, surname, ...personFields } = args;
 
-    const person = personApi.updatePerson(db, id, personFields);
+    const person = await personApi.updatePerson(db, id, personFields);
     if (!person) {
       return { content: [{ type: 'text', text: 'Person not found' }] };
     }
 
     if (given_name !== undefined || surname !== undefined) {
-      const names = personApi.getPersonNames(db, id);
+      const names = await personApi.getPersonNames(db, id);
       if (names.length > 0) {
         const primary = names[0];
-        personApi.updatePersonName(db, primary.id, {
+        await personApi.updatePersonName(db, primary.id, {
           ...(given_name !== undefined ? { given_name } : {}),
           ...(surname !== undefined ? { surname } : {}),
         });
       }
     }
 
-    return { content: [{ type: 'text', text: JSON.stringify(personApi.getPerson(db, id), null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(await personApi.getPerson(db, id), null, 2) }] };
   });
 
   server.registerTool('delete_person', {
@@ -194,7 +194,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const ok = personApi.deletePerson(getDb(), args.id);
+    const ok = await personApi.deletePerson(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Person not found' }] };
   });
 
@@ -208,7 +208,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { person_id, ...data } = args;
-    const name = personApi.addPersonName(getDb(), person_id, data);
+    const name = await personApi.addPersonName(getDb(), person_id, data);
     return { content: [{ type: 'text', text: JSON.stringify(name, null, 2) }] };
   });
 
@@ -230,7 +230,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const name = personApi.updatePersonName(getDb(), id, data);
+    const name = await personApi.updatePersonName(getDb(), id, data);
     return { content: [{ type: 'text', text: name ? JSON.stringify(name, null, 2) : 'person_name not found' }] };
   });
 
@@ -240,7 +240,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('person_name ID (from get_person_summary)'),
     },
   }, async (args) => {
-    const ok = personApi.deletePersonName(getDb(), args.id);
+    const ok = await personApi.deletePersonName(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'person_name not found' }] };
   });
 
@@ -251,7 +251,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       source_id: z.string().describe('ID of the person to merge into target (will be deleted)'),
     },
   }, async (args) => {
-    const result = duplicates.mergePersons(getDb(), args.target_id, args.source_id);
+    const result = await duplicates.mergePersons(getDb(), args.target_id, args.source_id);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -279,16 +279,16 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
     let candidates: unknown;
     switch (entity) {
       case 'person':
-        candidates = duplicates.findDuplicates(db, args.limit);
+        candidates = await duplicates.findDuplicates(db, args.limit);
         break;
       case 'place':
-        candidates = duplicates.findDuplicatePlaces(db, args.limit, args.offset);
+        candidates = await duplicates.findDuplicatePlaces(db, args.limit, args.offset);
         break;
       case 'source':
-        candidates = duplicates.findDuplicateSources(db, args.limit, args.offset);
+        candidates = await duplicates.findDuplicateSources(db, args.limit, args.offset);
         break;
       case 'media':
-        candidates = duplicates.findDuplicateMedia(db, args.limit, args.offset);
+        candidates = await duplicates.findDuplicateMedia(db, args.limit, args.offset);
         break;
     }
     return { content: [{ type: 'text', text: JSON.stringify(candidates, null, 2) }] };
@@ -302,7 +302,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       identifier_value: z.string().describe('The identifier value as it appears in the source system'),
     },
   }, async (args) => {
-    const ident = personApi.addPersonIdentifier(getDb(), args.person_id, {
+    const ident = await personApi.addPersonIdentifier(getDb(), args.person_id, {
       identifier_type: args.identifier_type,
       identifier_value: args.identifier_value,
     });
@@ -315,7 +315,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       person_id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const list = personApi.getPersonIdentifiers(getDb(), args.person_id);
+    const list = await personApi.getPersonIdentifiers(getDb(), args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -325,7 +325,7 @@ export function registerPersonTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('person_identifier ID'),
     },
   }, async (args) => {
-    const ok = personApi.deletePersonIdentifier(getDb(), args.id);
+    const ok = await personApi.deletePersonIdentifier(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Identifier not found' }] };
   });
 }

@@ -13,7 +13,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
       notes: z.string().optional(),
     },
   }, async (args) => {
-    const group = groupApi.createGroup(getDb(), args);
+    const group = await groupApi.createGroup(getDb(), args);
     return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
   });
 
@@ -21,7 +21,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
     description: 'List all groups with their names.',
     inputSchema: {},
   }, async () => {
-    const list = groupApi.listGroups(getDb());
+    const list = await groupApi.listGroups(getDb());
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -32,9 +32,9 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const db = getDb();
-    const group = groupApi.getGroup(db, args.id);
+    const group = await groupApi.getGroup(db, args.id);
     if (!group) return { content: [{ type: 'text', text: 'Group not found' }] };
-    const links = groupApi.getGroupLinks(db, args.id);
+    const links = await groupApi.getGroupLinks(db, args.id);
     return { content: [{ type: 'text', text: JSON.stringify({ ...group, links }, null, 2) }] };
   });
 
@@ -47,7 +47,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const group = groupApi.updateGroup(getDb(), id, data);
+    const group = await groupApi.updateGroup(getDb(), id, data);
     return { content: [{ type: 'text', text: group ? JSON.stringify(group, null, 2) : 'Group not found' }] };
   });
 
@@ -57,7 +57,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Group ID'),
     },
   }, async (args) => {
-    const ok = groupApi.deleteGroup(getDb(), args.id);
+    const ok = await groupApi.deleteGroup(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Group not found' }] };
   });
 
@@ -69,7 +69,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
       entity_id: z.string().describe('Entity ID'),
     },
   }, async (args) => {
-    const link = groupApi.addGroupLink(getDb(), args.group_id, args.entity_type, args.entity_id);
+    const link = await groupApi.addGroupLink(getDb(), args.group_id, args.entity_type, args.entity_id);
     return { content: [{ type: 'text', text: JSON.stringify(link, null, 2) }] };
   });
 
@@ -79,7 +79,7 @@ export function registerGroupTools(server: McpServer, ctx: ToolContext): void {
       link_id: z.string().describe('group_link ID'),
     },
   }, async (args) => {
-    const ok = groupApi.removeGroupLink(getDb(), args.link_id);
+    const ok = await groupApi.removeGroupLink(getDb(), args.link_id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Link not found' }] };
   });
 }

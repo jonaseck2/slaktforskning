@@ -26,12 +26,12 @@ export function remapHolgerMediaPath(winPath: string, mediaDir: string): string 
  * Import a single OBJE node (inline or top-level reference) and return the media UUID.
  * Returns null if the node cannot be resolved.
  */
-export function importObjeNode(
+export async function importObjeNode(
   db: Database,
   objeNode: GedcomNode,
   objeMap: Map<string, string>,
   options?: ImportOptions,
-): string | null {
+): Promise<string | null> {
   // Reference to a previously imported top-level OBJE record: `1 OBJE @M1@`
   if (objeNode.value?.startsWith('@')) {
     return objeMap.get(objeNode.value) ?? null;
@@ -44,7 +44,7 @@ export function importObjeNode(
   const form = getChild(objeNode, 'FORM')?.value ?? null;
   const titl = getChild(objeNode, 'TITL')?.value ?? null;
   const note = getChild(objeNode, 'NOTE')?.value ?? '';
-  const media = createMedia(db, {
+  const media = await createMedia(db, {
     file_ref: file || null,
     title: titl || (file ? basename(file) : undefined),
     format: form,

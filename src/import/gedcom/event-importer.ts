@@ -17,13 +17,13 @@ import { getChild, getChildren, resolveNote } from './node-utils';
 import { resolvePlace } from './place-resolver';
 import { importObjeNode } from './obje-importer';
 
-export function importEventNode(
+export async function importEventNode(
   db: Database,
   evNode: GedcomNode,
   appType: string,
   sourceMap: Map<string, string>,
   opts: { relationship_id?: string | null },
-  resolvePlaceFn: (db: Database, name: string) => Place,
+  resolvePlaceFn: (db: Database, name: string) => Promise<Place>,
   placeIdMap: Map<string, string>,
   eventIdMap: Map<string, string>,
   noteMap: Map<string, string>,
@@ -35,7 +35,7 @@ export function importEventNode(
   const parsed = dateNode
     ? parseGedcomDate(dateNode.value)
     : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
-  let place = placNode ? resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
+  let place = placNode ? await resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
 
   // Standard GEDCOM 5.5.1: ADDR can appear directly on the event node (not under PLAC).
   // Apply address fields to the associated place (or create one from ADDR if no PLAC).
@@ -52,17 +52,17 @@ export function importEventNode(
       if (postal_code && !place.postal_code) addrUpdate.postal_code = postal_code;
       if (city && !place.city) addrUpdate.city = city;
       if (country && !place.country) addrUpdate.country = country;
-      if (Object.keys(addrUpdate).length > 0) updatePlace(db, place.id, addrUpdate);
+      if (Object.keys(addrUpdate).length > 0) await updatePlace(db, place.id, addrUpdate);
     } else if (city || street) {
       // No PLAC but ADDR present — create a place from the address data
       const placeName = city ?? street ?? 'Unknown';
-      place = resolvePlaceFn(db, placeName);
+      place = await resolvePlaceFn(db, placeName);
       const addrUpdate: Parameters<typeof updatePlace>[2] = {};
       if (street) addrUpdate.street = street;
       if (postal_code) addrUpdate.postal_code = postal_code;
       if (city) addrUpdate.city = city;
       if (country) addrUpdate.country = country;
-      if (Object.keys(addrUpdate).length > 0) updatePlace(db, place.id, addrUpdate);
+      if (Object.keys(addrUpdate).length > 0) await updatePlace(db, place.id, addrUpdate);
     }
   }
 
@@ -105,7 +105,7 @@ export function importEventNode(
   const placAddrFromEvent = getChild(evNode, '_PLAC_ADDR')?.value ?? null;
   const placeAddress = placAddrFromPlac ?? placAddrFromEvent ?? null;
 
-  const event = createEvent(db, {
+  const event = await createEvent(db, {
     event_type: appType,
     date_type: parsed.date_type,
     date_value: parsed.date_value,
@@ -120,7 +120,7 @@ export function importEventNode(
 
   // place_address is not in the createEvent API surface — set it directly when present.
   if (placeAddress) {
-    runSql(db, 'UPDATE events SET place_address = ? WHERE id = ?', [placeAddress, event.id]);
+    await runSql(db, 'UPDATE events SET place_address = ? WHERE id = ?', [placeAddress, event.id]);
   }
 
   // Track old→new event ID so ASSO _EVID references resolve across databases
@@ -137,7 +137,7 @@ export function importEventNode(
       const transcription = dataNode ? getChild(dataNode, 'TEXT')?.value ?? '' : '';
       const notes = getChild(sour, 'NOTE')?.value ?? '';
       const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
-      createCitation(db, {
+      await createCitation(db, {
         source_id: srcId,
         event_id: event.id,
         page,
@@ -152,9 +152,9 @@ export function importEventNode(
   // Event media
   let eventMediaOrder = 0;
   for (const objeNode of getChildren(evNode, 'OBJE')) {
-    const mediaId = importObjeNode(db, objeNode, objeMap, importOptions);
+    const mediaId = await importObjeNode(db, objeNode, objeMap, importOptions);
     if (mediaId) {
-      addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id, sort_order: eventMediaOrder });
+      await addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id, sort_order: eventMediaOrder });
       eventMediaOrder++;
     }
   }

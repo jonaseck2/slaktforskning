@@ -14,8 +14,8 @@ const i18n = createI18n({
   },
 });
 
-describe('ReportCover', () => {
-  it('renders title and subtitle', () => {
+describe('ReportCover', async () => {
+  it('renders title and subtitle', async () => {
     const wrapper = mount(ReportCover, {
       props: { title: 'A Life', subtitle: 'Anna Andersson (1850-1920)' },
       global: { plugins: [i18n] },
@@ -24,7 +24,7 @@ describe('ReportCover', () => {
     expect(wrapper.text()).toContain('Anna Andersson');
   });
 
-  it('uses researcherName when provided', () => {
+  it('uses researcherName when provided', async () => {
     const wrapper = mount(ReportCover, {
       props: { title: 'T', researcherName: 'Jonas Ahnstedt' },
       global: { plugins: [i18n] },
@@ -32,7 +32,7 @@ describe('ReportCover', () => {
     expect(wrapper.text()).toContain('Compiled by Jonas Ahnstedt');
   });
 
-  it('falls back to anonymous attribution', () => {
+  it('falls back to anonymous attribution', async () => {
     const wrapper = mount(ReportCover, {
       props: { title: 'T', date: new Date('2026-04-19') },
       global: { plugins: [i18n] },
@@ -40,7 +40,7 @@ describe('ReportCover', () => {
     expect(wrapper.text()).toContain('Compiled');
   });
 
-  it('renders hero image when provided', () => {
+  it('renders hero image when provided', async () => {
     const wrapper = mount(ReportCover, {
       props: { title: 'T', heroImageUrl: 'file://test.jpg' },
       global: { plugins: [i18n] },

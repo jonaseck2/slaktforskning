@@ -362,7 +362,7 @@ export function remapGenneyMediaPath(ref: string, mediaDir: string): string {
 
 // ── Main transform ─────────────────────────────────────────────────────────
 
-export function transformGenney(db: Database, tables: GenneyTables, opts: { mediaDir?: string } = {}): ImportSummary {
+export async function transformGenney(db: Database, tables: GenneyTables, opts: { mediaDir?: string } = {}): Promise<ImportSummary> {
   const summary: ImportSummary = {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: 0, citations: 0,
@@ -889,14 +889,14 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   // on next launch, but the user can open the persons list mid-session and
   // see empty Id cells. Assign here so the value is correct immediately.
   // Same logic as the schema backfill, scoped to NULL rows only.
-  const startFrom = (queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons')?.m ?? 0) + 1;
-  const newRows = queryAll<{ id: string }>(db, `
+  const startFrom = ((await queryOne<{ m: number | null }>(db, 'SELECT MAX(display_id) as m FROM persons'))?.m ?? 0) + 1;
+  const newRows = await queryAll<{ id: string }>(db, `
     SELECT id FROM persons
     WHERE display_id IS NULL
     ORDER BY created_at, id
   `);
   for (let i = 0; i < newRows.length; i++) {
-    runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, newRows[i].id]);
+    await runSql(db, 'UPDATE persons SET display_id = ? WHERE id = ?', [startFrom + i, newRows[i].id]);
   }
 
   // ── Researcher info from SUBMITTER + INI + ADDRESS ─────────────────────────
@@ -908,7 +908,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   //   structured ADDRESS1/CITY/POSTALCODE/STATE/COUNTRY fields directly).
   // Only writes settings that are currently empty — a user who has typed
   // their own contact info in Settings keeps it on re-import.
-  importGenneyResearcher(db, tables);
+  await importGenneyResearcher(db, tables);
 
     return summary;
   } finally {
@@ -921,7 +921,7 @@ export function transformGenney(db: Database, tables: GenneyTables, opts: { medi
   }
 }
 
-function importGenneyResearcher(db: Database, tables: GenneyTables): void {
+async function importGenneyResearcher(db: Database, tables: GenneyTables): Promise<void> {
   const ini = tables.INI?.[0];
   const userRid = ini?.SUBMITTER?.trim();
   if (!userRid) return;
@@ -951,16 +951,16 @@ function importGenneyResearcher(db: Database, tables: GenneyTables): void {
     if (lines.length > 0) address = lines.join('\n');
   }
 
-  const setIfEmpty = (key: string, value: string | undefined): void => {
+  const setIfEmpty = async (key: string, value: string | undefined): Promise<void> => {
     if (!value) return;
-    const existing = getDbSetting(db, key);
+    const existing = await getDbSetting(db, key);
     if (existing && existing.trim()) return;
-    setDbSetting(db, key, value);
+    await setDbSetting(db, key, value);
   };
-  setIfEmpty('researcher_name', name);
-  setIfEmpty('researcher_address', address);
-  setIfEmpty('researcher_phone', phone);
-  setIfEmpty('researcher_email', email);
+  await setIfEmpty('researcher_name', name);
+  await setIfEmpty('researcher_address', address);
+  await setIfEmpty('researcher_phone', phone);
+  await setIfEmpty('researcher_email', email);
 }
 
 /** Parse NDJSON lines from DerbyExtractor stdout into GenneyTables. */

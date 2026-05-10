@@ -13,8 +13,8 @@ import {
 //   a silent no-op produces a blank iframe with a cryptic
 //   "Failed to fetch ./data.json" error from installStaticApi's last-resort
 //   dev fallback. These tests catch that drift before it ships.
-describe('injectSnapshotIntoHtml', () => {
-  it('replaces the marker with an inline __SNAPSHOT__ script', () => {
+describe('injectSnapshotIntoHtml', async () => {
+  it('replaces the marker with an inline __SNAPSHOT__ script', async () => {
     const html = `<html><body><div id="app"></div>${INJECTION_MARKER}<script type="module" src="./main.ts"></script></body></html>`;
     const result = injectSnapshotIntoHtml(html, { persons: [{ id: 'p1' }] });
     expect(result).not.toBe(html);
@@ -23,13 +23,13 @@ describe('injectSnapshotIntoHtml', () => {
     expect(result).toContain('"persons":[{"id":"p1"}]');
   });
 
-  it('throws loudly when the marker is missing — silent no-op was the original bug', () => {
+  it('throws loudly when the marker is missing — silent no-op was the original bug', async () => {
     const htmlWithoutMarker = '<html><body><div id="app"></div></body></html>';
     expect(() => injectSnapshotIntoHtml(htmlWithoutMarker, { persons: [] }))
       .toThrow(/missing.*PREVIEW_SNAPSHOT_INJECTION_POINT/);
   });
 
-  it('preserves marker placement before any module script (snapshot must be set when main.ts runs)', () => {
+  it('preserves marker placement before any module script (snapshot must be set when main.ts runs)', async () => {
     const html = `<body>${INJECTION_MARKER}<script type="module" src="./main.ts"></script></body>`;
     const result = injectSnapshotIntoHtml(html, {});
     const snapshotIdx = result.indexOf('window.__SNAPSHOT__');
@@ -39,7 +39,7 @@ describe('injectSnapshotIntoHtml', () => {
     expect(snapshotIdx).toBeLessThan(moduleIdx);
   });
 
-  it('escapes </script> inside snapshot string fields so the inline script is closing-tag-safe', () => {
+  it('escapes </script> inside snapshot string fields so the inline script is closing-tag-safe', async () => {
     const html = `<body>${INJECTION_MARKER}</body>`;
     const tricky = { notes: 'sneaky </script><script>alert(1)</script>' };
     const result = injectSnapshotIntoHtml(html, tricky);
@@ -52,7 +52,7 @@ describe('injectSnapshotIntoHtml', () => {
     expect(inlineBlock).toContain('<\\/script');
   });
 
-  it('handles null/undefined snapshots without crashing', () => {
+  it('handles null/undefined snapshots without crashing', async () => {
     const html = `<body>${INJECTION_MARKER}</body>`;
     expect(injectSnapshotIntoHtml(html, null)).toContain('window.__SNAPSHOT__=null');
     expect(injectSnapshotIntoHtml(html, undefined)).toContain('window.__SNAPSHOT__=null');
@@ -61,7 +61,7 @@ describe('injectSnapshotIntoHtml', () => {
   // Build-product integration: confirms viteSingleFile preserved the marker
   // verbatim through the static SPA build. Skipped when dist-static hasn't
   // been built yet (CI runs build:static before vitest in package).
-  it('built dist-static/index.html still carries the marker (when present)', () => {
+  it('built dist-static/index.html still carries the marker (when present)', async () => {
     const distHtml = resolve(__dirname, '..', '..', 'dist-static', 'index.html');
     if (!existsSync(distHtml)) return;
     const html = readFileSync(distHtml, 'utf8');
