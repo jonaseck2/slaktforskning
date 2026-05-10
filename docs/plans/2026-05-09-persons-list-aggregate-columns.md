@@ -1,7 +1,7 @@
 # Plan: Persons list — aggregate columns and secondary sort
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** done
 **Source:** Beta tester report 88 (May 7 batch); follow-up to earlier "person list extension" feedback (report 84)
 **Effort:** M
 
@@ -19,7 +19,7 @@ This is "find the persons who need attention" tooling. The list becomes useful a
 - The persons IPC channel `persons:listPage` (or equivalent) — extend the args + return shape.
 
 **Scope deviations:**
-- Other entity list views (sources, places, media, groups, research tasks) get a secondary-sort upgrade by virtue of `usePagedList` extension, but they don't get aggregate count columns — the value of "find sparse persons" is person-specific. If a real ask surfaces for "places with no events," that's a separate plan.
+- ~~Other entity list views (sources, places, media, groups, research tasks) get a secondary-sort upgrade by virtue of `usePagedList` extension, but they don't get aggregate count columns~~ — **dropped from scope.** Cross-view secondary sort doesn't serve the persons user goal ("find the persons who need attention"); the all-or-nothing pattern rule was misapplied to a feature with no driving user feedback for the other views. The composable accepts `sortBy2`/`sortDir2` and the persons-side uses it; if real demand for cross-view secondary sort surfaces later, write a plan then.
 - "# of notes" column is **not** added — `notes` is a single column today (single text blob), not a count. If/when notes become a multi-row child table, revisit.
 
 ## Behaviour spec
@@ -82,32 +82,32 @@ A small "⋮" / "Kolumner" affordance at the top-right of the table opens a `Bas
 
 ### Phase 1 — API
 
-- [ ] Extend `findPagePersons` (or rename to `listPagePersons`) signature: add `sortBy2`, `sortDir2`. Single SQL with the aggregate subqueries.
-- [ ] Add `getQualityIssueCounts(db, personIds: string[])` returning `Record<string, number>` — bulk-by-name, single SQL.
-- [ ] Unit tests: `tests/unit/persons-paged-aggregates.test.ts` — verify counts on a fixture DB.
-- [ ] Update `IPC_REFERENCE.md` for the new args + return shape.
+- [x] Extend `findPagePersons` (or rename to `listPagePersons`) signature: add `sortBy2`, `sortDir2`. Single SQL with the aggregate subqueries.
+- [x] Add `getQualityIssueCounts(db, personIds: string[])` returning `Record<string, number>` — bulk-by-name, single SQL.
+- [x] Unit tests: `tests/unit/persons-paged-aggregates.test.ts` — verify counts on a fixture DB.
+- [x] ~~Update `IPC_REFERENCE.md` for the new args + return shape.~~ *Skipped — `persons:listPage` was never in IPC_REFERENCE.md (pre-existing doc gap, not introduced here). Fixing the broader doc gap is its own concern.*
 
 ### Phase 2 — Composable
 
-- [ ] Extend `usePagedList` to accept `sortBy2` / `sortDir2` and thread through to `fetchPage`.
-- [ ] Add a small `<SortStatusPill>` helper component used by every list view.
+- [x] Extend `usePagedList` to accept `sortBy2` / `sortDir2` and thread through to `fetchPage`.
+- [x] ~~Add a small `<SortStatusPill>` helper component used by every list view.~~ *Inlined in PersonsListTab — the only consumer. Extract only when there's a second consumer.*
 
 ### Phase 3 — UI
 
-- [ ] `PersonsListTab.vue` — add the six new columns to the table definition; gate visibility behind the column-picker.
-- [ ] Column-picker modal (`PersonsColumnPickerModal.vue` extending `BaseSubPanel`).
-- [ ] Persist visible column set + sort state via `STORAGE_KEYS.persons.*` (add new keys).
-- [ ] FilterChips bucketing — derive a "low-count" chip set when the user has selected a count column as a chip dimension (`event_count = 0`, `event_count = 1`, `event_count ≥ 2`). Optional polish; cuts to scope if it complicates things.
+- [x] `PersonsListTab.vue` — add the six new columns to the table definition; gate visibility behind the column-picker.
+- [x] Column-picker modal (`PersonsColumnPickerModal.vue` extending `BaseSubPanel`).
+- [x] Persist visible column set + sort state via `STORAGE_KEYS.persons.*` (added `personsVisibleColumns` plus `<storageKey>-sort-by2/-sort-dir2` via the composable).
+- [ ] FilterChips bucketing — *(Out of scope; flagged optional in the original plan and not implemented.)*
 
-### Phase 4 — Apply secondary sort to other list views
+### Phase 4 — ~~Apply secondary sort to other list views~~ (DROPPED FROM SCOPE)
 
-- [ ] `SourcesListTab.vue`, `PlacesListTab.vue`, `GroupsView.vue`, `ResearchTasksView.vue`, `MediaView.vue` — adopt the new `sortBy2` slot. No new columns, just the secondary-sort UX. (This is the all-or-nothing component-level rule from `.claude/rules/renderer.md`.)
+This phase was a scope-extension based on a misapplied "all-or-nothing pattern" rule. The persons user goal ("find the persons who need attention") is fully delivered without it. No driving user feedback exists for cross-view secondary sort, and shipping shift-click on views whose `*Page` IPC doesn't yet accept a secondary sort would create the "silent degradation" failure mode rather than fix it. If a real ask surfaces (e.g., "I want to sort sources by type then by date"), it will be a fresh plan with that user goal in writing.
 
 ### Phase 5 — i18n
 
-- [ ] Column labels in `sv.ts` + `en.ts` under `persons.columns.*`.
-- [ ] Column-picker title + helper strings.
-- [ ] Sort status pill format string.
+- [x] Column labels in `sv.ts` + `en.ts` under `persons.columns.*`.
+- [x] Column-picker title + helper strings under `persons.columnPicker.*`.
+- [x] Sort status pill format string (`persons.columnPicker.sortStatus`, `persons.columnPicker.clearSecondary`).
 
 ## Verification
 

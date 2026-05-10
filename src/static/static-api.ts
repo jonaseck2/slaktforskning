@@ -353,6 +353,12 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
       } catch { return []; }
     },
     listUnsourcedPage: async () => ({ persons: [], total: 0 }),
+    refreshQualityIssueCounts: noopVoid,
+    getQualityIssueCounts: async (personIds: string[]) => {
+      const out: Record<string, number> = {};
+      for (const id of personIds) out[id] = 0;
+      return out;
+    },
     create: noop, createWithEvent: noop, update: noop, delete: noopFalse,
     addName: noop, updateName: noop, deleteName: noopFalse,
     addIdentifier: noop, deleteIdentifier: noopFalse,
