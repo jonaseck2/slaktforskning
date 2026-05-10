@@ -11,9 +11,10 @@ import {
   getCitationsForPersonName,
 } from '../api/sources';
 import { getPlace, listPlaces } from '../api/places';
-import { getMediaForEntity } from '../api/media';
+import { getMedia, getMediaForEntity } from '../api/media';
 import { getRepositoriesForSource } from '../api/repositories';
-import type { Place, Citation, Repository } from '../api/types';
+import { listGroups, getGroupLinks } from '../api/groups';
+import type { Place, Citation, Repository, Media } from '../api/types';
 import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
@@ -646,16 +647,42 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     if (includeMedia) emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
   });
 
-  // ── Place-level citations via custom top-level _PLAC records ───────────────
-  // Other apps skip unrecognised level-0 record types per GEDCOM 5.5.1 spec.
-  if (includeSources) {
+  // ── Top-level _PLAC and OBJE records for places / media reachable from
+  //    citations or groups. Both kinds are emitted as level-0 custom (_PLAC)
+  //    or standard (OBJE) records before _GROUP so that _GROUP_LINK xrefs
+  //    have something to point at. Other apps skip unrecognised level-0
+  //    record types per GEDCOM 5.5.1 spec.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Determine which places and media need top-level records. Sources of demand:
+  //   - place-level citations (existing behaviour)
+  //   - group_links (entity_type ∈ person/place/media) — new in this plan
+  const allGroups = listGroups(db);
+  const groupLinksByGroup = new Map<string, ReturnType<typeof getGroupLinks>>();
+  const groupLinkedPlaceIds = new Set<string>();
+  const groupLinkedMediaIds = new Set<string>();
+  for (const grp of allGroups) {
+    const links = getGroupLinks(db, grp.id);
+    groupLinksByGroup.set(grp.id, links);
+    for (const link of links) {
+      if (link.entity_type === 'place') groupLinkedPlaceIds.add(link.entity_id);
+      else if (link.entity_type === 'media') groupLinkedMediaIds.add(link.entity_id);
+    }
+  }
+
+  // Build the set of place ids that need a `_PLAC` top-level record.
+  const placeXref = new Map<string, string>();
+  if (includeSources || groupLinkedPlaceIds.size > 0) {
     const allPlaces = listPlaces(db);
     let placeCounter = 0;
     for (const place of allPlaces) {
-      const placeCitations = getCitationsForPlace(db, place.id);
-      if (placeCitations.length === 0) continue;
+      const placeCitations = includeSources ? getCitationsForPlace(db, place.id) : [];
+      const isGroupLinked = groupLinkedPlaceIds.has(place.id);
+      if (placeCitations.length === 0 && !isGroupLinked) continue;
       placeCounter++;
-      lines.push(`0 @P${placeCounter}@ _PLAC`);
+      const pxr = `@P${placeCounter}@`;
+      placeXref.set(place.id, pxr);
+      lines.push(`0 ${pxr} _PLAC`);
       // NAME allows the importer to create the place by name when UUID lookup fails (cross-DB import)
       lines.push(`1 NAME ${place.name}`);
       lines.push(`1 _PLAC_ID ${place.id}`);
@@ -666,11 +693,70 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     }
   }
 
+  // Top-level OBJE records for media linked from groups. Inline OBJE blocks
+  // (under INDI/FAM/event) carry no xref so they can't be referenced from
+  // _GROUP_LINK; we emit a dedicated top-level record per group-linked media
+  // and tag it with `_OBJE_ID` (the source DB UUID) so the importer can
+  // deduplicate when a media is linked from both a person and a group.
+  const mediaXref = new Map<string, string>();
+  if (groupLinkedMediaIds.size > 0 && includeMedia) {
+    let mediaCounter = 0;
+    for (const mediaId of groupLinkedMediaIds) {
+      const m: Media | null = getMedia(db, mediaId);
+      if (!m) continue;
+      mediaCounter++;
+      const mxr = `@M${mediaCounter}@`;
+      mediaXref.set(m.id, mxr);
+      lines.push(`0 ${mxr} OBJE`);
+      if (m.format) lines.push(`1 FORM ${m.format}`);
+      if (m.file_ref) lines.push(`1 FILE ${m.file_ref}`);
+      if (m.title) lines.push(`1 TITL ${m.title}`);
+      if (m.notes) lines.push(`1 NOTE ${m.notes}`);
+    }
+  }
+
+  // ── Top-level _GROUP records ───────────────────────────────────────────────
+  // Each `_GROUP` carries the user's group (name + notes) and a `_GROUP_LINK`
+  // sub-record per member. The link encodes its host entity kind in
+  // `2 TYPE person|place|media` and resolves the host via `2 REF @xref@`.
+  // Polymorphic xref resolution: persons → INDI xref map; places → _PLAC xref
+  // map (built above); media → OBJE xref map (built above for group-linked
+  // media). Members whose host has no xref (e.g. a place that wasn't seeded
+  // because it had no citations *and* no group link, which can only happen
+  // mid-export if listPlaces ever returns a stale set) are skipped — the
+  // importer surfaces this asymmetrically via warnings if it ever happens.
+  if (allGroups.length > 0) {
+    let groupCounter = 0;
+    for (const grp of allGroups) {
+      groupCounter++;
+      const gxr = `@G${groupCounter}@`;
+      lines.push(`0 ${gxr} _GROUP`);
+      if (grp.name) lines.push(`1 NAME ${grp.name}`);
+      if (grp.notes) {
+        const noteLines = grp.notes.split(/\r?\n/);
+        lines.push(`1 NOTE ${noteLines[0]}`);
+        for (let i = 1; i < noteLines.length; i++) {
+          lines.push(`2 CONT ${noteLines[i]}`);
+        }
+      }
+      const links = groupLinksByGroup.get(grp.id) ?? [];
+      for (const link of links) {
+        let refXr: string | undefined;
+        if (link.entity_type === 'person') refXr = personXref.get(link.entity_id);
+        else if (link.entity_type === 'place') refXr = placeXref.get(link.entity_id);
+        else if (link.entity_type === 'media') refXr = mediaXref.get(link.entity_id);
+        if (!refXr) continue;
+        lines.push(`1 _GROUP_LINK`);
+        lines.push(`2 TYPE ${link.entity_type}`);
+        lines.push(`2 REF ${refXr}`);
+      }
+    }
+  }
+
   lines.push('0 TRLR');
 
   // ── Build ExportReport ─────────────────────────────────────────────────────
   const researchTaskCount = ((db.get('SELECT COUNT(*) as n FROM research_tasks') as { n: number } | undefined)?.n ?? 0);
-  const groupCount = ((db.get('SELECT COUNT(*) as n FROM groups') as { n: number } | undefined)?.n ?? 0);
 
   const excluded: ExportReport['excluded'] = [];
   if (researchTaskCount > 0) excluded.push({
@@ -678,12 +764,8 @@ export function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', e
     count: researchTaskCount,
     reason: 'No equivalent concept in GEDCOM 5.5.1',
   });
-  if (groupCount > 0) excluded.push({
-    category: 'Groups and group membership',
-    count: groupCount,
-    reason: 'No equivalent concept in GEDCOM 5.5.1',
-  });
   // events.place_address: now lossless via custom _PLAC_ADDR sub-tag (see emit sites above).
+  // groups / group_links: now lossless via custom _GROUP / _GROUP_LINK records (see emit sites above).
 
   // Count total events exported (across all persons and couples)
   const totalEventCount = ((db.get('SELECT COUNT(*) as n FROM events') as { n: number } | undefined)?.n ?? 0);
