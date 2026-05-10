@@ -5,8 +5,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { unzipSync } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
 import { createMedia, addMediaLink } from '../../src/api/media';
-import { exportArchive } from '../../src/api/archive_export';
-import { importArchive } from '../../src/api/archive_import';
+import { exportArchive, exportArchiveToBytes } from '../../src/api/archive_export';
+import { importArchive, importArchiveFromBytes } from '../../src/api/archive_import';
 import { createPerson } from '../../src/api/persons';
 import { createTestDb } from './helpers';
 
@@ -230,5 +230,57 @@ describe('archive import', async () => {
     const renamedFile = files.find(f => f !== 'photo.jpg')!;
     expect(renamedFile).toMatch(/^photo_\d+\.jpg$/);
     expect(fs.readFileSync(path.join(importMediaDir, renamedFile), 'utf-8')).toBe('new-content');
+  });
+});
+
+describe('archive bytes-in/out variants (Tauri path)', async () => {
+  it('round-trips entirely in memory via mediaReader/mediaWriter callbacks', async () => {
+    // Seed: one person + one media row with in-memory bytes (no fs).
+    const person = await createPerson(db, { given_name: 'Bytes', surname: 'Test' });
+    const media = await createMedia(db, {
+      file_ref: 'family-media/photo.jpg',
+      title: 'Photo',
+      format: 'jpg',
+    });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+
+    const memFiles = new Map<string, Uint8Array>();
+    memFiles.set('family-media/photo.jpg', new Uint8Array(Buffer.from('jpeg-bytes')));
+
+    // Export: use a reader that pulls from the in-memory map.
+    const { zipBytes, report: exportReport } = await exportArchiveToBytes(
+      db,
+      async (relPath) => memFiles.get(relPath) ?? null,
+    );
+    expect(exportReport.mediaCount).toBe(1);
+    expect(exportReport.missingMedia).toEqual([]);
+    expect(zipBytes.length).toBeGreaterThan(0);
+
+    // Import into a fresh DB using a writer that captures media bytes.
+    const db2 = await createTestDb();
+    const writtenFiles = new Map<string, Uint8Array>();
+    const importReport = await importArchiveFromBytes(
+      db2,
+      zipBytes,
+      'family-media',
+      async (filename, bytes) => { writtenFiles.set(filename, bytes); },
+    );
+    expect(importReport.gedcomReport.persons).toBe(1);
+    expect(importReport.mediaImported).toBe(1);
+    expect(importReport.mediaSkipped).toEqual([]);
+
+    // The writer received the photo bytes, byte-identical to what the
+    // reader supplied at export time.
+    const written = writtenFiles.get('photo.jpg');
+    expect(written).toBeDefined();
+    expect(Buffer.from(written!).toString()).toBe('jpeg-bytes');
+
+    // file_ref rows in the imported DB point at the supplied media folder
+    // name (not the in-archive `media/...` shape).
+    const rows = (db2 as unknown as { all: (sql: string) => Array<{ file_ref: string }> }).all(
+      "SELECT file_ref FROM media WHERE file_ref IS NOT NULL",
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].file_ref).toBe('family-media/photo.jpg');
   });
 });

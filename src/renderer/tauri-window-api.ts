@@ -346,27 +346,140 @@ export function mountWindowApi(db: Database): MountResult {
     }
   };
 
-  // Holger / RootsMagic / Genney importers do extensive fs operations
-  // (directory walks, mdb→sqlite extraction, Docker/Java spawning) that
-  // need wholesale Rust-side replacements. They stay throw-on-call in the
-  // Tauri build until that work lands. The file picker still works so the
-  // UI doesn't crash; the run handler returns a clear error.
+  // RootsMagic — pick file, write its bytes to a temp file via Rust (so
+  // rusqlite has a real path to open), open as a read-only secondary
+  // SQLite connection through the SecondaryDatabase shim, then run the
+  // shared `importFromRootsMagicDb` transform against the active DB.
+  // Cleanup (close secondary + delete temp) lives in the `finally` block
+  // so a failed import doesn't leak the rusqlite handle or the temp file.
+  // Accepts both `{ sourcePath }` (the renderer UI's wire shape) and
+  // `{ filePath }` (the channel-spec name) so neither side has to change.
+  api.import.rootsmagicRun = async (opts: unknown) => {
+    const o = opts as { sourcePath?: string; filePath?: string } | undefined;
+    const path = o?.sourcePath ?? o?.filePath;
+    if (!path) return { success: false, error: 'sourcePath is required' };
+    let tempPath: string | null = null;
+    let secondary: import('./secondary-db-shim').SecondaryDatabase | null = null;
+    try {
+      const [{ SecondaryDatabase }, rmMod] = await Promise.all([
+        import('./secondary-db-shim'),
+        import('../import/rootsmagic'),
+      ]);
+      // Read picked file → write to OS temp dir → hand temp path to
+      // secondary_db_open. We can't pass the user's original path
+      // straight to rusqlite because (a) the renderer's chosen-file
+      // sandbox might not grant Rust the same access on all platforms,
+      // and (b) the .rmgc may live on a network share where read-only
+      // SQLite open + journal probing is unreliable.
+      const b64 = await invoke<string>('fs_read_bytes_base64', { path });
+      const baseName = path.split(/[\\/]/).pop() ?? 'rootsmagic.rmgc';
+      tempPath = await invoke<string>('fs_write_temp_bytes_base64', { name: baseName, b64 });
+      secondary = await SecondaryDatabase.open(tempPath);
+      const result = await rmMod.importFromRootsMagicDb(
+        getDb(),
+        secondary as unknown as Database,
+      );
+      fireDataChanged();
+      return { success: true, summary: result.summary };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    } finally {
+      if (secondary) {
+        try { secondary.close(); } catch { /* ignore */ }
+      }
+      if (tempPath) {
+        try { await invoke('fs_remove_file', { path: tempPath }); } catch { /* ignore */ }
+      }
+    }
+  };
+
+  // Holger / Genney importers do extensive fs operations (directory
+  // walks, mdb→sqlite extraction, Docker/Java spawning) that need
+  // wholesale Rust-side replacements. They stay throw-on-call in the
+  // Tauri build until that work lands. The file picker still works so
+  // the UI doesn't crash; the run handler returns a clear error.
   const notWired = (label: string) => async () => ({
     success: false,
     error: `${label} import is not yet wired in the Tauri build (deferred)`,
   });
   api.import.holgerRun = notWired('Holger');
-  api.import.rootsmagicRun = notWired('RootsMagic');
   api.import.genneyRun = notWired('Genney');
   api.import.genneyDiscover = async () => ({ success: false, error: 'genneyDiscover not yet wired in Tauri build' });
 
   if (!api.archive) api.archive = {};
-  // Archive export/import iterate per-media-row and read/write files
-  // alongside zip building. Need a refactor to thread fs read/write
-  // callbacks through the api/archive_*.ts functions before wiring here.
-  // Tracked in the tauri-port notes (Phase 4 follow-up).
-  api.archive.export = notWired('Archive export');
-  api.archive.import = notWired('Archive import');
+  // Archive export — open save dialog, build zip in memory via the pure
+  // `exportArchiveToBytes` helper (which calls the supplied media reader
+  // for each `file_ref` row), then write the resulting bytes via
+  // `fs_write_bytes_base64`. Mirrors the Electron archive:_exportRun
+  // worker channel without the worker hop.
+  api.archive.export = async (opts?: unknown) => {
+    const o = opts as { gedcomVersion?: '5.5.1' | '7.0' } | undefined;
+    const version = o?.gedcomVersion ?? '5.5.1';
+    const r = await saveFile('Export Archive', 'family-tree.zip', ['zip'], 'Zip Archive');
+    if (r.canceled || !r.path) return { canceled: true };
+    try {
+      const archiveMod = await import('../api/archive_export');
+      const dbDir = (await dbDirFromPath()) ?? '';
+      const mediaReader = async (relPath: string): Promise<Uint8Array | null> => {
+        try {
+          const abs = dbDir ? `${dbDir}/${relPath}` : relPath;
+          const b64 = await invoke<string>('fs_read_bytes_base64', { path: abs });
+          return base64ToUint8Array(b64);
+        } catch {
+          return null;
+        }
+      };
+      const { zipBytes, report } = await archiveMod.exportArchiveToBytes(
+        getDb(),
+        mediaReader,
+        { gedcomVersion: version },
+      );
+      const b64 = uint8ArrayToBase64(zipBytes);
+      await invoke('fs_write_bytes_base64', { path: r.path, b64 });
+      return { exported: true, filePath: r.path, report };
+    } catch (e) {
+      return { canceled: false, error: String((e as Error)?.message || e) };
+    }
+  };
+
+  // Archive import — open file dialog, read zip bytes via
+  // `fs_read_bytes_base64`, hand them to the pure
+  // `importArchiveFromBytes` helper. Each media entry is written through
+  // a writer that resolves into the active DB's `<dbname>-media/` folder
+  // using `fs_write_bytes_base64`. Mirrors archive:_importRun.
+  api.archive.import = async () => {
+    const r = await pickFile('Import Archive', ['zip'], 'Zip Archive');
+    if (r.canceled || !r.path) return { canceled: true };
+    try {
+      const archiveMod = await import('../api/archive_import');
+      const cur = await invoke<string | null>('db_current_path');
+      if (!cur) return { canceled: false, error: 'no DB open' };
+      const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
+      const dbBase = (cur.split(/[\\/]/).pop() ?? '').replace(/\.(db|sqlite|sqlite3)$/i, '');
+      const mediaFolderName = `${dbBase}-media`;
+      const mediaDir = `${dbDir}/${mediaFolderName}`;
+
+      const b64 = await invoke<string>('fs_read_bytes_base64', { path: r.path });
+      const zipBytes = base64ToUint8Array(b64);
+
+      const mediaWriter = async (filename: string, bytes: Uint8Array): Promise<void> => {
+        const dest = `${mediaDir}/${filename}`;
+        const outB64 = uint8ArrayToBase64(bytes);
+        await invoke('fs_write_bytes_base64', { path: dest, b64: outB64 });
+      };
+
+      const report = await archiveMod.importArchiveFromBytes(
+        getDb(),
+        zipBytes,
+        mediaFolderName,
+        mediaWriter,
+      );
+      fireDataChanged();
+      return { imported: true, filePath: r.path, report };
+    } catch (e) {
+      return { canceled: false, error: String((e as Error)?.message || e) };
+    }
+  };
 
   if (!api.export) api.export = {};
   api.export.openFolder = async (folderPath: unknown) => {
@@ -514,6 +627,19 @@ function base64ToUint8Array(b64: string): Uint8Array {
   const arr = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return arr;
+}
+
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  // Chunked btoa to avoid call-stack overflow on large arrays (zip blobs
+  // can be tens of MB). 32 KiB chunks comfortably stay under the
+  // String.fromCharCode arg limit on every browser.
+  const CHUNK = 0x8000;
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const sub = bytes.subarray(i, Math.min(i + CHUNK, bytes.length));
+    bin += String.fromCharCode.apply(null, sub as unknown as number[]);
+  }
+  return btoa(bin);
 }
 
 function deriveDbName(path: string): string {
