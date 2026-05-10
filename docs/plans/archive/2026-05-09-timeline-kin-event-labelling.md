@@ -1,7 +1,7 @@
 # Plan: Timeline kin-event labelling — relational prefix, partner names, age column, foster filter
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** done
 **Source:** Beta tester reports 86, 87, 89, 91, 93#2 (May 7 batch)
 **Effort:** M
 

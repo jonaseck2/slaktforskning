@@ -1,7 +1,7 @@
 # Plan: Quality check — events dated before the person's birth
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** done
 **Source:** Beta tester report 93 #1 (May 7 batch)
 **Effort:** S
 

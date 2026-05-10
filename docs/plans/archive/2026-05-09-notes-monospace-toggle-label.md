@@ -1,7 +1,7 @@
 # Plan: Notes monospace toggle — readable label, defer rich-text formatting
 
 **Date:** 2026-05-09
-**Status:** planned
+**Status:** done
 **Source:** Beta tester report 90 (May 7 batch)
 **Effort:** XS (label rename) + brainstorm follow-up (rich text)
 
