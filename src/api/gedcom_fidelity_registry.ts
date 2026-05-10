@@ -560,22 +560,22 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v551: {
       kind: 'lossy',
       reason:
-        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person-level, ' +
-        'family-level and place-level citation phases do NOT read DATA/TEXT back, so transcription is ' +
-        'preserved only when the citation is attached to an event or person_name.',
+        'event-level and name-level citations round-trip transcription via standard DATA/TEXT. Person-level, ' +
+        'family-level and place-level citation phases do NOT read DATA/TEXT back, and 5.5.1 is stricter about ' +
+        'unknown sub-tags inside SOUR cites — third-party 5.5.1 consumers historically reject custom tags at ' +
+        'this level — so we intentionally do not emit a custom carrier here. Promoting v5.5.1 would be a ' +
+        'separate plan focused on testing custom-tag tolerance against a panel of 5.5.1-consuming apps.',
       expectedAfterRoundTrip: (seeded, ctx) => {
         return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
       },
     },
     v70: {
-      kind: 'lossy',
-      reason:
-        'event-level and name-level citations round-trip transcription via DATA/TEXT. Person/family/place ' +
-        'citation phases do not read DATA/TEXT back, so transcription is preserved only when the citation ' +
-        'is attached to an event or person_name.',
-      expectedAfterRoundTrip: (seeded, ctx) => {
-        return (ctx?.row.event_id || ctx?.row.person_name_id) ? seeded : '';
-      },
+      kind: 'lossless-via',
+      mechanism:
+        'standard DATA/TEXT under SOUR for event-level and name-level citations; custom 2 _TRANS sub-tag under ' +
+        'SOUR for person-level, family-level (relationship_id) and place-level citations — covers all four ' +
+        'host kinds, multi-line transcriptions ride CONT continuation under _TRANS so embedded newlines ' +
+        'round-trip byte-identical.',
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },

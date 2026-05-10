@@ -39,10 +39,6 @@ The registry in `src/api/gedcom_fidelity_registry.ts` declares 20+ fields as cur
 `groups` (name, notes) and `group_links` (entity_type, entity_id, sort_order) are currently dropped on export. Custom `_GROUP` top-level records + `_GROUP_LINK` sub-records carry the data losslessly. Medium user impact.
 - Plan: [`plans/2026-05-09-gedcom-groups-custom-tag.md`](plans/2026-05-09-gedcom-groups-custom-tag.md)
 
-#### citations.transcription — promote v7.0 to lossless via `_TRANS` [planned]
-Under v5.5.1, transcriptions on person/family/place-level citations are dropped (SOUR has no TEXT analog at those host levels). Under v7.0 we can carry it losslessly via `_TRANS`. Split the registry entry by version; v551 stays lossy with reason cited.
-- Plan: [`plans/2026-05-09-gedcom-citation-transcription-v70.md`](plans/2026-05-09-gedcom-citation-transcription-v70.md)
-
 #### Declared lossy, no promotion planned
 The Prime Directive requires honest disclosure, not lossless round-trip for every column. The following lossy fields are documented in `src/api/gedcom_fidelity_registry.ts` and surfaced via `ExportReport.excluded`; promotion is not planned. Reopen if a user requests it.
 - `media.is_printable` — UI convenience flag for reporting. User re-checks the box if they care.
