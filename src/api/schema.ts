@@ -11,9 +11,9 @@ export async function initializeSchema(db: Database): Promise<void> {
   // becomes WAL-tagged (e.g. touched by a real-SQLite tool like rusqlite or
   // the sqlite3 CLI) becomes unreadable to this build with bare
   // SQLITE_CANTOPEN. `scripts/walfix.mjs` recovers such files.
-  db.exec('PRAGMA foreign_keys = ON');
+  await db.exec('PRAGMA foreign_keys = ON');
 
-  db.exec(`
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS persons (
       id TEXT PRIMARY KEY,
       sex TEXT NOT NULL DEFAULT 'U' CHECK(sex IN ('M', 'F', 'U')),
@@ -267,15 +267,15 @@ export async function initializeSchema(db: Database): Promise<void> {
   // v0.3.0 column migrations — idempotent (skips if column already present)
   const eventCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)')).map(c => c.name);
   if (!eventCols.includes('relationship_id')) {
-    db.exec(`ALTER TABLE events ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
+    await db.exec(`ALTER TABLE events ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
 
   const citationCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(citations)')).map(c => c.name);
   if (!citationCols.includes('relationship_id')) {
-    db.exec(`ALTER TABLE citations ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
+    await db.exec(`ALTER TABLE citations ADD COLUMN relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL`);
   }
   if (!citationCols.includes('place_id')) {
-    db.exec(`ALTER TABLE citations ADD COLUMN place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
+    await db.exec(`ALTER TABLE citations ADD COLUMN place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
   }
   // v0.219.0: citations can now attach to person_names rows so a name change
   // (or any name record) can carry its own source. ON DELETE CASCADE matches
@@ -289,83 +289,83 @@ export async function initializeSchema(db: Database): Promise<void> {
   // v0.3.1 migration: person_names gained name_prefix, name_suffix, patronymic_base, name_qualifier
   const personNamesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(person_names)')).map(c => c.name);
   if (!personNamesCols.includes('name_prefix')) {
-    db.exec(`ALTER TABLE person_names ADD COLUMN name_prefix TEXT`);
+    await db.exec(`ALTER TABLE person_names ADD COLUMN name_prefix TEXT`);
   }
   if (!personNamesCols.includes('name_suffix')) {
-    db.exec(`ALTER TABLE person_names ADD COLUMN name_suffix TEXT`);
+    await db.exec(`ALTER TABLE person_names ADD COLUMN name_suffix TEXT`);
   }
   if (!personNamesCols.includes('patronymic_base')) {
-    db.exec(`ALTER TABLE person_names ADD COLUMN patronymic_base TEXT`);
+    await db.exec(`ALTER TABLE person_names ADD COLUMN patronymic_base TEXT`);
   }
   if (!personNamesCols.includes('name_qualifier')) {
-    db.exec(`ALTER TABLE person_names ADD COLUMN name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))`);
+    await db.exec(`ALTER TABLE person_names ADD COLUMN name_qualifier TEXT CHECK(name_qualifier IN ('patronymic', 'matronymic', 'particle', 'married', 'alias'))`);
   }
   // v0.5.4 preferred_name (tilltalsnamn)
   if (!personNamesCols.includes('preferred_name')) {
-    db.exec('ALTER TABLE person_names ADD COLUMN preferred_name TEXT');
+    await db.exec('ALTER TABLE person_names ADD COLUMN preferred_name TEXT');
   }
   // v0.6.8 nickname (smeknamn)
   if (!personNamesCols.includes('nickname')) {
-    db.exec('ALTER TABLE person_names ADD COLUMN nickname TEXT');
+    await db.exec('ALTER TABLE person_names ADD COLUMN nickname TEXT');
   }
 
   const placesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(places)')).map(c => c.name);
   if (!placesCols.includes('place_type')) {
-    db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
+    await db.exec(`ALTER TABLE places ADD COLUMN place_type TEXT`);
   }
   if (!placesCols.includes('parent_place_id')) {
-    db.exec(`ALTER TABLE places ADD COLUMN parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
+    await db.exec(`ALTER TABLE places ADD COLUMN parent_place_id TEXT REFERENCES places(id) ON DELETE SET NULL`);
   }
   if (!placesCols.includes('date_from')) {
-    db.exec(`ALTER TABLE places ADD COLUMN date_from TEXT`);
+    await db.exec(`ALTER TABLE places ADD COLUMN date_from TEXT`);
   }
   if (!placesCols.includes('date_to')) {
-    db.exec(`ALTER TABLE places ADD COLUMN date_to TEXT`);
+    await db.exec(`ALTER TABLE places ADD COLUMN date_to TEXT`);
   }
   if (!placesCols.includes('notes')) {
-    db.exec(`ALTER TABLE places ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+    await db.exec(`ALTER TABLE places ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
   }
   // v0.5.3 address fields
   if (!placesCols.includes('street')) {
-    db.exec('ALTER TABLE places ADD COLUMN street TEXT');
+    await db.exec('ALTER TABLE places ADD COLUMN street TEXT');
   }
   if (!placesCols.includes('postal_code')) {
-    db.exec('ALTER TABLE places ADD COLUMN postal_code TEXT');
+    await db.exec('ALTER TABLE places ADD COLUMN postal_code TEXT');
   }
   if (!placesCols.includes('city')) {
-    db.exec('ALTER TABLE places ADD COLUMN city TEXT');
+    await db.exec('ALTER TABLE places ADD COLUMN city TEXT');
   }
   if (!placesCols.includes('country')) {
-    db.exec('ALTER TABLE places ADD COLUMN country TEXT');
+    await db.exec('ALTER TABLE places ADD COLUMN country TEXT');
   }
 
   // v0.7.0 events: cause + place_address
   if (!eventCols.includes('cause')) {
-    db.exec('ALTER TABLE events ADD COLUMN cause TEXT');
+    await db.exec('ALTER TABLE events ADD COLUMN cause TEXT');
   }
   if (!eventCols.includes('place_address')) {
-    db.exec('ALTER TABLE events ADD COLUMN place_address TEXT');
+    await db.exec('ALTER TABLE events ADD COLUMN place_address TEXT');
   }
 
   // v0.7.0 sources: call_number + abstract
   const sourcesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(sources)')).map(c => c.name);
   if (!sourcesCols.includes('call_number')) {
-    db.exec('ALTER TABLE sources ADD COLUMN call_number TEXT');
+    await db.exec('ALTER TABLE sources ADD COLUMN call_number TEXT');
   }
   if (!sourcesCols.includes('abstract')) {
-    db.exec('ALTER TABLE sources ADD COLUMN abstract TEXT');
+    await db.exec('ALTER TABLE sources ADD COLUMN abstract TEXT');
   }
 
   // v0.8.0 media: is_missing flag for files that couldn't be found/extracted
   const mediaCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(media)')).map(c => c.name);
   if (!mediaCols.includes('is_missing')) {
-    db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
+    await db.exec('ALTER TABLE media ADD COLUMN is_missing INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.9.0 media_links: sort_order for user-controlled ordering
   const mediaLinkCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(media_links)')).map(c => c.name);
   if (!mediaLinkCols.includes('sort_order')) {
-    db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
+    await db.exec('ALTER TABLE media_links ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
   }
 
   // v0.79.0 name_type: add 'name_change' to CHECK constraint
@@ -468,7 +468,7 @@ export async function initializeSchema(db: Database): Promise<void> {
   }
 
   // Indexes that depend on migrated columns — run after migrations
-  db.exec(`
+  await db.exec(`
     CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id);
     CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
     CREATE INDEX IF NOT EXISTS idx_events_type_datetype ON events(event_type, date_type);

@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as fsp from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as fsp from 'node:fs/promises';
+import * as path from 'node:path';
 import type { Database } from 'node-sqlite3-wasm';
 import { getMediaDir, getMediaFolderName } from './media';
 import { runSql } from './db';
