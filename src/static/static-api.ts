@@ -522,6 +522,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     forPerson: async () => [],
     forPlace: async () => [],
     forMedia: async () => [],
+    runForEvent: async () => [],
   };
 
   const media = {

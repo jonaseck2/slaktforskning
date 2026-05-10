@@ -895,6 +895,20 @@ async function handleSave() {
         }
       }
     }
+    // Post-save quality check (informational, non-blocking).
+    // Surfaces EVENT_BEFORE_BIRTH / EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH at
+    // save time so the user reconciles authored-but-inconsistent dates
+    // instead of silently leaving them in the database. PRIME DIRECTIVE:
+    // this never modifies `ev` — it just reads.
+    try {
+      const checkResults = (await window.api.checks.runForEvent(ev.id!)) as Array<{ code: string }> | null;
+      if (checkResults && checkResults.length > 0) {
+        toast.warning(t('quality.toast.eventOutsideLifespan', { count: checkResults.length }));
+      }
+    } catch (qcErr) {
+      // Non-blocking: a failed quality probe must not block the save.
+      console.error('[EventModal] post-save quality check failed:', qcErr);
+    }
     emit('saved', ev);
   } catch (err) {
     console.error('[EventModal] save failed:', err);

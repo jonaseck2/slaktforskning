@@ -56,6 +56,7 @@ import {
   checkPlaceNameBrokenLansbokstav,
 } from './checks-place';
 import { checkPossibleDuplicatePerson, checkDuplicateIdentifier, checkDuplicatePlace, checkDuplicateMedia, checkDuplicateSource } from './checks-duplicates';
+import { checkEventOutsideLifespan, checkEventOutsideLifespanForEvent } from './event_outside_lifespan';
 
 // Re-export public types
 export type { CheckResult, CheckSeverity } from './check-utils';
@@ -124,6 +125,7 @@ export function getAllCheckFunctions(): NamedCheck[] {
     // A. Chronological — Person
     { name: 'checkBirthAfterDeath',       fn: (db) => checkBirthAfterDeath(db) },
     { name: 'checkEventAfterDeath',       fn: (db) => checkEventAfterDeath(db) },
+    { name: 'checkEventOutsideLifespan',  fn: (db) => checkEventOutsideLifespan(db) },
     { name: 'checkBurialBeforeDeath',     fn: (db) => checkBurialBeforeDeath(db) },
     { name: 'checkLifespan',              fn: (db) => checkLifespan(db) },
     { name: 'checkFutureDates',           fn: (db) => checkFutureDates(db) },
@@ -247,4 +249,14 @@ export async function runChecksForMedia(db: Database, mediaId: string, dbDir?: s
   // Include global checks — media file existence is the main media-scoped signal.
   const all = await runAllCheckFunctions(db, dbDir);
   return all.filter(r => r.mediaIds?.includes(mediaId));
+}
+
+/**
+ * Run only the checks that apply to a single event. Used by the save-time
+ * toast hook in event-creating modals — runs synchronously, no gazetteer or
+ * media-file I/O, returns only the rows that would have appeared in the
+ * Quality view for this event.
+ */
+export function runChecksForEvent(db: Database, eventId: string): CheckResult[] {
+  return checkEventOutsideLifespanForEvent(db, eventId);
 }

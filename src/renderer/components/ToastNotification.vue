@@ -60,6 +60,10 @@ const { toasts, dismiss } = useToast();
   background: #1d4ed8;
   color: white;
 }
+.toast--warning {
+  background: var(--warning-bg, #b45309);
+  color: var(--warning-text, white);
+}
 .toast-enter-active,
 .toast-leave-active {
   transition: opacity 0.2s, transform 0.2s;

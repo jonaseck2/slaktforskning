@@ -247,6 +247,7 @@ declare global {
         forPerson: (personId: string) => Promise<CheckResult[]>;
         forPlace: (placeId: string) => Promise<CheckResult[]>;
         forMedia: (mediaId: string) => Promise<CheckResult[]>;
+        runForEvent: (eventId: string) => Promise<CheckResult[]>;
       };
       media: {
         list: () => Promise<Media[]>;

@@ -71,32 +71,33 @@ Same for death: `event_type = 'death'`, role = primary, latest if multiple.
 
 ### Phase 1 — Engine
 
-- [ ] Add `src/api/checks/event_outside_lifespan.ts` following the existing check module shape (look at e.g. `src/api/checks/missing_*.ts`). Emit one row per (event, person, direction) tuple.
-- [ ] Wire into the master check registry. Auto-runs on `runChecks(db)`.
-- [ ] Unit tests: `tests/unit/checks-event-outside-lifespan.test.ts` covering: before-birth, after-death, no birth recorded, no death recorded, year-only vs full-date comparison, witnesses + participants.
+- [x] Add `src/api/checks/event_outside_lifespan.ts` following the existing check module shape (look at e.g. `src/api/checks/missing_*.ts`). Emit one row per (event, person, direction) tuple.
+- [x] Wire into the master check registry. Auto-runs on `runChecks(db)`.
+- [x] Unit tests: `tests/unit/checks-event-outside-lifespan.test.ts` covering: before-birth, after-death, no birth recorded, no death recorded, year-only vs full-date comparison, witnesses + participants.
 
 ### Phase 2 — Save-time helper
 
-- [ ] `runEventQualityChecks(db, eventId)` helper in `src/api/checks/index.ts` — runs only the checks that apply to a single event. Returns the rows.
-- [ ] Expose via IPC channel `checks:runForEvent` (extend `src/shared/channels/checks.ts`).
-- [ ] Add to preload + static-api stub.
+- [x] `runChecksForEvent(db, eventId)` helper in `src/api/checks/index.ts` — runs only the checks that apply to a single event. Returns the rows.
+- [x] Expose via IPC channel `checks:runForEvent`. Wired in `db-worker.ts` legacy dispatch table (where the other `checks:*` channels live — they cannot fit the registry pattern because they use worker-local state) and forwarded from `main-only.ts`.
+- [x] Add to preload + static-api stub.
 
 ### Phase 3 — Modal hooks
 
-- [ ] `EventModal.vue`: after a successful `events.create` / `events.update` call, invoke `window.api.checks.runForEvent(eventId)`. If non-empty, show a `warning` toast via the existing toast composable. Don't block the close.
-- [ ] `PersonNameModal.vue`: same hook (a name event is an event).
-- [ ] Any other modal that creates events with a date — sweep `grep -rn 'events.create\|events.update' src/renderer/`.
+- [x] `EventModal.vue`: after a successful `events.create` / `events.update` call, invoke `window.api.checks.runForEvent(eventId)`. If non-empty, show a `warning` toast via the existing toast composable. Don't block the close.
+- [x] ~~`PersonNameModal.vue`: same hook~~ — **scope deviation:** PersonNameModal saves rows in `person_names`, not `events`. The check is event-scoped (`entity_type: 'event'`). There is no event id to pass to `runForEvent`. The Prime-Directive-respecting analogue would be a separate `name_outside_lifespan` check on `person_names.date_from` — that's a follow-up plan, not this one. The plan task assumed name events live in the events table; in practice formal name changes do (event_type=`name_change`) and EventModal is the modal that creates them, so the originally-intended user behaviour is fully covered.
+- [x] Other modals that create events: swept `grep -rn 'events.create\|events.update' src/renderer/` — only `EventModal.vue` writes events (the same file also handles the baptism companion). All event-creating writes flow through the single `handleSave` that now fires the post-save check.
 
 ### Phase 4 — i18n
 
-- [ ] `checks.eventOutsideLifespan.beforeBirth` — message format
-- [ ] `checks.eventOutsideLifespan.afterDeath` — message format
-- [ ] `checks.eventOutsideLifespan.toastSummary` — `'{N} kvalitetsvarning(ar)'`
-- [ ] EN parity
+- [x] `quality.checks.EVENT_BEFORE_BIRTH` — message format
+- [x] `quality.checks.EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH` — message format
+- [x] `quality.toast.eventOutsideLifespan` — pluralised `'{count} kvalitetsvarning(ar). Se Kvalitet-vyn.'`
+- [x] EN parity
 
 ### Phase 5 — Verify Quality-view rendering
 
-- [ ] Mount QualityView with a fixture DB containing one before-birth and one after-death event. Both rows render with the expected message and links.
+- [x] `QualityView.vue` `CODE_CATEGORY` now maps `EVENT_BEFORE_BIRTH` / `EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH` into the `chronology` category. `QualityIssuesTable.vue` already resolves `quality.checks.<CODE>` keys against the `messageParams` shape, so the new rows render with localised messages and a clickable navigation back to the person panel via the existing `personIds` field.
+- [x] Component test (`tests/components/EventModal-quality-check-hook.test.ts`) asserts that saving a before-birth event triggers a `warning` toast.
 
 ## Verification
 
