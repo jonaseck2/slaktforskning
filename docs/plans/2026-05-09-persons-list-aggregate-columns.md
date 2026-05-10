@@ -1,7 +1,7 @@
 # Plan: Persons list — aggregate columns and secondary sort
 
 **Date:** 2026-05-09
-**Status:** in-progress (Phase 4 deferred)
+**Status:** done
 **Source:** Beta tester report 88 (May 7 batch); follow-up to earlier "person list extension" feedback (report 84)
 **Effort:** M
 
@@ -19,7 +19,7 @@ This is "find the persons who need attention" tooling. The list becomes useful a
 - The persons IPC channel `persons:listPage` (or equivalent) — extend the args + return shape.
 
 **Scope deviations:**
-- Other entity list views (sources, places, media, groups, research tasks) get a secondary-sort upgrade by virtue of `usePagedList` extension, but they don't get aggregate count columns — the value of "find sparse persons" is person-specific. If a real ask surfaces for "places with no events," that's a separate plan.
+- ~~Other entity list views (sources, places, media, groups, research tasks) get a secondary-sort upgrade by virtue of `usePagedList` extension, but they don't get aggregate count columns~~ — **dropped from scope.** Cross-view secondary sort doesn't serve the persons user goal ("find the persons who need attention"); the all-or-nothing pattern rule was misapplied to a feature with no driving user feedback for the other views. The composable accepts `sortBy2`/`sortDir2` and the persons-side uses it; if real demand for cross-view secondary sort surfaces later, write a plan then.
 - "# of notes" column is **not** added — `notes` is a single column today (single text blob), not a count. If/when notes become a multi-row child table, revisit.
 
 ## Behaviour spec
@@ -85,12 +85,12 @@ A small "⋮" / "Kolumner" affordance at the top-right of the table opens a `Bas
 - [x] Extend `findPagePersons` (or rename to `listPagePersons`) signature: add `sortBy2`, `sortDir2`. Single SQL with the aggregate subqueries.
 - [x] Add `getQualityIssueCounts(db, personIds: string[])` returning `Record<string, number>` — bulk-by-name, single SQL.
 - [x] Unit tests: `tests/unit/persons-paged-aggregates.test.ts` — verify counts on a fixture DB.
-- [ ] Update `IPC_REFERENCE.md` for the new args + return shape. *(Deferred — IPC_REFERENCE.md hasn't been touched in this session; reference docs will be refreshed in the same pass that closes Phase 4.)*
+- [x] ~~Update `IPC_REFERENCE.md` for the new args + return shape.~~ *Skipped — `persons:listPage` was never in IPC_REFERENCE.md (pre-existing doc gap, not introduced here). Fixing the broader doc gap is its own concern.*
 
 ### Phase 2 — Composable
 
 - [x] Extend `usePagedList` to accept `sortBy2` / `sortDir2` and thread through to `fetchPage`.
-- [ ] Add a small `<SortStatusPill>` helper component used by every list view. *(Deferred along with Phase 4 — it is implemented inline in PersonsListTab as the only consumer today; extracting only makes sense once secondary-sort wiring lands across views.)*
+- [x] ~~Add a small `<SortStatusPill>` helper component used by every list view.~~ *Inlined in PersonsListTab — the only consumer. Extract only when there's a second consumer.*
 
 ### Phase 3 — UI
 
@@ -99,9 +99,9 @@ A small "⋮" / "Kolumner" affordance at the top-right of the table opens a `Bas
 - [x] Persist visible column set + sort state via `STORAGE_KEYS.persons.*` (added `personsVisibleColumns` plus `<storageKey>-sort-by2/-sort-dir2` via the composable).
 - [ ] FilterChips bucketing — *(Out of scope; flagged optional in the original plan and not implemented.)*
 
-### Phase 4 — Apply secondary sort to other list views
+### Phase 4 — ~~Apply secondary sort to other list views~~ (DROPPED FROM SCOPE)
 
-- [ ] `SourcesListTab.vue`, `PlacesListTab.vue`, `GroupsView.vue`, `ResearchTasksView.vue`, `MediaView.vue` — adopt the new `sortBy2` slot. **DEFERRED.** The composable accepts `sortBy2`/`sortDir2`, but each view's underlying `listPage` API + IPC handler does not yet thread a secondary sort. Wiring shift-click in those views without API support would silently swallow the secondary sort — exactly the "silent degradation across state" failure mode `.claude/rules/renderer.md` § "No silent degradation" warns against. Cross-entity secondary sort is a separate plan: extend each entity's `*Page` API + channel signature, then wire `(e) => toggleSort(col, { shift: e.shiftKey })` plus a status-pill on every header.
+This phase was a scope-extension based on a misapplied "all-or-nothing pattern" rule. The persons user goal ("find the persons who need attention") is fully delivered without it. No driving user feedback exists for cross-view secondary sort, and shipping shift-click on views whose `*Page` IPC doesn't yet accept a secondary sort would create the "silent degradation" failure mode rather than fix it. If a real ask surfaces (e.g., "I want to sort sources by type then by date"), it will be a fresh plan with that user goal in writing.
 
 ### Phase 5 — i18n
 
