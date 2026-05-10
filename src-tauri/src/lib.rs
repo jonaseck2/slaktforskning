@@ -3,6 +3,7 @@
 
 mod db;
 mod mcp;
+mod media;
 mod ui_server;
 
 use db::{AncestorNode, DbStats, PersonRow, RunResult};
@@ -375,6 +376,18 @@ fn fs_copy_file(src: String, dest: String) -> Result<(), String> {
     std::fs::copy(&src, &dest).map(|_| ()).map_err(|e| format!("copy: {e}"))
 }
 
+/// Open a file or folder with the OS's default associated application.
+/// Mirrors Electron's `shell.openPath(absPath)` used by media:openFile —
+/// e.g. clicking "Open file" on a JPG media row launches Photos on macOS,
+/// the default image viewer on Linux, etc.
+#[tauri::command]
+fn shell_open_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_path(path, None::<&str>)
+        .map_err(|e| format!("open_path: {e}"))
+}
+
 /// Read a media file (resolved relative to the active DB's directory) and
 /// return a base64 data URL. Backs window.api.media.readAsDataUrl().
 #[tauri::command]
@@ -580,9 +593,13 @@ pub fn run() {
             secondary_db_get,
             secondary_db_all,
             shell_reveal,
+            shell_open_path,
             app_version,
             fs_copy_file,
             read_bundled_resource,
+            media::media_thumbnail,
+            media::website_bake_preview_thumbnails,
+            media::website_load_static_index_html,
             ui_server::ui_eval_response,
         ])
         .setup(|app| {

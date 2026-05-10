@@ -236,6 +236,55 @@ export function mountWindowApi(db: Database): MountResult {
     const row = await media.getMedia(getDb(), mediaId);
     return row?.file_ref ?? null;
   };
+  // media.createFromFile — same fs flow as media.attach but with a
+  // user-supplied default title (`suggestedTitle`), and no entity-link
+  // step. Mirrors the Electron handler at src/main/ipc/media.ts:144.
+  api.media.createFromFile = async (data: unknown) => {
+    const opts = data as { suggestedTitle?: string } | undefined;
+    const r = await invoke<{ canceled: boolean; fileRef?: string; format?: string | null; title?: string }>(
+      'media_pick_and_copy',
+    );
+    if (r.canceled) return { canceled: true };
+    const item = await media.createMedia(getDb(), {
+      file_ref: r.fileRef ?? null,
+      title: opts?.suggestedTitle?.trim() || r.title || '',
+      format: (r.format ?? null) as string | null,
+    });
+    fireDataChanged();
+    return { canceled: false, media: item };
+  };
+  // media.openFile — open a media file in the OS's default app (Photos,
+  // Preview, VLC, etc.). Renderer hands us the media row's id; we look up
+  // file_ref, resolve to an absolute path against the DB directory, and
+  // hand it to tauri-plugin-opener's open_path on the Rust side.
+  api.media.openFile = async (mediaId: unknown) => {
+    if (typeof mediaId !== 'string') return { success: false, error: 'missing media id' };
+    const row = await media.getMedia(getDb(), mediaId);
+    if (!row?.file_ref) return { success: false, error: 'Media not found or no file_ref' };
+    const cur = await invoke<string | null>('db_current_path');
+    if (!cur) return { success: false, error: 'no DB open' };
+    const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
+    // file_ref is normally relative (`<dbname>-media/foo.jpg`); if it ever
+    // is absolute (pre-consolidate), use it as-is.
+    const isAbsolute = /^([A-Za-z]:[\\/]|\/)/.test(row.file_ref);
+    const absPath = isAbsolute ? row.file_ref : `${dbDir}/${row.file_ref}`;
+    try {
+      await invoke('shell_open_path', { path: absPath });
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    }
+  };
+  // media.thumbnailDataUrl — JPEG thumbnail via the Rust `image` crate.
+  // Mirrors the Electron `nativeImage.resize().toJPEG()` path in
+  // src/main/ipc/media.ts:60. Returns null on missing files or
+  // undecodable formats so the renderer can fall back to an icon.
+  api.media.thumbnailDataUrl = async (fileRefArg: unknown, maxWidthArg?: unknown) => {
+    const fileRef = typeof fileRefArg === 'string' ? fileRefArg : null;
+    if (!fileRef) return null;
+    const maxWidth = typeof maxWidthArg === 'number' && maxWidthArg > 0 ? maxWidthArg : undefined;
+    return await invoke<string | null>('media_thumbnail', { fileRef, maxWidth });
+  };
 
   // Checks: main-only IPC channels in the Electron build (worker-local
   // cancellation state). In Tauri the whole thing runs in the renderer, so
@@ -544,6 +593,86 @@ export function mountWindowApi(db: Database): MountResult {
     } catch (e) {
       return { canceled: false, error: String((e as Error)?.message || e) };
     }
+  };
+
+  // Website export — `previewSnapshot` is auto-walked from the registry
+  // (worker-shape, no Electron deps). `buildPreviewHtml` mirrors the
+  // Electron handler in src/main/ipc/website-export.ts:59 — it builds a
+  // full DB snapshot with media metadata, bakes the first 24 image
+  // thumbnails into JPEG data URLs via the Rust `image` crate, and inlines
+  // the result into a copy of dist-static/index.html that the renderer
+  // drops into a Blob URL for the preview iframe.
+  if (!api.website) api.website = {};
+  api.website.buildPreviewHtml = async (opts: unknown) => {
+    type BuildOpts = {
+      siteTitle: string;
+      focusPersonId: string | null;
+      scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
+      options: { excludeLiving: boolean; redactLiving: boolean; mediaPersonOnly: boolean };
+    };
+    const o = opts as BuildOpts;
+    const PREVIEW_THUMB_COUNT = 24;
+    const IMG_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+    const snapshotMod = await import('../api/html_site/snapshot');
+    const snapshot = await snapshotMod.buildSnapshot(getDb(), {
+      siteTitle: o.siteTitle,
+      focusPersonId: o.focusPersonId ?? '',
+      scope: o.scope,
+      options: {
+        ...o.options,
+        includeMedia: true,
+        includeReports: false,
+        includePrints: false,
+      },
+    }) as {
+      meta: Record<string, unknown>;
+      media: Array<{ id: string; file_ref: string | null; format?: string | null }>;
+      mediaLinks: Array<{ media_id: string }>;
+      mediaRegions: Array<{ media_id: string }>;
+      settings: Record<string, string>;
+    };
+    const totalMediaInScope = snapshot.media.length;
+    // Filter to image media (the Rust thumbnailer only handles raster
+    // formats), trim to the preview cap, then bake.
+    const imageRefs = snapshot.media
+      .filter(m => {
+        if (!m.file_ref) return false;
+        const ext = (m.format ?? '').toLowerCase() ||
+          (m.file_ref.split('.').pop() ?? '').toLowerCase();
+        return IMG_EXTENSIONS.has(ext);
+      })
+      .slice(0, PREVIEW_THUMB_COUNT)
+      .map(m => ({ id: m.id, fileRef: m.file_ref as string }));
+    const previewMediaDataUrls = imageRefs.length === 0
+      ? {} as Record<string, string>
+      : await invoke<Record<string, string>>('website_bake_preview_thumbnails', { mediaRefs: imageRefs });
+    // Trim media (and dependent rows) to the items we actually inlined,
+    // matching the Electron handler's behaviour so the preview gallery
+    // shows real photos and no broken images.
+    const inlinedIds = new Set(Object.keys(previewMediaDataUrls));
+    snapshot.media = snapshot.media.filter(m => inlinedIds.has(m.id));
+    snapshot.mediaLinks = snapshot.mediaLinks.filter(ml => inlinedIds.has(ml.media_id));
+    snapshot.mediaRegions = snapshot.mediaRegions.filter(r => inlinedIds.has(r.media_id));
+    snapshot.meta = { ...snapshot.meta, previewMediaDataUrls };
+    snapshot.settings = {
+      ...snapshot.settings,
+      preview_media_limit: String(PREVIEW_THUMB_COUNT),
+      preview_media_total_linked: String(totalMediaInScope),
+    };
+    const html = await invoke<string>('website_load_static_index_html');
+    // Same swap as src/main/preview-html-inject.ts (kept inline to avoid
+    // a renderer→main cross-layer import). Throws when the marker is
+    // missing — silent no-op was the original failure mode (blank iframe
+    // with a `fetch ./data.json` error from installStaticApi's last-resort
+    // dev path).
+    const json = JSON.stringify(snapshot ?? null).replace(/<\/script/gi, '<\\/script');
+    const inline = `<script>window.__SNAPSHOT__=${json};</script>`;
+    const MARKER = '<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->';
+    const result = html.replace(MARKER, inline);
+    if (result === html) {
+      throw new Error(`[website.buildPreviewHtml] index.html missing ${MARKER}`);
+    }
+    return result;
   };
 
   if (!api.export) api.export = {};
