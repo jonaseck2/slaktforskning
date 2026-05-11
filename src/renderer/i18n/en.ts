@@ -1328,6 +1328,8 @@ export default {
     deleteConfirmMessage: '"{title}" will be removed. {links} links to persons, places, and media will be cleared. This cannot be undone.',
     deleteConfirmContinue: 'Continue',
     deletedToast: '"{title}" was removed.',
+    searchOrCreate: 'Search task or create new…',
+    createNew: 'Create new task',
   },
   groups: {
     title: 'Groups',
@@ -1577,6 +1579,7 @@ export default {
     attachTo: 'Attach to',
     attachFromFile: 'Attach file…',
     attachFromFileWithQuery: 'Attach file "{query}"…',
+    searchOrAttach: 'Search existing media or attach new file…',
     alreadyAttached: 'Already attached to this {entityType}',
     confirmDelete: 'Delete this media file?',
     confirmUnlink: 'Unlink this media file from the person? The media file itself is not deleted.',

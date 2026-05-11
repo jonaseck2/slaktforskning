@@ -63,6 +63,7 @@ const { data, reload } = useEntityData<ResearchTaskRow[]>(idRef, async (id) => {
 
 const tasks = computed(() => data.value ?? []);
 const count = computed(() => tasks.value.length);
+const taskIds = computed(() => tasks.value.map(t => t.id));
 
 function onSelect(id: string) {
   const task = tasks.value.find(t => t.id === id);
@@ -73,6 +74,9 @@ defineExpose({
   /** Surface contract: the parent's `+ Task` CTA may need to know how
    * many tasks exist for the count badge. */
   count,
+  /** Ids of tasks already linked to this person — surfaced so the
+   * sibling ResearchTaskPicker can exclude them from search results. */
+  taskIds,
   reload,
 });
 </script>

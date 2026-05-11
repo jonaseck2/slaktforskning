@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { mediaDisplayName } from '../utils/mediaUtils';
 import { narrateMedia, narrationLabelsFromI18n } from '../utils/narration';
@@ -62,11 +62,16 @@ interface MediaItem {
   format: string | null;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: string | null;
   placeholder?: string;
   excludeIds?: string[];
-}>();
+  /** Auto-focus the input on mount and open the dropdown so the user sees
+   * the existing-media list + "Create new from file" affordance immediately
+   * (mirrors GroupPicker's behaviour). Set false when embedded inline in a
+   * form where focus would steal from another field. */
+  autofocus?: boolean;
+}>(), { autofocus: false });
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | null];
@@ -175,6 +180,15 @@ function onKeydown(e: KeyboardEvent) {
 function onBlur() {
   setTimeout(() => { open.value = false; }, 200);
 }
+
+onMounted(async () => {
+  if (props.autofocus) {
+    await nextTick();
+    inputEl.value?.focus();
+    // onFocus loads + opens the dropdown so the picker renders the
+    // existing-media list and the "Create new from file" footer right away.
+  }
+});
 </script>
 
 <style scoped>

@@ -145,7 +145,7 @@
             :alt="mediaDisplayName(item.title, item.file_ref, '')"
             class="card-image"
           />
-          <div v-else-if="isImageMedia(item.format, item.file_ref)" class="card-image-loading"></div>
+          <div v-else-if="isImageMedia(item.format, item.file_ref) && !thumbnailFailed[item.id]" class="card-image-loading"></div>
           <div v-else class="card-file-icon">
             <span class="card-file-ext">{{ (item.format || '?').toUpperCase() }}</span>
           </div>
@@ -326,6 +326,10 @@ const { panelWidth: listWidth, startResize: startListResize } = usePanelResize({
 });
 
 const thumbnails = ref<Record<string, string>>({});
+// Tracks media ids whose thumbnail decode returned null or threw. The gallery
+// template falls back to the file-icon placeholder for these so cards don't
+// spin forever for HEIC/corrupt/unsupported images.
+const thumbnailFailed = ref<Record<string, boolean>>({});
 const viewerMode = ref(false);
 const viewerIndex = ref(0);
 const deepLinkItems = ref<MediaItem[] | null>(null);
@@ -467,6 +471,7 @@ async function loadThumbnails(mediaItems: MediaItem[]) {
     isImageMedia(item.format, item.file_ref)
     && !item.is_missing
     && !thumbnails.value[item.id]
+    && !thumbnailFailed.value[item.id]
     && !!item.file_ref);
   // Bounded-parallel: 8 in flight saturates Electron main without queueing
   // large nativeImage encodes back-to-back. Sequential `for-await` over a
@@ -476,8 +481,22 @@ async function loadThumbnails(mediaItems: MediaItem[]) {
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, async () => {
     while (cursor < targets.length) {
       const item = targets[cursor++];
-      const url = await window.api.media.thumbnailDataUrl(item.file_ref) as string | null;
-      if (url) thumbnails.value[item.id] = url;
+      try {
+        const url = await window.api.media.thumbnailDataUrl(item.file_ref) as string | null;
+        if (url) {
+          thumbnails.value[item.id] = url;
+        } else {
+          // Decoder returned null (unsupported format, missing file). Mark as
+          // failed so the card stops showing the spinner and falls back to the
+          // file-icon placeholder. Without this the gallery spins forever for
+          // any image whose extension passes isImageMedia but whose bytes the
+          // thumbnailer can't decode (HEIC, corrupt JPEG, RAW formats, etc).
+          thumbnailFailed.value[item.id] = true;
+        }
+      } catch (err) {
+        console.warn('[MediaView] thumbnail failed for', item.id, err);
+        thumbnailFailed.value[item.id] = true;
+      }
     }
   }));
 }
