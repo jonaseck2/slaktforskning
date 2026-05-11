@@ -86,15 +86,22 @@ fn make_thumbnail_jpeg(abs_path: &Path, max_width: u32, quality: u8) -> Result<O
 /// already caches in-memory via Vue keep-alive). Adding it later is a
 /// pure-Rust change with no API impact.
 #[tauri::command(rename_all = "camelCase")]
-pub fn media_thumbnail(file_ref: String, max_width: Option<u32>) -> Result<Option<String>, String> {
-    let abs = resolve_file_ref(&file_ref)?;
-    let width = max_width.unwrap_or(DEFAULT_THUMB_WIDTH).max(1);
-    let jpeg = match make_thumbnail_jpeg(&abs, width, DEFAULT_THUMB_QUALITY)? {
-        Some(j) => j,
-        None => return Ok(None),
-    };
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&jpeg);
-    Ok(Some(format!("data:image/jpeg;base64,{b64}")))
+pub async fn media_thumbnail(file_ref: String, max_width: Option<u32>) -> Result<Option<String>, String> {
+    // Async + spawn_blocking because thumbnail generation does sync image
+    // decode + JPEG re-encode — many ms per call. Doing this on the Wry
+    // main thread blocked scrolling and chart drawing in the pre-fix build.
+    tokio::task::spawn_blocking(move || {
+        let abs = resolve_file_ref(&file_ref)?;
+        let width = max_width.unwrap_or(DEFAULT_THUMB_WIDTH).max(1);
+        let jpeg = match make_thumbnail_jpeg(&abs, width, DEFAULT_THUMB_QUALITY)? {
+            Some(j) => j,
+            None => return Ok(None),
+        };
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&jpeg);
+        Ok(Some(format!("data:image/jpeg;base64,{b64}")))
+    })
+    .await
+    .map_err(|e| format!("join: {e}"))?
 }
 
 #[derive(serde::Deserialize)]

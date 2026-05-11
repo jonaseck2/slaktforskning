@@ -27,18 +27,24 @@ fn db_is_open() -> bool {
 }
 
 #[tauri::command]
-fn db_stats() -> Result<DbStats, String> {
-    db::db_stats()
+async fn db_stats() -> Result<DbStats, String> {
+    tokio::task::spawn_blocking(db::db_stats)
+        .await
+        .map_err(|e| format!("join: {e}"))?
 }
 
 #[tauri::command]
-fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
-    db::persons_list(limit, offset)
+async fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
+    tokio::task::spawn_blocking(move || db::persons_list(limit, offset))
+        .await
+        .map_err(|e| format!("join: {e}"))?
 }
 
 #[tauri::command]
-fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<AncestorNode>, String> {
-    db::get_ancestor_tree(&focus_id, max_depth)
+async fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<AncestorNode>, String> {
+    tokio::task::spawn_blocking(move || db::get_ancestor_tree(&focus_id, max_depth))
+        .await
+        .map_err(|e| format!("join: {e}"))?
 }
 
 #[tauri::command]
@@ -69,29 +75,37 @@ fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), Str
 // TS shim invokes these via tauri::invoke after Phase 2.5 lands.
 // ---------------------------------------------------------------------------
 
+// All db_* commands are declared `async fn` so Tauri schedules them on the
+// tokio runtime instead of running synchronously on the main (Wry) thread.
+// The async bodies in src-tauri/src/db.rs further dispatch to a blocking
+// thread via `spawn_blocking`. See the rationale comment in db.rs above
+// `db_batch`. Keeping these declared `fn` (sync) was the root cause of the
+// 1-2 s GUI lock-ups during list scrolling and chart drawing in the
+// pre-fix Tauri build.
+
 #[tauri::command(rename_all = "camelCase")]
-fn db_batch(sql: String) -> Result<(), String> {
-    db::db_batch(&sql)
+async fn db_batch(sql: String) -> Result<(), String> {
+    db::db_batch(sql).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult, String> {
-    db::db_run(&sql, &params.unwrap_or_default())
+async fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult, String> {
+    db::db_run(sql, params.unwrap_or_default()).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn db_run_changes(sql: String, params: Option<Vec<JsonValue>>) -> Result<u64, String> {
-    db::db_run_changes(&sql, &params.unwrap_or_default())
+async fn db_run_changes(sql: String, params: Option<Vec<JsonValue>>) -> Result<u64, String> {
+    db::db_run_changes(sql, params.unwrap_or_default()).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn db_get(sql: String, params: Option<Vec<JsonValue>>) -> Result<Option<JsonValue>, String> {
-    db::db_get(&sql, &params.unwrap_or_default())
+async fn db_get(sql: String, params: Option<Vec<JsonValue>>) -> Result<Option<JsonValue>, String> {
+    db::db_get(sql, params.unwrap_or_default()).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonValue>, String> {
-    db::db_all(&sql, &params.unwrap_or_default())
+async fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonValue>, String> {
+    db::db_all(sql, params.unwrap_or_default()).await
 }
 
 /// Returns the absolute path to the default database file inside the app's
@@ -366,30 +380,30 @@ fn secondary_db_close(handle: u32) {
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn secondary_db_run(
+async fn secondary_db_run(
     handle: u32,
     sql: String,
     params: Option<Vec<JsonValue>>,
 ) -> Result<RunResult, String> {
-    db::secondary_db_run(handle, &sql, &params.unwrap_or_default())
+    db::secondary_db_run(handle, sql, params.unwrap_or_default()).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn secondary_db_get(
+async fn secondary_db_get(
     handle: u32,
     sql: String,
     params: Option<Vec<JsonValue>>,
 ) -> Result<Option<JsonValue>, String> {
-    db::secondary_db_get(handle, &sql, &params.unwrap_or_default())
+    db::secondary_db_get(handle, sql, params.unwrap_or_default()).await
 }
 
 #[tauri::command(rename_all = "camelCase")]
-fn secondary_db_all(
+async fn secondary_db_all(
     handle: u32,
     sql: String,
     params: Option<Vec<JsonValue>>,
 ) -> Result<Vec<JsonValue>, String> {
-    db::secondary_db_all(handle, &sql, &params.unwrap_or_default())
+    db::secondary_db_all(handle, sql, params.unwrap_or_default()).await
 }
 
 /// Reveal a file or folder in the OS file manager.
@@ -427,38 +441,46 @@ fn shell_open_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
 
 /// Read a media file (resolved relative to the active DB's directory) and
 /// return a base64 data URL. Backs window.api.media.readAsDataUrl().
+///
+/// Async + spawn_blocking for the same reason the db_* commands are: avatar
+/// thumbnails are fetched per-row during list scrolls, and a sync command
+/// would block the Wry main thread on every read + base64 encode.
 #[tauri::command]
-fn media_read_as_data_url(file_ref: String) -> Result<Option<String>, String> {
-    use std::path::PathBuf;
-    let db_path = match db::current_path() {
-        Some(p) => p,
-        None => return Err("no DB open".into()),
-    };
-    let db_dir = PathBuf::from(&db_path).parent().unwrap_or(std::path::Path::new(".")).to_path_buf();
-    let abs = if std::path::Path::new(&file_ref).is_absolute() {
-        PathBuf::from(&file_ref)
-    } else {
-        db_dir.join(&file_ref)
-    };
-    if !abs.exists() {
-        return Ok(None);
-    }
-    let bytes = std::fs::read(&abs).map_err(|e| format!("read: {e}"))?;
-    let mime = match abs.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase()).as_deref() {
-        Some("jpg") | Some("jpeg") => "image/jpeg",
-        Some("png") => "image/png",
-        Some("gif") => "image/gif",
-        Some("webp") => "image/webp",
-        Some("heic") | Some("heif") => "image/heic",
-        Some("svg") => "image/svg+xml",
-        Some("pdf") => "application/pdf",
-        Some("mp4") => "video/mp4",
-        Some("mov") => "video/quicktime",
-        _ => "application/octet-stream",
-    };
-    use base64::Engine;
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-    Ok(Some(format!("data:{mime};base64,{b64}")))
+async fn media_read_as_data_url(file_ref: String) -> Result<Option<String>, String> {
+    tokio::task::spawn_blocking(move || {
+        use std::path::PathBuf;
+        let db_path = match db::current_path() {
+            Some(p) => p,
+            None => return Err("no DB open".into()),
+        };
+        let db_dir = PathBuf::from(&db_path).parent().unwrap_or(std::path::Path::new(".")).to_path_buf();
+        let abs = if std::path::Path::new(&file_ref).is_absolute() {
+            PathBuf::from(&file_ref)
+        } else {
+            db_dir.join(&file_ref)
+        };
+        if !abs.exists() {
+            return Ok(None);
+        }
+        let bytes = std::fs::read(&abs).map_err(|e| format!("read: {e}"))?;
+        let mime = match abs.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase()).as_deref() {
+            Some("jpg") | Some("jpeg") => "image/jpeg",
+            Some("png") => "image/png",
+            Some("gif") => "image/gif",
+            Some("webp") => "image/webp",
+            Some("heic") | Some("heif") => "image/heic",
+            Some("svg") => "image/svg+xml",
+            Some("pdf") => "application/pdf",
+            Some("mp4") => "video/mp4",
+            Some("mov") => "video/quicktime",
+            _ => "application/octet-stream",
+        };
+        use base64::Engine;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+        Ok(Some(format!("data:{mime};base64,{b64}")))
+    })
+    .await
+    .map_err(|e| format!("join: {e}"))?
 }
 
 /// Show a native save-file dialog for creating a new .db. Returns the chosen

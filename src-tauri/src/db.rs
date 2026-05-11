@@ -287,20 +287,19 @@ fn row_to_json_object(row: &rusqlite::Row<'_>, names: &[String]) -> rusqlite::Re
     Ok(JsonValue::Object(obj))
 }
 
-/// Execute a multi-statement SQL block (DDL or seed). Mirrors
-/// db.exec(...) in node-sqlite3-wasm. No params; no return value
-/// beyond Ok / Err. initializeSchema from src/api/schema.ts ports
-/// straight onto this primitive once the shim wires up.
-pub fn db_batch(sql: &str) -> Result<(), String> {
+// Internal sync implementations — run on whatever thread the caller is on.
+// The public entry points used by the Tauri commands wrap these in
+// `spawn_blocking` so SQL work never lands on the main thread (where Wry's
+// webview event pump runs) or on a tokio worker (where it would queue the
+// next invoke behind it). See the async wrappers below.
+
+pub(crate) fn db_batch_sync(sql: &str) -> Result<(), String> {
     let guard = DB.lock();
     let conn = guard.as_ref().ok_or("no db open")?;
-    conn.execute_batch(sql).map_err(|e| format!("exec: {e}"))
+    conn.execute_batch(sql).map_err(|e| format!("batch: {e}"))
 }
 
-/// Run an INSERT/UPDATE/DELETE; returns rows affected + last insert rowid.
-/// Caller passes SQL + a JsonValue array of parameters. Equivalent to
-/// runSqlChanges(db, sql, params) in src/api/db.ts.
-pub fn db_run(sql: &str, params: &[JsonValue]) -> Result<RunResult, String> {
+pub(crate) fn db_run_sync(sql: &str, params: &[JsonValue]) -> Result<RunResult, String> {
     let bound = coerce_params(params)?;
     let guard = DB.lock();
     let conn = guard.as_ref().ok_or("no db open")?;
@@ -314,15 +313,7 @@ pub fn db_run(sql: &str, params: &[JsonValue]) -> Result<RunResult, String> {
     })
 }
 
-/// Same as db_run but returns just the changes count — saves a roundtrip
-/// for callers that don't need the rowid.
-pub fn db_run_changes(sql: &str, params: &[JsonValue]) -> Result<u64, String> {
-    Ok(db_run(sql, params)?.changes)
-}
-
-/// Get the first matching row as a JSON object keyed by column name,
-/// or null if no rows. Mirrors queryOne(db, sql, params).
-pub fn db_get(sql: &str, params: &[JsonValue]) -> Result<Option<JsonValue>, String> {
+fn db_get_sync(sql: &str, params: &[JsonValue]) -> Result<Option<JsonValue>, String> {
     let bound = coerce_params(params)?;
     let guard = DB.lock();
     let conn = guard.as_ref().ok_or("no db open")?;
@@ -341,10 +332,7 @@ pub fn db_get(sql: &str, params: &[JsonValue]) -> Result<Option<JsonValue>, Stri
     }
 }
 
-/// Get all matching rows. Mirrors queryAll(db, sql, params). Caller
-/// must keep the row count reasonable — for 22k+ row scans the result
-/// payload over IPC is large; consider streaming or paging.
-pub fn db_all(sql: &str, params: &[JsonValue]) -> Result<Vec<JsonValue>, String> {
+pub(crate) fn db_all_sync(sql: &str, params: &[JsonValue]) -> Result<Vec<JsonValue>, String> {
     let bound = coerce_params(params)?;
     let guard = DB.lock();
     let conn = guard.as_ref().ok_or("no db open")?;
@@ -362,6 +350,52 @@ pub fn db_all(sql: &str, params: &[JsonValue]) -> Result<Vec<JsonValue>, String>
     rows_iter
         .collect::<rusqlite::Result<Vec<_>>>()
         .map_err(|e| format!("collect: {e}"))
+}
+
+// ---------------------------------------------------------------------------
+// Async wrappers — dispatch SQL work to a blocking thread via tokio's
+// blocking-thread pool. The Tauri commands in lib.rs are declared
+// `async fn`, which is what tells Tauri to schedule them on the runtime
+// instead of running synchronously on the main thread (where Wry's webview
+// event pump lives). Wrapping the body in `spawn_blocking` is what keeps
+// the tokio worker threads themselves free for the next invoke. Together
+// this means:
+//   - the renderer's IPC dispatch is never blocked by a slow SQL query;
+//   - several invokes can be in flight without head-of-line blocking;
+//   - the parking_lot::Mutex around the connection still serialises actual
+//     SQL execution (rusqlite is single-connection sync, by design).
+// Before this split, every db_* command was a sync `fn` and ran on the
+// main thread. With a 22k-person DB and a fast scroll, every page fetch +
+// every per-row avatar batch held the main thread for tens of ms each,
+// producing the 1-2 s lock-ups the user reported.
+// ---------------------------------------------------------------------------
+
+pub async fn db_batch(sql: String) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || db_batch_sync(&sql))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+pub async fn db_run(sql: String, params: Vec<JsonValue>) -> Result<RunResult, String> {
+    tokio::task::spawn_blocking(move || db_run_sync(&sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+pub async fn db_run_changes(sql: String, params: Vec<JsonValue>) -> Result<u64, String> {
+    Ok(db_run(sql, params).await?.changes)
+}
+
+pub async fn db_get(sql: String, params: Vec<JsonValue>) -> Result<Option<JsonValue>, String> {
+    tokio::task::spawn_blocking(move || db_get_sync(&sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+pub async fn db_all(sql: String, params: Vec<JsonValue>) -> Result<Vec<JsonValue>, String> {
+    tokio::task::spawn_blocking(move || db_all_sync(&sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
 }
 
 // ---------------------------------------------------------------------------
@@ -407,10 +441,12 @@ fn with_secondary<R>(
     f(conn)
 }
 
-/// Same as db_run but on a secondary handle. Read-only mode means INSERT /
-/// UPDATE / DELETE will fail at the rusqlite layer — that's the intended
-/// guarantee against accidentally writing to the source file.
-pub fn secondary_db_run(
+// Sync inner bodies for the secondary connections. Same shape as the
+// primary db_*_sync helpers above; the public entry points wrap these in
+// `spawn_blocking` so import paths (RootsMagic, Holger) don't pin the
+// main thread either.
+
+fn secondary_db_run_sync(
     handle: u32,
     sql: &str,
     params: &[JsonValue],
@@ -428,8 +464,7 @@ pub fn secondary_db_run(
     })
 }
 
-/// Same as db_get but on a secondary handle.
-pub fn secondary_db_get(
+fn secondary_db_get_sync(
     handle: u32,
     sql: &str,
     params: &[JsonValue],
@@ -454,8 +489,7 @@ pub fn secondary_db_get(
     })
 }
 
-/// Same as db_all but on a secondary handle.
-pub fn secondary_db_all(
+fn secondary_db_all_sync(
     handle: u32,
     sql: &str,
     params: &[JsonValue],
@@ -477,4 +511,39 @@ pub fn secondary_db_all(
             .collect::<rusqlite::Result<Vec<_>>>()
             .map_err(|e| format!("collect: {e}"))
     })
+}
+
+/// Same as db_run but on a secondary handle. Read-only mode means INSERT /
+/// UPDATE / DELETE will fail at the rusqlite layer — that's the intended
+/// guarantee against accidentally writing to the source file.
+pub async fn secondary_db_run(
+    handle: u32,
+    sql: String,
+    params: Vec<JsonValue>,
+) -> Result<RunResult, String> {
+    tokio::task::spawn_blocking(move || secondary_db_run_sync(handle, &sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+/// Same as db_get but on a secondary handle.
+pub async fn secondary_db_get(
+    handle: u32,
+    sql: String,
+    params: Vec<JsonValue>,
+) -> Result<Option<JsonValue>, String> {
+    tokio::task::spawn_blocking(move || secondary_db_get_sync(handle, &sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+/// Same as db_all but on a secondary handle.
+pub async fn secondary_db_all(
+    handle: u32,
+    sql: String,
+    params: Vec<JsonValue>,
+) -> Result<Vec<JsonValue>, String> {
+    tokio::task::spawn_blocking(move || secondary_db_all_sync(handle, &sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
 }

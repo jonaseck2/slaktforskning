@@ -315,7 +315,7 @@ pub fn consolidate_media(
 
     // Read all media rows via the primary connection. We use db::db_all so
     // the same locking discipline as the renderer-side calls applies.
-    let rows_json = db::db_all("SELECT id, file_ref FROM media", &[])?;
+    let rows_json = db::db_all_sync("SELECT id, file_ref FROM media", &[])?;
     let rows: Vec<MediaRow> = rows_json
         .into_iter()
         .map(|v| serde_json::from_value(v).map_err(|e| format!("decode row: {e}")))
@@ -336,7 +336,7 @@ pub fn consolidate_media(
     let mut skipped: u64 = 0;
     let mut missing: u64 = 0;
 
-    db::db_batch("BEGIN IMMEDIATE")?;
+    db::db_batch_sync("BEGIN IMMEDIATE")?;
     let mut committed = false;
     let result: Result<(), String> = (|| {
         for row in &rows {
@@ -401,11 +401,11 @@ pub fn consolidate_media(
     })();
 
     if result.is_ok() {
-        db::db_batch("COMMIT")?;
+        db::db_batch_sync("COMMIT")?;
         committed = true;
     }
     if !committed {
-        let _ = db::db_batch("ROLLBACK");
+        let _ = db::db_batch_sync("ROLLBACK");
     }
     result?;
 
@@ -417,7 +417,7 @@ pub fn consolidate_media(
 }
 
 fn update_ref(id: &str, new_ref: &str) -> Result<(), String> {
-    db::db_run(
+    db::db_run_sync(
         "UPDATE media SET file_ref = ? WHERE id = ?",
         &[serde_json::Value::String(new_ref.to_string()), serde_json::Value::String(id.to_string())],
     )
