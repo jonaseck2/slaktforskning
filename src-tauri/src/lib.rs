@@ -112,10 +112,29 @@ async fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonV
 /// per-user data directory. Creates the parent dir if missing. The renderer
 /// uses this on first boot so the spike persists across launches without a
 /// file picker.
+///
+/// E2E override: when `SLAKTFORSKNING_DB` is set in the process environment,
+/// return that path verbatim (still creating the parent dir if missing). The
+/// Playwright fixture spawns the packaged binary with this var pointed at a
+/// temp `.db` so each test run gets a fresh, isolated database without
+/// touching the user's real `app_data_dir/family.db`.
 #[tauri::command]
 fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
     use std::fs;
+    use std::path::PathBuf;
     use tauri::Manager;
+    if let Ok(override_path) = std::env::var("SLAKTFORSKNING_DB") {
+        if !override_path.is_empty() {
+            let p = PathBuf::from(&override_path);
+            if let Some(parent) = p.parent() {
+                if !parent.as_os_str().is_empty() {
+                    fs::create_dir_all(parent)
+                        .map_err(|e| format!("create_dir_all: {e}"))?;
+                }
+            }
+            return Ok(override_path);
+        }
+    }
     let dir = app
         .path()
         .app_data_dir()
