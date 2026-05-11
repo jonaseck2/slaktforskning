@@ -36,7 +36,3 @@ The Prime Directive requires honest disclosure, not lossless round-trip for ever
 - `media_links.link_type` — UI hint (portrait/document); user retags after import. Mostly an avatar-picker convenience.
 - `media_links.sort_order` — relative order is preserved (what users observe in the UI); the absolute integer is rebased to 0..n-1 on import. The user does not author this number.
 - `research_tasks` / `task_links` — internal working metadata, not published genealogy. Cross-tool portability has near-zero value (other apps use their own task systems).
-
-### [planned] Archive (.zip) round-trip fidelity registry + tests
-Mirror `src/api/gedcom_fidelity_registry.ts` for the .zip archive export/import path. Share the helper infrastructure in `tests/helpers/gedcom_fidelity.ts` but allow per-format status (e.g., groups could be lossless in archive but lossy in GEDCOM). Scope: `src/export/archive.ts`, `src/import/archive/`, tests for per-field round-trip + golden-seed. Lower urgency: pure CI insurance — the archive ships the SQLite file bit-for-bit, so no regression has been observed; this would catch a future one.
-- Plan: [`plans/2026-05-09-archive-fidelity-registry.md`](plans/2026-05-09-archive-fidelity-registry.md)

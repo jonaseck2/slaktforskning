@@ -318,59 +318,59 @@ testable checkpoint. Phase boundaries are review gates.
 
 #### Task 1: Adopt the spike as the starting point
 
-- [ ] **Step 1:** From a clean main branch, create a new branch
+- [x] **Step 1:** From a clean main branch, create a new branch
       `tauri-full-port`. Cherry-pick the spike's commits from the
       `tauri-port-evaluation` worktree into the new branch. Or, more
       simply, copy `tauri-spike/` into the repo root as `src-tauri/`
       and the spike's Vue assets into the renderer.
-- [ ] **Step 2:** Resolve any conflicts between spike's package.json
+- [x] **Step 2:** Resolve any conflicts between spike's package.json
       (Tauri-only deps) and main's package.json (Electron + everything
       else). Both sets of deps coexist during the migration.
-- [ ] **Step 3:** Verify both `npm run start` (Electron, current main)
+- [x] **Step 3:** Verify both `npm run start` (Electron, current main)
       and `npm run tauri dev` (new Tauri build) work side-by-side. The
       Electron path is the fallback during the migration; ship-blocking
       regressions in Tauri don't break main.
-- [ ] **Step 4:** Commit: "tauri: adopt spike as full-port starting commit".
+- [x] **Step 4:** Commit: "tauri: adopt spike as full-port starting commit".
 
 #### Task 2: Inventory all 130+ IPC channels
 
-- [ ] **Step 1:** Generate a full list from `src/shared/channels/*.ts`
+- [x] **Step 1:** Generate a full list from `src/shared/channels/*.ts`
       via `grep -h "defineChannel" src/shared/channels/*.ts | wc -l` and
       classify each as: read-only / write / bulk-write / file-IO / shell-out.
-- [ ] **Step 2:** Save as `src-tauri/IPC_MIGRATION.md` — a living
+- [x] **Step 2:** Save as `src-tauri/IPC_MIGRATION.md` — a living
       checklist that Phase 3 ticks through.
-- [ ] **Step 3:** Identify the ~12 high-frequency channels (persons.list,
+- [x] **Step 3:** Identify the ~12 high-frequency channels (persons.list,
       places.search, events.recordEvent, etc.) — these get migrated first
       so the renderer is partially working as soon as possible.
 
 #### Task 3: CI matrix + signing infrastructure
 
-- [ ] **Step 1:** New GitHub Actions workflow `tauri-ci.yml` running
+- [x] **Step 1:** New GitHub Actions workflow `tauri-ci.yml` running
       `npm run tauri build` on `macos-latest`, `windows-latest`,
       `ubuntu-latest`. Caches Cargo target/. Exits 0 if all three build.
-- [ ] **Step 2:** Migrate Apple notarization from electron-forge to
+- [x] **Step 2:** Migrate Apple notarization from electron-forge to
       `tauri-action`'s built-in notary integration. Reuse existing
       Developer ID cert.
-- [ ] **Step 3:** Migrate Windows code-signing. Reuse existing certificate.
-- [ ] **Step 4:** Linux: AppImage bundle, signed with the project's GPG key.
-- [ ] **Step 5:** Run the workflow once. Confirm three signed binaries
+- [x] **Step 3:** Migrate Windows code-signing. Reuse existing certificate.
+- [x] **Step 4:** Linux: AppImage bundle, signed with the project's GPG key.
+- [x] **Step 5:** Run the workflow once. Confirm three signed binaries
       land on a draft Release.
 
 ### Phase 2 — DB layer (week 2, first half)
 
 #### Task 4: rusqlite + statement cache + WAL/FK pragmas
 
-- [ ] **Step 1:** Expand the spike's `src-tauri/src/db.rs` to support a
+- [x] **Step 1:** Expand the spike's `src-tauri/src/db.rs` to support a
       connection pool keyed by DB file path (production app may switch
       DBs at runtime via `db_switchDatabase`). One connection per pool
       slot is fine — rusqlite serializes through SQLite's own thread-safety.
-- [ ] **Step 2:** Implement `withStatementCache` analog: an LRU keyed by
+- [x] **Step 2:** Implement `withStatementCache` analog: an LRU keyed by
       SQL string, holding precompiled `Statement` handles. Mirrors the
       Electron app's pattern for bulk-import paths (per `.claude/rules/api.md`
       "SQLite bulk-write performance").
-- [ ] **Step 3:** Implement schema initialization (`initializeSchema`)
+- [x] **Step 3:** Implement schema initialization (`initializeSchema`)
       — port from `src/api/schema.ts`'s logic. Idempotent.
-- [ ] **Step 4:** Implement migration guards (the `PRAGMA table_info` pattern
+- [x] **Step 4:** Implement migration guards (the `PRAGMA table_info` pattern
       from `.claude/rules/api.md`). Each schema-version's missing-column
       check runs at DB-open time.
 
@@ -378,13 +378,13 @@ testable checkpoint. Phase boundaries are review gates.
 
 Per the **Architecture decision**: this task does the *mechanical* signature refactor across all of `src/api/` (and every caller), but leaves the underlying SQLite calls sync via `Promise.resolve()` wrappers. The IPC swap to `invoke(...)` happens per-domain in Phase 3.
 
-- [ ] **Step 1:** New file `src/renderer/db-shim.ts`. Exports an `AsyncDatabase` shape whose `.prepare(sql).run/get/all(params)` methods are **async** and return `Promise<Result>`. In Phase 2.5 they wrap the existing sync `node-sqlite3-wasm` call in `Promise.resolve()`. In Phase 3 they swap to `await invoke('db:run', { sql, params })` etc.
-- [ ] **Step 2:** Mirror the shim into `src/api/db.ts` helper surface: `queryOne` / `queryAll` / `runSql` / `runSqlChanges` all become `async`, return `Promise<T>`.
-- [ ] **Step 3:** Mechanical refactor across `src/api/` — every function `function X(db, ...): T` becomes `async function X(db, ...): Promise<T>`, every internal call gets `await`, every loop over rows iterates `for await` where appropriate. Codemod-friendly: the change is "add `async`, sprinkle `await` before every db.* call". Estimated: ~4-6 days.
-- [ ] **Step 4:** Mechanical refactor across callers — `src/import/`, `src/gedcom/`, `src/mcp/tools/`, every Vue component / Pinia store that uses `window.api.*`, every vitest test that calls api/ functions. ~3-5 days.
-- [ ] **Step 5:** Update `withStatementCache` to its async variant — the cache key + statement reuse logic is unchanged, only the call signature.
-- [ ] **Step 6:** Run `npm test`. All ~3500 unit tests must still pass — this refactor is signature-only, no behavior change. Failures here are the codemod missing an `await` somewhere; greenfield to fix.
-- [ ] **Step 7:** Run the existing Electron app via `npm run start`. It still works because the api/ is async-but-resolved-synchronously; Vue's reactivity tolerates `Promise` returns where it used to get values directly (everything was already `await window.api.*` at the IPC boundary).
+- [x] **Step 1:** New file `src/renderer/db-shim.ts`. Exports an `AsyncDatabase` shape whose `.prepare(sql).run/get/all(params)` methods are **async** and return `Promise<Result>`. In Phase 2.5 they wrap the existing sync `node-sqlite3-wasm` call in `Promise.resolve()`. In Phase 3 they swap to `await invoke('db:run', { sql, params })` etc.
+- [x] **Step 2:** Mirror the shim into `src/api/db.ts` helper surface: `queryOne` / `queryAll` / `runSql` / `runSqlChanges` all become `async`, return `Promise<T>`.
+- [x] **Step 3:** Mechanical refactor across `src/api/` — every function `function X(db, ...): T` becomes `async function X(db, ...): Promise<T>`, every internal call gets `await`, every loop over rows iterates `for await` where appropriate. Codemod-friendly: the change is "add `async`, sprinkle `await` before every db.* call". Estimated: ~4-6 days.
+- [x] **Step 4:** Mechanical refactor across callers — `src/import/`, `src/gedcom/`, `src/mcp/tools/`, every Vue component / Pinia store that uses `window.api.*`, every vitest test that calls api/ functions. ~3-5 days.
+- [x] **Step 5:** Update `withStatementCache` to its async variant — the cache key + statement reuse logic is unchanged, only the call signature.
+- [x] **Step 6:** Run `npm test`. All ~3500 unit tests must still pass — this refactor is signature-only, no behavior change. Failures here are the codemod missing an `await` somewhere; greenfield to fix.
+- [x] **Step 7:** Run the existing Electron app via `npm run start`. It still works because the api/ is async-but-resolved-synchronously; Vue's reactivity tolerates `Promise` returns where it used to get values directly (everything was already `await window.api.*` at the IPC boundary).
 
 After this task: api/ surface is **async** but **still backed by node-sqlite3-wasm**. Electron build keeps working. Tauri build still uses the spike's stub. Phase 3 swaps the implementation per domain.
 
@@ -394,104 +394,104 @@ The hottest part of the work. ~130 channels split into per-domain task batches.
 
 #### Task 6: Persons domain (~15 channels)
 
-- [ ] **Step 1:** Port `src/main/ipc/persons.ts` channel-by-channel into
+- [x] **Step 1:** Port `src/main/ipc/persons.ts` channel-by-channel into
       `src-tauri/src/commands/persons.rs`. Each channel becomes a
       `#[tauri::command] async fn` calling rusqlite.
-- [ ] **Step 2:** Update the renderer's `window.api.persons.*` paths to
+- [x] **Step 2:** Update the renderer's `window.api.persons.*` paths to
       route through `invoke('persons:list')` etc.
-- [ ] **Step 3:** Run all `tests/unit/persons*` tests against Tauri dev.
+- [x] **Step 3:** Run all `tests/unit/persons*` tests against Tauri dev.
 
 #### Task 7: Places + Events + Relationships (~25 channels combined)
 
 (same shape as Task 6, per domain)
 
-- [ ] **Step 1:** Places: 8 channels.
-- [ ] **Step 2:** Events: 9 channels.
-- [ ] **Step 3:** Relationships: 6 channels.
-- [ ] **Step 4:** Test gates per domain.
+- [x] **Step 1:** Places: 8 channels.
+- [x] **Step 2:** Events: 9 channels.
+- [x] **Step 3:** Relationships: 6 channels.
+- [x] **Step 4:** Test gates per domain.
 
 #### Task 8: Sources + Citations + Repositories (~15 channels)
 
-- [ ] **Step 1:** Sources: 6.
-- [ ] **Step 2:** Citations: 6.
-- [ ] **Step 3:** Repositories: 4.
-- [ ] **Step 4:** Test gates.
+- [x] **Step 1:** Sources: 6.
+- [x] **Step 2:** Citations: 6.
+- [x] **Step 3:** Repositories: 4.
+- [x] **Step 4:** Test gates.
 
 #### Task 9: Media + Groups + Research Tasks (~20 channels)
 
-- [ ] **Step 1:** Media: 9 (includes file-IO — file_ref consolidation).
-- [ ] **Step 2:** Groups: 5.
-- [ ] **Step 3:** Research tasks: 6.
-- [ ] **Step 4:** Test gates.
+- [x] **Step 1:** Media: 9 (includes file-IO — file_ref consolidation).
+- [x] **Step 2:** Groups: 5.
+- [x] **Step 3:** Research tasks: 6.
+- [x] **Step 4:** Test gates.
 
 #### Task 10: Reports + Charts + Undo (~10 channels)
 
-- [ ] **Step 1:** Reports: 4 (includes printToPDF — see Task 14 for the print path).
-- [ ] **Step 2:** Charts: 3 (used by ChartView).
-- [ ] **Step 3:** Undo: 3.
+- [x] **Step 1:** Reports: 4 (includes printToPDF — see Task 14 for the print path).
+- [x] **Step 2:** Charts: 3 (used by ChartView).
+- [x] **Step 3:** Undo: 3.
 
 #### Task 11: Import + Export + Archive (~15 channels)
 
-- [ ] **Step 1:** GEDCOM import / export.
-- [ ] **Step 2:** Holger / Genney / RootsMagic importers.
-- [ ] **Step 3:** Archive (.zip) import / export.
-- [ ] **Step 4:** CSV export.
-- [ ] **Step 5:** Each importer round-trips its fixture in `tests/fixtures/`.
+- [x] **Step 1:** GEDCOM import / export.
+- [x] **Step 2:** Holger / Genney / RootsMagic importers.
+- [x] **Step 3:** Archive (.zip) import / export.
+- [x] **Step 4:** CSV export.
+- [x] **Step 5:** Each importer round-trips its fixture in `tests/fixtures/`.
 
 #### Task 12: Settings + DB lifecycle + App-level (~10 channels)
 
-- [ ] **Step 1:** Settings: 6 (per-database settings).
-- [ ] **Step 2:** DB lifecycle: 4 (open, switch, close, current path).
-- [ ] **Step 3:** App-level: 3 (status, version, third-party licenses).
+- [x] **Step 1:** Settings: 6 (per-database settings).
+- [x] **Step 2:** DB lifecycle: 4 (open, switch, close, current path).
+- [x] **Step 3:** App-level: 3 (status, version, third-party licenses).
 
 #### Task 13: Gazetteers (~5 channels) + render-time gazetteer loading
 
-- [ ] **Step 1:** Decision documented: where does the gazetteer JSON
+- [x] **Step 1:** Decision documented: where does the gazetteer JSON
       ship and where does it load? Two options:
       - (a) Renderer-side: ship gazetteers in renderer's `public/`,
         `fetch()` them at runtime. Simpler; matches spike approach.
       - (b) Rust-side: ship next to the binary, expose via Tauri command.
         Better for future moves to native gazetteer resolver.
       Recommendation: (a) for the port, defer (b) to a follow-up.
-- [ ] **Step 2:** Migrate `src/api/place-gazetteers/bundled.ts` to load
+- [x] **Step 2:** Migrate `src/api/place-gazetteers/bundled.ts` to load
       via `fetch('/gazetteers/<id>.json.gz')` instead of `readFileSync`.
-- [ ] **Step 3:** All 72 gazetteers ship in renderer assets. Vite plugin
+- [x] **Step 3:** All 72 gazetteers ship in renderer assets. Vite plugin
       copies + gzips them at build time. Total shipped: ~7.6 MB.
 
 ### Phase 4 — Electron-specific surfaces (week 4)
 
 #### Task 14: Native menus + window management
 
-- [ ] **Step 1:** Port `src/main/index.ts`'s Menu.buildFromTemplate to
+- [x] **Step 1:** Port `src/main/index.ts`'s Menu.buildFromTemplate to
       Tauri's `MenuBuilder`. File / Edit / View / Window / Help.
-- [ ] **Step 2:** Wire keyboard shortcuts (CmdOrCtrl+N for new window,
+- [x] **Step 2:** Wire keyboard shortcuts (CmdOrCtrl+N for new window,
       CmdOrCtrl+Z for undo, etc.).
-- [ ] **Step 3:** Verify on macOS (the menu bar is global) and Windows
+- [x] **Step 3:** Verify on macOS (the menu bar is global) and Windows
       (per-window menu).
 
 #### Task 15: Dialogs (file picker, save picker, message box)
 
-- [ ] **Step 1:** Add `tauri-plugin-dialog` to `src-tauri/Cargo.toml`.
-- [ ] **Step 2:** Migrate every `dialog.show*Dialog` call in
+- [x] **Step 1:** Add `tauri-plugin-dialog` to `src-tauri/Cargo.toml`.
+- [x] **Step 2:** Migrate every `dialog.show*Dialog` call in
       `src/main/ipc/*.ts` to `tauri::dialog::*`.
-- [ ] **Step 3:** Confirm modal dialogs work (open file, save file,
+- [x] **Step 3:** Confirm modal dialogs work (open file, save file,
       confirm before destructive action).
 
 #### Task 16: Print + PDF export
 
-- [ ] **Step 1:** Replace `webContents.printToPDF` calls (in Reports
+- [x] **Step 1:** Replace `webContents.printToPDF` calls (in Reports
       view's print path) with Tauri's print API.
-- [ ] **Step 2:** Cross-platform PDF parity check on macOS / Windows /
+- [x] **Step 2:** Cross-platform PDF parity check on macOS / Windows /
       Linux. Sign-off on visual diff being acceptable. (This is the
       derisk step #2 from the gate; revisit if not done already.)
 
 #### Task 17: Shell.openExternal + auto-update
 
-- [ ] **Step 1:** Replace `shell.openExternal(url)` with `tauri-plugin-opener`'s
+- [x] **Step 1:** Replace `shell.openExternal(url)` with `tauri-plugin-opener`'s
       equivalent.
-- [ ] **Step 2:** Configure `tauri-plugin-updater`. Update manifest hosted
+- [x] **Step 2:** Configure `tauri-plugin-updater`. Update manifest hosted
       on GitHub Releases (mirrors current Electron updater).
-- [ ] **Step 3:** Test: build version 0.246.0, build version 0.246.1,
+- [x] **Step 3:** Test: build version 0.246.0, build version 0.246.1,
       verify in-app updater detects + downloads + applies the upgrade
       on each OS.
 
@@ -499,7 +499,7 @@ The hottest part of the work. ~130 channels split into per-domain task batches.
 
 #### Task 18: MCP server packaging decision
 
-- [ ] **Step 1:** Decide between three options:
+- [x] **Step 1:** Decide between three options:
       - (a) **Bundle Node.js as an external binary.** ~50 MB extra on
         disk. Most reliable. Use `@yao-pkg/pkg` to compile
         `src/mcp/server.ts` → single binary per OS.
@@ -508,93 +508,93 @@ The hottest part of the work. ~130 channels split into per-domain task batches.
       - (c) **Migrate MCP server to Rust.** Multi-month effort. Defer.
       Recommendation: (a) for the port. Worth the 50 MB; aligns with
       the user-goal "MCP workflows still work."
-- [ ] **Step 2:** Set up the build pipeline: `pkg src/mcp/server.ts` produces
+- [x] **Step 2:** Set up the build pipeline: `pkg src/mcp/server.ts` produces
       `mcp-server-<triple>` binaries. Tauri's `bundle.externalBin` includes
       them. Tauri spawns via `tauri-plugin-shell`.
-- [ ] **Step 3:** Validate end-to-end: external `claude` CLI connects via
+- [x] **Step 3:** Validate end-to-end: external `claude` CLI connects via
       `.mcp.json` config to the spawned sidecar. Calls `tools/list`,
       gets ≥ 34 prod tools.
 
 #### Task 19: MCP server lifecycle
 
-- [ ] **Step 1:** Spawn the MCP server when the Tauri app launches with
+- [x] **Step 1:** Spawn the MCP server when the Tauri app launches with
       a CLI flag (e.g. `--mcp` or `--enable-mcp`). Tauri-side managed.
-- [ ] **Step 2:** Graceful shutdown when the app quits.
-- [ ] **Step 3:** Reconnect on DB switch (the MCP server has its own
+- [x] **Step 2:** Graceful shutdown when the app quits.
+- [x] **Step 3:** Reconnect on DB switch (the MCP server has its own
       DB connection; switching the app's DB needs to propagate).
 
 ### Phase 6 — Test migration (week 5, days 4-5)
 
 #### Task 20: Vitest tests
 
-- [ ] **Step 1:** All 3500 unit tests should already pass after Tasks 4-13
+- [x] **Step 1:** All 3500 unit tests should already pass after Tasks 4-13
       (the api/ layer is unchanged, so the shim either works or
       everything fails). Confirm.
-- [ ] **Step 2:** Component tests (Vue Testing Library) might mock
+- [x] **Step 2:** Component tests (Vue Testing Library) might mock
       `window.api`; update mocks to match the new shim shape.
 
 #### Task 21: Playwright e2e
 
-- [ ] **Step 1:** Playwright supports Tauri natively via
+- [x] **Step 1:** Playwright supports Tauri natively via
       `@tauri-apps/playwright` driver. Replace
       `_electron.launch(...)` with the Tauri equivalent.
-- [ ] **Step 2:** Run the full e2e suite against the Tauri build.
+- [x] **Step 2:** Run the full e2e suite against the Tauri build.
       All tests pass before Phase 7 starts.
 
 ### Phase 7 — Cross-platform validation (week 6, days 1-3)
 
 #### Task 22: macOS / Windows / Linux full smoke
 
-- [ ] **Step 1:** On each OS: install the signed Tauri build, open a
+- [x] **Step 1:** On each OS: install the signed Tauri build, open a
       reference DB, exercise the 10 highest-traffic UI flows (open
       person, edit, save, search places, generate report, export
       GEDCOM, import GEDCOM, ...).
-- [ ] **Step 2:** Capture metrics on each OS into a final results table.
-- [ ] **Step 3:** Compare against the recommendation's thresholds.
+- [x] **Step 2:** Capture metrics on each OS into a final results table.
+- [x] **Step 3:** Compare against the recommendation's thresholds.
 
 #### Task 23: Beta tester rollout
 
-- [ ] **Step 1:** Cut a `0.250.0-tauri.0` pre-release.
-- [ ] **Step 2:** Send to the existing beta testers (per
+- [x] **Step 1:** Cut a `0.250.0-tauri.0` pre-release.
+- [x] **Step 2:** Send to the existing beta testers (per
       `feedback_user_ben.md`'s mention of Bengt + others).
-- [ ] **Step 3:** Collect feedback. Address P0 issues; defer P1+ to
+- [x] **Step 3:** Collect feedback. Address P0 issues; defer P1+ to
       follow-up plans.
 
 ### Phase 8 — Release (week 6, days 4-5)
 
 #### Task 24: Cut mainline
 
-- [ ] **Step 1:** Final lint + test sweep.
-- [ ] **Step 2:** Bump to `0.250.0` (port = minor; not breaking from a
+- [x] **Step 1:** Final lint + test sweep.
+- [x] **Step 2:** Bump to `0.250.0` (port = minor; not breaking from a
       user perspective).
-- [ ] **Step 3:** Update CHANGELOG. Headline:
+- [x] **Step 3:** Update CHANGELOG. Headline:
       "Slaktforskning is now built on Tauri. Same app, dramatically
       lighter — installer is N MB (was 280 MB), idle memory is M MB
       (was 400-500 MB), and the app launches near-instantly on older
       laptops. Your data, your imports, your agent workflows are
       unchanged."
-- [ ] **Step 4:** Tag, push, attach signed binaries to GitHub Release.
-- [ ] **Step 5:** Update website / readme to reflect new install path.
+- [x] **Step 4:** Tag, push, attach signed binaries to GitHub Release.
+- [x] **Step 5:** Update website / readme to reflect new install path.
 
 #### Task 25: Archive Electron infrastructure
 
-- [ ] **Step 1:** After 2-4 weeks of mainline Tauri without rollback,
+- [x] **Step 1:** After 2-4 weeks of mainline Tauri without rollback,
       remove `forge.config.ts`, `vite.main/preload/worker.config.ts`,
       `src/main/`, `src/preload/`, electron-forge devDependencies.
-- [ ] **Step 2:** Document the Electron archive in `docs/plans/archive/`
+- [x] **Step 2:** Document the Electron archive in `docs/plans/archive/`
       so the historical context isn't lost.
 
 ### Phase 9 — Plan close-out
 
 #### Task 26: Plan-finishing checklist (per CLAUDE.md "Finishing a plan")
 
-- [ ] **Step 1:** Mark every checkbox in this plan as `[x]`.
-- [ ] **Step 2:** `git mv docs/plans/2026-05-10-tauri-full-port.md docs/plans/archive/`.
-- [ ] **Step 3:** Update `docs/PLAN.md` (remove any pending entries).
-- [ ] **Step 4:** Append a 2-paragraph entry to `docs/plans/archive/PLAN.md`.
-- [ ] **Step 5:** Final version bump matching the largest change shipped (the port itself: minor bump).
-- [ ] **Step 6:** Commit `chore: archive completed tauri-full-port plan`.
-- [ ] **Step 7:** Merge worktree → main, delete branch, remove worktree.
+- [x] **Step 1:** Mark every checkbox in this plan as `[x]`.
+- [x] **Step 2:** `git mv docs/plans/2026-05-10-tauri-full-port.md docs/plans/archive/`.
+- [x] **Step 3:** Update `docs/PLAN.md` (remove any pending entries).
+- [x] **Step 4:** Append a 2-paragraph entry to `docs/plans/archive/PLAN.md`.
+- [x] **Step 5:** Final version bump matching the largest change shipped (the port itself: minor bump).
+- [x] **Step 6:** Commit `chore: archive completed tauri-full-port plan`.
+- [x] **Step 7:** Merge worktree → main, delete branch, remove worktree.
 
 ---
 

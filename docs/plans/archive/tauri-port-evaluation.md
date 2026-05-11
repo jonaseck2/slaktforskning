@@ -114,34 +114,34 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 **Goal:** Write down which machines we'll measure on. No hardware-spec gating — whatever's at hand counts.
 
-- [ ] **Step 1:** Inventory available test surfaces. Minimum useful set is the dev mac plus one Windows machine (or VM) plus one Linux VM. If a constrained machine (older laptop, 8 GB RAM, integrated GPU) is around, add it as a bonus.
-- [ ] **Step 2:** Record CPU model, RAM, OS version, disk type per machine in `docs/plans/tauri-port-evaluation-baseline.md`. Confidential? Don't commit. Generic? Commit.
+- [x] **Step 1:** Inventory available test surfaces. Minimum useful set is the dev mac plus one Windows machine (or VM) plus one Linux VM. If a constrained machine (older laptop, 8 GB RAM, integrated GPU) is around, add it as a bonus.
+- [x] **Step 2:** Record CPU model, RAM, OS version, disk type per machine in `docs/plans/tauri-port-evaluation-baseline.md`. Confidential? Don't commit. Generic? Commit.
 
 #### Task 2: Note the decision rule
 
 **Goal:** Lock in the percentage-threshold rule so it's the same yardstick before and after measurement.
 
-- [ ] **Step 1:** Confirm the rule (no per-metric absolute targets):
+- [x] **Step 1:** Confirm the rule (no per-metric absolute targets):
   - **≥50%** improvement on most headline metrics (disk app, idle RAM, loaded RAM, cold start, list scroll) → **Go.**
   - **≥25%** improvement on most headline metrics, no dealbreakers → **Go.**
   - **<25%** improvement, or any dealbreaker, → **No-go** or **Defer.**
-- [ ] **Step 2:** Note the dealbreakers (any one is enough to tank the recommendation):
+- [x] **Step 2:** Note the dealbreakers (any one is enough to tank the recommendation):
   - Chart-print PDF visibly different from Electron output (font subsetting, page breaks, raster fallback)
   - Any of the 6 IPC commands needs > 200 LOC of Rust glue
   - WebKit/WebView2/WebKitGTK lacks a CSS feature the renderer currently relies on
   - Multi-window mutation propagation requires a fundamentally different api/ contract
-- [ ] **Step 3:** Add this rule to the top of `tauri-port-evaluation-baseline.md` so the recommendation in Phase 3 is graded against the same rule.
+- [x] **Step 3:** Add this rule to the top of `tauri-port-evaluation-baseline.md` so the recommendation in Phase 3 is graded against the same rule.
 
 #### Task 3: Capture Electron baselines
 
 **Goal:** All 13 metrics from the Verification table populated for Electron, on each reference machine.
 
-- [ ] **Step 1:** Build current main: `npm run make`. Note the installer size for each platform (or skip the platform-makers and just measure the .app/.exe bundle if cross-compilation isn't set up).
-- [ ] **Step 2:** Install on each test machine.
-- [ ] **Step 3:** Prepare a 10k-person reference DB. Use an existing GEDCOM fixture or seed via the dev MCP's `seed_family` tool. Save the .db file so the same dataset is used in Phase 2.
-- [ ] **Step 4:** Capture each metric per the verification table. For RAM, sum all process RSS via Activity Monitor / Task Manager / `ps`. For FPS, use the OS performance overlay or Chrome DevTools' FPS meter (Electron exposes it via `devtools` toggle).
-- [ ] **Step 5:** Record numbers in `docs/plans/tauri-port-evaluation-baseline.md`.
-- [ ] **Step 6:** Commit baseline.
+- [x] **Step 1:** Build current main: `npm run make`. Note the installer size for each platform (or skip the platform-makers and just measure the .app/.exe bundle if cross-compilation isn't set up).
+- [x] **Step 2:** Install on each test machine.
+- [x] **Step 3:** Prepare a 10k-person reference DB. Use an existing GEDCOM fixture or seed via the dev MCP's `seed_family` tool. Save the .db file so the same dataset is used in Phase 2.
+- [x] **Step 4:** Capture each metric per the verification table. For RAM, sum all process RSS via Activity Monitor / Task Manager / `ps`. For FPS, use the OS performance overlay or Chrome DevTools' FPS meter (Electron exposes it via `devtools` toggle).
+- [x] **Step 5:** Record numbers in `docs/plans/tauri-port-evaluation-baseline.md`.
+- [x] **Step 6:** Commit baseline.
 
 ### Phase 2 — Tauri spike
 
@@ -149,64 +149,64 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 **Goal:** Minimal Tauri 2.x app + Vue 3 + Vite renderer that opens a window. Locked-down to the same Vue + Vite versions as the Electron build, so the renderer code is identical.
 
-- [ ] **Step 1:** Create a `tauri-spike/` worktree (or sibling repo) — keeps the spike's heavy Cargo deps out of the main repo's `node_modules`.
-- [ ] **Step 2:** `npm create tauri-app@latest` with Vue 3 + Vite + TS. Adopt the same `vite.renderer.config.ts` shape as main.
-- [ ] **Step 3:** Verify `npm run tauri dev` opens a window on macOS. Document the bundle size of the empty Tauri app — that's the "Tauri runtime cost" baseline.
+- [x] **Step 1:** Create a `tauri-spike/` worktree (or sibling repo) — keeps the spike's heavy Cargo deps out of the main repo's `node_modules`.
+- [x] **Step 2:** `npm create tauri-app@latest` with Vue 3 + Vite + TS. Adopt the same `vite.renderer.config.ts` shape as main.
+- [x] **Step 3:** Verify `npm run tauri dev` opens a window on macOS. Document the bundle size of the empty Tauri app — that's the "Tauri runtime cost" baseline.
 
 #### Task 5: Port 3 representative views
 
 **Goal:** PersonsListView, ChartView (pedigree), ReportsView render against the spike — even if data is mocked at first.
 
-- [ ] **Step 1:** Copy `src/renderer/views/PersonsListView.vue` + its direct dependencies into the spike. Replace `window.api.persons.list(...)` calls with mocked data initially.
-- [ ] **Step 2:** Same for ChartView (whichever chart is simplest — pedigree).
-- [ ] **Step 3:** Same for ReportsView.
-- [ ] **Step 4:** Verify all 3 render in WebKit (macOS) without obvious visual regression. Don't sweat fine details yet — that's Task 12.
+- [x] **Step 1:** Copy `src/renderer/views/PersonsListView.vue` + its direct dependencies into the spike. Replace `window.api.persons.list(...)` calls with mocked data initially.
+- [x] **Step 2:** Same for ChartView (whichever chart is simplest — pedigree).
+- [x] **Step 3:** Same for ReportsView.
+- [x] **Step 4:** Verify all 3 render in WebKit (macOS) without obvious visual regression. Don't sweat fine details yet — that's Task 12.
 
 #### Task 6: rusqlite + DB lifecycle
 
 **Goal:** Tauri-side Rust manages a SQLite connection pool via rusqlite. Open/close/switch a DB file. Schema initialization runs.
 
-- [ ] **Step 1:** Add `rusqlite = { version = "0.33", features = ["bundled"] }` to the spike's `Cargo.toml`.
-- [ ] **Step 2:** Open one of the reference DBs prepared in Task 3.
-- [ ] **Step 3:** Implement `db_switch_database` Tauri command that takes a path and re-points the connection.
-- [ ] **Step 4:** Run a `SELECT count(*) FROM persons` from the renderer via a Tauri command. Confirm the same count as Electron.
+- [x] **Step 1:** Add `rusqlite = { version = "0.33", features = ["bundled"] }` to the spike's `Cargo.toml`.
+- [x] **Step 2:** Open one of the reference DBs prepared in Task 3.
+- [x] **Step 3:** Implement `db_switch_database` Tauri command that takes a path and re-points the connection.
+- [x] **Step 4:** Run a `SELECT count(*) FROM persons` from the renderer via a Tauri command. Confirm the same count as Electron.
 
 #### Task 7: Port 6 representative IPC commands
 
 **Goal:** Each of the 6 commands works end-to-end through Tauri.
 
-- [ ] **Step 1:** `persons.list` — the cheap read.
-- [ ] **Step 2:** `persons.create` — write + undo entry.
-- [ ] **Step 3:** `events.recordEvent` — multi-table write.
-- [ ] **Step 4:** `places.resolveBoundary` — CPU-bound gazetteer. This is the test of "can the api/ layer's pure-TS gazetteer code coexist with Rust DB access?". Two design options to prototype:
+- [x] **Step 1:** `persons.list` — the cheap read.
+- [x] **Step 2:** `persons.create` — write + undo entry.
+- [x] **Step 3:** `events.recordEvent` — multi-table write.
+- [x] **Step 4:** `places.resolveBoundary` — CPU-bound gazetteer. This is the test of "can the api/ layer's pure-TS gazetteer code coexist with Rust DB access?". Two design options to prototype:
   - (a) Run the gazetteer resolver in the Tauri webview (renderer-side TS), keep Rust pure for DB.
   - (b) Cross-compile the gazetteer resolver to Rust (much bigger lift).
   - Pick (a) for the spike. Document the choice and its tradeoff.
-- [ ] **Step 5:** `undo.undo` — cross-cutting state lookup.
-- [ ] **Step 6:** `db.switchDatabase` (already done in Task 6, just polish).
+- [x] **Step 5:** `undo.undo` — cross-cutting state lookup.
+- [x] **Step 6:** `db.switchDatabase` (already done in Task 6, just polish).
 
 #### Task 8: Multi-window with mutation propagation
 
 **Goal:** Two windows on the same DB; mutation in one shows up in the other.
 
-- [ ] **Step 1:** Use Tauri's `WebviewWindowBuilder` to open a second window.
-- [ ] **Step 2:** Wire a Tauri event broadcast (analogous to today's `data:changed` IPC fan-out) so when one window mutates, the other reloads.
-- [ ] **Step 3:** Verify by editing a person's name in window A and confirming window B's PersonsListView refreshes.
+- [x] **Step 1:** Use Tauri's `WebviewWindowBuilder` to open a second window.
+- [x] **Step 2:** Wire a Tauri event broadcast (analogous to today's `data:changed` IPC fan-out) so when one window mutates, the other reloads.
+- [x] **Step 3:** Verify by editing a person's name in window A and confirming window B's PersonsListView refreshes.
 
 #### Task 9: MCP sidecar
 
 **Goal:** External `claude` CLI can connect to the Tauri app's MCP server.
 
-- [ ] **Step 1:** Use Tauri's sidecar pattern to spawn `tsx src/mcp/server.ts` (re-using the existing Node stdio bridge — that code is engine-agnostic).
-- [ ] **Step 2:** Confirm one MCP tool round-trip via the existing `.mcp.json`-style config pointing at the spike's binary.
+- [x] **Step 1:** Use Tauri's sidecar pattern to spawn `tsx src/mcp/server.ts` (re-using the existing Node stdio bridge — that code is engine-agnostic).
+- [x] **Step 2:** Confirm one MCP tool round-trip via the existing `.mcp.json`-style config pointing at the spike's binary.
 
 #### Task 10: Chart print + Save PDF
 
 **Goal:** Open ReportsView with a real chart, print to PDF, save SVG.
 
-- [ ] **Step 1:** Tauri's `print()` API or `window.print()` — investigate which path is closest to Electron's `webContents.printToPDF`.
-- [ ] **Step 2:** Save PDF on a reference chart. Open in Preview / Acrobat.
-- [ ] **Step 3:** Save SVG via the existing renderer-side serialization. Verify byte-level it's the same as Electron's output.
+- [x] **Step 1:** Tauri's `print()` API or `window.print()` — investigate which path is closest to Electron's `webContents.printToPDF`.
+- [x] **Step 2:** Save PDF on a reference chart. Open in Preview / Acrobat.
+- [x] **Step 3:** Save SVG via the existing renderer-side serialization. Verify byte-level it's the same as Electron's output.
 
 ### Phase 3 — Comparison + recommendation
 
@@ -214,38 +214,38 @@ The recommendation closes with one of: **Go**, **Defer**, **No-go**, plus the re
 
 **Goal:** All 13 verification-table metrics populated for the Tauri spike, on each machine from Task 1.
 
-- [ ] **Step 1:** Bundle the spike: `npm run tauri build`. Record installer/.app size per platform.
-- [ ] **Step 2:** Install on each test machine.
-- [ ] **Step 3:** Same metrics + same procedure as Task 3, against the spike. Use the same reference DB.
-- [ ] **Step 4:** Append to `tauri-port-evaluation-baseline.md`.
+- [x] **Step 1:** Bundle the spike: `npm run tauri build`. Record installer/.app size per platform.
+- [x] **Step 2:** Install on each test machine.
+- [x] **Step 3:** Same metrics + same procedure as Task 3, against the spike. Use the same reference DB.
+- [x] **Step 4:** Append to `tauri-port-evaluation-baseline.md`.
 
 #### Task 12: Cross-platform parity report
 
 **Goal:** Document any rendering differences between WebKit / WebView2 / WebKitGTK on the 3 views.
 
-- [ ] **Step 1:** Same chart, same person, same window size — screenshot from each engine.
-- [ ] **Step 2:** Diff visually. Document any: font rendering, sub-pixel positioning, SVG stroke behavior, scroll smoothness, print page-break behavior, focus-ring rendering.
-- [ ] **Step 3:** For each diff, classify: cosmetic / functional / dealbreaker.
-- [ ] **Step 4:** Save into the recommendation as a section.
+- [x] **Step 1:** Same chart, same person, same window size — screenshot from each engine.
+- [x] **Step 2:** Diff visually. Document any: font rendering, sub-pixel positioning, SVG stroke behavior, scroll smoothness, print page-break behavior, focus-ring rendering.
+- [x] **Step 3:** For each diff, classify: cosmetic / functional / dealbreaker.
+- [x] **Step 4:** Save into the recommendation as a section.
 
 #### Task 13: Feature-gap audit
 
 **Goal:** Honest list of "what doesn't port cleanly."
 
-- [ ] **Step 1:** For each of the 6 IPC commands, count Rust LOC needed to glue. If any exceeded 200 LOC, that's a flag.
-- [ ] **Step 2:** Note any Tauri 2.x absence the full port would have to write or wait for: auto-update on Linux, deep-link handling, native menus (compare against current Electron menu), printer dialog, etc.
-- [ ] **Step 3:** Estimate if the api/ layer survives a port (it should — that's the design rationale for it being pure-TS) or whether sections would need rewriting.
+- [x] **Step 1:** For each of the 6 IPC commands, count Rust LOC needed to glue. If any exceeded 200 LOC, that's a flag.
+- [x] **Step 2:** Note any Tauri 2.x absence the full port would have to write or wait for: auto-update on Linux, deep-link handling, native menus (compare against current Electron menu), printer dialog, etc.
+- [x] **Step 3:** Estimate if the api/ layer survives a port (it should — that's the design rationale for it being pure-TS) or whether sections would need rewriting.
 
 #### Task 14: Cost estimate update + write the recommendation
 
 **Goal:** A one-page `docs/plans/tauri-port-evaluation-recommendation.md` that the user can read in 5 minutes and decide on.
 
-- [ ] **Step 1:** Populate the comparison table with measured numbers from Tasks 3 + 11. Compute Δ % per row per machine.
-- [ ] **Step 2:** Apply the Task-2 rule. Headline rows (disk app, idle RAM, loaded RAM, cold start, list scroll) carry the verdict; secondary rows are informational.
-- [ ] **Step 3:** Write the parity report findings, the feature-gap audit, the risk register.
-- [ ] **Step 4:** Update the cost estimate. Was 2-3 months still right? If the spike took 1 week, the full port might be 6-8 weeks. If it took 3 weeks, scale accordingly.
-- [ ] **Step 5:** Recommendation: **Go**, **Defer**, or **No-go**, with one paragraph of reasoning grounded in the numbers and the percentage rule.
-- [ ] **Step 6:** Hand to user. They accept one of the three outcomes. If "go," a separate full-port plan opens. If "defer" or "no-go," archive this plan.
+- [x] **Step 1:** Populate the comparison table with measured numbers from Tasks 3 + 11. Compute Δ % per row per machine.
+- [x] **Step 2:** Apply the Task-2 rule. Headline rows (disk app, idle RAM, loaded RAM, cold start, list scroll) carry the verdict; secondary rows are informational.
+- [x] **Step 3:** Write the parity report findings, the feature-gap audit, the risk register.
+- [x] **Step 4:** Update the cost estimate. Was 2-3 months still right? If the spike took 1 week, the full port might be 6-8 weeks. If it took 3 weeks, scale accordingly.
+- [x] **Step 5:** Recommendation: **Go**, **Defer**, or **No-go**, with one paragraph of reasoning grounded in the numbers and the percentage rule.
+- [x] **Step 6:** Hand to user. They accept one of the three outcomes. If "go," a separate full-port plan opens. If "defer" or "no-go," archive this plan.
 
 ---
 
