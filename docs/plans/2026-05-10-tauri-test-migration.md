@@ -109,29 +109,29 @@ This plan exists because Phase 6 of the Tauri full port (`docs/plans/2026-05-10-
 
 ### Task 1 — Replace `tests/e2e/fixture.ts` with a Tauri-aware version
 
-- [ ] In `packagedBinaryPath()`, switch resolution to the Tauri output: macOS → `tauri-spike/src-tauri/target/release/bundle/macos/Släktforskning (Tauri).app/Contents/MacOS/tauri-spike`; Linux → `…/bundle/appimage/…AppImage` (and `chmod +x` if needed); Windows → `…/bundle/nsis/…exe`. The "binary missing" error message references `npm run tauri:build`.
-- [ ] In `startApp()`, drop `SLAKTFORSKNING_DB` (Tauri command does not honour it yet — see Task 2). Keep `SLAKTFORSKNING_UI_PORT` (the Tauri `ui_server.rs` already reads it). Keep `SLAKTFORSKNING_NO_FOCUS` if any Tauri code reads it; else delete.
-- [ ] Update Phase 1 health-poll target from `/dom` to `/` (the Tauri ui-server's health endpoint). Tauri does not expose `/dom` today.
-- [ ] Update Phase 2 Vue-mount probe to use `POST /eval` with body `{ "script": "!!window.__vue_router" }` (the Tauri equivalent of `/execute_js`). The response shape is `{ result: <value> }` from `/eval`'s `run_in_renderer` flow — confirm the AppDriver wrapper matches.
-- [ ] Update `AppDriver.executeJs` to `POST /eval` with `{ script }` instead of `POST /execute_js` with `{ code }`. Other AppDriver methods (`getDom`, `click`, `fillInput`, `navigate`, `setLocale`) implement themselves on top of `executeJs` after this change — see Task 3.
+- [x] In `packagedBinaryPath()`, switch resolution to the Tauri output: macOS → `tauri-spike/src-tauri/target/release/bundle/macos/Släktforskning (Tauri).app/Contents/MacOS/tauri-spike`; Linux → `…/bundle/appimage/…AppImage` (and `chmod +x` if needed); Windows → `…/bundle/nsis/…exe`. The "binary missing" error message references `npm run tauri:build`.
+- [x] In `startApp()`, drop `SLAKTFORSKNING_DB` (Tauri command does not honour it yet — see Task 2). Keep `SLAKTFORSKNING_UI_PORT` (the Tauri `ui_server.rs` already reads it). Keep `SLAKTFORSKNING_NO_FOCUS` if any Tauri code reads it; else delete.
+- [x] Update Phase 1 health-poll target from `/dom` to `/` (the Tauri ui-server's health endpoint). Tauri does not expose `/dom` today.
+- [x] Update Phase 2 Vue-mount probe to use `POST /eval` with body `{ "script": "!!window.__vue_router" }` (the Tauri equivalent of `/execute_js`). The response shape is `{ result: <value> }` from `/eval`'s `run_in_renderer` flow — confirm the AppDriver wrapper matches.
+- [x] Update `AppDriver.executeJs` to `POST /eval` with `{ script }` instead of `POST /execute_js` with `{ code }`. Other AppDriver methods (`getDom`, `click`, `fillInput`, `navigate`, `setLocale`) implement themselves on top of `executeJs` after this change — see Task 3.
 - [ ] Verify: `node -e "console.log(require('./tests/e2e/fixture').packagedBinaryPath())"` prints the right path. Run a single e2e test under `--workers=1`; smoke confirms boot.
 
 ### Task 2 — Inject the test DB path into the Tauri runtime
 
-- [ ] Extend `tauri-spike/src-tauri/src/lib.rs` `default_db_path` to honour an env var: if `SLAKTFORSKNING_DB` is set, return that; else fall back to `app_data_dir().join('family.db')`.
-- [ ] Confirm the renderer's "first boot" path calls `default_db_path` before hitting the rusqlite layer (it does today, per port notes "Persistent rusqlite DB at …family.db" + the bridge boot trace).
-- [ ] Restore `SLAKTFORSKNING_DB` env-var pass-through in `startApp()` (Task 1 dropped it; this task adds it back now that the Rust side honours it).
+- [x] Extend `tauri-spike/src-tauri/src/lib.rs` `default_db_path` to honour an env var: if `SLAKTFORSKNING_DB` is set, return that; else fall back to `app_data_dir().join('family.db')`.
+- [x] Confirm the renderer's "first boot" path calls `default_db_path` before hitting the rusqlite layer (it does today, per port notes "Persistent rusqlite DB at …family.db" + the bridge boot trace).
+- [x] Restore `SLAKTFORSKNING_DB` env-var pass-through in `startApp()` (Task 1 dropped it; this task adds it back now that the Rust side honours it).
 - [ ] Verify: spawn the Tauri binary with `SLAKTFORSKNING_DB=/tmp/probe.db`, fetch `/db_path`, assert the response says `/tmp/probe.db`. Done as part of Task 1's smoke.
 
 ### Task 3 — Reimplement AppDriver primitives on top of `/eval` (in-renderer DOM, click, fill, navigate)
 
 The Tauri `ui_server.rs` exposes only `/eval` + `/screenshot` + `/db_path` + `/`. AppDriver currently expects 6+ HTTP routes. The cheapest path is to reimplement the Electron-side route handlers as JS strings shipped through `/eval`:
 
-- [ ] `getDom()` → `executeJs<string>('document.documentElement.outerHTML')`
-- [ ] `click(selector)` → executes a polling JS that returns `{ ok: true }` once it finds + clicks the element, or `{ ok: false }` after a timeout. Same retry loop as today, just inside the renderer.
-- [ ] `fillInput(selector, value)` → unchanged in shape; today's body already lives inside an `executeJs` IIFE.
-- [ ] `navigate(routePath)` → `executeJs(`window.__vue_router.push(${JSON.stringify(routePath)})`)` followed by `settle()`.
-- [ ] `screenshot()` — already `POST /screenshot`; Tauri side returns the same `{ data: <base64> }` shape per `ui_server.rs` `handle_screenshot`. Confirm and pass through.
+- [x] `getDom()` → `executeJs<string>('document.documentElement.outerHTML')`
+- [x] `click(selector)` → executes a polling JS that returns `{ ok: true }` once it finds + clicks the element, or `{ ok: false }` after a timeout. Same retry loop as today, just inside the renderer.
+- [x] `fillInput(selector, value)` → unchanged in shape; today's body already lives inside an `executeJs` IIFE.
+- [x] `navigate(routePath)` → `executeJs(`window.__vue_router.push(${JSON.stringify(routePath)})`)` followed by `settle()`.
+- [x] `screenshot()` — already `POST /screenshot`; Tauri side returns the same `{ data: <base64> }` shape per `ui_server.rs` `handle_screenshot`. Confirm and pass through.
 - [ ] Verify: each AppDriver method exercised at least once across the four e2e specs (already true; no test-body changes needed — only the AppDriver internals change).
 
 ### Task 4 — Fix the deferred RUN handlers blocking website-export e2e
@@ -144,41 +144,41 @@ Per port notes "Active blockers / in-progress" + "Points to revisit #4": `archiv
 
 ### Task 5 — Adapt the 8 Bucket B unit tests
 
-- [ ] `tests/unit/data-changed-broadcast.test.ts` — replace the preload-side grep with a `tauri-window-api.ts` grep for `emit('data:changed')` + `listen('data:changed', …)`. Keep the `db-worker.ts` grep behind a `process.env.SLAKTFORSKNING_RUNTIME === 'electron'` skip (or delete outright if Electron build is being retired in this branch — confirm with maintainer; default = keep both grep paths).
-- [ ] `tests/unit/preload-coverage.test.ts` — `git rm`. Replaced by Task 6's new test.
-- [ ] `tests/unit/ipc-worker-coverage.test.ts` — `git rm`. The user goal it guarded (long imports don't freeze the renderer) moves to Task 7's e2e + Tauri's async commands.
-- [ ] `tests/unit/main-thread-responsive-during-import.test.ts` — `git rm`. Same reason.
-- [ ] `tests/unit/worker-broadcast.test.ts` — `git rm`. parentPort no longer involved.
-- [ ] `tests/unit/ipc/onboarding.test.ts` — `git rm` once a fresh `tests/unit/onboarding.test.ts` covers the Tauri-side store. If the Tauri-side store migration is pending, leave the test in place behind an Electron-runtime skip. Default: rm now, follow-up adds the new test.
-- [ ] `tests/unit/settings.test.ts` — replace `vi.mock('electron', …)` with a mock of whichever Tauri-side path resolver `src/main/settings.ts`'s replacement uses. Likely just becomes a thin db-settings test. If `src/main/settings.ts` is unchanged in this branch, leave the test alone.
-- [ ] `tests/unit/static-api-coverage.test.ts` — keep as-is. Re-run to confirm it still passes (it asserts `buildStaticApi()` shape, not Electron specifics).
-- [ ] `tests/unit/scripts.thirdPartyLicenses.test.ts` — keep. Will likely need a follow-up to merge cargo + npm license rows, but not in this plan.
-- [ ] Verify: `npm test` exits 0, with the deletions accounted for in the count.
+- [x] `tests/unit/data-changed-broadcast.test.ts` — replace the preload-side grep with a `tauri-window-api.ts` grep for `emit('data:changed')` + `listen('data:changed', …)`. Keep the `db-worker.ts` grep behind a `process.env.SLAKTFORSKNING_RUNTIME === 'electron'` skip (or delete outright if Electron build is being retired in this branch — confirm with maintainer; default = keep both grep paths).
+- [x] `tests/unit/preload-coverage.test.ts` — `git rm`. Replaced by Task 6's new test.
+- [x] `tests/unit/ipc-worker-coverage.test.ts` — `git rm`. The user goal it guarded (long imports don't freeze the renderer) moves to Task 7's e2e + Tauri's async commands.
+- [x] `tests/unit/main-thread-responsive-during-import.test.ts` — `git rm`. Same reason.
+- [x] `tests/unit/worker-broadcast.test.ts` — `git rm`. parentPort no longer involved.
+- [x] `tests/unit/ipc/onboarding.test.ts` — `git rm` once a fresh `tests/unit/onboarding.test.ts` covers the Tauri-side store. If the Tauri-side store migration is pending, leave the test in place behind an Electron-runtime skip. Default: rm now, follow-up adds the new test.
+- [x] `tests/unit/settings.test.ts` — replace `vi.mock('electron', …)` with a mock of whichever Tauri-side path resolver `src/main/settings.ts`'s replacement uses. Likely just becomes a thin db-settings test. If `src/main/settings.ts` is unchanged in this branch, leave the test alone.
+- [x] `tests/unit/static-api-coverage.test.ts` — keep as-is. Re-run to confirm it still passes (it asserts `buildStaticApi()` shape, not Electron specifics).
+- [x] `tests/unit/scripts.thirdPartyLicenses.test.ts` — keep. Will likely need a follow-up to merge cargo + npm license rows, but not in this plan.
+- [ ] Verify: `npm test` exits 0, with the deletions accounted for in the count. *(Suite runs to 3688 passed + 7 pre-existing failures unrelated to this commit cluster — gazetteers / gedcom-validation / gedcom_compat / import-gedcom-reporting / csv-export-worker-channel / duplicates-{media, places, sources}. Those are tracked in the "Deferred" section below; not introduced by Task 5's deletions.)*
 
 ### Task 6 — Add `tests/unit/tauri-channel-coverage.test.ts`
 
-- [ ] Read `src/renderer/tauri-window-api.ts` as text. Build the set of channels it polyfills by matching the assignment patterns it uses (e.g. `window.api.media.attach = …`, `window.api.gedcom.export = …`).
-- [ ] Walk the channel registry (`channelRegistry`) like `preload-coverage.test.ts` does today.
-- [ ] For each registry channel that the *renderer* calls (i.e. has a `defineChannel` direction of either `worker` or `main`, excluding registry-internal entries), assert it appears in the polyfill set OR the auto-walked channels in `tauri-window-api.ts`.
-- [ ] Add an explicit allowlist for channels the renderer never calls (e.g. internal `archive:_*Run` channels are called only by their public `archive:export` shim; they don't need a renderer polyfill).
+- [x] Read `src/renderer/tauri-window-api.ts` as text. Build the set of channels it polyfills by matching the assignment patterns it uses (e.g. `window.api.media.attach = …`, `window.api.gedcom.export = …`).
+- [x] Walk the channel registry (`channelRegistry`) like `preload-coverage.test.ts` does today.
+- [x] For each registry channel that the *renderer* calls (i.e. has a `defineChannel` direction of either `worker` or `main`, excluding registry-internal entries), assert it appears in the polyfill set OR the auto-walked channels in `tauri-window-api.ts`.
+- [x] Add an explicit allowlist for channels the renderer never calls (e.g. internal `archive:_*Run` channels are called only by their public `archive:export` shim; they don't need a renderer polyfill).
 - [ ] Verify: hand-comment one polyfill out of `tauri-window-api.ts`, confirm the test fails with the right message, restore.
 
 ### Task 7 — Add `tests/unit/tauri-window-api.test.ts` and a coverage threshold
 
-- [ ] Write the unit test by mocking `@tauri-apps/api/core`'s `invoke` (mirror `db-shim.test.ts`'s pattern). For each polyfilled channel, assert it calls the right Rust command with the right shape and returns the right shape.
-- [ ] Add `src/renderer/tauri-window-api.ts` (and any sibling Tauri-bridge files) to the `coverage.include` list in `vitest.config.mts`. Add a per-file threshold (vitest 4 supports `thresholds.perFile`); if not, leave it under the global threshold and confirm the line coverage from this new test drives it ≥ 80%.
+- [x] Write the unit test by mocking `@tauri-apps/api/core`'s `invoke` (mirror `db-shim.test.ts`'s pattern). For each polyfilled channel, assert it calls the right Rust command with the right shape and returns the right shape.
+- [x] Add `src/renderer/tauri-window-api.ts` (and any sibling Tauri-bridge files) to the `coverage.include` list in `vitest.config.mts`. Add a per-file threshold (vitest 4 supports `thresholds.perFile`); if not, leave it under the global threshold and confirm the line coverage from this new test drives it ≥ 80%.
 - [ ] Verify: `npm test -- --coverage` exits 0; the lcov shows ≥ 80% lines for `tauri-window-api.ts`.
 
 ### Task 8 — Add a `tauri:build:test` script + wire `pretest:e2e`
 
-- [ ] Add to `package.json`:
-  - `"tauri:build:test": "npm --prefix tauri-spike run tauri build -- --bundles app"` (mac fast path; CI matrix later expands to platform-specific bundles).
-  - Replace `"pretest:e2e": "npm run package"` with `"pretest:e2e": "npm run tauri:build:test"`.
+- [x] Add to `package.json`:
+  - `"tauri:build:test": "tauri build --bundles app"` (mac fast path; CI matrix later expands to platform-specific bundles). *Note: dropped the `npm --prefix tauri-spike` indirection — the plan's path predates the cleanup that moved `src-tauri/` to repo root, so a top-level `tauri` script is what actually runs.*
+  - [ ] Replace `"pretest:e2e": "npm run package"` with `"pretest:e2e": "npm run tauri:build:test"`. *(Deliberately deferred — Task 4 fs-shim work is unfinished; flipping pretest:e2e would break local `npm run test:e2e` invocations until website-export's RUN handler is shimmable.)*
 - [ ] Verify: cold `npm run test:e2e` starts with the Tauri build (~30 s per port notes), then runs Playwright against the produced `.app`.
 
 ### Task 9 — Run the suite, fix the long tail, capture follow-ups
 
-- [ ] `npm test` → green. Note the new test count in the plan close-out.
+- [ ] `npm test` → green. Note the new test count in the plan close-out. *(Ran to 3688 passed + 7 pre-existing failures; the new tauri-channel-coverage / tauri-window-api / data-changed-broadcast tests all pass. Pre-existing failures are not introduced by this work — see "Deferred" section below.)*
 - [ ] `npm run test:e2e` → green. Note the wall-clock vs Electron's 1.5 min baseline.
 - [ ] Capture every test that needed *unexpected* changes (i.e. not in Bucket A despite the plan's prediction) into a "Tasks discovered during execution" subsection at the bottom of this plan. If the count > 5, the plan's scope was wrong; pause and re-edit.
 - [ ] User runs the suite themselves and signs off (Verification #5).
@@ -197,4 +197,47 @@ Per port notes "Active blockers / in-progress" + "Points to revisit #4": `archiv
 
 ## Tasks discovered during execution
 
-(Empty until execution starts. Per `.claude/rules/plans.md`: if this section grows past 5 entries the plan's scope was wrong — pause and re-edit, don't push through.)
+### Tauri /eval response shape differs from Electron /execute_js
+
+The Tauri `ui_server.rs` `/eval` endpoint returns the raw JS value (or
+`{ "__error": "..." }` if the script throws). The Electron `/execute_js`
+endpoint wrapped the value as `{ result, error }`. Caught in Task 1 / Task 3
+when rewriting `AppDriver.executeJs` — the new implementation unwraps `__error`
+and a singleton `error` key on bridge errors. No plan-edit needed; the spec
+already named `/eval` as the target endpoint.
+
+### `window` global must be stubbed for tauri-window-api unit tests
+
+`mountWindowApi(db)` assigns `window.__chartBridge = {}` at the bottom of the
+function. Vitest's `node` environment has no `window`. The new
+`tests/unit/tauri-window-api.test.ts` stubs `globalThis.window` before the
+SUT import (mirroring `db-shim.test.ts`'s `vi.mock` pattern). Switching to
+`happy-dom` for one assertion would have cost ~150 ms per file; the stub is
+~5 lines and doesn't slow anything down.
+
+## Deferred / out of scope for this commit cluster
+
+Task 4 (RUN-handler fs-shim for website-export) and Task 8 e2e verification
+were not landed in this cluster. The prompt's STOP clause said: "If after a
+day of focused work you've landed Tasks 1-3 + 5 (the bulk of the structural
+change) and Tasks 4 + 6 + 7 + 8 are dragging on website-export fs-shim
+issues OR specific Electron-test retirements that turn out to be
+load-bearing — STOP and report."
+
+What landed: Tasks 1, 2, 3, 5, 6, 7 + the `tauri:build:test` half of Task 8.
+What didn't: Task 4 (website-export fs-shim) — needs follow-up work to
+audit `archive:_importRun`, `archive:_exportRun`, `gedcom:export`,
+`csv:export`, `website:exportRun` for `import * as fs from 'node:fs'` usage
+and route them through a runtime-aware shim (`fs_read_text` /
+`fs_write_text` invoke commands or `media_bulk_copy` for cpSync-shaped
+calls). Until that lands, `tests/e2e/website-export.test.ts` will fail
+against the Tauri build, so `pretest:e2e` was deliberately left pointing at
+`npm run package` (Electron) — flipping it without Task 4 would break the
+pretest gate for everyone.
+
+What this means for the v0.250.0-tauri.0 release tag: the unit suite is
+trustworthy on the Tauri side now (Bucket A passes unchanged + the new
+Bucket D bridge-coverage tests catch polyfill drift). The e2e suite is
+still Electron-flavoured. Either land Task 4 + flip `pretest:e2e` first,
+or ship the release tag with an explicit "e2e validated against Electron
+build only; Tauri e2e is the next milestone" caveat.
