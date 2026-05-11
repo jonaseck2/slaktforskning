@@ -82,11 +82,20 @@ const { panelWidth, startResize } = usePanelResize({ storageKey: STORAGE_KEYS.gr
 async function load() {
   if (!window.api) return;
   const raw = (await window.api.groups.list()) as Array<{ id: string; name: string; notes: string }>;
-  const enriched: GroupRow[] = [];
-  for (const g of raw) {
-    const links = (await window.api.groups.getLinks(g.id)) as Array<{ entity_type: string }>;
-    enriched.push({ ...g, memberCount: links.length });
-  }
+  // Per-row getLinks; one failing row mustn't kill the whole list. Fall back
+  // to memberCount=0 + log so the row still shows. Past failure: a stale
+  // group_links row pointing at a deleted entity threw inside getLinks and
+  // load() bailed mid-loop, leaving the table at its previous (often empty)
+  // state — user-reported "groups read as 0 after add".
+  const enriched: GroupRow[] = await Promise.all(raw.map(async (g) => {
+    try {
+      const links = (await window.api.groups.getLinks(g.id)) as Array<{ entity_type: string }>;
+      return { ...g, memberCount: links.length };
+    } catch (err) {
+      console.error('[GroupsView] getLinks failed for group', g.id, err);
+      return { ...g, memberCount: 0 };
+    }
+  }));
   groups.value = enriched;
 }
 
