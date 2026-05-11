@@ -346,12 +346,20 @@ export function runAriaQuery(
 // but the eval path is separately exercised by the live smoke in Task 3).
 const FN_SOURCE = runAriaQuery.toString();
 
+// esbuild (Vite's bundler) inlines `__name(fn, "fn")` calls inside function
+// bodies as a debugger-naming aid. The helper is defined at module scope in
+// the bundled output — but when we `.toString()` the function and ship the
+// body via `/eval`, `__name` is undefined in the renderer and every call
+// inside throws ReferenceError. Prepend a no-op shim so the serialized
+// script is self-contained regardless of the host's bundler choices.
+const PREAMBLE = 'var __name=function(fn){return fn};';
+
 /** Build the `/eval` payload for `ui_aria_list`. */
 export function buildAriaListScript(opts: AriaQueryOpts): string {
-  return '(' + FN_SOURCE + ')(' + JSON.stringify('list') + ',' + JSON.stringify(opts) + ')';
+  return '(function(){' + PREAMBLE + 'return (' + FN_SOURCE + ')(' + JSON.stringify('list') + ',' + JSON.stringify(opts) + ');})()';
 }
 
 /** Build the `/eval` payload for `ui_aria_invoke`. */
 export function buildAriaInvokeScript(opts: AriaQueryOpts): string {
-  return '(' + FN_SOURCE + ')(' + JSON.stringify('invoke') + ',' + JSON.stringify(opts) + ')';
+  return '(function(){' + PREAMBLE + 'return (' + FN_SOURCE + ')(' + JSON.stringify('invoke') + ',' + JSON.stringify(opts) + ');})()';
 }
