@@ -17,6 +17,11 @@ export default defineConfig({
         'src/mcp/**/*.ts',
         'src/renderer/utils/**/*.ts',
         'src/renderer/composables/**/*.ts',
+        // Tauri-bridge layer — without this, polyfill drift was silent.
+        // Coverage is driven by tests/unit/tauri-window-api.test.ts +
+        // tests/unit/db-shim.test.ts. Threshold is the global 80% line.
+        'src/renderer/tauri-window-api.ts',
+        'src/renderer/db-shim.ts',
         'src/shared/**/*.ts',
       ],
       exclude: [
