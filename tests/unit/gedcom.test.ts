@@ -1745,9 +1745,10 @@ describe('groups + group_links round-trip via _GROUP / _GROUP_LINK', async () =>
     await importGedcom(fresh, parseGedcom(ged));
     const groupsAfter = await listGroups(fresh);
     expect(groupsAfter).toHaveLength(3);
-    const totalLinks = groupsAfter
-      .map(async g => (await getGroupLinks(fresh, g.id)).length)
-      .reduce((a, b) => a + b, 0);
+    const linkCounts = await Promise.all(
+      groupsAfter.map(async g => (await getGroupLinks(fresh, g.id)).length),
+    );
+    const totalLinks = linkCounts.reduce((a, b) => a + b, 0);
     expect(totalLinks).toBe(8);
   });
 

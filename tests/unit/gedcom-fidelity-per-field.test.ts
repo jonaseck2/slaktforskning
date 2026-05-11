@@ -61,7 +61,7 @@ describe('GEDCOM fidelity per-field round-trip', async () => {
           const seededRow = seededRows[0] ?? {};
 
           const fresh = await roundTrip(db, version);
-          const got = readColumnFromOnlyRow(fresh, table, col);
+          const got = await readColumnFromOnlyRow(fresh, table, col);
 
           if (status.kind === 'lossless' || status.kind === 'lossless-via') {
             expect(got, `column ${key} under ${version}`).toEqual(sentinel);

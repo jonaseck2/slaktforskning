@@ -782,12 +782,12 @@ export async function roundTrip(db: Database, version: RegistryVersion): Promise
  * After round-trip, read the value of `col` from the (single) row in `table`.
  * Per-field tests seed exactly one row, so this is straightforward.
  */
-export function readColumnFromOnlyRow(db: Database, table: string, col: string): unknown {
+export async function readColumnFromOnlyRow(db: Database, table: string, col: string): Promise<unknown> {
   // Special case: event_participants.role for non-primary roles requires a
   // primary participant in the seed too (so the event survives export). After
   // round-trip the table contains 2 rows; pick the non-primary one.
   if (table === 'event_participants' && col === 'role') {
-    const rows = queryAll<{ role: string }>(
+    const rows = await queryAll<{ role: string }>(
       db,
       `SELECT role FROM event_participants WHERE role != 'primary'`,
     );
@@ -797,7 +797,7 @@ export function readColumnFromOnlyRow(db: Database, table: string, col: string):
     }
     return rows[0].role;
   }
-  const rows = queryAll<Record<string, unknown>>(db, `SELECT ${col} FROM ${table}`);
+  const rows = await queryAll<Record<string, unknown>>(db, `SELECT ${col} FROM ${table}`);
   if (rows.length === 0) return null;
   if (rows.length > 1) {
     throw new Error(`readColumnFromOnlyRow: expected 1 row in ${table}, got ${rows.length}`);
@@ -814,15 +814,15 @@ export function readColumnFromOnlyRow(db: Database, table: string, col: string):
  *
  * Returns a plain object: { tableName: row[] }.
  */
-export function canonicaliseDb(db: Database): Record<string, unknown[]> {
+export async function canonicaliseDb(db: Database): Promise<Record<string, unknown[]>> {
   const out: Record<string, unknown[]> = {};
-  const tables = queryAll<{ name: string }>(
+  const tables = (await queryAll<{ name: string }>(
     db,
     "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-  ).map(t => t.name);
+  )).map(t => t.name);
   for (const table of tables) {
     if (table in EXEMPT_TABLES) continue;
-    const rows = queryAll<Record<string, unknown>>(db, `SELECT * FROM ${table}`);
+    const rows = await queryAll<Record<string, unknown>>(db, `SELECT * FROM ${table}`);
     out[table] = rows.map(stripAuditAndIds).sort(stableRowSort);
   }
   return out;
