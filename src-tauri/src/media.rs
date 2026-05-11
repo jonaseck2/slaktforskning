@@ -147,6 +147,74 @@ pub fn website_load_static_index_html() -> Result<String, String> {
     ))
 }
 
+/// Copy media files into a `<dest>/media/full/<id>.<ext>` layout for the
+/// website-export bundle. Mirrors the loop in
+/// `src/main/ipc/website-export.ts:151–182`:
+///   - Resolves each `file_ref` against the active DB directory.
+///   - Skips entries with no `file_ref` or where the source file doesn't
+///     exist on disk (`fsp.access` swallow).
+///   - Returns the set of media IDs that were successfully copied so the
+///     caller can trim its snapshot to match.
+///
+/// The caller is responsible for the final snapshot trim — this command
+/// is purely fs work. Used by the renderer-side `api.website.export`
+/// polyfill in `tauri-window-api.ts`.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WebsiteExportMediaResult {
+    pub exported_ids: Vec<String>,
+    pub copied: u64,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn website_export_media(
+    dest_full_dir: String,
+    media_refs: Vec<MediaRefInput>,
+) -> Result<WebsiteExportMediaResult, String> {
+    tokio::task::spawn_blocking(move || {
+        let dest_dir = std::path::PathBuf::from(&dest_full_dir);
+        std::fs::create_dir_all(&dest_dir)
+            .map_err(|e| format!("mkdir {}: {e}", dest_dir.display()))?;
+        let mut exported_ids = Vec::<String>::new();
+        let mut copied: u64 = 0;
+        for entry in media_refs {
+            let Some(file_ref) = entry.file_ref else { continue };
+            if file_ref.is_empty() { continue; }
+            let abs = match resolve_file_ref(&file_ref) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if !abs.exists() {
+                continue;
+            }
+            let ext = abs
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|s| s.to_string())
+                .unwrap_or_default();
+            let filename = if ext.is_empty() {
+                entry.id.clone()
+            } else {
+                format!("{}.{}", entry.id, ext)
+            };
+            let dest = dest_dir.join(&filename);
+            match std::fs::copy(&abs, &dest) {
+                Ok(_) => {
+                    exported_ids.push(entry.id);
+                    copied += 1;
+                }
+                Err(_) => {
+                    // Skip individual file failures rather than aborting,
+                    // mirroring the Electron impl's per-file try/catch.
+                }
+            }
+        }
+        Ok(WebsiteExportMediaResult { exported_ids, copied })
+    })
+    .await
+    .map_err(|e| format!("join: {e}"))?
+}
+
 /// Bake preview thumbnails for the website-export preview iframe. Mirrors
 /// `buildPreviewThumbnails` in `src/main/ipc/website-export.ts`:
 ///   - Take the first 24 image refs the caller provides

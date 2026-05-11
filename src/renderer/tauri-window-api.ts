@@ -782,6 +782,117 @@ export function mountWindowApi(db: Database): MountResult {
     return result;
   };
 
+  // website.export — full multi-file export to a user-chosen folder.
+  // Mirrors the Electron handler in src/main/ipc/website-export.ts:
+  //   1. Pick output dir (skipped when `_outputDir` is provided — used by
+  //      e2e tests).
+  //   2. Build the snapshot via the pure api/ helper.
+  //   3. Copy media files into <outputDir>/media/full/<id>.<ext> via Rust.
+  //   4. Trim the snapshot to the actually-copied media (no broken images
+  //      in the static gallery).
+  //   5. Gzip the snapshot JSON, base64 it, and inject into the dist-static
+  //      index.html as `window.__SNAPSHOT_GZ__` before writing the result
+  //      to <outputDir>/index.html.
+  api.website.export = async (opts: unknown) => {
+    type ExportOpts = {
+      siteTitle: string;
+      focusPersonId: string | null;
+      scope: { everyone?: boolean; focusId?: string; ancestors?: number; descendants?: number };
+      options: {
+        includeMedia: boolean;
+        excludeLiving: boolean;
+        redactLiving: boolean;
+        mediaPersonOnly: boolean;
+      };
+      _outputDir?: string;
+    };
+    const o = opts as ExportOpts;
+    let outDir: string;
+    if (o._outputDir) {
+      outDir = o._outputDir;
+    } else {
+      const r = await pickFolder('Choose export folder');
+      if (r.canceled || !r.path) return { canceled: true };
+      outDir = r.path;
+    }
+    try {
+      const snapshotMod = await import('../api/html_site/snapshot');
+      const snapshot = await snapshotMod.buildSnapshot(getDb(), {
+        siteTitle: o.siteTitle,
+        focusPersonId: o.focusPersonId ?? '',
+        scope: o.scope,
+        options: {
+          ...o.options,
+          // The exporter snapshot deliberately mirrors the Electron handler's
+          // includeMedia toggle: false drops every media row; true ships the
+          // metadata and the per-file copy step decides what survives.
+          includeMedia: o.options.includeMedia,
+          includeReports: false,
+          includePrints: false,
+        },
+      }) as {
+        meta: Record<string, unknown>;
+        media: Array<{ id: string; file_ref: string | null; format?: string | null }>;
+        mediaLinks: Array<{ media_id: string }>;
+        mediaRegions: Array<{ media_id: string }>;
+        settings: Record<string, string>;
+      };
+
+      // Copy media into <outDir>/media/full/<id>.<ext>. Returns the IDs
+      // that actually landed on disk so we can trim the snapshot below —
+      // matches the Electron handler's `exportedMediaIds` Set.
+      let exportedIds = new Set<string>();
+      if (o.options.includeMedia && snapshot.media.length > 0) {
+        const fullDir = `${outDir}/media/full`;
+        const mediaRefs = snapshot.media
+          .filter(m => !!m.file_ref)
+          .map(m => ({ id: m.id, fileRef: m.file_ref as string }));
+        const r = await invoke<{ exportedIds: string[]; copied: number }>(
+          'website_export_media',
+          { destFullDir: fullDir, mediaRefs },
+        );
+        exportedIds = new Set(r.exportedIds);
+      }
+
+      if (o.options.includeMedia) {
+        snapshot.media = snapshot.media.filter(m => exportedIds.has(m.id));
+        snapshot.mediaLinks = snapshot.mediaLinks.filter(ml => exportedIds.has(ml.media_id));
+        snapshot.mediaRegions = snapshot.mediaRegions.filter(r => exportedIds.has(r.media_id));
+      } else {
+        snapshot.media = [];
+        snapshot.mediaLinks = [];
+        snapshot.mediaRegions = [];
+      }
+
+      // Embed the gzipped snapshot as base64 in an inline <script> in
+      // index.html (mirrors the Electron handler — the bootstrap reads
+      // window.__SNAPSHOT_GZ__ and decompresses in-page so the file works
+      // from file:// without a server fetch round-trip).
+      const json = JSON.stringify(snapshot);
+      const { gzipSync } = await import('fflate');
+      const gzipped = gzipSync(textEncode(json), { level: 9 });
+      const b64 = uint8ArrayToBase64(gzipped);
+
+      const html = await invoke<string>('website_load_static_index_html');
+      const tag = `<script>window.__SNAPSHOT_GZ__=${JSON.stringify(b64)};</script>`;
+      const injected = html.includes('</head>')
+        ? html.replace('</head>', `${tag}</head>`)
+        : `${tag}${html}`;
+      await invoke('fs_write_text', { path: `${outDir}/index.html`, contents: injected });
+
+      return { canceled: false, outputDir: outDir };
+    } catch (e) {
+      const msg = String((e as Error)?.message || e);
+      // The Electron handler treats a missing dist-static bundle as a
+      // soft failure (`bundleMissing: true`). Mirror that so the renderer
+      // UI's "Bundle missing" banner still surfaces.
+      if (/dist-static\/index\.html not found/.test(msg)) {
+        return { bundleMissing: true };
+      }
+      return { canceled: false, error: msg };
+    }
+  };
+
   if (!api.export) api.export = {};
   api.export.openFolder = async (folderPath: unknown) => {
     if (typeof folderPath !== 'string') return { ok: false };
@@ -1068,6 +1179,10 @@ export function mountWindowApi(db: Database): MountResult {
     api,
     onDataChanged: (cb: () => void) => { dataChangedListeners.push(cb); },
   };
+}
+
+function textEncode(s: string): Uint8Array {
+  return new TextEncoder().encode(s);
 }
 
 function base64ToUint8Array(b64: string): Uint8Array {

@@ -138,9 +138,9 @@ The Tauri `ui_server.rs` exposes only `/eval` + `/screenshot` + `/db_path` + `/`
 
 Per port notes "Active blockers / in-progress" + "Points to revisit #4": `archive:_importRun`, `archive:_exportRun`, `gedcom:export`, `csv:export`, `website:exportRun` currently `import * as fs from 'node:fs'` in handlers reachable from the Tauri renderer. These are blockers for `website-export.test.ts` going green. Out of strict scope for this plan, but the e2e cannot pass without them, so:
 
-- [ ] Audit each blocked RUN handler for `import * as fs from 'node:fs'` usage; pull the synchronous reads/writes behind a runtime-aware shim (`readFileText(path)` → `invoke('fs_read_text')` in Tauri / sync `fs` in Electron). The polyfill list in `src/renderer/tauri-window-api.ts` already covers the picker side; this task adds the read/write side.
-- [ ] If any handler needs `fs.cpSync` for media folder copies, add a Rust `media_bulk_copy` command (port notes already names this).
-- [ ] Verify: `tests/e2e/website-export.test.ts` passes against the built Tauri `.app`. Failure is the canary: this task is incomplete.
+- [x] Audit each blocked RUN handler for `import * as fs from 'node:fs'` usage; pull the synchronous reads/writes behind a runtime-aware shim (`readFileText(path)` → `invoke('fs_read_text')` in Tauri / sync `fs` in Electron). The polyfill list in `src/renderer/tauri-window-api.ts` already covers the picker side; this task adds the read/write side. *(Audit result: archive:_importRun, archive:_exportRun, gedcom:export, csv:export were already wired in Cluster A / Cluster Q via the bytes-in/bytes-out pattern (see `exportArchiveToBytes`, `importArchiveFromBytes`, `gedcom.export`, `csv.export` polyfills). Only `website:export` remained — wired in this task via a renderer-side polyfill that builds the snapshot in JS, gzips via `fflate`, and writes via `fs_write_text` + a new `website_export_media` Rust command.)*
+- [x] If any handler needs `fs.cpSync` for media folder copies, add a Rust `media_bulk_copy` command (port notes already names this). *(Added `website_export_media(destFullDir, mediaRefs)` in `src-tauri/src/media.rs` — copies each media row's resolved file into `<dest>/media/full/<id>.<ext>` and returns the IDs that landed so the renderer can trim its snapshot. Modeled on the existing `holger_bulk_copy_media` command. The Holger import path already has its own bulk-copy command — no further additions needed there.)*
+- [x] Verify: `tests/e2e/website-export.test.ts` passes against the built Tauri `.app`. Failure is the canary: this task is incomplete. *(Passes. `npx playwright test tests/e2e/website-export.test.ts` against the Tauri build — green in 7.6s. `crud-roundtrip` also still passes.)*
 
 ### Task 5 — Adapt the 8 Bucket B unit tests
 
@@ -173,7 +173,7 @@ Per port notes "Active blockers / in-progress" + "Points to revisit #4": `archiv
 
 - [x] Add to `package.json`:
   - `"tauri:build:test": "tauri build --bundles app"` (mac fast path; CI matrix later expands to platform-specific bundles). *Note: dropped the `npm --prefix tauri-spike` indirection — the plan's path predates the cleanup that moved `src-tauri/` to repo root, so a top-level `tauri` script is what actually runs.*
-  - [ ] Replace `"pretest:e2e": "npm run package"` with `"pretest:e2e": "npm run tauri:build:test"`. *(Deliberately deferred — Task 4 fs-shim work is unfinished; flipping pretest:e2e would break local `npm run test:e2e` invocations until website-export's RUN handler is shimmable.)*
+  - [x] Replace `"pretest:e2e": "npm run package"` with `"pretest:e2e": "npm run tauri:build:test"`. *(Flipped now that Task 4 lands the website-export fs-shim. Also added `"pretauri:build:test": "npm run build:static"` so dist-static/index.html exists before the Tauri build runs — required by the new `website.export` polyfill.)*
 - [ ] Verify: cold `npm run test:e2e` starts with the Tauri build (~30 s per port notes), then runs Playwright against the produced `.app`.
 
 ### Task 9 — Run the suite, fix the long tail, capture follow-ups
@@ -217,27 +217,22 @@ SUT import (mirroring `db-shim.test.ts`'s `vi.mock` pattern). Switching to
 
 ## Deferred / out of scope for this commit cluster
 
-Task 4 (RUN-handler fs-shim for website-export) and Task 8 e2e verification
-were not landed in this cluster. The prompt's STOP clause said: "If after a
-day of focused work you've landed Tasks 1-3 + 5 (the bulk of the structural
-change) and Tasks 4 + 6 + 7 + 8 are dragging on website-export fs-shim
-issues OR specific Electron-test retirements that turn out to be
-load-bearing — STOP and report."
+(Originally deferred: Task 4 RUN-handler fs-shim for website-export +
+Task 8 pretest:e2e flip. Both landed in the follow-up commit cluster —
+see the Task 4 / Task 8 entries above. The audit found that
+`archive:_importRun` / `archive:_exportRun` / `gedcom:export` / `csv:export`
+were already wired in Cluster A / Cluster Q via the bytes-in/bytes-out
+pattern, so the only handler that actually needed new wiring was
+`website:export`. That landed via a renderer-side polyfill that builds the
+snapshot in JS, gzips via `fflate`, and writes via `fs_write_text` plus a
+new `website_export_media` Rust command modeled on `holger_bulk_copy_media`.
+The `pretest:e2e` script now points at `tauri:build:test` and the
+`tests/e2e/website-export.test.ts` canary passes against the built `.app`.)
 
-What landed: Tasks 1, 2, 3, 5, 6, 7 + the `tauri:build:test` half of Task 8.
-What didn't: Task 4 (website-export fs-shim) — needs follow-up work to
-audit `archive:_importRun`, `archive:_exportRun`, `gedcom:export`,
-`csv:export`, `website:exportRun` for `import * as fs from 'node:fs'` usage
-and route them through a runtime-aware shim (`fs_read_text` /
-`fs_write_text` invoke commands or `media_bulk_copy` for cpSync-shaped
-calls). Until that lands, `tests/e2e/website-export.test.ts` will fail
-against the Tauri build, so `pretest:e2e` was deliberately left pointing at
-`npm run package` (Electron) — flipping it without Task 4 would break the
-pretest gate for everyone.
-
-What this means for the v0.250.0-tauri.0 release tag: the unit suite is
-trustworthy on the Tauri side now (Bucket A passes unchanged + the new
-Bucket D bridge-coverage tests catch polyfill drift). The e2e suite is
-still Electron-flavoured. Either land Task 4 + flip `pretest:e2e` first,
-or ship the release tag with an explicit "e2e validated against Electron
-build only; Tauri e2e is the next milestone" caveat.
+Pre-existing test failures unrelated to this plan (still tracked separately
+from the migration close-out):
+- gazetteers / gedcom-validation / gedcom_compat / import-gedcom-reporting
+  unit failures noted under Task 5.
+- `tests/e2e/duplicates.spec.ts` — the four-tab merge flow flakes on the
+  Tauri build (one of the four entity tabs throws an `executeJs` error
+  mid-flow). Not introduced by Task 4; predates this commit cluster.

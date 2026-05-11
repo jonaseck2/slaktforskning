@@ -690,6 +690,7 @@ pub fn run() {
             media::media_thumbnail,
             media::website_bake_preview_thumbnails,
             media::website_load_static_index_html,
+            media::website_export_media,
             ui_server::ui_eval_response,
         ])
         .setup(|app| {

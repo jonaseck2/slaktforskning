@@ -253,4 +253,80 @@ describe('tauri-window-api Rust command dispatch', () => {
     expect(invokeSpy).toHaveBeenCalledWith('plugin:updater|download_and_install', undefined);
     expect(r.ok).toBe(true);
   });
+
+  it('website.export skips the dialog when _outputDir is provided and writes index.html', async () => {
+    // Mock the snapshot loader so buildSnapshot doesn't poke at the stub DB.
+    vi.doMock('../../src/api/html_site/snapshot', () => ({
+      buildSnapshot: vi.fn().mockResolvedValue({
+        meta: {},
+        media: [],
+        mediaLinks: [],
+        mediaRegions: [],
+        settings: {},
+      }),
+    }));
+    // The polyfill loads the static index.html via Rust, then writes the
+    // injected version back. Stub both calls.
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'website_load_static_index_html') {
+        return Promise.resolve('<html><head></head><body></body></html>');
+      }
+      if (cmd === 'fs_write_text') return Promise.resolve(undefined);
+      return Promise.resolve(undefined);
+    });
+    const { api } = mountWindowApi(stubDb);
+    const r = (await (api.website as unknown as {
+      export: (opts: unknown) => Promise<{ outputDir?: string; canceled?: boolean }>;
+    }).export({
+      siteTitle: 'Test',
+      focusPersonId: null,
+      scope: { everyone: true },
+      options: { includeMedia: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
+      _outputDir: '/tmp/site',
+    }));
+    // Should NOT have called dialog_pick — _outputDir bypassed it.
+    const cmds = invokeSpy.mock.calls.map(c => c[0]);
+    expect(cmds).not.toContain('dialog_pick');
+    expect(cmds).toContain('website_load_static_index_html');
+    expect(cmds).toContain('fs_write_text');
+    // The fs_write_text call must target <outputDir>/index.html with an
+    // injected __SNAPSHOT_GZ__ tag.
+    const writeCall = invokeSpy.mock.calls.find(c => c[0] === 'fs_write_text');
+    expect(writeCall).toBeDefined();
+    const writeArgs = writeCall![1] as { path: string; contents: string };
+    expect(writeArgs.path).toBe('/tmp/site/index.html');
+    expect(writeArgs.contents).toContain('window.__SNAPSHOT_GZ__=');
+    expect(r.outputDir).toBe('/tmp/site');
+    vi.doUnmock('../../src/api/html_site/snapshot');
+  });
+
+  it('website.export reports bundleMissing when the static index.html is absent', async () => {
+    vi.doMock('../../src/api/html_site/snapshot', () => ({
+      buildSnapshot: vi.fn().mockResolvedValue({
+        meta: {},
+        media: [],
+        mediaLinks: [],
+        mediaRegions: [],
+        settings: {},
+      }),
+    }));
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'website_load_static_index_html') {
+        return Promise.reject(new Error('dist-static/index.html not found. Tried: …'));
+      }
+      return Promise.resolve(undefined);
+    });
+    const { api } = mountWindowApi(stubDb);
+    const r = (await (api.website as unknown as {
+      export: (opts: unknown) => Promise<{ bundleMissing?: boolean }>;
+    }).export({
+      siteTitle: 'Test',
+      focusPersonId: null,
+      scope: { everyone: true },
+      options: { includeMedia: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
+      _outputDir: '/tmp/site',
+    }));
+    expect(r.bundleMissing).toBe(true);
+    vi.doUnmock('../../src/api/html_site/snapshot');
+  });
 });
