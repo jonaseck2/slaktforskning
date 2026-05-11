@@ -229,6 +229,3 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
 
   // Chart inspection tools live in dev/chart.ts (registerChartTools).
 }
-
-/** Exported for chart.ts and inspect.ts so they share the /eval helper. */
-export { runScript };
