@@ -92,10 +92,11 @@
         </div>
       </div>
 
-      <!-- Identifierare section. v-show keeps the child mounted while
-           collapsed so its defineExpose({ count }) is live and the (N) badge
-           is accurate even before the user opens the section. -->
-      <div class="panel-section">
+      <!-- Identifierare section. v-show on the outer div hides it entirely when
+           the person has no identifiers (power-user feature — not shown until
+           data exists). The child stays mounted via the outer v-show so
+           identifierCount stays live without a separate data probe. -->
+      <div v-show="identifierCount > 0" class="panel-section">
         <SectionHeader :title="$t('personDetail.identifiers')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addIdentifierShort') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-show="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
@@ -178,14 +179,22 @@
            is closed, contradicting the DB and confusing the user. The child
            uses useEntityData with caching so the per-mount fetch is cheap. -->
       <div class="panel-section">
-        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskForm()" />
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskPicker()" />
         <div v-show="sections.research" class="panel-section-body">
+          <div v-if="!props.readonly && showTaskPicker && personId" class="panel-group-picker-wrap">
+            <ResearchTaskPicker
+              :person-id="personId"
+              :exclude-ids="researchTaskIds"
+              @added="onTaskAdded"
+              @cancel="showTaskPicker = false"
+            />
+          </div>
           <PersonResearchTasksSection
             ref="researchSectionRef"
             :person-id="personId!"
             :readonly="props.readonly"
             @select="openTaskForm"
-            @add-task="openTaskForm()"
+            @add-task="openTaskPicker()"
           />
         </div>
       </div>
@@ -292,6 +301,7 @@ import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import GroupPicker from './GroupPicker.vue';
 import GroupsTable from './GroupsTable.vue';
+import ResearchTaskPicker from './ResearchTaskPicker.vue';
 import PersonResearchTasksSection from './PersonResearchTasksSection.vue';
 import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
@@ -526,6 +536,7 @@ const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 const researchSectionRef = ref<InstanceType<typeof PersonResearchTasksSection> | null>(null);
 const researchTaskCount = computed(() => researchSectionRef.value?.count ?? 0);
+const researchTaskIds = computed<string[]>(() => researchSectionRef.value?.taskIds ?? []);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const identifierCount = computed(() => identifiersSectionRef.value?.count ?? 0);
 
@@ -686,10 +697,29 @@ async function onGroupAdded() {
 
 const showTaskForm = ref(false);
 const editingTask = ref<ResearchTaskRow | null>(null);
+// `+ Task` opens the picker (mirrors `+ Group`), letting the user pick an
+// existing task to link to this person OR type a new task name and create
+// it inline. The full ResearchTaskModal still opens via row-click for
+// editing existing tasks.
+const showTaskPicker = ref(false);
 
 function openTaskForm(task: ResearchTaskRow | null = null) {
   editingTask.value = task;
   showTaskForm.value = true;
+}
+
+function openTaskPicker() {
+  // Make sure the section is open so the inline picker is visible.
+  if (!sections.research) toggleSection('research');
+  showTaskPicker.value = true;
+}
+
+async function onTaskAdded() {
+  showTaskPicker.value = false;
+  // Picker mutated through `mutating()`-wrapped IPCs, so the section's
+  // `useEntityData` already reloads via onDataChanged. Reload PersonPanel's
+  // own data so dependent counts/caches stay fresh.
+  await reload();
 }
 
 function closeTaskForm() {

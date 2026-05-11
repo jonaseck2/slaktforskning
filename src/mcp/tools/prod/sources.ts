@@ -20,7 +20,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
       abstract: z.string().optional().describe('Abstract or description'),
     },
   }, async (args) => {
-    const source = sourceApi.createSource(getDb(), args);
+    const source = await sourceApi.createSource(getDb(), args);
     return { content: [{ type: 'text', text: JSON.stringify(source, null, 2) }] };
   });
 
@@ -30,7 +30,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
       query: z.string().describe('Search query'),
     },
   }, async (args) => {
-    const results = sourceApi.searchSources(getDb(), args.query);
+    const results = await sourceApi.searchSources(getDb(), args.query);
     return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
   });
 
@@ -56,13 +56,13 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
     if (source_id) {
       resolvedSourceId = source_id;
     } else if (source_title) {
-      const source = findOrCreateSource(db, source_title);
+      const source = await findOrCreateSource(db, source_title);
       resolvedSourceId = source.id;
     } else {
       return { content: [{ type: 'text', text: 'Error: provide either source_id or source_title' }] };
     }
 
-    const citation = sourceApi.createCitation(db, {
+    const citation = await sourceApi.createCitation(db, {
       source_id: resolvedSourceId,
       ...citationData,
     });
@@ -75,7 +75,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
       person_id: z.string().describe('Person ID'),
     },
   }, async (args) => {
-    const list = sourceApi.getCitationsForPerson(getDb(), args.person_id);
+    const list = await sourceApi.getCitationsForPerson(getDb(), args.person_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -94,7 +94,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const src = sourceApi.updateSource(getDb(), id, data);
+    const src = await sourceApi.updateSource(getDb(), id, data);
     return { content: [{ type: 'text', text: src ? JSON.stringify(src, null, 2) : 'Source not found' }] };
   });
 
@@ -104,7 +104,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Source ID'),
     },
   }, async (args) => {
-    const ok = sourceApi.deleteSource(getDb(), args.id);
+    const ok = await sourceApi.deleteSource(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Source not found' }] };
   });
 
@@ -120,7 +120,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const cit = sourceApi.updateCitation(getDb(), id, data);
+    const cit = await sourceApi.updateCitation(getDb(), id, data);
     return { content: [{ type: 'text', text: cit ? JSON.stringify(cit, null, 2) : 'Citation not found' }] };
   });
 
@@ -130,7 +130,7 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Citation ID'),
     },
   }, async (args) => {
-    const ok = sourceApi.deleteCitation(getDb(), args.id);
+    const ok = await sourceApi.deleteCitation(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Citation not found' }] };
   });
 }

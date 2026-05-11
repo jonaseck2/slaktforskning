@@ -53,6 +53,10 @@ async function dismiss() {
 function reposition() {
   if (!props.anchorEl) return;
   const rect = props.anchorEl.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) {
+    positionStyle.value = { visibility: 'hidden', position: 'fixed' };
+    return;
+  }
   const off = 10;
   const style: CSSProperties = { position: 'fixed', zIndex: 'var(--z-coachmark)' };
   if (props.placement === 'below') {

@@ -4,7 +4,7 @@ import { useEditableFields } from '../../../src/renderer/composables/useEditable
 
 interface Foo { id: string; title: string; notes: string; }
 
-describe('useEditableFields', () => {
+describe('useEditableFields', async () => {
   it('seeds fields from initial data and persists changes', async () => {
     const id = ref<string | null>('a');
     const data = ref<Foo | null>({ id: 'a', title: 'Hi', notes: 'N' });

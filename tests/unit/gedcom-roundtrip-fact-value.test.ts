@@ -44,16 +44,16 @@ function normalizeFacts(gedcomText: string): NormalizedFact[] {
   return facts;
 }
 
-function roundTrip(gedcomText: string): string {
-  const db = createTestDb();
-  importGedcom(db, parseGedcom(gedcomText));
-  return exportGedcom(db, '5.5.1').ged;
+async function roundTrip(gedcomText: string): string {
+  const db = await createTestDb();
+  await importGedcom(db, parseGedcom(gedcomText));
+  return (await exportGedcom(db, '5.5.1')).ged;
 }
 
-describe('GEDCOM fact-value round-trip', () => {
-  it('preserves OCCU line value through import → export', () => {
+describe('GEDCOM fact-value round-trip', async () => {
+  it('preserves OCCU line value through import → export', async () => {
     const original = loadFixture('occupation-with-notes.ged');
-    const exported = roundTrip(original);
+    const exported = await roundTrip(original);
 
     const factsA = normalizeFacts(original);
     const factsB = normalizeFacts(exported);
@@ -61,9 +61,9 @@ describe('GEDCOM fact-value round-trip', () => {
     expect(factsB).toEqual(factsA);
   });
 
-  it('preserves multiple fact-shaped events with mixed sub-tags', () => {
+  it('preserves multiple fact-shaped events with mixed sub-tags', async () => {
     const original = loadFixture('mixed-facts.ged');
-    const exported = roundTrip(original);
+    const exported = await roundTrip(original);
 
     const factsA = normalizeFacts(original).sort((a, b) => a.tag.localeCompare(b.tag));
     const factsB = normalizeFacts(exported).sort((a, b) => a.tag.localeCompare(b.tag));
@@ -71,9 +71,9 @@ describe('GEDCOM fact-value round-trip', () => {
     expect(factsB).toEqual(factsA);
   });
 
-  it('preserves DEAT with CAUS and NOTE (no fact value)', () => {
+  it('preserves DEAT with CAUS and NOTE (no fact value)', async () => {
     const original = loadFixture('death-with-cause-and-notes.ged');
-    const exported = roundTrip(original);
+    const exported = await roundTrip(original);
 
     const factsA = normalizeFacts(original);
     const factsB = normalizeFacts(exported);
@@ -81,10 +81,10 @@ describe('GEDCOM fact-value round-trip', () => {
     expect(factsB).toEqual(factsA);
   });
 
-  it('triple-trip is idempotent (export, import, export same)', () => {
+  it('triple-trip is idempotent (export, import, export same)', async () => {
     const original = loadFixture('mixed-facts.ged');
-    const onceExported = roundTrip(original);
-    const twiceExported = roundTrip(onceExported);
+    const onceExported = await roundTrip(original);
+    const twiceExported = await roundTrip(onceExported);
 
     const factsB = normalizeFacts(onceExported).sort((a, b) => a.tag.localeCompare(b.tag));
     const factsC = normalizeFacts(twiceExported).sort((a, b) => a.tag.localeCompare(b.tag));

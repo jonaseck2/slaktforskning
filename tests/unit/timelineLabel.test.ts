@@ -70,8 +70,8 @@ function makeEntry(partial: Partial<TimelineEntry>): TimelineEntry {
   };
 }
 
-describe('composeTimelineLabel — self events', () => {
-  it('returns the bare event type for self events', () => {
+describe('composeTimelineLabel — self events', async () => {
+  it('returns the bare event type for self events', async () => {
     const result = composeTimelineLabel(
       makeEntry({ relationship_label: 'self', event: makeEvent({ event_type: 'birth' }) }),
       tSv,
@@ -79,7 +79,7 @@ describe('composeTimelineLabel — self events', () => {
     expect(result.primary).toBe('Födelse');
   });
 
-  it('renders couple events with partner name in the primary line', () => {
+  it('renders couple events with partner name in the primary line', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'self',
@@ -97,7 +97,7 @@ describe('composeTimelineLabel — self events', () => {
     expect(result.secondary).toBe('Stockholm');
   });
 
-  it('uses the unknown placeholder when partner has no names', () => {
+  it('uses the unknown placeholder when partner has no names', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'self',
@@ -115,8 +115,8 @@ describe('composeTimelineLabel — self events', () => {
   });
 });
 
-describe('composeTimelineLabel — parent of child', () => {
-  it('labels son birth correctly', () => {
+describe('composeTimelineLabel — parent of child', async () => {
+  it('labels son birth correctly', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'son',
@@ -129,7 +129,7 @@ describe('composeTimelineLabel — parent of child', () => {
     expect(result.primary).toBe('Sons födelse — Erik Andersson');
   });
 
-  it('labels daughter death correctly', () => {
+  it('labels daughter death correctly', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'daughter',
@@ -142,7 +142,7 @@ describe('composeTimelineLabel — parent of child', () => {
     expect(result.primary).toBe('Dotters död — Lisa Persson');
   });
 
-  it('labels child birth (sex unknown) correctly', () => {
+  it('labels child birth (sex unknown) correctly', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'child',
@@ -156,8 +156,8 @@ describe('composeTimelineLabel — parent of child', () => {
   });
 });
 
-describe('composeTimelineLabel — child of parent (focal is the child)', () => {
-  it('labels parent death the same regardless of sex', () => {
+describe('composeTimelineLabel — child of parent (focal is the child)', async () => {
+  it('labels parent death the same regardless of sex', async () => {
     const father = composeTimelineLabel(
       makeEntry({
         relationship_label: 'father',
@@ -182,8 +182,8 @@ describe('composeTimelineLabel — child of parent (focal is the child)', () => 
   });
 });
 
-describe('composeTimelineLabel — partner death', () => {
-  it('labels spouse death as partner death', () => {
+describe('composeTimelineLabel — partner death', async () => {
+  it('labels spouse death as partner death', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'spouse',
@@ -197,8 +197,8 @@ describe('composeTimelineLabel — partner death', () => {
   });
 });
 
-describe('composeTimelineLabel — sibling', () => {
-  it('labels sibling death', () => {
+describe('composeTimelineLabel — sibling', async () => {
+  it('labels sibling death', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'sibling',
@@ -212,8 +212,8 @@ describe('composeTimelineLabel — sibling', () => {
   });
 });
 
-describe('composeTimelineLabel — foster relationships', () => {
-  it('labels foster_placement event as fosterChildWelcomed', () => {
+describe('composeTimelineLabel — foster relationships', async () => {
+  it('labels foster_placement event as fosterChildWelcomed', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'foster_son',
@@ -226,7 +226,7 @@ describe('composeTimelineLabel — foster relationships', () => {
     expect(result.primary).toBe('Fosterbarn välkomnas — Erik Andersson');
   });
 
-  it('labels foster parent death (focal is foster child)', () => {
+  it('labels foster parent death (focal is foster child)', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'foster_father',
@@ -239,7 +239,7 @@ describe('composeTimelineLabel — foster relationships', () => {
     expect(result.primary).toBe('Fosterförälders död — Olof Persson');
   });
 
-  it('labels foster child death (focal is foster parent)', () => {
+  it('labels foster child death (focal is foster parent)', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'foster_daughter',
@@ -253,8 +253,8 @@ describe('composeTimelineLabel — foster relationships', () => {
   });
 });
 
-describe('composeTimelineLabel — step relationships', () => {
-  it('labels step_placement as stepChildWelcomed', () => {
+describe('composeTimelineLabel — step relationships', async () => {
+  it('labels step_placement as stepChildWelcomed', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'step_son',
@@ -267,7 +267,7 @@ describe('composeTimelineLabel — step relationships', () => {
     expect(result.primary).toBe('Styvbarn välkomnas — Erik Andersson');
   });
 
-  it('labels step parent death', () => {
+  it('labels step parent death', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'step_mother',
@@ -281,8 +281,8 @@ describe('composeTimelineLabel — step relationships', () => {
   });
 });
 
-describe('composeTimelineLabel — fallback for unusual roles', () => {
-  it('uses kinFallback for non-canonical role+event combinations', () => {
+describe('composeTimelineLabel — fallback for unusual roles', async () => {
+  it('uses kinFallback for non-canonical role+event combinations', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'sibling',
@@ -298,8 +298,8 @@ describe('composeTimelineLabel — fallback for unusual roles', () => {
   });
 });
 
-describe('composeTimelineLabel — English locale parity', () => {
-  it('renders English son birth', () => {
+describe('composeTimelineLabel — English locale parity', async () => {
+  it('renders English son birth', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'son',
@@ -312,7 +312,7 @@ describe('composeTimelineLabel — English locale parity', () => {
     expect(result.primary).toBe("Son's birth — Erik Andersson");
   });
 
-  it('renders English partner death', () => {
+  it('renders English partner death', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'spouse',
@@ -325,7 +325,7 @@ describe('composeTimelineLabel — English locale parity', () => {
     expect(result.primary).toBe("Partner's death — Anna Andersson");
   });
 
-  it('renders English foster child welcomed', () => {
+  it('renders English foster child welcomed', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'foster_child',
@@ -338,7 +338,7 @@ describe('composeTimelineLabel — English locale parity', () => {
     expect(result.primary).toBe('Foster child welcomed — Erik Andersson');
   });
 
-  it('renders English couple event with partner', () => {
+  it('renders English couple event with partner', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'self',
@@ -356,8 +356,8 @@ describe('composeTimelineLabel — English locale parity', () => {
   });
 });
 
-describe('composeTimelineLabel — birth-name parenthetical', () => {
-  it('appends birth surname when toggle is on', () => {
+describe('composeTimelineLabel — birth-name parenthetical', async () => {
+  it('appends birth surname when toggle is on', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'son',
@@ -372,7 +372,7 @@ describe('composeTimelineLabel — birth-name parenthetical', () => {
     expect(result.primary).toBe('Sons födelse — Erik Andersson (f. Lindberg)');
   });
 
-  it('omits birth surname when toggle is off', () => {
+  it('omits birth surname when toggle is off', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'son',
@@ -388,8 +388,8 @@ describe('composeTimelineLabel — birth-name parenthetical', () => {
   });
 });
 
-describe('composeTimelineLabel — ARIA full-sentence form', () => {
-  it('appends date and place when present', () => {
+describe('composeTimelineLabel — ARIA full-sentence form', async () => {
+  it('appends date and place when present', async () => {
     const result = composeTimelineLabel(
       makeEntry({
         relationship_label: 'son',

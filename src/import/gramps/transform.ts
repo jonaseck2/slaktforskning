@@ -398,18 +398,18 @@ function mapFamilyRel(rel?: string): string | null {
 
 // ── Transform ─────────────────────────────────────────────────────────────
 
-export function transformGramps(ourDb: Database, xml: string): GrampsImportSummary {
+export async function transformGramps(ourDb: Database, xml: string): Promise<GrampsImportSummary> {
   const summary = emptyGrampsSummary();
   const doc = parseGrampsXml(xml);
 
   // ── researcher → db_settings (only if currently empty) ─────────────────
-  const setIfEmpty = (key: string, value: string | undefined): void => {
+  const setIfEmpty = async (key: string, value: string | undefined): Promise<void> => {
     if (!value?.trim()) return;
-    const existing = getDbSetting(ourDb, key);
+    const existing = await getDbSetting(ourDb, key);
     if (existing && existing.trim()) return;
-    setDbSetting(ourDb, key, value.trim());
+    await setDbSetting(ourDb, key, value.trim());
   };
-  if (doc.researcher.name) setIfEmpty('researcher_name', doc.researcher.name);
+  if (doc.researcher.name) await setIfEmpty('researcher_name', doc.researcher.name);
   const addrLines = [
     doc.researcher.street,
     [doc.researcher.postal, doc.researcher.city].filter(Boolean).join(' ').trim() || null,
@@ -417,16 +417,16 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
     doc.researcher.state,
     doc.researcher.country,
   ].filter((s): s is string => Boolean(s?.trim()));
-  if (addrLines.length > 0) setIfEmpty('researcher_address', addrLines.join('\n'));
-  setIfEmpty('researcher_phone', doc.researcher.phone);
-  setIfEmpty('researcher_email', doc.researcher.email);
+  if (addrLines.length > 0) await setIfEmpty('researcher_address', addrLines.join('\n'));
+  await setIfEmpty('researcher_phone', doc.researcher.phone);
+  await setIfEmpty('researcher_email', doc.researcher.email);
 
   // ── places ─────────────────────────────────────────────────────────────
   const placeMap = new Map<string, string>();
   for (const p of doc.places) {
     const name = p.title?.trim() || p.pname?.trim();
     if (!name) continue;
-    const place = findOrCreatePlace(ourDb, name);
+    const place = await findOrCreatePlace(ourDb, name);
     placeMap.set(p.handle, place.id);
     summary.places++;
   }
@@ -445,7 +445,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
   const sourceMap = new Map<string, string>();
   for (const s of doc.sources) {
     if (!s.title?.trim()) continue;
-    const src = createSource(ourDb, {
+    const src = await createSource(ourDb, {
       title: s.title.trim(),
       author: s.author ?? '',
       publication_info: s.pubinfo ?? '',
@@ -460,10 +460,10 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
   // ── persons ────────────────────────────────────────────────────────────
   const personMap = new Map<string, string>();
   for (const p of doc.persons) {
-    const person = createPerson(ourDb, { sex: p.gender }, { allowNameless: true });
+    const person = await createPerson(ourDb, { sex: p.gender }, { allowNameless: true });
     personMap.set(p.handle, person.id);
     if (p.uid) {
-      addPersonIdentifier(ourDb, person.id, { identifier_type: 'uid', identifier_value: p.uid });
+      await addPersonIdentifier(ourDb, person.id, { identifier_type: 'uid', identifier_value: p.uid });
     }
     const sortedNames = p.names.slice().sort((a, b) =>
       (a.type === 'Birth Name' ? -1 : 0) - (b.type === 'Birth Name' ? -1 : 0)
@@ -479,7 +479,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
             : t === 'alias'
               ? 'alias'
               : 'birth';
-      addPersonName(ourDb, person.id, {
+      await addPersonName(ourDb, person.id, {
         given_name: n.first ?? '',
         surname: n.surname ?? '',
         name_type: nameType,
@@ -496,7 +496,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
     const motherId = f.mother ? personMap.get(f.mother) : undefined;
     if (fatherId && motherId) {
       const subtype = mapFamilyRel(f.rel);
-      const couple = createRelationship(ourDb, {
+      const couple = await createRelationship(ourDb, {
         type: 'couple',
         person1_id: fatherId,
         person2_id: motherId,
@@ -509,13 +509,13 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
       const childId = personMap.get(childHandle);
       if (!childId) continue;
       if (fatherId) {
-        createRelationship(ourDb, {
+        await createRelationship(ourDb, {
           type: 'parent_child', person1_id: fatherId, person2_id: childId, subtype: 'biological',
         });
         summary.parentChildRelationships++;
       }
       if (motherId) {
-        createRelationship(ourDb, {
+        await createRelationship(ourDb, {
           type: 'parent_child', person1_id: motherId, person2_id: childId, subtype: 'biological',
         });
         summary.parentChildRelationships++;
@@ -556,7 +556,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
     const dateValue = e.dateVal ?? e.dateRangeStart ?? null;
     const dateValueEnd = e.dateRangeStop ?? null;
 
-    const created = createEvent(ourDb, {
+    const created = await createEvent(ourDb, {
       event_type: mapGrampsEventType(e.type),
       date_type: dateType,
       date_value: dateValue,
@@ -568,7 +568,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
     });
 
     if (owner?.kind === 'person') {
-      addEventParticipant(ourDb, {
+      await addEventParticipant(ourDb, {
         event_id: created.id, person_id: owner.id, role: 'primary',
       });
     }
@@ -578,7 +578,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
       const sourceId = cit?.sourceHandle ? sourceMap.get(cit.sourceHandle) : undefined;
       if (!sourceId) continue;
       const conf = (cit?.confidence ?? 2) as 0 | 1 | 2 | 3;
-      createCitation(ourDb, {
+      await createCitation(ourDb, {
         source_id: sourceId,
         event_id: created.id,
         page: cit?.page ?? '',
@@ -595,7 +595,7 @@ export function transformGramps(ourDb: Database, xml: string): GrampsImportSumma
   // ── media (objects) ────────────────────────────────────────────────────
   for (const o of doc.objects) {
     if (!o.fileSrc && !o.description) continue;
-    createMedia(ourDb, {
+    await createMedia(ourDb, {
       file_ref: o.fileSrc ?? null,
       title: o.description ?? '',
       format: o.mime ?? null,

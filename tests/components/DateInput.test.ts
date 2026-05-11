@@ -21,7 +21,7 @@ function mountDateInput(props: Partial<{
   });
 }
 
-describe('DateInput', () => {
+describe('DateInput', async () => {
   describe('date display', () => {
     it('shows dateValue in the start date field', () => {
       const wrapper = mountDateInput({ dateValue: '1850-03-15' });
@@ -48,7 +48,7 @@ describe('DateInput', () => {
     });
   });
 
-  describe('text editing (emit)', () => {
+  describe('text editing (emit)', async () => {
     it('emits year-only when only year entered', async () => {
       const wrapper = mountDateInput();
       const input = wrapper.find('.date-field .date-text');
@@ -68,7 +68,7 @@ describe('DateInput', () => {
     });
   });
 
-  describe('digit filtering', () => {
+  describe('digit filtering', async () => {
     it('strips non-digit/non-dash characters', async () => {
       const wrapper = mountDateInput();
       const input = wrapper.find('.date-field .date-text');
@@ -78,7 +78,7 @@ describe('DateInput', () => {
     });
   });
 
-  describe('date type', () => {
+  describe('date type', async () => {
     it('hides date field when type is unknown', () => {
       const wrapper = mountDateInput({ dateType: 'unknown' });
       expect(wrapper.findAll('.date-field')).toHaveLength(0);
@@ -98,12 +98,12 @@ describe('DateInput', () => {
 
     it('emits dateType change', async () => {
       const wrapper = mountDateInput();
-      await wrapper.find('select').setValue('about');
+      (await wrapper.find('select')).setValue('about');
       expect(wrapper.emitted('update:dateType')![0][0]).toBe('about');
     });
   });
 
-  describe('original date', () => {
+  describe('original date', async () => {
     it('shows dateOriginal value', () => {
       const wrapper = mountDateInput({ dateOriginal: '1 JAN 1850' });
       const origInput = wrapper.find('.date-original-row input');
@@ -119,7 +119,7 @@ describe('DateInput', () => {
     });
   });
 
-  describe('between mode end date', () => {
+  describe('between mode end date', async () => {
     it('shows dateValueEnd in the end field', () => {
       const wrapper = mountDateInput({
         dateType: 'between',

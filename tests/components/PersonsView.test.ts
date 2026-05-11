@@ -39,7 +39,7 @@ function findChip(wrapper: ReturnType<typeof mount>, label: string) {
   return wrapper.findAll('.chip-btn').find(b => b.text().trim() === label);
 }
 
-describe('PersonsView', () => {
+describe('PersonsView', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -119,7 +119,7 @@ describe('PersonsView', () => {
 
   // ── Tree subject fallback (load()) ─────────────────────────────────────────
 
-  describe('load() tree subject fallback', () => {
+  describe('load() tree subject fallback', async () => {
     it('redirects to default_person_id when no route personId', async () => {
       routeParams.personId = undefined;
       (window as any).api.db.getSetting.mockResolvedValue('default-id');

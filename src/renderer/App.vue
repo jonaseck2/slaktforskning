@@ -18,6 +18,10 @@
         <span class="nav-icon" aria-hidden="true">📷</span>
         <span class="nav-label">{{ $t('media.nav') }}</span>
       </router-link>
+      <router-link to="/search" class="nav-item" :aria-label="$t('nav.search')">
+        <span class="nav-icon" aria-hidden="true">🔍</span>
+        <span class="nav-label">{{ $t('nav.search') }}</span>
+      </router-link>
       <h2 class="nav-section-label">{{ $t('nav.organize') }}</h2>
       <router-link to="/groups" class="nav-item" :aria-label="$t('nav.groups')">
         <span class="nav-icon" aria-hidden="true">🏷️</span>
@@ -474,6 +478,7 @@ const navSections = computed<NavSectionDef[]>(() => [
       { to: '/', icon: '👤', labelKey: 'nav.people' },
       { to: '/places', icon: '📍', labelKey: 'places.title' },
       { to: '/media', icon: '📷', labelKey: 'media.nav' },
+      { to: '/search', icon: '🔍', labelKey: 'nav.search' },
     ],
   },
   {

@@ -13,23 +13,23 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 });
 
-describe('useMonospacedNotes', () => {
-  beforeEach(() => {
+describe('useMonospacedNotes', async () => {
+  beforeEach(async () => {
     localStorage.clear();
   });
 
-  it('defaults to false when no value is stored', () => {
+  it('defaults to false when no value is stored', async () => {
     const { monospaced } = useMonospacedNotes('person');
     expect(monospaced.value).toBe(false);
   });
 
-  it('reads the stored value from localStorage on init', () => {
+  it('reads the stored value from localStorage on init', async () => {
     localStorage.setItem('slaktforskning-monospace-notes-person', 'true');
     const { monospaced } = useMonospacedNotes('person');
     expect(monospaced.value).toBe(true);
   });
 
-  it('toggle() flips the value and persists to localStorage', () => {
+  it('toggle() flips the value and persists to localStorage', async () => {
     const { monospaced, toggle } = useMonospacedNotes('place');
     expect(monospaced.value).toBe(false);
 
@@ -42,7 +42,7 @@ describe('useMonospacedNotes', () => {
     expect(localStorage.getItem('slaktforskning-monospace-notes-place')).toBe('false');
   });
 
-  it('keeps each entity type independent', () => {
+  it('keeps each entity type independent', async () => {
     const person = useMonospacedNotes('person');
     const place = useMonospacedNotes('place');
 

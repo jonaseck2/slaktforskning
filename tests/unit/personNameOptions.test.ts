@@ -11,11 +11,11 @@ interface FakeWindow {
   };
 }
 
-describe('usePersonNameOptions', () => {
+describe('usePersonNameOptions', async () => {
   let getSetting: ReturnType<typeof vi.fn>;
   let setSetting: ReturnType<typeof vi.fn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     setActivePinia(createPinia());
     getSetting = vi.fn();
     setSetting = vi.fn().mockResolvedValue(undefined);
@@ -24,7 +24,7 @@ describe('usePersonNameOptions', () => {
     };
   });
 
-  it('default value is true', () => {
+  it('default value is true', async () => {
     const store = usePersonNameOptions();
     expect(store.showBirthNameParenthetical).toBe(true);
   });
@@ -57,7 +57,7 @@ describe('usePersonNameOptions', () => {
     expect(store.showBirthNameParenthetical).toBe(true);
   });
 
-  it('setShowBirthNameParenthetical(false) updates the ref synchronously', () => {
+  it('setShowBirthNameParenthetical(false) updates the ref synchronously', async () => {
     const store = usePersonNameOptions();
     expect(store.showBirthNameParenthetical).toBe(true);
     // Don't await — ref must update before the persistence promise resolves.

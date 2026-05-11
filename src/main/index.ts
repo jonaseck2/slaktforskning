@@ -209,9 +209,9 @@ function buildMenu(): void {
   Menu.setApplicationMenu(menu);
 }
 
-app.on('ready', () => {
-  getDatabase();
-  registerIpcHandlers();
+app.on('ready', async () => {
+  await getDatabase();
+  await registerIpcHandlers();
   buildMenu();
   createWindow();
   startUiServer(() => activeWindow);

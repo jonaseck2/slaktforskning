@@ -53,7 +53,7 @@ const Host = defineComponent({
   `,
 });
 
-describe('Coachmark', () => {
+describe('Coachmark', async () => {
   it('renders when unseen, hides when seen', async () => {
     wrapper = mount(Host, { global: { plugins: [i18n] }, attachTo: document.body });
     await flushPromises();

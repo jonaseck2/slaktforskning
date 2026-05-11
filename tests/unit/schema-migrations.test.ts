@@ -62,38 +62,38 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
   ignored_duplicates:['entity_type', 'person1_id', 'person2_id', 'created_at'],
 };
 
-function tableCols(db: Database, table: string): string[] {
-  return queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`).map(c => c.name);
+async function tableCols(db: Database, table: string): string[] {
+  return (await queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`)).map(c => c.name);
 }
 
-describe('schema migrations', () => {
-  it('initializeSchema is idempotent on a fresh DB', () => {
-    const db = createTestDb();
-    expect(() => initializeSchema(db)).not.toThrow();
-    expect(() => initializeSchema(db)).not.toThrow();
+describe('schema migrations', async () => {
+  it('initializeSchema is idempotent on a fresh DB', async () => {
+    const db = await createTestDb();
+    expect(async () => await initializeSchema(db)).not.toThrow();
+    expect(async () => await initializeSchema(db)).not.toThrow();
     // After three runs no extra junk should accumulate.
-    expect(tableCols(db, 'persons')).toEqual(expect.arrayContaining(EXPECTED_COLUMNS.persons));
+    expect(await tableCols(db, 'persons')).toEqual(expect.arrayContaining(EXPECTED_COLUMNS.persons));
   });
 
-  it('current schema matches the fingerprint snapshot', () => {
+  it('current schema matches the fingerprint snapshot', async () => {
     // If this fails, you added a column to schema.ts without updating
     // EXPECTED_COLUMNS above. Confirm the column has a migration block in
     // schema.ts (search for `ALTER TABLE <table> ADD COLUMN <col>`), then
     // add it to EXPECTED_COLUMNS.
-    const db = createTestDb();
+    const db = await createTestDb();
     for (const [table, expected] of Object.entries(EXPECTED_COLUMNS)) {
-      const actual = tableCols(db, table).sort();
+      const actual = (await tableCols(db, table)).sort();
       const want = [...expected].sort();
       expect(actual, `Mismatch in table ${table}`).toEqual(want);
     }
   });
 
-  it('upgrades a synthesised pre-v0.3 database — every current column exists after init', () => {
+  it('upgrades a synthesised pre-v0.3 database — every current column exists after init', async () => {
     const db = new Database(':memory:');
 
     // Build the v0.2-era schema by hand. These CREATE TABLE statements
     // intentionally OMIT all columns added by later migration blocks.
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE persons (
         id TEXT PRIMARY KEY,
         sex TEXT NOT NULL DEFAULT 'U',
@@ -103,7 +103,7 @@ describe('schema migrations', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE person_names (
         id TEXT PRIMARY KEY,
         person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
@@ -115,7 +115,7 @@ describe('schema migrations', () => {
         sort_order INTEGER NOT NULL DEFAULT 0
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE person_identifiers (
         id TEXT PRIMARY KEY,
         person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
@@ -124,7 +124,7 @@ describe('schema migrations', () => {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE relationships (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
@@ -136,7 +136,7 @@ describe('schema migrations', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE places (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -145,7 +145,7 @@ describe('schema migrations', () => {
         longitude REAL
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE events (
         id TEXT PRIMARY KEY,
         event_type TEXT NOT NULL,
@@ -159,7 +159,7 @@ describe('schema migrations', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE event_participants (
         id TEXT PRIMARY KEY,
         event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
@@ -168,7 +168,7 @@ describe('schema migrations', () => {
         UNIQUE(event_id, person_id)
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE sources (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL DEFAULT '',
@@ -181,7 +181,7 @@ describe('schema migrations', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE citations (
         id TEXT PRIMARY KEY,
         source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
@@ -195,7 +195,7 @@ describe('schema migrations', () => {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE groups (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -204,14 +204,14 @@ describe('schema migrations', () => {
       )
     `);
     // Legacy group_members table — should be dropped and migrated to group_links.
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE group_members (
         group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
         person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
         PRIMARY KEY (group_id, person_id)
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE research_tasks (
         id TEXT PRIMARY KEY,
         priority INTEGER NOT NULL DEFAULT 0,
@@ -224,7 +224,7 @@ describe('schema migrations', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE media (
         id TEXT PRIMARY KEY,
         file_ref TEXT,
@@ -235,7 +235,7 @@ describe('schema migrations', () => {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE media_links (
         id TEXT PRIMARY KEY,
         media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
@@ -247,37 +247,37 @@ describe('schema migrations', () => {
     `);
 
     // Seed data that we expect to survive every migration.
-    runSql(db, `INSERT INTO persons (id, sex, living, notes) VALUES ('p1', 'M', 1, 'pre-migration person')`);
-    runSql(db, `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order) VALUES ('n1', 'p1', 'Anders', 'Persson', 'birth', 0)`);
-    runSql(db, `INSERT INTO places (id, name, normalized_name) VALUES ('pl1', 'Stockholm', 'stockholm')`);
-    runSql(db, `INSERT INTO events (id, event_type, description, place_id) VALUES ('e1', 'birth', 'born at home', 'pl1')`);
-    runSql(db, `INSERT INTO events (id, event_type, description) VALUES ('e2', 'baptism', 'old type — should collapse to christening')`);
-    runSql(db, `INSERT INTO sources (id, title) VALUES ('s1', 'Parish book')`);
-    runSql(db, `INSERT INTO citations (id, source_id, page) VALUES ('c1', 's1', '12')`);
-    runSql(db, `INSERT INTO groups (id, name) VALUES ('g1', 'Family')`);
-    runSql(db, `INSERT INTO group_members (group_id, person_id) VALUES ('g1', 'p1')`);
-    runSql(db, `INSERT INTO research_tasks (id, priority, status, task, person_id) VALUES ('t1', 0, 'open', 'Find death record', 'p1')`);
+    await runSql(db, `INSERT INTO persons (id, sex, living, notes) VALUES ('p1', 'M', 1, 'pre-migration person')`);
+    await runSql(db, `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order) VALUES ('n1', 'p1', 'Anders', 'Persson', 'birth', 0)`);
+    await runSql(db, `INSERT INTO places (id, name, normalized_name) VALUES ('pl1', 'Stockholm', 'stockholm')`);
+    await runSql(db, `INSERT INTO events (id, event_type, description, place_id) VALUES ('e1', 'birth', 'born at home', 'pl1')`);
+    await runSql(db, `INSERT INTO events (id, event_type, description) VALUES ('e2', 'baptism', 'old type — should collapse to christening')`);
+    await runSql(db, `INSERT INTO sources (id, title) VALUES ('s1', 'Parish book')`);
+    await runSql(db, `INSERT INTO citations (id, source_id, page) VALUES ('c1', 's1', '12')`);
+    await runSql(db, `INSERT INTO groups (id, name) VALUES ('g1', 'Family')`);
+    await runSql(db, `INSERT INTO group_members (group_id, person_id) VALUES ('g1', 'p1')`);
+    await runSql(db, `INSERT INTO research_tasks (id, priority, status, task, person_id) VALUES ('t1', 0, 'open', 'Find death record', 'p1')`);
 
     // Run the full migration ladder.
-    initializeSchema(db);
+    await initializeSchema(db);
 
     // Every expected column from the fingerprint must now exist.
     for (const [table, expected] of Object.entries(EXPECTED_COLUMNS)) {
-      const actual = tableCols(db, table);
+      const actual = await tableCols(db, table);
       for (const col of expected) {
         expect(actual, `${table}.${col} missing after migration`).toContain(col);
       }
     }
 
     // Data preserved.
-    const persons = queryAll<{ id: string; sex: string; notes: string }>(db, 'SELECT id, sex, notes FROM persons');
+    const persons = await queryAll<{ id: string; sex: string; notes: string }>(db, 'SELECT id, sex, notes FROM persons');
     expect(persons).toEqual([{ id: 'p1', sex: 'M', notes: 'pre-migration person' }]);
 
     // `living` column must have been dropped (derived at read time now).
-    expect(tableCols(db, 'persons')).not.toContain('living');
+    expect(await tableCols(db, 'persons')).not.toContain('living');
 
     // `description` rename: events row must surface its old value as `notes`.
-    const events = queryAll<{ id: string; event_type: string; notes: string }>(
+    const events = await queryAll<{ id: string; event_type: string; notes: string }>(
       db, 'SELECT id, event_type, notes FROM events ORDER BY id'
     );
     expect(events[0]).toMatchObject({ id: 'e1', event_type: 'birth', notes: 'born at home' });
@@ -285,29 +285,29 @@ describe('schema migrations', () => {
     expect(events[1]).toMatchObject({ id: 'e2', event_type: 'christening' });
 
     // `group_members` must have been migrated to `group_links` and dropped.
-    const groupMembersExists = queryAll<{ name: string }>(
+    const groupMembersExists = await queryAll<{ name: string }>(
       db, `SELECT name FROM sqlite_master WHERE type='table' AND name='group_members'`
     );
     expect(groupMembersExists).toHaveLength(0);
-    const links = queryAll<{ group_id: string; entity_type: string; entity_id: string }>(
+    const links = await queryAll<{ group_id: string; entity_type: string; entity_id: string }>(
       db, `SELECT group_id, entity_type, entity_id FROM group_links`
     );
     expect(links).toEqual([{ group_id: 'g1', entity_type: 'person', entity_id: 'p1' }]);
 
     // `research_tasks.person_id` must have moved to task_links and the column dropped.
-    expect(tableCols(db, 'research_tasks')).not.toContain('person_id');
-    const taskLinks = queryAll<{ task_id: string; entity_type: string; entity_id: string }>(
+    expect(await tableCols(db, 'research_tasks')).not.toContain('person_id');
+    const taskLinks = await queryAll<{ task_id: string; entity_type: string; entity_id: string }>(
       db, `SELECT task_id, entity_type, entity_id FROM task_links`
     );
     expect(taskLinks).toEqual([{ task_id: 't1', entity_type: 'person', entity_id: 'p1' }]);
 
     // display_id backfill must have run.
-    const displayIds = queryAll<{ display_id: number | null }>(
+    const displayIds = await queryAll<{ display_id: number | null }>(
       db, 'SELECT display_id FROM persons WHERE id = ?', ['p1']
     );
     expect(displayIds[0].display_id).toBe(1);
 
     // Re-running initializeSchema on an already-migrated DB must be a no-op.
-    expect(() => initializeSchema(db)).not.toThrow();
+    expect(async () => await initializeSchema(db)).not.toThrow();
   });
 });

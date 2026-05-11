@@ -45,12 +45,12 @@ const fixture: Snapshot = {
   settings: { default_person_id: 'p1' },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   (globalThis as Record<string, unknown>).api = undefined;
   installStaticApiWith(fixture);
 });
 
-describe('static-api persons', () => {
+describe('static-api persons', async () => {
   it('listPage returns snapshot persons with names', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.persons.listPage(10, 0) as { persons: Array<{ given_name: string }>, total: number };
     expect(result.total).toBe(2);
@@ -82,7 +82,7 @@ describe('static-api persons', () => {
   });
 });
 
-describe('static-api places', () => {
+describe('static-api places', async () => {
   it('list returns all places', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.places.list() as Array<{ name: string }>;
     expect(result).toHaveLength(1);
@@ -90,7 +90,7 @@ describe('static-api places', () => {
   });
 });
 
-describe('static-api events', () => {
+describe('static-api events', async () => {
   it('getEventsForPerson returns events via participant join', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.events.forPerson('p1') as Array<{ event_type: string }>;
     expect(result).toHaveLength(1);
@@ -103,7 +103,7 @@ describe('static-api events', () => {
   });
 });
 
-describe('static-api relationships', () => {
+describe('static-api relationships', async () => {
   it('getOfPerson returns relationships where person is person1 or person2', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.relationships.getForPerson('p1') as Array<{ id: string }>;
     expect(result).toHaveLength(1);
@@ -117,7 +117,7 @@ describe('static-api relationships', () => {
   });
 });
 
-describe('static-api citations', () => {
+describe('static-api citations', async () => {
   it('getCitationsForPerson returns citations linked to that person', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.citations.forPerson('p1') as Array<{ id: string }>;
     expect(result).toHaveLength(1);
@@ -130,7 +130,7 @@ describe('static-api citations', () => {
   });
 });
 
-describe('static-api media', () => {
+describe('static-api media', async () => {
   it('getForEntity returns media merged with link fields', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.media.forEntity('person', 'p1') as Array<{ id: string; link_id: string; sort_order: number }>;
     expect(result).toHaveLength(1);
@@ -145,7 +145,7 @@ describe('static-api media', () => {
   });
 });
 
-describe('static-api search', () => {
+describe('static-api search', async () => {
   it('persons.search finds partial match via lunr', async () => {
     const result = await (globalThis as Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>).api.persons.search('Ann') as Array<{ given_name: string }>;
     expect(result.length).toBeGreaterThanOrEqual(1);

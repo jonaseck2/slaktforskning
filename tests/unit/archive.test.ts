@@ -5,16 +5,16 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { unzipSync } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
 import { createMedia, addMediaLink } from '../../src/api/media';
-import { exportArchive } from '../../src/api/archive_export';
-import { importArchive } from '../../src/api/archive_import';
+import { exportArchive, exportArchiveToBytes } from '../../src/api/archive_export';
+import { importArchive, importArchiveFromBytes } from '../../src/api/archive_import';
 import { createPerson } from '../../src/api/persons';
 import { createTestDb } from './helpers';
 
 let db: Database;
 let tmpDir: string;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'archive-test-'));
 });
 
@@ -22,13 +22,13 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-describe('archive export', () => {
-  it('creates a zip with a .ged file when no media exists', () => {
-    createPerson(db, { given_name: 'Anna', surname: 'Svensson', sex: 'F' });
+describe('archive export', async () => {
+  it('creates a zip with a .ged file when no media exists', async () => {
+    await createPerson(db, { given_name: 'Anna', surname: 'Svensson', sex: 'F' });
     const outputPath = path.join(tmpDir, 'test.zip');
     const dbDir = tmpDir; // no media dir needed
 
-    const report = exportArchive(db, outputPath, dbDir);
+    const report = await exportArchive(db, outputPath, dbDir);
 
     expect(fs.existsSync(outputPath)).toBe(true);
     expect(report.mediaCount).toBe(0);
@@ -44,27 +44,27 @@ describe('archive export', () => {
     expect(gedContent).toContain('Svensson');
   });
 
-  it('includes media files and rewrites paths in GEDCOM', () => {
-    const person = createPerson(db, { given_name: 'Erik', surname: 'Johansson' });
+  it('includes media files and rewrites paths in GEDCOM', async () => {
+    const person = await createPerson(db, { given_name: 'Erik', surname: 'Johansson' });
 
     // Create a media file on disk
     const mediaDir = path.join(tmpDir, 'media');
     fs.mkdirSync(mediaDir, { recursive: true });
     fs.writeFileSync(path.join(mediaDir, 'photo.jpg'), 'fake-jpeg-data');
 
-    const media = createMedia(db, {
+    const media = await createMedia(db, {
       file_ref: 'media/photo.jpg',
       title: 'Photo of Erik',
       format: 'jpg',
     });
-    addMediaLink(db, {
+    await addMediaLink(db, {
       media_id: media.id,
       entity_type: 'person',
       entity_id: person.id,
     });
 
     const outputPath = path.join(tmpDir, 'test-with-media.zip');
-    const report = exportArchive(db, outputPath, tmpDir);
+    const report = await exportArchive(db, outputPath, tmpDir);
 
     expect(report.mediaCount).toBe(1);
     expect(report.missingMedia).toEqual([]);
@@ -81,23 +81,23 @@ describe('archive export', () => {
     expect(gedContent).toContain('FILE media/photo.jpg');
   });
 
-  it('reports missing media files', () => {
-    createPerson(db, { given_name: 'Nils', surname: 'Nilsson' });
-    createMedia(db, {
+  it('reports missing media files', async () => {
+    await createPerson(db, { given_name: 'Nils', surname: 'Nilsson' });
+    await createMedia(db, {
       file_ref: 'media/missing.jpg',
       title: 'Missing photo',
       format: 'jpg',
     });
 
     const outputPath = path.join(tmpDir, 'test-missing.zip');
-    const report = exportArchive(db, outputPath, tmpDir);
+    const report = await exportArchive(db, outputPath, tmpDir);
 
     expect(report.mediaCount).toBe(0);
     expect(report.missingMedia).toEqual(['media/missing.jpg']);
   });
 
-  it('handles duplicate filenames', () => {
-    const person = createPerson(db, { given_name: 'Karin', surname: 'Larsson' });
+  it('handles duplicate filenames', async () => {
+    const person = await createPerson(db, { given_name: 'Karin', surname: 'Larsson' });
 
     // Create two media files with same name but different directories
     const dir1 = path.join(tmpDir, 'media');
@@ -107,13 +107,13 @@ describe('archive export', () => {
     fs.writeFileSync(path.join(dir1, 'photo.jpg'), 'data1');
     fs.writeFileSync(path.join(dir2, 'photo.jpg'), 'data2');
 
-    const m1 = createMedia(db, { file_ref: 'media/photo.jpg', title: 'Photo 1', format: 'jpg' });
-    const m2 = createMedia(db, { file_ref: 'other/photo.jpg', title: 'Photo 2', format: 'jpg' });
-    addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
-    addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
+    const m1 = await createMedia(db, { file_ref: 'media/photo.jpg', title: 'Photo 1', format: 'jpg' });
+    const m2 = await createMedia(db, { file_ref: 'other/photo.jpg', title: 'Photo 2', format: 'jpg' });
+    await addMediaLink(db, { media_id: m1.id, entity_type: 'person', entity_id: person.id });
+    await addMediaLink(db, { media_id: m2.id, entity_type: 'person', entity_id: person.id });
 
     const outputPath = path.join(tmpDir, 'test-dupes.zip');
-    const report = exportArchive(db, outputPath, tmpDir);
+    const report = await exportArchive(db, outputPath, tmpDir);
 
     expect(report.mediaCount).toBe(2);
 
@@ -125,33 +125,33 @@ describe('archive export', () => {
   });
 });
 
-describe('archive import', () => {
-  it('imports GEDCOM and media from a zip', () => {
+describe('archive import', async () => {
+  it('imports GEDCOM and media from a zip', async () => {
     // First export an archive
-    const person = createPerson(db, { given_name: 'Lisa', surname: 'Berg' });
+    const person = await createPerson(db, { given_name: 'Lisa', surname: 'Berg' });
     const mediaDir = path.join(tmpDir, 'media');
     fs.mkdirSync(mediaDir, { recursive: true });
     fs.writeFileSync(path.join(mediaDir, 'doc.png'), 'png-content');
 
-    const media = createMedia(db, {
+    const media = await createMedia(db, {
       file_ref: 'media/doc.png',
       title: 'Document',
       format: 'png',
     });
-    addMediaLink(db, {
+    await addMediaLink(db, {
       media_id: media.id,
       entity_type: 'person',
       entity_id: person.id,
     });
 
     const archivePath = path.join(tmpDir, 'roundtrip.zip');
-    exportArchive(db, archivePath, tmpDir);
+    await exportArchive(db, archivePath, tmpDir);
 
     // Now import into a fresh database
-    const db2 = createTestDb();
+    const db2 = await createTestDb();
     const importMediaDir = path.join(tmpDir, 'imported-media');
 
-    const report = importArchive(db2, archivePath, importMediaDir);
+    const report = await importArchive(db2, archivePath, importMediaDir);
 
     expect(report.gedcomReport.persons).toBe(1);
     expect(report.mediaImported).toBe(1);
@@ -162,18 +162,18 @@ describe('archive import', () => {
     expect(fs.readFileSync(path.join(importMediaDir, 'doc.png'), 'utf-8')).toBe('png-content');
   });
 
-  it('throws when archive contains no .ged file', () => {
+  it('throws when archive contains no .ged file', async () => {
     // Create a zip with no .ged file
     const { zipSync } = require('fflate');
     const zipData = zipSync({ 'readme.txt': new Uint8Array(Buffer.from('hello')) });
     const archivePath = path.join(tmpDir, 'no-ged.zip');
     fs.writeFileSync(archivePath, zipData);
 
-    const db2 = createTestDb();
-    expect(() => importArchive(db2, archivePath, path.join(tmpDir, 'media'))).toThrow('No .ged file found');
+    const db2 = await createTestDb();
+    await expect(importArchive(db2, archivePath, path.join(tmpDir, 'media'))).rejects.toThrow('No .ged file found');
   });
 
-  it('imports .ged file from a subdirectory in the archive', () => {
+  it('imports .ged file from a subdirectory in the archive', async () => {
     const { zipSync } = require('fflate');
     // Create a minimal GEDCOM in a subdirectory
     const gedContent = [
@@ -192,12 +192,12 @@ describe('archive import', () => {
     const archivePath = path.join(tmpDir, 'subdir-ged.zip');
     fs.writeFileSync(archivePath, zipData);
 
-    const db2 = createTestDb();
-    const report = importArchive(db2, archivePath, path.join(tmpDir, 'media'));
+    const db2 = await createTestDb();
+    const report = await importArchive(db2, archivePath, path.join(tmpDir, 'media'));
     expect(report.gedcomReport.persons).toBe(1);
   });
 
-  it('handles file collision in media directory', () => {
+  it('handles file collision in media directory', async () => {
     const { zipSync } = require('fflate');
     const gedContent = [
       '0 HEAD',
@@ -218,8 +218,8 @@ describe('archive import', () => {
     fs.mkdirSync(importMediaDir, { recursive: true });
     fs.writeFileSync(path.join(importMediaDir, 'photo.jpg'), 'existing-content');
 
-    const db2 = createTestDb();
-    const report = importArchive(db2, archivePath, importMediaDir);
+    const db2 = await createTestDb();
+    const report = await importArchive(db2, archivePath, importMediaDir);
     expect(report.mediaImported).toBe(1);
 
     // Original file should be preserved
@@ -230,5 +230,57 @@ describe('archive import', () => {
     const renamedFile = files.find(f => f !== 'photo.jpg')!;
     expect(renamedFile).toMatch(/^photo_\d+\.jpg$/);
     expect(fs.readFileSync(path.join(importMediaDir, renamedFile), 'utf-8')).toBe('new-content');
+  });
+});
+
+describe('archive bytes-in/out variants (Tauri path)', async () => {
+  it('round-trips entirely in memory via mediaReader/mediaWriter callbacks', async () => {
+    // Seed: one person + one media row with in-memory bytes (no fs).
+    const person = await createPerson(db, { given_name: 'Bytes', surname: 'Test' });
+    const media = await createMedia(db, {
+      file_ref: 'family-media/photo.jpg',
+      title: 'Photo',
+      format: 'jpg',
+    });
+    await addMediaLink(db, { media_id: media.id, entity_type: 'person', entity_id: person.id });
+
+    const memFiles = new Map<string, Uint8Array>();
+    memFiles.set('family-media/photo.jpg', new Uint8Array(Buffer.from('jpeg-bytes')));
+
+    // Export: use a reader that pulls from the in-memory map.
+    const { zipBytes, report: exportReport } = await exportArchiveToBytes(
+      db,
+      async (relPath) => memFiles.get(relPath) ?? null,
+    );
+    expect(exportReport.mediaCount).toBe(1);
+    expect(exportReport.missingMedia).toEqual([]);
+    expect(zipBytes.length).toBeGreaterThan(0);
+
+    // Import into a fresh DB using a writer that captures media bytes.
+    const db2 = await createTestDb();
+    const writtenFiles = new Map<string, Uint8Array>();
+    const importReport = await importArchiveFromBytes(
+      db2,
+      zipBytes,
+      'family-media',
+      async (filename, bytes) => { writtenFiles.set(filename, bytes); },
+    );
+    expect(importReport.gedcomReport.persons).toBe(1);
+    expect(importReport.mediaImported).toBe(1);
+    expect(importReport.mediaSkipped).toEqual([]);
+
+    // The writer received the photo bytes, byte-identical to what the
+    // reader supplied at export time.
+    const written = writtenFiles.get('photo.jpg');
+    expect(written).toBeDefined();
+    expect(Buffer.from(written!).toString()).toBe('jpeg-bytes');
+
+    // file_ref rows in the imported DB point at the supplied media folder
+    // name (not the in-archive `media/...` shape).
+    const rows = (db2 as unknown as { all: (sql: string) => Array<{ file_ref: string }> }).all(
+      "SELECT file_ref FROM media WHERE file_ref IS NOT NULL",
+    );
+    expect(rows.length).toBe(1);
+    expect(rows[0].file_ref).toBe('family-media/photo.jpg');
   });
 });

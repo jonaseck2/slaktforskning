@@ -18,7 +18,7 @@ export interface ImportContext {
   options: ImportOptions | undefined;
   isGenney: boolean;
   isHolger: boolean;
-  resolvePlaceFn: (db: Database, name: string) => Place;
+  resolvePlaceFn: (db: Database, name: string) => Promise<Place>;
 
   // ── Maps built & consumed across phases ──────────────────────────────────
   noteMap: Map<string, string>;                         // xref → note text

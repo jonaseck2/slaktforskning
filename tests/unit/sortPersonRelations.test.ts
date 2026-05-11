@@ -116,8 +116,8 @@ function run(rows: RelationRow[], locale = 'sv'): RelationsSortGroup[] {
 
 // ── tests ────────────────────────────────────────────────────────────────
 
-describe('sortPersonRelations', () => {
-  it('orders biological father before mother (and bio before adoptive)', () => {
+describe('sortPersonRelations', async () => {
+  it('orders biological father before mother (and bio before adoptive)', async () => {
     const rows = [
       // Insertion order intentionally jumbled
       parent({ id: 'r-mom-bio', parentId: 'mom1', parentSex: 'F', subtype: 'biological' }),
@@ -136,7 +136,7 @@ describe('sortPersonRelations', () => {
     expect(parents[3]).toMatchObject({ kind: 'parent', subtype: 'adopted', sex: 'F' });
   });
 
-  it('omits empty parent buckets entirely (no foster placeholder)', () => {
+  it('omits empty parent buckets entirely (no foster placeholder)', async () => {
     const rows = [
       parent({ id: 'r-dad-bio', parentId: 'dad1', parentSex: 'M', subtype: 'biological' }),
     ];
@@ -145,7 +145,7 @@ describe('sortPersonRelations', () => {
     expect(groups.length).toBe(1);
   });
 
-  it('orders partners chronologically; null start_date sinks to bottom', () => {
+  it('orders partners chronologically; null start_date sinks to bottom', async () => {
     const rows = [
       partner({ id: 'r-p3', partnerId: 'p3', startDate: null }),
       partner({ id: 'r-p1', partnerId: 'p1', startDate: '1850-06-01' }),
@@ -156,7 +156,7 @@ describe('sortPersonRelations', () => {
     expect(groups.map(g => (g as { row: RelationRow }).row.id)).toEqual(['r-p2', 'r-p1', 'r-p3', 'r-p4']);
   });
 
-  it('groups children under the partner who produced them, oldest first', () => {
+  it('groups children under the partner who produced them, oldest first', async () => {
     const rows: RelationRow[] = [
       partner({ id: 'r-p1', partnerId: 'p1', startDate: '1840-01-01' }),
       partner({ id: 'r-p2', partnerId: 'p2', startDate: '1860-01-01' }),
@@ -176,7 +176,7 @@ describe('sortPersonRelations', () => {
     expect(partnerGroups[1].children.map(c => c.id)).toEqual(['r-c3']);
   });
 
-  it('places children with null/unrecognised other parent in the children-no-partner bucket', () => {
+  it('places children with null/unrecognised other parent in the children-no-partner bucket', async () => {
     const rows: RelationRow[] = [
       partner({ id: 'r-p1', partnerId: 'p1', startDate: '1840-01-01' }),
       child({ id: 'r-c1', childId: 'c1', otherParentId: 'p1', birthDate: '1841-04-04' }),
@@ -194,7 +194,7 @@ describe('sortPersonRelations', () => {
     }
   });
 
-  it('emits the children-no-partner bucket AFTER all partner rows (last partner-like entry)', () => {
+  it('emits the children-no-partner bucket AFTER all partner rows (last partner-like entry)', async () => {
     const rows: RelationRow[] = [
       partner({ id: 'r-p1', partnerId: 'p1', startDate: '1840-01-01' }),
       child({ id: 'r-c1', childId: 'c1', otherParentId: 'p1', birthDate: '1841-04-04' }),
@@ -210,7 +210,7 @@ describe('sortPersonRelations', () => {
     expect(orphanIdx).toBeLessThan(otherIdx);
   });
 
-  it('emits godparents (family-flavoured) before group memberships (social)', () => {
+  it('emits godparents (family-flavoured) before group memberships (social)', async () => {
     const rows: RelationRow[] = [
       other({ id: 'r-other', type: 'other', otherId: 'x1', name: 'Albin', subtype: 'colleague' }),
       other({ id: 'r-gp', type: 'godparent', otherId: 'gp1', name: 'Bertil' }),
@@ -221,7 +221,7 @@ describe('sortPersonRelations', () => {
     expect(others[1].row.id).toBe('r-other');
   });
 
-  it('sub-sorts other relations alphabetically using Swedish collation (å, ä, ö after z)', () => {
+  it('sub-sorts other relations alphabetically using Swedish collation (å, ä, ö after z)', async () => {
     const rows: RelationRow[] = [
       other({ id: 'r-zorro', type: 'godparent', otherId: 'z1', name: 'Zorro' }),
       other({ id: 'r-anna', type: 'godparent', otherId: 'a1', name: 'Anna' }),
@@ -234,7 +234,7 @@ describe('sortPersonRelations', () => {
     expect(others.map(o => o.row.other.display_name)).toEqual(['Anna', 'Zorro', 'Åsa', 'Örjan']);
   });
 
-  it('sub-sorts other relations using English collation (Å folds into A)', () => {
+  it('sub-sorts other relations using English collation (Å folds into A)', async () => {
     const rows: RelationRow[] = [
       other({ id: 'r-zorro', type: 'godparent', otherId: 'z1', name: 'Zorro' }),
       other({ id: 'r-asa', type: 'godparent', otherId: 'aa1', name: 'Åsa' }),
@@ -249,7 +249,7 @@ describe('sortPersonRelations', () => {
     expect(names.indexOf('Anna')).toBeLessThan(names.indexOf('Åsa'));
   });
 
-  it('produces a stable, fully-ordered result for a complex fixture (snapshot of order)', () => {
+  it('produces a stable, fully-ordered result for a complex fixture (snapshot of order)', async () => {
     const rows: RelationRow[] = [
       // Parents
       parent({ id: 'r-dad-bio', parentId: 'dad', parentSex: 'M', subtype: 'biological', name: 'Bo' }),
@@ -290,7 +290,7 @@ describe('sortPersonRelations', () => {
     expect(p2.children.map(c => c.id)).toEqual(['r-c3']);
   });
 
-  it('is deterministic — same input, same output, run twice', () => {
+  it('is deterministic — same input, same output, run twice', async () => {
     const rows: RelationRow[] = [
       parent({ id: 'r1', parentId: 'mom', parentSex: 'F', subtype: 'biological' }),
       parent({ id: 'r2', parentId: 'dad', parentSex: 'M', subtype: 'biological' }),

@@ -10,15 +10,15 @@ import { createCaptureServer, callTool, makeCtx } from './helpers/mcpHarness';
 let db: ReturnType<typeof createTestDb>;
 let tools: ReturnType<typeof createCaptureServer>['tools'];
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
   const cap = createCaptureServer();
   registerResearchTools(cap.server, makeCtx(db));
   tools = cap.tools;
 });
 
-describe('get_research_gaps', () => {
-  it('registers the tool', () => {
+describe('get_research_gaps', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('get_research_gaps')).toBe(true);
   });
 
@@ -30,7 +30,7 @@ describe('get_research_gaps', () => {
   });
 
   it('returns research gaps object with correct shape for existing person', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Karl', surname: 'Larsson' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Karl', surname: 'Larsson' });
 
     const result = await callTool<{
       person_id: string;
@@ -50,7 +50,7 @@ describe('get_research_gaps', () => {
   });
 
   it('reports missing_birth and missing_parents as true for a person with no events', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Svensson' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Svensson' });
 
     const result = await callTool<{
       missing_birth: boolean;
@@ -62,9 +62,9 @@ describe('get_research_gaps', () => {
   });
 
   it('reports missing_birth as false when a birth event exists', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Nilsson' });
-    const event = createEvent(db, { event_type: 'birth', date_original: '1850' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Nilsson' });
+    const event = await createEvent(db, { event_type: 'birth', date_original: '1850' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
     const result = await callTool<{ missing_birth: boolean }>(tools, 'get_research_gaps', {
       person_id: person.id,
@@ -74,9 +74,9 @@ describe('get_research_gaps', () => {
   });
 
   it('reports events_without_places for events that have no place', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Maja', surname: 'Berg' });
-    const event = createEvent(db, { event_type: 'baptism', date_original: '1870' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Maja', surname: 'Berg' });
+    const event = await createEvent(db, { event_type: 'baptism', date_original: '1870' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
     const result = await callTool<{ events_without_places: Array<{ id: string }> }>(
       tools,
@@ -89,8 +89,8 @@ describe('get_research_gaps', () => {
   });
 });
 
-describe('add_research_task', () => {
-  it('registers the tool', () => {
+describe('add_research_task', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('add_research_task')).toBe(true);
   });
 
@@ -139,7 +139,7 @@ describe('add_research_task', () => {
   });
 
   it('creates task linked to person_ids and returns links array', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Nils', surname: 'Holm' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Nils', surname: 'Holm' });
 
     const result = await callTool<{
       id: string;
@@ -161,7 +161,7 @@ describe('add_research_task', () => {
   });
 
   it('creates task with multiple entity links (person + place)', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Stina', surname: 'Ekman' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Stina', surname: 'Ekman' });
     // Insert a place directly
     const placeId = 'test-place-id-' + Date.now();
     db.prepare(
@@ -203,8 +203,8 @@ describe('add_research_task', () => {
   });
 });
 
-describe('update_research_task', () => {
-  it('registers the tool', () => {
+describe('update_research_task', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('update_research_task')).toBe(true);
   });
 
@@ -217,7 +217,7 @@ describe('update_research_task', () => {
   });
 
   it('updates status and returns updated task', async () => {
-    const task = createResearchTask(db, { task: 'Check census', status: 'open' });
+    const task = await createResearchTask(db, { task: 'Check census', status: 'open' });
 
     const result = await callTool<{ id: string; status: string }>(
       tools,
@@ -234,7 +234,7 @@ describe('update_research_task', () => {
   });
 
   it('updates notes and result', async () => {
-    const task = createResearchTask(db, { task: 'Find will', status: 'open' });
+    const task = await createResearchTask(db, { task: 'Find will', status: 'open' });
 
     const result = await callTool<{ notes: string; result: string }>(
       tools,
@@ -255,7 +255,7 @@ describe('update_research_task', () => {
   });
 
   it('updates priority without touching other fields', async () => {
-    const task = createResearchTask(db, {
+    const task = await createResearchTask(db, {
       task: 'Verify date',
       status: 'in_progress',
       priority: 5,
@@ -274,7 +274,7 @@ describe('update_research_task', () => {
   });
 
   it('updates task description', async () => {
-    const task = createResearchTask(db, { task: 'Old description', status: 'open' });
+    const task = await createResearchTask(db, { task: 'Old description', status: 'open' });
 
     const result = await callTool<{ task: string }>(tools, 'update_research_task', {
       id: task.id,
@@ -288,8 +288,8 @@ describe('update_research_task', () => {
   });
 
   it('leaves other tasks unchanged when updating one task', async () => {
-    const task1 = createResearchTask(db, { task: 'Task 1', status: 'open', priority: 1 });
-    const task2 = createResearchTask(db, { task: 'Task 2', status: 'open', priority: 2 });
+    const task1 = await createResearchTask(db, { task: 'Task 1', status: 'open', priority: 1 });
+    const task2 = await createResearchTask(db, { task: 'Task 2', status: 'open', priority: 2 });
 
     await callTool(tools, 'update_research_task', {
       id: task1.id,
@@ -302,8 +302,8 @@ describe('update_research_task', () => {
   });
 });
 
-describe('run_checks', () => {
-  it('registers the tool', () => {
+describe('run_checks', async () => {
+  it('registers the tool', async () => {
     expect(tools.has('run_checks')).toBe(true);
   });
 
@@ -313,7 +313,7 @@ describe('run_checks', () => {
   });
 
   it('runChecksForPerson branch (with person_id) returns an array', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Single', surname: 'Person' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Single', surname: 'Person' });
     const result = await callTool<unknown>(tools, 'run_checks', { person_id: person.id });
     expect(Array.isArray(result)).toBe(true);
   });
@@ -327,27 +327,27 @@ describe('run_checks', () => {
 
   it('run_checks without person_id surfaces issues from seeded data', async () => {
     // A birth event with no place is a quality issue surfaced by runAllChecks.
-    const person = createPerson(db, { sex: 'M', given_name: 'Lars', surname: 'Olsson' });
-    const birth = createEvent(db, { event_type: 'birth', date_original: '1800' });
-    addEventParticipant(db, { event_id: birth.id, person_id: person.id, role: 'primary' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Lars', surname: 'Olsson' });
+    const birth = await createEvent(db, { event_type: 'birth', date_original: '1800' });
+    await addEventParticipant(db, { event_id: birth.id, person_id: person.id, role: 'primary' });
 
     const result = await callTool<unknown[]>(tools, 'run_checks', {});
     expect(Array.isArray(result)).toBe(true);
   });
 
   it('run_checks with person_id scopes to that person', async () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Britta', surname: 'Lund' });
-    const event = createEvent(db, { event_type: 'birth', date_original: '1900' });
-    addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
+    const person = await createPerson(db, { sex: 'F', given_name: 'Britta', surname: 'Lund' });
+    const event = await createEvent(db, { event_type: 'birth', date_original: '1900' });
+    await addEventParticipant(db, { event_id: event.id, person_id: person.id, role: 'primary' });
 
     const result = await callTool<unknown[]>(tools, 'run_checks', { person_id: person.id });
     expect(Array.isArray(result)).toBe(true);
   });
 });
 
-describe('research_tasks DB cascade', () => {
+describe('research_tasks DB cascade', async () => {
   it('task links are deleted when task is deleted', async () => {
-    const person = createPerson(db, { sex: 'M', given_name: 'Olof', surname: 'Strand' });
+    const person = await createPerson(db, { sex: 'M', given_name: 'Olof', surname: 'Strand' });
     const result = await callTool<{ id: string }>(tools, 'add_research_task', {
       task: 'Cascading task',
       person_ids: [person.id],
@@ -366,11 +366,11 @@ describe('research_tasks DB cascade', () => {
   });
 });
 
-describe('add_research_task linked to existing task via addTaskLink API', () => {
-  it('getTaskLinks returns correct links after addTaskLink', () => {
-    const person = createPerson(db, { sex: 'F', given_name: 'Sigrid', surname: 'Ek' });
-    const task = createResearchTask(db, { task: 'Check parish records', status: 'open' });
-    addTaskLink(db, task.id, 'person', person.id);
+describe('add_research_task linked to existing task via addTaskLink API', async () => {
+  it('getTaskLinks returns correct links after addTaskLink', async () => {
+    const person = await createPerson(db, { sex: 'F', given_name: 'Sigrid', surname: 'Ek' });
+    const task = await createResearchTask(db, { task: 'Check parish records', status: 'open' });
+    await addTaskLink(db, task.id, 'person', person.id);
 
     const linkRows = db.prepare('SELECT * FROM task_links WHERE task_id = ?').all([task.id]) as any[];
     expect(linkRows).toHaveLength(1);

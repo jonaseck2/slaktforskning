@@ -78,16 +78,16 @@ function latestDate(rows: EventRow[]): EventRow | null {
  * death event>. Year-only dates are accepted (they parse via parseLooseDate);
  * comparison granularity is handled at flagging time.
  */
-function loadLifespanBounds(db: Database): {
+async function loadLifespanBounds(db: Database): Promise<{
   earliestBirth: Map<string, EventRow>;
   latestDeath: Map<string, EventRow>;
-} {
+}> {
   // Pull all birth and death events with non-null date_value, regardless of
   // date_type. The plan deliberately includes 'about', 'before', 'after',
   // 'between', 'calculated' — the warning fires at the same threshold as
   // exact dates because a contradictory math result is itself worth flagging.
   // 'unknown' is excluded (date_value will normally be null anyway).
-  const rows = queryAll<{ person_id: string; event_id: string; event_type: string; date_value: string }>(
+  const rows = await queryAll<{ person_id: string; event_id: string; event_type: string; date_value: string }>(
     db,
     `SELECT ep.person_id, e.id AS event_id, e.event_type, e.date_value
      FROM event_participants ep
@@ -136,8 +136,8 @@ function loadLifespanBounds(db: Database): {
  * roles — witnesses, godparents, officiants — not just the primary
  * participant.
  */
-function loadParticipantEvents(db: Database): PersonEventRow[] {
-  return queryAll<PersonEventRow>(
+async function loadParticipantEvents(db: Database): Promise<PersonEventRow[]> {
+  return await queryAll<PersonEventRow>(
     db,
     `SELECT ep.person_id, e.id AS event_id, e.event_type, e.date_value
      FROM event_participants ep
@@ -150,9 +150,9 @@ function loadParticipantEvents(db: Database): PersonEventRow[] {
 /**
  * Run the check across the whole DB. Used by the registry-driven runAll.
  */
-export function checkEventOutsideLifespan(db: Database): CheckResult[] {
-  const { earliestBirth, latestDeath } = loadLifespanBounds(db);
-  const events = loadParticipantEvents(db);
+export async function checkEventOutsideLifespan(db: Database): Promise<CheckResult[]> {
+  const { earliestBirth, latestDeath } = await loadLifespanBounds(db);
+  const events = await loadParticipantEvents(db);
   const results: CheckResult[] = [];
 
   for (const ev of events) {
@@ -219,23 +219,23 @@ export function checkEventOutsideLifespan(db: Database): CheckResult[] {
  * Returns one row per (participant × subkind) where the inconsistency
  * fires.
  */
-export function checkEventOutsideLifespanForEvent(db: Database, eventId: string): CheckResult[] {
-  const eventRow = queryAll<{ id: string; event_type: string; date_value: string | null; date_type: string }>(
+export async function checkEventOutsideLifespanForEvent(db: Database, eventId: string): Promise<CheckResult[]> {
+  const eventRow = (await queryAll<{ id: string; event_type: string; date_value: string | null; date_type: string }>(
     db,
     `SELECT id, event_type, date_value, date_type FROM events WHERE id = ?`,
     [eventId],
-  )[0];
+  ))[0];
   if (!eventRow || !eventRow.date_value || eventRow.date_type === 'unknown') return [];
   if (!parseLooseDate(eventRow.date_value)) return [];
 
-  const participants = queryAll<{ person_id: string }>(
+  const participants = await queryAll<{ person_id: string }>(
     db,
     `SELECT person_id FROM event_participants WHERE event_id = ?`,
     [eventId],
   );
   if (participants.length === 0) return [];
 
-  const { earliestBirth, latestDeath } = loadLifespanBounds(db);
+  const { earliestBirth, latestDeath } = await loadLifespanBounds(db);
   const results: CheckResult[] = [];
 
   for (const p of participants) {

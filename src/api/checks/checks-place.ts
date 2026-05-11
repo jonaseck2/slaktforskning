@@ -12,24 +12,24 @@ const LAN_LETTER_SET: Set<string> = new Set(
   Object.values(LAN_LETTER_CODES).flatMap(letters => letters.map(l => l.toUpperCase())),
 );
 
-export function checkOrphanedPlace(db: Database): CheckResult[] {
+export async function checkOrphanedPlace(db: Database): Promise<CheckResult[]> {
   // Four bulk set-membership queries instead of four correlated NOT EXISTS
   // subqueries (which went O(places × references) on large DBs).
-  const places = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+  const places = await queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
   const usedByEvents = new Set(
-    queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM events WHERE place_id IS NOT NULL').map(r => r.id),
+    (await queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM events WHERE place_id IS NOT NULL')).map(r => r.id),
   );
   const usedByCitations = new Set(
-    queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM citations WHERE place_id IS NOT NULL').map(r => r.id),
+    (await queryAll<{ id: string }>(db, 'SELECT DISTINCT place_id AS id FROM citations WHERE place_id IS NOT NULL')).map(r => r.id),
   );
   const usedByChildPlaces = new Set(
-    queryAll<{ id: string }>(db, 'SELECT DISTINCT parent_place_id AS id FROM places WHERE parent_place_id IS NOT NULL').map(r => r.id),
+    (await queryAll<{ id: string }>(db, 'SELECT DISTINCT parent_place_id AS id FROM places WHERE parent_place_id IS NOT NULL')).map(r => r.id),
   );
   const usedByMedia = new Set(
-    queryAll<{ id: string }>(
+    (await queryAll<{ id: string }>(
       db,
       "SELECT DISTINCT entity_id AS id FROM media_links WHERE entity_type = 'place'",
-    ).map(r => r.id),
+    )).map(r => r.id),
   );
   const rows = places.filter(
     p =>
@@ -48,8 +48,8 @@ export function checkOrphanedPlace(db: Database): CheckResult[] {
   }));
 }
 
-export function checkCircularPlaceHierarchy(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; parent_place_id: string | null; name: string }>(db,
+export async function checkCircularPlaceHierarchy(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; parent_place_id: string | null; name: string }>(db,
     'SELECT id, parent_place_id, name FROM places'
   );
   const parentOf = new Map<string, string | null>();
@@ -100,8 +100,8 @@ export function checkCircularPlaceHierarchy(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkPlaceCoordinatesInvalid(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string; latitude: number; longitude: number }>(db, `
+export async function checkPlaceCoordinatesInvalid(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; name: string; latitude: number; longitude: number }>(db, `
     SELECT id, name, latitude, longitude FROM places
     WHERE latitude IS NOT NULL AND longitude IS NOT NULL
   `);
@@ -132,8 +132,8 @@ export function checkPlaceCoordinatesInvalid(db: Database): CheckResult[] {
  * Detects when a date string was entered into the place name field.
  * Matches: 1736, 1736-11, 1736-11-11, 1736 11 11, 1736/11/11, 1736.11.11.
  */
-export function checkPlaceNameLooksLikeDate(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+export async function checkPlaceNameLooksLikeDate(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
   const datePattern = /^\d{4}([-\s/.]\d{1,2}){0,2}$/;
   const results: CheckResult[] = [];
   for (const r of rows) {
@@ -163,8 +163,8 @@ export function checkPlaceNameLooksLikeDate(db: Database): CheckResult[] {
  * Skips clean cases where the parens close properly — `Stockholm (A)` and
  * `Gotland (I)` should NOT match.
  */
-export function checkPlaceNameBrokenLansbokstav(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
+export async function checkPlaceNameBrokenLansbokstav(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; name: string }>(db, 'SELECT id, name FROM places');
   // Captures a 1-2 letter länsbokstav after `(`, followed by `I` or `|`
   // and then either end-of-string, comma, or whitespace — but NOT `)`,
   // which would mean the parens already close cleanly. Clean cases like
@@ -195,8 +195,8 @@ export function checkPlaceNameBrokenLansbokstav(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkPlaceDatesInverted(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string; date_from: string; date_to: string }>(db, `
+export async function checkPlaceDatesInverted(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; name: string; date_from: string; date_to: string }>(db, `
     SELECT id, name, date_from, date_to FROM places
     WHERE date_from IS NOT NULL AND date_to IS NOT NULL AND date_from > date_to
   `);

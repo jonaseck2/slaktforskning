@@ -103,7 +103,7 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     // gedcom
     const text = readGedcomFile(args.file_path);
     const tree = parseGedcom(text);
-    importGedcom(db, tree, {});
+    await importGedcom(db, tree, {});
     return { content: [{ type: 'text', text: JSON.stringify({ imported: true, file_path: args.file_path, format: 'gedcom' }) }] };
   });
 
@@ -113,7 +113,7 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
       version: z.enum(['5.5.1', '7.0']).optional().describe('GEDCOM version (default: 5.5.1)'),
     },
   }, async (args) => {
-    const { ged, report } = exportGedcom(getDb(), args.version ?? '5.5.1');
+    const { ged, report } = await exportGedcom(getDb(), args.version ?? '5.5.1');
     return { content: [{ type: 'text', text: JSON.stringify({ report, gedcom_length: ged.length, ged }, null, 2) }] };
   });
 
@@ -125,7 +125,7 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     },
   }, async (args) => {
     const dbDir = nodePath.dirname(getDbPath());
-    const report = exportArchive(getDb(), args.output_path, dbDir, { gedcomVersion: args.gedcom_version });
+    const report = await exportArchive(getDb(), args.output_path, dbDir, { gedcomVersion: args.gedcom_version });
     return { content: [{ type: 'text', text: JSON.stringify({ output_path: args.output_path, report }, null, 2) }] };
   });
 
@@ -136,7 +136,7 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     },
   }, async (args) => {
     const mediaDir = getMediaDir(getDbPath());
-    const report = importArchive(getDb(), args.archive_path, mediaDir);
+    const report = await importArchive(getDb(), args.archive_path, mediaDir);
     return { content: [{ type: 'text', text: JSON.stringify(report, null, 2) }] };
   });
 
@@ -161,7 +161,7 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     }
     getDb().close();
     const newDb = new Database(args.path);
-    initializeSchema(newDb);
+    await initializeSchema(newDb);
     setDb(newDb);
     setDbPath(args.path);
     return { content: [{ type: 'text', text: JSON.stringify({ switched: true, path: args.path }, null, 2) }] };

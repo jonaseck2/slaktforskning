@@ -126,7 +126,7 @@ defineChannel({
       try {
         const text = readGedcomFile(gedPath);
         const tree = parseGedcom(text);
-        const report = importGedcom(db, tree, {
+        const report = await importGedcom(db, tree, {
           mediaDir: opts.mediaDir,
           profile: opts.profile,
         });
@@ -270,7 +270,7 @@ defineChannel({
     }
     return withImportLifecycle('archive', async () => {
       const dbPath = getWorkerDbPath();
-      const report = importArchive(db, opts.archivePath, opts.mediaDir);
+      const report = await importArchive(db, opts.archivePath, opts.mediaDir);
       await consolidateMediaFolder(db, dbPath);
       return { imported: true, filePath: opts.archivePath, report };
     });
@@ -294,7 +294,7 @@ defineChannel({
     const dbPath = getWorkerDbPath();
     const dbDir = path.dirname(dbPath);
     const version = opts.gedcomVersion ?? '5.5.1';
-    const report = exportArchive(db, opts.filePath, dbDir, { gedcomVersion: version });
+    const report = await exportArchive(db, opts.filePath, dbDir, { gedcomVersion: version });
     return { exported: true, filePath: opts.filePath, report };
   },
 });
@@ -312,7 +312,7 @@ defineChannel({
   mutating: false,
   handler: async (db, opts: { version?: '5.5.1' | '7.0'; exportOptions?: ExportOptions }) => {
     const version = opts?.version === '7.0' ? '7.0' : '5.5.1';
-    const { ged, report } = exportGedcom(db, version, opts?.exportOptions);
+    const { ged, report } = await exportGedcom(db, version, opts?.exportOptions);
     return { ged, report };
   },
 });
@@ -344,19 +344,19 @@ defineChannel({
     let defaultName: string;
     switch (opts.entityType) {
       case 'persons':
-        csv = exportPersonsCsv(db, csvOptions);
+        csv = await exportPersonsCsv(db, csvOptions);
         defaultName = 'persons.csv';
         break;
       case 'events':
-        csv = exportEventsCsv(db, csvOptions);
+        csv = await exportEventsCsv(db, csvOptions);
         defaultName = 'events.csv';
         break;
       case 'sources':
-        csv = exportSourcesCsv(db, csvOptions);
+        csv = await exportSourcesCsv(db, csvOptions);
         defaultName = 'sources.csv';
         break;
       case 'places':
-        csv = exportPlacesCsv(db, csvOptions);
+        csv = await exportPlacesCsv(db, csvOptions);
         defaultName = 'places.csv';
         break;
       default:

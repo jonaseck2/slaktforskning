@@ -22,8 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import FilterChips from '../components/ui/FilterChips.vue';
 import DatabaseView from './DatabaseView.vue';
 import DefaultsView from './DefaultsView.vue';
@@ -32,7 +33,19 @@ import GazetteersView from './GazetteersView.vue';
 
 const { t } = useI18n();
 
-const activeTab = ref('database');
+const VALID_TABS = ['database', 'defaults', 'link-rules', 'gazetteers'] as const;
+type Tab = typeof VALID_TABS[number];
+const route = useRoute();
+const router = useRouter();
+function tabFromRoute(): Tab {
+  const q = route.query.tab;
+  return (typeof q === 'string' && (VALID_TABS as readonly string[]).includes(q)) ? q as Tab : 'database';
+}
+const activeTab = ref<Tab>(tabFromRoute());
+watch(() => route.query.tab, () => { activeTab.value = tabFromRoute(); });
+watch(activeTab, (t) => {
+  if (route.query.tab !== t) router.replace({ query: { ...route.query, tab: t } });
+});
 
 const tabOptions = computed(() => [
   { value: 'database', label: t('settings.tabs.database') },

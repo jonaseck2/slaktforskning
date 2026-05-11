@@ -46,8 +46,8 @@ const YEAR_PATTERN = /^(\d{4})/;
  * →renderer hops on every preview refresh, blocking the worker thread the
  * whole time. This function instead returns just counts + a sorted sample.
  */
-export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult {
-  const scopeSet = computeScope(db, opts.scope);
+export async function buildPreview(db: Database, opts: PreviewOptions): Promise<PreviewResult> {
+  const scopeSet = await computeScope(db, opts.scope);
 
   if (scopeSet.size === 0) {
     return {
@@ -61,12 +61,12 @@ export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult 
   // — same rationale as buildSnapshot.
   const scopeIds = [...scopeSet];
   const placeholders = scopeIds.map(() => '?').join(',');
-  const rawPersonIds = scopeIds.length === 0 ? [] : queryAll<{ id: string }>(
+  const rawPersonIds = scopeIds.length === 0 ? [] : await queryAll<{ id: string }>(
     db,
     `SELECT id FROM persons WHERE id IN (${placeholders})`,
     scopeIds,
   );
-  const derivation = loadLivingDerivation(db);
+  const derivation = await loadLivingDerivation(db);
   const inScopeAll = rawPersonIds.map(p => ({ id: p.id, living: isLivingDerived(p.id, derivation) }));
 
   const finalPersons = opts.options.excludeLiving
@@ -78,7 +78,7 @@ export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult 
     ? finalPersons.filter(p => p.living).length
     : 0;
 
-  const nameRows = queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(
+  const nameRows = await queryAll<{ person_id: string; given_name: string | null; surname: string | null }>(
     db,
     `SELECT person_id, given_name, surname FROM person_names ORDER BY person_id, sort_order`,
   );
@@ -89,7 +89,7 @@ export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult 
     namesByPerson.set(n.person_id, { given: n.given_name ?? '', surname: n.surname ?? '' });
   }
 
-  const yearRows = queryAll<{ person_id: string; event_type: string; date_value: string | null }>(
+  const yearRows = await queryAll<{ person_id: string; event_type: string; date_value: string | null }>(
     db,
     `SELECT ep.person_id, e.event_type, e.date_value
      FROM events e
@@ -109,7 +109,7 @@ export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult 
     yearsByPerson.set(r.person_id, cur);
   }
 
-  const eventPlaceRows = queryAll<{ person_id: string; place_id: string }>(
+  const eventPlaceRows = await queryAll<{ person_id: string; place_id: string }>(
     db,
     `SELECT ep.person_id, e.place_id
      FROM events e
@@ -121,7 +121,7 @@ export function buildPreview(db: Database, opts: PreviewOptions): PreviewResult 
     if (finalPersonIds.has(r.person_id)) placeIds.add(r.place_id);
   }
 
-  const mediaLinkRows = queryAll<{ entity_id: string; media_id: string }>(
+  const mediaLinkRows = await queryAll<{ entity_id: string; media_id: string }>(
     db,
     `SELECT entity_id, media_id FROM media_links WHERE entity_type = 'person'`,
   );

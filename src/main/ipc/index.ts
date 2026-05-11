@@ -11,7 +11,7 @@ import { registerUtilityHandlers } from './main-only';
 import { registerWebsiteExportHandlers } from './website-export';
 import { registerOnboardingHandlers } from './onboarding';
 
-export function registerIpcHandlers(): void {
+export async function registerIpcHandlers(): Promise<void> {
   // Start the DB worker — fires and forgets; callWorker queues until worker signals ready
   const dbPath = getCurrentDatabasePath();
   startWorker(dbPath);

@@ -41,7 +41,7 @@ function installMockApi(): MockApi {
   return api;
 }
 
-describe('fetchPersonNode — photoUrl', () => {
+describe('fetchPersonNode — photoUrl', async () => {
   beforeEach(() => {
     _resetPhotoCacheForTests();
     vi.mocked(cropImageToDataUrl).mockClear();

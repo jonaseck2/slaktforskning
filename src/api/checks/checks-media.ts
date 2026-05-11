@@ -3,8 +3,8 @@ import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { dateDefinitelyAfter } from './check-utils';
 
-export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResult[] {
-  const rows = queryAll<{ id: string; file_ref: string }>(db, `
+export async function checkMediaFileMissing(db: Database, _dbDir?: string): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; file_ref: string }>(db, `
     SELECT id, file_ref FROM media
     WHERE is_missing = 1 AND file_ref IS NOT NULL AND file_ref != ''
   `);
@@ -19,8 +19,8 @@ export function checkMediaFileMissing(db: Database, _dbDir?: string): CheckResul
   }));
 }
 
-export function checkOrphanedMedia(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; title: string | null }>(db, `
+export async function checkOrphanedMedia(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; title: string | null }>(db, `
     SELECT m.id, m.title
     FROM media m
     WHERE NOT EXISTS (SELECT 1 FROM media_links ml WHERE ml.media_id = m.id)
@@ -35,8 +35,8 @@ export function checkOrphanedMedia(db: Database): CheckResult[] {
   }));
 }
 
-export function checkMediaRegionOutOfBounds(db: Database): CheckResult[] {
-  const rows = queryAll<{
+export async function checkMediaRegionOutOfBounds(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{
     id: string; media_id: string; x: number; y: number; width: number; height: number;
   }>(db, `
     SELECT id, media_id, x, y, width, height FROM media_regions
@@ -52,8 +52,8 @@ export function checkMediaRegionOutOfBounds(db: Database): CheckResult[] {
   }));
 }
 
-export function checkPhotoAfterSubjectDeath(db: Database): CheckResult[] {
-  const rows = queryAll<{
+export async function checkPhotoAfterSubjectDeath(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{
     media_id: string; person_id: string; event_date: string; death_date: string;
   }>(db, `
     SELECT mr.media_id, mr.person_id,
@@ -94,8 +94,8 @@ export function checkPhotoAfterSubjectDeath(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkPhotoBeforeSubjectBirth(db: Database): CheckResult[] {
-  const rows = queryAll<{
+export async function checkPhotoBeforeSubjectBirth(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{
     media_id: string; person_id: string; event_date: string; birth_date: string;
   }>(db, `
     SELECT mr.media_id, mr.person_id,

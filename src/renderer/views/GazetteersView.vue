@@ -102,7 +102,7 @@
                 {{ gaz.bundled ? $t('gazetteers.bundled') : $t('gazetteers.imported') }}
               </span>
               <button class="btn-sm" @click="handleExport(gaz.id, gaz.name)">{{ $t('gazetteers.exportBtn') }}</button>
-              <button v-if="!gaz.bundled" class="btn-delete" @click="confirmDelete(gaz)">{{ $t('common.delete') }}</button>
+              <button v-if="!gaz.bundled" class="btn-sm btn-delete" @click="confirmDelete(gaz)">{{ $t('common.delete') }}</button>
             </div>
           </div>
           <div v-if="gaz.description" class="gazetteer-card-desc">{{ gaz.description }}</div>

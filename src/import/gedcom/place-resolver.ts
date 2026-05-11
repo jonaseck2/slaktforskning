@@ -14,7 +14,7 @@ import { getChild } from './node-utils';
  * preserve the existing values via updatePlace's merge logic.
  * Address fields are guarded to prevent overwriting existing place data.
  */
-export function updatePlaceFromNode(db: Database, placeId: string, placNode: GedcomNode): void {
+export async function updatePlaceFromNode(db: Database, placeId: string, placNode: GedcomNode): Promise<void> {
   const mapNode = getChild(placNode, 'MAP');
   let lat: number | null = null;
   let lon: number | null = null;
@@ -47,9 +47,9 @@ export function updatePlaceFromNode(db: Database, placeId: string, placNode: Ged
       !place_type && !notes && !date_from && !date_to) return;
 
   // Get the current place to avoid overwriting existing address fields
-  const place = getPlace(db, placeId);
+  const place = await getPlace(db, placeId);
 
-  updatePlace(db, placeId, {
+  await updatePlace(db, placeId, {
     ...(lat != null && { latitude: lat }),
     ...(lon != null && { longitude: lon }),
     ...(street && !place?.street && { street }),
@@ -71,12 +71,12 @@ export function updatePlaceFromNode(db: Database, placeId: string, placNode: Ged
  * - Always applies additional data from sub-tags (MAP, ADDR, etc.) to the resolved place.
  * Updates placeIdMap with old->new UUID mapping for later use in _PLAC records.
  */
-export function resolvePlace(
+export async function resolvePlace(
   db: Database,
   placNode: GedcomNode,
-  resolvePlaceFn: (db: Database, name: string) => Place,
+  resolvePlaceFn: (db: Database, name: string) => Promise<Place>,
   placeIdMap: Map<string, string>,
-): Place | null {
+): Promise<Place | null> {
   const oldPlaceId = getChild(placNode, '_PLAC_ID')?.value;
   let place: Place | null = null;
 
@@ -84,20 +84,20 @@ export function resolvePlace(
     // Check if we already resolved this old ID in this import session
     const mappedId = placeIdMap.get(oldPlaceId);
     if (mappedId) {
-      place = getPlace(db, mappedId);
+      place = await getPlace(db, mappedId);
     } else {
       // Same-DB roundtrip: UUID exists verbatim in this DB
-      place = getPlace(db, oldPlaceId);
+      place = await getPlace(db, oldPlaceId);
       if (place) placeIdMap.set(oldPlaceId, oldPlaceId);
     }
   }
 
   if (!place && placNode.value) {
-    place = resolvePlaceFn(db, placNode.value);
+    place = await resolvePlaceFn(db, placNode.value);
     if (oldPlaceId && place) placeIdMap.set(oldPlaceId, place.id);
   }
 
-  if (place) updatePlaceFromNode(db, place.id, placNode);
+  if (place) await updatePlaceFromNode(db, place.id, placNode);
 
   return place;
 }

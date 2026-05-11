@@ -43,20 +43,20 @@ describe('import:holgerRun worker channel', () => {
   });
 });
 
-describe('import:holgerRun handler — end-to-end against in-memory DB', () => {
+describe('import:holgerRun handler — end-to-end against in-memory DB', async () => {
   let tmpDir: string;
   let db: ReturnType<typeof createTestDb>;
   let importFlag: boolean;
   const broadcasts: Array<{ type: string; topic?: string; payload?: unknown }> = [];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holger-channel-test-'));
-    db = createTestDb();
+    db = await createTestDb();
     importFlag = false;
     broadcasts.length = 0;
 
     // Wire worker-state accessors. The fake dbPath points at tmpDir so
-    // getMediaDir() and consolidateMediaFolder() resolve to a real (empty) dir.
+    // getMediaDir() and await consolidateMediaFolder() resolve to a real (empty) dir.
     const fakeDbPath = path.join(tmpDir, 'family.db');
     _setWorkerStateAccessors({
       getDbPath: () => fakeDbPath,

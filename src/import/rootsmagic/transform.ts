@@ -160,7 +160,7 @@ export function emptyRootsMagicSummary(): RootsMagicImportSummary {
  * @param ourDb     destination — our app's SQLite database
  * @param rmDb      source — the RootsMagic .rmgc file opened as SQLite
  */
-export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagicImportSummary {
+export async function transformRootsMagic(ourDb: Database, rmDb: Database): Promise<RootsMagicImportSummary> {
   const summary = emptyRootsMagicSummary();
 
   // ── Phase 1: build lookups ─────────────────────────────────────────────
@@ -168,13 +168,13 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   // event_type to write. The OwnerType column distinguishes person vs
   // family events with the same FactTypeID (yes, the column overload
   // is unfortunate — but that's the schema).
-  const factTypes = queryAll<RmFactType>(rmDb,
+  const factTypes = await queryAll<RmFactType>(rmDb,
     'SELECT FactTypeID, OwnerType, Name, GedcomTag FROM FactTypeTable'
   );
   const factTypeById = new Map<number, RmFactType>(factTypes.map(f => [f.FactTypeID, f]));
 
   // PlaceTable: build a RM PlaceID → our Place row map.
-  const rmPlaces = queryAll<RmPlace>(rmDb,
+  const rmPlaces = await queryAll<RmPlace>(rmDb,
     'SELECT PlaceID, Name, Latitude, Longitude, Note FROM PlaceTable'
   );
   const placeMap = new Map<number, string>();   // RM PlaceID → our place.id
@@ -183,14 +183,14 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     // RootsMagic prefixes places with a 5-char abbrev (e.g. "ABA - Aba Nigeria").
     // Strip if present and the suffix has the same root.
     const cleanName = rp.Name.replace(/^[A-Z0-9]{2,5}\s*-\s*/, '').trim() || rp.Name.trim();
-    const place = findOrCreatePlace(ourDb, cleanName);
+    const place = await findOrCreatePlace(ourDb, cleanName);
     placeMap.set(rp.PlaceID, place.id);
     // Update lat/lon if RootsMagic has them and we don't (lossy: lat/lon are
     // stored as integers × 10⁷ in RootsMagic).
     if (rp.Latitude !== 0 || rp.Longitude !== 0) {
       const lat = rp.Latitude / 1e7;
       const lng = rp.Longitude / 1e7;
-      runSql(ourDb,
+      await runSql(ourDb,
         'UPDATE places SET latitude = COALESCE(latitude, ?), longitude = COALESCE(longitude, ?) WHERE id = ?',
         [lat, lng, place.id]
       );
@@ -200,13 +200,13 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
 
   // SourceTable: copy each source. RootsMagic stores them with a free-text
   // Name plus optional ActualText (transcription), Comments, RefNumber.
-  const rmSources = queryAll<RmSource>(rmDb,
+  const rmSources = await queryAll<RmSource>(rmDb,
     'SELECT SourceID, Name, RefNumber, ActualText, Comments FROM SourceTable'
   );
   const sourceMap = new Map<number, string>();
   for (const rs of rmSources) {
     if (!rs.Name?.trim()) continue;
-    const src = createSource(ourDb, {
+    const src = await createSource(ourDb, {
       title: rs.Name.trim(),
       author: '',
       publication_info: '',
@@ -220,7 +220,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 2: persons ───────────────────────────────────────────────────
-  const rmPersons = queryAll<RmPerson>(rmDb,
+  const rmPersons = await queryAll<RmPerson>(rmDb,
     'SELECT PersonID, UniqueID, Sex, Living, Note FROM PersonTable'
   );
   const personMap = new Map<number, string>();
@@ -229,13 +229,13 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     // Names land in phase 3; allowNameless covers persons whose only name
     // row hasn't been seen yet at this point. (Living is derived at read
     // time from death/burial/cremation events; not a stored column.)
-    const person = createPerson(ourDb, { sex, notes: rp.Note ?? '' }, { allowNameless: true });
+    const person = await createPerson(ourDb, { sex, notes: rp.Note ?? '' }, { allowNameless: true });
     personMap.set(rp.PersonID, person.id);
 
     // Carry the RootsMagic UniqueID over as an external identifier so a
     // future re-export keeps the cross-system handle.
     if (rp.UniqueID?.trim()) {
-      addPersonIdentifier(ourDb, person.id, {
+      await addPersonIdentifier(ourDb, person.id, {
         identifier_type: 'uid',
         identifier_value: rp.UniqueID.trim(),
       });
@@ -244,14 +244,14 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 3: names ─────────────────────────────────────────────────────
-  const rmNames = queryAll<RmName>(rmDb,
+  const rmNames = await queryAll<RmName>(rmDb,
     'SELECT NameID, OwnerID, Surname, Given, Prefix, Suffix, Nickname, NameType, IsPrimary FROM NameTable ORDER BY OwnerID, IsPrimary DESC, NameID'
   );
   for (const n of rmNames) {
     const personId = personMap.get(n.OwnerID);
     if (!personId) continue;
     const nameType = mapNameType(n.NameType);
-    addPersonName(ourDb, personId, {
+    await addPersonName(ourDb, personId, {
       given_name: n.Given || '',
       surname: n.Surname || '',
       name_type: nameType,
@@ -263,7 +263,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 4: families & parent-child relationships ─────────────────────
-  const rmFamilies = queryAll<RmFamily>(rmDb,
+  const rmFamilies = await queryAll<RmFamily>(rmDb,
     'SELECT FamilyID, FatherID, MotherID, Note FROM FamilyTable'
   );
   const familyToCoupleId = new Map<number, string>();   // FamilyID → couple relationship.id
@@ -272,7 +272,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     const motherId = f.MotherID ? personMap.get(f.MotherID) : undefined;
     if (!fatherId && !motherId) continue;
     if (fatherId && motherId) {
-      const couple = createRelationship(ourDb, {
+      const couple = await createRelationship(ourDb, {
         type: 'couple',
         person1_id: fatherId,
         person2_id: motherId,
@@ -284,7 +284,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ChildTable rows define each parent_child link with a relationship type.
-  const rmChildren = queryAll<RmChild>(rmDb,
+  const rmChildren = await queryAll<RmChild>(rmDb,
     'SELECT ChildID, FamilyID, RelFather, RelMother FROM ChildTable'
   );
   for (const c of rmChildren) {
@@ -294,7 +294,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     if (family.FatherID) {
       const fatherId = personMap.get(family.FatherID);
       if (fatherId) {
-        createRelationship(ourDb, {
+        await createRelationship(ourDb, {
           type: 'parent_child',
           person1_id: fatherId,
           person2_id: childId,
@@ -306,7 +306,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     if (family.MotherID) {
       const motherId = personMap.get(family.MotherID);
       if (motherId) {
-        createRelationship(ourDb, {
+        await createRelationship(ourDb, {
           type: 'parent_child',
           person1_id: motherId,
           person2_id: childId,
@@ -318,7 +318,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 5: events ────────────────────────────────────────────────────
-  const rmEvents = queryAll<RmEvent>(rmDb,
+  const rmEvents = await queryAll<RmEvent>(rmDb,
     'SELECT EventID, EventType, OwnerType, OwnerID, PlaceID, Date, Details, Note FROM EventTable'
   );
   const eventMap = new Map<number, string>();   // RM EventID → our event.id
@@ -336,7 +336,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
           : undefined;
     if (!ownerOurId) continue;
 
-    const created = createEvent(ourDb, {
+    const created = await createEvent(ourDb, {
       event_type: eventType,
       date_type: parsed.dateType,
       date_value: parsed.dateValue,
@@ -350,7 +350,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     eventMap.set(ev.EventID, created.id);
 
     if (ev.OwnerType === 0) {
-      addEventParticipant(ourDb, {
+      await addEventParticipant(ourDb, {
         event_id: created.id,
         person_id: ownerOurId,
         role: 'primary',
@@ -360,14 +360,14 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // WitnessTable: extra event participants (witness, godparent, officiant).
-  const rmWitnesses = queryAll<RmWitness>(rmDb,
+  const rmWitnesses = await queryAll<RmWitness>(rmDb,
     'SELECT WitnessID, EventID, PersonID, Role FROM WitnessTable'
   );
   for (const w of rmWitnesses) {
     const eventId = eventMap.get(w.EventID);
     const personId = personMap.get(w.PersonID);
     if (!eventId || !personId) continue;
-    addEventParticipant(ourDb, {
+    await addEventParticipant(ourDb, {
       event_id: eventId,
       person_id: personId,
       role: 'witness',
@@ -375,7 +375,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 6: citations ─────────────────────────────────────────────────
-  const rmCitations = queryAll<RmCitation>(rmDb,
+  const rmCitations = await queryAll<RmCitation>(rmDb,
     'SELECT CitationID, OwnerType, OwnerID, SourceID, Quality, Comments, ActualText, RefNumber FROM CitationTable'
   );
   for (const c of rmCitations) {
@@ -401,7 +401,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     }
 
     const quality = c.Quality ? Math.min(3, Math.max(0, parseInt(c.Quality, 10) || 0)) : 2;
-    createCitation(ourDb, {
+    await createCitation(ourDb, {
       source_id: sourceId,
       page: c.RefNumber || '',
       confidence: quality as 0 | 1 | 2 | 3,
@@ -413,7 +413,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
   }
 
   // ── Phase 7: media ─────────────────────────────────────────────────────
-  const rmMedia = queryAll<RmMedia>(rmDb,
+  const rmMedia = await queryAll<RmMedia>(rmDb,
     'SELECT MediaID, MediaPath, MediaFile, Caption, Description FROM MultimediaTable'
   );
   const mediaMap = new Map<number, string>();
@@ -422,7 +422,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
       ? `${m.MediaPath.replace(/\\/g, '/').replace(/\/$/, '')}/${m.MediaFile}`
       : (m.MediaFile ?? null);
     if (!fileRef && !m.Caption) continue;
-    const mediaRow = createMedia(ourDb, {
+    const mediaRow = await createMedia(ourDb, {
       title: m.Caption || m.MediaFile || '',
       file_ref: fileRef,
       notes: m.Description ?? '',
@@ -431,7 +431,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     summary.media++;
   }
 
-  const rmMediaLinks = queryAll<RmMediaLink>(rmDb,
+  const rmMediaLinks = await queryAll<RmMediaLink>(rmDb,
     'SELECT LinkID, MediaID, OwnerType, OwnerID, IsPrimary, SortOrder, Caption FROM MediaLinkTable'
   );
   for (const ml of rmMediaLinks) {
@@ -445,7 +445,7 @@ export function transformRootsMagic(ourDb: Database, rmDb: Database): RootsMagic
     else if (ml.OwnerType === 3) { entityType = 'source'; entityId = sourceMap.get(ml.OwnerID); }
     else if (ml.OwnerType === 5) { entityType = 'place'; entityId = placeMap.get(ml.OwnerID); }
     if (!entityType || !entityId) continue;
-    addMediaLink(ourDb, {
+    await addMediaLink(ourDb, {
       media_id: mediaOurId,
       entity_type: entityType,
       entity_id: entityId,

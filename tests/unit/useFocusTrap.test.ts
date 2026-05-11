@@ -29,20 +29,20 @@ function makeContainer(...children: HTMLElement[]): HTMLDivElement {
   return div;
 }
 
-describe('useFocusTrap', () => {
-  beforeEach(() => {
+describe('useFocusTrap', async () => {
+  beforeEach(async () => {
     document.body.replaceChildren();
     mountedCb = null;
     unmountedCb = null;
   });
 
-  it('returns nothing useful (no activate/deactivate exports)', () => {
+  it('returns nothing useful (no activate/deactivate exports)', async () => {
     const containerRef = ref<HTMLElement | null>(null);
     const result = useFocusTrap(containerRef);
     expect(result).toBeUndefined();
   });
 
-  it('focuses first focusable element on mount', () => {
+  it('focuses first focusable element on mount', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const container = makeContainer(btn1, btn2);
@@ -54,7 +54,7 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(btn1);
   });
 
-  it('focuses [autofocus] element on mount when present', () => {
+  it('focuses [autofocus] element on mount when present', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     btn2.setAttribute('autofocus', '');
@@ -67,14 +67,14 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(btn2);
   });
 
-  it('does nothing if container is null', () => {
+  it('does nothing if container is null', async () => {
     const containerRef = ref<HTMLElement | null>(null);
     useFocusTrap(containerRef);
     expect(() => mountedCb!()).not.toThrow();
     expect(() => unmountedCb!()).not.toThrow();
   });
 
-  it('does not focus disabled buttons', () => {
+  it('does not focus disabled buttons', async () => {
     const disabled = makeButton(true);
     const enabled = makeButton();
     const container = makeContainer(disabled, enabled);
@@ -86,7 +86,7 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(enabled);
   });
 
-  it('wraps focus to last element on Shift+Tab from first', () => {
+  it('wraps focus to last element on Shift+Tab from first', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const btn3 = makeButton();
@@ -109,7 +109,7 @@ describe('useFocusTrap', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('wraps focus to first element on Tab from last', () => {
+  it('wraps focus to first element on Tab from last', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const btn3 = makeButton();
@@ -132,7 +132,7 @@ describe('useFocusTrap', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('does not intercept Tab when not at boundary', () => {
+  it('does not intercept Tab when not at boundary', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const btn3 = makeButton();
@@ -154,7 +154,7 @@ describe('useFocusTrap', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it('single focusable element: Tab wraps back to itself', () => {
+  it('single focusable element: Tab wraps back to itself', async () => {
     const btn = makeButton();
     const container = makeContainer(btn);
     const containerRef = ref<HTMLElement | null>(container);
@@ -184,7 +184,7 @@ describe('useFocusTrap', () => {
     expect(shiftTabEvent.defaultPrevented).toBe(true);
   });
 
-  it('restores focus to previously focused element on unmount', () => {
+  it('restores focus to previously focused element on unmount', async () => {
     const outsideBtn = makeButton();
     document.body.appendChild(outsideBtn);
     outsideBtn.focus();
@@ -201,7 +201,7 @@ describe('useFocusTrap', () => {
     expect(document.activeElement).toBe(outsideBtn);
   });
 
-  it('removes keydown listener on unmount', () => {
+  it('removes keydown listener on unmount', async () => {
     const btn1 = makeButton();
     const btn2 = makeButton();
     const container = makeContainer(btn1, btn2);

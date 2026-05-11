@@ -3,23 +3,23 @@ import { getChannel } from '../../src/shared/channels';
 import { createPerson } from '../../src/api/persons';
 import { createTestDb } from './helpers';
 
-describe('website:previewSnapshot worker channel — registration', () => {
-  it('is registered as a worker channel and is non-mutating', () => {
+describe('website:previewSnapshot worker channel — registration', async () => {
+  it('is registered as a worker channel and is non-mutating', async () => {
     const ch = getChannel('website:previewSnapshot');
     expect(ch).toBeDefined();
     expect(ch!.thread).toBe('worker');
     expect(ch!.mutating).toBe(false);
   });
 
-  it('has a handler function', () => {
+  it('has a handler function', async () => {
     const ch = getChannel('website:previewSnapshot');
     expect(typeof (ch as { handler?: unknown }).handler).toBe('function');
   });
 });
 
-describe('website:previewSnapshot handler — end-to-end against in-memory DB', () => {
+describe('website:previewSnapshot handler — end-to-end against in-memory DB', async () => {
   it('returns totals + sample for an empty scope', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const ch = getChannel('website:previewSnapshot');
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,8 +34,8 @@ describe('website:previewSnapshot handler — end-to-end against in-memory DB', 
   });
 
   it('counts a seeded person', async () => {
-    const db = createTestDb();
-    createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Test' });
+    const db = await createTestDb();
+    await createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Test' });
     const ch = getChannel('website:previewSnapshot');
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

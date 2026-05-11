@@ -6,33 +6,33 @@ defineChannel({
   name: 'events:create',
   thread: 'worker',
   mutating: true,
-  handler: (db, data: Parameters<typeof events.createEvent>[1]) =>
+  handler: async (db, data: Parameters<typeof events.createEvent>[1]) =>
     uw.createEventUndo(db, data),
 });
 
 defineChannel({
   name: 'events:get',
   thread: 'worker',
-  handler: (db, id: string) => events.getEvent(db, id),
+  handler: async (db, id: string) => await events.getEvent(db, id),
 });
 
 defineChannel({
   name: 'events:forPerson',
   thread: 'worker',
-  handler: (db, personId: string) => events.getEventsForPerson(db, personId),
+  handler: async (db, personId: string) => await events.getEventsForPerson(db, personId),
 });
 
 defineChannel({
   name: 'events:forRelationship',
   thread: 'worker',
-  handler: (db, relationshipId: string) => events.getEventsForRelationship(db, relationshipId),
+  handler: async (db, relationshipId: string) => await events.getEventsForRelationship(db, relationshipId),
 });
 
 defineChannel({
   name: 'events:update',
   thread: 'worker',
   mutating: true,
-  handler: (db, id: string, data: Parameters<typeof events.updateEvent>[2]) =>
+  handler: async (db, id: string, data: Parameters<typeof events.updateEvent>[2]) =>
     uw.updateEventUndo(db, id, data),
 });
 
@@ -40,11 +40,11 @@ defineChannel({
   name: 'events:delete',
   thread: 'worker',
   mutating: true,
-  handler: (db, id: string) => uw.deleteEventUndo(db, id),
+  handler: async (db, id: string) => uw.deleteEventUndo(db, id),
 });
 
 defineChannel({
   name: 'events:forPlace',
   thread: 'worker',
-  handler: (db, placeId: string) => events.getEventsForPlace(db, placeId),
+  handler: async (db, placeId: string) => await events.getEventsForPlace(db, placeId),
 });

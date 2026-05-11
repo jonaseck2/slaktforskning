@@ -1,8 +1,21 @@
 /**
  * Shared E2E fixture: AppDriver class + process lifecycle helpers.
  *
- * Each gui-*.test.ts file imports these to start its own Electron instance
- * on a dedicated port, enabling parallel test execution.
+ * Each gui-*.test.ts file imports these to start its own Tauri instance on a
+ * dedicated port, enabling parallel test execution.
+ *
+ * Tauri bridge architecture (see src-tauri/src/ui_server.rs):
+ *   GET  /            — health probe
+ *   GET  /db_path     — current rusqlite-open DB path
+ *   POST /eval        — run a JS expression in the renderer; response is the
+ *                       raw JS value (or `{ "__error": "..." }` on throw).
+ *                       NOT wrapped in `{ result: ... }` like the Electron
+ *                       /execute_js endpoint was.
+ *   POST /screenshot  — native window capture (returns `{ data: <base64> }`)
+ *
+ * AppDriver primitives (`getDom`, `click`, `fillInput`, `navigate`,
+ * `setLocale`, `executeJs`, `screenshot`) all run on top of these four
+ * endpoints — most of them ship a JS string through `/eval`.
  */
 import { spawn, execFileSync, ChildProcess } from 'node:child_process';
 import path from 'node:path';
@@ -78,33 +91,63 @@ export interface AppInstance {
 }
 
 /**
- * Spawn electron-forge start with a temp DB and custom UI port.
- * Returns when the UI HTTP server is accepting connections.
- * Throws if the app doesn't start within 90 seconds.
- */
-/**
- * Resolve the path to the packaged Electron binary for the current platform.
+ * Resolve the path to the packaged Tauri binary for the current platform.
  * Throws with a helpful message if the binary is missing — the e2e script is
- * expected to run `npm run package` before invoking Playwright.
+ * expected to run `npm run tauri:build` (or the test-friendly
+ * `npm run tauri:build:test` once it lands) before invoking Playwright.
  */
 export function packagedBinaryPath(): string {
-  const { platform, arch } = process;
-  const outDir = path.join(PROJECT_ROOT, 'out', `Släktforskning-${platform}-${arch}`);
-  // Inner binary follows packagerConfig.executableName ('slaktforskning').
-  const binary = platform === 'darwin'
-    ? path.join(outDir, 'Släktforskning.app', 'Contents', 'MacOS', 'slaktforskning')
-    : platform === 'win32'
-      ? path.join(outDir, 'slaktforskning.exe')
-      : path.join(outDir, 'slaktforskning');
+  const { platform } = process;
+  const targetDir = path.join(PROJECT_ROOT, 'src-tauri', 'target', 'release');
+
+  let binary: string;
+  if (platform === 'darwin') {
+    // The Tauri bundle ships two .app variants — `Släktforskning (Tauri).app`
+    // (productName-derived) and `tauri-spike.app` (executable name fallback).
+    // The first one is what users install; the second mirrors the inner
+    // executable used by both. Inner binary is `tauri-spike` per
+    // src-tauri/Cargo.toml `[[bin]]`.
+    binary = path.join(
+      targetDir, 'bundle', 'macos',
+      'Släktforskning (Tauri).app', 'Contents', 'MacOS', 'tauri-spike',
+    );
+  } else if (platform === 'linux') {
+    // Linux ships AppImage. Look at the appimage dir; fall back to the raw
+    // binary in `target/release/` if the AppImage hasn't been built yet
+    // (handy for `cargo build --release` runs).
+    const appimageDir = path.join(targetDir, 'bundle', 'appimage');
+    if (fs.existsSync(appimageDir)) {
+      const entries = fs.readdirSync(appimageDir).filter(f => f.endsWith('.AppImage'));
+      if (entries.length > 0) {
+        binary = path.join(appimageDir, entries[0]);
+      } else {
+        binary = path.join(targetDir, 'tauri-spike');
+      }
+    } else {
+      binary = path.join(targetDir, 'tauri-spike');
+    }
+  } else if (platform === 'win32') {
+    binary = path.join(targetDir, 'tauri-spike.exe');
+  } else {
+    throw new Error(`Unsupported platform for Tauri e2e: ${platform}`);
+  }
+
   if (!fs.existsSync(binary)) {
     throw new Error(
-      `Packaged Electron binary not found at:\n  ${binary}\n` +
-      `Run \`npm run package\` first (the test:e2e script does this automatically).`
+      `Packaged Tauri binary not found at:\n  ${binary}\n` +
+      `Run \`npm run tauri:build\` first ` +
+      `(eventually replaced by \`npm run tauri:build:test\` — see the test-migration plan).`
     );
   }
   return binary;
 }
 
+/**
+ * Spawn the packaged Tauri binary with a temp DB and custom UI port.
+ * Returns when the UI HTTP server is accepting connections AND the Vue app
+ * has mounted (`window.__vue_router` set by the renderer entry point).
+ * Throws if the app doesn't start within ~50 seconds (30 + 20).
+ */
 export async function startApp(port: number, tag = ''): Promise<AppInstance> {
   killPort(port);
 
@@ -114,23 +157,20 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
   );
 
   const isWindows = process.platform === 'win32';
-  // Spawn the packaged Electron binary directly. Tests run against the same
+  // Spawn the packaged Tauri binary directly. Tests run against the same
   // build users get, with no Vite dev-server contention. On POSIX, detached
   // forms a process group so killProcessGroup(-pid) kills all children.
   const spawnCmd  = packagedBinaryPath();
-  // Linux GitHub runners ship without root-owned chrome-sandbox helper, so
-  // the SUID sandbox aborts startup with mode-4755 errors. Tests don't need
-  // browser sandboxing — disable on Linux only to keep macOS/Windows real.
-  const spawnArgs: string[] = process.platform === 'linux'
-    ? ['--no-sandbox', '--disable-setuid-sandbox']
-    : [];
+  const spawnArgs: string[] = [];
   const proc = spawn(spawnCmd, spawnArgs, {
     cwd: PROJECT_ROOT,
     env: {
       ...process.env,
+      // Honoured by `default_db_path` in src-tauri/src/lib.rs — overrides the
+      // per-user `app_data_dir/family.db` so each test run is isolated.
       SLAKTFORSKNING_DB: dbPath,
+      // Honoured by `ui_server.rs::spawn` — picks the bridge port.
       SLAKTFORSKNING_UI_PORT: String(port),
-      SLAKTFORSKNING_NO_FOCUS: '1',
     },
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: !isWindows,
@@ -142,8 +182,9 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
   const baseUrl = `http://127.0.0.1:${port}`;
 
-  // Phase 1: wait for the HTTP server to accept connections.
-  // Packaged binary launches in ~1–3s — no Vite dev-server compile.
+  // Phase 1: wait for the HTTP server to accept connections. Tauri's
+  // `ui_server.rs` exposes `GET /` as the health probe — returns
+  // `{ ok: true, server: "tauri-ui-bridge" }` once axum is bound.
   const httpReady = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] App did not start in time. Output:\n`, output);
@@ -152,7 +193,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
     const poll = async () => {
       try {
-        const res = await fetch(`${baseUrl}/dom`, {
+        const res = await fetch(`${baseUrl}/`, {
           signal: AbortSignal.timeout(2000),
         });
         if (res.ok) {
@@ -166,7 +207,7 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       setTimeout(poll, 250);
     };
 
-    // Brief delay before first poll so Electron has time to bind the UI server.
+    // Brief delay before first poll so Tauri has time to bind the UI server.
     setTimeout(poll, 500);
 
     proc.on('error', () => { clearTimeout(timeout); resolve(false); });
@@ -177,12 +218,14 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
     await killProcessGroup(proc);
     const tail = output.slice(-2000).trim();
     throw new Error(
-      `Electron app on port ${port} did not start in time (30s). ` +
+      `Tauri app on port ${port} did not start in time (30s). ` +
       `Last 2000 chars of output:\n${tail || '(no output captured)'}`
     );
   }
 
-  // Phase 2: wait for the Vue app to mount (window.__vue_router set by renderer)
+  // Phase 2: wait for the Vue app to mount (window.__vue_router set by renderer).
+  // Tauri's POST /eval returns the raw JS value (or { __error: "..." } on throw),
+  // not the Electron-style { result: <value> } wrapper.
   const ready = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
       console.error(`[e2e:${port}] Vue did not initialize in time.`);
@@ -191,14 +234,14 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
 
     const poll = async () => {
       try {
-        const res = await fetch(`${baseUrl}/execute_js`, {
+        const res = await fetch(`${baseUrl}/eval`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: '!!window.__vue_router' }),
+          body: JSON.stringify({ script: '!!window.__vue_router' }),
           signal: AbortSignal.timeout(5000),
         });
-        const body = (await res.json()) as { result?: boolean };
-        if (body.result === true) {
+        const body = (await res.json()) as boolean | { __error?: string } | null;
+        if (body === true) {
           clearTimeout(timeout);
           resolve(true);
           return;
@@ -241,7 +284,13 @@ export async function teardownApp(instance: AppInstance | undefined): Promise<vo
 }
 
 // ---------------------------------------------------------------------------
-// AppDriver — thin wrapper over the ui-server HTTP bridge
+// AppDriver — thin wrapper over the Tauri ui-bridge HTTP surface
+//
+// Every primitive (getDom, click, fillInput, navigate, setLocale) is
+// implemented on top of `executeJs` (= POST /eval). The Tauri bridge
+// exposes only /eval, /screenshot, /db_path, and /. We push DOM/click/fill
+// logic into the renderer as JS strings, mirroring the same retries and
+// settle semantics the Electron-era endpoints had.
 // ---------------------------------------------------------------------------
 
 export class AppDriver {
@@ -278,49 +327,72 @@ export class AppDriver {
 
   /** Get the full rendered HTML of the current view. */
   async getDom(): Promise<string> {
-    const res = await fetch(`${this.baseUrl}/dom`, {
-      signal: AbortSignal.timeout(20_000),
-    });
-    return res.text();
+    return await this.executeJs<string>('document.documentElement.outerHTML');
   }
 
   /** Push a Vue Router path (e.g. "/", "/places", "/search?q=foo"). */
   async navigate(routePath: string): Promise<void> {
-    await this.post('/navigate', { path: routePath });
+    await this.executeJs(
+      `window.__vue_router.push(${JSON.stringify(routePath)})`,
+    );
     await this.settle();
   }
 
   /** Click an element by CSS selector. Polls until the element exists (up to timeoutMs). */
   async click(selector: string, timeoutMs = 8000): Promise<void> {
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-      const result = (await this.post('/click', { selector })) as {
-        ok?: boolean;
-        error?: string;
-      };
-      if (result.ok) {
-        await this.settle();
-        return;
-      }
-      // Element not found — retry after a short delay
-      await new Promise((r) => setTimeout(r, 100));
+    // The poll runs entirely in the renderer — one /eval round-trip instead
+    // of one per attempt. Returns { ok: true } on hit, { ok: false } on
+    // deadline. Throws to surface the same error message as the old shape.
+    const result = await this.executeJs<{ ok: boolean; error?: string }>(`
+      new Promise((resolve) => {
+        const sel = ${JSON.stringify(selector)};
+        const deadline = Date.now() + ${timeoutMs};
+        const tick = () => {
+          const el = document.querySelector(sel);
+          if (el && typeof el.click === 'function') {
+            try { el.click(); resolve({ ok: true }); }
+            catch (e) { resolve({ ok: false, error: String(e && e.message || e) }); }
+            return;
+          }
+          if (Date.now() >= deadline) {
+            resolve({ ok: false, error: 'Element not found after ' + ${timeoutMs} + 'ms' });
+            return;
+          }
+          setTimeout(tick, 100);
+        };
+        tick();
+      })
+    `);
+    if (!result?.ok) {
+      throw new Error(`click(${selector}): ${result?.error ?? 'unknown error'}`);
     }
-    throw new Error(`click(${selector}): Element not found after ${timeoutMs}ms`);
+    await this.settle();
   }
 
-  /** Run JavaScript in the renderer and return the serialized result. */
+  /**
+   * Run JavaScript in the renderer and return the serialized result.
+   *
+   * The Tauri /eval endpoint returns the JS value directly (or
+   * `{ __error: "..." }` if the script threw). The Electron-era
+   * /execute_js wrapped this as `{ result, error }` — older AppDriver
+   * callers used `result.result`, so we unwrap consistently here.
+   */
   async executeJs<T = unknown>(code: string): Promise<T> {
-    const result = (await this.post('/execute_js', { code })) as {
-      result?: T;
-      error?: string;
-    };
-    if (result.error) throw new Error(`executeJs: ${result.error}`);
-    return result.result as T;
+    const raw = await this.post('/eval', { script: code });
+    if (raw && typeof raw === 'object' && '__error' in (raw as object)) {
+      throw new Error(`executeJs: ${(raw as { __error: string }).__error}`);
+    }
+    // Tauri ui_server may also wrap a server-side bridge error as `{ error }`
+    // (e.g. timeout, no main window). Surface those too.
+    if (raw && typeof raw === 'object' && 'error' in (raw as object) && Object.keys(raw as object).length === 1) {
+      throw new Error(`executeJs: ${(raw as { error: string }).error}`);
+    }
+    return raw as T;
   }
 
   /** Capture a PNG screenshot of the window. */
   async screenshot(): Promise<Buffer> {
-    const result = (await this.post('/screenshot')) as { data: string };
+    const result = (await this.post('/screenshot', {})) as { data: string };
     return Buffer.from(result.data, 'base64');
   }
 

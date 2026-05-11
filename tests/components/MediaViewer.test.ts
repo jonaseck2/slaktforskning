@@ -59,7 +59,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('MediaViewer', () => {
+describe('MediaViewer', async () => {
   it('renders counter as "1 / 1" for single item', async () => {
     const wrapper = mountViewer();
     await flushPromises();

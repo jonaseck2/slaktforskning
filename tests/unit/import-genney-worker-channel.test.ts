@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { channelRegistry } from '../../src/shared/channels';
 
-describe('import:genneyRun / import:genneyDiscover worker channels', () => {
+describe('import:genneyRun / import:genneyDiscover worker channels', async () => {
   it('genneyRun is registered as a worker channel and is mutating', () => {
     const ch = channelRegistry['import:genneyRun'];
     expect(ch).toBeDefined();

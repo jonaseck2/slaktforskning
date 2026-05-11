@@ -4,73 +4,73 @@ import { defineChannel } from './registry';
 defineChannel({
   name: 'researchTasks:list',
   thread: 'worker',
-  handler: (db) => researchTasks.listResearchTasks(db),
+  handler: async (db) => await researchTasks.listResearchTasks(db),
 });
 
 defineChannel({
   name: 'researchTasks:get',
   thread: 'worker',
-  handler: (db, id: string) => researchTasks.getResearchTask(db, id),
+  handler: async (db, id: string) => await researchTasks.getResearchTask(db, id),
 });
 
 defineChannel({
   name: 'researchTasks:forPerson',
   thread: 'worker',
-  handler: (db, personId: string) => researchTasks.getResearchTasksForPerson(db, personId),
+  handler: async (db, personId: string) => await researchTasks.getResearchTasksForPerson(db, personId),
 });
 
 defineChannel({
   name: 'researchTasks:forPlace',
   thread: 'worker',
-  handler: (db, placeId: string) => researchTasks.getResearchTasksForPlace(db, placeId),
+  handler: async (db, placeId: string) => await researchTasks.getResearchTasksForPlace(db, placeId),
 });
 
 defineChannel({
   name: 'researchTasks:forMedia',
   thread: 'worker',
-  handler: (db, mediaId: string) => researchTasks.getResearchTasksForMedia(db, mediaId),
+  handler: async (db, mediaId: string) => await researchTasks.getResearchTasksForMedia(db, mediaId),
 });
 
 defineChannel({
   name: 'researchTasks:create',
   thread: 'worker',
   mutating: true,
-  handler: (db, data: Parameters<typeof researchTasks.createResearchTask>[1]) =>
-    researchTasks.createResearchTask(db, data),
+  handler: async (db, data: Parameters<typeof researchTasks.createResearchTask>[1]) =>
+    await researchTasks.createResearchTask(db, data),
 });
 
 defineChannel({
   name: 'researchTasks:update',
   thread: 'worker',
   mutating: true,
-  handler: (db, id: string, data: Parameters<typeof researchTasks.updateResearchTask>[2]) =>
-    researchTasks.updateResearchTask(db, id, data),
+  handler: async (db, id: string, data: Parameters<typeof researchTasks.updateResearchTask>[2]) =>
+    await researchTasks.updateResearchTask(db, id, data),
 });
 
 defineChannel({
   name: 'researchTasks:delete',
   thread: 'worker',
   mutating: true,
-  handler: (db, id: string) => researchTasks.deleteResearchTask(db, id),
+  handler: async (db, id: string) => await researchTasks.deleteResearchTask(db, id),
 });
 
 defineChannel({
   name: 'researchTasks:addLink',
   thread: 'worker',
   mutating: true,
-  handler: (db, taskId: string, entityType: Parameters<typeof researchTasks.addTaskLink>[2], entityId: string) =>
-    researchTasks.addTaskLink(db, taskId, entityType, entityId),
+  handler: async (db, taskId: string, entityType: Parameters<typeof researchTasks.addTaskLink>[2], entityId: string) =>
+    await researchTasks.addTaskLink(db, taskId, entityType, entityId),
 });
 
 defineChannel({
   name: 'researchTasks:removeLink',
   thread: 'worker',
   mutating: true,
-  handler: (db, linkId: string) => researchTasks.removeTaskLink(db, linkId),
+  handler: async (db, linkId: string) => await researchTasks.removeTaskLink(db, linkId),
 });
 
 defineChannel({
   name: 'researchTasks:getLinks',
   thread: 'worker',
-  handler: (db, taskId: string) => researchTasks.getTaskLinks(db, taskId),
+  handler: async (db, taskId: string) => await researchTasks.getTaskLinks(db, taskId),
 });

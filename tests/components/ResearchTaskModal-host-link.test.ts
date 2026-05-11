@@ -10,7 +10,7 @@ import { i18n } from './setup';
  * CTA produces an orphan task — the same shape as the historical
  * "PlacePanel + Add person" bug.
  */
-describe('ResearchTaskModal — host-person link on create', () => {
+describe('ResearchTaskModal — host-person link on create', async () => {
   const mockCreate = vi.fn();
   const mockAddLink = vi.fn();
   const mockGetNames = vi.fn();
@@ -60,7 +60,7 @@ describe('ResearchTaskModal — host-person link on create', () => {
     });
     await flushPromises();
 
-    await wrapper.find('textarea').setValue('Generic task');
+    (await wrapper.find('textarea')).setValue('Generic task');
 
     const saveBtn = wrapper.findAll('button').find(b => /save|spara/i.test(b.text()));
     await saveBtn!.trigger('click');

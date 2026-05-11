@@ -18,14 +18,14 @@ class FakeStorage {
   clear(): void { this.store = {}; }
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   // Vitest's jsdom env provides localStorage, but we want explicit control
   // over what each test reads. Replace it per-test.
   (global as unknown as { localStorage: FakeStorage }).localStorage = new FakeStorage();
 });
 
-describe('useResizableColumns — initial widths', () => {
-  it('uses defaultWidth when nothing is saved', () => {
+describe('useResizableColumns — initial widths', async () => {
+  it('uses defaultWidth when nothing is saved', async () => {
     const { widths } = useResizableColumns({
       tableId: 'test-table',
       columns: [
@@ -36,7 +36,7 @@ describe('useResizableColumns — initial widths', () => {
     expect(widths.value).toEqual({ a: 100, b: 200 });
   });
 
-  it('hydrates from localStorage when a saved value exists', () => {
+  it('hydrates from localStorage when a saved value exists', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ a: 250, b: 175 }));
     const { widths } = useResizableColumns({
       tableId: 'test-table',
@@ -48,7 +48,7 @@ describe('useResizableColumns — initial widths', () => {
     expect(widths.value).toEqual({ a: 250, b: 175 });
   });
 
-  it('falls back to default for any column not present in localStorage', () => {
+  it('falls back to default for any column not present in localStorage', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ a: 250 }));
     const { widths } = useResizableColumns({
       tableId: 'test-table',
@@ -60,7 +60,7 @@ describe('useResizableColumns — initial widths', () => {
     expect(widths.value).toEqual({ a: 250, b: 200 });
   });
 
-  it('falls back to defaults if localStorage contains invalid JSON', () => {
+  it('falls back to defaults if localStorage contains invalid JSON', async () => {
     localStorage.setItem(STORAGE_KEY, 'not-json');
     const { widths } = useResizableColumns({
       tableId: 'test-table',
@@ -71,7 +71,7 @@ describe('useResizableColumns — initial widths', () => {
     expect(widths.value).toEqual({ a: 100 });
   });
 
-  it('uses a different localStorage key per tableId', () => {
+  it('uses a different localStorage key per tableId', async () => {
     localStorage.setItem('slaktforskning-table-cols-other-table', JSON.stringify({ a: 999 }));
     const { widths } = useResizableColumns({
       tableId: 'test-table',
@@ -82,8 +82,8 @@ describe('useResizableColumns — initial widths', () => {
   });
 });
 
-describe('useResizableColumns — resetWidths', () => {
-  it('reverts to defaults and persists', () => {
+describe('useResizableColumns — resetWidths', async () => {
+  it('reverts to defaults and persists', async () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ a: 999 }));
     const { widths, resetWidths } = useResizableColumns({
       tableId: 'test-table',

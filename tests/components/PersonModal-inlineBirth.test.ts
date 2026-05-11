@@ -16,7 +16,7 @@ import { i18n } from './setup';
  * inserts the participant link automatically — exactly the shape the plan's
  * "two IPCs" verification asserts (one round-trip, atomic).
  */
-describe('PersonModal — inline birth event on create', () => {
+describe('PersonModal — inline birth event on create', async () => {
   let createWithEventMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {

@@ -15,7 +15,7 @@ vi.mock('vue-router', () => ({
 // The number-stepper between the +/− buttons is also covered: it's a `<span>`
 // (not a button), but it carries `title` + `aria-label` so the user goal —
 // "hover the number, learn what it does" — is preserved.
-describe('HourglassChart — control tooltips', () => {
+describe('HourglassChart — control tooltips', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {

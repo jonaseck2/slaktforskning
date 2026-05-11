@@ -22,8 +22,8 @@ export interface DuplicateCandidate {
  * 1. Group persons by normalized surname (cheap)
  * 2. Within each group, compare given names and birth dates
  */
-export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] {
-  const candidates = collectDuplicateCandidates(db);
+export async function findDuplicates(db: Database, limit = 100): Promise<DuplicateCandidate[]> {
+  const candidates = await collectDuplicateCandidates(db);
   candidates.sort((a, b) => b.score - a.score);
   return candidates.slice(0, limit);
 }
@@ -33,12 +33,12 @@ export function findDuplicates(db: Database, limit = 100): DuplicateCandidate[] 
  * so callers can drive infinite-scroll UIs without re-running the O(N²)
  * candidate collection twice (once for `findDuplicates`, once for `count`).
  */
-export function findDuplicatesPage(
+export async function findDuplicatesPage(
   db: Database,
   limit = 100,
   offset = 0,
-): { items: DuplicateCandidate[]; total: number } {
-  const candidates = collectDuplicateCandidates(db);
+): Promise<{ items: DuplicateCandidate[]; total: number }> {
+  const candidates = await collectDuplicateCandidates(db);
   candidates.sort((a, b) => b.score - a.score);
   return { items: candidates.slice(offset, offset + limit), total: candidates.length };
 }
@@ -48,16 +48,16 @@ export function findDuplicatesPage(
  * nav badge so the displayed count reflects the true total instead of being
  * pinned at the `findDuplicates` page-size limit.
  */
-export function countDuplicates(db: Database): number {
-  return collectDuplicateCandidates(db).length;
+export async function countDuplicates(db: Database): Promise<number> {
+  return (await collectDuplicateCandidates(db)).length;
 }
 
-function collectDuplicateCandidates(db: Database): DuplicateCandidate[] {
+async function collectDuplicateCandidates(db: Database): Promise<DuplicateCandidate[]> {
   // Load persons, primary names, and birth dates in bulk — the old correlated
   // subquery version was O(N²) on large DBs. Join in JS with Maps.
-  const personRows = queryAll<{ id: string; sex: string }>(db, 'SELECT id, sex FROM persons');
+  const personRows = await queryAll<{ id: string; sex: string }>(db, 'SELECT id, sex FROM persons');
 
-  const nameRows = queryAll<{
+  const nameRows = await queryAll<{
     person_id: string;
     given_name: string | null;
     surname: string | null;
@@ -75,7 +75,7 @@ function collectDuplicateCandidates(db: Database): DuplicateCandidate[] {
     }
   }
 
-  const birthRows = queryAll<{ person_id: string; date_value: string }>(db, `
+  const birthRows = await queryAll<{ person_id: string; date_value: string }>(db, `
     SELECT ep.person_id, e.date_value
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id
@@ -110,7 +110,7 @@ function collectDuplicateCandidates(db: Database): DuplicateCandidate[] {
   // inner loop can skip them with no per-pair query. Filter to entity_type='person'
   // so a place pair with the same UUIDs (vanishingly unlikely but possible)
   // doesn't accidentally hide a person pair.
-  const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
+  const ignoredRows = await queryAll<{ person1_id: string; person2_id: string }>(
     db, "SELECT person1_id, person2_id FROM ignored_duplicates WHERE entity_type = 'person'"
   );
   const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
@@ -215,10 +215,10 @@ function calculateSimilarity(
  * Pair is stored canonically (lower id first) so insertion order doesn't matter.
  * Idempotent — re-ignoring the same pair is a no-op.
  */
-export function ignoreDuplicate(db: Database, personAId: string, personBId: string): void {
+export async function ignoreDuplicate(db: Database, personAId: string, personBId: string): Promise<void> {
   if (personAId === personBId) throw new Error('Cannot ignore a person against themselves');
   const [p1, p2] = personAId < personBId ? [personAId, personBId] : [personBId, personAId];
-  runSql(
+  await runSql(
     db,
     "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('person', ?, ?)",
     [p1, p2]
@@ -230,12 +230,12 @@ export function ignoreDuplicate(db: Database, personAId: string, personBId: stri
  * All of source's data is reassigned to target, then source is deleted.
  * Returns the number of records moved.
  */
-export function mergePersons(db: Database, targetId: string, sourceId: string): { moved: Record<string, number> } {
+export async function mergePersons(db: Database, targetId: string, sourceId: string): Promise<{ moved: Record<string, number> }> {
   if (targetId === sourceId) throw new Error('Cannot merge a person with themselves');
 
   // Verify both exist
-  const target = queryOne<{ id: string }>(db, 'SELECT id FROM persons WHERE id = ?', [targetId]);
-  const source = queryOne<{ id: string }>(db, 'SELECT id FROM persons WHERE id = ?', [sourceId]);
+  const target = await queryOne<{ id: string }>(db, 'SELECT id FROM persons WHERE id = ?', [targetId]);
+  const source = await queryOne<{ id: string }>(db, 'SELECT id FROM persons WHERE id = ?', [sourceId]);
   if (!target) throw new Error('Target person not found');
   if (!source) throw new Error('Source person not found');
 
@@ -247,41 +247,41 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   // the canonical one. Without this demotion, two `name_type='birth'` rows
   // ended up on the merged person — surfaced by the 2026-05-09 Bernadotte
   // duplicate test (Karl XIV Johan + "Jean Baptiste Bernadotte" merge).
-  const existingNameCount = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM person_names WHERE person_id = ?', [targetId])?.n ?? 0;
-  const targetHasBirthName = (queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM person_names WHERE person_id = ? AND name_type = 'birth'", [targetId])?.n ?? 0) > 0;
-  const sourceNames = queryAll<{ id: string; sort_order: number; name_type: string }>(db, 'SELECT id, sort_order, name_type FROM person_names WHERE person_id = ?', [sourceId]);
+  const existingNameCount = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM person_names WHERE person_id = ?', [targetId]))?.n ?? 0;
+  const targetHasBirthName = ((await queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM person_names WHERE person_id = ? AND name_type = 'birth'", [targetId]))?.n ?? 0) > 0;
+  const sourceNames = await queryAll<{ id: string; sort_order: number; name_type: string }>(db, 'SELECT id, sort_order, name_type FROM person_names WHERE person_id = ?', [sourceId]);
   for (const name of sourceNames) {
     if (targetHasBirthName && name.name_type === 'birth') {
-      runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ?, name_type = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, 'aka', name.id]);
+      await runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ?, name_type = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, 'aka', name.id]);
     } else {
-      runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, name.id]);
+      await runSql(db, 'UPDATE person_names SET person_id = ?, sort_order = ? WHERE id = ?', [targetId, existingNameCount + name.sort_order, name.id]);
     }
   }
   moved.person_names = sourceNames.length;
 
   // 2. Person identifiers — move, skip conflicts
-  const sourceIdents = queryAll<{ id: string; identifier_type: string; identifier_value: string }>(db, 'SELECT id, identifier_type, identifier_value FROM person_identifiers WHERE person_id = ?', [sourceId]);
+  const sourceIdents = await queryAll<{ id: string; identifier_type: string; identifier_value: string }>(db, 'SELECT id, identifier_type, identifier_value FROM person_identifiers WHERE person_id = ?', [sourceId]);
   let identMoved = 0;
   for (const ident of sourceIdents) {
-    const exists = queryOne<{ id: string }>(db, 'SELECT id FROM person_identifiers WHERE person_id = ? AND identifier_type = ? AND identifier_value = ?', [targetId, ident.identifier_type, ident.identifier_value]);
+    const exists = await queryOne<{ id: string }>(db, 'SELECT id FROM person_identifiers WHERE person_id = ? AND identifier_type = ? AND identifier_value = ?', [targetId, ident.identifier_type, ident.identifier_value]);
     if (exists) {
-      runSql(db, 'DELETE FROM person_identifiers WHERE id = ?', [ident.id]);
+      await runSql(db, 'DELETE FROM person_identifiers WHERE id = ?', [ident.id]);
     } else {
-      runSql(db, 'UPDATE person_identifiers SET person_id = ? WHERE id = ?', [targetId, ident.id]);
+      await runSql(db, 'UPDATE person_identifiers SET person_id = ? WHERE id = ?', [targetId, ident.id]);
       identMoved++;
     }
   }
   moved.person_identifiers = identMoved;
 
   // 3. Event participants — reassign, skip if target already participates in same event
-  const sourceParticipants = queryAll<{ id: string; event_id: string }>(db, 'SELECT id, event_id FROM event_participants WHERE person_id = ?', [sourceId]);
+  const sourceParticipants = await queryAll<{ id: string; event_id: string }>(db, 'SELECT id, event_id FROM event_participants WHERE person_id = ?', [sourceId]);
   let epMoved = 0;
   for (const ep of sourceParticipants) {
-    const exists = queryOne<{ id: string }>(db, 'SELECT id FROM event_participants WHERE event_id = ? AND person_id = ?', [ep.event_id, targetId]);
+    const exists = await queryOne<{ id: string }>(db, 'SELECT id FROM event_participants WHERE event_id = ? AND person_id = ?', [ep.event_id, targetId]);
     if (exists) {
-      runSql(db, 'DELETE FROM event_participants WHERE id = ?', [ep.id]);
+      await runSql(db, 'DELETE FROM event_participants WHERE id = ?', [ep.id]);
     } else {
-      runSql(db, 'UPDATE event_participants SET person_id = ? WHERE id = ?', [targetId, ep.id]);
+      await runSql(db, 'UPDATE event_participants SET person_id = ? WHERE id = ?', [targetId, ep.id]);
       epMoved++;
     }
   }
@@ -290,15 +290,15 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   // 4. Relationships — reassign person1_id/person2_id, skip self-relationships
   const relUpdated = { count: 0 };
   for (const col of ['person1_id', 'person2_id'] as const) {
-    const rels = queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db, `SELECT id, person1_id, person2_id FROM relationships WHERE ${col} = ?`, [sourceId]);
+    const rels = await queryAll<{ id: string; person1_id: string | null; person2_id: string | null }>(db, `SELECT id, person1_id, person2_id FROM relationships WHERE ${col} = ?`, [sourceId]);
     for (const rel of rels) {
       const otherCol = col === 'person1_id' ? 'person2_id' : 'person1_id';
       const otherId = rel[otherCol];
       // Would create self-relationship?
       if (otherId === targetId) {
-        runSql(db, 'DELETE FROM relationships WHERE id = ?', [rel.id]);
+        await runSql(db, 'DELETE FROM relationships WHERE id = ?', [rel.id]);
       } else {
-        runSql(db, `UPDATE relationships SET ${col} = ? WHERE id = ?`, [targetId, rel.id]);
+        await runSql(db, `UPDATE relationships SET ${col} = ? WHERE id = ?`, [targetId, rel.id]);
         relUpdated.count++;
       }
     }
@@ -306,47 +306,47 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   moved.relationships = relUpdated.count;
 
   // 5. Citations — reassign person_id
-  const citCount = queryAll<{ id: string }>(db, 'SELECT id FROM citations WHERE person_id = ?', [sourceId]);
+  const citCount = await queryAll<{ id: string }>(db, 'SELECT id FROM citations WHERE person_id = ?', [sourceId]);
   for (const c of citCount) {
-    runSql(db, 'UPDATE citations SET person_id = ? WHERE id = ?', [targetId, c.id]);
+    await runSql(db, 'UPDATE citations SET person_id = ? WHERE id = ?', [targetId, c.id]);
   }
   moved.citations = citCount.length;
 
   // 6. Group person-links — reassign, skip if target already linked to group
-  const sourceGroupLinks = queryAll<{ id: string; group_id: string }>(db,
+  const sourceGroupLinks = await queryAll<{ id: string; group_id: string }>(db,
     `SELECT id, group_id FROM group_links WHERE entity_type = 'person' AND entity_id = ?`, [sourceId]);
   let gmMoved = 0;
   for (const gl of sourceGroupLinks) {
-    const exists = queryOne<{ id: string }>(db,
+    const exists = await queryOne<{ id: string }>(db,
       `SELECT id FROM group_links WHERE group_id = ? AND entity_type = 'person' AND entity_id = ?`, [gl.group_id, targetId]);
     if (exists) {
-      runSql(db, 'DELETE FROM group_links WHERE id = ?', [gl.id]);
+      await runSql(db, 'DELETE FROM group_links WHERE id = ?', [gl.id]);
     } else {
-      runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [targetId, gl.id]);
+      await runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [targetId, gl.id]);
       gmMoved++;
     }
   }
   moved.group_members = gmMoved;
 
   // 8. Research-task person-links — reassign, skip if target already linked
-  const sourceTaskLinks = queryAll<{ id: string; task_id: string }>(db,
+  const sourceTaskLinks = await queryAll<{ id: string; task_id: string }>(db,
     `SELECT id, task_id FROM task_links WHERE entity_type = 'person' AND entity_id = ?`, [sourceId]);
   let tlMoved = 0;
   for (const tl of sourceTaskLinks) {
-    const exists = queryOne<{ id: string }>(db,
+    const exists = await queryOne<{ id: string }>(db,
       `SELECT id FROM task_links WHERE task_id = ? AND entity_type = 'person' AND entity_id = ?`, [tl.task_id, targetId]);
     if (exists) {
-      runSql(db, 'DELETE FROM task_links WHERE id = ?', [tl.id]);
+      await runSql(db, 'DELETE FROM task_links WHERE id = ?', [tl.id]);
     } else {
-      runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [targetId, tl.id]);
+      await runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [targetId, tl.id]);
       tlMoved++;
     }
   }
   moved.research_tasks = tlMoved;
 
   // 9. Merge person fields — append notes
-  const sourceData = queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [sourceId]);
-  const targetData = queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [targetId]);
+  const sourceData = await queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [sourceId]);
+  const targetData = await queryOne<{ notes: string; sex: string }>(db, 'SELECT notes, sex FROM persons WHERE id = ?', [targetId]);
   if (sourceData && targetData) {
     const updates: string[] = [];
     const vals: unknown[] = [];
@@ -366,7 +366,7 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
     if (updates.length > 0) {
       updates.push("updated_at = datetime('now')");
       vals.push(targetId);
-      runSql(db, `UPDATE persons SET ${updates.join(', ')} WHERE id = ?`, vals);
+      await runSql(db, `UPDATE persons SET ${updates.join(', ')} WHERE id = ?`, vals);
     }
   }
 
@@ -379,7 +379,7 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
   const SINGLE_CARDINALITY_TYPES = ['birth', 'baptism', 'christening', 'death', 'burial'] as const;
   let eventsDeduped = 0;
   for (const eventType of SINGLE_CARDINALITY_TYPES) {
-    const dupes = queryAll<{ id: string; created_at: string }>(db, `
+    const dupes = await queryAll<{ id: string; created_at: string }>(db, `
       SELECT e.id, e.created_at
       FROM events e
       JOIN event_participants ep ON ep.event_id = e.id
@@ -392,16 +392,16 @@ export function mergePersons(db: Database, targetId: string, sourceId: string): 
     const survivor = dupes[0];
     for (let i = 1; i < dupes.length; i++) {
       const stale = dupes[i];
-      runSql(db, 'UPDATE citations SET event_id = ? WHERE event_id = ?', [survivor.id, stale.id]);
-      runSql(db, "UPDATE media_links SET entity_id = ? WHERE entity_type = 'event' AND entity_id = ?", [survivor.id, stale.id]);
-      runSql(db, 'DELETE FROM events WHERE id = ?', [stale.id]);
+      await runSql(db, 'UPDATE citations SET event_id = ? WHERE event_id = ?', [survivor.id, stale.id]);
+      await runSql(db, "UPDATE media_links SET entity_id = ? WHERE entity_type = 'event' AND entity_id = ?", [survivor.id, stale.id]);
+      await runSql(db, 'DELETE FROM events WHERE id = ?', [stale.id]);
       eventsDeduped++;
     }
   }
   moved.events_deduped = eventsDeduped;
 
   // 10. Delete source person (CASCADE handles any remaining FKs like media_links)
-  runSql(db, 'DELETE FROM persons WHERE id = ?', [sourceId]);
+  await runSql(db, 'DELETE FROM persons WHERE id = ?', [sourceId]);
 
   return { moved };
 }
@@ -468,12 +468,12 @@ function placeNormalize(name: string): string {
  * Pairs already recorded in `ignored_duplicates` (entity_type='place') are
  * skipped so the user's "ignore" choice persists across runs.
  */
-export function findDuplicatePlaces(
+export async function findDuplicatePlaces(
   db: Database,
   limit = 100,
   offset = 0,
-): DuplicatePlaceCandidate[] {
-  const places = queryAll<{
+): Promise<DuplicatePlaceCandidate[]> {
+  const places = await queryAll<{
     id: string;
     name: string;
     normalized_name: string;
@@ -488,7 +488,7 @@ export function findDuplicatePlaces(
     byParent.get(key)!.push(p);
   }
 
-  const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
+  const ignoredRows = await queryAll<{ person1_id: string; person2_id: string }>(
     db, "SELECT person1_id, person2_id FROM ignored_duplicates WHERE entity_type = 'place'"
   );
   const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
@@ -549,10 +549,10 @@ export function findDuplicatePlaces(
 }
 
 /** Total candidate count, used for the duplicates badge. */
-export function countDuplicatePlaces(db: Database): number {
+export async function countDuplicatePlaces(db: Database): Promise<number> {
   // Re-uses the find machinery without the limit slice; cheap enough for
   // typical DBs because the parent-grouping prunes the O(N²) pair space.
-  return findDuplicatePlaces(db, Number.MAX_SAFE_INTEGER, 0).length;
+  return (await findDuplicatePlaces(db, Number.MAX_SAFE_INTEGER, 0)).length;
 }
 
 /**
@@ -562,10 +562,10 @@ export function countDuplicatePlaces(db: Database): number {
  * matter. The CHECK (person1_id < person2_id) constraint on ignored_duplicates
  * also enforces this; we sort defensively.
  */
-export function ignoreDuplicatePlace(db: Database, placeAId: string, placeBId: string): void {
+export async function ignoreDuplicatePlace(db: Database, placeAId: string, placeBId: string): Promise<void> {
   if (placeAId === placeBId) throw new Error('Cannot ignore a place against itself');
   const [p1, p2] = placeAId < placeBId ? [placeAId, placeBId] : [placeBId, placeAId];
-  runSql(
+  await runSql(
     db,
     "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('place', ?, ?)",
     [p1, p2]
@@ -602,41 +602,41 @@ export function ignoreDuplicatePlace(db: Database, placeAId: string, placeBId: s
  * duplicate against an existing target row (UNIQUE constraint protection on
  * group_links / task_links / media_links).
  */
-export function mergePlaces(
+export async function mergePlaces(
   db: Database,
   targetId: string,
   sourceId: string,
-): { moved: Record<string, number> } {
+): Promise<{ moved: Record<string, number> }> {
   if (targetId === sourceId) throw new Error('Cannot merge a place with itself');
-  const target = queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [targetId]);
-  const source = queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [sourceId]);
+  const target = await queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [targetId]);
+  const source = await queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [sourceId]);
   if (!target) throw new Error('Target place not found');
   if (!source) throw new Error('Source place not found');
 
   // --- snapshot pre-mutation state for undo ---
   // Children that referenced the source via a non-polymorphic FK
-  const eventsTouched = queryAll<{ id: string; place_id: string | null }>(
+  const eventsTouched = await queryAll<{ id: string; place_id: string | null }>(
     db, 'SELECT id, place_id FROM events WHERE place_id = ?', [sourceId]
   );
-  const childPlacesTouched = queryAll<{ id: string; parent_place_id: string | null }>(
+  const childPlacesTouched = await queryAll<{ id: string; parent_place_id: string | null }>(
     db, 'SELECT id, parent_place_id FROM places WHERE parent_place_id = ?', [sourceId]
   );
-  const citationsTouched = queryAll<{ id: string; place_id: string | null }>(
+  const citationsTouched = await queryAll<{ id: string; place_id: string | null }>(
     db, 'SELECT id, place_id FROM citations WHERE place_id = ?', [sourceId]
   );
   // Polymorphic link rows where the source was the entity. We snapshot
   // every row that may be either updated to point at target OR deleted as a
   // duplicate of an existing target-link.
-  const sourceGroupLinks = queryAll<{ id: string; group_id: string }>(db,
+  const sourceGroupLinks = await queryAll<{ id: string; group_id: string }>(db,
     "SELECT id, group_id FROM group_links WHERE entity_type = 'place' AND entity_id = ?", [sourceId]);
-  const sourceTaskLinks = queryAll<{ id: string; task_id: string }>(db,
+  const sourceTaskLinks = await queryAll<{ id: string; task_id: string }>(db,
     "SELECT id, task_id FROM task_links WHERE entity_type = 'place' AND entity_id = ?", [sourceId]);
-  const sourceMediaLinks = queryAll<{ id: string; media_id: string }>(db,
+  const sourceMediaLinks = await queryAll<{ id: string; media_id: string }>(db,
     "SELECT id, media_id FROM media_links WHERE entity_type = 'place' AND entity_id = ?", [sourceId]);
   // Ignored-duplicate rows mentioning the source (any pair, since `place_id`
   // is stored in either column once canonically sorted — it can be person1_id
   // or person2_id depending on UUID order).
-  const ignoredRows = queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
+  const ignoredRows = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
     db,
     "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'place' AND (person1_id = ? OR person2_id = ?)",
     [sourceId, sourceId]
@@ -659,11 +659,11 @@ export function mergePlaces(
   }> = [];
   const updatedMediaLinks: string[] = [];
 
-  runSql(db, 'BEGIN IMMEDIATE');
+  await runSql(db, 'BEGIN IMMEDIATE');
   try {
     // 1. events.place_id
     for (const e of eventsTouched) {
-      runSql(db, 'UPDATE events SET place_id = ? WHERE id = ?', [targetId, e.id]);
+      await runSql(db, 'UPDATE events SET place_id = ? WHERE id = ?', [targetId, e.id]);
     }
     moved.events = eventsTouched.length;
 
@@ -681,29 +681,29 @@ export function mergePlaces(
         // We don't count it as moved.
         continue;
       }
-      runSql(db, 'UPDATE places SET parent_place_id = ? WHERE id = ?', [targetId, cp.id]);
+      await runSql(db, 'UPDATE places SET parent_place_id = ? WHERE id = ?', [targetId, cp.id]);
     }
     moved.child_places = childPlacesTouched.filter(cp => cp.id !== targetId).length;
 
     // 3. citations.place_id
     for (const c of citationsTouched) {
-      runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [targetId, c.id]);
+      await runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [targetId, c.id]);
     }
     moved.citations = citationsTouched.length;
 
     // 4. group_links — UNIQUE(group_id, entity_type, entity_id) means we
     // must skip when target already in same group.
     for (const gl of sourceGroupLinks) {
-      const exists = queryOne<{ id: string; sort_order: number; created_at: string }>(db,
+      const exists = await queryOne<{ id: string; sort_order: number; created_at: string }>(db,
         "SELECT id, sort_order, created_at FROM group_links WHERE group_id = ? AND entity_type = 'place' AND entity_id = ?",
         [gl.group_id, targetId]);
       if (exists) {
-        const full = queryOne<{ id: string; group_id: string; sort_order: number; created_at: string }>(db,
+        const full = await queryOne<{ id: string; group_id: string; sort_order: number; created_at: string }>(db,
           'SELECT id, group_id, sort_order, created_at FROM group_links WHERE id = ?', [gl.id]);
         if (full) deletedGroupLinks.push(full);
-        runSql(db, 'DELETE FROM group_links WHERE id = ?', [gl.id]);
+        await runSql(db, 'DELETE FROM group_links WHERE id = ?', [gl.id]);
       } else {
-        runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [targetId, gl.id]);
+        await runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [targetId, gl.id]);
         updatedGroupLinks.push(gl.id);
       }
     }
@@ -711,16 +711,16 @@ export function mergePlaces(
 
     // 5. task_links — same pattern
     for (const tl of sourceTaskLinks) {
-      const exists = queryOne<{ id: string }>(db,
+      const exists = await queryOne<{ id: string }>(db,
         "SELECT id FROM task_links WHERE task_id = ? AND entity_type = 'place' AND entity_id = ?",
         [tl.task_id, targetId]);
       if (exists) {
-        const full = queryOne<{ id: string; task_id: string; sort_order: number; created_at: string }>(db,
+        const full = await queryOne<{ id: string; task_id: string; sort_order: number; created_at: string }>(db,
           'SELECT id, task_id, sort_order, created_at FROM task_links WHERE id = ?', [tl.id]);
         if (full) deletedTaskLinks.push(full);
-        runSql(db, 'DELETE FROM task_links WHERE id = ?', [tl.id]);
+        await runSql(db, 'DELETE FROM task_links WHERE id = ?', [tl.id]);
       } else {
-        runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [targetId, tl.id]);
+        await runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [targetId, tl.id]);
         updatedTaskLinks.push(tl.id);
       }
     }
@@ -729,19 +729,19 @@ export function mergePlaces(
     // 6. media_links — no UNIQUE constraint at the SQL level today, but a
     // (media, place) pair appearing twice is meaningless. Mirror the dedupe.
     for (const ml of sourceMediaLinks) {
-      const exists = queryOne<{ id: string }>(db,
+      const exists = await queryOne<{ id: string }>(db,
         "SELECT id FROM media_links WHERE media_id = ? AND entity_type = 'place' AND entity_id = ?",
         [ml.media_id, targetId]);
       if (exists) {
-        const full = queryOne<{
+        const full = await queryOne<{
           id: string; media_id: string; link_type: number | null;
           sort_order: number; created_at: string;
         }>(db,
           'SELECT id, media_id, link_type, sort_order, created_at FROM media_links WHERE id = ?', [ml.id]);
         if (full) deletedMediaLinks.push(full);
-        runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
+        await runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
       } else {
-        runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [targetId, ml.id]);
+        await runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [targetId, ml.id]);
         updatedMediaLinks.push(ml.id);
       }
     }
@@ -749,18 +749,18 @@ export function mergePlaces(
 
     // 7. ignored_duplicates rows that mention the source — drop them so the
     // pair doesn't reappear pointing at a deleted id. Snapshot taken above.
-    runSql(db,
+    await runSql(db,
       "DELETE FROM ignored_duplicates WHERE entity_type = 'place' AND (person1_id = ? OR person2_id = ?)",
       [sourceId, sourceId]
     );
     moved.ignored_duplicates = ignoredRows.length;
 
     // 8. Delete the source place
-    runSql(db, 'DELETE FROM places WHERE id = ?', [sourceId]);
+    await runSql(db, 'DELETE FROM places WHERE id = ?', [sourceId]);
 
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
   }
 
@@ -769,11 +769,11 @@ export function mergePlaces(
   const sourceSnapshot: Place = source;
   undoManager.push({
     label: 'undo.mergePlaces',
-    undo: () => {
-      runSql(db, 'BEGIN IMMEDIATE');
+    undo: async () => {
+      await runSql(db, 'BEGIN IMMEDIATE');
       try {
         // Recreate the source place row exactly as it was.
-        runSql(db, `
+        await runSql(db, `
           INSERT INTO places (id, name, normalized_name, place_type, latitude, longitude,
                               parent_place_id, date_from, date_to, notes,
                               street, postal_code, city, country)
@@ -788,62 +788,62 @@ export function mergePlaces(
 
         // Revert events.place_id
         for (const e of eventsTouched) {
-          runSql(db, 'UPDATE events SET place_id = ? WHERE id = ?', [e.place_id, e.id]);
+          await runSql(db, 'UPDATE events SET place_id = ? WHERE id = ?', [e.place_id, e.id]);
         }
         // Revert places.parent_place_id
         for (const cp of childPlacesTouched) {
           if (cp.id === sourceSnapshot.id) continue; // wouldn't have been moved
-          runSql(db, 'UPDATE places SET parent_place_id = ? WHERE id = ?', [cp.parent_place_id, cp.id]);
+          await runSql(db, 'UPDATE places SET parent_place_id = ? WHERE id = ?', [cp.parent_place_id, cp.id]);
         }
         // Revert citations.place_id
         for (const c of citationsTouched) {
-          runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [c.place_id, c.id]);
+          await runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [c.place_id, c.id]);
         }
         // Revert moved group_links
         for (const id of updatedGroupLinks) {
-          runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE group_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         // Re-insert deleted group_links (the duplicates we collapsed)
         for (const gl of deletedGroupLinks) {
-          runSql(db, `
+          await runSql(db, `
             INSERT INTO group_links (id, group_id, entity_type, entity_id, sort_order, created_at)
             VALUES (?, ?, 'place', ?, ?, ?)
           `, [gl.id, gl.group_id, sourceSnapshot.id, gl.sort_order, gl.created_at]);
         }
         // Revert moved task_links
         for (const id of updatedTaskLinks) {
-          runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE task_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         for (const tl of deletedTaskLinks) {
-          runSql(db, `
+          await runSql(db, `
             INSERT INTO task_links (id, task_id, entity_type, entity_id, sort_order, created_at)
             VALUES (?, ?, 'place', ?, ?, ?)
           `, [tl.id, tl.task_id, sourceSnapshot.id, tl.sort_order, tl.created_at]);
         }
         // Revert moved media_links
         for (const id of updatedMediaLinks) {
-          runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         for (const ml of deletedMediaLinks) {
-          runSql(db, `
+          await runSql(db, `
             INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order, created_at)
             VALUES (?, ?, 'place', ?, ?, ?, ?)
           `, [ml.id, ml.media_id, sourceSnapshot.id, ml.link_type, ml.sort_order, ml.created_at]);
         }
         // Restore ignored_duplicates rows
         for (const ig of ignoredRows) {
-          runSql(db,
+          await runSql(db,
             "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id, created_at) VALUES ('place', ?, ?, ?)",
             [ig.person1_id, ig.person2_id, ig.created_at]
           );
         }
-        runSql(db, 'COMMIT');
+        await runSql(db, 'COMMIT');
       } catch (err) {
-        try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+        try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
         throw err;
       }
     },
-    redo: () => { mergePlaces(db, targetId, sourceId); },
+    redo: async () => { await mergePlaces(db, targetId, sourceId); },
   });
 
   return { moved };
@@ -855,8 +855,8 @@ export function mergePlaces(
  * used by `deletePerson` so a tombstoned id doesn't keep an "ignored" pair
  * stuck in the DB forever.
  */
-export function deleteIgnoredDuplicatesForPlace(db: Database, placeId: string): number {
-  return runSqlChanges(db,
+export async function deleteIgnoredDuplicatesForPlace(db: Database, placeId: string): Promise<number> {
+  return await runSqlChanges(db,
     "DELETE FROM ignored_duplicates WHERE entity_type = 'place' AND (person1_id = ? OR person2_id = ?)",
     [placeId, placeId]
   );
@@ -903,12 +903,12 @@ function sourceNormalize(value: string | null | undefined): string {
  * en-dash) under the same author should see both rows surfaced as a high-score
  * candidate pair.
  */
-export function findDuplicateSources(
+export async function findDuplicateSources(
   db: Database,
   limit = 100,
   offset = 0,
-): DuplicateSourceCandidate[] {
-  const sources = queryAll<{
+): Promise<DuplicateSourceCandidate[]> {
+  const sources = await queryAll<{
     id: string;
     title: string;
     author: string;
@@ -924,7 +924,7 @@ export function findDuplicateSources(
     byAuthor.get(key)!.push(s);
   }
 
-  const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
+  const ignoredRows = await queryAll<{ person1_id: string; person2_id: string }>(
     db, "SELECT person1_id, person2_id FROM ignored_duplicates WHERE entity_type = 'source'"
   );
   const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
@@ -984,10 +984,10 @@ export function findDuplicateSources(
 }
 
 /** Total candidate count, used for the duplicates badge. */
-export function countDuplicateSources(db: Database): number {
+export async function countDuplicateSources(db: Database): Promise<number> {
   // Re-uses the find machinery without the limit slice; cheap enough for
   // typical DBs because the author-grouping prunes the O(N²) pair space.
-  return findDuplicateSources(db, Number.MAX_SAFE_INTEGER, 0).length;
+  return (await findDuplicateSources(db, Number.MAX_SAFE_INTEGER, 0)).length;
 }
 
 /**
@@ -997,10 +997,10 @@ export function countDuplicateSources(db: Database): number {
  * matter. The CHECK (person1_id < person2_id) constraint on ignored_duplicates
  * also enforces this; we sort defensively.
  */
-export function ignoreDuplicateSource(db: Database, sourceAId: string, sourceBId: string): void {
+export async function ignoreDuplicateSource(db: Database, sourceAId: string, sourceBId: string): Promise<void> {
   if (sourceAId === sourceBId) throw new Error('Cannot ignore a source against itself');
   const [p1, p2] = sourceAId < sourceBId ? [sourceAId, sourceBId] : [sourceBId, sourceAId];
-  runSql(
+  await runSql(
     db,
     "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('source', ?, ?)",
     [p1, p2]
@@ -1033,30 +1033,30 @@ export function ignoreDuplicateSource(db: Database, sourceAId: string, sourceBId
  * NB: the parameter name `sourceId` is the *id of the source-side participant
  * in the merge*, not the entity type. The entity type is "source" throughout.
  */
-export function mergeSources(
+export async function mergeSources(
   db: Database,
   targetId: string,
   sourceId: string,
-): { moved: Record<string, number> } {
+): Promise<{ moved: Record<string, number> }> {
   if (targetId === sourceId) throw new Error('Cannot merge a source with itself');
-  const target = queryOne<Source>(db, 'SELECT * FROM sources WHERE id = ?', [targetId]);
-  const source = queryOne<Source>(db, 'SELECT * FROM sources WHERE id = ?', [sourceId]);
+  const target = await queryOne<Source>(db, 'SELECT * FROM sources WHERE id = ?', [targetId]);
+  const source = await queryOne<Source>(db, 'SELECT * FROM sources WHERE id = ?', [sourceId]);
   if (!target) throw new Error('Target source not found');
   if (!source) throw new Error('Source source not found');
 
   // --- snapshot pre-mutation state for undo ---
-  const citationsTouched = queryAll<{ id: string; source_id: string }>(
+  const citationsTouched = await queryAll<{ id: string; source_id: string }>(
     db, 'SELECT id, source_id FROM citations WHERE source_id = ?', [sourceId]
   );
   // source_repositories has composite PK (source_id, repository_id) — snapshot
   // both (source_id, repository_id) tuples so undo can re-insert the deleted
   // join rows verbatim.
-  const sourceRepoLinks = queryAll<{ source_id: string; repository_id: string }>(
+  const sourceRepoLinks = await queryAll<{ source_id: string; repository_id: string }>(
     db, 'SELECT source_id, repository_id FROM source_repositories WHERE source_id = ?', [sourceId]
   );
-  const sourceMediaLinks = queryAll<{ id: string; media_id: string }>(db,
+  const sourceMediaLinks = await queryAll<{ id: string; media_id: string }>(db,
     "SELECT id, media_id FROM media_links WHERE entity_type = 'source' AND entity_id = ?", [sourceId]);
-  const ignoredRows = queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
+  const ignoredRows = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
     db,
     "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'source' AND (person1_id = ? OR person2_id = ?)",
     [sourceId, sourceId]
@@ -1075,11 +1075,11 @@ export function mergeSources(
   }> = [];
   const updatedMediaLinks: string[] = [];
 
-  runSql(db, 'BEGIN IMMEDIATE');
+  await runSql(db, 'BEGIN IMMEDIATE');
   try {
     // 1. citations.source_id — straight repoint, no UNIQUE constraint.
     for (const c of citationsTouched) {
-      runSql(db, 'UPDATE citations SET source_id = ? WHERE id = ?', [targetId, c.id]);
+      await runSql(db, 'UPDATE citations SET source_id = ? WHERE id = ?', [targetId, c.id]);
     }
     moved.citations = citationsTouched.length;
 
@@ -1087,15 +1087,15 @@ export function mergeSources(
     // is already linked to the same repository, drop the source row instead of
     // attempting an UPDATE that would violate the PK.
     for (const sr of sourceRepoLinks) {
-      const exists = queryOne<{ source_id: string }>(db,
+      const exists = await queryOne<{ source_id: string }>(db,
         'SELECT source_id FROM source_repositories WHERE source_id = ? AND repository_id = ?',
         [targetId, sr.repository_id]);
       if (exists) {
         deletedRepoLinks.push({ source_id: sr.source_id, repository_id: sr.repository_id });
-        runSql(db, 'DELETE FROM source_repositories WHERE source_id = ? AND repository_id = ?',
+        await runSql(db, 'DELETE FROM source_repositories WHERE source_id = ? AND repository_id = ?',
           [sr.source_id, sr.repository_id]);
       } else {
-        runSql(db, 'UPDATE source_repositories SET source_id = ? WHERE source_id = ? AND repository_id = ?',
+        await runSql(db, 'UPDATE source_repositories SET source_id = ? WHERE source_id = ? AND repository_id = ?',
           [targetId, sr.source_id, sr.repository_id]);
         updatedRepoLinks.push(sr.repository_id);
       }
@@ -1105,37 +1105,37 @@ export function mergeSources(
     // 3. media_links — no UNIQUE constraint at the SQL level today, but a
     // (media, source) pair appearing twice is meaningless. Mirror the dedupe.
     for (const ml of sourceMediaLinks) {
-      const exists = queryOne<{ id: string }>(db,
+      const exists = await queryOne<{ id: string }>(db,
         "SELECT id FROM media_links WHERE media_id = ? AND entity_type = 'source' AND entity_id = ?",
         [ml.media_id, targetId]);
       if (exists) {
-        const full = queryOne<{
+        const full = await queryOne<{
           id: string; media_id: string; link_type: number | null;
           sort_order: number; created_at: string;
         }>(db,
           'SELECT id, media_id, link_type, sort_order, created_at FROM media_links WHERE id = ?', [ml.id]);
         if (full) deletedMediaLinks.push(full);
-        runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
+        await runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
       } else {
-        runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [targetId, ml.id]);
+        await runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [targetId, ml.id]);
         updatedMediaLinks.push(ml.id);
       }
     }
     moved.media_links = updatedMediaLinks.length;
 
     // 4. ignored_duplicates rows that mention the source — drop them.
-    runSql(db,
+    await runSql(db,
       "DELETE FROM ignored_duplicates WHERE entity_type = 'source' AND (person1_id = ? OR person2_id = ?)",
       [sourceId, sourceId]
     );
     moved.ignored_duplicates = ignoredRows.length;
 
     // 5. Delete the source source-row.
-    runSql(db, 'DELETE FROM sources WHERE id = ?', [sourceId]);
+    await runSql(db, 'DELETE FROM sources WHERE id = ?', [sourceId]);
 
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
   }
 
@@ -1144,11 +1144,11 @@ export function mergeSources(
   const sourceSnapshot: Source = source;
   undoManager.push({
     label: 'undo.mergeSources',
-    undo: () => {
-      runSql(db, 'BEGIN IMMEDIATE');
+    undo: async () => {
+      await runSql(db, 'BEGIN IMMEDIATE');
       try {
         // Recreate the source source-row exactly as it was.
-        runSql(db, `
+        await runSql(db, `
           INSERT INTO sources (id, title, author, publication_info, repository, url, source_type,
                                call_number, abstract, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1161,43 +1161,43 @@ export function mergeSources(
 
         // Revert citations.source_id
         for (const c of citationsTouched) {
-          runSql(db, 'UPDATE citations SET source_id = ? WHERE id = ?', [c.source_id, c.id]);
+          await runSql(db, 'UPDATE citations SET source_id = ? WHERE id = ?', [c.source_id, c.id]);
         }
         // Revert moved source_repositories rows
         for (const repoId of updatedRepoLinks) {
-          runSql(db, 'UPDATE source_repositories SET source_id = ? WHERE source_id = ? AND repository_id = ?',
+          await runSql(db, 'UPDATE source_repositories SET source_id = ? WHERE source_id = ? AND repository_id = ?',
             [sourceSnapshot.id, targetId, repoId]);
         }
         // Re-insert deleted source_repositories duplicates
         for (const sr of deletedRepoLinks) {
-          runSql(db, 'INSERT OR IGNORE INTO source_repositories (source_id, repository_id) VALUES (?, ?)',
+          await runSql(db, 'INSERT OR IGNORE INTO source_repositories (source_id, repository_id) VALUES (?, ?)',
             [sr.source_id, sr.repository_id]);
         }
         // Revert moved media_links
         for (const id of updatedMediaLinks) {
-          runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE media_links SET entity_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         // Re-insert deleted media_links duplicates
         for (const ml of deletedMediaLinks) {
-          runSql(db, `
+          await runSql(db, `
             INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order, created_at)
             VALUES (?, ?, 'source', ?, ?, ?, ?)
           `, [ml.id, ml.media_id, sourceSnapshot.id, ml.link_type, ml.sort_order, ml.created_at]);
         }
         // Restore ignored_duplicates rows
         for (const ig of ignoredRows) {
-          runSql(db,
+          await runSql(db,
             "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id, created_at) VALUES ('source', ?, ?, ?)",
             [ig.person1_id, ig.person2_id, ig.created_at]
           );
         }
-        runSql(db, 'COMMIT');
+        await runSql(db, 'COMMIT');
       } catch (err) {
-        try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+        try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
         throw err;
       }
     },
-    redo: () => { mergeSources(db, targetId, sourceId); },
+    redo: async () => { await mergeSources(db, targetId, sourceId); },
   });
 
   return { moved };
@@ -1207,8 +1207,8 @@ export function mergeSources(
  * Hook called from `deleteSource`: clean up any `ignored_duplicates` rows
  * that mention the deleted source id. Mirrors `deleteIgnoredDuplicatesForPlace`.
  */
-export function deleteIgnoredDuplicatesForSource(db: Database, sourceId: string): number {
-  return runSqlChanges(db,
+export async function deleteIgnoredDuplicatesForSource(db: Database, sourceId: string): Promise<number> {
+  return await runSqlChanges(db,
     "DELETE FROM ignored_duplicates WHERE entity_type = 'source' AND (person1_id = ? OR person2_id = ?)",
     [sourceId, sourceId]
   );
@@ -1256,18 +1256,18 @@ function mediaNormalize(value: string | null | undefined): string {
  * up with two `media` rows pointing at the same `file_ref` — this function
  * surfaces that pair at score 100 every time.
  */
-export function findDuplicateMedia(
+export async function findDuplicateMedia(
   db: Database,
   limit = 100,
   offset = 0,
-): DuplicateMediaCandidate[] {
-  const mediaRows = queryAll<{
+): Promise<DuplicateMediaCandidate[]> {
+  const mediaRows = await queryAll<{
     id: string;
     title: string;
     file_ref: string | null;
   }>(db, 'SELECT id, title, file_ref FROM media');
 
-  const ignoredRows = queryAll<{ person1_id: string; person2_id: string }>(
+  const ignoredRows = await queryAll<{ person1_id: string; person2_id: string }>(
     db, "SELECT person1_id, person2_id FROM ignored_duplicates WHERE entity_type = 'media'"
   );
   const ignored = new Set<string>(ignoredRows.map(r => `${r.person1_id}:${r.person2_id}`));
@@ -1348,18 +1348,18 @@ export function findDuplicateMedia(
 }
 
 /** Total candidate count, used for the duplicates badge. */
-export function countDuplicateMedia(db: Database): number {
-  return findDuplicateMedia(db, Number.MAX_SAFE_INTEGER, 0).length;
+export async function countDuplicateMedia(db: Database): Promise<number> {
+  return (await findDuplicateMedia(db, Number.MAX_SAFE_INTEGER, 0)).length;
 }
 
 /**
  * Mark a duplicate media pair as ignored. Idempotent.
  * Pair is stored canonically (lower id first).
  */
-export function ignoreDuplicateMedia(db: Database, mediaAId: string, mediaBId: string): void {
+export async function ignoreDuplicateMedia(db: Database, mediaAId: string, mediaBId: string): Promise<void> {
   if (mediaAId === mediaBId) throw new Error('Cannot ignore a media against itself');
   const [p1, p2] = mediaAId < mediaBId ? [mediaAId, mediaBId] : [mediaBId, mediaAId];
-  runSql(
+  await runSql(
     db,
     "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('media', ?, ?)",
     [p1, p2]
@@ -1421,38 +1421,38 @@ function resolveFileRef(fileRef: string | null, dbPath: string): string | null {
  * the row, the link/region rows, the ignored_duplicates rows, AND writes
  * the file bytes back to their original path.
  */
-export function mergeMedia(
+export async function mergeMedia(
   db: Database,
   targetId: string,
   sourceId: string,
   keepFile: 'target' | 'source',
   opts: { dbPath: string },
-): { moved: Record<string, number> } {
+): Promise<{ moved: Record<string, number> }> {
   if (targetId === sourceId) throw new Error('Cannot merge a media with itself');
   if (keepFile !== 'target' && keepFile !== 'source') {
     throw new Error(`mergeMedia: keepFile must be 'target' or 'source', got ${JSON.stringify(keepFile)}`);
   }
-  const target = queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [targetId]);
-  const source = queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [sourceId]);
+  const target = await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [targetId]);
+  const source = await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [sourceId]);
   if (!target) throw new Error('Target media not found');
   if (!source) throw new Error('Source media not found');
 
   // --- snapshot pre-mutation state for undo ---
-  const sourceMediaLinks = queryAll<{
+  const sourceMediaLinks = await queryAll<{
     id: string; media_id: string; entity_type: string; entity_id: string;
     link_type: number | null; sort_order: number; created_at: string;
   }>(
     db, 'SELECT id, media_id, entity_type, entity_id, link_type, sort_order, created_at FROM media_links WHERE media_id = ?',
     [sourceId]
   );
-  const sourceMediaRegions = queryAll<{
+  const sourceMediaRegions = await queryAll<{
     id: string; media_id: string; person_id: string | null;
     x: number; y: number; width: number; height: number; label: string | null; created_at: string;
   }>(
     db, 'SELECT id, media_id, person_id, x, y, width, height, label, created_at FROM media_regions WHERE media_id = ?',
     [sourceId]
   );
-  const ignoredRows = queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
+  const ignoredRows = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
     db,
     "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'media' AND (person1_id = ? OR person2_id = ?)",
     [sourceId, sourceId]
@@ -1498,13 +1498,13 @@ export function mergeMedia(
   // Snapshot target's current file_ref for undo when keepFile='source'.
   const targetFileRefBeforeMerge = target.file_ref;
 
-  runSql(db, 'BEGIN IMMEDIATE');
+  await runSql(db, 'BEGIN IMMEDIATE');
   try {
     // 0. If keepFile='source', rewrite target's file_ref to source's value
     // BEFORE deleting source. The user chose to keep source's file; target's
     // authored title/notes/etc. stay put.
     if (keepFile === 'source') {
-      runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [source.file_ref, targetId]);
+      await runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [source.file_ref, targetId]);
     }
 
     // 1. media_links — repoint. media_links has no SQL UNIQUE constraint
@@ -1512,14 +1512,14 @@ export function mergeMedia(
     // entity) pair appearing twice is meaningless. Mirror the dedupe pattern
     // from mergePlaces / mergeSources.
     for (const ml of sourceMediaLinks) {
-      const exists = queryOne<{ id: string }>(db,
+      const exists = await queryOne<{ id: string }>(db,
         'SELECT id FROM media_links WHERE media_id = ? AND entity_type = ? AND entity_id = ?',
         [targetId, ml.entity_type, ml.entity_id]);
       if (exists) {
         deletedMediaLinks.push(ml);
-        runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
+        await runSql(db, 'DELETE FROM media_links WHERE id = ?', [ml.id]);
       } else {
-        runSql(db, 'UPDATE media_links SET media_id = ? WHERE id = ?', [targetId, ml.id]);
+        await runSql(db, 'UPDATE media_links SET media_id = ? WHERE id = ?', [targetId, ml.id]);
         updatedMediaLinks.push(ml.id);
       }
     }
@@ -1528,13 +1528,13 @@ export function mergeMedia(
     // 2. media_regions — repoint. No UNIQUE, no dedupe (a face tag is bound
     // to a coordinate box; collapsing them would lose authored geometry).
     for (const mr of sourceMediaRegions) {
-      runSql(db, 'UPDATE media_regions SET media_id = ? WHERE id = ?', [targetId, mr.id]);
+      await runSql(db, 'UPDATE media_regions SET media_id = ? WHERE id = ?', [targetId, mr.id]);
       updatedMediaRegions.push(mr.id);
     }
     moved.media_regions = updatedMediaRegions.length;
 
     // 3. ignored_duplicates rows that mention the source — drop them.
-    runSql(db,
+    await runSql(db,
       "DELETE FROM ignored_duplicates WHERE entity_type = 'media' AND (person1_id = ? OR person2_id = ?)",
       [sourceId, sourceId]
     );
@@ -1542,11 +1542,11 @@ export function mergeMedia(
 
     // 4. Delete the source media row. CASCADE handles any remaining FK-bound
     // child rows (defensively — by step 1 and 2 we've moved them all).
-    runSql(db, 'DELETE FROM media WHERE id = ?', [sourceId]);
+    await runSql(db, 'DELETE FROM media WHERE id = ?', [sourceId]);
 
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
   }
 
@@ -1572,11 +1572,11 @@ export function mergeMedia(
   const fileToRestoreAbs = fileToDeleteAbs;
   undoManager.push({
     label: 'undo.mergeMedia',
-    undo: () => {
-      runSql(db, 'BEGIN IMMEDIATE');
+    undo: async () => {
+      await runSql(db, 'BEGIN IMMEDIATE');
       try {
         // Recreate the source media row exactly as it was.
-        runSql(db, `
+        await runSql(db, `
           INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, [
@@ -1589,34 +1589,34 @@ export function mergeMedia(
 
         // If we rewrote target.file_ref (keepFile='source'), revert it.
         if (keepFile === 'source') {
-          runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [targetFileRefBeforeMerge, targetId]);
+          await runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [targetFileRefBeforeMerge, targetId]);
         }
 
         // Revert moved media_links
         for (const id of updatedMediaLinks) {
-          runSql(db, 'UPDATE media_links SET media_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE media_links SET media_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         // Re-insert deleted media_links duplicates
         for (const ml of deletedMediaLinks) {
-          runSql(db, `
+          await runSql(db, `
             INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
           `, [ml.id, sourceSnapshot.id, ml.entity_type, ml.entity_id, ml.link_type, ml.sort_order, ml.created_at]);
         }
         // Revert moved media_regions
         for (const id of updatedMediaRegions) {
-          runSql(db, 'UPDATE media_regions SET media_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
+          await runSql(db, 'UPDATE media_regions SET media_id = ? WHERE id = ?', [sourceSnapshot.id, id]);
         }
         // Restore ignored_duplicates rows
         for (const ig of ignoredRows) {
-          runSql(db,
+          await runSql(db,
             "INSERT OR IGNORE INTO ignored_duplicates (entity_type, person1_id, person2_id, created_at) VALUES ('media', ?, ?, ?)",
             [ig.person1_id, ig.person2_id, ig.created_at]
           );
         }
-        runSql(db, 'COMMIT');
+        await runSql(db, 'COMMIT');
       } catch (err) {
-        try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+        try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
         throw err;
       }
 
@@ -1631,7 +1631,7 @@ export function mergeMedia(
         }
       }
     },
-    redo: () => { mergeMedia(db, targetId, sourceId, keepFile, opts); },
+    redo: async () => { await mergeMedia(db, targetId, sourceId, keepFile, opts); },
   });
 
   return { moved };
@@ -1641,8 +1641,8 @@ export function mergeMedia(
  * Hook called from `deleteMedia`: clean up any `ignored_duplicates` rows
  * that mention the deleted media id. Mirrors `deleteIgnoredDuplicatesForPlace`.
  */
-export function deleteIgnoredDuplicatesForMedia(db: Database, mediaId: string): number {
-  return runSqlChanges(db,
+export async function deleteIgnoredDuplicatesForMedia(db: Database, mediaId: string): Promise<number> {
+  return await runSqlChanges(db,
     "DELETE FROM ignored_duplicates WHERE entity_type = 'media' AND (person1_id = ? OR person2_id = ?)",
     [mediaId, mediaId]
   );

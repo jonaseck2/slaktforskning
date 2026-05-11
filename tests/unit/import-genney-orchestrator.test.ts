@@ -177,9 +177,9 @@ describe('isDockerAvailable', () => {
 
 // ── importFromGenney — encrypted Derby → GEDCOM fallback ─────────────────────
 
-describe('importFromGenney — encrypted Derby database', () => {
+describe('importFromGenney — encrypted Derby database', async () => {
   it('falls back to GEDCOM when service.properties contains dataEncryption=true', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'mydb/service.properties': enc(ENCRYPTED_SERVICE_PROPS_FLAG),
       'export.ged': enc(MINIMAL_GED),
@@ -192,7 +192,7 @@ describe('importFromGenney — encrypted Derby database', () => {
   });
 
   it('falls back to GEDCOM when service.properties contains derby.encryptionAlgorithm', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'mydb/service.properties': enc(ENCRYPTED_SERVICE_PROPS_KEYALGO),
       'family.ged': enc(MINIMAL_GED),
@@ -204,7 +204,7 @@ describe('importFromGenney — encrypted Derby database', () => {
   });
 
   it('throws when Derby is encrypted and no GEDCOM fallback exists', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'mydb/service.properties': enc(ENCRYPTED_SERVICE_PROPS_FLAG),
       'readme.txt': enc('no ged here'),
@@ -216,7 +216,7 @@ describe('importFromGenney — encrypted Derby database', () => {
   });
 
   it('fires onProgress with encrypted message when falling back', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const messages: string[] = [];
     const archivePath = writeZip({
       'mydb/service.properties': enc(ENCRYPTED_SERVICE_PROPS_FLAG),
@@ -233,12 +233,12 @@ describe('importFromGenney — encrypted Derby database', () => {
 
 // ── importFromGenney — unencrypted Derby → Docker path ────────────────────────
 
-describe('importFromGenney — unencrypted Derby database', () => {
+describe('importFromGenney — unencrypted Derby database', async () => {
   // 30s timeout: on runners with Docker preinstalled (ubuntu-latest) the spawn
   // takes >5s to fail against garbage Derby files. The test only asserts that
   // the promise eventually rejects, so a longer timeout is harmless elsewhere.
   it('finds unencrypted Derby at root level and attempts Docker (rejects without real DB)', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'service.properties': enc(UNENCRYPTED_SERVICE_PROPS),
       'seg0/c10.dat': enc('dummy'),
@@ -248,7 +248,7 @@ describe('importFromGenney — unencrypted Derby database', () => {
   }, 30000);
 
   it('finds unencrypted Derby in a subdirectory', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'backup/mydb/service.properties': enc(UNENCRYPTED_SERVICE_PROPS),
       'backup/mydb/seg0/c10.dat': enc('dummy'),
@@ -260,9 +260,9 @@ describe('importFromGenney — unencrypted Derby database', () => {
 
 // ── importFromGenney — onProgress callback ───────────────────────────────────
 
-describe('importFromGenney — onProgress callback', () => {
+describe('importFromGenney — onProgress callback', async () => {
   it('fires at least one progress message on the GEDCOM-fallback path', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const messages: string[] = [];
     const archivePath = writeZip({ 'export.ged': enc(MINIMAL_GED) }, '.gcc');
 
@@ -275,7 +275,7 @@ describe('importFromGenney — onProgress callback', () => {
   });
 
   it('defaults to noop onProgress when not provided', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({ 'export.ged': enc(MINIMAL_GED) }, '.gcc');
 
     const result = await importFromGenney(db, archivePath);
@@ -285,9 +285,9 @@ describe('importFromGenney — onProgress callback', () => {
 
 // ── importFromGenney — GEDCOM file selection ─────────────────────────────────
 
-describe('importFromGenney — GEDCOM file selection', () => {
+describe('importFromGenney — GEDCOM file selection', async () => {
   it('returns a .ged path when archive has multiple GEDCOM files', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'old.ged': enc(MINIMAL_GED),
       'new.ged': enc(MINIMAL_GED),
@@ -299,7 +299,7 @@ describe('importFromGenney — GEDCOM file selection', () => {
   });
 
   it('finds a .gedcom file (not just .ged)', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({ 'export.gedcom': enc(MINIMAL_GED) }, '.gcc');
 
     const result = await importFromGenney(db, archivePath);
@@ -308,7 +308,7 @@ describe('importFromGenney — GEDCOM file selection', () => {
   });
 
   it('finds GEDCOM file nested in a subdirectory', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({ 'exports/family.ged': enc(MINIMAL_GED) }, '.gcc');
 
     const result = await importFromGenney(db, archivePath);
@@ -319,9 +319,9 @@ describe('importFromGenney — GEDCOM file selection', () => {
 
 // ── importFromGenney — plain directory path ──────────────────────────────────
 
-describe('importFromGenney — plain directory path', () => {
+describe('importFromGenney — plain directory path', async () => {
   it('accepts a directory path (isDirectory check returns true)', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'genney-dir-test-'));
     tmpPaths.push(tempDir);
 
@@ -332,9 +332,9 @@ describe('importFromGenney — plain directory path', () => {
 
 // ── importFromGenney — missing source path ───────────────────────────────────
 
-describe('importFromGenney — missing source path', () => {
+describe('importFromGenney — missing source path', async () => {
   it('throws when source path does not exist', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     await expect(
       importFromGenney(db, '/absolutely/non/existent/path/file.gcc'),
     ).rejects.toThrow();
@@ -343,7 +343,7 @@ describe('importFromGenney — missing source path', () => {
 
 // ── discoverTables ────────────────────────────────────────────────────────────
 
-describe('discoverTables', () => {
+describe('discoverTables', async () => {
   it('throws "encrypted" when archive has encrypted Derby', async () => {
     const archivePath = writeZip({
       'mydb/service.properties': enc(ENCRYPTED_SERVICE_PROPS_FLAG),
@@ -388,9 +388,9 @@ describe('discoverTables', () => {
 
 // ── extractZip — path normalisation ──────────────────────────────────────────
 
-describe('extractZip — path normalisation via importFromGenney', () => {
+describe('extractZip — path normalisation via importFromGenney', async () => {
   it('handles archive entries with backslash separators (Windows-created zips)', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const entries: Record<string, Uint8Array> = {};
     entries['subdir\\export.ged'] = enc(MINIMAL_GED);
     const archivePath = writeZip(entries, '.gcc');
@@ -402,9 +402,9 @@ describe('extractZip — path normalisation via importFromGenney', () => {
 
 // ── emptyImportSummary shape ──────────────────────────────────────────────────
 
-describe('importFromGenney — emptyImportSummary', () => {
+describe('importFromGenney — emptyImportSummary', async () => {
   it('summary has all required keys with zero counts when GEDCOM fallback fires', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({ 'export.ged': enc(MINIMAL_GED) }, '.gcc');
 
     const { summary: s } = await importFromGenney(db, archivePath);
@@ -433,7 +433,7 @@ describe('importFromGenney — emptyImportSummary', () => {
 // below sets up a module-level mock. Individual tests use vi.mocked() to change
 // the return value per-test.
 
-describe('importFromGenney — mocked Docker (success path)', () => {
+describe('importFromGenney — mocked Docker (success path)', async () => {
   let spawnMock: ReturnType<typeof vi.fn>;
   let spawnSyncMock: ReturnType<typeof vi.fn>;
 
@@ -455,7 +455,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
   it('importFromGenney succeeds when Docker outputs schema + NDJSON (single schema)', async () => {
     // Use dynamic import after mocking so the orchestrator picks up the mock
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=single');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     // First spawn call: schema detection → returns single schema name
     // Second spawn call: data extraction → returns NDJSON table dump
@@ -474,7 +474,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney picks non-APP schema when multiple schemas returned', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=multi-schema');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     const factory = fakeSpawnFactory([MULTI_SCHEMA_OUTPUT, MINIMAL_NDJSON]);
     spawnMock.mockImplementation(factory);
@@ -489,7 +489,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney throws when no user schema found (empty Docker output)', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=no-schema');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     const factory = fakeSpawnFactory(['']); // empty → no schemas
     spawnMock.mockImplementation(factory);
@@ -503,7 +503,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney uses options.schema to skip schema detection', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=override-schema');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     // Only one spawn call: data extraction (schema detection skipped)
     const factory = fakeSpawnFactory([MINIMAL_NDJSON]);
@@ -519,7 +519,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney handles archive with unencrypted Derby + media/ folder (destMediaDir)', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=media-copy');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     const factory = fakeSpawnFactory([SINGLE_SCHEMA_OUTPUT, MINIMAL_NDJSON]);
     spawnMock.mockImplementation(factory);
@@ -542,7 +542,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney handles archive with unencrypted Derby and mediaDir option', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=mediadir-opt');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     const factory = fakeSpawnFactory([SINGLE_SCHEMA_OUTPUT, MINIMAL_NDJSON]);
     spawnMock.mockImplementation(factory);
@@ -558,7 +558,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('runDocker emits stdout data to stdoutChunks (covers stdout handler)', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=stdout-chunks');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     // Docker outputs a chunk to stdout then closes with 0
     const factory = fakeSpawnFactory([SINGLE_SCHEMA_OUTPUT, MINIMAL_NDJSON]);
@@ -575,7 +575,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('runDocker rejects when spawn emits error event (covers error handler)', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=spawn-error');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     spawnMock.mockImplementation(fakeSpawnError());
 
@@ -588,7 +588,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('importFromGenney completes normally with a single-person NDJSON output', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=rollback');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     // Single person, no events — verifies the transaction path completes
     const factory = fakeSpawnFactory([
@@ -608,7 +608,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
 
   it('gazetteer_config is set when not already present after import', async () => {
     const { importFromGenney: importFn } = await import('../../src/import/genney/index.ts?v=gazetteer');
-    const db = createTestDb();
+    const db = await createTestDb();
 
     const factory = fakeSpawnFactory([SINGLE_SCHEMA_OUTPUT, MINIMAL_NDJSON]);
     spawnMock.mockImplementation(factory);
@@ -630,7 +630,7 @@ describe('importFromGenney — mocked Docker (success path)', () => {
   });
 });
 
-describe('discoverTables — mocked Docker (success path)', () => {
+describe('discoverTables — mocked Docker (success path)', async () => {
   let spawnMock: ReturnType<typeof vi.fn>;
   let spawnSyncMock: ReturnType<typeof vi.fn>;
 

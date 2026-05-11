@@ -26,7 +26,7 @@ function buildXml(body: string): string {
 }
 
 let db: ReturnType<typeof createTestDb>;
-beforeEach(() => { db = createTestDb(); });
+beforeEach(async () => { db = await createTestDb(); });
 
 describe('parseGrampsXml', () => {
   it('extracts researcher info from the header', () => {
@@ -69,8 +69,8 @@ describe('parseGrampsXml', () => {
   });
 });
 
-describe('transformGramps — researcher info', () => {
-  it('writes researcher_* settings from the header', () => {
+describe('transformGramps — researcher info', async () => {
+  it('writes researcher_* settings from the header', async () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <database xmlns="http://gramps-project.org/xml/1.7.1/">
   <header>
@@ -85,19 +85,19 @@ describe('transformGramps — researcher info', () => {
     </researcher>
   </header>
 </database>`;
-    transformGramps(db, xml);
-    expect(getDbSetting(db, 'researcher_name')).toBe('Alex Roitman');
-    expect(getDbSetting(db, 'researcher_phone')).toBe('(555)123-4567');
-    expect(getDbSetting(db, 'researcher_email')).toBe('any@x.com');
-    const addr = getDbSetting(db, 'researcher_address') ?? '';
+    await transformGramps(db, xml);
+    expect(await getDbSetting(db, 'researcher_name')).toBe('Alex Roitman');
+    expect(await getDbSetting(db, 'researcher_phone')).toBe('(555)123-4567');
+    expect(await getDbSetting(db, 'researcher_email')).toBe('any@x.com');
+    const addr = await getDbSetting(db, 'researcher_address') ?? '';
     expect(addr).toContain('1122 Boogie Ave');
     expect(addr).toContain('Gotham');
     expect(addr).toContain('USA');
   });
 });
 
-describe('transformGramps — persons + names', () => {
-  it('imports persons with primary names', () => {
+describe('transformGramps — persons + names', async () => {
+  it('imports persons with primary names', async () => {
     const xml = buildXml(`
       <people>
         <person handle="_P1" id="I0001">
@@ -115,16 +115,16 @@ describe('transformGramps — persons + names', () => {
           </name>
         </person>
       </people>`);
-    const summary = transformGramps(db, xml);
+    const summary = await transformGramps(db, xml);
     expect(summary.persons).toBe(2);
-    const persons = listPersons(db);
+    const persons = await listPersons(db);
     const surnames = persons.map(p => p.surname).sort();
     expect(surnames).toEqual(['Doe', 'Smith']);
     expect(persons.find(p => p.surname === 'Smith')?.sex).toBe('M');
     expect(persons.find(p => p.surname === 'Doe')?.sex).toBe('F');
   });
 
-  it('imports an additional married name with the right name_type', () => {
+  it('imports an additional married name with the right name_type', async () => {
     const xml = buildXml(`
       <people>
         <person handle="_P1" id="I0001">
@@ -139,15 +139,15 @@ describe('transformGramps — persons + names', () => {
           </name>
         </person>
       </people>`);
-    transformGramps(db, xml);
-    const personId = listPersons(db)[0].id;
-    const names = getPersonNames(db, personId);
+    await transformGramps(db, xml);
+    const personId = (await listPersons(db))[0].id;
+    const names = await getPersonNames(db, personId);
     expect(names.map(n => n.name_type).sort()).toEqual(['birth', 'married']);
   });
 });
 
-describe('transformGramps — families & events', () => {
-  it('creates couple + parent_child + an event with date and place', () => {
+describe('transformGramps — families & events', async () => {
+  it('creates couple + parent_child + an event with date and place', async () => {
     const xml = buildXml(`
       <events>
         <event handle="_E1" id="E0001">
@@ -190,29 +190,29 @@ describe('transformGramps — families & events', () => {
           <pname value="Boston"/>
         </placeobj>
       </places>`);
-    const summary = transformGramps(db, xml);
+    const summary = await transformGramps(db, xml);
     expect(summary.persons).toBe(3);
     expect(summary.coupleRelationships).toBe(1);
     expect(summary.parentChildRelationships).toBe(2);
     expect(summary.events).toBe(2);
     expect(summary.places).toBe(1);
 
-    const johnId = listPersons(db).find(p => p.given_name === 'John')!.id;
-    const events = getEventsForPerson(db, johnId);
+    const johnId = (await listPersons(db)).find(p => p.given_name === 'John')!.id;
+    const events = await getEventsForPerson(db, johnId);
     expect(events.find(e => e.event_type === 'birth')?.date_value).toBe('1955-10-02');
 
-    const couple = listRelationships(db).find(r => r.type === 'couple')!;
+    const couple = (await listRelationships(db)).find(r => r.type === 'couple')!;
     const stmt = db.prepare("SELECT date_value FROM events WHERE event_type='marriage' AND relationship_id=?");
     const marr = stmt.get([couple.id]) as { date_value: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
     expect(marr?.date_value).toBe('1980-06-15');
 
-    expect(listPlaces(db)[0].name).toBe('Boston, MA, USA');
+    expect((await listPlaces(db))[0].name).toBe('Boston, MA, USA');
   });
 });
 
-describe('transformGramps — sources + citations', () => {
-  it('imports a source and attaches a citation to an event', () => {
+describe('transformGramps — sources + citations', async () => {
+  it('imports a source and attaches a citation to an event', async () => {
     const xml = buildXml(`
       <events>
         <event handle="_E1" id="E0001">
@@ -239,10 +239,10 @@ describe('transformGramps — sources + citations', () => {
           <stitle>1955 Massachusetts Birth Records</stitle>
         </source>
       </sources>`);
-    const summary = transformGramps(db, xml);
+    const summary = await transformGramps(db, xml);
     expect(summary.sources).toBe(1);
     expect(summary.citations).toBe(1);
-    expect(listSources(db)[0].title).toBe('1955 Massachusetts Birth Records');
+    expect((await listSources(db))[0].title).toBe('1955 Massachusetts Birth Records');
   });
 });
 
@@ -250,20 +250,20 @@ describe('transformGramps — sources + citations', () => {
 
 const SAMPLE = '/Users/jonasahnstedt/git/slaktforskning/export-import/samples/native-binary/gramps-data.gramps';
 
-describe.skipIf(!existsSync(SAMPLE))('Gramps import — real .gramps sample', () => {
+describe.skipIf(!existsSync(SAMPLE))('Gramps import — real .gramps sample', async () => {
   it('imports the gramps-data.gramps reference file end-to-end', async () => {
     const result = await importFromGramps(db, SAMPLE);
     expect(result.summary.persons).toBeGreaterThan(0);
-    expect(listPersons(db).length).toBe(result.summary.persons);
+    expect((await listPersons(db)).length).toBe(result.summary.persons);
     // Every imported person has a name (createPerson would have thrown otherwise).
-    expect(listPersons(db).every(p => (p.given_name?.length ?? 0) + (p.surname?.length ?? 0) > 0)).toBe(true);
+    expect((await listPersons(db)).every(p => (p.given_name?.length ?? 0) + (p.surname?.length ?? 0) > 0)).toBe(true);
     console.log(`  gramps-data.gramps: persons=${result.summary.persons}, fams=${result.summary.coupleRelationships}, parentChild=${result.summary.parentChildRelationships}, events=${result.summary.events}, places=${result.summary.places}, sources=${result.summary.sources}, citations=${result.summary.citations}, media=${result.summary.media}`);
   });
 
   it('preserves researcher info from the file', async () => {
     await importFromGramps(db, SAMPLE);
-    expect(getDbSetting(db, 'researcher_name')).toBe('Alex Roitman');
-    expect(getDbSetting(db, 'researcher_email')).toBe('anyone@someplace.com');
+    expect(await getDbSetting(db, 'researcher_name')).toBe('Alex Roitman');
+    expect(await getDbSetting(db, 'researcher_email')).toBe('anyone@someplace.com');
   });
 });
 

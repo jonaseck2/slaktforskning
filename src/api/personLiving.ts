@@ -36,8 +36,8 @@ export function livingSqlExpr(personAlias = 'p'): string {
   END)`;
 }
 
-export function isPersonLiving(db: Database, personId: string): boolean {
-  const row = queryOne<{ living: number }>(db,
+export async function isPersonLiving(db: Database, personId: string): Promise<boolean> {
+  const row = await queryOne<{ living: number }>(db,
     `SELECT ${livingSqlExpr('p')} AS living FROM persons p WHERE p.id = ?`,
     [personId]
   );
@@ -57,8 +57,8 @@ export interface LivingDerivation {
   cutoffYear: number;
 }
 
-export function loadLivingDerivation(db: Database): LivingDerivation {
-  const deceasedRows = queryAll<{ person_id: string }>(
+export async function loadLivingDerivation(db: Database): Promise<LivingDerivation> {
+  const deceasedRows = await queryAll<{ person_id: string }>(
     db,
     `SELECT DISTINCT ep.person_id
      FROM event_participants ep
@@ -67,7 +67,7 @@ export function loadLivingDerivation(db: Database): LivingDerivation {
   );
   const deceasedIds = new Set(deceasedRows.map(r => r.person_id));
 
-  const birthRows = queryAll<{ person_id: string; year: number }>(
+  const birthRows = await queryAll<{ person_id: string; year: number }>(
     db,
     `SELECT ep.person_id, MIN(CAST(substr(e.date_value, 1, 4) AS INTEGER)) AS year
      FROM event_participants ep

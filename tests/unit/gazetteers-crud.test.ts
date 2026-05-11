@@ -71,15 +71,15 @@ function makeBoundaryGazetteer(): string {
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 let db: Database;
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
 // ── importGazetteer ──────────────────────────────────────────────────────────
 
-describe('importGazetteer', () => {
-  it('imports a valid point gazetteer and returns metadata', () => {
-    const result = importGazetteer(db, makePointGazetteer());
+describe('importGazetteer', async () => {
+  it('imports a valid point gazetteer and returns metadata', async () => {
+    const result = await importGazetteer(db, makePointGazetteer());
     expect(result.id).toBe('test-custom');
     expect(result.name).toBe('Test Gazetteer');
     expect(result.locale).toBe('en');
@@ -87,82 +87,82 @@ describe('importGazetteer', () => {
     expect(result.nodeCount).toBe(4);
   });
 
-  it('imports a valid boundary gazetteer with geometry', () => {
-    const result = importGazetteer(db, makeBoundaryGazetteer());
+  it('imports a valid boundary gazetteer with geometry', async () => {
+    const result = await importGazetteer(db, makeBoundaryGazetteer());
     expect(result.id).toBe('test-boundary');
     expect(result.nodeCount).toBeGreaterThan(0);
   });
 
-  it('upserts on duplicate id', () => {
+  it('upserts on duplicate id', async () => {
     importGazetteer(db, makePointGazetteer());
     const updated = makePointGazetteer({ name: 'Updated Name' });
-    const result = importGazetteer(db, updated);
+    const result = await importGazetteer(db, updated);
     expect(result.name).toBe('Updated Name');
 
     // Only one row in the DB after upsert
-    const exported = exportGazetteer(db, 'test-custom');
+    const exported = await exportGazetteer(db, 'test-custom');
     expect(exported).not.toBeNull();
     const parsed = JSON.parse(exported!);
     expect(parsed.name).toBe('Updated Name');
   });
 
-  it('rejects a bundled id with "bundled ID"', () => {
+  it('rejects a bundled id with "bundled ID"', async () => {
     const json = makePointGazetteer({ id: 'sv-socknar' });
-    expect(() => importGazetteer(db, json)).toThrow('bundled ID');
+    await expect(importGazetteer(db, json)).rejects.toThrow('bundled ID');
   });
 
-  it('rejects invalid JSON with "Invalid JSON"', () => {
-    expect(() => importGazetteer(db, 'not-json{')).toThrow('Invalid JSON');
+  it('rejects invalid JSON with "Invalid JSON"', async () => {
+    await expect(importGazetteer(db, 'not-json{')).rejects.toThrow('Invalid JSON');
   });
 
-  it('rejects oversized JSON with "50 MB"', () => {
+  it('rejects oversized JSON with "50 MB"', async () => {
     // Create a string just over 50 MB
     const padding = 'x'.repeat(50 * 1024 * 1024 + 1);
     const json = `{"_pad":"${padding}"}`;
-    expect(() => importGazetteer(db, json)).toThrow('50 MB');
+    await expect(importGazetteer(db, json)).rejects.toThrow('50 MB');
   });
 
-  it('rejects missing id', () => {
+  it('rejects missing id', async () => {
     const json = makePointGazetteer({ id: undefined });
-    expect(() => importGazetteer(db, json)).toThrow('id');
+    await expect(importGazetteer(db, json)).rejects.toThrow('id');
   });
 
-  it('rejects missing name', () => {
+  it('rejects missing name', async () => {
     const json = makePointGazetteer({ name: undefined });
-    expect(() => importGazetteer(db, json)).toThrow('name');
+    await expect(importGazetteer(db, json)).rejects.toThrow('name');
   });
 
-  it('rejects missing locale', () => {
+  it('rejects missing locale', async () => {
     const json = makePointGazetteer({ locale: undefined });
-    expect(() => importGazetteer(db, json)).toThrow('locale');
+    await expect(importGazetteer(db, json)).rejects.toThrow('locale');
   });
 
-  it('rejects missing root', () => {
+  it('rejects missing root', async () => {
     const json = makePointGazetteer({ root: undefined });
-    expect(() => importGazetteer(db, json)).toThrow('root');
+    await expect(importGazetteer(db, json)).rejects.toThrow('root');
   });
 
-  it('rejects invalid node missing lat', () => {
+  it('rejects invalid node missing lat', async () => {
     const json = JSON.stringify({
       id: 'test-custom',
       name: 'Test',
       locale: 'en',
       root: { name: 'World', type: 'world', lon: 0 }, // missing lat
     });
-    expect(() => importGazetteer(db, json)).toThrow('lat');
+    await expect(importGazetteer(db, json)).rejects.toThrow('lat');
   });
 
-  it('rejects invalid aliases (non-string array)', () => {
+  it('rejects invalid aliases (non-string array)', async () => {
     const json = JSON.stringify({
       id: 'test-custom',
       name: 'Test',
       locale: 'en',
       root: { name: 'World', type: 'world', lat: 0, lon: 0, aliases: [123] },
     });
-    expect(() => importGazetteer(db, json)).toThrow('aliases');
+    await expect(importGazetteer(db, json)).rejects.toThrow('aliases');
   });
 
-  it('rejects invalid geometry type', () => {
+  it('rejects invalid geometry type', async () => {
     const json = JSON.stringify({
       id: 'test-custom',
       name: 'Test',
@@ -175,15 +175,15 @@ describe('importGazetteer', () => {
         geometry: { type: 'LineString', coordinates: [] },
       },
     });
-    expect(() => importGazetteer(db, json)).toThrow('geometry.type');
+    await expect(importGazetteer(db, json)).rejects.toThrow('geometry.type');
   });
 
-  it('rejects invalid kind "language"', () => {
+  it('rejects invalid kind "language"', async () => {
     const json = makePointGazetteer({ kind: 'language' });
-    expect(() => importGazetteer(db, json)).toThrow('kind');
+    await expect(importGazetteer(db, json)).rejects.toThrow('kind');
   });
 
-  it('rejects legacy self-rooted gazetteers (root.name not "World" or "World (Historical)")', () => {
+  it('rejects legacy self-rooted gazetteers (root.name not "World" or "World (Historical)")', async () => {
     const json = makePointGazetteer({
       id: 'legacy-test',
       root: {
@@ -194,15 +194,15 @@ describe('importGazetteer', () => {
         children: [{ name: 'Stockholm', type: 'city', lat: 59.33, lon: 18.07 }],
       },
     });
-    expect(() => importGazetteer(db, json)).toThrow(/root must be 'World'/);
+    await expect(importGazetteer(db, json)).rejects.toThrow(/root must be 'World'/);
   });
 
-  it('accepts a World-rooted import', () => {
+  it('accepts a World-rooted import', async () => {
     const json = makePointGazetteer({ id: 'world-rooted-test' });
-    expect(() => importGazetteer(db, json)).not.toThrow();
+    await expect(importGazetteer(db, json)).resolves.not.toThrow();
   });
 
-  it("accepts a 'World (Historical)'-rooted import", () => {
+  it("accepts a 'World (Historical)'-rooted import", async () => {
     const json = makePointGazetteer({
       id: 'historical-test',
       root: {
@@ -213,65 +213,65 @@ describe('importGazetteer', () => {
         children: [{ name: 'Holy Roman Empire', type: 'country', lat: 50, lon: 10 }],
       },
     });
-    expect(() => importGazetteer(db, json)).not.toThrow();
+    await expect(importGazetteer(db, json)).resolves.not.toThrow();
   });
 });
 
 // ── exportGazetteer ──────────────────────────────────────────────────────────
 
-describe('exportGazetteer', () => {
-  it('exports an imported gazetteer as JSON string with matching id', () => {
+describe('exportGazetteer', async () => {
+  it('exports an imported gazetteer as JSON string with matching id', async () => {
     importGazetteer(db, makePointGazetteer());
-    const exported = exportGazetteer(db, 'test-custom');
+    const exported = await exportGazetteer(db, 'test-custom');
     expect(exported).not.toBeNull();
     const parsed = JSON.parse(exported!);
     expect(parsed.id).toBe('test-custom');
   });
 
-  it('exports a bundled gazetteer', () => {
-    const exported = exportGazetteer(db, 'sv-socknar');
+  it('exports a bundled gazetteer', async () => {
+    const exported = await exportGazetteer(db, 'sv-socknar');
     expect(exported).not.toBeNull();
     const parsed = JSON.parse(exported!);
     expect(parsed.id).toBe('sv-socknar');
   });
 
-  it('returns null for an unknown id', () => {
-    const result = exportGazetteer(db, 'nonexistent-gazetteer-xyz');
+  it('returns null for an unknown id', async () => {
+    const result = await exportGazetteer(db, 'nonexistent-gazetteer-xyz');
     expect(result).toBeNull();
   });
 });
 
 // ── deleteGazetteer ──────────────────────────────────────────────────────────
 
-describe('deleteGazetteer', () => {
-  it('deletes an imported gazetteer and returns true', () => {
+describe('deleteGazetteer', async () => {
+  it('deletes an imported gazetteer and returns true', async () => {
     importGazetteer(db, makePointGazetteer());
-    const deleted = deleteGazetteer(db, 'test-custom');
+    const deleted = await deleteGazetteer(db, 'test-custom');
     expect(deleted).toBe(true);
-    expect(exportGazetteer(db, 'test-custom')).toBeNull();
+    expect(await exportGazetteer(db, 'test-custom')).toBeNull();
   });
 
-  it('returns false when deleting a bundled gazetteer', () => {
-    const result = deleteGazetteer(db, 'sv-socknar');
+  it('returns false when deleting a bundled gazetteer', async () => {
+    const result = await deleteGazetteer(db, 'sv-socknar');
     expect(result).toBe(false);
   });
 
-  it('returns false when deleting an unknown id', () => {
-    const result = deleteGazetteer(db, 'nonexistent-xyz');
+  it('returns false when deleting an unknown id', async () => {
+    const result = await deleteGazetteer(db, 'nonexistent-xyz');
     expect(result).toBe(false);
   });
 
-  it('removes the deleted id from enabled gazetteer config', () => {
+  it('removes the deleted id from enabled gazetteer config', async () => {
     importGazetteer(db, makePointGazetteer());
-    setDbSetting(
+    await setDbSetting(
       db,
       'gazetteer_config',
       JSON.stringify({ enabledGazetteers: ['sv-socknar', 'test-custom'] }),
     );
 
-    deleteGazetteer(db, 'test-custom');
+    await deleteGazetteer(db, 'test-custom');
 
-    const configJson = getDbSetting(db, 'gazetteer_config');
+    const configJson = await getDbSetting(db, 'gazetteer_config');
     expect(configJson).not.toBeNull();
     const config = JSON.parse(configJson!) as { enabledGazetteers: string[] };
     expect(config.enabledGazetteers).not.toContain('test-custom');
@@ -281,15 +281,15 @@ describe('deleteGazetteer', () => {
 
 // ── listGazetteers ───────────────────────────────────────────────────────────
 
-describe('listGazetteers', () => {
-  it('returns bundled gazetteers with bundled: true', () => {
-    const list = listGazetteers(db);
+describe('listGazetteers', async () => {
+  it('returns bundled gazetteers with bundled: true', async () => {
+    const list = await listGazetteers(db);
     const bundled = list.filter(g => g.bundled);
     expect(bundled.length).toBeGreaterThan(0);
     bundled.forEach(g => expect(g.bundled).toBe(true));
   });
 
-  it('returns imported gazetteers with bundled: false and source metadata', () => {
+  it('returns imported gazetteers with bundled: false and source metadata', async () => {
     const json = JSON.stringify({
       id: 'test-custom',
       name: 'Test Gazetteer',
@@ -305,7 +305,7 @@ describe('listGazetteers', () => {
     });
     importGazetteer(db, json);
 
-    const list = listGazetteers(db);
+    const list = await listGazetteers(db);
     const imported = list.filter(g => !g.bundled);
     expect(imported.length).toBe(1);
     expect(imported[0].id).toBe('test-custom');
@@ -313,9 +313,9 @@ describe('listGazetteers', () => {
     expect(imported[0].source?.name).toBe('TestSource');
   });
 
-  it('returns bundled and imported together', () => {
+  it('returns bundled and imported together', async () => {
     importGazetteer(db, makePointGazetteer());
-    const list = listGazetteers(db);
+    const list = await listGazetteers(db);
     const ids = list.map(g => g.id);
     expect(ids).toContain('sv-socknar');
     expect(ids).toContain('test-custom');
@@ -324,15 +324,15 @@ describe('listGazetteers', () => {
 
 // ── getImportedGazetteers ────────────────────────────────────────────────────
 
-describe('getImportedGazetteers', () => {
-  it('returns empty array when no gazetteers have been imported', () => {
-    const result = getImportedGazetteers(db);
+describe('getImportedGazetteers', async () => {
+  it('returns empty array when no gazetteers have been imported', async () => {
+    const result = await getImportedGazetteers(db);
     expect(result).toEqual([]);
   });
 
-  it('returns parsed Gazetteer objects with correct structure', () => {
+  it('returns parsed Gazetteer objects with correct structure', async () => {
     importGazetteer(db, makePointGazetteer());
-    const result = getImportedGazetteers(db);
+    const result = await getImportedGazetteers(db);
     expect(result.length).toBe(1);
     expect(result[0].id).toBe('test-custom');
     expect(result[0].name).toBe('Test Gazetteer');

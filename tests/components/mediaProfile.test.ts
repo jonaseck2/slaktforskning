@@ -43,7 +43,7 @@ beforeEach(() => {
   setActivePinia(createPinia());
 });
 
-describe('isMediaPersonProfile', () => {
+describe('isMediaPersonProfile', async () => {
   it('returns true when mediaId is first in the link list', async () => {
     const links: LinkRow[] = [
       { id: 'media-1', link_id: 'link-1' },
@@ -84,7 +84,7 @@ describe('isMediaPersonProfile', () => {
   });
 });
 
-describe('setMediaAsPersonProfile', () => {
+describe('setMediaAsPersonProfile', async () => {
   it('reorders links so the target media link_id is first', async () => {
     const links: LinkRow[] = [
       { id: 'media-1', link_id: 'link-1' },

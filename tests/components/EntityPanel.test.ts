@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import EntityPanel from '../../src/renderer/components/EntityPanel.vue';
 import { i18n } from './setup';
 
-describe('EntityPanel', () => {
+describe('EntityPanel', async () => {
   it('renders empty state when entity is null', () => {
     const w = mount(EntityPanel, {
       global: { plugins: [i18n] },
@@ -18,7 +18,7 @@ describe('EntityPanel', () => {
       props: { entityType: 'person', entity: { id: '1' }, label: 'Person' },
       slots: { default: '<div>content</div>' },
     });
-    await w.find('[data-testid="entity-close"]').trigger('click');
+    (await w.find('[data-testid="entity-close"]')).trigger('click');
     expect(w.emitted('close')).toHaveLength(1);
   });
 
@@ -27,7 +27,7 @@ describe('EntityPanel', () => {
       global: { plugins: [i18n] },
       props: { entityType: 'person', entity: { id: '1' }, label: 'Person', editable: true },
     });
-    await w.find('[data-testid="entity-edit"]').trigger('click');
+    (await w.find('[data-testid="entity-edit"]')).trigger('click');
     expect(w.emitted('edit')).toHaveLength(1);
   });
 

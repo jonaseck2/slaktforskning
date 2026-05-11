@@ -26,7 +26,7 @@ const tasks = [
   },
 ];
 
-describe('PersonResearchTasksSection', () => {
+describe('PersonResearchTasksSection', async () => {
   const mockForPerson = vi.fn();
 
   beforeEach(() => {
@@ -81,7 +81,7 @@ describe('PersonResearchTasksSection', () => {
     });
     await flushPromises();
 
-    await wrapper.findAll('tbody tr')[0].trigger('click');
+    (await wrapper.findAll('tbody tr'))[0].trigger('click');
 
     const emitted = wrapper.emitted('select');
     expect(emitted).toBeTruthy();

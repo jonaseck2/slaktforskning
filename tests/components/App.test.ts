@@ -64,7 +64,7 @@ const STUBS = {
   RouterLink: { template: '<a><slot /></a>' },
 };
 
-describe('App.vue default person navigation', () => {
+describe('App.vue default person navigation', async () => {
   let pinia: ReturnType<typeof createPinia>;
 
   beforeEach(() => {

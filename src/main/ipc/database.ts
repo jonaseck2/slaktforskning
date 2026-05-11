@@ -7,7 +7,7 @@ import type { WrapHandlerFn } from './wrap-handler';
 export function registerDatabaseHandlers(
   _getDb: unknown,
   getCurrentDatabasePath: () => string,
-  switchDatabase: (dbPath: string) => void,
+  switchDatabase: (dbPath: string) => Promise<void>,
   loadSettings: () => { recentDatabases: string[] },
   wrapHandler: WrapHandlerFn,
 ) {
@@ -43,14 +43,14 @@ export function registerDatabaseHandlers(
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
-    switchDatabase(result.filePath);
+    await switchDatabase(result.filePath);
     await switchWorkerDb(result.filePath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: result.filePath, name: path.basename(result.filePath) };
   });
 
   ipcMain.handle('db:switchTo', async (_e, dbPath: string) => {
-    switchDatabase(dbPath);
+    await switchDatabase(dbPath);
     await switchWorkerDb(dbPath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: dbPath, name: path.basename(dbPath) };
@@ -65,7 +65,7 @@ export function registerDatabaseHandlers(
       properties: ['openFile'],
     });
     if (result.canceled || result.filePaths.length === 0) return { canceled: true };
-    switchDatabase(result.filePaths[0]);
+    await switchDatabase(result.filePaths[0]);
     await switchWorkerDb(result.filePaths[0]);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { path: result.filePaths[0], name: path.basename(result.filePaths[0]) };
@@ -100,7 +100,7 @@ export function registerDatabaseHandlers(
     });
     if (result.canceled || result.filePaths.length === 0) return { success: false, error: 'Cancelled' };
     const backupPath = result.filePaths[0];
-    switchDatabase(backupPath);
+    await switchDatabase(backupPath);
     await switchWorkerDb(backupPath);
     BrowserWindow.getAllWindows().forEach(w => w.webContents.send('db:switched'));
     return { success: true, path: backupPath };

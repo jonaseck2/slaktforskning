@@ -4,7 +4,7 @@ import type { Relationship, EventParticipant, RelationshipType, EventParticipant
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
 import { displayedNameIdSql, birthSurnameSql } from './persons';
 
-export function createRelationship(
+export async function createRelationship(
   db: Database,
   data: {
     type: RelationshipType;
@@ -13,21 +13,21 @@ export function createRelationship(
     subtype?: string | null;
     notes?: string;
   }
-): Relationship {
+): Promise<Relationship> {
   const id = uuid();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes)
     VALUES (?, ?, ?, ?, ?, ?)
   `, [id, data.type, data.person1_id ?? null, data.person2_id ?? null, data.subtype ?? null, data.notes ?? '']);
-  return getRelationship(db, id)!;
+  return (await getRelationship(db, id))!;
 }
 
-export function getRelationship(db: Database, id: string): Relationship | null {
-  return queryOne<Relationship>(db, `SELECT * FROM relationships WHERE id = ?`, [id]) ?? null;
+export async function getRelationship(db: Database, id: string): Promise<Relationship | null> {
+  return (await queryOne<Relationship>(db, `SELECT * FROM relationships WHERE id = ?`, [id])) ?? null;
 }
 
-export function listRelationships(db: Database): Relationship[] {
-  return queryAll<Relationship>(db, `SELECT * FROM relationships ORDER BY created_at`);
+export async function listRelationships(db: Database): Promise<Relationship[]> {
+  return await queryAll<Relationship>(db, `SELECT * FROM relationships ORDER BY created_at`);
 }
 
 type RelWithNames = Relationship & {
@@ -41,14 +41,14 @@ type RelWithNames = Relationship & {
   person2_sex: 'M' | 'F' | 'U' | null;
 };
 
-export function countRelationships(db: Database): number {
-  return (queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM relationships`) ?? { n: 0 }).n;
+export async function countRelationships(db: Database): Promise<number> {
+  return ((await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM relationships`)) ?? { n: 0 }).n;
 }
 
-export function listRelationshipsPage(db: Database, limit: number, offset: number): RelWithNames[] {
+export async function listRelationshipsPage(db: Database, limit: number, offset: number): Promise<RelWithNames[]> {
   // `person1_birth_surname` / `person2_birth_surname` are display-only —
   // see plan birth-name-display-and-quality-check. Never persisted.
-  return queryAll<RelWithNames>(db, `
+  return await queryAll<RelWithNames>(db, `
     SELECT r.*,
       COALESCE(pn1.given_name, '') as person1_given_name,
       COALESCE(pn1.surname, '') as person1_surname,
@@ -72,11 +72,11 @@ export function listRelationshipsPage(db: Database, limit: number, offset: numbe
   `, [limit, offset]);
 }
 
-export function updateRelationship(
+export async function updateRelationship(
   db: Database,
   id: string,
   data: Partial<Pick<Relationship, 'type' | 'person1_id' | 'person2_id' | 'subtype' | 'notes'>>
-): Relationship | null {
+): Promise<Relationship | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
   for (const [key, value] of Object.entries(data)) {
@@ -87,33 +87,33 @@ export function updateRelationship(
       values.push(value ?? null);
     }
   }
-  if (fields.length === 0) return getRelationship(db, id);
+  if (fields.length === 0) return await getRelationship(db, id);
   fields.push("updated_at = datetime('now')");
   values.push(id);
-  runSql(db, `UPDATE relationships SET ${fields.join(', ')} WHERE id = ?`, values);
-  return getRelationship(db, id);
+  await runSql(db, `UPDATE relationships SET ${fields.join(', ')} WHERE id = ?`, values);
+  return await getRelationship(db, id);
 }
 
-export function deleteRelationship(db: Database, id: string): boolean {
-  return runSqlChanges(db, `DELETE FROM relationships WHERE id = ?`, [id]) > 0;
+export async function deleteRelationship(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, `DELETE FROM relationships WHERE id = ?`, [id])) > 0;
 }
 
-export function getRelationshipsOfPerson(db: Database, personId: string): Relationship[] {
-  return queryAll<Relationship>(db, `
+export async function getRelationshipsOfPerson(db: Database, personId: string): Promise<Relationship[]> {
+  return await queryAll<Relationship>(db, `
     SELECT * FROM relationships
     WHERE person1_id = ? OR person2_id = ?
     ORDER BY type, created_at
   `, [personId, personId]);
 }
 
-export function searchRelationships(
+export async function searchRelationships(
   db: Database,
   query: string
-): (Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person1_birth_surname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null; person2_birth_surname: string | null })[] {
+): Promise<(Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person1_birth_surname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null; person2_birth_surname: string | null })[]> {
   const like = `%${query}%`;
   // `person1_birth_surname` / `person2_birth_surname` are display-only —
   // see plan birth-name-display-and-quality-check. Never persisted.
-  return queryAll<Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person1_birth_surname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null; person2_birth_surname: string | null }>(db, `
+  return await queryAll<Relationship & { person1_given_name: string; person1_surname: string; person1_preferred_name: string | null; person1_nickname: string | null; person1_birth_surname: string | null; person2_given_name: string; person2_surname: string; person2_preferred_name: string | null; person2_nickname: string | null; person2_birth_surname: string | null }>(db, `
     SELECT DISTINCT r.*,
       COALESCE(pn1.given_name, '') as person1_given_name,
       COALESCE(pn1.surname, '') as person1_surname,
@@ -136,26 +136,26 @@ export function searchRelationships(
 
 // Event Participants
 
-export function addEventParticipant(
+export async function addEventParticipant(
   db: Database,
   data: {
     event_id: string;
     person_id: string;
     role?: EventParticipantRole;
   }
-): EventParticipant {
+): Promise<EventParticipant> {
   const id = uuid();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO event_participants (id, event_id, person_id, role)
     VALUES (?, ?, ?, ?)
   `, [id, data.event_id, data.person_id, data.role ?? 'primary']);
-  return queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id])!;
+  return (await queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id]))!;
 }
 
-export function getEventParticipants(db: Database, eventId: string): EventParticipant[] {
-  return queryAll<EventParticipant>(db, `SELECT * FROM event_participants WHERE event_id = ?`, [eventId]);
+export async function getEventParticipants(db: Database, eventId: string): Promise<EventParticipant[]> {
+  return await queryAll<EventParticipant>(db, `SELECT * FROM event_participants WHERE event_id = ?`, [eventId]);
 }
 
-export function removeEventParticipant(db: Database, id: string): boolean {
-  return runSqlChanges(db, `DELETE FROM event_participants WHERE id = ?`, [id]) > 0;
+export async function removeEventParticipant(db: Database, id: string): Promise<boolean> {
+  return (await runSqlChanges(db, `DELETE FROM event_participants WHERE id = ?`, [id])) > 0;
 }

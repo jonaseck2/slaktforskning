@@ -15,16 +15,16 @@ export function getMediaDir(dbPath: string): string {
   return path.join(path.dirname(dbPath), getMediaFolderName(dbPath));
 }
 
-export function createMedia(db: Database, data: {
+export async function createMedia(db: Database, data: {
   file_ref?: string | null;
   title?: string;
   format?: string | null;
   notes?: string;
   is_printable?: boolean;
   is_missing?: boolean;
-}): Media {
+}): Promise<Media> {
   const id = crypto.randomUUID();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [
@@ -33,15 +33,15 @@ export function createMedia(db: Database, data: {
     data.is_printable ? 1 : 0,
     data.is_missing ? 1 : 0,
   ]);
-  return queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id])!;
+  return (await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id]))!;
 }
 
-export function getMedia(db: Database, id: string): Media | null {
-  return queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id]) ?? null;
+export async function getMedia(db: Database, id: string): Promise<Media | null> {
+  return (await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id])) ?? null;
 }
 
-export function listMedia(db: Database): Media[] {
-  return queryAll<Media>(db, 'SELECT * FROM media ORDER BY title');
+export async function listMedia(db: Database): Promise<Media[]> {
+  return await queryAll<Media>(db, 'SELECT * FROM media ORDER BY title');
 }
 
 export interface MediaListItem extends Media {
@@ -105,7 +105,7 @@ function buildMediaFilterClause(
   return { where: `WHERE ${clauses.join(' AND ')}`, params };
 }
 
-export function listMediaPage(
+export async function listMediaPage(
   db: Database,
   limit: number,
   offset: number,
@@ -113,12 +113,12 @@ export function listMediaPage(
   sortDir: ListMediaSortDir = 'asc',
   query?: string,
   filters?: MediaListFilters,
-): MediaListItem[] {
+): Promise<MediaListItem[]> {
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
   const col = sortBy === 'format' ? 'format' : sortBy === 'created_at' ? 'created_at' : 'title';
   const orderBy = `COALESCE(m.${col},'') ${dir}, m.title ASC`;
   const filter = buildMediaFilterClause(query, filters);
-  return queryAll<MediaListItem>(db, `
+  return await queryAll<MediaListItem>(db, `
     SELECT m.*,
            (SELECT COUNT(*) FROM media_links ml WHERE ml.media_id = m.id) AS link_count,
            (SELECT COUNT(*) FROM media_regions mr WHERE mr.media_id = m.id) AS face_tag_count
@@ -129,39 +129,39 @@ export function listMediaPage(
   `, [...filter.params, limit, offset]);
 }
 
-export function countMedia(db: Database, query?: string, filters?: MediaListFilters): number {
+export async function countMedia(db: Database, query?: string, filters?: MediaListFilters): Promise<number> {
   const filter = buildMediaFilterClause(query, filters);
   if (!filter.where) {
-    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media')?.n ?? 0;
+    return (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM media'))?.n ?? 0;
   }
-  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${filter.where}`, filter.params)?.n ?? 0;
+  return (await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${filter.where}`, filter.params))?.n ?? 0;
 }
 
-export function countMissingMedia(db: Database, query?: string, filters?: MediaListFilters): number {
+export async function countMissingMedia(db: Database, query?: string, filters?: MediaListFilters): Promise<number> {
   const filter = buildMediaFilterClause(query, filters);
   const missingClause = filter.where
     ? `${filter.where} AND m.is_missing = 1`
     : 'WHERE m.is_missing = 1';
-  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${missingClause}`, filter.params)?.n ?? 0;
+  return (await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM media m ${missingClause}`, filter.params))?.n ?? 0;
 }
 
-export function deleteMedia(db: Database, id: string): boolean {
-  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
-  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
+export async function deleteMedia(db: Database, id: string): Promise<boolean> {
+  await runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
+  await runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'media' AND entity_id = ?`, [id]);
   // v0.220.0: ignored_duplicates is polymorphic — clean media-typed pairs so
   // a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
   // Mirrors deletePerson / deletePlace / deleteSource.
-  deleteIgnoredDuplicatesForMedia(db, id);
-  return runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id]) > 0;
+  await deleteIgnoredDuplicatesForMedia(db, id);
+  return (await runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id])) > 0;
 }
 
-export function updateMedia(db: Database, id: string, data: {
+export async function updateMedia(db: Database, id: string, data: {
   title?: string;
   notes?: string;
   format?: string | null;
   is_printable?: boolean;
   file_ref?: string | null;
-}): Media | null {
+}): Promise<Media | null> {
   const fields: string[] = [];
   const values: unknown[] = [];
 
@@ -171,38 +171,38 @@ export function updateMedia(db: Database, id: string, data: {
   if (data.is_printable !== undefined) { fields.push('is_printable = ?'); values.push(data.is_printable ? 1 : 0); }
   if (data.file_ref !== undefined) { fields.push('file_ref = ?'); values.push(data.file_ref); }
 
-  if (fields.length === 0) return getMedia(db, id);
+  if (fields.length === 0) return await getMedia(db, id);
 
   values.push(id);
-  const changes = runSqlChanges(db, `UPDATE media SET ${fields.join(', ')} WHERE id = ?`, values);
+  const changes = await runSqlChanges(db, `UPDATE media SET ${fields.join(', ')} WHERE id = ?`, values);
   if (changes === 0) return null;
-  return getMedia(db, id);
+  return await getMedia(db, id);
 }
 
-export function addMediaLink(db: Database, data: {
+export async function addMediaLink(db: Database, data: {
   media_id: string;
   entity_type: MediaLinkEntityType;
   entity_id: string;
   link_type?: number | null;
   sort_order?: number;
-}): MediaLink {
+}): Promise<MediaLink> {
   const id = crypto.randomUUID();
   let sortOrder = data.sort_order;
   if (sortOrder === undefined) {
-    const max = queryOne<{ m: number | null }>(db,
+    const max = await queryOne<{ m: number | null }>(db,
       'SELECT MAX(sort_order) AS m FROM media_links WHERE entity_type = ? AND entity_id = ?',
       [data.entity_type, data.entity_id]);
     sortOrder = (max?.m ?? -1) + 1;
   }
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order)
     VALUES (?, ?, ?, ?, ?, ?)
   `, [id, data.media_id, data.entity_type, data.entity_id, data.link_type ?? null, sortOrder]);
-  return queryOne<MediaLink>(db, 'SELECT * FROM media_links WHERE id = ?', [id])!;
+  return (await queryOne<MediaLink>(db, 'SELECT * FROM media_links WHERE id = ?', [id]))!;
 }
 
-export function getMediaForEntity(db: Database, entityType: MediaLinkEntityType, entityId: string): (Media & { link_id: string; link_type: number | null; sort_order: number })[] {
-  return queryAll<Media & { link_id: string; link_type: number | null; sort_order: number }>(db, `
+export async function getMediaForEntity(db: Database, entityType: MediaLinkEntityType, entityId: string): Promise<(Media & { link_id: string; link_type: number | null; sort_order: number })[]> {
+  return await queryAll<Media & { link_id: string; link_type: number | null; sort_order: number }>(db, `
     SELECT m.*, ml.id AS link_id, ml.link_type, ml.sort_order
     FROM media m
     JOIN media_links ml ON ml.media_id = m.id
@@ -224,12 +224,12 @@ export interface ProfilePicRef {
   region: { x: number; y: number; width: number; height: number } | null;
 }
 
-export function getPersonProfilePicRef(db: Database, personId: string): ProfilePicRef | null {
+export async function getPersonProfilePicRef(db: Database, personId: string): Promise<ProfilePicRef | null> {
   // Avatar fallback chain:
   //   1. Any face-tagged region for this person  → cropped face wins
   //   2. Else the starred linked media (first by sort_order) → raw image
   //   3. Else null → initials placeholder
-  const tagged = queryOne<{ media_id: string; x: number; y: number; width: number; height: number }>(db, `
+  const tagged = await queryOne<{ media_id: string; x: number; y: number; width: number; height: number }>(db, `
     SELECT media_id, x, y, width, height FROM media_regions
     WHERE person_id = ?
     ORDER BY created_at
@@ -241,7 +241,7 @@ export function getPersonProfilePicRef(db: Database, personId: string): ProfileP
       region: { x: tagged.x, y: tagged.y, width: tagged.width, height: tagged.height },
     };
   }
-  const link = queryOne<{ media_id: string }>(db, `
+  const link = await queryOne<{ media_id: string }>(db, `
     SELECT media_id FROM media_links
     WHERE entity_type = 'person' AND entity_id = ?
     ORDER BY sort_order, created_at
@@ -257,7 +257,7 @@ export function getPersonProfilePicRef(db: Database, personId: string): ProfileP
  * "first" row per person is selected inside SQLite — no JS-side dedup. The
  * same fallback chain applies (face tag → first linked media → null).
  */
-export function getPersonProfilePicRefs(db: Database, personIds: string[]): Record<string, ProfilePicRef | null> {
+export async function getPersonProfilePicRefs(db: Database, personIds: string[]): Promise<Record<string, ProfilePicRef | null>> {
   const result: Record<string, ProfilePicRef | null> = {};
   if (personIds.length === 0) return result;
   for (const id of personIds) result[id] = null;
@@ -265,7 +265,7 @@ export function getPersonProfilePicRefs(db: Database, personIds: string[]): Reco
   const placeholders = personIds.map(() => '?').join(',');
 
   // Best face tag per person — first by created_at.
-  const faceTags = queryAll<{
+  const faceTags = await queryAll<{
     person_id: string; media_id: string; x: number; y: number; width: number; height: number;
   }>(db, `
     SELECT person_id, media_id, x, y, width, height FROM (
@@ -289,7 +289,7 @@ export function getPersonProfilePicRefs(db: Database, personIds: string[]): Reco
   if (remaining.length === 0) return result;
 
   const placeholders2 = remaining.map(() => '?').join(',');
-  const links = queryAll<{ entity_id: string; media_id: string }>(db, `
+  const links = await queryAll<{ entity_id: string; media_id: string }>(db, `
     SELECT entity_id, media_id FROM (
       SELECT entity_id, media_id,
              ROW_NUMBER() OVER (PARTITION BY entity_id ORDER BY sort_order, created_at) AS rn
@@ -306,10 +306,10 @@ export function getPersonProfilePicRefs(db: Database, personIds: string[]): Reco
   return result;
 }
 
-export function getLinksForMedia(db: Database, mediaId: string): MediaLink[] {
-  return queryAll<MediaLink>(db, 'SELECT * FROM media_links WHERE media_id = ? ORDER BY entity_type, sort_order', [mediaId]);
+export async function getLinksForMedia(db: Database, mediaId: string): Promise<MediaLink[]> {
+  return await queryAll<MediaLink>(db, 'SELECT * FROM media_links WHERE media_id = ? ORDER BY entity_type, sort_order', [mediaId]);
 }
 
-export function removeMediaLink(db: Database, linkId: string): boolean {
-  return runSqlChanges(db, 'DELETE FROM media_links WHERE id = ?', [linkId]) > 0;
+export async function removeMediaLink(db: Database, linkId: string): Promise<boolean> {
+  return (await runSqlChanges(db, 'DELETE FROM media_links WHERE id = ?', [linkId])) > 0;
 }

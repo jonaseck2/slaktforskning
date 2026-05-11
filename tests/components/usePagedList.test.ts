@@ -8,7 +8,7 @@ function flushDebounce(ms: number) {
   return new Promise(r => setTimeout(r, ms + 30));
 }
 
-describe('usePagedList', () => {
+describe('usePagedList', async () => {
   it('initial reload fetches page 0 with default sort', async () => {
     const fetchPage = vi.fn(async () => ({ items: [{ id: '1' }, { id: '2' }], total: 2 }));
     const list = usePagedList<Row, 'name'>({

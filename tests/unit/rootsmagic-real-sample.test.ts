@@ -17,16 +17,16 @@ const SAMPLES = [
   '/Users/jonasahnstedt/git/slaktforskning/export-import/samples/native-binary/rootsmagic-analyzer.rmgc',
 ];
 
-describe.skipIf(!SAMPLES.every(existsSync))('RootsMagic import — real .rmgc samples', () => {
+describe.skipIf(!SAMPLES.every(existsSync))('RootsMagic import — real .rmgc samples', async () => {
   for (const path of SAMPLES) {
     it(`imports ${path.split('/').pop()} without throwing`, async () => {
-      const db = createTestDb();
+      const db = await createTestDb();
       const result = await importFromRootsMagic(db, path);
       expect(result.summary.persons).toBeGreaterThan(0);
       // Sanity: the DB ended up with the same number of person rows as the report says.
-      expect(listPersons(db).length).toBe(result.summary.persons);
+      expect((await listPersons(db)).length).toBe(result.summary.persons);
       // No empty-string-name persons (createPerson would have thrown if names landed wrong).
-      expect(listPersons(db).every(p => (p.given_name?.length ?? 0) + (p.surname?.length ?? 0) > 0)).toBe(true);
+      expect((await listPersons(db)).every(p => (p.given_name?.length ?? 0) + (p.surname?.length ?? 0) > 0)).toBe(true);
       // Print summary so a human running the suite can spot regressions.
       console.log(`  ${path.split('/').pop()}: persons=${result.summary.persons}, fams=${result.summary.coupleRelationships}, events=${result.summary.events}, places=${listPlaces(db).length}, sources=${listSources(db).length}, rels=${listRelationships(db).length}`);
     });

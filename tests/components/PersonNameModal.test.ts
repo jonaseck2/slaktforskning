@@ -76,7 +76,7 @@ function nameRow(overrides: Record<string, unknown>) {
   };
 }
 
-describe('PersonNameModal — date_to visibility per name_type', () => {
+describe('PersonNameModal — date_to visibility per name_type', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     installApi();
@@ -173,7 +173,7 @@ describe('PersonNameModal — date_to visibility per name_type', () => {
   });
 });
 
-describe('PersonNameModal — Prime Directive: hidden field does not null authored data', () => {
+describe('PersonNameModal — Prime Directive: hidden field does not null authored data', async () => {
   it('saving a name_change row that already has date_to keeps the value', async () => {
     const api = installApi();
     const wrapper = mount(PersonNameModal, {
@@ -190,7 +190,7 @@ describe('PersonNameModal — Prime Directive: hidden field does not null author
     // Save without touching anything. The field is hidden in the UI but
     // form.date_to was hydrated from the row, so the save payload must
     // still carry '2020-01-01'.
-    await wrapper.find('button[data-test-id="basesubpanel-save"], .ep-save, button[type="submit"]').exists()
+    (await wrapper.find('button[data-test-id="basesubpanel-save"], .ep-save, button[type="submit"]')).exists()
       ? wrapper.find('button[type="submit"]').trigger('click')
       : (wrapper.vm as unknown as { handleSave: () => Promise<void> }).handleSave();
     await flushPromises();
@@ -202,7 +202,7 @@ describe('PersonNameModal — Prime Directive: hidden field does not null author
   });
 });
 
-describe('PersonNameModal — citation block', () => {
+describe('PersonNameModal — citation block', async () => {
   it('renders the Hänvisning section header with an "+ Add citation" button', async () => {
     installApi();
     const wrapper = mount(PersonNameModal, {

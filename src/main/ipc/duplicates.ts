@@ -20,9 +20,9 @@ export function registerDuplicatesHandlers(
   getCurrentDatabasePath: () => string,
   wrapHandler: WrapHandlerFn,
 ) {
-  wrapHandler('duplicates:mergeMedia', (...args: unknown[]) => {
+  wrapHandler('duplicates:mergeMedia', async (...args: unknown[]) => {
     const [targetId, sourceId, keepFile] = args as [string, string, 'target' | 'source'];
-    return duplicates.mergeMedia(getDb(), targetId, sourceId, keepFile, {
+    return await duplicates.mergeMedia(await getDb(), targetId, sourceId, keepFile, {
       dbPath: getCurrentDatabasePath(),
     });
   });

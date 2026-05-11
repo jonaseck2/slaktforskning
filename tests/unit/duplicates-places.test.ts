@@ -20,8 +20,8 @@ import { queryAll, runSql } from '../../src/api/db';
 import { createTestDb } from './helpers';
 
 let db: Database;
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
   undoManager.clear();
 });
 
@@ -43,13 +43,13 @@ describe('levenshtein', () => {
   });
 });
 
-describe('findDuplicatePlaces', () => {
-  it('finds places with identical normalized names at top level', () => {
+describe('findDuplicatePlaces', async () => {
+  it('finds places with identical normalized names at top level', async () => {
     // The user-goal canary: "Stockholm" and "Stockholm " (trailing space)
     // both top-level, must be flagged with the highest score.
-    const a = createPlace(db, { name: 'Stockholm' });
-    const b = createPlace(db, { name: 'Stockholm ' });
-    const dupes = findDuplicatePlaces(db);
+    const a = await createPlace(db, { name: 'Stockholm' });
+    const b = await createPlace(db, { name: 'Stockholm ' });
+    const dupes = await findDuplicatePlaces(db);
     expect(dupes).toHaveLength(1);
     const pair = dupes[0];
     expect(new Set([pair.place1_id, pair.place2_id])).toEqual(new Set([a.id, b.id]));
@@ -58,325 +58,325 @@ describe('findDuplicatePlaces', () => {
     expect(pair.reasons).toContain('both_top_level');
   });
 
-  it('finds places within Levenshtein distance 2', () => {
-    createPlace(db, { name: 'Stockholm' });
-    createPlace(db, { name: 'Stocholm' }); // missing k — distance 1
-    const dupes = findDuplicatePlaces(db);
+  it('finds places within Levenshtein distance 2', async () => {
+    await createPlace(db, { name: 'Stockholm' });
+    await createPlace(db, { name: 'Stocholm' }); // missing k — distance 1
+    const dupes = await findDuplicatePlaces(db);
     expect(dupes).toHaveLength(1);
     expect(dupes[0].reasons).toContain('levenshtein_1');
     expect(dupes[0].score).toBeGreaterThan(80);
     expect(dupes[0].score).toBeLessThan(100);
   });
 
-  it('does not flag pairs beyond distance 2', () => {
-    createPlace(db, { name: 'Stockholm' });
-    createPlace(db, { name: 'Goeteborg' });
-    expect(findDuplicatePlaces(db)).toHaveLength(0);
+  it('does not flag pairs beyond distance 2', async () => {
+    await createPlace(db, { name: 'Stockholm' });
+    await createPlace(db, { name: 'Goeteborg' });
+    expect(await findDuplicatePlaces(db)).toHaveLength(0);
   });
 
-  it('does not flag places with different parents', () => {
-    const swe = createPlace(db, { name: 'Sweden' });
-    const usa = createPlace(db, { name: 'USA' });
-    createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
-    createPlace(db, { name: 'Stockholm', parent_place_id: usa.id });
-    expect(findDuplicatePlaces(db)).toHaveLength(0);
+  it('does not flag places with different parents', async () => {
+    const swe = await createPlace(db, { name: 'Sweden' });
+    const usa = await createPlace(db, { name: 'USA' });
+    await createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
+    await createPlace(db, { name: 'Stockholm', parent_place_id: usa.id });
+    expect(await findDuplicatePlaces(db)).toHaveLength(0);
   });
 
-  it('flags places with identical parents', () => {
-    const swe = createPlace(db, { name: 'Sweden' });
-    createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
-    createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
-    const dupes = findDuplicatePlaces(db);
+  it('flags places with identical parents', async () => {
+    const swe = await createPlace(db, { name: 'Sweden' });
+    await createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
+    await createPlace(db, { name: 'Stockholm', parent_place_id: swe.id });
+    const dupes = await findDuplicatePlaces(db);
     expect(dupes).toHaveLength(1);
     expect(dupes[0].reasons).toContain('same_parent');
   });
 
-  it('honours ignored pairs', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
-    const b = createPlace(db, { name: 'Stockholm' });
-    expect(findDuplicatePlaces(db)).toHaveLength(1);
-    ignoreDuplicatePlace(db, a.id, b.id);
-    expect(findDuplicatePlaces(db)).toHaveLength(0);
+  it('honours ignored pairs', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
+    const b = await createPlace(db, { name: 'Stockholm' });
+    expect(await findDuplicatePlaces(db)).toHaveLength(1);
+    await ignoreDuplicatePlace(db, a.id, b.id);
+    expect(await findDuplicatePlaces(db)).toHaveLength(0);
   });
 
-  it('honours pagination via limit/offset', () => {
+  it('honours pagination via limit/offset', async () => {
     // 4 candidate pairs in 4 different parents. Use parent names that are
     // far apart in edit distance so the parents don't themselves form
     // duplicate pairs at the top level (Parent0 vs Parent1 = distance 1).
     const parentNames = ['Africa', 'BorneoIslands', 'Cameroon99', 'Denmark11'];
     for (const pn of parentNames) {
-      const par = createPlace(db, { name: pn });
-      createPlace(db, { name: 'Leaf', parent_place_id: par.id });
-      createPlace(db, { name: 'Leaf', parent_place_id: par.id });
+      const par = await createPlace(db, { name: pn });
+      await createPlace(db, { name: 'Leaf', parent_place_id: par.id });
+      await createPlace(db, { name: 'Leaf', parent_place_id: par.id });
     }
-    expect(countDuplicatePlaces(db)).toBe(4);
-    expect(findDuplicatePlaces(db, 2, 0)).toHaveLength(2);
-    expect(findDuplicatePlaces(db, 2, 2)).toHaveLength(2);
-    expect(findDuplicatePlaces(db, 2, 4)).toHaveLength(0);
+    expect(await countDuplicatePlaces(db)).toBe(4);
+    expect(await findDuplicatePlaces(db, 2, 0)).toHaveLength(2);
+    expect(await findDuplicatePlaces(db, 2, 2)).toHaveLength(2);
+    expect(await findDuplicatePlaces(db, 2, 4)).toHaveLength(0);
   });
 
-  it('does not pair a place against persons of the same UUID by mistake', () => {
+  it('does not pair a place against persons of the same UUID by mistake', async () => {
     // Sanity: ignored_duplicates rows for entity_type='person' must not hide
     // place pairs (entity_type='place'). Belt-and-braces given the polymorphic
     // table — the find function filters by entity_type='place'.
-    const a = createPlace(db, { name: 'Stockholm' });
-    const b = createPlace(db, { name: 'Stockholm' });
+    const a = await createPlace(db, { name: 'Stockholm' });
+    const b = await createPlace(db, { name: 'Stockholm' });
     // Forge an ignored 'person' row with the same UUIDs (canonically sorted).
     const [low, high] = a.id < b.id ? [a.id, b.id] : [b.id, a.id];
-    runSql(db,
+    await runSql(db,
       "INSERT INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('person', ?, ?)",
       [low, high]
     );
-    expect(findDuplicatePlaces(db)).toHaveLength(1);
+    expect(await findDuplicatePlaces(db)).toHaveLength(1);
   });
 });
 
-describe('mergePlaces — repointing', () => {
-  it('repoints events.place_id', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const ev = createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
-    const result = mergePlaces(db, target.id, source.id);
+describe('mergePlaces — repointing', async () => {
+  it('repoints events.place_id', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const ev = await createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.events).toBe(1);
-    expect(getEvent(db, ev.id)?.place_id).toBe(target.id);
-    expect(getPlace(db, source.id)).toBeNull();
+    expect((await getEvent(db, ev.id))?.place_id).toBe(target.id);
+    expect(await getPlace(db, source.id)).toBeNull();
   });
 
-  it('repoints places.parent_place_id (self-reference)', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const child = createPlace(db, { name: 'Gamla stan', parent_place_id: source.id });
-    const result = mergePlaces(db, target.id, source.id);
+  it('repoints places.parent_place_id (self-reference)', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const child = await createPlace(db, { name: 'Gamla stan', parent_place_id: source.id });
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.child_places).toBe(1);
-    expect(getPlace(db, child.id)?.parent_place_id).toBe(target.id);
+    expect((await getPlace(db, child.id))?.parent_place_id).toBe(target.id);
   });
 
-  it('repoints citations.place_id', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const src = createSource(db, { title: 'A book' });
-    const cit = createCitation(db, { source_id: src.id, place_id: source.id });
-    const result = mergePlaces(db, target.id, source.id);
+  it('repoints citations.place_id', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const src = await createSource(db, { title: 'A book' });
+    const cit = await createCitation(db, { source_id: src.id, place_id: source.id });
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.citations).toBe(1);
-    expect(getCitation(db, cit.id)?.place_id).toBe(target.id);
+    expect((await getCitation(db, cit.id))?.place_id).toBe(target.id);
   });
 
-  it('repoints group_links and skips duplicates', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const g1 = createGroup(db, { name: 'g1' });
-    const g2 = createGroup(db, { name: 'g2' });
-    addGroupLink(db, g1.id, 'place', source.id);  // moves
-    addGroupLink(db, g2.id, 'place', target.id);  // already linked to target
-    addGroupLink(db, g2.id, 'place', source.id);  // duplicate — should be deleted on merge
-    const result = mergePlaces(db, target.id, source.id);
+  it('repoints group_links and skips duplicates', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const g1 = await createGroup(db, { name: 'g1' });
+    const g2 = await createGroup(db, { name: 'g2' });
+    await addGroupLink(db, g1.id, 'place', source.id);  // moves
+    await addGroupLink(db, g2.id, 'place', target.id);  // already linked to target
+    await addGroupLink(db, g2.id, 'place', source.id);  // duplicate — should be deleted on merge
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.group_links).toBe(1);
-    const g1Links = getGroupLinks(db, g1.id);
-    const g2Links = getGroupLinks(db, g2.id);
+    const g1Links = await getGroupLinks(db, g1.id);
+    const g2Links = await getGroupLinks(db, g2.id);
     expect(g1Links).toHaveLength(1);
     expect(g1Links[0].entity_id).toBe(target.id);
     expect(g2Links).toHaveLength(1); // duplicate collapsed
     expect(g2Links[0].entity_id).toBe(target.id);
   });
 
-  it('repoints task_links and skips duplicates', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const t1 = createResearchTask(db, { task: 't1' });
-    const t2 = createResearchTask(db, { task: 't2' });
-    addTaskLink(db, t1.id, 'place', source.id);
-    addTaskLink(db, t2.id, 'place', target.id);
-    addTaskLink(db, t2.id, 'place', source.id);
-    const result = mergePlaces(db, target.id, source.id);
+  it('repoints task_links and skips duplicates', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const t1 = await createResearchTask(db, { task: 't1' });
+    const t2 = await createResearchTask(db, { task: 't2' });
+    await addTaskLink(db, t1.id, 'place', source.id);
+    await addTaskLink(db, t2.id, 'place', target.id);
+    await addTaskLink(db, t2.id, 'place', source.id);
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.task_links).toBe(1);
-    const t1Links = getTaskLinks(db, t1.id);
-    const t2Links = getTaskLinks(db, t2.id);
+    const t1Links = await getTaskLinks(db, t1.id);
+    const t2Links = await getTaskLinks(db, t2.id);
     expect(t1Links).toHaveLength(1);
     expect(t1Links[0].entity_id).toBe(target.id);
     expect(t2Links).toHaveLength(1);
   });
 
-  it('repoints media_links and skips duplicates', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const m1 = createMedia(db, { title: 'photo1' });
-    const m2 = createMedia(db, { title: 'photo2' });
-    addMediaLink(db, { media_id: m1.id, entity_type: 'place', entity_id: source.id });
-    addMediaLink(db, { media_id: m2.id, entity_type: 'place', entity_id: target.id });
-    addMediaLink(db, { media_id: m2.id, entity_type: 'place', entity_id: source.id });
-    const result = mergePlaces(db, target.id, source.id);
+  it('repoints media_links and skips duplicates', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const m1 = await createMedia(db, { title: 'photo1' });
+    const m2 = await createMedia(db, { title: 'photo2' });
+    await addMediaLink(db, { media_id: m1.id, entity_type: 'place', entity_id: source.id });
+    await addMediaLink(db, { media_id: m2.id, entity_type: 'place', entity_id: target.id });
+    await addMediaLink(db, { media_id: m2.id, entity_type: 'place', entity_id: source.id });
+    const result = await mergePlaces(db, target.id, source.id);
     expect(result.moved.media_links).toBe(1);
-    const onTarget = getMediaForEntity(db, 'place', target.id);
+    const onTarget = await getMediaForEntity(db, 'place', target.id);
     expect(onTarget.some(m => m.id === m1.id)).toBe(true);
     expect(onTarget.some(m => m.id === m2.id)).toBe(true);
     // No m2 link still pointing at source (which is gone)
-    const orphans = queryAll(db,
+    const orphans = await queryAll(db,
       "SELECT id FROM media_links WHERE entity_type = 'place' AND entity_id = ?",
       [source.id]
     );
     expect(orphans).toHaveLength(0);
   });
 
-  it('throws on self-merge', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
-    expect(() => mergePlaces(db, a.id, a.id)).toThrow('Cannot merge a place with itself');
+  it('throws on self-merge', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
+    await expect(mergePlaces(db, a.id, a.id)).rejects.toThrow('Cannot merge a place with itself');
   });
 
-  it('throws when target missing', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
-    expect(() => mergePlaces(db, 'no-such-id', a.id)).toThrow('Target place not found');
+  it('throws when target missing', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
+    await expect(mergePlaces(db, 'no-such-id', a.id)).rejects.toThrow('Target place not found');
   });
 
-  it('throws when source missing', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
-    expect(() => mergePlaces(db, a.id, 'no-such-id')).toThrow('Source place not found');
+  it('throws when source missing', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
+    await expect(mergePlaces(db, a.id, 'no-such-id')).rejects.toThrow('Source place not found');
   });
 
-  it('drops candidate pair count by one after merge', () => {
-    createPlace(db, { name: 'Stockholm' });
-    const a = createPlace(db, { name: 'Stockholm' });
-    const b = createPlace(db, { name: 'Stockholm' });
-    expect(countDuplicatePlaces(db)).toBeGreaterThanOrEqual(1);
-    mergePlaces(db, a.id, b.id);
+  it('drops candidate pair count by one after merge', async () => {
+    await createPlace(db, { name: 'Stockholm' });
+    const a = await createPlace(db, { name: 'Stockholm' });
+    const b = await createPlace(db, { name: 'Stockholm' });
+    expect(await countDuplicatePlaces(db)).toBeGreaterThanOrEqual(1);
+    await mergePlaces(db, a.id, b.id);
     // Two Stockholms left -> still one pair, but the previously-3-stockholm
     // surface should have shrunk by one.
-    expect(countDuplicatePlaces(db)).toBe(1);
+    expect(await countDuplicatePlaces(db)).toBe(1);
   });
 });
 
-describe('mergePlaces — undo round-trip', () => {
-  it('restores every touched row exactly to its pre-merge state', () => {
+describe('mergePlaces — undo round-trip', async () => {
+  it('restores every touched row exactly to its pre-merge state', async () => {
     // Build a fixture with one of each kind of FK reference + a polymorphic
     // link of each type, including a "duplicate target link" that gets
     // collapsed during merge.
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const sourceSnapshot = getPlace(db, source.id)!;
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const sourceSnapshot = await getPlace(db, source.id)!;
 
-    const ev = createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
-    const child = createPlace(db, { name: 'Old town', parent_place_id: source.id });
-    const childSnapshotBefore = getPlace(db, child.id)!;
-    const src = createSource(db, { title: 'A' });
-    const cit = createCitation(db, { source_id: src.id, place_id: source.id });
+    const ev = await createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
+    const child = await createPlace(db, { name: 'Old town', parent_place_id: source.id });
+    const childSnapshotBefore = await getPlace(db, child.id)!;
+    const src = await createSource(db, { title: 'A' });
+    const cit = await createCitation(db, { source_id: src.id, place_id: source.id });
 
-    const g1 = createGroup(db, { name: 'g1' });
-    const g2 = createGroup(db, { name: 'g2' });
-    addGroupLink(db, g1.id, 'place', source.id);   // will move
-    addGroupLink(db, g2.id, 'place', target.id);   // pre-existing on target
-    addGroupLink(db, g2.id, 'place', source.id);   // will be collapsed (duplicate)
+    const g1 = await createGroup(db, { name: 'g1' });
+    const g2 = await createGroup(db, { name: 'g2' });
+    await addGroupLink(db, g1.id, 'place', source.id);   // will move
+    await addGroupLink(db, g2.id, 'place', target.id);   // pre-existing on target
+    await addGroupLink(db, g2.id, 'place', source.id);   // will be collapsed (duplicate)
 
-    const t1 = createResearchTask(db, { task: 't1' });
-    addTaskLink(db, t1.id, 'place', source.id);    // moves
+    const t1 = await createResearchTask(db, { task: 't1' });
+    await addTaskLink(db, t1.id, 'place', source.id);    // moves
 
-    const m1 = createMedia(db, { title: 'photo' });
-    addMediaLink(db, { media_id: m1.id, entity_type: 'place', entity_id: source.id });
+    const m1 = await createMedia(db, { title: 'photo' });
+    await addMediaLink(db, { media_id: m1.id, entity_type: 'place', entity_id: source.id });
 
     // Forge an ignored_duplicates row mentioning the source so the cleanup +
     // restore path is exercised.
-    const otherPlace = createPlace(db, { name: 'Other' });
-    ignoreDuplicatePlace(db, source.id, otherPlace.id);
+    const otherPlace = await createPlace(db, { name: 'Other' });
+    await ignoreDuplicatePlace(db, source.id, otherPlace.id);
 
     // Snapshot rows BEFORE merge
-    const groupLinksBefore = queryAll(db,
+    const groupLinksBefore = await queryAll(db,
       "SELECT id, group_id, entity_type, entity_id, sort_order, created_at FROM group_links WHERE entity_type = 'place' ORDER BY id"
     );
-    const taskLinksBefore = queryAll(db,
+    const taskLinksBefore = await queryAll(db,
       "SELECT id, task_id, entity_type, entity_id, sort_order, created_at FROM task_links WHERE entity_type = 'place' ORDER BY id"
     );
-    const mediaLinksBefore = queryAll(db,
+    const mediaLinksBefore = await queryAll(db,
       "SELECT id, media_id, entity_type, entity_id, link_type, sort_order, created_at FROM media_links WHERE entity_type = 'place' ORDER BY id"
     );
-    const ignoredBefore = queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
+    const ignoredBefore = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
       db,
       "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'place' ORDER BY person1_id, person2_id"
     );
     expect(ignoredBefore.length).toBeGreaterThan(0);
 
     // --- merge ---
-    mergePlaces(db, target.id, source.id);
+    await mergePlaces(db, target.id, source.id);
     // Sanity: state has changed.
-    expect(getPlace(db, source.id)).toBeNull();
-    expect(getEvent(db, ev.id)?.place_id).toBe(target.id);
+    expect(await getPlace(db, source.id)).toBeNull();
+    expect((await getEvent(db, ev.id))?.place_id).toBe(target.id);
 
     // --- undo ---
-    const label = undoManager.undo();
+    const label = await undoManager.undo();
     expect(label).toBe('undo.mergePlaces');
 
     // Source row restored, exact column values.
-    const sourceAfter = getPlace(db, source.id);
+    const sourceAfter = await getPlace(db, source.id);
     expect(sourceAfter).not.toBeNull();
     expect(sourceAfter).toEqual(sourceSnapshot);
 
     // events.place_id reverts.
-    expect(getEvent(db, ev.id)?.place_id).toBe(source.id);
+    expect((await getEvent(db, ev.id))?.place_id).toBe(source.id);
     // child place reverts.
-    expect(getPlace(db, child.id)).toEqual(childSnapshotBefore);
+    expect(await getPlace(db, child.id)).toEqual(childSnapshotBefore);
     // citation reverts.
-    expect(getCitation(db, cit.id)?.place_id).toBe(source.id);
+    expect((await getCitation(db, cit.id))?.place_id).toBe(source.id);
 
     // Polymorphic links: every row that existed pre-merge exists post-undo
     // with the same id, and entity_id points at whatever it pointed at before.
-    const groupLinksAfter = queryAll(db,
+    const groupLinksAfter = await queryAll(db,
       "SELECT id, group_id, entity_type, entity_id, sort_order, created_at FROM group_links WHERE entity_type = 'place' ORDER BY id"
     );
     expect(groupLinksAfter).toEqual(groupLinksBefore);
 
-    const taskLinksAfter = queryAll(db,
+    const taskLinksAfter = await queryAll(db,
       "SELECT id, task_id, entity_type, entity_id, sort_order, created_at FROM task_links WHERE entity_type = 'place' ORDER BY id"
     );
     expect(taskLinksAfter).toEqual(taskLinksBefore);
 
-    const mediaLinksAfter = queryAll(db,
+    const mediaLinksAfter = await queryAll(db,
       "SELECT id, media_id, entity_type, entity_id, link_type, sort_order, created_at FROM media_links WHERE entity_type = 'place' ORDER BY id"
     );
     expect(mediaLinksAfter).toEqual(mediaLinksBefore);
 
     // ignored_duplicates restored.
-    const ignoredAfter = queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
+    const ignoredAfter = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
       db,
       "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'place' ORDER BY person1_id, person2_id"
     );
     expect(ignoredAfter).toEqual(ignoredBefore);
   });
 
-  it('redo replays the merge', () => {
-    const target = createPlace(db, { name: 'Stockholm' });
-    const source = createPlace(db, { name: 'Stockholm' });
-    const ev = createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
+  it('redo replays the merge', async () => {
+    const target = await createPlace(db, { name: 'Stockholm' });
+    const source = await createPlace(db, { name: 'Stockholm' });
+    const ev = await createEvent(db, { event_type: 'birth', date_type: 'exact', place_id: source.id });
 
-    mergePlaces(db, target.id, source.id);
-    undoManager.undo();
-    expect(getPlace(db, source.id)).not.toBeNull();
-    expect(getEvent(db, ev.id)?.place_id).toBe(source.id);
+    await mergePlaces(db, target.id, source.id);
+    await undoManager.undo();
+    expect(await getPlace(db, source.id)).not.toBeNull();
+    expect((await getEvent(db, ev.id))?.place_id).toBe(source.id);
 
-    undoManager.redo();
-    expect(getPlace(db, source.id)).toBeNull();
-    expect(getEvent(db, ev.id)?.place_id).toBe(target.id);
+    await undoManager.redo();
+    expect(await getPlace(db, source.id)).toBeNull();
+    expect((await getEvent(db, ev.id))?.place_id).toBe(target.id);
   });
 });
 
-describe('deletePlace — ignored_duplicates cleanup', () => {
-  it('removes place-typed ignored pairs that mention the deleted id', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
-    const b = createPlace(db, { name: 'Stockholm' });
-    const c = createPlace(db, { name: 'Goeteborg' });
-    ignoreDuplicatePlace(db, a.id, b.id);
-    ignoreDuplicatePlace(db, a.id, c.id);
-    expect(queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'place'")).toHaveLength(2);
-    deletePlace(db, a.id);
+describe('deletePlace — ignored_duplicates cleanup', async () => {
+  it('removes place-typed ignored pairs that mention the deleted id', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
+    const b = await createPlace(db, { name: 'Stockholm' });
+    const c = await createPlace(db, { name: 'Goeteborg' });
+    await ignoreDuplicatePlace(db, a.id, b.id);
+    await ignoreDuplicatePlace(db, a.id, c.id);
+    expect(await queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'place'")).toHaveLength(2);
+    await deletePlace(db, a.id);
     // Both rows mentioned `a.id` -> both removed.
-    expect(queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'place'")).toHaveLength(0);
+    expect(await queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'place'")).toHaveLength(0);
   });
 
-  it('does not touch person-typed ignored rows', () => {
-    const a = createPlace(db, { name: 'Stockholm' });
+  it('does not touch person-typed ignored rows', async () => {
+    const a = await createPlace(db, { name: 'Stockholm' });
     // Forge a person-typed ignored row whose ids happen to overlap.
-    runSql(db,
+    await runSql(db,
       "INSERT INTO ignored_duplicates (entity_type, person1_id, person2_id) VALUES ('person', ?, ?)",
       [`aaa-${a.id.slice(0, 4)}`, `zzz-${a.id.slice(0, 4)}`]
     );
-    deletePlace(db, a.id);
-    expect(queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'person'")).toHaveLength(1);
+    await deletePlace(db, a.id);
+    expect(await queryAll(db, "SELECT * FROM ignored_duplicates WHERE entity_type = 'person'")).toHaveLength(1);
   });
 });
 
@@ -407,7 +407,7 @@ describe('FK self-check — every places.id reference must be handled by mergePl
 
   it('mergePlaces handles every FK column that references places.id', () => {
     const fkRefs = extractFkReferencesToPlaces(schema);
-    const mergeBlockMatch = merge.match(/export function mergePlaces[\s\S]*?^}/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergePlaces[\s\S]*?^}/m);
     expect(mergeBlockMatch).not.toBeNull();
     const mergeBlock = mergeBlockMatch![0];
 
@@ -424,7 +424,7 @@ describe('FK self-check — every places.id reference must be handled by mergePl
   });
 
   it('mergePlaces handles polymorphic place-typed links', () => {
-    const mergeBlockMatch = merge.match(/export function mergePlaces[\s\S]*?^}/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergePlaces[\s\S]*?^}/m);
     const mergeBlock = mergeBlockMatch![0];
     for (const table of ['group_links', 'task_links', 'media_links']) {
       const re = new RegExp(`${table}[\\s\\S]{0,200}?entity_type\\s*=\\s*'place'`);

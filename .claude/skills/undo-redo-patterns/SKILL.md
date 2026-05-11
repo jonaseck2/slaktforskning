@@ -1,6 +1,6 @@
 ---
 name: undo-redo-patterns
-description: Wire undo/redo support for new mutations. Use when adding any function in src/api/ that writes to the database, when composing multi-step operations that must undo atomically, when adding a new IPC channel that mutates state, or when investigating "why didn't my action show up in the undo stack". Covers UndoAction shape, the snapshot-old-state-then-mutate sequence, beginGroup/endGroup for atomic multi-step ops, the preload mutating() wrapper, and the relationship between undo and onDataChanged.
+description: Wire undo/redo support for new mutations. Use when adding any function in src/api/ that writes to the database, when composing multi-step operations that must undo atomically, when adding a new IPC channel that mutates state, or when investigating "why didn't my action show up in the undo stack". Covers UndoAction shape, the snapshot-old-state-then-mutate sequence, beginGroup/endGroup for atomic multi-step ops, the data-changed fan-out (Electron preload mutating() / Tauri auto-walk fireDataChanged()), and the relationship between undo and onDataChanged.
 ---
 
 # Undo / Redo Patterns
@@ -82,9 +82,28 @@ While `groupStack !== null`, every `undoManager.push()` call routes into the gro
 
 The renderer can also drive grouping for compound user-initiated flows via `window.api.undo.beginGroup(label)` / `endGroup()`. Use this when a single user gesture fires multiple `window.api.*` mutations that should undo together.
 
-## Preload `mutating()` wrapper — the renderer-facing half
+## Data-changed fan-out — the renderer-facing half
 
-[src/preload/index.ts](src/preload/index.ts) wraps every mutating IPC call:
+The user-observable contract is the same in both runtimes: every mutating IPC call must fire `data:changed` listeners after it resolves so `useEntityData` / `usePagedList` consumers refresh. The mechanism differs.
+
+### Tauri (current)
+
+`src/renderer/tauri-window-api.ts` walks the channel registry. For every channel declared `mutating: true`, the auto-walked wrapper calls `fireDataChanged()` after the handler resolves:
+
+```typescript
+// tauri-window-api.ts (sketch — the auto-walk loop)
+api[domain][method] = async (...args) => {
+  const result = await channel.handler(getDb(), ...args);
+  if (channel.mutating) fireDataChanged();
+  return result;
+};
+```
+
+`fireDataChanged()` does two things: (1) emits a Tauri event so all open windows react, and (2) calls every locally-registered `dataChangedListeners` callback. The two `undo:undo` / `undo:redo` polyfills in `tauri-window-api.ts` also call `fireDataChanged()` — undoing an action is a mutation from the renderer's point of view.
+
+### Electron (legacy)
+
+`src/preload/index.ts` wraps every mutating IPC call:
 
 ```typescript
 function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...args: T) => Promise<R> {
@@ -98,9 +117,13 @@ function mutating<T extends unknown[], R>(fn: (...args: T) => Promise<R>): (...a
 update: mutating((id, data) => ipcRenderer.invoke('persons:update', id, data)),
 ```
 
-Every mutation listed in `defineChannel({ ..., mutating: true })` (worker-thread channel) and every preload entry that uses `mutating()` (manually-registered channel) fires the listener fan-out *after* the IPC call resolves. `useEntityData` / `usePagedList` register against this one source of truth.
+The DB worker also broadcasts `data:changed` on completion (since `c3f12d95`) so MCP-side mutations refresh other windows the same way renderer-initiated ones do.
 
-**Implication for new channels:** if you add a worker-thread mutation channel via `defineChannel` and forget `mutating: true`, the IPC fires, undo records correctly, but **renderer views won't refresh until the user manually changes routes**. This is the same class of bug as the v0.227.2 PlacePanel research-tasks regression — the data path was sound, the broadcast was missing.
+### What both share
+
+`useEntityData` / `usePagedList` register against `window.api.onDataChanged(cb)` — one source of truth, runtime-agnostic. The composables don't care which implementation fired the listener.
+
+**Implication for new channels:** if you add a registry channel via `defineChannel` and forget `mutating: true`, the IPC fires, undo records correctly, but **renderer views won't refresh until the user manually changes routes**. This was the v0.227.2 PlacePanel research-tasks regression — the data path was sound, the broadcast was missing. The flag is engine-agnostic; the bug class survives the runtime change.
 
 ## Wiring checklist for a new mutation
 
@@ -109,11 +132,12 @@ When you add `myThings.create`, `myThings.update`, etc.:
 1. **API function** in [src/api/myThings.ts](src/api/) — pure CRUD, `db: Database` first parameter.
 2. **Undo wrapper** in [src/api/undo_wrappers.ts](src/api/undo_wrappers.ts) — snapshot + delegate + push.
 3. **IPC channel** in [src/shared/channels/myThings.ts](src/shared/channels/) — `defineChannel({ name: 'myThings:create', thread: 'worker', mutating: true, handler: (db, args) => undoWrappers.createMyThingUndo(db, args) })`. Do not call the raw `myThings.create` from the channel handler — it bypasses undo.
-4. **Preload entry** in [src/preload/index.ts](src/preload/index.ts) — `create: mutating((args) => ipcRenderer.invoke('myThings:create', args))`. The hand-maintained map; `preload-coverage.test.ts` asserts parity with the registry.
-5. **Static API stub** in [src/static/static-api.ts](src/static/static-api.ts) — read-only context, so use `noopVoid` or similar.
-6. **i18n labels** — add `undo.createMyThing`, `undo.updateMyThing`, `undo.deleteMyThing` to both `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts` so the menu can render the verb.
+4. **Renderer wiring (Electron)** in [src/preload/index.ts](src/preload/index.ts) — `create: mutating((args) => ipcRenderer.invoke('myThings:create', args))`. The hand-maintained map; `preload-coverage.test.ts` asserts parity with the registry.
+5. **Renderer wiring (Tauri)** — usually nothing to do; `tauri-window-api.ts`'s auto-walk picks up the registry entry and fires `fireDataChanged()` automatically because `mutating: true`. Only add an explicit polyfill if the channel needs Tauri-native services; if you do, the polyfill must call `fireDataChanged()` itself (the auto-walk wrapper is bypassed). `tauri-channel-coverage.test.ts` asserts every registry channel either auto-walks or has an explicit polyfill.
+6. **Static API stub** in [src/static/static-api.ts](src/static/static-api.ts) — read-only context, so use `noopVoid` or similar.
+7. **i18n labels** — add `undo.createMyThing`, `undo.updateMyThing`, `undo.deleteMyThing` to both `src/renderer/i18n/sv.ts` and `src/renderer/i18n/en.ts` so the menu can render the verb.
 
-If step 2 is skipped, the mutation works but isn't undoable. If step 4's `mutating()` is skipped, the mutation works AND is undoable but the UI goes stale. Both are silent failures.
+If step 2 is skipped, the mutation works but isn't undoable. If `mutating: true` is missing on the `defineChannel` (or a Tauri polyfill forgets `fireDataChanged()`), the mutation works AND is undoable but the UI goes stale. Both are silent failures.
 
 ## Lifecycle quirks
 
@@ -160,8 +184,9 @@ expect(...).toBeNull();
 
 ## Reference
 
-- [src/api/undo.ts](src/api/undo.ts) — `UndoManager` class
+- [src/api/undo.ts](src/api/undo.ts) — `UndoManager` class (engine-agnostic; lives in api/)
 - [src/api/undo_wrappers.ts](src/api/undo_wrappers.ts) — every undo-aware mutation in one file
 - [src/shared/channels/undo.ts](src/shared/channels/undo.ts) — IPC bindings (`undo:undo`, `undo:redo`, `undo:state`, `undo:beginGroup`, `undo:endGroup`)
-- [src/preload/index.ts](src/preload/index.ts) — `mutating()` helper + listener registry
+- [src/renderer/tauri-window-api.ts](src/renderer/tauri-window-api.ts) — Tauri auto-walk + `fireDataChanged()`; `undo:undo` / `undo:redo` polyfills
+- [src/preload/index.ts](src/preload/index.ts) — Electron `mutating()` helper + listener registry
 - [tests/unit/undo.test.ts](tests/unit/undo.test.ts) — existing test patterns

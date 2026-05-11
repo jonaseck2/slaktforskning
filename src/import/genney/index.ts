@@ -160,12 +160,12 @@ export async function importFromGenney(
     db.exec('BEGIN IMMEDIATE');
     let summary: ImportSummary;
     try {
-      summary = transformGenney(db, tables, { mediaDir: effectiveMediaDir });
+      summary = await transformGenney(db, tables, { mediaDir: effectiveMediaDir });
 
       // Auto-enable Swedish parishes gazetteer if no config exists yet
-      const existingConfig = getDbSetting(db, 'gazetteer_config');
+      const existingConfig = await getDbSetting(db, 'gazetteer_config');
       if (!existingConfig) {
-        setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] }));
+        await setDbSetting(db, 'gazetteer_config', JSON.stringify({ enabledGazetteers: ['sv-socknar', 'sv-forsamlingar'] }));
       }
 
       db.exec('COMMIT');

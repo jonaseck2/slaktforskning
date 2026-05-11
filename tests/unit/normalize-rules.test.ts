@@ -19,35 +19,35 @@ function stripSuffix(input: string, rules: { stripSuffixes: string[]; stripPrefi
   return s;
 }
 
-describe('DE_RULES — ecclesiastical suffixes', () => {
-  it('strips Kirchgemeinde', () => {
+describe('DE_RULES — ecclesiastical suffixes', async () => {
+  it('strips Kirchgemeinde', async () => {
     expect(stripSuffix('Kirchgemeinde St. Petri', DE_RULES)).toBe('St. Petri');
   });
-  it('strips Pfarrei', () => {
+  it('strips Pfarrei', async () => {
     expect(stripSuffix('Pfarrei St. Maria', DE_RULES)).toBe('St. Maria');
   });
-  it('strips Pfarrei-Verband before Pfarrei (longest-first)', () => {
+  it('strips Pfarrei-Verband before Pfarrei (longest-first)', async () => {
     expect(stripSuffix('Pfarrei-Verband Nord', DE_RULES)).toBe('Nord');
   });
-  it('strips Kirchengemeinde trailing', () => {
+  it('strips Kirchengemeinde trailing', async () => {
     expect(stripSuffix('Hamburg-Altona Kirchengemeinde', DE_RULES)).toBe('Hamburg-Altona');
   });
 });
 
-describe('GB_RULES — British-isles civil + ecclesiastical suffixes', () => {
-  it('strips Council Area', () => {
+describe('GB_RULES — British-isles civil + ecclesiastical suffixes', async () => {
+  it('strips Council Area', async () => {
     expect(stripSuffix('East Lothian Council Area', GB_RULES)).toBe('East Lothian');
   });
-  it('strips Civil Parish (longest-first; matched before bare "parish")', () => {
+  it('strips Civil Parish (longest-first; matched before bare "parish")', async () => {
     expect(stripSuffix('Civil Parish of Woodbridge', GB_RULES)).toBe('Woodbridge');
   });
-  it('strips County of prefix', () => {
+  it('strips County of prefix', async () => {
     expect(stripSuffix('County of Suffolk', GB_RULES)).toBe('Suffolk');
   });
-  it('strips Community trailing (Wales)', () => {
+  it('strips Community trailing (Wales)', async () => {
     expect(stripSuffix('Llanrwst Community', GB_RULES)).toBe('Llanrwst');
   });
-  it('strips Royal Burgh prefix', () => {
+  it('strips Royal Burgh prefix', async () => {
     expect(stripSuffix('Royal Burgh of Stirling', GB_RULES)).toBe('Stirling');
   });
 });

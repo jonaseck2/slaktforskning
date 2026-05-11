@@ -2,8 +2,8 @@ import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import type { CheckResult, CheckSeverity } from './check-utils';
 
-export function checkOrphanedSource(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; title: string }>(db, `
+export async function checkOrphanedSource(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; title: string }>(db, `
     SELECT s.id, s.title
     FROM sources s
     WHERE NOT EXISTS (
@@ -21,8 +21,8 @@ export function checkOrphanedSource(db: Database): CheckResult[] {
   }));
 }
 
-export function checkSourceMissingTitle(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string }>(db, `
+export async function checkSourceMissingTitle(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string }>(db, `
     SELECT id FROM sources WHERE title IS NULL OR title = ''
   `);
   return rows.map(r => ({
@@ -35,8 +35,8 @@ export function checkSourceMissingTitle(db: Database): CheckResult[] {
   }));
 }
 
-export function checkOrphanedRepository(db: Database): CheckResult[] {
-  const rows = queryAll<{ id: string; name: string }>(db, `
+export async function checkOrphanedRepository(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ id: string; name: string }>(db, `
     SELECT r.id, r.name
     FROM repositories r
     WHERE NOT EXISTS (

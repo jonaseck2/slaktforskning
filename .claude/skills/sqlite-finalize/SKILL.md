@@ -5,6 +5,8 @@ description: Finalize SQLite prepared statements to avoid WASM heap leaks in nod
 
 # SQLite Statement Finalization
 
+> **Scope: Active for the Electron build + the Vitest test backend.** The Tauri build runs against rusqlite, which manages statement lifetimes via Rust's borrow checker — no manual finalize, no WASM heap to leak into. This skill is still mandatory wherever `node-sqlite3-wasm` is the binding: every `src/api/*.ts` function exercised from Vitest (which uses node-sqlite3-wasm via `createTestDb()`), every `src/main/*` worker handler in the Electron build, and every importer running in either of those paths. Becomes obsolete when in-memory rusqlite replaces node-sqlite3-wasm in tests (post-v0.250.0 follow-up per `docs/plans/2026-05-10-tauri-test-migration.md`). Until then, treat unfinalised `db.prepare()` calls as bugs in any code path Vitest can reach.
+
 ## The Problem
 
 `node-sqlite3-wasm` compiled prepared statements live in the **Emscripten WASM

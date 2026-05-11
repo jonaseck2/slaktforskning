@@ -4,8 +4,8 @@ import {
   narrateMedia, narratePlace, narrateEvent, narrateCitation,
 } from '../../src/renderer/utils/narration';
 
-describe('narratePerson', () => {
-  it('narrates a person with birth and death', () => {
+describe('narratePerson', async () => {
+  it('narrates a person with birth and death', async () => {
     const text = narratePerson({
       name: 'Erik Johansson',
       birthDate: '1842-03-15',
@@ -25,14 +25,14 @@ describe('narratePerson', () => {
     expect(text).toContain('Karl');
   });
 
-  it('handles missing data gracefully', () => {
+  it('handles missing data gracefully', async () => {
     const text = narratePerson({ name: 'Unknown Person' });
     expect(text).toContain('Unknown Person');
     expect(text).not.toContain('undefined');
     expect(text).not.toContain('null');
   });
 
-  it('handles only birth data', () => {
+  it('handles only birth data', async () => {
     const text = narratePerson({ name: 'Test', birthDate: '1900', birthPlace: 'Stockholm' });
     expect(text).toContain('Born');
     expect(text).toContain('Stockholm');
@@ -40,8 +40,8 @@ describe('narratePerson', () => {
   });
 });
 
-describe('narrateRelationship', () => {
-  it('narrates a couple relationship', () => {
+describe('narrateRelationship', async () => {
+  it('narrates a couple relationship', async () => {
     const text = narrateRelationship({
       type: 'couple',
       person1Name: 'Erik Johansson',
@@ -54,7 +54,7 @@ describe('narrateRelationship', () => {
     expect(text).toContain('3');
   });
 
-  it('handles parent_child type', () => {
+  it('handles parent_child type', async () => {
     const text = narrateRelationship({
       type: 'parent_child',
       person1Name: 'Erik',
@@ -65,8 +65,8 @@ describe('narrateRelationship', () => {
   });
 });
 
-describe('narrateSource', () => {
-  it('narrates a source with author', () => {
+describe('narrateSource', async () => {
+  it('narrates a source with author', async () => {
     const text = narrateSource({
       title: 'Church records, Göteborg parish',
       author: 'Swedish Church',
@@ -77,15 +77,15 @@ describe('narrateSource', () => {
     expect(text).toContain('4');
   });
 
-  it('narrates source without author', () => {
+  it('narrates source without author', async () => {
     const text = narrateSource({ title: 'Census 1880', citationCount: 0 });
     expect(text).toContain('Census 1880');
     expect(text).not.toContain('Author');
   });
 });
 
-describe('narrateMedia', () => {
-  it('narrates a photo with title, format, and tagged people', () => {
+describe('narrateMedia', async () => {
+  it('narrates a photo with title, format, and tagged people', async () => {
     const text = narrateMedia({
       title: 'Karl och Anna 1923',
       format: 'jpg',
@@ -99,22 +99,22 @@ describe('narrateMedia', () => {
     expect(text).toContain('1923');
   });
 
-  it('handles a document with no tagged people', () => {
+  it('handles a document with no tagged people', async () => {
     const text = narrateMedia({ title: 'Birth certificate', format: 'pdf' });
     expect(text).toContain('Birth certificate');
     expect(text).toContain('Document');
     expect(text).not.toContain('Tagged');
   });
 
-  it('handles minimal data (title only)', () => {
+  it('handles minimal data (title only)', async () => {
     const text = narrateMedia({ title: 'Untitled' });
     expect(text).toContain('Untitled');
     expect(text).not.toContain('undefined');
   });
 });
 
-describe('narratePlace', () => {
-  it('narrates a place with type, parent path, and event count', () => {
+describe('narratePlace', async () => {
+  it('narrates a place with type, parent path, and event count', async () => {
     const text = narratePlace({
       name: 'Älghult',
       type: 'parish',
@@ -127,21 +127,21 @@ describe('narratePlace', () => {
     expect(text).toContain('47');
   });
 
-  it('handles a place with no events', () => {
+  it('handles a place with no events', async () => {
     const text = narratePlace({ name: 'Stockholm', eventCount: 0 });
     expect(text).toContain('Stockholm');
     expect(text).not.toContain('undefined');
   });
 
-  it('handles minimal data (name only)', () => {
+  it('handles minimal data (name only)', async () => {
     const text = narratePlace({ name: 'Unknown' });
     expect(text).toContain('Unknown');
     expect(text).not.toContain('undefined');
   });
 });
 
-describe('narrateEvent', () => {
-  it('narrates a birth event with date, place, and primary person', () => {
+describe('narrateEvent', async () => {
+  it('narrates a birth event with date, place, and primary person', async () => {
     const text = narrateEvent({
       type: 'Birth',
       date: '12 March 1850',
@@ -154,22 +154,22 @@ describe('narrateEvent', () => {
     expect(text).toContain('Stockholm');
   });
 
-  it('handles a marriage event with no primary person', () => {
+  it('handles a marriage event with no primary person', async () => {
     const text = narrateEvent({ type: 'Marriage', date: '1868', place: 'Göteborg' });
     expect(text).toContain('Marriage');
     expect(text).toContain('1868');
     expect(text).not.toContain('undefined');
   });
 
-  it('handles minimal data (type only)', () => {
+  it('handles minimal data (type only)', async () => {
     const text = narrateEvent({ type: 'Census' });
     expect(text).toContain('Census');
     expect(text).not.toContain('undefined');
   });
 });
 
-describe('narrateCitation', () => {
-  it('narrates a primary citation with page and attached entity', () => {
+describe('narrateCitation', async () => {
+  it('narrates a primary citation with page and attached entity', async () => {
     const text = narrateCitation({
       sourceTitle: 'Stockholms domkyrkoförsamling födelsebok 1850-1859',
       page: '47',
@@ -182,14 +182,14 @@ describe('narrateCitation', () => {
     expect(text).toContain("Karl Andersson's birth");
   });
 
-  it('handles a citation with no page', () => {
+  it('handles a citation with no page', async () => {
     const text = narrateCitation({ sourceTitle: 'Census 1880', confidence: 2 });
     expect(text).toContain('Census 1880');
     expect(text).toContain('secondary');
     expect(text).not.toContain('undefined');
   });
 
-  it('handles minimal data (title only)', () => {
+  it('handles minimal data (title only)', async () => {
     const text = narrateCitation({ sourceTitle: 'Unknown source' });
     expect(text).toContain('Unknown source');
     expect(text).not.toContain('undefined');

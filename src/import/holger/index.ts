@@ -5,6 +5,18 @@
  *   - A .ged file → used directly with profile='holger'
  *   - A .zip file → unzipped to a temp dir; the largest .ged inside is used
  *   - A folder → recursively scanned for .ged files
+ *
+ * Two entry points:
+ *
+ * 1. `importFromHolger(db, opts)` — Electron-side. Does its own fs work
+ *    (zip extract via fflate, file walks, file reads). Used by the worker
+ *    channel in src/shared/channels/import.ts.
+ *
+ * 2. `importFromHolgerWithBytes(db, gedBytes, options)` — bytes-in, no fs.
+ *    Decodes encoding-aware, parses, runs `importGedcom` with the Holger
+ *    profile. The Tauri renderer's polyfill calls this after the Rust side
+ *    has extracted the .ged from any zip + bulk-copied the media folder
+ *    into `<dbname>-media/`. Mirrors `importFromGrampsBytes` shape.
  */
 
 import * as fs from 'fs';
@@ -12,7 +24,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { unzipSync } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
-import { readGedcomFile } from '../../gedcom/encoding';
+import { readGedcomFile, decodeGedcomBytes } from '../../gedcom/encoding';
 import { parseGedcom } from '../../gedcom/parser';
 import { importGedcom } from '../../import/gedcom';
 import type { ImportReport } from '../../import/gedcom';
@@ -122,7 +134,7 @@ export async function importFromHolger(
     console.log(`[import-timing] parseGedcom — ${Date.now() - tParse}ms — ${tree.length} top-level nodes`);
     progress('Importing…');
     const tImport = Date.now();
-    const report = importGedcom(db, tree, {
+    const report = await importGedcom(db, tree, {
       profile: 'holger',
       ...(mediaDir ? { mediaDir } : {}),
     });
@@ -132,5 +144,42 @@ export async function importFromHolger(
   } finally {
     if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Bytes-in entry — used by the Tauri renderer's polyfill
+// ---------------------------------------------------------------------------
+
+export interface HolgerImportFromBytesOptions {
+  /** Local directory for remapping Windows-style OBJE FILE paths.
+   *  e.g. 'C:\\OurKind\\Media\\P12\\photo.jpg' -> '{mediaDir}/P12/photo.jpg' */
+  mediaDir?: string;
+  onProgress?: (msg: string) => void;
+}
+
+/**
+ * Run the Holger import against a GEDCOM byte buffer. Pure TS, no fs —
+ * the caller (Tauri renderer polyfill) is responsible for any zip extract,
+ * any media-folder copy, and post-import media consolidation. Mirrors the
+ * same parse + importGedcom flow as `importFromHolger` after step 3, just
+ * without the path-based file reads.
+ */
+export async function importFromHolgerWithBytes(
+  db: Database,
+  gedBytes: Uint8Array,
+  options: HolgerImportFromBytesOptions = {},
+): Promise<{ report: ImportReport }> {
+  const { mediaDir, onProgress = () => { /* noop */ } } = options;
+  onProgress('Decoding GEDCOM…');
+  const text = decodeGedcomBytes(gedBytes);
+  onProgress('Parsing GEDCOM…');
+  const tree = parseGedcom(text);
+  onProgress('Importing…');
+  const report = await importGedcom(db, tree, {
+    profile: 'holger',
+    ...(mediaDir ? { mediaDir } : {}),
+  });
+  onProgress(`Done — ${report.persons} persons, ${report.families} families`);
+  return { report };
 }
 

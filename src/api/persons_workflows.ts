@@ -41,8 +41,8 @@ export interface CreatePersonWithEventResult {
   citation: Citation | null;
 }
 
-function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithEventResult {
-  const person = personApi.createPerson(db, {
+async function _core(db: Database, args: CreatePersonWithEventArgs): Promise<CreatePersonWithEventResult> {
+  const person = await personApi.createPerson(db, {
     given_name: args.given_name,
     surname: args.surname,
     sex: args.sex,
@@ -55,11 +55,11 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
   if (args.event) {
     let place_id: string | null = args.event.place_id;
     if (!place_id && args.event.place_name && args.event.place_name.trim()) {
-      const place = placeApi.findOrCreatePlace(db, args.event.place_name.trim());
+      const place = await placeApi.findOrCreatePlace(db, args.event.place_name.trim());
       place_id = place.id;
     }
 
-    event = eventApi.createEvent(db, {
+    event = await eventApi.createEvent(db, {
       event_type: args.event.event_type,
       date_type: args.event.date_type as GenealogyEvent['date_type'],
       date_value: args.event.date_value,
@@ -70,14 +70,14 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
       cause: args.event.cause,
     });
 
-    relationshipApi.addEventParticipant(db, {
+    await relationshipApi.addEventParticipant(db, {
       event_id: event.id,
       person_id: person.id,
       role: 'primary',
     });
 
     if (args.citation) {
-      citation = sourceApi.createCitation(db, {
+      citation = await sourceApi.createCitation(db, {
         source_id: args.citation.source_id,
         event_id: event.id,
         person_id: person.id,
@@ -93,13 +93,13 @@ function _core(db: Database, args: CreatePersonWithEventArgs): CreatePersonWithE
   return { person, event, citation };
 }
 
-export function createPersonWithEventWorkflow(
+export async function createPersonWithEventWorkflow(
   db: Database,
   args: CreatePersonWithEventArgs,
-): CreatePersonWithEventResult {
+): Promise<CreatePersonWithEventResult> {
   db.exec('BEGIN');
   try {
-    const result = _core(db, args);
+    const result = await _core(db, args);
     db.exec('COMMIT');
     return result;
   } catch (err) {

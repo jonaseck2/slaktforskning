@@ -36,7 +36,7 @@ export interface RecordEventResult {
   citation: Citation | null;
 }
 
-export function recordEventWorkflow(db: Database, args: RecordEventArgs): RecordEventResult {
+export async function recordEventWorkflow(db: Database, args: RecordEventArgs): Promise<RecordEventResult> {
   if (args.place && args.place_chain && args.place_chain.length > 0) {
     throw new Error(
       'Pass either `place` (single component) or `place_chain` (root → leaf, including the leaf), not both.',
@@ -49,7 +49,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       for (const link of args.place_chain) placeApi.assertLeafPlaceName(link);
       const leaf = args.place_chain[args.place_chain.length - 1];
       const ancestors = args.place_chain.slice(0, -1);
-      const place = placeApi.findOrCreatePlaceWithChain(
+      const place = await placeApi.findOrCreatePlaceWithChain(
         db,
         leaf,
         ancestors.map((n) => ({ name: n })),
@@ -57,7 +57,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
       place_id = place.id;
     } else if (args.place) {
       placeApi.assertLeafPlaceName(args.place);
-      const place = placeApi.findOrCreatePlace(db, args.place);
+      const place = await placeApi.findOrCreatePlace(db, args.place);
       place_id = place.id;
     }
 
@@ -70,7 +70,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
     // explicitly state `date_type` if they want a structured value. When
     // omitted: date_original holds the raw input; date_type defaults to
     // 'unknown' at the api/schema layer; date_value stays null.
-    const event = eventApi.createEvent(db, {
+    const event = await eventApi.createEvent(db, {
       event_type: args.event_type,
       relationship_id: args.relationship_id ?? null,
       date_original: args.date_original ?? args.date_value ?? '',
@@ -85,7 +85,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
 
     // Single primary participant
     if (args.person_id) {
-      relationshipApi.addEventParticipant(db, {
+      await relationshipApi.addEventParticipant(db, {
         event_id: event.id,
         person_id: args.person_id,
         role: 'primary',
@@ -95,7 +95,7 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
     // Multiple participants with roles
     if (args.person_ids && args.person_ids.length > 0) {
       for (const p of args.person_ids) {
-        relationshipApi.addEventParticipant(db, {
+        await relationshipApi.addEventParticipant(db, {
           event_id: event.id,
           person_id: p.id,
           role: (p.role as Parameters<typeof relationshipApi.addEventParticipant>[1]['role']) ?? 'primary',
@@ -105,8 +105,8 @@ export function recordEventWorkflow(db: Database, args: RecordEventArgs): Record
 
     let citation: Citation | null = null;
     if (args.source_title) {
-      const source = findOrCreateSource(db, args.source_title);
-      citation = sourceApi.createCitation(db, {
+      const source = await findOrCreateSource(db, args.source_title);
+      citation = await sourceApi.createCitation(db, {
         source_id: source.id,
         event_id: event.id,
         page: args.source_page,
@@ -150,7 +150,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       cause: z.string().optional().describe('Cause (e.g. cause of death)'),
     },
   }, async (args) => {
-    const result = recordEventWorkflow(getDb(), args as RecordEventArgs);
+    const result = await recordEventWorkflow(getDb(), args as RecordEventArgs);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -162,7 +162,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       include_sibling_deaths: z.boolean().optional().describe('When true, include each sibling\'s death events that occurred during the subject\'s lifetime. Default false.'),
     },
   }, async (args) => {
-    const timeline = reportData.getTimeline(getDb(), args.person_id, {
+    const timeline = await reportData.getTimeline(getDb(), args.person_id, {
       includeChildrenMarriages: args.include_children_marriages,
       includeSiblingDeaths: args.include_sibling_deaths,
     });
@@ -197,11 +197,11 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
     }
 
     if (place !== undefined) {
-      const p = placeApi.findOrCreatePlace(db, place);
+      const p = await placeApi.findOrCreatePlace(db, place);
       updates.place_id = p.id;
     }
 
-    const event = eventApi.updateEvent(db, id, updates);
+    const event = await eventApi.updateEvent(db, id, updates);
     return { content: [{ type: 'text', text: event ? JSON.stringify(event, null, 2) : 'Event not found' }] };
   });
 
@@ -211,7 +211,7 @@ export function registerEventTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Event ID'),
     },
   }, async (args) => {
-    const ok = eventApi.deleteEvent(getDb(), args.id);
+    const ok = await eventApi.deleteEvent(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Event not found' }] };
   });
 }

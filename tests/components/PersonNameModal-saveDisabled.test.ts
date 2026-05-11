@@ -63,7 +63,7 @@ function findSaveButton(wrapper: ReturnType<typeof mount>) {
   return wrapper.find('button.ep-save-btn');
 }
 
-describe('PersonNameModal — prefill given_name + surname from current displayed name', () => {
+describe('PersonNameModal — prefill given_name + surname from current displayed name', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -148,7 +148,7 @@ describe('PersonNameModal — prefill given_name + surname from current displaye
     await inputs[1].setValue('Andersson-Berg'); // change surname
     await flushPromises();
 
-    await findSaveButton(wrapper).trigger('click');
+    (await findSaveButton(wrapper)).trigger('click');
     await flushPromises();
 
     expect(api.persons.addName).toHaveBeenCalledTimes(1);
@@ -158,7 +158,7 @@ describe('PersonNameModal — prefill given_name + surname from current displaye
   });
 });
 
-describe('PersonNameModal — Save is disabled until at least one identifier is provided', () => {
+describe('PersonNameModal — Save is disabled until at least one identifier is provided', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -241,7 +241,7 @@ describe('PersonNameModal — Save is disabled until at least one identifier is 
   });
 });
 
-describe('PersonNameModal — required-field markers + ARIA', () => {
+describe('PersonNameModal — required-field markers + ARIA', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -299,7 +299,7 @@ describe('PersonNameModal — required-field markers + ARIA', () => {
   });
 });
 
-describe('PersonNameModal — Enter on invalid form flashes the field instead of saving silently', () => {
+describe('PersonNameModal — Enter on invalid form flashes the field instead of saving silently', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

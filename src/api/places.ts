@@ -28,7 +28,7 @@ export function assertLeafPlaceName(name: string): void {
   }
 }
 
-export function createPlace(
+export async function createPlace(
   db: Database,
   data: {
     name: string;
@@ -44,9 +44,9 @@ export function createPlace(
     city?: string | null;
     country?: string | null;
   }
-): Place {
+): Promise<Place> {
   const id = crypto.randomUUID();
-  runSql(db, `
+  await runSql(db, `
     INSERT INTO places (id, name, normalized_name, place_type, parent_place_id, latitude, longitude, date_from, date_to, notes, street, postal_code, city, country)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
@@ -58,15 +58,15 @@ export function createPlace(
     data.street ?? null, data.postal_code ?? null,
     data.city ?? null, data.country ?? null,
   ]);
-  return getPlace(db, id)!;
+  return (await getPlace(db, id))!;
 }
 
-export function getPlace(db: Database, id: string): Place | null {
-  return queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [id]) ?? null;
+export async function getPlace(db: Database, id: string): Promise<Place | null> {
+  return (await queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [id])) ?? null;
 }
 
-export function listPlaces(db: Database): Place[] {
-  return queryAll<Place>(db, 'SELECT * FROM places ORDER BY name ASC');
+export async function listPlaces(db: Database): Promise<Place[]> {
+  return await queryAll<Place>(db, 'SELECT * FROM places ORDER BY name ASC');
 }
 
 export type ListPlacesSortBy = 'name' | 'place_type';
@@ -82,20 +82,20 @@ function buildPlacesFilterClause(query: string | undefined): { where: string; pa
   };
 }
 
-export function listPlacesPage(
+export async function listPlacesPage(
   db: Database,
   limit: number,
   offset: number,
   sortBy: ListPlacesSortBy = 'name',
   sortDir: ListPlacesSortDir = 'asc',
   query?: string,
-): Place[] {
+): Promise<Place[]> {
   const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
   const orderBy = sortBy === 'place_type'
     ? `COALESCE(p.place_type,'') ${dir}, p.name ASC`
     : `p.name ${dir}`;
   const filter = buildPlacesFilterClause(query);
-  return queryAll<Place>(db, `
+  return await queryAll<Place>(db, `
     SELECT p.* FROM places p
     ${filter.where}
     ORDER BY ${orderBy}
@@ -103,17 +103,17 @@ export function listPlacesPage(
   `, [...filter.params, limit, offset]);
 }
 
-export function countPlaces(db: Database, query?: string): number {
+export async function countPlaces(db: Database, query?: string): Promise<number> {
   const filter = buildPlacesFilterClause(query);
   if (!filter.where) {
-    return queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places')?.n ?? 0;
+    return (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places'))?.n ?? 0;
   }
-  return queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM places p ${filter.where}`, filter.params)?.n ?? 0;
+  return (await queryOne<{ n: number }>(db, `SELECT COUNT(*) as n FROM places p ${filter.where}`, filter.params))?.n ?? 0;
 }
 
-export function searchPlaces(db: Database, query: string): (Place & { parent_name: string | null })[] {
+export async function searchPlaces(db: Database, query: string): Promise<(Place & { parent_name: string | null })[]> {
   const q = `%${normalize(query)}%`;
-  return queryAll<Place & { parent_name: string | null }>(db, `
+  return await queryAll<Place & { parent_name: string | null }>(db, `
     SELECT p.*, parent.name as parent_name
     FROM places p
     LEFT JOIN places parent ON parent.id = p.parent_place_id
@@ -123,11 +123,11 @@ export function searchPlaces(db: Database, query: string): (Place & { parent_nam
 }
 
 /** Returns the full path of a place as a comma-separated string, e.g. "Fröderyd, Jönköpings län". */
-export function getPlacePath(db: Database, id: string): string {
+export async function getPlacePath(db: Database, id: string): Promise<string> {
   const parts: string[] = [];
   let currentId: string | null = id;
   while (currentId) {
-    const row = queryOne<{ name: string; parent_place_id: string | null }>(db, 'SELECT name, parent_place_id FROM places WHERE id = ?', [currentId]);
+    const row = await queryOne<{ name: string; parent_place_id: string | null }>(db, 'SELECT name, parent_place_id FROM places WHERE id = ?', [currentId]);
     if (!row) break;
     parts.push(row.name);
     currentId = row.parent_place_id ?? null;
@@ -135,15 +135,15 @@ export function getPlacePath(db: Database, id: string): string {
   return parts.join(', ');
 }
 
-export function updatePlace(
+export async function updatePlace(
   db: Database,
   id: string,
   data: Partial<Omit<Place, 'id' | 'normalized_name'>>
-): Place | null {
-  const existing = getPlace(db, id);
+): Promise<Place | null> {
+  const existing = await getPlace(db, id);
   if (!existing) return null;
   const name = data.name ?? existing.name;
-  runSql(db, `
+  await runSql(db, `
     UPDATE places SET
       name = ?, normalized_name = ?, place_type = ?,
       parent_place_id = ?, latitude = ?, longitude = ?,
@@ -165,24 +165,24 @@ export function updatePlace(
     data.country ?? existing.country,
     id,
   ]);
-  return getPlace(db, id);
+  return await getPlace(db, id);
 }
 
-export function deletePlace(db: Database, id: string): boolean {
-  runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
-  runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
+export async function deletePlace(db: Database, id: string): Promise<boolean> {
+  await runSqlChanges(db, `DELETE FROM task_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
+  await runSqlChanges(db, `DELETE FROM group_links WHERE entity_type = 'place' AND entity_id = ?`, [id]);
   // v0.220.0: ignored_duplicates is polymorphic — clean place-typed pairs
   // so a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
   // Mirrors the pattern in deletePerson.
-  deleteIgnoredDuplicatesForPlace(db, id);
-  return runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id]) > 0;
+  await deleteIgnoredDuplicatesForPlace(db, id);
+  return (await runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id])) > 0;
 }
 
-export function findOrCreatePlace(db: Database, name: string): Place {
+export async function findOrCreatePlace(db: Database, name: string): Promise<Place> {
   const norm = normalize(name);
-  const existing = queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? LIMIT 1', [norm]);
+  const existing = await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? LIMIT 1', [norm]);
   if (existing) return existing;
-  return createPlace(db, { name: name.trim() });
+  return await createPlace(db, { name: name.trim() });
 }
 
 /**
@@ -196,7 +196,7 @@ export function findOrCreatePlace(db: Database, name: string): Place {
  * and `name` would be `'Hörningsholm'`. Each link in the chain gets created
  * once (matching by `(parent, normalized_name)`) and reused on subsequent calls.
  */
-export function findOrCreatePlaceWithChain(
+export async function findOrCreatePlaceWithChain(
   db: Database,
   name: string,
   chain: Array<{
@@ -217,20 +217,20 @@ export function findOrCreatePlaceWithChain(
     city?: string | null;
     country?: string | null;
   },
-): Place {
+): Promise<Place> {
   let parentId: string | null = null;
   for (const link of chain) {
     const norm = normalize(link.name);
     // Match within the current parent scope to avoid colliding with
     // unrelated places of the same name elsewhere in the tree.
     const existing: Place | undefined = parentId === null
-      ? queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [norm])
-      : queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [norm, parentId]);
+      ? await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [norm])
+      : await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [norm, parentId]);
     if (existing) {
       parentId = existing.id;
       continue;
     }
-    const created = createPlace(db, {
+    const created = await createPlace(db, {
       name: link.name.trim(),
       place_type: link.place_type,
       parent_place_id: parentId,
@@ -244,10 +244,10 @@ export function findOrCreatePlaceWithChain(
   // silently overwritten by a findOrCreate call (use updatePlace explicitly).
   const leafNorm = normalize(name);
   const existingLeaf: Place | undefined = parentId === null
-    ? queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [leafNorm])
-    : queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [leafNorm, parentId]);
+    ? await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [leafNorm])
+    : await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [leafNorm, parentId]);
   if (existingLeaf) return existingLeaf;
-  return createPlace(db, { name: name.trim(), parent_place_id: parentId, ...leafProps });
+  return await createPlace(db, { name: name.trim(), parent_place_id: parentId, ...leafProps });
 }
 
 /**
@@ -255,12 +255,12 @@ export function findOrCreatePlaceWithChain(
  * `hasChildren` is computed via EXISTS so the tree picker can render chevrons
  * without N+1 queries when expanding.
  */
-export function listPlaceChildren(
+export async function listPlaceChildren(
   db: Database,
   parentId: string | null,
-): (Place & { hasChildren: boolean })[] {
+): Promise<(Place & { hasChildren: boolean })[]> {
   if (parentId === null) {
-    return queryAll<Place & { hasChildren: boolean }>(db, `
+    return await queryAll<Place & { hasChildren: boolean }>(db, `
       SELECT p.*,
         EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
       FROM places p
@@ -268,7 +268,7 @@ export function listPlaceChildren(
       ORDER BY p.name ASC
     `);
   }
-  return queryAll<Place & { hasChildren: boolean }>(db, `
+  return await queryAll<Place & { hasChildren: boolean }>(db, `
     SELECT p.*,
       EXISTS(SELECT 1 FROM places c WHERE c.parent_place_id = p.id) AS hasChildren
     FROM places p
@@ -284,11 +284,11 @@ const MAX_PLACE_ANCESTOR_DEPTH = 32;
  * reverses. Capped at MAX_PLACE_ANCESTOR_DEPTH to defend against accidental
  * cycles in user data.
  */
-export function getPlaceAncestors(db: Database, id: string): Place[] {
+export async function getPlaceAncestors(db: Database, id: string): Promise<Place[]> {
   const reverseChain: Place[] = [];
   let currentId: string | null = id;
   for (let i = 0; i < MAX_PLACE_ANCESTOR_DEPTH && currentId; i++) {
-    const row = queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [currentId]);
+    const row = await queryOne<Place>(db, 'SELECT * FROM places WHERE id = ?', [currentId]);
     if (!row) break;
     reverseChain.push(row);
     currentId = row.parent_place_id ?? null;
@@ -296,11 +296,11 @@ export function getPlaceAncestors(db: Database, id: string): Place[] {
   return reverseChain.reverse();
 }
 
-export function getPersonsForPlace(
+export async function getPersonsForPlace(
   db: Database,
   placeId: string
-): { id: string; sex: string; given_name: string; surname: string; event_count: number; first_year: string | null; last_year: string | null }[] {
-  return queryAll(db, `
+): Promise<{ id: string; sex: string; given_name: string; surname: string; event_count: number; first_year: string | null; last_year: string | null }[]> {
+  return await queryAll(db, `
     SELECT p.id, p.sex,
       COALESCE(pn.given_name, '') AS given_name,
       COALESCE(pn.surname, '') AS surname,

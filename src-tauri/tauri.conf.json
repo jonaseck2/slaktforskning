@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Släktforskning (Tauri)",
+  "version": "0.1.0",
+  "identifier": "com.slaktforskning.tauri-spike",
+  "build": {
+    "beforeDevCommand": "npx vite --config vite.tauri-renderer.config.ts",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && npx vite build --config vite.tauri-renderer.config.ts",
+    "frontendDist": "../dist-tauri"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Släktforskning",
+        "width": 1280,
+        "height": 800
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "appimage", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["../THIRD_PARTY_LICENSES.txt"],
+    "externalBin": ["../target/mcp-server"],
+    "macOS": {
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": "entitlements.plist",
+      "minimumSystemVersion": "12.0"
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com"
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/jonaseck2/slaktforskning/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCQzkyRDg0NkNENjcwMjYKUldRbWNOWnNoQzNKeXlKTkR1WjE3OUR4UnVCYkZqYm5tc3JvUEVrb1d2bG1IbEg0MmtsRFBpVFIK"
+    }
+  }
+}

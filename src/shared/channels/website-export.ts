@@ -17,5 +17,5 @@ defineChannel({
   name: 'website:previewSnapshot',
   thread: 'worker',
   mutating: false,
-  handler: async (db, opts: PreviewOptions) => buildPreview(db, opts),
+  handler: async (db, opts: PreviewOptions) => await buildPreview(db, opts),
 });

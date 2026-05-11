@@ -83,7 +83,7 @@ async function nextRaf() {
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
 
-describe('Coachmark — face tagging', () => {
+describe('Coachmark — face tagging', async () => {
   it('renders when face-tag mode is active and there are no regions yet', async () => {
     wrapper = mount(FaceTagHost, { global: { plugins: [i18n] }, attachTo: document.body });
     await flushPromises();

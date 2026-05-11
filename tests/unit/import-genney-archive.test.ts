@@ -35,9 +35,9 @@ afterEach(() => {
   }
 });
 
-describe('Genney archive extraction — .gcc', () => {
+describe('Genney archive extraction — .gcc', async () => {
   it('returns gedcomFallbackPath when zip contains only a .ged file', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'export.ged': new TextEncoder().encode(MINIMAL_GED),
     }, '.gcc');
@@ -50,7 +50,7 @@ describe('Genney archive extraction — .gcc', () => {
   });
 
   it('returns gedcomFallbackPath when zip has .backup extension', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'export.ged': new TextEncoder().encode(MINIMAL_GED),
     }, '.backup');
@@ -61,7 +61,7 @@ describe('Genney archive extraction — .gcc', () => {
   });
 
   it('throws when zip contains no .ged file and no Derby database', async () => {
-    const db = createTestDb();
+    const db = await createTestDb();
     const archivePath = writeZip({
       'readme.txt': new TextEncoder().encode('no ged here'),
     }, '.gcc');

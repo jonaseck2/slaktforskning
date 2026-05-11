@@ -92,7 +92,7 @@ const KNOWN_FAM_TAGS = new Set([
 
 // ── Phase 0: NOTE records ───────────────────────────────────────────────────
 
-export function phaseNotes(ctx: ImportContext): void {
+export async function phaseNotes(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'NOTE' || !node.xref) continue;
     ctx.noteMap.set(node.xref, node.value ?? '');
@@ -101,7 +101,7 @@ export function phaseNotes(ctx: ImportContext): void {
 
 // ── Phase 0.5: OBJE top-level records ──────────────────────────────────────
 
-export function phaseObje(ctx: ImportContext): void {
+export async function phaseObje(ctx: ImportContext): Promise<void> {
   let total = 0, withFile = 0;
   for (const node of ctx.tree) {
     if (node.tag !== 'OBJE' || !node.xref) continue;
@@ -118,7 +118,7 @@ export function phaseObje(ctx: ImportContext): void {
     // actually on disk is decided later by consolidateMediaFolder via a single
     // recursive readdir of the dest folder. Doing it here would mean N
     // sync existsSync() calls (~6s for 12k OBJEs) on the main thread.
-    const media = createMedia(ctx.db, {
+    const media = await createMedia(ctx.db, {
       file_ref: file || null,
       title: titl || (file ? basename(file) : undefined),
       format: form,
@@ -133,14 +133,14 @@ export function phaseObje(ctx: ImportContext): void {
 
 // ── Phase 0.7: REPO records ────────────────────────────────────────────────
 
-export function phaseRepo(ctx: ImportContext): void {
+export async function phaseRepo(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'REPO' || !node.xref) continue;
     const addrNode = getChild(node, 'ADDR');
     const addrValue = addrNode
       ? (getChild(addrNode, 'ADR1')?.value ?? addrNode.value ?? undefined)
       : undefined;
-    const repo = createRepository(ctx.db, {
+    const repo = await createRepository(ctx.db, {
       name: getChild(node, 'NAME')?.value ?? '',
       // Treat an empty ADDR line value as "no address" so ADDR-as-parent-only
       // emit (used to scope CITY/POST/etc) doesn't fabricate an empty string.
@@ -160,11 +160,11 @@ export function phaseRepo(ctx: ImportContext): void {
 
 // ── Phase 0.8: _GRP records (Genney only) ──────────────────────────────────
 
-export function phaseGroups(ctx: ImportContext): void {
+export async function phaseGroups(ctx: ImportContext): Promise<void> {
   if (!ctx.isGenney) return;
   for (const node of ctx.tree) {
     if (node.tag !== '_GRP' || !node.xref) continue;
-    const group = createGroup(ctx.db, {
+    const group = await createGroup(ctx.db, {
       name: getChild(node, 'NAME')?.value ?? '',
       notes: resolveNote(node, ctx.noteMap) || undefined,
     });
@@ -174,10 +174,10 @@ export function phaseGroups(ctx: ImportContext): void {
 
 // ── Phase 1: SOUR records ──────────────────────────────────────────────────
 
-export function phaseSources(ctx: ImportContext): void {
+export async function phaseSources(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'SOUR' || !node.xref) continue;
-    const src = createSource(ctx.db, {
+    const src = await createSource(ctx.db, {
       title: getChild(node, 'TITL')?.value ?? '',
       author: getChild(node, 'AUTH')?.value ?? '',
       publication_info: getChild(node, 'PUBL')?.value ?? '',
@@ -203,14 +203,14 @@ export function phaseSources(ctx: ImportContext): void {
     const repoVal = getChild(node, 'REPO')?.value ?? '';
     if (repoVal.startsWith('@')) {
       const repoId = ctx.repoMap.get(repoVal);
-      if (repoId) linkSourceRepository(ctx.db, src.id, repoId);
+      if (repoId) await linkSourceRepository(ctx.db, src.id, repoId);
     }
   }
 }
 
 // ── Phase 2: INDI records ──────────────────────────────────────────────────
 
-export function phaseIndividuals(ctx: ImportContext): void {
+export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'INDI' || !node.xref) continue;
 
@@ -259,7 +259,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
     // disclosed via the import report's `namelessPersonCount`.
     const nameNodes = getChildren(node, 'NAME');
 
-    const person = createPerson(ctx.db, {
+    const person = await createPerson(ctx.db, {
       sex,
       notes: notes || undefined,
     }, { allowNameless: true });
@@ -315,7 +315,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         if (fore) preferred_name = fore;
       }
 
-      const personName = addPersonName(ctx.db, person.id, {
+      const personName = await addPersonName(ctx.db, person.id, {
         given_name: given,
         surname,
         name_prefix: prefix,
@@ -341,7 +341,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const dataNode = getChild(sour, 'DATA');
         const transcription = dataNode ? (getChild(dataNode, 'TEXT')?.value ?? '') : '';
-        createCitation(ctx.db, {
+        await createCitation(ctx.db, {
           source_id: srcId,
           person_name_id: personName.id,
           page,
@@ -360,57 +360,57 @@ export function phaseIndividuals(ctx: ImportContext): void {
       const refnType = getChild(refn, 'TYPE')?.value?.trim() ?? '';
       const ltype = refnType.toLowerCase();
       if (ltype === 'familysearch') {
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: refn.value });
       } else if (ltype === 'ancestry') {
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: refn.value });
       } else if (ltype === 'riksarkivet') {
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: refn.value });
       } else if (ltype === 'personnummer') {
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: refn.value });
       } else if (ltype === 'other') {
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'other', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'other', identifier_value: refn.value });
       } else {
         // Plain REFN or unknown TYPE -> store as 'refn'
-        addPersonIdentifier(ctx.db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
+        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
       }
     }
     const rin = getChild(node, 'RIN');
-    if (rin?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
+    if (rin?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
 
     // _UID (GEDCOM 5.5 non-standard, ubiquitous) and bare UID (GEDCOM 7.0
     // standard). RootsMagic, Genney, FTM, MyHeritage all emit one or the other.
     const uid = getChild(node, '_UID') ?? getChild(node, 'UID');
-    if (uid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'uid', identifier_value: uid.value });
+    if (uid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'uid', identifier_value: uid.value });
 
     // AFN — Ancestral File Number. GEDCOM 5.5/5.5.1 standard tag.
     const afn = getChild(node, 'AFN');
-    if (afn?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'afn', identifier_value: afn.value });
+    if (afn?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'afn', identifier_value: afn.value });
 
     // SSN — Social Security Number. GEDCOM 5.5 standard tag. Privacy-sensitive
     // but if the user authored it in their source DB, the Prime Directive
     // says preserve it; the user can delete it via the panel if they want.
     const ssn = getChild(node, 'SSN');
-    if (ssn?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ssn', identifier_value: ssn.value });
+    if (ssn?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ssn', identifier_value: ssn.value });
 
     // FSID — modern FamilySearch ID. Non-standard tag emitted by FTM and others.
     const fsid = getChild(node, 'FSID');
-    if (fsid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsid.value });
+    if (fsid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsid.value });
 
     // Extended identifiers (legacy custom tags -- kept for backward compat reading old exports)
     const fsi = getChild(node, '_FSI');
-    if (fsi?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsi.value });
+    if (fsi?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsi.value });
     const anid = getChild(node, '_ANID');
-    if (anid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: anid.value });
+    if (anid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: anid.value });
     const raid = getChild(node, '_RAID');
-    if (raid?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: raid.value });
+    if (raid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: raid.value });
     const pnummer = getChild(node, '_PNUMMER');
-    if (pnummer?.value) addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: pnummer.value });
+    if (pnummer?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: pnummer.value });
 
     // Person events
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = importEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
-        addEventParticipant(ctx.db, { event_id: event.id, person_id: person.id, role: 'primary' });
+        const event = await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
+        await addEventParticipant(ctx.db, { event_id: event.id, person_id: person.id, role: 'primary' });
       }
     }
 
@@ -432,7 +432,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
         // Multi-line transcriptions are unwrapped from CONT continuation by
         // the parser into the joined node value.
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
-        createCitation(ctx.db, {
+        await createCitation(ctx.db, {
           source_id: srcId,
           person_id: person.id,
           page,
@@ -454,7 +454,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
       for (const grpNode of getChildren(node, '_GRP')) {
         const groupId = ctx.grpMap.get(grpNode.value ?? '');
         if (groupId) {
-          try { addGroupLink(ctx.db, groupId, 'person', person.id); } catch { /* ignore duplicate */ }
+          try { await addGroupLink(ctx.db, groupId, 'person', person.id); } catch { /* ignore duplicate */ }
         }
       }
     }
@@ -462,9 +462,9 @@ export function phaseIndividuals(ctx: ImportContext): void {
     // Person-level media
     let personMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
       if (mediaId) {
-        addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'person', entity_id: person.id, sort_order: personMediaOrder });
+        await addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'person', entity_id: person.id, sort_order: personMediaOrder });
         personMediaOrder++;
       }
     }
@@ -499,7 +499,7 @@ export function phaseIndividuals(ctx: ImportContext): void {
 
 // ── Phase 3: FAM records ───────────────────────────────────────────────────
 
-export function phaseFamilies(ctx: ImportContext): void {
+export async function phaseFamilies(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'FAM') continue;
 
@@ -525,7 +525,7 @@ export function phaseFamilies(ctx: ImportContext): void {
       coupleSubtype = 'unknown';
     }
 
-    const couple = createRelationship(ctx.db, {
+    const couple = await createRelationship(ctx.db, {
       type: 'couple',
       person1_id: person1Id,
       person2_id: person2Id,
@@ -535,7 +535,7 @@ export function phaseFamilies(ctx: ImportContext): void {
     // Extended couple metadata (notes only -- subtype already applied above)
     const relnotes = getChild(node, '_RELNOTES')?.value;
     if (relnotes) {
-      updateRelationship(ctx.db, couple.id, { notes: relnotes });
+      await updateRelationship(ctx.db, couple.id, { notes: relnotes });
     }
 
     // Family events
@@ -545,7 +545,7 @@ export function phaseFamilies(ctx: ImportContext): void {
       // engagement event (pre-marriage) and IS imported normally.
       if (ctx.isHolger && gedTag === 'ENGA' && !hasMarr) continue;
       for (const evNode of getChildren(node, gedTag)) {
-        importEventNode(ctx.db, evNode, appType, ctx.sourceMap, { relationship_id: couple.id }, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
+        await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, { relationship_id: couple.id }, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
       }
     }
 
@@ -560,8 +560,8 @@ export function phaseFamilies(ctx: ImportContext): void {
         const adopSubtype = ctx.holgerAdoptionMap.get(chil.value)?.get(node.xref ?? '');
         if (adopSubtype) childSubtype = adopSubtype;
       }
-      if (person1Id) createRelationship(ctx.db, { type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
-      if (person2Id) createRelationship(ctx.db, { type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
+      if (person1Id) await createRelationship(ctx.db, { type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
+      if (person2Id) await createRelationship(ctx.db, { type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
     }
 
     // Family-level citations (SOUR directly on FAM, not under an event)
@@ -574,7 +574,7 @@ export function phaseFamilies(ctx: ImportContext): void {
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         // _TRANS carrier — see person-level citation block above for rationale.
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
-        createCitation(ctx.db, {
+        await createCitation(ctx.db, {
           source_id: srcId,
           relationship_id: couple.id,
           page,
@@ -589,9 +589,9 @@ export function phaseFamilies(ctx: ImportContext): void {
     // Family-level media
     let relMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
       if (mediaId) {
-        addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id, sort_order: relMediaOrder });
+        await addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id, sort_order: relMediaOrder });
         relMediaOrder++;
       }
     }
@@ -607,7 +607,7 @@ export function phaseFamilies(ctx: ImportContext): void {
 
 // ── Phase 4: Post-process ASSO blocks ──────────────────────────────────────
 
-export function phaseAsso(ctx: ImportContext): void {
+export async function phaseAsso(ctx: ImportContext): Promise<void> {
   for (const { personId, assoNode } of ctx.assoData) {
     const otherPersonXref = assoNode.value;
     const otherPersonId = ctx.personMap.get(otherPersonXref);
@@ -620,7 +620,7 @@ export function phaseAsso(ctx: ImportContext): void {
       // Non-primary event participant: map old event UUID -> new event UUID
       const newEventId = ctx.eventIdMap.get(evidRef);
       if (newEventId) {
-        addEventParticipant(ctx.db, {
+        await addEventParticipant(ctx.db, {
           event_id: newEventId,
           person_id: otherPersonId,
           role: rela as EventParticipantRole,
@@ -630,7 +630,7 @@ export function phaseAsso(ctx: ImportContext): void {
       // Sibling / godparent / other relationship -- deduplicate before creating
       const relType = rela as RelationshipType;
       if (relType === 'sibling' || relType === 'godparent' || relType === 'other') {
-        const existingRels = getRelationshipsOfPerson(ctx.db, personId).filter((r: Relationship) =>
+        const existingRels = (await getRelationshipsOfPerson(ctx.db, personId)).filter((r: Relationship) =>
           r.type === relType &&
           ((r.person1_id === personId && r.person2_id === otherPersonId) ||
            (r.person1_id === otherPersonId && r.person2_id === personId))
@@ -642,7 +642,7 @@ export function phaseAsso(ctx: ImportContext): void {
           // notes (with embedded newlines) survive end-to-end. Couples ride
           // _RELNOTES on FAM; this is the non-couple carrier.
           const notes = getChild(assoNode, '_RELA_NOTE')?.value ?? '';
-          createRelationship(ctx.db, {
+          await createRelationship(ctx.db, {
             type: relType,
             person1_id: personId,
             person2_id: otherPersonId,
@@ -658,21 +658,21 @@ export function phaseAsso(ctx: ImportContext): void {
 
 // ── Phase 5: _PLAC records for place-level citations ───────────────────────
 
-export function phasePlaceCitations(ctx: ImportContext): void {
+export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== '_PLAC') continue;
     const oldPlaceId = getChild(node, '_PLAC_ID')?.value;
     if (!oldPlaceId) continue;
 
     const newPlaceId = ctx.placeIdMap.get(oldPlaceId) ?? oldPlaceId;
-    let place = getPlace(ctx.db, newPlaceId);
+    let place = await getPlace(ctx.db, newPlaceId);
 
     if (!place) {
       // UUID not found (cross-DB import, or place only exists via this _PLAC record).
       // Fall back to name-based find-or-create using the NAME tag we write in the exporter.
       const placeName = getChild(node, 'NAME')?.value;
       if (!placeName) continue;
-      place = ctx.resolvePlaceFn(ctx.db, placeName);
+      place = await ctx.resolvePlaceFn(ctx.db, placeName);
       ctx.placeIdMap.set(oldPlaceId, place.id);
     }
 
@@ -685,7 +685,7 @@ export function phasePlaceCitations(ctx: ImportContext): void {
       const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
       // _TRANS carrier — see person-level citation block in phaseIndividuals.
       const transcription = getChild(sour, '_TRANS')?.value ?? '';
-      createCitation(ctx.db, {
+      await createCitation(ctx.db, {
         source_id: srcId,
         place_id: place.id,
         page,
@@ -720,7 +720,7 @@ export function phasePlaceCitations(ctx: ImportContext): void {
 // Unresolved REFs are reported via ctx.warnings rather than silently dropped,
 // so a corrupted GEDCOM (dangling xref) doesn't lose the user's group
 // membership without disclosure. See CLAUDE.md "Round-Trip Fidelity".
-export function phaseGroupRecords(ctx: ImportContext): void {
+export async function phaseGroupRecords(ctx: ImportContext): Promise<void> {
   // Build a local xref → DB place_id map by walking every _PLAC record.
   // The exporter writes a 1 _PLAC_ID <uuid> sub-tag on each _PLAC record;
   // phasePlaceCitations (which has already run by this point) has populated
@@ -735,14 +735,14 @@ export function phaseGroupRecords(ctx: ImportContext): void {
     // direct lookup against the source UUID for the rare case where the
     // place existed in a same-DB reimport and the map skipped it.
     const dbPlaceId = ctx.placeIdMap.get(oldPlaceId) ?? oldPlaceId;
-    if (getPlace(ctx.db, dbPlaceId)) {
+    if (await getPlace(ctx.db, dbPlaceId)) {
       placeXrefToId.set(node.xref, dbPlaceId);
     } else {
       // Place wasn't created yet (no citation seeded it AND _GROUP wants it).
       // Create from NAME fallback now so the group link can resolve.
       const placeName = getChild(node, 'NAME')?.value;
       if (placeName) {
-        const place = ctx.resolvePlaceFn(ctx.db, placeName);
+        const place = await ctx.resolvePlaceFn(ctx.db, placeName);
         ctx.placeIdMap.set(oldPlaceId, place.id);
         placeXrefToId.set(node.xref, place.id);
       }
@@ -753,7 +753,7 @@ export function phaseGroupRecords(ctx: ImportContext): void {
     if (node.tag !== '_GROUP' || !node.xref) continue;
     const name = getChild(node, 'NAME')?.value ?? '';
     const notes = resolveNote(node, ctx.noteMap) || undefined;
-    const group = createGroup(ctx.db, { name, notes });
+    const group = await createGroup(ctx.db, { name, notes });
 
     let linkPosition = 0;
     for (const linkNode of getChildren(node, '_GROUP_LINK')) {
@@ -781,7 +781,7 @@ export function phaseGroupRecords(ctx: ImportContext): void {
         continue;
       }
       try {
-        addGroupLink(ctx.db, group.id, entityType, entityId);
+        await addGroupLink(ctx.db, group.id, entityType, entityId);
         linkPosition++;
       } catch {
         // Duplicate row (UNIQUE on group_id, entity_type, entity_id) — ignore.
@@ -793,7 +793,7 @@ export function phaseGroupRecords(ctx: ImportContext): void {
 
 // ── Phase 6: _TODO records (Genney only) ───────────────────────────────────
 
-export function phaseTodos(ctx: ImportContext): void {
+export async function phaseTodos(ctx: ImportContext): Promise<void> {
   if (!ctx.isGenney) return;
   for (const node of ctx.tree) {
     if (node.tag !== '_TODO') continue;
@@ -804,8 +804,8 @@ export function phaseTodos(ctx: ImportContext): void {
     const priority = parseInt(getChild(node, '_PRIO')?.value ?? '1', 10);
     const task = getChild(node, '_TASK')?.value ?? '';
     const notes = resolveNote(node, ctx.noteMap);
-    const created = createResearchTask(ctx.db, { task, notes: notes || undefined, priority, status });
-    if (person_id) addTaskLink(ctx.db, created.id, 'person', person_id);
+    const created = await createResearchTask(ctx.db, { task, notes: notes || undefined, priority, status });
+    if (person_id) await addTaskLink(ctx.db, created.id, 'person', person_id);
   }
 }
 
@@ -820,7 +820,7 @@ export function phaseTodos(ctx: ImportContext): void {
 //   researcher_address / researcher_phone / researcher_email at end-of-import
 //   (only if those settings are currently empty — see import-core.ts).
 
-export function phaseSubmitters(ctx: ImportContext): void {
+export async function phaseSubmitters(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'SUBM') continue;
     const name = getChild(node, 'NAME')?.value;

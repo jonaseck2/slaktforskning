@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { useDeleteConfirm } from '../../src/renderer/composables/useDeleteConfirm';
 
-describe('useDeleteConfirm', () => {
+describe('useDeleteConfirm', async () => {
   describe('initial state', () => {
     it('initializes with visible=false and target=null', () => {
       const perform = vi.fn();
@@ -108,7 +108,7 @@ describe('useDeleteConfirm', () => {
     });
   });
 
-  describe('confirm()', () => {
+  describe('confirm()', async () => {
     it('closes the modal and calls perform with the target', async () => {
       const perform = vi.fn();
       const del = useDeleteConfirm(perform);
@@ -217,7 +217,7 @@ describe('useDeleteConfirm', () => {
     });
   });
 
-  describe('full workflows', () => {
+  describe('full workflows', async () => {
     it('ask -> confirm -> ask -> cancel -> ask -> confirm', async () => {
       const perform = vi.fn();
       const del = useDeleteConfirm(perform);
@@ -294,7 +294,7 @@ describe('useDeleteConfirm', () => {
     });
   });
 
-  describe('type safety', () => {
+  describe('type safety', async () => {
     it('enforces generic type parameter for perform callback', () => {
       // TypeScript compile-time check: perform function signature must match <T>
       const del = useDeleteConfirm<string>((id: string) => {
@@ -354,7 +354,7 @@ describe('useDeleteConfirm', () => {
     });
   });
 
-  describe('edge cases', () => {
+  describe('edge cases', async () => {
     it('handles falsy but non-null targets', async () => {
       const perform = vi.fn();
       const del = useDeleteConfirm<boolean | string>(perform);

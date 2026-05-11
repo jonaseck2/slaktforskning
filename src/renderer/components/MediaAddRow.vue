@@ -3,7 +3,8 @@
     <MediaPicker
       v-model="pickedId"
       :exclude-ids="excludeIds"
-      :placeholder="$t('media.title_label')"
+      :placeholder="$t('media.searchOrAttach')"
+      autofocus
       @attach-file="onAttachFile"
     />
     <AppButton variant="primary" size="sm" :disabled="!pickedId" @click="commitExisting">

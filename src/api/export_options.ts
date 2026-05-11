@@ -33,15 +33,15 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
  * Also includes spouses (couple relationships) of every person found,
  * so that family units remain complete.
  */
-export function getPersonIdsInBranch(
+export async function getPersonIdsInBranch(
   db: Database,
   personId: string,
   direction: 'ancestors' | 'descendants' | 'both',
   generations?: number,
-): Set<string> {
+): Promise<Set<string>> {
   if (direction === 'both') {
-    const ancestors = getPersonIdsInBranch(db, personId, 'ancestors', generations);
-    const descendants = getPersonIdsInBranch(db, personId, 'descendants', generations);
+    const ancestors = await getPersonIdsInBranch(db, personId, 'ancestors', generations);
+    const descendants = await getPersonIdsInBranch(db, personId, 'descendants', generations);
     return new Set([...ancestors, ...descendants]);
   }
 
@@ -59,7 +59,7 @@ export function getPersonIdsInBranch(
       let rows: { person1_id: string | null; person2_id: string | null }[];
       if (direction === 'ancestors') {
         // person2 is the child, person1 is the parent
-        rows = queryAll<{ person1_id: string | null; person2_id: string | null }>(
+        rows = await queryAll<{ person1_id: string | null; person2_id: string | null }>(
           db,
           `SELECT person1_id, person2_id FROM relationships WHERE type = 'parent_child' AND person2_id = ?`,
           [currentId],
@@ -72,7 +72,7 @@ export function getPersonIdsInBranch(
         }
       } else {
         // direction === 'descendants': person1 is the parent, person2 is the child
-        rows = queryAll<{ person1_id: string | null; person2_id: string | null }>(
+        rows = await queryAll<{ person1_id: string | null; person2_id: string | null }>(
           db,
           `SELECT person1_id, person2_id FROM relationships WHERE type = 'parent_child' AND person1_id = ?`,
           [currentId],
@@ -92,7 +92,7 @@ export function getPersonIdsInBranch(
   // Include spouses of every person found
   const personIds = [...result];
   for (const pid of personIds) {
-    const couples = queryAll<{ person1_id: string | null; person2_id: string | null }>(
+    const couples = await queryAll<{ person1_id: string | null; person2_id: string | null }>(
       db,
       `SELECT person1_id, person2_id FROM relationships WHERE type = 'couple' AND (person1_id = ? OR person2_id = ?)`,
       [pid, pid],
@@ -122,15 +122,15 @@ export function filterPersonsByOptions(
  * Apply all export options and return a filtered dataset descriptor.
  * The returned personIds set determines which persons are included.
  */
-export function applyExportOptions(
+export async function applyExportOptions(
   db: Database,
   options: ExportOptions,
-): { personIds: Set<string> | null; includeMedia: boolean; includeNotes: boolean; includeSources: boolean } {
+): Promise<{ personIds: Set<string> | null; includeMedia: boolean; includeNotes: boolean; includeSources: boolean }> {
   let personIds: Set<string> | null = null;
 
   // Branch filter first (if specified)
   if (options.branchFilter) {
-    personIds = getPersonIdsInBranch(
+    personIds = await getPersonIdsInBranch(
       db,
       options.branchFilter.personId,
       options.branchFilter.direction,
@@ -140,7 +140,7 @@ export function applyExportOptions(
 
   // Living filter
   if (options.excludeLiving) {
-    const livingIds = queryAll<{ id: string }>(
+    const livingIds = await queryAll<{ id: string }>(
       db,
       `SELECT p.id AS id FROM persons p WHERE ${livingSqlExpr('p')} = 1`,
     );
@@ -152,7 +152,7 @@ export function applyExportOptions(
       }
     } else {
       // Get all person IDs and exclude living
-      const allIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+      const allIds = await queryAll<{ id: string }>(db, `SELECT id FROM persons`);
       personIds = new Set(allIds.map(r => r.id));
       for (const id of livingSet) {
         personIds.delete(id);

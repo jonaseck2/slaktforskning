@@ -205,27 +205,27 @@ function assertUiPair(p: Palette, pair: UiPair): void {
   ).toBeGreaterThanOrEqual(NON_TEXT_THRESHOLD);
 }
 
-describe('WCAG contrast — palette extraction', () => {
-  it('parses :root vars from tokens.css', () => {
+describe('WCAG contrast — palette extraction', async () => {
+  it('parses :root vars from tokens.css', async () => {
     const p = mergeBlocks(TOKENS_CSS, ':root');
     expect(p['text-primary']).toMatch(/^#[0-9a-fA-F]+$/);
     expect(p['surface']).toMatch(/^#[0-9a-fA-F]+$/);
     expect(p['accent']).toMatch(/^#[0-9a-fA-F]+$/);
   });
 
-  it('parses .theme-nordic overrides', () => {
+  it('parses .theme-nordic overrides', async () => {
     const p = mergeBlocks(TOKENS_CSS, '.theme-nordic');
     expect(p['text-primary']).toBeTruthy();
   });
 
-  it('parses html.high-contrast base (shared semantic) overrides', () => {
+  it('parses html.high-contrast base (shared semantic) overrides', async () => {
     const p = mergeBlocks(SHARED_CSS, 'html.high-contrast');
     // Shared base defines semantic colors; per-theme blocks define text/surface.
     expect(p['error-bg']).toBeTruthy();
     expect(p['error-text']).toBeTruthy();
   });
 
-  it('parses html.high-contrast.theme-forest per-theme overrides', () => {
+  it('parses html.high-contrast.theme-forest per-theme overrides', async () => {
     const p = mergeBlocks(SHARED_CSS, 'html.high-contrast.theme-forest');
     expect(p['text-primary']).toBeTruthy();
     expect(p['surface']).toBeTruthy();
@@ -233,27 +233,27 @@ describe('WCAG contrast — palette extraction', () => {
   });
 });
 
-describe('WCAG AAA — high-contrast mode (theme-tinted)', () => {
+describe('WCAG AAA — high-contrast mode (theme-tinted)', async () => {
   const themes: Theme[] = ['forest', 'nordic', 'twilight'];
 
   for (const theme of themes) {
-    describe(`theme: ${theme}`, () => {
+    describe(`theme: ${theme}`, async () => {
       const palette = buildPalette(theme, 'high-contrast');
 
       for (const pair of TEXT_PAIRS) {
-        it(`${pair.label} ≥ AAA (${pair.size ?? 'normal'})`, () => {
+        it(`${pair.label} ≥ AAA (${pair.size ?? 'normal'})`, async () => {
           assertPair(palette, pair, 'AAA');
         });
       }
 
       for (const pair of UI_PAIRS) {
-        it(`${pair.label} ≥ 3:1 (UI)`, () => {
+        it(`${pair.label} ≥ 3:1 (UI)`, async () => {
           assertUiPair(palette, pair);
         });
       }
 
       for (const pair of ENTITY_TEXT_PAIRS) {
-        it(`${pair.label} ≥ AAA (high-contrast)`, () => {
+        it(`${pair.label} ≥ AAA (high-contrast)`, async () => {
           assertPair(palette, pair, 'AAA');
         });
       }
@@ -261,7 +261,7 @@ describe('WCAG AAA — high-contrast mode (theme-tinted)', () => {
   }
 });
 
-describe('WCAG AA — light and dark base themes (regression)', () => {
+describe('WCAG AA — light and dark base themes (regression)', async () => {
   const combos: Array<{ theme: Theme; appearance: Appearance }> = [
     { theme: 'forest', appearance: 'light' },
     { theme: 'nordic', appearance: 'light' },
@@ -272,17 +272,17 @@ describe('WCAG AA — light and dark base themes (regression)', () => {
   ];
 
   for (const { theme, appearance } of combos) {
-    describe(`${theme} / ${appearance}`, () => {
+    describe(`${theme} / ${appearance}`, async () => {
       const palette = buildPalette(theme, appearance);
 
       for (const pair of TEXT_PAIRS) {
-        it(`${pair.label} ≥ AA (${pair.size ?? 'normal'})`, () => {
+        it(`${pair.label} ≥ AA (${pair.size ?? 'normal'})`, async () => {
           assertPair(palette, pair, 'AA');
         });
       }
 
       for (const pair of ENTITY_TEXT_PAIRS) {
-        it(`${pair.label} ≥ AA (${appearance})`, () => {
+        it(`${pair.label} ≥ AA (${appearance})`, async () => {
           assertPair(palette, pair, 'AA');
         });
       }

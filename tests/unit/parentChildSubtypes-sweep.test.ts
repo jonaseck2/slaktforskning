@@ -30,8 +30,8 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe('parentChildSubtypes sweep', () => {
-  it('no Vue template under src/renderer/components/ references parentChildSubtypes. directly', () => {
+describe('parentChildSubtypes sweep', async () => {
+  it('no Vue template under src/renderer/components/ references parentChildSubtypes. directly', async () => {
     const root = resolve(__dirname, '..', '..', 'src', 'renderer', 'components');
     const files = walk(root);
     const offenders: string[] = [];

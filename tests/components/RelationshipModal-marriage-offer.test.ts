@@ -90,7 +90,7 @@ async function fillCoupleMarriageAndSave(wrapper: ReturnType<typeof mountModalNe
   await flushPromises();
 }
 
-describe('RelationshipModal — marriage wedding offer (Part C)', () => {
+describe('RelationshipModal — marriage wedding offer (Part C)', async () => {
   it('renders the wedding-offer ConfirmModal after saving a couple+marriage relationship with no linked wedding event', async () => {
     const wrapper = mountModalNew();
     await flushPromises();

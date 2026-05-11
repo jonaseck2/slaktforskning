@@ -32,13 +32,13 @@ Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', {
   writable: true,
 });
 
-describe('useTTS', () => {
-  beforeEach(() => {
+describe('useTTS', async () => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
   });
 

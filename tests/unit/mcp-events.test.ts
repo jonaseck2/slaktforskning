@@ -9,14 +9,14 @@ import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('recordEventWorkflow', () => {
-  it('creates event with primary participant via person_id', () => {
-    const person = persons.createPerson(db, { given_name: 'Anna', surname: 'Lindström' });
-    const result = recordEventWorkflow(db, {
+describe('recordEventWorkflow', async () => {
+  it('creates event with primary participant via person_id', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Anna', surname: 'Lindström' });
+    const result = await recordEventWorkflow(db, {
       event_type: 'birth',
       person_id: person.id,
       date_value: '1850',
@@ -28,21 +28,21 @@ describe('recordEventWorkflow', () => {
     expect(result.event.date_value).toBe('1850');
     expect(result.citation).toBeNull();
 
-    const participants = relationships.getEventParticipants(db, result.event.id);
+    const participants = await relationships.getEventParticipants(db, result.event.id);
     expect(participants).toHaveLength(1);
     expect(participants[0].person_id).toBe(person.id);
     expect(participants[0].role).toBe('primary');
 
-    const personEvents = events.getEventsForPerson(db, person.id);
+    const personEvents = await events.getEventsForPerson(db, person.id);
     expect(personEvents).toHaveLength(1);
     expect(personEvents[0].id).toBe(result.event.id);
   });
 
-  it('creates event with multiple participants via person_ids', () => {
-    const person1 = persons.createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
-    const person2 = persons.createPerson(db, { given_name: 'Maria', surname: 'Olsson' });
+  it('creates event with multiple participants via person_ids', async () => {
+    const person1 = await persons.createPerson(db, { given_name: 'Erik', surname: 'Svensson' });
+    const person2 = await persons.createPerson(db, { given_name: 'Maria', surname: 'Olsson' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'marriage',
       person_ids: [
         { id: person1.id, role: 'primary' },
@@ -52,7 +52,7 @@ describe('recordEventWorkflow', () => {
 
     expect(result.event.event_type).toBe('marriage');
 
-    const participants = relationships.getEventParticipants(db, result.event.id);
+    const participants = await relationships.getEventParticipants(db, result.event.id);
     expect(participants).toHaveLength(2);
 
     const roles = participants.map(p => p.role);
@@ -64,10 +64,10 @@ describe('recordEventWorkflow', () => {
     expect(ids).toContain(person2.id);
   });
 
-  it('creates citation when source_title provided', () => {
-    const person = persons.createPerson(db, { given_name: 'Lars', surname: 'Karlsson' });
+  it('creates citation when source_title provided', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Lars', surname: 'Karlsson' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'death',
       person_id: person.id,
       date_value: '1900',
@@ -81,16 +81,16 @@ describe('recordEventWorkflow', () => {
     expect(result.citation!.page).toBe('12');
     expect(result.citation!.confidence).toBe(3);
 
-    const allSources = sources.listSources(db);
+    const allSources = await sources.listSources(db);
     expect(allSources).toHaveLength(1);
     expect(allSources[0].title).toBe('Dödboken 1900');
   });
 
-  it('reuses existing source when source_title matches', () => {
-    const existingSource = sources.createSource(db, { title: 'Kyrkböcker' });
-    const person = persons.createPerson(db, { given_name: 'Nils', surname: 'Berg' });
+  it('reuses existing source when source_title matches', async () => {
+    const existingSource = await sources.createSource(db, { title: 'Kyrkböcker' });
+    const person = await persons.createPerson(db, { given_name: 'Nils', surname: 'Berg' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'baptism',
       person_id: person.id,
       source_title: 'Kyrkböcker',
@@ -98,13 +98,13 @@ describe('recordEventWorkflow', () => {
 
     expect(result.citation).not.toBeNull();
     expect(result.citation!.source_id).toBe(existingSource.id);
-    expect(sources.listSources(db)).toHaveLength(1);
+    expect(await sources.listSources(db)).toHaveLength(1);
   });
 
-  it('creates place when place string provided', () => {
-    const person = persons.createPerson(db, { given_name: 'Britta', surname: 'Holm' });
+  it('creates place when place string provided', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Britta', surname: 'Holm' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'birth',
       person_id: person.id,
       place: 'Göteborg',
@@ -112,29 +112,29 @@ describe('recordEventWorkflow', () => {
 
     expect(result.event.place_id).toBeTruthy();
 
-    const place = places.getPlace(db, result.event.place_id!);
+    const place = await places.getPlace(db, result.event.place_id!);
     expect(place).not.toBeNull();
     expect(place!.name).toBe('Göteborg');
   });
 
-  it('reuses existing place when place string matches', () => {
-    const existingPlace = places.createPlace(db, { name: 'Stockholm' });
-    const person = persons.createPerson(db, { given_name: 'Sven', surname: 'Ek' });
+  it('reuses existing place when place string matches', async () => {
+    const existingPlace = await places.createPlace(db, { name: 'Stockholm' });
+    const person = await persons.createPerson(db, { given_name: 'Sven', surname: 'Ek' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'census',
       person_id: person.id,
       place: 'Stockholm',
     });
 
     expect(result.event.place_id).toBe(existingPlace.id);
-    expect(places.listPlaces(db)).toHaveLength(1);
+    expect(await places.listPlaces(db)).toHaveLength(1);
   });
 
-  it('persists value and notes as separate fields', () => {
-    const person = persons.createPerson(db, { given_name: 'Olof', surname: 'Snickare' });
+  it('persists value and notes as separate fields', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Olof', surname: 'Snickare' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'occupation',
       person_id: person.id,
       value: 'Carpenter',
@@ -145,10 +145,10 @@ describe('recordEventWorkflow', () => {
     expect(result.event.notes).toBe('shipyard');
   });
 
-  it('routes deprecated `description` parameter to `notes` for backwards compat', () => {
-    const person = persons.createPerson(db, { given_name: 'Karl', surname: 'Hem' });
+  it('routes deprecated `description` parameter to `notes` for backwards compat', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Karl', surname: 'Hem' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'birth',
       person_id: person.id,
       description: 'Born at home',
@@ -158,10 +158,10 @@ describe('recordEventWorkflow', () => {
     expect(result.event.value).toBeNull();
   });
 
-  it('explicit notes wins over deprecated description', () => {
-    const person = persons.createPerson(db, { given_name: 'Per', surname: 'Test' });
+  it('explicit notes wins over deprecated description', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Per', surname: 'Test' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'birth',
       person_id: person.id,
       notes: 'real notes',
@@ -171,10 +171,10 @@ describe('recordEventWorkflow', () => {
     expect(result.event.notes).toBe('real notes');
   });
 
-  it('persists date_value_end for ranged events with date_type "between"', () => {
-    const person = persons.createPerson(db, { given_name: 'Jonas', surname: 'Test' });
+  it('persists date_value_end for ranged events with date_type "between"', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Jonas', surname: 'Test' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'military',
       person_id: person.id,
       date_type: 'between',
@@ -187,14 +187,14 @@ describe('recordEventWorkflow', () => {
     expect(result.event.date_value).toBe('1999');
     expect(result.event.date_value_end).toBe('2000');
 
-    const stored = events.getEvent(db, result.event.id)!;
+    const stored = (await events.getEvent(db, result.event.id))!;
     expect(stored.date_value_end).toBe('2000');
   });
 
-  it('drops date_value_end when date_type is omitted (matches date_value behaviour)', () => {
-    const person = persons.createPerson(db, { given_name: 'Anna', surname: 'Test' });
+  it('drops date_value_end when date_type is omitted (matches date_value behaviour)', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Anna', surname: 'Test' });
 
-    const result = recordEventWorkflow(db, {
+    const result = await recordEventWorkflow(db, {
       event_type: 'residence',
       person_id: person.id,
       date_value: '1999',
@@ -205,15 +205,15 @@ describe('recordEventWorkflow', () => {
     expect(result.event.date_value_end).toBeNull();
   });
 
-  it('rejects a comma-separated `place` argument', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    expect(() =>
-      recordEventWorkflow(db, {
+  it('rejects a comma-separated `place` argument', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    await expect(async () =>
+      await recordEventWorkflow(db, {
         event_type: 'residence',
         person_id: person.id,
         place: 'Chennai, India, World',
       }),
-    ).toThrow(/comma|place_chain/i);
+    ).rejects.toThrow(/comma|place_chain/i);
 
     // No place row was written, no event row was written
     const placeRows = db.prepare('SELECT * FROM places').all([]) as any[];
@@ -222,21 +222,21 @@ describe('recordEventWorkflow', () => {
     expect(eventRows).toHaveLength(0);
   });
 
-  it('rejects when both `place` and `place_chain` are provided', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    expect(() =>
-      recordEventWorkflow(db, {
+  it('rejects when both `place` and `place_chain` are provided', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    await expect(async () =>
+      await recordEventWorkflow(db, {
         event_type: 'residence',
         person_id: person.id,
         place: 'Chennai',
         place_chain: ['World', 'India', 'Chennai'],
       }),
-    ).toThrow(/either|both|not both/i);
+    ).rejects.toThrow(/either|both|not both/i);
   });
 
-  it('place_chain creates the full hierarchy and links the event to the leaf', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    const result = recordEventWorkflow(db, {
+  it('place_chain creates the full hierarchy and links the event to the leaf', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    const result = await recordEventWorkflow(db, {
       event_type: 'residence',
       person_id: person.id,
       place_chain: ['World', 'India', 'Chennai'],
@@ -256,14 +256,14 @@ describe('recordEventWorkflow', () => {
     expect(result.event.place_id).toBe(byName['Chennai'].id);
   });
 
-  it('place_chain is idempotent — re-recording reuses existing rows', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    recordEventWorkflow(db, {
+  it('place_chain is idempotent — re-recording reuses existing rows', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    await recordEventWorkflow(db, {
       event_type: 'residence',
       person_id: person.id,
       place_chain: ['World', 'India', 'Chennai'],
     });
-    recordEventWorkflow(db, {
+    await recordEventWorkflow(db, {
       event_type: 'residence',
       person_id: person.id,
       place_chain: ['World', 'India', 'Chennai'],
@@ -273,30 +273,30 @@ describe('recordEventWorkflow', () => {
     expect(placeRows).toHaveLength(3);
   });
 
-  it('place_chain rejects a comma in any link', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    expect(() =>
-      recordEventWorkflow(db, {
+  it('place_chain rejects a comma in any link', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    await expect(async () =>
+      await recordEventWorkflow(db, {
         event_type: 'residence',
         person_id: person.id,
         place_chain: ['World', 'India, Bharat', 'Chennai'],
       }),
-    ).toThrow(/comma|place_chain/i);
+    ).rejects.toThrow(/comma|place_chain/i);
 
     // Nothing persisted
     expect(db.prepare('SELECT * FROM places').all([]) as any[]).toHaveLength(0);
     expect(db.prepare('SELECT * FROM events').all([]) as any[]).toHaveLength(0);
   });
 
-  it('plain `place` (single component) still works as before', () => {
-    const person = persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
-    const result = recordEventWorkflow(db, {
+  it('plain `place` (single component) still works as before', async () => {
+    const person = await persons.createPerson(db, { given_name: 'Ben', surname: 'A' });
+    const result = await recordEventWorkflow(db, {
       event_type: 'birth',
       person_id: person.id,
       place: 'Stockholm',
     });
 
-    const place = places.getPlace(db, result.event.place_id!);
+    const place = await places.getPlace(db, result.event.place_id!);
     expect(place!.name).toBe('Stockholm');
     expect(place!.parent_place_id).toBeNull();
   });

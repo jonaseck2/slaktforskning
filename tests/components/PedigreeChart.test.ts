@@ -7,7 +7,7 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-describe('PedigreeChart', () => {
+describe('PedigreeChart', async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (window as unknown as { api: unknown }).api = {

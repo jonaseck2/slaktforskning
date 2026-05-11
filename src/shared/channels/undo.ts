@@ -9,17 +9,17 @@ import { defineChannel } from './registry';
 defineChannel({
   name: 'undo:state',
   thread: 'worker',
-  handler: (_db) => undoManager.getState(),
+  handler: async (_db) => await undoManager.getState(),
 });
 
 defineChannel({
   name: 'undo:beginGroup',
   thread: 'worker',
-  handler: (_db, label: string) => { undoManager.beginGroup(label); },
+  handler: async (_db, label: string) => { await undoManager.beginGroup(label); },
 });
 
 defineChannel({
   name: 'undo:endGroup',
   thread: 'worker',
-  handler: (_db) => { undoManager.endGroup(); },
+  handler: async (_db) => { await undoManager.endGroup(); },
 });

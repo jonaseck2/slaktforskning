@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as fsp from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as fsp from 'node:fs/promises';
+import * as path from 'node:path';
 import type { Database } from 'node-sqlite3-wasm';
 import { getMediaDir, getMediaFolderName } from './media';
 import { runSql } from './db';
@@ -106,7 +106,7 @@ export async function consolidateMediaFolder(
   // DB work commits in a single fsync. BEGIN IMMEDIATE acquires the write
   // lock upfront so we don't race a worker-thread reader for the upgrade.
   // Holding a long transaction is fine in WAL mode — readers continue.
-  runSql(db, 'BEGIN IMMEDIATE');
+  await runSql(db, 'BEGIN IMMEDIATE');
   let committed = false;
 
   const update = db.prepare('UPDATE media SET file_ref = ? WHERE id = ?');
@@ -187,12 +187,12 @@ export async function consolidateMediaFolder(
 
   try {
     await Promise.all(Array.from({ length: COPY_CONCURRENCY }, () => worker()));
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
     committed = true;
   } finally {
     update.finalize();
     if (!committed) {
-      try { runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
+      try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     }
   }
   const elapsed = Date.now() - tStart;

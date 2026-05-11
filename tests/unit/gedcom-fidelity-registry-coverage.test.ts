@@ -11,18 +11,18 @@ import { GEDCOM_FIDELITY } from '../../src/api/gedcom_fidelity_registry';
 import { EXEMPT_TABLES } from '../helpers/gedcom_fidelity';
 import { createTestDb } from './helpers';
 
-describe('GEDCOM fidelity registry coverage', () => {
-  it('every non-exempt column in every table has a registry entry', () => {
-    const db = createTestDb();
-    const tables = queryAll<{ name: string }>(
+describe('GEDCOM fidelity registry coverage', async () => {
+  it('every non-exempt column in every table has a registry entry', async () => {
+    const db = await createTestDb();
+    const tables = (await queryAll<{ name: string }>(
       db,
       "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-    ).map(t => t.name);
+    )).map(t => t.name);
 
     const missing: string[] = [];
     for (const table of tables) {
       if (table in EXEMPT_TABLES) continue;
-      const cols = queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`).map(c => c.name);
+      const cols = (await queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`)).map(c => c.name);
       for (const col of cols) {
         const key = `${table}.${col}`;
         if (!(key in GEDCOM_FIDELITY)) missing.push(key);
@@ -40,15 +40,15 @@ describe('GEDCOM fidelity registry coverage', () => {
     }
   });
 
-  it('every registry key references a column that exists in the live schema', () => {
-    const db = createTestDb();
-    const tables = queryAll<{ name: string }>(
+  it('every registry key references a column that exists in the live schema', async () => {
+    const db = await createTestDb();
+    const tables = (await queryAll<{ name: string }>(
       db,
       "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-    ).map(t => t.name);
+    )).map(t => t.name);
     const liveColumns = new Set<string>();
     for (const table of tables) {
-      const cols = queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`).map(c => c.name);
+      const cols = (await queryAll<{ name: string }>(db, `PRAGMA table_info(${table})`)).map(c => c.name);
       for (const col of cols) liveColumns.add(`${table}.${col}`);
     }
 

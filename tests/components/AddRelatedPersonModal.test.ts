@@ -5,7 +5,7 @@ import { i18n } from './setup';
 
 // These tests cover the add-related-person behaviour of PersonModal
 // (formerly in a separate AddRelatedPersonModal component).
-describe('PersonModal (add-related-person behaviour)', () => {
+describe('PersonModal (add-related-person behaviour)', async () => {
   const mockPersonsCreateWithEvent = vi.fn();
   const mockPersonsGet = vi.fn();
   const mockRelationshipsCreate = vi.fn();
@@ -55,9 +55,9 @@ describe('PersonModal (add-related-person behaviour)', () => {
   it('creates parent_child with new person as parent for father mode', async () => {
     const wrapper = mountModal('father');
     await flushPromises();
-    await wrapper.find('input.ep-input--name').setValue('Lars');
+    (await wrapper.find('input.ep-input--name')).setValue('Lars');
     // Trigger save via BaseSubPanel save event
-    await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
+    (await wrapper.findComponent({ name: 'BaseSubPanel' })).vm.$emit('save');
     await flushPromises();
 
     expect(mockPersonsCreateWithEvent).toHaveBeenCalledWith(
@@ -75,8 +75,8 @@ describe('PersonModal (add-related-person behaviour)', () => {
   it('creates parent_child with new person as parent for mother mode', async () => {
     const wrapper = mountModal('mother');
     await flushPromises();
-    await wrapper.find('input.ep-input--name').setValue('Anna');
-    await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
+    (await wrapper.find('input.ep-input--name')).setValue('Anna');
+    (await wrapper.findComponent({ name: 'BaseSubPanel' })).vm.$emit('save');
     await flushPromises();
 
     expect(mockPersonsCreateWithEvent).toHaveBeenCalledWith(
@@ -98,8 +98,8 @@ describe('PersonModal (add-related-person behaviour)', () => {
     // Buttons in document order: [new, existing, M (Son), F (Daughter), U (Unknown)].
     const sexButtons = wrapper.findAll('.ep-seg-opt');
     await sexButtons[3].trigger('click'); // F (Daughter)
-    await wrapper.find('input.ep-input--name').setValue('Britta');
-    await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
+    (await wrapper.find('input.ep-input--name')).setValue('Britta');
+    (await wrapper.findComponent({ name: 'BaseSubPanel' })).vm.$emit('save');
     await flushPromises();
 
     expect(mockRelationshipsCreate).toHaveBeenCalledWith(
@@ -114,8 +114,8 @@ describe('PersonModal (add-related-person behaviour)', () => {
   it('creates couple relationship for spouse mode', async () => {
     const wrapper = mountModal('spouse');
     await flushPromises();
-    await wrapper.find('input.ep-input--name').setValue('Maria');
-    await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
+    (await wrapper.find('input.ep-input--name')).setValue('Maria');
+    (await wrapper.findComponent({ name: 'BaseSubPanel' })).vm.$emit('save');
     await flushPromises();
 
     expect(mockRelationshipsCreate).toHaveBeenCalledWith(
@@ -130,8 +130,8 @@ describe('PersonModal (add-related-person behaviour)', () => {
   it('emits saved and close after successful save', async () => {
     const wrapper = mountModal('father');
     await flushPromises();
-    await wrapper.find('input.ep-input--name').setValue('Test');
-    await wrapper.findComponent({ name: 'BaseSubPanel' }).vm.$emit('save');
+    (await wrapper.find('input.ep-input--name')).setValue('Test');
+    (await wrapper.findComponent({ name: 'BaseSubPanel' })).vm.$emit('save');
     await flushPromises();
 
     expect(wrapper.emitted('saved')).toHaveLength(1);

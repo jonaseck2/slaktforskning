@@ -40,7 +40,17 @@ export function startUiServer(windowGetter: () => BrowserWindow | null): void {
     const method = req.method ?? 'GET';
 
     try {
-      if (method === 'POST' && url === '/screenshot') {
+      if (method === 'POST' && url === '/eval') {
+        // Mirrors the Tauri bridge — the dev MCP ships JS strings here and
+        // expects the renderer's return value back. Wrapped in an async IIFE
+        // so the script can use top-level await.
+        const body = await readBody(req) as { script?: string };
+        if (!body.script) { json(res, 400, { error: 'script required' }); return; }
+        const wrapped = `(async () => { try { return await (${body.script}); } catch (e) { return { __error: String(e && (e.stack || e.message) || e) }; } })()`;
+        const result = await win.webContents.executeJavaScript(wrapped);
+        json(res, 200, result);
+
+      } else if (method === 'POST' && url === '/screenshot') {
         const body = await readBody(req) as { selector?: string; padding?: number };
         if (body.selector) {
           // Element-cropped screenshot: scroll into view, capture rect.

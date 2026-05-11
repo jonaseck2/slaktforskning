@@ -9,7 +9,7 @@ import { loadSettings, saveSettings } from './settings';
 let db: Database | null = null;
 let currentDbPath: string | null = null;
 
-function openDatabase(dbPath: string): Database {
+async function openDatabase(dbPath: string): Promise<Database> {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   // node-sqlite3-wasm (Emscripten) creates .lock directories for file locking.
   // If the app crashes, stale locks block subsequent opens — remove them.
@@ -18,7 +18,7 @@ function openDatabase(dbPath: string): Database {
     fs.rmSync(lockPath, { recursive: true });
   }
   const newDb = new Database(dbPath);
-  initializeSchema(newDb);
+  await initializeSchema(newDb);
   return newDb;
 }
 
@@ -28,10 +28,10 @@ function resolveDefaultPath(): string {
     || path.join(app.getPath('userData'), 'slaktforskning.db');
 }
 
-export function getDatabase(): Database {
+export async function getDatabase(): Promise<Database> {
   if (db) return db;
   currentDbPath = resolveDefaultPath();
-  db = openDatabase(currentDbPath);
+  db = await openDatabase(currentDbPath);
   return db;
 }
 
@@ -40,10 +40,10 @@ export function getCurrentDatabasePath(): string {
   return currentDbPath;
 }
 
-export function switchDatabase(newPath: string): void {
+export async function switchDatabase(newPath: string): Promise<void> {
   closeDatabase();
   undoManager.clear();
-  db = openDatabase(newPath);
+  db = await openDatabase(newPath);
   currentDbPath = newPath;
 
   const settings = loadSettings();

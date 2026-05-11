@@ -137,30 +137,30 @@ function createImportContext(db: Database, tree: GedcomNode[], options?: ImportO
 
 // ── doImportGedcom: run all phases ──────────────────────────────────────────
 
-function doImportGedcom(
+async function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
-): { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] } {
+): Promise<{ skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] }> {
   const ctx = createImportContext(db, tree, options);
 
-  const runPhase = (name: string, fn: (c: typeof ctx) => void) => {
+  const runPhase = async (name: string, fn: (c: typeof ctx) => Promise<void>) => {
     const t = Date.now();
-    fn(ctx);
+    await fn(ctx);
     console.log(`[import-timing]   phase ${name} — ${Date.now() - t}ms`);
   };
-  runPhase('notes',          phaseNotes);
-  runPhase('obje',           phaseObje);
-  runPhase('repo',           phaseRepo);
-  runPhase('groups',         phaseGroups);
-  runPhase('sources',        phaseSources);
-  runPhase('individuals',    phaseIndividuals);
-  runPhase('families',       phaseFamilies);
-  runPhase('asso',           phaseAsso);
-  runPhase('placeCitations', phasePlaceCitations);
-  runPhase('groupRecords',   phaseGroupRecords);
-  runPhase('todos',          phaseTodos);
-  runPhase('submitters',     phaseSubmitters);
+  await runPhase('notes',          phaseNotes);
+  await runPhase('obje',           phaseObje);
+  await runPhase('repo',           phaseRepo);
+  await runPhase('groups',         phaseGroups);
+  await runPhase('sources',        phaseSources);
+  await runPhase('individuals',    phaseIndividuals);
+  await runPhase('families',       phaseFamilies);
+  await runPhase('asso',           phaseAsso);
+  await runPhase('placeCitations', phasePlaceCitations);
+  await runPhase('groupRecords',   phaseGroupRecords);
+  await runPhase('todos',          phaseTodos);
+  await runPhase('submitters',     phaseSubmitters);
   console.log(`[import-timing]   maps: noteMap=${ctx.noteMap.size} objeMap=${ctx.objeMap.size} sourceMap=${ctx.sourceMap.size} personMap=${ctx.personMap.size} placeIdMap=${ctx.placeIdMap.size}`);
 
   // Build and return partial report
@@ -365,7 +365,7 @@ export function previewGedcomImport(tree: GedcomNode[]): ImportPreview {
 
 // ── Main import entry point ─────────────────────────────────────────────────
 
-export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): ValidationReport {
+export async function importGedcom(db: Database, tree: GedcomNode[], options?: ImportOptions): Promise<ValidationReport> {
   // Compute rawCounts from original (pre-normalization) tree
   const rawCounts = {
     individuals: 0,
@@ -408,7 +408,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
   try {
-    partial = doImportGedcom(cachedDb, normalizedTree, options);
+    partial = await doImportGedcom(cachedDb, normalizedTree, options);
     runSql(db, 'COMMIT');
   } catch (err) {
     runSql(db, 'ROLLBACK');
@@ -466,7 +466,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
       try {
         const rows = stmt.all(q.params) as { person_id: string }[];
         if (rows.length === 1) {
-          setDbSetting(db, 'default_person_id', rows[0].person_id);
+          await setDbSetting(db, 'default_person_id', rows[0].person_id);
           break outer;
         }
       } finally {
@@ -479,8 +479,8 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   // nothing — guarantees the chart has a focal person after import instead
   // of an empty visualization. Never overwrites an existing setting (a user
   // who imports into a populated DB keeps their prior tree subject).
-  if (!getDbSetting(db, 'default_person_id') && partial.firstPersonId) {
-    setDbSetting(db, 'default_person_id', partial.firstPersonId);
+  if (!(await getDbSetting(db, 'default_person_id')) && partial.firstPersonId) {
+    await setDbSetting(db, 'default_person_id', partial.firstPersonId);
   }
 
   // Populate researcher_* settings from the SUBM record. Mirrors the
@@ -489,16 +489,16 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   // Only writes settings that are currently empty: a user who has typed
   // their own contact info in Settings keeps it on re-import.
   if (partial.submitterNames.length > 0 || partial.submitterContact) {
-    const setIfEmpty = (key: string, value: string | undefined): void => {
+    const setIfEmpty = async (key: string, value: string | undefined): Promise<void> => {
       if (!value) return;
-      const existing = getDbSetting(db, key);
+      const existing = await getDbSetting(db, key);
       if (existing && existing.trim()) return;
-      setDbSetting(db, key, value);
+      await setDbSetting(db, key, value);
     };
-    setIfEmpty('researcher_name', partial.submitterNames[0]);
-    setIfEmpty('researcher_address', partial.submitterContact?.address);
-    setIfEmpty('researcher_phone', partial.submitterContact?.phone);
-    setIfEmpty('researcher_email', partial.submitterContact?.email);
+    await setIfEmpty('researcher_name', partial.submitterNames[0]);
+    await setIfEmpty('researcher_address', partial.submitterContact?.address);
+    await setIfEmpty('researcher_phone', partial.submitterContact?.phone);
+    await setIfEmpty('researcher_email', partial.submitterContact?.email);
   }
 
   const events: Record<string, number> = {};
@@ -557,6 +557,13 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
   // tagStats mirrors skipped (same data, different field name)
   const tagStats = partial.skipped.map(s => ({ tag: s.tag, occurrences: s.count }));
 
+  // defaultPersonId: from SUBM match if available, otherwise firstPersonId fallback
+  const submMatch = await getDbSetting(db, 'default_person_id');
+  const defaultPersonOverride: { defaultPersonId?: string } =
+    submMatch ? { defaultPersonId: submMatch }
+      : partial.firstPersonId != null ? { defaultPersonId: partial.firstPersonId }
+      : {};
+
   return {
     version,
     persons:       personsAfter       - personsBefore,
@@ -574,13 +581,7 @@ export function importGedcom(db: Database, tree: GedcomNode[], options?: ImportO
     tagStats,
     unmappedData,
     modelLimitations,
-    // defaultPersonId: from SUBM match if available, otherwise firstPersonId fallback
-    ...((() => {
-      const submMatch = getDbSetting(db, 'default_person_id');
-      if (submMatch) return { defaultPersonId: submMatch };
-      if (partial.firstPersonId != null) return { defaultPersonId: partial.firstPersonId };
-      return {};
-    })()),
+    ...defaultPersonOverride,
     ...(partial.submitterNames.length > 0 ? { submitterName: partial.submitterNames[0] } : {}),
   };
 }

@@ -11,15 +11,15 @@ import { createSource } from '../../src/api/sources';
 import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
-beforeEach(() => { db = createTestDb(); });
+beforeEach(async () => { db = await createTestDb(); });
 
-describe('POSSIBLE_DUPLICATE_PERSON', () => {
+describe('POSSIBLE_DUPLICATE_PERSON', async () => {
   it('fires for two persons with the same name and matching birth year', async () => {
-    const p1 = createPerson(db, { given_name: 'Anna', surname: 'Eriksson' });
-    const p2 = createPerson(db, { given_name: 'Anna', surname: 'Eriksson' });
+    const p1 = await createPerson(db, { given_name: 'Anna', surname: 'Eriksson' });
+    const p2 = await createPerson(db, { given_name: 'Anna', surname: 'Eriksson' });
     for (const p of [p1, p2]) {
-      const e = createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1900-01-01' });
-      addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
+      const e = await createEvent(db, { event_type: 'birth', date_type: 'exact', date_value: '1900-01-01' });
+      await addEventParticipant(db, { event_id: e.id, person_id: p.id, role: 'primary' });
     }
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'POSSIBLE_DUPLICATE_PERSON');
@@ -37,14 +37,14 @@ describe('POSSIBLE_DUPLICATE_PERSON', () => {
   });
 });
 
-describe('DUPLICATE_IDENTIFIER', () => {
+describe('DUPLICATE_IDENTIFIER', async () => {
   it('fires when two persons share the same identifier', async () => {
-    const p1 = createPerson(db, {}, { allowNameless: true });
-    const p2 = createPerson(db, {}, { allowNameless: true });
-    queryRun(db,
+    const p1 = await createPerson(db, {}, { allowNameless: true });
+    const p2 = await createPerson(db, {}, { allowNameless: true });
+    await queryRun(db,
       'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)',
       [uuidv4(), p1.id, 'familysearch', 'ABC-1234']);
-    queryRun(db,
+    await queryRun(db,
       'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)',
       [uuidv4(), p2.id, 'familysearch', 'ABC-1234']);
     const results = await runAllChecks(db);
@@ -55,20 +55,20 @@ describe('DUPLICATE_IDENTIFIER', () => {
   });
 
   it('does not fire for unique identifiers', async () => {
-    const p1 = createPerson(db, {}, { allowNameless: true });
-    const p2 = createPerson(db, {}, { allowNameless: true });
-    queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p1.id, 'familysearch', 'A']);
-    queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p2.id, 'familysearch', 'B']);
+    const p1 = await createPerson(db, {}, { allowNameless: true });
+    const p2 = await createPerson(db, {}, { allowNameless: true });
+    await queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p1.id, 'familysearch', 'A']);
+    await queryRun(db, 'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value) VALUES (?, ?, ?, ?)', [uuidv4(), p2.id, 'familysearch', 'B']);
     const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_IDENTIFIER')).toHaveLength(0);
   });
 });
 
-describe('DUPLICATE_PLACE', () => {
+describe('DUPLICATE_PLACE', async () => {
   it('fires for two places with the same normalized_name and same parent', async () => {
-    const country = createPlace(db, { name: 'Sverige' });
-    const a = createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
-    const b = createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
+    const country = await createPlace(db, { name: 'Sverige' });
+    const a = await createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
+    const b = await createPlace(db, { name: 'Stockholm', parent_place_id: country.id });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'DUPLICATE_PLACE');
     expect(hit).toHaveLength(1);
@@ -82,22 +82,22 @@ describe('DUPLICATE_PLACE', () => {
   });
 
   it('does not fire for same name under different parents', async () => {
-    const p1 = createPlace(db, { name: 'Sverige' });
-    const p2 = createPlace(db, { name: 'Norge' });
-    createPlace(db, { name: 'Strömstad', parent_place_id: p1.id });
-    createPlace(db, { name: 'Strömstad', parent_place_id: p2.id });
+    const p1 = await createPlace(db, { name: 'Sverige' });
+    const p2 = await createPlace(db, { name: 'Norge' });
+    await createPlace(db, { name: 'Strömstad', parent_place_id: p1.id });
+    await createPlace(db, { name: 'Strömstad', parent_place_id: p2.id });
     const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_PLACE')).toHaveLength(0);
   });
 });
 
-describe('DUPLICATE_MEDIA', () => {
+describe('DUPLICATE_MEDIA', async () => {
   it('fires for two media rows with the same file_ref', async () => {
-    const p = createPerson(db, {}, { allowNameless: true });
-    const a = createMedia(db, { title: 'Foo', file_ref: '/photos/p.jpg' });
-    const b = createMedia(db, { title: 'Bar', file_ref: '/photos/p.jpg' });
-    addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
-    addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
+    const p = await createPerson(db, {}, { allowNameless: true });
+    const a = await createMedia(db, { title: 'Foo', file_ref: '/photos/p.jpg' });
+    const b = await createMedia(db, { title: 'Bar', file_ref: '/photos/p.jpg' });
+    await addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
+    await addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'DUPLICATE_MEDIA');
     expect(hit).toHaveLength(1);
@@ -109,20 +109,20 @@ describe('DUPLICATE_MEDIA', () => {
   });
 
   it('does not fire for empty file_ref', async () => {
-    const p = createPerson(db, {}, { allowNameless: true });
-    const a = createMedia(db, { title: 'Foo' });
-    const b = createMedia(db, { title: 'Bar' });
-    addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
-    addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
+    const p = await createPerson(db, {}, { allowNameless: true });
+    const a = await createMedia(db, { title: 'Foo' });
+    const b = await createMedia(db, { title: 'Bar' });
+    await addMediaLink(db, { media_id: a.id, entity_type: 'person', entity_id: p.id });
+    await addMediaLink(db, { media_id: b.id, entity_type: 'person', entity_id: p.id });
     const results = await runAllChecks(db);
     expect(results.filter(r => r.code === 'DUPLICATE_MEDIA')).toHaveLength(0);
   });
 });
 
-describe('DUPLICATE_SOURCE', () => {
+describe('DUPLICATE_SOURCE', async () => {
   it('fires for two sources with the same URL', async () => {
-    const a = createSource(db, { title: 'A', url: 'https://example.org/book' });
-    const b = createSource(db, { title: 'B', url: 'https://example.org/book' });
+    const a = await createSource(db, { title: 'A', url: 'https://example.org/book' });
+    const b = await createSource(db, { title: 'B', url: 'https://example.org/book' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
     expect(hit).toHaveLength(1);
@@ -134,8 +134,8 @@ describe('DUPLICATE_SOURCE', () => {
   });
 
   it('fires for two sources with the same (title, author, publication_info)', async () => {
-    const a = createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
-    const b = createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
+    const a = await createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
+    const b = await createSource(db, { title: 'Bygdebok', author: 'Svensson', publication_info: '1932' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
     expect(hit).toHaveLength(1);
@@ -143,8 +143,8 @@ describe('DUPLICATE_SOURCE', () => {
   });
 
   it('deduplicates when a group matches both url and metadata', async () => {
-    const a = createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
-    const b = createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
+    const a = await createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
+    const b = await createSource(db, { title: 'Same', author: 'Same', publication_info: 'Same', url: 'https://x.org' });
     const results = await runAllChecks(db);
     const hit = results.filter(r => r.code === 'DUPLICATE_SOURCE');
     expect(hit).toHaveLength(1);

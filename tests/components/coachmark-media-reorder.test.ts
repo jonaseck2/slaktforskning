@@ -90,7 +90,7 @@ afterEach(() => {
   config.global.stubs = originalStubs;
 });
 
-describe('Coachmark — media reorder (PersonMediaSection)', () => {
+describe('Coachmark — media reorder (PersonMediaSection)', async () => {
   it('renders coachmark when media has 2+ items and seen-key not set', async () => {
     wrapper = mount(PersonMediaSection, {
       global: { plugins: [i18n], stubs: { RouterLink: true } },
@@ -149,7 +149,7 @@ describe('Coachmark — media reorder (PersonMediaSection)', () => {
   });
 });
 
-describe('Coachmark — media reorder (EntityMediaSection)', () => {
+describe('Coachmark — media reorder (EntityMediaSection)', async () => {
   it('renders coachmark when media has 2+ items', async () => {
     wrapper = mount(EntityMediaSection, {
       global: { plugins: [i18n], stubs: { RouterLink: true } },

@@ -28,7 +28,7 @@ export function registerDuplicateMergeTools(server: McpServer, ctx: UtilityToolC
       source_id: z.string().describe('ID of the place to merge into target (will be deleted)'),
     },
   }, async (args) => {
-    const result = duplicates.mergePlaces(getDb(), args.target_id, args.source_id);
+    const result = await duplicates.mergePlaces(getDb(), args.target_id, args.source_id);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -43,7 +43,7 @@ export function registerDuplicateMergeTools(server: McpServer, ctx: UtilityToolC
       source_id: z.string().describe('ID of the source row to merge into target (will be deleted)'),
     },
   }, async (args) => {
-    const result = duplicates.mergeSources(getDb(), args.target_id, args.source_id);
+    const result = await duplicates.mergeSources(getDb(), args.target_id, args.source_id);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -67,7 +67,7 @@ export function registerDuplicateMergeTools(server: McpServer, ctx: UtilityToolC
       ),
     },
   }, async (args) => {
-    const result = duplicates.mergeMedia(getDb(), args.target_id, args.source_id, args.keep_file, {
+    const result = await duplicates.mergeMedia(getDb(), args.target_id, args.source_id, args.keep_file, {
       dbPath: getDbPath(),
     });
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };

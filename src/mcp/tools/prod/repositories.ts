@@ -22,7 +22,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       notes: z.string().optional(),
     },
   }, async (args) => {
-    const repo = repoApi.createRepository(getDb(), args);
+    const repo = await repoApi.createRepository(getDb(), args);
     return { content: [{ type: 'text', text: JSON.stringify(repo, null, 2) }] };
   });
 
@@ -30,7 +30,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
     description: 'List all repositories.',
     inputSchema: {},
   }, async () => {
-    const list = repoApi.listRepositories(getDb());
+    const list = await repoApi.listRepositories(getDb());
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 
@@ -40,7 +40,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       id: z.string().describe('Repository ID'),
     },
   }, async (args) => {
-    const repo = repoApi.getRepository(getDb(), args.id);
+    const repo = await repoApi.getRepository(getDb(), args.id);
     return { content: [{ type: 'text', text: repo ? JSON.stringify(repo, null, 2) : 'Repository not found' }] };
   });
 
@@ -62,7 +62,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const repo = repoApi.updateRepository(getDb(), id, data);
+    const repo = await repoApi.updateRepository(getDb(), id, data);
     return { content: [{ type: 'text', text: repo ? JSON.stringify(repo, null, 2) : 'Repository not found' }] };
   });
 
@@ -72,7 +72,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       id: z.string().describe('Repository ID'),
     },
   }, async (args) => {
-    const ok = repoApi.deleteRepository(getDb(), args.id);
+    const ok = await repoApi.deleteRepository(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Repository not found' }] };
   });
 
@@ -83,7 +83,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       repository_id: z.string().describe('Repository ID'),
     },
   }, async (args) => {
-    repoApi.linkSourceRepository(getDb(), args.source_id, args.repository_id);
+    await repoApi.linkSourceRepository(getDb(), args.source_id, args.repository_id);
     return { content: [{ type: 'text', text: 'Linked' }] };
   });
 
@@ -94,7 +94,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       repository_id: z.string().describe('Repository ID'),
     },
   }, async (args) => {
-    const ok = repoApi.unlinkSourceRepository(getDb(), args.source_id, args.repository_id);
+    const ok = await repoApi.unlinkSourceRepository(getDb(), args.source_id, args.repository_id);
     return { content: [{ type: 'text', text: ok ? 'Unlinked' : 'Link not found' }] };
   });
 
@@ -104,7 +104,7 @@ export function registerRepositoryTools(server: McpServer, ctx: ToolContext): vo
       source_id: z.string().describe('Source ID'),
     },
   }, async (args) => {
-    const list = repoApi.getRepositoriesForSource(getDb(), args.source_id);
+    const list = await repoApi.getRepositoriesForSource(getDb(), args.source_id);
     return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
   });
 }

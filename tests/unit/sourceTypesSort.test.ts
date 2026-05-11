@@ -16,37 +16,37 @@ function sortedFor(locale: 'sv' | 'en'): string[] {
   return [...SOURCE_TYPE_VALUES].sort((a, b) => collator.compare(labels[a], labels[b]));
 }
 
-describe('Source type dropdown — locale-aware sort', () => {
-  it('every value has a Swedish label', () => {
+describe('Source type dropdown — locale-aware sort', async () => {
+  it('every value has a Swedish label', async () => {
     const labels = sv.sourceTypes as Record<string, string>;
     for (const v of SOURCE_TYPE_VALUES) {
       expect(labels[v], `missing sv label for ${v}`).toBeTruthy();
     }
   });
 
-  it('every value has an English label', () => {
+  it('every value has an English label', async () => {
     const labels = en.sourceTypes as Record<string, string>;
     for (const v of SOURCE_TYPE_VALUES) {
       expect(labels[v], `missing en label for ${v}`).toBeTruthy();
     }
   });
 
-  it('Swedish: Adelskalender (peerage_register) sorts before Bok (book)', () => {
+  it('Swedish: Adelskalender (peerage_register) sorts before Bok (book)', async () => {
     const order = sortedFor('sv');
     expect(order.indexOf('peerage_register')).toBeLessThan(order.indexOf('book'));
   });
 
-  it('Swedish: Bouppteckning (probate_inventory) sorts before Brev (letter)', () => {
+  it('Swedish: Bouppteckning (probate_inventory) sorts before Brev (letter)', async () => {
     const order = sortedFor('sv');
     expect(order.indexOf('probate_inventory')).toBeLessThan(order.indexOf('letter'));
   });
 
-  it('Swedish: Övrigt (other) sorts last — å/ä/ö come after z', () => {
+  it('Swedish: Övrigt (other) sorts last — å/ä/ö come after z', async () => {
     const order = sortedFor('sv');
     expect(order[order.length - 1]).toBe('other');
   });
 
-  it('Swedish: Uppslagsverk (encyclopedia) and Utvandringshandling (passenger_list) sort near the end before Övrigt', () => {
+  it('Swedish: Uppslagsverk (encyclopedia) and Utvandringshandling (passenger_list) sort near the end before Övrigt', async () => {
     const order = sortedFor('sv');
     expect(order.indexOf('encyclopedia')).toBeLessThan(order.indexOf('other'));
     expect(order.indexOf('passenger_list')).toBeLessThan(order.indexOf('other'));
@@ -54,17 +54,17 @@ describe('Source type dropdown — locale-aware sort', () => {
     expect(order.indexOf('encyclopedia')).toBeLessThan(order.indexOf('passenger_list'));
   });
 
-  it("English: Encyclopedia sorts before Genealogist's work", () => {
+  it("English: Encyclopedia sorts before Genealogist's work", async () => {
     const order = sortedFor('en');
     expect(order.indexOf('encyclopedia')).toBeLessThan(order.indexOf('genealogist'));
   });
 
-  it('English: Book sorts before Census', () => {
+  it('English: Book sorts before Census', async () => {
     const order = sortedFor('en');
     expect(order.indexOf('book')).toBeLessThan(order.indexOf('census'));
   });
 
-  it('dropdown shows all 18 entries (13 original + 5 new)', () => {
+  it('dropdown shows all 18 entries (13 original + 5 new)', async () => {
     expect(SOURCE_TYPE_VALUES.length).toBe(18);
   });
 });

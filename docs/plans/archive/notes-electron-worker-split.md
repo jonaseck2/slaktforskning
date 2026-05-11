@@ -1,9 +1,8 @@
----
-name: worker-thread-ipc-split
-description: Worker-thread vs main-thread split for IPC handlers and bulk DB writes. Use when adding/modifying any IPC channel, any code in src/main/db-worker.ts, any src/api/ function reachable from a worker channel, any importer (GEDCOM, Holger, Genney, archive), any media file operation, or when investigating UI freezes / sluggish list views / slow imports. Covers banned sync I/O, bulk-write transaction rules, and the "lying bulk name" anti-pattern.
----
+# Notes — Electron Worker-Thread / Main-Thread Split (historical RCA)
 
-# Worker-Thread / Main-Thread Split
+> **Status: retired skill (2026-05-10).** This file used to live at `.claude/skills/worker-thread-ipc-split/SKILL.md`. The Tauri build has no DB worker thread — rusqlite runs on the Rust side via async commands, so the user goal this skill guarded ("renderer doesn't freeze during long imports") is satisfied architecturally. The file is preserved here as historical RCA: every bug listed below shipped, was found by the user noticing the app stutter, and the patterns described are what kept the Electron worker thread responsive. If a future architectural change reintroduces a single-threaded host that serialises IPC, this is the prior-art record. Per `docs/plans/2026-05-10-tauri-port-completion-audit.md` §3.
+
+# Worker-Thread / Main-Thread Split (Electron)
 
 This skill is the trigger-on-intent companion to `.claude/rules/api.md` (which auto-loads only when you're already editing matching files). The **rule file is the canonical source** for the bug history and the full banned/allowed lists — read it. This skill exists so you check before you write the bug, not after.
 

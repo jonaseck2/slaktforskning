@@ -5,7 +5,7 @@ import {
   _resetWorkerStateAccessors,
 } from '../../src/main/db-worker-state';
 
-describe('withImportLifecycle', () => {
+describe('withImportLifecycle', async () => {
   let importInProgress = false;
 
   beforeEach(() => {

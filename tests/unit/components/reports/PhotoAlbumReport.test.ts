@@ -15,7 +15,7 @@ const mockApi = {
   db: { getSetting: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.media.list.mockResolvedValue([]);
   mockApi.media.forEntity.mockResolvedValue([]);
@@ -27,7 +27,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('PhotoAlbumReport', () => {
+describe('PhotoAlbumReport', async () => {
   it('renders cover with person-scoped title when media and subject available', async () => {
     mockApi.media.forEntity.mockResolvedValue([
       {

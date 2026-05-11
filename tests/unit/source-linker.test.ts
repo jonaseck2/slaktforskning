@@ -17,18 +17,18 @@ const testRule: LinkRule = {
   priority: 10,
 };
 
-describe('linkify', () => {
-  it('returns plain segment for text with no matches', () => {
+describe('linkify', async () => {
+  it('returns plain segment for text with no matches', async () => {
     const result = linkify('no links here', [testRule]);
     expect(result).toEqual([{ text: 'no links here' }]);
   });
 
-  it('returns empty array for empty string', () => {
+  it('returns empty array for empty string', async () => {
     const result = linkify('', [testRule]);
     expect(result).toEqual([]);
   });
 
-  it('extracts a single match with surrounding text', () => {
+  it('extracts a single match with surrounding text', async () => {
     const result = linkify('ref: AID: v12345.b67 end', [testRule]);
     expect(result).toEqual([
       { text: 'ref: ' },
@@ -37,7 +37,7 @@ describe('linkify', () => {
     ]);
   });
 
-  it('extracts multiple matches', () => {
+  it('extracts multiple matches', async () => {
     const result = linkify('first AID: v1.b2 then AID: v3.b4', [testRule]);
     expect(result).toHaveLength(4);
     expect(result[1]).toEqual({
@@ -52,7 +52,7 @@ describe('linkify', () => {
     });
   });
 
-  it('handles match at start of string', () => {
+  it('handles match at start of string', async () => {
     const result = linkify('AID: v1.b2 rest', [testRule]);
     expect(result[0]).toEqual({
       text: 'AID: v1.b2',
@@ -61,19 +61,19 @@ describe('linkify', () => {
     });
   });
 
-  it('handles match at end of string', () => {
+  it('handles match at end of string', async () => {
     const result = linkify('see AID: v1.b2', [testRule]);
     expect(result).toHaveLength(2);
     expect(result[1].url).toBeDefined();
   });
 
-  it('skips disabled rules', () => {
+  it('skips disabled rules', async () => {
     const disabled = { ...testRule, enabled: false };
     const result = linkify('AID: v1.b2', [disabled]);
     expect(result).toEqual([{ text: 'AID: v1.b2' }]);
   });
 
-  it('higher priority rule wins on overlap', () => {
+  it('higher priority rule wins on overlap', async () => {
     const lowPriority: LinkRule = {
       id: 'low',
       name: 'Low',
@@ -88,7 +88,7 @@ describe('linkify', () => {
     expect(result[0].ruleName).toBe('Test AID');
   });
 
-  it('supports $0 as full match reference', () => {
+  it('supports $0 as full match reference', async () => {
     const urlRule: LinkRule = {
       id: 'url',
       name: 'URL',
@@ -107,50 +107,50 @@ describe('linkify', () => {
   });
 });
 
-describe('Swedish default rules', () => {
-  it('matches ArkivDigital AID with page suffix', () => {
+describe('Swedish default rules', async () => {
+  it('matches ArkivDigital AID with page suffix', async () => {
     const result = linkify('(AID: v170308.b530.s44, NAD: SE/VALA/00333)', svRules);
     const aidSeg = result.find((s) => s.ruleName === 'ArkivDigital (AID)');
     expect(aidSeg).toBeDefined();
     expect(aidSeg!.url).toBe('https://app.arkivdigital.se/volume/v170308?image=530');
   });
 
-  it('matches ArkivDigital AID without page suffix', () => {
+  it('matches ArkivDigital AID without page suffix', async () => {
     const result = linkify('AID: v36086.b20', svRules);
     const aidSeg = result.find((s) => s.url);
     expect(aidSeg!.url).toBe('https://app.arkivdigital.se/volume/v36086?image=20');
   });
 
-  it('matches Riksarkivet NAD code', () => {
+  it('matches Riksarkivet NAD code', async () => {
     const result = linkify('NAD: SE/VALA/00333', svRules);
     const nadSeg = result.find((s) => s.ruleName === 'Riksarkivet (NAD)');
     expect(nadSeg).toBeDefined();
     expect(nadSeg!.url).toContain('SE/VALA/00333');
   });
 
-  it('matches Sveriges Befolkning abbreviation', () => {
+  it('matches Sveriges Befolkning abbreviation', async () => {
     const result = linkify('SvBf1980', svRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
   });
 });
 
-describe('English default rules', () => {
-  it('matches FamilySearch ARK', () => {
+describe('English default rules', async () => {
+  it('matches FamilySearch ARK', async () => {
     const result = linkify('see ark:/61903/1:1:XHLN-69H for details', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toBe('https://www.familysearch.org/ark:/61903/1:1:XHLN-69H');
   });
 
-  it('matches FindAGrave memorial', () => {
+  it('matches FindAGrave memorial', async () => {
     const result = linkify('Find A Grave memorial 12345678', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toBe('https://www.findagrave.com/memorial/12345678');
   });
 
-  it('matches Ancestry record URL', () => {
+  it('matches Ancestry record URL', async () => {
     const result = linkify('ancestry.com/discoveryui-content/view/12345:6789', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
@@ -158,28 +158,28 @@ describe('English default rules', () => {
   });
 });
 
-describe('Universal rules', () => {
-  it('matches plain HTTPS URL', () => {
+describe('Universal rules', async () => {
+  it('matches plain HTTPS URL', async () => {
     const result = linkify('visit https://example.com/page today', universalRules);
     const seg = result.find((s) => s.url);
     expect(seg!.url).toBe('https://example.com/page');
   });
 
-  it('matches plain HTTP URL', () => {
+  it('matches plain HTTP URL', async () => {
     const result = linkify('see http://old.site.com/doc', universalRules);
     const seg = result.find((s) => s.url);
     expect(seg!.url).toBe('http://old.site.com/doc');
   });
 });
 
-describe('resolveRules', () => {
+describe('resolveRules', async () => {
   const defaults: LinkRule[] = [
     { id: 'sv-1', name: 'SV Rule', pattern: 'sv', urlTemplate: 'https://sv.com', locale: 'sv', enabled: true, priority: 10 },
     { id: 'en-1', name: 'EN Rule', pattern: 'en', urlTemplate: 'https://en.com', locale: 'en', enabled: true, priority: 10 },
     { id: 'uni-1', name: 'Universal', pattern: 'uni', urlTemplate: 'https://uni.com', locale: '*', enabled: true, priority: 100 },
   ];
 
-  it('includes only rules from enabled locales plus universal', () => {
+  it('includes only rules from enabled locales plus universal', async () => {
     const result = resolveRules(defaults, { enabledLocales: ['sv'], overrides: {} });
     const ids = result.map((r) => r.id);
     expect(ids).toContain('sv-1');
@@ -187,7 +187,7 @@ describe('resolveRules', () => {
     expect(ids).not.toContain('en-1');
   });
 
-  it('applies enabled override to disable a default rule', () => {
+  it('applies enabled override to disable a default rule', async () => {
     const result = resolveRules(defaults, {
       enabledLocales: ['sv'],
       overrides: { 'sv-1': { enabled: false } },
@@ -196,7 +196,7 @@ describe('resolveRules', () => {
     expect(svRule!.enabled).toBe(false);
   });
 
-  it('adds custom rules from overrides', () => {
+  it('adds custom rules from overrides', async () => {
     const result = resolveRules(defaults, {
       enabledLocales: ['sv'],
       overrides: {
@@ -214,7 +214,7 @@ describe('resolveRules', () => {
     expect(custom!.name).toBe('Custom');
   });
 
-  it('sorts output by priority', () => {
+  it('sorts output by priority', async () => {
     const result = resolveRules(defaults, { enabledLocales: ['sv', 'en'], overrides: {} });
     for (let i = 1; i < result.length; i++) {
       expect(result[i].priority).toBeGreaterThanOrEqual(result[i - 1].priority);
@@ -222,8 +222,8 @@ describe('resolveRules', () => {
   });
 });
 
-describe('German default rules', () => {
-  it('matches Archion reference', () => {
+describe('German default rules', async () => {
+  it('matches Archion reference', async () => {
     const result = linkify('Archion: Taufregister 1680-1720', deRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
@@ -231,14 +231,14 @@ describe('German default rules', () => {
     expect(seg!.url).toContain('Taufregister');
   });
 
-  it('matches Matricula reference', () => {
+  it('matches Matricula reference', async () => {
     const result = linkify('Matricula: Wien, St. Stephan, more text', deRules);
     const seg = result.find((s) => s.ruleName === 'Matricula');
     expect(seg).toBeDefined();
     expect(seg!.url).toContain('matricula-online.eu');
   });
 
-  it('matches Ancestry.de record URL', () => {
+  it('matches Ancestry.de record URL', async () => {
     const result = linkify('ancestry.de/discoveryui-content/view/45678:1234', deRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
@@ -246,8 +246,8 @@ describe('German default rules', () => {
   });
 });
 
-describe('Danish default rules', () => {
-  it('matches Arkivalieronline AO reference', () => {
+describe('Danish default rules', async () => {
+  it('matches Arkivalieronline AO reference', async () => {
     const result = linkify('AO: 12345', daRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
@@ -255,7 +255,7 @@ describe('Danish default rules', () => {
     expect(seg!.url).toContain('12345');
   });
 
-  it('matches KIP reference', () => {
+  it('matches KIP reference', async () => {
     const result = linkify('KIP: Odense 1787, some note', daRules);
     const seg = result.find((s) => s.ruleName?.includes('KIP'));
     expect(seg).toBeDefined();
@@ -263,15 +263,15 @@ describe('Danish default rules', () => {
   });
 });
 
-describe('Norwegian default rules', () => {
-  it('matches Digitalarkivet DA reference', () => {
+describe('Norwegian default rules', async () => {
+  it('matches Digitalarkivet DA reference', async () => {
     const result = linkify('DA: Bergen 1801, census', noRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toContain('digitalarkivet.no');
   });
 
-  it('matches Arkivverket URL passthrough', () => {
+  it('matches Arkivverket URL passthrough', async () => {
     const result = linkify('see arkivverket.no/search/archives for details', noRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
@@ -279,15 +279,15 @@ describe('Norwegian default rules', () => {
   });
 });
 
-describe('Swedish rule additions', () => {
-  it('matches SVAR reference', () => {
+describe('Swedish rule additions', async () => {
+  it('matches SVAR reference', async () => {
     const result = linkify('SVAR: Husförhör Lekeberga 1820-1830, page 5', svRules);
     const seg = result.find((s) => s.ruleName === 'SVAR');
     expect(seg).toBeDefined();
     expect(seg!.url).toContain('riksarkivet.se/svar/');
   });
 
-  it('matches DDB reference', () => {
+  it('matches DDB reference', async () => {
     const result = linkify('DDB: Skellefteå 1890, birth record', svRules);
     const seg = result.find((s) => s.ruleName?.includes('DDB'));
     expect(seg).toBeDefined();
@@ -295,29 +295,29 @@ describe('Swedish rule additions', () => {
   });
 });
 
-describe('English rule additions', () => {
-  it('matches MyHeritage record URL', () => {
+describe('English rule additions', async () => {
+  it('matches MyHeritage record URL', async () => {
     const result = linkify('myheritage.com/research/record-1-300123456', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toBe('https://www.myheritage.com/research/record-1-300123456');
   });
 
-  it('matches Geni profile URL', () => {
+  it('matches Geni profile URL', async () => {
     const result = linkify('geni.com/people/John-Smith/6000000012345678', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toContain('geni.com/people/profile/6000000012345678');
   });
 
-  it('matches WikiTree ID reference', () => {
+  it('matches WikiTree ID reference', async () => {
     const result = linkify('WikiTree: Smith-12345', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();
     expect(seg!.url).toBe('https://www.wikitree.com/wiki/Smith-12345');
   });
 
-  it('matches BillionGraves memorial', () => {
+  it('matches BillionGraves memorial', async () => {
     const result = linkify('BillionGraves memorial 1234567', enRules);
     const seg = result.find((s) => s.url);
     expect(seg).toBeDefined();

@@ -23,7 +23,7 @@ const mockApi = {
   sources: { get: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.media.forEntity.mockResolvedValue([]);
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
@@ -49,7 +49,7 @@ function buildMember(id: string, given: string, surname: string, sex: 'M' | 'F' 
   };
 }
 
-describe('AMarriageReport', () => {
+describe('AMarriageReport', async () => {
   it('renders cover with couple names', async () => {
     mockApi.reports.familyUnit.mockResolvedValue({
       relationship: { id: 'r1', type: 'couple', subtype: null, person1_id: 'p1', person2_id: 'p2', notes: null },

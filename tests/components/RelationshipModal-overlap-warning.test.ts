@@ -144,7 +144,7 @@ function findOverlapWarning(wrapper: ReturnType<typeof mountModalNew>) {
     .find((c) => c.props('visible') === true && c.props('title') === 'Existing partnership');
 }
 
-describe('RelationshipModal — overlap warning (Part D)', () => {
+describe('RelationshipModal — overlap warning (Part D)', async () => {
   it('fires the warning when person1 has an existing couple relationship with no divorce and other partner alive', async () => {
     setUnresolvedExistingPartnership();
 

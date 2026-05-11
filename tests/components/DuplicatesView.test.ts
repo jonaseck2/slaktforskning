@@ -94,7 +94,7 @@ async function mountView(initialPath = '/duplicates') {
   return { wrapper: w, router };
 }
 
-describe('DuplicatesView (tab shell)', () => {
+describe('DuplicatesView (tab shell)', async () => {
   let api: MockApi;
 
   beforeEach(() => {
@@ -178,7 +178,7 @@ describe('DuplicatesView (tab shell)', () => {
   // candidates" finding in QualityView; QualityView routes to
   // `/duplicates?tab=places&pair=ID1:ID2`; the duplicates view must switch to
   // the Places tab AND pre-open the merge modal for that exact pair.
-  describe('quality-check deep link (?pair=)', () => {
+  describe('quality-check deep link (?pair=)', async () => {
     it('pre-opens the merge modal for the named place pair on mount', async () => {
       const pair = {
         place1_id: 'PLACE-A',

@@ -238,26 +238,35 @@ async function runChecks() {
   }
 }
 
+// Quality is the documented exception to the "composables own onDataChanged"
+// rule (renderer.md): running checks is expensive (full DB scan), so we
+// can't auto-rerun on every mutation via useEntityData/usePagedList.
+// Instead we keep a single direct onDataChanged subscription with an
+// 800ms debounce — long enough to coalesce a burst of writes (import,
+// bulk MCP edits) into one re-check. The dataVersionStore.version watch
+// would be redundant on top of this.
+let debounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (debounce) clearTimeout(debounce);
+  debounce = setTimeout(runChecks, 800);
+};
+
 onMounted(() => {
   isMounted = true;
   resetIgnored();
-  runChecks();
-
-  // Quality is the documented exception to the "composables own onDataChanged"
-  // rule (renderer.md): running checks is expensive (full DB scan), so we
-  // can't auto-rerun on every mutation via useEntityData/usePagedList.
-  // Instead we keep a single direct onDataChanged subscription with an
-  // 800ms debounce — long enough to coalesce a burst of writes (import,
-  // bulk MCP edits) into one re-check. The dataVersionStore.version watch
-  // would be redundant on top of this.
-  let debounce: ReturnType<typeof setTimeout> | null = null;
-  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(() => {
-    if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(runChecks, 800);
-  });
+  // Cache hit: results already in the Pinia store from an earlier visit.
+  // Skip the re-scan — onDataChanged will rerun if anything mutates while
+  // the store is still warm. Past behaviour was to re-scan every time the
+  // user navigated to /quality, even if no data had changed.
+  if (!qualityStore.hasRun) {
+    runChecks();
+  }
+  (window.api as unknown as { onDataChanged: (cb: () => void) => void }).onDataChanged(onMutation);
 });
 
 onUnmounted(() => {
   isMounted = false;
+  if (debounce) { clearTimeout(debounce); debounce = null; }
+  (window.api as unknown as { offDataChanged?: (cb: () => void) => void }).offDataChanged?.(onMutation);
 });
 </script>

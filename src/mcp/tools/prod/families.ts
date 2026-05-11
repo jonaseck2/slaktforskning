@@ -23,13 +23,13 @@ export interface AddChildArgs {
 }
 
 export interface AddChildResult {
-  child: ReturnType<typeof _createPersonCore>['person'];
+  child: Awaited<ReturnType<typeof _createPersonCore>>['person'];
   relationships: Relationship[];
   birth_event: GenealogyEvent | null;
   citation: Citation | null;
 }
 
-export function addChildWorkflow(db: Database, args: AddChildArgs): AddChildResult {
+export async function addChildWorkflow(db: Database, args: AddChildArgs): Promise<AddChildResult> {
   db.exec('BEGIN');
   try {
     const personArgs: CreatePersonArgs = {
@@ -43,11 +43,11 @@ export function addChildWorkflow(db: Database, args: AddChildArgs): AddChildResu
       source_page: args.source_page,
     };
 
-    const { person: child, birth_event, citation } = _createPersonCore(db, personArgs);
+    const { person: child, birth_event, citation } = await _createPersonCore(db, personArgs);
 
     const relationships: Relationship[] = [];
 
-    const rel1 = relationshipApi.createRelationship(db, {
+    const rel1 = await relationshipApi.createRelationship(db, {
       type: 'parent_child',
       person1_id: args.parent_id,
       person2_id: child.id,
@@ -55,7 +55,7 @@ export function addChildWorkflow(db: Database, args: AddChildArgs): AddChildResu
     relationships.push(rel1);
 
     if (args.other_parent_id) {
-      const rel2 = relationshipApi.createRelationship(db, {
+      const rel2 = await relationshipApi.createRelationship(db, {
         type: 'parent_child',
         person1_id: args.other_parent_id,
         person2_id: child.id,
@@ -88,10 +88,10 @@ export interface AddRelationshipResult {
   event: GenealogyEvent | null;
 }
 
-export function addRelationshipWorkflow(db: Database, args: AddRelationshipArgs): AddRelationshipResult {
+export async function addRelationshipWorkflow(db: Database, args: AddRelationshipArgs): Promise<AddRelationshipResult> {
   db.exec('BEGIN');
   try {
-    const relationship = relationshipApi.createRelationship(db, {
+    const relationship = await relationshipApi.createRelationship(db, {
       type: args.type,
       person1_id: args.person1_id,
       person2_id: args.person2_id,
@@ -103,13 +103,13 @@ export function addRelationshipWorkflow(db: Database, args: AddRelationshipArgs)
     if (args.event_type) {
       let place_id: string | null = null;
       if (args.event_place) {
-        const place = placeApi.findOrCreatePlace(db, args.event_place);
+        const place = await placeApi.findOrCreatePlace(db, args.event_place);
         place_id = place.id;
       }
       // Pass through what the agent provided. Per CLAUDE.md prime directive,
       // we never infer date_type from a free-form date string — agents must
       // explicitly state `event_date_type` for a structured value.
-      event = eventApi.createEvent(db, {
+      event = await eventApi.createEvent(db, {
         event_type: args.event_type,
         relationship_id: relationship.id,
         date_original: args.event_date ?? '',
@@ -144,7 +144,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       notes: z.string().optional().describe('Notes about the relationship'),
     },
   }, async (args) => {
-    const result = addRelationshipWorkflow(getDb(), args as AddRelationshipArgs);
+    const result = await addRelationshipWorkflow(getDb(), args as AddRelationshipArgs);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -168,7 +168,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
     if (!args.given_name?.trim() && !args.surname?.trim()) {
       throw new Error('At least one of given_name or surname must be non-empty');
     }
-    const result = addChildWorkflow(getDb(), args as AddChildArgs);
+    const result = await addChildWorkflow(getDb(), args as AddChildArgs);
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   });
 
@@ -178,7 +178,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       relationship_id: z.string().describe('Relationship ID'),
     },
   }, async (args) => {
-    const unit = reportData.getFamilyUnit(getDb(), args.relationship_id);
+    const unit = await reportData.getFamilyUnit(getDb(), args.relationship_id);
     return { content: [{ type: 'text', text: unit ? JSON.stringify(unit, null, 2) : 'Relationship not found' }] };
   });
 
@@ -189,7 +189,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       generations: z.number().optional().describe('Number of generations to include (default: 4)'),
     },
   }, async (args) => {
-    const tree = reportData.getAncestorTree(getDb(), args.person_id, args.generations ?? 4);
+    const tree = await reportData.getAncestorTree(getDb(), args.person_id, args.generations ?? 4);
     return { content: [{ type: 'text', text: tree ? JSON.stringify(tree, null, 2) : 'Person not found' }] };
   });
 
@@ -203,7 +203,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
     },
   }, async (args) => {
     const { id, ...data } = args;
-    const rel = relationshipApi.updateRelationship(getDb(), id, data);
+    const rel = await relationshipApi.updateRelationship(getDb(), id, data);
     return { content: [{ type: 'text', text: rel ? JSON.stringify(rel, null, 2) : 'Relationship not found' }] };
   });
 
@@ -213,7 +213,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('Relationship ID'),
     },
   }, async (args) => {
-    const ok = relationshipApi.deleteRelationship(getDb(), args.id);
+    const ok = await relationshipApi.deleteRelationship(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Relationship not found' }] };
   });
 
@@ -225,7 +225,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       role: z.enum(['primary', 'spouse', 'parent', 'child', 'witness', 'godparent', 'officiant', 'other']).optional().describe('Role in the event (default: primary)'),
     },
   }, async (args) => {
-    const part = relationshipApi.addEventParticipant(getDb(), {
+    const part = await relationshipApi.addEventParticipant(getDb(), {
       event_id: args.event_id,
       person_id: args.person_id,
       role: args.role ?? 'primary',
@@ -239,7 +239,7 @@ export function registerFamilyTools(server: McpServer, ctx: ToolContext): void {
       id: z.string().describe('event_participant ID'),
     },
   }, async (args) => {
-    const ok = relationshipApi.removeEventParticipant(getDb(), args.id);
+    const ok = await relationshipApi.removeEventParticipant(getDb(), args.id);
     return { content: [{ type: 'text', text: ok ? 'Deleted' : 'Participant not found' }] };
   });
 }

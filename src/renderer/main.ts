@@ -1,3 +1,38 @@
+// Boot log goes to console only — devtools (right-click → Inspect Element)
+// is the canonical surface. Cargo.toml has features = ["devtools"] so it
+// works in release builds too. Errors that crash before mount surface via
+// console.error in the inspector.
+const bootLog = (msg: string) => { console.log('[boot]', msg); };
+bootLog('main.ts entered');
+
+// Capture console + errors into a ring buffer the dev MCP /console endpoint
+// drains. Lets the agent see what went wrong on the last navigate without
+// poking at devtools.
+type ConsoleEntry = { ts: number; level: 'log'|'warn'|'error'|'info'; args: string };
+const buf: ConsoleEntry[] = [];
+const MAX = 500;
+const push = (level: ConsoleEntry['level'], args: unknown[]) => {
+  try {
+    const s = args.map(a => {
+      if (a instanceof Error) return a.stack || a.message;
+      if (typeof a === 'object') { try { return JSON.stringify(a); } catch { return String(a); } }
+      return String(a);
+    }).join(' ');
+    buf.push({ ts: Date.now(), level, args: s });
+    if (buf.length > MAX) buf.shift();
+  } catch { /* ignore */ }
+};
+const wrap = <K extends ConsoleEntry['level']>(k: K) => {
+  const orig = console[k];
+  console[k] = (...args: unknown[]) => { push(k, args); orig.apply(console, args as never); };
+};
+wrap('log'); wrap('warn'); wrap('error'); wrap('info');
+window.addEventListener('error', (e) => push('error', [`${e.message} @ ${e.filename}:${e.lineno}`]));
+window.addEventListener('unhandledrejection', (e) => push('error', ['unhandledrejection:', e.reason]));
+(window as Window & { __taurisConsole?: { drain: () => ConsoleEntry[] } }).__taurisConsole = {
+  drain: () => buf.splice(0, buf.length),
+};
+
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { router } from './router';
@@ -8,6 +43,89 @@ import App from './App.vue';
 import { vNarrate } from './directives/narrate';
 import { installComponentInspector } from './dev/component-inspector';
 import { STORAGE_KEYS } from './utils/storage-keys';
+bootLog('static imports done');
+
+// Tauri-only: when running in a Tauri webview, mount window.api by walking
+// the channel registry (no Electron contextBridge / preload world). Detect
+// via the global __TAURI_INTERNALS__ marker that Tauri injects. The Electron
+// build never enters this branch — it gets window.api from the preload.
+if ('__TAURI_INTERNALS__' in window) {
+  bootLog('tauri detected, dynamic imports starting');
+  try {
+    const [shimMod, apiMod, schemaMod, coreMod] = await Promise.all([
+      import('node-sqlite3-wasm').catch(e => { bootLog('shim import threw: ' + (e?.stack || e?.message || e)); throw e; }),
+      import('./tauri-window-api').catch(e => { bootLog('window-api import threw: ' + (e?.stack || e?.message || e)); throw e; }),
+      import('../api/schema').catch(e => { bootLog('schema import threw: ' + (e?.stack || e?.message || e)); throw e; }),
+      import('@tauri-apps/api/core'),
+    ]);
+    bootLog('dynamic imports done, resolving db path');
+    const { Database } = shimMod;
+    const { mountWindowApi } = apiMod;
+    const { initializeSchema } = schemaMod;
+    // Honour any DB the user already switched to via window.api.db.switchTo.
+    // App.vue's onSwitched handler triggers window.location.reload() to
+    // re-initialise per-DB state, but the Tauri *process* doesn't restart —
+    // db::CURRENT_PATH lives across the reload. Without checking it first,
+    // every reload would reopen the bundled default and silently undo the
+    // user's switch, leaving a divergence where MCP / sqlite3 see one DB
+    // and the renderer sees another.
+    const currentPath = await coreMod.invoke<string | null>('db_current_path');
+    const dbPath = currentPath ?? (await coreMod.invoke<string>('default_db_path'));
+    bootLog('db path: ' + dbPath + (currentPath ? ' (resumed)' : ' (default)'));
+    // UI-server callback bridge for the dev MCP. Rust sends scripts via the
+    // webview that end with window.__taurisUiCallback(id, value), routing the
+    // value back to a pending oneshot on the Rust side.
+    (window as Window & { __taurisUiCallback?: (id: string, value: unknown) => void }).__taurisUiCallback =
+      (id: string, value: unknown) => {
+        coreMod.invoke('ui_eval_response', { id, value }).catch((e: unknown) => console.error('[ui-callback]', e));
+      };
+    const db = new Database(dbPath);
+    await db.opened;
+    bootLog('db opened, initializing schema');
+    await initializeSchema(db);
+    bootLog('schema ready, mounting window.api');
+    mountWindowApi(db);
+    bootLog('window.api mounted');
+
+    // Forward Rust menu events to renderer actions. Each menu item id
+    // dispatches to a window.api method or a router push.
+    const eventMod = await import('@tauri-apps/api/event');
+    await eventMod.listen('menu:item', async (e) => {
+      const id = String(e.payload);
+      try {
+        switch (id) {
+          case 'open-db': {
+            const result = await (window.api.db as { openExisting: () => Promise<unknown> }).openExisting();
+            console.log('[menu] open-db:', result);
+            break;
+          }
+          case 'new-db': {
+            const result = await (window.api.db as { createNew: () => Promise<unknown> }).createNew();
+            console.log('[menu] new-db:', result);
+            break;
+          }
+          case 'undo': await (window.api.undo as { undo: () => Promise<unknown> }).undo(); break;
+          case 'redo': await (window.api.undo as { redo: () => Promise<unknown> }).redo(); break;
+          case 'settings': window.location.hash = '#/settings'; break;
+          case 'nav-persons': window.location.hash = '#/persons'; break;
+          case 'nav-places': window.location.hash = '#/places'; break;
+          case 'nav-sources': window.location.hash = '#/sources'; break;
+          case 'nav-media': window.location.hash = '#/media'; break;
+          case 'nav-quality': window.location.hash = '#/quality'; break;
+          case 'nav-reports': window.location.hash = '#/reports'; break;
+          case 'close-window': window.close(); break;
+        }
+      } catch (err) {
+        console.error('[menu] handler failed for', id, err);
+      }
+    });
+  } catch (e: unknown) {
+    const err = e as { stack?: string; message?: string };
+    bootLog('FATAL caught: ' + (err?.stack || err?.message || String(e)));
+  }
+} else {
+  bootLog('NOT a tauri build — __TAURI_INTERNALS__ missing');
+}
 
 const app = createApp(App);
 app.use(createPinia());
@@ -23,7 +141,34 @@ if (lastRoute && lastRoute !== '/' && !hasHashRoute) {
   router.push(lastRoute).catch(() => router.push('/'));
 }
 
-router.isReady().finally(() => app.mount('#app'));
+bootLog('about to wait for router.isReady');
+router.isReady().finally(() => {
+  bootLog('router ready, mounting app');
+  app.mount('#app');
+  bootLog('app.mount returned');
+
+  // Tauri-only: one-shot update check after mount. The polyfill swallows
+  // all errors (including "no update available"), so the only path that
+  // surfaces UI here is when an update genuinely is ready. Console-only
+  // notification for now — a non-modal toast that lets the user trigger
+  // the install lands as a follow-up once the renderer has a global toast
+  // host wired (see docs/UX_INVENTORY.md for the planned shape).
+  if ('__TAURI_INTERNALS__' in window) {
+    setTimeout(() => {
+      const checker = (window.api?.app as { checkForUpdates?: () => Promise<{ available: boolean; version?: string; body?: string }> } | undefined)?.checkForUpdates;
+      if (typeof checker !== 'function') return;
+      checker().then((res) => {
+        if (res.available) {
+          // eslint-disable-next-line no-console
+          console.info(`[updater] update available: ${res.version}`, res.body);
+          // TODO: wire to a global toast / banner once the project has one.
+          // For now the renderer's Settings → About view can call
+          // api.app.downloadAndInstallUpdate() manually.
+        }
+      }).catch(() => { /* polyfill already swallows */ });
+    }, 5000);
+  }
+});
 
 // Expose router and i18n for MCP ui_navigate tool and E2E locale switching
 (window as Window & { __vue_router: typeof router; __vue_i18n: typeof i18n }).__vue_router = router;

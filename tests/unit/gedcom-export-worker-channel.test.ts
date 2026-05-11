@@ -21,15 +21,15 @@ describe('gedcom:_exportRun worker channel — registration', () => {
   });
 });
 
-describe('gedcom:_exportRun handler — end-to-end against in-memory DB', () => {
+describe('gedcom:_exportRun handler — end-to-end against in-memory DB', async () => {
   let db: ReturnType<typeof createTestDb>;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
   });
 
   it('returns a GEDCOM string + report for a seeded person', async () => {
-    createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindström' });
+    await createPerson(db, { sex: 'F', given_name: 'Anna', surname: 'Lindström' });
 
     const ch = channelRegistry['gedcom:_exportRun'];
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
@@ -46,7 +46,7 @@ describe('gedcom:_exportRun handler — end-to-end against in-memory DB', () => 
   });
 
   it('respects version 7.0 in the produced GEDCOM', async () => {
-    createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Test' });
+    await createPerson(db, { sex: 'M', given_name: 'Erik', surname: 'Test' });
     const ch = channelRegistry['gedcom:_exportRun'];
     if (!ch || ch.thread !== 'worker') throw new Error('channel missing');
 

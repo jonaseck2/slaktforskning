@@ -12,7 +12,7 @@ import { i18n } from './setup';
 // This is the modal-side counterpart to the per-event quality check engine.
 // Engine-level coverage lives in tests/unit/checks-event-outside-lifespan.
 
-describe('EventModal — post-save quality check toast', () => {
+describe('EventModal — post-save quality check toast', async () => {
   let toast: ReturnType<typeof useToast>;
   const updateMock = vi.fn();
   const createMock = vi.fn();

@@ -16,24 +16,24 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function getOrCreateTestGroup(db: Database): string {
-  const groups = groupApi.listGroups(db);
+async function getOrCreateTestGroup(db: Database): Promise<string> {
+  const groups = await groupApi.listGroups(db);
   const existing = groups.find(g => g.name === '__test__');
   if (existing) return existing.id;
-  const group = groupApi.createGroup(db, { name: '__test__', notes: 'Test data — safe to delete' });
+  const group = await groupApi.createGroup(db, { name: '__test__', notes: 'Test data — safe to delete' });
   return group.id;
 }
 
-function createSeededPerson(
+async function createSeededPerson(
   db: Database,
   groupId: string,
   opts: { given_name?: string; surname?: string; sex?: 'M' | 'F' | 'U'; birth_date?: string; birth_place?: string }
-): string {
+): Promise<string> {
   const sex = opts.sex ?? (Math.random() > 0.5 ? 'M' : 'F');
   const given_name = opts.given_name ?? (sex === 'M' ? pick(MALE_NAMES) : pick(FEMALE_NAMES));
   const surname = opts.surname ?? pick(SURNAMES);
 
-  const { person } = _createPersonCore(db, {
+  const { person } = await _createPersonCore(db, {
     given_name,
     surname,
     sex: sex as 'M' | 'F' | 'U',
@@ -41,7 +41,7 @@ function createSeededPerson(
     birth_place: opts.birth_place,
   });
 
-  groupApi.addGroupLink(db, groupId, 'person', person.id);
+  await groupApi.addGroupLink(db, groupId, 'person', person.id);
   return person.id;
 }
 
@@ -56,36 +56,36 @@ export interface SeedFamilyResult {
   person_ids: string[];
 }
 
-export function seedFamilyWorkflow(db: Database, args: SeedFamilyArgs = {}): SeedFamilyResult {
+export async function seedFamilyWorkflow(db: Database, args: SeedFamilyArgs = {}): Promise<SeedFamilyResult> {
   const generations = args.generations ?? 2;
   const childrenPerFamily = args.children_per_family ?? 2;
   const includeEvents = args.include_events !== false;
 
-  const groupId = getOrCreateTestGroup(db);
+  const groupId = await getOrCreateTestGroup(db);
   const personIds: string[] = [];
 
-  function createCouple(husbandId: string, wifeId: string): void {
-    const rel = relationshipApi.createRelationship(db, {
+  async function createCouple(husbandId: string, wifeId: string): Promise<void> {
+    const rel = await relationshipApi.createRelationship(db, {
       type: 'couple',
       person1_id: husbandId,
       person2_id: wifeId,
       subtype: 'marriage',
     });
     if (includeEvents) {
-      const marriageEvent = eventApi.createEvent(db, {
+      const marriageEvent = await eventApi.createEvent(db, {
         event_type: 'marriage',
         date_original: String(1850 + Math.floor(Math.random() * 100)),
         date_type: 'exact',
         date_value: String(1850 + Math.floor(Math.random() * 100)),
         relationship_id: rel.id,
       });
-      relationshipApi.addEventParticipant(db, { event_id: marriageEvent.id, person_id: husbandId, role: 'primary' });
-      relationshipApi.addEventParticipant(db, { event_id: marriageEvent.id, person_id: wifeId, role: 'spouse' });
+      await relationshipApi.addEventParticipant(db, { event_id: marriageEvent.id, person_id: husbandId, role: 'primary' });
+      await relationshipApi.addEventParticipant(db, { event_id: marriageEvent.id, person_id: wifeId, role: 'spouse' });
     }
   }
 
-  function linkParentChild(parentId: string, childId: string): void {
-    relationshipApi.createRelationship(db, {
+  async function linkParentChild(parentId: string, childId: string): Promise<void> {
+    await relationshipApi.createRelationship(db, {
       type: 'parent_child',
       person1_id: parentId,
       person2_id: childId,
@@ -95,7 +95,7 @@ export function seedFamilyWorkflow(db: Database, args: SeedFamilyArgs = {}): See
 
   // Create focal person
   const focalYear = 1970 + Math.floor(Math.random() * 20);
-  const focalId = createSeededPerson(db, groupId, {
+  const focalId = await createSeededPerson(db, groupId, {
     sex: 'M',
     birth_date: String(focalYear),
     birth_place: includeEvents ? 'Stockholm' : undefined,
@@ -103,52 +103,52 @@ export function seedFamilyWorkflow(db: Database, args: SeedFamilyArgs = {}): See
   personIds.push(focalId);
 
   // Add spouse for focal
-  const focalSpouseId = createSeededPerson(db, groupId, { sex: 'F', birth_date: String(focalYear - 2) });
+  const focalSpouseId = await createSeededPerson(db, groupId, { sex: 'F', birth_date: String(focalYear - 2) });
   personIds.push(focalSpouseId);
-  createCouple(focalId, focalSpouseId);
+  await createCouple(focalId, focalSpouseId);
 
   // Add children
   for (let i = 0; i < childrenPerFamily; i++) {
     const childSex = Math.random() > 0.5 ? 'M' : 'F';
-    const childId = createSeededPerson(db, groupId, {
+    const childId = await createSeededPerson(db, groupId, {
       sex: childSex as 'M' | 'F',
       birth_date: String(focalYear + 25 + i),
     });
     personIds.push(childId);
-    linkParentChild(focalId, childId);
-    linkParentChild(focalSpouseId, childId);
+    await linkParentChild(focalId, childId);
+    await linkParentChild(focalSpouseId, childId);
   }
 
   if (generations >= 2) {
     const fatherYear = focalYear - 30;
-    const fatherId = createSeededPerson(db, groupId, { sex: 'M', birth_date: String(fatherYear) });
+    const fatherId = await createSeededPerson(db, groupId, { sex: 'M', birth_date: String(fatherYear) });
     personIds.push(fatherId);
-    const motherId = createSeededPerson(db, groupId, { sex: 'F', birth_date: String(fatherYear + 2) });
+    const motherId = await createSeededPerson(db, groupId, { sex: 'F', birth_date: String(fatherYear + 2) });
     personIds.push(motherId);
-    createCouple(fatherId, motherId);
-    linkParentChild(fatherId, focalId);
-    linkParentChild(motherId, focalId);
+    await createCouple(fatherId, motherId);
+    await linkParentChild(fatherId, focalId);
+    await linkParentChild(motherId, focalId);
 
     if (generations >= 3) {
       const gpYear = fatherYear - 30;
 
       // Paternal grandparents
-      const pfatherId = createSeededPerson(db, groupId, { sex: 'M', birth_date: String(gpYear) });
+      const pfatherId = await createSeededPerson(db, groupId, { sex: 'M', birth_date: String(gpYear) });
       personIds.push(pfatherId);
-      const pmotherId = createSeededPerson(db, groupId, { sex: 'F', birth_date: String(gpYear + 2) });
+      const pmotherId = await createSeededPerson(db, groupId, { sex: 'F', birth_date: String(gpYear + 2) });
       personIds.push(pmotherId);
-      createCouple(pfatherId, pmotherId);
-      linkParentChild(pfatherId, fatherId);
-      linkParentChild(pmotherId, fatherId);
+      await createCouple(pfatherId, pmotherId);
+      await linkParentChild(pfatherId, fatherId);
+      await linkParentChild(pmotherId, fatherId);
 
       // Maternal grandparents
-      const mfatherId = createSeededPerson(db, groupId, { sex: 'M', birth_date: String(gpYear) });
+      const mfatherId = await createSeededPerson(db, groupId, { sex: 'M', birth_date: String(gpYear) });
       personIds.push(mfatherId);
-      const mmotherId = createSeededPerson(db, groupId, { sex: 'F', birth_date: String(gpYear + 2) });
+      const mmotherId = await createSeededPerson(db, groupId, { sex: 'F', birth_date: String(gpYear + 2) });
       personIds.push(mmotherId);
-      createCouple(mfatherId, mmotherId);
-      linkParentChild(mfatherId, motherId);
-      linkParentChild(mmotherId, motherId);
+      await createCouple(mfatherId, mmotherId);
+      await linkParentChild(mfatherId, motherId);
+      await linkParentChild(mmotherId, motherId);
     }
   }
 
@@ -159,20 +159,20 @@ export interface ClearTestDataResult {
   deleted_count: number;
 }
 
-export function clearTestData(db: Database): ClearTestDataResult {
-  const groups = groupApi.listGroups(db);
+export async function clearTestData(db: Database): Promise<ClearTestDataResult> {
+  const groups = await groupApi.listGroups(db);
   const testGroup = groups.find(g => g.name === '__test__');
   if (!testGroup) return { deleted_count: 0 };
 
-  const links = groupApi.getGroupLinks(db, testGroup.id);
+  const links = await groupApi.getGroupLinks(db, testGroup.id);
   let deleted_count = 0;
   for (const link of links) {
     if (link.entity_type === 'person') {
-      personApi.deletePerson(db, link.entity_id);
+      await personApi.deletePerson(db, link.entity_id);
       deleted_count++;
     }
   }
-  groupApi.deleteGroup(db, testGroup.id);
+  await groupApi.deleteGroup(db, testGroup.id);
   return { deleted_count };
 }
 
@@ -193,11 +193,11 @@ export function registerSeedTools(server: McpServer, ctx: ToolContext): void {
       const db = getDb();
       db.exec('BEGIN');
       try {
-        const groupId = getOrCreateTestGroup(db);
-        const personId = createSeededPerson(db, groupId, { given_name, surname, sex, birth_date, birth_place });
+        const groupId = await getOrCreateTestGroup(db);
+        const personId = await createSeededPerson(db, groupId, { given_name, surname, sex, birth_date, birth_place });
         db.exec('COMMIT');
-        const person = personApi.getPerson(db, personId);
-        const names = personApi.getPersonNames(db, personId);
+        const person = await personApi.getPerson(db, personId);
+        const names = await personApi.getPersonNames(db, personId);
         return { content: [{ type: 'text' as const, text: JSON.stringify({ person, names }, null, 2) }] };
       } catch (err) {
         db.exec('ROLLBACK');
@@ -218,7 +218,7 @@ export function registerSeedTools(server: McpServer, ctx: ToolContext): void {
       const db = getDb();
       db.exec('BEGIN');
       try {
-        const result = seedFamilyWorkflow(db, { generations, children_per_family, include_events });
+        const result = await seedFamilyWorkflow(db, { generations, children_per_family, include_events });
         db.exec('COMMIT');
         return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
       } catch (err) {
@@ -236,7 +236,7 @@ export function registerSeedTools(server: McpServer, ctx: ToolContext): void {
       const db = getDb();
       db.exec('BEGIN');
       try {
-        const result = clearTestData(db);
+        const result = await clearTestData(db);
         db.exec('COMMIT');
         return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
       } catch (err) {

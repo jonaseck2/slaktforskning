@@ -26,7 +26,7 @@ const baseSummary = {
   citations: [],
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.media.forEntity.mockResolvedValue([]);
   mockApi.media.readAsDataUrl.mockResolvedValue(null);
@@ -40,7 +40,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('ALifeReport', () => {
+describe('ALifeReport', async () => {
   it('renders cover with primary person name', async () => {
     mockApi.reports.personSummary.mockResolvedValue(baseSummary);
 

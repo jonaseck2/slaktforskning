@@ -6,22 +6,22 @@ import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 
-beforeEach(() => {
-  db = createTestDb();
+beforeEach(async () => {
+  db = await createTestDb();
 });
 
-describe('addChildWorkflow', () => {
-  it('creates child person + parent_child relationship', () => {
-    const parent = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+describe('addChildWorkflow', async () => {
+  it('creates child person + parent_child relationship', async () => {
+    const parent = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
 
-    const result = addChildWorkflow(db, {
+    const result = await addChildWorkflow(db, {
       parent_id: parent.id,
       given_name: 'Anna',
       surname: 'Svensson',
     });
 
     expect(result.child.id).toBeTruthy();
-    const names = personApi.getPersonNames(db, result.child.id);
+    const names = await personApi.getPersonNames(db, result.child.id);
     expect(names[0].given_name).toBe('Anna');
     expect(names[0].surname).toBe('Svensson');
 
@@ -32,11 +32,11 @@ describe('addChildWorkflow', () => {
     expect(rel.person2_id).toBe(result.child.id);
   });
 
-  it('creates two parent_child relationships when other_parent_id is provided', () => {
-    const father = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
-    const mother = personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
+  it('creates two parent_child relationships when other_parent_id is provided', async () => {
+    const father = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const mother = await personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
 
-    const result = addChildWorkflow(db, {
+    const result = await addChildWorkflow(db, {
       parent_id: father.id,
       other_parent_id: mother.id,
       given_name: 'Lars',
@@ -53,10 +53,10 @@ describe('addChildWorkflow', () => {
     }
   });
 
-  it('creates birth event when birth_date is provided', () => {
-    const parent = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+  it('creates birth event when birth_date is provided', async () => {
+    const parent = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
 
-    const result = addChildWorkflow(db, {
+    const result = await addChildWorkflow(db, {
       parent_id: parent.id,
       given_name: 'Britta',
       surname: 'Svensson',
@@ -70,16 +70,16 @@ describe('addChildWorkflow', () => {
     expect(result.birth_event?.date_value).toBe('1875');
 
     // Verify child is participant
-    const participants = relationshipApi.getEventParticipants(db, result.birth_event!.id);
+    const participants = await relationshipApi.getEventParticipants(db, result.birth_event!.id);
     const childParticipant = participants.find(p => p.person_id === result.child.id);
     expect(childParticipant).toBeDefined();
     expect(childParticipant?.role).toBe('primary');
   });
 
-  it('creates citation when source_title is provided', () => {
-    const parent = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+  it('creates citation when source_title is provided', async () => {
+    const parent = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
 
-    const result = addChildWorkflow(db, {
+    const result = await addChildWorkflow(db, {
       parent_id: parent.id,
       given_name: 'Karin',
       surname: 'Svensson',
@@ -93,12 +93,12 @@ describe('addChildWorkflow', () => {
   });
 });
 
-describe('addRelationshipWorkflow', () => {
-  it('creates a relationship between two persons', () => {
-    const p1 = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
-    const p2 = personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
+describe('addRelationshipWorkflow', async () => {
+  it('creates a relationship between two persons', async () => {
+    const p1 = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const p2 = await personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
 
-    const result = addRelationshipWorkflow(db, {
+    const result = await addRelationshipWorkflow(db, {
       person1_id: p1.id,
       person2_id: p2.id,
       type: 'couple',
@@ -110,11 +110,11 @@ describe('addRelationshipWorkflow', () => {
     expect(result.event).toBeNull();
   });
 
-  it('creates marriage event when event_type and event_date are provided', () => {
-    const p1 = personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
-    const p2 = personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
+  it('creates marriage event when event_type and event_date are provided', async () => {
+    const p1 = await personApi.createPerson(db, { given_name: 'Erik', surname: 'Svensson', sex: 'M' });
+    const p2 = await personApi.createPerson(db, { given_name: 'Maja', surname: 'Johansson', sex: 'F' });
 
-    const result = addRelationshipWorkflow(db, {
+    const result = await addRelationshipWorkflow(db, {
       person1_id: p1.id,
       person2_id: p2.id,
       type: 'couple',
@@ -132,11 +132,11 @@ describe('addRelationshipWorkflow', () => {
     expect(result.event?.relationship_id).toBe(result.relationship.id);
   });
 
-  it('creates relationship with notes', () => {
-    const p1 = personApi.createPerson(db, { given_name: 'Per', surname: 'Nilsson', sex: 'M' });
-    const p2 = personApi.createPerson(db, { given_name: 'Lisa', surname: 'Andersson', sex: 'F' });
+  it('creates relationship with notes', async () => {
+    const p1 = await personApi.createPerson(db, { given_name: 'Per', surname: 'Nilsson', sex: 'M' });
+    const p2 = await personApi.createPerson(db, { given_name: 'Lisa', surname: 'Andersson', sex: 'F' });
 
-    const result = addRelationshipWorkflow(db, {
+    const result = await addRelationshipWorkflow(db, {
       person1_id: p1.id,
       person2_id: p2.id,
       type: 'couple',
@@ -146,11 +146,11 @@ describe('addRelationshipWorkflow', () => {
     expect(result.relationship.notes).toBe('Married in church');
   });
 
-  it('creates sibling relationship', () => {
-    const p1 = personApi.createPerson(db, { given_name: 'Lars', surname: 'Berg', sex: 'M' });
-    const p2 = personApi.createPerson(db, { given_name: 'Elin', surname: 'Berg', sex: 'F' });
+  it('creates sibling relationship', async () => {
+    const p1 = await personApi.createPerson(db, { given_name: 'Lars', surname: 'Berg', sex: 'M' });
+    const p2 = await personApi.createPerson(db, { given_name: 'Elin', surname: 'Berg', sex: 'F' });
 
-    const result = addRelationshipWorkflow(db, {
+    const result = await addRelationshipWorkflow(db, {
       person1_id: p1.id,
       person2_id: p2.id,
       type: 'sibling',

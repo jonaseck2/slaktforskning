@@ -1,20 +1,23 @@
 {
   "mcpServers": {
     "slaktforskning": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "tsx",
-        "src/mcp/server.ts"
+        "scripts/mcp-tauri.mjs",
+        "prod"
       ],
       "cwd": "."
     },
     "slaktforskning-dev": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "tsx",
-        "src/mcp/devServer.ts"
+        "scripts/mcp-tauri.mjs",
+        "dev"
       ],
-      "cwd": "."
+      "cwd": ".",
+      "env": {
+        "SLAKTFORSKNING_UI_PORT": "19241"
+      }
     },
     "github": {
       "command": "npx",

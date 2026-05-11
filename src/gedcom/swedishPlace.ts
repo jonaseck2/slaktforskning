@@ -11,7 +11,7 @@ function normalize(name: string): string {
  * Differs from findOrCreatePlace in that it matches on (normalized_name, parent_place_id)
  * to avoid collapsing e.g. two parishes named "Kungsbacka" in different counties.
  */
-function findOrCreateWithParent(db: Database, name: string, parentId: string | null): Place {
+async function findOrCreateWithParent(db: Database, name: string, parentId: string | null): Promise<Place> {
   const norm = normalize(name);
   const existing = (
     parentId === null
@@ -32,7 +32,7 @@ function findOrCreateWithParent(db: Database, name: string, parentId: string | n
  *
  * Single-part strings fall back to the flat findOrCreatePlace behaviour.
  */
-export function findOrCreateSwedishPlace(db: Database, placeTag: string): Place {
+export async function findOrCreateSwedishPlace(db: Database, placeTag: string): Promise<Place> {
   const parts = placeTag.split(',').map(p => p.trim()).filter(Boolean);
   if (parts.length <= 1) return findOrCreatePlace(db, placeTag.trim());
 
@@ -40,7 +40,7 @@ export function findOrCreateSwedishPlace(db: Database, placeTag: string): Place 
   let parentId: string | null = null;
   let innermost: Place | null = null;
   for (let i = parts.length - 1; i >= 0; i--) {
-    const place = findOrCreateWithParent(db, parts[i], parentId);
+    const place = await findOrCreateWithParent(db, parts[i], parentId);
     parentId = place.id;
     if (i === 0) innermost = place;
   }

@@ -14,7 +14,7 @@ const sampleEvent = {
   notes: 'Born',
 };
 
-describe('EventList', () => {
+describe('EventList', async () => {
   const mockForPerson = vi.fn();
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe('EventList', () => {
     await flushPromises();
 
     expect(wrapper.find('.modal-overlay').exists()).toBe(false);
-    await wrapper.find('.clickable-row').trigger('click');
+    (await wrapper.find('.clickable-row')).trigger('click');
     await wrapper.vm.$nextTick();
 
     expect(wrapper.find('.modal-overlay').exists()).toBe(true);

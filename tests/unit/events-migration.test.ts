@@ -3,11 +3,11 @@ import { Database } from 'node-sqlite3-wasm';
 import { initializeSchema } from '../../src/api/schema';
 import { runSql, queryAll } from '../../src/api/db';
 
-describe('events migration v0.203.0', () => {
-  it('preserves description content as notes after migration', () => {
+describe('events migration v0.203.0', async () => {
+  it('preserves description content as notes after migration', async () => {
     const db = new Database(':memory:');
     // Build a pre-migration schema manually (mimics a pre-v0.203 database)
-    runSql(db, `
+    await runSql(db, `
       CREATE TABLE events (
         id TEXT PRIMARY KEY,
         event_type TEXT NOT NULL,
@@ -24,13 +24,13 @@ describe('events migration v0.203.0', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
     `);
-    runSql(db, "INSERT INTO events (id, event_type, description, cause) VALUES ('e1', 'death', 'He died peacefully.', 'old age')");
-    runSql(db, "INSERT INTO events (id, event_type, description) VALUES ('e2', 'occupation', 'Carpenter — apprenticed at 14')");
+    await runSql(db, "INSERT INTO events (id, event_type, description, cause) VALUES ('e1', 'death', 'He died peacefully.', 'old age')");
+    await runSql(db, "INSERT INTO events (id, event_type, description) VALUES ('e2', 'occupation', 'Carpenter — apprenticed at 14')");
 
     // Run the full schema initialization (which includes the migration block)
-    initializeSchema(db);
+    await initializeSchema(db);
 
-    const rows = queryAll<{ id: string; notes: string; value: string | null; cause: string | null }>(
+    const rows = await queryAll<{ id: string; notes: string; value: string | null; cause: string | null }>(
       db, 'SELECT id, notes, value, cause FROM events ORDER BY id', []
     );
     expect(rows).toHaveLength(2);
@@ -38,20 +38,20 @@ describe('events migration v0.203.0', () => {
     expect(rows[1]).toMatchObject({ id: 'e2', notes: 'Carpenter — apprenticed at 14', value: null });
   });
 
-  it('is idempotent (running twice does not error)', () => {
+  it('is idempotent (running twice does not error)', async () => {
     const db = new Database(':memory:');
-    initializeSchema(db);
-    initializeSchema(db);  // second run must not throw
-    const cols = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)', []).map(c => c.name);
+    await initializeSchema(db);
+    await initializeSchema(db);  // second run must not throw
+    const cols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)', [])).map(c => c.name);
     expect(cols).toContain('value');
     expect(cols).toContain('notes');
     expect(cols).not.toContain('description');
   });
 
-  it('fresh DB has value and notes columns from CREATE TABLE', () => {
+  it('fresh DB has value and notes columns from CREATE TABLE', async () => {
     const db = new Database(':memory:');
-    initializeSchema(db);
-    const cols = queryAll<{ name: string }>(db, 'PRAGMA table_info(events)', []).map(c => c.name);
+    await initializeSchema(db);
+    const cols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)', [])).map(c => c.name);
     expect(cols).toContain('value');
     expect(cols).toContain('notes');
     expect(cols).not.toContain('description');

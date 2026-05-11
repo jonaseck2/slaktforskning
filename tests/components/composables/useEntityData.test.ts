@@ -15,7 +15,7 @@ beforeEach(() => {
   };
 });
 
-describe('useEntityData — race safety', () => {
+describe('useEntityData — race safety', async () => {
   it('loads data when id changes', async () => {
     const id = ref<string | null>(null);
     const load = vi.fn(async (i: string) => ({ id: i, name: 'X' }));
@@ -86,7 +86,7 @@ describe('useEntityData — race safety', () => {
   });
 });
 
-describe('useEntityData — onDataChanged reactivity', () => {
+describe('useEntityData — onDataChanged reactivity', async () => {
   it('reloads when onDataChanged fires (debounced)', async () => {
     vi.useFakeTimers();
     try {

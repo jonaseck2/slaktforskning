@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated } from 'vue';
+import { ref, computed, onMounted, onUnmounted, onActivated } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ResearchTaskModal from '../components/modals/ResearchTaskModal.vue';
@@ -123,11 +123,27 @@ async function onSaved(newTask?: { id: string }) {
   if (newTask?.id) selectTask(newTask.id);
 }
 
+// Same shape as GroupsView: subscribe to onDataChanged so the list refreshes
+// after any mutation (modal save, MCP call, second window, db.switchTo).
+// Debounced to coalesce bursts. Documented "list view that hasn't been
+// migrated to usePagedList yet" exception per .claude/rules/renderer.md.
+let mutationDebounce: ReturnType<typeof setTimeout> | null = null;
+const onMutation = () => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  mutationDebounce = setTimeout(() => { void load(); }, 200);
+};
+
 onMounted(async () => {
   await load();
   const id = route.params.id as string | undefined;
   if (id) selectTask(id);
   else if (selectedTaskId.value) openPanel();
+  window.api?.onDataChanged?.(onMutation);
+});
+
+onUnmounted(() => {
+  if (mutationDebounce) clearTimeout(mutationDebounce);
+  window.api?.offDataChanged?.(onMutation);
 });
 
 onActivated(() => {

@@ -11,8 +11,8 @@ const mockApi = {
 // @ts-expect-error test shim
 globalThis.window = { api: mockApi } as never;
 
-describe('useLifeMap', () => {
-  beforeEach(() => {
+describe('useLifeMap', async () => {
+  beforeEach(async () => {
     mockApi.events.forPerson.mockReset();
     mockApi.places.get.mockReset();
     mockApi.places.getPath.mockReset();

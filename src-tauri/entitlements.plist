@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      macOS hardened-runtime entitlements for the Tauri build.
+
+      These are the minimum entitlements Tauri needs for our feature set:
+        - JIT + unsigned-executable-memory: required by the WebKit/JIT
+          runtime that hosts the Vue renderer.
+        - dyld-environment-variables: required by Tauri's dev/devtools build
+          so injected env vars (e.g. TAURI_AUTOSTART_DEVTOOLS) work.
+        - disable-library-validation: required to load the bundled MCP
+          sidecar binary (mcp-server-<triple>) which is signed with the
+          same Developer ID but lives outside the main app's signature.
+        - app-sandbox is intentionally NOT set. The app needs read/write
+          access to user-chosen .db files anywhere on disk; sandboxing
+          would force every database open through a security-scoped
+          bookmark dance that breaks our drag-into-Recent-files UX.
+
+      If the auto-updater plugin needs additional entitlements at install
+      time, add them here — common adds: `com.apple.security.network.client`
+      (already implicit in the hardened runtime).
+    -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

@@ -8,9 +8,9 @@ function dateInFuture(s: string): boolean {
   return dateDefinitelyAfter(s, TODAY);
 }
 
-export function checkBirthAfterDeath(db: Database): CheckResult[] {
-  const births = loadPersonEvents(db, 'birth');
-  const deaths = loadPersonEvents(db, 'death');
+export async function checkBirthAfterDeath(db: Database): Promise<CheckResult[]> {
+  const births = await loadPersonEvents(db, 'birth');
+  const deaths = await loadPersonEvents(db, 'death');
   const results: CheckResult[] = [];
   for (const [personId, deathList] of deaths) {
     for (const d of deathList) {
@@ -31,13 +31,13 @@ export function checkBirthAfterDeath(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkEventAfterDeath(db: Database): CheckResult[] {
+export async function checkEventAfterDeath(db: Database): Promise<CheckResult[]> {
   // Pre-filter on cheap shape (death + non-death event for same person), then
   // compare dates in JS via parseLooseDate so free-form date_value strings
   // ("26 Jan 1763" etc.) are handled correctly. The previous SUBSTR(0,4)
   // string compare assumed ISO and produced ~13 false EVENT_AFTER_DEATH hits
   // per session on the Bernadotte test database.
-  const rows = queryAll<{ person_id: string; event_id: string; event_type: string; event_date: string; death_id: string; death_date: string }>(db, `
+  const rows = await queryAll<{ person_id: string; event_id: string; event_type: string; event_date: string; death_id: string; death_date: string }>(db, `
     SELECT p.id AS person_id,
            e.id AS event_id, e.event_type, e.date_value AS event_date,
            d.id AS death_id, d.date_value AS death_date
@@ -64,9 +64,9 @@ export function checkEventAfterDeath(db: Database): CheckResult[] {
     }));
 }
 
-export function checkBurialBeforeDeath(db: Database): CheckResult[] {
-  const burials = loadPersonEvents(db, 'burial');
-  const deaths = loadPersonEvents(db, 'death');
+export async function checkBurialBeforeDeath(db: Database): Promise<CheckResult[]> {
+  const burials = await loadPersonEvents(db, 'burial');
+  const deaths = await loadPersonEvents(db, 'death');
   const results: CheckResult[] = [];
   for (const [personId, burialList] of burials) {
     for (const b of burialList) {
@@ -87,9 +87,9 @@ export function checkBurialBeforeDeath(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkLifespan(db: Database): CheckResult[] {
-  const births = loadPersonEvents(db, 'birth');
-  const deaths = loadPersonEvents(db, 'death');
+export async function checkLifespan(db: Database): Promise<CheckResult[]> {
+  const births = await loadPersonEvents(db, 'birth');
+  const deaths = await loadPersonEvents(db, 'death');
   const rows: { person_id: string; birth_year: number; death_year: number; birth_id: string; death_id: string }[] = [];
   for (const [personId, deathList] of deaths) {
     for (const d of deathList) {
@@ -130,7 +130,7 @@ export function checkLifespan(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkFutureDates(db: Database): CheckResult[] {
+export async function checkFutureDates(db: Database): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
 
   // Filter all candidate births/deaths in JS via dateDefinitelyAfter so
@@ -138,7 +138,7 @@ export function checkFutureDates(db: Database): CheckResult[] {
   // lexicographically against TODAY (which would silently flag historical
   // dates as "future" because '2' > '1' in ASCII). Keeps the SQL filter
   // narrow and lets parseLooseDate do the actual chronological compare.
-  const births = queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
+  const births = await queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
     SELECT p.id AS person_id, e.id AS event_id, e.date_value
     FROM persons p
     JOIN event_participants ep ON ep.person_id = p.id
@@ -158,7 +158,7 @@ export function checkFutureDates(db: Database): CheckResult[] {
     });
   }
 
-  const deaths = queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
+  const deaths = await queryAll<{ person_id: string; event_id: string; date_value: string }>(db, `
     SELECT p.id AS person_id, e.id AS event_id, e.date_value
     FROM persons p
     JOIN event_participants ep ON ep.person_id = p.id
@@ -181,8 +181,8 @@ export function checkFutureDates(db: Database): CheckResult[] {
   return results;
 }
 
-export function checkBaptismLate(db: Database): CheckResult[] {
-  const rows = queryAll<{ person_id: string; baptism_id: string; bap_year: number; birth_id: string; birth_year: number }>(db, `
+export async function checkBaptismLate(db: Database): Promise<CheckResult[]> {
+  const rows = await queryAll<{ person_id: string; baptism_id: string; bap_year: number; birth_id: string; birth_year: number }>(db, `
     SELECT p.id AS person_id,
            bap.id AS baptism_id, CAST(SUBSTR(bap.date_value, 1, 4) AS INTEGER) AS bap_year,
            b.id AS birth_id, CAST(SUBSTR(b.date_value, 1, 4) AS INTEGER) AS birth_year
@@ -206,9 +206,9 @@ export function checkBaptismLate(db: Database): CheckResult[] {
   }));
 }
 
-export function checkDeathWithoutBirth(db: Database): CheckResult[] {
-  const hasBirth = personIdsWithEvent(db, 'birth');
-  const deathRows = queryAll<{ person_id: string; event_id: string }>(db, `
+export async function checkDeathWithoutBirth(db: Database): Promise<CheckResult[]> {
+  const hasBirth = await personIdsWithEvent(db, 'birth');
+  const deathRows = await queryAll<{ person_id: string; event_id: string }>(db, `
     SELECT ep.person_id, e.id AS event_id
     FROM event_participants ep
     JOIN events e ON e.id = ep.event_id AND e.event_type = 'death'
@@ -225,9 +225,9 @@ export function checkDeathWithoutBirth(db: Database): CheckResult[] {
     }));
 }
 
-export function checkNoBirthEvent(db: Database): CheckResult[] {
-  const hasBirth = personIdsWithEvent(db, 'birth');
-  const allPersonIds = queryAll<{ id: string }>(db, `SELECT id FROM persons`);
+export async function checkNoBirthEvent(db: Database): Promise<CheckResult[]> {
+  const hasBirth = await personIdsWithEvent(db, 'birth');
+  const allPersonIds = await queryAll<{ id: string }>(db, `SELECT id FROM persons`);
   return allPersonIds
     .filter(r => !hasBirth.has(r.id))
     .map(r => ({

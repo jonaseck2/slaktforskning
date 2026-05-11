@@ -10,7 +10,7 @@ import { i18n } from './setup';
 // `value` state must NOT be discarded, and Save must still send the authored
 // value. Hiding a field is not consent to null it out. See CLAUDE.md.
 
-describe('EventModal — fact-value Prime Directive guard', () => {
+describe('EventModal — fact-value Prime Directive guard', async () => {
   const updateMock = vi.fn();
   const createMock = vi.fn();
 

@@ -21,7 +21,7 @@ const mockApi = {
   gazetteers: { getImported: vi.fn() },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   mockApi.places.get.mockResolvedValue(null);
   mockApi.places.list.mockResolvedValue([]);
@@ -35,7 +35,7 @@ beforeEach(() => {
   (window as unknown as { api: unknown }).api = mockApi;
 });
 
-describe('PlaceChronicleReport', () => {
+describe('PlaceChronicleReport', async () => {
   it('renders cover with place name', async () => {
     mockApi.reports.placeHistory.mockResolvedValue({
       place_id: 'pl1',

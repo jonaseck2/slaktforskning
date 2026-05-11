@@ -1280,17 +1280,9 @@ html.screen-reader h1:focus {
 .notes-mono {
   font-family: var(--font-mono);
 }
-.mono-toggle-t {
-  font-family: inherit;
-  line-height: 1;
-}
-.mono-toggle-t.is-mono {
-  font-family: var(--font-mono);
-}
 .mono-toggle-label {
   font-size: var(--font-xs);
   color: var(--text-secondary);
-  margin-inline-start: var(--space-xs);
 }
 
 /* ── Entity panel layout (modal redesign) ── */

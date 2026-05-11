@@ -86,14 +86,14 @@ export interface NamedCheck {
  * inject aliases into other gazetteers — they never appear as candidates
  * themselves.
  */
-function loadGazetteersForChecks(db: Database) {
-  const configJson = getDbSetting(db, 'gazetteer_config');
+async function loadGazetteersForChecks(db: Database) {
+  const configJson = await getDbSetting(db, 'gazetteer_config');
   const gazConfig: GazetteerConfig = configJson
     ? JSON.parse(configJson)
     : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
   const langIds = getAllGazetteers().filter(g => g.kind === 'language').map(g => g.id);
   const enabledWithLangs = Array.from(new Set([...gazConfig.enabledGazetteers, ...langIds]));
-  const imported = getImportedGazetteers(db);
+  const imported = await getImportedGazetteers(db);
   return loadGazetteers(
     { enabledGazetteers: enabledWithLangs },
     getAllGazetteers(),
@@ -112,11 +112,11 @@ export function getAllCheckFunctions(): NamedCheck[] {
   // data and merges language translations, so doing it three times per
   // runAll dominated post-import CPU. Sharing also keeps the resolver's
   // identity-keyed `getGlobalNameDepth` cache warm between checks.
-  let cachedGazetteers: ReturnType<typeof loadGazetteersForChecks> | null = null;
+  let cachedGazetteers: Awaited<ReturnType<typeof loadGazetteersForChecks>> | null = null;
   let cachedGazDb: Database | null = null;
-  function gazetteersFor(db: Database) {
+  async function gazetteersFor(db: Database) {
     if (cachedGazetteers && cachedGazDb === db) return cachedGazetteers;
-    cachedGazetteers = loadGazetteersForChecks(db);
+    cachedGazetteers = await loadGazetteersForChecks(db);
     cachedGazDb = db;
     return cachedGazetteers;
   }
@@ -155,21 +155,21 @@ export function getAllCheckFunctions(): NamedCheck[] {
 
     // E2. Gazetteer match quality (global)
     { name: 'checkGazetteerMatchQuality', global: true, fn: async (db) => {
-      const gazetteers = gazetteersFor(db);
-      const rejectedJson = getDbSetting(db, 'gazetteer_rejections');
+      const gazetteers = await gazetteersFor(db);
+      const rejectedJson = await getDbSetting(db, 'gazetteer_rejections');
       const rejectedPlaceIds = new Set<string>(rejectedJson ? JSON.parse(rejectedJson) : []);
       const raw = await checkGazetteerMatchQuality(db, gazetteers);
       return raw.filter(r => !r.placeIds?.some(id => rejectedPlaceIds.has(id)));
     }},
 
     // E3. Missing-comma in place names (global, resolver-aware)
-    { name: 'checkPlaceMissingComma', global: true, fn: (db) => {
-      return checkPlaceMissingComma(db, gazetteersFor(db));
+    { name: 'checkPlaceMissingComma', global: true, fn: async (db) => {
+      return checkPlaceMissingComma(db, await gazetteersFor(db));
     }},
 
     // E4. Bare unresolvable places without region context (global, resolver-aware)
-    { name: 'checkPlaceNameNoRegion', global: true, fn: (db) => {
-      return checkPlaceNameNoRegion(db, gazetteersFor(db));
+    { name: 'checkPlaceNameNoRegion', global: true, fn: async (db) => {
+      return checkPlaceNameNoRegion(db, await gazetteersFor(db));
     }},
 
     // F. Data Completeness
@@ -257,6 +257,6 @@ export async function runChecksForMedia(db: Database, mediaId: string, dbDir?: s
  * media-file I/O, returns only the rows that would have appeared in the
  * Quality view for this event.
  */
-export function runChecksForEvent(db: Database, eventId: string): CheckResult[] {
-  return checkEventOutsideLifespanForEvent(db, eventId);
+export async function runChecksForEvent(db: Database, eventId: string): Promise<CheckResult[]> {
+  return await checkEventOutsideLifespanForEvent(db, eventId);
 }
