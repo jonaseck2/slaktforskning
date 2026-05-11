@@ -23,6 +23,7 @@ export default {
     quality: 'Quality',
     duplicates: 'Duplicates',
     researchTasks: 'Tasks',
+    search: 'Search',
     research: 'RESEARCH',
     organize: 'ORGANIZE',
     review: 'REVIEW',

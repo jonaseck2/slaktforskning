@@ -23,6 +23,7 @@ export default {
     quality: 'Kvalitet',
     duplicates: 'Dubbletter',
     researchTasks: 'Uppgifter',
+    search: 'Sök',
     research: 'FORSKNING',
     organize: 'ORGANISERA',
     review: 'GRANSKA',

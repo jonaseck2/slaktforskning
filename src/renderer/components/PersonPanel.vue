@@ -92,10 +92,11 @@
         </div>
       </div>
 
-      <!-- Identifierare section. v-show keeps the child mounted while
-           collapsed so its defineExpose({ count }) is live and the (N) badge
-           is accurate even before the user opens the section. -->
-      <div class="panel-section">
+      <!-- Identifierare section. v-show on the outer div hides it entirely when
+           the person has no identifiers (power-user feature — not shown until
+           data exists). The child stays mounted via the outer v-show so
+           identifierCount stays live without a separate data probe. -->
+      <div v-show="identifierCount > 0" class="panel-section">
         <SectionHeader :title="$t('personDetail.identifiers')" :count="identifierCount" :collapsed="!sections.identifiers" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('personDetail.addIdentifierShort') }" @toggle="toggleSection('identifiers')" @action="identifiersSectionRef?.openAddForm()" />
         <div v-show="sections.identifiers" class="panel-section-body">
           <PersonIdentifiersSection ref="identifiersSectionRef" :person-id="personId!" :readonly="props.readonly" />
