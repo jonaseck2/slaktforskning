@@ -62,8 +62,16 @@ if ('__TAURI_INTERNALS__' in window) {
     const { Database } = shimMod;
     const { mountWindowApi } = apiMod;
     const { initializeSchema } = schemaMod;
-    const dbPath = await coreMod.invoke<string>('default_db_path');
-    bootLog('db path: ' + dbPath);
+    // Honour any DB the user already switched to via window.api.db.switchTo.
+    // App.vue's onSwitched handler triggers window.location.reload() to
+    // re-initialise per-DB state, but the Tauri *process* doesn't restart —
+    // db::CURRENT_PATH lives across the reload. Without checking it first,
+    // every reload would reopen the bundled default and silently undo the
+    // user's switch, leaving a divergence where MCP / sqlite3 see one DB
+    // and the renderer sees another.
+    const currentPath = await coreMod.invoke<string | null>('db_current_path');
+    const dbPath = currentPath ?? (await coreMod.invoke<string>('default_db_path'));
+    bootLog('db path: ' + dbPath + (currentPath ? ' (resumed)' : ' (default)'));
     // UI-server callback bridge for the dev MCP. Rust sends scripts via the
     // webview that end with window.__taurisUiCallback(id, value), routing the
     // value back to a pending oneshot on the Rust side.
