@@ -12,9 +12,18 @@ import { haversineKm } from './check-utils';
  */
 function makeYieldBudget(budgetMs = 75): () => Promise<void> {
   let last = Date.now();
+  // Cross-runtime yield: setImmediate exists in Node + Electron's worker
+  // thread; Tauri's webview only has the browser scheduler. setTimeout(0)
+  // is the smallest portable yield (4ms minimum in browsers, ~1ms in Node).
+  // Don't use queueMicrotask — same-microtask resolution doesn't actually
+  // unblock layout / paint, defeating the whole point of yielding.
+  const yieldFn: (cb: () => void) => void =
+    typeof setImmediate === 'function'
+      ? (cb) => { setImmediate(cb); }
+      : (cb) => { setTimeout(cb, 0); };
   return async () => {
     if (Date.now() - last >= budgetMs) {
-      await new Promise<void>(resolve => setImmediate(resolve));
+      await new Promise<void>(resolve => yieldFn(resolve));
       last = Date.now();
     }
   };
