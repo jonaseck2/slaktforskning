@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.slaktforskning.tauri-spike",
   "build": {
-    "beforeDevCommand": "cd .. && npx vite --config vite.tauri-renderer.config.ts",
+    "beforeDevCommand": "npx vite --config vite.tauri-renderer.config.ts",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "cd .. && node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && npx vite build --config vite.tauri-renderer.config.ts",
+    "beforeBuildCommand": "node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && npx vite build --config vite.tauri-renderer.config.ts",
     "frontendDist": "../dist-tauri"
   },
   "app": {

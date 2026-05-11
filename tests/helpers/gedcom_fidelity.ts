@@ -770,11 +770,11 @@ function seedByTable(db: Database, table: string, col: string, value: unknown): 
 /**
  * Round-trip a DB through GEDCOM at the given version. Returns the fresh DB.
  */
-export function roundTrip(db: Database, version: RegistryVersion): Database {
-  const { ged } = exportGedcom(db, VERSION_LABEL[version]);
+export async function roundTrip(db: Database, version: RegistryVersion): Promise<Database> {
+  const { ged } = await exportGedcom(db, VERSION_LABEL[version]);
   const tree = parseGedcom(ged);
-  const fresh = createTestDb();
-  importGedcom(fresh, tree);
+  const fresh = await createTestDb();
+  await importGedcom(fresh, tree);
   return fresh;
 }
 

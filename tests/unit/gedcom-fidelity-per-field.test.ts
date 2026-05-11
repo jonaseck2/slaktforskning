@@ -60,7 +60,7 @@ describe('GEDCOM fidelity per-field round-trip', async () => {
           const seededRows = await queryAll<Record<string, unknown>>(db, `SELECT * FROM ${table}`);
           const seededRow = seededRows[0] ?? {};
 
-          const fresh = roundTrip(db, version);
+          const fresh = await roundTrip(db, version);
           const got = readColumnFromOnlyRow(fresh, table, col);
 
           if (status.kind === 'lossless' || status.kind === 'lossless-via') {

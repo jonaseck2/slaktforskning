@@ -455,7 +455,7 @@ describe('exportGedcom', async () => {
 /** Export db → parse → import into a fresh db2. Returns db2. */
 async function roundtrip(sourceDb: ReturnType<typeof createTestDb>): ReturnType<typeof createTestDb> {
   const db2 = await createTestDb();
-  await importGedcom(db2, parseGedcom(await exportGedcom(sourceDb).ged));
+  await importGedcom(db2, parseGedcom((await exportGedcom(sourceDb)).ged));
   return db2;
 }
 
@@ -725,7 +725,7 @@ describe('Extended GEDCOM roundtrip — relationships', async () => {
       notes: 'half-siblings\nsame mother only',
     });
     const db2 = await createTestDb();
-    await importGedcom(db2, parseGedcom(await exportGedcom(db, '7.0').ged));
+    await importGedcom(db2, parseGedcom((await exportGedcom(db, '7.0')).ged));
     const sibs = (await listRelationships(db2)).filter(r => r.type === 'sibling');
     expect(sibs).toHaveLength(1);
     expect(sibs[0].notes).toBe('half-siblings\nsame mother only');
@@ -897,7 +897,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', async () => {
       call_number: 'F-IIa-7-1843',
     });
     const db2 = await createTestDb();
-    await importGedcom(db2, parseGedcom(await exportGedcom(db, '7.0').ged));
+    await importGedcom(db2, parseGedcom((await exportGedcom(db, '7.0')).ged));
     const out = (await listSources(db2))[0];
     expect(out.abstract).toBe('Multi-line abstract\nwith embedded newline.');
     expect(out.call_number).toBe('F-IIa-7-1843');
@@ -987,7 +987,7 @@ describe('Extended GEDCOM roundtrip — sources & citations', async () => {
     await createCitation(db, { source_id: src.id, place_id: place.id, page: 'p. 7' });
 
     const db2 = await createTestDb();
-    await importGedcom(db2, parseGedcom(await exportGedcom(db).ged));
+    await importGedcom(db2, parseGedcom((await exportGedcom(db)).ged));
 
     const got2 = (await listPlaces(db2)).find(pl => pl.name === 'Göteborg');
     expect(got2).toBeTruthy();

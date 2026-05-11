@@ -245,7 +245,7 @@ describe('GEDCOM fidelity golden-DB-seed round-trip', async () => {
       await seedComprehensive(db);
       const before = canonicaliseDb(db);
 
-      const after = canonicaliseDb(roundTrip(db, version));
+      const after = canonicaliseDb(await roundTrip(db, version));
 
       expect(after, `golden round-trip mismatch under ${version}`).toEqual(before);
     });
