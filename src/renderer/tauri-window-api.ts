@@ -437,6 +437,28 @@ export function mountWindowApi(db: Database): MountResult {
   };
 
   if (!api.import) api.import = {};
+
+  // Progress event subscriptions — Electron uses `ipcRenderer.on('import:*Progress', cb)`.
+  // The renderer-side polyfilled importers (gramps, holger, rootsmagic) run in
+  // the same process; they thread an onProgress callback through and we fan
+  // it out to all subscribed listeners. Genney isn't wired but its picker UI
+  // mounts the listener — keep the registry empty-but-callable to stop the
+  // "window.api.import.onProgress is not a function" throw.
+  const progressListeners: Record<string, Array<(msg: string) => void>> = {
+    genney: [], holger: [], rootsmagic: [], gramps: [],
+  };
+  const subscribe = (kind: string) => (cb: unknown) => {
+    if (typeof cb !== 'function') return;
+    progressListeners[kind].push(cb as (msg: string) => void);
+  };
+  const fireProgress = (kind: string, msg: string): void => {
+    for (const cb of progressListeners[kind]) try { cb(msg); } catch { /* ignore */ }
+  };
+  api.import.onProgress = subscribe('genney');
+  api.import.onHolgerProgress = subscribe('holger');
+  api.import.onRootsmagicProgress = subscribe('rootsmagic');
+  api.import.onGrampsProgress = subscribe('gramps');
+
   api.import.genneyCheckDocker = async () => ({ available: false });
   api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
   api.import.genneySelectArchive = () => pickFile('Välj Genney-arkivfil (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
@@ -452,7 +474,7 @@ export function mountWindowApi(db: Database): MountResult {
       const grampsMod = await import('../import/gramps');
       const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
       const bytes = base64ToUint8Array(b64);
-      const result = await grampsMod.importFromGrampsBytes(getDb(), bytes);
+      const result = await grampsMod.importFromGrampsBytes(getDb(), bytes, { onProgress: (m) => fireProgress('gramps', m) });
       fireDataChanged();
       return { success: true, summary: result.summary };
     } catch (e) {
@@ -564,9 +586,11 @@ export function mountWindowApi(db: Database): MountResult {
       // OBJE FILE paths get rewritten there; consolidate then copies into
       // <dbname>-media/ via the fast path.
       const holgerMod = await import('../import/holger/index');
+      fireProgress('holger', `Importing ${extracted.gedName}…`);
       const { report } = await holgerMod.importFromHolgerWithBytes(getDb(), gedBytes, {
         mediaDir: o.mediaDir,
       });
+      fireProgress('holger', `Imported ${report?.persons ?? 0} persons; consolidating media…`);
 
       // Step 4 — copy + rewrite media file_refs.
       const consol = await invoke<{ copied: number; skipped: number; missing: number; ms: number }>(
