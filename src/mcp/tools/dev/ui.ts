@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { buildAriaListScript, buildAriaInvokeScript, type AriaListResult, type AriaInvokeResult } from './ui-aria-script';
 
 // The dev MCP drives the running app through the bridge's irreducible
 // surface: POST /eval (run a JS string in the renderer, get its JSON value
@@ -188,6 +189,41 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
     async () => {
       await runScript(uiBase, '(window.print(), { ok: true })');
       return { content: [{ type: 'text' as const, text: 'Print dialog opened — choose Save as PDF.' }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_list',
+    'List every interactable in the renderer by its accessible name and ARIA role — what a screen-reader user would hear, not what CSS would select. Prefer this over ui_get_dom when the goal is navigation ("find the Länkregler tab", "find the +Regel button"); the names are CSS-class-agnostic and survive layout refactors. Returns `{ matches: [{ index, name, role, region, tag, disabled, hidden }], total }`. Accessible-name priority: v-narrate text → aria-label → aria-labelledby → label[for] → visible text → placeholder → title; elements producing no name are omitted. Filter with `region` (a named landmark/dialog ancestor), `role` (button, link, tab, textbox, searchbox, checkbox, combobox, radio, menuitem, ...), `limit` (default 100, max 500). By default excludes aria-hidden / display:none / visibility:hidden elements and `disabled` / `aria-disabled` controls — pass `include_hidden: true` or `include_disabled: true` to widen.',
+    {
+      region: z.string().optional().describe('Scope to one region by its accessible name. Region = nearest ancestor that is [role="dialog"], [role="region"] with aria-label, <section aria-label>, <header>, <aside>, or <main>.'),
+      role: z.string().optional().describe('Filter by ARIA role (button, link, tab, textbox, ...). Roles match the role attribute first, then the element\'s implicit role.'),
+      limit: z.number().optional().describe('Maximum matches to return (default 100, max 500). Hits past the limit are still counted in `total`.'),
+      include_disabled: z.boolean().optional().describe('Include disabled / aria-disabled elements. Default false.'),
+      include_hidden: z.boolean().optional().describe('Include aria-hidden, display:none, and visibility:hidden elements. Default false.'),
+    },
+    async (opts) => {
+      const script = buildAriaListScript(opts);
+      const result = await runScript(uiBase, script) as AriaListResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_invoke',
+    'Invoke a single element in the renderer by its accessible name — the screen-reader-style addressing of ui_click / ui_fill. Use this in preference to ui_click whenever the goal is to act on something the user can see ("click Spara", "fill the E-post field"); the name survives CSS-class renames and layout refactors. On ambiguity (two elements with the same name) the tool throws an error that lists every candidate with its role + region so the agent can disambiguate via the `role` / `region` arguments — never silently clicks the first match, because that is exactly the bug class CSS-selector tools produce. For input roles (textbox, searchbox, combobox), pass `value` to set the input and fire `input` + `change` events the same way ui_fill does; passing `value` to a button or link throws.',
+    {
+      name: z.string().describe('Accessible name to invoke. Matched exactly (after trim) against the seven-step accessible-name resolution.'),
+      role: z.string().optional().describe('Disambiguator: only consider elements with this ARIA role.'),
+      region: z.string().optional().describe('Disambiguator: only consider elements inside the named region/dialog/landmark.'),
+      value: z.string().optional().describe('Only valid for textbox, searchbox, or combobox roles. Sets the input value and dispatches input + change events. Throws if the matched element is not an input role.'),
+    },
+    async (opts) => {
+      const script = buildAriaInvokeScript(opts);
+      const result = await runScript(uiBase, script) as AriaInvokeResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
 
