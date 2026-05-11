@@ -1,6 +1,21 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { buildAriaListScript, buildAriaInvokeScript, type AriaListResult, type AriaInvokeResult } from './ui-aria-script';
+import {
+  buildAriaListScript,
+  buildAriaInvokeScript,
+  buildAriaTabOrderScript,
+  buildAriaLandmarksScript,
+  buildAriaHeadingsScript,
+  buildAriaReadScript,
+  buildAriaAuditScript,
+  type AriaListResult,
+  type AriaInvokeResult,
+  type AriaTabOrderResult,
+  type AriaLandmarksResult,
+  type AriaHeadingsResult,
+  type AriaReadResult,
+  type AriaAuditResult,
+} from './ui-aria-script';
 
 // The dev MCP drives the running app through the bridge's irreducible
 // surface: POST /eval (run a JS string in the renderer, get its JSON value
@@ -222,6 +237,76 @@ export function registerUiTools(server: McpServer, uiBase: string): void {
     async (opts) => {
       const script = buildAriaInvokeScript(opts);
       const result = await runScript(uiBase, script) as AriaInvokeResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_tab_order',
+    'Walk focusable elements in tab order — what pressing Tab repeatedly would visit — with their accessible name, role, region, and state. Use this when the agent needs to understand the keyboard journey through a view, or to compare what a TTS user would experience against the visual layout. Tabindex resolution: positive `tabindex` ascending first, then `tabindex=0` and natively-focusable elements in DOM order; `tabindex=-1` and disabled / hidden elements are excluded. Each entry carries a `tab_index` (the resolved position) plus the same name/role/region/state surface as `ui_aria_list`. Returns `{ matches: [...], total }`.',
+    {
+      region: z.string().optional().describe('Scope to one region by its accessible name (see ui_aria_landmarks for available regions).'),
+      role: z.string().optional().describe('Filter by ARIA role.'),
+      limit: z.number().optional().describe('Maximum entries to return (default 100, max 500).'),
+    },
+    async (opts) => {
+      const script = buildAriaTabOrderScript(opts);
+      const result = await runScript(uiBase, script) as AriaTabOrderResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_landmarks',
+    'Enumerate every landmark in the document — `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, plus explicit `role="region"|"main"|"navigation"|"banner"|"complementary"|"contentinfo"|"search"|"form"|"dialog"`. Each entry: `{ role, name, has_name, tag, child_interactable_count, region (parent landmark name), busy? }`. Landmarks with `has_name: false` are not navigable by name — they are real screen-reader-user a11y gaps and surface in `ui_aria_audit` as `unnamed_landmark`. Use this tool first when orienting in an unfamiliar view, before drilling into a region with `ui_aria_list` / `ui_aria_read`.',
+    {},
+    async () => {
+      const script = buildAriaLandmarksScript({});
+      const result = await runScript(uiBase, script) as AriaLandmarksResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_headings',
+    'Enumerate every heading in the document or a scoped region — every `<h1>`–`<h6>` and `[role="heading"][aria-level]`. Each entry: `{ level, text, region, tag }`. This is the H-key navigation a TTS user has; the agent gets the document outline in one call. When `region` is given, scopes to that landmark.',
+    {
+      region: z.string().optional().describe('Scope to one region by accessible name.'),
+    },
+    async (opts) => {
+      const script = buildAriaHeadingsScript(opts);
+      const result = await runScript(uiBase, script) as AriaHeadingsResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_read',
+    'Return the ordered stream of reading units a screen reader would announce when traversing a region: `{ kind: "heading", level, text } | { kind: "paragraph", text } | { kind: "list_item", text } | { kind: "interactable", name, role, state }`, in DOM order. Use this when the agent needs to "read the screen" — understand the prose flow of a view rather than enumerate clickables. If `region` is omitted, reads from the document body.',
+    {
+      region: z.string().optional().describe('Scope to one region by accessible name. Reads the whole document if omitted.'),
+    },
+    async (opts) => {
+      const script = buildAriaReadScript(opts);
+      const result = await runScript(uiBase, script) as AriaReadResult | { error: string };
+      if ('error' in result) throw new Error(result.error);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'ui_aria_audit',
+    'Scoped a11y audit — reports every place the app fails to expose an affordance via accessible name / role / state, so the agent + the developer can fix the app rather than work around it. Finding kinds (severity in parens): `unnamed_interactable` (high — agent cannot address by name), `unnamed_landmark` (medium — screen-reader users cannot jump by region name), `input_without_label` (high — input has only placeholder/title as name), `tab_strip_without_role` (medium — chip strip masquerading as tabs), `positive_tabindex` (low — anti-pattern), `disabled_focusable` (low — aria-disabled without removing from tab order). Each finding includes a `hint` string the agent can quote when filing a follow-up. Scope to one region with `region`; omit to audit the whole document.',
+    {
+      region: z.string().optional().describe('Scope the audit to one region by accessible name. Audits the whole document if omitted.'),
+    },
+    async (opts) => {
+      const script = buildAriaAuditScript(opts);
+      const result = await runScript(uiBase, script) as AriaAuditResult | { error: string };
       if ('error' in result) throw new Error(result.error);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }

@@ -15,8 +15,18 @@ import {
   runAriaQuery,
   buildAriaListScript,
   buildAriaInvokeScript,
+  buildAriaTabOrderScript,
+  buildAriaLandmarksScript,
+  buildAriaHeadingsScript,
+  buildAriaReadScript,
+  buildAriaAuditScript,
   type AriaListResult,
   type AriaInvokeResult,
+  type AriaTabOrderResult,
+  type AriaLandmarksResult,
+  type AriaHeadingsResult,
+  type AriaReadResult,
+  type AriaAuditResult,
 } from '../../../src/mcp/tools/dev/ui-aria-script';
 
 type W = Window & { __narrationMap?: WeakMap<HTMLElement, string | (() => string)> };
@@ -310,5 +320,385 @@ describe('buildAriaListScript / buildAriaInvokeScript', () => {
     expect(invokeScript).toContain('"region":"Min Modal"');
     expect(invokeScript).toContain('"value":"x"');
     expect(invokeScript).toContain('"invoke"');
+  });
+});
+
+// ─── v2: region-resolution refactor regression ──────────────────────────────
+describe('region resolution — named landmarks only', () => {
+  it('bare <main> without aria-label does NOT count as a region (v1 bug regression)', () => {
+    mountFixture('<main><button>Inside main</button></main>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const btn = r.matches.find((m) => m.name === 'Inside main');
+    expect(btn?.region).toBeNull();
+  });
+
+  it('<main aria-label="Settings"> counts as a region', () => {
+    mountFixture('<main aria-label="Settings"><button>Inside settings</button></main>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const btn = r.matches.find((m) => m.name === 'Inside settings');
+    expect(btn?.region).toBe('Settings');
+  });
+
+  it('[role="dialog"] without aria-label does NOT flood region with descendant text', () => {
+    mountFixture('<div role="dialog"><h2>Lots of text here that should not become the region name</h2><button>Close</button></div>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const btn = r.matches.find((m) => m.name === 'Close');
+    expect(btn?.region).toBeNull();
+  });
+
+  it('[role="dialog"] with aria-label uses the label as region', () => {
+    mountFixture('<div role="dialog" aria-label="Confirm"><button>OK</button></div>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const btn = r.matches.find((m) => m.name === 'OK');
+    expect(btn?.region).toBe('Confirm');
+  });
+});
+
+// ─── v2: state surface ──────────────────────────────────────────────────────
+describe('state surface', () => {
+  it('aria-pressed="true" → pressed: true', () => {
+    mountFixture('<button aria-pressed="true">Bold</button>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Bold');
+    expect(m?.pressed).toBe(true);
+  });
+
+  it('aria-expanded="false" → expanded: false (emitted because attribute is set)', () => {
+    mountFixture('<button aria-expanded="false">Menu</button>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Menu');
+    expect(m?.expanded).toBe(false);
+  });
+
+  it('aria-expanded="true" → expanded: true', () => {
+    mountFixture('<button aria-expanded="true">Menu</button>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Menu');
+    expect(m?.expanded).toBe(true);
+  });
+
+  it('aria-selected="true" → selected: true', () => {
+    mountFixture('<button role="tab" aria-selected="true">Tab 1</button>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Tab 1');
+    expect(m?.selected).toBe(true);
+  });
+
+  it('aria-checked="mixed" → checked: "mixed"', () => {
+    mountFixture('<div role="checkbox" aria-checked="mixed" aria-label="Partial"></div>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Partial');
+    expect(m?.checked).toBe('mixed');
+  });
+
+  it('native <input type=checkbox checked> → checked: true', () => {
+    mountFixture('<label for="c1">Agree</label><input id="c1" type="checkbox" checked />');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Agree');
+    expect(m?.checked).toBe(true);
+  });
+
+  it('aria-current="page" → current: "page"', () => {
+    mountFixture('<a href="#x" aria-current="page">Home</a>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Home');
+    expect(m?.current).toBe('page');
+  });
+
+  it('<input required> → required: true', () => {
+    mountFixture('<label for="x">Email</label><input id="x" type="email" required />');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Email');
+    expect(m?.required).toBe(true);
+  });
+
+  it('aria-invalid="true" → invalid: true', () => {
+    mountFixture('<label for="x">Year</label><input id="x" aria-invalid="true" />');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Year');
+    expect(m?.invalid).toBe(true);
+  });
+
+  it('no state attributes → state fields are absent from result', () => {
+    mountFixture('<button>Plain</button>');
+    const r = runAriaQuery('list', {}) as AriaListResult;
+    const m = r.matches.find((it) => it.name === 'Plain');
+    expect(m && 'pressed' in m).toBe(false);
+    expect(m && 'expanded' in m).toBe(false);
+    expect(m && 'selected' in m).toBe(false);
+  });
+});
+
+// ─── v2: tab_order mode ─────────────────────────────────────────────────────
+describe('ui_aria_tab_order', () => {
+  it('returns natively focusable elements in DOM order when no tabindex', () => {
+    mountFixture('<button>First</button><a href="#">Second</a><label for="x">Third</label><input id="x" />');
+    const r = runAriaQuery('tab_order', {}) as AriaTabOrderResult;
+    expect(r.matches.map((m) => m.name)).toEqual(['First', 'Second', 'Third']);
+    expect(r.matches.map((m) => m.tab_index)).toEqual([0, 1, 2]);
+  });
+
+  it('positive tabindex jumps the queue ahead of tabindex=0 / native', () => {
+    mountFixture('<button>A</button><button tabindex="1">B</button><button tabindex="2">C</button><button>D</button>');
+    const r = runAriaQuery('tab_order', {}) as AriaTabOrderResult;
+    // B (tabindex=1) first, C (tabindex=2) next, then A + D in DOM order.
+    expect(r.matches.map((m) => m.name)).toEqual(['B', 'C', 'A', 'D']);
+  });
+
+  it('tabindex=-1 is excluded', () => {
+    mountFixture('<button>A</button><button tabindex="-1">B (skip)</button><button>C</button>');
+    const r = runAriaQuery('tab_order', {}) as AriaTabOrderResult;
+    expect(r.matches.map((m) => m.name)).toEqual(['A', 'C']);
+  });
+
+  it('hidden / disabled / aria-hidden elements are excluded', () => {
+    mountFixture('<button>A</button><button disabled>B</button><button aria-hidden="true">C</button><button>D</button>');
+    const r = runAriaQuery('tab_order', {}) as AriaTabOrderResult;
+    expect(r.matches.map((m) => m.name)).toEqual(['A', 'D']);
+  });
+
+  it('region filter scopes to one named landmark', () => {
+    mountFixture('<button>Outside</button><main aria-label="Inner"><button>Inside</button></main>');
+    const r = runAriaQuery('tab_order', { region: 'Inner' }) as AriaTabOrderResult;
+    expect(r.matches.map((m) => m.name)).toEqual(['Inside']);
+  });
+});
+
+// ─── v2: landmarks mode ─────────────────────────────────────────────────────
+describe('ui_aria_landmarks', () => {
+  it('enumerates every landmark, named and unnamed', () => {
+    mountFixture('<main aria-label="Main"><button>One</button></main><nav><a href="#x">A</a></nav><aside aria-label="Sidebar"></aside>');
+    const r = runAriaQuery('landmarks', {}) as AriaLandmarksResult;
+    const byRole = Object.fromEntries(r.landmarks.map((l) => [l.role, l]));
+    expect(byRole.main?.name).toBe('Main');
+    expect(byRole.main?.has_name).toBe(true);
+    expect(byRole.main?.child_interactable_count).toBe(1);
+    expect(byRole.navigation?.has_name).toBe(false);
+    expect(byRole.complementary?.name).toBe('Sidebar');
+  });
+
+  it('has_name: false for unnamed <main>', () => {
+    mountFixture('<main><h1>Page</h1></main>');
+    const r = runAriaQuery('landmarks', {}) as AriaLandmarksResult;
+    expect(r.landmarks[0].role).toBe('main');
+    expect(r.landmarks[0].has_name).toBe(false);
+    expect(r.landmarks[0].name).toBeNull();
+  });
+
+  it('parent region (nesting) is set correctly', () => {
+    mountFixture('<main aria-label="Outer"><section aria-label="Inner"><button>X</button></section></main>');
+    const r = runAriaQuery('landmarks', {}) as AriaLandmarksResult;
+    const inner = r.landmarks.find((l) => l.name === 'Inner');
+    expect(inner?.region).toBe('Outer');
+  });
+});
+
+// ─── v2: headings mode ──────────────────────────────────────────────────────
+describe('ui_aria_headings', () => {
+  it('returns every <h1>-<h6> with its level + text', () => {
+    mountFixture('<h1>Top</h1><h2>Sub</h2><h3>Deeper</h3>');
+    const r = runAriaQuery('headings', {}) as AriaHeadingsResult;
+    expect(r.headings.map((h) => [h.level, h.text])).toEqual([[1, 'Top'], [2, 'Sub'], [3, 'Deeper']]);
+  });
+
+  it('supports [role="heading"][aria-level]', () => {
+    mountFixture('<div role="heading" aria-level="2">Custom</div>');
+    const r = runAriaQuery('headings', {}) as AriaHeadingsResult;
+    expect(r.headings).toEqual([{ level: 2, text: 'Custom', region: null, tag: 'div' }]);
+  });
+
+  it('attaches region to each heading', () => {
+    mountFixture('<main aria-label="Settings"><h2>Researcher</h2></main>');
+    const r = runAriaQuery('headings', {}) as AriaHeadingsResult;
+    expect(r.headings[0].region).toBe('Settings');
+  });
+
+  it('region filter scopes to one landmark', () => {
+    mountFixture('<h1>Outside</h1><main aria-label="Inner"><h1>Inside</h1></main>');
+    const r = runAriaQuery('headings', { region: 'Inner' }) as AriaHeadingsResult;
+    expect(r.headings.map((h) => h.text)).toEqual(['Inside']);
+  });
+});
+
+// ─── v2: read mode ──────────────────────────────────────────────────────────
+describe('ui_aria_read', () => {
+  it('emits headings, paragraphs, list items, and interactables in DOM order', () => {
+    mountFixture(`
+      <main aria-label="View">
+        <h1>Title</h1>
+        <p>Some prose.</p>
+        <ul><li>Item 1</li><li>Item 2</li></ul>
+        <button>Action</button>
+      </main>
+    `);
+    const r = runAriaQuery('read', { region: 'View' }) as AriaReadResult;
+    expect(r.units.map((u) => u.kind)).toEqual(['heading', 'paragraph', 'list_item', 'list_item', 'interactable']);
+    expect((r.units[0] as { kind: 'heading'; level: number; text: string }).level).toBe(1);
+    expect((r.units[1] as { kind: 'paragraph'; text: string }).text).toBe('Some prose.');
+    expect((r.units[4] as { kind: 'interactable'; name: string; role: string }).role).toBe('button');
+  });
+
+  it('errors when region name does not exist', () => {
+    mountFixture('<main>nothing</main>');
+    const r = runAriaQuery('read', { region: 'Phantom' }) as { error: string };
+    expect(r.error).toContain('No region named "Phantom"');
+  });
+
+  it('reads the whole document when no region passed', () => {
+    mountFixture('<h1>Doc</h1><p>Body</p>');
+    const r = runAriaQuery('read', {}) as AriaReadResult;
+    expect(r.units.map((u) => u.kind)).toEqual(['heading', 'paragraph']);
+  });
+});
+
+// ─── v2: audit mode ─────────────────────────────────────────────────────────
+describe('ui_aria_audit', () => {
+  it('surfaces unnamed_interactable for a button with no name source', () => {
+    mountFixture('<button></button><button>Named</button>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'unnamed_interactable');
+    expect(u?.severity).toBe('high');
+    expect(u?.tag).toBe('button');
+  });
+
+  it('surfaces unnamed_landmark for <main> without aria-label', () => {
+    mountFixture('<main><h1>Unnamed</h1></main>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'unnamed_landmark');
+    expect(u?.severity).toBe('medium');
+    expect(u?.role).toBe('main');
+  });
+
+  it('surfaces input_without_label for an <input> whose only name source is placeholder', () => {
+    mountFixture('<input placeholder="enter text"/>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'input_without_label');
+    expect(u?.severity).toBe('high');
+    expect(u?.tag).toBe('input');
+  });
+
+  it('surfaces tab_strip_without_role for 3+ adjacent short-named buttons (no role=tab)', () => {
+    mountFixture('<div><button>One</button><button>Two</button><button>Three</button></div>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'tab_strip_without_role');
+    expect(u?.severity).toBe('medium');
+  });
+
+  it('does NOT flag tab_strip_without_role when role=tablist is set on the parent', () => {
+    mountFixture('<div role="tablist"><button role="tab">One</button><button role="tab">Two</button><button role="tab">Three</button></div>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    expect(r.findings.find((f) => f.kind === 'tab_strip_without_role')).toBeUndefined();
+  });
+
+  it('surfaces positive_tabindex for tabindex>=1', () => {
+    mountFixture('<button tabindex="3">Bad</button>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'positive_tabindex');
+    expect(u?.severity).toBe('low');
+  });
+
+  it('surfaces disabled_focusable for aria-disabled without `disabled`/tabindex=-1', () => {
+    mountFixture('<button aria-disabled="true">Pseudo-disabled</button>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const u = r.findings.find((f) => f.kind === 'disabled_focusable');
+    expect(u?.severity).toBe('low');
+  });
+
+  it('sorts findings high → medium → low', () => {
+    mountFixture('<button tabindex="1"></button><main><h1>X</h1></main>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    const severities = r.findings.map((f) => f.severity);
+    // high (unnamed_interactable) before medium (unnamed_landmark) before low (positive_tabindex)
+    const high = severities.indexOf('high');
+    const med = severities.indexOf('medium');
+    const low = severities.indexOf('low');
+    expect(high).toBeGreaterThanOrEqual(0);
+    expect(med).toBeGreaterThanOrEqual(0);
+    expect(low).toBeGreaterThanOrEqual(0);
+    expect(high).toBeLessThan(med);
+    expect(med).toBeLessThan(low);
+  });
+
+  it('each finding carries a hint string', () => {
+    mountFixture('<button></button>');
+    const r = runAriaQuery('audit', {}) as AriaAuditResult;
+    expect(r.findings[0].hint.length).toBeGreaterThan(20);
+  });
+});
+
+// ─── v2: serialization round-trip ───────────────────────────────────────────
+// The class of bug that bit v1 twice (__name helper undefined, region
+// flooding) only manifested in the serialized form — not in direct-call
+// tests. These tests evaluate the buildAria*Script outputs in the test
+// environment and assert the result matches calling runAriaQuery directly.
+// JSDOM-based fixture, sandboxed scope: the script never touches global
+// state beyond what runAriaQuery itself would touch.
+describe('serialization round-trip — buildAria*Script outputs match direct calls', () => {
+  function evalScript<T>(script: string): T {
+    // The script is a closed IIFE we wrote ourselves. Evaluating it in the
+    // test environment is the whole point of this test — to exercise the
+    // exact source the renderer would run.
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
+    return (new Function('return ' + script))() as T;
+  }
+
+  it('list mode: serialized output equals direct call', () => {
+    mountFixture('<main aria-label="X"><button>Hello</button></main>');
+    const direct = runAriaQuery('list', { role: 'button' }) as AriaListResult;
+    const round = evalScript<AriaListResult>(buildAriaListScript({ role: 'button' }));
+    expect(round.matches.map((m) => m.name)).toEqual(direct.matches.map((m) => m.name));
+    expect(round.matches[0]?.region).toBe('X');
+  });
+
+  it('invoke mode: serialized output equals direct call (no-match error path)', () => {
+    mountFixture('<button>One</button>');
+    const direct = runAriaQuery('invoke', { name: 'Phantom' }) as { error: string };
+    const round = evalScript<{ error: string }>(buildAriaInvokeScript({ name: 'Phantom' }));
+    expect(round.error).toBe(direct.error);
+  });
+
+  it('tab_order: serialized output equals direct call', () => {
+    mountFixture('<button>A</button><button>B</button>');
+    const direct = runAriaQuery('tab_order', {}) as AriaTabOrderResult;
+    const round = evalScript<AriaTabOrderResult>(buildAriaTabOrderScript({}));
+    expect(round.matches.map((m) => m.name)).toEqual(direct.matches.map((m) => m.name));
+  });
+
+  it('landmarks: serialized output equals direct call', () => {
+    mountFixture('<main aria-label="X"><button>Inside</button></main>');
+    const direct = runAriaQuery('landmarks', {}) as AriaLandmarksResult;
+    const round = evalScript<AriaLandmarksResult>(buildAriaLandmarksScript({}));
+    expect(round.landmarks.map((l) => l.role)).toEqual(direct.landmarks.map((l) => l.role));
+    expect(round.landmarks[0]?.name).toBe('X');
+  });
+
+  it('headings: serialized output equals direct call', () => {
+    mountFixture('<h1>Top</h1><h2>Sub</h2>');
+    const direct = runAriaQuery('headings', {}) as AriaHeadingsResult;
+    const round = evalScript<AriaHeadingsResult>(buildAriaHeadingsScript({}));
+    expect(round.headings.map((h) => h.text)).toEqual(direct.headings.map((h) => h.text));
+  });
+
+  it('read: serialized output equals direct call', () => {
+    mountFixture('<main aria-label="X"><h1>Top</h1><p>Body</p></main>');
+    const direct = runAriaQuery('read', { region: 'X' }) as AriaReadResult;
+    const round = evalScript<AriaReadResult>(buildAriaReadScript({ region: 'X' }));
+    expect(round.units.map((u) => u.kind)).toEqual(direct.units.map((u) => u.kind));
+  });
+
+  it('audit: serialized output equals direct call', () => {
+    mountFixture('<main><button></button></main>');
+    const direct = runAriaQuery('audit', {}) as AriaAuditResult;
+    const round = evalScript<AriaAuditResult>(buildAriaAuditScript({}));
+    expect(round.findings.map((f) => f.kind).sort()).toEqual(direct.findings.map((f) => f.kind).sort());
+  });
+
+  it('preamble shim is present for every mode (catches __name regressions)', () => {
+    expect(buildAriaListScript({})).toContain('var __name=function(fn){return fn}');
+    expect(buildAriaTabOrderScript({})).toContain('var __name=function(fn){return fn}');
+    expect(buildAriaLandmarksScript({})).toContain('var __name=function(fn){return fn}');
+    expect(buildAriaHeadingsScript({})).toContain('var __name=function(fn){return fn}');
+    expect(buildAriaReadScript({})).toContain('var __name=function(fn){return fn}');
+    expect(buildAriaAuditScript({})).toContain('var __name=function(fn){return fn}');
   });
 });

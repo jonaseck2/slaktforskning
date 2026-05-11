@@ -1,158 +1,154 @@
-# ARIA-driven dev MCP tools (`ui_aria_list` + `ui_aria_invoke`)
+# ARIA-driven dev MCP tools — TTS-parity surface
 
 > Subagent dispatch: see `.claude/skills/subagent-handoff/SKILL.md`.
 
+> **Scope expansion 2026-05-11 (mid-execution).** The original plan (`ui_aria_list` + `ui_aria_invoke` only) shipped via subagent + parent live-smoke on the same day. During the smoke the user observed that the surface was "screen-reader-inspired CSS selectors" — useful for navigation, but not actually parity with what a TTS user experiences. Three real a11y bugs in the app (Settings chip strip lacking `role="tab"`, modal form inputs without label associations, unnamed `<main>` landmark) surfaced only because the tool was incomplete and failed to find what the user expected. The user picked option 2 ("Expand the surface before shipping") and we widened scope from 2 tools → 7 tools + state surface + a11y audit. The text below is the expanded plan; the v1 work (resolver + name priority + region + invoke) is preserved and stays in scope.
+
 ## User goal
 
-When I (or any agent) drive the running app via the dev MCP, I find and click things the same way a screen-reader user does — by accessible name, not by guessing CSS selectors. Today the dev MCP's `ui_click` / `ui_fill` / `ui_get_dom` all take a CSS selector. That works until the selector goes stale, the class name changes, or two elements share the same shape and we have to fall back to `[...nodeList].find(n => n.textContent === '...')` scaffolding. We hit this twice in the 2026-05-11 shakedown — finding the "Länkregler" Settings tab needed text-match scaffolding, and the "click the name row in PersonPanel" attempt clicked the right CSS class but the wrong behavior (the row's handler wasn't what the agent thought it was).
+When I (or any agent) drive the running app via the dev MCP, I experience it the way a screen-reader user does — tab through focusables in tab order, navigate by landmark and heading, read a section's prose, hear element state ("pressed", "expanded", "selected") — and the same surface doubles as a systematic a11y audit because every gap the tool hits is a gap a real user would hit too. CSS selectors describe layout; accessible names + roles + states + landmark structure describe what the user (sighted or not) thinks they're interacting with. The original two-tool surface (`ui_aria_list` + `ui_aria_invoke`) is one slice of that; the rest of this plan adds the slices that make the agent's experience of the app a faithful mirror of what a real TTS user gets.
 
-The Vue app already curates accessibility metadata via the `v-narrate` directive (consumed by the screen-reader mode) and standard `aria-label` / `aria-labelledby` / `<label for>` attributes. The agent should be able to read that surface directly: "list every interactable in the current view with its accessible name and role", "click the one named 'Länkregler'", "fill the input labelled 'E-post'". When two elements share a name (multiple "Spara" buttons, one per nested modal level), the tool reports the ambiguity and demands disambiguation rather than silently picking the first match — that silent-first-match behavior is exactly the bug class CSS selectors keep producing.
+We saw the value of the half-measure on day one: three real a11y bugs in the app caught by `ui_aria_list` *failing to find things by their user-facing names*. That's the right way to find a11y bugs — reactive, but the gap was made of the tool not modelling the right primitives. Headings, landmarks, tab order, and live state turn that reactive discovery into a proactive one: `ui_aria_audit(view)` lists every gap in one call.
 
 ## Scope
 
-Two new tools in `src/mcp/tools/dev/ui.ts`:
+**Seven tools**, all in `src/mcp/tools/dev/ui.ts`, all routing through the existing `runScript` → `POST /eval` flow. **No Tauri Rust changes.** No new HTTP endpoints. The accessible-name + region + state computation lives in renderer-side JS injected via `runScript` — one big function with a mode switch (`'list' | 'invoke' | 'tab_order' | 'landmarks' | 'headings' | 'read' | 'audit'`) whose `.toString()` body ships to the renderer.
 
-- `ui_aria_list` — returns every interactable in the renderer with its computed accessible name, ARIA role, surrounding region (the named region or modal it belongs to), and a small set of state flags (disabled, hidden). Optional `region` filter scopes to one region/modal. Optional `role` filter (`'button' | 'link' | 'tab' | 'textbox' | 'searchbox' | 'checkbox' | 'combobox' | 'radio' | 'menuitem'`). Optional `limit` (default 100, max 500).
-- `ui_aria_invoke` — invokes an element by accessible name. `name` is required; `role` and `region` are optional disambiguators. For `textbox` / `searchbox` / `combobox` roles, accepts an additional `value` argument and sets the input value with the same native-setter + `input`/`change`-event dance `ui_fill` already uses. Returns the invoked element's pre-invoke state for the agent to confirm.
+- `ui_aria_list` — interactables only, with name + role + region + state. Optional `region` / `role` / `limit` / `include_disabled` / `include_hidden` filters. (v1 — keep.)
+- `ui_aria_invoke` — click or fill by accessible name; ambiguity errors out with full candidate list. (v1 — keep.)
+- `ui_aria_tab_order` — sequential walk of focusable elements in tab order (resolved `tabindex` ascending, then DOM order for `tabindex=0` / natively focusable). What pressing Tab repeatedly would visit. Each entry carries the same shape as `ui_aria_list` plus a `tab_index` field and the resolved focus order.
+- `ui_aria_landmarks` — every landmark in the document: `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, `[role="region"]`, `[role="dialog"]`, `[role="search"]`, `[role="form"]`. Each entry: `{ role, name, has_name, tag, child_interactable_count, region (parent landmark name) }`. Surfaces unnamed landmarks (`has_name: false`) so the agent + audit can spot them.
+- `ui_aria_headings` — every `<h1>`–`<h6>` and `[role="heading"][aria-level]`. Each entry: `{ level, text, region }`. The H-key navigation a TTS user has.
+- `ui_aria_read` — given a region (by accessible name) or the document if no region passed, returns the ordered stream of reading-units a screen reader would announce: heading / paragraph / list-item / interactable, in DOM order. Each unit carries its kind + text + (for interactables) role + state. Useful when the agent needs to "read the screen" rather than enumerate clickables.
+- `ui_aria_audit` — scoped a11y audit. Reports findings, severity ranked:
+  - `unnamed_interactable` — interactable with no name from any of the seven sources (must be clicked via CSS selector — agent can't get there by name).
+  - `unnamed_landmark` — `<main>`/`<nav>`/`<aside>`/`<section>` without `aria-label`. Means screen-reader users can't jump to it by landmark name.
+  - `input_without_label` — `<input>` / `<textarea>` / `<select>` whose name is empty OR derived only from placeholder/title (not a real label).
+  - `tab_strip_without_role` — heuristic: 3+ adjacent buttons inside one container, all visible at once, no `role="tab"` / `role="tablist"`. Likely a chip strip masquerading as tabs.
+  - `positive_tabindex` — any `tabindex >= 1` (anti-pattern — overrides natural tab order in ways no one tests).
+  - `disabled_focusable` — element has `aria-disabled="true"` but is still in the tab order (real disabled removes from tab order; aria-disabled alone doesn't).
+  Each finding: `{ kind, severity: 'low'|'medium'|'high', tag, role?, region?, hint }`. The `hint` field is a one-liner like the user-friendly bug descriptions in the plan's failure-modes section, so the agent knows what to do without re-deriving.
 
-Both tools route through the existing `runScript` → `POST /eval` flow — same pattern as every other `dev/ui.ts` tool. **No Tauri Rust changes.** No new HTTP endpoints. The accessible-name computation lives in renderer-side JS injected via `runScript`.
+**Element state on every result** — added to every match in every mode where the element is interactable. Optional fields, only emitted when truthy:
+- `pressed: true` (aria-pressed="true")
+- `expanded: true|false` (aria-expanded set)
+- `selected: true` (aria-selected="true")
+- `checked: true|false|'mixed'` (aria-checked or `<input type=checkbox/radio>.checked`)
+- `current: '...'` (aria-current value)
+- `busy: true`
+- `invalid: true`
+- `required: true`
 
-Accessible-name resolution priority (in renderer-side JS, first match wins):
-
-1. The text the app authored via `v-narrate` — the directive stores narration text on a WeakMap; read directly from that source so we're consistent with what the screen-reader mode would announce. This is the app's curated truth.
-2. `aria-label` attribute.
-3. `aria-labelledby` referent's `textContent`.
-4. Associated `<label for>` text (for inputs with an `id`).
-5. The element's own visible `textContent` (trimmed).
-6. `placeholder` (for inputs without any of the above).
-7. `title` attribute.
-
-If none of the seven produce a non-empty string, the element is omitted from `ui_aria_list` (not invocable by name — the agent would have to fall back to `ui_click` with a selector, by design).
-
-Region resolution: walk ancestors looking for `[role="dialog"]` (modal), `[role="region"][aria-label]`, `<section aria-label="...">`, `<header>`, `<aside>`, `<main>`. First hit wins; `region` is its accessible name (computed via the same priority).
-
-Both tools are additive — they live alongside `ui_click`, `ui_fill`, `ui_get_dom`, `ui_eval`. The CSS-selector tools stay; some debugging (computed styles, raw DOM inspection, layout sanity) is genuinely selector-shaped and not about user-facing affordances.
+Both `ui_aria_list` and `ui_aria_tab_order` results carry state; `ui_aria_landmarks` carries `busy` only (the only state meaningful on a landmark). `ui_aria_read` carries state on interactable items.
 
 ### Scope deviations
 
-- **Don't reimplement the W3C accessible-name-computation spec end-to-end.** The 7-step priority above covers every interactable in this app today. The spec has corner cases (e.g. `<fieldset><legend>` for grouped inputs, `<table><caption>`, `<svg><title>`) we don't currently use. If a corner case shows up, extend the priority list; don't ship the whole algorithm preemptively.
-- **Don't add an ARIA tree-shape tool.** A flat list with a `region` field gives the agent enough context. A tree would expose the implementation hierarchy, not the user's mental model.
-- **Don't silently pick the first match on ambiguity.** Ambiguity is real signal — two buttons named "Spara" on screen means the agent has to think about which one. Silent first-match would re-introduce the exact bug class CSS selectors caused.
-- **Don't migrate existing agents/skills off `ui_click`.** Additive. Agents pick the tool that fits the task. The skill update (Task 3) sets the preference; it doesn't deprecate anything.
-- **Don't add a Tauri Rust command.** The accessible-name computation is renderer-side JS by design — it can see the live DOM, the WeakMap on the `v-narrate` directive, and computed `display: none` / `visibility: hidden` / `aria-hidden` state. Doing it Rust-side would mean serializing the entire AX tree across the bridge, which is exactly what we don't want.
+- **Don't implement the W3C accessible-name-computation spec end-to-end.** The 7-step priority covers every interactable in this app today. Corner cases (`<fieldset><legend>`, `<table><caption>`, `<svg><title>`) extend the priority list when they come up.
+- **Don't ship a tree-shape `ui_aria_tree` tool.** Tab order, landmarks, headings, and the read mode together are richer than a single tree dump.
+- **Don't silently pick the first match on ambiguity in `ui_aria_invoke`.** The user-goal-defining behavior of v1 stays.
+- **Don't try to mimic verbose TTS verbalization.** `ui_aria_read` returns the *content* a TTS would announce, not the literal "Länkregler comma tab comma 3 of 4 comma collapsed" string. Roles + state are returned as structured fields the agent can format itself.
+- **Don't migrate existing agents/skills off `ui_click`.** Additive. The skill update (Task 5) shifts the *preference* without deprecating anything.
+- **Don't add a Tauri Rust command.** Accessible-name + region + state computation is renderer-side JS by design — it can see the live DOM, the `v-narrate` WeakMap, computed styles, and inherited aria-hidden. Doing it Rust-side would mean serializing the entire AX tree across the bridge.
 
 ## Verification
 
-User-observable outcome (matches §1): an agent can walk through the four-tab Settings view, open the Länkregler tab, open `+ Regel`, fill the rule's fields, and save — using only `ui_aria_list` + `ui_aria_invoke` calls. No CSS selectors anywhere in the agent's tool log for that flow.
+User-observable outcome: an agent can do the Settings → Länkregler → +Regel flow from v1 *plus* enumerate the page's landmarks and headings, read the prose of the active region, hear which chip is "selected" in a tab strip, and run a one-shot a11y audit that lists every place the tool can't address an element by name. The agent's tool log uses only `ui_aria_*` tools — zero CSS selectors.
 
-1. **Live smoke (goal-anchor).** In a fresh session against the running app, with the dev MCP restarted to pick up the new tools, an agent reproduces the shakedown flow that was brittle before:
-   1. `ui_aria_list({ role: 'tab' })` → confirm "Länkregler" appears.
-   2. `ui_aria_invoke({ name: 'Länkregler', role: 'tab' })` → tab switches.
-   3. `ui_aria_list({ region: 'Länkregler' })` → confirm "+ Regel" appears with role `'button'`.
-   4. `ui_aria_invoke({ name: '+ Regel' })` → modal opens.
-   5. `ui_aria_list({ region: '<modal aria-label or title>' })` → confirm the form's inputs by their labels.
-   6. `ui_aria_invoke({ name: 'Namn', role: 'textbox', value: 'Wikipedia (sv)' })` → input receives an `input` event, Vue picks up the value.
-   7. `ui_aria_invoke({ name: 'Spara' })` — but two "Spara" buttons exist (the modal and the page footer). The tool errors with the documented ambiguity shape, listing both candidates with their regions.
-   8. `ui_aria_invoke({ name: 'Spara', region: '<modal name>' })` → modal closes, the new rule appears in the Länkregler table.
+1. **Live smoke** (goal-anchor). In a session against the running app with the dev MCP restarted:
+   1. `ui_aria_landmarks()` — returns the document's landmarks. Note any with `has_name: false`.
+   2. `ui_aria_headings()` — returns every heading. Levels visible.
+   3. `ui_aria_tab_order({ region: '<some named region>' })` — sequential focus order matches what pressing Tab would visit.
+   4. `ui_aria_list({ role: 'button' })` — every button now carries state (pressed/expanded if any apply).
+   5. `ui_aria_read({ region: '<the open settings tab content region>' })` — returns headings + paragraphs + interactables in DOM order.
+   6. `ui_aria_audit()` — surfaces (at minimum) the three real bugs the day-one smoke caught: the Settings chip strip without `role="tab"`, the modal form inputs without label associations, and the unnamed `<main>`.
+   7. The v1 flow (Settings → Länkregler → +Regel → fill → ambiguity-check on "Spara" if/when one exists at the page level) still works.
+   8. Tool log contains zero CSS selectors for steps 1–7.
 
-   The tool log for this flow contains zero CSS selectors and zero `document.querySelector` calls.
+2. **Unit tests** in `tests/unit/components/mcp-aria.test.ts`. The v1 25 tests stay. New tests:
+   - `tab_order` returns elements in resolved tabindex order (positive first ascending, then 0 + native focusables in DOM order).
+   - `landmarks` returns every landmark with `has_name` correctly set; `child_interactable_count` matches the count of interactables `ui_aria_list({ region: name })` would return.
+   - `headings` returns levels for `<h1>`–`<h6>` and `[role="heading"][aria-level]`.
+   - `read` returns reading-units in DOM order; headings carry level; interactables carry role + state.
+   - `audit` produces findings for fixture pages embedding each of the six finding-kinds (one per kind); ranks severity correctly.
+   - State surface: `aria-pressed="true"` → `pressed: true`; `aria-expanded="false"` → `expanded: false`; `aria-checked="mixed"` → `checked: 'mixed'`; `<input required>` → `required: true`. Each tested on a fixture element.
 
-2. **Unit test** in `tests/unit/mcp.test.ts` mounting a fixture page with curated `v-narrate` / `aria-label` / `<label>` shapes, asserting:
-   - `ui_aria_list` returns every interactable with the expected accessible name.
-   - The priority order is honored (v-narrate beats `aria-label`, which beats `aria-labelledby`, which beats `label[for]`, which beats text content, which beats placeholder, which beats `title`).
-   - `role` filter narrows the result set.
-   - `region` filter narrows the result set.
-   - Disabled and `aria-hidden` elements are omitted by default; included when `include_disabled: true` / `include_hidden: true`.
-   - `ui_aria_invoke` clicks the single match; fills `textbox` roles when `value` is given; errors on ambiguous and missing matches with the documented shape (lists candidates on ambiguity).
+3. **Serialization round-trip test** (the gap the v1 smoke exposed). A new test that takes the output of `buildAria*Script(opts)` and evaluates it against a fixture document via the test environment's JS evaluator, then asserts equivalence with calling `runAriaQuery(...)` directly. Catches the class-of-bug that bit v1 twice (esbuild's `__name` helper, the `<main>` region-flooding) — anywhere the serialized form drifts from the directly-called form. Every mode gets a round-trip case.
 
-3. **Skill update.** `.claude/skills/slaktforskning-mcp-dev/SKILL.md` gains a "ARIA-first navigation" section (2–3 paragraphs): when to reach for these tools, why they're preferred over CSS-selector tools, the seven-step accessible-name priority. Future agents reach for ARIA tools first.
+4. **Skill + docs update.** `.claude/skills/slaktforskning-mcp-dev/SKILL.md` gains an "ARIA-first navigation" section covering the seven tools, when to prefer each, and the seven-step accessible-name priority. `docs/MCP.md` adds seven dev-tool rows.
 
 ## Failure modes / RCA reference
 
-Two specific incidents from the 2026-05-11 shakedown are the proximate cause for this plan:
+Day-one shakedown (2026-05-11) and the v1 ship of this plan together produced four classes of bug worth not repeating:
 
-- **Länkregler tab.** The agent tried `[...document.querySelectorAll('button, [role="tab"], .tab-btn')].find(...)` — the actual chip was a `button.chip-btn`, not in any of those three selectors. The agent eventually found it via a broader search, but only after two failed attempts. With `ui_aria_invoke({ name: 'Länkregler', role: 'tab' })` it would have hit first try, *and* it would have hit even after a future refactor renames `chip-btn` to anything else (because the accessible name and role are CSS-class-agnostic).
-- **PersonPanel name row.** The agent succeeded at "click a `.clickable-row` containing 'Bengt Gunnar Persson'" but the click did not open the name-edit modal — the row's actual handler was a selection toggle, not a modal opener. The CSS class said "clickable" but the behavior said "select". With `ui_aria_invoke({ name: 'Bengt Gunnar Persson, bytt t Sareld' })` the tool would have either succeeded against the modal-opener (if one existed) or returned `No interactable named "…"` against the row (because a row that only toggles selection probably doesn't have a button-shaped accessible role).
-
-The class-of-bug both share: **CSS selectors describe layout; they don't describe the user-facing affordance.** Accessible names describe what the user thinks they're clicking. That's what the agent actually means when it says "click the Länkregler tab" — not "click the third child of the `.tab-bar` div".
-
-This plan does not promise to eliminate every CSS-selector failure (some debugging is selector-shaped by design — checking computed styles, inspecting layout). It promises that for *agent navigation tasks*, accessible name is the right primitive, and the dev MCP exposes it.
+1. **CSS-selector navigation is brittle.** Settled by the v1 ship — `ui_aria_invoke` exists, ambiguity-with-candidates errors are the norm.
+2. **The app's own a11y has real gaps the tool surfaces *only because the tool fails*.** Settings chip strip uses `role="button"` instead of `role="tab"`; modal form inputs aren't `<label for=>`-bound; `<main>` has no `aria-label`. Each becomes invisible until someone asks the tool for it. v2's `ui_aria_audit` is the proactive surface for this — and a separate plan file (`docs/plans/2026-05-11-app-a11y-gaps.md`) tracks the app-side fixes after this lands.
+3. **Tests can pass while production fails.** v1's 25 unit tests exercised `runAriaQuery` *directly*; the production path is `.toString() → /eval`. Two bugs (esbuild's `__name` helper added inside the function body, the `<main>` region-flooding) only manifested in the serialized form. v2 adds a serialization round-trip test that evaluates `buildAria*Script(opts)` output against JSDOM — any drift between direct-call and serialized form fails the test.
+4. **Region resolution was over-eager.** v1's `regionFor` returned `<main>`/`<header>`/`<aside>` even without `aria-label`, falling back through the accessible-name priority to the entire landmark's text content. The fix (only count a landmark as a *named* region when it has an explicit name) lives in v2's region-resolution refactor and is the basis for `ui_aria_landmarks`' `has_name` field.
 
 ## Tasks
 
-### Task 1: Implement `ui_aria_list` and `ui_aria_invoke`
+### Task 1 (v1 — shipped): `ui_aria_list` and `ui_aria_invoke`
 
-- [ ] Write the accessible-name resolution function in renderer-side JS (the seven-step priority list above). Embed as a string template in `src/mcp/tools/dev/ui.ts` — same shape as `ui_get_dom`'s extraction body. Cover the `v-narrate` WeakMap lookup explicitly (read the directive's storage key; default to empty string if unmounted).
-- [ ] Write the region-resolution helper (ancestor walk for `[role="dialog"]`, `[role="region"][aria-label]`, `<section aria-label>`, `<header>`, `<aside>`, `<main>` — first hit wins, region name computed via the same accessible-name priority).
-- [ ] Register `ui_aria_list` with parameters:
-  - `region?: string` — scopes to one region by accessible name.
-  - `role?: string` — filter by ARIA role.
-  - `limit?: number` — default 100, max 500.
-  - `include_disabled?: boolean` — default `false`.
-  - `include_hidden?: boolean` — default `false` (excludes `aria-hidden`, `display: none`, `visibility: hidden`).
-  Returns `{ matches: Array<{ index, name, role, region?, tag, disabled, hidden }>, total }`.
-- [ ] Register `ui_aria_invoke` with parameters:
-  - `name: string` — required.
-  - `role?: string` — disambiguator.
-  - `region?: string` — disambiguator.
-  - `value?: string` — only valid for `textbox` / `searchbox` / `combobox` roles; throws on others.
-  Returns `{ invoked: { name, role, region?, tag }, value_set?: string }`.
-- [ ] On ambiguity: `throw new Error('Multiple matches for "<name>" — disambiguate with role or region. Candidates: [{name, role, region, tag}, ...]')`. The candidates list is serialized into the error message so the agent sees it directly (MCP tool errors are surfaced to the agent verbatim).
-- [ ] On no match: `throw new Error('No interactable named "<name>" in <region|"current view">. Try ui_aria_list to see what is available.')`.
-- [ ] On `value` passed for a non-input role: `throw new Error('value is only valid for textbox, searchbox, or combobox roles; got <role>.')`.
-- [ ] Tool descriptions follow the prose style of the other `dev/ui.ts` tools (sentence-form, one paragraph max, no emojis, explicit about when to prefer the ARIA tools over CSS-selector tools).
+- [x] Resolver function in `src/mcp/tools/dev/ui-aria-script.ts` with 7-step accessible-name priority.
+- [x] Region-resolution helper.
+- [x] `ui_aria_list` + `ui_aria_invoke` registered in `src/mcp/tools/dev/ui.ts`.
+- [x] Ambiguity / no-match / value-for-non-input error shapes.
+- [x] 25 unit tests in `tests/unit/components/mcp-aria.test.ts`.
+- [x] `__name` shim in the serialized script (esbuild interaction caught at smoke time).
+- [x] Live smoke validated `ui_aria_list({ role: 'link' })` + `ui_aria_invoke({ name: 'Inställningar', role: 'link' })` + ambiguity error against the running app.
 
-### Task 2: Unit tests in `tests/unit/mcp.test.ts`
+### Task 2 (v2): Expand the resolver to TTS parity
 
-- [ ] Mount a JSDOM fixture page covering:
-  - An element with `v-narrate` text only.
-  - An element with `aria-label` only.
-  - An element with `aria-labelledby` pointing to a sibling.
-  - An `<input>` with an associated `<label for>`.
-  - A `<button>` with text content only.
-  - An `<input>` with `placeholder` only.
-  - An element with `title` only.
-  - A "mixed" element with all seven sources populated — used to assert priority order.
-  - Two buttons with the same accessible name "Spara" but different regions.
-  - A button inside a `[role="dialog"]` modal.
-  - A `disabled` button.
-  - An `aria-hidden="true"` button.
-  - A `display: none` button.
-- [ ] Assertions:
-  - `ui_aria_list` returns every visible-and-enabled interactable with its expected name and role.
-  - Priority order on the mixed element resolves to the v-narrate text.
-  - `role: 'button'` filter excludes inputs and links.
-  - `region: '<modal name>'` filter returns only the modal's children.
-  - `include_disabled: false` excludes the disabled button; `: true` includes it.
-  - `include_hidden: false` excludes the aria-hidden and display-none buttons; `: true` includes them.
-  - `ui_aria_invoke({ name: '<unique button name>' })` dispatches a `click` event the test observes.
-  - `ui_aria_invoke({ name: 'Spara' })` throws the documented ambiguity error containing both candidates.
-  - `ui_aria_invoke({ name: 'Spara', region: '<modal name>' })` clicks the modal's button.
-  - `ui_aria_invoke({ name: 'Search', role: 'textbox', value: 'Sareld' })` sets the input's value and fires `input` + `change` events.
-  - `ui_aria_invoke({ name: 'Nonexistent' })` throws the documented no-match error.
-- [ ] `npx vitest run tests/unit/mcp.test.ts` passes; no regression in the rest of the suite.
+- [ ] **Refactor region resolution** — only `[role="dialog"]`, `[role="region"][aria-label]`, `<section aria-label>`, and any landmark with `aria-label` count as a *named* region. Bare `<main>`/`<header>`/`<aside>`/`<section>` without a name = not a region.
+- [ ] **Add `state` to every result** — emit `pressed` / `expanded` / `selected` / `checked` / `current` / `busy` / `invalid` / `required` as optional fields when their ARIA attributes are set or when the native HTML state is truthy.
+- [ ] **Add mode `'tab_order'`** — walk focusables (`a[href]`, `button`, `input`, `select`, `textarea`, `[tabindex]:not([tabindex="-1"])`, `[role][tabindex]`); resolve order (positive `tabindex` first ascending, then `tabindex=0` + natively focusable in DOM order); return each with name + role + region + state + `tab_index`. Optional `region` filter.
+- [ ] **Add mode `'landmarks'`** — collect `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, `[role="region"|"main"|"navigation"|"banner"|"complementary"|"contentinfo"|"search"|"form"|"dialog"]`. Return `{ role, name, has_name, tag, child_interactable_count, region (parent landmark name) }` per landmark.
+- [ ] **Add mode `'headings'`** — `<h1>`–`<h6>` + `[role="heading"][aria-level]`. Return `{ level, text, region, tag }` per heading.
+- [ ] **Add mode `'read'`** — given `opts.region`, walk that region's descendants in DOM order; emit `{ kind: 'heading', level, text }` / `{ kind: 'paragraph', text }` / `{ kind: 'list_item', text }` / `{ kind: 'interactable', name, role, state }` units. If no region given, read from `<body>` (the whole document).
+- [ ] **Add mode `'audit'`** — walk the view (or scoped region), produce an array of `{ kind, severity, tag, role?, region?, hint }` findings for each of the six finding-kinds. Hints are static strings keyed by `kind`.
 
-### Task 3: Live smoke + skill update + docs
+### Task 3: Wire each mode as its own MCP tool
 
-- [ ] Restart the dev MCP. Run the eight-step flow from Verification §1 against the running app. Confirm the tool log contains zero CSS selectors for the entire flow. If any step fails, fix it in Task 1 — don't paper over with a CSS fallback.
-- [ ] Add an "ARIA-first navigation" section to `.claude/skills/slaktforskning-mcp-dev/SKILL.md`. Three short paragraphs: (a) when to reach for `ui_aria_list` / `ui_aria_invoke` (any task that says "click X" / "fill Y by what the user sees"); (b) the seven-step accessible-name priority and how to think about it; (c) when the CSS-selector tools are still right (computed styles, layout debugging, the `ui_get_dom` raw-shape probe).
-- [ ] Add two rows to `docs/MCP.md` under the dev-tools table; one for each new tool, citing the shakedown incidents the tools exist to prevent.
+- [ ] Register `ui_aria_tab_order` in `src/mcp/tools/dev/ui.ts` — params: optional `region`, optional `limit` (default 100, max 500).
+- [ ] Register `ui_aria_landmarks` — no params. Returns every landmark.
+- [ ] Register `ui_aria_headings` — optional `region`. Returns every heading (in region if given).
+- [ ] Register `ui_aria_read` — optional `region`. Returns reading-units in DOM order.
+- [ ] Register `ui_aria_audit` — optional `region` to scope. Returns findings.
+- [ ] Each tool's description follows the prose style of the existing `dev/ui.ts` tools (sentence-form, one paragraph max, no emojis, explicit on when to prefer this tool over the alternatives).
+
+### Task 4: Tests
+
+- [ ] **Serialization round-trip test scaffolding.** Add a helper that takes a `buildAria*Script(opts)` output, evaluates it against a JSDOM document, and returns the result. Use it to assert *the serialized form* produces the same output as the directly-called function for every mode. This is the test class that would have caught both v1 production bugs.
+- [ ] **Per-mode tests.** One test block per mode covering happy path + at least one edge case. Spec coverage matches Verification §2.
+- [ ] **State surface tests** on a fixture with mixed `aria-pressed` / `aria-expanded` / `aria-checked="mixed"` / `<input required>` elements.
+- [ ] **Audit-finding tests** — one fixture per finding-kind, asserting the audit surfaces exactly that finding with the right severity + hint.
+- [ ] `npx vitest run` passes with no regression vs floor (3950 passed / 112 skipped before this Task; expect +30–50 new tests).
+
+### Task 5: Live smoke + skill + docs/MCP.md
+
+- [ ] Restart the dev MCP. Run the seven-step Verification §1 flow. Tool log captured; assert zero CSS selectors.
+- [ ] `ui_aria_audit()` against the running app surfaces (at minimum) the three real bugs the v1 smoke caught: Settings chip strip without `role="tab"`, modal inputs without label associations, unnamed `<main>`.
+- [ ] Update `.claude/skills/slaktforskning-mcp-dev/SKILL.md` with the "ARIA-first navigation" section covering the seven tools.
+- [ ] Add seven dev-tool rows to `docs/MCP.md`, each one paragraph with cross-link to the others (e.g. "see `ui_aria_audit` for finding things this tool can't address").
+- [ ] Write a small follow-up plan file `docs/plans/2026-05-11-app-a11y-gaps.md` capturing the three app-side a11y findings as a separate work-stream.
 
 ## Self-review checklist
 
-- [ ] Plan opens with user goal in user-recognizable language (no mechanism-first phrasing).
-- [ ] Scope enumerates every same-shaped surface — `src/mcp/tools/dev/ui.ts` is the full set (no other dev MCP tool files).
-- [ ] Verification observes user-observable behavior (an agent walks the running app without CSS selectors), not just `vitest` green.
-- [ ] Failure-modes section cites the specific shakedown incidents this plan exists to prevent.
-- [ ] Live smoke ran end-to-end against the running app; tool log captured and free of CSS selectors.
-- [ ] All checkboxes in this plan ticked.
+- [ ] Plan opens with user goal in user-recognizable language.
+- [ ] Scope enumerates every same-shaped surface (the resolver and all seven tool registrations are in `src/mcp/tools/dev/ui.ts` + `src/mcp/tools/dev/ui-aria-script.ts`).
+- [ ] Verification observes user-observable behavior — an agent walks the app the way a TTS user does.
+- [ ] Failure-modes section cites the four specific bug classes the smoke exposed.
+- [ ] All Task 2–5 checkboxes ticked; Task 1 already ticked from v1.
+- [ ] Live smoke ran end-to-end; tool log free of CSS selectors.
 - [ ] Plan `git mv` to `docs/plans/archive/`.
-- [ ] Patch version bump in `package.json` (`0.252.x → 0.252.(x+1)`) — dev-only new tools, no user-visible behavior.
-- [ ] `## Unreleased` entry in `CHANGELOG.md` summarising the new tools and the failure modes they retire.
-- [ ] Append a Tauri-style archive entry to `docs/plans/archive/PLAN.md`.
+- [ ] Minor version bump in `package.json` — `0.252.0 → 0.253.0` (new agent-facing capability, even though dev-only).
+- [ ] `## Unreleased` entry in `CHANGELOG.md` summarising the seven tools and the audit's role.
+- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [ ] Follow-up plan `docs/plans/2026-05-11-app-a11y-gaps.md` exists and is in `docs/PLAN.md` as `[planned]`.
 - [ ] Commit `chore: archive completed aria-mcp-tools`.
-- [ ] Merge to main. **Workflow note:** this is plan-driven by virtue of having a plan file, but it's a single-day three-task plan with no parallelism. Direct work on `main` is acceptable per the CLAUDE.md "small fixes → main is fine" provision; a worktree is allowed but adds friction without payoff here. Pick whichever fits the session.
 
 ## Tasks discovered during execution
 
-(Empty until execution starts.)
+- v1 → v2 scope expansion mid-execution: user observed that "screen-reader-inspired CSS selectors" wasn't enough; moved to TTS-parity surface. Plan rewritten in place 2026-05-11 to reflect new scope. Existing v1 work preserved as Task 1.
+- Serialization round-trip test class added to Task 4 — would have caught the two v1 production-only bugs (`__name` undefined, `<main>` region-flooding) before live smoke.
+- Region resolution refactored mid-execution — bare `<main>`/`<header>` without `aria-label` no longer counts as a named region. Same change underpins `ui_aria_landmarks`' `has_name` field.
