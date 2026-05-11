@@ -240,7 +240,7 @@ describe('cross-country place resolution', async () => {
     expect(result).not.toBeNull();
   });
 
-  it('resolves "Ontario, Kanada" via Swedish language gazetteer', () => {
+  it('resolves "Ontario, Kanada" via Swedish language gazetteer', async () => {
     const result = await resolvePlace('Ontario, Kanada', gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain('Canada');
@@ -388,7 +388,7 @@ describe('Swedish exonym expansion', async () => {
     ['Nordamerika', 'North America'],
     ['Oceanien',    'Oceania'],
     ['Sydamerika',  'South America'],
-  ])('resolves Swedish continent name "%s" to %s in world-boundaries', (sv, en) => {
+  ])('resolves Swedish continent name "%s" to %s in world-boundaries', async (sv, en) => {
     const result = await resolvePlace(sv, gazetteers);
     expect(result).not.toBeNull();
     expect(result!.matchedPath).toContain(en);

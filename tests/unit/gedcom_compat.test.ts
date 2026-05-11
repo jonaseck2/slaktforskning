@@ -203,7 +203,7 @@ describe('non_standard_tags.ged', async () => {
   it('does not crash on custom tags', async () => {
     const tree = parseGedcom(loadFixture('non_standard_tags.ged'));
     // Should not throw
-    expect(() => await importGedcom(db, tree)).not.toThrow();
+    await expect(async () => await importGedcom(db, tree)).not.toThrow();
   });
 });
 
@@ -303,7 +303,7 @@ describe('duplicate_xrefs.ged', async () => {
     // the importer creates a new person for each INDI node.
     // The second @I1@ overwrites the first in the personMap, which is
     // acceptable behavior — the important thing is no crash.
-    expect(() => await importGedcom(db, tree)).not.toThrow();
+    await expect(async () => await importGedcom(db, tree)).not.toThrow();
   });
 
   it('creates persons for all INDI records', async () => {

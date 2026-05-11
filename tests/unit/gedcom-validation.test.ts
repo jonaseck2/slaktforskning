@@ -40,7 +40,7 @@ const SAMPLE_WITH_LDS = `0 HEAD
 
 describe('ValidationReport', async () => {
   describe('rawCounts', async () => {
-    it('correctly counts INDI, FAM, SOUR, REPO, SUBM records', () => {
+    it('correctly counts INDI, FAM, SOUR, REPO, SUBM records', async () => {
       const tree = parseGedcom(SAMPLE_GEDCOM);
       const report = await importGedcom(db, tree);
 
@@ -114,7 +114,7 @@ describe('ValidationReport', async () => {
   });
 
   describe('tagStats', async () => {
-    it('mirrors skipped field (same tags, different shape)', () => {
+    it('mirrors skipped field (same tags, different shape)', async () => {
       const tree = parseGedcom(`0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME John /Smith/\n1 _CUSTOM unknown tag\n0 TRLR`);
       const report = await importGedcom(db, tree);
 

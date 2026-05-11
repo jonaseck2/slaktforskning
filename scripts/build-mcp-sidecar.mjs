@@ -94,8 +94,10 @@ async function main() {
     const rawOut = path.join(targetDir, `mcp-server-${t.pkg}${t.ext}`);
     const finalOut = path.join(targetDir, `mcp-server-${t.suffix}${t.ext}`);
     console.log(`[build-mcp-sidecar] pkg → ${path.relative(repoRoot, finalOut)}`);
+    // Explicit @yao-pkg/pkg — the legacy `pkg` (5.8.1) only knows up to
+    // node18 and rejects `node20-*` targets.
     await run('npx', [
-      'pkg',
+      '@yao-pkg/pkg',
       bundlePath,
       '--targets', t.pkg,
       '--output', rawOut,

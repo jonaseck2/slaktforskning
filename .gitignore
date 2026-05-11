@@ -25,3 +25,4 @@ coverage/
 THIRD_PARTY_LICENSES.txt
 sbom.cdx.json
 target/
+dist-mcp/
