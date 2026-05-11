@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ToolContext } from '../prod/types';
 import { queryOne } from '../../../api/db';
+import { runScript, liveDbPath } from './ui';
 import { runScript } from './ui';
 
 interface InspectToolContext extends ToolContext {

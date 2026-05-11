@@ -24,8 +24,20 @@ async function uiPost(uiBase: string, path: string, body: unknown): Promise<unkn
 }
 
 /** Run a script in the renderer via /eval. Returns the script's return value. */
-async function runScript(uiBase: string, script: string): Promise<unknown> {
+export async function runScript(uiBase: string, script: string): Promise<unknown> {
   return await uiPost(uiBase, '/eval', { script });
+}
+
+/** Live DB path from the bridge. Returns null if unreachable or empty. */
+export async function liveDbPath(uiBase: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${uiBase}/db_path`);
+    if (!res.ok) return null;
+    const body = await res.json() as { path?: string };
+    return typeof body.path === 'string' && body.path.length ? body.path : null;
+  } catch {
+    return null;
+  }
 }
 
 export function registerUiTools(server: McpServer, uiBase: string): void {

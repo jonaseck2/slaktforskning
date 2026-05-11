@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- fix(dev-mcp): `chart_*` and `app_status` tools no longer fail with "Unexpected end of JSON input" — `runScript` and `liveDbPath` are now exported from `src/mcp/tools/dev/ui.ts` so the chart and inspect tool modules can import them at load time. Restart the dev MCP to pick up the fix.
+- fix(settings): `/link-rules` and `/gazetteers` direct links now open the matching tab inside the Settings view (previously both redirected to `/settings` and stranded on the Database tab). SettingsView reads `route.query.tab` and writes it back as the user clicks chips.
+- fix(gazetteers): the "Ta bort" button on imported gazetteer cards now renders as a styled button — was missing the `btn-sm` companion class and inherited browser default look.
 - fix(tauri): `db.switchTo` now survives the auto-reload — the renderer's boot path resumes the Rust connection's current path before falling back to the bundled default, so a switched DB doesn't silently revert to `family.db` on the next reload.
 - feat(gazetteers): country chip set now lists actual countries (Sweden, Germany, …) with Multi-country and Language packs pinned at the end — the old "World" bucket lumped 25+ unrelated gazetteers together. Bulk Enable all / Disable all buttons act on the visible (filtered) subset, with a count showing how many of those are currently active.
 - fix(gazetteers): typing in Test Lookup no longer stutters — the per-source merge is memoised and the query is debounced.
