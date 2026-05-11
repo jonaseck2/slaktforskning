@@ -4,6 +4,15 @@ import type { Directive, DirectiveBinding } from 'vue';
 // The focus listener in useScreenReaderMode reads from this map.
 export const narrationMap = new WeakMap<HTMLElement, string | (() => string)>();
 
+// Exposed on `window.__narrationMap` so the dev MCP's ARIA tools
+// (ui_aria_list / ui_aria_invoke) can read the curated narration the
+// screen-reader mode would announce. A WeakMap is GC-safe to expose;
+// per-element entries disappear when the element is unmounted by Vue.
+// Guarded for the SSR/Node test environment where `window` is undefined.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __narrationMap?: WeakMap<HTMLElement, string | (() => string)> }).__narrationMap = narrationMap;
+}
+
 // v-narrate directive.
 // Usage:
 //   v-narrate="'static text'"
