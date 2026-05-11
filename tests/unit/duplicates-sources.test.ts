@@ -373,7 +373,7 @@ describe('FK self-check — every sources.id reference must be handled by mergeS
 
   it('mergeSources handles every FK column that references sources.id', () => {
     const fkRefs = extractFkReferencesToSources(schema);
-    const mergeBlockMatch = merge.match(/export function mergeSources[\s\S]*?\n}\n/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergeSources[\s\S]*?\n}\n/m);
     expect(mergeBlockMatch).not.toBeNull();
     const mergeBlock = mergeBlockMatch![0];
 
@@ -386,7 +386,7 @@ describe('FK self-check — every sources.id reference must be handled by mergeS
   });
 
   it('mergeSources handles polymorphic source-typed media_links', () => {
-    const mergeBlockMatch = merge.match(/export function mergeSources[\s\S]*?\n}\n/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergeSources[\s\S]*?\n}\n/m);
     const mergeBlock = mergeBlockMatch![0];
     const re = /media_links[\s\S]{0,200}?entity_type\s*=\s*'source'/;
     expect(re.test(mergeBlock), `mergeSources must repoint media_links where entity_type='source'`).toBe(true);

@@ -643,7 +643,7 @@ describe('GEDCOM import - SEX value normalization', async () => {
 
   it('does not crash on GEDCOM 7.0 SEX X (intersex/non-binary)', async () => {
     const db = await createTestDb();
-    expect(() => await importGedcom(db, parseGedcom(buildGed('1 SEX X')))).not.toThrow();
+    await importGedcom(db, parseGedcom(buildGed('1 SEX X')));
     const row = (db.prepare('SELECT sex FROM persons').get([]) as { sex: string } | undefined);
     expect(row?.sex).toBe('U');
   });
@@ -656,7 +656,7 @@ describe('GEDCOM import - SEX value normalization', async () => {
 
   it('treats bare "1 SEX" (empty value) as Unknown', async () => {
     const db = await createTestDb();
-    expect(() => await importGedcom(db, parseGedcom(buildGed('1 SEX')))).not.toThrow();
+    await importGedcom(db, parseGedcom(buildGed('1 SEX')));
     expect((db.prepare('SELECT sex FROM persons').get([]) as { sex: string }).sex).toBe('U');
   });
 

@@ -344,19 +344,19 @@ defineChannel({
     let defaultName: string;
     switch (opts.entityType) {
       case 'persons':
-        csv = exportPersonsCsv(db, csvOptions);
+        csv = await exportPersonsCsv(db, csvOptions);
         defaultName = 'persons.csv';
         break;
       case 'events':
-        csv = exportEventsCsv(db, csvOptions);
+        csv = await exportEventsCsv(db, csvOptions);
         defaultName = 'events.csv';
         break;
       case 'sources':
-        csv = exportSourcesCsv(db, csvOptions);
+        csv = await exportSourcesCsv(db, csvOptions);
         defaultName = 'sources.csv';
         break;
       case 'places':
-        csv = exportPlacesCsv(db, csvOptions);
+        csv = await exportPlacesCsv(db, csvOptions);
         defaultName = 'places.csv';
         break;
       default:

@@ -407,7 +407,7 @@ describe('FK self-check — every places.id reference must be handled by mergePl
 
   it('mergePlaces handles every FK column that references places.id', () => {
     const fkRefs = extractFkReferencesToPlaces(schema);
-    const mergeBlockMatch = merge.match(/export function mergePlaces[\s\S]*?^}/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergePlaces[\s\S]*?^}/m);
     expect(mergeBlockMatch).not.toBeNull();
     const mergeBlock = mergeBlockMatch![0];
 
@@ -424,7 +424,7 @@ describe('FK self-check — every places.id reference must be handled by mergePl
   });
 
   it('mergePlaces handles polymorphic place-typed links', () => {
-    const mergeBlockMatch = merge.match(/export function mergePlaces[\s\S]*?^}/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergePlaces[\s\S]*?^}/m);
     const mergeBlock = mergeBlockMatch![0];
     for (const table of ['group_links', 'task_links', 'media_links']) {
       const re = new RegExp(`${table}[\\s\\S]{0,200}?entity_type\\s*=\\s*'place'`);

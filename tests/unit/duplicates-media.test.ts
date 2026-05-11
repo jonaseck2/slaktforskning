@@ -550,7 +550,7 @@ describe('FK self-check — every media.id reference must be handled by mergeMed
 
   it('mergeMedia handles every FK column that references media.id', () => {
     const fkRefs = extractFkReferencesToMedia(schema);
-    const mergeBlockMatch = merge.match(/export function mergeMedia[\s\S]*?\n}\n/m);
+    const mergeBlockMatch = merge.match(/export (?:async )?function mergeMedia[\s\S]*?\n}\n/m);
     expect(mergeBlockMatch).not.toBeNull();
     const mergeBlock = mergeBlockMatch![0];
 
