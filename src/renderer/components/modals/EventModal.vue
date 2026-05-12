@@ -1044,18 +1044,6 @@ function handleCancel() {
 .confidence-1 { background: var(--warning-bg); color: var(--warning-text); }
 .confidence-2 { background: var(--info-bg);    color: var(--info-text); }
 .confidence-3 { background: var(--success-bg); color: var(--success-text); }
-.ep-sec-action {
-  background: transparent;
-  border: 1px solid var(--entity-border, var(--surface-border));
-  color: var(--entity-text, var(--text-primary));
-  font-size: var(--font-xs);
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: inherit;
-}
-.ep-sec-action:hover { background: var(--entity-bg, var(--surface-hover)); filter: brightness(0.97); }
 .ep-sec-empty {
   font-size: var(--font-xs);
   color: var(--text-muted);

@@ -1455,6 +1455,18 @@ body.modal-resizing * { cursor: nwse-resize !important; user-select: none !impor
 .ep-sec-open  { font-size: 14px; font-weight: 600; color: var(--entity-text, var(--text-primary)); opacity: 0.65; }
 .ep-sec-content { padding: 8px 14px 8px; }
 .ep-sec-gap { height: 8px; }
+.ep-sec-action {
+  background: transparent;
+  border: 1px solid var(--entity-border, var(--surface-border));
+  color: var(--entity-text, var(--text-primary));
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-sec-action:hover { background: var(--entity-bg, var(--surface-hover)); filter: brightness(0.97); }
 
 /* Entity rows in sections */
 .ep-entity-row {
