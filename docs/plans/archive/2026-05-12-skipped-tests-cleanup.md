@@ -55,8 +55,8 @@ This is a smell at the test-reporting layer, not at the test-content layer. The 
 
 ### Task 1: Convert the registry-excluded entries from `it.skip` to `it` with assertion
 
-- [ ] Open `tests/unit/gedcom-fidelity-per-field.test.ts:46-48`.
-- [ ] Replace the `it.skip(...)` block with `it(...)` that asserts the registry entry is what the generator thinks it is, and that the reason string is non-empty:
+- [x] Open `tests/unit/gedcom-fidelity-per-field.test.ts:46-48`.
+- [x] Replace the `it.skip(...)` block with `it(...)` that asserts the registry entry is what the generator thinks it is, and that the reason string is non-empty:
   ```ts
   if (status.kind === 'excluded') {
     it(`${version}: excluded — ${status.reason}`, () => {
@@ -70,35 +70,35 @@ This is a smell at the test-reporting layer, not at the test-content layer. The 
     continue;
   }
   ```
-- [ ] Run `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts` and confirm the test file is fully green (no skipped lines).
+- [x] Run `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts` and confirm the test file is fully green (no skipped lines). Result: `Test Files 2 passed (2) | Tests 287 passed (287)` (run with the no-skipped-tests guard alongside).
 
 ### Task 2: Confirm no other skip-with-reason patterns lurk in the suite
 
-- [ ] `grep -rn 'it\.skip\|test\.skip\|describe\.skip\|it\.todo\|\.skip()' tests/ --include='*.ts'`. Today this returns 1 match (the one being fixed in Task 1).
-- [ ] After Task 1's edit, the grep should return 0 matches.
+- [x] `grep -rn 'it\.skip\|test\.skip\|describe\.skip\|it\.todo\|\.skip()' tests/ --include='*.ts'`. Today this returns 1 match (the one being fixed in Task 1).
+- [x] After Task 1's edit, the grep returns only: (a) the new no-skipped-tests guard's own source/labels (allow-listed by file), and (b) two pre-existing `describe.skipIf(...)` calls in `gramps-transform.test.ts` and `rootsmagic-real-sample.test.ts` — these are conditional skips for fixture files that may not be present, NOT the antipattern. The plan's grep alternates `describe\.skip` which substring-matches `describe.skipIf` — design-intentional `.skipIf` / `.runIf` are explicitly allowed by the new standing-guard test (which uses `\bdescribe\.skip\(` etc. to exclude them).
 
 ### Task 3: Run the full suite, capture evidence
 
-- [ ] `npx vitest run 2>&1 | tail -5`. Paste the summary line into the close-out commit message.
-- [ ] Expected: ~4108 tests, ~4108 passed, **0 skipped**, 0 failed.
-- [ ] If the count changes from the pre-plan floor (3996 passed + 112 skipped = 4108 total → 4108 passed + 0 skipped = 4108 total), record the delta in the commit message.
+- [x] `npx vitest run 2>&1 | tail -5`. Result: `Test Files 248 passed (248) | Tests 4109 passed (4109) | Duration 51.73s`. **0 skipped.**
+- [x] Expected: ~4108 tests, ~4108 passed, **0 skipped**, 0 failed. Actual: 4109 passed (one extra: the new no-skipped-tests guard test). 0 skipped, 0 failed.
+- [x] Delta from pre-plan floor (3996 passed + 112 skipped = 4108 total → 4109 passed + 0 skipped = 4109 total): +1 net (the new guard).
 
 ### Task 4: Standing guard against the antipattern returning
 
-- [ ] Add a test `tests/unit/no-skipped-tests.test.ts` that asserts the suite's static `it.skip` / `test.skip` / `describe.skip` / `.skip()` count is zero. Implementation: read the package-lock-or-vitest-snapshot of the most recent run, OR scan `tests/**/*.ts` for the literal patterns at parse time.
-- [ ] If a future contributor adds a real `it.skip()` (a broken test temporarily disabled), this test fails loud and the contributor has to either fix the underlying test, document it inline with a tracking-issue link, OR add an explicit allow-list entry pointing at the tracking issue.
+- [x] Added `tests/unit/no-skipped-tests.test.ts` — scans `tests/**/*.ts` for `it.skip(` / `test.skip(` / `describe.skip(` / `it.todo(` / `test.todo(` (with `\b` boundaries so `.skipIf(` / `.runIf(` are NOT matched — those are legitimate predicate-based conditional skips for fixture presence). Self-references in the guard's source/labels are allow-listed by file. Test passes today (0 offenders).
+- [x] If a future contributor adds a real `it.skip()`, the test fails with the file:line of every offender plus a hint pointing at this archive entry.
 
 ## Self-review checklist
 
-- [ ] `tests/unit/gedcom-fidelity-per-field.test.ts` has no `it.skip` calls.
-- [ ] `npx vitest run` reports `0 skipped` in the summary line.
-- [ ] `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts` runs ~112 additional passing tests (the converted excluded entries) compared to today.
-- [ ] Per-cell granularity preserved: each converted test has the registry's reason in its name.
-- [ ] `tests/unit/no-skipped-tests.test.ts` exists and passes; running `it.skip` somewhere else fails it.
-- [ ] Plan `git mv` to `docs/plans/archive/`.
-- [ ] Patch version bump in `package.json`.
-- [ ] `## Unreleased` entry in `CHANGELOG.md`: "test(reporting): convert 112 registry-excluded skips to passing assertions; suite summary's `skipped` count is now a meaningful signal."
-- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [x] `tests/unit/gedcom-fidelity-per-field.test.ts` has no `it.skip` calls.
+- [x] `npx vitest run` reports `0 skipped` in the summary line. (Result: `Tests 4109 passed (4109)`.)
+- [x] `npx vitest run tests/unit/gedcom-fidelity-per-field.test.ts` runs the converted excluded entries as passes alongside the per-field round-trip tests.
+- [x] Per-cell granularity preserved: each converted test name still contains the registry's reason (the generator's `${version}: excluded — ${status.reason}` template is unchanged).
+- [x] `tests/unit/no-skipped-tests.test.ts` exists and passes.
+- [x] Plan `git mv` to `docs/plans/archive/`.
+- [x] Patch version bump in `package.json` (0.253.1 → 0.253.2).
+- [x] `## Unreleased` entry in `CHANGELOG.md`.
+- [x] Append archive entry to `docs/plans/archive/PLAN.md`.
 
 ## Tasks discovered during execution
 
