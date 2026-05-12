@@ -596,15 +596,14 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
 
 async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {
   await window.api.mediaRegions.updateGeometry(id, rect);
-  if (selectedMediaId.value) {
-    const regs = await window.api.mediaRegions.getForMedia(selectedMediaId.value) as Array<{ id: string; person_id: string | null }>;
-    const r = regs.find(rr => rr.id === id);
-    if (r?.person_id) {
-      profilePicStore.invalidatePerson(r.person_id);
-      void profilePicStore.ensureLoaded(r.person_id);
-    }
+  await viewerRef.value?.reloadRegions();
+  // Read person_id from the viewer's already-loaded regions instead of a second IPC.
+  const r = viewerRef.value?.regions.value.find((rr: { id: string }) => rr.id === id) as
+    | { person_id: string | null } | undefined;
+  if (r?.person_id) {
+    profilePicStore.invalidatePerson(r.person_id);
+    void profilePicStore.ensureLoaded(r.person_id);
   }
-  viewerRef.value?.reloadRegions();
 }
 
 function onOpenViewerFromPanel() {

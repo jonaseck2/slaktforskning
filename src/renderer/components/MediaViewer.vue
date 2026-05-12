@@ -273,21 +273,24 @@ async function loadRegions() {
     x: number; y: number; width: number; height: number;
   }>;
 
-  const enriched: EnrichedRegion[] = [];
-  for (const r of raw) {
-    let personName = '';
-    if (r.person_id) {
-      const names = await window.api.persons.getNames(r.person_id) as Array<{
-        given_name?: string; surname?: string;
-      }>;
-      if (names.length > 0) {
-        const n = names[0];
-        personName = [n.given_name, n.surname].filter(Boolean).join(' ');
-      }
-    }
-    enriched.push({ ...r, personName });
-  }
-  enrichedRegions.value = enriched;
+  // Fetch names for all tagged persons in parallel — serial getNames calls were
+  // the dominant cost of every region refresh (each one a Tauri round-trip).
+  const namesByPersonId = new Map<string, string>();
+  const uniquePersonIds = Array.from(new Set(
+    raw.map(r => r.person_id).filter((id): id is string => !!id),
+  ));
+  const nameLists = await Promise.all(uniquePersonIds.map(pid =>
+    window.api.persons.getNames(pid) as Promise<Array<{ given_name?: string; surname?: string }>>,
+  ));
+  uniquePersonIds.forEach((pid, i) => {
+    const n = nameLists[i][0];
+    namesByPersonId.set(pid, n ? [n.given_name, n.surname].filter(Boolean).join(' ') : '');
+  });
+
+  enrichedRegions.value = raw.map(r => ({
+    ...r,
+    personName: r.person_id ? (namesByPersonId.get(r.person_id) ?? '') : '',
+  }));
 }
 
 function onImageLoad() {

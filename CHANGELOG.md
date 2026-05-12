@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- perf: face-tag drag is no longer sluggish — release-to-save round-trips collapsed from N+3 sequential IPCs to 2
 - fix: global search no longer caps at 20 persons — both sections now infinite-scroll
 - chore: drop the leftover "(Tauri)" suffix from the app's product name — the binary, bundle, and dock icon are now just "Släktforskning"
 - chore: Tauri build banner now reports the real app version — the Rust crate and bundle config were stuck at 0.1.0
