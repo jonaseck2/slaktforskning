@@ -46,6 +46,26 @@ If the plan follows a failed prior attempt — or addresses a class of bug we've
 - **Hygiene-as-verification.** Marking a UI feature done because vitest is green and lint is clean.
 - **Out-of-band scope creep.** Discovering during execution that "actually we should also do X" — that means the plan's scope was wrong from the start; pause, edit the plan, get a nod.
 - **Productive-feeling drift.** Writing detailed task lists before the user goal is in writing. Tasks before goal = mechanism before intent.
+- **Manual smoke as a process fix.** "We should smoke X before archive" is never the right answer when a regression escapes. The fix is either (a) a test that exercises X (subprocess-run an npm script and assert exit 0; mount the surface and assert behavior), or (b) the executor runs the command themselves before claiming done — with the exit code and tail of output reported as evidence. Procedural smoke steps decay the moment people are tired and shift the burden onto the user finding the regression in real use. Tests in CI run on every push; the executor's pre-claim execution is mechanical. A documented "smoke at close-out" step is just a wish that someone will be diligent.
+
+## Verification discipline at close-out
+
+Before any plan is archived (per the close-out checklist in `CLAUDE.md`), the plan's executor produces evidence — not assertion — that the Verification §1 criteria are met. Evidence is:
+
+- **Test output.** "3996 tests passed in 41 s; the new `<name>.test.ts` file covers the surface in <plan>." Paste the relevant `npm test` summary line.
+- **Run output.** "`npm run build` exited 0 in 2 min 17 s; the produced `.app` is at `<path>`." Paste the tail.
+- **MCP / UI call result.** "`ui_aria_audit()` returned N findings, including the three the plan's user goal names." Paste the JSON or the relevant snippet.
+
+What's NOT evidence:
+
+- "Tests should pass after this change." (Should — without having run them.)
+- "The build should work — only docs changed." (Should — without having built.)
+- "I'd like to smoke this before archive." (Plan to verify in the future is not verification now.)
+- "If anything is broken, the user will tell us." (Burden-shifting; user is not the smoke step.)
+
+The executor invokes `superpowers:verification-before-completion` explicitly when this discipline matters — that skill encodes the same rule. Applies to every plan close-out before it lands in `docs/plans/archive/`.
+
+**Past incident:** the Tauri full-port close-out (2026-05-12) archived with explicit gates met (tests green, lint clean, Holger import works via MCP). But `npm start = electron-forge start` was broken and `npm run build` OOM'd on the inlined gazetteers. Both would have failed CI loudly on the first push, but the executor never pushed before archiving AND never ran the commands locally. Every gap was surfaced by the user in successive rounds (`npm scripts still there?`, `npm run build fails`, `100% CPU`). Adding "manually smoke before archive" as a procedural fix would not have helped (procedures decay); having `npm run build` in CI + the executor running it locally before archiving + a `tests/unit/scripts.npm-scripts.test.ts` that subprocess-runs each script would have caught the regressions.
 
 ## Worked example
 
