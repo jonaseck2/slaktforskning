@@ -54,9 +54,28 @@ Prepend a new section after `## Unreleased` (or at the top if no Unreleased sect
 
 Group commits by type. Omit `chore:` and `style:` unless there's nothing else. Use the commit subject verbatim, stripping the type prefix.
 
-## Step 4 — Bump version in package.json
+## Step 4 — Bump version in all three manifests
 
-Update `"version"` in `package.json` to the new version string.
+The version lives in **three files** that must move in lockstep — `package.json` is the npm package, `src-tauri/Cargo.toml` is the Rust crate (this is what `cargo build` prints as `Compiling slaktforskning v…`), and `src-tauri/tauri.conf.json` is what the packaged installer reports. Drift between them means the build banner, the bundle metadata, and `package.json` disagree.
+
+Update all three:
+
+1. `package.json` — `"version": "X.Y.Z"`
+2. `src-tauri/Cargo.toml` — `version = "X.Y.Z"` (under `[package]`)
+3. `src-tauri/tauri.conf.json` — `"version": "X.Y.Z"` (top-level field)
+
+Then run `cargo update -p slaktforskning --manifest-path src-tauri/Cargo.toml` (or just `cargo build --manifest-path src-tauri/Cargo.toml` once) so `src-tauri/Cargo.lock` picks up the new crate version. The lock-file change must be in the release commit too — otherwise the next CI build re-touches it.
+
+Verify before committing:
+
+```bash
+grep '"version"' package.json
+grep '^version' src-tauri/Cargo.toml
+grep '"version"' src-tauri/tauri.conf.json
+grep -A1 'name = "slaktforskning"' src-tauri/Cargo.lock | grep version
+```
+
+All four lines must show the same `X.Y.Z`.
 
 ## Step 5 — Commit, tag, push
 

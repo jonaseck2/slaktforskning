@@ -112,7 +112,7 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 ## Version bumping
 
-**Every commit that ships a fix or feature MUST bump `package.json` version.** No exceptions, no batching. If it's worth committing, it's worth versioning.
+**Every commit that ships a fix or feature MUST bump the version in all three manifests.** No exceptions, no batching. If it's worth committing, it's worth versioning.
 
 - **Any feature** (new event type, new component, new API function, new UI element) → **minor bump** (e.g. 0.69.0 → 0.70.0)
 - **Any fix** (bug fix, i18n correction, config tweak, user feedback fix) → **patch bump** (e.g. 0.69.0 → 0.69.1)
@@ -120,14 +120,33 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 **This applies to small changes too.** Adding one event type, fixing one i18n string, changing a CSS rule — all get a version bump. A stream of unbumped commits makes it impossible to track what changed when.
 
+### Version lives in three files (keep them in lockstep)
+
+The version string is duplicated across three manifests. They MUST move together every commit:
+
+1. `package.json` → `"version": "X.Y.Z"`
+2. `src-tauri/Cargo.toml` → `version = "X.Y.Z"` under `[package]` (this is what `cargo build` prints as `Compiling slaktforskning vX.Y.Z` and what shows up in the binary)
+3. `src-tauri/tauri.conf.json` → `"version": "X.Y.Z"` (top-level field, used in the bundled installer's metadata)
+
+`src-tauri/Cargo.lock` also pins `name = "slaktforskning" / version = "…"` — update it too (the next `cargo build` would touch it anyway, so doing it in the same commit avoids a churn diff).
+
+**Why all three:** drift means the build banner, the bundle metadata, and `package.json` disagree. The crate version was at `0.1.0` for ~250 commits because only `package.json` was being bumped — every Tauri build banner reported the wrong version, and the packaged installer would have shipped `0.1.0` to users.
+
 Steps:
 1. Determine bump type from the nature of the change.
 2. Read current version from `package.json`.
 3. Calculate new version (bump the right segment, reset lower segments to 0 for minor bumps).
-4. Update `"version"` in `package.json`.
-5. Include `package.json` in the same commit.
+4. Update `"version"` in `package.json`, `version` in `src-tauri/Cargo.toml`, `"version"` in `src-tauri/tauri.conf.json`, and the `version = "…"` line under `name = "slaktforskning"` in `src-tauri/Cargo.lock`.
+5. Include all four files in the same commit.
 
-The bumped version becomes the canonical version — use it in the `CHANGELOG.md` entry.
+Verify with one grep before committing:
+
+```bash
+grep -E '"version"|^version' package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml | head -3
+grep -A1 'name = "slaktforskning"' src-tauri/Cargo.lock | grep version | head -1
+```
+
+All four lines must show the same `X.Y.Z`. The bumped version becomes the canonical version — use it in the `CHANGELOG.md` entry.
 
 ## Plan + Roadmap sync
 
