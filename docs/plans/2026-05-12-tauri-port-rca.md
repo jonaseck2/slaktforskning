@@ -186,13 +186,29 @@ This RCA is "complete" when:
 
 Item 4 is the strongest test. The RCA is complete when I can list each gap and point at the specific automated check that would have failed loud enough to block the archive commit.
 
-## Open questions for the user
+## Decisions (resolved 2026-05-12 mid-session)
 
-Before executing the queued fixes, three decisions need alignment:
+1. **L1 + L2 + L3 land in `.claude/rules/plans.md`** as proposed.
+2. **`CLAUDE.md` stays canonical.** No move to `AGENTS.md` — the project's tooling is Claude-Code-shaped end-to-end.
+3. **Direct push to `origin/main` requires local green first; PR-based work doesn't.** CI on a PR is the appropriate verification surface for the PR author + reviewer — that's what PRs are for. CI on a direct push to `main` is not; by the time CI fails, the broken commit is already in the protected branch. So the local-verification-before-push rule applies *specifically* to direct pushes to `main`, not to pushes onto a feature branch in flight to a PR. This lands as **L6** below.
 
-1. **L1 + L2 + L3 as new sections in `.claude/rules/plans.md`** — agreed shape, or do you want to push back on framing?
-2. **`AGENTS.md` vs `CLAUDE.md`.** You mentioned `AGENTS.md` (the cross-tool conventional name). Currently the project has `CLAUDE.md`. Do you want me to (a) create `AGENTS.md` as the canonical, leave `CLAUDE.md` as an alias / pointer, or (b) keep `CLAUDE.md` canonical and skip `AGENTS.md`? Other tools (Codex, Cursor) increasingly look for `AGENTS.md`; switching is conventional.
-3. **Push the 75 commits to `origin/main`.** I have not pushed any of this session's work. The first push will trigger the rewritten `ci.yml` against macOS/Windows/Linux all at once — that's the loudest test the new infrastructure gets. Approve, or hold for one more local pass?
+## Lesson L6 — Direct push to main requires local green; PRs let CI be the check
+
+CI on a PR is a contract between the author and the reviewer: you push, CI tells you what's broken, you iterate. That's the whole point of PR-based workflow. Letting CI catch regressions in that lane is correct, not antipattern.
+
+CI on a direct push to `main` is something else. By the time CI reports failure, the broken commit is already in the protected branch — and the executor was the only one with leverage to catch it pre-push. Substituting CI for local verification in that lane shifts the burden away from the executor and onto whoever notices the red main branch.
+
+The rule:
+
+> **For any commit going *directly* to `origin/main` (not through a PR), the executor has run every check CI will run, and captured evidence (exit codes, test counts, tails of output) that they passed locally. PR-based work is exempt — CI is the appropriate check there.**
+
+The same antipattern shape as L3 (manual smoke as a process) applies in this narrow lane: substituting a remote / async / automated check as the *primary* verification step shifts the burden away from the executor who has all the leverage. For PRs the substitution is correct (the PR review is the second pair of eyes). For direct pushes there's no second pair of eyes; the executor is the only check, and local must be green before push.
+
+The close-out checklist gets paired with **step 6.5** — *"if this archive is going direct to `main`: run the same checks CI will run; capture each command's exit code and the tail of its output; only then push. If it's going via PR, push and let CI report."*
+
+This lands in both `.claude/rules/plans.md` (the rules file) and `CLAUDE.md`'s "Finishing a plan" section.
+
+**Going-forward implication:** plan close-outs that warrant the worktree + subagent workflow (per CLAUDE.md's existing rule) should land via PR, not direct push. Small fixes per the "Small fixes → main is fine" rule can go direct, but bring step 6.5's local-green requirement with them.
 
 ## Tasks discovered during execution
 
