@@ -38,7 +38,7 @@ Vitest stays paired with Vite — Vite 7 needs Vitest 4 or later:
 
 - `vite-plugin-node-polyfills` — does dependency rewriting at the Rollup plugin level. Most likely to break on a Vite/Rollup major bump. If the plugin's current release doesn't support Vite 7, we either upgrade the plugin (its repo is active) or replace it with manual `resolve.alias` entries + `optimizeDeps.exclude`.
 - `vite-plugin-singlefile` — used by `vite.static.config.ts` to inline JS/CSS into one `index.html` for the static SPA / website-export bundle. Active project; check for Vite 7 release.
-- `rollup-plugin-visualizer` — only loads when a build-time env var sets it active (see `docs/plans/archive/bundle-and-memory-reduction.md`). Optional / dev-only path. Low priority.
+- `rollup-plugin-visualizer` — only loads when a build-time env var sets it active (see `docs/plans/archive/2026-05-09-bundle-and-memory-reduction.md`). Optional / dev-only path. Low priority.
 
 ### Test surfaces that mock or import Vite internals
 
@@ -65,7 +65,7 @@ User-observable outcomes:
 6. `npm run lint` 0 errors.
 7. `node_modules/vite/package.json` reports a 7.x version.
 
-### Mechanical checks (smoke)
+### Mechanical checks (live)
 
 - Renderer bundle output shape: `dist-tauri/assets/*.js` files exist, total size within ±10% of the pre-upgrade build (currently ~31 MB, dominated by the gazetteer chunk).
 - Renderer dev: hit `http://localhost:1420/` from the running Tauri dev process; verify HMR by editing a `.vue` file and observing the patch in the running window without a full reload.

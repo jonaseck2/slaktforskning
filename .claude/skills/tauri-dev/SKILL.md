@@ -1,6 +1,6 @@
 ---
 name: tauri-dev
-description: Launch, debug, and verify the Tauri app during development. Use when testing UI changes, debugging the renderer or Rust host, verifying a build, or asking how to inspect the running app. Covers `npm run tauri:dev`, the bundle build, the dev MCP UI bridge port, and where logs land. Replaces the retired `electron-dev` skill — same name pattern, Tauri-shaped contents.
+description: Launch, debug, and verify the Tauri app during development. Use when testing UI changes, debugging the renderer or Rust host, verifying a build, or asking how to inspect the running app. Covers `npm run tauri:dev`, the bundle build, the dev MCP UI bridge port, and where logs land.
 ---
 
 # Tauri Dev Skill

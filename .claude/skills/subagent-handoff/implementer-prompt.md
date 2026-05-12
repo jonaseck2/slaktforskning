@@ -77,7 +77,7 @@ Task tool (general-purpose):
        Lint, type-check, and unit tests that don't render or invoke the
        feature DO NOT count here. If the environment didn't let me verify
        (e.g. no GUI in dev container), say so explicitly: "Could not
-       smoke-check; user must verify <specific check> before merge."
+       run the live check; user must verify <specific check> before merge."
 
     3. **What I assumed / where I deviated** from the spec or user goal.
        Anything not literal in the plan: assumptions, scope decisions,

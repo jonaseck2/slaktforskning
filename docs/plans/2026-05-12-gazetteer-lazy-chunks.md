@@ -56,7 +56,7 @@ User-observable outcomes:
 - `npm run build` (after removing the `cross-env NODE_OPTIONS=--max-old-space-size=8192` prefix from the script): exits 0 in roughly the same wall time as today (~2 min cold-Rust + ~20 s Vite). Vite's "Some chunks are larger than 500 kB" warning disappears.
 - `npx vitest run` (with the renamed async test bodies): 246 files / no regression vs the pre-plan floor (currently 3991 passed).
 - `du -sh dist-tauri/assets/*-*.js | sort -h | tail -5`: the previously-30 MB `tauri-window-api-*.js` chunk is now under 1 MB. Each gazetteer is its own `<id>-*.js` chunk in the 200 KB – 2 MB range.
-- Live smoke against the running app: open Settings → Ortsregister, watch the Network panel. Each chip-click that enables a gazetteer fetches that one chunk on demand.
+- Live verification against the running app: open Settings → Ortsregister, watch the Network panel. Each chip-click that enables a gazetteer fetches that one chunk on demand.
 
 ## Failure modes / RCA reference
 
@@ -64,7 +64,7 @@ This plan exists because the Electron-retire cleanup (commit 9b3d7030) exposed a
 
 Two failure modes to design against:
 
-1. **A consumer that was synchronous becomes implicitly async and the call site forgets to `await`.** TypeScript catches most of these (`Promise<Gazetteer> | undefined` doesn't unify with `Gazetteer | undefined`). But Vue templates with `{{ getGazetteerById(id).name }}` won't fail type-check and will render `[object Promise].name` at runtime. The plan's Task 3 enumerates every template consumer; mechanical conversion + a `tests/components/` smoke check on Settings → Ortsregister catches it.
+1. **A consumer that was synchronous becomes implicitly async and the call site forgets to `await`.** TypeScript catches most of these (`Promise<Gazetteer> | undefined` doesn't unify with `Gazetteer | undefined`). But Vue templates with `{{ getGazetteerById(id).name }}` won't fail type-check and will render `[object Promise].name` at runtime. The plan's Task 3 enumerates every template consumer; mechanical conversion + a `tests/components/` mounted-component check on Settings → Ortsregister catches it.
 2. **The lazy-load contract leaks into `src/api/place-gazetteers/bundled.ts`.** That file stays sync because it's used by the Node host (tests + MCP sidecar) where loading 70 MB is fine. The two surfaces stay parallel: `bundled.ts` (sync, Node) vs `empty-gazetteers.ts` (async, renderer-via-Vite-alias). Mixing them would mean either the renderer becomes sync (and we re-introduce the OOM) or the Node code becomes async (and the MCP sidecar has to await on every place resolve). The alias regex in `vite.renderer.config.ts` is the seam; tests run with the alias off (vitest uses the real `bundled.ts`).
 
 ## Tasks
@@ -102,7 +102,7 @@ Two failure modes to design against:
 - [ ] Remove `cross-env` from `devDependencies` if nothing else needs it.
 - [ ] `npm run build` succeeds without the workaround. Time it; it should be roughly the same wall clock as today.
 
-### Task 6: Live smoke + docs
+### Task 6: Live verification + docs
 
 - [ ] In a running app, open Settings → Ortsregister, click into "Test lookup", type a Swedish place name. Confirm results appear; check the Network panel for the lazy `sv-orter-*.js` chunk fetch on first lookup.
 - [ ] Open Places view, look at the map. Pins for already-resolved places render immediately; pins for new countries lazy-load.
@@ -117,7 +117,7 @@ Two failure modes to design against:
 - [ ] `tauri-window-api-*.js` chunk is < 1 MB.
 - [ ] Each gazetteer JSON is its own chunk in `dist-tauri/assets/`.
 - [ ] No regression in `tests/unit/place-gazetteers-*.test.ts`.
-- [ ] Live smoke: Settings → Ortsregister → Test Lookup returns matches; map pins land in the right country.
+- [ ] Live verification: Settings → Ortsregister → Test Lookup returns matches; map pins land in the right country.
 - [ ] Plan `git mv` to `docs/plans/archive/`.
 - [ ] Patch version bump in `package.json` (perf fix; no user-facing feature change).
 - [ ] `## Unreleased` entry in `CHANGELOG.md` summarising the chunk split + the cross-env removal.
