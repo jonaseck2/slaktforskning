@@ -70,10 +70,12 @@ defineChannel({
 //
 // `mergeMedia` is intentionally NOT registered here — it uses synchronous
 // `fs` calls to delete and snapshot the file on disk, which is banned in
-// worker handlers (see .claude/rules/api.md "Worker-thread sync I/O"). It is
-// registered as a main-thread handler in `src/main/ipc/duplicates.ts` and
-// listed in `MAIN_THREAD_ONLY_CHANNELS` in
-// `tests/unit/ipc-worker-coverage.test.ts`.
+// worker handlers (see .claude/rules/api.md "Worker-thread sync I/O"). The
+// retired Electron build registered it as a main-thread handler in
+// `src/main/ipc/duplicates.ts`; the Tauri build polyfills it directly in
+// `src/renderer/tauri-window-api.ts` (search for `api.duplicates.mergeMedia`).
+// The `static-api.ts` stub keeps it as a noop because the static SPA is
+// read-only.
 
 defineChannel({
   name: 'duplicates:findMedia',

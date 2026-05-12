@@ -6,10 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-### [planned] Repair the broken Playwright e2e suite + rename `[smoke]` → `[boot]`
-`npx playwright test` on `main` fails — 2 of 4 projects (`[smoke]` and `[duplicates]`) throw `executeJs: renderer script timed out`. The surface that was supposed to catch the Tauri close-out's boot regression is itself broken, and the disrepair went unnoticed because nobody ran it. Diagnose the timeout cause (hypothesis: gazetteer-init burst pins the renderer); apply the fix (likely a documented timeout marker, blocked on gazetteer-lazy-chunks for the cause-side fix); rename the `[smoke]` project to `[boot]` per L3 from the Tauri-port RCA; wire `npx playwright test` into close-out evidence per L7.
-- Plan: [`plans/2026-05-12-e2e-test-repair.md`](plans/2026-05-12-e2e-test-repair.md)
-
 ### [planned] Rename `tauri-spike` → `slaktforskning`
 The Cargo crate, the Tauri bundle identifier, the inner Mach-O binary name, the macOS data-folder path, the CI cache keys, and the e2e fixture's binary-lookup strings all still read `tauri-spike` / `com.slaktforskning.tauri-spike` from the proof-of-concept phase. The Tauri port shipped in 0.252.0; the name didn't move. Clean rename — no migration code since the app has never shipped to a public user (any legacy dev data is `mv`-able by hand). After: `git grep tauri.spike` returns zero in live code.
 - Plan: [`plans/2026-05-12-rename-tauri-spike.md`](plans/2026-05-12-rename-tauri-spike.md)

@@ -1,5 +1,5 @@
 /**
- * E2E smoke for the four-tab Duplicates view.
+ * E2E coverage for the four-tab Duplicates view.
  *
  * Seeds one duplicate pair of each kind (persons, places, sources, media) via
  * `window.api.*`, opens `/duplicates`, walks the four tabs, runs each tab's
@@ -17,7 +17,7 @@
  *
  * One pair per tab, one merge per tab, one "no longer suggested" assertion
  * per tab. Tasks 1-8 already shipped ~150 unit/component tests; this is
- * smoke, not exhaustive coverage.
+ * runtime-IPC coverage, not exhaustive correctness coverage.
  */
 import { test, expect } from '@playwright/test';
 import { startApp, teardownApp, AppDriver, AppInstance } from './fixture';

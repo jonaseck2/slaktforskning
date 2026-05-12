@@ -11,26 +11,33 @@ function tempDbPath(): string {
   return path.join(os.tmpdir(), `slaktforskning-test-${Date.now()}.db`);
 }
 
-// Smoke #1: the packaged Electron app boots and the renderer mounts Vue.
-// Proves: packaged binary, main → preload → renderer → worker → SQLite chain.
+// Boot #1: the packaged Tauri app boots and the renderer mounts Vue.
+// Proves: packaged binary, Tauri host → renderer → rusqlite chain.
+//
+// Tauri's ui_server.rs exposes POST /eval (not Electron-era /execute_js)
+// and returns the raw JS value, not a { result } wrapper. The two-bug
+// migration (wrong URL + wrong response shape) was missed during the
+// Tauri port and the test silently failed on every run with
+// "Unexpected end of JSON input" — repaired here as part of the
+// e2e-test-repair plan (2026-05-12).
 test('packaged app launches and Vue mounts', async () => {
   const UI_PORT = 19200;
   let instance: AppInstance | undefined;
   try {
-    instance = await startApp(UI_PORT, 'smoke');
-    const res = await fetch(`http://127.0.0.1:${UI_PORT}/execute_js`, {
+    instance = await startApp(UI_PORT, 'boot');
+    const res = await fetch(`http://127.0.0.1:${UI_PORT}/eval`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: '!!window.__vue_router && !!window.api' }),
+      body: JSON.stringify({ script: '!!window.__vue_router && !!window.api' }),
     });
-    const body = (await res.json()) as { result?: boolean };
-    expect(body.result).toBe(true);
+    const body = (await res.json()) as boolean | { __error?: string } | { error?: string };
+    expect(body).toBe(true);
   } finally {
     await teardownApp(instance);
   }
 });
 
-// Smoke #2: prod MCP server stdio handshake.
+// Boot #2: prod MCP server stdio handshake.
 // Proves: MCP entry point + api/ wiring still loads.
 test('MCP server starts and responds', async () => {
   const dbPath = tempDbPath();
@@ -91,7 +98,7 @@ test('MCP server starts and responds', async () => {
   expect(result.output).toContain('slaktforskning');
 });
 
-// Smoke #3: dev MCP server stdio handshake (covers UI bridge + chart tools wiring).
+// Boot #3: dev MCP server stdio handshake (covers UI bridge + chart tools wiring).
 test('dev MCP server starts and responds', async () => {
   const dbPath = tempDbPath();
 

@@ -20,6 +20,7 @@ import { initializeSchema } from '../api/schema';
 import * as media from '../api/media';
 import * as checks from '../api/checks';
 import * as persons from '../api/persons';
+import * as duplicates from '../api/duplicates';
 import { queryAll } from '../api/db';
 import { undoManager } from '../api/undo';
 
@@ -284,6 +285,34 @@ export function mountWindowApi(db: Database): MountResult {
     if (!fileRef) return null;
     const maxWidth = typeof maxWidthArg === 'number' && maxWidthArg > 0 ? maxWidthArg : undefined;
     return await invoke<string | null>('media_thumbnail', { fileRef, maxWidth });
+  };
+
+  // Duplicates: mergeMedia is intentionally NOT registered in
+  // src/shared/channels/duplicates.ts because the Electron build keeps it
+  // on the main thread (it does sync fs to delete + snapshot the file).
+  // In Tauri there's no worker thread; api/ runs in the renderer; the
+  // sync fs calls inside mergeMedia run against the host fs through the
+  // Rust side. We polyfill the channel here so window.api.duplicates.mergeMedia
+  // resolves at runtime — without it, MergeMediaModal and the e2e [duplicates]
+  // project both fail with an undefined-callee error. Repaired as part of
+  // the e2e-test-repair plan (2026-05-12).
+  if (!api.duplicates) api.duplicates = {};
+  api.duplicates.mergeMedia = async (
+    targetIdArg: unknown,
+    sourceIdArg: unknown,
+    keepFileArg: unknown,
+  ) => {
+    if (typeof targetIdArg !== 'string' || typeof sourceIdArg !== 'string') {
+      throw new Error('duplicates.mergeMedia: targetId and sourceId must be strings');
+    }
+    if (keepFileArg !== 'target' && keepFileArg !== 'source') {
+      throw new Error("duplicates.mergeMedia: keepFile must be 'target' or 'source'");
+    }
+    const dbPath = await invoke<string | null>('db_current_path');
+    if (!dbPath) throw new Error('duplicates.mergeMedia: no database open');
+    const result = await duplicates.mergeMedia(getDb(), targetIdArg, sourceIdArg, keepFileArg, { dbPath });
+    fireDataChanged();
+    return result;
   };
 
   // Checks: main-only IPC channels in the Electron build (worker-local

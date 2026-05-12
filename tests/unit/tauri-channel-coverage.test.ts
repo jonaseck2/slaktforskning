@@ -121,6 +121,11 @@ describe('tauri-window-api channel coverage', () => {
       'import:rootsmagicSelectFile', 'import:grampsSelectFile',
       'import:grampsRun', 'import:rootsmagicRun', 'import:holgerRun',
       'import:genneyRun', 'import:genneyDiscover',
+      // src/main/ipc/duplicates.ts (sync fs to delete + snapshot the file —
+      // banned in worker handlers per .claude/rules/api.md, polyfilled in
+      // src/renderer/tauri-window-api.ts because the Tauri build has no
+      // worker thread)
+      'duplicates:mergeMedia',
       // src/main/ipc/website-export.ts
       'website:export', 'website:buildPreviewHtml',
       // src/main/ipc/onboarding.ts

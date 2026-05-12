@@ -48,39 +48,45 @@ A second class-of-bug surfaces if Task 1's hypothesis is wrong: the e2e fixture'
 
 ### Task 1: Diagnose the timeout cause
 
-- [ ] Run `npx playwright test --project=smoke` (today's name) and capture the timing — specifically how long the `executeJs` call inside `AppDriver.settle()` waits before timing out. Note that the renderer is observable (the dev MCP bridge serves `/eval` for ad-hoc JS) so we can independently measure "how long does Vue mount take in the packaged build" without relying on the fixture.
-- [ ] Hypothesis A: gazetteer-init burst pins the renderer. Test: time `window.__SETTINGS_VIEW_READY__` (or equivalent ready-flag) from app launch against the packaged build. If it's >5s on cold launch, hypothesis confirmed.
-- [ ] Hypothesis B: a `tauri-window-api.ts` startup race (e.g. `app_data_dir()` resolution failing before the channel registry is walked). Test: read `[tauri-window-api]` console logs from `ui_console` after launching.
-- [ ] Write findings into the "Tasks discovered during execution" section. Decision: cause confirmed → fix with documented marker; cause unclear → escalate / request user input before continuing.
+- [x] Run `npx playwright test --project=smoke` (today's name) and capture the timing — specifically how long the `executeJs` call inside `AppDriver.settle()` waits before timing out. Note that the renderer is observable (the dev MCP bridge serves `/eval` for ad-hoc JS) so we can independently measure "how long does Vue mount take in the packaged build" without relying on the fixture.
+- [x] Hypothesis A: gazetteer-init burst pins the renderer. Test: time `window.__SETTINGS_VIEW_READY__` (or equivalent ready-flag) from app launch against the packaged build. If it's >5s on cold launch, hypothesis confirmed.
+- [x] Hypothesis B: a `tauri-window-api.ts` startup race (e.g. `app_data_dir()` resolution failing before the channel registry is walked). Test: read `[tauri-window-api]` console logs from `ui_console` after launching.
+- [x] Write findings into the "Tasks discovered during execution" section. Decision: cause confirmed → fix with documented marker; cause unclear → escalate / request user input before continuing.
 
 ### Task 2: Apply the fix per Task 1's diagnosis
 
-- [ ] If gazetteer-burst confirmed: extend the `executeJs` timeout in `tests/e2e/fixture.ts` with an inline comment: `// Temporary: gazetteer-init burst can pin the renderer for up to ~15s on cold launch. Remove this once docs/plans/2026-05-12-gazetteer-lazy-chunks.md lands.` Pick a value that's pessimistic (e.g. 30s instead of the current ~5s) — better to wait a bit than have a flaky timeout.
-- [ ] Run `npx playwright test --project=smoke` and `--project=duplicates`. Both green.
+- [x] If gazetteer-burst confirmed: extend the `executeJs` timeout in `tests/e2e/fixture.ts` with an inline comment: `// Temporary: gazetteer-init burst can pin the renderer for up to ~15s on cold launch. Remove this once docs/plans/2026-05-12-gazetteer-lazy-chunks.md lands.` Pick a value that's pessimistic (e.g. 30s instead of the current ~5s) — better to wait a bit than have a flaky timeout.
+- [x] Run `npx playwright test --project=smoke` and `--project=duplicates`. Both green.
 
 ### Task 3: Rename `[smoke]` → `[boot]`
 
-- [ ] `playwright.config.ts:29`: `name: 'smoke'` → `name: 'boot'`.
-- [ ] `tests/e2e/app.test.ts:20`: `await startApp(UI_PORT, 'smoke')` → `await startApp(UI_PORT, 'boot')` (if `startApp`'s tag is used for project routing — confirm).
-- [ ] Search for any other references: `grep -rn "'smoke'\|\"smoke\"\|--project=smoke" tests/e2e/ playwright.config.ts .github/workflows/ .claude/`. Update each.
-- [ ] Run `npx playwright test` (full suite). All 4 projects green. Project names in output: `[boot]`, `[crud]`, `[website-export]`, `[duplicates]`.
+- [x] `playwright.config.ts:29`: `name: 'smoke'` → `name: 'boot'`.
+- [x] `tests/e2e/app.test.ts:20`: `await startApp(UI_PORT, 'smoke')` → `await startApp(UI_PORT, 'boot')` (if `startApp`'s tag is used for project routing — confirm).
+- [x] Search for any other references: `grep -rn "'smoke'\|\"smoke\"\|--project=smoke" tests/e2e/ playwright.config.ts .github/workflows/ .claude/`. Update each.
+- [x] Run `npx playwright test` (full suite). All 4 projects green. Project names in output: `[boot]`, `[crud]`, `[website-export]`, `[duplicates]`.
 
 ### Task 4: Wire into close-out evidence
 
-- [ ] `CLAUDE.md` "Finishing a plan" step 0: add the evidence template's `npx playwright test → 4 passed (Xs)` line item to the list. (Already implicit in "Verification discipline at close-out"; this makes the template concrete.)
-- [ ] No code change to `tests/unit/scripts.npmScripts.test.ts` — `test:e2e` stays skipped from the unit-test runner (it needs the packaged Tauri binary, which the unit-test container doesn't have).
+- [x] `CLAUDE.md` "Finishing a plan" step 0: add the evidence template's `npx playwright test → 4 passed (Xs)` line item to the list. (Already implicit in "Verification discipline at close-out"; this makes the template concrete.)
+- [x] No code change to `tests/unit/scripts.npmScripts.test.ts` — `test:e2e` stays skipped from the unit-test runner (it needs the packaged Tauri binary, which the unit-test container doesn't have).
 
 ## Self-review checklist
 
-- [ ] `npx playwright test` on a fresh checkout exits 0 with all 4 projects green.
-- [ ] `grep -rn 'smoke' tests/e2e/ playwright.config.ts` returns zero hits.
-- [ ] Any timeout extension is documented inline with a tracking comment pointing at the gazetteer-lazy-chunks plan + a re-tighten date.
-- [ ] `CLAUDE.md` "Finishing a plan" step 0 lists `npx playwright test` as expected evidence.
-- [ ] Plan `git mv` to `docs/plans/archive/`.
-- [ ] Patch version bump in `package.json`.
-- [ ] `## Unreleased` entry in `CHANGELOG.md`: "test(e2e): repair the Playwright suite (boot + duplicates timeouts); rename `[smoke]` project to `[boot]` per the `.claude/rules/plans.md` smoke-antipattern rule."
-- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [x] `npx playwright test` on a fresh checkout exits 0 with all 4 projects green.
+- [x] `grep -rn 'smoke' tests/e2e/ playwright.config.ts` returns zero hits.
+- [x] Any timeout extension is documented inline with a tracking comment pointing at the gazetteer-lazy-chunks plan + a re-tighten date.
+- [x] `CLAUDE.md` "Finishing a plan" step 0 lists `npx playwright test` as expected evidence.
+- [x] Plan `git mv` to `docs/plans/archive/`.
+- [x] Patch version bump in `package.json`.
+- [x] `## Unreleased` entry in `CHANGELOG.md`: "test(e2e): repair the Playwright suite (boot + duplicates timeouts); rename `[smoke]` project to `[boot]` per the `.claude/rules/plans.md` smoke-antipattern rule."
+- [x] Append archive entry to `docs/plans/archive/PLAN.md`.
 
 ## Tasks discovered during execution
 
-(Empty until execution starts.)
+- **Hypothesis was wrong.** The plan predicted gazetteer-init burst pinning the renderer past `executeJs`'s timeout. The gazetteer-lazy-chunks plan landed first and removed the suspected cause — but rerunning the suite revealed two real bugs the timeout symptom had been masking, neither of them timing-related:
+  1. **`[boot]` (`app.test.ts`)** never timed out. It failed at `res.json()` with "Unexpected end of JSON input" — the test was hitting the Electron-era `/execute_js` endpoint and parsing the response as `{ result: boolean }`. Tauri's `ui_server.rs` exposes `/eval` and returns the raw JS value (or `{ __error: "..." }` on throw). The two-bug migration (wrong URL + wrong response shape) was missed during the Tauri port. Repaired in-place — switched to `/eval` and `body === true`.
+  2. **`[duplicates]` (`duplicates.spec.ts`)** failed in 1.5 s on the **media** tab's `mergeMedia` call with a stack-only WebKit error. Root cause: `window.api.duplicates.mergeMedia` was **undefined** in the Tauri build. The Electron build registered `mergeMedia` as a main-thread handler in `src/main/ipc/duplicates.ts` (it does sync `fs` to delete + snapshot the file, which is banned in worker handlers per `.claude/rules/api.md`); the channel registry intentionally skips it. The Tauri port has no worker thread but ALSO had no polyfill, so the auto-walk produced an empty `api.duplicates.mergeMedia`. Repaired by adding an explicit polyfill in `src/renderer/tauri-window-api.ts` that resolves `dbPath` via `db_current_path` and calls `api/duplicates.ts`'s `mergeMedia` directly.
+- **Allowlist update.** The new polyfill required adding `duplicates:mergeMedia` to the `MAIN_ONLY_ELECTRON_CHANNELS` set in `tests/unit/tauri-channel-coverage.test.ts` so the existing coverage test stays green.
+- **Comment in `src/shared/channels/duplicates.ts`** updated to point at the new polyfill location instead of the retired `src/main/ipc/duplicates.ts`.
+- **No timeout extension applied.** The plan's contingency (extend the `executeJs` timeout if the gazetteer-burst hypothesis was confirmed) was unnecessary — the gazetteer-lazy-chunks plan removed the cause AND the actual failures were not timing-related. `tests/e2e/fixture.ts` is unmodified.
+- **Comments in `tests/e2e/duplicates.spec.ts`** purged of "smoke" usage as part of the L3 antipattern sweep (header comment + closing line in the docblock).

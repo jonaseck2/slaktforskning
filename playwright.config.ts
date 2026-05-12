@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
  * E2E config — lean by design.
  *
  * What e2e covers (and only this):
- *   • app boot + Vue mount (smoke)
+ *   • app boot + Vue mount (boot)
  *   • MCP prod + dev server stdio handshake
  *   • renderer → preload → main → worker → SQLite IPC round-trip (CRUD)
  *   • website export filesystem round-trip
@@ -26,7 +26,7 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'smoke',
+      name: 'boot',
       testMatch: 'app.test.ts',
       timeout: 60_000,
     },
