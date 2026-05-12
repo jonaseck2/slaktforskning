@@ -76,19 +76,19 @@
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
       </div>
       <div v-if="showFactValueField" class="ep-field" data-testid="event-value-field">
-        <span class="ep-field-label">{{ $t(valueLabelKey) }}</span>
-        <input class="ep-input" v-model="form.value" :placeholder="$t('events.valuePlaceholder')" />
+        <label class="ep-field-label" for="event-field-1">{{ $t(valueLabelKey) }}</label>
+        <input id="event-field-1" class="ep-input" v-model="form.value" :placeholder="$t('events.valuePlaceholder')" />
       </div>
       <div v-if="form.event_type === 'death'" class="ep-field">
-        <span class="ep-field-label">{{ $t('events.cause') }}</span>
-        <input class="ep-input" v-model="form.cause" :placeholder="$t('events.causePlaceholder')" />
+        <label class="ep-field-label" for="event-field-2">{{ $t('events.cause') }}</label>
+        <input id="event-field-2" class="ep-input" v-model="form.cause" :placeholder="$t('events.causePlaceholder')" />
       </div>
 
       <!-- Second person (only for couple events when called from a person panel) -->
       <template v-if="showSecondPersonField">
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('events.spouse') }}</span>
-          <select
+          <label class="ep-field-label" for="event-field-3">{{ $t('events.spouse') }}</label>
+          <select id="event-field-3"
             v-if="partnerOptions.length > 0 && secondPersonMode === 'select'"
             class="ep-input"
             :value="secondPersonId"
@@ -120,12 +120,12 @@
         </div>
         <template v-if="recordNameChange">
           <div class="ep-field">
-            <span class="ep-field-label">{{ $t('persons.givenName') }}</span>
-            <input class="ep-input" v-model="nameChangeForm.given_name" type="text" />
+            <label class="ep-field-label" for="event-field-4">{{ $t('persons.givenName') }}</label>
+            <input id="event-field-4" class="ep-input" v-model="nameChangeForm.given_name" type="text" />
           </div>
           <div class="ep-field">
-            <span class="ep-field-label">{{ $t('persons.surname') }}</span>
-            <input class="ep-input" v-model="nameChangeForm.surname" type="text" />
+            <label class="ep-field-label" for="event-field-5">{{ $t('persons.surname') }}</label>
+            <input id="event-field-5" class="ep-input" v-model="nameChangeForm.surname" type="text" />
           </div>
           <div class="ep-field">
             <span class="ep-field-label">{{ $t('names.nameType') }}</span>
@@ -154,8 +154,8 @@
           <SimpleDateInput v-model="baptismDate" />
         </div>
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('events.godparents') }}</span>
-          <input class="ep-input" v-model="godparents" :placeholder="$t('events.godparentsPlaceholder')" />
+          <label class="ep-field-label" for="event-field-6">{{ $t('events.godparents') }}</label>
+          <input id="event-field-6" class="ep-input" v-model="godparents" :placeholder="$t('events.godparentsPlaceholder')" />
         </div>
         <div v-if="baptismDate || godparents" class="ep-field-hint">
           {{ $t('events.baptismHint') }}
@@ -163,8 +163,8 @@
       </template>
 
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('events.notes') }}</span>
-        <textarea class="ep-input" v-model="form.notes" rows="3" :placeholder="$t('events.notesPlaceholder')" />
+        <label class="ep-field-label" for="event-field-7">{{ $t('events.notes') }}</label>
+        <textarea id="event-field-7" class="ep-input" v-model="form.notes" rows="3" :placeholder="$t('events.notesPlaceholder')" />
       </div>
     </div>
 

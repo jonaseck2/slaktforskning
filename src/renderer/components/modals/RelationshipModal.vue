@@ -27,16 +27,16 @@
 
       <!-- Subtype (conditional) -->
       <div v-if="form.type === 'couple'" class="ep-field">
-        <span class="ep-field-label">{{ $t('relationshipDetail.subtype') }}</span>
-        <select class="ep-input" v-model="form.subtype">
+        <label class="ep-field-label" for="relationship-field-1">{{ $t('relationshipDetail.subtype') }}</label>
+        <select id="relationship-field-1" class="ep-input" v-model="form.subtype">
           <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">
             {{ $t('coupleSubtypes.' + st) }}
           </option>
         </select>
       </div>
       <div v-if="form.type === 'parent_child'" class="ep-field">
-        <span class="ep-field-label">{{ $t('relationshipDetail.subtype') }}</span>
-        <select class="ep-input" v-model="form.subtype">
+        <label class="ep-field-label" for="relationship-field-2">{{ $t('relationshipDetail.subtype') }}</label>
+        <select id="relationship-field-2" class="ep-input" v-model="form.subtype">
           <!--
             person1 = parent by DB convention; the dropdown describes
             person1's role toward person2. Use parent-direction labels
@@ -71,8 +71,8 @@
 
       <!-- Notes -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('common.notes') }}</span>
-        <textarea
+        <label class="ep-field-label" for="relationship-field-3">{{ $t('common.notes') }}</label>
+        <textarea id="relationship-field-3"
           class="ep-input"
           v-model="form.notes"
           rows="3"

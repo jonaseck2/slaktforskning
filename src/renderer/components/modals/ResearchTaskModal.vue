@@ -10,8 +10,8 @@
     <div class="ep-fields">
       <!-- Task -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('researchTasks.task') }} *</span>
-        <textarea
+        <label class="ep-field-label" for="researchtask-field-1">{{ $t('researchTasks.task') }} *</label>
+        <textarea id="researchtask-field-1"
           ref="taskRef"
           class="ep-textarea"
           v-model="form.task"
@@ -52,8 +52,8 @@
 
       <!-- Notes -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('researchTasks.notes') }}</span>
-        <textarea
+        <label class="ep-field-label" for="researchtask-field-2">{{ $t('researchTasks.notes') }}</label>
+        <textarea id="researchtask-field-2"
           class="ep-textarea"
           v-model="form.notes"
           rows="2"
@@ -62,8 +62,8 @@
 
       <!-- Result (only when done/stopped) -->
       <div v-if="form.status === 'done' || form.status === 'stopped'" class="ep-field">
-        <span class="ep-field-label">{{ $t('researchTasks.result') }}</span>
-        <textarea
+        <label class="ep-field-label" for="researchtask-field-3">{{ $t('researchTasks.result') }}</label>
+        <textarea id="researchtask-field-3"
           class="ep-textarea"
           v-model="form.result"
           rows="2"

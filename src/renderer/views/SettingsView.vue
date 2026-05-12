@@ -4,13 +4,40 @@
       <h2>{{ $t('settings.title') }}</h2>
     </div>
 
-    <FilterChips :options="tabOptions" :model-value="activeTab" @update:model-value="activeTab = $event" />
+    <FilterChips
+      role="tablist"
+      tabpanel-id-prefix="settings"
+      :aria-label="$t('settings.title')"
+      :options="tabOptions"
+      :model-value="activeTab"
+      @update:model-value="activeTab = $event as Tab"
+    />
 
     <div class="settings-content">
-      <DatabaseView v-if="activeTab === 'database'" />
-      <DefaultsView v-else-if="activeTab === 'defaults'" />
-      <LinkRulesView v-else-if="activeTab === 'link-rules'" />
-      <GazetteersView v-else-if="activeTab === 'gazetteers'" />
+      <div
+        v-if="activeTab === 'database'"
+        id="settings-database"
+        role="tabpanel"
+        aria-labelledby="settings-tab-database"
+      ><DatabaseView /></div>
+      <div
+        v-else-if="activeTab === 'defaults'"
+        id="settings-defaults"
+        role="tabpanel"
+        aria-labelledby="settings-tab-defaults"
+      ><DefaultsView /></div>
+      <div
+        v-else-if="activeTab === 'link-rules'"
+        id="settings-link-rules"
+        role="tabpanel"
+        aria-labelledby="settings-tab-link-rules"
+      ><LinkRulesView /></div>
+      <div
+        v-else-if="activeTab === 'gazetteers'"
+        id="settings-gazetteers"
+        role="tabpanel"
+        aria-labelledby="settings-tab-gazetteers"
+      ><GazetteersView /></div>
     </div>
 
     <div class="settings-about">

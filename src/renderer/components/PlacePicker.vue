@@ -6,6 +6,7 @@
         type="text"
         v-model="query"
         :placeholder="placeholder || $t('places.searchPlaceholder')"
+        :aria-label="placeholder || $t('places.searchPlaceholder')"
         role="combobox"
         :aria-expanded="showDropdown && (results.length > 0 || query.length > 1)"
         aria-autocomplete="list"

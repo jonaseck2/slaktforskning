@@ -3,18 +3,60 @@
     <div class="header">
       <h2>{{ $t('nav.importExport') }}</h2>
     </div>
-    <FilterChips :options="filterOptions" :model-value="activeTab" @update:model-value="activeTab = $event" />
+    <FilterChips
+      role="tablist"
+      tabpanel-id-prefix="import-export"
+      :aria-label="$t('nav.importExport')"
+      :options="filterOptions"
+      :model-value="activeTab"
+      @update:model-value="activeTab = $event"
+    />
 
-    <template v-if="activeTab === 'gedcom'">
+    <div
+      v-if="activeTab === 'gedcom'"
+      id="import-export-gedcom"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-gedcom"
+    >
       <GedcomImportSection />
       <GedcomExportSection />
-    </template>
-    <GenneyImportSection v-if="activeTab === 'genney'" />
-    <HolgerImportSection v-if="activeTab === 'holger'" />
-    <RootsMagicImportSection v-if="activeTab === 'rootsmagic'" />
-    <GrampsImportSection v-if="activeTab === 'gramps'" />
-    <ArchiveSection v-if="activeTab === 'archive'" />
-    <CsvExportSection v-if="activeTab === 'csv'" />
+    </div>
+    <div
+      v-else-if="activeTab === 'genney'"
+      id="import-export-genney"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-genney"
+    ><GenneyImportSection /></div>
+    <div
+      v-else-if="activeTab === 'holger'"
+      id="import-export-holger"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-holger"
+    ><HolgerImportSection /></div>
+    <div
+      v-else-if="activeTab === 'rootsmagic'"
+      id="import-export-rootsmagic"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-rootsmagic"
+    ><RootsMagicImportSection /></div>
+    <div
+      v-else-if="activeTab === 'gramps'"
+      id="import-export-gramps"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-gramps"
+    ><GrampsImportSection /></div>
+    <div
+      v-else-if="activeTab === 'archive'"
+      id="import-export-archive"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-archive"
+    ><ArchiveSection /></div>
+    <div
+      v-else-if="activeTab === 'csv'"
+      id="import-export-csv"
+      role="tabpanel"
+      aria-labelledby="import-export-tab-csv"
+    ><CsvExportSection /></div>
   </div>
 </template>
 

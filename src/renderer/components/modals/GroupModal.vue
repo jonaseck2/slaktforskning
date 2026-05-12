@@ -10,16 +10,16 @@
     <!-- Fields -->
     <div class="ep-fields">
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('groups.name') }}</span>
-        <input
+        <label class="ep-field-label" for="group-field-1">{{ $t('groups.name') }}</label>
+        <input id="group-field-1"
           ref="nameRef"
           class="ep-input"
           v-model="form.name"
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('groups.notes') }}</span>
-        <textarea
+        <label class="ep-field-label" for="group-field-2">{{ $t('groups.notes') }}</label>
+        <textarea id="group-field-2"
           class="ep-textarea"
           v-model="form.notes"
           rows="3"

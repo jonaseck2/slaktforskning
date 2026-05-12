@@ -1,12 +1,21 @@
 <template>
   <div class="filter-chips">
-    <div class="filter-chips-bar">
+    <div
+      class="filter-chips-bar"
+      :role="role === 'tablist' ? 'tablist' : undefined"
+      :aria-label="role === 'tablist' ? ariaLabel : undefined"
+    >
       <button
         v-for="option in options"
         :key="option.value"
         type="button"
         class="chip-btn"
         :class="{ 'chip-btn--active': option.value === modelValue }"
+        :role="role === 'tablist' ? 'tab' : undefined"
+        :aria-selected="role === 'tablist' ? String(option.value === modelValue) : undefined"
+        :aria-controls="role === 'tablist' && tabpanelIdPrefix ? `${tabpanelIdPrefix}-${option.value}` : undefined"
+        :id="role === 'tablist' && tabpanelIdPrefix ? `${tabpanelIdPrefix}-tab-${option.value}` : undefined"
+        :tabindex="role === 'tablist' ? (option.value === modelValue ? 0 : -1) : undefined"
         @click="$emit('update:modelValue', option.value)"
       >
         {{ option.label }}
@@ -17,10 +26,30 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+withDefaults(defineProps<{
   options: Array<{ value: string; label: string; count?: number }>;
   modelValue: string;
-}>();
+  /**
+   * When set to 'tablist', the chip strip is announced as ARIA tabs (role="tablist"
+   * on the bar, role="tab" + aria-selected on each chip). Pair with `tabpanelIdPrefix`
+   * to wire `aria-controls` so a screen reader can jump from a tab to its panel.
+   * Default is the filter pattern (no role — chips are plain buttons that filter
+   * the surrounding content; "tab" semantics would lie about what they do).
+   */
+  role?: 'tablist' | 'filter';
+  /**
+   * When `role="tablist"`, prefix used to build `aria-controls`/`id` for tab and
+   * panel association. The owning view should render the active panel with
+   * `id="<prefix>-<value>"` and `role="tabpanel"` `aria-labelledby="<prefix>-tab-<value>"`.
+   */
+  tabpanelIdPrefix?: string;
+  /** Optional accessible name for the tablist (when `role="tablist"`). */
+  ariaLabel?: string;
+}>(), {
+  role: 'filter',
+  tabpanelIdPrefix: undefined,
+  ariaLabel: undefined,
+});
 
 defineEmits<{ 'update:modelValue': [value: string] }>();
 </script>

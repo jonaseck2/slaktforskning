@@ -27,8 +27,8 @@
       />
 
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('common.notes') }}</span>
-        <textarea
+        <label class="ep-field-label" for="place-field-1">{{ $t('common.notes') }}</label>
+        <textarea id="place-field-1"
           class="ep-textarea"
           v-model="form.notes"
           rows="3"

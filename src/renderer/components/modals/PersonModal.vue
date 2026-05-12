@@ -33,8 +33,8 @@
     <!-- Other-parent picker (only when adding a child/son/daughter to a person who has partner(s)) -->
     <div v-if="isChildMode && partnerOptions.length > 0" class="ep-fields">
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('addRelated.otherParent') }}</span>
-        <select class="ep-input" v-model="secondParentId">
+        <label class="ep-field-label" for="person-field-1">{{ $t('addRelated.otherParent') }}</label>
+        <select id="person-field-1" class="ep-input" v-model="secondParentId">
           <option :value="null">{{ $t('addRelated.noOtherParent') }}</option>
           <option v-for="opt in partnerOptions" :key="opt.id" :value="opt.id">{{ opt.label }}</option>
         </select>
@@ -70,8 +70,8 @@
 
       <!-- Subtype (existing person path) -->
       <div v-if="addRelatedTo" class="ep-field">
-        <span class="ep-field-label">{{ addRelatedTo.mode === 'spouse' ? $t('personDetail.coupleSubtype') : $t('relationshipDetail.subtype') }}</span>
-        <select class="ep-input" v-model="form.subtype">
+        <label class="ep-field-label" for="person-field-2">{{ addRelatedTo.mode === 'spouse' ? $t('personDetail.coupleSubtype') : $t('relationshipDetail.subtype') }}</label>
+        <select id="person-field-2" class="ep-input" v-model="form.subtype">
           <template v-if="addRelatedTo.mode === 'spouse'">
             <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
           </template>
@@ -101,8 +101,8 @@
         </div>
         <!-- Subtype (new person path, when addRelatedTo is set) -->
         <div v-if="addRelatedTo" class="ep-field">
-          <span class="ep-field-label">{{ addRelatedTo.mode === 'spouse' ? $t('personDetail.coupleSubtype') : $t('relationshipDetail.subtype') }}</span>
-          <select class="ep-input" v-model="form.subtype">
+          <label class="ep-field-label" for="person-field-3">{{ addRelatedTo.mode === 'spouse' ? $t('personDetail.coupleSubtype') : $t('relationshipDetail.subtype') }}</label>
+          <select id="person-field-3" class="ep-input" v-model="form.subtype">
             <template v-if="addRelatedTo.mode === 'spouse'">
               <option v-for="st in COUPLE_SUBTYPE_VALUES" :key="st" :value="st">{{ $t('coupleSubtypes.' + st) }}</option>
             </template>
@@ -113,9 +113,9 @@
         </div>
 
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('persons.name') }}</span>
+          <label class="ep-field-label" for="person-field-4">{{ $t('persons.name') }}</label>
           <div class="ep-name-row">
-            <input
+            <input id="person-field-4"
               ref="givenNameRef"
               class="ep-input ep-input--name"
               v-model="form.given_name"

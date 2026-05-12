@@ -20,8 +20,8 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.pageLocation') }}</span>
-        <input
+        <label class="ep-field-label" for="citation-field-1">{{ $t('citations.pageLocation') }}</label>
+        <input id="citation-field-1"
           ref="pageRef"
           class="ep-input"
           v-model="form.page"
@@ -29,8 +29,8 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.transcription') }}</span>
-        <textarea
+        <label class="ep-field-label" for="citation-field-2">{{ $t('citations.transcription') }}</label>
+        <textarea id="citation-field-2"
           class="ep-textarea"
           v-model="form.transcription"
           :placeholder="$t('citations.transcriptionPlaceholder')"
@@ -38,8 +38,8 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.notes') }}</span>
-        <textarea
+        <label class="ep-field-label" for="citation-field-3">{{ $t('citations.notes') }}</label>
+        <textarea id="citation-field-3"
           class="ep-textarea"
           v-model="form.notes"
           :placeholder="$t('citations.notesPlaceholder')"
@@ -60,8 +60,8 @@
         </div>
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('citations.dateAccessed') }}</span>
-        <input class="ep-input" type="date" v-model="form.date_accessed" />
+        <label class="ep-field-label" for="citation-field-4">{{ $t('citations.dateAccessed') }}</label>
+        <input id="citation-field-4" class="ep-input" type="date" v-model="form.date_accessed" />
       </div>
     </div>
 

@@ -24,6 +24,9 @@
       <FilterChips
         v-if="focalPerson"
         class="viz-tabs"
+        role="tablist"
+        tabpanel-id-prefix="viz"
+        :aria-label="$t('persons.familyTree')"
         :model-value="activeTab"
         :options="[
           { value: 'pedigree',    label: $t('visualization.tab.pedigree') },
@@ -42,7 +45,14 @@
       <AppEmptyState v-else-if="noFocalPerson" icon="🌳" :title="$t('visualization.noFocalPerson')" :description="$t('empty.noFocalPerson')" data-testid="viz-no-focal" />
 
       <!-- Chart content -->
-      <div v-else-if="focalPerson" class="viz-chart-content" data-testid="viz-area">
+      <div
+        v-else-if="focalPerson"
+        class="viz-chart-content"
+        data-testid="viz-area"
+        role="tabpanel"
+        :id="`viz-${activeTab}`"
+        :aria-labelledby="`viz-tab-${activeTab}`"
+      >
         <PedigreeChart
           v-if="activeTab === 'pedigree'"
           ref="pedigreeChartRef"

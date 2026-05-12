@@ -85,8 +85,8 @@
 
       <!-- Preferred name (only for birth names) -->
       <div v-if="form.name_type === 'birth'" class="ep-field">
-        <span class="ep-field-label">{{ $t('persons.preferredName') }}</span>
-        <input
+        <label class="ep-field-label" for="personname-field-1">{{ $t('persons.preferredName') }}</label>
+        <input id="personname-field-1"
           class="ep-input"
           v-model="form.preferred_name"
           type="text"
@@ -97,8 +97,8 @@
 
       <!-- Nickname -->
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('persons.nickname') }}</span>
-        <input
+        <label class="ep-field-label" for="personname-field-2">{{ $t('persons.nickname') }}</label>
+        <input id="personname-field-2"
           class="ep-input"
           v-model="form.nickname"
           type="text"
@@ -113,8 +113,8 @@
 
         <!-- Qualifier -->
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('names.qualifier') }}</span>
-          <select class="ep-input" v-model="form.name_qualifier">
+          <label class="ep-field-label" for="personname-field-3">{{ $t('names.qualifier') }}</label>
+          <select id="personname-field-3" class="ep-input" v-model="form.name_qualifier">
             <option value="">—</option>
             <option value="patronymic">{{ $t('names.qualifierPatronymic') }}</option>
             <option value="matronymic">{{ $t('names.qualifierMatronymic') }}</option>
@@ -124,8 +124,8 @@
 
         <!-- Patronymic base (only when qualifier is patronymic/matronymic) -->
         <div v-if="form.name_qualifier === 'patronymic' || form.name_qualifier === 'matronymic'" class="ep-field">
-          <span class="ep-field-label">{{ $t('names.patronymicBase') }}</span>
-          <input
+          <label class="ep-field-label" for="personname-field-4">{{ $t('names.patronymicBase') }}</label>
+          <input id="personname-field-4"
             class="ep-input"
             v-model="form.patronymic_base"
             type="text"
@@ -136,8 +136,8 @@
 
         <!-- Prefix -->
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('names.prefix') }}</span>
-          <input
+          <label class="ep-field-label" for="personname-field-5">{{ $t('names.prefix') }}</label>
+          <input id="personname-field-5"
             class="ep-input"
             v-model="form.name_prefix"
             type="text"
@@ -148,8 +148,8 @@
 
         <!-- Suffix -->
         <div class="ep-field">
-          <span class="ep-field-label">{{ $t('names.suffix') }}</span>
-          <input
+          <label class="ep-field-label" for="personname-field-6">{{ $t('names.suffix') }}</label>
+          <input id="personname-field-6"
             class="ep-input"
             v-model="form.name_suffix"
             type="text"

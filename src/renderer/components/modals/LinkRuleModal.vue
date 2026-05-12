@@ -10,8 +10,9 @@
   >
     <div class="ep-fields">
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('linkRules.name') }}</span>
+        <label class="ep-field-label" for="link-rule-name">{{ $t('linkRules.name') }}</label>
         <input
+          id="link-rule-name"
           ref="nameRef"
           class="ep-input"
           v-model="form.name"
@@ -19,8 +20,9 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('linkRules.pattern') }}</span>
+        <label class="ep-field-label" for="link-rule-pattern">{{ $t('linkRules.pattern') }}</label>
         <input
+          id="link-rule-pattern"
           class="ep-input mono"
           v-model="form.pattern"
           :readonly="props.mode === 'view'"
@@ -29,16 +31,18 @@
         <span v-if="patternError" class="ep-field-error">{{ patternError }}</span>
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('linkRules.urlTemplate') }}</span>
+        <label class="ep-field-label" for="link-rule-url-template">{{ $t('linkRules.urlTemplate') }}</label>
         <input
+          id="link-rule-url-template"
           class="ep-input mono"
           v-model="form.urlTemplate"
           :readonly="props.mode === 'view'"
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('linkRules.example') }}</span>
+        <label class="ep-field-label" for="link-rule-example">{{ $t('linkRules.example') }}</label>
         <input
+          id="link-rule-example"
           class="ep-input"
           v-model="form.example"
           :placeholder="props.mode === 'add' ? $t('linkRules.examplePlaceholder') : ''"
@@ -52,8 +56,9 @@
         <div v-if="exampleMatchUrl" class="ep-match-url">→ {{ exampleMatchUrl }}</div>
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('linkRules.priority') }}</span>
+        <label class="ep-field-label" for="link-rule-priority">{{ $t('linkRules.priority') }}</label>
         <input
+          id="link-rule-priority"
           class="ep-input"
           v-model.number="form.priority"
           type="number"

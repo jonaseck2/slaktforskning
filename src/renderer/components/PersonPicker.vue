@@ -6,6 +6,7 @@
         type="text"
         :value="searchQuery"
         :placeholder="placeholder"
+        :aria-label="placeholder"
         role="combobox"
         :aria-expanded="open && results.length > 0"
         aria-autocomplete="list"

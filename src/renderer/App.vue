@@ -266,7 +266,12 @@
       </nav>
     </header>
 
-    <main id="main-content" :class="['content', { 'content-paneled': isPaneledView }]" @click="openSection = null">
+    <main
+      id="main-content"
+      :class="['content', { 'content-paneled': isPaneledView }]"
+      :aria-label="mainAriaLabel"
+      @click="openSection = null"
+    >
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="CACHED_VIEWS">
           <component
@@ -461,6 +466,40 @@ watch(() => route.path, () => {
 const CACHED_VIEWS = ['PersonsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/groups', '/research-tasks', '/website'];
 const isPaneledView = computed(() => PANELED_ROUTES.some(r => route.path.startsWith(r)));
+
+// Accessible name for the <main> landmark, derived from the active route. A
+// screen-reader user navigating by landmark (D in NVDA, VO+U in VoiceOver)
+// hears this as the region's name. Falls back to the app title for routes
+// without an explicit i18n entry (e.g. /search subroutes), which is still
+// better than an unnamed landmark.
+const ROUTE_TITLE_KEYS: Array<{ prefix: string; key: string }> = [
+  { prefix: '/persons', key: 'nav.people' },
+  { prefix: '/places', key: 'places.title' },
+  { prefix: '/media', key: 'media.nav' },
+  { prefix: '/search', key: 'nav.search' },
+  { prefix: '/groups', key: 'nav.groups' },
+  { prefix: '/research-tasks', key: 'nav.researchTasks' },
+  { prefix: '/sources', key: 'nav.sources' },
+  { prefix: '/quality', key: 'nav.quality' },
+  { prefix: '/duplicates', key: 'nav.duplicates' },
+  { prefix: '/reports', key: 'reports.nav' },
+  { prefix: '/prints', key: 'nav.framablePrints' },
+  { prefix: '/website', key: 'nav.website' },
+  { prefix: '/import-export', key: 'nav.importExport' },
+  { prefix: '/settings', key: 'nav.settings' },
+];
+const mainAriaLabel = computed(() => {
+  const path = route.path;
+  if (path === '/') return t('nav.people');
+  // Longest-prefix match so '/research-tasks/123' wins over '/' and '/persons/abc' over '/'
+  let best: { prefix: string; key: string } | null = null;
+  for (const entry of ROUTE_TITLE_KEYS) {
+    if (path === entry.prefix || path.startsWith(entry.prefix + '/')) {
+      if (!best || entry.prefix.length > best.prefix.length) best = entry;
+    }
+  }
+  return best ? t(best.key) : t('app.title');
+});
 const qualityErrorCount = ref(0);
 const openTaskCount = ref(0);
 const duplicateCount = ref(0);

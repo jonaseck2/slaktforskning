@@ -9,8 +9,8 @@
   >
     <div class="ep-fields">
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.sourceTitle') }}</span>
-        <input
+        <label class="ep-field-label" for="source-field-1">{{ $t('sources.sourceTitle') }}</label>
+        <input id="source-field-1"
           ref="titleRef"
           class="ep-input"
           v-model="form.title"
@@ -19,28 +19,28 @@
         />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.sourceType') }}</span>
-        <select class="ep-input" v-model="form.source_type">
+        <label class="ep-field-label" for="source-field-2">{{ $t('sources.sourceType') }}</label>
+        <select id="source-field-2" class="ep-input" v-model="form.source_type">
           <option v-for="st in sortedSourceTypes" :key="st" :value="st">
             {{ $t('sourceTypes.' + st) }}
           </option>
         </select>
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.author') }}</span>
-        <input class="ep-input" v-model="form.author" :placeholder="$t('sources.authorPlaceholder')" />
+        <label class="ep-field-label" for="source-field-3">{{ $t('sources.author') }}</label>
+        <input id="source-field-3" class="ep-input" v-model="form.author" :placeholder="$t('sources.authorPlaceholder')" />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.publicationInfo') }}</span>
-        <input class="ep-input" v-model="form.publication_info" :placeholder="$t('sources.publicationInfoPlaceholder')" />
+        <label class="ep-field-label" for="source-field-4">{{ $t('sources.publicationInfo') }}</label>
+        <input id="source-field-4" class="ep-input" v-model="form.publication_info" :placeholder="$t('sources.publicationInfoPlaceholder')" />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.repository') }}</span>
-        <input class="ep-input" v-model="form.repository" :placeholder="$t('sources.repositoryPlaceholder')" />
+        <label class="ep-field-label" for="source-field-5">{{ $t('sources.repository') }}</label>
+        <input id="source-field-5" class="ep-input" v-model="form.repository" :placeholder="$t('sources.repositoryPlaceholder')" />
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('sources.url') }}</span>
-        <input class="ep-input" v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
+        <label class="ep-field-label" for="source-field-6">{{ $t('sources.url') }}</label>
+        <input id="source-field-6" class="ep-input" v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
       </div>
     </div>
 

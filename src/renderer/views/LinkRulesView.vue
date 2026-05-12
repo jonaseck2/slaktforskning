@@ -13,40 +13,45 @@
         <h4>{{ $t('linkRules.defaultRuleSets') }}</h4>
       </div>
       <div class="locale-toggles">
-        <label class="locale-toggle">
+        <label class="locale-toggle" for="link-rules-locale-sv">
           <input
+            id="link-rules-locale-sv"
             type="checkbox"
             :checked="config.enabledLocales.includes('sv')"
             @change="toggleLocale('sv', ($event.target as HTMLInputElement).checked)"
           />
           {{ $t('linkRules.swedish') }}
         </label>
-        <label class="locale-toggle">
+        <label class="locale-toggle" for="link-rules-locale-en">
           <input
+            id="link-rules-locale-en"
             type="checkbox"
             :checked="config.enabledLocales.includes('en')"
             @change="toggleLocale('en', ($event.target as HTMLInputElement).checked)"
           />
           {{ $t('linkRules.english') }}
         </label>
-        <label class="locale-toggle">
+        <label class="locale-toggle" for="link-rules-locale-de">
           <input
+            id="link-rules-locale-de"
             type="checkbox"
             :checked="config.enabledLocales.includes('de')"
             @change="toggleLocale('de', ($event.target as HTMLInputElement).checked)"
           />
           {{ $t('linkRules.german') }}
         </label>
-        <label class="locale-toggle">
+        <label class="locale-toggle" for="link-rules-locale-da">
           <input
+            id="link-rules-locale-da"
             type="checkbox"
             :checked="config.enabledLocales.includes('da')"
             @change="toggleLocale('da', ($event.target as HTMLInputElement).checked)"
           />
           {{ $t('linkRules.danish') }}
         </label>
-        <label class="locale-toggle">
+        <label class="locale-toggle" for="link-rules-locale-no">
           <input
+            id="link-rules-locale-no"
             type="checkbox"
             :checked="config.enabledLocales.includes('no')"
             @change="toggleLocale('no', ($event.target as HTMLInputElement).checked)"
@@ -81,6 +86,7 @@
             <td>
               <input
                 type="checkbox"
+                :aria-label="$t('linkRules.enabled') + ': ' + rule.name"
                 :checked="rule.enabled"
                 @click.stop
                 @change="toggleRule(rule.id, ($event.target as HTMLInputElement).checked)"

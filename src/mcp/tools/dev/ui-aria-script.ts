@@ -233,13 +233,26 @@ export function runAriaQuery(
       }
       if (parts.length) return parts.join(' ');
     }
-    // 4. <label for="id"> association
+    // 4. <label for="id"> association — also accepts an implicit (wrapping)
+    // <label> ancestor (the HTML spec form). Either form makes the label
+    // programmatically associated with the input for screen readers.
     const id = el.getAttribute('id');
     if (id) {
       const label = document.querySelector('label[for="' + (window.CSS && window.CSS.escape ? window.CSS.escape(id) : id) + '"]');
       if (label) {
         const t = (label.textContent ?? '').trim();
         if (t) return t;
+      }
+    }
+    {
+      let cur: Element | null = el.parentElement;
+      while (cur && cur !== document.body) {
+        if (cur.tagName.toLowerCase() === 'label') {
+          const t = (cur.textContent ?? '').trim();
+          if (t) return t;
+          break;
+        }
+        cur = cur.parentElement;
       }
     }
     // 5. Own visible text content (trimmed, aria-hidden excluded)
@@ -280,6 +293,18 @@ export function runAriaQuery(
     if (id) {
       const lbl = document.querySelector('label[for="' + (window.CSS && window.CSS.escape ? window.CSS.escape(id) : id) + '"]');
       if (lbl && (lbl.textContent ?? '').trim()) return 'label-for';
+    }
+    {
+      // Implicit (wrapping) <label> ancestor. WHATWG spec treats it as a
+      // form-control labelling association.
+      let cur: Element | null = el.parentElement;
+      while (cur && cur !== document.body) {
+        if (cur.tagName.toLowerCase() === 'label') {
+          if ((cur.textContent ?? '').trim()) return 'label-for';
+          break;
+        }
+        cur = cur.parentElement;
+      }
     }
     if (visibleText(el)) return 'text';
     const ph = el.getAttribute('placeholder');
