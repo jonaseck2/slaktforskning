@@ -6,6 +6,10 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+### [planned] Gazetteer lazy chunks
+The renderer bundle's 30 MB `tauri-window-api-*.js` chunk is dominated by `import.meta.glob('../api/place-gazetteers/data/*.json', { eager: true })` in `src/renderer/empty-gazetteers.ts`, which inlines every gazetteer JSON (~70 MB raw) at build time. This forced the `NODE_OPTIONS=--max-old-space-size=8192` workaround in `package.json` and makes app cold-start parse 70 MB of JSON even if the user only opens Sweden. Switching to `eager: false` lets Vite code-split each gazetteer JSON into its own lazy chunk loaded on demand. Removes the heap-bump workaround.
+- Plan: [`plans/2026-05-12-gazetteer-lazy-chunks.md`](plans/2026-05-12-gazetteer-lazy-chunks.md)
+
 ### [planned] App-level a11y gaps (surfaced by `ui_aria_audit`)
 The dev MCP's `ui_aria_audit` tool (shipped 2026-05-12 in the ARIA-MCP plan) found 27 a11y findings on Settings → Länkregler alone — Settings chip strip without `role="tab"`, modal form inputs without label associations, 12 unnamed row-checkboxes, unnamed `<main>`. Same pattern likely repeats across every modal + form-driven view. This plan closes those gaps and adds a CI test (`tests/components/aria-audit-zero-findings.test.ts`) that fails the build on any new a11y gap.
 - Plan: [`plans/2026-05-12-app-a11y-gaps.md`](plans/2026-05-12-app-a11y-gaps.md)
