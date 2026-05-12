@@ -588,7 +588,7 @@ Walked every `SKILL.md` in `.claude/skills/`. Verdicts:
   async by default. The user goal this skill guarded ("renderer doesn't
   freeze during long imports") is satisfied architecturally. The skill's
   bug history is still valuable as historical RCA — move the body to
-  `docs/plans/archive/notes-electron-worker-split.md` and delete the
+  `docs/plans/archive/2026-05-10-notes-electron-worker-split.md` and delete the
   skill file.
 
 - `electron-dev` — Electron-specific dev loop instructions. Replaced by
