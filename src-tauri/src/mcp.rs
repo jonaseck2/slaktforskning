@@ -62,7 +62,7 @@ pub async fn probe_mcp_sidecar(repo_root: &str, db_path: &str) -> McpProbe {
     let mut reader = BufReader::new(stdout).lines();
 
     // MCP initialize request — minimal valid shape.
-    let init_msg = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"tauri-spike-probe","version":"0.1"}}}"#;
+    let init_msg = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"slaktforskning-probe","version":"0.1"}}}"#;
     if let Err(e) = stdin.write_all(format!("{init_msg}\n").as_bytes()).await {
         let _ = child.kill().await;
         return McpProbe {

@@ -16,6 +16,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const port = process.env.SLAKTFORSKNING_UI_PORT || '19241';
 
+// Read the Tauri bundle identifier once so the fallback DB path stays in sync
+// with whatever `src-tauri/tauri.conf.json` declares. The next rename then
+// becomes a one-place edit in tauri.conf.json instead of hunting for hardcoded
+// strings across scripts.
+function readIdentifier() {
+  try {
+    const conf = JSON.parse(
+      fs.readFileSync(path.join(repoRoot, 'src-tauri', 'tauri.conf.json'), 'utf8'),
+    );
+    if (typeof conf?.identifier === 'string' && conf.identifier.length) {
+      return conf.identifier;
+    }
+  } catch {
+    // fall through to a sensible default
+  }
+  return 'com.slaktforskning.app';
+}
+const bundleIdentifier = readIdentifier();
+
 // dev or prod entry, picked by argv[2]: 'dev' → devServer.ts, anything else → server.ts
 const variant = process.argv[2] === 'dev' ? 'devServer' : 'server';
 const entry = path.join(repoRoot, 'src', 'mcp', `${variant}.ts`);
@@ -42,11 +61,12 @@ if (active) {
 } else if (env.SLAKTFORSKNING_DB) {
   process.stderr.write(`[mcp-tauri] app not reachable, using SLAKTFORSKNING_DB=${env.SLAKTFORSKNING_DB}\n`);
 } else {
-  // Fallback to the Tauri spike's hardcoded default so we at least line up
-  // when the app isn't running for the very first launch.
+  // Fallback to the Tauri bundle's default DB path so we at least line up
+  // when the app isn't running for the very first launch. The identifier is
+  // read from src-tauri/tauri.conf.json so this stays in sync after renames.
   const fallback = path.join(
     process.env.HOME || '',
-    'Library/Application Support/com.slaktforskning.tauri-spike/family.db',
+    `Library/Application Support/${bundleIdentifier}/family.db`,
   );
   if (fs.existsSync(path.dirname(fallback))) {
     env.SLAKTFORSKNING_DB = fallback;

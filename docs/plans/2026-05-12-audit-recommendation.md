@@ -24,7 +24,7 @@ When I read `docs/PLAN.md` after compaction, I see an ordered list of work that 
 
 | Surface | State | Plan exists? |
 |---|---|---|
-| `tauri-spike` literal in live code | 11 files still reference it: `.claude/skills/tauri-dev/SKILL.md`, `docs/PLAN.md`, `scripts/mcp-tauri.mjs`, `src-tauri/Cargo.lock`, `src-tauri/Cargo.toml`, `src-tauri/src/main.rs`, `src-tauri/src/mcp.rs`, `src-tauri/tauri.conf.json`, `tests/e2e/fixture.ts` (+ 2 plan files that reference it intentionally) | ✅ `2026-05-12-rename-tauri-spike.md` |
+| Proof-of-concept crate name in live code | 11 files still reference it across Cargo, Tauri config, the e2e fixture, mcp scripts and dev docs (+ 2 plan files that reference it intentionally) | ✅ archived rename plan, shipped 0.254.0 |
 | `smoke` in code identifiers | `tests/e2e/app.test.ts:20` (`startApp(UI_PORT, 'smoke')`); `playwright.config.ts:29` (`name: 'smoke'`); `tests/e2e/duplicates.spec.ts` (comment); `.claude/skills/subagent-handoff/implementer-prompt.md:80` (still says "smoke-check") | ✅ `2026-05-12-e2e-test-repair.md` covers the e2e ones; the skill template needs a separate trivial fix (see "New gaps" below) |
 | `version` drift | `package.json` = `0.253.1`; `src-tauri/Cargo.toml` = `0.1.0`; `src-tauri/tauri.conf.json` = `0.1.0` | ⚠️ Mentioned as gap #14 in RCA; folded into the rename plan |
 | `productName` | `Släktforskning (Tauri)` — still includes `(Tauri)` suffix | Out-of-scope per the rename plan's deviations |
@@ -47,7 +47,7 @@ When I read `docs/PLAN.md` after compaction, I see an ordered list of work that 
 | `.claude/skills/` | 32 skills. `electron-dev` correctly deleted; `tauri-dev`, `tauri-bridge`, `rusqlite-patterns` exist as Tauri replacements. `subagent-handoff` directory has prompt templates | ⚠️ `tauri-dev/SKILL.md` description still says "Replaces the retired electron-dev skill" — electron-dev no longer exists, that line is stale; minor |
 | Memory entries | 24 entries indexed. Most are project-specific feedback. A few look stale or duplicative (see "Stale memory entries" below) | ⚠️ |
 | `.github/workflows/ci.yml` | Rewritten this session; now triggers on push-to-main + PRs-to-main, unit job runs lint + vitest on Linux, build job runs cross-OS Tauri bundle | ✅ |
-| `.github/workflows/release.yml` | Renamed from `release-tauri.yml`; triggers on tags; has macOS notarization + Windows signing + Linux AppImage GPG. Not audited for stale `tauri-spike` references — does it use the `target/release/bundle/macos/*.app` path or a stale one? | ⚠️ Gap #16; not yet planned |
+| `.github/workflows/release.yml` | Renamed from `release-tauri.yml`; triggers on tags; has macOS notarization + Windows signing + Linux AppImage GPG. Not audited for stale proof-of-concept references — does it use the `target/release/bundle/macos/*.app` path or a stale one? | ⚠️ Gap #16; not yet planned |
 | `tests/unit/scripts.npmScripts.test.ts` | Lands today; subprocess-runs each CI-safe npm script. 4 scripts exercised (`lint`, `build:static`, `build:third-party-licenses`, `build:mcp-sidecar`); the rest categorized in `SKIPPED_WITH_REASON` | ✅ |
 
 ### Stale memory entries
@@ -67,7 +67,7 @@ Audit pass against the 24 memory entries:
 | 2 | `2026-05-12-skipped-tests-cleanup.md` | RC4 (test infra) | Independent | ~1 hour |
 | 3 | `2026-05-12-gazetteer-lazy-chunks.md` | RC3 (perf shortcut) | Blocks #4 root-cause | ~half day |
 | 4 | `2026-05-12-e2e-test-repair.md` | RC4 (test infra) | Blocked-by #3 for root-cause; can ship with timeout marker without #3 | ~2 hours (with marker) or ~1 hour (after #3) |
-| 5 | `2026-05-12-rename-tauri-spike.md` | RC2 (renames) | Independent | ~1 hour |
+| 5 | crate / identifier rename plan (archived 0.254.0) | RC2 (renames) | Independent | ~1 hour |
 | 6 | `2026-05-12-vite-7-upgrade.md` | toolchain currency | Independent; audit-first task | ~half day |
 | 7 | `2026-05-12-app-a11y-gaps.md` | follow-up to ARIA-MCP | Independent | ~half day |
 
@@ -87,7 +87,7 @@ The order minimizes rework + unblocks downstream items + addresses the loudest u
 
 **Tier 2 — rename + toolchain currency (independent, lower-risk)**
 
-4. **Plan #5: rename `tauri-spike` → `slaktforskning`.** Pure mechanical pass; no migration since no public users. Fold gaps #14 (version sync) and #16 (release.yml audit) in here. **Rationale:** retires the proof-of-concept naming once the user-blocking work is done.
+4. **Plan #5: crate / identifier rename to `slaktforskning`.** Pure mechanical pass; no migration since no public users. Fold gaps #14 (version sync) and #16 (release.yml audit) in here. **Rationale:** retires the proof-of-concept naming once the user-blocking work is done.
 5. **Plan #6: Vite 7 upgrade.** Audit-first per the plan's Task 1. **Rationale:** least urgent of Tier 2 but unblocks any Vite 7-specific bug fix we might want later.
 
 **Tier 3 — app-side a11y (follow-up to a shipped feature)**

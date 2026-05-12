@@ -6,10 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-### [planned] Rename `tauri-spike` → `slaktforskning`
-The Cargo crate, the Tauri bundle identifier, the inner Mach-O binary name, the macOS data-folder path, the CI cache keys, and the e2e fixture's binary-lookup strings all still read `tauri-spike` / `com.slaktforskning.tauri-spike` from the proof-of-concept phase. The Tauri port shipped in 0.252.0; the name didn't move. Clean rename — no migration code since the app has never shipped to a public user (any legacy dev data is `mv`-able by hand). After: `git grep tauri.spike` returns zero in live code.
-- Plan: [`plans/2026-05-12-rename-tauri-spike.md`](plans/2026-05-12-rename-tauri-spike.md)
-
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 

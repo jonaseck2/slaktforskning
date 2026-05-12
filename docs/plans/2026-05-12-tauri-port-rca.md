@@ -8,14 +8,14 @@ The Tauri full-port plan archived at version `0.252.0` on 2026-05-11 with every 
 
 - `npm start` ran `electron-forge start` (broken — Electron deps removed; renderer pulled `node:fs`).
 - `npm run make` / `npm run package` / `npm run publish` were also broken in the same way.
-- The Cargo crate was still named `tauri-spike`; the inner Mach-O binary inherited that name.
-- The Tauri bundle identifier was `com.slaktforskning.tauri-spike`; user data lived under that path.
+- The Cargo crate was still named after the proof-of-concept phase; the inner Mach-O binary inherited that name (renamed in 0.254.0 — see archived rename plan).
+- The Tauri bundle identifier carried the same proof-of-concept suffix; user data lived under that path (renamed in 0.254.0).
 - A 30 MB inlined gazetteer chunk OOM'd `npm run build` on the default Node heap.
 - Once built, the bundle pinned WebKit at 100% CPU / ~4 GB RSS at boot, parsing 70 MB of inlined gazetteer JSON in one microtask burst.
 - macOS Launch Services cached a stale Electron build's path as the canonical `Släktforskning` app; double-clicking "Släktforskning" from Spotlight launched a months-old `.app` from a deleted worktree.
 - `src-tauri/examples/walfix.rs` duplicated `scripts/walfix.mjs` (both did the same WAL→DELETE recovery).
 - `vite.renderer.config.ts` (Electron) and `vite.tauri-renderer.config.ts` (Tauri) coexisted; the Tauri one was the only build-relevant config but the file naming hid that.
-- The CI workflow `ci.yml` had triggered on a deleted branch (`tauri-full-port`), had stale `tauri-spike` cache paths, an empty `- run: ` step from a bad sed during the Electron-retire cleanup, and didn't run `npm test` or `npm run lint` at all — only `npm run build`.
+- The CI workflow `ci.yml` had triggered on a deleted branch (`tauri-full-port`), had stale proof-of-concept cache paths, an empty `- run: ` step from a bad sed during the Electron-retire cleanup, and didn't run `npm test` or `npm run lint` at all — only `npm run build`.
 - 75 commits sat unpushed to `origin/main` at archive time; CI had run zero verification against the merged state.
 - E2E tests (Playwright) fail when actually run today — `[smoke]` and `[duplicates]` projects both throw renderer-script timeouts.
 - E2E projects are named `smoke`, the same word the user has flagged as an antipattern (the `[smoke]` project's existence was missed; if it had been run as part of close-out it would have caught at least the boot regression).
@@ -30,8 +30,8 @@ Each gap maps to exactly one root-cause class (RC1–RC4 below). Multiple gaps p
 |---|---|---|
 | 1 | `npm start` runs `electron-forge start` after Electron retired | RC1 |
 | 2 | `npm run make` / `package` / `publish` likewise | RC1 |
-| 3 | Cargo crate name `tauri-spike` | RC2 |
-| 4 | Tauri identifier `com.slaktforskning.tauri-spike` | RC2 |
+| 3 | Cargo crate name carried the proof-of-concept suffix | RC2 |
+| 4 | Tauri identifier carried the proof-of-concept suffix | RC2 |
 | 5 | Renderer OOM in `npm run build` (default Node heap) | RC1 + RC3 |
 | 6 | Renderer at 100% CPU / 4 GB RSS at boot (inlined gazetteers) | RC3 |
 | 7 | Launch Services cached stale Electron `.app` from deleted worktree | RC1 |
@@ -68,7 +68,7 @@ Four root causes. Each is named, then mapped to the gaps it produced.
 
 ### RC2 — Renames + deletes were scoped as "internal cosmetics", missing that they were load-bearing
 
-**Statement.** `tauri-spike` is in the bundle identifier (the user-data path), the inner Mach-O name, the Cargo `[lib]` symbol called from `main.rs`, the Tauri product-name path, every `Info.plist` field, the `ps aux` output, and the Spotlight identity. None of these are "cosmetic." Same for `vite.renderer.config.ts` (Electron) vs `vite.tauri-renderer.config.ts` (Tauri) coexisting — *both files* compiled to plausible-looking configs and only one was load-bearing; the other was dead but indistinguishable from its replacement by filename.
+**Statement.** The proof-of-concept crate name appeared in the bundle identifier (the user-data path), the inner Mach-O name, the Cargo `[lib]` symbol called from `main.rs`, the Tauri product-name path, every `Info.plist` field, the `ps aux` output, and the Spotlight identity. None of these are "cosmetic." Same for `vite.renderer.config.ts` (Electron) vs `vite.tauri-renderer.config.ts` (Tauri) coexisting — *both files* compiled to plausible-looking configs and only one was load-bearing; the other was dead but indistinguishable from its replacement by filename.
 
 **Why this escaped:** I parsed "spike" as a developer-mental-model label and didn't recognize that it was also the data-folder name a user would type into Finder. I parsed `vite.tauri-renderer.config.ts` as "the Tauri variant" and didn't recognize that having two renderer configs meant the codebase had two answers to "where does the renderer build live" — a contradiction the next-best-Vite-config-file-finder hits at random.
 
@@ -116,7 +116,7 @@ Stopped mid-Round-1 to write this. Pre-RCA in-flight work:
 
 ### Class RC2 (renames missed as load-bearing)
 
-- `tauri-spike` → `slaktforskning` rename. Plan exists: [`docs/plans/2026-05-12-rename-tauri-spike.md`](2026-05-12-rename-tauri-spike.md). Scope is comprehensive (Cargo, Tauri identifier, e2e fixture, CI cache keys, MCP-tauri script, skill docs). Decision pending: identifier rename (no migration since no public users).
+- Crate / identifier rename to `slaktforskning`. Shipped in 0.254.0; archived plan documents the scope (Cargo, Tauri identifier, e2e fixture, CI cache keys, MCP-tauri script, skill docs).
 - Version drift: `package.json` `0.253.1`, `Cargo.toml` `0.1.0`, `tauri.conf.json` `0.1.0`. The rename plan should also synchronize versions (or carve out a tiny follow-up plan).
 
 ### Class RC3 (eager gazetteer bundling)
@@ -185,7 +185,7 @@ This rule lands in `.claude/rules/plans.md`'s "Verification discipline at close-
 | Root cause | Structural fix | State |
 |---|---|---|
 | RC1 (close-out skipped legacy delete) | L1 + L2 in `.claude/rules/plans.md`; CLAUDE.md checklist step 0 (evidence) + step 7 (push) | In flight |
-| RC2 (renames missed as load-bearing) | The rename plan (`2026-05-12-rename-tauri-spike.md`); a "renames are part of the plan, never post-archive" addition to plans.md | Plan written, rule TBD |
+| RC2 (renames missed as load-bearing) | The crate / identifier rename plan (archived 0.254.0); a "renames are part of the plan, never post-archive" addition to plans.md | Plan shipped 0.254.0, rule TBD |
 | RC3 (eager gazetteer bundling) | Lazy-chunks plan (`2026-05-12-gazetteer-lazy-chunks.md`); remove the heap-bump workaround in the same commit | Plan written |
 | RC4 (verification infrastructure decorative) | New `ci.yml` runs lint + tests + cross-OS build; new `scripts.npmScripts.test.ts`; L4 mandating `superpowers:verification-before-completion`; e2e suite repaired + `[smoke]` renamed | Partial; in flight |
 

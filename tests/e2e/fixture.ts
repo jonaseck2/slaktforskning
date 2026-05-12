@@ -103,13 +103,13 @@ export function packagedBinaryPath(): string {
   let binary: string;
   if (platform === 'darwin') {
     // The Tauri bundle ships two .app variants — `Släktforskning (Tauri).app`
-    // (productName-derived) and `tauri-spike.app` (executable name fallback).
+    // (productName-derived) and `slaktforskning.app` (executable name fallback).
     // The first one is what users install; the second mirrors the inner
-    // executable used by both. Inner binary is `tauri-spike` per
+    // executable used by both. Inner binary is `slaktforskning` per
     // src-tauri/Cargo.toml `[[bin]]`.
     binary = path.join(
       targetDir, 'bundle', 'macos',
-      'Släktforskning (Tauri).app', 'Contents', 'MacOS', 'tauri-spike',
+      'Släktforskning (Tauri).app', 'Contents', 'MacOS', 'slaktforskning',
     );
   } else if (platform === 'linux') {
     // Linux ships AppImage. Look at the appimage dir; fall back to the raw
@@ -121,13 +121,13 @@ export function packagedBinaryPath(): string {
       if (entries.length > 0) {
         binary = path.join(appimageDir, entries[0]);
       } else {
-        binary = path.join(targetDir, 'tauri-spike');
+        binary = path.join(targetDir, 'slaktforskning');
       }
     } else {
-      binary = path.join(targetDir, 'tauri-spike');
+      binary = path.join(targetDir, 'slaktforskning');
     }
   } else if (platform === 'win32') {
-    binary = path.join(targetDir, 'tauri-spike.exe');
+    binary = path.join(targetDir, 'slaktforskning.exe');
   } else {
     throw new Error(`Unsupported platform for Tauri e2e: ${platform}`);
   }
