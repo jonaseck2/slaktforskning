@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="search-view">
     <div class="search-header">
       <h2>{{ $t('search.title') }}</h2>
-      <form class="search-form" @submit.prevent="runSearch">
+      <form class="search-form" @submit.prevent>
         <input
           v-model="inputQuery"
           type="text"
@@ -10,23 +10,25 @@
           class="search-input"
           autofocus
         />
-        <AppButton variant="primary" type="submit">{{ $t('search.button') }}</AppButton>
       </form>
     </div>
 
-    <AppEmptyState v-if="!searched" icon="🔍" :title="$t('search.emptyState')" />
-    <AppEmptyState v-else-if="totalResults === 0" icon="🔍" :title="$t('search.noResults', { query: displayedQuery })" />
+    <AppEmptyState v-if="!hasQuery" icon="🔍" :title="$t('search.emptyState')" />
+    <AppEmptyState
+      v-else-if="!loading && totalResults === 0"
+      icon="🔍"
+      :title="$t('search.noResults', { query: displayedQuery })"
+    />
 
     <template v-else>
       <!-- Persons -->
-      <section v-if="persons.length > 0" class="result-section">
-        <h3>{{ $t('nav.people') }} <span class="count">{{ persons.length }}</span></h3>
+      <section v-if="personsTotal > 0" class="result-section">
+        <h3>{{ $t('nav.people') }} <span class="count">{{ personsTotal }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
               <th>{{ $t('common.name') }}</th>
               <th>{{ $t('persons.sex') }}</th>
-              <th>{{ $t('persons.living') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -53,15 +55,18 @@
               <!-- Display only — see plan birth-name-display-and-quality-check. -->
               <td><PersonName :given-name="p.given_name" :surname="p.surname" :preferred-name="p.preferred_name" :nickname="p.nickname" :birth-surname="p.birth_surname" :show-birth-name-parenthetical="personNameOptions.showBirthNameParenthetical" /></td>
               <td>{{ p.sex }}</td>
-              <td>{{ p.living ? $t('common.yes') : $t('common.no') }}</td>
             </tr>
           </tbody>
         </table>
+        <div ref="personsSentinel" class="scroll-sentinel"></div>
+        <p class="count-label">
+          {{ $t('search.showingPersons', { shown: persons.length, total: personsTotal }) }}
+        </p>
       </section>
 
       <!-- Sources -->
-      <section v-if="sources.length > 0" class="result-section">
-        <h3>{{ $t('nav.sources') }} <span class="count">{{ sources.length }}</span></h3>
+      <section v-if="sourcesTotal > 0" class="result-section">
+        <h3>{{ $t('nav.sources') }} <span class="count">{{ sourcesTotal }}</span></h3>
         <table class="data-table">
           <thead>
             <tr>
@@ -95,6 +100,10 @@
             </tr>
           </tbody>
         </table>
+        <div ref="sourcesSentinel" class="scroll-sentinel"></div>
+        <p class="count-label">
+          {{ $t('search.showingSources', { shown: sources.length, total: sourcesTotal }) }}
+        </p>
       </section>
     </template>
   </div>
@@ -105,28 +114,25 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import PersonName from '../components/PersonName.vue';
-import AppButton from '../components/ui/AppButton.vue';
 import AppEmptyState from '../components/ui/AppEmptyState.vue';
 import { useSelectedPersonStore } from '../stores/selectedPerson';
 import { narratePersonRow, narrateSourceRow } from '../utils/screenReaderNarration';
 import { usePersonNameOptions } from '../stores/personNameOptions';
+import { usePagedList } from '../composables/usePagedList';
 
-// Display only — see plan birth-name-display-and-quality-check.
 const personNameOptions = usePersonNameOptions();
 
-interface PersonResult {
+interface PersonRow {
   id: string;
   given_name: string;
   surname: string;
   preferred_name: string | null;
   nickname: string | null;
-  /** Display only — see plan birth-name-display-and-quality-check. */
   birth_surname: string | null;
   sex: string;
-  living: boolean;
 }
 
-interface SourceResult {
+interface SourceRow {
   id: string;
   title: string;
   author: string;
@@ -139,12 +145,66 @@ const router = useRouter();
 const selectedStore = useSelectedPersonStore();
 
 const inputQuery = ref('');
-const displayedQuery = ref('');
-const searched = ref(false);
-const persons = ref<PersonResult[]>([]);
-const sources = ref<SourceResult[]>([]);
+const displayedQuery = computed(() => inputQuery.value.trim());
+const hasQuery = computed(() => displayedQuery.value.length > 0);
 
-const totalResults = computed(() => persons.value.length + sources.value.length);
+type PersonsSortBy = 'surname';
+const {
+  items: persons,
+  total: personsTotal,
+  searchQuery: personsQuery,
+  loading: personsLoading,
+  attachSentinel: attachPersonsSentinel,
+} = usePagedList<PersonRow, PersonsSortBy>({
+  defaultSortBy: 'surname',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    if (!query) return { items: [], total: 0 };
+    if (!window.api) return { items: [], total: 0 };
+    const result = await window.api.persons.listPage(limit, offset, sortBy, sortDir, query) as { persons: PersonRow[]; total: number };
+    return { items: result.persons, total: result.total };
+  },
+});
+
+type SourcesSortBy = 'title';
+const {
+  items: sources,
+  total: sourcesTotal,
+  searchQuery: sourcesQuery,
+  loading: sourcesLoading,
+  attachSentinel: attachSourcesSentinel,
+} = usePagedList<SourceRow, SourcesSortBy>({
+  defaultSortBy: 'title',
+  fetchPage: async (limit, offset, sortBy, sortDir, query) => {
+    if (!query) return { items: [], total: 0 };
+    if (!window.api) return { items: [], total: 0 };
+    const result = await window.api.sources.listPage(limit, offset, sortBy, sortDir, query) as { items: SourceRow[]; total: number };
+    return { items: result.items, total: result.total };
+  },
+});
+
+const personsSentinel = ref<HTMLElement | null>(null);
+const sourcesSentinel = ref<HTMLElement | null>(null);
+watch(personsSentinel, (el) => attachPersonsSentinel(el));
+watch(sourcesSentinel, (el) => attachSourcesSentinel(el));
+
+const totalResults = computed(() => personsTotal.value + sourcesTotal.value);
+const loading = computed(() => personsLoading.value || sourcesLoading.value);
+
+watch(inputQuery, (q) => {
+  const trimmed = q.trim();
+  personsQuery.value = trimmed;
+  sourcesQuery.value = trimmed;
+  router.replace({ path: '/search', query: trimmed ? { q: trimmed } : {} });
+});
+
+watch(
+  () => route.query.q,
+  (q) => {
+    if (typeof q === 'string' && q !== inputQuery.value) {
+      inputQuery.value = q;
+    }
+  },
+);
 
 function focusNextRow(e: KeyboardEvent): void {
   const row = (e.target as HTMLElement).nextElementSibling as HTMLElement | null;
@@ -155,57 +215,33 @@ function focusPrevRow(e: KeyboardEvent): void {
   if (row?.matches('tr[tabindex]')) row.focus();
 }
 
-function goToPerson(p: PersonResult) {
+function goToPerson(p: PersonRow) {
   selectedStore.set(p.id);
   router.push(`/persons/${p.id}`);
 }
-
-async function runSearch() {
-  const q = inputQuery.value.trim();
-  if (!q) return;
-  router.replace({ path: '/search', query: { q } });
-  await search(q);
-}
-
-async function search(q: string) {
-  if (!q || !window.api) return;
-  displayedQuery.value = q;
-  searched.value = true;
-  const [p, s] = await Promise.all([
-    window.api.persons.search(q) as Promise<PersonResult[]>,
-    window.api.sources.search(q) as Promise<SourceResult[]>,
-  ]);
-  persons.value = p;
-  sources.value = s;
-}
-
-watch(
-  () => route.query.q,
-  (q) => {
-    if (typeof q === 'string' && q) {
-      inputQuery.value = q;
-      search(q);
-    }
-  }
-);
 
 onMounted(() => {
   const q = route.query.q;
   if (typeof q === 'string' && q) {
     inputQuery.value = q;
-    search(q);
   }
 });
 </script>
 
 <style scoped>
+.search-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
 .search-header {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-lg);
 }
 .search-form {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
 }
 .search-input {
   flex: 1;
@@ -222,7 +258,7 @@ onMounted(() => {
   border-color: var(--accent);
 }
 .result-section {
-  margin-bottom: 32px;
+  margin-bottom: var(--space-2xl);
 }
 .result-section h3 {
   font-size: var(--font-base);
@@ -230,17 +266,23 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 .count {
   background: var(--surface-hover);
   color: var(--text-secondary);
   padding: 1px 7px;
-  border-radius: 10px;
+  border-radius: var(--radius-full);
   font-size: var(--font-xs);
   font-weight: 500;
+}
+.count-label {
+  margin: var(--space-sm) 0 0 0;
+  padding: var(--space-sm) 0 0 0;
+  border-top: 1px solid var(--surface-border-subtle);
+  text-align: center;
 }
 </style>

@@ -370,6 +370,8 @@ export default {
     button: 'Search',
     emptyState: 'Enter a name or keyword to search.',
     noResults: 'No results for \u201C{query}\u201D.',
+    showingPersons: 'Showing {shown} of {total} persons',
+    showingSources: 'Showing {shown} of {total} sources',
   },
   events: {
     title: 'Events',

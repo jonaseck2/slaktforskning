@@ -370,6 +370,8 @@ export default {
     button: 'Sök',
     emptyState: 'Skriv ett namn eller sökord för att söka.',
     noResults: 'Inga resultat för \u201C{query}\u201D.',
+    showingPersons: 'Visar {shown} av {total} personer',
+    showingSources: 'Visar {shown} av {total} källor',
   },
   events: {
     title: 'Händelser',
