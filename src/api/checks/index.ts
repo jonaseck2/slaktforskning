@@ -88,15 +88,16 @@ export interface NamedCheck {
  */
 async function loadGazetteersForChecks(db: Database) {
   const configJson = await getDbSetting(db, 'gazetteer_config');
+  const all = await getAllGazetteers();
   const gazConfig: GazetteerConfig = configJson
     ? JSON.parse(configJson)
-    : { enabledGazetteers: getAllGazetteers().map(g => g.id) };
-  const langIds = getAllGazetteers().filter(g => g.kind === 'language').map(g => g.id);
+    : { enabledGazetteers: all.map(g => g.id) };
+  const langIds = all.filter(g => g.kind === 'language').map(g => g.id);
   const enabledWithLangs = Array.from(new Set([...gazConfig.enabledGazetteers, ...langIds]));
   const imported = await getImportedGazetteers(db);
   return loadGazetteers(
     { enabledGazetteers: enabledWithLangs },
-    getAllGazetteers(),
+    all,
     imported,
   );
 }

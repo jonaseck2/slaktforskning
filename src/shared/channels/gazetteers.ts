@@ -47,5 +47,5 @@ defineChannel({
 defineChannel({
   name: 'gazetteers:getBundled',
   thread: 'main',
-  handler: async () => getAllGazetteers(),
+  handler: async () => await getAllGazetteers(),
 });

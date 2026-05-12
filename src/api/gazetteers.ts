@@ -1,13 +1,17 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { countNodes } from '../gazetteer-build/tree';
 import type { Gazetteer, GazetteerSource, GazetteerInfo } from './place-gazetteers/types';
-import { getAllGazetteers } from './place-gazetteers/bundled';
+import { getAllGazetteers, getBundledGazetteerIds } from './place-gazetteers/bundled';
 import { getDbSetting, setDbSetting } from './db_settings';
 import { queryOne, queryAll, runSql } from './db';
 
 const MAX_JSON_BYTES = 50 * 1024 * 1024; // 50 MB
 
-const BUNDLED_IDS = new Set(getAllGazetteers().map(g => g.id));
+// Use the sync-in-both-runtimes ID list rather than calling getAllGazetteers()
+// at module init: in the renderer (where bundled.ts is aliased to
+// empty-gazetteers.ts) getAllGazetteers is async and would force this module
+// init into a Promise — which it can't be.
+const BUNDLED_IDS = new Set(getBundledGazetteerIds());
 
 export interface ImportGazetteerResult {
   id: string;
@@ -148,7 +152,8 @@ export async function exportGazetteer(db: Database, id: string): Promise<string 
     return row.data;
   }
 
-  const bundled = getAllGazetteers().find(g => g.id === id);
+  const all = await getAllGazetteers();
+  const bundled = all.find(g => g.id === id);
   if (bundled) {
     return JSON.stringify(bundled, null, 2);
   }
@@ -193,7 +198,7 @@ type GazetteerRow = {
 };
 
 export async function listGazetteers(db: Database): Promise<GazetteerInfo[]> {
-  const bundled = getAllGazetteers().map((g): GazetteerInfo => ({
+  const bundled = (await getAllGazetteers()).map((g): GazetteerInfo => ({
     id: g.id,
     name: g.name,
     locale: g.locale,

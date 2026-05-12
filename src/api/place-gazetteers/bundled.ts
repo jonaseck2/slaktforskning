@@ -269,3 +269,13 @@ const BUNDLED_GAZETTEERS: Gazetteer[] = BUNDLED_GAZETTEER_IDS
 export function getAllGazetteers(): Gazetteer[] {
   return BUNDLED_GAZETTEERS;
 }
+
+/**
+ * Returns the static list of bundled gazetteer IDs (without loading any
+ * JSON data). Mirrors the same-named export on the renderer-aliased
+ * `empty-gazetteers.ts` so api/ code that just needs the ID set can stay
+ * synchronous in both runtimes.
+ */
+export function getBundledGazetteerIds(): string[] {
+  return [...BUNDLED_GAZETTEER_IDS];
+}

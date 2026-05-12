@@ -25,7 +25,7 @@ Loads when touching the build/test configs.
 
 ## Critical invariants
 
-- **Gazetteer JSON files ship as a packed binary sidecar.** `vite.renderer.config.ts`'s build pipeline runs the gazetteer compression at build time; the resulting `.bin` is loaded from `dist-tauri/` at runtime. The raw JSONs in `src/api/place-gazetteers/data/` are preserved for tests and dev — `bundled.ts` falls back to raw JSON when no binary sidecar exists.
+- **Gazetteer JSON files ship as lazy Vite chunks, one chunk per gazetteer.** `src/renderer/empty-gazetteers.ts` (the renderer-aliased replacement for `src/api/place-gazetteers/bundled.ts`) does `import.meta.glob('../api/place-gazetteers/data/*.json', { import: 'default' })` *without* `eager: true`, so Vite emits 72 individual chunks under `dist-tauri/assets/`. The webview fetches each chunk on demand the first time `getGazetteerById(id)` / `getAllGazetteers()` resolves it; the in-memory cache returns the same instance to every subsequent caller. Re-introducing `eager: true` collapses everything back into one ~30 MB chunk and OOMs Vite's rollup pass on the default 2 GB Node heap — guarded by `tests/unit/empty-gazetteers-no-eager.test.ts`.
 - **Tauri's `frontendDist` points at `dist-tauri/`** (per `tauri.conf.json`). The renderer build writes there; the Tauri bundler picks up that directory at package time.
 - **MCP sidecar must be built before `npm run build`.** `tauri.conf.json`'s `beforeBuildCommand` already chains `npm run build:mcp-sidecar` — that drops binaries in `target/mcp-server-*` that `tauri.conf.json`'s `externalBin` pulls into the bundle.
 

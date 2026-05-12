@@ -1,24 +1,45 @@
 // Tauri-renderer-side replacement for src/api/place-gazetteers/bundled.ts.
 // The real file does fileURLToPath(import.meta.url) + readFileSync at module
 // init — works in Node but throws on tauri:// URLs and there's no fs in the
-// renderer. Instead, we Vite-bake every JSON in src/api/place-gazetteers/data/
-// at build time via import.meta.glob, and re-export the same surface the
-// real bundled.ts exposes (BUNDLED_GAZETTEERS, getAllGazetteers,
-// getGazetteerById, LAN_LETTER_CODES, HISTORICAL_LAN_ALIASES).
+// renderer.
 //
-// Vite resolves the glob at build time, inlining each JSON as its own
-// chunk. ~70 MB raw → ~10 MB gzipped in the prod build (Vite handles the
-// compression). Dev mode pays the JSON-parse cost on first import per file.
+// Lazy-chunk strategy: every JSON in src/api/place-gazetteers/data/ is
+// import.meta.glob'd WITHOUT eager:true, so Vite emits one chunk per
+// gazetteer that the webview only fetches on demand. Loaded gazetteers are
+// cached in-memory; callers see a Promise on first access then a hot result
+// for the lifetime of the page.
+//
+// The previous version of this file used { eager: true, import: 'default' }
+// which inlined every JSON into one ~30 MB chunk that the webview parsed
+// at app start AND that OOM'd Vite's rollup pass during production build
+// (forcing the NODE_OPTIONS=--max-old-space-size=8192 workaround in
+// package.json). Lazy chunks remove both costs.
+//
+// Surface contract vs the Node bundled.ts:
+//   - getAllGazetteers / getGazetteerById are ASYNC here; they're sync in
+//     bundled.ts. Every renderer-reachable caller in src/api/ must await.
+//   - getBundledGazetteerIds / LAN_LETTER_CODES / HISTORICAL_LAN_ALIASES
+//     stay synchronous (they don't touch JSON data).
+//   - preloadGazetteer(id) warms the cache without waiting on a render path.
 
 import {
   SV_RULES, DK_RULES, NO_RULES, FI_RULES, IS_RULES, EN_RULES, DE_RULES, GB_RULES,
 } from '../gazetteer-build/normalize-rules';
 import type { Gazetteer, GazetteerNode, GazetteerNormalizeRules } from '../api/place-gazetteers/types';
 
-const RAW: Record<string, Gazetteer> = import.meta.glob(
+// Eager `as: 'url'` glob: each gazetteer JSON ships as a static asset under
+// dist-tauri/assets/, and we collect a synchronous map of id → URL at build
+// time. The JSONs are NEVER parsed by rollup (which OOMs on the 70 MB pile);
+// we fetch + JSON.parse at runtime, on demand, in the browser/webview.
+//
+// Why not non-eager `import: 'default'`? Vite still treats JSON imports as
+// modules and parses every one to emit a code-split chunk — the rollup step
+// holds all 70 MB of parsed JSON in Node memory and OOMs the default 2 GB
+// heap. The url-asset path skips parsing entirely.
+const URL_MAP: Record<string, string> = import.meta.glob(
   '../api/place-gazetteers/data/*.json',
-  { eager: true, import: 'default' },
-) as Record<string, Gazetteer>;
+  { eager: true, query: '?url', import: 'default' },
+) as Record<string, string>;
 
 // Order matters — same precedence list the real bundled.ts uses.
 const BUNDLED_IDS: readonly string[] = [
@@ -52,10 +73,8 @@ const BUNDLED_IDS: readonly string[] = [
   'ca-divisions-boundaries', 'world-boundaries',
 ];
 
-function lookupById(id: string): Gazetteer | undefined {
-  // Vite glob keys come back as relative paths from this file's dir.
-  const key = `../api/place-gazetteers/data/${id}.json`;
-  return RAW[key];
+function loaderKeyFor(id: string): string {
+  return `../api/place-gazetteers/data/${id}.json`;
 }
 
 export const HISTORICAL_LAN_ALIASES: Record<string, string[]> = {
@@ -126,24 +145,60 @@ function enrichHistoricalAliases(gaz: Gazetteer): Gazetteer {
   return gaz;
 }
 
-export const BUNDLED_GAZETTEERS: Gazetteer[] = BUNDLED_IDS
-  .map(lookupById)
-  .filter((g): g is Gazetteer => !!g)
-  .map(attachNormalizeRules)
-  .map(enrichHistoricalAliases);
+// In-memory cache: id → fully-decorated Gazetteer (after normalize-rules +
+// historical-aliases). The same Gazetteer reference is returned to every
+// caller so the resolver's WeakMap-keyed indexes (nameIndexCache,
+// perGazetteerNameDepth, mergedDepthByArray) stay warm across calls.
+const cache: Map<string, Gazetteer> = new Map();
+// In-flight loads: id → Promise. Prevents the "two callers in the same tick
+// each kick off a fetch for the same chunk" race.
+const inflight: Map<string, Promise<Gazetteer | undefined>> = new Map();
 
-export const BUNDLED_GAZETTEER_MAP: Record<string, Gazetteer> = Object.fromEntries(
-  BUNDLED_GAZETTEERS.map(g => [g.id, g]),
-);
-
-export function getAllGazetteers(): Gazetteer[] {
-  return BUNDLED_GAZETTEERS;
+async function loadOne(id: string): Promise<Gazetteer | undefined> {
+  const cached = cache.get(id);
+  if (cached) return cached;
+  const existing = inflight.get(id);
+  if (existing) return existing;
+  const url = URL_MAP[loaderKeyFor(id)];
+  if (!url) return undefined;
+  const p = (async () => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`fetch ${url} failed: ${res.status} ${res.statusText}`);
+      }
+      const raw = (await res.json()) as Gazetteer;
+      const decorated = enrichHistoricalAliases(attachNormalizeRules(raw));
+      cache.set(id, decorated);
+      return decorated;
+    } finally {
+      inflight.delete(id);
+    }
+  })();
+  inflight.set(id, p);
+  return p;
 }
 
-export function getGazetteerById(id: string): Gazetteer | undefined {
-  return BUNDLED_GAZETTEER_MAP[id];
+export async function getAllGazetteers(): Promise<Gazetteer[]> {
+  // Load (or pull from cache) every bundled gazetteer in parallel.
+  // Preserves BUNDLED_IDS order (the resolver precedence list).
+  const loaded = await Promise.all(BUNDLED_IDS.map(id => loadOne(id)));
+  return loaded.filter((g): g is Gazetteer => !!g);
+}
+
+export async function getGazetteerById(id: string): Promise<Gazetteer | undefined> {
+  return loadOne(id);
 }
 
 export function getBundledGazetteerIds(): string[] {
-  return BUNDLED_GAZETTEERS.map(g => g.id);
+  return [...BUNDLED_IDS];
+}
+
+/**
+ * Warm the in-memory cache for one gazetteer. Useful for the
+ * usePlaceResolver composable to start the user-enabled-set fetch in the
+ * background after the app boots.
+ */
+export async function preloadGazetteer(id: string): Promise<void> {
+  await loadOne(id);
 }

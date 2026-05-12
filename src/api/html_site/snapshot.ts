@@ -148,7 +148,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     const config = configJson ? JSON.parse(configJson) as { enabledGazetteers?: string[] } : null;
     const enabled = config?.enabledGazetteers ?? [];
     if (enabled.length > 0) {
-      gazetteers = loadGazetteers({ enabledGazetteers: enabled }, getAllGazetteers(), await getImportedGazetteers(db));
+      gazetteers = loadGazetteers({ enabledGazetteers: enabled }, await getAllGazetteers(), await getImportedGazetteers(db));
     }
   } catch {
     // If gazetteer loading fails for any reason, ship places without resolved coords.
