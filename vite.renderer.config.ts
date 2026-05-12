@@ -1,14 +1,11 @@
 // Vite config that builds src/renderer/ for the Tauri webview.
-// Differences vs vite.renderer.config.ts (which is owned by electron-forge):
-//   - Output goes to dist-tauri/ (where tauri.conf.json's frontendDist
-//     points by default).
-//   - `node-sqlite3-wasm` is aliased to src/renderer/db-shim.ts so api/db.ts
-//     routes its db.prepare/run/get/all calls through Tauri invoke() to the
-//     rusqlite primitives in src-tauri/src/db.rs.
-//   - electron-forge-specific knobs are absent.
 //
-// Run: npx vite build --config vite.tauri-renderer.config.ts
-//   or: npx vite --config vite.tauri-renderer.config.ts (dev server, used by
+// `node-sqlite3-wasm` is aliased to src/renderer/db-shim.ts so the api/
+// layer's `db.prepare/run/get/all` calls route through Tauri invoke() into
+// the rusqlite primitives in src-tauri/src/db.rs.
+//
+// Run: npx vite build --config vite.renderer.config.ts (production bundle)
+//   or: npx vite --config vite.renderer.config.ts (dev server, used by
 //       Tauri's beforeDevCommand).
 
 import { resolve } from 'node:path';
@@ -16,14 +13,14 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     // Several src/api/ modules import from node:fs / node:path / node:url /
     // node:zlib (media path math, gazetteer gunzip, duplicate file probes).
     // The renderer can't actually read disk; these polyfills let the bundle
     // *build*, and any code path that calls fs at runtime fails loudly. Real
-    // file I/O moves to Rust commands in a follow-up phase.
+    // file I/O is routed through Rust commands.
     nodePolyfills({
       protocolImports: true,
       // Exclude fs and fs/promises — we alias them ourselves. The polyfill
@@ -39,9 +36,12 @@ export default defineConfig({
     // Tauri targets modern WebKit (macOS) / WebView2 / WebKitGTK; top-level
     // await + dynamic imports are fine.
     target: 'esnext',
-    // Keep readable stacks in the spike — we're debugging.
-    minify: false,
-    sourcemap: true,
+    // Production needs to minify — otherwise the sourcemap pass on an
+    // unminified ~1000-module bundle OOMs Node's default heap during
+    // rollup chunk rendering. Dev keeps both off (no separate build step;
+    // sourcemap is on for the dev server below).
+    minify: mode === 'production' ? 'esbuild' : false,
+    sourcemap: mode === 'production' ? false : true,
   },
   resolve: {
     alias: [
@@ -65,4 +65,4 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
   },
-});
+}));
