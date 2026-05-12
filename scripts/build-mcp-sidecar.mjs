@@ -20,8 +20,17 @@
 // (which uses npx tsx via scripts/mcp-tauri.mjs); only invoked by the
 // release workflow before `tauri build`.
 //
-// To build only a single target locally for smoke-testing, set
-// SIDECAR_TARGETS to a comma-separated subset of the four targets below.
+// Default behaviour:
+//   - SIDECAR_TARGETS unset → build only the host platform's target. This is
+//     what a local `npm run build` wants: Tauri can only bundle an installer
+//     for the host OS anyway, and `pkg`'s fabricator must spawn the target
+//     Node binary on the host to generate V8 bytecode, so cross-compiling
+//     to e.g. macos-arm64 from a Windows host fails with `spawn UNKNOWN`.
+//   - SIDECAR_TARGETS=all → build all four targets. Only viable on a host
+//     that can execute each target's Node binary (i.e. nowhere — CI uses
+//     a matrix instead, see .github/workflows/release.yml).
+//   - SIDECAR_TARGETS=<comma-list> → build that explicit subset. Used by
+//     the release matrix to build exactly one target per runner.
 
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs';
@@ -43,10 +52,32 @@ const ALL_TARGETS = [
   { pkg: 'node20-linux-x64', suffix: 'x86_64-unknown-linux-gnu', ext: '' },
 ];
 
-const targetFilter = process.env.SIDECAR_TARGETS?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
-const targets = targetFilter.length
-  ? ALL_TARGETS.filter((t) => targetFilter.includes(t.pkg) || targetFilter.includes(t.suffix))
-  : ALL_TARGETS;
+function hostPkgTarget() {
+  const a = process.arch === 'arm64' ? 'arm64' : 'x64';
+  if (process.platform === 'darwin') return `node20-macos-${a}`;
+  if (process.platform === 'win32') return `node20-win-${a}`;
+  if (process.platform === 'linux') return `node20-linux-${a}`;
+  return null;
+}
+
+const rawFilter = process.env.SIDECAR_TARGETS?.trim() ?? '';
+let targetFilter;
+if (!rawFilter) {
+  const host = hostPkgTarget();
+  if (!host) {
+    console.error(`[build-mcp-sidecar] cannot auto-detect host pkg target for ${process.platform}/${process.arch}`);
+    console.error(`[build-mcp-sidecar] set SIDECAR_TARGETS explicitly. available: ${ALL_TARGETS.map((t) => t.pkg).join(', ')}`);
+    process.exit(1);
+  }
+  targetFilter = [host];
+  console.log(`[build-mcp-sidecar] no SIDECAR_TARGETS set; defaulting to host target ${host} (set SIDECAR_TARGETS=all for the full matrix)`);
+} else if (rawFilter === 'all') {
+  targetFilter = ALL_TARGETS.map((t) => t.pkg);
+} else {
+  targetFilter = rawFilter.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+const targets = ALL_TARGETS.filter((t) => targetFilter.includes(t.pkg) || targetFilter.includes(t.suffix));
 
 if (!targets.length) {
   console.error(`[build-mcp-sidecar] no targets matched filter: ${targetFilter.join(',')}`);
@@ -56,7 +87,14 @@ if (!targets.length) {
 
 function run(cmd, args, opts = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32', ...opts });
+    const useShell = process.platform === 'win32';
+    // `shell: true` concatenates argv without escaping, so any arg containing
+    // whitespace (e.g. paths like `C:\Users\Jane Doe\...`) gets split by the
+    // shell. Quote those args ourselves to preserve them as a single token.
+    const finalArgs = useShell
+      ? args.map((a) => (/\s/.test(a) && !/^".*"$/.test(a) ? `"${a}"` : a))
+      : args;
+    const child = spawn(cmd, finalArgs, { stdio: 'inherit', shell: useShell, ...opts });
     child.on('exit', (code) => {
       if (code === 0) resolve();
       else reject(new Error(`${cmd} ${args.join(' ')} → exit ${code}`));

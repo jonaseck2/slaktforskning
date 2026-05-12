@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.255.0",
+  "version": "0.255.1",
   "description": "A genealogy desktop application",
   "private": true,
   "type": "module",
