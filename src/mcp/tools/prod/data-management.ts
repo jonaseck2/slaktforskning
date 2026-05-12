@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { Database } from 'node-sqlite3-wasm';
+import { Database } from '../../../shared/sqlite3-wasm';
 import * as nodePath from 'node:path';
 import { initializeSchema } from '../../../api/schema';
 import { readGedcomFile, parseGedcom, importGedcom, exportGedcom } from '../../../gedcom/index';

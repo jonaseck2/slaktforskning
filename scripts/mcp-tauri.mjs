@@ -111,9 +111,15 @@ if (sidecarBuilt) {
   );
 }
 
-const child = spawn('npx', ['tsx', entry], {
-  stdio: 'inherit',
-  env,
-  cwd: repoRoot,
-});
+// On Windows we have to reach `npx` through the OS shell — `npx` is `npx.cmd`,
+// Node 24 refuses to spawn `.cmd`/`.bat` files directly (CVE-2024-27980), and
+// bare `npx` without `.cmd` gets ENOENT. We can't use `shell: true` with the
+// args array because the shell then re-parses argv and splits the entry path
+// on its space (`C:\Users\Jonas Ahnstedt\...`) — same class of bug commit
+// fd90051a fixed for `npm run build`. Passing the full command as a single
+// pre-quoted string and `shell: true` gives the OS shell the responsibility of
+// argv parsing and stays out of Node's DEP0190 path.
+const child = process.platform === 'win32'
+  ? spawn(`npx tsx "${entry}"`, { stdio: 'inherit', env, cwd: repoRoot, shell: true })
+  : spawn('npx', ['tsx', entry], { stdio: 'inherit', env, cwd: repoRoot });
 child.on('exit', (code) => process.exit(code ?? 0));

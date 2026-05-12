@@ -20,11 +20,15 @@ import * as os from 'os';
 import * as https from 'https';
 import { spawn, spawnSync } from 'child_process';
 import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'node:url';
 import { Unzip, UnzipInflate } from 'fflate';
 import type { Database } from 'node-sqlite3-wasm';
 import { getDbSetting, setDbSetting } from '../../api/db_settings';
 import { bulkCopyMediaFolder } from '../../api/media_consolidate';
 import { transformGenney, type GenneyTables, type ImportSummary } from './transform';
+
+// __dirname isn't auto-defined in Node ESM — recover it from import.meta.url.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // parseNdJson is used inside PARSE_WORKER_CODE (eval worker), not imported directly
 
 // Parses NDJSON off the main thread using an eval worker (no build changes needed).

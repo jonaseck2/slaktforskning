@@ -20,7 +20,7 @@
  * INSERT in the per-row loop would fsync individually.
  */
 
-import { Database } from 'node-sqlite3-wasm';
+import { Database } from '../../shared/sqlite3-wasm';
 import { runSql } from '../../api/db';
 import {
   transformRootsMagic,

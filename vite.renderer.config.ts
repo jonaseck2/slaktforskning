@@ -48,6 +48,13 @@ export default defineConfig(({ mode }) => ({
       // Exact-match regex aliases to avoid prefix collisions with the
       // node-polyfills plugin's internal aliases.
       { find: /^node-sqlite3-wasm$/, replacement: resolve('src/renderer/db-shim.ts') },
+      // The Node-side shim (uses `createRequire` to dodge ESM's broken named
+      // export detection on `node-sqlite3-wasm`'s CJS Emscripten module) is
+      // unreachable in the renderer — alias it to the same db-shim that
+      // `node-sqlite3-wasm` itself resolves to. Without this, Vite tries to
+      // bundle the shim and fails on `import { createRequire } from 'node:module'`
+      // because node-stdlib-browser's `node:module` mock has no `createRequire`.
+      { find: /^.*\/shared\/sqlite3-wasm(\.ts)?$/, replacement: resolve('src/renderer/db-shim.ts') },
       { find: /^(node:)?fs$/, replacement: resolve('src/renderer/empty-stub.ts') },
       { find: /^(node:)?fs\/promises$/, replacement: resolve('src/renderer/empty-fs-promises.ts') },
       { find: /^(node:)?worker_threads$/, replacement: resolve('src/renderer/empty-stub.ts') },

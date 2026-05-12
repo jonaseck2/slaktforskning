@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { Database } from 'node-sqlite3-wasm';
+import { Database } from '../shared/sqlite3-wasm';
 import { getDefaultDbPath } from '../shared/dbPath';
 import { createDevServer } from './createDevServer';
 import { installStdioHardening, initializeSchemaWithRetry } from './harden';
