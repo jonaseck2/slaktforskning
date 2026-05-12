@@ -203,7 +203,7 @@ describe('media links', async () => {
     const l3 = await addMediaLink(db, { media_id: m3.id, entity_type: 'person', entity_id: person.id });
 
     // Reverse the order: Third, Second, First
-    reorderMediaLinks(db, [l3.id, l2.id, l1.id]);
+    await reorderMediaLinks(db, [l3.id, l2.id, l1.id]);
 
     const results = await getMediaForEntity(db, 'person', person.id);
     expect(results.map(r => r.title)).toEqual(['Third', 'Second', 'First']);

@@ -470,18 +470,18 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   for (const rid of [...referencedSplaceIds]) collectAncestors(rid);
 
   const importedSplaces = new Set<number>();
-  function importSplace(rid: number): void {
+  async function importSplace(rid: number): Promise<void> {
     if (importedSplaces.has(rid)) return;
     const sp = splacesById.get(rid);
     if (!sp) return;
-    if (sp.PARENT != null && !importedSplaces.has(sp.PARENT)) importSplace(sp.PARENT);
+    if (sp.PARENT != null && !importedSplaces.has(sp.PARENT)) await importSplace(sp.PARENT);
 
     const parentUuid = sp.PARENT != null ? splaceFlatMap.get(sp.PARENT) ?? null : null;
     const lat = sp.LATITUD != null && sp.LATITUD !== 0 ? sp.LATITUD : null;
     const lon = sp.LONGITUD != null && sp.LONGITUD !== 0 ? sp.LONGITUD : null;
     const name = sp.NAME ?? `Place ${rid}`;
     const id = crypto.randomUUID();
-    stmts.insertPlace.run([
+    await stmts.insertPlace.run([
       id, name, name.toLowerCase().trim().replace(/\s+/g, ' '),
       mapSplaceType(sp.TYPE), parentUuid, lat, lon, sp.NOTE ?? '',
       sp.STREET ?? null, sp.POSTALCODE ?? null, sp.CITY ?? null, sp.COUNTRY ?? null,
@@ -490,7 +490,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     importedSplaces.add(rid);
     summary.places++;
   }
-  for (const rid of referencedSplaceIds) importSplace(rid);
+  for (const rid of referencedSplaceIds) await importSplace(rid);
 
   // Build event→SPLACE lookup
   const eventToSplace = new Map<string, number>();
@@ -520,12 +520,12 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const notes = noteParts.length > 0 ? noteParts.join('\n') : '';
 
     const id = crypto.randomUUID();
-    stmts.insertPerson.run([id, sex, notes]);
+    await stmts.insertPerson.run([id, sex, notes]);
     personMap.set(p.RID, id);
 
     const hasName = !!((given && given.trim()) || (p.SURNAME && p.SURNAME.trim()));
     if (hasName) {
-      stmts.insertPersonName.run([
+      await stmts.insertPersonName.run([
         crypto.randomUUID(), id,
         given ?? null, p.SURNAME ?? null,
         p.PREFIX ?? null, p.SUFFIX ?? null,
@@ -540,7 +540,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     }
 
     if (p.UID) {
-      stmts.insertPersonIdentifier.run([
+      await stmts.insertPersonIdentifier.run([
         crypto.randomUUID(), id, 'other', String(p.UID), new Date().toISOString(),
       ]);
     }
@@ -557,7 +557,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   for (const src of tables.SOURCE) {
     const title = (src.TITLE || src.ABBREVIATION || '').trim();
     const id = crypto.randomUUID();
-    stmts.insertSource.run([
+    await stmts.insertSource.run([
       id, title, src.AUTHOR ?? '', src.PUBLICATION ?? '', mapSourceType(src.MEDIATYPE),
       src.CALLNUMBER ?? null, src.TEXT ?? null,
     ]);
@@ -580,7 +580,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const subtype = mapCoupleSubtype(spouseRelType.get(fam.RID));
 
     const id = crypto.randomUUID();
-    stmts.insertRelationship.run([id, 'couple', p1, p2, subtype ?? null, fam.NOTE ?? '']);
+    await stmts.insertRelationship.run([id, 'couple', p1, p2, subtype ?? null, fam.NOTE ?? '']);
     familyMap.set(fam.RID, id);
     summary.coupleRelationships++;
   }
@@ -597,7 +597,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (cf.FATHER && cf.FATHERLINK) {
       const fatherId = personMap.get(cf.FATHER);
       if (fatherId) {
-        stmts.insertRelationship.run([
+        await stmts.insertRelationship.run([
           crypto.randomUUID(), 'parent_child', fatherId, childId,
           mapParentChildSubtype(cf.FATHERLINK) ?? null, '',
         ]);
@@ -610,7 +610,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (cf.MOTHER && cf.MOTHERLINK) {
       const motherId = personMap.get(cf.MOTHER);
       if (motherId) {
-        stmts.insertRelationship.run([
+        await stmts.insertRelationship.run([
           crypto.randomUUID(), 'parent_child', motherId, childId,
           mapParentChildSubtype(cf.MOTHERLINK) ?? null, '',
         ]);
@@ -663,7 +663,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const rel_id = familyOwner ? familyMap.get(familyOwner) ?? null : null;
 
     const id = crypto.randomUUID();
-    stmts.insertEvent.run([
+    await stmts.insertEvent.run([
       id, event_type, rel_id,
       parsedDate?.date_type ?? 'unknown',
       parsedDate?.date_value ?? null,
@@ -679,7 +679,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     for (const owner of owners) {
       if (!owner.startsWith('I')) continue;
       const person_id = personMap.get(owner);
-      if (person_id) stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
+      if (person_id) await stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
     }
 
     summary.events++;
@@ -706,7 +706,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
 
     const owners = citOwnerMap.get(cit.RID) ?? [];
     if (owners.length === 0) {
-      stmts.insertCitation.run([
+      await stmts.insertCitation.run([
         crypto.randomUUID(), source_id, null, null, null,
         cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
         cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
@@ -723,14 +723,14 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
         const person_id = personMap.get(owner);
         if (person_id) {
           const mentionId = crypto.randomUUID();
-          stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, null, '']);
-          stmts.insertParticipant.run([crypto.randomUUID(), mentionId, person_id, 'primary']);
+          await stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, null, '']);
+          await stmts.insertParticipant.run([crypto.randomUUID(), mentionId, person_id, 'primary']);
           event_id = mentionId;
           summary.events++;
         }
       }
 
-      stmts.insertCitation.run([
+      await stmts.insertCitation.run([
         crypto.randomUUID(), source_id, event_id, null, relationship_id,
         cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
         cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
@@ -746,7 +746,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (!repo.RID) continue;
     const id = crypto.randomUUID();
     const addressLine = [repo.ADDRESS, repo.ADDRESS1, repo.ADDRESS2].filter(Boolean).join(', ') || null;
-    stmts.insertRepository.run([
+    await stmts.insertRepository.run([
       id, repo.NAME ?? repo.RID,
       addressLine, repo.CITY ?? null, repo.POSTALCODE ?? null,
       repo.STATE ?? null, repo.COUNTRY ?? null,
@@ -762,7 +762,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (!sr.SOURCE || !sr.REPO) continue;
     const source_id = sourceMap.get(sr.SOURCE);
     const repo_id = repoMap.get(sr.REPO);
-    if (source_id && repo_id) stmts.insertSourceRepo.run([source_id, repo_id]);
+    if (source_id && repo_id) await stmts.insertSourceRepo.run([source_id, repo_id]);
   }
 
   // ── 9. Import groups + memberships ──────────────────────────────────────
@@ -771,7 +771,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   for (const grp of tables.GROUPS) {
     if (!grp.RID) continue;
     const id = crypto.randomUUID();
-    stmts.insertGroup.run([id, grp.NAME ?? grp.RID, grp.NOTE ?? '']);
+    await stmts.insertGroup.run([id, grp.NAME ?? grp.RID, grp.NOTE ?? '']);
     groupMap.set(grp.RID, id);
     summary.groups++;
   }
@@ -781,7 +781,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const group_id = groupMap.get(gm.GROUPS);
     const person_id = personMap.get(gm.PERSON);
     if (group_id && person_id) {
-      stmts.insertGroupLink.run([crypto.randomUUID(), group_id, person_id]);
+      await stmts.insertGroupLink.run([crypto.randomUUID(), group_id, person_id]);
     }
   }
 
@@ -793,7 +793,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const id = crypto.randomUUID();
     let fileRef = m.FILEREF ?? null;
     if (fileRef && opts.mediaDir) fileRef = remapGenneyMediaPath(fileRef, opts.mediaDir);
-    stmts.insertMedia.run([
+    await stmts.insertMedia.run([
       id, fileRef, m.TITLE ?? '', m.FORMAT ?? null,
       m.NOTE ?? '', m.ISPRINTABLE === 1 ? 1 : 0,
     ]);
@@ -815,7 +815,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     else if (om.OWNER.startsWith('S')) { entity_type = 'source'; entity_id = sourceMap.get(om.OWNER) ?? null; }
 
     if (entity_type && entity_id) {
-      stmts.insertMediaLink.run([crypto.randomUUID(), media_id, entity_type, entity_id, om.LINKTYPE ?? null]);
+      await stmts.insertMediaLink.run([crypto.randomUUID(), media_id, entity_type, entity_id, om.LINKTYPE ?? null]);
     }
   }
 
@@ -829,13 +829,13 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const taskId = crypto.randomUUID();
     const person_id = todo.PERSON ? personMap.get(todo.PERSON) ?? null : null;
     const status = GENNEY_TODO_STATUS[String(todo.STATUS ?? '').toLowerCase()] ?? 'open';
-    stmts.insertResearchTask.run([
+    await stmts.insertResearchTask.run([
       taskId,
       todo.PRIORITY ?? 0, status,
       todo.TASK ?? '', todo.NOTE ?? '', todo.RESULT ?? '',
     ]);
     if (person_id) {
-      stmts.insertTaskLink.run([crypto.randomUUID(), taskId, person_id]);
+      await stmts.insertTaskLink.run([crypto.randomUUID(), taskId, person_id]);
     }
     summary.researchTasks++;
   }

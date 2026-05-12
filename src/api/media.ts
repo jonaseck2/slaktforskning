@@ -211,12 +211,15 @@ export async function getMediaForEntity(db: Database, entityType: MediaLinkEntit
   `, [entityType, entityId]);
 }
 
-export function reorderMediaLinks(db: Database, linkIds: string[]): void {
+export async function reorderMediaLinks(db: Database, linkIds: string[]): Promise<void> {
   const stmt = db.prepare('UPDATE media_links SET sort_order = ? WHERE id = ?');
-  for (let i = 0; i < linkIds.length; i++) {
-    stmt.run([i, linkIds[i]]);
+  try {
+    for (let i = 0; i < linkIds.length; i++) {
+      await stmt.run([i, linkIds[i]]);
+    }
+  } finally {
+    stmt.finalize();
   }
-  stmt.finalize();
 }
 
 export interface ProfilePicRef {

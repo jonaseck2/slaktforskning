@@ -73,7 +73,7 @@ export async function consolidateMediaFolder(
   const folderName = getMediaFolderName(dbPath);
   const mediaDir = getMediaDir(dbPath);
 
-  const rows = db.all('SELECT id, file_ref FROM media') as Array<{ id: string; file_ref: string | null }>;
+  const rows = await db.all('SELECT id, file_ref FROM media') as Array<{ id: string; file_ref: string | null }>;
   console.log(`[import-timing]   consolidateMediaFolder: ${rows.length} media rows to walk, dest=${mediaDir}, bulkCopiedFromDir=${bulkCopiedFromDir ?? '(none)'}, concurrency=${COPY_CONCURRENCY}`);
   if (rows.length === 0) return result;
 
@@ -132,7 +132,7 @@ export async function consolidateMediaFolder(
     if (bulkCopiedFromDir && isPathUnder(ref, bulkCopiedFromDir)) {
       const rel = path.relative(bulkCopiedFromDir, ref);
       if (existingDestRelPaths.has(rel)) {
-        update.run([path.join(folderName, rel), row.id]);
+        await update.run([path.join(folderName, rel), row.id]);
         fastPathHits++;
         result.copied++;
         return;
@@ -167,7 +167,7 @@ export async function consolidateMediaFolder(
         throw err;
       }
     }
-    update.run([path.join(folderName, filename), row.id]);
+    await update.run([path.join(folderName, filename), row.id]);
     result.copied++;
   }
 

@@ -1,5 +1,6 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { Place } from '../api/types';
+import { queryOne } from '../api/db';
 import { createPlace, findOrCreatePlace } from '../api/places';
 
 function normalize(name: string): string {
@@ -13,11 +14,9 @@ function normalize(name: string): string {
  */
 async function findOrCreateWithParent(db: Database, name: string, parentId: string | null): Promise<Place> {
   const norm = normalize(name);
-  const existing = (
-    parentId === null
-      ? db.prepare('SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1').get([norm])
-      : db.prepare('SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1').get([norm, parentId])
-  ) as Place | undefined;
+  const existing = parentId === null
+    ? await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id IS NULL LIMIT 1', [norm])
+    : await queryOne<Place>(db, 'SELECT * FROM places WHERE normalized_name = ? AND parent_place_id = ? LIMIT 1', [norm, parentId]);
   if (existing) return existing;
   return createPlace(db, { name: name.trim(), parent_place_id: parentId });
 }

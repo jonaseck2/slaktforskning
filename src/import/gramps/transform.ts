@@ -437,7 +437,7 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     const parentOurId = placeMap.get(p.parentHandle);
     if (!childOurId || !parentOurId) continue;
     const stmt = ourDb.prepare('UPDATE places SET parent_place_id = ? WHERE id = ?');
-    try { stmt.run([parentOurId, childOurId]); }
+    try { await stmt.run([parentOurId, childOurId]); }
     finally { (stmt as unknown as { finalize(): void }).finalize(); }
   }
 

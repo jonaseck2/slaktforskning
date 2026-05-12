@@ -456,7 +456,7 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
     for (const q of queries) {
       const stmt = db.prepare(q.sql);
       try {
-        const rows = stmt.all(q.params) as { person_id: string }[];
+        const rows = await stmt.all(q.params) as { person_id: string }[];
         if (rows.length === 1) {
           await setDbSetting(db, 'default_person_id', rows[0].person_id);
           break outer;
