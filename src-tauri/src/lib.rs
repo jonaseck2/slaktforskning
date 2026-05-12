@@ -123,21 +123,41 @@ async fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonV
     db::db_all(sql, params.unwrap_or_default()).await
 }
 
-/// Returns the absolute path to the default database file inside the app's
-/// per-user data directory. Creates the parent dir if missing. The renderer
-/// uses this on first boot so the spike persists across launches without a
-/// file picker.
+/// Returns the absolute path to the default database file. Resolution order:
+///   1. `SLAKTFORSKNING_DB` env override (used by the Playwright fixture).
+///   2. `<exe-dir>/family.db` when the exe's directory is writable. This makes
+///      the app portable — drop the zip on a USB stick, the family.db lives
+///      alongside the exe and travels with it.
+///   3. `<app_data_dir>/family.db` as the fallback for installer setups
+///      where the exe lives in Program Files (read-only without admin).
 ///
-/// E2E override: when `SLAKTFORSKNING_DB` is set in the process environment,
-/// return that path verbatim (still creating the parent dir if missing). The
-/// Playwright fixture spawns the packaged binary with this var pointed at a
-/// temp `.db` so each test run gets a fresh, isolated database without
-/// touching the user's real `app_data_dir/family.db`.
+/// Creates the parent dir if missing. The renderer calls this on first boot
+/// so the database persists across launches without a file picker.
 #[tauri::command]
 fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
     use std::fs;
-    use std::path::PathBuf;
+    use std::io::Write;
+    use std::path::{Path, PathBuf};
     use tauri::Manager;
+
+    fn is_dir_writable(dir: &Path) -> bool {
+        let probe = dir.join(".slaktforskning-write-probe");
+        match fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&probe)
+        {
+            Ok(mut f) => {
+                let ok = f.write_all(b"").is_ok();
+                drop(f);
+                let _ = fs::remove_file(&probe);
+                ok
+            }
+            Err(_) => false,
+        }
+    }
+
     if let Ok(override_path) = std::env::var("SLAKTFORSKNING_DB") {
         if !override_path.is_empty() {
             let p = PathBuf::from(&override_path);
@@ -150,13 +170,21 @@ fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
             return Ok(override_path);
         }
     }
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            if is_dir_writable(exe_dir) {
+                return Ok(exe_dir.join("family.db").to_string_lossy().into_owned());
+            }
+        }
+    }
+
     let dir = app
         .path()
         .app_data_dir()
         .map_err(|e| format!("app_data_dir: {e}"))?;
     fs::create_dir_all(&dir).map_err(|e| format!("create_dir_all: {e}"))?;
-    let p = dir.join("family.db");
-    Ok(p.to_string_lossy().into_owned())
+    Ok(dir.join("family.db").to_string_lossy().into_owned())
 }
 
 /// Returns the path of the currently-open DB, or None if none open. Backs

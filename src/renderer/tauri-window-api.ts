@@ -35,6 +35,15 @@ function getDb(): Database {
   return dbInstance;
 }
 
+// Renderer-local "import in progress" flag. The Tauri build runs imports
+// directly in the renderer (no worker thread), so the worker-side
+// `setWorkerImportInProgress` from db-worker-state.ts is bypassed for the
+// polyfilled importers. We mirror the same gate here: long-running quality
+// checks return early when an import is mid-flight, so they don't race the
+// import for the DB mutex and slow it down. Set by each importer polyfill
+// (holgerRun, grampsRun, rootsmagicRun), consumed by api.checks.* below.
+let _importInProgress = false;
+
 // data:changed broadcast — emit through Tauri's event bus so multiple windows
 // stay in sync. The Electron build does this via main → BrowserWindow.send;
 // in Tauri, every renderer that mutates calls `emit('data:changed')` which
@@ -326,6 +335,7 @@ export function mountWindowApi(db: Database): MountResult {
     return cur.replace(/[\\/][^\\/]+$/, '');
   };
   api.checks.runAll = async () => {
+    if (_importInProgress) return [];
     const dbDir = await dbDirFromPath();
     const results = await checks.runAllChecks(getDb(), dbDir);
     // Cap notice severity per code at 500, mirroring the worker's behaviour.
@@ -359,6 +369,13 @@ export function mountWindowApi(db: Database): MountResult {
   };
   api.checks.forPerson = async (personId: unknown) => {
     if (typeof personId !== 'string') return [];
+    // Skip during active imports — checks run every rule against every event
+    // for a person and contend with the importer for the DB mutex. Old
+    // Electron build had the same gate via `getWorkerImportInProgress`; the
+    // Tauri build needs it explicitly because the polyfilled importers
+    // bypass `withImportLifecycle`. The panel section will re-load when the
+    // import emits its post-completion data:changed broadcast.
+    if (_importInProgress) return [];
     const dbDir = await dbDirFromPath();
     const results: import('../api/checks').CheckResult[] = [];
     for (const c of checks.getAllCheckFunctions()) {
@@ -370,16 +387,19 @@ export function mountWindowApi(db: Database): MountResult {
   };
   api.checks.forPlace = async (placeId: unknown) => {
     if (typeof placeId !== 'string') return [];
+    if (_importInProgress) return [];
     const dbDir = await dbDirFromPath();
     return await checks.runChecksForPlace(getDb(), placeId, dbDir);
   };
   api.checks.forMedia = async (mediaId: unknown) => {
     if (typeof mediaId !== 'string') return [];
+    if (_importInProgress) return [];
     const dbDir = await dbDirFromPath();
     return await checks.runChecksForMedia(getDb(), mediaId, dbDir);
   };
   api.checks.runForEvent = async (eventId: unknown) => {
     if (typeof eventId !== 'string') return [];
+    if (_importInProgress) return [];
     return await checks.runChecksForEvent(getDb(), eventId);
   };
   api.checks.cancel = async () => { /* no cancellation surface here yet */ };
@@ -404,6 +424,7 @@ export function mountWindowApi(db: Database): MountResult {
   api.gedcom.import = async (opts: unknown) => {
     const o = opts as { filePath?: string; mediaDir?: string; profile?: 'standard' | 'minimal' } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
+    _importInProgress = true;
     try {
       const [enc, parserMod, importerMod] = await Promise.all([
         import('../gedcom/encoding'),
@@ -417,11 +438,14 @@ export function mountWindowApi(db: Database): MountResult {
       const report = await importerMod.importGedcom(getDb(), tree, {
         mediaDir: o.mediaDir,
         profile: o.profile,
+        onProgress: (m) => fireProgress('genney', m),
       });
       fireDataChanged();
       return report;
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
+    } finally {
+      _importInProgress = false;
     }
   };
 
@@ -499,6 +523,7 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.grampsRun = async (opts: unknown) => {
     const o = opts as { filePath?: string } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
+    _importInProgress = true;
     try {
       const grampsMod = await import('../import/gramps');
       const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
@@ -508,6 +533,8 @@ export function mountWindowApi(db: Database): MountResult {
       return { success: true, summary: result.summary };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
+    } finally {
+      _importInProgress = false;
     }
   };
 
@@ -525,6 +552,7 @@ export function mountWindowApi(db: Database): MountResult {
     if (!path) return { success: false, error: 'sourcePath is required' };
     let tempPath: string | null = null;
     let secondary: import('./secondary-db-shim').SecondaryDatabase | null = null;
+    _importInProgress = true;
     try {
       const [{ SecondaryDatabase }, rmMod] = await Promise.all([
         import('./secondary-db-shim'),
@@ -549,6 +577,7 @@ export function mountWindowApi(db: Database): MountResult {
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
     } finally {
+      _importInProgress = false;
       if (secondary) {
         try { secondary.close(); } catch { /* ignore */ }
       }
@@ -616,9 +645,22 @@ export function mountWindowApi(db: Database): MountResult {
       // <dbname>-media/ via the fast path.
       const holgerMod = await import('../import/holger/index');
       fireProgress('holger', `Importing ${extracted.gedName}…`);
-      const { report } = await holgerMod.importFromHolgerWithBytes(getDb(), gedBytes, {
-        mediaDir: o.mediaDir,
-      });
+      // CRITICAL: route per-phase and per-row progress emitted by the GEDCOM
+      // import pipeline (phasePrepPlaces, phaseObje, phaseSources,
+      // phaseIndividuals, phaseFamilies) through fireProgress so the toast
+      // bar in HolgerImportSection.vue actually receives (N / M) messages.
+      // Without this, the bar stays indeterminate for the whole import even
+      // though phases.ts is emitting fine-grained progress.
+      _importInProgress = true;
+      let report;
+      try {
+        ({ report } = await holgerMod.importFromHolgerWithBytes(getDb(), gedBytes, {
+          mediaDir: o.mediaDir,
+          onProgress: (m) => fireProgress('holger', m),
+        }));
+      } finally {
+        _importInProgress = false;
+      }
       fireProgress('holger', `Imported ${report?.persons ?? 0} persons; consolidating media…`);
 
       // Step 4 — copy + rewrite media file_refs.

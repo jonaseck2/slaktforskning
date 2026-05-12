@@ -19,6 +19,14 @@ export interface ImportContext {
   isGenney: boolean;
   isHolger: boolean;
   resolvePlaceFn: (db: Database, name: string) => Promise<Place>;
+  /** Pre-resolved place map (set by phasePrepPlaces). Keyed by normalized
+   *  name. Replaces the per-event IPC roundtrip of `findOrCreatePlace`
+   *  with a Map.get() inside resolvePlaceFn. */
+  prefetchedPlaces?: Map<string, Place>;
+  /** Pre-resolved inline-OBJE map (set by phasePrepInlineMedia). Keyed by
+   *  the OBJE GedcomNode itself. Replaces every per-event
+   *  `createMedia(...)` IPC inside `importObjeNode` with a Map.get(). */
+  inlineMediaMap?: Map<GedcomNode, string>;
 
   // ── Maps built & consumed across phases ──────────────────────────────────
   noteMap: Map<string, string>;                         // xref → note text

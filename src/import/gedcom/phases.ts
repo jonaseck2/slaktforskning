@@ -18,13 +18,15 @@
  *   SUBM  Submitter name collection
  */
 
+import { v4 as uuid } from 'uuid';
 import { basename } from 'path';
-import type { Relationship, RelationshipType, EventParticipantRole } from '../../api/types';
-import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
-import { createRelationship, updateRelationship, addEventParticipant, getRelationshipsOfPerson } from '../../api/relationships';
-import { createSource, createCitation } from '../../api/sources';
-import { createMedia, addMediaLink } from '../../api/media';
-import { getPlace } from '../../api/places';
+import type { Relationship, RelationshipType, EventParticipantRole, PersonIdentifier } from '../../api/types';
+import { bulkCreatePersons, bulkAddPersonNames, bulkAddPersonIdentifiers } from '../../api/persons';
+import { createRelationship, updateRelationship, addEventParticipant, bulkAddEventParticipants, getRelationshipsOfPerson } from '../../api/relationships';
+import { createSource, createCitation, bulkCreateSources } from '../../api/sources';
+import { createMedia, addMediaLink, bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
+import { getPlace, bulkResolvePlaces } from '../../api/places';
+import type { Place } from '../../api/types';
 import { createRepository, linkSourceRepository } from '../../api/repositories';
 import { createGroup, addGroupLink } from '../../api/groups';
 import { createResearchTask, addTaskLink } from '../../api/research_tasks';
@@ -99,13 +101,145 @@ export async function phaseNotes(ctx: ImportContext): Promise<void> {
   }
 }
 
+// ── Phase 0.3: pre-resolve places ──────────────────────────────────────────
+
+/**
+ * Walk every PLAC tag in the tree, deduplicate by normalized name, and bulk-
+ * resolve to existing or freshly-inserted Place rows. Stores the result in
+ * `ctx.prefetchedPlaces` keyed by normalized name. `ctx.resolvePlaceFn` is
+ * then overridden so per-event lookups become Map.get() — zero IPC per
+ * event, instead of `findOrCreatePlace`'s SELECT + maybe INSERT.
+ *
+ * Skipped for Genney imports — they use a different resolver that handles
+ * hierarchical "Stockholm, Sverige (X)" parsing; pre-resolution would have
+ * to mirror that logic. For Holger and plain GEDCOM (the dominant case),
+ * this collapses 60-100k+ IPC calls into 2.
+ */
+export async function phasePrepPlaces(ctx: ImportContext): Promise<void> {
+  if (ctx.isGenney) return;
+
+  const names: string[] = [];
+  const seen = new Set<string>();
+  function walk(nodes: typeof ctx.tree): void {
+    for (const n of nodes) {
+      if (n.tag === 'PLAC' && n.value) {
+        const trimmed = n.value.trim();
+        if (trimmed && !seen.has(trimmed)) {
+          seen.add(trimmed);
+          names.push(trimmed);
+        }
+      }
+      if (n.children.length > 0) walk(n.children);
+    }
+  }
+  walk(ctx.tree);
+  if (names.length === 0) return;
+
+  ctx.options?.onProgress?.(`Förbereder ${names.length} platser…`);
+  const placeMap = await bulkResolvePlaces(ctx.db, names);
+  ctx.prefetchedPlaces = placeMap;
+
+  // Wrap the original resolver — Map.get on hit, fall through on miss
+  // (e.g. ADDR-derived names that didn't show up in any PLAC).
+  const originalResolve = ctx.resolvePlaceFn;
+  function normalize(name: string): string {
+    return name.toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+  ctx.resolvePlaceFn = async (db, name) => {
+    const cached = placeMap.get(normalize(name));
+    if (cached) return cached;
+    const created = await originalResolve(db, name);
+    placeMap.set(normalize(created.name), created);
+    return created;
+  };
+  console.log(`[import-timing]     phasePrepPlaces: resolved ${names.length} unique places`);
+}
+
+// ── Phase 0.4: pre-resolve inline OBJE (media inside INDI/FAM/events) ──────
+
+/**
+ * Walk the tree, find every *inline* OBJE node (i.e. OBJE without an xref
+ * and without an `@ref@` value — these are media records embedded under
+ * INDI / FAM / event nodes, not top-level OBJE records). Pre-generate
+ * UUIDs and bulk-INSERT them in one batched call.
+ *
+ * Holger imports are inline-OBJE heavy — the user's reference file has
+ * 11k+ inline OBJE records and zero top-level OBJE. Without this phase,
+ * every `importObjeNode` inside an event loop pays one IPC roundtrip for
+ * `createMedia`; this collapses 11k calls into 1.
+ *
+ * `inlineMediaMap` is keyed by the GedcomNode reference itself — node
+ * identity is stable across the import because the tree is read-only
+ * after parsing. `importObjeNode` consults it first; on cache hit it
+ * returns the pre-allocated mediaId without any IPC.
+ */
+export async function phasePrepInlineMedia(ctx: ImportContext): Promise<void> {
+  const inlineNodes: typeof ctx.tree = [];
+  function walk(nodes: typeof ctx.tree): void {
+    for (const n of nodes) {
+      if (n.tag === 'OBJE' && !n.xref && !n.value?.startsWith('@')) {
+        inlineNodes.push(n);
+      }
+      if (n.children.length > 0) walk(n.children);
+    }
+  }
+  walk(ctx.tree);
+  if (inlineNodes.length === 0) return;
+
+  const inlineMediaMap = new Map<typeof ctx.tree[number], string>();
+  ctx.inlineMediaMap = inlineMediaMap;
+
+  ctx.options?.onProgress?.(`Förbereder inbäddade media (0 / ${inlineNodes.length})`);
+  const mediaDir = ctx.options?.mediaDir;
+  const rows: Array<{
+    id: string; file_ref: string | null; title: string; format: string | null;
+    notes: string; is_printable: boolean; is_missing: boolean;
+  }> = new Array(inlineNodes.length);
+  for (let i = 0; i < inlineNodes.length; i++) {
+    const node = inlineNodes[i];
+    let file = getChild(node, 'FILE')?.value ?? '';
+    if (file && mediaDir) {
+      file = remapHolgerMediaPath(file, mediaDir);
+    }
+    const form = getChild(node, 'FORM')?.value ?? null;
+    const titl = getChild(node, 'TITL')?.value ?? null;
+    const noteVal = getChild(node, 'NOTE')?.value ?? '';
+    const id = crypto.randomUUID();
+    inlineMediaMap.set(node, id);
+    rows[i] = {
+      id,
+      file_ref: file || null,
+      title: titl ?? (file ? basename(file) : ''),
+      format: form,
+      notes: noteVal,
+      is_printable: false,
+      is_missing: !file,
+    };
+    if ((i + 1) % 1000 === 0 || (i + 1) === inlineNodes.length) {
+      ctx.options?.onProgress?.(`Förbereder inbäddade media (${i + 1} / ${inlineNodes.length})`);
+    }
+  }
+  ctx.options?.onProgress?.(`Sparar ${rows.length} inbäddade mediaposter (1 / 1)…`);
+  await bulkCreateMedia(ctx.db, rows);
+  console.log(`[import-timing]     phasePrepInlineMedia: resolved ${inlineNodes.length} inline OBJE`);
+}
+
 // ── Phase 0.5: OBJE top-level records ──────────────────────────────────────
 
 export async function phaseObje(ctx: ImportContext): Promise<void> {
-  let total = 0, withFile = 0;
-  for (const node of ctx.tree) {
-    if (node.tag !== 'OBJE' || !node.xref) continue;
-    total++;
+  // Two-pass: parse + collect; bulk INSERT once at the end. The Tauri
+  // build pays one IPC per `createMedia` call; for a Holger import with
+  // 22k OBJE records that's 22k IPC. Batched INSERT is one call.
+  const objeNodes: typeof ctx.tree = [];
+  for (const n of ctx.tree) if (n.tag === 'OBJE' && n.xref) objeNodes.push(n);
+  const total = objeNodes.length;
+  if (total === 0) return;
+
+  ctx.options?.onProgress?.(`Importerar media (0 / ${total})`);
+  const rows: Array<{ id: string; file_ref: string | null; title: string; format: string | null; notes: string; is_printable: boolean; is_missing: boolean }> = new Array(total);
+  let withFile = 0;
+  for (let i = 0; i < total; i++) {
+    const node = objeNodes[i];
     let file = getChild(node, 'FILE')?.value ?? '';
     if (file && ctx.options?.mediaDir) {
       file = remapHolgerMediaPath(file, ctx.options.mediaDir);
@@ -114,20 +248,26 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
     const form = getChild(node, 'FORM')?.value ?? null;
     const titl = getChild(node, 'TITL')?.value ?? null;
     const note = getChild(node, 'NOTE')?.value ?? '';
-    // is_missing is the inverse of "we have a file_ref"; whether that file is
-    // actually on disk is decided later by consolidateMediaFolder via a single
-    // recursive readdir of the dest folder. Doing it here would mean N
-    // sync existsSync() calls (~6s for 12k OBJEs) on the main thread.
-    const media = await createMedia(ctx.db, {
+    const id = crypto.randomUUID();
+    ctx.objeMap.set(node.xref!, id);
+    // is_missing is the inverse of "we have a file_ref"; whether that file
+    // is actually on disk is decided later by consolidateMediaFolder via a
+    // single recursive readdir of the dest folder.
+    rows[i] = {
+      id,
       file_ref: file || null,
-      title: titl || (file ? basename(file) : undefined),
+      title: titl ?? (file ? basename(file) : ''),
       format: form,
-      notes: note || undefined,
+      notes: note,
       is_printable: false,
       is_missing: !file,
-    });
-    ctx.objeMap.set(node.xref, media.id);
+    };
+    if ((i + 1) % 500 === 0 || (i + 1) === total) {
+      ctx.options?.onProgress?.(`Importerar media (${i + 1} / ${total})`);
+    }
   }
+  ctx.options?.onProgress?.(`Sparar ${total} mediaposter…`);
+  await bulkCreateMedia(ctx.db, rows);
   console.log(`[import-timing]     phaseObje: total=${total} withFile=${withFile}`);
 }
 
@@ -175,66 +315,136 @@ export async function phaseGroups(ctx: ImportContext): Promise<void> {
 // ── Phase 1: SOUR records ──────────────────────────────────────────────────
 
 export async function phaseSources(ctx: ImportContext): Promise<void> {
-  for (const node of ctx.tree) {
-    if (node.tag !== 'SOUR' || !node.xref) continue;
-    const src = await createSource(ctx.db, {
+  // Two-pass: parse + collect; bulk INSERT once; then per-row repo links.
+  const sourNodes: typeof ctx.tree = [];
+  for (const n of ctx.tree) if (n.tag === 'SOUR' && n.xref) sourNodes.push(n);
+  const total = sourNodes.length;
+  if (total === 0) return;
+
+  ctx.options?.onProgress?.(`Importerar källor (0 / ${total})`);
+  type SourceRow = {
+    id: string;
+    title: string; author: string; publication_info: string; repository: string;
+    url: string; source_type: string;
+    abstract: string | null; call_number: string | null;
+  };
+  const rows: SourceRow[] = new Array(total);
+  // Repo-link pairs to flush after the bulk source insert (still per-row IPC
+  // because there are typically few repository links; not the hot path).
+  const repoLinks: Array<{ sourceId: string; repoXref: string }> = [];
+  for (let i = 0; i < total; i++) {
+    const node = sourNodes[i];
+    const id = uuid();
+    ctx.sourceMap.set(node.xref!, id);
+    rows[i] = {
+      id,
       title: getChild(node, 'TITL')?.value ?? '',
       author: getChild(node, 'AUTH')?.value ?? '',
       publication_info: getChild(node, 'PUBL')?.value ?? '',
       repository: (() => {
         const repoText = getChild(node, '_REPO_TEXT')?.value;
         if (repoText) return repoText;
-        // Legacy: plain text in REPO (not an xref pointer)
         const repoVal = getChild(node, 'REPO')?.value ?? '';
         return repoVal.startsWith('@') ? '' : repoVal;
       })(),
       url: getChild(node, '_URL')?.value ?? '',
       source_type: getChild(node, '_STYPE')?.value ?? '',
-      // Custom _ABSTRACT / _CALL sub-tags carry the user-authored
-      // sources.abstract and sources.call_number fields. Long values are
-      // wrapped across CONT continuation lines on export; the parser already
-      // unwraps CONT/CONC into the node's joined .value, so reading the
-      // value directly preserves embedded newlines. Distinct from the
-      // repository's own REPO.CALN (different table, different column).
       abstract: getChild(node, '_ABSTRACT')?.value ?? null,
       call_number: getChild(node, '_CALL')?.value ?? null,
-    });
-    ctx.sourceMap.set(node.xref, src.id);
+    };
     const repoVal = getChild(node, 'REPO')?.value ?? '';
-    if (repoVal.startsWith('@')) {
-      const repoId = ctx.repoMap.get(repoVal);
-      if (repoId) await linkSourceRepository(ctx.db, src.id, repoId);
+    if (repoVal.startsWith('@')) repoLinks.push({ sourceId: id, repoXref: repoVal });
+    if ((i + 1) % 200 === 0 || (i + 1) === total) {
+      ctx.options?.onProgress?.(`Importerar källor (${i + 1} / ${total})`);
     }
+  }
+  ctx.options?.onProgress?.(`Sparar ${total} källor…`);
+  await bulkCreateSources(ctx.db, rows);
+
+  // Repo links — small set; per-row is fine.
+  for (const { sourceId, repoXref } of repoLinks) {
+    const repoId = ctx.repoMap.get(repoXref);
+    if (repoId) await linkSourceRepository(ctx.db, sourceId, repoId);
   }
 }
 
 // ── Phase 2: INDI records ──────────────────────────────────────────────────
 
 export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
-  for (const node of ctx.tree) {
-    if (node.tag !== 'INDI' || !node.xref) continue;
+  // Two-pass collect-then-flush. The Tauri build pays ~1 ms IPC per
+  // singular createPerson / addPersonName / addPersonIdentifier; for a
+  // 22k-person Holger import that's 5+ minutes of pure IPC. We pre-parse
+  // every INDI into batched-INSERT buffers, generate UUIDs in JS so
+  // downstream rows can reference them, and flush in one bulk call each.
+  // Pass 2 then handles per-row work that's hard to batch (event chains,
+  // citations, media links, ASSO collection, tag counts).
+  const indiNodes: typeof ctx.tree = [];
+  for (const n of ctx.tree) if (n.tag === 'INDI' && n.xref) indiNodes.push(n);
+  const total = indiNodes.length;
+  if (total === 0) return;
+
+  type ParsedName = {
+    id: string;
+    nameNode: typeof ctx.tree[number];
+    given_name: string | null;
+    surname: string | null;
+    name_prefix: string | null;
+    name_suffix: string | null;
+    name_type: 'birth' | 'married' | 'name_change' | 'alias' | 'aka';
+    patronymic_base: string | null;
+    preferred_name: string | null;
+    nickname: string | null;
+    name_qualifier: string | null;
+    date_from: string | null;
+    date_to: string | null;
+  };
+
+  const personRows: Array<{ id: string; sex: 'M' | 'F' | 'U'; notes: string }> = [];
+  const nameRows: Array<{
+    id: string; person_id: string;
+    given_name: string | null; surname: string | null;
+    name_prefix: string | null; name_suffix: string | null;
+    name_type: ParsedName['name_type'];
+    patronymic_base: string | null;
+    preferred_name: string | null;
+    nickname: string | null;
+    name_qualifier: string | null;
+    date_from: string | null;
+    date_to: string | null;
+  }> = [];
+  const identifierRows: Array<{
+    person_id: string;
+    identifier_type: PersonIdentifier['identifier_type'];
+    identifier_value: string;
+  }> = [];
+  const parsedNamesByXref = new Map<string, ParsedName[]>();
+
+  // ─── Pass 1: parse every INDI; populate ctx.personMap up-front ──────────
+  ctx.options?.onProgress?.(`Importing persons (0 / ${total})`);
+  for (let i = 0; i < indiNodes.length; i++) {
+    const node = indiNodes[i];
+    const xref = node.xref!;
+    const personId = uuid();
+    ctx.personMap.set(xref, personId);
+    if (ctx.isHolger && ctx.firstPersonId === null) ctx.firstPersonId = personId;
 
     // Normalize SEX to schema's M / F / U vocabulary. Per GEDCOM 5.5.1 only
-    // M/F/U are valid; GEDCOM 7.0 adds X (intersex/non-binary) and N (no
-    // entry); some real-world files emit bare "1 SEX" (empty) or lowercase.
+    // M/F/U are valid; GEDCOM 7.0 adds X / N; some files emit bare or lowercase.
     // Anything outside M/F maps to U so the importer doesn't crash on the
-    // schema's CHECK constraint. This is lossy — see the warning below.
+    // schema's CHECK constraint. Lossy — disclosed via skippedTags below.
     const rawSex = getChild(node, 'SEX')?.value?.trim().toUpperCase() ?? '';
     const sex: 'M' | 'F' | 'U' = rawSex === 'M' ? 'M' : rawSex === 'F' ? 'F' : 'U';
     if (rawSex && rawSex !== 'M' && rawSex !== 'F' && rawSex !== 'U') {
       ctx.skippedTags.set(`SEX=${rawSex}`, (ctx.skippedTags.get(`SEX=${rawSex}`) ?? 0) + 1);
     }
-    let notes = resolveNote(node, ctx.noteMap);
 
-    // Genney 4.1: haplogroup tags -> append to notes
+    let notes = resolveNote(node, ctx.noteMap);
     if (ctx.isGenney) {
       const yHaplo = getChild(node, '_YHAPLOGROUP')?.value;
       const mHaplo = getChild(node, '_MHAPLOGROUP')?.value;
       if (yHaplo) notes = notes ? `${notes}\nY-DNA: ${yHaplo}` : `Y-DNA: ${yHaplo}`;
       if (mHaplo) notes = notes ? `${notes}\nmtDNA: ${mHaplo}` : `mtDNA: ${mHaplo}`;
     }
-
-    // Holger: append REMA and MISC as additional notes
     if (ctx.isHolger) {
       const extras: string[] = [];
       for (const child of node.children) {
@@ -249,33 +459,18 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         notes = notes ? `${notes}\n\n${extra}` : extra;
       }
     }
-
-    // Look ahead at NAME tags so we know whether to allow a nameless create.
-    // The importer always inserts the person row first then appends names via
-    // addPersonName below, so createPerson is always called without given/surname.
-    // We opt in to the importer-only `allowNameless` flag when (and only when)
-    // the source INDI record has no NAME tag — preserving the source's reference
-    // graph (this person may be a parent/spouse in a FAM record). The user is
-    // disclosed via the import report's `namelessPersonCount`.
-    const nameNodes = getChildren(node, 'NAME');
-
-    const person = await createPerson(ctx.db, {
-      sex,
-      notes: notes || undefined,
-    }, { allowNameless: true });
-    ctx.personMap.set(node.xref, person.id);
-    if (ctx.isHolger && ctx.firstPersonId === null) ctx.firstPersonId = person.id;
-
-    if (nameNodes.length === 0) {
-      ctx.namelessPersonCount += 1;
-    }
+    personRows.push({ id: personId, sex, notes });
 
     if (ctx.isHolger) {
       const subtypeMap = parseHolgerAdoptionSubtypes(node);
-      if (subtypeMap.size > 0) ctx.holgerAdoptionMap.set(node.xref!, subtypeMap);
+      if (subtypeMap.size > 0) ctx.holgerAdoptionMap.set(xref, subtypeMap);
     }
 
-    // Names
+    // Names — parse + assign UUIDs now so name-level citations in Pass 2
+    // can reference them.
+    const nameNodes = getChildren(node, 'NAME');
+    if (nameNodes.length === 0) ctx.namelessPersonCount += 1;
+    const parsedNames: ParsedName[] = [];
     for (const nameNode of nameNodes) {
       const raw = nameNode.value ?? '';
       const surnameMatch = raw.match(/^(.*?)\/(.+?)\/(.*)$/);
@@ -284,19 +479,17 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       const prefix = getChild(nameNode, 'NPFX')?.value ?? null;
       const suffix = getChild(nameNode, 'NSFX')?.value ?? null;
       const rawType = getChild(nameNode, 'TYPE')?.value?.toUpperCase();
-      const name_type =
+      const name_type: ParsedName['name_type'] =
         rawType === 'MARRIED' ? 'married'
         : rawType === 'NAME_CHANGE' ? 'name_change'
         : rawType === 'AKA' ? 'aka'
         : rawType === 'ALIAS' ? 'alias'
         : 'birth';
 
-      // _PATR overrides genney patronymic detection; both can coexist
       const explicitPatr = getChild(nameNode, '_PATR')?.value ?? null;
       const patronymic_base = explicitPatr ?? (ctx.isGenney ? getPatronymicBase(surname) : null);
 
-      // Preferred name (tilltalsnamn) marked with * (Genney) or ! (Holger/OurKind)
-      // directly after the token. e.g. "Eva Linda* Marie" -> preferred_name = "Linda"
+      // Preferred name (tilltalsnamn) marked with * (Genney) or ! (Holger).
       const nickname = getChild(nameNode, 'NICK')?.value ?? null;
       let preferred_name: string | null = null;
       const markerMatch = given ? given.match(/[*!]/) : null;
@@ -308,31 +501,123 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         preferred_name = tokens[tokens.length - 1] ?? null;
         given = (beforeMarker + (afterMarker ? ' ' + afterMarker : '')).replace(/\s+/g, ' ').trim() || null;
       }
-
-      // Holger/OurKind FORE tag: the tilltalsnamn (preferred name / kallad)
       if (ctx.isHolger && !preferred_name) {
         const fore = getChild(nameNode, 'FORE')?.value ?? null;
         if (fore) preferred_name = fore;
       }
 
-      const personName = await addPersonName(ctx.db, person.id, {
+      const nameId = uuid();
+      const parsed: ParsedName = {
+        id: nameId,
+        nameNode,
         given_name: given,
         surname,
         name_prefix: prefix,
         name_suffix: suffix,
-        name_type: name_type as 'birth' | 'married' | 'name_change' | 'alias' | 'aka',
+        name_type,
         patronymic_base,
         preferred_name,
         nickname,
         name_qualifier: (getChild(nameNode, '_NQUAL')?.value ?? null) as string | null,
         date_from: getChild(nameNode, '_DATE_FROM')?.value ?? null,
         date_to: getChild(nameNode, '_DATE_TO')?.value ?? null,
+      };
+      parsedNames.push(parsed);
+      nameRows.push({
+        id: nameId,
+        person_id: personId,
+        given_name: parsed.given_name,
+        surname: parsed.surname,
+        name_prefix: parsed.name_prefix,
+        name_suffix: parsed.name_suffix,
+        name_type: parsed.name_type,
+        patronymic_base: parsed.patronymic_base,
+        preferred_name: parsed.preferred_name,
+        nickname: parsed.nickname,
+        name_qualifier: parsed.name_qualifier,
+        date_from: parsed.date_from,
+        date_to: parsed.date_to,
       });
+    }
+    parsedNamesByXref.set(xref, parsedNames);
 
-      // Name-level citations: SOUR sub-tags under NAME (allowed by GEDCOM
-      // 5.5.1 and 7.0 NAME_PIECE structure). Counterpart of the exporter's
-      // emitCitationBlock under each NAME line.
-      for (const sour of getChildren(nameNode, 'SOUR')) {
+    // Identifiers — REFN with TYPE → typed; plain REFN → 'refn'.
+    for (const refn of getChildren(node, 'REFN')) {
+      if (!refn.value) continue;
+      const ltype = (getChild(refn, 'TYPE')?.value?.trim() ?? '').toLowerCase();
+      const identifier_type: PersonIdentifier['identifier_type'] =
+        ltype === 'familysearch' ? 'familysearch'
+        : ltype === 'ancestry' ? 'ancestry'
+        : ltype === 'riksarkivet' ? 'riksarkivet'
+        : ltype === 'personnummer' ? 'personnummer'
+        : ltype === 'other' ? 'other'
+        : 'refn';
+      identifierRows.push({ person_id: personId, identifier_type, identifier_value: refn.value });
+    }
+    const rin = getChild(node, 'RIN');
+    if (rin?.value) identifierRows.push({ person_id: personId, identifier_type: 'rin', identifier_value: rin.value });
+    // _UID (GEDCOM 5.5 non-standard, ubiquitous) and bare UID (GEDCOM 7.0 standard).
+    const uidNode = getChild(node, '_UID') ?? getChild(node, 'UID');
+    if (uidNode?.value) identifierRows.push({ person_id: personId, identifier_type: 'uid', identifier_value: uidNode.value });
+    const afn = getChild(node, 'AFN');
+    if (afn?.value) identifierRows.push({ person_id: personId, identifier_type: 'afn', identifier_value: afn.value });
+    // SSN — Privacy-sensitive but the Prime Directive says preserve authored data.
+    const ssn = getChild(node, 'SSN');
+    if (ssn?.value) identifierRows.push({ person_id: personId, identifier_type: 'ssn', identifier_value: ssn.value });
+    const fsid = getChild(node, 'FSID');
+    if (fsid?.value) identifierRows.push({ person_id: personId, identifier_type: 'familysearch', identifier_value: fsid.value });
+    // Legacy custom tags — read for backward compat with old exports.
+    const fsi = getChild(node, '_FSI');
+    if (fsi?.value) identifierRows.push({ person_id: personId, identifier_type: 'familysearch', identifier_value: fsi.value });
+    const anid = getChild(node, '_ANID');
+    if (anid?.value) identifierRows.push({ person_id: personId, identifier_type: 'ancestry', identifier_value: anid.value });
+    const raid = getChild(node, '_RAID');
+    if (raid?.value) identifierRows.push({ person_id: personId, identifier_type: 'riksarkivet', identifier_value: raid.value });
+    const pnummer = getChild(node, '_PNUMMER');
+    if (pnummer?.value) identifierRows.push({ person_id: personId, identifier_type: 'personnummer', identifier_value: pnummer.value });
+
+    if ((i + 1) % 200 === 0 || (i + 1) === total) {
+      ctx.options?.onProgress?.(`Importing persons (${i + 1} / ${total})`);
+    }
+  }
+
+  // ─── Flush: persons → names → identifiers (FK topo order) ──────────────
+  ctx.options?.onProgress?.(`Writing ${personRows.length} persons (1 / ${total})…`);
+  await bulkCreatePersons(ctx.db, personRows);
+  ctx.options?.onProgress?.(`Writing ${nameRows.length} names…`);
+  await bulkAddPersonNames(ctx.db, nameRows);
+  if (identifierRows.length > 0) {
+    ctx.options?.onProgress?.(`Writing ${identifierRows.length} identifiers…`);
+    await bulkAddPersonIdentifiers(ctx.db, identifierRows);
+  }
+
+  // ─── Pass 2: events, citations, ASSO, media, tag counts ────────────────
+  // Buffers for what we can batch at the end of the pass. event row IDs come
+  // back from importEventNode (per-row IPC) but the participant + media-link
+  // rows referencing those IDs go into buffers and get flushed in one bulk
+  // INSERT each at the end. That's ~22k × 3 events = 66k participant IPC
+  // calls collapsed to 1; same shape for person-level media links.
+  const participantBuffer: Array<{ event_id: string; person_id: string; role?: 'primary' }> = [];
+  const mediaLinkBuffer: Array<{
+    media_id: string;
+    entity_type: 'person' | 'event' | 'relationship' | 'place' | 'source';
+    entity_id: string;
+    sort_order: number;
+  }> = [];
+
+  const LDS_TAGS = new Set(['BAPL', 'SLGC', 'CONL', 'ENDL', 'SLGS']);
+  ctx.options?.onProgress?.(`Importing person events (0 / ${total})`);
+  for (let i = 0; i < indiNodes.length; i++) {
+    const node = indiNodes[i];
+    const xref = node.xref!;
+    const personId = ctx.personMap.get(xref)!;
+    const parsedNames = parsedNamesByXref.get(xref) ?? [];
+
+    // Name-level citations — DATA/TEXT carries the transcription on
+    // event-level and name-level cites (already lossless under both GEDCOM
+    // versions).
+    for (const pn of parsedNames) {
+      for (const sour of getChildren(pn.nameNode, 'SOUR')) {
         const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
         if (!srcId) continue;
         const quay = parseInt(getChild(sour, 'QUAY')?.value ?? '2', 10);
@@ -343,7 +628,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const transcription = dataNode ? (getChild(dataNode, 'TEXT')?.value ?? '') : '';
         await createCitation(ctx.db, {
           source_id: srcId,
-          person_name_id: personName.id,
+          person_name_id: pn.id,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
@@ -353,71 +638,20 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       }
     }
 
-    // External identifiers: standard GEDCOM
-    // REFN with a TYPE sub-tag maps to typed identifiers; plain REFN maps to 'refn'
-    for (const refn of getChildren(node, 'REFN')) {
-      if (!refn.value) continue;
-      const refnType = getChild(refn, 'TYPE')?.value?.trim() ?? '';
-      const ltype = refnType.toLowerCase();
-      if (ltype === 'familysearch') {
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: refn.value });
-      } else if (ltype === 'ancestry') {
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: refn.value });
-      } else if (ltype === 'riksarkivet') {
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: refn.value });
-      } else if (ltype === 'personnummer') {
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: refn.value });
-      } else if (ltype === 'other') {
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'other', identifier_value: refn.value });
-      } else {
-        // Plain REFN or unknown TYPE -> store as 'refn'
-        await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'refn', identifier_value: refn.value });
-      }
-    }
-    const rin = getChild(node, 'RIN');
-    if (rin?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'rin', identifier_value: rin.value });
-
-    // _UID (GEDCOM 5.5 non-standard, ubiquitous) and bare UID (GEDCOM 7.0
-    // standard). RootsMagic, Genney, FTM, MyHeritage all emit one or the other.
-    const uid = getChild(node, '_UID') ?? getChild(node, 'UID');
-    if (uid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'uid', identifier_value: uid.value });
-
-    // AFN — Ancestral File Number. GEDCOM 5.5/5.5.1 standard tag.
-    const afn = getChild(node, 'AFN');
-    if (afn?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'afn', identifier_value: afn.value });
-
-    // SSN — Social Security Number. GEDCOM 5.5 standard tag. Privacy-sensitive
-    // but if the user authored it in their source DB, the Prime Directive
-    // says preserve it; the user can delete it via the panel if they want.
-    const ssn = getChild(node, 'SSN');
-    if (ssn?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ssn', identifier_value: ssn.value });
-
-    // FSID — modern FamilySearch ID. Non-standard tag emitted by FTM and others.
-    const fsid = getChild(node, 'FSID');
-    if (fsid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsid.value });
-
-    // Extended identifiers (legacy custom tags -- kept for backward compat reading old exports)
-    const fsi = getChild(node, '_FSI');
-    if (fsi?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'familysearch', identifier_value: fsi.value });
-    const anid = getChild(node, '_ANID');
-    if (anid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'ancestry', identifier_value: anid.value });
-    const raid = getChild(node, '_RAID');
-    if (raid?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'riksarkivet', identifier_value: raid.value });
-    const pnummer = getChild(node, '_PNUMMER');
-    if (pnummer?.value) await addPersonIdentifier(ctx.db, person.id, { identifier_type: 'personnummer', identifier_value: pnummer.value });
-
-    // Person events
+    // Person events — every BIRT / DEAT / OCCU / etc. plus its citations
+    // and media live inside importEventNode. addEventParticipant ties the
+    // event back to the person as `primary` — pushed to the buffer for one
+    // bulk INSERT at the end of Pass 2 instead of one IPC per event.
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
-        await addEventParticipant(ctx.db, { event_id: event.id, person_id: person.id, role: 'primary' });
+        const event = await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
+        participantBuffer.push({ event_id: event.id, person_id: personId, role: 'primary' });
       }
     }
 
-    // (TITL is now routed via PERSON_EVENT_TAGS as event_type 'title' so the
-    //  line value is preserved in events.value and round-trips through export.)
-
-    // Person-level citations (SOUR directly on INDI, not under an event)
+    // Person-level citations (SOUR directly on INDI, not under an event).
+    // _TRANS carries the transcription for non-event/non-name hosts in v7.0;
+    // multi-line CONT continuation is unwrapped by the parser.
     for (const sour of getChildren(node, 'SOUR')) {
       const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
       if (srcId) {
@@ -425,16 +659,10 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
-        // GEDCOM 7.0 carrier for transcription on non-event/non-name hosts.
-        // Standard DATA/TEXT is not read at this level (it's only read for
-        // event-level and name-level citations); the exporter writes _TRANS
-        // here under v7.0 so person/family/place transcriptions round-trip.
-        // Multi-line transcriptions are unwrapped from CONT continuation by
-        // the parser into the joined node value.
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
         await createCitation(ctx.db, {
           source_id: srcId,
-          person_id: person.id,
+          person_id: personId,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
@@ -444,62 +672,75 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       }
     }
 
-    // Collect ASSO blocks for post-processing (Phase 4)
+    // Collect ASSO blocks for Phase 4.
     for (const assoNode of getChildren(node, 'ASSO')) {
-      ctx.assoData.push({ personId: person.id, assoNode });
+      ctx.assoData.push({ personId, assoNode });
     }
 
-    // Genney: _GRP -> group memberships
+    // Genney: _GRP → group memberships.
     if (ctx.isGenney) {
       for (const grpNode of getChildren(node, '_GRP')) {
         const groupId = ctx.grpMap.get(grpNode.value ?? '');
         if (groupId) {
-          try { await addGroupLink(ctx.db, groupId, 'person', person.id); } catch { /* ignore duplicate */ }
+          try { await addGroupLink(ctx.db, groupId, 'person', personId); } catch { /* ignore duplicate */ }
         }
       }
     }
 
-    // Person-level media
+    // Person-level media — same buffering as participants: importObjeNode
+    // is now Map.get on the inline-media-cache, and the addMediaLink calls
+    // get bulk-flushed at the end of Pass 2.
     let personMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
       if (mediaId) {
-        await addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'person', entity_id: person.id, sort_order: personMediaOrder });
+        mediaLinkBuffer.push({ media_id: mediaId, entity_type: 'person', entity_id: personId, sort_order: personMediaOrder });
         personMediaOrder++;
       }
     }
 
-    // Count LDS ordinance tags on INDI records (not imported -- not relevant for Swedish genealogy)
-    const LDS_TAGS = new Set(['BAPL', 'SLGC', 'CONL', 'ENDL', 'SLGS']);
+    // Tag counts — LDS / TRAN / NO / unrecognised top-level INDI children.
     for (const child of node.children) {
       if (LDS_TAGS.has(child.tag)) ctx.ldsCount++;
-    }
-
-    // Count TRAN nodes (GEDCOM 7.0 multi-language translations)
-    for (const child of node.children) {
       if (child.tag === 'TRAN') ctx.tranCount++;
       for (const grandchild of child.children) {
         if (grandchild.tag === 'TRAN') ctx.tranCount++;
       }
-    }
-
-    // Count NO nodes (GEDCOM 7.0 negative assertions -- not imported)
-    for (const child of node.children) {
       if (child.tag === 'NO') ctx.noCount++;
-    }
-
-    // Count unrecognised top-level INDI tags
-    for (const child of node.children) {
       if (!KNOWN_INDI_TAGS.has(child.tag)) {
         ctx.skippedTags.set(child.tag, (ctx.skippedTags.get(child.tag) ?? 0) + 1);
       }
     }
+
+    if ((i + 1) % 200 === 0 || (i + 1) === total) {
+      ctx.options?.onProgress?.(`Importing person events (${i + 1} / ${total})`);
+    }
+  }
+
+  // Bulk-flush the buffers built during Pass 2.
+  if (participantBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Writing ${participantBuffer.length} event participants…`);
+    await bulkAddEventParticipants(ctx.db, participantBuffer);
+  }
+  if (mediaLinkBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Writing ${mediaLinkBuffer.length} media links…`);
+    await bulkAddMediaLinks(ctx.db, mediaLinkBuffer);
   }
 }
 
 // ── Phase 3: FAM records ───────────────────────────────────────────────────
 
 export async function phaseFamilies(ctx: ImportContext): Promise<void> {
+  // Count FAM records once so we can emit (N / total) progress as the loop
+  // advances. Each FAM does many per-row IPC calls (relationship + events +
+  // participants + citations); progress keeps the bar moving so the user
+  // sees that the phase is alive.
+  let famTotal = 0;
+  for (const n of ctx.tree) if (n.tag === 'FAM') famTotal++;
+  if (famTotal === 0) return;
+  let famIdx = 0;
+  ctx.options?.onProgress?.(`Importerar familjer (0 / ${famTotal})`);
+
   for (const node of ctx.tree) {
     if (node.tag !== 'FAM') continue;
 
@@ -589,7 +830,7 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
     // Family-level media
     let relMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
-      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options);
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
       if (mediaId) {
         await addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id, sort_order: relMediaOrder });
         relMediaOrder++;
@@ -601,6 +842,11 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
       if (!KNOWN_FAM_TAGS.has(child.tag)) {
         ctx.skippedTags.set(child.tag, (ctx.skippedTags.get(child.tag) ?? 0) + 1);
       }
+    }
+
+    famIdx++;
+    if (famIdx % 200 === 0 || famIdx === famTotal) {
+      ctx.options?.onProgress?.(`Importerar familjer (${famIdx} / ${famTotal})`);
     }
   }
 }

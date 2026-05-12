@@ -137,6 +137,7 @@ export async function importFromHolger(
     const report = await importGedcom(db, tree, {
       profile: 'holger',
       ...(mediaDir ? { mediaDir } : {}),
+      onProgress: progress,
     });
     console.log(`[import-timing] importGedcom — ${Date.now() - tImport}ms — persons=${report.persons} families=${report.families} places=${report.places}`);
     progress(`Done — ${report.persons} persons, ${report.families} families`);
@@ -178,6 +179,7 @@ export async function importFromHolgerWithBytes(
   const report = await importGedcom(db, tree, {
     profile: 'holger',
     ...(mediaDir ? { mediaDir } : {}),
+    onProgress,
   });
   onProgress(`Done — ${report.persons} persons, ${report.families} families`);
   return { report };

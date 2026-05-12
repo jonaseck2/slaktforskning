@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Relationship, EventParticipant, RelationshipType, EventParticipantRole } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { displayedNameIdSql, birthSurnameSql } from './persons';
 
 export async function createRelationship(
@@ -150,6 +150,28 @@ export async function addEventParticipant(
     VALUES (?, ?, ?, ?)
   `, [id, data.event_id, data.person_id, data.role ?? 'primary']);
   return (await queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id]))!;
+}
+
+/**
+ * Bulk-insert event_participants rows. One batched INSERT for N rows —
+ * used by the GEDCOM importer's phaseIndividuals Pass 2 to collapse N
+ * IPC roundtrips into one for the primary-role participant per event.
+ */
+export async function bulkAddEventParticipants(
+  db: Database,
+  rows: Array<{ event_id: string; person_id: string; role?: EventParticipantRole }>,
+): Promise<void> {
+  if (rows.length === 0) return;
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    params[i] = [uuid(), r.event_id, r.person_id, r.role ?? 'primary'];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, ?)',
+    params,
+  );
 }
 
 export async function getEventParticipants(db: Database, eventId: string): Promise<EventParticipant[]> {

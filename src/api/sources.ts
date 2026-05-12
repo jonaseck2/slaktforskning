@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Source, Citation } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { getCitationsByOwner } from './links';
 import { deleteIgnoredDuplicatesForSource } from './duplicates';
 
@@ -31,6 +31,47 @@ export async function createSource(
     data.abstract ?? null,
   ]);
   return (await getSource(db, id))!;
+}
+
+/**
+ * Bulk-insert source rows. One batched INSERT for N rows — used by the
+ * GEDCOM importer's phaseSources to collapse N IPC roundtrips to one.
+ *
+ * Each row may supply its own `id`; otherwise a v4 UUID is generated. Caller
+ * needing the id ahead of time (importer xref maps) MUST supply it.
+ */
+export async function bulkCreateSources(
+  db: Database,
+  rows: Array<Partial<Omit<Source, 'created_at' | 'updated_at'>>>,
+): Promise<Source[]> {
+  if (rows.length === 0) return [];
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    params[i] = [
+      id,
+      r.title ?? '',
+      r.author ?? '',
+      r.publication_info ?? '',
+      r.repository ?? '',
+      r.url ?? '',
+      r.source_type ?? '',
+      r.call_number ?? null,
+      r.abstract ?? null,
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    params,
+  );
+  const placeholders = ids.map(() => '?').join(',');
+  const back = await queryAll<Source>(db, `SELECT * FROM sources WHERE id IN (${placeholders})`, ids);
+  const byId = new Map(back.map((s) => [s.id, s]));
+  return ids.map((id) => byId.get(id)!);
 }
 
 export async function getSource(db: Database, id: string): Promise<Source | null> {

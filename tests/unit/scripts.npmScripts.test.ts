@@ -48,6 +48,7 @@ const SKIPPED_WITH_REASON: Record<string, string> = {
   start: 'long-lived dev server (tauri dev) — not CI-safe',
   dev: 'alias for start',
   build: 'full Tauri release bundle — runs in dedicated CI job',
+  'build:portable': 'full Tauri release build + zip — runs in dedicated CI job',
   'build:e2e': 'same as build',
   'pretest:e2e': 'chains build:e2e',
   'test:e2e': 'Playwright against packaged Tauri binary',

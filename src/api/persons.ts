@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Person, PersonName, PersonIdentifier } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { livingSqlExpr } from './personLiving';
 
 /**
@@ -118,6 +118,183 @@ export async function createPerson(
   // turned bulk imports into O(n²). Regression introduced in bad81619.
   const row = (await queryOne<Omit<Person, 'living'>>(db, `SELECT * FROM persons WHERE id = ?`, [id]))!;
   return { ...row, living: true };
+}
+
+/**
+ * Bulk-insert persons rows. One batched INSERT for N rows instead of N
+ * `await stmt.run([...])` IPC roundtrips. Used by the GEDCOM importer's
+ * `phaseIndividuals` collect-then-flush pass — at 22k persons this
+ * collapses ~22k IPC calls to one.
+ *
+ * Each row may supply its own `id`; otherwise a v4 UUID is generated. The
+ * caller MUST set `id` when downstream rows (names, identifiers, events)
+ * already reference it — that's the normal importer pattern. `display_id`
+ * is assigned dense and sequential starting after `MAX(display_id)`, the
+ * same way the singular `createPerson` does it; we read the high-water
+ * mark once and assign in JS so the batch is a single statement.
+ *
+ * Returns the inserted persons in input order. `living` is always `true`
+ * for freshly-inserted rows (no events exist yet to derive it from), so
+ * we skip the correlated EXISTS subqueries the singular `createPerson`
+ * also skips.
+ */
+export async function bulkCreatePersons(
+  db: Database,
+  rows: Array<{ id?: string; sex?: Person['sex']; notes?: string }>,
+): Promise<Person[]> {
+  if (rows.length === 0) return [];
+
+  const high = (await queryOne<{ max_id: number }>(db, 'SELECT COALESCE(MAX(display_id), 0) AS max_id FROM persons'))!;
+  let nextDisplayId = high.max_id;
+
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    nextDisplayId++;
+    params[i] = [id, r.sex ?? 'U', r.notes ?? '', nextDisplayId];
+  }
+
+  await runBatch(db, 'INSERT INTO persons (id, sex, notes, display_id) VALUES (?, ?, ?, ?)', params);
+
+  // Read back in one SELECT, return in input order. We could also synthesise
+  // the rows in JS — but a SELECT keeps the contract "you get back what the
+  // DB has" in case a trigger or DEFAULT writes additional columns.
+  const placeholders = ids.map(() => '?').join(',');
+  const rowsBack = await queryAll<Omit<Person, 'living'>>(
+    db,
+    `SELECT * FROM persons WHERE id IN (${placeholders})`,
+    ids,
+  );
+  const byId = new Map(rowsBack.map((r) => [r.id, r]));
+  return ids.map((id) => {
+    const row = byId.get(id)!;
+    return { ...row, living: true };
+  });
+}
+
+/**
+ * Bulk-insert person_names rows. Sort order is assigned dense per-person in
+ * input order when the caller doesn't supply `sort_order` — matches the
+ * singular `addPersonName` which queries `MAX(sort_order)+1`. Caller must
+ * already have person rows committed (FK on `person_id`).
+ */
+export async function bulkAddPersonNames(
+  db: Database,
+  rows: Array<{
+    id?: string;
+    person_id: string;
+    given_name?: string | null;
+    surname?: string | null;
+    name_type?: PersonName['name_type'];
+    date_from?: string | null;
+    date_to?: string | null;
+    sort_order?: number;
+    name_prefix?: string | null;
+    name_suffix?: string | null;
+    patronymic_base?: string | null;
+    name_qualifier?: PersonName['name_qualifier'];
+    preferred_name?: string | null;
+    nickname?: string | null;
+  }>,
+): Promise<PersonName[]> {
+  if (rows.length === 0) return [];
+
+  // Per-person dense sort_order when not supplied. The singular function
+  // queries MAX(sort_order)+1 per call; importers create persons fresh so
+  // we just start at 0 and increment.
+  const seenPerPerson = new Map<string, number>();
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    const parsed = parsePreferredName(r.given_name);
+    const preferredName = r.preferred_name !== undefined ? r.preferred_name : parsed.preferred_name;
+    let sortOrder = r.sort_order;
+    if (sortOrder === undefined) {
+      sortOrder = seenPerPerson.get(r.person_id) ?? 0;
+      seenPerPerson.set(r.person_id, sortOrder + 1);
+    }
+    params[i] = [
+      id,
+      r.person_id,
+      parsed.given_name ?? null,
+      r.surname ?? null,
+      r.name_type ?? 'birth',
+      r.date_from ?? null,
+      r.date_to ?? null,
+      sortOrder,
+      r.name_prefix ?? null,
+      r.name_suffix ?? null,
+      r.patronymic_base ?? null,
+      r.name_qualifier ?? null,
+      preferredName ?? null,
+      r.nickname ?? null,
+    ];
+  }
+
+  await runBatch(
+    db,
+    `INSERT INTO person_names
+       (id, person_id, given_name, surname, name_type, date_from, date_to, sort_order,
+        name_prefix, name_suffix, patronymic_base, name_qualifier, preferred_name, nickname)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    params,
+  );
+
+  const placeholders = ids.map(() => '?').join(',');
+  const rowsBack = await queryAll<PersonName>(
+    db,
+    `SELECT * FROM person_names WHERE id IN (${placeholders})`,
+    ids,
+  );
+  const byId = new Map(rowsBack.map((r) => [r.id, r]));
+  return ids.map((id) => byId.get(id)!);
+}
+
+/**
+ * Bulk-insert person_identifiers rows. Caller must already have person
+ * rows committed (FK on `person_id`).
+ */
+export async function bulkAddPersonIdentifiers(
+  db: Database,
+  rows: Array<{
+    id?: string;
+    person_id: string;
+    identifier_type: PersonIdentifier['identifier_type'];
+    identifier_value: string;
+  }>,
+): Promise<PersonIdentifier[]> {
+  if (rows.length === 0) return [];
+
+  const now = new Date().toISOString();
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    params[i] = [id, r.person_id, r.identifier_type, r.identifier_value, now];
+  }
+
+  await runBatch(
+    db,
+    'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)',
+    params,
+  );
+
+  const placeholders = ids.map(() => '?').join(',');
+  const rowsBack = await queryAll<PersonIdentifier>(
+    db,
+    `SELECT * FROM person_identifiers WHERE id IN (${placeholders})`,
+    ids,
+  );
+  const byId = new Map(rowsBack.map((r) => [r.id, r]));
+  return ids.map((id) => byId.get(id)!);
 }
 
 export async function getPerson(db: Database, id: string): Promise<Person | null> {

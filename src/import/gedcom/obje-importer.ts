@@ -31,10 +31,17 @@ export async function importObjeNode(
   objeNode: GedcomNode,
   objeMap: Map<string, string>,
   options?: ImportOptions,
+  inlineMediaMap?: Map<GedcomNode, string>,
 ): Promise<string | null> {
   // Reference to a previously imported top-level OBJE record: `1 OBJE @M1@`
   if (objeNode.value?.startsWith('@')) {
     return objeMap.get(objeNode.value) ?? null;
+  }
+  // Fast path: this inline OBJE was pre-resolved in phasePrepInlineMedia
+  // and its row is already in the DB. Skip the per-event IPC.
+  if (inlineMediaMap) {
+    const cached = inlineMediaMap.get(objeNode);
+    if (cached) return cached;
   }
   // Inline embedded OBJE
   let file = getChild(objeNode, 'FILE')?.value ?? '';

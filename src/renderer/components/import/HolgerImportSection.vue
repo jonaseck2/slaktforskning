@@ -160,11 +160,27 @@ async function holgerPickMedia() {
   if (!r.canceled && r.path) holgerMediaDir.value = r.path;
 }
 
+const PROGRESS_TOAST_ID = 'import-holger';
+
+// Parse a "(N / M)" suffix the importer appends to per-row progress
+// messages — used to drive the determinate progress bar. If the parse
+// fails, the toast falls back to an indeterminate (animated) bar.
+function parseCounts(msg: string): { current?: number; total?: number } {
+  const m = msg.match(/\((\d+)\s*\/\s*(\d+)\)/);
+  if (!m) return {};
+  return { current: parseInt(m[1], 10), total: parseInt(m[2], 10) };
+}
+
 async function handleImportFromHolger() {
   if (!holgerSourcePath.value) return;
   busy.value = true;
   holgerProgress.value = t('importExport.holgerRunning');
-  window.api.import.onHolgerProgress((msg: string) => { holgerProgress.value = msg; });
+  toast.progress(PROGRESS_TOAST_ID, t('importExport.holgerRunning'));
+  window.api.import.onHolgerProgress((msg: string) => {
+    holgerProgress.value = msg;
+    const { current, total } = parseCounts(msg);
+    toast.progress(PROGRESS_TOAST_ID, msg, current, total);
+  });
   try {
     const result = await window.api.import.holgerRun({
       sourcePath: holgerSourcePath.value,
@@ -197,6 +213,7 @@ async function handleImportFromHolger() {
   } finally {
     busy.value = false;
     holgerProgress.value = '';
+    toast.dismissProgress(PROGRESS_TOAST_ID);
   }
 }
 

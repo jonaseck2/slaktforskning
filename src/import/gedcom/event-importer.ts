@@ -29,6 +29,7 @@ export async function importEventNode(
   noteMap: Map<string, string>,
   objeMap: Map<string, string>,
   importOptions?: ImportOptions,
+  inlineMediaMap?: Map<GedcomNode, string>,
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
@@ -152,7 +153,7 @@ export async function importEventNode(
   // Event media
   let eventMediaOrder = 0;
   for (const objeNode of getChildren(evNode, 'OBJE')) {
-    const mediaId = await importObjeNode(db, objeNode, objeMap, importOptions);
+    const mediaId = await importObjeNode(db, objeNode, objeMap, importOptions, inlineMediaMap);
     if (mediaId) {
       await addMediaLink(db, { media_id: mediaId, entity_type: 'event', entity_id: event.id, sort_order: eventMediaOrder });
       eventMediaOrder++;

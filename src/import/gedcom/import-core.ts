@@ -32,7 +32,7 @@ import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
 import type { ImportContext } from './import-types';
 import {
   PERSON_EVENT_TAGS, FAMILY_EVENT_TAGS,
-  phaseNotes, phaseObje, phaseRepo, phaseGroups,
+  phaseNotes, phaseObje, phaseRepo, phaseGroups, phasePrepPlaces, phasePrepInlineMedia,
   phaseSources, phaseIndividuals, phaseFamilies,
   phaseAsso, phasePlaceCitations, phaseGroupRecords, phaseTodos, phaseSubmitters,
 } from './phases';
@@ -46,6 +46,11 @@ export interface ImportOptions {
   /** Local directory for remapping Windows-style OBJE FILE paths (Holger exports).
    *  e.g. 'C:\\OurKind\\Media\\P12\\photo.jpg' -> '{mediaDir}/P12/photo.jpg' */
   mediaDir?: string;
+  /** Called with a human-readable status string at phase boundaries and
+   *  periodically inside the slow row-iteration phases (every ~100 rows).
+   *  Forwarded to the renderer via the per-importer progress channel
+   *  (`import:holgerProgress` etc.) so the UI bar can update mid-import. */
+  onProgress?: (msg: string) => void;
 }
 
 export interface ImportReport {
@@ -145,12 +150,31 @@ async function doImportGedcom(
 ): Promise<{ skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] }> {
   const ctx = createImportContext(db, tree, options);
 
+  // Total = 14 phases below. Each runPhase call emits a determinate
+  // (current / total) tick so the toast bar always shows visible progress,
+  // even for fast phases that finish before they emit their own per-row
+  // progress (e.g. phaseNotes, phaseAsso). Phases that do emit their own
+  // per-row progress overwrite this with finer-grained counts.
+  const phaseTotal = 14;
+  let phaseIdx = 0;
   const runPhase = async (name: string, fn: (c: typeof ctx) => Promise<void>) => {
+    phaseIdx++;
+    options?.onProgress?.(`Fas ${phaseIdx}/${phaseTotal}: ${name} (${phaseIdx} / ${phaseTotal})`);
     const t = Date.now();
     await fn(ctx);
     console.log(`[import-timing]   phase ${name} — ${Date.now() - t}ms`);
   };
   await runPhase('notes',          phaseNotes);
+  // Place pre-resolution runs after notes (which builds noteMap) but before
+  // any phase that touches events / PLAC. Collapses 60-100k+ findOrCreatePlace
+  // IPC calls into 2 (one SELECT, one bulk INSERT).
+  await runPhase('prepPlaces',     phasePrepPlaces);
+  // Inline-OBJE pre-resolution: walk the tree for every OBJE node embedded
+  // inside INDI / FAM / event nodes and batch-create the media rows in one
+  // INSERT. Holger imports are inline-OBJE heavy (~11k+ records in the
+  // reference file, zero top-level OBJE), so without this phase every
+  // event-loop pays one createMedia IPC per inline OBJE.
+  await runPhase('prepInlineMedia', phasePrepInlineMedia);
   await runPhase('obje',           phaseObje);
   await runPhase('repo',           phaseRepo);
   await runPhase('groups',         phaseGroups);

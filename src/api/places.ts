@@ -1,11 +1,85 @@
 import { Database } from 'node-sqlite3-wasm';
 import { Place } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { displayedNameIdSql } from './persons';
 import { deleteIgnoredDuplicatesForPlace } from './duplicates';
 
 function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Pre-resolve places for an importer. Walks a list of raw place-name strings,
+ * deduplicates by normalized name, looks up existing rows in one SELECT, and
+ * bulk-inserts the missing ones with one batched INSERT.
+ *
+ * Returns a Map keyed by normalized name → Place row. The importer's
+ * `resolvePlaceFn` can then look up from this map and do zero IPC per event.
+ *
+ * Why this exists: Holger imports do ~3-5 events per person, each with a
+ * PLAC tag, hitting `findOrCreatePlace` for every event. That's 60-100k+
+ * IPC calls (SELECT + maybe INSERT) — minutes of pure IPC under Tauri.
+ * Pre-resolving collapses it to 2 IPC calls total.
+ */
+export async function bulkResolvePlaces(
+  db: Database,
+  names: string[],
+): Promise<Map<string, Place>> {
+  const result = new Map<string, Place>();
+  if (names.length === 0) return result;
+
+  // Dedupe by normalized name; keep the first raw spelling for new rows.
+  const byNorm = new Map<string, string>();
+  for (const raw of names) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const norm = normalize(trimmed);
+    if (!byNorm.has(norm)) byNorm.set(norm, trimmed);
+  }
+  if (byNorm.size === 0) return result;
+
+  const allNorms = [...byNorm.keys()];
+
+  // One SELECT for every normalized name. SQLite caps IN list at 999 binds
+  // by default; chunk to stay below.
+  const CHUNK = 800;
+  for (let i = 0; i < allNorms.length; i += CHUNK) {
+    const chunk = allNorms.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => '?').join(',');
+    const rows = await queryAll<Place>(
+      db,
+      `SELECT * FROM places WHERE normalized_name IN (${placeholders})`,
+      chunk,
+    );
+    for (const row of rows) result.set(row.normalized_name, row);
+  }
+
+  // Anything still missing → one bulk INSERT.
+  const missing: Array<{ id: string; raw: string; norm: string }> = [];
+  for (const [norm, raw] of byNorm) {
+    if (result.has(norm)) continue;
+    missing.push({ id: crypto.randomUUID(), raw, norm });
+  }
+  if (missing.length > 0) {
+    await runBatch(
+      db,
+      'INSERT INTO places (id, name, normalized_name) VALUES (?, ?, ?)',
+      missing.map((m) => [m.id, m.raw, m.norm]),
+    );
+    // Read back as full rows so the caller gets the same shape as the SELECT
+    // branch (with default values populated by the DB / column defaults).
+    for (let i = 0; i < missing.length; i += CHUNK) {
+      const chunk = missing.slice(i, i + CHUNK);
+      const placeholders = chunk.map(() => '?').join(',');
+      const rows = await queryAll<Place>(
+        db,
+        `SELECT * FROM places WHERE id IN (${placeholders})`,
+        chunk.map((m) => m.id),
+      );
+      for (const row of rows) result.set(row.normalized_name, row);
+    }
+  }
+  return result;
 }
 
 /**

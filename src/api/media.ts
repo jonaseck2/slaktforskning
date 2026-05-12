@@ -1,7 +1,7 @@
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import type { Media, MediaLink, MediaLinkEntityType } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { deleteIgnoredDuplicatesForMedia } from './duplicates';
 
 /** Folder name convention: `foo.db` -> `foo-media`. Pure function of dbPath. */
@@ -34,6 +34,54 @@ export async function createMedia(db: Database, data: {
     data.is_missing ? 1 : 0,
   ]);
   return (await queryOne<Media>(db, 'SELECT * FROM media WHERE id = ?', [id]))!;
+}
+
+/**
+ * Bulk-insert media rows. One batched INSERT for N rows — used by the
+ * GEDCOM importer's phaseObje when files reference thousands of OBJE
+ * records, collapsing N IPC roundtrips to one.
+ *
+ * Each row may supply its own `id`; otherwise a v4 UUID is generated. Caller
+ * needing the id ahead of time (importer xref maps) MUST supply it.
+ */
+export async function bulkCreateMedia(
+  db: Database,
+  rows: Array<{
+    id?: string;
+    file_ref?: string | null;
+    title?: string;
+    format?: string | null;
+    notes?: string;
+    is_printable?: boolean;
+    is_missing?: boolean;
+  }>,
+): Promise<Media[]> {
+  if (rows.length === 0) return [];
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? crypto.randomUUID();
+    ids[i] = id;
+    params[i] = [
+      id,
+      r.file_ref ?? null,
+      r.title ?? '',
+      r.format ?? null,
+      r.notes ?? '',
+      r.is_printable ? 1 : 0,
+      r.is_missing ? 1 : 0,
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    params,
+  );
+  const placeholders = ids.map(() => '?').join(',');
+  const back = await queryAll<Media>(db, `SELECT * FROM media WHERE id IN (${placeholders})`, ids);
+  const byId = new Map(back.map((m) => [m.id, m]));
+  return ids.map((id) => byId.get(id)!);
 }
 
 export async function getMedia(db: Database, id: string): Promise<Media | null> {
@@ -199,6 +247,42 @@ export async function addMediaLink(db: Database, data: {
     VALUES (?, ?, ?, ?, ?, ?)
   `, [id, data.media_id, data.entity_type, data.entity_id, data.link_type ?? null, sortOrder]);
   return (await queryOne<MediaLink>(db, 'SELECT * FROM media_links WHERE id = ?', [id]))!;
+}
+
+/**
+ * Bulk-insert media_links rows. Caller supplies `sort_order` per row (the
+ * importer iterates per-entity and assigns dense order 0,1,2,...). No
+ * per-row MAX(sort_order) query — caller knows the entity is freshly
+ * created in this same batch.
+ */
+export async function bulkAddMediaLinks(
+  db: Database,
+  rows: Array<{
+    media_id: string;
+    entity_type: MediaLinkEntityType;
+    entity_id: string;
+    link_type?: number | null;
+    sort_order: number;
+  }>,
+): Promise<void> {
+  if (rows.length === 0) return;
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    params[i] = [
+      crypto.randomUUID(),
+      r.media_id,
+      r.entity_type,
+      r.entity_id,
+      r.link_type ?? null,
+      r.sort_order,
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO media_links (id, media_id, entity_type, entity_id, link_type, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
+    params,
+  );
 }
 
 export async function getMediaForEntity(db: Database, entityType: MediaLinkEntityType, entityId: string): Promise<(Media & { link_id: string; link_type: number | null; sort_order: number })[]> {
