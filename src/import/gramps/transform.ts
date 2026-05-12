@@ -20,6 +20,7 @@ import { findOrCreatePlace } from '../../api/places';
 import { createSource, createCitation } from '../../api/sources';
 import { createMedia } from '../../api/media';
 import { setDbSetting, getDbSetting } from '../../api/db_settings';
+import { runBatch } from '../../api/db';
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -430,15 +431,18 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     placeMap.set(p.handle, place.id);
     summary.places++;
   }
-  // Hook up parent_place_id where parent exists.
+  // Hook up parent_place_id where parent exists. Collected into a single
+  // bulk UPDATE so 1000s of parent links don't pay 1000s of IPC roundtrips.
+  const parentLinkParams: unknown[][] = [];
   for (const p of doc.places) {
     if (!p.parentHandle) continue;
     const childOurId = placeMap.get(p.handle);
     const parentOurId = placeMap.get(p.parentHandle);
     if (!childOurId || !parentOurId) continue;
-    const stmt = ourDb.prepare('UPDATE places SET parent_place_id = ? WHERE id = ?');
-    try { await stmt.run([parentOurId, childOurId]); }
-    finally { (stmt as unknown as { finalize(): void }).finalize(); }
+    parentLinkParams.push([parentOurId, childOurId]);
+  }
+  if (parentLinkParams.length > 0) {
+    await runBatch(ourDb, 'UPDATE places SET parent_place_id = ? WHERE id = ?', parentLinkParams);
   }
 
   // ── sources ────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import type { Database } from 'node-sqlite3-wasm';
 import { getMediaDir, getMediaFolderName } from './media';
-import { runSql } from './db';
+import { runSql, runBatchOnStatement } from './db';
 
 export interface ConsolidateResult {
   /** Files copied + ref rewritten (or already at dest with same name — counted as copied) */
@@ -119,7 +119,21 @@ export async function consolidateMediaFolder(
   let slowPathCopies = 0;
   const tStart = Date.now();
 
-  async function processRow(row: { id: string; file_ref: string | null }): Promise<void> {
+  // Each worker accumulates its own (file_ref, id) buffer; we flush once per
+  // worker on completion. Under Tauri this collapses ~12k per-row IPC writes
+  // into 8 batched runs. The DB write order is irrelevant — every row is an
+  // independent (id-keyed) UPDATE, so concurrent buffers can merge in any
+  // order. Cap each buffer to UPDATE_FLUSH_SIZE so very large dest-folder
+  // imports don't sit on tens of thousands of pending params before flushing.
+  const UPDATE_FLUSH_SIZE = 1000;
+  const buffers: unknown[][][] = Array.from({ length: COPY_CONCURRENCY }, () => []);
+  async function flushBuffer(buf: unknown[][]): Promise<void> {
+    if (buf.length === 0) return;
+    await runBatchOnStatement(update, buf);
+    buf.length = 0;
+  }
+
+  async function processRow(row: { id: string; file_ref: string | null }, buf: unknown[][]): Promise<void> {
     const ref = row.file_ref;
     if (!ref) { result.skipped++; return; }
     if (!path.isAbsolute(ref)) { result.skipped++; return; }
@@ -132,9 +146,10 @@ export async function consolidateMediaFolder(
     if (bulkCopiedFromDir && isPathUnder(ref, bulkCopiedFromDir)) {
       const rel = path.relative(bulkCopiedFromDir, ref);
       if (existingDestRelPaths.has(rel)) {
-        await update.run([path.join(folderName, rel), row.id]);
+        buf.push([path.join(folderName, rel), row.id]);
         fastPathHits++;
         result.copied++;
+        if (buf.length >= UPDATE_FLUSH_SIZE) await flushBuffer(buf);
         return;
       }
       // Source file wasn't in the bulk-copy tree — bulk copy is async + best-
@@ -167,19 +182,25 @@ export async function consolidateMediaFolder(
         throw err;
       }
     }
-    await update.run([path.join(folderName, filename), row.id]);
+    buf.push([path.join(folderName, filename), row.id]);
     result.copied++;
+    if (buf.length >= UPDATE_FLUSH_SIZE) await flushBuffer(buf);
   }
 
   // Bounded-concurrency worker pool — each worker pulls the next index off a
-  // shared cursor until the queue is drained.
+  // shared cursor until the queue is drained, accumulating updates in its
+  // own buffer for batched flush.
   let cursor = 0;
-  async function worker(): Promise<void> {
+  async function worker(workerIdx: number): Promise<void> {
+    const buf = buffers[workerIdx];
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const i = cursor++;
-      if (i >= rows.length) return;
-      await processRow(rows[i]);
+      if (i >= rows.length) {
+        await flushBuffer(buf);
+        return;
+      }
+      await processRow(rows[i], buf);
       processed++;
       if (processed % 1000 === 0) {
         const elapsed = Date.now() - tStart;
@@ -190,7 +211,7 @@ export async function consolidateMediaFolder(
   }
 
   try {
-    await Promise.all(Array.from({ length: COPY_CONCURRENCY }, () => worker()));
+    await Promise.all(Array.from({ length: COPY_CONCURRENCY }, (_, idx) => worker(idx)));
     await runSql(db, 'COMMIT');
     committed = true;
   } finally {

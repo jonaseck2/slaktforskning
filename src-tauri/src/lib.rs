@@ -93,6 +93,21 @@ async fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult
     db::db_run(sql, params.unwrap_or_default()).await
 }
 
+/// Bulk-run one prepared SQL string against many parameter rows in a single
+/// IPC roundtrip + a single connection-mutex hold. The renderer importer
+/// loop's per-row `db_run` was the dominant cost on a 1.5 GB Holger import
+/// (millions of rows × ~1 ms IPC each = hours). Batching collapses N
+/// roundtrips into one. The Rust side iterates the rows under one
+/// `prepare_cached` and one mutex hold; the surrounding JS-side
+/// `BEGIN/COMMIT` is unchanged.
+#[tauri::command(rename_all = "camelCase")]
+async fn db_batch_run(
+    sql: String,
+    params_list: Vec<Vec<JsonValue>>,
+) -> Result<Vec<RunResult>, String> {
+    db::db_batch_run(sql, params_list).await
+}
+
 #[tauri::command(rename_all = "camelCase")]
 async fn db_run_changes(sql: String, params: Option<Vec<JsonValue>>) -> Result<u64, String> {
     db::db_run_changes(sql, params.unwrap_or_default()).await
@@ -657,6 +672,7 @@ pub fn run() {
             // Generic primitives the TS shim invokes
             db_batch,
             db_run,
+            db_batch_run,
             db_run_changes,
             db_get,
             db_all,

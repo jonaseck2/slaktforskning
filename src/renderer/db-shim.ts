@@ -45,6 +45,28 @@ export class Statement {
     return await invoke<RunResult>('db_run', { sql: this.sql, params: toArray(values) });
   }
 
+  /**
+   * Bulk-run this prepared statement against many parameter rows in a single
+   * IPC roundtrip. Replaces the importer hot loop's `for (const row of rows)
+   * await stmt.run([...])`, where each iteration paid ~1 ms of IPC overhead
+   * (renderer → tauri → rusqlite → return). The Rust side prepares the SQL
+   * once, holds the connection mutex for the whole batch, and iterates rows
+   * inside the lock — zero interleaved-writer hazard. A failure on row N
+   * propagates as a thrown error naming the failing index; the caller is
+   * expected to wrap the call in a JS-side `BEGIN; ...; COMMIT;` so a
+   * failure ROLLBACKs the whole batch. Returns one RunResult per row.
+   *
+   * Use this whenever a write loop's row count is unbounded or > ~50.
+   * Per-row `await stmt.run(...)` should be reserved for one-shot writes.
+   */
+  async runBatch(paramsList: BindValues[]): Promise<RunResult[]> {
+    if (paramsList.length === 0) return [];
+    return await invoke<RunResult[]>('db_batch_run', {
+      sql: this.sql,
+      paramsList: paramsList.map(toArray),
+    });
+  }
+
   async all(values?: BindValues): Promise<QueryResult[]> {
     const rows = await invoke<unknown[]>('db_all', { sql: this.sql, params: toArray(values) });
     return rows as QueryResult[];

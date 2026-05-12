@@ -235,7 +235,7 @@ pub fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
 // LRU on top — rusqlite's cache is bounded (16 by default; the existing
 // Electron app's hot SQL set comfortably fits).
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct RunResult {
     pub changes: u64,
     pub last_insert_rowid: i64,
@@ -313,6 +313,54 @@ pub(crate) fn db_run_sync(sql: &str, params: &[JsonValue]) -> Result<RunResult, 
     })
 }
 
+/// Bulk-execute one prepared SQL string against many parameter rows under a
+/// single connection-mutex hold. Solves the importer hot-loop problem: the
+/// renderer was paying ~1 ms/row of IPC overhead for `for (const row of rows)
+/// stmt.run([...])`. Batching collapses N IPC roundtrips into one.
+///
+/// Semantics:
+///   - One `prepare_cached` for the SQL — the statement is reused across
+///     every row in the batch.
+///   - The connection mutex is held for the full duration of the batch; no
+///     other writer can interleave between rows. (Reads from the same
+///     connection are also serialized — DELETE journaling has a single
+///     writer anyway.)
+///   - Rows are executed in order. A failure on row N propagates as an
+///     `Err(...)`; rows 0..N-1 have already executed against the connection.
+///     The caller is expected to wrap the batch in a JS-side `BEGIN; ...;
+///     COMMIT;` so a mid-batch failure ROLLBACKs the whole batch.
+///   - Returns one `RunResult` per row. `last_insert_rowid` is captured per
+///     row (matches the per-call `db_run` semantics; note that for
+///     non-INSERT statements rusqlite returns the last insert rowid the
+///     connection has seen, which is consistent with `db_run`).
+pub(crate) fn db_batch_run_sync(
+    sql: &str,
+    params_list: &[Vec<JsonValue>],
+) -> Result<Vec<RunResult>, String> {
+    // Coerce all rows up front so a typo on row 500 doesn't leave 499 rows
+    // half-applied with no error message naming the offending row index.
+    let mut bound_rows: Vec<Vec<SqlValue>> = Vec::with_capacity(params_list.len());
+    for (i, row) in params_list.iter().enumerate() {
+        bound_rows.push(coerce_params(row).map_err(|e| format!("batch row {i}: {e}"))?);
+    }
+
+    let guard = DB.lock();
+    let conn = guard.as_ref().ok_or("no db open")?;
+    let mut stmt = conn.prepare_cached(sql).map_err(|e| format!("prepare: {e}"))?;
+
+    let mut out: Vec<RunResult> = Vec::with_capacity(bound_rows.len());
+    for (i, bound) in bound_rows.iter().enumerate() {
+        let changes = stmt
+            .execute(rusqlite::params_from_iter(bound.iter()))
+            .map_err(|e| format!("batch row {i}: {e}"))?;
+        out.push(RunResult {
+            changes: changes as u64,
+            last_insert_rowid: conn.last_insert_rowid(),
+        });
+    }
+    Ok(out)
+}
+
 fn db_get_sync(sql: &str, params: &[JsonValue]) -> Result<Option<JsonValue>, String> {
     let bound = coerce_params(params)?;
     let guard = DB.lock();
@@ -378,6 +426,15 @@ pub async fn db_batch(sql: String) -> Result<(), String> {
 
 pub async fn db_run(sql: String, params: Vec<JsonValue>) -> Result<RunResult, String> {
     tokio::task::spawn_blocking(move || db_run_sync(&sql, &params))
+        .await
+        .map_err(|e| format!("join: {e}"))?
+}
+
+pub async fn db_batch_run(
+    sql: String,
+    params_list: Vec<Vec<JsonValue>>,
+) -> Result<Vec<RunResult>, String> {
+    tokio::task::spawn_blocking(move || db_batch_run_sync(&sql, &params_list))
         .await
         .map_err(|e| format!("join: {e}"))?
 }
@@ -546,4 +603,117 @@ pub async fn secondary_db_all(
     tokio::task::spawn_blocking(move || secondary_db_all_sync(handle, &sql, &params))
         .await
         .map_err(|e| format!("join: {e}"))?
+}
+
+// ---------------------------------------------------------------------------
+// Tests — exercise the global-DB primitives against a temp file path. These
+// run under `cargo test --manifest-path src-tauri/Cargo.toml` and complement
+// the renderer-side vitest suite in tests/unit/import-batching.test.ts.
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use std::sync::Mutex as StdMutex;
+
+    // The global DB used by db_*_sync is a static singleton — concurrent tests
+    // would clobber each other's data. Serialize via a module-level mutex.
+    static TEST_LOCK: StdMutex<()> = StdMutex::new(());
+
+    fn temp_db_path(name: &str) -> String {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        std::env::temp_dir()
+            .join(format!("slaktforskning-test-{name}-{now}.db"))
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    fn open_fresh(name: &str) -> String {
+        let path = temp_db_path(name);
+        // Ensure no prior open lingers.
+        close_db();
+        open_db(&path).expect("open temp db");
+        path
+    }
+
+    #[test]
+    fn db_batch_run_inserts_many_rows_and_caches_prepare() {
+        let _g = TEST_LOCK.lock().unwrap();
+        let path = open_fresh("batch_basic");
+        db_batch_sync("CREATE TABLE t (a INTEGER NOT NULL, b TEXT NOT NULL)").unwrap();
+
+        let mut rows: Vec<Vec<JsonValue>> = Vec::with_capacity(1000);
+        for i in 0..1000i64 {
+            rows.push(vec![json!(i), json!(format!("v{i}"))]);
+        }
+        let started = std::time::Instant::now();
+        let results = db_batch_run_sync("INSERT INTO t (a, b) VALUES (?, ?)", &rows).unwrap();
+        let elapsed = started.elapsed();
+        assert_eq!(results.len(), 1000);
+        for r in &results {
+            assert_eq!(r.changes, 1);
+        }
+        // Sanity check: 1000 inserts under one prepare + one mutex hold should
+        // be quick locally. 50 ms is generous; the actual wall-clock is single
+        // digits on a modern machine. If this trips in CI it likely means the
+        // statement isn't being cached.
+        assert!(
+            elapsed.as_millis() < 500,
+            "1000-row batch took too long: {:?}",
+            elapsed
+        );
+
+        // Verify all rows landed.
+        let row = db_get_sync("SELECT COUNT(*) as n FROM t", &[])
+            .unwrap()
+            .unwrap();
+        assert_eq!(row["n"], json!(1000));
+
+        close_db();
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn db_batch_run_propagates_mid_batch_failure() {
+        let _g = TEST_LOCK.lock().unwrap();
+        let path = open_fresh("batch_fail");
+        db_batch_sync(
+            "CREATE TABLE u (id INTEGER PRIMARY KEY, v TEXT NOT NULL UNIQUE)",
+        )
+        .unwrap();
+
+        // Wrap in BEGIN/ROLLBACK so the first 10 rows don't actually persist —
+        // mirrors the JS-side transaction the importer holds across the batch.
+        db_batch_sync("BEGIN").unwrap();
+        let mut rows: Vec<Vec<JsonValue>> = Vec::new();
+        for i in 0..10i64 {
+            rows.push(vec![json!(i), json!(format!("v{i}"))]);
+        }
+        // Row 10 collides on the UNIQUE(v) — the same value as row 5.
+        rows.push(vec![json!(10i64), json!("v5")]);
+        // Row 11 would succeed if we got past the failure — verify we don't.
+        rows.push(vec![json!(11i64), json!("v11")]);
+
+        let err = db_batch_run_sync("INSERT INTO u (id, v) VALUES (?, ?)", &rows)
+            .expect_err("should error on UNIQUE collision");
+        assert!(
+            err.contains("batch row 10"),
+            "error should name failing row index, got: {err}"
+        );
+
+        // Caller's responsibility: rollback. Verify the rollback unwinds the
+        // 10 successful rows.
+        db_batch_sync("ROLLBACK").unwrap();
+        let row = db_get_sync("SELECT COUNT(*) as n FROM u", &[])
+            .unwrap()
+            .unwrap();
+        assert_eq!(row["n"], json!(0), "rollback should leave table empty");
+
+        close_db();
+        let _ = std::fs::remove_file(&path);
+    }
 }

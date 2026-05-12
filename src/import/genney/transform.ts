@@ -13,7 +13,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { parseGedcomDate } from '../../gedcom/date';
 import { eventTypeHasFactValue } from '../../api/events_gedcom';
-import { queryOne, queryAll, runSql } from '../../api/db';
+import { queryOne, queryAll, runSql, runBatchOnStatement } from '../../api/db';
 import { getDbSetting, setDbSetting } from '../../api/db_settings';
 
 // ── Genney row shapes ──────────────────────────────────────────────────────
@@ -447,6 +447,45 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     ),
   };
 
+  // ── Per-statement parameter queues for bulk flush ────────────────────────
+  //
+  // Under the Tauri build, every `stmt.run([...])` is one IPC roundtrip
+  // (~1 ms). A Genney import with 5910 citations + 3008 events + 833 persons
+  // means tens of thousands of IPC calls and the import takes hours instead
+  // of minutes. We collect rows into per-SQL queues here, then flush each
+  // queue in a single `db_batch_run` IPC roundtrip via `runBatchOnStatement`.
+  //
+  // The queues map 1:1 to the prepared statements above. Each push appends
+  // one row of params; each `flushAll()` drains every queue in order. We
+  // call flushAll between sections so cross-section foreign-key references
+  // (citations.event_id, media_links.entity_id) see the rows they need
+  // committed to the local connection. Flush order is the same as section
+  // order — places → persons → sources → families → events → … — so each
+  // batch's referenced rows already exist when it runs.
+  //
+  // The single BEGIN/COMMIT remains around the whole import; flushAll runs
+  // INSIDE that transaction. A mid-batch failure throws and the outer
+  // catch issues ROLLBACK, undoing every flushed row.
+  type ParamRow = unknown[];
+  const queues: Record<keyof typeof stmts, ParamRow[]> = Object.keys(stmts).reduce((acc, k) => {
+    acc[k as keyof typeof stmts] = [];
+    return acc;
+  }, {} as Record<keyof typeof stmts, ParamRow[]>);
+  const enq = (key: keyof typeof stmts, row: ParamRow): void => {
+    queues[key].push(row);
+  };
+  // Per-section flush — empties every queue in declaration order. Splacing
+  // it between phases bounds peak memory and lets later sections see the
+  // earlier sections' rows for FK lookups. Idempotent on empty queues.
+  async function flushAll(): Promise<void> {
+    for (const key of Object.keys(queues) as Array<keyof typeof stmts>) {
+      const q = queues[key];
+      if (q.length === 0) continue;
+      await runBatchOnStatement(stmts[key], q);
+      q.length = 0;
+    }
+  }
+
   try {
 
   // ── 1. Import SPLACE records (parents before children) ───────────────────
@@ -520,12 +559,12 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const notes = noteParts.length > 0 ? noteParts.join('\n') : '';
 
     const id = crypto.randomUUID();
-    await stmts.insertPerson.run([id, sex, notes]);
+    enq('insertPerson', [id, sex, notes]);
     personMap.set(p.RID, id);
 
     const hasName = !!((given && given.trim()) || (p.SURNAME && p.SURNAME.trim()));
     if (hasName) {
-      await stmts.insertPersonName.run([
+      enq('insertPersonName', [
         crypto.randomUUID(), id,
         given ?? null, p.SURNAME ?? null,
         p.PREFIX ?? null, p.SUFFIX ?? null,
@@ -540,13 +579,17 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     }
 
     if (p.UID) {
-      await stmts.insertPersonIdentifier.run([
+      enq('insertPersonIdentifier', [
         crypto.randomUUID(), id, 'other', String(p.UID), new Date().toISOString(),
       ]);
     }
 
     summary.persons++;
   }
+  // Flush persons + names + identifiers before sources/families/events that
+  // reference person rows by id (the FK is enforced once events/citations
+  // reference these rows downstream).
+  await flushAll();
 
   // ── 3. Import sources ────────────────────────────────────────────────────
   const sourceMap = new Map<string, string>(); // Genney S-ID → UUID
@@ -557,13 +600,14 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   for (const src of tables.SOURCE) {
     const title = (src.TITLE || src.ABBREVIATION || '').trim();
     const id = crypto.randomUUID();
-    await stmts.insertSource.run([
+    enq('insertSource', [
       id, title, src.AUTHOR ?? '', src.PUBLICATION ?? '', mapSourceType(src.MEDIATYPE),
       src.CALLNUMBER ?? null, src.TEXT ?? null,
     ]);
     sourceMap.set(src.RID, id);
     summary.sources++;
   }
+  await flushAll();
 
   // ── 4. Import couple families ────────────────────────────────────────────
   const familyMap = new Map<string, string>(); // Genney F-ID → UUID
@@ -580,7 +624,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const subtype = mapCoupleSubtype(spouseRelType.get(fam.RID));
 
     const id = crypto.randomUUID();
-    await stmts.insertRelationship.run([id, 'couple', p1, p2, subtype ?? null, fam.NOTE ?? '']);
+    enq('insertRelationship', [id, 'couple', p1, p2, subtype ?? null, fam.NOTE ?? '']);
     familyMap.set(fam.RID, id);
     summary.coupleRelationships++;
   }
@@ -597,7 +641,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (cf.FATHER && cf.FATHERLINK) {
       const fatherId = personMap.get(cf.FATHER);
       if (fatherId) {
-        await stmts.insertRelationship.run([
+        enq('insertRelationship', [
           crypto.randomUUID(), 'parent_child', fatherId, childId,
           mapParentChildSubtype(cf.FATHERLINK) ?? null, '',
         ]);
@@ -610,7 +654,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (cf.MOTHER && cf.MOTHERLINK) {
       const motherId = personMap.get(cf.MOTHER);
       if (motherId) {
-        await stmts.insertRelationship.run([
+        enq('insertRelationship', [
           crypto.randomUUID(), 'parent_child', motherId, childId,
           mapParentChildSubtype(cf.MOTHERLINK) ?? null, '',
         ]);
@@ -620,6 +664,9 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
       skippedParentLinks++;
     }
   }
+  // Flush relationships before events (events reference relationships via
+  // events.relationship_id).
+  await flushAll();
 
   // ── 6. Import events ─────────────────────────────────────────────────────
   // Build canonical event→owners map from OWNER_EVENT (preferred over EVENT.OWNER).
@@ -663,7 +710,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const rel_id = familyOwner ? familyMap.get(familyOwner) ?? null : null;
 
     const id = crypto.randomUUID();
-    await stmts.insertEvent.run([
+    enq('insertEvent', [
       id, event_type, rel_id,
       parsedDate?.date_type ?? 'unknown',
       parsedDate?.date_value ?? null,
@@ -679,11 +726,15 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     for (const owner of owners) {
       if (!owner.startsWith('I')) continue;
       const person_id = personMap.get(owner);
-      if (person_id) await stmts.insertParticipant.run([crypto.randomUUID(), id, person_id, 'primary']);
+      if (person_id) enq('insertParticipant', [crypto.randomUUID(), id, person_id, 'primary']);
     }
 
     summary.events++;
   }
+  // Flush events + participants before citations (citations reference events
+  // via citations.event_id, including the synthetic 'mention' events created
+  // in the citation loop below).
+  await flushAll();
 
   // ── 7. Import citations ──────────────────────────────────────────────────
   const citSourceMap = new Map<string, string>(); // CITATION.RID → SOURCE.RID
@@ -706,7 +757,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
 
     const owners = citOwnerMap.get(cit.RID) ?? [];
     if (owners.length === 0) {
-      await stmts.insertCitation.run([
+      enq('insertCitation', [
         crypto.randomUUID(), source_id, null, null, null,
         cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
         cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
@@ -723,14 +774,24 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
         const person_id = personMap.get(owner);
         if (person_id) {
           const mentionId = crypto.randomUUID();
-          await stmts.insertEvent.run([mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, null, '']);
-          await stmts.insertParticipant.run([crypto.randomUUID(), mentionId, person_id, 'primary']);
+          // Mention events + their participants need to land before the
+          // citation that references them — but we don't have to flush
+          // per-citation. Instead we exploit FK ordering: the citation
+          // row's event_id will reference an event row that's queued in
+          // the same batch run; since we drain insertEvent BEFORE
+          // insertCitation in flushAll's iteration order (Object.keys
+          // preserves declaration order in modern JS, and `stmts` declares
+          // insertEvent and insertParticipant before insertCitation), the
+          // mention event lands first and the FK is satisfied at the time
+          // insertCitation runs. No mid-loop flush needed.
+          enq('insertEvent', [mentionId, 'mention', null, 'unknown', null, null, '', null, null, null, null, '']);
+          enq('insertParticipant', [crypto.randomUUID(), mentionId, person_id, 'primary']);
           event_id = mentionId;
           summary.events++;
         }
       }
 
-      await stmts.insertCitation.run([
+      enq('insertCitation', [
         crypto.randomUUID(), source_id, event_id, null, relationship_id,
         cit.WHEREINTEXT ?? '', mapConfidence(cit.CERTAINTY),
         cit.TEXT ?? '', cit.NOTE ?? '', cit.DATE ?? '',
@@ -738,6 +799,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
       summary.citations++;
     }
   }
+  await flushAll();
 
   // ── 8. Import repositories ───────────────────────────────────────────────
   const repoMap = new Map<string, string>(); // Genney REPO.RID → UUID
@@ -746,7 +808,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     if (!repo.RID) continue;
     const id = crypto.randomUUID();
     const addressLine = [repo.ADDRESS, repo.ADDRESS1, repo.ADDRESS2].filter(Boolean).join(', ') || null;
-    await stmts.insertRepository.run([
+    enq('insertRepository', [
       id, repo.NAME ?? repo.RID,
       addressLine, repo.CITY ?? null, repo.POSTALCODE ?? null,
       repo.STATE ?? null, repo.COUNTRY ?? null,
@@ -756,14 +818,17 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     repoMap.set(repo.RID, id);
     summary.repositories++;
   }
+  // Flush repos before source_repositories, which reference repositories.id.
+  await flushAll();
 
   // Link sources to repositories
   for (const sr of tables.SOURCE_REPO) {
     if (!sr.SOURCE || !sr.REPO) continue;
     const source_id = sourceMap.get(sr.SOURCE);
     const repo_id = repoMap.get(sr.REPO);
-    if (source_id && repo_id) await stmts.insertSourceRepo.run([source_id, repo_id]);
+    if (source_id && repo_id) enq('insertSourceRepo', [source_id, repo_id]);
   }
+  await flushAll();
 
   // ── 9. Import groups + memberships ──────────────────────────────────────
   const groupMap = new Map<string, string>(); // Genney GROUP.RID → UUID
@@ -771,19 +836,22 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   for (const grp of tables.GROUPS) {
     if (!grp.RID) continue;
     const id = crypto.randomUUID();
-    await stmts.insertGroup.run([id, grp.NAME ?? grp.RID, grp.NOTE ?? '']);
+    enq('insertGroup', [id, grp.NAME ?? grp.RID, grp.NOTE ?? '']);
     groupMap.set(grp.RID, id);
     summary.groups++;
   }
+  // Flush groups before group_links, which reference groups.id.
+  await flushAll();
 
   for (const gm of tables.GROUP_MEMBER) {
     if (!gm.GROUPS || !gm.PERSON) continue;
     const group_id = groupMap.get(gm.GROUPS);
     const person_id = personMap.get(gm.PERSON);
     if (group_id && person_id) {
-      await stmts.insertGroupLink.run([crypto.randomUUID(), group_id, person_id]);
+      enq('insertGroupLink', [crypto.randomUUID(), group_id, person_id]);
     }
   }
+  await flushAll();
 
   // ── 10. Import media + links ─────────────────────────────────────────────
   const mediaMap = new Map<string, string>(); // Genney MEDIA.RID → UUID
@@ -793,13 +861,15 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const id = crypto.randomUUID();
     let fileRef = m.FILEREF ?? null;
     if (fileRef && opts.mediaDir) fileRef = remapGenneyMediaPath(fileRef, opts.mediaDir);
-    await stmts.insertMedia.run([
+    enq('insertMedia', [
       id, fileRef, m.TITLE ?? '', m.FORMAT ?? null,
       m.NOTE ?? '', m.ISPRINTABLE === 1 ? 1 : 0,
     ]);
     mediaMap.set(m.RID, id);
     summary.media++;
   }
+  // Flush media before media_links, which reference media.id.
+  await flushAll();
 
   for (const om of tables.OWNER_MEDIA) {
     if (!om.OWNER || !om.MEDIA) continue;
@@ -815,9 +885,10 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     else if (om.OWNER.startsWith('S')) { entity_type = 'source'; entity_id = sourceMap.get(om.OWNER) ?? null; }
 
     if (entity_type && entity_id) {
-      await stmts.insertMediaLink.run([crypto.randomUUID(), media_id, entity_type, entity_id, om.LINKTYPE ?? null]);
+      enq('insertMediaLink', [crypto.randomUUID(), media_id, entity_type, entity_id, om.LINKTYPE ?? null]);
     }
   }
+  await flushAll();
 
   // ── 11. Import research tasks (TODO) ─────────────────────────────────────
   const GENNEY_TODO_STATUS: Record<string, string> = {
@@ -829,16 +900,19 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     const taskId = crypto.randomUUID();
     const person_id = todo.PERSON ? personMap.get(todo.PERSON) ?? null : null;
     const status = GENNEY_TODO_STATUS[String(todo.STATUS ?? '').toLowerCase()] ?? 'open';
-    await stmts.insertResearchTask.run([
+    enq('insertResearchTask', [
       taskId,
       todo.PRIORITY ?? 0, status,
       todo.TASK ?? '', todo.NOTE ?? '', todo.RESULT ?? '',
     ]);
     if (person_id) {
-      await stmts.insertTaskLink.run([crypto.randomUUID(), taskId, person_id]);
+      enq('insertTaskLink', [crypto.randomUUID(), taskId, person_id]);
     }
     summary.researchTasks++;
   }
+  // Final flush before backfill / researcher-info pass below — anything that
+  // queries the freshly-inserted person rows needs them visible.
+  await flushAll();
 
   // ── Populate warnings and skipped ────────────────────────────────────────
   const unrefPlaceCount = splacesById.size - importedSplaces.size;

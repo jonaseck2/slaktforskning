@@ -112,6 +112,26 @@ try {
 
 `BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). The rule applies to **any writes-in-loop**, not just imports or migrations — `consolidateMediaFolder`'s 12k `UPDATE media SET file_ref = ?` rewrites needed this and shipped without it (v0.210.7), turning ~50 ms of work into 30+ seconds of WAL fsyncs. Audit any new `for (const row of rows) <DB-write>` loop against this rule. For bulk imports, also use `withStatementCache` to avoid re-compiling the same SQL thousands of times — see `/sqlite-finalize`.
 
+**Use `runBatch` instead of `for (const row of rows) await stmt.run([...])` whenever the row count is unbounded or > ~50.** Under the Tauri build, every `await stmt.run([...])` pays ~1 ms of IPC roundtrip (renderer → Rust → rusqlite → return). For a 1.5 GB Holger import (millions of rows), that turns minutes-of-work into hours-of-IPC. `runBatch` collapses N IPC roundtrips into one: the Rust side prepares the SQL once, holds the connection mutex for the whole batch, and iterates the rows under the lock. Mid-batch failures still propagate so the surrounding `BEGIN/COMMIT` ROLLBACKs the whole batch.
+
+```typescript
+import { runBatch, runBatchOnStatement } from '../api/db';
+
+// Single SQL across many rows: use runBatch (creates+finalizes the statement).
+await runBatch(db, 'INSERT INTO things (id, name) VALUES (?, ?)', rows.map(r => [r.id, r.name]));
+
+// Inside an importer with a cached prepared statement:
+const stmt = db.prepare('INSERT INTO things (id, name) VALUES (?, ?)');
+try {
+  // Collect rows into a buffer, flush with runBatchOnStatement.
+  await runBatchOnStatement(stmt, rowsBuffer);
+} finally {
+  stmt.finalize();
+}
+```
+
+Same shape both backends: under Electron / node-sqlite3-wasm, `runBatch` falls back to a sync per-row loop (the IPC cost it avoids doesn't exist there) but the API surface is identical so importer code stays single-sourced. Per-row `await stmt.run(...)` is reserved for one-shot writes — the bulk db_settings update, the per-form-submit insert, etc. Audit any new `for (const row of rows) await stmt.run(...)` loop against this rule. The mechanical regression check is `tests/unit/import-batching.test.ts`, which runs the Genney importer through the Tauri shim and asserts `db_run` calls stay in the small-constant range while `db_batch_run` covers the bulk inserts — if you add a new per-row loop and that test stays green, the loop wasn't on a hot path; if it turns red, you reverted batching and need to use `runBatch`.
+
 ## Worker-thread sync I/O — mandatory rules
 
 The DB worker is a **single thread** that serves every DB-touching IPC channel. Any synchronous I/O call inside a worker handler pins the worker for that call's full duration, queuing every other handler behind it. With media in the DB and a list view mounted, this turns the renderer into a slideshow inside a second.

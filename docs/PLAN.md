@@ -6,10 +6,6 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
-### [planned] Bulk-insert batching: kill the per-row IPC roundtrip in importers
-Importing a 1.5 GB Holger DB takes hours instead of minutes because every `stmt.run([…])` in the importer hot loops is one Tauri `invoke()` → IPC bridge → rusqlite → return roundtrip (~1 ms each), and the Tauri-port left those `for-of` loops shaped exactly the way they were under in-process Electron. Add a parameterised `db_batch_run` Rust command + `Statement.runBatch(paramsList)` shim, then migrate the GEDCOM/Holger, Genney, Gramps, RootsMagic transforms and `consolidateMediaFolder` to batch their writes. User-observable goal: a 1.5 GB Holger import completes in ~3 min on the user's reference machine, regression-tested by `tests/unit/import-batching.test.ts` (wall-clock + IPC call-count assertion).
-- Plan: [`plans/2026-05-12-bulk-insert-batching.md`](plans/2026-05-12-bulk-insert-batching.md)
-
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
