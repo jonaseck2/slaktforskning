@@ -6,6 +6,14 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+### [planned] Repair the broken Playwright e2e suite + rename `[smoke]` → `[boot]`
+`npx playwright test` on `main` fails — 2 of 4 projects (`[smoke]` and `[duplicates]`) throw `executeJs: renderer script timed out`. The surface that was supposed to catch the Tauri close-out's boot regression is itself broken, and the disrepair went unnoticed because nobody ran it. Diagnose the timeout cause (hypothesis: gazetteer-init burst pins the renderer); apply the fix (likely a documented timeout marker, blocked on gazetteer-lazy-chunks for the cause-side fix); rename the `[smoke]` project to `[boot]` per L3 from the Tauri-port RCA; wire `npx playwright test` into close-out evidence per L7.
+- Plan: [`plans/2026-05-12-e2e-test-repair.md`](plans/2026-05-12-e2e-test-repair.md)
+
+### [planned] Skipped-tests antipattern: convert registry-excluded skips to passing assertions
+`npm test` reports 112 skipped tests, all from `tests/unit/gedcom-fidelity-per-field.test.ts` — a generator that emits `it.skip(reason)` for every `(table, column, gedcom-version)` cell registered as `excluded` in the GEDCOM fidelity registry. The per-cell coverage is the right design; the "skipped" rendering is the wrong reporter category — 112 noise lines hide any future *real* skip (a broken test someone disabled with `it.skip` to make CI green disappears in the pile). Fix: convert the `it.skip(reason)` to `it()` with `expect(status.kind).toBe('excluded')`. Adds a standing test that asserts the suite has zero static skips. After: `npm test` summary's `skipped` count is a signal again.
+- Plan: [`plans/2026-05-12-skipped-tests-cleanup.md`](plans/2026-05-12-skipped-tests-cleanup.md)
+
 ### [planned] Lift Vite 5.4.21 → Vite 7.x
 Match the Tauri 2.x default toolchain. Today's build emits "The CJS build of Vite's Node API is deprecated" because we're two majors behind. Scope: `vite`, `@vitejs/plugin-vue`, `vite-plugin-node-polyfills`, `vite-plugin-singlefile`, `rollup-plugin-visualizer`, `vitest`, `@vitest/coverage-v8` — plus an audit pass for breaking-change notes (Vite 6 + 7 migration guides). No Rolldown migration (separate plan). The riskiest dep is `vite-plugin-node-polyfills`; if it doesn't have a Vite 7 release, replace it with a minimal in-tree alias set.
 - Plan: [`plans/2026-05-12-vite-7-upgrade.md`](plans/2026-05-12-vite-7-upgrade.md)

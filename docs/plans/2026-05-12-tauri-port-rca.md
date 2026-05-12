@@ -49,6 +49,8 @@ Other latent gaps from the audit that surfaced *during* this RCA's drafting (i.e
 | 14 | `package.json` `version` is `0.253.1` but `src-tauri/Cargo.toml` is `0.1.0` and `tauri.conf.json` is `0.1.0` | RC2 |
 | 15 | `THIRD_PARTY_LICENSES.txt` claims Electron deps in the historical CHANGELOG entry — no Tauri Rust crate licenses are surfaced anywhere | RC1 |
 | 16 | `release.yml` (post-rename of `release-tauri.yml`) hasn't been audited for the same kind of stale references `ci.yml` had | RC4 |
+| 17 | **112 "skipped" unit tests in the suite summary.** All 112 come from `tests/unit/gedcom-fidelity-per-field.test.ts` — a generator that walks every `(table, column, gedcom-version)` triple and emits a check per cell; cells registered as `excluded` in `src/api/gedcom_fidelity_registry.ts` get reported as skipped with the registry's reason as the test name. By design, but it floods the suite output and masks any *real* future skip (someone `it.skip()`-ing a broken test to make CI green disappears in the pile). The design intent (one test per registry entry) is right; the rendering (as 112 `skipped` lines) is wrong. | RC4 |
+| 18 | **No e2e test was part of close-out verification.** The plan's verification §1 step 4 said "Cross-platform smoke ... 10 highest-traffic flows pass" but framed it as manual "smoke" (L3); the Playwright `[smoke]` project that *actually exists* and *would have caught the boot regression* was never invoked. Currently `npx playwright test` is broken on `main` (2 of the 4 projects time out) — meaning the suite that should have been the verification surface for the close-out is itself in disrepair, and nobody noticed because nobody ran it. | RC4 |
 
 ## Root-cause analysis
 
@@ -123,10 +125,9 @@ Stopped mid-Round-1 to write this. Pre-RCA in-flight work:
 
 ### Class RC4 (verification infrastructure was decorative)
 
-- Run `npx playwright test` once the in-flight unit-test commit lands. **The current run fails** — `[smoke]` and `[duplicates]` projects throw `executeJs: renderer script timed out`. These need diagnosis (likely Tauri-binary-path issues in the fixture after the renames already in `e2e/fixture.ts`, or a `dist-tauri/` vs `dist-static/` confusion).
-- Rename the Playwright `[smoke]` project. Candidate: `[boot]` (what it actually tests). Touches `playwright.config.ts` + the project's tag string in tests that select on project name. Done as part of the e2e fix above.
+- **Skipped-tests cleanup plan** ([`plans/2026-05-12-skipped-tests-cleanup.md`](2026-05-12-skipped-tests-cleanup.md)) — convert the 112 registry-excluded `it.skip(reason)` calls to passing assertions; restore the suite's `skipped` count as a meaningful signal. Adds a standing test that asserts the suite has zero static skips.
+- **e2e repair plan** ([`plans/2026-05-12-e2e-test-repair.md`](2026-05-12-e2e-test-repair.md)) — diagnose + fix the `executeJs: renderer script timed out` failures in the `[smoke]` and `[duplicates]` Playwright projects. Hypothesis: gazetteer-init burst pins the renderer past the fixture's executeJs timeout (RC3 cascade). Rename the `[smoke]` project to `[boot]` per L3.
 - Audit `release.yml` for the same class of stale references `ci.yml` had. Currently triggered only on tags; safer than `ci.yml` was but not verified.
-- Add `tests/e2e/` to the close-out evidence requirement in `CLAUDE.md`. Currently the checklist says "produce evidence" but doesn't name e2e specifically — and the e2e suite is the closest thing to a real boot-and-walk-the-app check.
 
 ## Lessons that change the standing rules
 
@@ -165,6 +166,19 @@ This rule lands in `CLAUDE.md`'s "Finishing a plan" section (already started in 
 ### L5 — Project rules go in workspace, never in user memory
 
 Already captured in [feedback_rules_belong_in_workspace.md](../../memory/feedback_rules_belong_in_workspace.md). Symptom in this incident: I wrote `feedback_no_smoke_checks.md` to memory before the user pointed out it belongs in `.claude/rules/`. Even one round of "save to memory → user-corrects → move to workspace" is waste; the right default is workspace from the first save.
+
+### L7 — e2e is the load-bearing verification for "the app works"; running it is part of every close-out
+
+The Tauri full-port plan's verification §1 step 4 said *"Cross-platform smoke ... 10 highest-traffic flows pass on macOS + Windows + Linux"*. The Playwright `[smoke]` project that actually tests boot + Vue mount exists in `tests/e2e/` and would have caught the boot regression. But the plan framed it as manual "smoke" (L3) and nobody ran it. Worse: the suite is currently broken on `main` (2 of the 4 projects time out) — the very test surface that should have caught the close-out's regressions is itself in disrepair, and the disrepair went unnoticed because nobody ran it.
+
+The rule: **`npx playwright test` is part of the evidence captured at every plan close-out**, paired with `npm test` and `npm run build`. Same shape as the existing rules:
+
+- For PRs → CI runs the e2e suite as part of the `build` job's downstream (when feasible — currently the suite requires the packaged Tauri binary which the `build` job already produces). CI catches it.
+- For direct pushes to `main` → executor runs `npx playwright test` locally before push, captures the exit code + project counts, includes them in the close-out commit message.
+
+And: **a broken e2e suite blocks archive**. If `[smoke]` or `[duplicates]` or any other project is timing out, the plan that's trying to archive is responsible for fixing them (or filing a separate plan that explicitly covers fixing them) before close-out. "The e2e suite was broken before my work" is not a pass; if you archive over a broken e2e suite, you've added another layer that the next contributor has to peel back before *they* can verify.
+
+This rule lands in `.claude/rules/plans.md`'s "Verification discipline at close-out" section. The skipped-tests cleanup plan above is the precondition: without it, `npx playwright test` failing is hard to distinguish from `npm test`'s 112-skipped baseline noise.
 
 ## Mitigation map: every gap class → the structural fix that closes it
 
