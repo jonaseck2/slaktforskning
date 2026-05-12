@@ -24,6 +24,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
 import { findOrCreatePlace } from '../../api/places';
 import { getDbSetting, setDbSetting } from '../../api/db_settings';
+import { queryOne, queryAll, runSql } from '../../api/db';
 import { detectGedcomVersion } from './detect';
 import type { GedcomVersion } from './detect';
 import { normalizeForImport } from './normalize';
@@ -238,21 +239,11 @@ function withStatementCache(db: Database): { proxy: Database; finalize(): void }
   };
 }
 
-/** Prepare, run once, finalize immediately -- avoids leaking WASM heap memory. */
-function runSql(db: Database, sql: string): void {
-  const stmt = db.prepare(sql);
-  try { stmt.run([]); } finally { (stmt as unknown as { finalize(): void }).finalize(); }
-}
-function queryOne<T>(db: Database, sql: string): T {
-  const stmt = db.prepare(sql);
-  try { return stmt.get([]) as T; }
-  finally { (stmt as unknown as { finalize(): void }).finalize(); }
-}
-function queryAll<T>(db: Database, sql: string): T[] {
-  const stmt = db.prepare(sql);
-  try { return stmt.all([]) as T[]; }
-  finally { (stmt as unknown as { finalize(): void }).finalize(); }
-}
+// Sync local wrappers for runSql / queryOne / queryAll were removed during the
+// Tauri-port aftermath: under the Tauri DB shim, prepare()/run()/get()/all()
+// are async, so the sync wrappers returned Promises that crashed downstream
+// (`evBeforeRows.map is not a function`). The await-aware helpers from
+// `src/api/db.ts` work against both backends.
 
 // ── Preview (no DB writes) ──────────────────────────────────────────────────
 
@@ -389,45 +380,46 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
     }
   }
 
-  // Snapshot row counts before import (each statement finalized immediately)
-  const personsBefore        = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons').n;
-  const familiesBefore       = queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'").n;
-  const sourcesBefore        = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources').n;
-  const placesBefore         = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places').n;
-  const citationsBefore      = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations').n;
-  const reposBefore          = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM repositories').n;
-  const groupsBefore         = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM groups').n;
-  const researchTasksBefore  = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM research_tasks').n;
-  const evBeforeRows         = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
+  // Snapshot row counts before import (each statement finalized immediately).
+  // `.n!` non-null asserts the row exists — `SELECT COUNT(*)` always returns one row.
+  const personsBefore        = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons'))!.n;
+  const familiesBefore       = (await queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'"))!.n;
+  const sourcesBefore        = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources'))!.n;
+  const placesBefore         = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places'))!.n;
+  const citationsBefore      = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations'))!.n;
+  const reposBefore          = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM repositories'))!.n;
+  const groupsBefore         = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM groups'))!.n;
+  const researchTasksBefore  = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM research_tasks'))!.n;
+  const evBeforeRows         = await queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
   const evBefore             = new Map<string, number>(evBeforeRows.map(r => [r.event_type, r.cnt]));
 
   const version = detectGedcomVersion(tree);
   const normalizedTree = normalizeForImport(tree, version);
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
-  runSql(db, 'BEGIN');
+  await runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
   try {
     partial = await doImportGedcom(cachedDb, normalizedTree, options);
-    runSql(db, 'COMMIT');
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    runSql(db, 'ROLLBACK');
+    await runSql(db, 'ROLLBACK');
     throw err;
   } finally {
     finalizeCache(); // free all compiled statements from the WASM heap
-    runSql(db, 'PRAGMA shrink_memory'); // release SQLite page cache back to WASM heap
+    await runSql(db, 'PRAGMA shrink_memory'); // release SQLite page cache back to WASM heap
   }
 
   // Snapshot row counts after import (each statement finalized immediately)
-  const personsAfter        = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons').n;
-  const familiesAfter       = queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'").n;
-  const sourcesAfter        = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources').n;
-  const placesAfter         = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places').n;
-  const citationsAfter      = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations').n;
-  const reposAfter          = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM repositories').n;
-  const groupsAfter         = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM groups').n;
-  const researchTasksAfter  = queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM research_tasks').n;
-  const evAfterRows         = queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
+  const personsAfter        = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM persons'))!.n;
+  const familiesAfter       = (await queryOne<{ n: number }>(db, "SELECT COUNT(*) as n FROM relationships WHERE type='couple'"))!.n;
+  const sourcesAfter        = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM sources'))!.n;
+  const placesAfter         = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM places'))!.n;
+  const citationsAfter      = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM citations'))!.n;
+  const reposAfter          = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM repositories'))!.n;
+  const groupsAfter         = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM groups'))!.n;
+  const researchTasksAfter  = (await queryOne<{ n: number }>(db, 'SELECT COUNT(*) as n FROM research_tasks'))!.n;
+  const evAfterRows         = await queryAll<{ event_type: string; cnt: number }>(db, 'SELECT event_type, COUNT(*) as cnt FROM events GROUP BY event_type');
 
   // Match SUBM name to a person and store as default_person_id
   // Strategies (tried in order, first unique match wins):

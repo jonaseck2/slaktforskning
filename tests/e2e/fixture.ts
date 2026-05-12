@@ -19,10 +19,14 @@
  */
 import { spawn, execFileSync, ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import os from 'node:os';
 import { expect } from '@playwright/test';
 
+// `"type": "module"` (added with the Vite-7 upgrade) means tsx loads this file
+// as ESM where __dirname is undefined. Derive it from import.meta.url.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 
 // ---------------------------------------------------------------------------

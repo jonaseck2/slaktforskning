@@ -74,7 +74,19 @@ const BUNDLED_GAZETTEER_IDS: readonly string[] = [
 // init for-loop. In Node mode (Electron main, worker, vitest, MCP server)
 // `import.meta.glob` is undefined so this stays empty and the fs-based
 // loadGazetteer below runs.
-const HERE = dirname(fileURLToPath(import.meta.url));
+//
+// Path-resolution dual-mode: ESM (vitest, npx tsx) uses `import.meta.url`;
+// CJS (esbuild's CJS bundle for the MCP sidecar) zeroes that out, so fall
+// back to the CJS-only `__dirname`. Without the fallback, `fileURLToPath('')`
+// throws at sidecar startup once the renderer asks for a place lookup.
+const HERE = (() => {
+  try {
+    return dirname(fileURLToPath(import.meta.url));
+  } catch {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (globalThis as any).__dirname as string;
+  }
+})();
 
 // Resolves to one of two locations depending on whether we're running from
 // source (tests, dev, ts-node) or from a Vite-built bundle:

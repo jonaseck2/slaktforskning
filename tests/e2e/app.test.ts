@@ -1,10 +1,12 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import os from 'node:os';
 import { test, expect } from '@playwright/test';
 import { startApp, teardownApp, AppInstance } from './fixture';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..', '..');
 
 function tempDbPath(): string {
