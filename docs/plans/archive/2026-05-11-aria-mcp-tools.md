@@ -99,53 +99,53 @@ Day-one shakedown (2026-05-11) and the v1 ship of this plan together produced fo
 
 ### Task 2 (v2): Expand the resolver to TTS parity
 
-- [ ] **Refactor region resolution** — only `[role="dialog"]`, `[role="region"][aria-label]`, `<section aria-label>`, and any landmark with `aria-label` count as a *named* region. Bare `<main>`/`<header>`/`<aside>`/`<section>` without a name = not a region.
-- [ ] **Add `state` to every result** — emit `pressed` / `expanded` / `selected` / `checked` / `current` / `busy` / `invalid` / `required` as optional fields when their ARIA attributes are set or when the native HTML state is truthy.
-- [ ] **Add mode `'tab_order'`** — walk focusables (`a[href]`, `button`, `input`, `select`, `textarea`, `[tabindex]:not([tabindex="-1"])`, `[role][tabindex]`); resolve order (positive `tabindex` first ascending, then `tabindex=0` + natively focusable in DOM order); return each with name + role + region + state + `tab_index`. Optional `region` filter.
-- [ ] **Add mode `'landmarks'`** — collect `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, `[role="region"|"main"|"navigation"|"banner"|"complementary"|"contentinfo"|"search"|"form"|"dialog"]`. Return `{ role, name, has_name, tag, child_interactable_count, region (parent landmark name) }` per landmark.
-- [ ] **Add mode `'headings'`** — `<h1>`–`<h6>` + `[role="heading"][aria-level]`. Return `{ level, text, region, tag }` per heading.
-- [ ] **Add mode `'read'`** — given `opts.region`, walk that region's descendants in DOM order; emit `{ kind: 'heading', level, text }` / `{ kind: 'paragraph', text }` / `{ kind: 'list_item', text }` / `{ kind: 'interactable', name, role, state }` units. If no region given, read from `<body>` (the whole document).
-- [ ] **Add mode `'audit'`** — walk the view (or scoped region), produce an array of `{ kind, severity, tag, role?, region?, hint }` findings for each of the six finding-kinds. Hints are static strings keyed by `kind`.
+- [x] **Refactor region resolution** — only `[role="dialog"]`, `[role="region"][aria-label]`, `<section aria-label>`, and any landmark with `aria-label` count as a *named* region. Bare `<main>`/`<header>`/`<aside>`/`<section>` without a name = not a region.
+- [x] **Add `state` to every result** — emit `pressed` / `expanded` / `selected` / `checked` / `current` / `busy` / `invalid` / `required` as optional fields when their ARIA attributes are set or when the native HTML state is truthy.
+- [x] **Add mode `'tab_order'`** — walk focusables (`a[href]`, `button`, `input`, `select`, `textarea`, `[tabindex]:not([tabindex="-1"])`, `[role][tabindex]`); resolve order (positive `tabindex` first ascending, then `tabindex=0` + natively focusable in DOM order); return each with name + role + region + state + `tab_index`. Optional `region` filter.
+- [x] **Add mode `'landmarks'`** — collect `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, `[role="region"|"main"|"navigation"|"banner"|"complementary"|"contentinfo"|"search"|"form"|"dialog"]`. Return `{ role, name, has_name, tag, child_interactable_count, region (parent landmark name) }` per landmark.
+- [x] **Add mode `'headings'`** — `<h1>`–`<h6>` + `[role="heading"][aria-level]`. Return `{ level, text, region, tag }` per heading.
+- [x] **Add mode `'read'`** — given `opts.region`, walk that region's descendants in DOM order; emit `{ kind: 'heading', level, text }` / `{ kind: 'paragraph', text }` / `{ kind: 'list_item', text }` / `{ kind: 'interactable', name, role, state }` units. If no region given, read from `<body>` (the whole document).
+- [x] **Add mode `'audit'`** — walk the view (or scoped region), produce an array of `{ kind, severity, tag, role?, region?, hint }` findings for each of the six finding-kinds. Hints are static strings keyed by `kind`.
 
 ### Task 3: Wire each mode as its own MCP tool
 
-- [ ] Register `ui_aria_tab_order` in `src/mcp/tools/dev/ui.ts` — params: optional `region`, optional `limit` (default 100, max 500).
-- [ ] Register `ui_aria_landmarks` — no params. Returns every landmark.
-- [ ] Register `ui_aria_headings` — optional `region`. Returns every heading (in region if given).
-- [ ] Register `ui_aria_read` — optional `region`. Returns reading-units in DOM order.
-- [ ] Register `ui_aria_audit` — optional `region` to scope. Returns findings.
-- [ ] Each tool's description follows the prose style of the existing `dev/ui.ts` tools (sentence-form, one paragraph max, no emojis, explicit on when to prefer this tool over the alternatives).
+- [x] Register `ui_aria_tab_order` in `src/mcp/tools/dev/ui.ts` — params: optional `region`, optional `limit` (default 100, max 500).
+- [x] Register `ui_aria_landmarks` — no params. Returns every landmark.
+- [x] Register `ui_aria_headings` — optional `region`. Returns every heading (in region if given).
+- [x] Register `ui_aria_read` — optional `region`. Returns reading-units in DOM order.
+- [x] Register `ui_aria_audit` — optional `region` to scope. Returns findings.
+- [x] Each tool's description follows the prose style of the existing `dev/ui.ts` tools (sentence-form, one paragraph max, no emojis, explicit on when to prefer this tool over the alternatives).
 
 ### Task 4: Tests
 
-- [ ] **Serialization round-trip test scaffolding.** Add a helper that takes a `buildAria*Script(opts)` output, evaluates it against a JSDOM document, and returns the result. Use it to assert *the serialized form* produces the same output as the directly-called function for every mode. This is the test class that would have caught both v1 production bugs.
-- [ ] **Per-mode tests.** One test block per mode covering happy path + at least one edge case. Spec coverage matches Verification §2.
-- [ ] **State surface tests** on a fixture with mixed `aria-pressed` / `aria-expanded` / `aria-checked="mixed"` / `<input required>` elements.
-- [ ] **Audit-finding tests** — one fixture per finding-kind, asserting the audit surfaces exactly that finding with the right severity + hint.
-- [ ] `npx vitest run` passes with no regression vs floor (3950 passed / 112 skipped before this Task; expect +30–50 new tests).
+- [x] **Serialization round-trip test scaffolding.** Add a helper that takes a `buildAria*Script(opts)` output, evaluates it against a JSDOM document, and returns the result. Use it to assert *the serialized form* produces the same output as the directly-called function for every mode. This is the test class that would have caught both v1 production bugs.
+- [x] **Per-mode tests.** One test block per mode covering happy path + at least one edge case. Spec coverage matches Verification §2.
+- [x] **State surface tests** on a fixture with mixed `aria-pressed` / `aria-expanded` / `aria-checked="mixed"` / `<input required>` elements.
+- [x] **Audit-finding tests** — one fixture per finding-kind, asserting the audit surfaces exactly that finding with the right severity + hint.
+- [x] `npx vitest run` passes with no regression vs floor (3950 passed / 112 skipped before this Task; expect +30–50 new tests).
 
 ### Task 5: Live smoke + skill + docs/MCP.md
 
-- [ ] Restart the dev MCP. Run the seven-step Verification §1 flow. Tool log captured; assert zero CSS selectors.
-- [ ] `ui_aria_audit()` against the running app surfaces (at minimum) the three real bugs the v1 smoke caught: Settings chip strip without `role="tab"`, modal inputs without label associations, unnamed `<main>`.
-- [ ] Update `.claude/skills/slaktforskning-mcp-dev/SKILL.md` with the "ARIA-first navigation" section covering the seven tools.
-- [ ] Add seven dev-tool rows to `docs/MCP.md`, each one paragraph with cross-link to the others (e.g. "see `ui_aria_audit` for finding things this tool can't address").
-- [ ] Write a small follow-up plan file `docs/plans/2026-05-11-app-a11y-gaps.md` capturing the three app-side a11y findings as a separate work-stream.
+- [x] Restart the dev MCP. Run the seven-step Verification §1 flow. Tool log captured; assert zero CSS selectors.
+- [x] `ui_aria_audit()` against the running app surfaces (at minimum) the three real bugs the v1 smoke caught: Settings chip strip without `role="tab"`, modal inputs without label associations, unnamed `<main>`.
+- [x] Update `.claude/skills/slaktforskning-mcp-dev/SKILL.md` with the "ARIA-first navigation" section covering the seven tools.
+- [x] Add seven dev-tool rows to `docs/MCP.md`, each one paragraph with cross-link to the others (e.g. "see `ui_aria_audit` for finding things this tool can't address").
+- [x] Write a small follow-up plan file `docs/plans/2026-05-11-app-a11y-gaps.md` capturing the three app-side a11y findings as a separate work-stream.
 
 ## Self-review checklist
 
-- [ ] Plan opens with user goal in user-recognizable language.
-- [ ] Scope enumerates every same-shaped surface (the resolver and all seven tool registrations are in `src/mcp/tools/dev/ui.ts` + `src/mcp/tools/dev/ui-aria-script.ts`).
-- [ ] Verification observes user-observable behavior — an agent walks the app the way a TTS user does.
-- [ ] Failure-modes section cites the four specific bug classes the smoke exposed.
-- [ ] All Task 2–5 checkboxes ticked; Task 1 already ticked from v1.
-- [ ] Live smoke ran end-to-end; tool log free of CSS selectors.
-- [ ] Plan `git mv` to `docs/plans/archive/`.
-- [ ] Minor version bump in `package.json` — `0.252.0 → 0.253.0` (new agent-facing capability, even though dev-only).
-- [ ] `## Unreleased` entry in `CHANGELOG.md` summarising the seven tools and the audit's role.
-- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
-- [ ] Follow-up plan `docs/plans/2026-05-11-app-a11y-gaps.md` exists and is in `docs/PLAN.md` as `[planned]`.
-- [ ] Commit `chore: archive completed aria-mcp-tools`.
+- [x] Plan opens with user goal in user-recognizable language.
+- [x] Scope enumerates every same-shaped surface (the resolver and all seven tool registrations are in `src/mcp/tools/dev/ui.ts` + `src/mcp/tools/dev/ui-aria-script.ts`).
+- [x] Verification observes user-observable behavior — an agent walks the app the way a TTS user does.
+- [x] Failure-modes section cites the four specific bug classes the smoke exposed.
+- [x] All Task 2–5 checkboxes ticked; Task 1 already ticked from v1.
+- [x] Live smoke ran end-to-end; tool log free of CSS selectors.
+- [x] Plan `git mv` to `docs/plans/archive/`.
+- [x] Minor version bump in `package.json` — `0.252.0 → 0.253.0` (new agent-facing capability, even though dev-only).
+- [x] `## Unreleased` entry in `CHANGELOG.md` summarising the seven tools and the audit's role.
+- [x] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [x] Follow-up plan `docs/plans/2026-05-11-app-a11y-gaps.md` exists and is in `docs/PLAN.md` as `[planned]`.
+- [x] Commit `chore: archive completed aria-mcp-tools`.
 
 ## Tasks discovered during execution
 

@@ -65,6 +65,40 @@ When working on chart layout bugs, use the chart inspection tools:
 
 This lets you verify connector positions, outline placement, and spacing without reading raw layout data from source files.
 
+#### ARIA-first navigation (preferred over `ui_click` / `ui_fill`)
+
+The seven `ui_aria_*` tools mirror what a screen-reader user experiences. **Prefer them over the CSS-selector tools (`ui_click`, `ui_fill`, `ui_get_dom`) whenever the goal is "act on something the user can see / hear"** — the accessible-name surface survives CSS-class renames, layout refactors, and Vue template restructures, while CSS selectors break on the first redesign.
+
+| When you want to… | Use |
+|---|---|
+| Orient in an unfamiliar view (what regions exist?) | `ui_aria_landmarks()` |
+| Read the page outline | `ui_aria_headings()` (optionally scoped by `region`) |
+| Trace what Tab navigation feels like | `ui_aria_tab_order({ region?: '…' })` |
+| List clickables/inputs by name + role + state | `ui_aria_list({ role?: '…', region?: '…' })` |
+| "Read" the prose of a section (TTS-style) | `ui_aria_read({ region?: '…' })` |
+| Click or fill by name | `ui_aria_invoke({ name: '…', role?: '…', region?: '…', value?: '…' })` |
+| Find every a11y gap in the current view | `ui_aria_audit({ region?: '…' })` |
+
+**Accessible-name resolution (7-step priority — first match wins):**
+
+1. `v-narrate` text on the element (the screen-reader mode's curated name — `window.__narrationMap.get(el)`).
+2. `aria-label` attribute.
+3. `aria-labelledby` referent's `textContent`.
+4. `<label for="id">` association.
+5. Element's own visible `textContent` (trimmed; `aria-hidden` children excluded).
+6. `placeholder` (form controls only — and `ui_aria_audit` reports this as `input_without_label` because placeholder ≠ label).
+7. `title`.
+
+If none produce a non-empty string, the element is omitted from `ui_aria_list` — and reported as `unnamed_interactable` by `ui_aria_audit`.
+
+**Ambiguity is a signal, not an error to dismiss.** `ui_aria_invoke({ name: 'Spara' })` throws when two elements share that name and lists every candidate with its role + region in the error message — silent first-match is the bug class CSS selectors keep producing. Disambiguate via the `role` / `region` arguments.
+
+**Region resolution is conservative.** Only landmarks with an *explicit* accessible name (`aria-label`, `aria-labelledby`, or `v-narrate`) count as named regions. Bare `<main>` / `<header>` / `<aside>` without `aria-label` resolve to `region: null` — they show up in `ui_aria_landmarks` with `has_name: false` and `ui_aria_audit` reports them as `unnamed_landmark`.
+
+**When `ui_aria_*` can't find what you want, that's data.** It usually means the app has a real a11y gap. Run `ui_aria_audit()` and quote the `hint` in the follow-up.
+
+**When the CSS-selector tools are still right:** `ui_query_styles` (computed styles, layout debugging), `ui_get_dom` with `mode: 'attributes'` (state probes the ARIA surface doesn't cover yet), and `ui_screenshot` (visual diffs). The two categories complement each other; ARIA covers user-facing affordances, CSS selectors cover implementation details.
+
 ### Mode 2: Acceptance Testing After Feature Implementation
 
 After implementing a UI feature (e.g. ResearchTasksView), before committing:

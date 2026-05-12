@@ -6,6 +6,10 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+### [planned] App-level a11y gaps (surfaced by `ui_aria_audit`)
+The dev MCP's `ui_aria_audit` tool (shipped 2026-05-12 in the ARIA-MCP plan) found 27 a11y findings on Settings → Länkregler alone — Settings chip strip without `role="tab"`, modal form inputs without label associations, 12 unnamed row-checkboxes, unnamed `<main>`. Same pattern likely repeats across every modal + form-driven view. This plan closes those gaps and adds a CI test (`tests/components/aria-audit-zero-findings.test.ts`) that fails the build on any new a11y gap.
+- Plan: [`plans/2026-05-12-app-a11y-gaps.md`](plans/2026-05-12-app-a11y-gaps.md)
+
 #### App Naming [backlog]
 Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 

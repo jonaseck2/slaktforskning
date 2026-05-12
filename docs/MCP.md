@@ -154,17 +154,36 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 All 77 production tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection. Use this server when developing or testing UI features.
 
-### UI Automation (requires Electron app running)
+### UI Automation (requires app running)
 
-The Electron main process starts an HTTP server (`src/main/ui-server.ts`) on port 19241 (override with `SLAKTFORSKNING_UI_PORT`). The dev MCP server calls this bridge for UI operations. If the app is not running, UI tools return a descriptive error.
+The Tauri Rust core exposes a tiny HTTP bridge (`src-tauri/src/ui_server.rs`) on port 19241 (override with `SLAKTFORSKNING_UI_PORT`). The dev MCP server calls this bridge for UI operations — three endpoints (`POST /eval`, `POST /screenshot`, `GET /db_path`) plus everything else built on `/eval`. If the app is not running, UI tools return a descriptive error.
 
 | Tool | Description |
 |------|-------------|
-| `ui_screenshot` | Capture the current window as a PNG image. |
+| `ui_screenshot` | Capture the current window as a PNG image. Optional `selector` to crop. |
 | `ui_navigate` | Navigate to a Vue Router route path (e.g. `/persons/123`). Uses `window.__vue_router` for clean hash-based navigation. |
-| `ui_click` | Click an element by CSS selector. |
-| `ui_fill` | Fill an input field by CSS selector and trigger Vue reactivity. |
-| `ui_get_dom` | Get the full rendered HTML of the current view. |
+| `ui_click` | Click an element by CSS selector. Prefer `ui_aria_invoke` when acting on something a user can see. |
+| `ui_fill` | Fill an input field by CSS selector and trigger Vue reactivity. Prefer `ui_aria_invoke` with `value` for input roles. |
+| `ui_get_dom` | Get DOM content scoped by selector (`mode: outerHTML | innerHTML | textContent | attributes`). Useful for raw-shape probes; for navigation, prefer the ARIA tools. |
+| `ui_query_styles` | Computed styles + bounding rect + scroll metrics for elements matching a selector. The fast path for layout debugging. |
+| `ui_eval` | Run an arbitrary JS expression in the renderer. Escape hatch for anything not covered by the structured tools. |
+| `ui_console` | Drain the renderer's captured console buffer (errors + warnings + logs, ring-buffered to 500 entries). |
+| `ui_reload` | Hard-reload the renderer window. Use after MCP-side mutations to refresh list views. |
+| `ui_export_pdf` | Open the print dialog (use Save-as-PDF). |
+
+### ARIA Tools (TTS-parity surface for UI navigation + a11y audit)
+
+Seven tools that mirror what a screen-reader user experiences. **Prefer these over `ui_click` / `ui_fill` / `ui_get_dom` whenever the goal is "act on something the user can see / hear"** — accessible names + roles + landmark structure survive CSS-class renames and layout refactors, while CSS selectors break on the first redesign. Accessible-name priority (first match wins): `v-narrate` → `aria-label` → `aria-labelledby` → `<label for>` → `textContent` → `placeholder` → `title`.
+
+| Tool | Description |
+|------|-------------|
+| `ui_aria_list` | Enumerate every interactable in the renderer with its accessible name, ARIA role, region (named-landmark ancestor), and state (`pressed` / `expanded` / `selected` / `checked` / `current` / `busy` / `invalid` / `required`). Filter by `role`, `region`, `limit`, `include_disabled`, `include_hidden`. |
+| `ui_aria_invoke` | Click or fill by accessible name. On ambiguity throws an error that lists every candidate with role + region so the agent can disambiguate via `role` / `region` arguments — never silently first-match. For input roles, pass `value` to set the input and dispatch `input` + `change` events. |
+| `ui_aria_tab_order` | Walk focusable elements in resolved tab order (positive `tabindex` ascending first, then `tabindex=0` + natively focusable in DOM order). What pressing Tab repeatedly would visit. Each entry carries `tab_index` + the same name/role/region/state surface as `ui_aria_list`. |
+| `ui_aria_landmarks` | Every landmark in the document — `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>`, `<section>`, plus explicit `role="region"|"dialog"|"search"|"form"|...`. Each entry: `{ role, name, has_name, tag, child_interactable_count, region, busy? }`. Landmarks with `has_name: false` are real a11y gaps — see `ui_aria_audit`. |
+| `ui_aria_headings` | Every `<h1>`–`<h6>` and `[role="heading"][aria-level]`. Each: `{ level, text, region, tag }`. The H-key navigation a TTS user has, in one call. Optionally scope to one `region`. |
+| `ui_aria_read` | Ordered stream of reading units (heading / paragraph / list_item / interactable) for a region or the whole document. Use when the agent needs to "read the screen" — understand prose flow rather than enumerate clickables. |
+| `ui_aria_audit` | Scoped a11y audit. Six finding-kinds with severity: `unnamed_interactable` (high), `unnamed_landmark` (medium), `input_without_label` (high), `tab_strip_without_role` (medium), `positive_tabindex` (low), `disabled_focusable` (low). Each finding includes a `hint` string the developer can quote when filing the fix. |
 
 ### Chart Inspection
 
