@@ -1,9 +1,10 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.253.3",
+  "version": "0.253.4",
   "description": "A genealogy desktop application",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "tauri dev",
     "dev": "tauri dev",
@@ -41,8 +42,8 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "@vitest/coverage-v8": "^4.1.2",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vitest/coverage-v8": "^4.1.6",
     "@vue/test-utils": "^2.4.6",
     "@yao-pkg/pkg": "^6.10.0",
     "eslint": "^8.57.1",
@@ -53,10 +54,10 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "tsx": "^4.21.0",
     "typescript": "~4.5.4",
-    "vite": "^5.4.21",
+    "vite": "^7.3.3",
     "vite-plugin-node-polyfills": "^0.26.0",
     "vite-plugin-singlefile": "^2.3.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.6"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

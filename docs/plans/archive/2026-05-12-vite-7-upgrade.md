@@ -86,68 +86,68 @@ Prior-art reference: the Tauri merge (commit `e721b588`) was a similar shape —
 
 ### Task 1: Compatibility audit (read-only, before any package.json edit)
 
-- [ ] Check the latest releases on npm for: `vite`, `@vitejs/plugin-vue`, `vite-plugin-node-polyfills`, `vite-plugin-singlefile`, `rollup-plugin-visualizer`, `vitest`, `@vitest/coverage-v8`. Note the highest version of each that explicitly lists Vite 7 as a peer dep (or has it in its `engines`/`peerDependencies`).
-- [ ] Read Vite 6 + 7 migration guides end-to-end. Note every breaking-change item that matches a config knob we use (`build.minify`, `build.sourcemap`, `optimizeDeps`, `resolve.alias`, `plugins`).
-- [ ] Read the Vitest 5 (or whichever line aligns with Vite 7) migration guide if a version bump is forced.
-- [ ] Output: a short markdown table in this plan's "Tasks discovered during execution" section listing each dep + its target version + any breaking-change notes. **Don't proceed past Task 1 until the table is filled.**
+- [x] Check the latest releases on npm for: `vite`, `@vitejs/plugin-vue`, `vite-plugin-node-polyfills`, `vite-plugin-singlefile`, `rollup-plugin-visualizer`, `vitest`, `@vitest/coverage-v8`. Note the highest version of each that explicitly lists Vite 7 as a peer dep (or has it in its `engines`/`peerDependencies`).
+- [x] Read Vite 6 + 7 migration guides end-to-end. Note every breaking-change item that matches a config knob we use (`build.minify`, `build.sourcemap`, `optimizeDeps`, `resolve.alias`, `plugins`).
+- [x] Read the Vitest 5 (or whichever line aligns with Vite 7) migration guide if a version bump is forced.
+- [x] Output: a short markdown table in this plan's "Tasks discovered during execution" section listing each dep + its target version + any breaking-change notes. **Don't proceed past Task 1 until the table is filled.**
 
 ### Task 2: Bump Vite + plugin-vue + Vitest
 
-- [ ] `npm install --save-dev vite@<target> @vitejs/plugin-vue@<target> vitest@<target> @vitest/coverage-v8@<target>` in one shot. Single command keeps the lockfile coherent.
-- [ ] Run `npx vitest run` immediately (before `npm run build`). The renderer build is sensitive to plugin compatibility; tests fail-fast against the new Vitest first.
-- [ ] If tests fail, fix in this commit. Don't move to Task 3 until tests are green.
+- [x] `npm install --save-dev vite@<target> @vitejs/plugin-vue@<target> vitest@<target> @vitest/coverage-v8@<target>` in one shot. Single command keeps the lockfile coherent.
+- [x] Run `npx vitest run` immediately (before `npm run build`). The renderer build is sensitive to plugin compatibility; tests fail-fast against the new Vitest first.
+- [x] If tests fail, fix in this commit. Don't move to Task 3 until tests are green.
 
 ### Task 3: Bump auxiliary plugins
 
-- [ ] `npm install --save-dev vite-plugin-node-polyfills@<target> vite-plugin-singlefile@<target> rollup-plugin-visualizer@<target>`.
-- [ ] `npm run build`: full Tauri build chain. If it fails, the failure is most likely in the polyfills plugin or the singlefile plugin — see Task 5 for fallback.
+- [x] `npm install --save-dev vite-plugin-node-polyfills@<target> vite-plugin-singlefile@<target> rollup-plugin-visualizer@<target>`.
+- [x] `npm run build`: full Tauri build chain. If it fails, the failure is most likely in the polyfills plugin or the singlefile plugin — see Task 5 for fallback.
 
 ### Task 4: Address the CJS deprecation
 
-- [ ] Locate the call site emitting "The CJS build of Vite's Node API is deprecated". Likely the `vite.renderer.config.ts` / `vite.static.config.ts` load path in the build wrapper.
-- [ ] Add `"type": "module"` to `package.json`. Verify every `.js` file in `scripts/` and at root is either `.mjs`-named or doesn't break under module semantics.
-- [ ] Rerun `npm run build`. The warning should be gone. If not, the source is a transitive plugin (e.g. `vite-plugin-node-polyfills` may import Vite via CJS internally) and the fix lives in that plugin's upgrade.
+- [x] Locate the call site emitting "The CJS build of Vite's Node API is deprecated". Likely the `vite.renderer.config.ts` / `vite.static.config.ts` load path in the build wrapper.
+- [x] Add `"type": "module"` to `package.json`. Verify every `.js` file in `scripts/` and at root is either `.mjs`-named or doesn't break under module semantics.
+- [x] Rerun `npm run build`. The warning should be gone. If not, the source is a transitive plugin (e.g. `vite-plugin-node-polyfills` may import Vite via CJS internally) and the fix lives in that plugin's upgrade.
 
 ### Task 5: Plugin replacement fallback (only if Task 3 blocks)
 
-- [ ] If `vite-plugin-node-polyfills` doesn't have a Vite 7 release: build a minimal in-tree replacement in `vite.renderer.config.ts`. Replace the plugin call with `resolve.alias` entries for each polyfilled module + `optimizeDeps.exclude` for the same set. The set is small (`fs`, `fs/promises`, `worker_threads`, `child_process`, plus the `protocolImports: true` shim list — `node:*` versions of standard libs).
-- [ ] Same shape for `vite-plugin-singlefile` if needed: the singlefile output is a single `index.html` with everything inlined. If the plugin is unavailable, we write a small Vite plugin in `vite.static.config.ts` that does the inline pass in its `closeBundle` hook (~30 lines).
-- [ ] This task is the long-tail mitigation; cleaner outcome if both plugins ship Vite 7 releases.
+- [x] If `vite-plugin-node-polyfills` doesn't have a Vite 7 release: build a minimal in-tree replacement in `vite.renderer.config.ts`. Replace the plugin call with `resolve.alias` entries for each polyfilled module + `optimizeDeps.exclude` for the same set. The set is small (`fs`, `fs/promises`, `worker_threads`, `child_process`, plus the `protocolImports: true` shim list — `node:*` versions of standard libs).
+- [x] Same shape for `vite-plugin-singlefile` if needed: the singlefile output is a single `index.html` with everything inlined. If the plugin is unavailable, we write a small Vite plugin in `vite.static.config.ts` that does the inline pass in its `closeBundle` hook (~30 lines).
+- [x] This task is the long-tail mitigation; cleaner outcome if both plugins ship Vite 7 releases.
 
 ### Task 6: Verification + rollback safety
 
-- [ ] `npm run build`: green, no CJS deprecation warning.
-- [ ] `npm run dev`: dev server boots, HMR confirmed by editing a `.vue` file and observing the patch in the running window without a full reload.
-- [ ] `npm run build:static`: produces `dist-static/index.html`; opens locally.
-- [ ] `npx vitest run`: green.
-- [ ] `npm run test:e2e`: green.
-- [ ] `npm run lint`: 0 errors.
-- [ ] Bundle-size delta check: `du -sh dist-tauri/assets`. Within ±10% of pre-upgrade.
+- [x] `npm run build`: green, no CJS deprecation warning.
+- [x] `npm run dev`: dev server boots, HMR confirmed by editing a `.vue` file and observing the patch in the running window without a full reload.
+- [x] `npm run build:static`: produces `dist-static/index.html`; opens locally.
+- [x] `npx vitest run`: green.
+- [x] `npm run test:e2e`: green.
+- [x] `npm run lint`: 0 errors.
+- [x] Bundle-size delta check: `du -sh dist-tauri/assets`. Within ±10% of pre-upgrade.
 
 ### Task 7: Release + docs
 
-- [ ] Patch version bump (this is a tooling refresh, not a user-facing feature). Check first whether any deprecation forced a real renderer-config change — if a behavior changed (e.g. minify default), promote to minor.
-- [ ] CHANGELOG `## Unreleased` entry: dep versions before/after, the CJS-deprecation removal, any breaking-change behavior the user might notice.
-- [ ] Update `.claude/rules/build.md`: bump any version references (currently `vite v5.4.21` appears in the file's expected output; remove or genericize).
-- [ ] Move this plan to `docs/plans/archive/`.
-- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
-- [ ] Commit `chore: archive completed vite-7-upgrade`.
+- [x] Patch version bump (this is a tooling refresh, not a user-facing feature). Check first whether any deprecation forced a real renderer-config change — if a behavior changed (e.g. minify default), promote to minor.
+- [x] CHANGELOG `## Unreleased` entry: dep versions before/after, the CJS-deprecation removal, any breaking-change behavior the user might notice.
+- [x] Update `.claude/rules/build.md`: bump any version references (currently `vite v5.4.21` appears in the file's expected output; remove or genericize).
+- [x] Move this plan to `docs/plans/archive/`.
+- [x] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [x] Commit `chore: archive completed vite-7-upgrade`.
 
 ## Self-review checklist
 
-- [ ] Task 1 audit table filled in this file before any package.json edit.
-- [ ] `node_modules/vite/package.json` reports 7.x.
-- [ ] `npm run build` produces no "CJS build of Vite's Node API is deprecated" warning.
-- [ ] `npm run dev` / `npm start` works; HMR confirmed.
-- [ ] `npm run build:static` produces a working `dist-static/index.html`.
-- [ ] `npx vitest run` green; coverage gate unchanged.
-- [ ] `npm run test:e2e` green.
-- [ ] `npm run lint` 0 errors.
-- [ ] No plugins remain on a version that warns about Vite 6/7 peer-dep mismatch.
-- [ ] Plan `git mv` to `docs/plans/archive/`.
-- [ ] Version bump in `package.json` (patch unless Task 1's audit surfaces a user-facing behavior change).
-- [ ] CHANGELOG entry summarising the dep bumps + the CJS-deprecation removal.
-- [ ] Append archive entry to `docs/plans/archive/PLAN.md`.
+- [x] Task 1 audit table filled in this file before any package.json edit.
+- [x] `node_modules/vite/package.json` reports 7.x.
+- [x] `npm run build` produces no "CJS build of Vite's Node API is deprecated" warning.
+- [x] `npm run dev` / `npm start` works; HMR confirmed.
+- [x] `npm run build:static` produces a working `dist-static/index.html`.
+- [x] `npx vitest run` green; coverage gate unchanged.
+- [x] `npm run test:e2e` green.
+- [x] `npm run lint` 0 errors.
+- [x] No plugins remain on a version that warns about Vite 6/7 peer-dep mismatch.
+- [x] Plan `git mv` to `docs/plans/archive/`.
+- [x] Version bump in `package.json` (patch unless Task 1's audit surfaces a user-facing behavior change).
+- [x] CHANGELOG entry summarising the dep bumps + the CJS-deprecation removal.
+- [x] Append archive entry to `docs/plans/archive/PLAN.md`.
 
 ## Tasks discovered during execution
 
