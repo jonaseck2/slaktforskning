@@ -6,6 +6,10 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+### [planned] Lift Vite 5.4.21 → Vite 7.x
+Match the Tauri 2.x default toolchain. Today's build emits "The CJS build of Vite's Node API is deprecated" because we're two majors behind. Scope: `vite`, `@vitejs/plugin-vue`, `vite-plugin-node-polyfills`, `vite-plugin-singlefile`, `rollup-plugin-visualizer`, `vitest`, `@vitest/coverage-v8` — plus an audit pass for breaking-change notes (Vite 6 + 7 migration guides). No Rolldown migration (separate plan). The riskiest dep is `vite-plugin-node-polyfills`; if it doesn't have a Vite 7 release, replace it with a minimal in-tree alias set.
+- Plan: [`plans/2026-05-12-vite-7-upgrade.md`](plans/2026-05-12-vite-7-upgrade.md)
+
 ### [planned] Rename `tauri-spike` → `slaktforskning`
 The Cargo crate, the Tauri bundle identifier, the inner Mach-O binary name, the macOS data-folder path, the CI cache keys, and the e2e fixture's binary-lookup strings all still read `tauri-spike` / `com.slaktforskning.tauri-spike` from the proof-of-concept phase. The Tauri port shipped in 0.252.0; the name didn't move. Clean rename — no migration code since the app has never shipped to a public user (any legacy dev data is `mv`-able by hand). After: `git grep tauri.spike` returns zero in live code.
 - Plan: [`plans/2026-05-12-rename-tauri-spike.md`](plans/2026-05-12-rename-tauri-spike.md)
