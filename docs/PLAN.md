@@ -6,6 +6,10 @@ A local-first desktop genealogy app. Includes a built-in MCP server so that **ex
 
 ## Roadmap
 
+### [planned] Rename `tauri-spike` → `slaktforskning`
+The Cargo crate, the Tauri bundle identifier, the inner Mach-O binary name, the macOS data-folder path, the CI cache keys, and the e2e fixture's binary-lookup strings all still read `tauri-spike` / `com.slaktforskning.tauri-spike` from the proof-of-concept phase. The Tauri port shipped in 0.252.0; the name didn't move. Clean rename — no migration code since the app has never shipped to a public user (any legacy dev data is `mv`-able by hand). After: `git grep tauri.spike` returns zero in live code.
+- Plan: [`plans/2026-05-12-rename-tauri-spike.md`](plans/2026-05-12-rename-tauri-spike.md)
+
 ### [planned] Gazetteer lazy chunks
 The renderer bundle's 30 MB `tauri-window-api-*.js` chunk is dominated by `import.meta.glob('../api/place-gazetteers/data/*.json', { eager: true })` in `src/renderer/empty-gazetteers.ts`, which inlines every gazetteer JSON (~70 MB raw) at build time. This forced the `NODE_OPTIONS=--max-old-space-size=8192` workaround in `package.json` and makes app cold-start parse 70 MB of JSON even if the user only opens Sweden. Switching to `eager: false` lets Vite code-split each gazetteer JSON into its own lazy chunk loaded on demand. Removes the heap-bump workaround.
 - Plan: [`plans/2026-05-12-gazetteer-lazy-chunks.md`](plans/2026-05-12-gazetteer-lazy-chunks.md)
