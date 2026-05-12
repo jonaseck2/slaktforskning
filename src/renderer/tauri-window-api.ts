@@ -767,19 +767,12 @@ export function mountWindowApi(db: Database): MountResult {
       preview_media_total_linked: String(totalMediaInScope),
     };
     const html = await invoke<string>('website_load_static_index_html');
-    // Same swap as src/main/preview-html-inject.ts (kept inline to avoid
-    // a renderer→main cross-layer import). Throws when the marker is
-    // missing — silent no-op was the original failure mode (blank iframe
-    // with a `fetch ./data.json` error from installStaticApi's last-resort
-    // dev path).
-    const json = JSON.stringify(snapshot ?? null).replace(/<\/script/gi, '<\\/script');
-    const inline = `<script>window.__SNAPSHOT__=${json};</script>`;
-    const MARKER = '<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->';
-    const result = html.replace(MARKER, inline);
-    if (result === html) {
-      throw new Error(`[website.buildPreviewHtml] index.html missing ${MARKER}`);
-    }
-    return result;
+    // Shared with the test harness via src/shared/preview-html-inject.ts.
+    // Throws when the marker is missing — silent no-op was the original
+    // failure mode (blank iframe with a `fetch ./data.json` error from
+    // installStaticApi's last-resort dev path).
+    const { injectSnapshotIntoHtml } = await import('../shared/preview-html-inject');
+    return injectSnapshotIntoHtml(html, snapshot ?? null);
   };
 
   // website.export — full multi-file export to a user-chosen folder.

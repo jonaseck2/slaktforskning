@@ -1,129 +1,163 @@
-name: Release
+# Tauri release workflow.
+#
+# Triggers: pushing a v* tag (e.g. `v0.250.0-tauri.0`, `v0.250.0`).
+# Outputs: signed installers per OS uploaded to the GitHub Release plus
+# the auto-updater manifest (`latest.json`) the in-app updater consumes.
+#
+# This workflow does NOT cut a release on its own — it just packages,
+# signs, and publishes when the maintainer manually pushes a release tag.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# Required GitHub Secrets (set under Settings → Secrets and variables →
+# Actions → Repository secrets). Generation steps documented in
+# docs/distribution/secrets-setup.md.
+# ─────────────────────────────────────────────────────────────────────────
+#   APPLE_SIGNING_IDENTITY   — Developer ID common name, e.g. "Developer ID Application: Jonas Ahnstedt (TEAMID12)"
+#   APPLE_CERTIFICATE        — Base64-encoded .p12 of the Developer ID cert
+#   APPLE_CERTIFICATE_PASSWORD — Password for the .p12
+#   APPLE_ID                 — Apple ID email used for notarization
+#   APPLE_PASSWORD           — App-specific password for notarytool
+#   APPLE_TEAM_ID            — 10-char Team ID
+#   APPLE_PROVIDER_SHORT_NAME — Provider short name (usually same as Team ID)
+#
+#   WINDOWS_CERTIFICATE       — Base64-encoded .pfx of the Authenticode cert
+#   WINDOWS_CERTIFICATE_PASSWORD — Password for the .pfx
+#
+#   LINUX_GPG_PRIVATE_KEY    — ASCII-armored GPG private key (for AppImage signing)
+#   LINUX_GPG_PASSPHRASE     — Passphrase for the GPG key
+#   LINUX_GPG_KEY_ID         — Key ID/fingerprint
+#
+#   TAURI_SIGNING_PRIVATE_KEY          — Auto-updater private key (from `tauri signer generate`)
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD — Passphrase for the updater key
+# ─────────────────────────────────────────────────────────────────────────
+#
+# Security note: every untrusted-looking input that lands inside `run:` is
+# routed through `env:` (`TAG_NAME`, `MATRIX_TARGET`) and quoted with
+# double-quoted shell expansions. `${{ matrix.* }}` and `${{ secrets.* }}`
+# are typed inputs from the workflow definition and the secret store,
+# never user content. `${{ github.ref_name }}` is the pushed tag — the
+# maintainer controls what tags they push, but we still pass it via env
+# rather than interpolating into shell as defence-in-depth.
+
+name: Release (Tauri)
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 permissions:
-  contents: write
-  actions: write
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  contents: write  # needed to publish the GitHub Release
 
 jobs:
-  check-version:
-    runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.check.outputs.changed }}
-      version: ${{ steps.check.outputs.version }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 2
-      - name: Check version change
-        id: check
-        run: |
-          CURRENT=$(node -p "require('./package.json').version")
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            PREVIOUS=""
-          else
-            PREVIOUS=$(git show "${LAST_TAG}":package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
-          fi
-          if [ "$CURRENT" != "$PREVIOUS" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT" >> $GITHUB_OUTPUT
-            echo "Version changed: $PREVIOUS -> $CURRENT"
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged: $CURRENT"
-          fi
-
-  build:
-    needs: check-version
-    if: needs.check-version.outputs.changed == 'true'
+  release:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            platform: darwin
-          - os: windows-latest
-            platform: win32
-          # ubuntu-22.04 pinned: ubuntu-latest ships rpmbuild 4.20 (Ubuntu 24.04) which is
-          # incompatible with electron-installer-redhat's spec template. Switch back to
-          # ubuntu-latest when electron-forge or electron-installer-redhat publishes a fix.
+          - os: macos-13          # Intel
+            target: x86_64-apple-darwin
+          - os: macos-14          # Apple Silicon
+            target: aarch64-apple-darwin
           - os: ubuntu-22.04
-            platform: linux
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
     runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run make -- --platform ${{ matrix.platform }}
-      - uses: actions/upload-artifact@v7
-        with:
-          name: Slaktforskning-${{ needs.check-version.outputs.version }}-${{
-            matrix.platform }}
-          path: out/make/**/*
-          retention-days: 1
 
-  release:
-    needs: [ check-version, build ]
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 20  # pinned to 20 — must match the pkg target node20-*
           cache: npm
-      - run: npm ci
-      - name: Generate THIRD_PARTY_LICENSES.txt
-        run: node scripts/build-third-party-licenses.mjs
-      - name: Generate CycloneDX SBOM
-        # Includes the full dep tree (no --omit=dev) because Electron is a
-        # devDependency that physically ships inside the packaged binary.
-        # Over-including dev-only tools like vitest/eslint is the safe SBOM
-        # stance — under-including bundled runtimes would be misleading.
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-tauri-release-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-release-
+
+      - name: Install Linux Tauri prerequisites
+        if: runner.os == 'Linux'
         run: |
-          npm sbom --sbom-format=cyclonedx > sbom.cdx.json
-          test -s sbom.cdx.json
-          node -e "const s=JSON.parse(require('fs').readFileSync('sbom.cdx.json','utf8')); if (!s.components?.find(c=>c.name==='electron')) { console.error('SBOM missing electron — see release.yml comment'); process.exit(1); }"
-      - uses: actions/download-artifact@v8
-        with:
-          path: artifacts
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.check-version.outputs.version }}
-          name: v${{ needs.check-version.outputs.version }}
-          generate_release_notes: true
-          files: |
-            artifacts/**/*
-            THIRD_PARTY_LICENSES.txt
-            sbom.cdx.json
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev \
+            build-essential curl wget file libxdo-dev \
+            libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
-  cleanup:
-    needs: [ build, release ]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete old artifacts (keep 3 most recent)
+      - run: npm ci
+
+      # Build the bundled MCP sidecar binary for THIS host. The build
+      # script picks the matching pkg target via SIDECAR_TARGETS so we
+      # don't waste 4× build time per OS runner.
+      - name: Build MCP sidecar
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
+          SIDECAR_TARGETS: ${{ matrix.target }}
+        run: npm run build:mcp-sidecar
+
+      # tauri-action handles: cargo build → bundle → sign (macOS via env,
+      # Windows via env) → notarize (macOS) → generate updater manifest →
+      # upload to GitHub Release.
+      - name: Build, sign, and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          # GitHub token for creating the release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS signing + notarization
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PROVIDER_SHORT_NAME: ${{ secrets.APPLE_PROVIDER_SHORT_NAME }}
+          # Windows Authenticode signing
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          # Tauri auto-updater signing (signs latest.json so the updater
+          # plugin can verify against the pubkey baked into tauri.conf.json)
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Släktforskning ${{ github.ref_name }}'
+          releaseBody: |
+            See CHANGELOG.md for changes.
+
+            Auto-update note: this release publishes a `latest.json` manifest
+            so users running >= 0.250.0 receive the update automatically.
+          releaseDraft: true        # maintainer reviews + publishes manually
+          prerelease: ${{ contains(github.ref_name, '-tauri.') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
+          args: --target ${{ matrix.target }}
+
+      # Linux AppImage signing isn't covered by tauri-action — sign the
+      # AppImage out of band with GPG. Only runs when the GPG secret is set
+      # (so the workflow doesn't fail for forks without GPG infrastructure).
+      - name: Sign Linux AppImage with GPG
+        if: runner.os == 'Linux' && env.HAVE_LINUX_GPG_KEY == 'true'
+        env:
+          HAVE_LINUX_GPG_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY != '' }}
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+          MATRIX_TARGET: ${{ matrix.target }}
         run: |
-          # Free space even when build/release failed — quota exhaustion is the
-          # most likely reason they failed. Keep 3 = 1 version × 3 platforms;
-          # durable copies live on the GitHub Release page anyway.
-          gh api "repos/$REPO/actions/artifacts" --paginate \
-            --jq '.artifacts | sort_by(.created_at) | reverse | .[3:] | .[].id' \
-          | while read -r id; do
-            echo "Deleting artifact $id"
-            gh api --method DELETE "repos/$REPO/actions/artifacts/$id"
+          echo "$LINUX_GPG_PRIVATE_KEY" | gpg --batch --import
+          for f in "src-tauri/target/${MATRIX_TARGET}/release/bundle/appimage/"*.AppImage; do
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$LINUX_GPG_PASSPHRASE" \
+                --local-user "$LINUX_GPG_KEY_ID" --detach-sign --armor "$f"
           done

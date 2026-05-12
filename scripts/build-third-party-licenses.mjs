@@ -56,21 +56,16 @@ function npmLs(args) {
 }
 
 /**
- * Walk the dep tree once, collecting the union of: production deps + Electron
- * (which is a devDep but ships in the binary). Output is a flat map keyed by
- * `<name>@<version>` for stable ordering.
+ * Walk the dep tree once, collecting production deps. Output is a flat map
+ * keyed by `<name>@<version>` for stable ordering. Rust crate licenses
+ * (Tauri runtime) are emitted separately by the Tauri bundler at build
+ * time; this script enumerates only the npm side that ships into
+ * dist-tauri/ via the Vite renderer build.
  */
 function collectDependencies() {
   const out = new Map();
-
   const prodTree = npmLs(['--omit=dev', '--all']);
   walk(prodTree, out, ROOT);
-
-  // Electron + electron-* runtime packages: dev deps that physically ship in
-  // the binary's resources folder. Pull them via a targeted query.
-  const electronTree = npmLs(['electron', '--all']);
-  walk(electronTree, out, ROOT);
-
   return out;
 }
 

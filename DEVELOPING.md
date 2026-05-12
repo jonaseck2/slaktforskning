@@ -6,6 +6,7 @@ A guide for contributors and anyone building from source.
 
 - Node.js 22 or later
 - npm
+- Rust toolchain (`rustup` — the Tauri build needs `cargo`)
 
 ## Setup
 
@@ -13,59 +14,62 @@ A guide for contributors and anyone building from source.
 git clone https://github.com/jonaseck2/slaktforskning.git
 cd slaktforskning
 npm install
-npm start              # Launch in dev mode (Vite HMR)
+npm start              # Launch the Tauri app in dev mode
 ```
+
+The first `npm start` compiles the Rust core from scratch (slow — a few minutes on a cold cache); subsequent starts are incremental (~3 s for Rust changes, instant HMR for Vue).
 
 ## Common Commands
 
 ```bash
-npm start              # Launch in dev mode (Vite HMR)
-npm test               # Unit tests (Vitest, ~1 200 tests)
+npm start              # Launch the Tauri app in dev mode
+npm test               # Unit tests (Vitest)
 npm test -- --coverage # With coverage report (80% threshold on src/api/)
 npm run lint           # ESLint (must pass with 0 errors before committing)
-npx playwright test    # E2E tests (requires Xvfb on Linux)
-npm run make           # Build installer for current platform
-npm run make:mac       # macOS .dmg
-npm run make:win       # Windows .exe
-npm run make:linux     # Linux .deb + .rpm
-npx tsx src/mcp/server.ts  # Run MCP server standalone
+npm run test:e2e       # E2E tests (Playwright against a built Tauri bundle)
+npm run build          # Build a packaged Tauri installer for the current platform
 ```
 
 ## Project Structure
 
 ```
 src/
-├── api/         # Business logic — pure TypeScript, no Electron deps
-├── main/        # Electron main process (windows, database, IPC)
-├── preload/     # Context bridge (renderer ↔ main)
-├── renderer/    # Vue 3 app (views, components, composables)
+├── api/         # Business logic — runtime-neutral TypeScript
+├── shared/      # Cross-runtime helpers (channel registry, worker-state, preview-html-inject, ...)
+├── renderer/    # Vue 3 app + tauri-window-api.ts (the window.api wiring) + db-shim.ts
+├── static/     # Static SPA entry (website export target)
 └── mcp/         # MCP server for AI agent access
+src-tauri/
+├── src/         # Rust core (db.rs, ui_server.rs, lib.rs, fs/dialog/shell commands)
+├── Cargo.toml   # Rust deps (rusqlite, tauri, tauri-plugin-*)
+└── tauri.conf.json
 tests/
-├── unit/        # Vitest tests for src/api/
-└── e2e/         # Playwright smoke tests
+├── unit/        # Vitest tests for src/api/ + src/shared/
+├── components/  # Vitest with happy-dom (renderer-side resolver tests, etc.)
+└── e2e/         # Playwright tests against the packaged Tauri binary
 docs/
 ├── PLAN.md          # Vision, status, roadmap
 ├── DATA_MODEL.md    # Schema design, GEDCOM compatibility
 ├── MCP.md           # MCP server tool reference
-└── IPC_REFERENCE.md # window.api surface + IPC channel mapping
+└── IPC_REFERENCE.md # window.api surface + channel registry mapping
 ```
 
 ## Architecture Overview
 
-`src/api/` is the single source of truth for all business logic — **zero Electron imports**. Both the IPC handlers (`src/main/ipc.ts`) and the MCP server (`src/mcp/server.ts`) call the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
+`src/api/` is the single source of truth for all business logic — **runtime-neutral TypeScript**. The renderer's `tauri-window-api.ts` walks the channel registry in `src/shared/channels/` at boot and wires `window.api.*` to each handler. SQLite calls route through `src/renderer/db-shim.ts` to rusqlite in `src-tauri/src/db.rs`. The MCP server calls the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
 
 See [CLAUDE.md](CLAUDE.md) for the complete architecture reference, domain types, schema, and component patterns.
 
 ## Dev Container
 
-A dev container is included for development without a local setup. Unit tests, linting, and packaging all work inside the container. E2E tests need Xvfb first:
+A dev container is included for development without a local setup. Unit tests, linting, and the Rust build all work inside the container. E2E tests need Xvfb first:
 
 ```bash
 source .devcontainer/xvfb-start.sh
-npx playwright test
+npm run test:e2e
 ```
 
-`npm start` does not work in the container (no display). Use `npm test` and `npm run make` instead.
+`npm start` does not work in the container (no display). Use `npm test` and `npm run build` instead.
 
 ### Dev Container Secrets
 

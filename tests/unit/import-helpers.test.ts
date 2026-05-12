@@ -3,7 +3,7 @@ import { withImportLifecycle } from '../../src/shared/channels/_import-helpers';
 import {
   _setWorkerStateAccessors,
   _resetWorkerStateAccessors,
-} from '../../src/main/db-worker-state';
+} from '../../src/shared/db-worker-state';
 
 describe('withImportLifecycle', async () => {
   let importInProgress = false;

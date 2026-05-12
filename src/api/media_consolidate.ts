@@ -105,7 +105,11 @@ export async function consolidateMediaFolder(
   // turning 12k rewrites into 30+ seconds. With it, the whole consolidate's
   // DB work commits in a single fsync. BEGIN IMMEDIATE acquires the write
   // lock upfront so we don't race a worker-thread reader for the upgrade.
-  // Holding a long transaction is fine in WAL mode — readers continue.
+  // The DB uses DELETE journaling (WAL is incompatible with the test-time
+  // node-sqlite3-wasm VFS and intentionally disabled in production too —
+  // see .claude/skills/sqlite-wal/), so a long write transaction blocks
+  // concurrent writers but not readers; that trade is acceptable here
+  // because consolidate runs at end-of-import when no UI is querying.
   await runSql(db, 'BEGIN IMMEDIATE');
   let committed = false;
 

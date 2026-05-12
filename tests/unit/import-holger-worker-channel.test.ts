@@ -6,11 +6,11 @@ import { channelRegistry } from '../../src/shared/channels';
 import {
   _setBroadcastTarget,
   _resetBroadcastTarget,
-} from '../../src/main/db-worker-broadcast';
+} from '../../src/shared/db-worker-broadcast';
 import {
   _setWorkerStateAccessors,
   _resetWorkerStateAccessors,
-} from '../../src/main/db-worker-state';
+} from '../../src/shared/db-worker-state';
 import { createTestDb } from './helpers';
 
 const MIN_GED = `0 HEAD

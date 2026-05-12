@@ -13,7 +13,7 @@
  * those domain files explicitly.
  */
 
-import { setWorkerImportInProgress } from '../../main/db-worker-state';
+import { setWorkerImportInProgress } from '../db-worker-state';
 
 export interface ImportResult<R = unknown> {
   success: boolean;

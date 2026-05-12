@@ -25,7 +25,7 @@ Coverage threshold: **80% lines and functions on `src/api/`** (enforced by `vite
 
 ## E2E Tests (Playwright)
 
-Tests live in `tests/e2e/` and run against the **packaged Electron binary**, not `electron-forge start`. `npm run test:e2e` calls `npm run package` first via `pretest:e2e`, then runs Playwright. This avoids Vite-dev contention and matches what users actually run.
+Tests live in `tests/e2e/` and run against the **packaged Tauri binary**, not `npm start`. `npm run test:e2e` chains `prebuild:e2e` (`build:static`) → `build:e2e` (`tauri build --bundles app`) → `playwright test`. This avoids Vite-dev contention and matches what users actually run.
 
 11 test projects, each with its own port (19242–19251). Full run: ~1.5 min wall clock × 10 workers in parallel.
 

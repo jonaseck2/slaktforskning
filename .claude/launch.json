@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "electron-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["electron-forge", "start"],
-      "port": 5173
+      "name": "tauri-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 1420
     }
   ]
 }

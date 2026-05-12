@@ -27,9 +27,9 @@ describe('build-third-party-licenses script', async () => {
     expect(content).toMatch(/MIT/);
   });
 
-  it('includes electron (a known dev/runtime dependency that ships in the binary)', async () => {
+  it('includes @modelcontextprotocol/sdk (a known production dependency that ships via the MCP sidecar)', async () => {
     const content = readFileSync(OUTPUT, 'utf8');
-    expect(content).toMatch(/^## electron@/m);
+    expect(content).toMatch(/^## @modelcontextprotocol\/sdk@/m);
   });
 
   it('is byte-identical on a second run (deterministic ordering)', async () => {

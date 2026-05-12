@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import {
   injectSnapshotIntoHtml,
   INJECTION_MARKER,
-} from '../../src/main/preview-html-inject';
+} from '../../src/shared/preview-html-inject';
 
 // Why this test exists:
 //   The preview iframe sets window.__SNAPSHOT__ via a string-replace against

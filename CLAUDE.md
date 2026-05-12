@@ -95,20 +95,20 @@ Släktforskning is a cross-platform desktop genealogy app built with Electron + 
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | Electron 41 (Chromium + Node.js) |
+| Runtime | Tauri 2.x (Rust core + system WebView) |
 | Frontend | Vue 3 (Composition API, `<script setup>`) + Vue Router + Pinia |
-| Build | Electron Forge + Vite |
-| Database | SQLite via node-sqlite3-wasm (WAL mode, foreign keys on) |
-| MCP Server | @modelcontextprotocol/sdk (stdio transport) |
-| Language | TypeScript throughout |
+| Build | Tauri CLI + Vite (renderer) + Cargo (Rust core) |
+| Database | SQLite via rusqlite (DELETE journaling, foreign keys on) |
+| MCP Server | @modelcontextprotocol/sdk (stdio transport, sidecar process) |
+| Language | TypeScript (renderer + api/) + Rust (core) |
 
 ## Architecture
 
 ### Key Principle
 
-`src/api/` is the single source of truth for all business logic. It has **zero Electron dependencies**. Both the Electron IPC handlers (`src/main/ipc/*.ts`) and the MCP server (`src/mcp/server.ts`) call the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
+`src/api/` is the single source of truth for all business logic. It is **runtime-neutral TypeScript** — runs in the renderer process via the Tauri DB shim. Both the renderer's `tauri-window-api.ts` (which walks `src/shared/channels/` at boot) and the MCP server (`src/mcp/server.ts`) call the same api/ functions. All api/ functions take a `Database` instance as their first argument (dependency injection, no singletons).
 
-**Worker Thread:** All 130+ DB-touching IPC channels run in a dedicated Node.js Worker Thread (`src/main/db-worker.ts`). The Electron main thread handles only Electron-specific operations (dialog, shell, BrowserWindow, printToPDF, fs for import/export). This keeps the main thread unblocked and eliminates click stutter. Worker startup is fire-and-forget; calls are queued until the worker signals `ready`.
+**No worker thread.** The Tauri model is: api/ runs in the renderer; SQLite calls via `src/renderer/db-shim.ts` invoke rusqlite in the Rust core (`src-tauri/src/db.rs`) via `tauri::command`, with `spawn_blocking` for the actual DB work. The Rust side is naturally off-thread, so the renderer stays responsive.
 
 ### File Map
 
@@ -116,43 +116,51 @@ Top-level layout — run `ls src/<dir>/` for the leaves.
 
 ```
 src/
-├── api/                  # Pure TS business logic — NO Electron imports. CRUD per entity, schema.ts, types.ts.
+├── api/                  # Runtime-neutral TS business logic. CRUD per entity, schema.ts, types.ts.
 │   ├── link-rules/       # Default link rule sets per locale (sv, en, de, da, no, universal)
 │   ├── html_site/        # Website export helpers (snapshot, scope, redact, thumbnails)
-│   └── place-gazetteers/ # Render-time place resolution. data/ holds 27 bundled JSON files (~42 MB).
+│   └── place-gazetteers/ # Render-time place resolution. data/ holds the bundled JSONs (~42 MB raw).
 ├── gazetteer-build/      # Shared utils for gazetteer build scripts (geo, sparql, geonames, wikidata, tree, io)
-├── shared/channels/      # Typed IPC channel registry — one defineChannel() per channel, per-domain files
-├── main/                 # Electron main process: index.ts, database.ts, settings.ts, db-worker.ts, ipc/*
-├── preload/index.ts      # contextBridge — hand-maintained window.api map (preload-coverage.test.ts enforces parity)
-├── renderer/             # Vue 3 app — App.vue, router.ts, views/, components/, components/ui/, components/modals/,
-│                         # composables/, directives/, utils/chart-layout/, constants/, styles/{tokens,shared}.css
+├── shared/               # Cross-runtime helpers shared between the renderer and the MCP sidecar
+│   ├── channels/         # Channel registry — one defineChannel() per channel, per-domain files
+│   ├── db-worker-state.ts        # DI-pattern state accessors (legacy name; runtime-neutral)
+│   ├── db-worker-broadcast.ts    # DI-pattern broadcast helper (legacy name; runtime-neutral)
+│   └── preview-html-inject.ts    # Pure string-swap for website-export preview iframe
+├── renderer/             # Vue 3 app — App.vue, router.ts, views/, components/, composables/, …
+│                         # plus tauri-window-api.ts (the window.api wiring) and db-shim.ts
 ├── static/               # Static SPA entry (website export target) — App.vue, router.ts, static-api.ts, views/
-└── mcp/                  # createProdServer.ts (34 workflow tools), createDevServer.ts (+ 15 dev tools), server.ts, devServer.ts
+└── mcp/                  # createProdServer.ts (prod tools), createDevServer.ts (+ 15 dev tools), server.ts, devServer.ts
+
+src-tauri/
+├── src/                  # Rust core — db.rs (rusqlite), ui_server.rs (HTTP bridge for dev MCP), lib.rs (commands), fs/dialog/shell
+├── Cargo.toml            # Rust deps
+└── tauri.conf.json       # Tauri app config
 
 tests/
 ├── unit/                 # Vitest against in-memory SQLite. createTestDb() in helpers.ts.
-└── e2e/                  # Playwright against packaged binary. AppDriver in fixture.ts.
+├── components/           # Vitest with happy-dom (renderer-side resolvers, e.g. ARIA tools).
+└── e2e/                  # Playwright against the packaged Tauri binary. AppDriver in fixture.ts.
 
 docs/                     # PLAN.md (roadmap), DATA_MODEL.md, MCP.md, IPC_REFERENCE.md, UX_INVENTORY.md (per-surface Purpose + CTA grid), plans/ (active + archive/)
 .claude/                  # napkin.md (auto-curated runbook), skills/ (auto-discovered project skills)
-.devcontainer/            # Linux dev container with Node 22 + Electron deps + Xvfb
+.devcontainer/            # Linux dev container with Node 22 + Rust + Xvfb
 ```
 
 ## Common Commands
 
 ```bash
-npm start              # Dev mode (Vite HMR)
+npm start              # Launch the Tauri app in dev mode (Rust + Vite HMR)
 npm run lint           # ESLint (must pass with 0 errors before committing)
-npm test               # Vitest unit + component tests (~2120 tests, 80% coverage threshold on src/api/)
-npm run test:e2e       # Package + Playwright (~30s end-to-end). Use `npx playwright test` if `out/` is already built.
-npm run package        # Package for current platform
-npm run make           # Build distributable installers
+npm test               # Vitest unit + component tests (~4000 tests, 80% coverage threshold on src/api/)
+npm run test:e2e       # Build the Tauri bundle + run Playwright. Use `npx playwright test` if `out/` is already built.
+npm run build          # Build a packaged Tauri installer for the current platform
 npm run build:static   # Build static SPA bundle (dist-static/)
 npm run dev:static     # Dev server for static SPA at localhost:5174
-npx tsx src/mcp/server.ts  # Run MCP server standalone
+npm run build:mcp-sidecar  # Build the MCP sidecar binaries for all targets (required before `npm run build`)
+npx tsx src/mcp/server.ts  # Run MCP server standalone (Node-host path, for non-Tauri agents)
 ```
 
-Each `BrowserWindow` runs an independent Vue app sharing the same main process and SQLite DB. New windows: `Cmd+N` / `Ctrl+N`.
+The Rust core takes ~3 s to incrementally recompile on `src-tauri/` changes; renderer changes are instant via Vite HMR. The first build on a cold `target/` cache takes 5–10 minutes — that's expected; the dependency graph is large.
 
 Reference docs (load on demand): `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/MCP.md`, `docs/IPC_REFERENCE.md`, `.claude/napkin.md`.
 
