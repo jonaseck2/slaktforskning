@@ -202,26 +202,17 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete place -->
-      <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('places.deletePlaceAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete place — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="placeId"
+        entity-type="place"
+        :entity-id="placeId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        :readonly="props.readonly"
+        @deleted="onDeleted"
+      />
     </template>
-
-    <!-- Delete confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('places.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('places.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
 
     <!-- Research task form modal -->
     <ResearchTaskModal
@@ -251,8 +242,7 @@ import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
 import PlaceNameAutocomplete from './PlaceNameAutocomplete.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import EntityPanel from './EntityPanel.vue';
-import ConfirmModal from './ConfirmModal.vue';
-import IconTrash from './ui/IconTrash.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import type { ComponentPublicInstance, Ref } from 'vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -492,30 +482,25 @@ function openTaskFromRow(id: string) {
 }
 
 // ── Delete place ────────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.places.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: event/person/media counts) and
+// react to @deleted with toast + close.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const name = place.value?.name ?? t('common.unknown');
-  return t('places.deleteConfirmMessage', {
-    name,
+const dangerEntityLabel = computed(() => place.value?.name ?? t('common.unknown'));
+
+const deleteConfirmMessage = computed(() =>
+  t('places.deleteConfirmMessage', {
+    name: dangerEntityLabel.value,
     events: eventCount.value,
     persons: personCount.value,
     media: mediaCount.value,
-  });
-});
+  }),
+);
 
-async function performDelete() {
-  if (!props.placeId) return;
-  try {
-    const name = place.value?.name ?? t('common.unknown');
-    await window.api.places.delete(props.placeId);
-    showDeleteConfirm.value = false;
-    toast.success(t('places.deletedToast', { name }));
-    emit('close');
-  } catch (err) {
-    console.error('[PlacePanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+function onDeleted() {
+  toast.success(t('places.deletedToast', { name: dangerEntityLabel.value }));
+  emit('close');
 }
 
 const heroMediaId = ref<string | null>(null);
