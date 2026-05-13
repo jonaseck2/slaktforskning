@@ -138,7 +138,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 **Effort:** 1.5 days.
 **Plan file:** [2026-05-14-report-data-split-design.md](2026-05-14-report-data-split-design.md).
 
-### 3.5 Modal composable extraction (audit premise corrected)
+### 3.5 Modal composable extraction — **DONE** (user goal met; LOC targets aspirational, follow-up identified), archived
 
 **User goal:** `EventModal.vue` (1,052 LOC), `PersonNameModal.vue` (701 LOC), `PersonModal.vue` (646 LOC), `RelationshipModal.vue` (568 LOC) become thin orchestrators; state + validation + save logic lives in composables.
 
