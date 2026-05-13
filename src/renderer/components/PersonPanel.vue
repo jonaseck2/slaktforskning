@@ -207,26 +207,17 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete person -->
-      <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('persons.deletePersonAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete person — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="personId"
+        entity-type="person"
+        :entity-id="personId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        :readonly="props.readonly"
+        @deleted="onDeleted"
+      />
     </template>
-
-    <!-- Delete confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('persons.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('persons.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
 
     <ConfirmModal
       :visible="delName.visible.value"
@@ -313,8 +304,8 @@ import PersonTimeline from './PersonTimeline.vue';
 import PersonMap from './PersonMap.vue';
 import AppAvatar from './ui/AppAvatar.vue';
 import AppButton from './ui/AppButton.vue';
-import IconTrash from './ui/IconTrash.vue';
 import EntityPanel from './EntityPanel.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import { useEntityData } from '../composables/useEntityData';
@@ -549,34 +540,28 @@ async function triggerAddEvent() {
 }
 
 // ── Delete person ───────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.persons.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: relationship count) and react to
+// @deleted with toast + emits + nav.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const name = primaryName.value
-    ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
-    : t('common.unknown');
-  return t('persons.deleteConfirmMessage', {
-    name,
-    relationships: relationshipCount.value,
-  });
+const dangerEntityLabel = computed(() => {
+  if (!primaryName.value) return t('common.unknown');
+  return [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ');
 });
 
-async function performDelete() {
-  if (!props.personId) return;
-  try {
-    await window.api.persons.delete(props.personId);
-    showDeleteConfirm.value = false;
-    toast.success(t('persons.deletedToast', {
-      name: primaryName.value
-        ? [primaryName.value.given_name, primaryName.value.surname].filter(Boolean).join(' ')
-        : t('common.unknown'),
-    }));
-    emit('person-changed');
-    emit('close');
-  } catch (err) {
-    console.error('[PersonPanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+const deleteConfirmMessage = computed(() =>
+  t('persons.deleteConfirmMessage', {
+    name: dangerEntityLabel.value,
+    relationships: relationshipCount.value,
+  }),
+);
+
+function onDeleted() {
+  toast.success(t('persons.deletedToast', { name: dangerEntityLabel.value }));
+  emit('person-changed');
+  emit('close');
+  router.push('/persons');
 }
 
 // ── Add relative modal ──────────────────────────────────────────────────────
