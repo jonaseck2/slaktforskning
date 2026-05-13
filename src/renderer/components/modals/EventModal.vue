@@ -3,6 +3,7 @@
     entity-type="event"
     :title="eventTitle"
     :mode="mode"
+    :save-disabled="!canSave || saving"
     @cancel="handleCancel"
     @save="handleSave"
     @close="$emit('close')"
@@ -273,6 +274,11 @@ import PlacePicker from '../PlacePicker.vue';
 import PersonPicker from '../PersonPicker.vue';
 import EventParticipantsSection from '../EventParticipantsSection.vue';
 import PersonModal from './PersonModal.vue';
+import { useEventForm, type EventForm } from '../../composables/useEventForm';
+import { useEventValidation } from '../../composables/useEventValidation';
+import { useEventCitations } from '../../composables/useEventCitations';
+import { useEventParticipants } from '../../composables/useEventParticipants';
+import { useEventSave, type EventSaveResult } from '../../composables/useEventSave';
 import { EVENT_TYPE_VALUES, isSpanEventType } from '../../constants/eventTypes';
 import { isEventTypeSortMode, sortEventTypes, type EventTypeSortMode } from '../../utils/eventTypeSort';
 import { pickDisplayedName } from '../../utils/nameUtils';
@@ -290,7 +296,6 @@ const OTHER_EVENT_TYPES_RAW = EVENT_TYPE_VALUES.filter(
   (et) => !QUICK_EVENT_TYPES.includes(et as QuickType),
 );
 
-interface CitationRow { id: string; sourceTitle: string; page: string | null; confidence: number | null; }
 interface EditingCitation {
   id: string;
   page: string;
@@ -299,6 +304,8 @@ interface EditingCitation {
   notes: string;
   date_accessed: string;
 }
+// EventData mirrors the props' shape (modal callers still pass this shape in).
+// The composables use their own EventForm type which is structurally equivalent.
 interface EventData {
   id?: string;
   event_type: string;
@@ -353,25 +360,44 @@ async function loadEventTypeSort() {
   }
 }
 
+// ── Form state (via useEventForm composable) ─────────────────────────────
+//
+// The composable owns the reactive form shape + dirty tracking. We seed it
+// with the editing event in edit mode (full shape) or defaults in create
+// mode (just event_type + place_id from props). The edit-mode hydration
+// branch of useEventForm is skipped because the modal already received the
+// row via props (no need for a second fetch).
 const savedEventId = ref<string | null>(props.editingEvent?.id ?? null);
+const editingEventDefaults: Partial<EventForm> | undefined = props.editingEvent
+  ? {
+      event_type: props.editingEvent.event_type,
+      date_type: props.editingEvent.date_type,
+      date_value: props.editingEvent.date_value,
+      date_value_end: props.editingEvent.date_value_end,
+      date_original: props.editingEvent.date_original,
+      place_id: props.editingEvent.place_id,
+      cause: props.editingEvent.cause,
+      value: props.editingEvent.value,
+      notes: props.editingEvent.notes,
+    }
+  : {
+      event_type: props.defaultEventType,
+      place_id: props.defaultPlaceId,
+    };
+const { form } = useEventForm({
+  // Pass mode 'create' regardless — we already have the props row, no need
+  // for the composable's edit-hydration fetch.
+  eventId: null,
+  mode: 'create',
+  defaults: editingEventDefaults,
+});
+
+const { canSave } = useEventValidation(form);
 
 // Snapshot of the event_type at the moment we entered edit mode. Used to drive
 // a soft warning when the user changes type on an already-saved event
 // (BENGT #36 — warn, don't block).
 const initialEventType = ref<string>(props.editingEvent?.event_type ?? '');
-
-const form = reactive<EventData>({
-  id: props.editingEvent?.id,
-  event_type: props.editingEvent?.event_type ?? props.defaultEventType,
-  date_type: props.editingEvent?.date_type ?? 'exact',
-  date_value: props.editingEvent?.date_value ?? null,
-  date_value_end: props.editingEvent?.date_value_end ?? null,
-  date_original: props.editingEvent?.date_original ?? '',
-  place_id: props.editingEvent ? props.editingEvent.place_id : (props.defaultPlaceId ?? null),
-  cause: props.editingEvent?.cause ?? null,
-  value: props.editingEvent?.value ?? null,
-  notes: props.editingEvent?.notes ?? '',
-});
 
 // Fact-shape detection: GEDCOM tags whose line value carries the primary fact
 // value (OCCU "Carpenter", EDUC "BA", RELI "Lutheran"). The value field is
@@ -402,9 +428,29 @@ function onEndDateTypeChange(t: string) {
 }
 const showTypeDropdown = ref(false);
 
-// Existing participants (only loaded when editing). Used by the type-change
-// warning to flag spouses/secondary participants that would no longer fit a
-// new type, or that are missing for a type that requires them.
+// ── Citations (via useEventCitations composable) ─────────────────────────
+const {
+  citations,
+  pendingCitations,
+  allCitationRows,
+  reload: reloadCitations,
+  addPending: addPendingCitation,
+  updatePending: updatePendingCitation,
+  removePending: removePendingCitationRow,
+  removeSaved: removeSavedCitation,
+} = useEventCitations(savedEventId);
+
+// ── Participants (via useEventParticipants composable) ───────────────────
+const {
+  participants,
+  reload: reloadParticipants,
+} = useEventParticipants(savedEventId, props.personId ?? null);
+
+// Existing participants tracked separately for the type-change warning UX —
+// the composable's `participants` includes auto-seeded primary rows the user
+// hasn't committed yet, while the warning needs to reflect persisted rows
+// only. Keep a thin local cache populated from window.api on mount + after
+// loadExistingParticipants() updates.
 const existingParticipants = ref<Array<{ id: string; person_id: string; role: string }>>([]);
 
 async function loadExistingParticipants() {
@@ -631,7 +677,7 @@ function openEditPendingCitation(tempId: string) {
   const found = pendingCitations.value.find((c) => c.tempId === tempId);
   if (!found) return;
   editingCitation.value = null;
-  editingPendingCitation.value = found;
+  editingPendingCitation.value = found as DeferredCitationPayload;
   subPanel.value = 'citation';
 }
 
@@ -641,94 +687,31 @@ function closeSubPanel() {
   editingPendingCitation.value = null;
 }
 
-// Citations list
-const citations = ref<CitationRow[]>([]);
-
-async function loadCitations() {
-  if (!savedEventId.value || !window.api) return;
-  try {
-    const raw = (await window.api.citations.forEvent(savedEventId.value)) as Array<{
-      id: string; source_id: string; page: string | null; confidence: number | null;
-    }>;
-    const rows: CitationRow[] = [];
-    for (const c of raw) {
-      const src = (await window.api.sources.get(c.source_id)) as { title: string } | null;
-      rows.push({
-        id: c.id,
-        sourceTitle: src?.title ?? c.source_id,
-        page: c.page,
-        confidence: c.confidence,
-      });
-    }
-    citations.value = rows;
-  } catch { /* ignore */ }
-}
-
 async function onCitationSaved() {
   closeSubPanel();
-  await loadCitations();
+  await reloadCitations();
 }
-
-// Pending (buffered) citations — used while creating a new event that does not
-// yet have an event_id. They are persisted in handleSave() after events.create.
-const pendingCitations = ref<DeferredCitationPayload[]>([]);
 
 function onPendingCitationSaved(payload: DeferredCitationPayload) {
   if (payload.tempId) {
-    const i = pendingCitations.value.findIndex((c) => c.tempId === payload.tempId);
-    if (i >= 0) pendingCitations.value.splice(i, 1, payload);
+    updatePendingCitation(payload.tempId, payload);
   } else {
-    pendingCitations.value.push({
-      ...payload,
-      tempId: 'pending-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-    });
+    addPendingCitation(payload);
   }
   closeSubPanel();
 }
 
 function removePendingCitation(tempId: string) {
-  const i = pendingCitations.value.findIndex((c) => c.tempId === tempId);
-  if (i >= 0) pendingCitations.value.splice(i, 1);
+  removePendingCitationRow(tempId);
 }
-
-interface MergedCitationRow {
-  key: string;
-  id: string;
-  isPending: boolean;
-  sourceTitle: string;
-  page: string | null;
-  confidence: number | null;
-}
-const allCitationRows = computed<MergedCitationRow[]>(() => {
-  const saved = citations.value.map((c): MergedCitationRow => ({
-    key: 'saved:' + c.id,
-    id: c.id,
-    isPending: false,
-    sourceTitle: c.sourceTitle,
-    page: c.page,
-    confidence: c.confidence,
-  }));
-  const pending = pendingCitations.value.map((c): MergedCitationRow => ({
-    key: 'pending:' + (c.tempId ?? ''),
-    id: c.tempId ?? '',
-    isPending: true,
-    sourceTitle: c.sourceTitle,
-    page: c.page,
-    confidence: c.confidence,
-  }));
-  return [...saved, ...pending];
-});
 
 const delCitation = useDeleteConfirm<string>(async (id) => {
-  if (!window.api) return;
-  await window.api.citations.delete(id);
-  await loadCitations();
+  await removeSavedCitation(id);
 });
 function deleteCitation(id: string) { delCitation.ask(id); }
 
 onMounted(async () => {
   await loadEventTypeSort();
-  await loadCitations();
   // partnerOptions must load before participants so loadExistingParticipants
   // can decide between the select and the PersonPicker fallback when the
   // existing spouse isn't reachable via the panel-owner's couple relationships.
@@ -760,123 +743,122 @@ async function loadContextName() {
   } catch { /* ignore */ }
 }
 
-// Save event
-async function handleSave() {
-  if (!window.api) return;
-  try {
-    let ev: EventData;
-    if (savedEventId.value) {
-      // Preserve user-authored cause/date_value_end regardless of current
-      // event_type. The form hides those fields outside of death/span types,
-      // but hiding a field is not consent to discard its value — see Prime
-      // Directive in CLAUDE.md.
-      // PRIME DIRECTIVE: send `value` and `notes` unconditionally, regardless
-      // of whether `showFactValueField` is true at this moment. Hiding the
-      // value field on a type change is not consent to discard the authored
-      // value. Same rule that protects `cause` and `date_value_end` above.
-      ev = (await window.api.events.update(savedEventId.value, {
-        event_type: form.event_type,
-        date_type: form.date_type,
-        date_value: form.date_value || null,
-        date_value_end: form.date_value_end || null,
-        date_original: form.date_original,
-        place_id: form.place_id,
-        cause: form.cause || null,
-        value: form.value || null,
-        notes: form.notes || '',
-      })) as EventData;
-      // Couple events: keep the spouse participant in sync with the picker.
-      // Four cases (see Prime Directive — never blind delete + reinsert if
-      // the value didn't change):
-      //   - same id  → no-op
-      //   - changed  → remove old, add new
-      //   - cleared  → remove old
-      //   - both nil → no-op
-      if (showSecondPersonField.value && props.personId) {
-        const desiredId = secondPersonId.value && secondPersonId.value !== props.personId
-          ? secondPersonId.value
-          : null;
-        const existingId = existingSpouseParticipantId.value;
-        // Re-derive the existing spouse's person_id from the cached
-        // participants list (loaded in loadExistingParticipants).
-        const existingSpouse = existingId
-          ? existingParticipants.value.find((p) => p.id === existingId)
-          : null;
-        const existingPersonId = existingSpouse?.person_id ?? null;
-        if (desiredId !== existingPersonId) {
-          if (existingId) {
-            await window.api.eventParticipants.remove(existingId);
-            existingSpouseParticipantId.value = null;
-          }
-          if (desiredId) {
-            const added = (await window.api.eventParticipants.add({
-              event_id: savedEventId.value,
-              person_id: desiredId,
-              role: 'spouse',
-            })) as { id: string } | null;
-            if (added?.id) existingSpouseParticipantId.value = added.id;
-          }
-          // Refresh the cache so subsequent saves observe the new state.
-          await loadExistingParticipants();
+// ── Save orchestration (via useEventSave composable) ─────────────────────
+//
+// The composable handles the core save: create-or-update + flush pending
+// citations + flush pending participants. Everything EventModal-specific
+// — baptism companion, name-change companion, spouse sync on edit, quality
+// check probe — runs in the `onSaved` callback after the core sequence.
+//
+// `extraCreateFields` forwards relationship_id when hosted on a relationship
+// panel (the modal owns the prop and decides what flows into the payload).
+//
+// PRIME DIRECTIVE: useEventSave writes every authored field unconditionally
+// regardless of whether the current event_type hides them in the UI. Hiding
+// a field is not consent to discard its value.
+const { save: composableSave, saving } = useEventSave({
+  form,
+  pendingCitations,
+  participants,
+  eventIdRef: savedEventId,
+  mode: props.editingEvent ? 'edit' : 'create',
+  canSave,
+  emit: (name, payload) => {
+    if (name === 'saved') emit('saved', payload as EventData);
+    else if (name === 'cancel') emit('cancel');
+    else if (name === 'close') emit('close');
+  },
+  extraCreateFields: () => {
+    const extras: Record<string, unknown> = {};
+    if (props.relationshipId) extras.relationship_id = props.relationshipId;
+    return extras;
+  },
+  onSaved: async (ev: EventSaveResult) => {
+    // On create from a person panel: attach panel-owner as primary (only on
+    // create; useEventSave already flushes any buffered pending: rows from
+    // useEventParticipants but the panel-owner primary is not buffered there
+    // when props.personId is set — useEventParticipants does seed a primary
+    // automatically and useEventSave flushes pending: rows, so this is a
+    // belt-and-braces check). For couple events: also attach the second
+    // person from the picker.
+    const wasCreate = !props.editingEvent;
+    if (wasCreate && window.api) {
+      // useEventParticipants seeded a primary with role='primary' before save;
+      // useEventSave already flushed it via participantAdd. But: the legacy
+      // path also explicitly added the panel-owner if it wasn't already.
+      // Confirm primary actually exists for this event_id; add if missing.
+      try {
+        const persisted = (await window.api.eventParticipants.getForEvent(ev.id)) as Array<{
+          person_id: string; role: string;
+        }>;
+        if (props.personId && !persisted.some((p) => p.role === 'primary' && p.person_id === props.personId)) {
+          await window.api.eventParticipants.add({
+            event_id: ev.id,
+            person_id: props.personId,
+            role: 'primary',
+          });
         }
-      }
-    } else {
-      ev = (await window.api.events.create({
-        event_type: form.event_type,
-        date_type: form.date_type,
-        date_value: form.date_value || null,
-        date_value_end: form.date_value_end || null,
-        date_original: form.date_original,
-        place_id: form.place_id,
-        cause: form.cause || null,
-        value: form.value || null,
-        notes: form.notes || '',
-        relationship_id: props.relationshipId ?? null,
-      })) as EventData;
-      savedEventId.value = ev.id!;
-      if (props.personId) {
-        await window.api.eventParticipants.add({
-          event_id: ev.id,
-          person_id: props.personId,
-          role: 'primary',
-        });
-      }
-      // Couple events from a person panel: also attach the second person.
-      if (showSecondPersonField.value && secondPersonId.value && props.personId
-        && secondPersonId.value !== props.personId) {
-        await window.api.eventParticipants.add({
-          event_id: ev.id,
-          person_id: secondPersonId.value,
-          role: 'spouse',
-        });
-      }
-      // Persist any citations the user added before the event existed.
-      // syncBaptismCompanion below reads citations.forEvent(birthEventId), so
-      // these must be written first for the baptism companion to inherit them.
-      for (const pc of pendingCitations.value) {
-        await window.api.citations.create({
-          source_id: pc.source_id,
-          page: pc.page,
-          confidence: pc.confidence,
-          transcription: pc.transcription,
-          notes: pc.notes,
-          date_accessed: pc.date_accessed,
-          event_id: ev.id,
-        });
-      }
-      pendingCitations.value = [];
+        // Couple events from a person panel: also attach the second person.
+        if (showSecondPersonField.value && secondPersonId.value && props.personId
+          && secondPersonId.value !== props.personId
+          && !persisted.some((p) => p.role === 'spouse' && p.person_id === secondPersonId.value)
+        ) {
+          await window.api.eventParticipants.add({
+            event_id: ev.id,
+            person_id: secondPersonId.value,
+            role: 'spouse',
+          });
+        }
+      } catch { /* ignore */ }
     }
-    await syncBaptismCompanion(ev.id!);
-    // Marriage-modal name-change companion: only at create time, only when the
-    // user keeps the checkbox ticked, only when at least one field has content.
-    // PRIME DIRECTIVE: best-effort — if this fails, surface but do NOT roll
-    // back the event. The name row is a separately authored fact from this
+
+    // Edit branch: keep the spouse participant in sync with the picker.
+    // Four cases (Prime Directive — never blind delete + reinsert if value
+    // didn't change):
+    //   - same id  → no-op
+    //   - changed  → remove old, add new
+    //   - cleared  → remove old
+    //   - both nil → no-op
+    if (!wasCreate && showSecondPersonField.value && props.personId && window.api) {
+      const desiredId = secondPersonId.value && secondPersonId.value !== props.personId
+        ? secondPersonId.value
+        : null;
+      const existingId = existingSpouseParticipantId.value;
+      const existingSpouse = existingId
+        ? existingParticipants.value.find((p) => p.id === existingId)
+        : null;
+      const existingPersonId = existingSpouse?.person_id ?? null;
+      if (desiredId !== existingPersonId) {
+        if (existingId) {
+          await window.api.eventParticipants.remove(existingId);
+          existingSpouseParticipantId.value = null;
+        }
+        if (desiredId) {
+          const added = (await window.api.eventParticipants.add({
+            event_id: ev.id,
+            person_id: desiredId,
+            role: 'spouse',
+          })) as { id: string } | null;
+          if (added?.id) existingSpouseParticipantId.value = added.id;
+        }
+        await loadExistingParticipants();
+      }
+    }
+
+    // Birth-only baptism companion (create-only via `showBaptismFields`).
+    await syncBaptismCompanion(ev.id);
+
+    // Marriage-modal name-change companion: only at create time, only when
+    // the user keeps the checkbox ticked, only when at least one field has
+    // content. PRIME DIRECTIVE: best-effort — failure must NOT roll back
+    // the event. The name row is a separately authored fact from this
     // moment on (no cascade on later event edits or delete).
     if (
       !props.editingEvent
       && recordNameChange.value
       && showNameChangeCompanion.value
       && props.personId
+      && window.api
     ) {
       const given = nameChangeForm.given_name.trim();
       const surname = nameChangeForm.surname.trim();
@@ -895,24 +877,32 @@ async function handleSave() {
         }
       }
     }
+
     // Post-save quality check (informational, non-blocking).
     // Surfaces EVENT_BEFORE_BIRTH / EVENT_OUTSIDE_LIFESPAN_AFTER_DEATH at
     // save time so the user reconciles authored-but-inconsistent dates
     // instead of silently leaving them in the database. PRIME DIRECTIVE:
     // this never modifies `ev` — it just reads.
-    try {
-      const checkResults = (await window.api.checks.runForEvent(ev.id!)) as Array<{ code: string }> | null;
-      if (checkResults && checkResults.length > 0) {
-        toast.warning(t('quality.toast.eventOutsideLifespan', { count: checkResults.length }));
+    if (window.api) {
+      try {
+        const checkResults = (await window.api.checks.runForEvent(ev.id)) as Array<{ code: string }> | null;
+        if (checkResults && checkResults.length > 0) {
+          toast.warning(t('quality.toast.eventOutsideLifespan', { count: checkResults.length }));
+        }
+      } catch (qcErr) {
+        // Non-blocking: a failed quality probe must not block the save.
+        console.error('[EventModal] post-save quality check failed:', qcErr);
       }
-    } catch (qcErr) {
-      // Non-blocking: a failed quality probe must not block the save.
-      console.error('[EventModal] post-save quality check failed:', qcErr);
     }
-    emit('saved', ev);
-  } catch (err) {
-    console.error('[EventModal] save failed:', err);
-  }
+
+    // Ensure citation list reflects any post-create flushes.
+    await reloadCitations();
+    await reloadParticipants();
+  },
+});
+
+async function handleSave() {
+  await composableSave();
 }
 
 // If the user filled in baptism date or godparents on a birth event, create/update
