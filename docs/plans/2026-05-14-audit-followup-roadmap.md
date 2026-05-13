@@ -155,7 +155,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 
 **Plan file:** [2026-05-14-tauri-window-api-split-design.md](2026-05-14-tauri-window-api-split-design.md) (contingency design — delete after 1.3 ships).
 
-### 3.7 Panel danger-zone extraction (audit premise was wrong — reframed)
+### 3.7 Panel danger-zone extraction — **DONE**, archived
 
 **User goal:** Changing the entity-deletion UX (cascade summary format, confirm gate, etc.) changes in one place, not six. Person, Place, Source, Media, Group, ResearchTask panels share a `<PanelDangerZone>` component.
 
