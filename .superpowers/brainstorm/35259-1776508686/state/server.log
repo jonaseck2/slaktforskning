@@ -1,6 +1,0 @@
-{"type":"server-started","port":54220,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:54220","screen_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/35259-1776508686/content","state_dir":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/35259-1776508686/state"}
-{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/35259-1776508686/content/media-layout.html"}
-{"source":"user-event","type":"click","text":"Image\n        \n        \n        \n          \n          \n          \n          \n          \n          \n        \n      \n    \n    \n      B — Bottom Filmstrip\n      Horizontal thumbnail strip below the image. Scrollable left/right. Classic lightroom pattern. Maximizes image width.","choice":"b","id":null,"timestamp":1776508828057}
-{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/35259-1776508686/content/viewer-detail.html"}
-{"type":"screen-added","file":"/Users/jonasahnstedt/git/slaktforskning/.superpowers/brainstorm/35259-1776508686/content/waiting.html"}
-{"type":"server-stopped","reason":"idle timeout"}
