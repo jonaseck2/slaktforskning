@@ -38,7 +38,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 **Effort:** 1–2 days.
 **Dependencies:** none. Independent of Tier 1.2–1.4.
-**Plan file:** `docs/plans/2026-05-14-vite-8-bundle-regression.md` (to be written via `superpowers:brainstorming`).
+**Plan file:** [2026-05-14-vite-8-bundle-regression-design.md](2026-05-14-vite-8-bundle-regression-design.md).
 
 ### 1.2 CrabNebula DevTools profiling baseline
 
@@ -50,7 +50,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 **Effort:** 0.5 day. Single-file plan (no `-design.md` split).
 **Dependencies:** blocks 3.1, 3.2, 3.4 (refactors need baseline). Not strictly blocking 3.3, 3.5, 3.6 but useful there too.
-**Plan file:** `docs/plans/2026-05-14-crabnebula-baseline.md`.
+**Plan file:** [2026-05-14-perf-baseline-capture.md](2026-05-14-perf-baseline-capture.md) (CrabNebula declined; existing-tools baseline).
 
 ### 1.3 Specta migration (renderer ↔ Rust IPC typesafety)
 
@@ -66,7 +66,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 **Effort:** 3–5 days.
 **Dependencies:** none directly. Subsumes the "drop `thread:` field" tactical item (2.2). Independent of Tier 1.4.
-**Plan file:** `docs/plans/2026-05-14-specta-migration-design.md` + `docs/plans/2026-05-14-specta-migration.md`.
+**Plan file:** [2026-05-14-specta-migration-design.md](2026-05-14-specta-migration-design.md).
 
 ### 1.4 kkrpc sidecar migration (Rust ↔ Node MCP)
 
@@ -82,7 +82,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 **Effort:** 2–3 days.
 **Dependencies:** none. Independent of Tier 1.3.
-**Plan file:** `docs/plans/2026-05-14-kkrpc-sidecar-design.md` + `docs/plans/2026-05-14-kkrpc-sidecar.md`.
+**Plan file:** [2026-05-14-kkrpc-sidecar-design.md](2026-05-14-kkrpc-sidecar-design.md) (Bun runtime + kkrpc, per user decision).
 
 ---
 
@@ -110,38 +110,42 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 
 **Why first in Tier 3:** clearest entity boundaries; 4 entity types already separate at the test-file level (`duplicates.test.ts`, `duplicates-places.test.ts`, `duplicates-media.test.ts`, sources implied); shared O(N²) grouping orchestrator is easy to extract.
 
-**Effort:** 2 days.
-**Plan file:** TBD.
+**Effort:** 1 day (verified — simpler than audit's 2-day estimate).
+**Plan file:** [2026-05-14-duplicates-split-design.md](2026-05-14-duplicates-split-design.md).
 
-### 3.2 Chart layout separation (`hourglass.ts` + `chartData.ts`)
+### 3.2 Chart layout property-test migration (Phase 1 only)
 
 **User goal:** Adding a new chart type or modifying placement math doesn't require updating dozens of golden snapshots in `chartLayout.test.ts` (1,663 LOC). Property-based assertions (no box overlaps, parents above children) replace exact-coordinate golden snapshots.
 
+**Audit refinement:** investigation showed the bottleneck isn't the 1,052-LOC `hourglass.ts` — it's the 1,663-LOC golden-snapshot test. Refactoring `hourglass.ts` first would cascade 50+ snapshot updates per commit. **Phase 1 (this plan):** test-side refactor to property-based assertions. **Phase 2 (separate future plan):** refactor `hourglass.ts` internals once snapshots no longer block iteration.
+
 **Why second:** highest payback per line touched; golden-snapshot fragility blocks chart features.
 
-**Effort:** 4–5 days.
-**Plan file:** TBD.
+**Effort:** 3 days (Phase 1 only).
+**Plan file:** [2026-05-14-chart-layout-property-tests-design.md](2026-05-14-chart-layout-property-tests-design.md).
 
 ### 3.3 GEDCOM phases encapsulation (`src/import/gedcom/phases.ts`)
 
-**User goal:** Each of the 7 import phases (NOTE maps → INDI → FAM → ASSO → PLAC → research tasks) is independently testable. A single phase break doesn't cascade through all 7 phases' test coverage.
+**User goal:** Each of the 14 import phases (verified count — NOTE maps → INDI → FAM → ASSO → PLAC → research tasks etc.) is independently editable. A single phase break doesn't cascade through all 14 phases' test coverage.
 
-**Effort:** 3–4 days.
-**Plan file:** TBD.
+**Effort:** 1 day (verified — simpler than audit's 3–4 day estimate; mechanical split).
+**Plan file:** [2026-05-14-gedcom-phases-split-design.md](2026-05-14-gedcom-phases-split-design.md).
 
 ### 3.4 `report_data.ts` shared traversal helpers
 
-**User goal:** Six report builders share the same walk-ancestors / collect-events / sort-by-date scaffolding. Adding a new report is composing helpers, not re-implementing the traversal.
+**User goal:** Seven report builders (verified count) live in their own files. Shared scaffolding (walk-ancestors / collect-events / sort-by-date) is discovered post-split, not assumed upfront.
+
+**Effort:** 1.5 days.
+**Plan file:** [2026-05-14-report-data-split-design.md](2026-05-14-report-data-split-design.md).
+
+### 3.5 Modal composable extraction (audit premise corrected)
+
+**User goal:** `EventModal.vue` (1,052 LOC), `PersonNameModal.vue` (701 LOC), `PersonModal.vue` (646 LOC), `RelationshipModal.vue` (568 LOC) become thin orchestrators; state + validation + save logic lives in composables.
+
+**Audit correction:** Re-measurement found EventModal is 105 LOC `<template>` + **721 LOC `<script setup>`** — bottleneck is composition logic, not template branching. The original "extract event-type-specific field components" recommendation doesn't fit; composable extraction (`useEventForm`, `useEventValidation`, `useEventCitations`, `useEventParticipants`, `useEventSave`) does.
 
 **Effort:** 3 days.
-**Plan file:** TBD.
-
-### 3.5 EventModal sub-component extraction
-
-**User goal:** `EventModal.vue` (1,052 LOC), `PersonNameModal.vue` (701 LOC), `PersonModal.vue` (646 LOC), `RelationshipModal.vue` (568 LOC) split into reusable field-group sub-components. Event-type-specific field rows (occupation, residence, education) become `<EventOccupationFields>` etc.
-
-**Effort:** 2 days.
-**Plan file:** TBD.
+**Plan file:** [2026-05-14-modal-composable-extraction-design.md](2026-05-14-modal-composable-extraction-design.md).
 
 ### 3.6 `tauri-window-api.ts` per-domain split
 
@@ -149,9 +153,18 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 
 **Note:** **superseded by 1.3 (Specta migration)** if that lands first — Specta generates the bindings, no hand-rolled wiring remains. Keep this item only as a fallback if 1.3 is descoped.
 
-### 3.7 Panel section scaffold composable
+**Plan file:** [2026-05-14-tauri-window-api-split-design.md](2026-05-14-tauri-window-api-split-design.md) (contingency design — delete after 1.3 ships).
 
-**User goal:** Reduce the 4,936 LOC of duplicated section-management boilerplate across 10 `*Panel.vue` files. Each panel manually manages `const <entity>SectionOpen = ref(...)` for each section; centralize via a `usePanelSections` composable.
+### 3.7 Panel danger-zone extraction (audit premise was wrong — reframed)
+
+**User goal:** Changing the entity-deletion UX (cascade summary format, confirm gate, etc.) changes in one place, not six. Person, Place, Source, Media, Group, ResearchTask panels share a `<PanelDangerZone>` component.
+
+**Audit correction:** The original 3.7 premise (extract `usePanelSections`) was **already done** — verified 2026-05-14 that the composable exists at [`src/renderer/composables/usePanelSections.ts`](../../src/renderer/composables/usePanelSections.ts) and 8 of 10 panels use it (the 2 exceptions are documented in CLAUDE.md). The "4,936 LOC of section-management boilerplate" claim was wrong; that's the panels themselves, dominated by domain-specific markup.
+
+Re-investigation found the real reducible duplication: 6 panels each implement an identical `panel-danger-zone` block (~50 LOC × 6).
+
+**Effort:** 1.5 days.
+**Plan file:** [2026-05-14-panel-danger-zone-extraction-design.md](2026-05-14-panel-danger-zone-extraction-design.md).
 
 **Effort:** 1 day. Lower priority than 3.1–3.6.
 
