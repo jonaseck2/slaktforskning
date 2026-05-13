@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/jonaseck2/slaktforskning",
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "^1.60.0",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.1",
     "@tauri-apps/plugin-updater": "^2.0.0",
