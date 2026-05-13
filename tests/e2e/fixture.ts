@@ -106,15 +106,20 @@ export function packagedBinaryPath(): string {
 
   let binary: string;
   if (platform === 'darwin') {
-    // The Tauri bundle ships two .app variants — `Släktforskning (Tauri).app`
-    // (productName-derived) and `slaktforskning.app` (executable name fallback).
-    // The first one is what users install; the second mirrors the inner
-    // executable used by both. Inner binary is `slaktforskning` per
-    // src-tauri/Cargo.toml `[[bin]]`.
-    binary = path.join(
+    // `build:e2e` runs `tauri build --no-bundle`, so the `.app` wrapper isn't
+    // produced — only the raw binary at `target/release/slaktforskning`. Fall
+    // back to the bundled `.app` if it happens to be present (e.g. after a
+    // full `npm run build`); otherwise use the raw binary. The previous
+    // hardcoded `Släktforskning (Tauri).app` path rotted when commit ca50d226
+    // dropped the "(Tauri)" suffix from `productName`, and again when the
+    // `--no-bundle` switch landed (390d3fc0).
+    const bundlePath = path.join(
       targetDir, 'bundle', 'macos',
-      'Släktforskning (Tauri).app', 'Contents', 'MacOS', 'slaktforskning',
+      'Släktforskning.app', 'Contents', 'MacOS', 'slaktforskning',
     );
+    binary = fs.existsSync(bundlePath)
+      ? bundlePath
+      : path.join(targetDir, 'slaktforskning');
   } else if (platform === 'linux') {
     // Linux ships AppImage. Look at the appimage dir; fall back to the raw
     // binary in `target/release/` if the AppImage hasn't been built yet
