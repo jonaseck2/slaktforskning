@@ -840,6 +840,55 @@ pub fn run() {
         .invoke_handler(specta.invoke_handler())
         .setup(|app| {
             ui_server::spawn(app.handle().clone());
+            // Headless mode for E2E (Option B per
+            // docs/plans/2026-05-13-e2e-expansion.md Task 0): when
+            // SLAKTFORSKNING_HEADLESS=1, build the main window
+            // programmatically off-screen (so WKWebView is never throttled —
+            // see the inline note below) and demote the macOS app to
+            // Accessory activation policy so it doesn't grab focus or appear
+            // in the Dock during local Tier 2 runs or CI under Xvfb. The
+            // auto-build entry in tauri.conf.json::app.windows[] is empty so
+            // this is the sole construction path; we ship Option B because
+            // Option A (hide() after auto-build) does NOT suppress focus
+            // theft on macOS — the window is still created visible and only
+            // hidden after, which briefly steals focus and is observable by
+            // `osascript ... visible of process "slaktforskning"`.
+            let headless = std::env::var("SLAKTFORSKNING_HEADLESS").as_deref() == Ok("1");
+            #[cfg(target_os = "macos")]
+            if headless {
+                use objc2::MainThreadMarker;
+                use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy};
+                if let Some(mtm) = MainThreadMarker::new() {
+                    let ns_app = NSApplication::sharedApplication(mtm);
+                    let _ = ns_app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+                }
+            }
+            {
+                use tauri::{WebviewUrl, WebviewWindowBuilder};
+                #[allow(unused_mut)]
+                let mut builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+                    .title("Släktforskning")
+                    .inner_size(1280.0, 800.0);
+                if headless {
+                    // macOS WKWebView aggressively throttles fully-hidden
+                    // windows: timers stretch, rAF can stall for seconds, and
+                    // the dev MCP bridge times out (15s) on heavier flows
+                    // (e.g. the duplicates seed + heuristic pass). Trick: keep
+                    // the window technically "visible" but place it far
+                    // off-screen so the user never sees it. Combined with the
+                    // Accessory activation policy set above, the app gets no
+                    // Dock icon, no menu bar, and never steals focus — but
+                    // the WebView stays unthrottled.
+                    builder = builder.visible(true).position(-32000.0, -32000.0);
+                    #[cfg(target_os = "windows")]
+                    {
+                        builder = builder.skip_taskbar(true);
+                    }
+                } else {
+                    builder = builder.visible(true);
+                }
+                builder.build()?;
+            }
             // Build + apply the application menu. Menu events fan out to
             // either a Rust handler (open-db, new-window) or are forwarded
             // to the focused webview as a 'menu:item' event the renderer

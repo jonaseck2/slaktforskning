@@ -10,13 +10,7 @@
     "frontendDist": "../dist-tauri"
   },
   "app": {
-    "windows": [
-      {
-        "title": "Släktforskning",
-        "width": 1280,
-        "height": 800
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }

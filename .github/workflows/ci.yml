@@ -20,3 +20,34 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+
+  # Tier 1 e2e — the 4-project Playwright suite (boot / crud / website-export
+  # / duplicates) that gates every PR. Runs against the packaged Tauri binary
+  # built by `npm run build:e2e` (which is `tauri build --no-bundle`). Tier 2
+  # (the broader panel/CTA suite added by the e2e-expansion plan) stays out
+  # of PR CI until the repo goes public OSS — at that point a nightly
+  # workflow picks it up. See docs/plans/2026-05-13-e2e-expansion.md.
+  #
+  # Headless: SLAKTFORSKNING_HEADLESS=1 is set in tests/e2e/fixture.ts (not
+  # here) — the env var is honoured by src-tauri/src/lib.rs::setup() to
+  # build the main window off-screen and (on macOS) demote the app to
+  # Accessory activation policy. On Linux CI we additionally wrap the run in
+  # `xvfb-run -a` so the GTK WebView has a virtual display to render into.
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Install Linux deps for Tauri + Xvfb
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev xvfb
+      - run: npm ci
+      - name: Run e2e (Tier 1, headless via Xvfb + SLAKTFORSKNING_HEADLESS)
+        run: xvfb-run -a npm run test:e2e

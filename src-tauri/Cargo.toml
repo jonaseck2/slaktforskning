@@ -51,3 +51,12 @@ specta = "=2.0.0-rc.25"
 specta-typescript = "=0.0.12"
 tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 
+# Headless E2E support on macOS — demote the app to Accessory activation
+# policy when SLAKTFORSKNING_HEADLESS=1 so it doesn't grab focus or show in
+# the Dock during local Tier 2 runs. Both crates are already transitive deps
+# (via tauri); we redeclare them here at the same major version to import
+# them directly from our setup() block. See src/lib.rs.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSResponder", "NSRunningApplication"] }
+
