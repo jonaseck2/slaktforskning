@@ -1686,6 +1686,22 @@ export default {
     deleteFailed: 'Det gick inte att ta bort. Försök igen.',
     loadFailed: 'Det gick inte att ladda data. Försök igen.',
   },
+  confirmModal: {
+    deleteEntity: {
+      action: 'Ta bort {entity}',
+      title: 'Ta bort denna {entity}?',
+      body: 'Detta tar bort {entity} och relaterad information.',
+      confirm: 'Ta bort',
+    },
+  },
+  entities: {
+    person: 'person',
+    place: 'plats',
+    source: 'källa',
+    media: 'media',
+    group: 'grupp',
+    'research-task': 'forskningsuppgift',
+  },
   a11y: {
     skipToMain: 'Hoppa till huvudinnehåll',
     readAloud: 'Läs upp',

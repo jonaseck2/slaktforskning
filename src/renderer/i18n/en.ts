@@ -1686,6 +1686,22 @@ export default {
     deleteFailed: 'Could not delete. Please try again.',
     loadFailed: 'Could not load data. Please try again.',
   },
+  confirmModal: {
+    deleteEntity: {
+      action: 'Delete {entity}',
+      title: 'Delete this {entity}?',
+      body: 'This will delete {entity} and any related information.',
+      confirm: 'Delete',
+    },
+  },
+  entities: {
+    person: 'person',
+    place: 'place',
+    source: 'source',
+    media: 'media item',
+    group: 'group',
+    'research-task': 'research task',
+  },
   a11y: {
     skipToMain: 'Skip to main content',
     readAloud: 'Read aloud',
