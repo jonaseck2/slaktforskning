@@ -113,7 +113,7 @@ The `cocoa` crate is already a transitive dep of Tauri on macOS; if not directly
 
 The window in `tauri.conf.json` may already be auto-built. If so, change the config to `"windows": []` so Rust owns the window construction entirely — otherwise Tauri builds a visible window first and we'd be too late.
 
-- [ ] **0.2 — Compile & smoke locally.** Build the binary in release mode (matches what e2e uses):
+- [ ] **0.2 — Compile and verify headless locally.** Build the binary in release mode (matches what e2e uses):
 
 ```bash
 npm run build:e2e
