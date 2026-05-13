@@ -183,13 +183,15 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete source -->
-      <div class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('sources.deleteSourceAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete source — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="props.sourceId"
+        entity-type="source"
+        :entity-id="props.sourceId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        @deleted="onDeleted"
+      />
     </template>
 
     <!-- Add citation modal -->
@@ -224,17 +226,6 @@
       @confirm="delCitation.confirm"
     />
 
-    <!-- Delete source confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('sources.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('sources.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
   </EntityPanel>
 </template>
 
@@ -246,6 +237,7 @@ import { useI18n } from 'vue-i18n';
 import CitationModal from './modals/CitationModal.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import EntityPanel from './EntityPanel.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
@@ -433,28 +425,23 @@ function onCitationEdited() {
 }
 
 // ── Delete source ──────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.sources.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: citation count) and react to
+// @deleted with toast + close.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const title = source.value?.title ?? t('common.unknown');
-  return t('sources.deleteConfirmMessage', {
-    title,
+const dangerEntityLabel = computed(() => source.value?.title ?? t('common.unknown'));
+
+const deleteConfirmMessage = computed(() =>
+  t('sources.deleteConfirmMessage', {
+    title: dangerEntityLabel.value,
     citations: panelData.value?.citations.length ?? 0,
-  });
-});
+  }),
+);
 
-async function performDelete() {
-  if (!props.sourceId) return;
-  try {
-    const title = source.value?.title ?? t('common.unknown');
-    await window.api.sources.delete(props.sourceId);
-    showDeleteConfirm.value = false;
-    toast.success(t('sources.deletedToast', { title }));
-    emit('close');
-  } catch (err) {
-    console.error('[SourcePanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+function onDeleted() {
+  toast.success(t('sources.deletedToast', { title: dangerEntityLabel.value }));
+  emit('close');
 }
 
 </script>
