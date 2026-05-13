@@ -20,8 +20,11 @@ export interface PanelDescriptor {
   name: string;
   /** Route to navigate to after seeding host. Receives the seeded entity id. */
   route: (id: string) => string;
-  /** Seed the host entity via MCP and return its id. */
-  seed: (driver: AppDriver) => Promise<{ id: string }>;
+  /** Seed the host entity via MCP and return its id. `route` is optional — the
+   *  test runner derives the navigation target from `route(id)` above; passing
+   *  it through is a no-op convenience for descriptors that wrap
+   *  `seedHostEntity()` directly. */
+  seed: (driver: AppDriver) => Promise<{ id: string; route?: string }>;
   /** Sections to verify. Read-only panels (Report/Website/Export) may pass []. */
   sections: PanelSectionCheck[];
   /** Whether the panel itself must offer a Danger-zone delete affordance. */

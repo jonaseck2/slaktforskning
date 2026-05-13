@@ -15,9 +15,17 @@ export type HostKind =
  * (the auto-walked channel shape) and return its id + the panel route to
  * navigate to.
  *
- * The api signatures here match `src/shared/channels/*` — every entity exposes
- * a `<domain>:create` channel, surfaced as `window.api.<domain>.create(data)`
- * by the auto-walk in `src/renderer/tauri-window-api.ts`.
+ * Field shapes match the actual src/api/<domain>.ts createX signatures —
+ * NOT the spec's plan-stub guesses. See `.claude/rules/api.md` for the
+ * domain-type table; concrete field names verified against:
+ *   - persons.ts:84  (given_name + surname + sex: 'M'|'F'|'U')
+ *   - places.ts:105  (place_type, not 'type')
+ *   - relationships.ts:7  (person1_id / person2_id, not _a / _b)
+ *   - research_tasks.ts:6  (task field, NOT NULL — schema.ts:181)
+ *   - media.ts:18  (file_ref + title)
+ *
+ * Channel auto-walk: filename `research-tasks.ts` exposes channel
+ * namespace `researchTasks:*` (camelCase). See src/shared/channels/.
  */
 export async function seedHostEntity(
   driver: AppDriver,
@@ -26,15 +34,16 @@ export async function seedHostEntity(
   switch (kind) {
     case 'person': {
       const p = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
-        primary_name: { given: 'Test', surname: 'Person' },
-        sex: 'unknown',
+        given_name: 'Test',
+        surname: 'Person',
+        sex: 'U',
       });
       return { id: p.id, route: `/persons/${p.id}` };
     }
     case 'place': {
       const p = await mutateViaMcp<{ id: string }>(driver, 'places.create', {
         name: 'Testplace',
-        type: 'city',
+        place_type: 'city',
       });
       return { id: p.id, route: `/places/${p.id}` };
     }
@@ -46,17 +55,24 @@ export async function seedHostEntity(
     }
     case 'relationship': {
       const a = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
-        primary_name: { given: 'A' },
+        given_name: 'A',
+        surname: 'Test',
+        sex: 'U',
       });
       const b = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
-        primary_name: { given: 'B' },
+        given_name: 'B',
+        surname: 'Test',
+        sex: 'U',
       });
       const r = await mutateViaMcp<{ id: string }>(driver, 'relationships.create', {
-        person_a_id: a.id,
-        person_b_id: b.id,
+        person1_id: a.id,
+        person2_id: b.id,
         type: 'couple',
       });
-      return { id: r.id, route: `/relationships/${r.id}` };
+      // Relationships have no top-level route — /relationships/:id redirects
+      // to /persons via the per-person Relations section convention. Route
+      // to person A so panel-surface specs find the relationship there.
+      return { id: r.id, route: `/persons/${a.id}` };
     }
     case 'group': {
       const g = await mutateViaMcp<{ id: string }>(driver, 'groups.create', {
@@ -66,7 +82,7 @@ export async function seedHostEntity(
     }
     case 'research-task': {
       const t = await mutateViaMcp<{ id: string }>(driver, 'researchTasks.create', {
-        title: 'Test Task',
+        task: 'Test research task',
       });
       return { id: t.id, route: `/research-tasks/${t.id}` };
     }
