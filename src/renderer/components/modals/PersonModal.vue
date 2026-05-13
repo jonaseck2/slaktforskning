@@ -224,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
@@ -233,6 +233,9 @@ import PlacePicker from '../PlacePicker.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import { COUPLE_SUBTYPE_VALUES, PARENT_CHILD_SUBTYPE_VALUES } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
+import { usePersonForm, type AddRelatedTo } from '../../composables/usePersonForm';
+import { usePersonValidation } from '../../composables/usePersonValidation';
+import { usePersonSave, type Person } from '../../composables/usePersonSave';
 import { getParentChildRoleLabel } from '../../utils/relationshipLabels';
 
 declare const window: Window & {
@@ -259,18 +262,12 @@ interface EventRow {
 }
 
 interface RelRow { id: string; label: string; sub: string; }
-interface Person { id: string; sex: string; living: boolean; }
 
 const props = withDefaults(defineProps<{
   mode?: 'standalone' | 'subpanel';
   personId?: string | null;
   prefillSurname?: string | null;
-  addRelatedTo?: {
-    personId: string;
-    mode: 'father' | 'mother' | 'spouse' | 'child' | 'son' | 'daughter';
-    personSex?: 'M' | 'F' | 'U';
-    personSurname?: string;
-  } | null;
+  addRelatedTo?: AddRelatedTo | null;
 }>(), {
   mode: 'standalone',
   personId: null,
@@ -289,7 +286,13 @@ const toast = useToast();
 const givenNameRef = ref<HTMLInputElement | null>(null);
 const savedPersonId = ref<string | null>(props.personId);
 
-// ── Add-related state ───────────────────────────────────────────────────────
+// ── Form state (via usePersonForm composable) ─────────────────────────────
+const { form, birth } = usePersonForm({
+  prefillSurname: props.prefillSurname,
+  addRelatedTo: props.addRelatedTo,
+});
+
+// ── Add-related state (orchestration, kept inline) ────────────────────────
 const entryMode = ref<'new' | 'existing'>('new');
 const existingPersonId = ref<string | null>(null);
 const isChildMode = computed(() => {
@@ -304,8 +307,6 @@ const isChildMode = computed(() => {
  *                     ("Fosterförälder", "Adoptivförälder", …)
  *   child / son / daughter → new person becomes the child → render child labels
  *                     ("Fosterbarn", "Adoptivbarn", …)
- * Direction comes from addRelatedTo.mode; falls back to 'child' for the
- * (unreachable) parent_child path with no mode set.
  */
 const parentChildDirection = computed<'parent' | 'child'>(() => {
   const m = props.addRelatedTo?.mode;
@@ -340,73 +341,15 @@ function pickChildSex(val: 'M' | 'F' | 'U') {
   nextTick(() => givenNameRef.value?.focus());
 }
 
-function defaultSex(): 'M' | 'F' | 'U' {
-  if (!props.addRelatedTo) return 'U';
-  const m = props.addRelatedTo.mode;
-  if (m === 'father' || m === 'son') return 'M';
-  if (m === 'mother' || m === 'daughter') return 'F';
-  if (m === 'spouse') {
-    if (props.addRelatedTo.personSex === 'M') return 'F';
-    if (props.addRelatedTo.personSex === 'F') return 'M';
-    return 'U';
-  }
-  return 'U';
-}
-
-function defaultSurname(): string {
-  if (props.prefillSurname) return props.prefillSurname;
-  return '';
-}
-
-function defaultSubtype(): string {
-  if (props.addRelatedTo?.mode === 'spouse') return 'unknown';
-  if (props.addRelatedTo) return 'biological';
-  return '';
-}
-
-const form = reactive({
-  given_name: '',
-  surname: defaultSurname(),
-  sex: defaultSex(),
-  subtype: defaultSubtype(),
-});
-
-// Inline birth event fields (create-mode only). The user's verbatim date string
-// goes into `date_original`; if it parses as a full ISO date we also fill
-// `date_value`. Per the Prime Directive, we never invent values the user didn't
-// type — empty fields skip event creation entirely.
-const birth = reactive<{ date: string; placeId: string | null }>({
-  date: '',
-  placeId: null,
-});
-
 const relatedPersonName = ref('');
 
-/**
- * Gate Save until the user has typed at least one identifier (or, in
- * existing-person link mode, picked a person from the picker). The genealogist
- * must never accidentally create a `persons` row with no `names` row attached
- * — this is the modal-side enforcement of the project's data-fidelity rule.
- *
- * Modes:
- * - Edit mode (`savedPersonId` set, no `addRelatedTo`): always enabled — the
- *   form is pre-populated from the existing person and the user is editing,
- *   not creating a nameless row.
- * - Existing-person link mode (`addRelatedTo` + `entryMode === 'existing'`):
- *   enabled when a person has been picked.
- * - Create / new-person mode (everything else, including `addRelatedTo` with
- *   `entryMode === 'new'`): enabled when at least one of given_name / surname
- *   is non-empty after trim.
- */
-const canSave = computed(() => {
-  // Edit mode — the modal opens with fields populated; saving never produces a nameless row.
-  if (savedPersonId.value && !props.addRelatedTo) return true;
-  // Existing-person link mode — gate on the picker, not the name fields.
-  if (props.addRelatedTo && entryMode.value === 'existing') {
-    return existingPersonId.value !== null;
-  }
-  // Create / new-person mode — at least one identifier must be typed.
-  return form.given_name.trim().length > 0 || form.surname.trim().length > 0;
+// ── Validation (via usePersonValidation composable) ───────────────────────
+const { canSave } = usePersonValidation({
+  form,
+  savedPersonId,
+  hasAddRelatedTo: () => !!props.addRelatedTo,
+  entryMode,
+  existingPersonId,
 });
 
 const displayTitle = computed(() => {
@@ -474,94 +417,25 @@ async function onEventSaved() {
   await loadData();
 }
 
-// ── Save ────────────────────────────────────────────────────────────────────
+// ── Save orchestration (via usePersonSave composable) ─────────────────────
+const { save: composableSave } = usePersonSave({
+  form,
+  birth,
+  savedPersonIdRef: savedPersonId,
+  addRelatedTo: props.addRelatedTo,
+  entryMode,
+  existingPersonId,
+  secondParentId,
+  canSave,
+  emit: (name, payload) => {
+    if (name === 'saved') emit('saved', payload as Person);
+    else if (name === 'close') emit('close');
+  },
+});
+
 async function handleSave() {
-  if (!window.api) return;
   try {
-    let person: Person;
-
-    if (savedPersonId.value) {
-      // Edit mode
-      person = (await window.api.persons.update(savedPersonId.value, {
-        sex: form.sex,
-      })) as Person;
-    } else if (props.addRelatedTo && entryMode.value === 'existing') {
-      // Link existing person
-      if (!existingPersonId.value) return;
-      person = (await window.api.persons.get(existingPersonId.value)) as Person;
-    } else {
-      // Disabled-Save (canSave computed) prevents reaching this branch with
-      // both name fields empty — no need for a post-save warning toast.
-      // Create new person, optionally with an inline birth event in the same
-      // atomic workflow when the user filled in birth date or birth place.
-      const payload: Record<string, unknown> = {
-        given_name: form.given_name,
-        surname: form.surname,
-        sex: form.sex,
-      };
-
-      const birthDate = birth.date.trim();
-      const birthPlaceId = birth.placeId;
-      if (birthDate || birthPlaceId) {
-        // Prime Directive: `date_original` is the user's verbatim text. Only
-        // populate `date_value` when the input is already a full ISO date —
-        // never invent a "best guess" that overwrites what the user wrote.
-        const isFullIso = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
-        payload.event = {
-          event_type: 'birth',
-          date_type: 'exact',
-          date_value: isFullIso ? birthDate : null,
-          date_original: birthDate,
-          place_id: birthPlaceId,
-          notes: '',
-          cause: null,
-        };
-      }
-
-      const result = (await window.api.persons.createWithEvent(payload)) as { person: Person };
-      person = result.person;
-      savedPersonId.value = person.id;
-    }
-
-    // Create relationship (when addRelatedTo is set)
-    if (props.addRelatedTo) {
-      const targetPersonId = (props.addRelatedTo && entryMode.value === 'existing')
-        ? existingPersonId.value!
-        : (savedPersonId.value ?? person.id);
-
-      const relData: Record<string, unknown> = {};
-      const m = props.addRelatedTo.mode;
-      if (m === 'father' || m === 'mother') {
-        relData.type = 'parent_child';
-        relData.person1_id = targetPersonId;        // parent
-        relData.person2_id = props.addRelatedTo.personId; // child
-        relData.subtype = form.subtype;
-      } else if (m === 'child' || m === 'son' || m === 'daughter') {
-        relData.type = 'parent_child';
-        relData.person1_id = props.addRelatedTo.personId; // parent
-        relData.person2_id = targetPersonId;        // child
-        relData.subtype = form.subtype;
-      } else {
-        relData.type = 'couple';
-        relData.person1_id = props.addRelatedTo.personId;
-        relData.person2_id = targetPersonId;
-        relData.subtype = form.subtype;
-      }
-      await window.api.relationships.create(relData);
-
-      // Child/son/daughter mode: also link to the second parent (the selected partner) if any.
-      if ((m === 'child' || m === 'son' || m === 'daughter') && secondParentId.value && secondParentId.value !== targetPersonId) {
-        await window.api.relationships.create({
-          type: 'parent_child',
-          person1_id: secondParentId.value,
-          person2_id: targetPersonId,
-          subtype: form.subtype,
-        });
-      }
-    }
-
-    emit('saved', person);
-    if (props.addRelatedTo) emit('close');
+    await composableSave();
   } catch (err) {
     console.error('[PersonModal] save failed:', err);
     toast.error(t('errors.saveFailed'));
@@ -571,6 +445,7 @@ async function handleSave() {
 async function loadPartners() {
   if (!isChildMode.value) return;
   if (!window.api) return;
+  if (!props.addRelatedTo) return;
   const parentId = props.addRelatedTo.personId;
   try {
     const rels = (await window.api.relationships.getForPerson(parentId)) as Array<{
