@@ -62,13 +62,260 @@ Tauri-port "improved perf" claims after the migration had no measured before-num
 
 0.5 day. Sequencing: boot trace (~30 min), place-resolve trace (~1 hour including DB load), dedup trace (~1 hour), summary writeup (~1 hour).
 
-## Tasks
+## Tasks (bite-sized — for `superpowers:executing-plans` or human execution)
 
-- [ ] Generate or identify a realistic test database (≥1k places, ≥5k persons).
-- [ ] Capture boot trace.
-- [ ] Capture place-resolve trace (renderer + Rust).
-- [ ] Capture dedup trace (renderer + Rust).
-- [ ] Write `summary.md` with the four-field table per workload.
-- [ ] Commit `docs/baseline-perf/2026-05-14/` directory.
-- [ ] Update [`.claude/skills/performance-profiling`](../../.claude/skills/) to reference `docs/baseline-perf/` as the canonical location.
-- [ ] Self-review checklist (see [`.claude/rules/plans.md`](../../.claude/rules/plans.md)).
+### Task 1: Prepare test database
+
+- [ ] **Step 1: Inspect the working database's row counts**
+
+```bash
+sqlite3 ~/Library/Application\ Support/com.slaktforskning.app/family.db \
+  "SELECT 'persons', COUNT(*) FROM persons UNION ALL SELECT 'places', COUNT(*) FROM places;"
+```
+
+Expected: two rows with counts.
+
+- [ ] **Step 2: If counts < 1k places / 5k persons, generate a stress fixture**
+
+In a running app session (via dev MCP), call `mcp__slaktforskning-dev__seed_family` repeatedly until counts meet threshold. Or use `tests/e2e/fixtures/` stress DBs if available. Record the chosen DB path.
+
+- [ ] **Step 3: Note the chosen DB and row counts**
+
+Save to a scratch file (will be copied into `summary.md`):
+
+```
+DB: <path>
+persons: <count>
+places: <count>
+events: <count>
+media: <count>
+```
+
+### Task 2: Capture boot trace
+
+- [ ] **Step 1: Open Chromium DevTools in the dev app**
+
+```bash
+npm start &
+# Wait ~10s for compile
+```
+
+In the app window: View → Toggle Developer Tools → Performance tab.
+
+- [ ] **Step 2: Start a recording, reload, stop after idle**
+
+In DevTools: click record (⚫), then Ctrl/Cmd+R to reload the renderer. Wait until the UI is fully responsive AND no JavaScript activity for ≥2 seconds. Stop recording (⚫).
+
+- [ ] **Step 3: Export the trace**
+
+In the Performance tab: click the "Save profile" icon. Save as `~/Downloads/boot.cpuprofile`.
+
+- [ ] **Step 4: Move to docs/baseline-perf/**
+
+```bash
+mkdir -p docs/baseline-perf/2026-05-14
+mv ~/Downloads/boot.cpuprofile docs/baseline-perf/2026-05-14/
+```
+
+### Task 3: Capture place-resolve trace (renderer)
+
+- [ ] **Step 1: Navigate to /places in the running app**
+
+Verify the chosen DB is loaded; map view shows pins.
+
+- [ ] **Step 2: Open DevTools Performance, start recording**
+
+- [ ] **Step 3: Trigger place resolution**
+
+Switch to list view, scroll the place list to the bottom (or filter to trigger queries). Wait for all pins to render.
+
+- [ ] **Step 4: Stop recording, save as `place-resolve-renderer.cpuprofile`**
+
+```bash
+mv ~/Downloads/place-resolve-renderer.cpuprofile docs/baseline-perf/2026-05-14/
+```
+
+### Task 4: Capture place-resolve trace (Rust)
+
+- [ ] **Step 1: Install cargo-flamegraph if missing**
+
+```bash
+cargo install flamegraph
+```
+
+Or use `samply` on macOS:
+
+```bash
+cargo install --locked samply
+```
+
+- [ ] **Step 2: Build a release binary**
+
+```bash
+npm run build:bin 2>&1 | tail -5
+```
+
+Expected: produces `src-tauri/target/release/slaktforskning` (or `.exe`).
+
+- [ ] **Step 3: Profile the binary while triggering place-resolve workload**
+
+```bash
+# Using samply (macOS):
+samply record src-tauri/target/release/slaktforskning &
+# In the app, navigate to /places, exercise the workload, then close the app.
+# samply will write profile_<timestamp>.json
+```
+
+Or with flamegraph (Linux):
+
+```bash
+cargo flamegraph -p slaktforskning --release
+# Trigger workload, close app — produces flamegraph.svg
+```
+
+- [ ] **Step 4: Move output to docs/baseline-perf/**
+
+```bash
+mv flamegraph.svg docs/baseline-perf/2026-05-14/place-resolve-rust.svg
+# OR for samply: mv profile_*.json docs/baseline-perf/2026-05-14/place-resolve-rust.json
+```
+
+### Task 5: Capture dedup trace
+
+- [ ] **Step 1: Renderer side — record `find_duplicates` invocation**
+
+In the running app, open DevTools Performance, start recording, navigate to `/quality` or wherever `find_duplicates` is triggered. Wait for results to render.
+
+- [ ] **Step 2: Save as `dedup-renderer.cpuprofile`**
+
+```bash
+mv ~/Downloads/dedup-renderer.cpuprofile docs/baseline-perf/2026-05-14/
+```
+
+- [ ] **Step 3: Rust side — profile dedup-only path**
+
+Run a script or test that calls dedup directly under `samply`:
+
+```bash
+samply record sh -c "src-tauri/target/release/slaktforskning --headless dedup" 2>&1 | tail -5
+# If a --headless mode isn't available, profile a Vitest run of duplicates.test.ts
+# instead: samply record npx vitest run tests/unit/duplicates.test.ts
+```
+
+- [ ] **Step 4: Move output**
+
+```bash
+mv profile_*.json docs/baseline-perf/2026-05-14/dedup-rust.json
+# OR: mv flamegraph.svg docs/baseline-perf/2026-05-14/dedup-rust.svg
+```
+
+### Task 6: Write `summary.md`
+
+- [ ] **Step 1: Create `docs/baseline-perf/2026-05-14/summary.md`**
+
+Use this template:
+
+```markdown
+# Performance Baseline — 2026-05-14
+
+## Test database
+
+DB path: <path>
+- persons: <count>
+- places: <count>
+- events: <count>
+- media: <count>
+
+## Boot workload
+
+- Wall-clock: <ms>
+- Top renderer self-time:
+  1. <function> — <ms>
+  2. <function> — <ms>
+  3. <function> — <ms>
+- (Rust-side timing not captured for boot — N/A)
+- Observation: <one paragraph: what's slow, what's surprising>
+
+## Place-resolve workload
+
+- Wall-clock (renderer trace): <ms>
+- Top renderer self-time:
+  1. <function> — <ms>
+  2. <function> — <ms>
+  3. <function> — <ms>
+- Top Rust self-time:
+  1. <function> — <ms>
+  2. <function> — <ms>
+  3. <function> — <ms>
+- Observation: <one paragraph>
+
+## Dedup workload
+
+- Wall-clock: <ms>
+- Top renderer self-time:
+  1. <function> — <ms>
+  2. <function> — <ms>
+  3. <function> — <ms>
+- Top Rust self-time:
+  1. <function> — <ms>
+  2. <function> — <ms>
+  3. <function> — <ms>
+- Observation: <one paragraph>
+
+## Cross-process timing gap
+
+Chromium DevTools shows `invoke()` round-trip latency but not the Rust-side
+breakdown inside the call. The Rust flamegraph fills part of that gap but
+isn't synchronized with the renderer trace. Future plans that need
+cross-process timing can reconsider CrabNebula DevTools.
+```
+
+Fill in the TBDs by reading each cpuprofile (open in Chromium DevTools → Performance → Load profile) and each flamegraph (open .svg in a browser; the wide bars are the hot functions).
+
+- [ ] **Step 2: Commit the baseline**
+
+```bash
+git add docs/baseline-perf/2026-05-14/
+git commit -m "perf: capture 2026-05-14 baselines for boot/place-resolve/dedup
+
+Three workloads traced via Chromium DevTools (renderer) + samply
+(Rust). Summary in docs/baseline-perf/2026-05-14/summary.md.
+Referenced by Tier 3 audit-followup plans (3.1 duplicates, 3.2
+chart-layout, 3.4 report_data) for before/after comparison."
+```
+
+### Task 7: Update the performance-profiling skill
+
+- [ ] **Step 1: Open `.claude/skills/performance-profiling/SKILL.md`** (or equivalent skill file path).
+
+- [ ] **Step 2: Add a reference to `docs/baseline-perf/`**
+
+In the skill body, add a paragraph after the tool-usage section:
+
+```markdown
+## Baseline storage convention
+
+Baselines from "before refactor" captures live at `docs/baseline-perf/YYYY-MM-DD/`:
+- `<workload>.cpuprofile` — renderer trace from Chromium DevTools Performance tab
+- `<workload>-rust.svg` or `.json` — flamegraph or samply profile
+- `summary.md` — wall-clock + top-3 self-time + observation per workload
+
+Tier 3 audit-followup plans (and any future "did this refactor help?" question)
+reference these files by date stamp. After capturing a new baseline, commit
+the directory in one PR.
+```
+
+- [ ] **Step 3: Commit the skill update**
+
+```bash
+git add .claude/skills/performance-profiling/
+git commit -m "skill(performance-profiling): document docs/baseline-perf/ as the canonical baseline location"
+```
+
+### Task 8: Self-review
+
+- [ ] All three workloads have both renderer and (where applicable) Rust traces in `docs/baseline-perf/2026-05-14/`.
+- [ ] `summary.md` has the four-field table for each workload (wall-clock, top-3 renderer, top-3 Rust, observation).
+- [ ] Test database row counts documented.
+- [ ] `.claude/skills/performance-profiling` references the new location.
+- [ ] Cross-process timing gap explicitly noted (so future readers know what we *didn't* capture).
