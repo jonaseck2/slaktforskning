@@ -168,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
@@ -180,6 +180,9 @@ import {
   PARENT_CHILD_SUBTYPE_VALUES,
 } from '../../constants/eventTypes';
 import { useToast } from '../../composables/useToast';
+import { useRelationshipForm, type RelationshipRow } from '../../composables/useRelationshipForm';
+import { useRelationshipValidation } from '../../composables/useRelationshipValidation';
+import { useRelationshipSave } from '../../composables/useRelationshipSave';
 import { getParentChildRoleLabel } from '../../utils/relationshipLabels';
 
 declare const window: Window & {
@@ -199,18 +202,9 @@ interface EventRow {
   description: string;
 }
 
-interface RelationshipData {
-  id: string;
-  type: string;
-  person1_id: string | null;
-  person2_id: string | null;
-  subtype: string | null;
-  notes: string | null;
-}
-
 const props = withDefaults(defineProps<{
   mode?: 'standalone' | 'subpanel';
-  editingRelationship?: RelationshipData | null;
+  editingRelationship?: RelationshipRow | null;
 }>(), {
   mode: 'standalone',
   editingRelationship: null,
@@ -219,7 +213,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   cancel: [];
   close: [];
-  saved: [relationship: RelationshipData];
+  saved: [relationship: RelationshipRow];
 }>();
 
 const { t } = useI18n();
@@ -227,13 +221,13 @@ const toast = useToast();
 
 const savedRelationshipId = ref<string | null>(props.editingRelationship?.id ?? null);
 
-const form = reactive({
-  type: props.editingRelationship?.type ?? 'couple',
-  subtype: props.editingRelationship?.subtype ?? 'marriage',
-  person1_id: props.editingRelationship?.person1_id ?? null as string | null,
-  person2_id: props.editingRelationship?.person2_id ?? null as string | null,
-  notes: props.editingRelationship?.notes ?? '',
+// ── Form state (via useRelationshipForm composable) ───────────────────────
+const { form, selectType } = useRelationshipForm({
+  editingRelationship: props.editingRelationship,
 });
+
+// ── Validation (via useRelationshipValidation composable) ─────────────────
+const { canSave } = useRelationshipValidation(form);
 
 // Person names for the display title
 const person1Name = ref<string | null>(null);
@@ -258,19 +252,6 @@ const person2Label = computed(() => {
   return t('relationships.person2');
 });
 
-// A relationship needs both persons + a type to save. Saving when person1_id
-// or person2_id is null falls through `performSave`'s early-return guard
-// silently — the user sees an active-looking Save button do nothing. Bind
-// this to BaseSubPanel's `save-disabled` so the button is visibly dimmed
-// (50% opacity + grayscale + cursor:not-allowed, see .ep-save-btn:disabled
-// in shared.css) when the form isn't ready, AND so the click handler is
-// no-op'd at the DOM level (the [disabled] attribute blocks the click event,
-// so handleSave never runs at all when canSave is false).
-const canSave = computed(() => {
-  return !!form.person1_id && !!form.person2_id && !!form.type
-    && form.person1_id !== form.person2_id;
-});
-
 function parentSubtypeOptionLabel(subtype: string): string {
   // person1 is the parent; render the option as the parent's role.
   return getParentChildRoleLabel(t, 'parent', subtype);
@@ -282,18 +263,6 @@ function onPerson1Select(person: { given_name: string; surname: string }) {
 
 function onPerson2Select(person: { given_name: string; surname: string }) {
   person2Name.value = [person.given_name, person.surname].filter(Boolean).join(' ') || null;
-}
-
-function selectType(type: string) {
-  form.type = type;
-  // Reset subtype to sensible default when switching type
-  if (type === 'couple') {
-    form.subtype = 'marriage';
-  } else if (type === 'parent_child') {
-    form.subtype = 'biological';
-  } else {
-    form.subtype = '';
-  }
 }
 
 // Events section
@@ -353,20 +322,12 @@ async function loadPersonNames() {
 // rather than forcing them to remember to open EventModal afterward. Decline
 // writes nothing (Prime Directive); the relationship was already saved
 // before the offer is shown.
-//
-// Divorce mirror: deferred. The data model has no `divorced` couple-subtype —
-// `CoupleSubtype` is `marriage | civil_union | cohabitation | living_apart |
-// relationship | unknown | other` (see src/api/types.ts and
-// constants/eventTypes.ts). Divorces are tracked as separate event rows
-// linked via relationship_id, so there's no subtype transition that signals
-// "divorce happened" from this modal. When/if the data model gains that
-// concept, mirror this helper for divorces.
-const pendingOffer = ref<RelationshipData | null>(null);
+const pendingOffer = ref<RelationshipRow | null>(null);
 
 // Wedding ceremonies are stored with event_type='marriage' (label "Vigsel")
 // in this codebase; 'wedding' (label "Bröllop") also exists. Treat either
 // linked event as "already recorded" so we don't pester users.
-async function shouldOfferWedding(rel: RelationshipData): Promise<boolean> {
+async function shouldOfferWedding(rel: RelationshipRow): Promise<boolean> {
   if (rel.type !== 'couple' || rel.subtype !== 'marriage') return false;
   if (!window.api) return false;
   try {
@@ -381,9 +342,7 @@ function onAcceptOffer() {
   if (!pendingOffer.value) return;
   // Keep pendingOffer set until the EventModal closes so the parent doesn't
   // emit `saved` and tear us down before the user finishes recording the
-  // wedding. The EventModal opens with only `relationshipId` (matching the
-  // canonical "Add Event from RelationshipModal" shape); the wedding event
-  // is linked to the couple via `relationship_id` with no participant rows.
+  // wedding.
   activeEvent.value = null;
   subPanel.value = 'event';
 }
@@ -397,9 +356,6 @@ function onDeclineOffer() {
 }
 
 async function onWeddingEventSaved() {
-  // Wedding event saved successfully. Refresh the events list, close the
-  // subpanel, and finalise the parent flow with the relationship that was
-  // already persisted.
   const rel = pendingOffer.value;
   pendingOffer.value = null;
   closeSubPanel();
@@ -423,18 +379,6 @@ function onWeddingEventClosed() {
 }
 
 // Overlap warning (Part D of plan 2026-05-04-event-participants-and-marriage-flow).
-//
-// When the genealogist creates a NEW couple relationship and person1 already
-// has an unresolved partnership, warn before silent overlap. "Unresolved":
-//   - existing relationship has type='couple', AND
-//   - the other partner has no death event, AND
-//   - the relationship has no linked divorce event.
-//
-// The warning fires only on CREATE (not edit) and only for couple type. The
-// current implementation checks person1 only; person2 check is acceptable as
-// a future enhancement (person2 is often a brand-new spouse with no other
-// relationships, and the plan's user-goal framing is "person X has unresolved
-// partnership" — singular).
 //
 // PRIME DIRECTIVE: this check NEVER writes anything. Cancel keeps the modal
 // open with no DB write; Add Anyway proceeds with the create exactly as
@@ -471,20 +415,29 @@ async function findUnresolvedPartnership(person1Id: string): Promise<{ partnerId
 
 function onAcceptOverlap() {
   pendingOverlapWarning.value = null;
-  // Continue the save the user already initiated. performSave() does the
-  // actual create.
+  // Continue the save the user already initiated.
   void performSave();
 }
 
 function onCancelOverlap() {
-  // Decline: clear the pending state, leave the modal open, no save.
   pendingOverlapWarning.value = null;
 }
 
-// Save relationship — split into two phases:
-//   handleSave(): validates the form, runs the overlap check, and either
-//     gates on the warning ConfirmModal or proceeds straight to performSave().
-//   performSave(): does the actual create/update + the wedding-offer flow.
+// ── Save orchestration (via useRelationshipSave composable) ───────────────
+//
+// The composable owns the core persist. handleSave() runs the modal-specific
+// pre-flight (different-persons toast, overlap warning) before invoking it,
+// and performSave() runs the modal-specific post-save (wedding offer) after.
+const { save: composableSave } = useRelationshipSave({
+  form,
+  savedRelationshipIdRef: savedRelationshipId,
+  canSave,
+  emit: (name, payload) => {
+    if (name === 'saved') emit('saved', payload as RelationshipRow);
+    else if (name === 'close') emit('close');
+  },
+});
+
 async function handleSave() {
   if (!window.api) return;
   if (!form.person1_id || !form.person2_id) {
@@ -504,9 +457,6 @@ async function handleSave() {
         return;
       }
     } catch (err) {
-      // Degrade gracefully: if the check fails, skip the warning rather than
-      // blocking the user. The Prime Directive is preserved either way — we
-      // only ever read here.
       console.warn('[RelationshipModal] overlap check failed:', err);
     }
   }
@@ -514,23 +464,9 @@ async function handleSave() {
 }
 
 async function performSave() {
-  if (!window.api) return;
-  if (!form.person1_id || !form.person2_id) return;
   try {
-    let rel: RelationshipData;
-    const payload = {
-      type: form.type,
-      person1_id: form.person1_id,
-      person2_id: form.person2_id,
-      subtype: form.subtype || null,
-      notes: form.notes ?? '',
-    };
-    if (savedRelationshipId.value) {
-      rel = (await window.api.relationships.update(savedRelationshipId.value, payload)) as RelationshipData;
-    } else {
-      rel = (await window.api.relationships.create(payload)) as RelationshipData;
-      savedRelationshipId.value = rel.id;
-    }
+    const rel = await composableSave();
+    if (!rel) return;
     // Marriage offer — only after the relationship is persisted. If the
     // helper returns true we hold the `saved` emit until the user resolves
     // the offer (Yes records a wedding event; No / cancel just finishes).
