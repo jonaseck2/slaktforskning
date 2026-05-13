@@ -67,13 +67,9 @@ const KNOWN_FAM_TAGS = new Set([
 ]);
 
 // ── Phase 0: NOTE records ───────────────────────────────────────────────────
-
-export async function phaseNotes(ctx: ImportContext): Promise<void> {
-  for (const node of ctx.tree) {
-    if (node.tag !== 'NOTE' || !node.xref) continue;
-    ctx.noteMap.set(node.xref, node.value ?? '');
-  }
-}
+// phaseNotes lives in ./phases/notes and is re-exported here for callers that
+// still import from './phases'.
+export { phaseNotes } from './phases/notes';
 
 // ── Phase 0.3: pre-resolve places ──────────────────────────────────────────
 
