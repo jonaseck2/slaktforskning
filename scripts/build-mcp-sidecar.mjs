@@ -46,17 +46,17 @@ const bundlePath = path.join(distDir, 'server.cjs');
 // (pkg target triple, output suffix matching Tauri externalBin convention,
 // optional .exe suffix for Windows targets).
 const ALL_TARGETS = [
-  { pkg: 'node20-macos-arm64', suffix: 'aarch64-apple-darwin', ext: '' },
-  { pkg: 'node20-macos-x64', suffix: 'x86_64-apple-darwin', ext: '' },
-  { pkg: 'node20-win-x64', suffix: 'x86_64-pc-windows-msvc', ext: '.exe' },
-  { pkg: 'node20-linux-x64', suffix: 'x86_64-unknown-linux-gnu', ext: '' },
+  { pkg: 'node22-macos-arm64', suffix: 'aarch64-apple-darwin', ext: '' },
+  { pkg: 'node22-macos-x64', suffix: 'x86_64-apple-darwin', ext: '' },
+  { pkg: 'node22-win-x64', suffix: 'x86_64-pc-windows-msvc', ext: '.exe' },
+  { pkg: 'node22-linux-x64', suffix: 'x86_64-unknown-linux-gnu', ext: '' },
 ];
 
 function hostPkgTarget() {
   const a = process.arch === 'arm64' ? 'arm64' : 'x64';
-  if (process.platform === 'darwin') return `node20-macos-${a}`;
-  if (process.platform === 'win32') return `node20-win-${a}`;
-  if (process.platform === 'linux') return `node20-linux-${a}`;
+  if (process.platform === 'darwin') return `node22-macos-${a}`;
+  if (process.platform === 'win32') return `node22-win-${a}`;
+  if (process.platform === 'linux') return `node22-linux-${a}`;
   return null;
 }
 
@@ -115,7 +115,7 @@ async function main() {
     'src/mcp/server.ts',
     '--bundle',
     '--platform=node',
-    '--target=node20',
+    '--target=node22',
     '--format=cjs',
     `--outfile=${path.relative(repoRoot, bundlePath)}`,
     '--external:node-sqlite3-wasm',
@@ -133,7 +133,7 @@ async function main() {
     const finalOut = path.join(targetDir, `mcp-server-${t.suffix}${t.ext}`);
     console.log(`[build-mcp-sidecar] pkg → ${path.relative(repoRoot, finalOut)}`);
     // Explicit @yao-pkg/pkg — the legacy `pkg` (5.8.1) only knows up to
-    // node18 and rejects `node20-*` targets.
+    // node18 and rejects `node22-*` targets.
     await run('npx', [
       '@yao-pkg/pkg',
       bundlePath,

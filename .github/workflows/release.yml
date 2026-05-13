@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          # The MCP sidecar pkg targets (`node20-*`) bake Node 20 into the
+          # The MCP sidecar pkg targets (`node22-*`) bake Node 22 into the
           # produced binary. The host runner Node is independent — 22 LTS
           # is what @yao-pkg/pkg's fabricator supports.
           node-version: 22
