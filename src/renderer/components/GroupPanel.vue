@@ -116,13 +116,15 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete group -->
-      <div class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('groups.deleteGroupAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete group — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="props.groupId"
+        entity-type="group"
+        :entity-id="props.groupId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        @deleted="onDeleted"
+      />
     </template>
 
     <ConfirmModal
@@ -136,17 +138,6 @@
       @confirm="delLink.confirm"
     />
 
-    <!-- Delete group confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('groups.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('groups.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
   </EntityPanel>
 </template>
 
@@ -160,8 +151,7 @@ import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import EntityPanel from './EntityPanel.vue';
 import ConfirmModal from './ConfirmModal.vue';
-import AppButton from './ui/AppButton.vue';
-import IconTrash from './ui/IconTrash.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -280,28 +270,23 @@ const delLink = useDeleteConfirm<string>(async (linkId) => {
 function removeLink(linkId: string) { delLink.ask(linkId); }
 
 // ── Delete group ───────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.groups.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: member counts) and react to
+// @deleted with toast + close.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const name = group.value?.name ?? t('common.unknown');
-  return t('groups.deleteConfirmMessage', {
-    name,
+const dangerEntityLabel = computed(() => group.value?.name ?? t('common.unknown'));
+
+const deleteConfirmMessage = computed(() =>
+  t('groups.deleteConfirmMessage', {
+    name: dangerEntityLabel.value,
     members: personLinks.value.length + placeLinks.value.length + mediaLinks.value.length,
-  });
-});
+  }),
+);
 
-async function performDelete() {
-  if (!props.groupId) return;
-  try {
-    const name = group.value?.name ?? t('common.unknown');
-    await window.api.groups.delete(props.groupId);
-    showDeleteConfirm.value = false;
-    toast.success(t('groups.deletedToast', { name }));
-    emit('close');
-  } catch (err) {
-    console.error('[GroupPanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+function onDeleted() {
+  toast.success(t('groups.deletedToast', { name: dangerEntityLabel.value }));
+  emit('close');
 }
 </script>
 
