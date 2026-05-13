@@ -253,26 +253,17 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete media -->
-      <div v-if="!props.readonly" class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('media.deleteMediaAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete media — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="props.mediaId"
+        entity-type="media"
+        :entity-id="props.mediaId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        :readonly="props.readonly"
+        @deleted="onDeleted"
+      />
     </template>
-
-    <!-- Delete media confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('media.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('media.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
 
     <ConfirmModal
       :visible="delRegion.visible.value"
@@ -308,6 +299,7 @@ import SectionEmpty from './ui/SectionEmpty.vue';
 import PersonPicker from './PersonPicker.vue';
 import ConfirmModal from './ConfirmModal.vue';
 import EntityPanel from './EntityPanel.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import LinkedText from './LinkedText.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
@@ -647,31 +639,26 @@ function expandFaceTags() {
 }
 
 // ── Delete media ───────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.media.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: linked persons/places/events/tags)
+// and react to @deleted with toast + close.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const title = media.value?.title || t('media.untitled');
-  return t('media.deleteConfirmMessage', {
-    title,
+const dangerEntityLabel = computed(() => media.value?.title || t('media.untitled'));
+
+const deleteConfirmMessage = computed(() =>
+  t('media.deleteConfirmMessage', {
+    title: dangerEntityLabel.value,
     persons: linkedPersons.value.length,
     places: linkedPlaces.value.length,
     events: linkedEvents.value.length,
     tags: regions.value.length,
-  });
-});
+  }),
+);
 
-async function performDelete() {
-  if (!props.mediaId) return;
-  try {
-    const title = media.value?.title || t('media.untitled');
-    await window.api.media.delete(props.mediaId);
-    showDeleteConfirm.value = false;
-    toast.success(t('media.deletedToast', { title }));
-    emit('close');
-  } catch (err) {
-    console.error('[MediaPanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+function onDeleted() {
+  toast.success(t('media.deletedToast', { title: dangerEntityLabel.value }));
+  emit('close');
 }
 
 defineExpose({ reload, expandFaceTags });
