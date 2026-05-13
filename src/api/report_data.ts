@@ -21,6 +21,8 @@ export { getPlaceHistory } from './report_data/place-history';
 export type { PlaceHistory, PlaceEventRecord } from './report_data/place-history';
 export { getFamilyUnit } from './report_data/family-unit';
 export type { FamilyUnit, FamilyMember } from './report_data/family-unit';
+export { getAncestorTree } from './report_data/ancestor-tree';
+export type { AncestorNode } from './report_data/ancestor-tree';
 
 // ── Return types ──
 
@@ -33,17 +35,6 @@ export interface PersonSummary {
   groups: Group[];
   research_tasks: ResearchTask[];
 }
-
-export interface AncestorNode {
-  person: Person;
-  names: PersonName[];
-  birth_event: EventWithPlace | null;
-  death_event: EventWithPlace | null;
-  marriage_event: EventWithPlace | null;
-  father: AncestorNode | null;
-  mother: AncestorNode | null;
-}
-
 
 /**
  * Stable vocabulary for `TimelineEntry.relationship_label`.
@@ -386,67 +377,6 @@ export async function getPersonSummary(db: Database, personId: string): Promise<
 
   return { person, names, events, relationships, citations, groups, research_tasks };
 }
-
-/**
- * Returns a nested ancestor tree up to N generations.
- * Each node has person, names, birth/death/marriage events, and father/mother subtrees.
- */
-export async function getAncestorTree(db: Database, personId: string, generations: number = 4): Promise<AncestorNode | null> {
-  const person = await getPerson(db, personId);
-  if (!person) return null;
-
-  const names = await getPersonNames(db, personId);
-  const personEvents = await resolveEventsPlaces(db, await getEventsForPerson(db, personId));
-
-  // Find marriage event from couple relationships
-  let marriage_event: EventWithPlace | null = null;
-  const rels = await getRelationshipsOfPerson(db, personId);
-  for (const r of rels) {
-    if (r.type === 'couple') {
-      const relEvents = await resolveEventsPlaces(db, await getEventsForRelationship(db, r.id));
-      marriage_event = findEventByType(relEvents, 'marriage');
-      if (marriage_event) break;
-    }
-  }
-
-  const node: AncestorNode = {
-    person,
-    names,
-    birth_event: findEventByType(personEvents, 'birth'),
-    death_event: findEventByType(personEvents, 'death'),
-    marriage_event,
-    father: null,
-    mother: null,
-  };
-
-  if (generations <= 1) return node;
-
-  // Find parents via parent_child relationships
-  const parentChildRels = rels.filter(r => r.type === 'parent_child');
-  for (const r of parentChildRels) {
-    // person1_id = parent, person2_id = child convention: go up only when person is the child
-    const parentId = r.person2_id === personId ? r.person1_id : null;
-    if (!parentId) continue;
-
-    const parentPerson = await getPerson(db, parentId);
-    if (!parentPerson) continue;
-
-    if (parentPerson.sex === 'M' && !node.father) {
-      node.father = await getAncestorTree(db, parentId, generations - 1);
-    } else if (parentPerson.sex === 'F' && !node.mother) {
-      node.mother = await getAncestorTree(db, parentId, generations - 1);
-    } else if (!node.father) {
-      // Unknown sex — fill first available slot
-      node.father = await getAncestorTree(db, parentId, generations - 1);
-    } else if (!node.mother) {
-      node.mother = await getAncestorTree(db, parentId, generations - 1);
-    }
-  }
-
-  return node;
-}
-
-
 
 /**
  * Returns a merged chronological timeline of a person's events plus family events
