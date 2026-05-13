@@ -100,6 +100,21 @@ The rule:
 
 The Tauri full-port close-out merged 75 commits to local `main` and sat unpushed for the session. The decorative-CI-infrastructure failure mode (RC4 in the RCA) compounded with the never-pushed state to produce: zero verification ever ran against the merged state. Plan-driven work going forward should land via PR (which makes CI the right check); only "small fix" direct commits to main keep the local-green-before-push contract.
 
+## e2e is load-bearing verification; running it is part of every close-out (L7, RCA 2026-05-12)
+
+`npx playwright test` is part of the evidence captured at every plan close-out, paired with `npm test` and `npm run build`. Same enforcement shape as L6:
+
+- **For PRs:** CI runs the e2e suite as part of the build job's downstream (when feasible — the suite requires the packaged Tauri binary the build job already produces). CI catches it; the author iterates on red.
+- **For direct pushes to `main`:** the executor runs `npx playwright test` locally before push, captures the exit code + per-project pass counts, includes them in the close-out commit message.
+
+And: **a broken e2e suite blocks archive.** If `[boot]` or `[crud]` or `[duplicates]` or `[website-export]` is timing out or failing, the plan trying to archive owns either fixing it OR filing a separate plan that explicitly covers fixing it before close-out. "The e2e suite was already broken before my work" is not a pass — it adds a layer the next contributor has to peel back before *they* can verify, which is exactly the failure mode the Tauri full-port close-out's broken `[smoke]` project demonstrated. The expected evidence template for any plan-close-out close-out commit message:
+
+- `npm test` → `N passed (Xs)` (paste the summary line).
+- `npm run build` → `built in Xs` (paste the tail line + exit code).
+- `npx playwright test` → `4 passed (Xs)` across the 4 projects (`[boot]`, `[crud]`, `[website-export]`, `[duplicates]`) (paste the summary line).
+
+The 2026-05-12 RCA's recurring finding: the Playwright `[smoke]` project (later renamed `[boot]` per L3) was *exactly* the automated boot check that would have caught the `npm start` regression — but nobody ran it as part of close-out because the plan didn't name e2e as required evidence. Naming it here makes "I forgot to run the e2e suite" indistinguishable from "I didn't run the test suite" — both fail the close-out gate.
+
 ## Worked example
 
 This is what the panel-composables refactor should have opened with:

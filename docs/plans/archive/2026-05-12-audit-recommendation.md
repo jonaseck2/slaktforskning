@@ -1,6 +1,8 @@
 # Post-Tauri audit + execution roadmap
 
 > Not an implementation plan; a synthesis. Captures the full state of the codebase + the prompts/skills/rules infrastructure at the close of the 2026-05-12 session, recommends the order of execution for the seven outstanding plans, and surfaces three new issues uncovered by the audit that don't yet have plans. Written before context compaction so the recommendation survives the session boundary.
+>
+> **Status 2026-05-13:** All seven referenced plans are now archived (`skipped-tests-cleanup`, `gazetteer-lazy-chunks`, `e2e-test-repair`, the crate-rename plan shipped in 0.254.0, `vite-7-upgrade` plus follow-up `vite-8-upgrade`, `app-a11y-gaps`, `bulk-api-functions`). The new gaps A–C surfaced below are either resolved or rolled into the [2026-05-14 audit follow-up roadmap](../2026-05-14-audit-followup-roadmap.md). The 84-unpushed-commit concern documented under "Cross-cutting" is moot. This synthesis has served its purpose and is being archived alongside the RCA it accompanied.
 
 ## User goal
 

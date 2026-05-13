@@ -48,7 +48,7 @@ Other latent gaps from the audit that surfaced *during* this RCA's drafting (i.e
 |---|---|---|
 | 14 | `package.json` `version` is `0.253.1` but `src-tauri/Cargo.toml` is `0.1.0` and `tauri.conf.json` is `0.1.0` | RC2 |
 | 15 | `THIRD_PARTY_LICENSES.txt` claims Electron deps in the historical CHANGELOG entry — no Tauri Rust crate licenses are surfaced anywhere | RC1 |
-| 16 | `release.yml` (post-rename of `release-tauri.yml`) hasn't been audited for the same kind of stale references `ci.yml` had | RC4 |
+| 16 | `release.yml` (post-rename of `release-tauri.yml`) hasn't been audited for the same kind of stale references `ci.yml` had | RC4 — **AUDITED CLEAN 2026-05-13**: triggers on `main` (valid); cache key uses generic `cargo-tauri-release-*`; zero `tauri-spike` / `tauri-full-port` hits across `.github/`; repo URL matches `jonaseck2/slaktforskning` remote; Node 22 + Tauri-action v0 + webkit2gtk-4.1 + OS matrix all current |
 | 17 | **112 "skipped" unit tests in the suite summary.** All 112 come from `tests/unit/gedcom-fidelity-per-field.test.ts` — a generator that walks every `(table, column, gedcom-version)` triple and emits a check per cell; cells registered as `excluded` in `src/api/gedcom_fidelity_registry.ts` get reported as skipped with the registry's reason as the test name. By design, but it floods the suite output and masks any *real* future skip (someone `it.skip()`-ing a broken test to make CI green disappears in the pile). The design intent (one test per registry entry) is right; the rendering (as 112 `skipped` lines) is wrong. | RC4 |
 | 18 | **No e2e test was part of close-out verification.** The plan's verification §1 step 4 said "Cross-platform smoke ... 10 highest-traffic flows pass" but framed it as manual "smoke" (L3); the Playwright `[smoke]` project that *actually exists* and *would have caught the boot regression* was never invoked. Currently `npx playwright test` is broken on `main` (2 of the 4 projects time out) — meaning the suite that should have been the verification surface for the close-out is itself in disrepair, and nobody noticed because nobody ran it. | RC4 |
 
@@ -127,7 +127,7 @@ Stopped mid-Round-1 to write this. Pre-RCA in-flight work:
 
 - **Skipped-tests cleanup plan** ([`plans/2026-05-12-skipped-tests-cleanup.md`](2026-05-12-skipped-tests-cleanup.md)) — convert the 112 registry-excluded `it.skip(reason)` calls to passing assertions; restore the suite's `skipped` count as a meaningful signal. Adds a standing test that asserts the suite has zero static skips.
 - **e2e repair plan** ([`plans/2026-05-12-e2e-test-repair.md`](2026-05-12-e2e-test-repair.md)) — diagnose + fix the `executeJs: renderer script timed out` failures in the `[smoke]` and `[duplicates]` Playwright projects. Hypothesis: gazetteer-init burst pins the renderer past the fixture's executeJs timeout (RC3 cascade). Rename the `[smoke]` project to `[boot]` per L3.
-- Audit `release.yml` for the same class of stale references `ci.yml` had. Currently triggered only on tags; safer than `ci.yml` was but not verified.
+- ~~Audit `release.yml` for the same class of stale references `ci.yml` had.~~ **Done 2026-05-13** — see gap #16 inline note above. Workflow is clean.
 
 ## Lessons that change the standing rules
 
@@ -178,7 +178,7 @@ The rule: **`npx playwright test` is part of the evidence captured at every plan
 
 And: **a broken e2e suite blocks archive**. If `[smoke]` or `[duplicates]` or any other project is timing out, the plan that's trying to archive is responsible for fixing them (or filing a separate plan that explicitly covers fixing them) before close-out. "The e2e suite was broken before my work" is not a pass; if you archive over a broken e2e suite, you've added another layer that the next contributor has to peel back before *they* can verify.
 
-This rule lands in `.claude/rules/plans.md`'s "Verification discipline at close-out" section. The skipped-tests cleanup plan above is the precondition: without it, `npx playwright test` failing is hard to distinguish from `npm test`'s 112-skipped baseline noise.
+This rule lands in `.claude/rules/plans.md`'s "Verification discipline at close-out" section. The skipped-tests cleanup plan above is the precondition: without it, `npx playwright test` failing is hard to distinguish from `npm test`'s 112-skipped baseline noise. **Landed 2026-05-13** as a new section "e2e is load-bearing verification; running it is part of every close-out (L7, RCA 2026-05-12)" in `.claude/rules/plans.md`.
 
 ## Mitigation map: every gap class → the structural fix that closes it
 
