@@ -247,18 +247,9 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
 export { phaseRepo } from './phases/repo';
 
 // ── Phase 0.8: _GRP records (Genney only) ──────────────────────────────────
-
-export async function phaseGroups(ctx: ImportContext): Promise<void> {
-  if (!ctx.isGenney) return;
-  for (const node of ctx.tree) {
-    if (node.tag !== '_GRP' || !node.xref) continue;
-    const group = await createGroup(ctx.db, {
-      name: getChild(node, 'NAME')?.value ?? '',
-      notes: resolveNote(node, ctx.noteMap) || undefined,
-    });
-    ctx.grpMap.set(node.xref, group.id);
-  }
-}
+// phaseGroups lives in ./phases/groups and is re-exported here for callers
+// that still import from './phases'.
+export { phaseGroups } from './phases/groups';
 
 // ── Phase 1: SOUR records ──────────────────────────────────────────────────
 
