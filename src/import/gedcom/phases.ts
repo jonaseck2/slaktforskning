@@ -22,12 +22,11 @@ import { v4 as uuid } from 'uuid';
 import { basename } from 'path';
 import type { Relationship, RelationshipType, EventParticipantRole, PersonIdentifier } from '../../api/types';
 import { bulkCreatePersons, bulkAddPersonNames, bulkAddPersonIdentifiers } from '../../api/persons';
-import { createRelationship, updateRelationship, addEventParticipant, bulkAddEventParticipants, bulkCreateRelationships, getRelationshipsOfPerson } from '../../api/relationships';
-import { createSource, createCitation, bulkCreateSources, bulkCreateCitations } from '../../api/sources';
-import { createMedia, addMediaLink, bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
+import { createRelationship, addEventParticipant, bulkAddEventParticipants, bulkCreateRelationships, getRelationshipsOfPerson } from '../../api/relationships';
+import { createCitation, bulkCreateSources, bulkCreateCitations } from '../../api/sources';
+import { bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
 import { bulkCreateEvents } from '../../api/events';
 import { getPlace, bulkResolvePlaces } from '../../api/places';
-import type { Place } from '../../api/types';
 import { createRepository, linkSourceRepository } from '../../api/repositories';
 import { createGroup, addGroupLink } from '../../api/groups';
 import { createResearchTask, addTaskLink } from '../../api/research_tasks';
@@ -36,7 +35,7 @@ import { holgerEngaSubtype, parseHolgerAdoptionSubtypes } from './profiles/holge
 import type { ImportContext } from './import-types';
 import { getChild, getChildren, resolveNote } from './node-utils';
 import { importObjeNode, remapHolgerMediaPath } from './obje-importer';
-import { importEventNode, collectEventNode } from './event-importer';
+import { collectEventNode } from './event-importer';
 import type { EventCollectResult } from './event-importer';
 
 // ── Tag maps ────────────────────────────────────────────────────────────────

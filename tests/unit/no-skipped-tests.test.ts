@@ -78,7 +78,10 @@ describe('no-skipped-tests guard', () => {
 
     const offenders: string[] = [];
     for (const file of files) {
-      const rel = relative(TESTS_DIR, file);
+      // Normalize to forward slashes so the allowlist (which uses POSIX-
+      // style paths) matches on Windows where `relative()` returns
+      // backslash-separated paths.
+      const rel = relative(TESTS_DIR, file).replace(/\\/g, '/');
       if (ALLOWLIST_FILES.has(rel)) continue;
       const content = readFileSync(file, 'utf8');
       for (const { pattern, label } of FORBIDDEN_PATTERNS) {

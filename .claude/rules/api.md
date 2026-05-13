@@ -132,6 +132,47 @@ try {
 
 Same shape both backends: under Electron / node-sqlite3-wasm, `runBatch` falls back to a sync per-row loop (the IPC cost it avoids doesn't exist there) but the API surface is identical so importer code stays single-sourced. Per-row `await stmt.run(...)` is reserved for one-shot writes — the bulk db_settings update, the per-form-submit insert, etc. Audit any new `for (const row of rows) await stmt.run(...)` loop against this rule. The mechanical regression check is `tests/unit/import-batching.test.ts`, which runs the Genney importer through the Tauri shim and asserts `db_run` calls stay in the small-constant range while `db_batch_run` covers the bulk inserts — if you add a new per-row loop and that test stays green, the loop wasn't on a hot path; if it turns red, you reverted batching and need to use `runBatch`.
 
+### Bulk api/ functions for the importer hot paths
+
+The GEDCOM/Holger importer goes through `src/api/` rather than raw `stmt.run`, so the `runBatch` wrapper above isn't enough on its own — the api/ surface needs bulk siblings. Current set (use these from any importer collect+flush loop):
+
+- `bulkCreatePersons`, `bulkAddPersonNames`, `bulkAddPersonIdentifiers` (persons.ts)
+- `bulkCreateMedia`, `bulkAddMediaLinks` (media.ts)
+- `bulkCreateSources`, `bulkCreateCitations` (sources.ts)
+- `bulkCreateEvents` (events.ts)
+- `bulkCreateRelationships`, `bulkAddEventParticipants` (relationships.ts)
+- `bulkResolvePlaces` (places.ts) — different shape: SELECT existing + bulk INSERT missing, returns `Map<normalizedName, Place>` for the importer's `resolvePlaceFn` Map.get path
+
+**Contract for new bulk variants:**
+
+- **Return `Promise<string[]>` of assigned ids** (caller-supplied or generated), not full row objects. The post-INSERT `SELECT * WHERE id IN (?, ?, ...)` readback pattern was tried and rejected — for 66k events the IN clause blows past `SQLITE_MAX_VARIABLE_NUMBER` (32766 on modern builds) and the import fails with "too many SQL variables". The caller already has the ids; tests that need the full row shape query the DB themselves.
+- **Accept caller-supplied `id`** so the importer can collect downstream rows (citations, participants, media links) that reference these ids before the flush runs.
+- **Empty-input check up front** — `if (rows.length === 0) return [];` — every bulk function has bulk-shaped callers that may legitimately pass an empty array.
+- **Use `runBatch`** for the actual INSERT; one prepared statement, N execute calls under one mutex hold.
+
+**The collect-then-flush pattern in phases.ts:**
+
+```typescript
+// Buffer everything as you walk the tree
+const eventRows: EventCollectResult['eventRow'][] = [];
+const citationRows: ...[] = [];
+const participantRows: ...[] = [];
+for (const indi of indiNodes) {
+  for (const evNode of getChildren(indi, 'BIRT')) {
+    const collected = await collectEventNode(...);  // returns specs, no IPC
+    eventRows.push(collected.eventRow);
+    citationRows.push(...collected.citationRows);
+    participantRows.push({ event_id: collected.eventRow.id, person_id, role: 'primary' });
+  }
+}
+// Flush in FK topo order at end of pass
+await bulkCreateEvents(db, eventRows);
+await bulkCreateCitations(db, citationRows);
+await bulkAddEventParticipants(db, participantRows);
+```
+
+`collectEventNode` (event-importer.ts) is the canonical "return specs with pre-allocated UUIDs, zero IPC for row inserts" pattern. New per-row-IPC paths in the importer should be migrated to this shape rather than left as singular `createX` calls.
+
 ## Worker-thread sync I/O — mandatory rules
 
 The DB worker is a **single thread** that serves every DB-touching IPC channel. Any synchronous I/O call inside a worker handler pins the worker for that call's full duration, queuing every other handler behind it. With media in the DB and a list view mounted, this turns the renderer into a slideshow inside a second.

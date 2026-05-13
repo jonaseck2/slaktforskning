@@ -84,6 +84,10 @@ describe('npm scripts smoke', () => {
         encoding: 'utf8',
         // Inherit env so PATH / NODE_OPTIONS / CARGO_HOME etc. work.
         env: process.env,
+        // Windows: `npm` is a `.cmd` shim — spawnSync can't resolve it
+        // without going through the shell. POSIX hosts find `npm` on PATH
+        // either way; setting shell: true there is a no-op cost.
+        shell: process.platform === 'win32',
       });
       if (result.status !== 0) {
         // Surface stderr in the failure so the next person reading the

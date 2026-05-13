@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: Windows test + e2e cleanup — npm-script tests now use `shell: true` for spawnSync; e2e teardown retries DB unlink to ride out Windows file-handle release; build:e2e uses `--no-bundle` instead of macOS-only `--bundles app`
 - perf: Holger / GEDCOM imports now finish in seconds — bulk batching on every per-row write path
 - feat: progress toast shows (N of M) for every slow phase; bar never sits indeterminate
 - feat: npm run build:portable zips a self-contained distribution; family.db lives next to the exe

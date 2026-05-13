@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.257.1",
+  "version": "0.257.2",
   "description": "A genealogy desktop application",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "pretest:e2e": "npm run build:e2e",
     "test:e2e": "playwright test",
     "prebuild:e2e": "npm run build:static",
-    "build:e2e": "tauri build --bundles app",
+    "build:e2e": "tauri build --no-bundle",
     "build:static": "vite build --config vite.static.config.ts",
     "dev:static": "vite --config vite.static.config.ts",
     "build:third-party-licenses": "node scripts/build-third-party-licenses.mjs",

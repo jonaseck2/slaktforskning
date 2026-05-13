@@ -282,9 +282,21 @@ export async function teardownApp(instance: AppInstance | undefined): Promise<vo
   if (!instance) return;
   const { proc, dbPath } = instance;
   await killProcessGroup(proc);
-  fs.rmSync(dbPath, { force: true });
+  // Windows holds an exclusive handle on the SQLite file briefly after the
+  // app process exits — even with TerminateProcess, the kernel hasn't
+  // released the file mapping by the time rmSync runs. Retry a handful of
+  // times with a short backoff so a transient EPERM doesn't fail the test.
+  // The unlink is cleanup, not test logic; never throw out of teardown.
+  const tryRmSync = (target: string, opts: fs.RmOptions = {}): boolean => {
+    try { fs.rmSync(target, { force: true, ...opts }); return true; }
+    catch { return false; }
+  };
+  for (let i = 0; i < 10; i++) {
+    if (tryRmSync(dbPath)) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
   // Also clean up stale lock dirs left by node-sqlite3-wasm
-  try { fs.rmSync(dbPath + '.lock', { force: true, recursive: true }); } catch { /* ok */ }
+  tryRmSync(dbPath + '.lock', { recursive: true });
 }
 
 // ---------------------------------------------------------------------------
