@@ -11,7 +11,7 @@ import {
   mergeMedia,
   ignoreDuplicateMedia,
   deleteIgnoredDuplicatesForMedia,
-} from '../../src/api/duplicates';
+} from '../../src/api/duplicates/media';
 import {
   createMedia,
   getMedia,
@@ -536,7 +536,7 @@ describe('FK self-check — every media.id reference must be handled by mergeMed
 
   const repoRoot = join(__dirname, '..', '..');
   const schema = readFileSync(join(repoRoot, 'src/api/schema.ts'), 'utf8');
-  const merge = readFileSync(join(repoRoot, 'src/api/duplicates.ts'), 'utf8');
+  const merge = readFileSync(join(repoRoot, 'src/api/duplicates/media.ts'), 'utf8');
 
   it('schema references to media.id we expect to find', () => {
     const fkRefs = extractFkReferencesToMedia(schema);

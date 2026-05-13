@@ -1,44 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
-import { queryAll, queryOne, runSql, runSqlChanges } from './db';
-import { undoManager } from './undo';
-import type { Media } from './types';
-import { levenshtein } from './duplicates/shared';
-
-// Person dedup lives in src/api/duplicates/persons.ts.
-export {
-  type DuplicateCandidate,
-  findDuplicates,
-  findDuplicatesPage,
-  countDuplicates,
-  ignoreDuplicate,
-  mergePersons,
-} from './duplicates/persons';
-
-// Place dedup lives in src/api/duplicates/places.ts.
-export {
-  type DuplicatePlaceCandidate,
-  findDuplicatePlaces,
-  countDuplicatePlaces,
-  ignoreDuplicatePlace,
-  mergePlaces,
-  deleteIgnoredDuplicatesForPlace,
-} from './duplicates/places';
-
-// Source dedup lives in src/api/duplicates/sources.ts.
-export {
-  type DuplicateSourceCandidate,
-  findDuplicateSources,
-  countDuplicateSources,
-  ignoreDuplicateSource,
-  mergeSources,
-  deleteIgnoredDuplicatesForSource,
-} from './duplicates/sources';
-
-// Shared dedup helpers (Levenshtein etc.) live in src/api/duplicates/shared.ts.
-export { levenshtein } from './duplicates/shared';
-
+import { queryAll, queryOne, runSql, runSqlChanges } from '../db';
+import { undoManager } from '../undo';
+import type { Media } from '../types';
+import { levenshtein } from './shared';
 
 // ---------------------------------------------------------------------------
 // Media duplicate find + merge
