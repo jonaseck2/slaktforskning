@@ -1,18 +1,25 @@
 import { defineConfig } from '@playwright/test';
 
 /**
- * E2E config — lean by design.
+ * E2E config — two tiers.
  *
- * What e2e covers (and only this):
- *   • app boot + Vue mount (boot)
- *   • MCP prod + dev server stdio handshake
- *   • renderer → preload → main → worker → SQLite IPC round-trip (CRUD)
- *   • website export filesystem round-trip
+ * Tier 1 (CI, `npm run test:e2e`):
+ *   • boot              — app boot + Vue mount + MCP stdio handshake
+ *   • crud              — renderer → preload → main → worker → SQLite IPC round-trip
+ *   • website-export    — website export filesystem round-trip
+ *   • duplicates        — duplicates + merge round-trip
  *
- * Everything else (UI state, filtering, status cycling, search, charts,
- * theming, modals, validation) is covered by tests/unit/ and tests/components/.
+ * Tier 2 (local + nightly once OSS, `npm run test:e2e:full`):
+ *   • panels            — Surface Contract checks across every *Panel.vue
+ *   • reactivity        — cross-view refresh (left list + center view + right panel)
+ *   • imports           — importer regression coverage (GEDCOM, Holger, Genney, …)
  *
- * Tests run against the packaged binary built by `npm run package`.
+ * Tier 1 (boot/crud/website-export/duplicates) runs in CI; Tier 2
+ * (panels/reactivity/imports) is `npm run test:e2e:full` only — it stays out of
+ * PR CI until this repo has free OSS build minutes, at which point it gets
+ * wired to a nightly workflow.
+ *
+ * Tests run against the packaged binary built by `npm run build:e2e`.
  * The pretest:e2e script handles this automatically.
  */
 export default defineConfig({
@@ -46,6 +53,24 @@ export default defineConfig({
       name: 'duplicates',
       testMatch: 'duplicates.spec.ts',
       timeout: 60_000,
+      retries: 1,
+    },
+    {
+      name: 'panels',
+      testMatch: 'panel-surface.spec.ts',
+      timeout: 60_000,
+      retries: 1,
+    },
+    {
+      name: 'reactivity',
+      testMatch: 'reactivity.spec.ts',
+      timeout: 60_000,
+      retries: 1,
+    },
+    {
+      name: 'imports',
+      testMatch: 'imports.spec.ts',
+      timeout: 120_000,
       retries: 1,
     },
   ],
