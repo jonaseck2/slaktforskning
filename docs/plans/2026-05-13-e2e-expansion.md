@@ -74,44 +74,53 @@ Verification §1 is observed at PR open (CI). §2–5 are observed at close-out 
 
 ### Steps
 
-- [ ] **0.1 — Honour `SLAKTFORSKNING_HEADLESS=1` in Rust.** Find the `tauri::Builder::default()` setup in [src-tauri/src/lib.rs](../../src-tauri/src/lib.rs). The main window is built somewhere in `.setup(|app| { ... })` (or auto-built from `tauri.conf.json::windows[]`). Locate the window creation; wrap it with:
+- [ ] **0.1 — Honour `SLAKTFORSKNING_HEADLESS=1` in Rust.** The main window is auto-built from [src-tauri/tauri.conf.json](../../src-tauri/tauri.conf.json)'s `app.windows[]` (verified at plan authoring: `lib.rs::run()` does NOT call `WebviewWindowBuilder::new` for the main window; only `open_new_window` at lib.rs:665 uses it for File → New Window). Two options for headless:
+
+  **Option A (chosen — least invasive): hide the auto-built window in `.setup()`.** In [src-tauri/src/lib.rs](../../src-tauri/src/lib.rs)'s `.setup(|app| { ... })` block (around lib.rs:739, after `ui_server::spawn(...)`), add:
 
 ```rust
 let headless = std::env::var("SLAKTFORSKNING_HEADLESS").as_deref() == Ok("1");
-
-// Build the main window programmatically when headless, so we can apply .visible(false).
-// (Or: read tauri.conf.json's windows[] config, but flip the visible flag.)
-let mut window_builder = tauri::WebviewWindowBuilder::new(
-    app,
-    "main",
-    tauri::WebviewUrl::App("index.html".into()),
-)
-.title("Släktforskning")
-.inner_size(1280.0, 800.0);
-
 if headless {
-    window_builder = window_builder.visible(false);
-    #[cfg(target_os = "windows")]
-    {
-        window_builder = window_builder.skip_taskbar(true);
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.hide();
+        #[cfg(target_os = "windows")]
+        let _ = win.set_skip_taskbar(true);
     }
-}
-
-let _window = window_builder.build()?;
-
-#[cfg(target_os = "macos")]
-if headless {
-    use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy};
-    unsafe {
-        let app: cocoa::base::id = NSApp();
-        app.setActivationPolicy_(NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory);
+    #[cfg(target_os = "macos")]
+    {
+        // Suppress Dock icon + menu bar takeover + Cmd+Tab entry.
+        // Use objc2 (already a Tauri 2 transitive dep) instead of the older `cocoa` crate.
+        use objc2::msg_send;
+        use objc2::runtime::AnyObject;
+        unsafe {
+            let cls = objc2::runtime::AnyClass::get(c"NSApplication").unwrap();
+            let app: *mut AnyObject = msg_send![cls, sharedApplication];
+            // NSApplicationActivationPolicyAccessory = 1
+            let _: () = msg_send![app, setActivationPolicy: 1_isize];
+        }
     }
 }
 ```
 
-The `cocoa` crate is already a transitive dep of Tauri on macOS; if not directly available, add `cocoa = "0.25"` to `[target.'cfg(target_os = "macos")'.dependencies]` in [src-tauri/Cargo.toml](../../src-tauri/Cargo.toml).
+The `Manager` trait (for `app.get_webview_window`) is already in scope in lib.rs (verified). `objc2` is a Tauri-2 transitive dep on macOS.
 
-The window in `tauri.conf.json` may already be auto-built. If so, change the config to `"windows": []` so Rust owns the window construction entirely — otherwise Tauri builds a visible window first and we'd be too late.
+**If `objc2` import path doesn't resolve** at build time, add to `[target.'cfg(target_os = "macos")'.dependencies]` in [src-tauri/Cargo.toml](../../src-tauri/Cargo.toml):
+
+```toml
+objc2 = "0.5"
+objc2-app-kit = { version = "0.2", features = ["NSApplication"] }
+```
+
+Then use the typed binding instead:
+
+```rust
+use objc2_app_kit::{NSApp, NSApplicationActivationPolicy};
+unsafe {
+    NSApp().setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+}
+```
+
+**Option B (fallback if A doesn't suppress focus theft on macOS):** programmatically rebuild the window. Set `tauri.conf.json::app.windows = []` (empty), then construct the main window in `.setup()` via `WebviewWindowBuilder::new(app, "main", WebviewUrl::default()).title("Släktforskning").inner_size(1280.0, 800.0).visible(!headless).build()?`. Combine with the macOS activation-policy block above. **Document in the commit message which option ended up shipping and why.**
 
 - [ ] **0.2 — Compile and verify headless locally.** Build the binary in release mode (matches what e2e uses):
 
