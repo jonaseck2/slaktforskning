@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Database } from 'node-sqlite3-wasm';
-import { findDuplicates, countDuplicates, mergePersons, ignoreDuplicate } from '../../src/api/duplicates';
+import { findDuplicates, countDuplicates, mergePersons, ignoreDuplicate } from '../../src/api/duplicates/persons';
 import { initializeSchema } from '../../src/api/schema';
 import { queryAll, queryOne, runSql } from '../../src/api/db';
 import { deletePerson } from '../../src/api/persons';
