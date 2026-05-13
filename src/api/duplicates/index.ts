@@ -1,4 +1,5 @@
 export * from './persons';
 export * from './places';
+export * from './sources';
 export * from './shared';
-// Other entity exports added in Tasks 4-5
+// Media exports added in Task 5

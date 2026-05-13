@@ -7,7 +7,7 @@ import {
   countDuplicateSources,
   mergeSources,
   ignoreDuplicateSource,
-} from '../../src/api/duplicates';
+} from '../../src/api/duplicates/sources';
 import {
   createSource,
   getSource,
@@ -359,7 +359,7 @@ describe('FK self-check — every sources.id reference must be handled by mergeS
 
   const repoRoot = join(__dirname, '..', '..');
   const schema = readFileSync(join(repoRoot, 'src/api/schema.ts'), 'utf8');
-  const merge = readFileSync(join(repoRoot, 'src/api/duplicates.ts'), 'utf8');
+  const merge = readFileSync(join(repoRoot, 'src/api/duplicates/sources.ts'), 'utf8');
 
   it('schema references to sources.id we expect to find', () => {
     const fkRefs = extractFkReferencesToSources(schema);
