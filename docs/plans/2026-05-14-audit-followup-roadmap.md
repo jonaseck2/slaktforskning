@@ -124,7 +124,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 **Effort:** 3 days (Phase 1 only).
 **Plan file:** [2026-05-14-chart-layout-property-tests-design.md](2026-05-14-chart-layout-property-tests-design.md).
 
-### 3.3 GEDCOM phases encapsulation (`src/import/gedcom/phases.ts`)
+### 3.3 GEDCOM phases encapsulation — **DONE**, archived
 
 **User goal:** Each of the 14 import phases (verified count — NOTE maps → INDI → FAM → ASSO → PLAC → research tasks etc.) is independently editable. A single phase break doesn't cascade through all 14 phases' test coverage.
 
