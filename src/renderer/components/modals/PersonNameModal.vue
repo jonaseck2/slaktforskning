@@ -4,7 +4,7 @@
     :title="displayTitle"
     :save-label="editingName ? $t('common.save') : $t('common.create')"
     :mode="mode"
-    :save-disabled="!validation.ok"
+    :save-disabled="!canSave || saving"
     @cancel="$emit('cancel')"
     @save="onSaveAttempt"
     @close="$emit('close')"
@@ -239,15 +239,18 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, watch, nextTick, onMounted, useId } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, useId } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import LinkedText from '../LinkedText.vue';
+import { usePersonNameForm } from '../../composables/usePersonNameForm';
+import { usePersonNameValidation } from '../../composables/usePersonNameValidation';
+import { usePersonNameSave } from '../../composables/usePersonNameSave';
 import { NAME_TYPE_VALUES } from '../../constants/eventTypes';
-import { parseAsteriskNotation, pickDisplayedName } from '../../utils/nameUtils';
+import { pickDisplayedName } from '../../utils/nameUtils';
 import type { NameRow } from '../PersonNamesTable.vue';
 
 declare const window: Window & {
@@ -285,33 +288,13 @@ const sortedNameTypes = computed(() => {
 const givenNameRef = ref<HTMLInputElement | null>(null);
 const surnameRef = ref<HTMLInputElement | null>(null);
 
-const form = reactive({
-  given_name: '',
-  surname: '',
-  name_type: 'married' as string,
-  name_prefix: '',
-  name_suffix: '',
-  name_qualifier: '',
-  patronymic_base: '',
-  preferred_name: '',
-  nickname: '',
-  date_from: '',
-  date_to: '',
+// ── Form state (via usePersonNameForm composable) ─────────────────────────
+const { form } = usePersonNameForm({
+  editingName: props.editingName,
+  defaultGivenName: props.defaultGivenName,
+  defaultSurname: props.defaultSurname,
+  editingNameSource: () => props.editingName,
 });
-
-watch(() => props.editingName, (n) => {
-  form.given_name = n?.given_name ?? (props.defaultGivenName || '');
-  form.surname = n?.surname ?? (props.defaultSurname || '');
-  form.name_type = n?.name_type ?? 'married';
-  form.name_prefix = n?.name_prefix ?? '';
-  form.name_suffix = n?.name_suffix ?? '';
-  form.name_qualifier = n?.name_qualifier ?? '';
-  form.patronymic_base = n?.patronymic_base ?? '';
-  form.preferred_name = n?.preferred_name ?? '';
-  form.nickname = n?.nickname ?? '';
-  form.date_from = n?.date_from ?? '';
-  form.date_to = n?.date_to ?? '';
-}, { immediate: true });
 
 // ── Prefill given_name + surname from the most-recent existing name ──────
 //
@@ -323,11 +306,6 @@ watch(() => props.editingName, (n) => {
 // PRIME DIRECTIVE: this is a *suggestion*, never persisted on its own. The
 // save handler writes exactly what's in the form fields when the user
 // presses Save (or Cancel writes nothing).
-//
-// Uses pickDisplayedName so prefill matches what the user sees on the
-// person panel. Skipped in edit mode (the watch above already hydrated
-// from props.editingName) and skipped if the caller already supplied
-// defaultGivenName.
 async function prefillFromCurrentName() {
   if (props.editingName) return;
   if (form.given_name || form.surname) return; // already has values (caller-supplied or user-typed)
@@ -398,7 +376,9 @@ async function loadPersonName() {
   } catch { /* ignore */ }
 }
 
-// ---- Citation flow (mirrors EventModal) ---------------------------------
+// ---- Citation flow (kept inline; uses citations.forPersonName, not the
+// EventModal-shaped citations.forEvent — distinct IPC channels make the
+// generalized composable not a fit yet) -----------------------------------
 //
 // `savedNameId` is the id of the persisted person_names row the citation
 // attaches to. In edit mode it's set immediately from props; in add mode
@@ -536,28 +516,8 @@ async function deleteCitation(id: string) {
   } catch { /* ignore */ }
 }
 
-// ── Validation + Save-button discipline ─────────────────────────────────
-//
-// User goal: the Save button is never a lie. If the form is invalid, Save
-// shows greyed-out (disabled). If the user reaches Save anyway (screen
-// reader, keyboard), the modal flashes the offending field, focuses it,
-// and surfaces an immediate, specific reason via toast.
-//
-// Constraint: at least one of given_name OR surname must be non-empty.
-// Mononyms exist; the importer/MCP audit (2026-05-04) explicitly preserves
-// "given only" and "surname only" as legitimate authored shapes.
-const validation = computed<{ ok: boolean; firstFailReason: string; firstFailField: 'given_name' | 'surname' | null }>(() => {
-  const g = form.given_name.trim();
-  const s = form.surname.trim();
-  if (g.length === 0 && s.length === 0) {
-    return {
-      ok: false,
-      firstFailReason: t('personName.givenOrSurnameRequired'),
-      firstFailField: 'given_name',
-    };
-  }
-  return { ok: true, firstFailReason: '', firstFailField: null };
-});
+// ── Validation (via usePersonNameValidation composable) ───────────────────
+const { validation, canSave } = usePersonNameValidation(form);
 
 const givenNameRequired = computed(() => !validation.value.ok);
 const surnameRequired = computed(() => !validation.value.ok);
@@ -575,6 +535,29 @@ function flashField(field: 'given_name' | 'surname') {
   el?.focus();
 }
 
+// ── Save orchestration (via usePersonNameSave composable) ─────────────────
+const { save: composableSave, saving } = usePersonNameSave({
+  form,
+  pendingCitations: pendingCitations as unknown as Parameters<typeof usePersonNameSave>[0]['pendingCitations'],
+  savedNameIdRef: savedNameId,
+  personId: props.personId,
+  isEdit: () => !!props.editingName,
+  canSave,
+  emit: (name) => {
+    if (name === 'saved') emit('saved');
+    else if (name === 'close') emit('close');
+  },
+});
+
+async function handleSave() {
+  try {
+    await composableSave();
+  } catch (err) {
+    console.error('[PersonNameModal] save failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
 // BaseSubPanel applies `:disabled` to the save button, so a normal mouse
 // click on a disabled button never reaches us. Keyboard / screen-reader
 // users CAN dispatch click events on `aria-disabled` buttons; this handler
@@ -583,66 +566,12 @@ function onSaveAttempt() {
   if (!validation.value.ok) {
     const field = validation.value.firstFailField;
     if (field) flashField(field);
-    toast.error(validation.value.firstFailReason);
+    // The composable returns i18n keys; the modal translates here so the
+    // composable stays test-friendly without an i18n provider.
+    toast.error(t(validation.value.firstFailReason));
     return;
   }
   void handleSave();
-}
-
-async function handleSave() {
-  if (!validation.value.ok) {
-    // Defence-in-depth — the @save handler is now onSaveAttempt, but if
-    // some other path calls handleSave directly we still refuse.
-    return;
-  }
-  try {
-    const { given_name: parsedGiven, preferred_name: parsedPreferred } = parseAsteriskNotation(form.given_name);
-    const resolvedPreferred = form.preferred_name || parsedPreferred || null;
-    // PRIME DIRECTIVE: build the payload from form values exactly as authored.
-    // `date_to` is included unconditionally — even when the field is hidden
-    // (birth, name_change) — because the form value reflects whatever the
-    // user (or import) authored before, and a UI-mode change is not consent
-    // to null it.
-    const payload = {
-      given_name: parsedGiven,
-      surname: form.surname || null,
-      name_type: form.name_type as 'birth' | 'married' | 'alias' | 'aka',
-      name_prefix: form.name_prefix || null,
-      name_suffix: form.name_suffix || null,
-      name_qualifier: form.name_qualifier || null,
-      patronymic_base: form.patronymic_base || null,
-      preferred_name: resolvedPreferred,
-      nickname: form.nickname || null,
-      date_from: form.date_from || null,
-      date_to: form.date_to || null,
-    };
-    if (props.editingName) {
-      await window.api.persons.updateName(props.editingName.id, payload);
-    } else {
-      const created = (await window.api.persons.addName(props.personId, payload)) as { id: string } | null;
-      if (created?.id) {
-        savedNameId.value = created.id;
-        // Persist any citations the user added before the name row existed.
-        for (const pc of pendingCitations.value) {
-          await window.api.citations.create({
-            source_id: pc.source_id,
-            page: pc.page,
-            confidence: pc.confidence,
-            transcription: pc.transcription,
-            notes: pc.notes,
-            date_accessed: pc.date_accessed,
-            person_name_id: created.id,
-          });
-        }
-        pendingCitations.value = [];
-      }
-    }
-    emit('saved');
-    emit('close');
-  } catch (err) {
-    console.error('[PersonNameModal] save failed:', err);
-    toast.error(t('errors.saveFailed'));
-  }
 }
 
 onMounted(async () => {
