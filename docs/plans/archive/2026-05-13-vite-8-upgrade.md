@@ -83,7 +83,8 @@ This is **not** a cosmetic version bump. Per the [Vite 8 migration guide](https:
 
 ## Self-review checklist
 
-- [ ] §1–§7 evidence captured in commit / PR description
-- [ ] No collateral changes (no "while I was here" refactors)
-- [ ] CHANGELOG `## Unreleased` entry added
-- [ ] No new `[smoke]` references introduced
+- [x] §1–§7 evidence captured in commit / PR description (close-out commit + plan Verification section above)
+- [x] No collateral changes — the one sibling commit is a pre-existing `main`-bug (e2e fixture rot from ca50d226 + 390d3fc0) that blocked close-out evidence, scoped and committed separately
+- [x] CHANGELOG `## Unreleased` entry added
+- [x] No new `[smoke]` references introduced
+- [x] Tasks #1–#7 all completed; merged to local `main` 2026-05-13 (commits 47badff0 → 64a1c3f6)
