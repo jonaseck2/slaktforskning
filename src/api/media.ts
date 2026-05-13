@@ -55,7 +55,7 @@ export async function bulkCreateMedia(
     is_printable?: boolean;
     is_missing?: boolean;
   }>,
-): Promise<Media[]> {
+): Promise<string[]> {
   if (rows.length === 0) return [];
   const ids: string[] = new Array(rows.length);
   const params: unknown[][] = new Array(rows.length);
@@ -78,10 +78,7 @@ export async function bulkCreateMedia(
     'INSERT INTO media (id, file_ref, title, format, notes, is_printable, is_missing) VALUES (?, ?, ?, ?, ?, ?, ?)',
     params,
   );
-  const placeholders = ids.map(() => '?').join(',');
-  const back = await queryAll<Media>(db, `SELECT * FROM media WHERE id IN (${placeholders})`, ids);
-  const byId = new Map(back.map((m) => [m.id, m]));
-  return ids.map((id) => byId.get(id)!);
+  return ids;
 }
 
 export async function getMedia(db: Database, id: string): Promise<Media | null> {

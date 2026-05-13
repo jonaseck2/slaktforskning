@@ -22,6 +22,47 @@ export async function createRelationship(
   return (await getRelationship(db, id))!;
 }
 
+/**
+ * Bulk-insert relationships rows. One batched INSERT for N rows — used by
+ * the GEDCOM importer's phaseFamilies for couple + parent_child rows.
+ * Caller may supply `id`; otherwise a v4 UUID is generated. Caller MUST
+ * supply `id` when downstream code references it before the flush.
+ */
+export async function bulkCreateRelationships(
+  db: Database,
+  rows: Array<{
+    id?: string;
+    type: RelationshipType;
+    person1_id?: string | null;
+    person2_id?: string | null;
+    subtype?: string | null;
+    notes?: string;
+  }>,
+): Promise<string[]> {
+  if (rows.length === 0) return [];
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    params[i] = [
+      id,
+      r.type,
+      r.person1_id ?? null,
+      r.person2_id ?? null,
+      r.subtype ?? null,
+      r.notes ?? '',
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO relationships (id, type, person1_id, person2_id, subtype, notes) VALUES (?, ?, ?, ?, ?, ?)',
+    params,
+  );
+  return ids;
+}
+
 export async function getRelationship(db: Database, id: string): Promise<Relationship | null> {
   return (await queryOne<Relationship>(db, `SELECT * FROM relationships WHERE id = ?`, [id])) ?? null;
 }

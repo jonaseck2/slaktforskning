@@ -43,7 +43,7 @@ export async function createSource(
 export async function bulkCreateSources(
   db: Database,
   rows: Array<Partial<Omit<Source, 'created_at' | 'updated_at'>>>,
-): Promise<Source[]> {
+): Promise<string[]> {
   if (rows.length === 0) return [];
   const ids: string[] = new Array(rows.length);
   const params: unknown[][] = new Array(rows.length);
@@ -68,10 +68,7 @@ export async function bulkCreateSources(
     'INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     params,
   );
-  const placeholders = ids.map(() => '?').join(',');
-  const back = await queryAll<Source>(db, `SELECT * FROM sources WHERE id IN (${placeholders})`, ids);
-  const byId = new Map(back.map((s) => [s.id, s]));
-  return ids.map((id) => byId.get(id)!);
+  return ids;
 }
 
 export async function getSource(db: Database, id: string): Promise<Source | null> {
@@ -184,6 +181,53 @@ export async function createCitation(
     data.relationship_id ?? null, data.place_id ?? null, data.person_name_id ?? null
   ]);
   return (await getCitation(db, id))!;
+}
+
+/**
+ * Bulk-insert citations rows. One batched INSERT for N rows — used by the
+ * GEDCOM importer to collapse per-event / per-name / per-person SOUR loop
+ * IPC into one call.
+ */
+export async function bulkCreateCitations(
+  db: Database,
+  rows: Array<{
+    source_id: string;
+    event_id?: string | null;
+    person_id?: string | null;
+    relationship_id?: string | null;
+    place_id?: string | null;
+    person_name_id?: string | null;
+    page?: string;
+    confidence?: number;
+    transcription?: string;
+    notes?: string;
+    date_accessed?: string;
+  }>,
+): Promise<void> {
+  if (rows.length === 0) return;
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    params[i] = [
+      uuid(),
+      r.source_id,
+      r.page ?? '',
+      r.date_accessed ?? '',
+      r.confidence ?? 0,
+      r.transcription ?? '',
+      r.notes ?? '',
+      r.event_id ?? null,
+      r.person_id ?? null,
+      r.relationship_id ?? null,
+      r.place_id ?? null,
+      r.person_name_id ?? null,
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    params,
+  );
 }
 
 export async function getCitation(db: Database, id: string): Promise<Citation | null> {

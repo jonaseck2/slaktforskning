@@ -21,8 +21,8 @@
       mode="standalone"
       hide-save
       :cancel-label="$t('common.close')"
-      @cancel="showImportReport = false"
-      @close="showImportReport = false"
+      @cancel="closeReportAndNavigate"
+      @close="closeReportAndNavigate"
     >
       <div class="report-body">
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
@@ -110,6 +110,19 @@ const importReport = ref<{
 const matchedPersonName = ref<string | null>(null);
 const manualTreeSubjectId = ref<string | null>(null);
 const resolvedTreeSubjectId = ref<string | null>(null);
+// Holds the tree-subject id between "import done" and "user closed report".
+// Navigation runs AFTER the user closes the modal, so the report stays
+// readable instead of being destroyed by the route-change unmount.
+const pendingNavigatePersonId = ref<string | null>(null);
+
+function closeReportAndNavigate() {
+  showImportReport.value = false;
+  const personId = pendingNavigatePersonId.value;
+  pendingNavigatePersonId.value = null;
+  if (personId) {
+    router.push(`/persons/${personId}`);
+  }
+}
 
 watch(() => importReport.value?.submitterName, async () => {
   resolvedTreeSubjectId.value = null;
@@ -200,10 +213,11 @@ async function handleImportFromHolger() {
     if (result.success && result.report) {
       importReport.value = result.report;
       showImportReport.value = true;
+      // Stash the tree-subject id so we can route there once the user has
+      // closed the report. Routing immediately would unmount this view and
+      // destroy the report modal before it can be read.
+      pendingNavigatePersonId.value = result.report.defaultPersonId ?? null;
       window.dispatchEvent(new CustomEvent('data-imported'));
-      if (result.report.defaultPersonId) {
-        router.push(`/persons/${result.report.defaultPersonId}`);
-      }
     } else {
       setStatus(t('importExport.holgerError', { error: result.error ?? 'Unknown error' }), 'error');
     }

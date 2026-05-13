@@ -1,7 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { GenealogyEvent } from './types';
-import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 
 export async function createEvent(
   db: Database,
@@ -36,6 +36,67 @@ export async function createEvent(
     data.notes ?? ''
   ]);
   return (await getEvent(db, id))!;
+}
+
+/**
+ * Bulk-insert events rows. One batched INSERT for N rows — used by the
+ * GEDCOM importer's phaseIndividuals + phaseFamilies to collapse N IPC
+ * calls into one for the per-event row.
+ *
+ * Each row may supply its own `id`; otherwise a v4 UUID is generated.
+ * Callers that need the id ahead of time (the importer's collect-then-flush
+ * shape) MUST supply it so downstream rows (citations, participants,
+ * media_links) can reference it without a second pass.
+ *
+ * `place_address` is included here so the per-event "UPDATE events SET
+ * place_address = ?" follow-up call in the singular path is folded into
+ * the bulk INSERT.
+ */
+export async function bulkCreateEvents(
+  db: Database,
+  rows: Array<{
+    id?: string;
+    event_type: string;
+    relationship_id?: string | null;
+    date_type?: GenealogyEvent['date_type'];
+    date_value?: string | null;
+    date_value_end?: string | null;
+    date_original?: string;
+    place_id?: string | null;
+    place_address?: string | null;
+    cause?: string | null;
+    value?: string | null;
+    notes?: string;
+  }>,
+): Promise<string[]> {
+  if (rows.length === 0) return [];
+  const ids: string[] = new Array(rows.length);
+  const params: unknown[][] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
+    params[i] = [
+      id,
+      r.event_type,
+      r.relationship_id ?? null,
+      r.date_type ?? 'unknown',
+      r.date_value ?? null,
+      r.date_value_end ?? null,
+      r.date_original ?? '',
+      r.place_id ?? null,
+      r.place_address ?? null,
+      r.cause ?? null,
+      r.value ?? null,
+      r.notes ?? '',
+    ];
+  }
+  await runBatch(
+    db,
+    'INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    params,
+  );
+  return ids;
 }
 
 export async function getEvent(db: Database, id: string): Promise<GenealogyEvent | null> {

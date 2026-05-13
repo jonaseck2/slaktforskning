@@ -126,22 +126,22 @@ export async function createPerson(
  * `phaseIndividuals` collect-then-flush pass — at 22k persons this
  * collapses ~22k IPC calls to one.
  *
- * Each row may supply its own `id`; otherwise a v4 UUID is generated. The
- * caller MUST set `id` when downstream rows (names, identifiers, events)
- * already reference it — that's the normal importer pattern. `display_id`
- * is assigned dense and sequential starting after `MAX(display_id)`, the
- * same way the singular `createPerson` does it; we read the high-water
- * mark once and assign in JS so the batch is a single statement.
+ * Each row may supply its own `id`; otherwise a v4 UUID is generated.
+ * `display_id` is assigned dense and sequential starting after the current
+ * `MAX(display_id)`, mirroring the singular `createPerson` semantics; the
+ * high-water mark is queried once and the values assigned in JS so the
+ * batch is a single INSERT statement.
  *
- * Returns the inserted persons in input order. `living` is always `true`
- * for freshly-inserted rows (no events exist yet to derive it from), so
- * we skip the correlated EXISTS subqueries the singular `createPerson`
- * also skips.
+ * Returns the array of assigned ids in input order. No readback — the
+ * caller-supplied / generated ids are sufficient for any downstream rows
+ * that reference them, and a SELECT `WHERE id IN (...)` with N≫32k blows
+ * past SQLite's variable limit anyway. Tests that need the full row
+ * shape should query the DB directly.
  */
 export async function bulkCreatePersons(
   db: Database,
   rows: Array<{ id?: string; sex?: Person['sex']; notes?: string }>,
-): Promise<Person[]> {
+): Promise<string[]> {
   if (rows.length === 0) return [];
 
   const high = (await queryOne<{ max_id: number }>(db, 'SELECT COALESCE(MAX(display_id), 0) AS max_id FROM persons'))!;
@@ -158,21 +158,7 @@ export async function bulkCreatePersons(
   }
 
   await runBatch(db, 'INSERT INTO persons (id, sex, notes, display_id) VALUES (?, ?, ?, ?)', params);
-
-  // Read back in one SELECT, return in input order. We could also synthesise
-  // the rows in JS — but a SELECT keeps the contract "you get back what the
-  // DB has" in case a trigger or DEFAULT writes additional columns.
-  const placeholders = ids.map(() => '?').join(',');
-  const rowsBack = await queryAll<Omit<Person, 'living'>>(
-    db,
-    `SELECT * FROM persons WHERE id IN (${placeholders})`,
-    ids,
-  );
-  const byId = new Map(rowsBack.map((r) => [r.id, r]));
-  return ids.map((id) => {
-    const row = byId.get(id)!;
-    return { ...row, living: true };
-  });
+  return ids;
 }
 
 /**
@@ -199,7 +185,7 @@ export async function bulkAddPersonNames(
     preferred_name?: string | null;
     nickname?: string | null;
   }>,
-): Promise<PersonName[]> {
+): Promise<string[]> {
   if (rows.length === 0) return [];
 
   // Per-person dense sort_order when not supplied. The singular function
@@ -245,15 +231,7 @@ export async function bulkAddPersonNames(
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     params,
   );
-
-  const placeholders = ids.map(() => '?').join(',');
-  const rowsBack = await queryAll<PersonName>(
-    db,
-    `SELECT * FROM person_names WHERE id IN (${placeholders})`,
-    ids,
-  );
-  const byId = new Map(rowsBack.map((r) => [r.id, r]));
-  return ids.map((id) => byId.get(id)!);
+  return ids;
 }
 
 /**
@@ -268,7 +246,7 @@ export async function bulkAddPersonIdentifiers(
     identifier_type: PersonIdentifier['identifier_type'];
     identifier_value: string;
   }>,
-): Promise<PersonIdentifier[]> {
+): Promise<string[]> {
   if (rows.length === 0) return [];
 
   const now = new Date().toISOString();
@@ -286,15 +264,7 @@ export async function bulkAddPersonIdentifiers(
     'INSERT INTO person_identifiers (id, person_id, identifier_type, identifier_value, created_at) VALUES (?, ?, ?, ?, ?)',
     params,
   );
-
-  const placeholders = ids.map(() => '?').join(',');
-  const rowsBack = await queryAll<PersonIdentifier>(
-    db,
-    `SELECT * FROM person_identifiers WHERE id IN (${placeholders})`,
-    ids,
-  );
-  const byId = new Map(rowsBack.map((r) => [r.id, r]));
-  return ids.map((id) => byId.get(id)!);
+  return ids;
 }
 
 export async function getPerson(db: Database, id: string): Promise<Person | null> {

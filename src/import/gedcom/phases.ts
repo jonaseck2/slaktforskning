@@ -22,9 +22,10 @@ import { v4 as uuid } from 'uuid';
 import { basename } from 'path';
 import type { Relationship, RelationshipType, EventParticipantRole, PersonIdentifier } from '../../api/types';
 import { bulkCreatePersons, bulkAddPersonNames, bulkAddPersonIdentifiers } from '../../api/persons';
-import { createRelationship, updateRelationship, addEventParticipant, bulkAddEventParticipants, getRelationshipsOfPerson } from '../../api/relationships';
-import { createSource, createCitation, bulkCreateSources } from '../../api/sources';
+import { createRelationship, updateRelationship, addEventParticipant, bulkAddEventParticipants, bulkCreateRelationships, getRelationshipsOfPerson } from '../../api/relationships';
+import { createSource, createCitation, bulkCreateSources, bulkCreateCitations } from '../../api/sources';
 import { createMedia, addMediaLink, bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
+import { bulkCreateEvents } from '../../api/events';
 import { getPlace, bulkResolvePlaces } from '../../api/places';
 import type { Place } from '../../api/types';
 import { createRepository, linkSourceRepository } from '../../api/repositories';
@@ -35,7 +36,8 @@ import { holgerEngaSubtype, parseHolgerAdoptionSubtypes } from './profiles/holge
 import type { ImportContext } from './import-types';
 import { getChild, getChildren, resolveNote } from './node-utils';
 import { importObjeNode, remapHolgerMediaPath } from './obje-importer';
-import { importEventNode } from './event-importer';
+import { importEventNode, collectEventNode } from './event-importer';
+import type { EventCollectResult } from './event-importer';
 
 // ── Tag maps ────────────────────────────────────────────────────────────────
 
@@ -592,11 +594,26 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   }
 
   // ─── Pass 2: events, citations, ASSO, media, tag counts ────────────────
-  // Buffers for what we can batch at the end of the pass. event row IDs come
-  // back from importEventNode (per-row IPC) but the participant + media-link
-  // rows referencing those IDs go into buffers and get flushed in one bulk
-  // INSERT each at the end. That's ~22k × 3 events = 66k participant IPC
-  // calls collapsed to 1; same shape for person-level media links.
+  // Buffers for batched-INSERT at end of pass. `collectEventNode` returns
+  // event + citation + event-media-link specs with pre-allocated UUIDs and
+  // does zero IPC for the row inserts; we flush each buffer once at the
+  // bottom. For a 22k-person Holger import this collapses ~200k per-event
+  // IPC calls (events + their citations + their event-level media links)
+  // into ~4 bulk calls total.
+  const eventRowBuffer: EventCollectResult['eventRow'][] = [];
+  const citationBuffer: Array<{
+    source_id: string;
+    event_id?: string | null;
+    person_id?: string | null;
+    relationship_id?: string | null;
+    place_id?: string | null;
+    person_name_id?: string | null;
+    page?: string;
+    confidence?: number;
+    transcription?: string;
+    notes?: string;
+    date_accessed?: string;
+  }> = [];
   const participantBuffer: Array<{ event_id: string; person_id: string; role?: 'primary' }> = [];
   const mediaLinkBuffer: Array<{
     media_id: string;
@@ -613,9 +630,8 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
     const personId = ctx.personMap.get(xref)!;
     const parsedNames = parsedNamesByXref.get(xref) ?? [];
 
-    // Name-level citations — DATA/TEXT carries the transcription on
-    // event-level and name-level cites (already lossless under both GEDCOM
-    // versions).
+    // Name-level citations — buffered for bulk insert. DATA/TEXT carries
+    // the transcription on event-level and name-level cites.
     for (const pn of parsedNames) {
       for (const sour of getChildren(pn.nameNode, 'SOUR')) {
         const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
@@ -626,7 +642,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const dataNode = getChild(sour, 'DATA');
         const transcription = dataNode ? (getChild(dataNode, 'TEXT')?.value ?? '') : '';
-        await createCitation(ctx.db, {
+        citationBuffer.push({
           source_id: srcId,
           person_name_id: pn.id,
           page,
@@ -638,14 +654,16 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       }
     }
 
-    // Person events — every BIRT / DEAT / OCCU / etc. plus its citations
-    // and media live inside importEventNode. addEventParticipant ties the
-    // event back to the person as `primary` — pushed to the buffer for one
-    // bulk INSERT at the end of Pass 2 instead of one IPC per event.
+    // Person events — buffer the event row, its citations, its media-link
+    // rows, plus a participant row tying the event to this person. All four
+    // buffers flush in one bulk INSERT each at the end of the pass.
     for (const [gedTag, appType] of Object.entries(PERSON_EVENT_TAGS)) {
       for (const evNode of getChildren(node, gedTag)) {
-        const event = await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
-        participantBuffer.push({ event_id: event.id, person_id: personId, role: 'primary' });
+        const collected = await collectEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
+        eventRowBuffer.push(collected.eventRow);
+        citationBuffer.push(...collected.citationRows);
+        mediaLinkBuffer.push(...collected.mediaLinkRows);
+        participantBuffer.push({ event_id: collected.eventRow.id, person_id: personId, role: 'primary' });
       }
     }
 
@@ -660,7 +678,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
-        await createCitation(ctx.db, {
+        citationBuffer.push({
           source_id: srcId,
           person_id: personId,
           page,
@@ -717,13 +735,22 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
     }
   }
 
-  // Bulk-flush the buffers built during Pass 2.
+  // Bulk-flush the buffers built during Pass 2. FK topo order:
+  //   events → citations (FK event_id) + participants (FK event_id) + media_links (FK by event_id on link rows).
+  if (eventRowBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${eventRowBuffer.length} händelser (1 / 1)…`);
+    await bulkCreateEvents(ctx.db, eventRowBuffer);
+  }
+  if (citationBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${citationBuffer.length} källhänvisningar (1 / 1)…`);
+    await bulkCreateCitations(ctx.db, citationBuffer);
+  }
   if (participantBuffer.length > 0) {
-    ctx.options?.onProgress?.(`Writing ${participantBuffer.length} event participants…`);
+    ctx.options?.onProgress?.(`Skriver ${participantBuffer.length} deltagare (1 / 1)…`);
     await bulkAddEventParticipants(ctx.db, participantBuffer);
   }
   if (mediaLinkBuffer.length > 0) {
-    ctx.options?.onProgress?.(`Writing ${mediaLinkBuffer.length} media links…`);
+    ctx.options?.onProgress?.(`Skriver ${mediaLinkBuffer.length} medialänkar (1 / 1)…`);
     await bulkAddMediaLinks(ctx.db, mediaLinkBuffer);
   }
 }
@@ -731,26 +758,60 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
 // ── Phase 3: FAM records ───────────────────────────────────────────────────
 
 export async function phaseFamilies(ctx: ImportContext): Promise<void> {
-  // Count FAM records once so we can emit (N / total) progress as the loop
-  // advances. Each FAM does many per-row IPC calls (relationship + events +
-  // participants + citations); progress keeps the bar moving so the user
-  // sees that the phase is alive.
-  let famTotal = 0;
-  for (const n of ctx.tree) if (n.tag === 'FAM') famTotal++;
+  // Collect-then-flush: same shape as phaseIndividuals. Each FAM produces:
+  //   - 1 couple row (relationships, type='couple')
+  //   - up to N family events (each via collectEventNode → event +
+  //     citations + media-links)
+  //   - 1-2 parent_child rows per CHIL
+  //   - per-FAM citations + media links
+  // The per-FAM IPC count was relationship + (events × ~3 IPC each) +
+  // (2 × children) + sour + obje per FAM — for 10k families with ~3 events
+  // each that's ~50-100k IPC under Tauri. All collapsed to a small constant
+  // by the bulk flushes at the end.
+  const famNodes: typeof ctx.tree = [];
+  for (const n of ctx.tree) if (n.tag === 'FAM') famNodes.push(n);
+  const famTotal = famNodes.length;
   if (famTotal === 0) return;
-  let famIdx = 0;
   ctx.options?.onProgress?.(`Importerar familjer (0 / ${famTotal})`);
 
-  for (const node of ctx.tree) {
-    if (node.tag !== 'FAM') continue;
+  const coupleRows: Array<{
+    id: string; type: 'couple'; person1_id: string | null; person2_id: string | null;
+    subtype: string; notes: string;
+  }> = [];
+  const parentChildRows: Array<{
+    type: 'parent_child'; person1_id: string; person2_id: string; subtype: string;
+  }> = [];
+  const eventRowBuffer: EventCollectResult['eventRow'][] = [];
+  const citationBuffer: Array<{
+    source_id: string;
+    event_id?: string | null;
+    person_id?: string | null;
+    relationship_id?: string | null;
+    place_id?: string | null;
+    person_name_id?: string | null;
+    page?: string;
+    confidence?: number;
+    transcription?: string;
+    notes?: string;
+    date_accessed?: string;
+  }> = [];
+  const mediaLinkBuffer: Array<{
+    media_id: string;
+    entity_type: 'relationship' | 'event' | 'person' | 'place' | 'source';
+    entity_id: string;
+    sort_order: number;
+  }> = [];
+  // _RELNOTES updates the couple row after-the-fact. We can fold it into the
+  // initial INSERT instead — collect the notes value and stamp it on the row.
+  // No extra UPDATE pass needed.
 
+  for (let i = 0; i < famNodes.length; i++) {
+    const node = famNodes[i];
     const husbXref = getChild(node, 'HUSB')?.value;
     const wifeXref = getChild(node, 'WIFE')?.value;
     const person1Id = husbXref ? ctx.personMap.get(husbXref) ?? null : null;
     const person2Id = wifeXref ? ctx.personMap.get(wifeXref) ?? null : null;
 
-    // Infer couple subtype: _SUBTYPE from extended export takes precedence;
-    // fall back to inferring 'marriage' from a MARR event in the FAM record.
     const extSubtype = getChild(node, '_SUBTYPE')?.value;
     const hasMarr = getChildren(node, 'MARR').length > 0;
     let coupleSubtype: string;
@@ -760,52 +821,47 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
       coupleSubtype = 'marriage';
     } else if (ctx.isHolger) {
       const engaNodes = getChildren(node, 'ENGA');
-      // Holger emits at most one ENGA per FAM; take the first if multiple exist
       coupleSubtype = engaNodes.length > 0 ? holgerEngaSubtype(engaNodes[0]) : 'unknown';
     } else {
       coupleSubtype = 'unknown';
     }
-
-    const couple = await createRelationship(ctx.db, {
+    const coupleId = uuid();
+    const relnotes = getChild(node, '_RELNOTES')?.value ?? '';
+    coupleRows.push({
+      id: coupleId,
       type: 'couple',
       person1_id: person1Id,
       person2_id: person2Id,
       subtype: coupleSubtype,
+      notes: relnotes,
     });
 
-    // Extended couple metadata (notes only -- subtype already applied above)
-    const relnotes = getChild(node, '_RELNOTES')?.value;
-    if (relnotes) {
-      await updateRelationship(ctx.db, couple.id, { notes: relnotes });
-    }
-
-    // Family events
+    // Family events.
     for (const [gedTag, appType] of Object.entries(FAMILY_EVENT_TAGS)) {
-      // Holger: ENGA on a FAM without MARR is a relationship-type tag (see holgerEngaSubtype),
-      // not a real engagement event. If both MARR and ENGA are present, the ENGA is a genuine
-      // engagement event (pre-marriage) and IS imported normally.
       if (ctx.isHolger && gedTag === 'ENGA' && !hasMarr) continue;
       for (const evNode of getChildren(node, gedTag)) {
-        await importEventNode(ctx.db, evNode, appType, ctx.sourceMap, { relationship_id: couple.id }, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options);
+        const collected = await collectEventNode(ctx.db, evNode, appType, ctx.sourceMap, { relationship_id: coupleId }, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
+        eventRowBuffer.push(collected.eventRow);
+        citationBuffer.push(...collected.citationRows);
+        mediaLinkBuffer.push(...collected.mediaLinkRows);
       }
     }
 
-    // Children -> parent_child relationships with PEDI subtype
+    // Children → parent_child rows.
     for (const chil of getChildren(node, 'CHIL')) {
       const childId = ctx.personMap.get(chil.value);
       if (!childId) continue;
       const pedi = getChild(chil, 'PEDI')?.value;
-      // 'birth' is the GEDCOM term for biological; everything else maps directly
       let childSubtype = pedi ? (pedi === 'birth' ? 'biological' : pedi) : 'biological';
       if (ctx.isHolger) {
         const adopSubtype = ctx.holgerAdoptionMap.get(chil.value)?.get(node.xref ?? '');
         if (adopSubtype) childSubtype = adopSubtype;
       }
-      if (person1Id) await createRelationship(ctx.db, { type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
-      if (person2Id) await createRelationship(ctx.db, { type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
+      if (person1Id) parentChildRows.push({ type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
+      if (person2Id) parentChildRows.push({ type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
     }
 
-    // Family-level citations (SOUR directly on FAM, not under an event)
+    // Family-level citations (SOUR directly on FAM).
     for (const sour of getChildren(node, 'SOUR')) {
       const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
       if (srcId) {
@@ -813,11 +869,10 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
         const page = getChild(sour, 'PAGE')?.value ?? '';
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
-        // _TRANS carrier — see person-level citation block above for rationale.
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
-        await createCitation(ctx.db, {
+        citationBuffer.push({
           source_id: srcId,
-          relationship_id: couple.id,
+          relationship_id: coupleId,
           page,
           confidence: Math.min(3, Math.max(0, quay)) as 0 | 1 | 2 | 3,
           notes: citNotes || undefined,
@@ -827,27 +882,49 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
       }
     }
 
-    // Family-level media
+    // Family-level media.
     let relMediaOrder = 0;
     for (const objeNode of getChildren(node, 'OBJE')) {
       const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
       if (mediaId) {
-        await addMediaLink(ctx.db, { media_id: mediaId, entity_type: 'relationship', entity_id: couple.id, sort_order: relMediaOrder });
+        mediaLinkBuffer.push({ media_id: mediaId, entity_type: 'relationship', entity_id: coupleId, sort_order: relMediaOrder });
         relMediaOrder++;
       }
     }
 
-    // Count unrecognised top-level FAM tags
+    // Count unrecognised top-level FAM tags.
     for (const child of node.children) {
       if (!KNOWN_FAM_TAGS.has(child.tag)) {
         ctx.skippedTags.set(child.tag, (ctx.skippedTags.get(child.tag) ?? 0) + 1);
       }
     }
 
-    famIdx++;
-    if (famIdx % 200 === 0 || famIdx === famTotal) {
-      ctx.options?.onProgress?.(`Importerar familjer (${famIdx} / ${famTotal})`);
+    if ((i + 1) % 200 === 0 || (i + 1) === famTotal) {
+      ctx.options?.onProgress?.(`Importerar familjer (${i + 1} / ${famTotal})`);
     }
+  }
+
+  // Bulk-flush. FK topo order:
+  //   relationships (couples + parent_child) → events → citations / media_links.
+  if (coupleRows.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${coupleRows.length} familjer (1 / 1)…`);
+    await bulkCreateRelationships(ctx.db, coupleRows);
+  }
+  if (parentChildRows.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${parentChildRows.length} föräldra/barn-länkar (1 / 1)…`);
+    await bulkCreateRelationships(ctx.db, parentChildRows);
+  }
+  if (eventRowBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${eventRowBuffer.length} familjehändelser (1 / 1)…`);
+    await bulkCreateEvents(ctx.db, eventRowBuffer);
+  }
+  if (citationBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${citationBuffer.length} familje-källhänvisningar (1 / 1)…`);
+    await bulkCreateCitations(ctx.db, citationBuffer);
+  }
+  if (mediaLinkBuffer.length > 0) {
+    ctx.options?.onProgress?.(`Skriver ${mediaLinkBuffer.length} familje-medialänkar (1 / 1)…`);
+    await bulkAddMediaLinks(ctx.db, mediaLinkBuffer);
   }
 }
 
