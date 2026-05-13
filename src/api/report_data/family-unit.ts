@@ -1,10 +1,10 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { getPerson, getPersonNames } from '../persons';
 import { getEventsForPerson, getEventsForRelationship } from '../events';
-import { getPlace, getPlacePath } from '../places';
 import { queryAll } from '../db';
-import type { Person, PersonName, GenealogyEvent, Relationship } from '../types';
+import type { Person, PersonName, Relationship } from '../types';
 import type { EventWithPlace } from './types';
+import { resolveEventsPlaces, findEventByType } from './shared';
 
 export interface FamilyMember {
   person: Person;
@@ -19,32 +19,6 @@ export interface FamilyUnit {
   person2: FamilyMember | null;
   relationship_events: EventWithPlace[];
   children: FamilyMember[];
-}
-
-// ── Local helpers ──
-// Duplicated from `report_data.ts` during the split; Task 11 of the plan will
-// extract genuinely-shared scaffolding to `shared.ts` if ≥2 reports use it
-// with identical shape.
-
-async function resolveEventPlace(db: Database, event: GenealogyEvent): Promise<EventWithPlace> {
-  let place_name: string | null = null;
-  let place_path: string | null = null;
-  if (event.place_id) {
-    const place = await getPlace(db, event.place_id);
-    place_name = place?.name ?? null;
-    place_path = await getPlacePath(db, event.place_id);
-  }
-  return { ...event, place_name, place_path };
-}
-
-async function resolveEventsPlaces(db: Database, events: GenealogyEvent[]): Promise<EventWithPlace[]> {
-  const out: EventWithPlace[] = [];
-  for (const e of events) out.push(await resolveEventPlace(db, e));
-  return out;
-}
-
-function findEventByType(events: EventWithPlace[], type: string): EventWithPlace | null {
-  return events.find(e => e.event_type === type) ?? null;
 }
 
 async function buildFamilyMember(db: Database, personId: string): Promise<FamilyMember | null> {

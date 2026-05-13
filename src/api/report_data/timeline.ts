@@ -2,9 +2,12 @@ import type { Database } from 'node-sqlite3-wasm';
 import { getPerson, getPersonNames } from '../persons';
 import { getRelationshipsOfPerson } from '../relationships';
 import { getEventsForPerson, getEventsForRelationship } from '../events';
-import { getPlace, getPlacePath } from '../places';
-import type { PersonName, GenealogyEvent } from '../types';
 import type { EventWithPlace } from './types';
+import {
+  resolveEventsPlaces,
+  getPrimaryName,
+  getBirthSurnameForDisplay,
+} from './shared';
 
 /**
  * Stable vocabulary for `TimelineEntry.relationship_label`.
@@ -99,56 +102,6 @@ export interface TimelineEntry {
 export interface TimelineOptions {
   includeChildrenMarriages?: boolean;
   includeSiblingDeaths?: boolean;
-}
-
-// ── Local helpers ──
-// Duplicated from `report_data.ts` during the split; Task 11 of the plan will
-// extract genuinely-shared scaffolding to `shared.ts` if ≥2 reports use it
-// with identical shape.
-
-async function resolveEventPlace(db: Database, event: GenealogyEvent): Promise<EventWithPlace> {
-  let place_name: string | null = null;
-  let place_path: string | null = null;
-  if (event.place_id) {
-    const place = await getPlace(db, event.place_id);
-    place_name = place?.name ?? null;
-    place_path = await getPlacePath(db, event.place_id);
-  }
-  return { ...event, place_name, place_path };
-}
-
-async function resolveEventsPlaces(db: Database, events: GenealogyEvent[]): Promise<EventWithPlace[]> {
-  const out: EventWithPlace[] = [];
-  for (const e of events) out.push(await resolveEventPlace(db, e));
-  return out;
-}
-
-function getPrimaryName(names: PersonName[]): { given_name: string; surname: string } {
-  if (names.length === 0) return { given_name: '', surname: '' };
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  return { given_name: sorted[0].given_name ?? '', surname: sorted[0].surname ?? '' };
-}
-
-/**
- * Display-only helper: returns the lowest-`sort_order` `birth`-type record's
- * surname when distinct from the primary record's surname, else null.
- * Used by `getTimeline` to populate `TimelineEntry.person_birth_surname` so
- * the renderer can compose "(f. …)" / "(b. …)" parentheticals at render time.
- * See plan birth-name-display-and-quality-check.
- */
-function getBirthSurnameForDisplay(names: PersonName[]): string | null {
-  if (names.length === 0) return null;
-  const primarySorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const primary = primarySorted[0];
-  const births = names.filter(n => n.name_type === 'birth')
-    .sort((a, b) => a.sort_order - b.sort_order);
-  const birth = births[0];
-  if (!birth) return null;
-  if (birth.id === primary.id) return null;
-  const birthSurname = (birth.surname ?? '').trim();
-  if (!birthSurname) return null;
-  if (birthSurname === (primary.surname ?? '').trim()) return null;
-  return birthSurname;
 }
 
 // ── Lifetime-constraint helpers (Task 2 — life timeline expansion) ──

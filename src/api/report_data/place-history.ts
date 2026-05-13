@@ -3,8 +3,9 @@ import { getPersonNames } from '../persons';
 import { getEventParticipants } from '../relationships';
 import { getPlace, getPlacePath } from '../places';
 import { queryAll } from '../db';
-import type { GenealogyEvent, PersonName } from '../types';
+import type { GenealogyEvent } from '../types';
 import type { EventWithPlace } from './types';
+import { resolveEventPlace, getPrimaryName, getBirthSurnameForDisplay } from './shared';
 
 export interface PlaceEventRecord {
   event: EventWithPlace;
@@ -28,47 +29,6 @@ export interface PlaceHistory {
   place_name: string;
   place_path: string;
   events: PlaceEventRecord[];
-}
-
-// ── Local helpers ──
-// Duplicated from `report_data.ts` during the split; Task 11 of the plan will
-// extract genuinely-shared scaffolding to `shared.ts` if ≥2 reports use it
-// with identical shape.
-
-async function resolveEventPlace(db: Database, event: GenealogyEvent): Promise<EventWithPlace> {
-  let place_name: string | null = null;
-  let place_path: string | null = null;
-  if (event.place_id) {
-    const place = await getPlace(db, event.place_id);
-    place_name = place?.name ?? null;
-    place_path = await getPlacePath(db, event.place_id);
-  }
-  return { ...event, place_name, place_path };
-}
-
-function getPrimaryName(names: PersonName[]): { given_name: string; surname: string } {
-  if (names.length === 0) return { given_name: '', surname: '' };
-  const sorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  return { given_name: sorted[0].given_name ?? '', surname: sorted[0].surname ?? '' };
-}
-
-/**
- * Display-only helper: returns the lowest-`sort_order` `birth`-type record's
- * surname when distinct from the primary record's surname, else null.
- */
-function getBirthSurnameForDisplay(names: PersonName[]): string | null {
-  if (names.length === 0) return null;
-  const primarySorted = [...names].sort((a, b) => a.sort_order - b.sort_order);
-  const primary = primarySorted[0];
-  const births = names.filter(n => n.name_type === 'birth')
-    .sort((a, b) => a.sort_order - b.sort_order);
-  const birth = births[0];
-  if (!birth) return null;
-  if (birth.id === primary.id) return null;
-  const birthSurname = (birth.surname ?? '').trim();
-  if (!birthSurname) return null;
-  if (birthSurname === (primary.surname ?? '').trim()) return null;
-  return birthSurname;
 }
 
 /**
