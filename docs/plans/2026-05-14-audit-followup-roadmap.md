@@ -131,7 +131,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 **Effort:** 1 day (verified — simpler than audit's 3–4 day estimate; mechanical split).
 **Plan file:** [2026-05-14-gedcom-phases-split-design.md](2026-05-14-gedcom-phases-split-design.md).
 
-### 3.4 `report_data.ts` shared traversal helpers
+### 3.4 `report_data.ts` shared traversal helpers — **DONE**, archived
 
 **User goal:** Seven report builders (verified count) live in their own files. Shared scaffolding (walk-ancestors / collect-events / sort-by-date) is discovered post-split, not assumed upfront.
 
