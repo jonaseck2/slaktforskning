@@ -104,7 +104,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 Numbers from the audit's complexity-hotspot survey. Each will need its own `-design.md` + `.md` plan per [`.claude/rules/plans.md`](../../.claude/rules/plans.md). All depend on 1.2 (profiling baseline) being captured first.
 
-### 3.1 `src/api/duplicates.ts` split
+### 3.1 `src/api/duplicates.ts` split — **DONE**, archived
 
 **User goal:** Improving the person dedup scorer doesn't require touching place dedup. Adding a new entity type for dedup (e.g., relationships) doesn't require editing a 1,649-line file.
 
