@@ -153,13 +153,15 @@
         </div>
       </div>
 
-      <!-- Danger zone: delete task -->
-      <div class="panel-danger-zone">
-        <AppButton variant="secondary" size="sm" @click="showDeleteConfirm = true">
-          <IconTrash class="trash-icon" />
-          <span>{{ $t('researchTasks.deleteTaskAction') }}</span>
-        </AppButton>
-      </div>
+      <!-- Danger zone: delete task — single source of truth for entity-deletion UX. -->
+      <PanelDangerZone
+        v-if="props.taskId"
+        entity-type="research-task"
+        :entity-id="props.taskId"
+        :entity-label="dangerEntityLabel"
+        :cascade-summary="[deleteConfirmMessage]"
+        @deleted="onDeleted"
+      />
     </template>
 
     <ConfirmModal
@@ -173,17 +175,6 @@
       @confirm="delLink.confirm"
     />
 
-    <!-- Delete task confirmation -->
-    <ConfirmModal
-      :visible="showDeleteConfirm"
-      :title="$t('researchTasks.deleteConfirmTitle')"
-      :message="deleteConfirmMessage"
-      tone="danger"
-      icon="⚠️"
-      :confirm-label="$t('researchTasks.deleteConfirmContinue')"
-      @cancel="showDeleteConfirm = false"
-      @confirm="performDelete"
-    />
   </EntityPanel>
 </template>
 
@@ -197,8 +188,7 @@ import LinkedMediaSection from './LinkedMediaSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import EntityPanel from './EntityPanel.vue';
 import ConfirmModal from './ConfirmModal.vue';
-import AppButton from './ui/AppButton.vue';
-import IconTrash from './ui/IconTrash.vue';
+import PanelDangerZone from './PanelDangerZone.vue';
 import { useToast } from '../composables/useToast';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -329,28 +319,23 @@ const delLink = useDeleteConfirm<string>(async (linkId) => {
 function removeLink(linkId: string) { delLink.ask(linkId); }
 
 // ── Delete task ────────────────────────────────────────────────────────────
+// PanelDangerZone owns the trash button, ConfirmModal, and the
+// window.api.researchTasks.delete call. We supply the cascade summary
+// (panel-specific domain knowledge: linked-entity count) and react to
+// @deleted with toast + close.
 
-const showDeleteConfirm = ref(false);
-const deleteConfirmMessage = computed(() => {
-  const title = task.value?.task ?? t('common.unknown');
-  return t('researchTasks.deleteConfirmMessage', {
-    title,
+const dangerEntityLabel = computed(() => task.value?.task ?? t('common.unknown'));
+
+const deleteConfirmMessage = computed(() =>
+  t('researchTasks.deleteConfirmMessage', {
+    title: dangerEntityLabel.value,
     links: personLinks.value.length + placeLinks.value.length + mediaLinks.value.length,
-  });
-});
+  }),
+);
 
-async function performDelete() {
-  if (!props.taskId) return;
-  try {
-    const title = task.value?.task ?? t('common.unknown');
-    await window.api.researchTasks.delete(props.taskId);
-    showDeleteConfirm.value = false;
-    toast.success(t('researchTasks.deletedToast', { title }));
-    emit('close');
-  } catch (err) {
-    console.error('[ResearchTaskPanel] delete failed:', err);
-    toast.error(t('errors.deleteFailed'));
-  }
+function onDeleted() {
+  toast.success(t('researchTasks.deletedToast', { title: dangerEntityLabel.value }));
+  emit('close');
 }
 </script>
 
