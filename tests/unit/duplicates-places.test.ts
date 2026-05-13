@@ -7,8 +7,8 @@ import {
   countDuplicatePlaces,
   mergePlaces,
   ignoreDuplicatePlace,
-  levenshtein,
-} from '../../src/api/duplicates';
+} from '../../src/api/duplicates/places';
+import { levenshtein } from '../../src/api/duplicates/shared';
 import { createPlace, getPlace, deletePlace } from '../../src/api/places';
 import { createEvent, getEvent } from '../../src/api/events';
 import { createSource, createCitation, getCitation } from '../../src/api/sources';
@@ -391,7 +391,7 @@ describe('FK self-check — every places.id reference must be handled by mergePl
 
   const repoRoot = join(__dirname, '..', '..');
   const schema = readFileSync(join(repoRoot, 'src/api/schema.ts'), 'utf8');
-  const merge = readFileSync(join(repoRoot, 'src/api/duplicates.ts'), 'utf8');
+  const merge = readFileSync(join(repoRoot, 'src/api/duplicates/places.ts'), 'utf8');
 
   it('schema references to places.id we expect to find', () => {
     // Sanity: parsing finds the FKs we know about.
