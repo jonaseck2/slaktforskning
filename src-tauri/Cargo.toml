@@ -45,3 +45,12 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
 zip = { version = "2", default-features = false, features = ["deflate"] }
 walkdir = "2"
 
+# Headless E2E support on macOS — demote the app to Accessory activation
+# policy when SLAKTFORSKNING_HEADLESS=1 so it doesn't grab focus or show in
+# the Dock during local Tier 2 runs. Both crates are already transitive deps
+# (via tauri); we redeclare them here at the same major version to import
+# them directly from our setup() block. See src/lib.rs.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSResponder", "NSRunningApplication"] }
+

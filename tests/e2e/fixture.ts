@@ -180,6 +180,12 @@ export async function startApp(port: number, tag = ''): Promise<AppInstance> {
       SLAKTFORSKNING_DB: dbPath,
       // Honoured by `ui_server.rs::spawn` — picks the bridge port.
       SLAKTFORSKNING_UI_PORT: String(port),
+      // Honoured by the .setup() block in src-tauri/src/lib.rs — builds the
+      // main window with visible(false) and (on macOS) demotes the app to
+      // Accessory activation policy so e2e runs don't pop windows or steal
+      // focus. The dev MCP HTTP bridge above stays up — it's the only
+      // surface tests need.
+      SLAKTFORSKNING_HEADLESS: '1',
     },
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: !isWindows,
