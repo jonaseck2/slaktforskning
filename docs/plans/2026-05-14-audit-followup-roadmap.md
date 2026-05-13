@@ -22,7 +22,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 
 ## Tier 1 — Strategic plans (architecture-shaping; plan-driven, worktree + subagents)
 
-### 1.1 Vite 8 bundle regression investigation
+### 1.1 Vite 8 bundle regression investigation — **DONE (no regression found)**, archived
 
 **User goal:** `npm run build` produces a renderer bundle whose total dist-tauri size and largest-chunk size are at least as good as the pre-Vite-8 v0.257.3 baseline. The user noticed v0.256-era builds were "much smaller" — that regression is either explained (by a measured baseline diff that shows the increase is structural, not accidental) or fixed.
 
