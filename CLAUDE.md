@@ -153,7 +153,8 @@ npm start              # Launch the Tauri app in dev mode (Rust + Vite HMR)
 npm run lint           # ESLint (must pass with 0 errors before committing)
 npm test               # Vitest unit + component tests (~4000 tests, 80% coverage threshold on src/api/)
 npm run test:e2e       # Build the Tauri bundle + run Playwright. Use `npx playwright test` if `out/` is already built.
-npm run build          # Build a packaged Tauri installer for the current platform
+npm run build          # Full Tauri bundle for the current platform — .app + .dmg (mac), NSIS .exe (Windows), .AppImage (Linux)
+npm run build:bin      # Raw Tauri binary only, no bundle (faster — used by build:e2e and dev iteration)
 npm run build:static   # Build static SPA bundle (dist-static/)
 npm run dev:static     # Dev server for static SPA at localhost:5174
 npm run build:mcp-sidecar  # Build the MCP sidecar binaries for all targets (required before `npm run build`)

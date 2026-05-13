@@ -47,8 +47,8 @@ const CI_SAFE_SCRIPTS = [
 const SKIPPED_WITH_REASON: Record<string, string> = {
   start: 'long-lived dev server (tauri dev) — not CI-safe',
   dev: 'alias for start',
-  build: 'full Tauri release bundle — runs in dedicated CI job',
-  'build:portable': 'full Tauri release build + zip — runs in dedicated CI job',
+  build: 'full Tauri release bundle (.app/.dmg/.exe/.AppImage) — runs in dedicated CI job',
+  'build:bin': 'raw Tauri release binary (no bundle) — used by build:e2e',
   'build:e2e': 'same as build',
   'pretest:e2e': 'chains build:e2e',
   'test:e2e': 'Playwright against packaged Tauri binary',

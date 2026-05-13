@@ -27,7 +27,8 @@ npm test               # Unit tests (Vitest)
 npm test -- --coverage # With coverage report (80% threshold on src/api/)
 npm run lint           # ESLint (must pass with 0 errors before committing)
 npm run test:e2e       # E2E tests (Playwright against a built Tauri bundle)
-npm run build          # Build a packaged Tauri installer for the current platform
+npm run build          # Build native bundle: .app + .dmg (mac), NSIS .exe (Windows), .AppImage (Linux)
+npm run build:bin      # Just the raw binary, no bundle (faster — used by e2e / dev)
 ```
 
 ## Project Structure

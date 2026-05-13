@@ -44,9 +44,9 @@ Download the latest installer from the [Releases](https://github.com/jonaseck2/s
 
 | Platform | Format |
 |----------|--------|
-| macOS | `.dmg` |
-| Windows | `.exe` (Squirrel installer) |
-| Linux | `.deb` / `.rpm` |
+| macOS | `.dmg` (drag the bundled `.app` to /Applications) |
+| Windows | `.exe` (NSIS installer) |
+| Linux | `.AppImage` (single-file portable) |
 
 > **Note:** Builds are currently unsigned. macOS will show a Gatekeeper warning on first launch — right-click the app and choose Open to bypass it. Windows may show a SmartScreen warning.
 

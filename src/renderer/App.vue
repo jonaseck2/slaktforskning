@@ -379,7 +379,9 @@ const redoTooltip = computed(() => {
   return label ? t('undo.tooltipRedoWithAction', { action: label }) : t('undo.tooltipRedo');
 });
 
-// About dialog — opened from Help → About OurLegacy via main process IPC.
+// About dialog — opened from the macOS app menu's "About Släktforskning" item
+// (Rust: src-tauri/src/lib.rs `build_menu` → 'menu:item' event → main.ts
+// dispatches the 'app:openAbout' window event we listen for below).
 const aboutVisible = ref(false);
 
 declare const window: Window & {

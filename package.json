@@ -1,15 +1,15 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.257.2",
+  "version": "0.257.3",
   "description": "A genealogy desktop application",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "tauri dev",
     "dev": "tauri dev",
-    "build": "tauri build --no-bundle && node scripts/post-build-rename.mjs",
-    "build:portable": "node scripts/build-portable-zip.mjs",
+    "build": "tauri build",
+    "build:bin": "tauri build --no-bundle && node scripts/post-build-rename.mjs",
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest run",
     "test:watch": "vitest",

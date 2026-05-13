@@ -600,15 +600,14 @@ fn read_bundled_resource(app: tauri::AppHandle, name: String) -> Result<String, 
 /// Cmd+, (settings) / Cmd+Z (undo) / Cmd+Shift+Z (redo). Other platforms
 /// don't show the application menu but the accelerators still work.
 fn build_menu(app: &tauri::AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
-    use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
+    use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 
-    let about_meta = AboutMetadataBuilder::new()
-        .name(Some("Släktforskning".to_string()))
-        .version(Some(env!("CARGO_PKG_VERSION").to_string()))
-        .build();
-
+    // Custom "About" item (id="about") instead of PredefinedMenuItem::about so
+    // the click routes through on_menu_event → 'menu:item' → the renderer's
+    // AboutModal (via the 'app:openAbout' window event), giving us a
+    // branded in-app About dialog instead of the native macOS About panel.
     let app_menu = SubmenuBuilder::new(app, "Släktforskning")
-        .item(&PredefinedMenuItem::about(app, Some("About Släktforskning"), Some(about_meta))?)
+        .item(&MenuItemBuilder::with_id("about", "About Släktforskning").build(app)?)
         .separator()
         .item(&MenuItemBuilder::with_id("settings", "Settings…").accelerator("CmdOrCtrl+,").build(app)?)
         .separator()

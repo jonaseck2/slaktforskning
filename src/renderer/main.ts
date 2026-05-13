@@ -106,6 +106,7 @@ if ('__TAURI_INTERNALS__' in window) {
           }
           case 'undo': await (window.api.undo as { undo: () => Promise<unknown> }).undo(); break;
           case 'redo': await (window.api.undo as { redo: () => Promise<unknown> }).redo(); break;
+          case 'about': window.dispatchEvent(new CustomEvent('app:openAbout')); break;
           case 'settings': window.location.hash = '#/settings'; break;
           case 'nav-persons': window.location.hash = '#/persons'; break;
           case 'nav-places': window.location.hash = '#/places'; break;
