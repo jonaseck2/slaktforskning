@@ -17,12 +17,12 @@
  */
 
 import type { Database } from 'node-sqlite3-wasm';
-import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
-import { createRelationship, addEventParticipant } from '../../api/relationships';
-import { createEvent } from '../../api/events';
+import { bulkCreatePersons, bulkAddPersonNames, bulkAddPersonIdentifiers } from '../../api/persons';
+import { bulkCreateRelationships, bulkAddEventParticipants } from '../../api/relationships';
+import { bulkCreateEvents } from '../../api/events';
 import { findOrCreatePlace } from '../../api/places';
-import { createSource, createCitation } from '../../api/sources';
-import { createMedia, addMediaLink } from '../../api/media';
+import { bulkCreateSources, bulkCreateCitations } from '../../api/sources';
+import { bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
 import { queryAll, runSql } from '../../api/db';
 
 // ── RootsMagic row shapes ──────────────────────────────────────────────────
@@ -204,9 +204,16 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     'SELECT SourceID, Name, RefNumber, ActualText, Comments FROM SourceTable'
   );
   const sourceMap = new Map<number, string>();
+  const sourceRows: Array<{
+    id: string; title: string; author: string; publication_info: string;
+    url: string; source_type: string; call_number?: string; abstract?: string;
+  }> = [];
   for (const rs of rmSources) {
     if (!rs.Name?.trim()) continue;
-    const src = await createSource(ourDb, {
+    const ourId = crypto.randomUUID();
+    sourceMap.set(rs.SourceID, ourId);
+    sourceRows.push({
+      id: ourId,
       title: rs.Name.trim(),
       author: '',
       publication_info: '',
@@ -215,70 +222,93 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
       call_number: rs.RefNumber || undefined,
       abstract: rs.ActualText || undefined,
     });
-    sourceMap.set(rs.SourceID, src.id);
     summary.sources++;
   }
+  await bulkCreateSources(ourDb, sourceRows);
 
   // ── Phase 2: persons ───────────────────────────────────────────────────
   const rmPersons = await queryAll<RmPerson>(rmDb,
     'SELECT PersonID, UniqueID, Sex, Living, Note FROM PersonTable'
   );
   const personMap = new Map<number, string>();
+  // Names land in phase 3; the bulk insert is nameless — matches the
+  // singular path's `allowNameless: true`. (Living is derived at read
+  // time from death/burial/cremation events; not a stored column.)
+  const personRows: Array<{ id: string; sex: 'M' | 'F' | 'U'; notes: string }> = [];
+  const identifierRows: Array<{ person_id: string; identifier_type: 'uid'; identifier_value: string }> = [];
   for (const rp of rmPersons) {
     const sex: 'M' | 'F' | 'U' = rp.Sex === 0 ? 'M' : rp.Sex === 1 ? 'F' : 'U';
-    // Names land in phase 3; allowNameless covers persons whose only name
-    // row hasn't been seen yet at this point. (Living is derived at read
-    // time from death/burial/cremation events; not a stored column.)
-    const person = await createPerson(ourDb, { sex, notes: rp.Note ?? '' }, { allowNameless: true });
-    personMap.set(rp.PersonID, person.id);
+    const ourId = crypto.randomUUID();
+    personMap.set(rp.PersonID, ourId);
+    personRows.push({ id: ourId, sex, notes: rp.Note ?? '' });
 
     // Carry the RootsMagic UniqueID over as an external identifier so a
     // future re-export keeps the cross-system handle.
     if (rp.UniqueID?.trim()) {
-      await addPersonIdentifier(ourDb, person.id, {
+      identifierRows.push({
+        person_id: ourId,
         identifier_type: 'uid',
         identifier_value: rp.UniqueID.trim(),
       });
     }
     summary.persons++;
   }
+  await bulkCreatePersons(ourDb, personRows);
+  await bulkAddPersonIdentifiers(ourDb, identifierRows);
 
   // ── Phase 3: names ─────────────────────────────────────────────────────
   const rmNames = await queryAll<RmName>(rmDb,
     'SELECT NameID, OwnerID, Surname, Given, Prefix, Suffix, Nickname, NameType, IsPrimary FROM NameTable ORDER BY OwnerID, IsPrimary DESC, NameID'
   );
+  const nameRows: Array<{
+    person_id: string;
+    given_name: string;
+    surname: string;
+    name_type: ReturnType<typeof mapNameType>;
+    name_prefix?: string;
+    name_suffix?: string;
+    nickname?: string;
+    sort_order: number;
+  }> = [];
   for (const n of rmNames) {
     const personId = personMap.get(n.OwnerID);
     if (!personId) continue;
-    const nameType = mapNameType(n.NameType);
-    await addPersonName(ourDb, personId, {
+    nameRows.push({
+      person_id: personId,
       given_name: n.Given || '',
       surname: n.Surname || '',
-      name_type: nameType,
+      name_type: mapNameType(n.NameType),
       name_prefix: n.Prefix || undefined,
       name_suffix: n.Suffix || undefined,
       nickname: n.Nickname || undefined,
       sort_order: n.IsPrimary ? 0 : 1,
     });
   }
+  await bulkAddPersonNames(ourDb, nameRows);
 
   // ── Phase 4: families & parent-child relationships ─────────────────────
   const rmFamilies = await queryAll<RmFamily>(rmDb,
     'SELECT FamilyID, FatherID, MotherID, Note FROM FamilyTable'
   );
   const familyToCoupleId = new Map<number, string>();   // FamilyID → couple relationship.id
+  const familyById = new Map<number, RmFamily>(rmFamilies.map(f => [f.FamilyID, f]));
+  const coupleRows: Array<{
+    id: string; type: 'couple'; person1_id: string; person2_id: string; notes: string;
+  }> = [];
   for (const f of rmFamilies) {
     const fatherId = f.FatherID ? personMap.get(f.FatherID) : undefined;
     const motherId = f.MotherID ? personMap.get(f.MotherID) : undefined;
     if (!fatherId && !motherId) continue;
     if (fatherId && motherId) {
-      const couple = await createRelationship(ourDb, {
+      const coupleId = crypto.randomUUID();
+      familyToCoupleId.set(f.FamilyID, coupleId);
+      coupleRows.push({
+        id: coupleId,
         type: 'couple',
         person1_id: fatherId,
         person2_id: motherId,
         notes: f.Note ?? '',
       });
-      familyToCoupleId.set(f.FamilyID, couple.id);
       summary.coupleRelationships++;
     }
   }
@@ -287,14 +317,18 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
   const rmChildren = await queryAll<RmChild>(rmDb,
     'SELECT ChildID, FamilyID, RelFather, RelMother FROM ChildTable'
   );
+  const parentChildRows: Array<{
+    type: 'parent_child'; person1_id: string; person2_id: string;
+    subtype: ReturnType<typeof mapChildRel>;
+  }> = [];
   for (const c of rmChildren) {
     const childId = personMap.get(c.ChildID);
-    const family = rmFamilies.find(f => f.FamilyID === c.FamilyID);
+    const family = familyById.get(c.FamilyID);
     if (!childId || !family) continue;
     if (family.FatherID) {
       const fatherId = personMap.get(family.FatherID);
       if (fatherId) {
-        await createRelationship(ourDb, {
+        parentChildRows.push({
           type: 'parent_child',
           person1_id: fatherId,
           person2_id: childId,
@@ -306,7 +340,7 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     if (family.MotherID) {
       const motherId = personMap.get(family.MotherID);
       if (motherId) {
-        await createRelationship(ourDb, {
+        parentChildRows.push({
           type: 'parent_child',
           person1_id: motherId,
           person2_id: childId,
@@ -316,12 +350,27 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
       }
     }
   }
+  await bulkCreateRelationships(ourDb, coupleRows);
+  await bulkCreateRelationships(ourDb, parentChildRows);
 
   // ── Phase 5: events ────────────────────────────────────────────────────
   const rmEvents = await queryAll<RmEvent>(rmDb,
     'SELECT EventID, EventType, OwnerType, OwnerID, PlaceID, Date, Details, Note FROM EventTable'
   );
   const eventMap = new Map<number, string>();   // RM EventID → our event.id
+  const eventRows: Array<{
+    id: string;
+    event_type: string;
+    date_type: ReturnType<typeof parseRmDate>['dateType'];
+    date_value: string | null;
+    date_value_end: string | null;
+    date_original: string;
+    place_id?: string;
+    notes: string;
+    value: string;
+    relationship_id?: string;
+  }> = [];
+  const participantRows: Array<{ event_id: string; person_id: string; role: 'primary' | 'witness' }> = [];
   for (const ev of rmEvents) {
     const fact = factTypeById.get(ev.EventType);
     if (!fact) continue;
@@ -336,7 +385,10 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
           : undefined;
     if (!ownerOurId) continue;
 
-    const created = await createEvent(ourDb, {
+    const ourEventId = crypto.randomUUID();
+    eventMap.set(ev.EventID, ourEventId);
+    eventRows.push({
+      id: ourEventId,
       event_type: eventType,
       date_type: parsed.dateType,
       date_value: parsed.dateValue,
@@ -347,17 +399,17 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
       value: ev.Details ?? '',
       relationship_id: ev.OwnerType === 1 ? ownerOurId : undefined,
     });
-    eventMap.set(ev.EventID, created.id);
 
     if (ev.OwnerType === 0) {
-      await addEventParticipant(ourDb, {
-        event_id: created.id,
+      participantRows.push({
+        event_id: ourEventId,
         person_id: ownerOurId,
         role: 'primary',
       });
     }
     summary.events++;
   }
+  await bulkCreateEvents(ourDb, eventRows);
 
   // WitnessTable: extra event participants (witness, godparent, officiant).
   const rmWitnesses = await queryAll<RmWitness>(rmDb,
@@ -367,17 +419,29 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     const eventId = eventMap.get(w.EventID);
     const personId = personMap.get(w.PersonID);
     if (!eventId || !personId) continue;
-    await addEventParticipant(ourDb, {
+    participantRows.push({
       event_id: eventId,
       person_id: personId,
       role: 'witness',
     });
   }
+  await bulkAddEventParticipants(ourDb, participantRows);
 
   // ── Phase 6: citations ─────────────────────────────────────────────────
   const rmCitations = await queryAll<RmCitation>(rmDb,
     'SELECT CitationID, OwnerType, OwnerID, SourceID, Quality, Comments, ActualText, RefNumber FROM CitationTable'
   );
+  const citationRows: Array<{
+    source_id: string;
+    page: string;
+    confidence: number;
+    transcription: string;
+    notes: string;
+    person_id?: string;
+    event_id?: string;
+    relationship_id?: string;
+    place_id?: string;
+  }> = [];
   for (const c of rmCitations) {
     const sourceId = sourceMap.get(c.SourceID);
     if (!sourceId) continue;
@@ -401,39 +465,50 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     }
 
     const quality = c.Quality ? Math.min(3, Math.max(0, parseInt(c.Quality, 10) || 0)) : 2;
-    await createCitation(ourDb, {
+    citationRows.push({
       source_id: sourceId,
       page: c.RefNumber || '',
-      confidence: quality as 0 | 1 | 2 | 3,
+      confidence: quality,
       transcription: c.ActualText || '',
       notes: c.Comments || '',
       ...attach,
     });
     summary.citations++;
   }
+  await bulkCreateCitations(ourDb, citationRows);
 
   // ── Phase 7: media ─────────────────────────────────────────────────────
   const rmMedia = await queryAll<RmMedia>(rmDb,
     'SELECT MediaID, MediaPath, MediaFile, Caption, Description FROM MultimediaTable'
   );
   const mediaMap = new Map<number, string>();
+  const mediaRows: Array<{ id: string; title: string; file_ref: string | null; notes: string }> = [];
   for (const m of rmMedia) {
     const fileRef = m.MediaPath && m.MediaFile
       ? `${m.MediaPath.replace(/\\/g, '/').replace(/\/$/, '')}/${m.MediaFile}`
       : (m.MediaFile ?? null);
     if (!fileRef && !m.Caption) continue;
-    const mediaRow = await createMedia(ourDb, {
+    const ourMediaId = crypto.randomUUID();
+    mediaMap.set(m.MediaID, ourMediaId);
+    mediaRows.push({
+      id: ourMediaId,
       title: m.Caption || m.MediaFile || '',
       file_ref: fileRef,
       notes: m.Description ?? '',
     });
-    mediaMap.set(m.MediaID, mediaRow.id);
     summary.media++;
   }
+  await bulkCreateMedia(ourDb, mediaRows);
 
   const rmMediaLinks = await queryAll<RmMediaLink>(rmDb,
     'SELECT LinkID, MediaID, OwnerType, OwnerID, IsPrimary, SortOrder, Caption FROM MediaLinkTable'
   );
+  const mediaLinkRows: Array<{
+    media_id: string;
+    entity_type: 'person' | 'event' | 'relationship' | 'place' | 'source';
+    entity_id: string;
+    sort_order: number;
+  }> = [];
   for (const ml of rmMediaLinks) {
     const mediaOurId = mediaMap.get(ml.MediaID);
     if (!mediaOurId) continue;
@@ -445,13 +520,14 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     else if (ml.OwnerType === 3) { entityType = 'source'; entityId = sourceMap.get(ml.OwnerID); }
     else if (ml.OwnerType === 5) { entityType = 'place'; entityId = placeMap.get(ml.OwnerID); }
     if (!entityType || !entityId) continue;
-    await addMediaLink(ourDb, {
+    mediaLinkRows.push({
       media_id: mediaOurId,
       entity_type: entityType,
       entity_id: entityId,
       sort_order: ml.SortOrder ?? 0,
     });
   }
+  await bulkAddMediaLinks(ourDb, mediaLinkRows);
 
   return summary;
 }
