@@ -1,15 +1,16 @@
 // src/renderer/api.d.ts
-// Typed declaration for window.api, matching src/preload/index.ts exactly.
+// Typed declaration for window.api.
 // Do NOT import from this file — it augments the global Window interface automatically.
 //
-// Architecture note:
-// - Migrated domains (currently: persons) are typed via ApiSurface<typeof channelRegistry>.
-//   Adding a domain to src/shared/channels/index.ts automatically types it here.
-// - Not-yet-migrated domains stay explicitly typed below until they are migrated.
+// Architecture note (post-Specta migration):
+// - Rust-backed commands (db_*, fs_*, dialog_*, media_*) are typed by Specta in
+//   `./bindings.ts`. The renderer-facing wrappers in `tauri-window-api.ts`
+//   delegate to those generated types.
+// - Renderer-local handlers (persons.list, events.create, …) are explicitly
+//   typed below. The Electron-era `ApiSurface<typeof channelRegistry>` derivation
+//   was retired alongside `src/shared/channels/`.
 // - LooseFallback catches any other unknown keys (e.g. third-party extensions).
 
-import type { ApiSurface } from '../../shared/channels/api-type';
-import type { channelRegistry } from '../../shared/channels/registry';
 import type {
   Person,
   PersonName,
@@ -30,7 +31,6 @@ import type {
   MediaLink,
 } from '../../api/types';
 
-type Migrated = ApiSurface<typeof channelRegistry>;
 type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 
 export type PersonWithNames = Person & { given_name: string | null; surname: string | null };
@@ -53,7 +53,7 @@ export interface CheckResult {
 
 declare global {
   interface Window {
-    api: Migrated & LooseFallback & {
+    api: LooseFallback & {
       persons: {
         create: (data: {
           sex?: 'M' | 'F' | 'U';

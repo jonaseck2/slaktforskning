@@ -1,26 +1,41 @@
 // Runtime polyfill that mounts `window.api.*` for the Tauri build.
 //
-// In the Electron build, src/preload/index.ts exposes window.api via
-// contextBridge as a hand-maintained map of channel-name → ipcRenderer.invoke
-// calls. Tauri has no contextBridge / no preload world: the renderer is just
-// a webview page running our Vue app + the existing src/api/ TS code in the
-// same process. So instead of going through an IPC, we walk the channel
-// registry (src/shared/channels/) and wire each `name: 'foo:bar'` directly
-// to its declared handler function.
+// Two halves:
+//   - Rust-backed commands (DB primitives, fs, dialog, media thumbnailing)
+//     come from `./bindings.ts` which `tauri-specta` regenerates from the
+//     #[tauri::command] + #[specta::specta] annotations every build.
+//   - Renderer-local TS handlers (persons.list, events.create, …) are bound
+//     explicitly below by mapping each `window.api.<domain>.<method>` to a
+//     direct call against the matching `src/api/*` function. The Database
+//     instance is the renderer-side shim from `src/renderer/db-shim.ts`
+//     (vite alias of `node-sqlite3-wasm`); its methods invoke() rusqlite
+//     primitives in `src-tauri/src/db.rs`.
 //
-// Same Database instance threads through every call. The Database is the
-// renderer-side shim from src/renderer/db-shim.ts (vite alias of
-// `node-sqlite3-wasm`); its methods invoke() rusqlite primitives in
-// src-tauri/src/db.rs.
+// The previous Electron-era `src/shared/channels/` registry was deleted in
+// the Specta migration. The wiring it carried lives inline below — no
+// indirection, one source of truth per surface.
 
 import { Database } from 'node-sqlite3-wasm';
 import { invoke } from '@tauri-apps/api/core';
-import { listChannels, getChannel } from '../shared/channels/registry';
 import { initializeSchema } from '../api/schema';
 import * as media from '../api/media';
+import * as mediaRegions from '../api/media_regions';
+import { getMediaTimeline } from '../api/media_timeline';
 import * as checks from '../api/checks';
 import * as persons from '../api/persons';
+import * as places from '../api/places';
+import * as events from '../api/events';
+import * as sources from '../api/sources';
+import * as relationships from '../api/relationships';
+import * as groups from '../api/groups';
+import * as repositories from '../api/repositories';
+import * as researchTasks from '../api/research_tasks';
 import * as duplicates from '../api/duplicates';
+import * as gazetteers from '../api/gazetteers';
+import * as reportData from '../api/report_data';
+import * as uw from '../api/undo_wrappers';
+import { getAllGazetteers } from '../api/place-gazetteers/bundled';
+import { getDbSetting, setDbSetting, deleteDbSetting } from '../api/db_settings';
 import { queryAll } from '../api/db';
 import { undoManager } from '../api/undo';
 import { commands } from './bindings';
@@ -50,10 +65,6 @@ async function unwrapAs<T>(
 ): Promise<T> {
   return (await unwrap(p)) as unknown as T;
 }
-
-// Side-effect imports register every channel on the registry at module load.
-// Without these, the registry is empty and listChannels() returns nothing.
-import '../shared/channels';
 
 let dbInstance: Database | null = null;
 
@@ -141,46 +152,329 @@ import('@tauri-apps/api/event').then(({ listen }) => {
   }).catch(() => { /* ignore */ });
 }).catch(() => { /* ignore */ });
 
-// Convert 'persons:list' → ['persons', 'list'].
-function splitChannelName(name: string): [string, string] {
-  const [domain, method] = name.split(':');
-  if (!domain || !method) throw new Error(`malformed channel name: ${name}`);
-  return [domain, method];
-}
-
 export interface MountResult {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
   onDataChanged: (cb: () => void) => void;
+}
+
+// Bind a renderer-local handler taking `(db, ...args)` and broadcast
+// data:changed after the call completes. The Specta-migrated `mountWindowApi`
+// uses these two helpers in place of the deleted channel-registry walk.
+function mutating<Args extends unknown[], R>(
+  fn: (db: Database, ...args: Args) => Promise<R> | R,
+): (...args: Args) => Promise<R> {
+  return async (...args: Args) => {
+    const result = await fn(getDb(), ...args);
+    fireDataChanged();
+    return result as R;
+  };
+}
+
+function readOnly<Args extends unknown[], R>(
+  fn: (db: Database, ...args: Args) => Promise<R> | R,
+): (...args: Args) => Promise<R> {
+  return async (...args: Args) => fn(getDb(), ...args) as Promise<R>;
 }
 
 export function mountWindowApi(db: Database): MountResult {
   dbInstance = db;
   const api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>> = {};
 
-  for (const channelName of listChannels()) {
-    const ch = getChannel(channelName);
-    if (!ch) continue;
-    const [domain, method] = splitChannelName(channelName);
-    if (!api[domain]) api[domain] = {};
+  // ── Inlined channel bindings ────────────────────────────────────────────
+  // Each `domain:method` from the Electron-era `src/shared/channels/` registry
+  // is bound here as a direct call against its `src/api/*` handler. Mutating
+  // operations go through `mutating()` so `data:changed` fires after them.
 
-    // Worker channels: handler signature is `(db, ...args)`.
-    // Main channels: handler signature is `(...args)` — no db arg.
-    const isWorker = ch.thread === 'worker';
-    const handler = ch.handler as (...args: unknown[]) => Promise<unknown>;
-    const isMutating = (ch as { mutating?: boolean }).mutating === true;
+  // persons
+  api.persons = {
+    create: mutating((db, data: Parameters<typeof uw.createPersonUndo>[1]) => uw.createPersonUndo(db, data)),
+    createWithEvent: mutating((db, data: Parameters<typeof uw.createPersonWithEventUndo>[1]) => uw.createPersonWithEventUndo(db, data)),
+    get: readOnly((db, id: string) => persons.getPerson(db, id)),
+    list: readOnly((db) => persons.listPersons(db)),
+    update: mutating((db, id: string, data: Parameters<typeof uw.updatePersonUndo>[2]) => uw.updatePersonUndo(db, id, data)),
+    delete: mutating((db, id: string) => uw.deletePersonUndo(db, id)),
+    search: readOnly((db, query: string, relateeId: string | null) => persons.searchPersons(db, query, relateeId ?? null)),
+    addName: mutating((db, personId: string, data: Parameters<typeof uw.addPersonNameUndo>[2]) => uw.addPersonNameUndo(db, personId, data)),
+    getNames: readOnly((db, personId: string) => persons.getPersonNames(db, personId)),
+    updateName: mutating((db, id: string, data: Parameters<typeof uw.updatePersonNameUndo>[2]) => uw.updatePersonNameUndo(db, id, data)),
+    deleteName: mutating((db, id: string) => uw.deletePersonNameUndo(db, id)),
+    addIdentifier: mutating((db, personId: string, data: Parameters<typeof persons.addPersonIdentifier>[2]) => persons.addPersonIdentifier(db, personId, data)),
+    getIdentifiers: readOnly((db, personId: string) => persons.getPersonIdentifiers(db, personId)),
+    deleteIdentifier: mutating((db, id: string) => persons.deletePersonIdentifier(db, id)),
+    listPage: readOnly(async (
+      db,
+      limit: number,
+      offset: number,
+      sortBy: persons.ListPersonsSortBy,
+      sortDir: persons.ListPersonsSortDir,
+      query?: string,
+      sortBy2?: persons.ListPersonsSortBy | null,
+      sortDir2?: persons.ListPersonsSortDir,
+    ) => ({
+      persons: await persons.listPersonsPage(db, limit, offset, sortBy, sortDir, query, sortBy2 ?? null, sortDir2),
+      total: await persons.countPersons(db, query),
+    })),
+    // Not flagged mutating — derived render-time cache. The quality_issue_counts
+    // table is exempt from the GEDCOM fidelity registry for the same reason.
+    refreshQualityIssueCounts: readOnly((db, counts: Record<string, number>) => persons.refreshQualityIssueCounts(db, counts)),
+    getQualityIssueCounts: readOnly((db, personIds: string[]) => persons.getQualityIssueCounts(db, personIds)),
+    searchWithDetails: readOnly((db, query: string) => persons.searchPersonsWithDetails(db, query)),
+    listUnsourcedPage: readOnly(async (db, limit: number, offset: number) => ({
+      persons: await persons.listUnsourcedPersonsPage(db, limit, offset),
+      total: await persons.countUnsourcedPersons(db),
+    })),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
-    api[domain][method] = isWorker
-      ? async (...args: unknown[]) => {
-          const result = await handler(getDb(), ...args);
-          if (isMutating) fireDataChanged();
-          return result;
-        }
-      : async (...args: unknown[]) => {
-          const result = await handler(...args);
-          if (isMutating) fireDataChanged();
-          return result;
-        };
-  }
+  // places
+  api.places = {
+    create: mutating((db, data: Parameters<typeof places.createPlace>[1]) => places.createPlace(db, data)),
+    get: readOnly((db, id: string) => places.getPlace(db, id)),
+    list: readOnly((db) => places.listPlaces(db)),
+    listPage: readOnly(async (
+      db,
+      limit: number,
+      offset: number,
+      sortBy: places.ListPlacesSortBy,
+      sortDir: places.ListPlacesSortDir,
+      query?: string,
+    ) => ({
+      items: await places.listPlacesPage(db, limit, offset, sortBy, sortDir, query),
+      total: await places.countPlaces(db, query),
+    })),
+    search: readOnly((db, query: string) => places.searchPlaces(db, query)),
+    update: mutating((db, id: string, data: Parameters<typeof places.updatePlace>[2]) => places.updatePlace(db, id, data)),
+    delete: mutating((db, id: string) => places.deletePlace(db, id)),
+    findOrCreate: mutating((db, name: string) => places.findOrCreatePlace(db, name)),
+    findOrCreateWithChain: mutating((db, name: string, chain: Parameters<typeof places.findOrCreatePlaceWithChain>[2]) =>
+      places.findOrCreatePlaceWithChain(db, name, chain)),
+    getPath: readOnly((db, id: string) => places.getPlacePath(db, id)),
+    getPersons: readOnly((db, placeId: string) => places.getPersonsForPlace(db, placeId)),
+    listChildren: readOnly((db, parentId: string | null) => places.listPlaceChildren(db, parentId)),
+    getAncestors: readOnly((db, id: string) => places.getPlaceAncestors(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // events
+  api.events = {
+    create: mutating((db, data: Parameters<typeof events.createEvent>[1]) => uw.createEventUndo(db, data)),
+    get: readOnly((db, id: string) => events.getEvent(db, id)),
+    forPerson: readOnly((db, personId: string) => events.getEventsForPerson(db, personId)),
+    forRelationship: readOnly((db, relationshipId: string) => events.getEventsForRelationship(db, relationshipId)),
+    update: mutating((db, id: string, data: Parameters<typeof events.updateEvent>[2]) => uw.updateEventUndo(db, id, data)),
+    delete: mutating((db, id: string) => uw.deleteEventUndo(db, id)),
+    forPlace: readOnly((db, placeId: string) => events.getEventsForPlace(db, placeId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // sources + citations
+  api.sources = {
+    create: mutating((db, data: Parameters<typeof sources.createSource>[1]) => uw.createSourceUndo(db, data)),
+    get: readOnly((db, id: string) => sources.getSource(db, id)),
+    list: readOnly((db) => sources.listSources(db)),
+    listPage: readOnly(async (
+      db,
+      limit: number,
+      offset: number,
+      sortBy: sources.ListSourcesSortBy,
+      sortDir: sources.ListSourcesSortDir,
+      query?: string,
+    ) => ({
+      items: await sources.listSourcesPage(db, limit, offset, sortBy, sortDir, query),
+      total: await sources.countSources(db, query),
+    })),
+    update: mutating((db, id: string, data: Parameters<typeof sources.updateSource>[2]) => uw.updateSourceUndo(db, id, data)),
+    delete: mutating((db, id: string) => uw.deleteSourceUndo(db, id)),
+    search: readOnly((db, query: string) => sources.searchSources(db, query)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  api.citations = {
+    create: mutating((db, data: Parameters<typeof sources.createCitation>[1]) => uw.createCitationUndo(db, data)),
+    get: readOnly((db, id: string) => sources.getCitation(db, id)),
+    forSource: readOnly((db, sourceId: string) => sources.getCitationsForSource(db, sourceId)),
+    forEvent: readOnly((db, eventId: string) => sources.getCitationsForEvent(db, eventId)),
+    forPerson: readOnly((db, personId: string) => sources.getCitationsForPerson(db, personId)),
+    forRelationship: readOnly((db, relationshipId: string) => sources.getCitationsForRelationship(db, relationshipId)),
+    forPlace: readOnly((db, placeId: string) => sources.getCitationsForPlace(db, placeId)),
+    forPersonName: readOnly((db, personNameId: string) => sources.getCitationsForPersonName(db, personNameId)),
+    delete: mutating((db, id: string) => uw.deleteCitationUndo(db, id)),
+    update: mutating((db, id: string, data: Parameters<typeof sources.updateCitation>[2]) => uw.updateCitationUndo(db, id, data)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // relationships + eventParticipants
+  api.relationships = {
+    create: mutating((db, data: Parameters<typeof relationships.createRelationship>[1]) => uw.createRelationshipUndo(db, data)),
+    get: readOnly((db, id: string) => relationships.getRelationship(db, id)),
+    list: readOnly((db) => relationships.listRelationships(db)),
+    listPage: readOnly(async (db, limit: number, offset: number) => ({
+      relationships: await relationships.listRelationshipsPage(db, limit, offset),
+      total: await relationships.countRelationships(db),
+    })),
+    update: mutating((db, id: string, data: Parameters<typeof relationships.updateRelationship>[2]) => uw.updateRelationshipUndo(db, id, data)),
+    delete: mutating((db, id: string) => uw.deleteRelationshipUndo(db, id)),
+    getForPerson: readOnly((db, personId: string) => relationships.getRelationshipsOfPerson(db, personId)),
+    search: readOnly((db, query: string) => relationships.searchRelationships(db, query)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  api.eventParticipants = {
+    add: mutating((db, data: Parameters<typeof relationships.addEventParticipant>[1]) => uw.addEventParticipantUndo(db, data)),
+    getForEvent: readOnly((db, eventId: string) => relationships.getEventParticipants(db, eventId)),
+    remove: mutating((db, id: string) => uw.removeEventParticipantUndo(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // groups
+  api.groups = {
+    list: readOnly((db) => groups.listGroups(db)),
+    get: readOnly((db, id: string) => groups.getGroup(db, id)),
+    create: mutating((db, data: Parameters<typeof groups.createGroup>[1]) => groups.createGroup(db, data)),
+    update: mutating((db, id: string, data: Parameters<typeof groups.updateGroup>[2]) => groups.updateGroup(db, id, data)),
+    delete: mutating((db, id: string) => groups.deleteGroup(db, id)),
+    addLink: mutating((db, groupId: string, entityType: Parameters<typeof groups.addGroupLink>[2], entityId: string) =>
+      groups.addGroupLink(db, groupId, entityType, entityId)),
+    removeLink: mutating((db, linkId: string) => groups.removeGroupLink(db, linkId)),
+    removeLinkByEntity: mutating((db, groupId: string, entityType: Parameters<typeof groups.removeGroupLinkByEntity>[2], entityId: string) =>
+      groups.removeGroupLinkByEntity(db, groupId, entityType, entityId)),
+    getLinks: readOnly((db, groupId: string) => groups.getGroupLinks(db, groupId)),
+    forPerson: readOnly((db, personId: string) => groups.getGroupsForPerson(db, personId)),
+    forPlace: readOnly((db, placeId: string) => groups.getGroupsForPlace(db, placeId)),
+    forMedia: readOnly((db, mediaId: string) => groups.getGroupsForMedia(db, mediaId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // repositories
+  api.repositories = {
+    list: readOnly((db) => repositories.listRepositories(db)),
+    get: readOnly((db, id: string) => repositories.getRepository(db, id)),
+    create: mutating((db, data: Parameters<typeof repositories.createRepository>[1]) => repositories.createRepository(db, data)),
+    update: mutating((db, id: string, data: Parameters<typeof repositories.updateRepository>[2]) => repositories.updateRepository(db, id, data)),
+    delete: mutating((db, id: string) => repositories.deleteRepository(db, id)),
+    forSource: readOnly((db, sourceId: string) => repositories.getRepositoriesForSource(db, sourceId)),
+    linkSource: mutating((db, sourceId: string, repoId: string) => repositories.linkSourceRepository(db, sourceId, repoId)),
+    unlinkSource: mutating((db, sourceId: string, repoId: string) => repositories.unlinkSourceRepository(db, sourceId, repoId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // researchTasks
+  api.researchTasks = {
+    list: readOnly((db) => researchTasks.listResearchTasks(db)),
+    get: readOnly((db, id: string) => researchTasks.getResearchTask(db, id)),
+    forPerson: readOnly((db, personId: string) => researchTasks.getResearchTasksForPerson(db, personId)),
+    forPlace: readOnly((db, placeId: string) => researchTasks.getResearchTasksForPlace(db, placeId)),
+    forMedia: readOnly((db, mediaId: string) => researchTasks.getResearchTasksForMedia(db, mediaId)),
+    create: mutating((db, data: Parameters<typeof researchTasks.createResearchTask>[1]) => researchTasks.createResearchTask(db, data)),
+    update: mutating((db, id: string, data: Parameters<typeof researchTasks.updateResearchTask>[2]) => researchTasks.updateResearchTask(db, id, data)),
+    delete: mutating((db, id: string) => researchTasks.deleteResearchTask(db, id)),
+    addLink: mutating((db, taskId: string, entityType: Parameters<typeof researchTasks.addTaskLink>[2], entityId: string) =>
+      researchTasks.addTaskLink(db, taskId, entityType, entityId)),
+    removeLink: mutating((db, linkId: string) => researchTasks.removeTaskLink(db, linkId)),
+    getLinks: readOnly((db, taskId: string) => researchTasks.getTaskLinks(db, taskId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // reports (read-only computed views)
+  api.reports = {
+    personSummary: readOnly((db, personId: string) => reportData.getPersonSummary(db, personId)),
+    familyUnit: readOnly((db, relId: string) => reportData.getFamilyUnit(db, relId)),
+    ancestorTree: readOnly((db, personId: string, generations?: number) => reportData.getAncestorTree(db, personId, generations)),
+    placeHistory: readOnly((db, placeId: string) => reportData.getPlaceHistory(db, placeId)),
+    researchGaps: readOnly((db, personId: string) => reportData.getResearchGaps(db, personId)),
+    timeline: readOnly((db, personId: string, options?: Parameters<typeof reportData.getTimeline>[2]) => reportData.getTimeline(db, personId, options)),
+    aliveInYear: readOnly((db, year: number) => reportData.getAliveInYear(db, year)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // duplicates (persons, places, sources; media also has merge — wired later below)
+  api.duplicates = {
+    find: readOnly((db, limit?: number) => duplicates.findDuplicates(db, limit)),
+    findPage: readOnly((db, limit?: number, offset?: number) => duplicates.findDuplicatesPage(db, limit, offset)),
+    count: readOnly((db) => duplicates.countDuplicates(db)),
+    merge: mutating((db, targetId: string, sourceId: string) => duplicates.mergePersons(db, targetId, sourceId)),
+    ignore: mutating((db, personAId: string, personBId: string) => duplicates.ignoreDuplicate(db, personAId, personBId)),
+    findPlaces: readOnly((db, limit?: number, offset?: number) => duplicates.findDuplicatePlaces(db, limit, offset)),
+    countPlaces: readOnly((db) => duplicates.countDuplicatePlaces(db)),
+    ignorePlace: mutating((db, placeAId: string, placeBId: string) => duplicates.ignoreDuplicatePlace(db, placeAId, placeBId)),
+    mergePlaces: mutating((db, targetId: string, sourceId: string) => duplicates.mergePlaces(db, targetId, sourceId)),
+    findSources: readOnly((db, limit?: number, offset?: number) => duplicates.findDuplicateSources(db, limit, offset)),
+    countSources: readOnly((db) => duplicates.countDuplicateSources(db)),
+    ignoreSource: mutating((db, sourceAId: string, sourceBId: string) => duplicates.ignoreDuplicateSource(db, sourceAId, sourceBId)),
+    mergeSources: mutating((db, targetId: string, sourceId: string) => duplicates.mergeSources(db, targetId, sourceId)),
+    findMedia: readOnly((db, limit?: number, offset?: number) => duplicates.findDuplicateMedia(db, limit, offset)),
+    countMedia: readOnly((db) => duplicates.countDuplicateMedia(db)),
+    ignoreMedia: mutating((db, mediaAId: string, mediaBId: string) => duplicates.ignoreDuplicateMedia(db, mediaAId, mediaBId)),
+    // mergeMedia is wired below — it needs the active DB path for the file
+    // snapshot + delete and lives next to the other fs-touching shims.
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // media (DB-backed; the fs+dialog shims overwrite a few entries below)
+  api.media = {
+    list: readOnly((db) => media.listMedia(db)),
+    listPage: readOnly(async (
+      db,
+      limit: number,
+      offset: number,
+      sortBy?: media.ListMediaSortBy,
+      sortDir?: media.ListMediaSortDir,
+      query?: string,
+      filters?: media.MediaListFilters,
+    ) => ({
+      items: await media.listMediaPage(db, limit, offset, sortBy, sortDir, query, filters),
+      total: await media.countMedia(db, query, filters),
+      total_missing: await media.countMissingMedia(db, query, filters),
+    })),
+    get: readOnly((db, id: string) => media.getMedia(db, id)),
+    create: mutating((db, data: Parameters<typeof media.createMedia>[1]) => media.createMedia(db, data)),
+    delete: mutating((db, id: string) => media.deleteMedia(db, id)),
+    update: mutating((db, id: string, data: Parameters<typeof media.updateMedia>[2]) => media.updateMedia(db, id, data)),
+    forEntity: readOnly((db, entityType: Parameters<typeof media.getMediaForEntity>[1], entityId: string) =>
+      media.getMediaForEntity(db, entityType, entityId)),
+    linksForMedia: readOnly((db, mediaId: string) => media.getLinksForMedia(db, mediaId)),
+    addLink: mutating((db, data: Parameters<typeof media.addMediaLink>[1]) => media.addMediaLink(db, data)),
+    removeLink: mutating((db, linkId: string) => media.removeMediaLink(db, linkId)),
+    reorder: mutating((db, linkIds: string[]) => media.reorderMediaLinks(db, linkIds)),
+    profilePicRef: readOnly((db, personId: string) => media.getPersonProfilePicRef(db, personId)),
+    profilePicRefs: readOnly((db, personIds: string[]) => media.getPersonProfilePicRefs(db, personIds)),
+    getTimeline: readOnly((db, entityType: Parameters<typeof getMediaTimeline>[1], entityId: string) =>
+      getMediaTimeline(db, entityType, entityId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  api.mediaRegions = {
+    create: mutating((db, data: Parameters<typeof mediaRegions.createMediaRegion>[1]) => mediaRegions.createMediaRegion(db, data)),
+    getForMedia: readOnly((db, mediaId: string) => mediaRegions.getMediaRegions(db, mediaId)),
+    getForPerson: readOnly((db, personId: string) => mediaRegions.getRegionsForPerson(db, personId)),
+    update: mutating((db, id: string, data: Parameters<typeof mediaRegions.updateMediaRegion>[2]) => mediaRegions.updateMediaRegion(db, id, data)),
+    delete: mutating((db, id: string) => mediaRegions.deleteMediaRegion(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // gazetteers — DB-backed (worker-shape) + pure-function (main-shape) blocks
+  api.gazetteers = {
+    list: readOnly((db) => gazetteers.listGazetteers(db)),
+    import: mutating((db, json: string) => gazetteers.importGazetteer(db, json)),
+    export: readOnly((db, id: string) => gazetteers.exportGazetteer(db, id)),
+    delete: mutating((db, id: string) => gazetteers.deleteGazetteer(db, id)),
+    getImported: readOnly((db) => gazetteers.getImportedGazetteers(db)),
+    // Pure functions — no db argument.
+    getSchema: async () => gazetteers.getGazetteerSchema(),
+    getBundled: async () => getAllGazetteers(),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // db settings (the broader api.db block with file dialogs is built later
+  // in this function and adds getCurrent / openExisting / createNew / etc.).
+  api.db = {
+    getSetting: readOnly((db, key: string) => getDbSetting(db, key)),
+    // Settings changes don't trigger a full data:changed broadcast.
+    setSetting: readOnly(async (db, key: string, value: string) => { await setDbSetting(db, key, value); }),
+    deleteSetting: readOnly(async (db, key: string) => { await deleteDbSetting(db, key); }),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // undo state queries (the undo.undo / undo.redo entrypoints with data:changed
+  // broadcasts are wired further down — kept together with the other event
+  // emitters for that domain).
+  api.undo = {
+    state: readOnly(() => undoManager.getState()),
+    beginGroup: readOnly(async (_db, label: string) => { await undoManager.beginGroup(label); }),
+    endGroup: readOnly(async () => { await undoManager.endGroup(); }),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // website export (preview snapshot — pure DB walk; buildPreviewHtml and
+  // export wrappers that hit fs/dialog land further down).
+  api.website = {
+    previewSnapshot: readOnly((db, opts: Parameters<typeof import('../api/html_site/preview').buildPreview>[1]) =>
+      import('../api/html_site/preview').then(({ buildPreview }) => buildPreview(db, opts))),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
 
   // Main-only channels that the registry walk can't satisfy because they
   // require Tauri runtime services (file dialog, app data dir). Override the
@@ -1221,14 +1515,32 @@ export function mountWindowApi(db: Database): MountResult {
     const r = await saveFile('Export CSV', defaultName, ['csv'], 'CSV Files');
     if (r.canceled || !r.path) return { canceled: true };
     try {
-      // Reuse the csv:_exportRun worker channel — already in the registry,
-      // already polyfilled, runs the same api/ functions in renderer.
-      const ch = getChannel('csv:_exportRun');
-      if (!ch) return { success: false, error: 'csv:_exportRun not registered' };
-      const result = await (ch.handler as (db: Database, opts: unknown) => Promise<{ csv?: string; error?: string }>)(getDb(), o);
-      if (result.error) return { success: false, error: result.error };
+      // Direct call into the csv_export api/ helpers — the Electron-era
+      // csv:_exportRun worker channel that used to wrap them is gone.
+      const csvMod = await import('../api/csv_export');
+      const csvOptions: import('../api/csv_export').CsvOptions = {
+        delimiter: o.delimiter ?? ',',
+        encoding: o.encoding ?? 'utf-8',
+      };
+      let csv: string;
+      switch (o.entityType) {
+        case 'persons':
+          csv = await csvMod.exportPersonsCsv(getDb(), csvOptions);
+          break;
+        case 'events':
+          csv = await csvMod.exportEventsCsv(getDb(), csvOptions);
+          break;
+        case 'sources':
+          csv = await csvMod.exportSourcesCsv(getDb(), csvOptions);
+          break;
+        case 'places':
+          csv = await csvMod.exportPlacesCsv(getDb(), csvOptions);
+          break;
+        default:
+          return { success: false, error: 'Unknown entityType: ' + o.entityType };
+      }
       const encoding = o.encoding ?? 'utf-8';
-      const csvOut = encoding === 'utf-8-bom' ? '﻿' + (result.csv ?? '') : (result.csv ?? '');
+      const csvOut = encoding === 'utf-8-bom' ? '﻿' + csv : csv;
       await unwrap(commands.fsWriteText(r.path, csvOut));
       return { success: true, filePath: r.path };
     } catch (e) {

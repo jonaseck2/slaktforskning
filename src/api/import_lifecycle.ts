@@ -1,19 +1,19 @@
 /**
- * Shared lifecycle scaffolding for worker-thread import handlers.
+ * Shared lifecycle scaffolding for import handlers.
  *
  * Every long-running import (Holger, GEDCOM, Genney, archive) needs:
- *   - flip importInProgress on at start (so other worker handlers can short-circuit)
+ *   - flip importInProgress on at start (so other handlers can short-circuit)
  *   - emit [import-timing] start/total console logs for postmortem timing
  *   - catch errors, log a timing-tagged warning, and return { success: false, error }
  *   - clear importInProgress in a finally block
  *
- * Filename starts with `_` to signal this is a helpers module — not a
- * channel-domain file. The channel-registry walk in `index.ts` only imports
- * domain files (`persons.ts`, `import.ts`, …); helper files are pulled in by
- * those domain files explicitly.
+ * In the Tauri build importers run in the renderer; the lifecycle flag is held
+ * on the renderer-local `_importInProgress` in `tauri-window-api.ts`. The shape
+ * here used to live in `src/shared/channels/_import-helpers.ts` (Electron-era
+ * worker channels) — relocated to `src/api/` after the Specta migration deleted
+ * the channel registry.
  */
-
-import { setWorkerImportInProgress } from '../db-worker-state';
+import { setWorkerImportInProgress } from '../shared/db-worker-state';
 
 export interface ImportResult<R = unknown> {
   success: boolean;
@@ -22,7 +22,7 @@ export interface ImportResult<R = unknown> {
 }
 
 /**
- * Wrap a worker-thread import handler with the standard lifecycle.
+ * Wrap an import handler with the standard lifecycle.
  *
  * `name` is the human label for timing logs (e.g. "holger", "gedcom", "genney").
  * `fn` runs the actual import and returns the report payload (NOT wrapped in

@@ -71,9 +71,9 @@ describe('tauri-window-api mountWindowApi shape', () => {
 
   it('mounts a non-empty surface (auto-walk + explicit polyfills both fire)', () => {
     const { api } = mountWindowApi(stubDb);
-    // Spot-check a representative channel from the auto-walked half
-    // (persons:list comes from src/shared/channels/persons.ts) and the
-    // explicit-polyfill half (db.getCurrent is overridden inline).
+    // Spot-check a representative renderer-local binding (persons.list, bound
+    // directly to src/api/persons.ts) and the explicit-polyfill half
+    // (db.getCurrent which calls a Rust command via Specta bindings).
     expect(typeof api.persons?.list).toBe('function');
     expect(typeof api.db?.getCurrent).toBe('function');
   });
