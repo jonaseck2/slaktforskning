@@ -32,15 +32,27 @@ export interface FanLayoutOptions {
   arcSpan?: ArcSpan;   // default 180
   maxGen?: number;      // default 6, range 1-8
   fillFn?: (ahnNum: number, gen: number, isEmpty: boolean, person: PersonNode | null) => string;
+  /**
+   * Optional per-generation font sizes used to balance the radial padding above
+   * and below the 4-line curved-text block in gens 1-4. The outermost line is the
+   * given name (larger font); the innermost is the death date (smaller font).
+   * Without compensation the larger-font glyph reaches farther past the outer
+   * textPath than the smaller-font descender pulls below the inner textPath,
+   * so the ink ends up biased toward the outer ring edge.
+   */
+  nameFontSize?: (gen: number) => number;
+  dateFontSize?: (gen: number) => number;
 }
 
-// Ring depths, keyed by arc span. Wide arcs (360°) need more radial room
-// because fonts are larger and gens 5-6 render 4 stacked lines; narrow arcs
-// (180°) shrink fonts and collapse gens 5-6 to 2-line compact mode, so the
-// tall rings at 360° become wasted whitespace at 180°. Values interpolate
-// linearly between 180° and 360°.
-const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 85, 87, 94, 125];
-const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 60, 63, 60, 72];
+// Ring depths, keyed by arc span. Each depth is the radial extent of the ring;
+// for gens 5+ (where text reads radially outward) that's also the reading-direction
+// limit, so depths are sized to fit `<full name> <year range>` at each generation's
+// font size with a couple of pixels of padding. Wide arcs (360°) host bigger fonts
+// and the 4-line gen 5-6 layout, so their depths run larger; narrow arcs (180°)
+// shrink fonts, collapse gen 5-6 to 2-line compact mode and pack rings tighter.
+// Values interpolate linearly between 180° and 360°.
+const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 82, 70, 55, 80];
+const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 70, 60, 50, 70];
 // Gap between rings
 const RING_GAP = 2;
 
@@ -50,6 +62,26 @@ function ringDepths(arcSpan: number): number[] {
     const narrow = RING_DEPTHS_NARROW[i] ?? wide;
     return narrow + (wide - narrow) * t;
   });
+}
+
+// Default per-generation font sizes — kept in sync with NAME_NARROW/WIDE and
+// DATE_NARROW/WIDE in FanChartSvg.vue. Used as defaults for the line-centre
+// balance shift in computeFanLayout when no fontSize fns are passed via options.
+const DEFAULT_NAME_WIDE: Record<number, number>   = { 1: 11, 2: 10,  3: 9,   4: 8.5, 5: 7.5, 6: 6,   7: 4.5, 8: 4.2 };
+const DEFAULT_NAME_NARROW: Record<number, number> = { 1: 11, 2: 10,  3: 7.5, 4: 6.5, 5: 6,   6: 5,   7: 4,   8: 3.8 };
+const DEFAULT_DATE_WIDE: Record<number, number>   = { 1: 9,  2: 8,   3: 7.5, 4: 7,   5: 6.5, 6: 5.5, 7: 4,   8: 3.8 };
+const DEFAULT_DATE_NARROW: Record<number, number> = { 1: 9,  2: 7.5, 3: 6.5, 4: 5.5, 5: 5,   6: 4.5, 7: 3.6, 8: 3.4 };
+function defaultNameFontSize(arcSpan: number, gen: number): number {
+  const t = Math.max(0, Math.min(1, (arcSpan - 180) / 180));
+  const w = DEFAULT_NAME_WIDE[gen] ?? 4.5;
+  const n = DEFAULT_NAME_NARROW[gen] ?? 4;
+  return n + (w - n) * t;
+}
+function defaultDateFontSize(arcSpan: number, gen: number): number {
+  const t = Math.max(0, Math.min(1, (arcSpan - 180) / 180));
+  const w = DEFAULT_DATE_WIDE[gen] ?? 4;
+  const n = DEFAULT_DATE_NARROW[gen] ?? 3.6;
+  return n + (w - n) * t;
 }
 
 function computeRings(maxGen: number, arcSpan: number = 360): Array<{ rInner: number; rOuter: number }> {
@@ -249,15 +281,37 @@ export function computeFanLayout(tree: PedigreeTree, options: FanLayoutOptions =
       if (person?.surname) lines.push('surname');
       if (person?.birthDate) lines.push('birth');
       if (person?.deathDate) lines.push('death');
-      const lineGap = 10;
+      // Distribute lines evenly across the ring so margin-top ≈ margin-bottom ≈ inter-line gap.
+      // ringDepth / (n+1) gives an n-line block centered with equal top/bottom padding.
+      // Capped so deep rings (gen 5+ wide) don't waste space.
+      const ringDepth = rOuter - rInner;
+      const nLines = Math.max(2, lines.length);
+      const lineGap = Math.min(11, ringDepth / (nLines + 1));
       const posOf: Partial<Record<'given' | 'surname' | 'birth' | 'death', number>> = {};
       lines.forEach((key, i) => {
         posOf[key] = ((lines.length - 1) / 2 - i) * lineGap;
       });
-      const rGiven   = rMid + sign * (posOf.given   ?? 0);
-      const rSurname = rMid + sign * (posOf.surname ?? 0);
-      const rBirth   = rMid + sign * (posOf.birth   ?? 0);
-      const rDeath   = rMid + sign * (posOf.death   ?? 0);
+      // Visual padding balance: a curved-text glyph's ascender reaches farther
+      // past its baseline than the descender drops below — so even with the
+      // line block mathematically centered on rMid, the OUTER ink (given, big
+      // font) overshoots more than the INNER ink (death, small font) does.
+      // Shift the whole block inward by half the asymmetry: 0.75·name reaches
+      // out, 0.25·date reaches in, so the centre-of-ink offset is
+      //   (0.75·nameFont − 0.25·dateFont) / 2.
+      // 0.75 / 0.25 are the standard alphabetic ascender/descender ratios;
+      // applies even when dominant-baseline="central" because WebKit's textPath
+      // baseline interpretation still leaves a measurable ink bias.
+      const nameFontFn = options.nameFontSize ?? ((g: number) => defaultNameFontSize(arcSpan, g));
+      const dateFontFn = options.dateFontSize ?? ((g: number) => defaultDateFontSize(arcSpan, g));
+      const nameFont = nameFontFn(gen);
+      const dateFont = dateFontFn(gen);
+      const lineCenterShift = (gen >= 1 && gen <= 4)
+        ? (0.75 * nameFont - 0.25 * dateFont) / 2
+        : 0;
+      const rGiven   = rMid + sign * ((posOf.given   ?? 0) - lineCenterShift);
+      const rSurname = rMid + sign * ((posOf.surname ?? 0) - lineCenterShift);
+      const rBirth   = rMid + sign * ((posOf.birth   ?? 0) - lineCenterShift);
+      const rDeath   = rMid + sign * ((posOf.death   ?? 0) - lineCenterShift);
 
       const textPathGivenD = isFocal ? '' : arcPath(rGiven);
       const textPathD      = isFocal ? '' : arcPath(rSurname);

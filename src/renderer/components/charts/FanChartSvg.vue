@@ -61,7 +61,13 @@
         <path v-if="seg.isEmpty" :d="seg.pathD" fill="url(#fan-empty-pattern)" style="pointer-events: none; opacity: 0.3;" />
       </template>
 
-      <!-- Curved text (gen 1-4) -->
+      <!-- Curved text (gen 1-4). Uses the default alphabetic baseline (glyphs sit
+           on the path with ascenders extending outward, descenders extending
+           inward). The line-block is rebalanced inside computeFanLayout via
+           lineCenterShift, which moves each baseline inward by
+           (0.75·nameFont − 0.25·dateFont)/2 so the visible ink ends up centered
+           in the ring instead of biased toward the outer edge. dominant-baseline
+           is intentionally NOT set — its WebKit/textPath behaviour is unreliable. -->
       <template v-if="seg.person && seg.generation >= 1 && seg.generation <= 4">
         <text v-if="givenLabel(seg)" text-anchor="middle" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">
           <textPath :href="`#ftpg-${seg.ahnNum}`" startOffset="50%">{{ fitCurved(givenLabel(seg), seg, nameFontSize(seg.generation)) }}</textPath>
@@ -87,19 +93,23 @@
         </g>
       </template>
 
-      <!-- Radial text gen 8: single line (full name + year range) — segments are too
-           narrow tangentially for any stack, so everything sits on one radial baseline. -->
+      <!-- Radial text gen 8: name + year range on one radial baseline, but split into
+           TWO text elements anchored at the segment midline so siblings line up in
+           concentric rings — name fills the inner half (text-anchor="end"), date the
+           outer half (text-anchor="start"). A single centered tspan-pair drifts the
+           name inward whenever the date is long, breaking ring alignment. -->
       <template v-else-if="seg.person && seg.generation >= 8">
         <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
-          <text :x="seg.textX" :y="seg.textY" dy="0" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fullNameLabel(seg) }}<tspan v-if="yearRangeLabel(seg)" :font-size="dateFontSize(seg.generation)" font-weight="400" :fill="dateColor"> {{ yearRangeLabel(seg) }}</tspan></text>
+          <text :x="seg.textX - 1" :y="seg.textY" text-anchor="end" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fitRadial(fullNameLabel(seg), seg, nameFontSize(seg.generation), 'inner') }}</text>
+          <text v-if="yearRangeLabel(seg)" :x="seg.textX + 1" :y="seg.textY" text-anchor="start" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ fitRadial(yearRangeLabel(seg), seg, dateFontSize(seg.generation), 'outer') }}</text>
         </g>
       </template>
 
       <!-- Radial text gen 5+ (narrow arc) and gen 7 (all arcs): 2 compact lines (full name + date range). -->
       <template v-else-if="seg.person && (seg.generation === 7 || (seg.generation >= 5 && isCompactGen(seg.generation)))">
         <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
-          <text :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg.generation).name" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fullNameLabel(seg) }}</text>
-          <text v-if="dateRangeLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg.generation).date" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ dateRangeLabel(seg) }}</text>
+          <text :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg).name" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fullNameLabel(seg) }}</text>
+          <text v-if="dateRangeLabel(seg)" :x="seg.textX" :y="seg.textY" :dy="twoLineDy(seg).date" text-anchor="middle" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ dateRangeLabel(seg) }}</text>
         </g>
       </template>
     </g>
@@ -334,6 +344,18 @@ function fitCurved(text: string, seg: FanSegment, fontSize: number): string {
   return truncateToWidth(text, arcLen, fontSize);
 }
 
+// Truncate a radial-text label to the inner or outer half of its ring's depth.
+// Used by gen 8 where name lives in the inner half and date in the outer half;
+// each gets half the ring depth minus a 1px gap on the centre side and a 2px
+// breathing margin against the ring edge.
+function fitRadial(text: string, seg: FanSegment, fontSize: number, half: 'inner' | 'outer'): string {
+  if (!text) return '';
+  const halfDepth = (seg.rOuter - seg.rInner) / 2;
+  const available = halfDepth - 1 - 2;
+  if (available <= 0) return '';
+  return truncateToWidth(text, available, fontSize);
+}
+
 function dateRangeLabel(seg: FanSegment): string {
   const b = seg.person?.birthDate ?? '';
   const d = seg.person?.deathDate ?? '';
@@ -357,13 +379,15 @@ function yearRangeLabel(seg: FanSegment): string {
   return range.join(' ');
 }
 
-// Tangential dy offsets for the 2-line radial layout. Gen 5-6 (compact narrow-arc
-// mode) and gen 7 each get their own gap based on how much tangential room the
-// segment has — gen 7 segments are half as wide as gen 6 so the gap is tighter.
-function twoLineDy(gen: number): { name: string; date: string } {
-  if (gen === 7) return { name: '-2', date: '2.2' };
-  // gen 5-6 compact mode (narrow arc): moderate gap
-  return { name: '-3', date: '3' };
+// Tangential dy offsets for the 2-line radial layout (gen 5-7 compact and gen 7
+// always). Gap = average of name + date font sizes so the visual spacing scales
+// with the text — tight on smaller gens, generous on bigger ones, never wasting
+// space.
+function twoLineDy(seg: FanSegment): { name: string; date: string } {
+  const fontName = nameFontSize(seg.generation);
+  const fontDate = dateFontSize(seg.generation);
+  const gap = ((fontName + fontDate) / 2) * 1.05;
+  return { name: (-gap / 2).toFixed(2), date: (gap / 2).toFixed(2) };
 }
 
 function tooltipLabel(seg: FanSegment): string {
@@ -379,10 +403,10 @@ function tooltipLabel(seg: FanSegment): string {
 // Font sizes are linearly interpolated between the narrow-arc target (180°) and
 // the wide-arc baseline (360°). 360° matches the previously-tuned sizes; 180°
 // shrinks gen 3+ to fit inside much narrower tangential slots.
-const NAME_WIDE: Record<number, number>   = { 1: 11, 2: 10,  3: 9,   4: 8.5, 5: 7.5, 6: 6,   7: 5,   8: 4.5 };
-const NAME_NARROW: Record<number, number> = { 1: 11, 2: 10,  3: 7.5, 4: 6.5, 5: 6,   6: 5,   7: 4.5, 8: 4   };
-const DATE_WIDE: Record<number, number>   = { 1: 9,  2: 8,   3: 7.5, 4: 7,   5: 6.5, 6: 5.5, 7: 4.5, 8: 4   };
-const DATE_NARROW: Record<number, number> = { 1: 9,  2: 7.5, 3: 6.5, 4: 5.5, 5: 5,   6: 4.5, 7: 4,   8: 3.6 };
+const NAME_WIDE: Record<number, number>   = { 1: 11, 2: 10,  3: 9,   4: 8.5, 5: 7.5, 6: 6,   7: 4.5, 8: 4.2 };
+const NAME_NARROW: Record<number, number> = { 1: 11, 2: 10,  3: 7.5, 4: 6.5, 5: 6,   6: 5,   7: 4,   8: 3.8 };
+const DATE_WIDE: Record<number, number>   = { 1: 9,  2: 8,   3: 7.5, 4: 7,   5: 6.5, 6: 5.5, 7: 4,   8: 3.8 };
+const DATE_NARROW: Record<number, number> = { 1: 9,  2: 7.5, 3: 6.5, 4: 5.5, 5: 5,   6: 4.5, 7: 3.6, 8: 3.4 };
 
 // t=0 at 180°, t=1 at 360°.
 const arcT = computed(() => Math.max(0, Math.min(1, (props.arcSpan - 180) / 180)));
@@ -410,11 +434,12 @@ function isCompactGen(gen: number): boolean {
   return false;
 }
 
-// Per-generation dy offsets for radial/straight text stacking.
-// Gap is roughly 1.3× the name font size: gen 5 (7.5px) gets 10; gen 6+ (≤6px) gets 7.
-// Lines are centered on the segment midline — positions depend on which lines are actually present.
+// Per-generation dy offsets for radial 4-line stacking (gen 5-6 wide non-compact).
+// Gap scales with name font size (≈1.15× to leave a small breathing gap between
+// rows) so spacing matches text scale. Only the visible lines are stacked, keeping
+// the block centered on the segment midline regardless of how many fields exist.
 function lineDy(seg: FanSegment): { given: string; surname: string; birth: string; death: string } {
-  const gap = seg.generation >= 6 ? 7 : 10;
+  const gap = nameFontSize(seg.generation) * 1.15;
   const present: Record<'given' | 'surname' | 'birth' | 'death', boolean> = {
     given: !!nameLine1(seg),
     surname: !!nameLine2(seg),
@@ -426,7 +451,7 @@ function lineDy(seg: FanSegment): { given: string; surname: string; birth: strin
   const n = visible.length;
   const result = { given: '0', surname: '0', birth: '0', death: '0' };
   for (let i = 0; i < n; i++) {
-    result[visible[i]] = String(Math.round((i - (n - 1) / 2) * gap));
+    result[visible[i]] = ((i - (n - 1) / 2) * gap).toFixed(2);
   }
   return result;
 }
