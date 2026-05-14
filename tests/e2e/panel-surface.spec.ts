@@ -465,14 +465,20 @@ function runSection(
     //   (existing group / existing task) and selecting it from the combobox.
 
     // Check 3: lifecycle parity — verified for sections with seeded rows.
-    if (
+    // Sections that legitimately don't have row-shaped lifecycle affordances
+    // (derived views, map widgets) opt out via `skipLifecycleParity` in
+    // their descriptor — see fixtures/panels.ts. The flag REQUIRES naming a
+    // canonical sibling section that owns the primitive's lifecycle, so
+    // reviewers can verify coverage isn't dropped.
+    const hasLifecycleCheck = (
       section.kind === 'modal-with-host' ||
       section.kind === 'modal-with-host-no-count-bump' ||
       section.kind === 'modal-anonymous' ||
       section.kind === 'picker' ||
       section.title === 'People' ||
       section.title === 'Names'
-    ) {
+    ) && !section.skipLifecycleParity;
+    if (hasLifecycleCheck) {
       test('check 3: rows offer both edit and delete (or unlink) affordances', async () => {
         const driver = getDriver();
         // Ensure section is open so the body renders.
@@ -481,18 +487,19 @@ function runSection(
           await driver.settle(200);
         }
         const rowCount = await getSectionRowCount(driver, section.title);
-        if (rowCount === 0) {
-          // Deferred: this runtime skip fires when a section's UI doesn't render
-          // rows via any of the helpers' recognised selectors (tbody tr /
-          // .clickable-row / .linked-row). Known cases:
-          //   - PersonPanel.Life map: leaflet map widget; markers, not rows.
-          //   - PersonPanel.Timeline / PlacePanel.Timeline: derived view of
-          //     events; lifecycle-parity lives on the canonical Events section.
-          // Un-defer trigger: a section adopts a row-shaped UI that fits one
-          // of the existing patterns, OR a new affordance helper is added.
-          test.skip(true, `[${descriptor.name}] no rows in section "${section.title}" to inspect — see Deferred comment in panel-surface.spec.ts.`);
-          return;
-        }
+        // No rowCount-zero runtime skip: if a check-3-bearing section
+        // produces zero rows, the seed is broken. The descriptor's
+        // `seed` step is responsible for pre-populating a row; if it
+        // isn't, the assertion below fails with a clear message and
+        // the seed needs fixing. (Sections that legitimately can't be
+        // seeded into a row-shaped UI carry `skipLifecycleParity`.)
+        expect(
+          rowCount,
+          `Section "${section.title}" must have at least one seeded row for lifecycle-parity. ` +
+            `If the section legitimately renders the primitive in a non-row UI (e.g. derived view, ` +
+            `map widget), add \`skipLifecycleParity\` to the descriptor citing the canonical section ` +
+            `that owns the lifecycle.`,
+        ).toBeGreaterThan(0);
         const affordances = await driver.executeJs<{ edit: boolean; deleteOrUnlink: boolean }>(`
           (() => {
             const headers = Array.from(document.querySelectorAll('.section-header-bar'));
