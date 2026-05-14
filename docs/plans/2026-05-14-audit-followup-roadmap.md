@@ -40,7 +40,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 **Dependencies:** none. Independent of Tier 1.2–1.4.
 **Plan file:** [2026-05-14-vite-8-bundle-regression-design.md](2026-05-14-vite-8-bundle-regression-design.md).
 
-### 1.2 CrabNebula DevTools profiling baseline
+### 1.2 Perf baseline capture — **DONE** (Rust-side only; renderer-side deferred to user-driven Safari Web Inspector step), archived
 
 **User goal:** I can answer "where is time being spent at app boot?" and "what's the slowest IPC?" in under 5 minutes with a screenshot, not by reading code. Subsequent refactors (Tier 3 items) reference these baseline numbers in their Verification section so we can prove they actually moved a needle.
 
