@@ -56,8 +56,12 @@ async fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<Ances
 
 #[specta::specta]
 #[tauri::command]
-async fn probe_mcp_sidecar(repo_root: String, db_path: String) -> McpProbe {
-    mcp::probe_mcp_sidecar(&repo_root, &db_path).await
+async fn probe_mcp_sidecar(
+    app: tauri::AppHandle,
+    repo_root: String,
+    db_path: String,
+) -> McpProbe {
+    mcp::probe_mcp_sidecar(&app, &repo_root, &db_path).await
 }
 
 #[specta::specta]
