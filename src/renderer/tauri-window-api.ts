@@ -992,12 +992,17 @@ export function mountWindowApi(db: Database): MountResult {
       }
     }
   };
-  // The "progress" listener used by the Electron build is a Tauri event
-  // listener subscribed via window.api.import.onHolgerProgress(cb). We
-  // don't broadcast progress messages from the Rust side yet — the
+  // Deferred: the "progress" listener used by the Electron build is a
+  // Tauri event listener subscribed via window.api.import.onHolgerProgress(cb).
+  // We don't broadcast progress messages from the Rust side yet — the
   // import is fast enough on a modern Mac that a single "Importerar…"
   // banner from the Vue UI is acceptable. Wire as no-op so the UI's
   // listener registration doesn't crash.
+  // (NOTE: line 832 above wires `api.import.onHolgerProgress = subscribe('holger')`
+  // for in-process per-message progress; this assignment silently overrides
+  // it. Un-defer trigger: a Holger import that runs slowly enough for a user
+  // to want per-row progress — at that point, drop this override and the
+  // subscribe('holger') wiring delivers the messages.)
   api.import.onHolgerProgress = () => { /* not yet wired */ };
 
   // Genney importer — three-step flow:
