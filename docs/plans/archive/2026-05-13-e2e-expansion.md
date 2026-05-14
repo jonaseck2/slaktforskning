@@ -74,7 +74,7 @@ Verification §1 is observed at PR open (CI). §2–5 are observed at close-out 
 
 ### Steps
 
-- [ ] **0.1 — Honour `SLAKTFORSKNING_HEADLESS=1` in Rust.** The main window is auto-built from [src-tauri/tauri.conf.json](../../src-tauri/tauri.conf.json)'s `app.windows[]` (verified at plan authoring: `lib.rs::run()` does NOT call `WebviewWindowBuilder::new` for the main window; only `open_new_window` at lib.rs:665 uses it for File → New Window). Two options for headless:
+- [x] **0.1 — Honour `SLAKTFORSKNING_HEADLESS=1` in Rust.** The main window is auto-built from [src-tauri/tauri.conf.json](../../src-tauri/tauri.conf.json)'s `app.windows[]` (verified at plan authoring: `lib.rs::run()` does NOT call `WebviewWindowBuilder::new` for the main window; only `open_new_window` at lib.rs:665 uses it for File → New Window). Two options for headless:
 
   **Option A (chosen — least invasive): hide the auto-built window in `.setup()`.** In [src-tauri/src/lib.rs](../../src-tauri/src/lib.rs)'s `.setup(|app| { ... })` block (around lib.rs:739, after `ui_server::spawn(...)`), add:
 
@@ -122,7 +122,7 @@ unsafe {
 
 **Option B (fallback if A doesn't suppress focus theft on macOS):** programmatically rebuild the window. Set `tauri.conf.json::app.windows = []` (empty), then construct the main window in `.setup()` via `WebviewWindowBuilder::new(app, "main", WebviewUrl::default()).title("Släktforskning").inner_size(1280.0, 800.0).visible(!headless).build()?`. Combine with the macOS activation-policy block above. **Document in the commit message which option ended up shipping and why.**
 
-- [ ] **0.2 — Compile and verify headless locally.** Build the binary in release mode (matches what e2e uses):
+- [x] **0.2 — Compile and verify headless locally.** Build the binary in release mode (matches what e2e uses):
 
 ```bash
 npm run build:e2e
@@ -141,7 +141,7 @@ kill $SLAKTFORSKNING_PID
 
 Expected: "OK: bridge responds" and "OK: not visible". On Linux substitute the visibility check for an xdotool / wmctrl query; on Windows for a PowerShell `Get-Process` filter.
 
-- [ ] **0.3 — Update `startApp` to spawn with `SLAKTFORSKNING_HEADLESS=1`.** In [tests/e2e/fixture.ts](../../tests/e2e/fixture.ts), find the `spawn(...)` call that launches the binary. Add to its options:
+- [x] **0.3 — Update `startApp` to spawn with `SLAKTFORSKNING_HEADLESS=1`.** In [tests/e2e/fixture.ts](../../tests/e2e/fixture.ts), find the `spawn(...)` call that launches the binary. Add to its options:
 
 ```ts
 env: {
@@ -154,7 +154,7 @@ env: {
 
 (Two of those three env vars already exist on the spawn — just add `SLAKTFORSKNING_HEADLESS`.)
 
-- [ ] **0.4 — Verify Tier 1 still passes, now headless.**
+- [x] **0.4 — Verify Tier 1 still passes, now headless.**
 
 ```bash
 npm run test:e2e
@@ -162,7 +162,7 @@ npm run test:e2e
 
 Expected: 4 projects pass, no windows appear during the run. Local wall clock <5 min.
 
-- [ ] **0.5 — Wire Tier 1 into CI.** Edit [.github/workflows/ci.yml](../../.github/workflows/ci.yml). Add a second job after `test`:
+- [x] **0.5 — Wire Tier 1 into CI.** Edit [.github/workflows/ci.yml](../../.github/workflows/ci.yml). Add a second job after `test`:
 
 ```yaml
   e2e:
@@ -191,7 +191,7 @@ Expected: 4 projects pass, no windows appear during the run. Local wall clock <5
           SLAKTFORSKNING_HEADLESS: '1'
 ```
 
-- [ ] **0.6 — Commit.**
+- [x] **0.6 — Commit.**
 
 ```bash
 git add src-tauri/src/lib.rs src-tauri/Cargo.toml tests/e2e/fixture.ts .github/workflows/ci.yml src-tauri/tauri.conf.json
@@ -222,7 +222,7 @@ CI now runs Tier 1 e2e on ubuntu-latest via xvfb-run."
 
 ### Steps
 
-- [ ] **1.1 — Add 3 empty Playwright projects.** Edit [playwright.config.ts](../../playwright.config.ts). Append after the `duplicates` project:
+- [x] **1.1 — Add 3 empty Playwright projects.** Edit [playwright.config.ts](../../playwright.config.ts). Append after the `duplicates` project:
 
 ```ts
 {
@@ -247,7 +247,7 @@ CI now runs Tier 1 e2e on ubuntu-latest via xvfb-run."
 
 Update the leading comment block: list the 7 projects and note "Tier 1 (boot/crud/website-export/duplicates) runs in CI; Tier 2 (panels/reactivity/imports) is `npm run test:e2e:full` only."
 
-- [ ] **1.2 — Add `test:e2e:full` script.** Edit `package.json` `scripts`:
+- [x] **1.2 — Add `test:e2e:full` script.** Edit `package.json` `scripts`:
 
 ```json
 "test:e2e:full": "npm run pretest:e2e && playwright test --project=boot --project=crud --project=website-export --project=duplicates --project=panels --project=reactivity --project=imports"
@@ -261,7 +261,7 @@ Keep `test:e2e` unchanged (still runs all projects by default — Playwright run
 
 This way Tier 1 stays Tier 1 even after Tier 2 projects are added to the config.
 
-- [ ] **1.3 — Verify Tier 1 still passes.** Run:
+- [x] **1.3 — Verify Tier 1 still passes.** Run:
 
 ```bash
 npm run test:e2e
@@ -269,7 +269,7 @@ npm run test:e2e
 
 Expected: 4 passed (one per project), <5 min wall clock.
 
-- [ ] **1.4 — Write `PanelDescriptor` types.** Create `tests/e2e/helpers/panel-descriptor.ts`:
+- [x] **1.4 — Write `PanelDescriptor` types.** Create `tests/e2e/helpers/panel-descriptor.ts`:
 
 ```ts
 import type { AppDriver } from '../fixture';
@@ -303,7 +303,7 @@ export interface PanelDescriptor {
 }
 ```
 
-- [ ] **1.5 — Write `mutateViaMcp` helper.** Create `tests/e2e/helpers/mutate-via-mcp.ts`. The Tauri dev bridge exposes `POST /eval` (see [src-tauri/src/ui_server.rs](../../src-tauri/src/ui_server.rs)). MCP tools are reachable via `window.api.<tool>` in the renderer — `mutateViaMcp` ships a JS expression through `/eval` that calls the tool and then awaits the next `data-changed` event:
+- [x] **1.5 — Write `mutateViaMcp` helper.** Create `tests/e2e/helpers/mutate-via-mcp.ts`. The Tauri dev bridge exposes `POST /eval` (see [src-tauri/src/ui_server.rs](../../src-tauri/src/ui_server.rs)). MCP tools are reachable via `window.api.<tool>` in the renderer — `mutateViaMcp` ships a JS expression through `/eval` that calls the tool and then awaits the next `data-changed` event:
 
 ```ts
 import type { AppDriver } from '../fixture';
@@ -335,7 +335,7 @@ export async function mutateViaMcp<T = unknown>(
 }
 ```
 
-- [ ] **1.6 — Write `seedHostEntity` helper.** Create `tests/e2e/helpers/seed-host-entity.ts`. Each host type maps to the `create_X` / `add_X` api call needed to seed it:
+- [x] **1.6 — Write `seedHostEntity` helper.** Create `tests/e2e/helpers/seed-host-entity.ts`. Each host type maps to the `create_X` / `add_X` api call needed to seed it:
 
 ```ts
 import type { AppDriver } from '../fixture';
@@ -393,7 +393,7 @@ export async function seedHostEntity(driver: AppDriver, kind: HostKind): Promise
 }
 ```
 
-- [ ] **1.7 — Commit plumbing.**
+- [x] **1.7 — Commit plumbing.**
 
 ```bash
 git add playwright.config.ts package.json tests/e2e/helpers/
@@ -414,7 +414,7 @@ git commit -m "test(e2e): add Tier 2 plumbing (panels/reactivity/imports project
 
 ### Steps
 
-- [ ] **2.1 — Write `fixtures/panels.ts` with two descriptors.**
+- [x] **2.1 — Write `fixtures/panels.ts` with two descriptors.**
 
 ```ts
 import type { PanelDescriptor } from '../helpers/panel-descriptor';
@@ -497,7 +497,7 @@ export const PANELS: PanelDescriptor[] = [
 
 Confirm the exact CTA labels by reading the panel source files before committing — if a label is wrong, the test fails at first run with a useful error.
 
-- [ ] **2.2 — Write the data-driven spec.**
+- [x] **2.2 — Write the data-driven spec.**
 
 Create `tests/e2e/panel-surface.spec.ts`:
 
@@ -636,7 +636,7 @@ async function fulfillsLabelInteraction(driver: AppDriver, panelName: string, se
 
 Note: the helpers (`sectionRowCount`, `fulfillsLabelInteraction`) are deliberately *forgiving* — different sections use different DOM shapes. As Task 3 fans out, sections that don't match these heuristics get a per-section override hook on the descriptor. Don't over-engineer in Task 2; observe what breaks and adapt.
 
-- [ ] **2.3 — Run the pilot.**
+- [x] **2.3 — Run the pilot.**
 
 ```bash
 npm run pretest:e2e  # builds the Tauri bundle (one-time per session)
@@ -645,15 +645,15 @@ npx playwright test --project=panels
 
 Expected outcome: **most checks pass, some fail.** The failures will be diagnostically useful — wrong CTA label, modal selector mismatch, section title localization mismatch. Iterate on the spec + descriptors until the pilot is green. Time-box this loop to one focused session; if more than 5 sections need ad-hoc overrides, that's a signal the data-driven shape needs richer per-section hooks.
 
-- [ ] **2.4 — Capture wall-clock.**
+- [x] **2.4 — Capture wall-clock.**
 
 Note the duration in the commit message. Expected: ~5–15 min for 2 panels on a local M-series Mac.
 
-- [ ] **2.5 — Deviation check.**
+- [x] **2.5 — Deviation check.**
 
 If average cost-per-panel >2 min wall clock, **stop and edit this plan**. Add a "Scope deviations" subsection under §Scope above, naming which panels (if any) get a slimmer check set. Default action remains: continue to Task 3 with full check set.
 
-- [ ] **2.6 — Commit.**
+- [x] **2.6 — Commit.**
 
 ```bash
 git add tests/e2e/panel-surface.spec.ts tests/e2e/fixtures/panels.ts
@@ -676,23 +676,23 @@ $(if any deviation needed: name it here)"
 
 ### Steps
 
-- [ ] **3.1 — Add SourcePanel descriptor.** Sections per [src/renderer/components/SourcePanel.vue](../../src/renderer/components/SourcePanel.vue): Citations, Repositories, Media, Research tasks (verify by reading the file). Each section gets host-flows-in + fulfills-label + lifecycle-parity. `hostDeletable: true`.
+- [x] **3.1 — Add SourcePanel descriptor.** Sections per [src/renderer/components/SourcePanel.vue](../../src/renderer/components/SourcePanel.vue): Citations, Repositories, Media, Research tasks (verify by reading the file). Each section gets host-flows-in + fulfills-label + lifecycle-parity. `hostDeletable: true`.
 
-- [ ] **3.2 — Add RelationshipPanel descriptor.** Sections: Events, Citations, Media. `hostDeletable: true`.
+- [x] **3.2 — Add RelationshipPanel descriptor.** Sections: Events, Citations, Media. `hostDeletable: true`.
 
-- [ ] **3.3 — Add GroupPanel descriptor.** Sections: Members (persons), Media, Research tasks. `hostDeletable: true`.
+- [x] **3.3 — Add GroupPanel descriptor.** Sections: Members (persons), Media, Research tasks. `hostDeletable: true`.
 
-- [ ] **3.4 — Add ResearchTaskPanel descriptor.** Sections: Linked entities, Media, Notes. `hostDeletable: true`.
+- [x] **3.4 — Add ResearchTaskPanel descriptor.** Sections: Linked entities, Media, Notes. `hostDeletable: true`.
 
-- [ ] **3.5 — Add MediaPanel descriptor.** Sections: Linked persons, Linked places, Linked events, Face tags. The known historical bug — unlink ✕ vs delete trash — is captured by `lifecycle-parity` check naturally (assertion accepts either trash *or* unlink icon as "delete-able affordance"; the per-section choice is enforced by the existing `tests/components/panel-cta-conventions.test.ts`, not this layer). `hostDeletable: true`.
+- [x] **3.5 — Add MediaPanel descriptor.** Sections: Linked persons, Linked places, Linked events, Face tags. The known historical bug — unlink ✕ vs delete trash — is captured by `lifecycle-parity` check naturally (assertion accepts either trash *or* unlink icon as "delete-able affordance"; the per-section choice is enforced by the existing `tests/components/panel-cta-conventions.test.ts`, not this layer). `hostDeletable: true`.
 
-- [ ] **3.6 — Add ReportPanel descriptor.** Read-only panel — `sections: []`. Add a single floor assertion: opening the panel route renders the report's host entity name visibly. `hostDeletable: false` (reports aren't a stored entity in this sense).
+- [x] **3.6 — Add ReportPanel descriptor.** Read-only panel — `sections: []`. Add a single floor assertion: opening the panel route renders the report's host entity name visibly. `hostDeletable: false` (reports aren't a stored entity in this sense).
 
-- [ ] **3.7 — Add WebsitePanel descriptor.** Same shape as ReportPanel — `sections: []`, floor assertion that the export action button is visible and clickable. `hostDeletable: false`.
+- [x] **3.7 — Add WebsitePanel descriptor.** Same shape as ReportPanel — `sections: []`, floor assertion that the export action button is visible and clickable. `hostDeletable: false`.
 
-- [ ] **3.8 — Add ExportOptionsPanel descriptor.** Same shape — `sections: []`, floor assertion that the panel renders with format toggles visible. `hostDeletable: false`.
+- [x] **3.8 — Add ExportOptionsPanel descriptor.** Same shape — `sections: []`, floor assertion that the panel renders with format toggles visible. `hostDeletable: false`.
 
-- [ ] **3.9 — Run the full `panels` project.**
+- [x] **3.9 — Run the full `panels` project.**
 
 ```bash
 npx playwright test --project=panels
@@ -700,7 +700,7 @@ npx playwright test --project=panels
 
 Expected: all 10 panel describes pass. Section count × check count drives the assertion count — likely ~60–80 individual tests.
 
-- [ ] **3.10 — Commit.**
+- [x] **3.10 — Commit.**
 
 ```bash
 git add tests/e2e/fixtures/panels.ts
@@ -721,12 +721,12 @@ Every `*Panel.vue` in [src/renderer/components/](../../src/renderer/components/)
 
 ### Steps
 
-- [ ] **4.1 — Catalog consumers.** List every consumer surface that must react to `data-changed`:
+- [x] **4.1 — Catalog consumers.** List every consumer surface that must react to `data-changed`:
   - 10 panels (already enumerated in `fixtures/panels.ts`).
   - List views: `PersonsView`, `PlacesView`, `SourcesView`, `RelationshipsView`, `GroupsView`, `ResearchTasksView`, `MediaView`, `DuplicatesView`. Verify by running `ls src/renderer/views/*.vue`.
   - Chart: `ChartView`.
 
-- [ ] **4.2 — Define `reactivity-triples.ts`.**
+- [x] **4.2 — Define `reactivity-triples.ts`.**
 
 ```ts
 import { mutateViaMcp } from '../helpers/mutate-via-mcp';
@@ -758,7 +758,7 @@ export const TRIPLES: ReactivityTriple[] = [
 
 Write at least one triple per consumer (10 panels + 8 list views + chart = 19). For panels, the mutation is "rename the host entity"; the assertion is "the panel's header text reflects the new name."
 
-- [ ] **4.3 — Write the data-driven spec.**
+- [x] **4.3 — Write the data-driven spec.**
 
 ```ts
 import { test, expect } from '@playwright/test';
@@ -787,13 +787,13 @@ for (const triple of TRIPLES) {
 }
 ```
 
-- [ ] **4.4 — Run the project.**
+- [x] **4.4 — Run the project.**
 
 ```bash
 npx playwright test --project=reactivity
 ```
 
-- [ ] **4.5 — Commit.**
+- [x] **4.5 — Commit.**
 
 ```bash
 git add tests/e2e/reactivity.spec.ts tests/e2e/fixtures/reactivity-triples.ts
@@ -820,7 +820,7 @@ git commit -m "test(e2e): reactivity project — N consumers react to data-chang
 
 ### Steps
 
-- [ ] **5.1 — Generate tiny GEDCOM 5.5.1 fixture.**
+- [x] **5.1 — Generate tiny GEDCOM 5.5.1 fixture.**
 
 ```
 0 HEAD
@@ -850,11 +850,11 @@ git commit -m "test(e2e): reactivity project — N consumers react to data-chang
 
 Save as `tests/e2e/fixtures/imports/gedcom-551.ged`.
 
-- [ ] **5.2 — Generate GEDCOM 7.0 fixture.** Same shape with `2 VERS 7.0`. Save as `gedcom-70.ged`.
+- [x] **5.2 — Generate GEDCOM 7.0 fixture.** Same shape with `2 VERS 7.0`. Save as `gedcom-70.ged`.
 
-- [ ] **5.3 — Source Holger/Genney/RootsMagic/Gramps fixtures.** Look in `tests/unit/import/` or `tests/fixtures/` for existing tiny fixtures. **Copy, do not re-author.** If a format has no tiny fixture yet, generate one using the format's own export (e.g. run `npm start`, build a 3-person tree, export to that format).
+- [x] **5.3 — Source Holger/Genney/RootsMagic/Gramps fixtures.** Look in `tests/unit/import/` or `tests/fixtures/` for existing tiny fixtures. **Copy, do not re-author.** If a format has no tiny fixture yet, generate one using the format's own export (e.g. run `npm start`, build a 3-person tree, export to that format).
 
-- [ ] **5.4 — Write the imports spec.**
+- [x] **5.4 — Write the imports spec.**
 
 ```ts
 import { test, expect } from '@playwright/test';
@@ -913,13 +913,13 @@ for (const c of CASES) {
 
 If a format's api function name is different from the guess above, fix it inline — the spec must call the real `window.api.<fn>` name.
 
-- [ ] **5.5 — Run the project.**
+- [x] **5.5 — Run the project.**
 
 ```bash
 npx playwright test --project=imports
 ```
 
-- [ ] **5.6 — Commit.**
+- [x] **5.6 — Commit.**
 
 ```bash
 git add tests/e2e/imports.spec.ts tests/e2e/fixtures/imports/
@@ -940,11 +940,11 @@ git commit -m "test(e2e): imports project — round-trip every native importer"
 
 ### Steps
 
-- [ ] **6.1 — Update [CLAUDE.md](../../CLAUDE.md) close-out checklist.** Locate the "Finishing a plan" section. Step 0's evidence template currently lists `npm test`, `npm run build`, `npx playwright test`. Add a Tier 2 evidence line:
+- [x] **6.1 — Update [CLAUDE.md](../../CLAUDE.md) close-out checklist.** Locate the "Finishing a plan" section. Step 0's evidence template currently lists `npm test`, `npm run build`, `npx playwright test`. Add a Tier 2 evidence line:
 
 > - `npm run test:e2e:full` → `N passed (Mmin Ms)` across the 7 projects (`boot`, `crud`, `website-export`, `duplicates`, `panels`, `reactivity`, `imports`) — **required for any plan whose user goal touches a panel, modal, list-view, or import path. Non-UI plans (Rust-side, schema-only, doc-only) are exempt.**
 
-- [ ] **6.2 — Replace stale e2e section in [.claude/rules/tests.md](../../.claude/rules/tests.md).** The current text describes 11 Electron-era projects with ports 19242–19251. Replace with:
+- [x] **6.2 — Replace stale e2e section in [.claude/rules/tests.md](../../.claude/rules/tests.md).** The current text describes 11 Electron-era projects with ports 19242–19251. Replace with:
 
 ```markdown
 ## E2E Tests (Playwright)
@@ -972,7 +972,7 @@ The `pretest:e2e` script handles the Tauri bundle build.
 The `/test` skill has the full pitfall list — CSS selector mismatches, executeJs IIFE wrapping, getDom() including `<style>` blocks, navigate-away-then-back data seeding, localStorage retry leaks, no-back-buttons rule.
 ```
 
-- [ ] **6.3 — Commit.**
+- [x] **6.3 — Commit.**
 
 ```bash
 git add CLAUDE.md .claude/rules/tests.md
@@ -993,13 +993,13 @@ This is the close-out evidence step for §Verification §3–5 above. Do not com
 
 ### Steps
 
-- [ ] **7.1 — Branch.**
+- [x] **7.1 — Branch.**
 
 ```bash
 git switch -c throwaway/e2e-verify
 ```
 
-- [ ] **7.2 — Break a CTA label (Surface Contract check 2).** Edit one panel's `+ Event` button to call the wrong handler — e.g. in [src/renderer/components/PersonPanel.vue](../../src/renderer/components/PersonPanel.vue), change the `@action` on the Events section to a no-op. Run:
+- [x] **7.2 — Break a CTA label (Surface Contract check 2).** Edit one panel's `+ Event` button to call the wrong handler — e.g. in [src/renderer/components/PersonPanel.vue](../../src/renderer/components/PersonPanel.vue), change the `@action` on the Events section to a no-op. Run:
 
 ```bash
 npx playwright test --project=panels --grep "Events.*creates the primitive"
@@ -1007,19 +1007,19 @@ npx playwright test --project=panels --grep "Events.*creates the primitive"
 
 Capture the failed-test name and error message. Revert the edit.
 
-- [ ] **7.3 — Break a host-flows-in.** Edit one modal so the host id is not prefilled. Run the same project; capture the failed-test name. Revert.
+- [x] **7.3 — Break a host-flows-in.** Edit one modal so the host id is not prefilled. Run the same project; capture the failed-test name. Revert.
 
-- [ ] **7.4 — Break lifecycle-parity.** Remove the trash icon from one panel section's row template. Run; capture. Revert.
+- [x] **7.4 — Break lifecycle-parity.** Remove the trash icon from one panel section's row template. Run; capture. Revert.
 
-- [ ] **7.5 — Break no-degradation.** Make `+ Media` on the Media section short-circuit when collapsed. Run; capture. Revert.
+- [x] **7.5 — Break no-degradation.** Make `+ Media` on the Media section short-circuit when collapsed. Run; capture. Revert.
 
-- [ ] **7.6 — Break `data-changed`.** In one consumer (e.g. `PersonsView`), comment out the `onDataChanged` subscription. Run `--project=reactivity`; capture. Revert.
+- [x] **7.6 — Break `data-changed`.** In one consumer (e.g. `PersonsView`), comment out the `onDataChanged` subscription. Run `--project=reactivity`; capture. Revert.
 
-- [ ] **7.7 — Break an importer.** Introduce a typo in [src/import/holger/](../../src/import/holger/) that causes the importer to drop persons. Run `--project=imports`; capture. Revert.
+- [x] **7.7 — Break an importer.** Introduce a typo in [src/import/holger/](../../src/import/holger/) that causes the importer to drop persons. Run `--project=imports`; capture. Revert.
 
-- [ ] **7.8 — Assemble close-out evidence.** Paste each of the 6 captured failure messages into a `close-out-evidence.md` scratch file (NOT committed) for use in the archive commit message (Task 8).
+- [x] **7.8 — Assemble close-out evidence.** Paste each of the 6 captured failure messages into a `close-out-evidence.md` scratch file (NOT committed) for use in the archive commit message (Task 8).
 
-- [ ] **7.9 — Discard the branch.**
+- [x] **7.9 — Discard the branch.**
 
 ```bash
 git switch <main-or-worktree-branch>
@@ -1044,9 +1044,9 @@ git branch -D throwaway/e2e-verify
 
 ### Steps
 
-- [ ] **8.1 — Verify all checkboxes above are `[x]`.**
+- [x] **8.1 — Verify all checkboxes above are `[x]`.**
 
-- [ ] **8.2 — Run all five verification gates and paste evidence.**
+- [x] **8.2 — Run all five verification gates and paste evidence.**
 
 ```bash
 npm run test:e2e      # Tier 1 — paste summary line
@@ -1055,22 +1055,22 @@ npm run test:e2e:full # Tier 2 — paste summary line
 
 Plus the 6 deliberate-break captures from Task 7.
 
-- [ ] **8.3 — Bump version.** This is a test-infrastructure feature → minor bump per [feedback_version_bump.md](../../.claude/projects/-Users-jonasahnstedt-git-slaktforskning/memory/feedback_version_bump.md). Edit `package.json` `version`.
+- [x] **8.3 — Bump version.** This is a test-infrastructure feature → minor bump per [feedback_version_bump.md](../../.claude/projects/-Users-jonasahnstedt-git-slaktforskning/memory/feedback_version_bump.md). Edit `package.json` `version`.
 
-- [ ] **8.4 — `CHANGELOG.md`.** Add under `## Unreleased`:
+- [x] **8.4 — `CHANGELOG.md`.** Add under `## Unreleased`:
 
 > - **E2E expansion.** Two-tier Playwright setup: `npm run test:e2e` (4-project lean, runs in CI) + `npm run test:e2e:full` (7-project thorough, runs locally + nightly once public OSS). New projects: `panels` (10 right-side panels × 4 Surface Contract checks), `reactivity` (every consumer reacts to `data-changed`), `imports` (every native importer round-trips a fixture).
 
-- [ ] **8.5 — Update [docs/PLAN.md](../PLAN.md) + archive entry.** Remove the planned block; append a one-paragraph done entry to [docs/plans/archive/PLAN.md](archive/PLAN.md).
+- [x] **8.5 — Update [docs/PLAN.md](../PLAN.md) + archive entry.** Remove the planned block; append a one-paragraph done entry to [docs/plans/archive/PLAN.md](archive/PLAN.md).
 
-- [ ] **8.6 — Move plan + spec.**
+- [x] **8.6 — Move plan + spec.**
 
 ```bash
 git mv docs/plans/2026-05-13-e2e-expansion.md docs/plans/archive/
 git mv docs/plans/2026-05-13-e2e-expansion-design.md docs/plans/archive/
 ```
 
-- [ ] **8.7 — Commit and merge.**
+- [x] **8.7 — Commit and merge.**
 
 ```bash
 git add -A
@@ -1097,7 +1097,7 @@ Plan is archived. Version bumped. CHANGELOG updated. CI green on the merge commi
 
 ## Self-review checklist
 
-- [ ] Every section/requirement in the design spec maps to a task here.
+- [x] Every section/requirement in the design spec maps to a task here.
   - Headless mode + CI wiring → **Task 0** (added 2026-05-13 after RCA: design originally claimed Tier 1 gates PR, which CI did not do).
   - Tier 1 explicit project restriction → Task 1 (step 1.2).
   - Tier 2 panels project → Tasks 2 + 3.
@@ -1106,7 +1106,7 @@ Plan is archived. Version bumped. CHANGELOG updated. CI green on the merge commi
   - Close-out integration → Task 6.
   - Deliberate-break verification → Task 7.
   - Archive workflow → Task 8.
-- [ ] No placeholders (TBD/TODO/"similar to"). The CTA-label specifics in Task 2 are explicitly "verify by reading the file before committing" — that's a directed action, not a placeholder.
-- [ ] Type consistency: `PanelDescriptor`, `PanelSectionCheck`, `SurfaceCheck`, `ReactivityTriple` defined once in helper files, referenced consistently.
-- [ ] All file paths absolute or repo-relative; no `~` or session-specific paths.
-- [ ] User-goal-falsifiability: if all 5 verification gates pass, the user goal cannot still be unmet. A panel CTA that lies → caught by `fulfills-label`. A panel that doesn't refresh → caught by `reactivity`. An importer regression → caught by `imports`. A Tier 1 breakage → caught by PR CI.
+- [x] No placeholders (TBD/TODO/"similar to"). The CTA-label specifics in Task 2 are explicitly "verify by reading the file before committing" — that's a directed action, not a placeholder.
+- [x] Type consistency: `PanelDescriptor`, `PanelSectionCheck`, `SurfaceCheck`, `ReactivityTriple` defined once in helper files, referenced consistently.
+- [x] All file paths absolute or repo-relative; no `~` or session-specific paths.
+- [x] User-goal-falsifiability: if all 5 verification gates pass, the user goal cannot still be unmet. A panel CTA that lies → caught by `fulfills-label`. A panel that doesn't refresh → caught by `reactivity`. An importer regression → caught by `imports`. A Tier 1 breakage → caught by PR CI.
