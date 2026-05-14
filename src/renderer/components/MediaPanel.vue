@@ -84,7 +84,7 @@
           :collapsed="!sections.persons"
           :action-label="props.readonly ? undefined : $t('media.linkPerson')"
           @toggle="toggleSection('persons')"
-          @action="showPersonPicker = true"
+          @action="openPersonPicker"
         />
         <div v-if="sections.persons" class="panel-section-body">
           <div v-if="!props.readonly && showPersonPicker" class="picker-wrap">
@@ -192,7 +192,7 @@
           :collapsed="!sections.places"
           :action-label="props.readonly ? undefined : $t('media.linkPlace')"
           @toggle="toggleSection('places')"
-          @action="showPlacePicker = true"
+          @action="openPlacePicker"
         />
         <div v-if="sections.places" class="panel-section-body">
           <div v-if="!props.readonly && showPlacePicker" class="picker-wrap">
@@ -382,6 +382,20 @@ const checksSectionRef = ref<InstanceType<typeof MediaChecksSection> | null>(nul
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
+
+// Always expand the section AND open the picker. Without the auto-expand
+// step the first click on `+ Person` / `+ Place` while the section is
+// collapsed flips `showXPicker` to true but the picker DOM never renders
+// (it lives inside the section-body's `v-if="sections.persons"` block) —
+// Surface Contract "no silent degradation" violation. See CLAUDE.md.
+function openPersonPicker() {
+  if (!sections.persons) toggleSection('persons');
+  showPersonPicker.value = true;
+}
+function openPlacePicker() {
+  if (!sections.places) toggleSection('places');
+  showPlacePicker.value = true;
+}
 const editingTagId = ref<string | null>(null);
 const titleDraft = ref('');
 const notesDraft = ref('');

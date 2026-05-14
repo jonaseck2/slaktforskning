@@ -529,16 +529,20 @@ function runSection(
     }
 
     // Check 4: no degradation across collapse/expand state.
-    // TODO(Task 3): `picker` kinds (Groups / Tasks on PersonPanel) toggle a
-    //   `showXPicker` ref via the CTA — collapsing-then-clicking flips state
-    //   the wrong way half the time. Real Surface Contract failure (CLAUDE.md
-    //   "no silent degradation"). Pilot leaves this uncovered until the
-    //   underlying handler is fixed; spec change first would mask the bug.
+    // Picker kinds (Groups / Tasks on PersonPanel; Linked Persons /
+    // Linked Places on MediaPanel; People / Places / Media on GroupPanel
+    // and ResearchTaskPanel) now use openXPicker() helpers that explicitly
+    // expand the section before opening the picker — previously the CTA
+    // either toggled the picker state or set-it-to-true without expanding,
+    // which produced an invisible no-op when collapsed. Check 4 covers all
+    // CTA-bearing sections; only `none` and `relations-empty` (no CTA) are
+    // out.
     if (
       section.kind === 'modal-with-host' ||
       section.kind === 'modal-with-host-no-count-bump' ||
       section.kind === 'modal-anonymous' ||
-      section.kind === 'media-attach'
+      section.kind === 'media-attach' ||
+      section.kind === 'picker'
     ) {
       test('check 4: CTA still works when section is collapsed', async () => {
         const driver = getDriver();

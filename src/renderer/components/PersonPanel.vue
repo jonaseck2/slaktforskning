@@ -153,7 +153,7 @@
 
       <!-- Grupper section -->
       <div class="panel-section">
-        <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('groups.addGroupShort') }" @toggle="toggleSection('groups')" @action="showGroupPicker = !showGroupPicker" />
+        <SectionHeader :title="$t('groups.title')" :count="groups.length" :collapsed="!sections.groups" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('groups.addGroupShort') }" @toggle="toggleSection('groups')" @action="openGroupPicker" />
         <div v-if="sections.groups" class="panel-section-body">
           <div v-if="!props.readonly && showGroupPicker && personId" class="panel-group-picker-wrap">
             <GroupPicker
@@ -680,6 +680,18 @@ async function reorderNames(orderedIds: string[]) {
 // ── Group actions ───────────────────────────────────────────────────────────
 
 const showGroupPicker = ref(false);
+
+// Mirrors openTaskPicker(): always expand the section AND open the picker.
+// The previous handler was an inline `showGroupPicker = !showGroupPicker`
+// toggle on the SectionHeader's @action, which (a) silently toggled state
+// without expanding the section when collapsed (the picker DOM lives
+// inside the section-body v-if), and (b) closed the picker on a second
+// click instead of opening it — a Surface Contract "no silent
+// degradation" violation across collapsed/expanded state.
+function openGroupPicker() {
+  if (!sections.groups) toggleSection('groups');
+  showGroupPicker.value = true;
+}
 
 const delGroup = useDeleteConfirm<string>(async (groupId) => {
   if (!props.personId) return;
