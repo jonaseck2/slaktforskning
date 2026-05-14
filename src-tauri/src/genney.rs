@@ -73,8 +73,9 @@ enum SidecarLine {
 
 /// Resolve the path to `genney-import.bundle.mjs`. Mirrors
 /// `mcp::resolve_bundle_path` — bundled-resource lookup first (Tauri
-/// rewrites the `..` prefix to `_up_`), dev fallback to
-/// `<repo>/dist-genney/genney-import.bundle.mjs`.
+/// rewrites the `..` prefix to `_up_`), then a dev fallback under the
+/// supplied `repo_root` (typically the renderer's known repo root from a
+/// build-time env), then a last-resort fallback to `cwd/dist-genney/...`.
 fn resolve_bundle_path(app: &AppHandle, repo_root: &str) -> Result<PathBuf, String> {
     if let Ok(resource_dir) = app.path().resource_dir() {
         let candidates = [
@@ -98,6 +99,16 @@ fn resolve_bundle_path(app: &AppHandle, repo_root: &str) -> Result<PathBuf, Stri
         .join("genney-import.bundle.mjs");
     if dev_path.exists() {
         return Ok(dev_path);
+    }
+    // Last-resort fallback: when the renderer passes an empty `repo_root`
+    // (e.g. dev/e2e where it doesn't know its own location), fall back to
+    // the Rust process's working directory. `tauri dev` and `tauri build
+    // --no-bundle` both leave cwd at the project root.
+    if let Ok(cwd) = std::env::current_dir() {
+        let cwd_path = cwd.join("dist-genney").join("genney-import.bundle.mjs");
+        if cwd_path.exists() {
+            return Ok(cwd_path);
+        }
     }
     Err(format!(
         "genney-import.bundle.mjs not found in resource_dir or {}; run `npm run build:genney-sidecar`",
