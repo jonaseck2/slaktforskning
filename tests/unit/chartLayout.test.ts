@@ -20,6 +20,11 @@ import {
   assertConnectivity,
   assertStableExtent,
 } from './chart-layout/properties';
+import {
+  overlapFixture,
+  parentDirectionReversedFixture,
+  alignmentBrokenFixture,
+} from './chart-layout/regression-fixtures';
 
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {
@@ -1789,3 +1794,34 @@ describe('Property assertions on existing fixtures', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Property assertions catch deliberate regressions.
+//
+// Each fixture in regression-fixtures.ts violates exactly one invariant. The
+// expected error message is asserted on so a future change that loosens the
+// failure message still fails noisily (rather than silently swallowing the
+// regression). This is how the property suite earns its keep: if a real
+// layout regression introduces an overlap, a reversed parent edge, or a
+// broken generation row, the test that fires names the specific boxes.
+// ---------------------------------------------------------------------------
+describe('Property assertions catch regressions', () => {
+  it('detects overlap with named box ids', () => {
+    expect(() => propAssertNoOverlaps(overlapFixture)).toThrow(
+      /Box A at \(100, 100, 80x40\) overlaps Box B at \(110, 110, 80x40\)/,
+    );
+  });
+
+  it('detects reversed parent direction in pedigree mode', () => {
+    expect(() =>
+      assertParentDirection(parentDirectionReversedFixture, 'pedigree', [
+        { parent: 'parent', child: 'child' },
+      ]),
+    ).toThrow(/Pedigree: parent parent .* should be right of child child/);
+  });
+
+  it('detects broken generation alignment in hourglass mode', () => {
+    expect(() =>
+      assertGenerationAlignment(alignmentBrokenFixture, 'hourglass', [['A', 'B']]),
+    ).toThrow(/Generation 0 \(hourglass\): boxes span 100\.\.150.*Boxes: A, B/);
+  });
+});
