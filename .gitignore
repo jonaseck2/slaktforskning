@@ -27,3 +27,9 @@ sbom.cdx.json
 target/
 dist-mcp/
 dist-mcp-test/
+
+# Bun runtime binaries — fetched per build by scripts/fetch-bun-binaries.mjs.
+# Lockfile (bun-binaries.lock) is committed; binaries themselves are not.
+src-tauri/binaries/.cache/
+src-tauri/binaries/bun-*
+!src-tauri/binaries/bun-binaries.lock
