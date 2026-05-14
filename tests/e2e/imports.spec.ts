@@ -174,10 +174,27 @@ const CASES: ImportCase[] = [
   // SecondaryDatabase.open → importFromRootsMagicDb).
 
   // --- Genney ------------------------------------------------------------
-  // TODO: `import.genneyRun` is `notWired` in the Tauri build today
-  // (src/renderer/tauri-window-api.ts:698). Once it's wired we'll add a
-  // `.gcc` and `.backup` fixture pair and cover it here. Skipping for now
-  // rather than authoring an empty test.
+  // genney-small.gcc is a tiny zip containing a 3-person `.ged` file and no
+  // Derby database. The Tauri Genney polyfill spawns the Bun sidecar
+  // (src/import/genney/sidecar-entry.ts), which detects the encrypted/no-Derby
+  // case, extracts the `.ged` to a temp dir, and returns `gedcomFallbackPath`.
+  // The renderer's polyfill then runs the GEDCOM importer over the bytes.
+  // This case exercises the wiring end-to-end without requiring Docker/Java —
+  // those are only needed for real Derby-format Genney archives.
+  {
+    format: 'genney-gcc',
+    fixture: 'tests/e2e/fixtures/imports/genney-small.gcc',
+    apiCall: 'import.genneyRun',
+    buildArgs: (p) => ({ sourcePath: p }),
+    expectedPersons: 3,
+    spotCheckName: 'Anna',
+  },
+  // TODO: needs a tiny `.backup` fixture that contains an unencrypted Derby
+  // DB (not just a .ged), to exercise the Bun-sidecar → Docker/Java → Derby
+  // extractor → transformGenney path. Authoring requires either a Genney
+  // install or a minimal Derby DB hand-built from the SCHEMA the Genney
+  // importer's transform.ts expects. Deferred until a contributor with
+  // Genney can drop one in. The wiring itself is covered by genney-gcc above.
 ];
 
 for (const c of CASES) {
