@@ -26,7 +26,13 @@ import {
 } from './fixture';
 import { PANELS, type PanelDescriptor, type PanelSection } from './fixtures/panels';
 
-const PORT = 19252;
+// Port 19255: must be unique across e2e specs. 19200/19201/19202 are
+// app.test/crud/website-export; 19252 is duplicates.spec.ts; 19253/19254
+// are reactivity/imports. Sharing a port with duplicates was a latent
+// bug — when test:e2e:full ran panels concurrently with the duplicates
+// project (Playwright workers: 2), they raced to bind 19252 and the
+// late spawner timed out on "Vue did not initialize in time".
+const PORT = 19255;
 
 // ---------------------------------------------------------------------------
 // Tiny helpers — kept local until Task 3 generalises them.
