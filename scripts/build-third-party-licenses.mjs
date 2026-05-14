@@ -31,7 +31,8 @@ const LICENSE_FILE_PATTERNS = /^(LICEN[SC]E|COPYING|NOTICE)(?:[-.].+)?$/i;
 // when the script throws on a real case — never add speculatively.
 // (e.g., some very old packages embed license text only in README.md)
 const KNOWN_LICENSE_HINTS = new Map([
-  // No entries yet. Add as needed when the script throws.
+  // kkrpc ships no LICENSE file in its npm tarball; license text lives in README.md (MIT).
+  ['kkrpc', 'README.md'],
 ]);
 
 /**
