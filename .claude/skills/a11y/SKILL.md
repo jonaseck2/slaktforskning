@@ -116,3 +116,23 @@ When adding a new interactive component:
 - [ ] Modals use BaseSubPanel (gets dialog role + focus trap + entity-aware header narration for free; never use BaseModal directly — it's only the internal overlay/backdrop primitive used by BaseSubPanel)
 - [ ] Pickers use the combobox pattern
 - [ ] Decorative icons use `aria-hidden="true"`
+
+## Verifying a11y against the running app (dev MCP)
+
+After implementing or editing an interactive surface, verify it against the live app via the `slaktforskning-dev` MCP. The seven `ui_aria_*` tools mirror what a screen-reader user experiences — they walk the live ARIA tree, not the rendered DOM, so they catch the failures CSS-selector probes miss. Prefer them over `ui_get_dom` / `ui_query_styles` whenever the question is "can the user perceive / reach / operate this?":
+
+| Question | Tool |
+|---|---|
+| What landmarks does this view expose? | `ui_aria_landmarks()` |
+| What's the heading outline? | `ui_aria_headings({ region?: '…' })` |
+| What does Tab navigation feel like? | `ui_aria_tab_order({ region?: '…' })` |
+| What clickables/inputs exist (by name + role + state)? | `ui_aria_list({ role?: '…', region?: '…' })` |
+| What does this section sound like to TTS? | `ui_aria_read({ region?: '…' })` |
+| Click or fill by accessible name | `ui_aria_invoke({ name: '…', role?: '…', region?: '…', value?: '…' })` |
+| Find every a11y gap in the current view | `ui_aria_audit({ region?: '…' })` |
+
+**Mandatory verification step for any UI change:** before claiming done, navigate to the surface and run `ui_aria_audit()`. The findings name specific gaps (`unnamed_interactable`, `input_without_label`, `unnamed_landmark`, `missing_focus_indicator`, …). A finding that the change introduced is a regression; address it before commit.
+
+**When `ui_aria_*` can't find what you want, that's data.** The accessible-name resolution is: `v-narrate` → `aria-label` → `aria-labelledby` → `<label for>` → visible textContent → `placeholder` → `title`. Unfindable = no accessible name = real a11y gap.
+
+**Ambiguity is a signal, not a bug.** `ui_aria_invoke({ name: 'Spara' })` throws when two elements share that name and lists every candidate with its role + region. Disambiguate via the `role` / `region` arguments.

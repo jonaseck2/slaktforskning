@@ -47,6 +47,22 @@ Dispatcher rejects reports missing any of the three and re-dispatches with the q
 
 **Anti-pattern:** terse "DONE — see commit X" reports. Dispatcher has no info to verify.
 
+### B5 — Subagent prompts ALWAYS instruct rebase + branch verification
+
+Every dispatch prompt MUST tell the subagent:
+1. **Before starting:** `git -C <worktree> fetch && git -C <worktree> rebase main` so the worktree base matches current `main`. Otherwise the subagent's "Tasks 1-N done in main" mental model is wrong and they may redo or undo committed work.
+2. **Before EVERY commit:** verify `git -C <worktree> rev-parse --abbrev-ref HEAD` reports `worktree-agent-*`, NOT `main`. If it reports `main`, the subagent has CWD-drifted out of its worktree — stop, abort the commit, fix.
+
+This addresses the most common dispatch failure mode: subagents reading "Tasks 1-7 done in main" as "you work directly on main too" and pushing commits to the wrong branch. The 2026-05-14 audit batch had at least two agents commit to main when their isolation worktree was the intended target.
+
+**Anti-pattern:** prompt says "Tasks 1-N done in main" without naming a specific commit SHA. Subagents interpret "in main" as "work on main."
+
+### B6 — Prompt wording: name the SHA, not "in main"
+
+Replace any "Tasks 1-N done in main" phrasing with: **"Main is at commit `<sha>`; rebase your worktree onto it. Commits 1-N from previous waves provide [list of artifacts]."** The SHA gives the agent a concrete anchor; "in main" doesn't.
+
+**Anti-pattern:** "Tasks 1-7 done in main" / "previous round landed in main" / "main has the X commit" — all of these read as "work on main."
+
 ## How to use
 
 When dispatching a subagent (implementer, spec-reviewer, or code-quality-reviewer):

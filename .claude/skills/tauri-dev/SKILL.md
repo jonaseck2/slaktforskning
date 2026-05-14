@@ -1,6 +1,6 @@
 ---
 name: tauri-dev
-description: Launch, debug, and verify the Tauri app during development. Use when testing UI changes, debugging the renderer or Rust host, verifying a build, or asking how to inspect the running app. Covers `npm run tauri:dev`, the bundle build, the dev MCP UI bridge port, and where logs land.
+description: Launch, debug, and verify the Tauri app during development. Use when testing UI changes, debugging the renderer or Rust host, verifying a build, or asking how to inspect the running app. Covers `npm start`, the bundle build, the dev MCP UI bridge port, and where logs land.
 ---
 
 # Tauri Dev Skill
@@ -10,7 +10,7 @@ description: Launch, debug, and verify the Tauri app during development. Use whe
 ### Dev mode (with HMR)
 
 ```bash
-npm run tauri:dev
+npm start
 ```
 
 This starts:
@@ -21,18 +21,18 @@ This starts:
 If you backgrounded the dev loop, logs land in `/tmp/tauri-dev.log` (per the launcher convention used in this repo). Tail to follow Rust + Vite output simultaneously:
 
 ```bash
-npm run tauri:dev > /tmp/tauri-dev.log 2>&1 &
+npm start > /tmp/tauri-dev.log 2>&1 &
 tail -f /tmp/tauri-dev.log
 ```
 
 ### Release / packaged build
 
 ```bash
-# Build a .app bundle (macOS — fastest to test packaged behaviour locally)
-npm run tauri:build -- --bundles app
+# Raw binary only (fastest — used for e2e and quick verification)
+npm run build:bin
 
-# Build all platform-default bundles (.dmg on macOS, .msi on Windows, .deb/.AppImage on Linux)
-npm run tauri:build
+# Full bundle for the current platform (.app + .dmg on macOS, NSIS .exe on Windows, .AppImage on Linux)
+npm run build
 ```
 
 The output goes to `src-tauri/target/release/bundle/`. To test what the user sees, copy the bundled `.app` to `/Applications` (or run it in place from `target/`) — the dev binary uses different bundle identifiers and storage paths from the release binary, so testing the bundle directly is the only way to verify production paths.
@@ -83,7 +83,7 @@ DevTools auto-open in dev mode. Vue component errors and `console.error` from th
 
 Before committing UI changes, verify they work in the running app:
 
-1. Ask the user to launch the app: `npm run tauri:dev`.
+1. Ask the user to launch the app: `npm start`.
 2. Use the native `mcp__slaktforskning-dev__ui_*` tools for navigation, screenshots, IPC.
 3. For deep DOM/SVG introspection (`getBoundingClientRect()`, `elementFromPoint()`, computed path geometry), use `ui_eval` with a script — the renderer evaluates it and returns the result. The Chrome DevTools MCP plugin no longer applies in the Tauri build (it spawned its own browser; not connected to the Tauri webview).
 4. Ask the user for visual confirmation if tools are unavailable.
@@ -93,7 +93,7 @@ Before committing UI changes, verify they work in the running app:
 ## Architecture reference
 
 ```
-npm run tauri:dev
+npm start
   └─ tauri-cli
        ├─ Vite dev server (renderer) → file:// inside webview, HMR over WS
        ├─ cargo build → src-tauri/target/debug/slaktforskning
@@ -115,7 +115,7 @@ npm run tauri:dev
 
 ## Common issues
 
-**Cargo rebuild on every dev start:** if `cargo build` is recompiling the world every time you `npm run tauri:dev`, your `target/` cache was nuked or the dependency graph changed. Normal incremental rebuilds touch only your edited files (~3 seconds). If the first build takes longer than 5 minutes, you're on a fresh checkout — that's expected, the dependency tree is large.
+**Cargo rebuild on every dev start:** if `cargo build` is recompiling the world every time you `npm start`, your `target/` cache was nuked or the dependency graph changed. Normal incremental rebuilds touch only your edited files (~3 seconds). If the first build takes longer than 5 minutes, you're on a fresh checkout — that's expected, the dependency tree is large.
 
 **Webview blank on launch:** check `/tmp/tauri-dev.log` for Vite errors first (the renderer bundle didn't build), then for Rust panics (the host crashed before opening the window).
 
@@ -140,7 +140,6 @@ npm run tauri:dev
 
 Channels are defined once via the typed registry in `src/shared/channels/<domain>.ts`. One `defineChannel()` call covers both runtimes — in Tauri, `tauri-window-api.ts` walks the registry on startup and wires every channel into `window.api.*` automatically. Polyfills are only needed when the channel needs Tauri-native services. See `/add-feature` IPC Layer and `/tauri-bridge` for the polyfill recipe.
 
-Coverage tests catch any miss across runtimes:
+Coverage tests catch any miss:
 - `tests/unit/tauri-channel-coverage.test.ts` — every registry channel auto-walks or has an explicit polyfill
-- `tests/unit/preload-coverage.test.ts` — every registry channel is exposed on the legacy Electron preload's `window.api`
 - `tests/unit/static-api-coverage.test.ts` — every registry channel has a stub in the static SPA api

@@ -28,7 +28,36 @@ Task tool (general-purpose):
 
     ## Context
 
-    [Scene-setting: where this fits, dependencies, architectural context]
+    [Scene-setting: where this fits, dependencies, architectural context.
+
+    **When this dispatch follows previous waves on the same plan:** name the
+    main-branch SHA, not "in main." Write:
+
+      "Main is at commit `<sha>`; rebase your worktree onto it. The previous
+      commits on main provide [list of files / behaviors]."
+
+    NOT "Tasks 1-N done in main" — that phrasing has caused subagents to
+    interpret "in main" as "you work directly on main" and push commits to
+    the wrong branch. See `subagent-handoff` rules B5/B6.]
+
+    ## Worktree discipline (project-local — read before any git operation)
+
+    1. **Rebase first.** Before touching any file, run:
+       `git -C <worktree-path> fetch && git -C <worktree-path> rebase main`
+       so your base matches current `main`. Otherwise commits from earlier
+       waves may not be visible in your worktree, and you may redo work.
+       If the rebase has conflicts, STOP and report `BLOCKED` — don't
+       force-resolve.
+
+    2. **Verify branch before EVERY commit.** Run:
+       `git -C <worktree-path> rev-parse --abbrev-ref HEAD`
+       and confirm it reports `worktree-agent-*`, NOT `main`. If it reports
+       `main`, you've drifted out of the worktree (most commonly from a
+       `cd` inside a Bash tool call). Stop, abort the commit, fix your CWD.
+
+    3. **Use `git -C <worktree-path>` for every git command**, OR
+       always pass absolute paths and verify cwd before each command. Never
+       `cd /path/to/.worktrees/... && git ...` — that masks drift.
 
     ## Before You Begin
 

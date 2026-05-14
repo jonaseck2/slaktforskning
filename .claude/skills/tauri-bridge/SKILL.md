@@ -109,6 +109,38 @@ pub struct ThingExportResult {
 
 If you add a command that returns a complex type and `cargo build` errors with "type X does not implement specta::Type", that's the fix — add the derive.
 
+### Special case: `serde_json::Value`
+
+`serde_json::Value` cannot be used directly in a Specta-annotated command signature on the version we pin (`specta = "=2.0.0-rc.25"`) — the type-derivation pass stack-overflows on Value's recursive enum. Use the `wire::JsonValueWire` newtype instead:
+
+```rust
+// In src-tauri/src/wire.rs (already shipped):
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(transparent)]
+pub struct JsonValueWire(pub serde_json::Value);
+
+// Hand-rolled specta::Type impl returns an empty named struct (TS: {}).
+// Wire format is `serde(transparent)` so callers see plain JSON.
+```
+
+Use in a command signature like:
+
+```rust
+use crate::wire::JsonValueWire;
+
+#[tauri::command]
+#[specta::specta]
+async fn thing_take_json(value: JsonValueWire) -> Result<JsonValueWire, String> {
+    let inner: serde_json::Value = value.0;
+    // ... do work ...
+    Ok(JsonValueWire(result))
+}
+```
+
+Helpers `wire::unwrap_params` and `wire::unwrap_params_list` keep call sites tidy at module boundaries.
+
+When Specta hits stable and (hopefully) fixes the recursive-type stack overflow, we can revisit and remove `JsonValueWire`. Until then, treat any `serde_json::Value` boundary as needing the newtype.
+
 ### Register the command
 
 In `src-tauri/src/lib.rs`, add the command name to the builder's `collect_commands!` macro:

@@ -13,7 +13,7 @@ A local-first, cross-platform desktop app for genealogy research. Your family tr
 
 ## What is this?
 
-Släktforskning is a desktop genealogy application built with Electron, Vue 3, and SQLite. All data stays on your machine — no cloud account, no subscription, no upload. A built-in MCP server lets AI agents like Claude read and write your genealogy data through natural conversation. The interface is available in Swedish and English.
+Släktforskning is a desktop genealogy application built with Tauri 2, Vue 3, and SQLite. All data stays on your machine — no cloud account, no subscription, no upload. A built-in MCP server lets AI agents like Claude read and write your genealogy data through natural conversation. The interface is available in Swedish and English.
 
 ## Features
 

@@ -1,4 +1,10 @@
-# IPC Migration Inventory
+# IPC Migration Inventory (archived working tracker, 2026-05-10 → 2026-05-12)
+
+**Archived state, not a living document.** This was the per-channel tracking sheet for the Electron→Tauri IPC port; every channel listed below has since landed in `src/shared/channels/` and is dispatched by `src/renderer/tauri-window-api.ts` (auto-walked from the registry). The migration completed in the v0.250.0 full-port close-out. Kept as a historical snapshot of which 187 channels existed at the start of the port and which Phase 3 task owned each one — useful only when archaeologically reconstructing why a channel exists or which cluster it belonged to.
+
+For the *current* IPC architecture see [`docs/IPC_REFERENCE.md`](../../IPC_REFERENCE.md) and the `tauri-bridge` skill. The checkboxes below are frozen — they reflect the state at the moment this tracker was archived, not current truth.
+
+---
 
 Auto-generated from `src/shared/channels/*.ts` at Phase 1 Task 2.
 Tracks the migration of every Electron IPC channel to a Tauri `#[tauri::command]`.

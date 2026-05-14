@@ -1,6 +1,6 @@
 ---
 name: performance-profiling
-description: Use when diagnosing slow operations, CPU saturation, or hangs — in either the Tauri app or the legacy Electron build. Covers CPU profiling setup for the renderer (DevTools — works on both Chromium and WebKitGTK webviews), the host process (Electron main via --inspect-brk; Tauri Rust binary via cargo flamegraph / samply), cpuprofile analysis, and the known SQLite bottleneck patterns in this codebase.
+description: Use when diagnosing slow operations, CPU saturation, or hangs in the Tauri app. Covers CPU profiling setup for the renderer (Chromium DevTools / Safari Web Inspector against the system webview), the Rust host binary (cargo flamegraph / samply), cpuprofile + Firefox-Profiler analysis, and the known SQLite bottleneck patterns in this codebase.
 ---
 
 # Performance Profiling for Släktforskning
@@ -13,76 +13,19 @@ CPU profiles tell you exactly which functions consumed the time, with sample cou
 
 ---
 
-## Where bottlenecks live by runtime
+## Where bottlenecks live
 
-| Layer | Tauri | Electron (legacy) |
-|---|---|---|
-| Renderer (Vue, JS, layout, paint) | Chromium DevTools — Performance tab against the WebKitGTK webview | Chromium DevTools — Performance tab against the Electron renderer |
-| Host process (DB, fs, native dialogs) | Rust async commands in `src-tauri/src/` — profile the Rust binary with `cargo flamegraph` or `samply` | Node.js worker thread (`src/main/db-worker.ts`) — `--inspect-brk` + Chrome DevTools attach, or the in-process `inspector.Session` helper below |
-| SQLite | rusqlite (full native) — same SQL hot-paths as Electron | node-sqlite3-wasm (WASM, single-threaded) — same SQL hot-paths as Tauri, plus WASM-heap finalize concerns (see `/sqlite-finalize`) |
+| Layer | Tooling |
+|---|---|
+| Renderer (Vue, JS, layout, paint) | Chromium DevTools (Linux/Windows) or Safari Web Inspector (macOS WKWebView) — Performance tab against the running webview |
+| Host process (DB, fs, native dialogs) | Rust async commands in `src-tauri/src/` — profile the Rust binary with `cargo flamegraph` or `samply` |
+| SQLite | rusqlite (full native) — `EXPLAIN QUERY PLAN` + the slow-pattern catalog below |
 
-**Renderer-side profiling is identical across runtimes** — both webviews are Chromium-family (Tauri uses WKWebView on macOS / WebKitGTK on Linux / WebView2 on Windows). The DevTools workflow below works for either. Where the runtimes diverge is the host process: in Electron, the worker thread is JavaScript and you instrument it inline; in Tauri, the host is a Rust binary and you profile it with native tooling.
+The Rust core's `spawn_blocking` keeps SQL off the renderer thread, so renderer-side CPU is almost always Vue/layout/paint; host-side CPU is almost always SQL or `serde_json` serialisation. Profile the two layers independently.
 
 ## Step 1: Instrument the Suspect Operation
 
-### Electron — JavaScript host (`src/main/db-worker.ts` etc.)
-
-Add the profiling helper to whichever file owns the operation you're investigating — typically `src/main/db-worker.ts` for DB-touching channels (where the bottleneck almost always lives), or `src/main/ipc/<domain>.ts` for main-thread channels:
-
-```typescript
-import * as inspector from 'inspector';
-import * as os from 'os';
-
-async function captureProfile<T>(label: string, fn: () => T | Promise<T>): Promise<T> {
-  const session = new inspector.Session();
-  session.connect();
-  await new Promise<void>((resolve, reject) =>
-    session.post('Profiler.enable', (err) => (err ? reject(err) : resolve()))
-  );
-  await new Promise<void>((resolve, reject) =>
-    session.post('Profiler.start', (err) => (err ? reject(err) : resolve()))
-  );
-  const t0 = Date.now();
-  let result: T;
-  try {
-    result = await fn();
-  } finally {
-    const profile = await new Promise<inspector.Profiler.Profile>((resolve, reject) =>
-      session.post('Profiler.stop', (_err, params) =>
-        _err ? reject(_err) : resolve(params.profile)
-      )
-    );
-    session.disconnect();
-    const elapsed = Date.now() - t0;
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const outPath = path.join(os.homedir(), 'Desktop', `${label}-${stamp}.cpuprofile`);
-    fs.writeFileSync(outPath, JSON.stringify(profile), 'utf-8');
-    console.log(`[profile] ${label}: ${elapsed}ms → ${outPath}`);
-  }
-  return result!;
-}
-```
-
-Wrap the slow handler:
-
-```typescript
-// GEDCOM import
-return await captureProfile('gedcom-import', () => {
-  const text = readGedcomFile(filePath);
-  const tree = parseGedcom(text);
-  return importGedcom(getDatabase(), tree, options);
-});
-
-// Quality checks
-return captureProfile('checks-runAll', () => {
-  const raw = checks.runAllChecks(db);
-  // ...
-});
-```
-
-Run `npm start`, trigger the operation. Look for `[profile] label: Nms → /path/to/file.cpuprofile` in the terminal.
-
-### Tauri — Rust host (`src-tauri/src/*.rs`)
+### Rust host (`src-tauri/src/*.rs`)
 
 Build the app with debug symbols in a release-class profile, then drive it with native sampling profilers. Two options on macOS / Linux:
 
@@ -157,9 +100,9 @@ Key metrics:
 
 ## Step 3: Interpret What You Find
 
-### Pattern: WASM SQLite execution dominates (80%+ of samples)
+### Pattern: rusqlite execution dominates (80%+ of samples)
 
-The SQL query is slow. Look at the call chain to find which check function is calling it. The fix is always one of:
+The SQL query is slow. Look at the call chain to find which check / api function is calling it. The fix is always one of:
 
 1. **4-way event_participants self-join** → 2-query + JS join (see below)
 2. **Correlated NOT EXISTS subquery** → Set membership (see below)
@@ -177,19 +120,9 @@ Normal — this is SQLite doing WAL file I/O. Not actionable.
 
 The name-resolution query after `checks.runAllChecks()` is slow. Cap the result set before calling it (already done with 500-result cap per notice-severity check code in `checks:runAll` handler).
 
-### Pattern: Empty UI views right after import / DB switch (worker contention)
+### Pattern: Renderer freezes during a long DB op
 
-Symptom: list views (Media, Persons, Places) show their empty state, the tree shows `noFocalPerson`, and the last log line is `[worker/checks] runAll #N: <11s>ms → <many> raw`. The renderer's `media:listPage`, `persons:list`, `db:getSetting('default_person_id')` IPC calls are queued behind a long-running check on the same worker thread.
-
-The `setImmediate` yield BETWEEN checks in `db-worker.ts` doesn't help when an INDIVIDUAL check (gazetteer-aware ones especially) blocks for several seconds on a single synchronous loop. Yields must be inside the loop, not just between checks.
-
-Fix shape:
-- The slow check function returns `Promise<CheckResult[]>` (allowed by `NamedCheck.fn` signature).
-- Inside hot loops over places/persons, yield every ~200 iterations: `if (++processed % YIELD_EVERY === 0) await yieldNow();` where `yieldNow = () => new Promise(r => setImmediate(r))`.
-- Update both runAll loops in `src/main/db-worker.ts` (`checks:runAll`, `checks:forPerson`) to `await check.fn(...)`.
-- Mass-async test conversion: `perl -i -pe 's/= (runAllChecks|runChecksForPerson|...)\(/= await $1(/g; s/\bit\(([^,]+), \(\) => \{/it($1, async () => {/g'` — but watch for `it()` descriptions containing commas/parens (the `[^,]+` regex won't match them; fix those manually).
-
-Don't write a wall-clock perf test on a private fixture — the yield doesn't reduce TOTAL runtime, it makes the worker non-blocking. Wall-clock won't catch that. Write call-counting and cache-survival invariants instead (see `tests/unit/checks-perf.test.ts`).
+In Tauri this is rare: rusqlite calls go through `spawn_blocking`, so the Rust side never blocks the renderer's tokio executor or the WebView event loop. If you do see a freeze, the suspect is renderer-side JS (a synchronous loop in Vue / a layout-thrash render pass) — profile the renderer with DevTools, not the Rust binary. The classic Electron-era "yield inside the worker loop" fix does not apply here.
 
 ---
 
@@ -342,11 +275,11 @@ Use these to narrow down which check to profile before capturing a full CPU prof
 
 When a user reports CPU saturation or slowness:
 
-1. [ ] Check per-check timing logs first — identify the slow check by name
-2. [ ] If the slow function is not obvious, add `captureProfile` wrapper to the suspected IPC handler
+1. [ ] Check per-check timing logs first (`[checks] checkX: Nms → M result(s)`) — identify the slow check by name
+2. [ ] Decide host vs renderer. If wall-clock dominates a Rust command (DB / fs / import), profile the Rust binary with `samply record`. If the UI is sluggish without a corresponding host-side cost, profile the renderer with DevTools (Chromium on Linux/Windows, Safari Web Inspector on macOS).
 3. [ ] Trigger the operation with the actual large dataset
-4. [ ] Collect the `.cpuprofile` from `~/Desktop/`
-5. [ ] Analyze: top nodes by hitCount → identify bottleneck function + line number
+4. [ ] Collect the profile (samply opens Firefox Profiler automatically; `.cpuprofile` exports from DevTools)
+5. [ ] Analyze: widest frames → identify bottleneck function + line number
 6. [ ] Read that function in the source; identify the slow query pattern
 7. [ ] Apply the appropriate fix (4-way JOIN → 2-query+JS, NOT EXISTS → Set, N+1 → bulk)
 8. [ ] `npm test` — all tests must pass before declaring done

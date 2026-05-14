@@ -1,6 +1,6 @@
 ---
 name: slaktforskning-mcp-dev
-description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire defineChannel + preload/Tauri-polyfill + static-api, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Also covers the dev MCP HTTP bridge (Tauri ui_server.rs / Electron ui-server.ts) used by ui_screenshot / ui_click / ui_eval / chart_*. Use when modifying anything in src/mcp/, src/shared/channels/, src/preload/index.ts, src/renderer/tauri-window-api.ts, src-tauri/src/ui_server.rs, or src/main/ui-server.ts. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
+description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire defineChannel + Tauri auto-walk / polyfill + static-api, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Also covers the dev MCP HTTP bridge (src-tauri/src/ui_server.rs) used by ui_screenshot / ui_click / ui_eval / chart_*. Use when modifying anything in src/mcp/, src/shared/channels/, src/renderer/tauri-window-api.ts, or src-tauri/src/ui_server.rs. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
 ---
 
 # Släktforskning MCP — Server-Dev Skill
@@ -158,16 +158,16 @@ During genealogy research, use the **prod server** (`src/mcp/server.ts`):
 
 If you are running as a headless agent (Kubernetes pod, CI, no window server, no `.mcp.json`):
 
-- **Skip all `ui_*` tools** — they require the Electron app to be running with a display. Calling them will fail or hang.
+- **Skip all `ui_*` tools** — they require the Tauri app to be running with a display. Calling them will fail or hang.
 - **Data tools work fine** — run the prod server standalone (`npx tsx src/mcp/server.ts`) with `SLAKTFORSKNING_DB=/path/to/db.db` and call data tools directly via stdin/stdout JSON-RPC.
-- **Use E2E tests for UI verification** — `npx playwright test` runs headless and covers the full IPC → Vue rendering stack. Prefer this over `ui_screenshot` for pipeline verification.
+- **Use E2E tests for UI verification** — `npm run test:e2e` (Tier 1) / `npm run test:e2e:full` (Tier 2) runs headless against the packaged Tauri binary and covers the full IPC → Vue rendering stack. Prefer this over `ui_screenshot` for pipeline verification.
 
 ### Session Start Checklist
 
 At the start of any session where UI work or research will happen:
 1. Call `get_current_database` — confirm which DB is active
 2. If the app is not running, UI tools (`ui_screenshot`, `ui_navigate`, etc.) will return errors — data tools still work
-3. Data tools operate directly on SQLite; they do not require the Electron app to be running
+3. Data tools operate directly on SQLite via the MCP sidecar; they do not require the Tauri app to be running
 
 ---
 
@@ -226,18 +226,17 @@ Use ToolSearch to find and call the `slaktforskning` MCP tools directly:
 
 ### When does my edit need a restart? — the reload matrix
 
-Several long-running processes share the codebase: the **Electron main process**, the **DB worker thread inside Electron**, the **renderer (Vue)**, the **preload script** (loads at window creation), and the **MCP server** (separate `npx tsx` process). Each caches different parts of the source. An edit that lands in one process is invisible to another until the right thing reloads.
+Several long-running processes share the codebase: the **Tauri Rust host** (compiled binary), the **renderer (Vue)** running inside the system webview, and the **MCP server** (separate `npx tsx` process for dev, or `bun server.bundle.mjs` child of the Rust host in the bundled build). Each caches different parts of the source. An edit that lands in one process is invisible to another until the right thing reloads.
 
 | You edited | Reload needed | Why |
 |---|---|---|
 | `src/renderer/**` (Vue, CSS, composables, stores) | Renderer reload — `ui_reload` MCP tool, or Cmd+R, or just save under HMR | Vite HMR updates the renderer; nothing else is involved. |
-| `src/preload/index.ts` | **Full Electron app restart.** Renderer reload alone won't pick it up. | Preload only loads at window creation. After a renderer reload, the renderer is new but the same preload bridge is reattached. |
-| `src/api/**` (any) | Restart Electron app **and** restart MCP server | The Electron worker thread loads api/* once at boot. The MCP server is a separate Node process that loads its own copy of the same files at boot. Both need to restart. |
-| `src/api/checks/**` | Same as above — restart Electron app + MCP server | These run inside the worker thread (called from `checks:runAll` IPC). The 2026-05-09 date-parser fix landed in source but stayed invisible until the worker restarted. |
-| `src/main/**` (db-worker, ipc, ui-server) | Restart Electron app | Main-process code is loaded once on boot. |
-| `src/main/db-worker.ts` | Restart Electron app | The worker is spawned at app start; no hot-reload. |
-| `src/shared/channels/**` | Restart Electron app **and** restart MCP server | Both processes import the channel registry at boot. |
-| `src/mcp/createProdServer.ts`, `src/mcp/createDevServer.ts`, `src/mcp/server.ts`, `src/mcp/devServer.ts` | Restart MCP server only | The MCP server is its own `npx tsx` process; restarting Electron doesn't touch it. |
+| `src/renderer/tauri-window-api.ts` / `src/renderer/db-shim.ts` / `src/renderer/main.ts` | **Full app restart** if running `npm start`; HMR usually picks up tauri-window-api.ts but always restart if behavior looks stale | The bridge mounts at boot. |
+| `src/api/**` (any) | Restart app **and** restart MCP server | The renderer-side api/ layer loads at app boot. The MCP server is a separate Node process that loads its own copy of the same files at boot. Both need to restart. |
+| `src/api/checks/**` | Same as above — restart app + MCP server | These run inside the renderer (called from `checks:runAll`). |
+| `src-tauri/src/**` | Restart `npm start` — Rust recompiles automatically (~3 s incremental) | The Rust host is a compiled binary; tauri-cli watches and recompiles. |
+| `src/shared/channels/**` | Restart app **and** restart MCP server | Both processes import the channel registry at boot. |
+| `src/mcp/createProdServer.ts`, `src/mcp/createDevServer.ts`, `src/mcp/server.ts`, `src/mcp/devServer.ts` | Restart MCP server only | The MCP server is its own `npx tsx` process; restarting the Tauri app doesn't touch it. |
 | `src/mcp/tools/**` | Restart MCP server only | Same. |
 | `.claude/skills/**`, `.claude/rules/**` | Nothing — picked up automatically at next prompt | Read by Claude Code on each turn. |
 
@@ -252,7 +251,7 @@ After a real MCP restart:
 1. **The MCP server's "current database" resets to the default app data DB.** Always call `switch_database` again before continuing work.
 2. Verify the new tool appears via `ToolSearch` before calling it — if it's still missing, the restart didn't take.
 
-**Restarting the Electron app** — ask the user. Claude Code can't restart their app without their consent (it would close their unsaved work).
+**Restarting the Tauri app** — ask the user. Claude Code can't restart their app without their consent (it would close their unsaved work).
 
 ### Verifying interactive UI fixes via MCP
 
@@ -297,9 +296,9 @@ server.registerTool('tool_name', {
 1. Implement the function in `src/api/*.ts`
 2. Write unit tests in `tests/unit/`
 3. Add the MCP tool in `src/mcp/createProdServer.ts` (or `createDevServer.ts` for dev-only tools)
-4. Add the IPC channel via `defineChannel()` in `src/shared/channels/<domain>.ts` — picked up automatically by `tauri-window-api.ts` auto-walk in the Tauri build
-5. **Electron only:** add the matching `window.api.<domain>.<method>` line manually to `src/preload/index.ts`. **Tauri only:** add a polyfill to `src/renderer/tauri-window-api.ts` if the channel needs native services (file dialog, fs, shell). Both runtimes: add a stub in `src/static/static-api.ts`.
-6. Test: `npm test && npx playwright test`
+4. Add the channel via `defineChannel()` in `src/shared/channels/<domain>.ts` — picked up automatically by `tauri-window-api.ts` auto-walk
+5. Add a polyfill in `src/renderer/tauri-window-api.ts` only if the channel needs Tauri-native services (file dialog, fs, shell, multi-window). Add a stub in `src/static/static-api.ts` so the website-export build still type-checks.
+6. Test: `npm test && npm run test:e2e`
 
 ## Common pitfalls (real bugs we shipped)
 
@@ -329,10 +328,7 @@ The fix shape is to extend the api function with a `leafProps` parameter and for
 
 ### 2. `mutating: true` is what makes the renderer notice
 
-A worker channel marked `mutating: true` does two things:
-
-1. The renderer's preload `mutating()` wrapper fires `dataChangedListeners` after the call returns — this is what `useEntityData` and `usePagedList` listen for to refresh.
-2. As of `c3f12d95`, the worker also broadcasts `data:changed` to all renderer windows on completion — so MCP-side mutations refresh list views the same way renderer-initiated ones do.
+A channel marked `mutating: true` causes `tauri-window-api.ts`'s auto-walk to call `fireDataChanged()` after the handler resolves. That's what `useEntityData` / `usePagedList` listen for to refresh. `fireDataChanged()` both emits a Tauri event (so all open windows react) and calls every locally-registered `dataChangedListeners` callback — so MCP-side mutations refresh list views the same way renderer-initiated ones do.
 
 **A new mutating channel that forgets the flag will:**
 - Save to the DB correctly,
@@ -370,18 +366,13 @@ In `.claude/settings.local.json` — use the dev server for development work:
 
 ---
 
-## The dev MCP HTTP bridge (Tauri vs Electron parity)
+## The dev MCP HTTP bridge
 
 The dev MCP tools (`ui_screenshot`, `ui_click`, `ui_navigate`, `ui_get_dom`, `ui_query_styles`, `ui_eval`, `ui_console`, `chart_*`) all run in the **MCP server process**, which is a separate Node.js process from the running app. They reach the running app via a small HTTP control plane on **port 19241** (configurable via `SLAKTFORSKNING_UI_PORT`).
 
-The bridge has the same **shape** in both runtimes — same port, same JSON shape, same `slaktforskning-dev` MCP toolset works against either — but radically different sizes:
+The bridge is `src-tauri/src/ui_server.rs` (~196 lines, axum + tokio) and exposes exactly four endpoints: `/`, `/db_path`, `/eval`, `/screenshot`. The dev MCP owns the tool inventory; Rust only exposes the primitives that can't be done from JS (native window screenshot, db-path probe, run-script-in-renderer). Every high-level dev tool (`ui_click`, `ui_navigate`, `ui_aria_*`, `chart_*`, …) is implemented as a JavaScript expression posted to `/eval`.
 
-| Runtime | File | Endpoints | Why this size |
-|---|---|---|---|
-| Tauri | `src-tauri/src/ui_server.rs` (~196 lines, axum + tokio) | `/`, `/db_path`, `/eval`, `/screenshot` (4 total) | Irreducible bridge — the dev MCP owns the tool inventory; Rust only exposes the primitives that can't be done from JS (native window screenshot, db-path probe, run-script-in-renderer). Everything else is built in JS and shipped via `/eval`. |
-| Electron (legacy) | `src/main/ui-server.ts` (~10+ endpoints) | adds `/navigate`, `/reload`, `/click`, `/fill`, `/dom`, `/query_styles`, `/console` | Pre-dates the script-injection architecture. Each high-level endpoint built its own renderer-side script via `webContents.send` + `ipcMain.once` reply. Kept as-is for parity while Electron is supported; will retire alongside the rest of `src/main/`. |
-
-**The MCP server itself (`src/mcp/server.ts`, `src/mcp/devServer.ts`) is engine-agnostic** — only the bridge transport differs. The prod MCP doesn't touch the bridge at all (it talks to the DB directly via rusqlite when run alongside Tauri, or via node-sqlite3-wasm when run alongside Electron).
+The prod MCP doesn't touch the bridge at all — it talks to the same SQLite file the app uses, opened via its own connection (rusqlite when bundled, `node-sqlite3` family when run via `tsx`).
 
 ### How a dev MCP tool actually works (the script-injection pattern)
 
@@ -417,4 +408,4 @@ You only need to touch Rust (`src-tauri/src/ui_server.rs` + `src-tauri/src/lib.r
 
 ### Console capture
 
-The Tauri renderer's `main.ts` wraps `console.{log,warn,error,info}` + `window.error` + `unhandledrejection` into a 500-entry ring buffer. The dev MCP's `ui_console` tool reads `__taurisConsole.drain()` via the script-injection endpoint — no separate Rust endpoint needed. Same UX as Electron's older `/console` HTTP endpoint, lower surface area in Rust.
+The renderer's `main.ts` wraps `console.{log,warn,error,info}` + `window.error` + `unhandledrejection` into a 500-entry ring buffer. The dev MCP's `ui_console` tool reads `__taurisConsole.drain()` via the script-injection endpoint — no separate Rust endpoint needed.

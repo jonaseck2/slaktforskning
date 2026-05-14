@@ -1,22 +1,30 @@
 ---
 name: import-format-add
-description: Add a new native importer for a genealogy file format (alongside the GEDCOM, Genney, Holger, RootsMagic, and Gramps importers we already ship). Use when the user asks to support a new app's file format — e.g. "add a Family Tree Maker importer", "let users import .ftm files directly", or "we should read .gpkg natively". Covers the multi-file pattern: src/import/<format>/, IPC channel, file picker, Tauri polyfill (renderer-side fs read via invoke('fs_read_bytes_base64')), preload + static-api, UI tab, MCP auto-detect, fixture-based tests.
+description: Add a new native importer for a genealogy file format (alongside the GEDCOM, Genney, Holger, RootsMagic, and Gramps importers we already ship). Use when the user asks to support a new app's file format — e.g. "add a Family Tree Maker importer", "let users import .ftm files directly", or "we should read .gpkg natively". Covers the multi-file pattern: src/import/<format>/, channel registry, file picker, Tauri polyfill (renderer-side fs read via invoke('fs_read_bytes_base64')), static-api stub, UI tab, MCP auto-detect, fixture-based tests.
 ---
 
 # Adding a Native Importer for a New Genealogy File Format
 
 Three native importers already exist (`src/import/genney/`, `src/import/rootsmagic/`, `src/import/gramps/`). Each closed the gap "user has a foreign app's file but no GEDCOM export" — agents and humans can drop the file in directly. The shape is consistent enough that a fourth one should be a recipe, not an investigation.
 
-## Reference implementation: Gramps
+## Reference implementations
 
-**Use Gramps as the reference for the Tauri-build wiring.** It is the only fully-wired importer in the Tauri build today (Holger, RootsMagic, and Genney are still throwing `notWired('…')` from `tauri-window-api.ts` as of the audit — that's the expected current state, not a bug). The shape:
+**Gramps, RootsMagic, and Holger are all fully wired in the Tauri build today.** Use the closest format-shape match as the diff target:
+
+- **Gramps** (`api.import.grampsRun`) — XML inside a `.gramps`/`.gpkg` (gzipped); good template for any XML- or text-based format.
+- **RootsMagic** (`api.import.rootsmagicRun`) — SQLite `.rmtree` / `.rmgc`; good template for any SQLite-shape format.
+- **Holger** (`api.import.holgerRun`) — GEDCOM- or ZIP-bundled; good template for any wrapped format.
+
+The shape is the same in all three:
 
 - File picker via `invoke('dialog_pick', { kind: 'open', extensions: [...] })` → returns chosen path.
 - Bytes via `invoke<string>('fs_read_bytes_base64', { path })` → base64-decode in renderer to a `Uint8Array`.
-- Decode + parse + import via the renderer-side `importFromGrampsBytes(db, bytes)` variant of the importer (a sibling of `importFromGramps(db, filePath)` that takes pre-loaded bytes — every Tauri-wired importer needs this variant because the renderer has no `fs`).
+- Decode + parse + import via the renderer-side `importFrom<Format>Bytes(db, bytes)` variant (a sibling of `importFrom<Format>(db, filePath)` that takes pre-loaded bytes — every Tauri-wired importer needs this variant because the renderer has no `fs`).
 - After success: call `fireDataChanged()` so list views and panels refresh without a route change.
 
-See the `api.import.grampsRun` polyfill in `src/renderer/tauri-window-api.ts` for the exact shape (~14 lines). The pattern lifts directly to a new importer; what changes is the `extensions` list, the `*SelectFile` dialog title, and the importer module name.
+See the existing polyfills in `src/renderer/tauri-window-api.ts` for the exact shape (~14 lines each). The pattern lifts directly to a new importer; what changes is the `extensions` list, the `*SelectFile` dialog title, and the importer module name.
+
+**Genney is the one not-yet-wired importer** (`notWired('Genney')`). It needs a Docker + Java extractor pipeline; in the Tauri build that means a Rust command that shells out, which we haven't built yet. Avoid as a reference until that lands.
 
 ## Step 0: confirm the format is worth doing
 
@@ -47,34 +55,32 @@ Look for: well-known root, regular per-entity blocks with `handle`/`id` attribut
 
 For binary: don't.
 
-## Step 2: file map (always the same six files)
+## Step 2: file map
 
 ```
-src/import/<format>/transform.ts        # pure DB→DB transform; no Electron/IPC, no fs
+src/import/<format>/transform.ts        # pure DB→DB transform; no IPC, no fs
 src/import/<format>/index.ts            # orchestrator: importFrom<Format>(db, path) AND importFrom<Format>Bytes(db, bytes) — both variants required
 tests/unit/<format>-transform.test.ts   # synthetic in-memory fixture + real-sample E2E (skipIf-gated)
-src/shared/channels/import.ts           # defineChannel('import:<format>Run', thread: 'worker', mutating: true)
-src/main/ipc/import.ts                  # wrapHandler('import:<format>SelectFile') — Electron dialog
-src/preload/index.ts                    # window.api.import.<format>SelectFile/Run/onProgress (Electron build)
-src/renderer/tauri-window-api.ts        # api.import.<format>SelectFile = pickFile(...); api.import.<format>Run = bytes-via-invoke + importFromBytes
-src/static/static-api.ts                # noop stubs
-src/renderer/components/import/<Format>ImportSection.vue   # lean copy of GrampsImportSection (or HolgerImportSection)
+src/shared/channels/import.ts           # defineChannel('import:<format>Run', mutating: true)
+src/renderer/tauri-window-api.ts        # api.import.<format>SelectFile = pickFile(...); api.import.<format>Run = bytes-via-invoke + importFromBytes + fireDataChanged()
+src/static/static-api.ts                # noop stub for the website-export SPA build
+src/renderer/components/import/<Format>ImportSection.vue   # lean copy of GrampsImportSection
 src/renderer/views/ImportExportView.vue                    # one filter chip + one v-if section
 src/renderer/i18n/{sv,en}.ts            # title, desc, pickFile, import, running, error
 src/mcp/tools/prod/data-management.ts   # extension match → format → native importer
 docs/MCP.md                             # update import_file row
-tests/unit/ipc-worker-coverage.test.ts  # add SelectFile to MAIN_THREAD_ONLY_CHANNELS
 tests/unit/tauri-channel-coverage.test.ts  # confirm SelectFile + Run polyfills are present
+tests/unit/static-api-coverage.test.ts     # confirm static stubs present
 ```
 
-The dual-variant orchestrator (`importFrom<Format>` + `importFrom<Format>Bytes`) is mandatory because the Tauri renderer cannot read fs directly — bytes arrive via `invoke('fs_read_bytes_base64')`. The Electron build calls the path variant; both variants delegate to the same `transform<Format>` function.
+The dual-variant orchestrator (`importFrom<Format>` + `importFrom<Format>Bytes`) is mandatory because the Tauri renderer cannot read fs directly — bytes arrive via `invoke('fs_read_bytes_base64')`. The path variant exists for tests + MCP-server-host calls; both variants delegate to the same `transform<Format>` function.
 
-Use Genney as the precedent if your format has its own tooling (Java/Docker for Derby), RootsMagic if it's SQLite, Gramps if it's XML. Three real precedents — diff against the closest one. **For the Tauri-build wiring, always copy from Gramps** — it's the only one fully wired; Holger / RootsMagic / Genney still throw `notWired('…')` in the Tauri build (they need their fs/spawn work moved to Rust commands first; tracked in `docs/plans/2026-05-10-tauri-port-completion-plan.md` Clusters R-H, R-RM).
+Diff against the closest existing format-shape match: RootsMagic if your input is SQLite; Gramps if it's XML; Holger if it's a wrapped / multi-file bundle.
 
 ## Step 3: transform.ts — required idioms
 
 ```typescript
-import type { Database } from 'node-sqlite3-wasm';
+import type { Database } from 'node-sqlite3-wasm'; // type-only shim; runtime is rusqlite via the Tauri db-shim
 import { createPerson, addPersonName, addPersonIdentifier } from '../../api/persons';
 import { createRelationship, addEventParticipant } from '../../api/relationships';
 import { createEvent } from '../../api/events';
@@ -151,16 +157,14 @@ The console.log lets a human (you, later) eyeball regressions when the count dri
 
 ## Step 6: end-to-end wiring
 
-The boring parts. Run these coverage tests after every step in this section — they fail loudly when something's missing across both runtimes:
+The boring parts. Run these coverage tests after every step in this section — they fail loudly when something's missing:
 
 ```bash
-npx vitest run tests/unit/ipc-worker-coverage.test.ts \
-                tests/unit/preload-coverage.test.ts \
-                tests/unit/tauri-channel-coverage.test.ts \
+npx vitest run tests/unit/tauri-channel-coverage.test.ts \
                 tests/unit/static-api-coverage.test.ts
 ```
 
-Use Gramps's chain as the diff target for the Tauri-side wiring; use Holger or RootsMagic for the Electron-side wiring (they both already work end-to-end on Electron).
+Use Gramps / RootsMagic / Holger as the diff target for the Tauri-side wiring (whichever matches your format shape).
 
 The MCP `import_file` extension-match branch and the `import_file` description need updating — agents discover the new format via the description.
 

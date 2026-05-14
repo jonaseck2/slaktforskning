@@ -98,7 +98,9 @@ The rule:
 
 > **Direct commits to `origin/main` (not via PR) require local-green before push.** The executor has run every check CI will run, with exit codes and test counts captured. PR-based work is exempt; CI is the appropriate check there.
 
-The Tauri full-port close-out merged 75 commits to local `main` and sat unpushed for the session. The decorative-CI-infrastructure failure mode (RC4 in the RCA) compounded with the never-pushed state to produce: zero verification ever ran against the merged state. Plan-driven work going forward should land via PR (which makes CI the right check); only "small fix" direct commits to main keep the local-green-before-push contract.
+The Tauri full-port close-out merged 75 commits to local `main` and sat unpushed for the session. The decorative-CI-infrastructure failure mode (RC4 in the RCA) compounded with the never-pushed state to produce: zero verification ever ran against the merged state.
+
+**Both PR and direct-to-`main` are legitimate paths for plan-driven work** — the rule is the verification, not the path. PRs let CI catch regressions for you (iterate on red). Direct merges to `main` (the common case for solo plan-driven work in this repo) require the executor to have run `npm test` + `npm run build` + the appropriate e2e tier locally before push, with the output pasted in the close-out commit. Forcing every plan through a PR is the wrong shape — it created a related failure mode where a later session pushed a worktree feature branch to `origin/main` (the branch ended up as `origin/main` instead of merging into `main`), because "must use a PR" warred with the natural local-merge-and-push flow. Pick the path; honour the verification.
 
 ## e2e is load-bearing verification; running it is part of every close-out (L7, RCA 2026-05-12)
 
