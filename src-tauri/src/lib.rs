@@ -27,6 +27,7 @@ fn db_is_open() -> bool {
 }
 
 #[tauri::command]
+#[specta::specta]
 async fn db_stats() -> Result<DbStats, String> {
     tokio::task::spawn_blocking(db::db_stats)
         .await

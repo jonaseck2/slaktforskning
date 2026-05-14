@@ -72,7 +72,7 @@ pub fn is_open() -> bool {
     DB.lock().is_some()
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 pub struct DbStats {
     pub persons: u32,
     pub events: u32,
