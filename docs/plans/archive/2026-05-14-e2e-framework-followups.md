@@ -50,15 +50,15 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
 
 #### Steps
 
-- [ ] **1.1 — Audit current skips.** Run `grep -n "test\.skip\|skip(" tests/e2e/panel-surface.spec.ts | grep -v "skip.*kind"` to list each skip's panel + section + reason. Expected count: 11. Cross-check against PR #53's implementer report: PersonPanel Timeline / Life map / Groups / Tasks; PlacePanel Timeline; GroupPanel Places / Media; ResearchTaskPanel Places / Media; MediaPanel Linked Places. (Eleven total.)
+- [x] **1.1 — Audit current skips.** Run `grep -n "test\.skip\|skip(" tests/e2e/panel-surface.spec.ts | grep -v "skip.*kind"` to list each skip's panel + section + reason. Expected count: 11. Cross-check against PR #53's implementer report: PersonPanel Timeline / Life map / Groups / Tasks; PlacePanel Timeline; GroupPanel Places / Media; ResearchTaskPanel Places / Media; MediaPanel Linked Places. (Eleven total.)
 
-- [ ] **1.2 — Decide where the seed enrichment lives.** Two options:
+- [x] **1.2 — Decide where the seed enrichment lives.** Two options:
   - **(a) Extend `seed-host-entity.ts`** — each `case` calls extra `mutateViaMcp(driver, '<entity>.create', ...)` after creating the host. Pro: single source of truth. Con: every panel always gets every row, which may slow `reactivity` triples that don't expect them.
   - **(b) Extend per-panel `seed` in `panels.ts`** — each `PanelDescriptor.seed` chains the extra rows it needs. Pro: per-panel surgical, doesn't affect `reactivity`. Con: per-descriptor code duplication.
 
   **Recommendation: (b).** The `reactivity` project's triples assume the seed produces just the host entity; extra rows could shift mutation count assertions. Keeping the section-row seeding inside `panels.ts` `PanelDescriptor.seed` localizes the change.
 
-- [ ] **1.3 — Implement per-panel seed enrichment.** For each `PanelDescriptor.seed` that has section(s) with lifecycle-parity checks currently skipping, chain the prerequisite row creations via `mutateViaMcp`. Concrete pre-seeds (using verified `<domain>.create` channels from `seed-host-entity.ts`):
+- [x] **1.3 — Implement per-panel seed enrichment.** For each `PanelDescriptor.seed` that has section(s) with lifecycle-parity checks currently skipping, chain the prerequisite row creations via `mutateViaMcp`. Concrete pre-seeds (using verified `<domain>.create` channels from `seed-host-entity.ts`):
 
   - **PersonPanel.seed** — after creating the host person, also:
     - Create one event linked to the person → unskips Timeline + Life map lifecycle-parity (`events.create({ event_type: 'birth', date_original: '1900', participants: [{ person_id: host.id, role: 'primary' }] })`).
@@ -75,7 +75,7 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
 
   Verify each channel name against `src/shared/channels/` before authoring — the implementer report from PR #53 noted that channel names don't always match guesses (e.g. `addPlace` → `places.create`, `addResearchTask` → `researchTasks.create`).
 
-- [ ] **1.4 — Verify each enrichment seeds correctly.** Probe via `/eval` after each seed call to confirm the row exists. Use the `mutateViaMcp` helper. Quick smoke per panel:
+- [x] **1.4 — Verify each enrichment seeds correctly.** Probe via `/eval` after each seed call to confirm the row exists. Use the `mutateViaMcp` helper. Quick smoke per panel:
 
   ```bash
   pkill -f slaktforskning 2>/dev/null; sleep 2
@@ -88,13 +88,13 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
   kill $APP_PID
   ```
 
-- [ ] **1.5 — Drop the 11 lifecycle-parity skips in `panel-surface.spec.ts`.** Look for `test.skip` calls with comments like `// no seeded row` and the conditional guards that skip check 3. Remove them; let the tests run.
+- [x] **1.5 — Drop the 11 lifecycle-parity skips in `panel-surface.spec.ts`.** Look for `test.skip` calls with comments like `// no seeded row` and the conditional guards that skip check 3. Remove them; let the tests run.
 
-- [ ] **1.6 — Run `npx playwright test --project=panels`.** Expected: total test count increases by 11; all previously-skipped tests now run and pass.
+- [x] **1.6 — Run `npx playwright test --project=panels`.** Expected: total test count increases by 11; all previously-skipped tests now run and pass.
 
-- [ ] **1.7 — Sanity check: `npx playwright test --project=reactivity`** still green. Confirms the seed enrichment didn't break reactivity triple assumptions.
+- [x] **1.7 — Sanity check: `npx playwright test --project=reactivity`** still green. Confirms the seed enrichment didn't break reactivity triple assumptions.
 
-- [ ] **1.8 — Commit.** `test(e2e): enrich PanelDescriptor.seed so every check-3 section has a row to lifecycle-test against`.
+- [x] **1.8 — Commit.** `test(e2e): enrich PanelDescriptor.seed so every check-3 section has a row to lifecycle-test against`.
 
 #### Verification (Task 1)
 
@@ -112,7 +112,7 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
 
 #### Steps
 
-- [ ] **2.1 — Add the `// Deferred coverage` block** above `CASES` in `imports.spec.ts`:
+- [x] **2.1 — Add the `// Deferred coverage` block** above `CASES` in `imports.spec.ts`:
 
   ```ts
   // Deferred coverage — native binary importer formats
@@ -134,7 +134,7 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
   // Until then, the GEDCOM-dialect cases are the right cost/value point.
   ```
 
-- [ ] **2.2 — Commit.** `docs(e2e): codify native-binary-fixtures deferral with trigger conditions`.
+- [x] **2.2 — Commit.** `docs(e2e): codify native-binary-fixtures deferral with trigger conditions`.
 
 #### Verification (Task 2)
 
@@ -145,11 +145,11 @@ Per [`.claude/rules/plans.md`](../../.claude/rules/plans.md) user-goal-falsifiab
 
 ## Self-review checklist
 
-- [ ] Both tasks have user-observable verification (not just "tests pass").
-- [ ] The native-binary deferral has concrete trigger conditions, not "we'll do it later."
-- [ ] Task 1 has a deliberate-red verification step.
-- [ ] `grep test.skip tests/e2e/` after this plan returns only `// Deferred:` entries with rationale.
-- [ ] No placeholder text (TBD, "similar to", "and so on").
+- [x] Both tasks have user-observable verification (not just "tests pass").
+- [x] The native-binary deferral has concrete trigger conditions, not "we'll do it later."
+- [x] Task 1 has a deliberate-red verification step.
+- [x] `grep test.skip tests/e2e/` after this plan returns only `// Deferred:` entries with rationale.
+- [x] No placeholder text (TBD, "similar to", "and so on").
 
 ## Plan execution shape
 
