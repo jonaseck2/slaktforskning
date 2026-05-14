@@ -675,7 +675,30 @@ fn open_new_window(app: &tauri::AppHandle) -> Result<(), String> {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Construct the Specta builder. The set of commands here mirrors what's
+/// registered with `tauri::generate_handler!` below, **for the subset that
+/// has been annotated with `#[specta::specta]`**. As more commands are
+/// annotated (Task 4 of docs/plans/2026-05-14-specta-migration.md), they
+/// move into `collect_commands!` here too; the runtime invoke_handler
+/// swaps to `builder.invoke_handler()` once the sets match.
+pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
+    tauri_specta::Builder::<tauri::Wry>::new()
+        .commands(tauri_specta::collect_commands![db_stats])
+}
+
 pub fn run() {
+    // Export bindings at app startup in debug builds. This is also produced
+    // out-of-band by `cargo test export_specta_bindings` and by the
+    // `bindgen` example binary (`cargo run --example bindgen`) so CI and the
+    // build pipeline don't need to launch the app to refresh bindings.ts.
+    #[cfg(debug_assertions)]
+    specta_builder()
+        .export(
+            specta_typescript::Typescript::default(),
+            "../src/renderer/bindings.ts",
+        )
+        .expect("Failed to export Specta TypeScript bindings");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -763,4 +786,26 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod specta_export_tests {
+    use super::*;
+
+    /// Regenerate `src/renderer/bindings.ts` from the Specta builder.
+    ///
+    /// Runs as part of `cargo test`, which means CI refreshes bindings on
+    /// every PR. If a developer forgets to commit the regenerated file, the
+    /// next CI run produces a diff. The renderer's static analysis depends
+    /// on `bindings.ts` being current, so this test exists to make that
+    /// guaranteed mechanically.
+    #[test]
+    fn export_specta_bindings() {
+        specta_builder()
+            .export(
+                specta_typescript::Typescript::default(),
+                "../src/renderer/bindings.ts",
+            )
+            .expect("Failed to export Specta TypeScript bindings");
+    }
 }
