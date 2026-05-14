@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Add a new feature, entity type, or field to the Släktforskning codebase. Use this skill whenever implementing any new data model change, CRUD operation, IPC channel, MCP tool, or Vue UI component — even if the user just says "add X" or "implement Y". Covers the full stack: schema, API, IPC channel (auto-walk vs Tauri polyfill), MCP, Vue.
+description: Add a new feature, entity type, or field to the Släktforskning codebase. Use this skill whenever implementing any new data model change, CRUD operation, IPC binding, MCP tool, or Vue UI component — even if the user just says "add X" or "implement Y". Covers the full stack: schema, API, window.api wiring (Specta-generated for Rust commands + inlined renderer-local bindings), MCP, Vue.
 ---
 
 # Adding a Feature to Släktforskning
@@ -41,9 +41,10 @@ Follow this order. Each step builds on the previous.
 2. **Schema** — add/alter tables in `src/api/schema.ts`; new tables use `CREATE TABLE IF NOT EXISTS`; new columns on existing tables **must** use a migration guard block (see below)
 3. **API functions** — implement CRUD in `src/api/*.ts` (pure TS, `db: Database` as first arg, no Electron deps)
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
-5. **IPC channel** — register via `defineChannel()` in `src/shared/channels/<domain>.ts`. In the Tauri build, `tauri-window-api.ts` walks the registry and auto-wires the channel into `window.api.*` — usually nothing more is needed. **Add a polyfill** only if the channel needs Tauri-native services (file dialog, fs read/write, native shell, second window). Polyfill = an override in `src/renderer/tauri-window-api.ts` that calls `invoke('<rust_command>')`. If you added a polyfill, also add a row to `tests/unit/tauri-channel-coverage.test.ts` (per the test-migration plan — asserts every registry channel either auto-walks or has an explicit polyfill). See `/tauri-bridge` for the polyfill recipe.
-
-> **Electron vs Tauri parity.** In the legacy Electron build, the preload (`src/preload/index.ts`) exposes a hand-maintained `window.api.<domain>.<method>` map and `tests/unit/preload-coverage.test.ts` enforces parity. In Tauri there is no preload world — `tauri-window-api.ts` is the equivalent: registry auto-walk + targeted polyfills + `tauri-channel-coverage.test.ts` as the parity gate. While both runtimes are supported, both layers exist; an `add-feature` change has to keep both in sync until Electron retires (see `docs/plans/2026-05-10-tauri-port-completion-plan.md`).
+5. **IPC binding** — two paths depending on whether the new operation needs Rust services or is pure TS over the renderer-side DB shim:
+   - **Pure TS handler** (most CRUD): add an explicit binding to `src/renderer/tauri-window-api.ts` (`api.things.create = mutating((db, data) => things.createThing(db, data))` or `readOnly(...)` for non-mutating). The `mutating()` helper fires `data:changed` after the call.
+   - **Rust-backed command** (file dialog, fs, shell, native thumbnailing, multi-window): add a `#[tauri::command] #[specta::specta]` function in `src-tauri/src/lib.rs`, register it in the `tauri_specta::Builder` collect_commands!. `cargo build` regenerates `src/renderer/bindings.ts` with the typed wrapper. Then add a polyfill in `tauri-window-api.ts` that calls `commands.thingName(...)`.
+   See `/tauri-bridge` for the polyfill recipe and the Specta annotation walkthrough.
 6. **MCP tool** — add thin wrapper in `src/mcp/createServer.ts` using `registerTool()` (Zod inputSchema, JSON response); add tests in `tests/unit/mcp.test.ts`
 7. **Vue UI** — build component or extend view in `src/renderer/`
 8. **Verify** — `npm test && npx playwright test`; for UI features, also use the MCP verification loop (see below)
@@ -148,81 +149,83 @@ Run after writing: `npm test -- --coverage` — coverage thresholds (80% lines a
 
 ## IPC Layer (Step 5)
 
-### Adding a new IPC channel
+### Adding a new window.api binding
 
-All DB-touching channels are declared via `defineChannel` in `src/shared/channels/<domain>.ts`. The Tauri build's `tauri-window-api.ts` walks the registry on startup and wires every channel into `window.api.*` directly — no preload, no contextBridge. The legacy Electron build still routes the same channels through a worker thread + hand-maintained preload map; both runtimes share the same `defineChannel` declaration.
+The Electron-era `src/shared/channels/` registry is gone. There's no `defineChannel`, no preload coverage test, no auto-walk. Two paths exist now depending on what the new operation needs.
 
-**1. Channel definition** (`src/shared/channels/<domain>.ts`) — single entry covers both runtimes:
-```typescript
-defineChannel({
-  name: 'things:create',
-  thread: 'worker',
-  mutating: true,                  // set true when this writes — fires onDataChanged
-  handler: (db, data: Parameters<typeof things.createThing>[1]) => things.createThing(db, data),
-});
-defineChannel({
-  name: 'things:delete',
-  thread: 'worker',
-  mutating: true,
-  handler: (db, id: string) => things.deleteThing(db, id),
-});
-```
+#### Path A — pure TS over the renderer-side DB shim (most CRUD)
 
-The barrel (`src/shared/channels/index.ts`) must import the domain file once if it's new — one line.
-
-**2. Renderer wiring — Tauri (auto-walk, preferred path).** `src/renderer/tauri-window-api.ts` iterates the registry at startup and assigns each `name: 'foo:bar'` channel to `window.api.foo.bar`. Mutating channels automatically fire `fireDataChanged()` after the handler resolves — no manual wrapper. For pure DB channels you ship nothing extra; the auto-walk picks them up.
-
-**Add a polyfill only when** the channel needs Tauri-native services that the api/-layer can't reach (file dialog, fs read/write, native shell, multi-window). Override the auto-walked entry in `tauri-window-api.ts`:
+Add an explicit binding to `src/renderer/tauri-window-api.ts`. The helpers `mutating()` and `readOnly()` thread the renderer-side `Database` and (for mutations) fire `data:changed` afterwards:
 
 ```typescript
-api.things.exportToFile = async (id: string) => {
-  const r = await invoke<{ path: string } | null>('dialog_pick', { kind: 'save', title: 'Export', defaultName: 'thing.json' });
-  if (!r?.path) return null;
-  const json = JSON.stringify(things.getThing(getDb(), id));
-  await invoke('fs_write_text', { path: r.path, contents: json });
-  return r.path;
+api.things = {
+  list: readOnly((db) => things.listThings(db)),
+  get: readOnly((db, id: string) => things.getThing(db, id)),
+  create: mutating((db, data: Parameters<typeof things.createThing>[1]) => things.createThing(db, data)),
+  update: mutating((db, id: string, data) => things.updateThing(db, id, data)),
+  delete: mutating((db, id: string) => things.deleteThing(db, id)),
 };
 ```
 
-The polyfill must call `fireDataChanged()` itself if the channel is mutating (the auto-walk wrapper is bypassed). See `/tauri-bridge` for the full polyfill recipe.
+That's it — the binding is live on `window.api.things.*`. Mutating ones automatically broadcast `data:changed` so `useEntityData` / `usePagedList` reload.
 
-**3. Renderer wiring — Electron (legacy, still required).** Edit `src/preload/index.ts` to add a matching line under the domain block:
-```typescript
-things: {
-  create: mutating((data: unknown) => ipcRenderer.invoke('things:create', data)),
-  delete: mutating((id: string) => ipcRenderer.invoke('things:delete', id)),
-},
+#### Path B — Rust-backed command (file dialog, fs, shell, multi-window, image processing)
+
+The Specta generator is the source of truth. Add the command to Rust, annotate it, and `bindings.ts` regenerates:
+
+```rust
+// src-tauri/src/lib.rs (or sibling module)
+#[tauri::command]
+#[specta::specta]
+async fn thing_export(id: String, path: String) -> Result<u64, String> {
+    tokio::task::spawn_blocking(move || things::export(&id, &path))
+        .await
+        .map_err(|e| e.to_string())?
+}
 ```
-Wrap mutating channels with the local `mutating()` helper so `onDataChanged` listeners fire. `tests/unit/preload-coverage.test.ts` enforces parity — adding a `defineChannel` without a preload entry fails CI.
 
-**4. Static API stub** (`src/static/static-api.ts`) — every registry channel needs a stub on the static-mode api, even if it's a no-op for the read-only website export. The `tests/unit/static-api-coverage.test.ts` parity check fails CI if you skip this.
+Register the command in the `tauri_specta::Builder::collect_commands!` macro in `lib.rs`. `cargo build` regenerates `src/renderer/bindings.ts` with `commands.thingExport(id, path)` and the right TypeScript types.
 
-**5. Vue component** — use it:
+Then add a polyfill in `src/renderer/tauri-window-api.ts` that calls the generated command:
+
+```typescript
+api.things.exportToFile = async (id: unknown) => {
+  if (typeof id !== 'string') return { success: false, error: 'id required' };
+  const r = await unwrap(commands.thingExport(id, '/tmp/x.json'));
+  fireDataChanged();
+  return { success: true, bytesWritten: r };
+};
+```
+
+Use `unwrap()` for `Result<T, String>` returns (Specta wraps them in `{ status, data | error }` envelopes); plain `await` for `Result<T, void>` ones. The polyfill is also where you call `fireDataChanged()` if the command mutates renderer-observable state.
+
+See `/tauri-bridge` for the full Specta annotation walkthrough including how to derive `specta::Type` on parameter and return types.
+
+#### Step 5b — type the new surface
+
+Update `src/renderer/api.d.ts` to add the method signature under `window.api.<domain>` so call sites in Vue components keep their compile-time types.
+
+#### Step 5c — Vue component use:
+
 ```typescript
 await window.api.things.create({ name: 'test' });
 ```
 
-After adding new IPC channels, update `src/renderer/api.d.ts` to add the typed method signatures under the correct `window.api.*` namespace. This file is the single global type declaration for `window.api`.
+### Required tests after adding a binding
 
-**Electron-only channels** (dialog, shell, printToPDF, fs ops) stay on the main thread — use `defineChannel({ thread: 'main', ... })` or, when `electron`-specific APIs aren't available in shared code, register manually via `wrapHandler` in the appropriate `src/main/ipc/*.ts` file and add the channel name to `MAIN_THREAD_ONLY_CHANNELS` in `tests/unit/ipc-worker-coverage.test.ts`. The Tauri side handles the same surface via Rust commands + a polyfill — see `/tauri-bridge`.
-
-### Required tests after adding a channel
-
-Run these together — they catch every place where a channel can be silently dropped across both runtimes:
+Compared to the Electron-era four-test parity gate, the post-Specta surface is much smaller:
 
 ```bash
-npx vitest run tests/unit/ipc-worker-coverage.test.ts \
-                tests/unit/preload-coverage.test.ts \
-                tests/unit/tauri-channel-coverage.test.ts \
-                tests/unit/static-api-coverage.test.ts
+npx vitest run tests/unit/static-api-coverage.test.ts \
+                tests/unit/tauri-window-api.test.ts
 ```
 
-- `ipc-worker-coverage` (Electron) — every `wrapHandler` resolves to a worker handler, registry entry, or `MAIN_THREAD_ONLY_CHANNELS`
-- `preload-coverage` (Electron) — every registry channel is exposed on the preload's `window.api` (parses preload as text)
-- `tauri-channel-coverage` (Tauri) — every registry channel either auto-walks via `tauri-window-api.ts` or has an explicit polyfill
-- `static-api-coverage` — every registry channel has a stub in the static SPA api
+- `static-api-coverage` — every legacy-shaped renderer-callable channel (dialog, fs, shell) still has a stub in the static SPA api for the website-export bundle.
+- `tauri-window-api.test.ts` — covers the polyfill dispatch shape for Rust-backed bindings (Specta wire arguments).
 
-See `docs/IPC_REFERENCE.md` for the complete existing `window.api` surface and IPC channel to API function mapping.
+The Specta builder itself verifies that every annotated command appears in `bindings.ts` — there is no separate parity test to drift against; if the Rust function and its annotations compile, the TypeScript binding exists.
+
+See `docs/IPC_REFERENCE.md` for the complete `window.api` surface map.
 
 ## MCP Layer (Step 6)
 
