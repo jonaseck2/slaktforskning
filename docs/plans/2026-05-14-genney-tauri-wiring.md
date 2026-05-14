@@ -66,7 +66,7 @@ User-goal-falsifiability check: if all five pass, can Genney import still be bro
 
 **Tripwire:** before Task 1 starts, the executor must skim §Scope's "Chosen" paragraph and confirm the rationale still holds against the current state of `src-tauri/binaries/bun-*` and `scripts/build-mcp-sidecar.mjs`. If the existing sidecar shape has changed materially since plan authoring (different bundler, different invocation contract), reopen this task and re-decide before continuing.
 
-- [ ] **0.1 — Tripwire check.** Confirm `scripts/build-mcp-sidecar.mjs` still uses esbuild → ESM bundle → spawn via tauri-plugin-shell. If it does, proceed. If it's been replaced by a different mechanism, reopen the decision in this plan body before Task 1.
+- [x] **0.1 — Tripwire check.** Confirm `scripts/build-mcp-sidecar.mjs` still uses esbuild → ESM bundle → spawn via tauri-plugin-shell. If it does, proceed. If it's been replaced by a different mechanism, reopen the decision in this plan body before Task 1.
 
 #### Verification (Task 0)
 
@@ -85,22 +85,22 @@ Plan §Scope still shows "✅ Chosen: Option A — Bun sidecar" and the executor
 
 #### Steps
 
-- [ ] **1.1 — Author the Bun bundle entry point.** A thin wrapper `src/import/genney/sidecar-entry.ts` that:
+- [x] **1.1 — Author the Bun bundle entry point.** A thin wrapper `src/import/genney/sidecar-entry.ts` that:
   - Parses argv (`sourcePath`, `dbPath`, `mediaDir?`, `optionsJson?`)
   - Opens the SQLite database via `better-sqlite3` (the Bun-compatible alternative to node-sqlite3-wasm — verify against the existing MCP sidecar's choice)
   - Calls `importFromGenney(db, sourcePath, options)` with the existing options shape, threading `onProgress` callbacks back to the parent via stdout JSON lines (`{ type: 'progress', message: '...' }`)
   - On completion, writes a final `{ type: 'result', summary: <ImportSummary> }` line and exits 0
   - On error, writes `{ type: 'error', error: '<message>', stack: '<stack>' }` and exits 1
-- [ ] **1.2 — Write `scripts/build-genney-sidecar.mjs`.** Mirror `scripts/build-mcp-sidecar.mjs`: esbuild with target=esnext, format=esm, bundle=true, platform=node, external=["better-sqlite3"], output `dist-genney/genney-import.bundle.mjs`. Run as part of `tauri.conf.json::beforeBuildCommand` (chain after existing MCP sidecar build).
-- [ ] **1.3 — Add the Rust spawn command.** In `src-tauri/src/lib.rs`, define a `#[tauri::command] async fn genney_import(...)` that:
+- [x] **1.2 — Write `scripts/build-genney-sidecar.mjs`.** Mirror `scripts/build-mcp-sidecar.mjs`: esbuild with target=esnext, format=esm, bundle=true, platform=node, external=["better-sqlite3"], output `dist-genney/genney-import.bundle.mjs`. Run as part of `tauri.conf.json::beforeBuildCommand` (chain after existing MCP sidecar build).
+- [x] **1.3 — Add the Rust spawn command.** In `src-tauri/src/lib.rs`, define a `#[tauri::command] async fn genney_import(...)` that:
   - Resolves the bundled `genney-import.bundle.mjs` resource path
   - Resolves the bundled `bun` binary path (same pattern as the MCP sidecar)
   - Spawns `bun <bundle> <args>` via `tauri-plugin-shell::ShellExt::shell().command(...)`
   - Streams stdout lines, parses each as JSON, fires `emit("genney:progress", line)` for progress events, captures the result line
   - Returns `Ok(summary)` on success, `Err(message)` on non-zero exit or parse failure
-- [ ] **1.4 — Register the command** in the `tauri::Builder::default()` `invoke_handler!` macro.
-- [ ] **1.5 — Verify the build pipeline.** Run `npm run build:e2e`; confirm `dist-genney/genney-import.bundle.mjs` is produced; confirm `bundle.resources` packages it into the binary. (No bundle test yet — just compile-clean.)
-- [ ] **1.6 — Commit.** `feat(import): Bun sidecar + Rust spawn command for Genney`
+- [x] **1.4 — Register the command** in the `tauri::Builder::default()` `invoke_handler!` macro.
+- [x] **1.5 — Verify the build pipeline.** Run `npm run build:e2e`; confirm `dist-genney/genney-import.bundle.mjs` is produced; confirm `bundle.resources` packages it into the binary. (No bundle test yet — just compile-clean.)
+- [x] **1.6 — Commit.** `feat(import): Bun sidecar + Rust spawn command for Genney`
 
 #### Verification (Task 1)
 
@@ -115,8 +115,8 @@ Building the Tauri app produces `dist-genney/genney-import.bundle.mjs`. The pack
 
 #### Steps
 
-- [ ] **2.1 — Read the existing Holger polyfill** as the canonical renderer-side import shape (file path → Rust command → progress emit → result envelope).
-- [ ] **2.2 — Replace the `notWired` stub.** New polyfill:
+- [x] **2.1 — Read the existing Holger polyfill** as the canonical renderer-side import shape (file path → Rust command → progress emit → result envelope).
+- [x] **2.2 — Replace the `notWired` stub.** New polyfill:
   ```ts
   api.import.genneyRun = async (opts: unknown) => {
     const o = opts as { sourcePath?: string; mediaDir?: string; schema?: string } | undefined;
@@ -144,9 +144,9 @@ Building the Tauri app produces `dist-genney/genney-import.bundle.mjs`. The pack
   };
   ```
   Adjust based on the exact `ImportSummary` shape returned by the importer.
-- [ ] **2.3 — Hook up the progress event.** The sidecar emits `genney:progress` lines. The renderer's existing import progress toast listens for a window event (see how Holger does it). Wire the same listener: `window.api.import.onProgress?.((line) => updateToast(line))` — match the existing pattern.
-- [ ] **2.4 — Test interactively.** Boot the Tauri app, open File → Import → Genney, pick a `.gcc` file from a local Genney install or from a contributor-provided fixture. Watch persons appear in PersonsView. Capture a screenshot.
-- [ ] **2.5 — Commit.** `feat(import): wire api.import.genneyRun via Rust spawn command + Bun sidecar`
+- [x] **2.3 — Hook up the progress event.** The sidecar emits `genney:progress` lines. The renderer's existing import progress toast listens for a window event (see how Holger does it). Wire the same listener: `window.api.import.onProgress?.((line) => updateToast(line))` — match the existing pattern.
+- [x] **2.4 — Test interactively.** Boot the Tauri app, open File → Import → Genney, pick a `.gcc` file from a local Genney install or from a contributor-provided fixture. Watch persons appear in PersonsView. Capture a screenshot.
+- [x] **2.5 — Commit.** `feat(import): wire api.import.genneyRun via Rust spawn command + Bun sidecar`
 
 #### Verification (Task 2)
 
@@ -162,11 +162,11 @@ Building the Tauri app produces `dist-genney/genney-import.bundle.mjs`. The pack
 
 #### Steps
 
-- [ ] **3.1 — Check for existing fixtures.** Run `find tests -name "*.gcc" -o -name "*.backup"` and look under `tests/fixtures/`. If a tiny fixture exists, use it. If not, see 3.2.
-- [ ] **3.2 — Author a tiny fixture, if needed.** Open Genney, create a 3-person family (parent + parent + child, with one event each, with one source), export as `.gcc`. Save as `tests/e2e/fixtures/imports/genney-small.gcc`. Verify the file size is < 50 KB (the Derby format is verbose but for 3 persons should be small). If no Genney install is available, **document this in the plan and defer the test-case enablement to a future contributor who has Genney installed** — the rest of the wiring still ships and works for users who already have `.gcc` files.
-- [ ] **3.3 — Un-TODO the case in `tests/e2e/imports.spec.ts`.** Find the Genney TODO comment in the `CASES` array, replace with a real `ImportCase` entry pointing at the fixture, using `apiCall: 'import.genneyRun'`. Expected person count: 3 (or whatever the fixture has).
-- [ ] **3.4 — Run `npx playwright test --project=imports --grep genney`.** Should pass.
-- [ ] **3.5 — Commit.** `test(e2e): activate Genney imports case with tiny .gcc fixture`
+- [x] **3.1 — Check for existing fixtures.** Run `find tests -name "*.gcc" -o -name "*.backup"` and look under `tests/fixtures/`. If a tiny fixture exists, use it. If not, see 3.2.
+- [x] **3.2 — Author a tiny fixture, if needed.** Open Genney, create a 3-person family (parent + parent + child, with one event each, with one source), export as `.gcc`. Save as `tests/e2e/fixtures/imports/genney-small.gcc`. Verify the file size is < 50 KB (the Derby format is verbose but for 3 persons should be small). If no Genney install is available, **document this in the plan and defer the test-case enablement to a future contributor who has Genney installed** — the rest of the wiring still ships and works for users who already have `.gcc` files.
+- [x] **3.3 — Un-TODO the case in `tests/e2e/imports.spec.ts`.** Find the Genney TODO comment in the `CASES` array, replace with a real `ImportCase` entry pointing at the fixture, using `apiCall: 'import.genneyRun'`. Expected person count: 3 (or whatever the fixture has).
+- [x] **3.4 — Run `npx playwright test --project=imports --grep genney`.** Should pass.
+- [x] **3.5 — Commit.** `test(e2e): activate Genney imports case with tiny .gcc fixture`
 
 #### Verification (Task 3)
 
@@ -182,11 +182,11 @@ Building the Tauri app produces `dist-genney/genney-import.bundle.mjs`. The pack
 
 #### Steps
 
-- [ ] **4.1 — Identify the JAR cache location** used by `src/import/genney/ensureJars`. Confirm it works inside the packaged Tauri binary's sandbox on macOS / Linux / Windows. On macOS specifically, the app is sandboxed and may not have write access to arbitrary paths; the cache should go under `~/Library/Application Support/com.slaktforskning.app/genney-jars/` or similar.
-- [ ] **4.2 — If sandbox restrictions apply,** update `ensureJars` to write the cache to the Tauri-provided `app.path().app_cache_dir()` (or equivalent) — pass it in as a sidecar arg.
-- [ ] **4.3 — If network is restricted,** add the Maven Central URLs to Tauri's `allowlist` or capabilities (research what Tauri 2 requires for outbound HTTP from a sidecar process — likely nothing because the sidecar is a child process not bound by webview CSP).
-- [ ] **4.4 — Verify on a fresh install.** Delete the JAR cache. Run a Genney import in the packaged Tauri app. Confirm the JAR download succeeds and the import works. Capture wall clock for first-import (with download).
-- [ ] **4.5 — Commit any changes.** `fix(genney): JAR cache location works under Tauri sandbox`
+- [x] **4.1 — Identify the JAR cache location** used by `src/import/genney/ensureJars`. Confirm it works inside the packaged Tauri binary's sandbox on macOS / Linux / Windows. On macOS specifically, the app is sandboxed and may not have write access to arbitrary paths; the cache should go under `~/Library/Application Support/com.slaktforskning.app/genney-jars/` or similar.
+- [x] **4.2 — If sandbox restrictions apply,** update `ensureJars` to write the cache to the Tauri-provided `app.path().app_cache_dir()` (or equivalent) — pass it in as a sidecar arg.
+- [x] **4.3 — If network is restricted,** add the Maven Central URLs to Tauri's `allowlist` or capabilities (research what Tauri 2 requires for outbound HTTP from a sidecar process — likely nothing because the sidecar is a child process not bound by webview CSP).
+- [x] **4.4 — Verify on a fresh install.** Delete the JAR cache. Run a Genney import in the packaged Tauri app. Confirm the JAR download succeeds and the import works. Capture wall clock for first-import (with download).
+- [x] **4.5 — Commit any changes.** `fix(genney): JAR cache location works under Tauri sandbox`
 
 #### Verification (Task 4)
 
@@ -201,9 +201,9 @@ A fresh-install Tauri user with no JAR cache and an internet connection can run 
 
 #### Steps
 
-- [ ] **5.1 — Grep for all `notWired` callers.** `grep -n "notWired(" src/renderer/tauri-window-api.ts`. List each.
-- [ ] **5.2 — For each one,** decide: wire it (small fix, file polyfill in this PR), or document it (add a `// Deferred: …` comment with the same un-defer-trigger format the imports.spec uses).
-- [ ] **5.3 — Commit.** `chore(tauri): document or wire remaining notWired stubs`
+- [x] **5.1 — Grep for all `notWired` callers.** `grep -n "notWired(" src/renderer/tauri-window-api.ts`. List each.
+- [x] **5.2 — For each one,** decide: wire it (small fix, file polyfill in this PR), or document it (add a `// Deferred: …` comment with the same un-defer-trigger format the imports.spec uses).
+- [x] **5.3 — Commit.** `chore(tauri): document or wire remaining notWired stubs`
 
 #### Verification (Task 5)
 
@@ -213,11 +213,11 @@ A fresh-install Tauri user with no JAR cache and an internet connection can run 
 
 ## Self-review checklist
 
-- [ ] User goal is user-observable (real import in the running app).
-- [ ] Architecture decision is gated before code (Task 0).
-- [ ] Verification has a deliberate-red step (Task 1 verification + Task 3 verification).
-- [ ] Native binary fixture authoring is in scope only for one format (`.gcc`) — the other native formats are tracked in the sibling plan `2026-05-14-importer-binary-fixtures.md`.
-- [ ] No placeholder text.
+- [x] User goal is user-observable (real import in the running app).
+- [x] Architecture decision is gated before code (Task 0).
+- [x] Verification has a deliberate-red step (Task 1 verification + Task 3 verification).
+- [x] Native binary fixture authoring is in scope only for one format (`.gcc`) — the other native formats are tracked in the sibling plan `2026-05-14-importer-binary-fixtures.md`.
+- [x] No placeholder text.
 
 ## Pairs with
 
