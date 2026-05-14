@@ -68,7 +68,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 **Dependencies:** none directly. Subsumes the "drop `thread:` field" tactical item (2.2). Independent of Tier 1.4.
 **Plan file:** [2026-05-14-specta-migration-design.md](2026-05-14-specta-migration-design.md).
 
-### 1.4 kkrpc sidecar migration (Rust ↔ Node MCP)
+### 1.4 kkrpc + Bun sidecar migration — **DONE**, archived
 
 **User goal:** No more `pkg`-deprecated build step. The MCP sidecar runs as a child Node process invoked via [kkrpc](https://github.com/kunkunsh/kkrpc), with typesafe RPC across the wire. App bundles drop the per-platform `node22-*` binaries (currently ~65 MB each); a single shared `mcp-server.bundle.js` ships instead. Releases stop being blocked by whether `@yao-pkg/pkg-fetch` has prebuilt Node 22, 23, 24 binaries for our four target triples.
 
