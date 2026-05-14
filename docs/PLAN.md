@@ -10,20 +10,18 @@ This file lists only what's **left** — planned, in-progress, or backlog. Anyth
 
 Active plans under `docs/plans/`. Each entry links the plan file; the user goal is what the plan delivers.
 
-- **E2E Expansion** — broaden the Playwright suite beyond Tier 1 (boot / crud / website-export / duplicates) into panels / reactivity / imports so the close-out evidence rule catches more regressions before main. → [2026-05-13-e2e-expansion.md](plans/2026-05-13-e2e-expansion.md) (spec: [-design.md](plans/2026-05-13-e2e-expansion-design.md))
-- **E2E Test-Coverage Enrichment** — follow-ups to the E2E expansion: fill the gaps the initial Tier 2 split surfaced. → [2026-05-14-e2e-framework-followups.md](plans/2026-05-14-e2e-framework-followups.md)
-- **Native importer binary fixtures** — close the e2e gaps for native importers (Holger / RootsMagic / Gramps) by shipping versioned binary fixtures the import project can run against. → [2026-05-14-importer-binary-fixtures.md](plans/2026-05-14-importer-binary-fixtures.md)
-- **Genney Tauri wiring** — port the last `notWired('Genney')` importer to the Tauri build (Docker + Java extractor pipeline behind a Rust shell-out command). → [2026-05-14-genney-tauri-wiring.md](plans/2026-05-14-genney-tauri-wiring.md)
-- **Audit follow-up roadmap** — actionable cluster of fixes derived from the post-port audit. → [2026-05-14-audit-followup-roadmap.md](plans/2026-05-14-audit-followup-roadmap.md)
-- **Hourglass layout refactor (Phase 2)** — internal refactor of `hourglass.ts` to simplify positioning passes. Design phase only. → [2026-05-14-hourglass-layout-refactor-design.md](plans/2026-05-14-hourglass-layout-refactor-design.md)
-- **Modal companion composables (3.5 follow-up)** — extract shared modal-state composables now that the BaseSubPanel modal pattern is converged. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
-- **Renderer-side perf baseline** — capture a Safari Web Inspector trace of the renderer to pair with the existing Rust-side `samply` baselines. → [2026-05-14-perf-baseline-renderer.md](plans/2026-05-14-perf-baseline-renderer.md)
-- **`build-third-party-licenses.mjs` reliability** — make the third-party-license bundle generator deterministic and CI-safe. → [2026-05-14-third-party-licenses-reliability.md](plans/2026-05-14-third-party-licenses-reliability.md)
+- **Genney Tauri wiring** — port the last `notWired('Genney')` importer to the Tauri build (Bun sidecar mirroring the MCP-sidecar shape). → [2026-05-14-genney-tauri-wiring.md](plans/2026-05-14-genney-tauri-wiring.md)
+- **`build-third-party-licenses.mjs` reliability** — clean skip + placeholder when `node_modules` is missing, so worktree/subagent dispatches stop reporting false failures. → [2026-05-14-third-party-licenses-reliability.md](plans/2026-05-14-third-party-licenses-reliability.md)
+- **Modal companion composables (3.5 follow-up)** — extract `useCompanionBaptism` / `useSpousePicker` / `useCitationsForPersonName` / `useWeddingOffer` / `useOverlapCheck` so the four large modals fit on one screen. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
+- **Audit follow-up roadmap (close-out)** — index doc; nearly all referenced plans have shipped, remaining tactical sweep + Tier 2.5 (Raw Payloads) gated on a renderer perf baseline. → [2026-05-14-audit-followup-roadmap.md](plans/2026-05-14-audit-followup-roadmap.md)
 
 ## Backlog
 
-#### App Naming [backlog]
-Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
+Plans that are valid and ready to grab but are not actively scheduled. Pull into "In flight" when triggered.
+
+- **Native importer binary fixtures** — close the e2e gaps for native binary decoders (Holger `.zip+media`, RootsMagic `.rmtree`, Gramps `.gramps` / `.gpkg`). Contributor-blocked (requires source-app installs). Un-defer trigger codified in [`tests/e2e/imports.spec.ts:74`](../tests/e2e/imports.spec.ts#L74). → [2026-05-14-importer-binary-fixtures.md](plans/2026-05-14-importer-binary-fixtures.md)
+- **Renderer-side perf baseline** — Safari Web Inspector traces (boot / place-resolve / dedup) to pair with the existing Rust-side `samply` baselines. 30-min user-driven task; grab when the next renderer-perf complaint arrives, or when starting audit-roadmap Tier 2.5 (Raw Payloads). → [2026-05-14-perf-baseline-renderer.md](plans/2026-05-14-perf-baseline-renderer.md)
+- **App Naming** — decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
 ---
 
@@ -32,6 +30,7 @@ Decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släk
 Things we thought about and decided against / deferred. Not backlog — listed only so we don't re-derive the same idea cold.
 
 - **Historical place names** — parishes that changed names or borders over time, with date ranges (e.g. "Stettin" → "Szczecin" 1945, Schleswig-Holstein county splits, Swedish parish mergers post-2000). Considered as a place-gazetteers extension. Out of scope: pinning the database to a specific historical-resolver version would conflict with the Prime Directive (DB stores authored values; everything else derives at read time). If revisited, the right shape is render-time alias resolution from a versioned alias table — not stored historical coordinates. Open it as a GitHub issue post-OSS so users can vote.
+- **Hourglass layout internal refactor (Phase 2 of 3.2)** — explicit "execute only if a real chart feature is blocked" plan. No chart feature is blocked today; the file works and is tested. The audit's "this file is too big" framing was a wrong premise twice in this batch. Reopen if a specific chart-feature request makes the file's shape the blocker. Design lives at [`plans/2026-05-14-hourglass-layout-refactor-design.md`](plans/2026-05-14-hourglass-layout-refactor-design.md).
 
 ---
 
