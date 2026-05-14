@@ -44,4 +44,10 @@ xcap = "0.9"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
 walkdir = "2"
+# Specta + tauri-specta: codegen TypeScript bindings from #[tauri::command]
+# functions. Replaces the hand-rolled src/shared/channels/ registry. See
+# docs/plans/2026-05-14-specta-migration.md.
+specta = "=2.0.0-rc.25"
+specta-typescript = "=0.0.12"
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
 
