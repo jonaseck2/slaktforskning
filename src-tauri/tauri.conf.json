@@ -31,8 +31,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["../THIRD_PARTY_LICENSES.txt"],
-    "externalBin": ["../target/mcp-server"],
+    "resources": [
+      "../THIRD_PARTY_LICENSES.txt",
+      "../dist-mcp/server.bundle.mjs",
+      "../dist-mcp/data/*"
+    ],
+    "externalBin": ["binaries/bun"],
     "macOS": {
       "signingIdentity": null,
       "providerShortName": null,
