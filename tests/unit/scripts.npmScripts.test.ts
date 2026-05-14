@@ -52,6 +52,8 @@ const SKIPPED_WITH_REASON: Record<string, string> = {
   'build:e2e': 'same as build',
   'pretest:e2e': 'chains build:e2e',
   'test:e2e': 'Playwright against packaged Tauri binary',
+  'pretest:e2e:full': 'chains build:e2e',
+  'test:e2e:full': 'Tier 2 Playwright suite (panels/reactivity/imports) — runs locally during plan close-out',
   test: 'running vitest from vitest = recursion + slow',
   'test:watch': 'long-lived watch mode',
   'dev:static': 'long-lived dev server (vite dev for the static SPA)',
