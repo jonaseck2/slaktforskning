@@ -113,7 +113,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 **Effort:** 1 day (verified — simpler than audit's 2-day estimate).
 **Plan file:** [2026-05-14-duplicates-split-design.md](2026-05-14-duplicates-split-design.md).
 
-### 3.2 Chart layout property-test migration (Phase 1 only)
+### 3.2 Chart layout property-test migration — **DONE** (audit premise was wrong, again; library shipped as forward-looking infra), archived
 
 **User goal:** Adding a new chart type or modifying placement math doesn't require updating dozens of golden snapshots in `chartLayout.test.ts` (1,663 LOC). Property-based assertions (no box overlaps, parents above children) replace exact-coordinate golden snapshots.
 
