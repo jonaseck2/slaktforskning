@@ -52,7 +52,7 @@ Every concrete recommendation surfaced during the 2026-05-14 audit is captured h
 **Dependencies:** blocks 3.1, 3.2, 3.4 (refactors need baseline). Not strictly blocking 3.3, 3.5, 3.6 but useful there too.
 **Plan file:** [2026-05-14-perf-baseline-capture.md](2026-05-14-perf-baseline-capture.md) (CrabNebula declined; existing-tools baseline).
 
-### 1.3 Specta migration (renderer ↔ Rust IPC typesafety)
+### 1.3 Specta migration — **DONE**, archived
 
 **User goal:** Adding a new Tauri command means writing the Rust function + adding it to `generate_handler!` — and the TypeScript binding shows up automatically with correct types. No more `src/shared/channels/*.ts` hand-rolled `defineChannel()`. No more "preload coverage" / "static-api coverage" / "ipc-worker coverage" tests. Renaming a Rust command in `db.rs` produces a TypeScript error at the call site, not a runtime crash.
 
@@ -151,9 +151,7 @@ Numbers from the audit's complexity-hotspot survey. Each will need its own `-des
 
 **User goal:** The 1,302 LOC god-module becomes a thin re-export `index.ts` + per-domain files matching `src/api/`.
 
-**Note:** **superseded by 1.3 (Specta migration)** if that lands first — Specta generates the bindings, no hand-rolled wiring remains. Keep this item only as a fallback if 1.3 is descoped.
-
-**Plan file:** [2026-05-14-tauri-window-api-split-design.md](2026-05-14-tauri-window-api-split-design.md) (contingency design — delete after 1.3 ships).
+**Note:** **OBSOLETE** — superseded by 1.3 (Specta migration) which shipped. Plan files moved to archive for historical reference only; never executed.
 
 ### 3.7 Panel danger-zone extraction — **DONE**, archived
 
