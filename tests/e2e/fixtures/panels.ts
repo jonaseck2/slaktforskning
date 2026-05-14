@@ -113,16 +113,34 @@ export const PANELS: PanelDescriptor[] = [
         surname: 'Person',
         sex: 'U',
       });
-      // Pre-seed one event so Events / Timeline / Life-map all have a row.
+      // Pre-seed an event WITH place_id so Events / Timeline / Life-map all
+      // have a lifecycle-parity row. Life-map's count badge specifically
+      // tracks events-with-place-id, not bare events — so the place_id is
+      // load-bearing here.
+      const place = await mutateViaMcp<{ id: string }>(driver, 'places.create', {
+        name: 'Seeded place for PersonPanel',
+        place_type: 'city',
+      });
       const ev = await mutateViaMcp<{ id: string }>(driver, 'events.create', {
         event_type: 'birth',
         date_original: 'SEEDED-EVENT-DATE',
+        place_id: place.id,
       });
       await mutateViaMcp(driver, 'eventParticipants.add', {
         event_id: ev.id,
         person_id: p.id,
         role: 'primary',
       });
+      // Pre-seed a group + link so Groups section has a lifecycle-parity row.
+      const group = await mutateViaMcp<{ id: string }>(driver, 'groups.create', {
+        name: 'Seeded group',
+      });
+      await mutateViaMcp(driver, 'groups.addLink', group.id, 'person', p.id);
+      // Pre-seed a research task + link so Tasks section has a row.
+      const task = await mutateViaMcp<{ id: string }>(driver, 'researchTasks.create', {
+        task: 'Seeded research task',
+      });
+      await mutateViaMcp(driver, 'researchTasks.addLink', task.id, 'person', p.id);
       return p.id;
     },
     route: (id) => `/persons/${id}`,
@@ -191,15 +209,24 @@ export const PANELS: PanelDescriptor[] = [
       const g = await mutateViaMcp<{ id: string }>(driver, 'groups.create', {
         name: 'Test Group',
       });
-      // Pre-seed one person + link so the People section has a row for
-      // lifecycle-parity.
+      // Pre-seed person + place + media + links so all three GroupPanel
+      // link sections (People / Places / Media) have a lifecycle-parity row.
       const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
         given_name: 'Group',
         surname: 'Member',
         sex: 'U',
       });
+      const place = await mutateViaMcp<{ id: string }>(driver, 'places.create', {
+        name: 'Seeded place for GroupPanel',
+        place_type: 'city',
+      });
+      const media = await mutateViaMcp<{ id: string }>(driver, 'media.create', {
+        title: 'Seeded media for GroupPanel',
+      });
       // groups:addLink takes positional args: (groupId, entityType, entityId).
       await mutateViaMcp(driver, 'groups.addLink', g.id, 'person', person.id);
+      await mutateViaMcp(driver, 'groups.addLink', g.id, 'place', place.id);
+      await mutateViaMcp(driver, 'groups.addLink', g.id, 'media', media.id);
       return g.id;
     },
     route: (id) => `/groups/${id}`,
@@ -223,14 +250,24 @@ export const PANELS: PanelDescriptor[] = [
       const t = await mutateViaMcp<{ id: string }>(driver, 'researchTasks.create', {
         task: 'Test research task',
       });
-      // Pre-seed one linked person so People has a row.
+      // Pre-seed person + place + media + links so all three ResearchTaskPanel
+      // link sections (People / Places / Media) have a lifecycle-parity row.
       const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
         given_name: 'Task',
         surname: 'Subject',
         sex: 'U',
       });
+      const place = await mutateViaMcp<{ id: string }>(driver, 'places.create', {
+        name: 'Seeded place for ResearchTaskPanel',
+        place_type: 'city',
+      });
+      const media = await mutateViaMcp<{ id: string }>(driver, 'media.create', {
+        title: 'Seeded media for ResearchTaskPanel',
+      });
       // researchTasks:addLink takes positional args: (taskId, entityType, entityId).
       await mutateViaMcp(driver, 'researchTasks.addLink', t.id, 'person', person.id);
+      await mutateViaMcp(driver, 'researchTasks.addLink', t.id, 'place', place.id);
+      await mutateViaMcp(driver, 'researchTasks.addLink', t.id, 'media', media.id);
       return t.id;
     },
     route: (id) => `/research-tasks/${id}`,
@@ -258,16 +295,26 @@ export const PANELS: PanelDescriptor[] = [
         // keeps the seed minimal.
         title: 'Test Media',
       });
-      // Pre-seed one linked person so Linked Persons has a row.
+      // Pre-seed linked person + place so Linked Persons + Linked Places
+      // both have a lifecycle-parity row.
       const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
         given_name: 'Media',
         surname: 'Subject',
         sex: 'U',
       });
+      const place = await mutateViaMcp<{ id: string }>(driver, 'places.create', {
+        name: 'Seeded place for MediaPanel',
+        place_type: 'city',
+      });
       await mutateViaMcp(driver, 'media.addLink', {
         media_id: m.id,
         entity_type: 'person',
         entity_id: person.id,
+      });
+      await mutateViaMcp(driver, 'media.addLink', {
+        media_id: m.id,
+        entity_type: 'place',
+        entity_id: place.id,
       });
       return m.id;
     },
@@ -366,6 +413,12 @@ export const PANELS: PanelDescriptor[] = [
         person_id: person.id,
         role: 'primary',
       });
+      // Pre-seed a research task linked to the place so Tasks section has a
+      // lifecycle-parity row.
+      const task = await mutateViaMcp<{ id: string }>(driver, 'researchTasks.create', {
+        task: 'Seeded research task for PlacePanel',
+      });
+      await mutateViaMcp(driver, 'researchTasks.addLink', task.id, 'place', place.id);
       return place.id;
     },
     route: (id) => `/places/${id}`,
