@@ -1,23 +1,29 @@
 /**
- * Asserts that the static SPA api stub (src/static/static-api.ts) stays in
- * sync with the IPC channel set.  Two layers are checked:
+ * Asserts that the static SPA api stub (src/static/static-api.ts) keeps a
+ * stub for every legacy / Electron-only channel that the renderer can call
+ * via window.api.
  *
- *   1. Every channel in the shared registry has a corresponding stub in the
- *      static api (auto-derived — catches newly added channels).
- *   2. Every legacy / Electron-only channel that the renderer can call via
- *      window.api still has a stub (hand-maintained list).
+ * SLIMMED IN THE SPECTA MIGRATION (2026-05-14): the previous version of this
+ * test also cross-checked the channel registry in `src/shared/channels/`.
+ * That registry was deleted along with the Electron worker dispatch model.
+ * The Specta-generated `src/renderer/bindings.ts` is now the source of truth
+ * for IPC commands, and the renderer-local handler bindings live inline in
+ * `src/renderer/tauri-window-api.ts`.
+ *
+ * What remains here is the hand-maintained list of legacy channels (dialog,
+ * fs, shell, BrowserWindow broadcasts) that the renderer surfaces on
+ * `window.api` and that the static SPA must stub for the website-export
+ * bundle to load without runtime errors.
  *
  * Checks are structural only (method exists); return-shape correctness is
  * not tested here.
  */
 import { describe, it, expect } from 'vitest';
-import '../../src/shared/channels';
-import { channelRegistry } from '../../src/shared/channels/registry';
 import { buildStaticApi } from '../../src/static/static-api';
 import type { Snapshot } from '../../src/api/html_site/snapshot';
 
 // Minimal empty snapshot — just enough for buildStaticApi to construct the
-// api object without throwing.  None of the stubs use the snapshot data.
+// api object without throwing. None of the stubs use the snapshot data.
 const emptySnapshot: Snapshot = {
   meta: { siteTitle: '', focusPersonId: '', generatedAt: '' },
   persons: [],
@@ -37,55 +43,16 @@ const emptySnapshot: Snapshot = {
 
 const staticApi = buildStaticApi(emptySnapshot);
 
-describe('static API parity', async () => {
-  it('every registry channel has a stub in the static api', async () => {
-    const missing: string[] = [];
-    for (const name of Object.keys(channelRegistry)) {
-      // Internal worker-only channels (names containing ':_') are dispatched
-      // from main-thread shims via callWorker(...) and are not part of the
-      // renderer-facing surface, so the static SPA does not stub them.
-      if (name.includes(':_')) continue;
-      const colonIdx = name.indexOf(':');
-      if (colonIdx === -1) continue;
-      const domain = name.slice(0, colonIdx);
-      const method = name.slice(colonIdx + 1);
-      const block = (staticApi as Record<string, Record<string, unknown> | undefined>)[domain];
-      if (!block || !(method in block)) {
-        missing.push(name);
-      }
-    }
-    if (missing.length > 0) {
-      throw new Error(
-        'src/static/static-api.ts is missing stubs for the following registry channels.\n' +
-        'Add a noop stub for each missing entry:\n\n  ' + missing.join('\n  '),
-      );
-    }
-  });
-
-  it('every registry channel handler is a function', async () => {
-    // Guards against someone writing defineChannel({ name, thread }) and
-    // forgetting the handler property.
-    const noHandler: string[] = [];
-    for (const [name, def] of Object.entries(channelRegistry)) {
-      if (typeof (def as { handler?: unknown }).handler !== 'function') {
-        noHandler.push(name);
-      }
-    }
-    expect(
-      noHandler,
-      'These registry channels are missing a handler function:\n  ' + noHandler.join('\n  '),
-    ).toEqual([]);
-  });
-
-  it('legacy renderer-callable channels have stubs in the static api', async () => {
-    // These channels intentionally stay outside the registry (Electron-only
-    // operations, BrowserWindow broadcasts, dialog, fs) but are exposed via
-    // the preload as window.api.domain.method and therefore need a stub in
-    // the static SPA.  Derived from the inline blocks in src/preload/index.ts.
+describe('static API parity', () => {
+  it('legacy renderer-callable channels have stubs in the static api', () => {
+    // These channels intentionally stay outside the Specta-generated bindings
+    // (Electron-only fs/dialog/shell operations, BrowserWindow broadcasts) but
+    // are exposed via the renderer-local polyfills in tauri-window-api.ts as
+    // window.api.<domain>.<method> and therefore need a stub in the static SPA.
     const legacyExposed: string[] = [
       // db — non-setting db management stays on main thread
       'db:getCurrent', 'db:getRecent', 'db:createNew', 'db:openExisting', 'db:switchTo',
-      // undo — undo/redo need BrowserWindow broadcasts, onChanged/onPerformed are event listeners
+      // undo — undo/redo need cross-window broadcasts
       'undo:undo', 'undo:redo',
       // shell / export / print / csv / backup
       'shell:open-external',
@@ -93,17 +60,12 @@ describe('static API parity', async () => {
       'print:print', 'print:exportPdf',
       'csv:export',
       'backup:backup', 'backup:restore',
-      // gedcom select-file/export — gedcom:preview and gedcom:import migrated
-      // to registry worker channels (covered by the registry-stub check above).
+      // gedcom dialog + export
       'gedcom:selectFile', 'gedcom:export',
-      // genney + holger import
+      // genney + holger import file pickers
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
       'import:genneySelectMedia',
-      // import:genneyRun and import:genneyDiscover migrated to registry worker
-      // channels — covered by the registry-stub check above.
       'import:holgerSelectFile', 'import:holgerSelectMedia',
-      // import:holgerRun is now a registry worker channel — checked by the
-      // 'every registry channel has a stub in the static api' test above.
       // archive
       'archive:export', 'archive:import',
       // website

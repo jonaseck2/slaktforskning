@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { withImportLifecycle } from '../../src/shared/channels/_import-helpers';
+import { withImportLifecycle } from '../../src/api/import_lifecycle';
 import {
   _setWorkerStateAccessors,
   _resetWorkerStateAccessors,
