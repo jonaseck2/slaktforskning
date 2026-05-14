@@ -93,15 +93,19 @@
         </g>
       </template>
 
-      <!-- Radial text gen 8: name + year range on one radial baseline, but split into
-           TWO text elements anchored at the segment midline so siblings line up in
+      <!-- Radial text gen 8: when both name + year range are present, split into two
+           text elements anchored at the segment midline so siblings line up in
            concentric rings — name fills the inner half (text-anchor="end"), date the
-           outer half (text-anchor="start"). A single centered tspan-pair drifts the
-           name inward whenever the date is long, breaking ring alignment. -->
+           outer half (text-anchor="start"). When there's no year range, render the
+           name centred so it gets the full ring depth instead of being trapped in
+           half a segment for nothing. -->
       <template v-else-if="seg.person && seg.generation >= 8">
         <g :transform="`rotate(${seg.textAngleRadial}, ${seg.textX}, ${seg.textY})`">
-          <text :x="seg.textX - 1" :y="seg.textY" text-anchor="end" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fitRadial(fullNameLabel(seg), seg, nameFontSize(seg.generation), 'inner') }}</text>
-          <text v-if="yearRangeLabel(seg)" :x="seg.textX + 1" :y="seg.textY" text-anchor="start" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ fitRadial(yearRangeLabel(seg), seg, dateFontSize(seg.generation), 'outer') }}</text>
+          <template v-if="yearRangeLabel(seg)">
+            <text :x="seg.textX - 1" :y="seg.textY" text-anchor="end" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fitRadial(fullNameLabel(seg), seg, nameFontSize(seg.generation), 'inner') }}</text>
+            <text :x="seg.textX + 1" :y="seg.textY" text-anchor="start" dominant-baseline="central" :font-size="dateFontSize(seg.generation)" :font-family="fontFamily" :fill="dateColor" style="pointer-events: none; user-select: none;">{{ fitRadial(yearRangeLabel(seg), seg, dateFontSize(seg.generation), 'outer') }}</text>
+          </template>
+          <text v-else :x="seg.textX" :y="seg.textY" text-anchor="middle" dominant-baseline="central" :font-size="nameFontSize(seg.generation)" :font-family="fontFamily" font-weight="600" :fill="textColor" style="pointer-events: none; user-select: none;">{{ fitRadial(fullNameLabel(seg), seg, nameFontSize(seg.generation), 'full') }}</text>
         </g>
       </template>
 
@@ -344,14 +348,14 @@ function fitCurved(text: string, seg: FanSegment, fontSize: number): string {
   return truncateToWidth(text, arcLen, fontSize);
 }
 
-// Truncate a radial-text label to the inner or outer half of its ring's depth.
-// Used by gen 8 where name lives in the inner half and date in the outer half;
-// each gets half the ring depth minus a 1px gap on the centre side and a 2px
-// breathing margin against the ring edge.
-function fitRadial(text: string, seg: FanSegment, fontSize: number, half: 'inner' | 'outer'): string {
+// Truncate a radial-text label to the room it has along the radius. 'inner' and
+// 'outer' get half the ring minus a 1px gap on the centre side; 'full' uses the
+// entire ring depth (used when only the name is present and the outer half would
+// otherwise sit empty).
+function fitRadial(text: string, seg: FanSegment, fontSize: number, half: 'inner' | 'outer' | 'full'): string {
   if (!text) return '';
-  const halfDepth = (seg.rOuter - seg.rInner) / 2;
-  const available = halfDepth - 1 - 2;
+  const ringDepth = seg.rOuter - seg.rInner;
+  const available = half === 'full' ? ringDepth - 2 : (ringDepth / 2) - 1;
   if (available <= 0) return '';
   return truncateToWidth(text, available, fontSize);
 }

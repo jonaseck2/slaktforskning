@@ -51,8 +51,8 @@ export interface FanLayoutOptions {
 // and the 4-line gen 5-6 layout, so their depths run larger; narrow arcs (180°)
 // shrink fonts, collapse gen 5-6 to 2-line compact mode and pack rings tighter.
 // Values interpolate linearly between 180° and 360°.
-const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 82, 70, 55, 80];
-const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 70, 60, 50, 70];
+const RING_DEPTHS_WIDE   = [50, 55, 60, 55, 48, 82, 70, 55, 90];
+const RING_DEPTHS_NARROW = [50, 55, 55, 48, 42, 70, 60, 50, 78];
 // Gap between rings
 const RING_GAP = 2;
 
