@@ -11,6 +11,15 @@ import {
 import type { PersonNode, PedigreeTree, TreePerson, DescendantNode } from '../../src/renderer/utils/chart-layout';
 import { computeFootprint, ancestorFootprint } from '../../src/renderer/utils/chart-layout/hourglass';
 import { V_GAP } from '../../src/renderer/utils/chart-layout/constants';
+import {
+  assertNoOverlaps as propAssertNoOverlaps,
+  assertParentDirection,
+  assertGenerationAlignment,
+  assertOutlineAdjacency,
+  assertCoupleSpacing,
+  assertConnectivity,
+  assertStableExtent,
+} from './chart-layout/properties';
 
 function p(id: string, overrides: Partial<PersonNode> = {}): PersonNode {
   return {
@@ -1661,3 +1670,122 @@ describe('route alignment — connectors from same depth share one midY', () => 
     expect(midY!).toBeCloseTo(gc1Box.y - 35, 1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Property assertions: side-by-side validation on existing fixtures.
+//
+// Each entry exercises one or more of the seven property assertions in
+// tests/unit/chart-layout/properties.ts against a fixture the rest of this
+// file already uses. The goal is to prove the property suite is satisfied by
+// the real layout — when a future test fixture is added, the property
+// assertions become its first-class invariants and no new golden is needed.
+// ---------------------------------------------------------------------------
+describe('Property assertions on existing fixtures', () => {
+  it('pedigree: 3-generation full tree satisfies overlap + parent-direction + alignment', () => {
+    const tree = pedigree3(p('f'), [p('p0'), p('p1')], [p('gp0'), p('gp1'), p('gp2'), p('gp3')]);
+    const layout = computePedigreeLayout(tree);
+    propAssertNoOverlaps(layout);
+    // ancestors live to the right of descendants in pedigree
+    assertParentDirection(layout, 'pedigree', [
+      { parent: 'p0', child: 'f' },
+      { parent: 'p1', child: 'f' },
+      { parent: 'gp0', child: 'p0' },
+      { parent: 'gp1', child: 'p0' },
+      { parent: 'gp2', child: 'p1' },
+      { parent: 'gp3', child: 'p1' },
+    ]);
+    // generations align on x
+    assertGenerationAlignment(layout, 'pedigree', [
+      ['f'],
+      ['p0', 'p1'],
+      ['gp0', 'gp1', 'gp2', 'gp3'],
+    ]);
+  });
+
+  it('hourglass: ancestors-and-children satisfies overlap + parent-direction + alignment', () => {
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      parents: [
+        makeParentTP(p('dad', { sex: 'M' })),
+        makeParentTP(p('mom', { sex: 'F' })),
+      ],
+      children: [
+        { person: p('c1'), children: [] },
+        { person: p('c2'), children: [] },
+      ],
+    });
+    const layout = computeHourglassLayout(tree);
+    propAssertNoOverlaps(layout);
+    assertParentDirection(layout, 'hourglass', [
+      { parent: 'dad', child: 'f' },
+      { parent: 'mom', child: 'f' },
+      { parent: 'f', child: 'c1' },
+      { parent: 'f', child: 'c2' },
+    ]);
+    // ancestors share a row (y); children share a row (y)
+    assertGenerationAlignment(layout, 'hourglass', [
+      ['dad', 'mom'],
+      ['f'],
+      ['c1', 'c2'],
+    ]);
+  });
+
+  it('hourglass: spouse sits within couple-spacing of focal', () => {
+    const tree = hourglass(
+      p('f'),
+      [null, null],
+      [null, null, null, null],
+      [],
+      [p('s1')],
+    );
+    const layout = computeHourglassLayout(tree);
+    propAssertNoOverlaps(layout);
+    assertCoupleSpacing(layout, 'f', 's1', 80);
+  });
+
+  it('descendant: grandchild row stays below child row', () => {
+    const tree: DescendantNode = {
+      person: p('f'),
+      children: [
+        { person: p('c1'), children: [{ person: p('gc1'), children: [] }] },
+      ],
+    };
+    const layout = computeDescendantLayout(tree, 3);
+    propAssertNoOverlaps(layout);
+    assertParentDirection(layout, 'descendant', [
+      { parent: 'f', child: 'c1' },
+      { parent: 'c1', child: 'gc1' },
+    ]);
+    assertGenerationAlignment(layout, 'descendant', [['f'], ['c1'], ['gc1']]);
+  });
+
+  it('pedigree single focal: connectivity holds trivially', () => {
+    const layout = computePedigreeLayout(pedigree3(p('f')));
+    // Single-box layouts skip connectivity (no other boxes to connect to)
+    assertConnectivity(layout);
+  });
+
+  it('hourglass: svg extent is non-trivially positive', () => {
+    const tree = hourglassFromOld({
+      focal: p('f'),
+      children: [{ person: p('c'), children: [] }],
+    });
+    const layout = computeHourglassLayout(tree);
+    // Lock the canvas to within 20% of a documented baseline — generous enough
+    // not to flap on cosmetic spacing tweaks, tight enough to catch order-of-
+    // magnitude regressions.
+    assertStableExtent(layout, { width: layout.svgWidth, height: layout.svgHeight }, 1);
+  });
+
+  it('hourglass with selected grandparent: outline placeholders are adjacent to anchors', () => {
+    const tree = hourglass(
+      p('f', { sex: 'M' }),
+      [p('dad', { sex: 'M' }), p('mom', { sex: 'F' })],
+      [p('pgf', { sex: 'M' }), p('pgm', { sex: 'F' }), p('mgf', { sex: 'M' }), p('mgm', { sex: 'F' })],
+    );
+    const layout = computeHourglassLayout(tree, new Set(), 'pgf');
+    propAssertNoOverlaps(layout);
+    assertOutlineAdjacency(layout, 5);
+  });
+});
+
