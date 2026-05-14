@@ -76,9 +76,9 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          # The MCP sidecar pkg targets (`node22-*`) bake Node 22 into the
-          # produced binary. The host runner Node is independent — 22 LTS
-          # is what @yao-pkg/pkg's fabricator supports.
+          # Node 22 LTS runs the esbuild MCP bundler + the fetch-bun-binaries
+          # script. The shipped MCP server itself runs under Bun (downloaded
+          # via scripts/fetch-bun-binaries.mjs), not the host Node.
           node-version: 22
           cache: npm
 
@@ -109,9 +109,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Build MCP sidecar for this host
-        env:
-          SIDECAR_TARGETS: ${{ matrix.target }}
+      - name: Fetch Bun binaries for all targets
+        run: node scripts/fetch-bun-binaries.mjs
+
+      - name: Build MCP server bundle (esbuild)
         run: npm run build:mcp-sidecar
 
       - name: Build, sign, and publish
