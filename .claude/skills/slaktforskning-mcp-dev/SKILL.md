@@ -253,6 +253,14 @@ After a real MCP restart:
 
 **Restarting the Tauri app** — ask the user. Claude Code can't restart their app without their consent (it would close their unsaved work).
 
+### When the dev MCP looks dead, ask — don't curl
+
+If `ui_screenshot` / `ui_get_dom` / `ui_click` / any `ui_aria_*` tool starts returning `{"error":"Not found"}` for every selector, or hangs, or returns suspiciously empty results across multiple unrelated calls, **stop and ask the user to start/restart the MCP**. Do not fall back to `curl http://127.0.0.1:19241/...` as a workaround.
+
+**Why this is a rule:** the MCP is the supported and ergonomic interface — it speaks structured tool I/O, the user can see what's being inspected in their tool log, and the workflow stays consistent. Falling back to curl bypasses that, scatters one-off shell scripts through the session, and makes the conversation harder for the user to follow. The user has flagged this directly.
+
+**How to apply:** first `"Not found"` or empty response → confirm the MCP looks dead with one more attempt against a different known-good target → then say to the user something like *"the slaktforskning-dev MCP looks disconnected — can you restart it?"* and wait. Don't curl, don't try to debug the MCP server itself, don't probe `/db_path` "just to see if it's up."
+
 ### Verifying interactive UI fixes via MCP
 
 The MCP UI bridge can `ui_screenshot`, `ui_navigate`, `ui_click`, `ui_fill`, `ui_get_dom`, `ui_query_styles`, `ui_reload`. It **cannot synthesize a drag** — there's no `mousedown + mousemove + mouseup` sequence. Don't claim "verified live" for any feature whose acceptance test is a drag (resizable columns, panel resize, chart pan/zoom). Instead:

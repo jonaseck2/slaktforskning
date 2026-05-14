@@ -134,6 +134,16 @@ This is what the panel-composables refactor should have opened with:
 
 That's the preamble. Tasks come after.
 
+## Commit plans and specs the moment they're written
+
+When you finish writing any file under `docs/plans/` (implementation plan or `-design.md` spec), commit it **in the same step** as writing it — before doing anything else. `git add docs/plans/<file>.md && git commit -m "docs(plan): …"` or `docs(spec): …`. Never leave a freshly written plan sitting uncommitted while you move on.
+
+**Why this is a rule, not a habit:** a plan written on `main` while a worktree is then created from `main` is left orphaned on `main` as an untracked file — the worktree branches from `main`'s HEAD, which doesn't include the uncommitted plan. Past incident (2026-04-19, monospaced-notes toggle): the plan was orphaned on `main`, had to be copied into the worktree, committed from there, and `rm`'d on `main` — the user had to flag the cleanup. The `superpowers:brainstorming` skill already commits specs; `superpowers:writing-plans` has been patched too, but make it a habit so this doesn't drift again.
+
+**How to apply:**
+- After every `docs/plans/YYYY-MM-DD-*.md` write → `git add` + `git commit -m "docs(plan): …"` before any other tool call.
+- Before creating a worktree, check `git status` on the source branch — anything doc-related must be committed first.
+
 ## Verification of these rules (meta)
 
 The verification of *these* rules is the next plan written in this repo. If the next plan opens with mechanism instead of user goal, or scopes implicitly, or verifies via lint+vitest only, the rule didn't fire — the rule is wrong, not the plan. Iterate the rule.
