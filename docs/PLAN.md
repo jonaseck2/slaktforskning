@@ -10,6 +10,7 @@ This file lists only what's **left** — planned, in-progress, or backlog. Anyth
 
 Active plans under `docs/plans/`. Each entry links the plan file; the user goal is what the plan delivers.
 
+- **Post-audit e2e regression triage** — fix the three audit-induced regressions the e2e framework caught at its first Tier 2 close-out run: Holger Specta dispatch, PlacePanel Events save, ChartView reactivity. → [2026-05-14-post-audit-e2e-regression-triage.md](plans/2026-05-14-post-audit-e2e-regression-triage.md)
 - **Genney Tauri wiring** — port the last `notWired('Genney')` importer to the Tauri build (Bun sidecar mirroring the MCP-sidecar shape). → [2026-05-14-genney-tauri-wiring.md](plans/2026-05-14-genney-tauri-wiring.md)
 - **`build-third-party-licenses.mjs` reliability** — clean skip + placeholder when `node_modules` is missing, so worktree/subagent dispatches stop reporting false failures. → [2026-05-14-third-party-licenses-reliability.md](plans/2026-05-14-third-party-licenses-reliability.md)
 - **Modal companion composables (3.5 follow-up)** — extract `useCompanionBaptism` / `useSpousePicker` / `useCitationsForPersonName` / `useWeddingOffer` / `useOverlapCheck` so the four large modals fit on one screen. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
