@@ -65,6 +65,7 @@
     "@types/lunr": "^2.3.7",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "fflate": "^0.8.2",
+    "kkrpc": "^0.6.7",
     "leaflet": "^1.9.4",
     "lunr": "^2.3.9",
     "node-sqlite3-wasm": "^0.8.56",
