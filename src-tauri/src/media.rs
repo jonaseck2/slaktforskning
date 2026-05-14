@@ -85,6 +85,7 @@ fn make_thumbnail_jpeg(abs_path: &Path, max_width: u32, quality: u8) -> Result<O
 /// `<dbname>-media/.thumbs/`; we skip the disk cache for now (the renderer
 /// already caches in-memory via Vue keep-alive). Adding it later is a
 /// pure-Rust change with no API impact.
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 pub async fn media_thumbnail(file_ref: String, max_width: Option<u32>) -> Result<Option<String>, String> {
     // Async + spawn_blocking because thumbnail generation does sync image
@@ -104,7 +105,7 @@ pub async fn media_thumbnail(file_ref: String, max_width: Option<u32>) -> Result
     .map_err(|e| format!("join: {e}"))?
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaRefInput {
     pub id: String,
@@ -124,6 +125,7 @@ pub struct MediaRefInput {
 /// In a packaged build this would be a tauri::Manager::resolve()-resolved
 /// resource; that wiring lands with the dist-static-bundling task in a
 /// follow-up plan.
+#[specta::specta]
 #[tauri::command]
 pub fn website_load_static_index_html() -> Result<String, String> {
     let mut candidates: Vec<PathBuf> = Vec::new();
@@ -159,13 +161,16 @@ pub fn website_load_static_index_html() -> Result<String, String> {
 /// The caller is responsible for the final snapshot trim — this command
 /// is purely fs work. Used by the renderer-side `api.website.export`
 /// polyfill in `tauri-window-api.ts`.
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct WebsiteExportMediaResult {
     pub exported_ids: Vec<String>,
+    // u64 → TS `number` (file count fits a JS safe int).
+    #[specta(type = specta_typescript::Number)]
     pub copied: u64,
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 pub async fn website_export_media(
     dest_full_dir: String,
@@ -225,6 +230,7 @@ pub async fn website_export_media(
 /// The caller (renderer-side `tauri-window-api.ts`) is responsible for
 /// passing only image media (filtered by extension or MIME) — keeps the
 /// Rust side dumb.
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 pub fn website_bake_preview_thumbnails(
     media_refs: Vec<MediaRefInput>,

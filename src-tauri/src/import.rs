@@ -36,7 +36,7 @@ use crate::db;
 // 1. Extract / read the .ged file
 // ---------------------------------------------------------------------------
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ExtractGedResult {
     /// .ged bytes, base64 (the renderer decodes to Uint8Array, then
@@ -189,10 +189,15 @@ fn holger_export_instructions() -> String {
 // 2. Bulk-copy a media folder into <dbname>-media/
 // ---------------------------------------------------------------------------
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 pub struct BulkCopyResult {
+    // u64 → TS `number`. File counts + ms duration safely fit a JS
+    // 53-bit safe int for any realistic import volume.
+    #[specta(type = specta_typescript::Number)]
     pub copied: u64,
+    #[specta(type = specta_typescript::Number)]
     pub skipped: u64,
+    #[specta(type = specta_typescript::Number)]
     pub ms: u64,
 }
 
@@ -245,14 +250,18 @@ pub fn bulk_copy_media(src_dir: &str, dest_dir: &str) -> Result<BulkCopyResult, 
 // 3. Consolidate absolute file_ref values in the `media` table
 // ---------------------------------------------------------------------------
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 pub struct ConsolidateResult {
     /// Files copied + ref rewritten (or already at dest with same name).
+    #[specta(type = specta_typescript::Number)]
     pub copied: u64,
     /// Refs left untouched (null, relative, etc.).
+    #[specta(type = specta_typescript::Number)]
     pub skipped: u64,
     /// Source path didn't exist on disk.
+    #[specta(type = specta_typescript::Number)]
     pub missing: u64,
+    #[specta(type = specta_typescript::Number)]
     pub ms: u64,
 }
 

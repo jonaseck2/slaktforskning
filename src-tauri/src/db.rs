@@ -96,7 +96,7 @@ pub fn db_stats() -> Result<DbStats, String> {
     })
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 pub struct PersonRow {
     pub id: String,
     pub given_name: Option<String>,
@@ -104,7 +104,7 @@ pub struct PersonRow {
     pub sex: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, specta::Type)]
 pub struct AncestorNode {
     pub id: String,
     pub generation: u32,    // 0 = focus, 1 = parents, 2 = grandparents...
@@ -235,9 +235,15 @@ pub fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
 // LRU on top — rusqlite's cache is bounded (16 by default; the existing
 // Electron app's hot SQL set comfortably fits).
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, specta::Type)]
 pub struct RunResult {
+    // u64/i64 → TS `number`. SQLite rowids and per-statement change counts
+    // fit comfortably within JS's 53-bit safe-integer range for any
+    // realistic genealogy DB; the Number override opts out of Specta's
+    // default "BigInt-forbidden" gate. See specta_typescript::Number docs.
+    #[specta(type = specta_typescript::Number)]
     pub changes: u64,
+    #[specta(type = specta_typescript::Number)]
     pub last_insert_rowid: i64,
 }
 

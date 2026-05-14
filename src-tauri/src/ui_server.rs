@@ -32,10 +32,11 @@ const EVAL_TIMEOUT: Duration = Duration::from_secs(15);
 type Sender = oneshot::Sender<JsonValue>;
 static PENDING: Lazy<Mutex<HashMap<String, Sender>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
+#[specta::specta]
 #[tauri::command]
-pub fn ui_eval_response(id: String, value: JsonValue) {
+pub fn ui_eval_response(id: String, value: crate::wire::JsonValueWire) {
     if let Some(tx) = PENDING.lock().remove(&id) {
-        let _ = tx.send(value);
+        let _ = tx.send(value.0);
     }
 }
 

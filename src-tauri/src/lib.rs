@@ -6,34 +6,39 @@ mod import;
 mod mcp;
 mod media;
 mod ui_server;
+mod wire;
 
 use db::{AncestorNode, DbStats, PersonRow, RunResult};
 use mcp::McpProbe;
-use serde_json::Value as JsonValue;
+use wire::JsonValueWire;
 
+#[specta::specta]
 #[tauri::command]
 fn db_open(path: String) -> Result<(), String> {
     db::open_db(&path)
 }
 
+#[specta::specta]
 #[tauri::command]
 fn db_close() {
     db::close_db();
 }
 
+#[specta::specta]
 #[tauri::command]
 fn db_is_open() -> bool {
     db::is_open()
 }
 
-#[tauri::command]
 #[specta::specta]
+#[tauri::command]
 async fn db_stats() -> Result<DbStats, String> {
     tokio::task::spawn_blocking(db::db_stats)
         .await
         .map_err(|e| format!("join: {e}"))?
 }
 
+#[specta::specta]
 #[tauri::command]
 async fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String> {
     tokio::task::spawn_blocking(move || db::persons_list(limit, offset))
@@ -41,6 +46,7 @@ async fn persons_list(limit: u32, offset: u32) -> Result<Vec<PersonRow>, String>
         .map_err(|e| format!("join: {e}"))?
 }
 
+#[specta::specta]
 #[tauri::command]
 async fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<AncestorNode>, String> {
     tokio::task::spawn_blocking(move || db::get_ancestor_tree(&focus_id, max_depth))
@@ -48,11 +54,13 @@ async fn get_ancestor_tree(focus_id: String, max_depth: u32) -> Result<Vec<Ances
         .map_err(|e| format!("join: {e}"))?
 }
 
+#[specta::specta]
 #[tauri::command]
 async fn probe_mcp_sidecar(repo_root: String, db_path: String) -> McpProbe {
     mcp::probe_mcp_sidecar(&repo_root, &db_path).await
 }
 
+#[specta::specta]
 #[tauri::command]
 fn open_second_window(app: tauri::AppHandle, label: String) -> Result<(), String> {
     use tauri::{WebviewUrl, WebviewWindowBuilder};
@@ -64,6 +72,7 @@ fn open_second_window(app: tauri::AppHandle, label: String) -> Result<(), String
         .map_err(|e| e.to_string())
 }
 
+#[specta::specta]
 #[tauri::command]
 fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), String> {
     use tauri::Emitter;
@@ -84,14 +93,16 @@ fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), Str
 // 1-2 s GUI lock-ups during list scrolling and chart drawing in the
 // pre-fix Tauri build.
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 async fn db_batch(sql: String) -> Result<(), String> {
     db::db_batch(sql).await
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
-async fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult, String> {
-    db::db_run(sql, params.unwrap_or_default()).await
+async fn db_run(sql: String, params: Option<Vec<JsonValueWire>>) -> Result<RunResult, String> {
+    db::db_run(sql, wire::unwrap_params(params)).await
 }
 
 /// Bulk-run one prepared SQL string against many parameter rows in a single
@@ -101,27 +112,48 @@ async fn db_run(sql: String, params: Option<Vec<JsonValue>>) -> Result<RunResult
 /// roundtrips into one. The Rust side iterates the rows under one
 /// `prepare_cached` and one mutex hold; the surrounding JS-side
 /// `BEGIN/COMMIT` is unchanged.
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 async fn db_batch_run(
     sql: String,
-    params_list: Vec<Vec<JsonValue>>,
+    params_list: Vec<Vec<JsonValueWire>>,
 ) -> Result<Vec<RunResult>, String> {
-    db::db_batch_run(sql, params_list).await
+    db::db_batch_run(sql, wire::unwrap_params_list(params_list)).await
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
-async fn db_run_changes(sql: String, params: Option<Vec<JsonValue>>) -> Result<u64, String> {
-    db::db_run_changes(sql, params.unwrap_or_default()).await
+async fn db_run_changes(sql: String, params: Option<Vec<JsonValueWire>>) -> Result<u32, String> {
+    // u32 not u64 so the binding renders as `number`. SQLite per-statement
+    // change counts comfortably fit a u32 for any realistic workload
+    // (4 billion rows of a single statement = absurd). If a single
+    // statement ever changes more than u32::MAX rows we'll know.
+    let n = db::db_run_changes(sql, wire::unwrap_params(params)).await?;
+    Ok(n.try_into().map_err(|_| format!("change count overflow: {n}"))?)
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
-async fn db_get(sql: String, params: Option<Vec<JsonValue>>) -> Result<Option<JsonValue>, String> {
-    db::db_get(sql, params.unwrap_or_default()).await
+async fn db_get(
+    sql: String,
+    params: Option<Vec<JsonValueWire>>,
+) -> Result<Option<JsonValueWire>, String> {
+    Ok(db::db_get(sql, wire::unwrap_params(params))
+        .await?
+        .map(JsonValueWire))
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
-async fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonValue>, String> {
-    db::db_all(sql, params.unwrap_or_default()).await
+async fn db_all(
+    sql: String,
+    params: Option<Vec<JsonValueWire>>,
+) -> Result<Vec<JsonValueWire>, String> {
+    Ok(db::db_all(sql, wire::unwrap_params(params))
+        .await?
+        .into_iter()
+        .map(JsonValueWire)
+        .collect())
 }
 
 /// Returns the absolute path to the default database file. Resolution order:
@@ -134,6 +166,7 @@ async fn db_all(sql: String, params: Option<Vec<JsonValue>>) -> Result<Vec<JsonV
 ///
 /// Creates the parent dir if missing. The renderer calls this on first boot
 /// so the database persists across launches without a file picker.
+#[specta::specta]
 #[tauri::command]
 fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
     use std::fs;
@@ -190,6 +223,7 @@ fn default_db_path(app: tauri::AppHandle) -> Result<String, String> {
 
 /// Returns the path of the currently-open DB, or None if none open. Backs
 /// `window.api.db.getCurrent()`.
+#[specta::specta]
 #[tauri::command]
 fn db_current_path() -> Option<String> {
     db::current_path()
@@ -198,6 +232,7 @@ fn db_current_path() -> Option<String> {
 /// Show a native open-file dialog for picking a .db file. Returns the chosen
 /// absolute path, or None if the user cancelled. The renderer then re-opens
 /// the shim against this path. Backs `window.api.db.openExisting()`.
+#[specta::specta]
 #[tauri::command]
 async fn db_pick_existing(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
@@ -215,8 +250,9 @@ async fn db_pick_existing(app: tauri::AppHandle) -> Result<Option<String>, Strin
 /// `<dbname>-media/` sibling folder (creating it if missing), and return the
 /// relative file_ref + format the renderer's createMedia() expects. Mirrors
 /// src/main/ipc/media.ts → media:attach.
+#[specta::specta]
 #[tauri::command]
-async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValue, String> {
+async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValueWire, String> {
     use std::path::{Path, PathBuf};
     use tauri_plugin_dialog::DialogExt;
 
@@ -232,7 +268,7 @@ async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValue, String>
         .pick_file(move |chosen| { let _ = tx.send(chosen.map(|p| p.to_string())); });
     let src_str = match rx.await.map_err(|e| format!("dialog: {e}"))? {
         Some(p) => p,
-        None => return Ok(serde_json::json!({ "canceled": true })),
+        None => return Ok(JsonValueWire(serde_json::json!({ "canceled": true }))),
     };
     let src = PathBuf::from(&src_str);
 
@@ -267,16 +303,17 @@ async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValue, String>
     let ext = dest.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase());
     let title = dest.file_stem().and_then(|s| s.to_str()).unwrap_or("media").to_string();
 
-    Ok(serde_json::json!({
+    Ok(JsonValueWire(serde_json::json!({
         "canceled": false,
         "fileRef": file_ref,
         "format": ext,
         "title": title,
-    }))
+    })))
 }
 
 /// Generic file/folder picker. The renderer-side polyfill uses this to back
 /// every Electron `dialog.showOpenDialog` / `showSaveDialog` call site.
+#[specta::specta]
 #[tauri::command]
 async fn dialog_pick(
     app: tauri::AppHandle,
@@ -285,7 +322,7 @@ async fn dialog_pick(
     extensions: Option<Vec<String>>,
     extension_label: Option<String>,
     default_name: Option<String>,
-) -> Result<JsonValue, String> {
+) -> Result<JsonValueWire, String> {
     use tauri_plugin_dialog::DialogExt;
     let (tx, rx) = tokio::sync::oneshot::channel();
     let mut builder = app.dialog().file();
@@ -309,17 +346,19 @@ async fn dialog_pick(
         _ => return Err(format!("unknown pick kind: {kind}")),
     }
     let chosen = rx.await.map_err(|e| format!("dialog: {e}"))?;
-    Ok(serde_json::json!({ "canceled": chosen.is_none(), "path": chosen }))
+    Ok(JsonValueWire(serde_json::json!({ "canceled": chosen.is_none(), "path": chosen })))
 }
 
 /// Read a file as utf-8 text. Used by import flows that need to feed the
 /// chosen file's contents to a JS parser running in the renderer.
+#[specta::specta]
 #[tauri::command]
 fn fs_read_text(path: String) -> Result<String, String> {
     std::fs::read_to_string(&path).map_err(|e| format!("read: {e}"))
 }
 
 /// Write utf-8 text to a file. Used by GEDCOM export.
+#[specta::specta]
 #[tauri::command]
 fn fs_write_text(path: String, contents: String) -> Result<(), String> {
     std::fs::write(&path, contents).map_err(|e| format!("write: {e}"))
@@ -327,6 +366,7 @@ fn fs_write_text(path: String, contents: String) -> Result<(), String> {
 
 /// Read a file as raw bytes (returned as base64 since serde-json can't
 /// represent binary directly). Used for archive imports / binary parsing.
+#[specta::specta]
 #[tauri::command]
 fn fs_read_bytes_base64(path: String) -> Result<String, String> {
     let bytes = std::fs::read(&path).map_err(|e| format!("read: {e}"))?;
@@ -337,6 +377,7 @@ fn fs_read_bytes_base64(path: String) -> Result<String, String> {
 /// Write raw bytes (base64-encoded for the JSON wire) to a file. Creates
 /// parent directories as needed. Used by archive export and per-media
 /// writes during archive import in the Tauri build.
+#[specta::specta]
 #[tauri::command]
 fn fs_write_bytes_base64(path: String, b64: String) -> Result<(), String> {
     use base64::Engine;
@@ -358,6 +399,7 @@ fn fs_write_bytes_base64(path: String, b64: String) -> Result<(), String> {
 /// SQLite connection. `name` is appended to a millisecond-precision prefix
 /// so concurrent imports don't collide; the renderer is responsible for
 /// calling `fs_remove_file` after the import completes.
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn fs_write_temp_bytes_base64(name: String, b64: String) -> Result<String, String> {
     use base64::Engine;
@@ -378,6 +420,7 @@ fn fs_write_temp_bytes_base64(name: String, b64: String) -> Result<String, Strin
 /// by `fs_write_temp_bytes_base64` after an import completes (success or
 /// failure path). Missing-file errors are swallowed because the typical
 /// caller doesn't care whether the cleanup actually had work to do.
+#[specta::specta]
 #[tauri::command]
 fn fs_remove_file(path: String) -> Result<(), String> {
     match std::fs::remove_file(&path) {
@@ -397,16 +440,19 @@ fn fs_remove_file(path: String) -> Result<(), String> {
 // All three live in src-tauri/src/import.rs; these are the thin invoke
 // wrappers.
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn holger_extract_ged(source_path: String) -> Result<import::ExtractGedResult, String> {
     import::extract_ged(&source_path)
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn holger_bulk_copy_media(src_dir: String, dest_dir: String) -> Result<import::BulkCopyResult, String> {
     import::bulk_copy_media(&src_dir, &dest_dir)
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn holger_consolidate_media(
     db_path: String,
@@ -418,6 +464,7 @@ fn holger_consolidate_media(
 /// Recursively delete a directory (e.g. the temp dir created when
 /// extracting a Holger backup zip). Used by the renderer's polyfill in
 /// the `finally` block of `api.import.holgerRun`. No-op when missing.
+#[specta::specta]
 #[tauri::command]
 fn fs_remove_dir(path: String) -> Result<(), String> {
     import::remove_dir(&path)
@@ -432,44 +479,56 @@ fn fs_remove_dir(path: String) -> Result<(), String> {
 // generic so Holger (Cluster R-H) and any future foreign-format importer
 // can reuse the same primitives without bespoke Rust additions.
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn secondary_db_open(path: String) -> Result<u32, String> {
     db::secondary_db_open(&path)
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 fn secondary_db_close(handle: u32) {
     db::secondary_db_close(handle)
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 async fn secondary_db_run(
     handle: u32,
     sql: String,
-    params: Option<Vec<JsonValue>>,
+    params: Option<Vec<JsonValueWire>>,
 ) -> Result<RunResult, String> {
-    db::secondary_db_run(handle, sql, params.unwrap_or_default()).await
+    db::secondary_db_run(handle, sql, wire::unwrap_params(params)).await
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 async fn secondary_db_get(
     handle: u32,
     sql: String,
-    params: Option<Vec<JsonValue>>,
-) -> Result<Option<JsonValue>, String> {
-    db::secondary_db_get(handle, sql, params.unwrap_or_default()).await
+    params: Option<Vec<JsonValueWire>>,
+) -> Result<Option<JsonValueWire>, String> {
+    Ok(db::secondary_db_get(handle, sql, wire::unwrap_params(params))
+        .await?
+        .map(JsonValueWire))
 }
 
+#[specta::specta]
 #[tauri::command(rename_all = "camelCase")]
 async fn secondary_db_all(
     handle: u32,
     sql: String,
-    params: Option<Vec<JsonValue>>,
-) -> Result<Vec<JsonValue>, String> {
-    db::secondary_db_all(handle, sql, params.unwrap_or_default()).await
+    params: Option<Vec<JsonValueWire>>,
+) -> Result<Vec<JsonValueWire>, String> {
+    Ok(db::secondary_db_all(handle, sql, wire::unwrap_params(params))
+        .await?
+        .into_iter()
+        .map(JsonValueWire)
+        .collect())
 }
 
 /// Reveal a file or folder in the OS file manager.
+#[specta::specta]
 #[tauri::command]
 fn shell_reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
@@ -478,6 +537,7 @@ fn shell_reveal(app: tauri::AppHandle, path: String) -> Result<(), String> {
 
 /// Returns the Cargo package version string (matches Cargo.toml `[package]
 /// version`). Backs `window.api.app.getVersion()` in the Tauri build.
+#[specta::specta]
 #[tauri::command]
 fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
@@ -485,6 +545,7 @@ fn app_version() -> String {
 
 /// Copy an existing file to a new path. Used by `backup.backup` to save a
 /// snapshot of the active database. Both paths are absolute.
+#[specta::specta]
 #[tauri::command]
 fn fs_copy_file(src: String, dest: String) -> Result<(), String> {
     std::fs::copy(&src, &dest).map(|_| ()).map_err(|e| format!("copy: {e}"))
@@ -494,6 +555,7 @@ fn fs_copy_file(src: String, dest: String) -> Result<(), String> {
 /// Mirrors Electron's `shell.openPath(absPath)` used by media:openFile —
 /// e.g. clicking "Open file" on a JPG media row launches Photos on macOS,
 /// the default image viewer on Linux, etc.
+#[specta::specta]
 #[tauri::command]
 fn shell_open_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
@@ -508,6 +570,7 @@ fn shell_open_path(app: tauri::AppHandle, path: String) -> Result<(), String> {
 /// Async + spawn_blocking for the same reason the db_* commands are: avatar
 /// thumbnails are fetched per-row during list scrolls, and a sync command
 /// would block the Wry main thread on every read + base64 encode.
+#[specta::specta]
 #[tauri::command]
 async fn media_read_as_data_url(file_ref: String) -> Result<Option<String>, String> {
     tokio::task::spawn_blocking(move || {
@@ -548,6 +611,7 @@ async fn media_read_as_data_url(file_ref: String) -> Result<Option<String>, Stri
 
 /// Show a native save-file dialog for creating a new .db. Returns the chosen
 /// absolute path, or None if the user cancelled. Backs `window.api.db.createNew()`.
+#[specta::specta]
 #[tauri::command]
 async fn db_pick_new(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
@@ -575,6 +639,7 @@ async fn db_pick_new(app: tauri::AppHandle) -> Result<Option<String>, String> {
 /// rewrites the leading `..` to a literal `_up_` directory inside the bundle.
 /// We try the flat name first (covers resources declared without `..`) and
 /// fall back to the `_up_` location.
+#[specta::specta]
 #[tauri::command]
 fn read_bundled_resource(app: tauri::AppHandle, name: String) -> Result<String, String> {
     use tauri::Manager;
@@ -683,7 +748,55 @@ fn open_new_window(app: &tauri::AppHandle) -> Result<(), String> {
 /// swaps to `builder.invoke_handler()` once the sets match.
 pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new()
-        .commands(tauri_specta::collect_commands![db_stats])
+        .commands(tauri_specta::collect_commands![
+            db_open,
+            db_close,
+            db_is_open,
+            db_stats,
+            persons_list,
+            get_ancestor_tree,
+            probe_mcp_sidecar,
+            open_second_window,
+            broadcast_data_changed,
+            db_batch,
+            db_run,
+            db_batch_run,
+            db_run_changes,
+            db_get,
+            db_all,
+            default_db_path,
+            db_current_path,
+            db_pick_existing,
+            db_pick_new,
+            media_pick_and_copy,
+            media_read_as_data_url,
+            dialog_pick,
+            fs_read_text,
+            fs_write_text,
+            fs_read_bytes_base64,
+            fs_write_bytes_base64,
+            fs_write_temp_bytes_base64,
+            fs_remove_file,
+            fs_remove_dir,
+            holger_extract_ged,
+            holger_bulk_copy_media,
+            holger_consolidate_media,
+            secondary_db_open,
+            secondary_db_close,
+            secondary_db_run,
+            secondary_db_get,
+            secondary_db_all,
+            shell_reveal,
+            shell_open_path,
+            app_version,
+            fs_copy_file,
+            read_bundled_resource,
+            media::media_thumbnail,
+            media::website_bake_preview_thumbnails,
+            media::website_load_static_index_html,
+            media::website_export_media,
+            ui_server::ui_eval_response,
+        ])
 }
 
 pub fn run() {

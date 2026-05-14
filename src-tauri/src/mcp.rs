@@ -24,10 +24,12 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 use tokio::time::timeout;
 
-#[derive(Serialize)]
+#[derive(Serialize, specta::Type)]
 pub struct McpProbe {
     pub spawned: bool,
     pub initialize_response: Option<String>,
+    // u64 → TS `number` (elapsed-ms always fits a JS safe int).
+    #[specta(type = specta_typescript::Number)]
     pub elapsed_ms: u64,
     pub error: Option<String>,
 }

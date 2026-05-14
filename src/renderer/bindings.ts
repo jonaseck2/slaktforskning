@@ -4,15 +4,296 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
+	dbOpen: (path: string) => typedError<null, string>(__TAURI_INVOKE("db_open", { path })),
+	dbClose: () => __TAURI_INVOKE<void>("db_close"),
+	dbIsOpen: () => __TAURI_INVOKE<boolean>("db_is_open"),
 	dbStats: () => typedError<DbStats, string>(__TAURI_INVOKE("db_stats")),
+	personsList: (limit: number, offset: number) => typedError<PersonRow[], string>(__TAURI_INVOKE("persons_list", { limit, offset })),
+	getAncestorTree: (focusId: string, maxDepth: number) => typedError<AncestorNode[], string>(__TAURI_INVOKE("get_ancestor_tree", { focusId, maxDepth })),
+	probeMcpSidecar: (repoRoot: string, dbPath: string) => __TAURI_INVOKE<McpProbe>("probe_mcp_sidecar", { repoRoot, dbPath }),
+	openSecondWindow: (label: string) => typedError<null, string>(__TAURI_INVOKE("open_second_window", { label })),
+	broadcastDataChanged: (kind: string) => typedError<null, string>(__TAURI_INVOKE("broadcast_data_changed", { kind })),
+	dbBatch: (sql: string) => typedError<null, string>(__TAURI_INVOKE("dbBatch", { sql })),
+	dbRun: (sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("dbRun", { sql, params })),
+	/**
+	 *  Bulk-run one prepared SQL string against many parameter rows in a single
+	 *  IPC roundtrip + a single connection-mutex hold. The renderer importer
+	 *  loop's per-row `db_run` was the dominant cost on a 1.5 GB Holger import
+	 *  (millions of rows × ~1 ms IPC each = hours). Batching collapses N
+	 *  roundtrips into one. The Rust side iterates the rows under one
+	 *  `prepare_cached` and one mutex hold; the surrounding JS-side
+	 *  `BEGIN/COMMIT` is unchanged.
+	 */
+	dbBatchRun: (sql: string, paramsList: ((Record<string, never>)[])[]) => typedError<RunResult[], string>(__TAURI_INVOKE("dbBatchRun", { sql, paramsList })),
+	dbRunChanges: (sql: string, params: (Record<string, never>)[] | null) => typedError<number, string>(__TAURI_INVOKE("dbRunChanges", { sql, params })),
+	dbGet: (sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("dbGet", { sql, params })),
+	dbAll: (sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("dbAll", { sql, params })),
+	/**
+	 *  Returns the absolute path to the default database file. Resolution order:
+	 *    1. `SLAKTFORSKNING_DB` env override (used by the Playwright fixture).
+	 *    2. `<exe-dir>/family.db` when the exe's directory is writable. This makes
+	 *       the app portable — drop the zip on a USB stick, the family.db lives
+	 *       alongside the exe and travels with it.
+	 *    3. `<app_data_dir>/family.db` as the fallback for installer setups
+	 *       where the exe lives in Program Files (read-only without admin).
+	 * 
+	 *  Creates the parent dir if missing. The renderer calls this on first boot
+	 *  so the database persists across launches without a file picker.
+	 */
+	defaultDbPath: () => typedError<string, string>(__TAURI_INVOKE("default_db_path")),
+	/**
+	 *  Returns the path of the currently-open DB, or None if none open. Backs
+	 *  `window.api.db.getCurrent()`.
+	 */
+	dbCurrentPath: () => __TAURI_INVOKE<string | null>("db_current_path"),
+	/**
+	 *  Show a native open-file dialog for picking a .db file. Returns the chosen
+	 *  absolute path, or None if the user cancelled. The renderer then re-opens
+	 *  the shim against this path. Backs `window.api.db.openExisting()`.
+	 */
+	dbPickExisting: () => typedError<string | null, string>(__TAURI_INVOKE("db_pick_existing")),
+	/**
+	 *  Show a native save-file dialog for creating a new .db. Returns the chosen
+	 *  absolute path, or None if the user cancelled. Backs `window.api.db.createNew()`.
+	 */
+	dbPickNew: () => typedError<string | null, string>(__TAURI_INVOKE("db_pick_new")),
+	/**
+	 *  Show a file picker for media, copy the chosen file into the active DB's
+	 *  `<dbname>-media/` sibling folder (creating it if missing), and return the
+	 *  relative file_ref + format the renderer's createMedia() expects. Mirrors
+	 *  src/main/ipc/media.ts → media:attach.
+	 */
+	mediaPickAndCopy: () => typedError<Record<string, never>, string>(__TAURI_INVOKE("media_pick_and_copy")),
+	/**
+	 *  Read a media file (resolved relative to the active DB's directory) and
+	 *  return a base64 data URL. Backs window.api.media.readAsDataUrl().
+	 * 
+	 *  Async + spawn_blocking for the same reason the db_* commands are: avatar
+	 *  thumbnails are fetched per-row during list scrolls, and a sync command
+	 *  would block the Wry main thread on every read + base64 encode.
+	 */
+	mediaReadAsDataUrl: (fileRef: string) => typedError<string | null, string>(__TAURI_INVOKE("media_read_as_data_url", { fileRef })),
+	/**
+	 *  Generic file/folder picker. The renderer-side polyfill uses this to back
+	 *  every Electron `dialog.showOpenDialog` / `showSaveDialog` call site.
+	 */
+	dialogPick: (kind: string, title: string | null, extensions: string[] | null, extensionLabel: string | null, defaultName: string | null) => typedError<Record<string, never>, string>(__TAURI_INVOKE("dialog_pick", { kind, title, extensions, extensionLabel, defaultName })),
+	/**
+	 *  Read a file as utf-8 text. Used by import flows that need to feed the
+	 *  chosen file's contents to a JS parser running in the renderer.
+	 */
+	fsReadText: (path: string) => typedError<string, string>(__TAURI_INVOKE("fs_read_text", { path })),
+	/**  Write utf-8 text to a file. Used by GEDCOM export. */
+	fsWriteText: (path: string, contents: string) => typedError<null, string>(__TAURI_INVOKE("fs_write_text", { path, contents })),
+	/**
+	 *  Read a file as raw bytes (returned as base64 since serde-json can't
+	 *  represent binary directly). Used for archive imports / binary parsing.
+	 */
+	fsReadBytesBase64: (path: string) => typedError<string, string>(__TAURI_INVOKE("fs_read_bytes_base64", { path })),
+	/**
+	 *  Write raw bytes (base64-encoded for the JSON wire) to a file. Creates
+	 *  parent directories as needed. Used by archive export and per-media
+	 *  writes during archive import in the Tauri build.
+	 */
+	fsWriteBytesBase64: (path: string, b64: string) => typedError<null, string>(__TAURI_INVOKE("fs_write_bytes_base64", { path, b64 })),
+	/**
+	 *  Write a base64-encoded blob to a fresh file inside the OS temp directory
+	 *  and return its absolute path. Used when the renderer needs to hand a
+	 *  binary file (a .rmgc, an extracted .mdb, etc.) to a Rust command that
+	 *  requires a real on-disk path — typically to open it as a secondary
+	 *  SQLite connection. `name` is appended to a millisecond-precision prefix
+	 *  so concurrent imports don't collide; the renderer is responsible for
+	 *  calling `fs_remove_file` after the import completes.
+	 */
+	fsWriteTempBytesBase64: (name: string, b64: string) => typedError<string, string>(__TAURI_INVOKE("fsWriteTempBytesBase64", { name, b64 })),
+	/**
+	 *  Best-effort delete of a single file. Used to clean up temp files written
+	 *  by `fs_write_temp_bytes_base64` after an import completes (success or
+	 *  failure path). Missing-file errors are swallowed because the typical
+	 *  caller doesn't care whether the cleanup actually had work to do.
+	 */
+	fsRemoveFile: (path: string) => typedError<null, string>(__TAURI_INVOKE("fs_remove_file", { path })),
+	/**
+	 *  Recursively delete a directory (e.g. the temp dir created when
+	 *  extracting a Holger backup zip). Used by the renderer's polyfill in
+	 *  the `finally` block of `api.import.holgerRun`. No-op when missing.
+	 */
+	fsRemoveDir: (path: string) => typedError<null, string>(__TAURI_INVOKE("fs_remove_dir", { path })),
+	holgerExtractGed: (sourcePath: string) => typedError<ExtractGedResult, string>(__TAURI_INVOKE("holgerExtractGed", { sourcePath })),
+	holgerBulkCopyMedia: (srcDir: string, destDir: string) => typedError<BulkCopyResult, string>(__TAURI_INVOKE("holgerBulkCopyMedia", { srcDir, destDir })),
+	holgerConsolidateMedia: (dbPath: string, bulkCopiedFromDir: string | null) => typedError<ConsolidateResult, string>(__TAURI_INVOKE("holgerConsolidateMedia", { dbPath, bulkCopiedFromDir })),
+	secondaryDbOpen: (path: string) => typedError<number, string>(__TAURI_INVOKE("secondaryDbOpen", { path })),
+	secondaryDbClose: (handle: number) => __TAURI_INVOKE<void>("secondaryDbClose", { handle }),
+	secondaryDbRun: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("secondaryDbRun", { handle, sql, params })),
+	secondaryDbGet: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("secondaryDbGet", { handle, sql, params })),
+	secondaryDbAll: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("secondaryDbAll", { handle, sql, params })),
+	/**  Reveal a file or folder in the OS file manager. */
+	shellReveal: (path: string) => typedError<null, string>(__TAURI_INVOKE("shell_reveal", { path })),
+	/**
+	 *  Open a file or folder with the OS's default associated application.
+	 *  Mirrors Electron's `shell.openPath(absPath)` used by media:openFile —
+	 *  e.g. clicking "Open file" on a JPG media row launches Photos on macOS,
+	 *  the default image viewer on Linux, etc.
+	 */
+	shellOpenPath: (path: string) => typedError<null, string>(__TAURI_INVOKE("shell_open_path", { path })),
+	/**
+	 *  Returns the Cargo package version string (matches Cargo.toml `[package]
+	 *  version`). Backs `window.api.app.getVersion()` in the Tauri build.
+	 */
+	appVersion: () => __TAURI_INVOKE<string>("app_version"),
+	/**
+	 *  Copy an existing file to a new path. Used by `backup.backup` to save a
+	 *  snapshot of the active database. Both paths are absolute.
+	 */
+	fsCopyFile: (src: string, dest: string) => typedError<null, string>(__TAURI_INVOKE("fs_copy_file", { src, dest })),
+	/**
+	 *  Read a file shipped as a Tauri bundled resource (declared in
+	 *  `tauri.conf.json` under `bundle.resources`). Returns the file's UTF-8
+	 *  contents. Used by the renderer's `app.readThirdPartyLicenses` polyfill
+	 *  to surface the bundled THIRD_PARTY_LICENSES.txt; generic enough to be
+	 *  reused for any other text resource we ship later.
+	 * 
+	 *  Tauri's `app.path().resource_dir()` gives the platform-specific resource
+	 *  root (on macOS that's `<bundle>.app/Contents/Resources/`). When a
+	 *  resource is declared with a `..` prefix (e.g. `../THIRD_PARTY_LICENSES.txt`
+	 *  because the file lives at the repo root next to `src-tauri/`), Tauri
+	 *  rewrites the leading `..` to a literal `_up_` directory inside the bundle.
+	 *  We try the flat name first (covers resources declared without `..`) and
+	 *  fall back to the `_up_` location.
+	 */
+	readBundledResource: (name: string) => typedError<string, string>(__TAURI_INVOKE("read_bundled_resource", { name })),
+	/**
+	 *  Generate a JPEG thumbnail data URL for a media file_ref. Returns None
+	 *  on missing files / undecodable formats — same shape as Electron's
+	 *  `media:thumbnailDataUrl`. The Electron path caches under
+	 *  `<dbname>-media/.thumbs/`; we skip the disk cache for now (the renderer
+	 *  already caches in-memory via Vue keep-alive). Adding it later is a
+	 *  pure-Rust change with no API impact.
+	 */
+	mediaThumbnail: (fileRef: string, maxWidth: number | null) => typedError<string | null, string>(__TAURI_INVOKE("mediaThumbnail", { fileRef, maxWidth })),
+	/**
+	 *  Bake preview thumbnails for the website-export preview iframe. Mirrors
+	 *  `buildPreviewThumbnails` in `src/main/ipc/website-export.ts`:
+	 *    - Take the first 24 image refs the caller provides
+	 *    - Resize to 400px wide JPEG at quality 70
+	 *    - Stop once we hit the 5 MB total-bytes budget
+	 *    - Skip individual broken images rather than aborting
+	 * 
+	 *  The caller (renderer-side `tauri-window-api.ts`) is responsible for
+	 *  passing only image media (filtered by extension or MIME) — keeps the
+	 *  Rust side dumb.
+	 */
+	websiteBakePreviewThumbnails: (mediaRefs: MediaRefInput[]) => typedError<{ [key in string]: string }, string>(__TAURI_INVOKE("websiteBakePreviewThumbnails", { mediaRefs })),
+	/**
+	 *  Locate the dist-static SPA bundle's `index.html` and return its
+	 *  contents. The website-export preview iframe in
+	 *  `src/renderer/views/WebsiteExportView.vue` loads this string into a
+	 *  Blob URL after the renderer-side polyfill bakes thumbnails into it.
+	 * 
+	 *  Search order — first match wins so dev sessions don't need a build:
+	 *    1. <repo>/dist-static/index.html (relative to the cwd Tauri runs from)
+	 *    2. <repo>/.claude/worktrees/<wt>/dist-static/index.html
+	 *    3. CARGO_MANIFEST_DIR/../dist-static/index.html (dev-time fallback)
+	 * 
+	 *  In a packaged build this would be a tauri::Manager::resolve()-resolved
+	 *  resource; that wiring lands with the dist-static-bundling task in a
+	 *  follow-up plan.
+	 */
+	websiteLoadStaticIndexHtml: () => typedError<string, string>(__TAURI_INVOKE("website_load_static_index_html")),
+	websiteExportMedia: (destFullDir: string, mediaRefs: MediaRefInput[]) => typedError<WebsiteExportMediaResult, string>(__TAURI_INVOKE("websiteExportMedia", { destFullDir, mediaRefs })),
+	uiEvalResponse: (id: string, value: Record<string, never>) => __TAURI_INVOKE<void>("ui_eval_response", { id, value }),
 };
 
 /* Types */
+export type AncestorNode = {
+	id: string,
+	generation: number,
+	position: number,
+	given_name: string | null,
+	surname: string | null,
+	sex: string,
+};
+
+export type BulkCopyResult = {
+	copied: number,
+	skipped: number,
+	ms: number,
+};
+
+export type ConsolidateResult = {
+	/**  Files copied + ref rewritten (or already at dest with same name). */
+	copied: number,
+	/**  Refs left untouched (null, relative, etc.). */
+	skipped: number,
+	/**  Source path didn't exist on disk. */
+	missing: number,
+	ms: number,
+};
+
 export type DbStats = {
 	persons: number,
 	events: number,
 	places: number,
 	sources: number,
+};
+
+export type ExtractGedResult = {
+	/**
+	 *  .ged bytes, base64 (the renderer decodes to Uint8Array, then
+	 *  decodeGedcomBytes does the encoding sniff).
+	 */
+	gedBytesB64: string,
+	/**
+	 *  Absolute path of the temp dir created when extracting from a zip,
+	 *  or None for direct .ged / directory inputs. The renderer is
+	 *  expected to call `fs_remove_dir` on it once the import is done.
+	 */
+	tempDir: string | null,
+	/**  Filename of the .ged the bytes came from (debug aid; not load-bearing). */
+	gedName: string,
+};
+
+export type McpProbe = {
+	spawned: boolean,
+	initialize_response: string | null,
+	elapsed_ms: number,
+	error: string | null,
+};
+
+export type MediaRefInput = {
+	id: string,
+	fileRef: string | null,
+};
+
+export type PersonRow = {
+	id: string,
+	given_name: string | null,
+	surname: string | null,
+	sex: string,
+};
+
+export type RunResult = {
+	changes: number,
+	last_insert_rowid: number,
+};
+
+/**
+ *  Copy media files into a `<dest>/media/full/<id>.<ext>` layout for the
+ *  website-export bundle. Mirrors the loop in
+ *  `src/main/ipc/website-export.ts:151–182`:
+ *    - Resolves each `file_ref` against the active DB directory.
+ *    - Skips entries with no `file_ref` or where the source file doesn't
+ *      exist on disk (`fsp.access` swallow).
+ *    - Returns the set of media IDs that were successfully copied so the
+ *      caller can trim its snapshot to match.
+ * 
+ *  The caller is responsible for the final snapshot trim — this command
+ *  is purely fs work. Used by the renderer-side `api.website.export`
+ *  polyfill in `tauri-window-api.ts`.
+ */
+export type WebsiteExportMediaResult = {
+	exportedIds: string[],
+	copied: number,
 };
 
 /* Tauri Specta runtime */
