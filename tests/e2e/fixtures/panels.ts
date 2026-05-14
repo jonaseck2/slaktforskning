@@ -60,6 +60,28 @@ export interface PanelSection {
   ctaLabel: string | null;
   /** Determines how the runner exercises this section. */
   kind: SectionKind;
+  /**
+   * If set, skip check 3 (lifecycle parity: rows offer edit + delete/unlink
+   * affordances). Use for sections that LEGITIMATELY don't have row-shaped
+   * lifecycle affordances:
+   *
+   *   - **Derived views** (e.g. PersonPanel.Timeline, PlacePanel.Timeline):
+   *     show the same primitive as a canonical sibling section but in a
+   *     different layout. The lifecycle (edit + delete) lives on the
+   *     canonical section, not on every alternate rendering of the same
+   *     data. CTA-label / host-flows-in / no-degradation checks still fire
+   *     because the CTA itself is legitimate (it creates a real primitive).
+   *
+   *   - **Non-row UI** (e.g. PersonPanel.Life map): renders the primitive
+   *     as map markers / cards / graphs instead of rows. Per-row edit/delete
+   *     affordances aren't applicable; lifecycle lives on the canonical row
+   *     section.
+   *
+   * Every use of this flag MUST cite the canonical sibling section that
+   * owns the primitive's lifecycle, so reviewers can verify the lifecycle
+   * is actually covered somewhere.
+   */
+  skipLifecycleParity?: { canonicalOwner: string; reason: string };
 }
 
 export interface PanelDescriptor {
@@ -151,12 +173,32 @@ export const PANELS: PanelDescriptor[] = [
       // Identifiers is `v-show`-hidden until count > 0 — skip in the pilot.
       // (TODO Task 3: pre-seed an identifier so this section exposes itself.)
       { title: 'Events', ctaLabel: '+ Event', kind: 'modal-with-host' },
-      { title: 'Timeline', ctaLabel: '+ Event', kind: 'modal-with-host' },
-      // Life map's count badge tracks events-with-place-id, not just events.
-      // The CTA truthfully adds an event, but a bare event (no place_id) is
-      // invisible to the count. Treat as modal-with-host but skip check 2.
-      // (Alternative would be a separate kind; this keeps the descriptor lean.)
-      { title: 'Life map', ctaLabel: '+ Event', kind: 'modal-with-host-no-count-bump' },
+      // Timeline is a derived view of the Events section's data — same
+      // primitive, alternate layout (vertical chronological timeline of
+      // `.timeline-entry` divs, not rows). The CTA still creates a real
+      // event, so checks 1/2/4 fire; lifecycle is covered by Events.
+      {
+        title: 'Timeline',
+        ctaLabel: '+ Event',
+        kind: 'modal-with-host',
+        skipLifecycleParity: {
+          canonicalOwner: 'Events',
+          reason: 'derived view of events as `.timeline-entry` divs; edit/delete lifecycle lives on the Events section',
+        },
+      },
+      // Life map renders events as leaflet markers — no row UI at all.
+      // Count badge tracks events-with-place-id (so check 2 also skips
+      // because a bare event is invisible to the count). The CTA truthfully
+      // adds an event; lifecycle lives on Events.
+      {
+        title: 'Life map',
+        ctaLabel: '+ Event',
+        kind: 'modal-with-host-no-count-bump',
+        skipLifecycleParity: {
+          canonicalOwner: 'Events',
+          reason: 'leaflet map widget; events render as markers, not rows; lifecycle lives on Events',
+        },
+      },
       { title: 'Relationships', ctaLabel: null, kind: 'relations-empty' },
       { title: 'Media', ctaLabel: '+ Media', kind: 'media-attach' },
       // Media Timeline has no CTA (canonical Add lives on the Media section above).
@@ -428,7 +470,18 @@ export const PANELS: PanelDescriptor[] = [
       // name in the title. The placeId still flows in via prop, so the saved
       // event lands at this place; verified behaviourally by check 2 (count++).
       { title: 'Events', ctaLabel: '+ Event', kind: 'modal-anonymous' },
-      { title: 'Timeline', ctaLabel: '+ Event', kind: 'modal-anonymous' },
+      // PlaceTimeline is a derived view of events-at-this-place — same
+      // primitive as Events section, alternate layout (`.timeline-entry`
+      // divs). Lifecycle lives on Events.
+      {
+        title: 'Timeline',
+        ctaLabel: '+ Event',
+        kind: 'modal-anonymous',
+        skipLifecycleParity: {
+          canonicalOwner: 'Events',
+          reason: 'derived view of events-at-this-place as `.timeline-entry` divs; lifecycle lives on Events',
+        },
+      },
       // People = derived view from event participants. No CTA — Surface
       // Contract check #2 says CTA-less derived sections are correct (no
       // label-lie risk). The seed event above provides the parity row.
