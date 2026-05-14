@@ -62,7 +62,35 @@ Tauri-port "improved perf" claims after the migration had no measured before-num
 
 0.5 day. Sequencing: boot trace (~30 min), place-resolve trace (~1 hour including DB load), dedup trace (~1 hour), summary writeup (~1 hour).
 
+## Revision history
+
+- **2026-05-14 (initial):** Plan assumed Chromium DevTools for renderer-side .cpuprofile capture. Two subagent dispatches returned BLOCKED with diagnostics that overturned the plan's premise:
+  1. **Tauri on macOS uses WKWebView, not Chromium.** Safari Web Inspector is the renderer-side debugger; its Timelines export format isn't directly compatible with Chromium DevTools' .cpuprofile schema. The `chrome-devtools-mcp` plugin tools don't attach to WKWebView either.
+  2. **Subagents lack GUI access.** Driving "click Record / reload / click Stop / Save profile" interactively in Safari Web Inspector is not subagent-executable.
+  3. **Stress fixture missing:** `holger2.db` has 22k persons but 0 places; `linda.db` has 833 persons + 272 places (under the ≥1k places / ≥5k persons threshold). No DB on disk meets both thresholds; the `seed_family` MCP tool requires the app to be running.
+- **2026-05-14 (revised, below):** Pivot to **Rust-first capture via `samply`** (subagent-executable — pure CLI). Renderer-side captures become a documented "user must perform interactively in Safari Web Inspector" step OR a future follow-up after the app gains a headless-trace-export mechanism. Reduces the immediate plan's scope to the workloads that exercise Rust the most: place-resolve, dedup. Boot trace gets captured as a Rust-binary samply pass (covers Rust-side launch cost; renderer-side mount cost requires the GUI step).
+
 ## Tasks (bite-sized — for `superpowers:executing-plans` or human execution)
+
+### Task 0: Install profiling tools (subagent-executable)
+
+- [ ] **Step 1: Install samply**
+
+```bash
+cargo install --locked samply
+samply --version
+```
+
+Expected: samply prints its version.
+
+- [ ] **Step 2: Build a release binary**
+
+```bash
+npm run build:bin 2>&1 | tail -5
+ls -la src-tauri/target/release/slaktforskning
+```
+
+Expected: release binary exists.
 
 ### Task 1: Prepare test database
 
@@ -75,9 +103,18 @@ sqlite3 ~/Library/Application\ Support/com.slaktforskning.app/family.db \
 
 Expected: two rows with counts.
 
-- [ ] **Step 2: If counts < 1k places / 5k persons, generate a stress fixture**
+- [ ] **Step 2: Pick the best available DB and document its limitations**
 
-In a running app session (via dev MCP), call `mcp__slaktforskning-dev__seed_family` repeatedly until counts meet threshold. Or use `tests/e2e/fixtures/` stress DBs if available. Record the chosen DB path.
+Known DBs on this system (verified 2026-05-14 by an earlier subagent):
+
+| DB path | persons | places | events | media |
+|---|---|---|---|---|
+| `~/Library/Application Support/com.slaktforskning.app/family.db` | 0 | 0 | 0 | 0 |
+| `~/Library/Application Support/Släktforskning/slaktforskning.db` | 8 | 13 | 21 | 0 |
+| `~/git/slaktforskning/export-import/wetransfer_testmaterial_2026-04-05_1624/linda.db` | **833** | **272** | 3008 | 4 |
+| `~/git/slaktforskning/export-import/wetransfer_testmaterial_2026-04-05_1624/holger2.db` | **22221** | 0 | 40954 | 0 |
+
+**Pick `linda.db`** as the baseline DB — best place breadth on disk. The original threshold (≥1k places, ≥5k persons) is reduced to "the realistic largest DB on hand" per the revision note. If `seed_family` is run later with the app running, regenerate the baseline against the larger stress fixture.
 
 - [ ] **Step 3: Note the chosen DB and row counts**
 
@@ -91,33 +128,79 @@ events: <count>
 media: <count>
 ```
 
-### Task 2: Capture boot trace
+### Task 2: Capture Rust-side boot + place-resolve + dedup traces (subagent-executable)
 
-- [ ] **Step 1: Open Chromium DevTools in the dev app**
+These three captures are pure CLI — no GUI needed. The user-driven renderer-side traces (Task 4) are documented as a follow-up.
 
-```bash
-npm start &
-# Wait ~10s for compile
-```
-
-In the app window: View → Toggle Developer Tools → Performance tab.
-
-- [ ] **Step 2: Start a recording, reload, stop after idle**
-
-In DevTools: click record (⚫), then Ctrl/Cmd+R to reload the renderer. Wait until the UI is fully responsive AND no JavaScript activity for ≥2 seconds. Stop recording (⚫).
-
-- [ ] **Step 3: Export the trace**
-
-In the Performance tab: click the "Save profile" icon. Save as `~/Downloads/boot.cpuprofile`.
-
-- [ ] **Step 4: Move to docs/baseline-perf/**
+- [ ] **Step 1: Boot trace (Rust-side)**
 
 ```bash
 mkdir -p docs/baseline-perf/2026-05-14
-mv ~/Downloads/boot.cpuprofile docs/baseline-perf/2026-05-14/
+samply record --save-only -o docs/baseline-perf/2026-05-14/boot-rust.json \
+  src-tauri/target/release/slaktforskning &
+SAMPLY_PID=$!
+sleep 8  # Wait for app to fully boot and gazetteer init to settle
+kill $SAMPLY_PID
+ls -la docs/baseline-perf/2026-05-14/boot-rust.json
 ```
 
-### Task 3: Capture place-resolve trace (renderer)
+Expected: profile JSON exists. Note: samply may need additional flags or signal handling depending on platform — adjust if the first run produces an empty file.
+
+- [ ] **Step 2: Place-resolve trace via the unit-test workload**
+
+```bash
+samply record --save-only -o docs/baseline-perf/2026-05-14/place-resolve-rust.json \
+  npx vitest run tests/unit/place-resolver*.test.ts tests/unit/place-gazetteers*.test.ts
+```
+
+Expected: profile captures the gazetteer resolver hot path.
+
+- [ ] **Step 3: Dedup trace via the unit-test workload**
+
+```bash
+samply record --save-only -o docs/baseline-perf/2026-05-14/dedup-rust.json \
+  npx vitest run tests/unit/duplicates
+```
+
+Expected: profile captures the dedup scoring path.
+
+- [ ] **Step 4: Open each profile in samply to identify top 3 self-time functions**
+
+```bash
+samply load docs/baseline-perf/2026-05-14/boot-rust.json
+# Note the top 3 functions by self-time; close the viewer
+samply load docs/baseline-perf/2026-05-14/place-resolve-rust.json
+samply load docs/baseline-perf/2026-05-14/dedup-rust.json
+```
+
+Save the top-3 per workload for `summary.md`.
+
+### Task 3: Renderer-side captures (USER-DRIVEN — interactive Safari Web Inspector)
+
+This task requires interactive use of Safari Web Inspector on macOS Tauri (no subagent equivalent). Document explicitly that it's a manual step; the resulting traces become part of the baseline if captured.
+
+- [ ] **Step 1: Open the dev app**
+
+```bash
+npm start &
+```
+
+- [ ] **Step 2: Open Safari Web Inspector**
+
+In the running Tauri app's window: right-click → Inspect Element. Or System Settings → Safari → Advanced → "Show Develop menu" must be enabled; then Develop → Slaktforskning → choose the renderer.
+
+- [ ] **Step 3: Capture three workloads**
+
+For each of boot / place-resolve (load DB, navigate to /places, scroll) / dedup (load DB, trigger `find_duplicates`):
+1. Switch to Timelines tab → JavaScript & Events.
+2. Click Record (red dot).
+3. Perform the workload.
+4. Stop recording.
+5. Export → JavaScript Profile → save as `docs/baseline-perf/2026-05-14/<workload>-renderer.cpuprofile`.
+
+- [ ] **Step 4: Mark renderer-side captures as DONE in `summary.md` (or as "user follow-up needed" if skipped)**
+
+### Task 4: Renderer-side captures (deferred; previously Task 3)
 
 - [ ] **Step 1: Navigate to /places in the running app**
 
