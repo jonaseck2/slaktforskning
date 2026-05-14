@@ -1,0 +1,18 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SOUR e2e-tests
+0 @I1@ INDI
+1 NAME Anna /Andersson/
+1 SEX F
+0 @I2@ INDI
+1 NAME Bo /Bengtsson/
+1 SEX M
+0 @I3@ INDI
+1 NAME Cecilia /Andersson/
+1 SEX F
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I1@
+1 CHIL @I3@
+0 TRLR
