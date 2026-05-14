@@ -64,7 +64,7 @@ The default DB lives at `~/Library/Application Support/com.slaktforskning.app/fa
 
 ## The dev MCP UI bridge
 
-Port **19241** (configurable via `SLAKTFORSKNING_UI_PORT`) hosts a small HTTP control plane (`src-tauri/src/ui_server.rs`, axum + tokio) used by the `slaktforskning-dev` MCP tools. Endpoints:
+Port **19241** (configurable via `SLAKTFORSKNING_UI_PORT`) hosts a small HTTP control plane (`src-tauri/src/ui_server.rs`, axum + tokio) used by the `slaktforskning-dev` MCP tools. This is **unchanged** by the 2026-05-14 kkrpc + Bun sidecar migration — kkrpc only replaces the *production* MCP sidecar spawn pattern (`bun server.bundle.mjs`). The dev MCP bridge stays as-is. Endpoints:
 
 | Path | Method | Purpose |
 |---|---|---|

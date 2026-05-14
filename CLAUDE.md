@@ -89,7 +89,7 @@ The genealogist thinks surface-first: they're "on a place," "on a person," "in a
 
 ## Project Overview
 
-Släktforskning is a cross-platform desktop genealogy app built with Electron + Vue 3 + TypeScript. All data stays local in SQLite. A built-in MCP server lets AI agents read/write genealogy data without the UI.
+Släktforskning is a cross-platform desktop genealogy app built with Tauri 2 (Rust host) + Vue 3 + TypeScript. All data stays local in SQLite. A built-in MCP server lets AI agents read/write genealogy data without the UI; in the bundled app it ships as a child Bun process spawned by the Rust host.
 
 ## Tech Stack
 
@@ -99,7 +99,7 @@ Släktforskning is a cross-platform desktop genealogy app built with Electron + 
 | Frontend | Vue 3 (Composition API, `<script setup>`) + Vue Router + Pinia |
 | Build | Tauri CLI + Vite (renderer) + Cargo (Rust core) |
 | Database | SQLite via rusqlite (DELETE journaling, foreign keys on) |
-| MCP Server | @modelcontextprotocol/sdk (stdio transport, sidecar process) |
+| MCP Server | @modelcontextprotocol/sdk (stdio); sidecar = `bun server.bundle.mjs` (esbuild ESM output + shipped Bun binary, spawned via tauri-plugin-shell). [kkrpc](https://github.com/kunkunsh/kkrpc) is the JS-side typesafe RPC layer. |
 | Language | TypeScript (renderer + api/) + Rust (core) |
 
 ## Architecture
@@ -159,7 +159,7 @@ npm run build          # Full Tauri bundle for the current platform — .app + .
 npm run build:bin      # Raw Tauri binary only, no bundle (faster — used by build:e2e and dev iteration)
 npm run build:static   # Build static SPA bundle (dist-static/)
 npm run dev:static     # Dev server for static SPA at localhost:5174
-npm run build:mcp-sidecar  # Build the MCP sidecar binaries for all targets (required before `npm run build`)
+npm run build:mcp-sidecar  # esbuild bundles src/mcp/server.ts → dist-mcp/server.bundle.mjs (ESM). Tauri ships it as a resource and spawns it under the per-platform Bun binary in src-tauri/binaries/ (fetched via scripts/fetch-bun-binaries.mjs). Required before `npm run build`.
 npx tsx src/mcp/server.ts  # Run MCP server standalone (Node-host path, for non-Tauri agents)
 ```
 

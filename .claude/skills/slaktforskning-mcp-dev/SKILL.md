@@ -32,6 +32,19 @@ The MCP server has two entry points:
 
 Use the **dev server** for all agent-driven development, UI testing, and chart debugging. Use the **prod server** for research sessions and narrative generation.
 
+### How the production sidecar ships
+
+In the bundled Tauri app, the prod server is NOT run via `npx tsx`. The build pipeline is:
+
+1. `npm run build:mcp-sidecar` — esbuild bundles `src/mcp/server.ts` → `dist-mcp/server.bundle.mjs` (ESM, single file). One tool, no pkg / no Node packing.
+2. `scripts/fetch-bun-binaries.mjs` — downloads per-platform Bun binaries (SHA-pinned via `src-tauri/binaries/bun-binaries.lock`) into `src-tauri/binaries/bun-<triple>`. CI runs this before `tauri build`.
+3. `tauri build` — Tauri's bundler picks up the Bun binary via `tauri.conf.json` `bundle.externalBin` and ships `server.bundle.mjs` via `bundle.resources`.
+4. `src-tauri/src/mcp.rs` spawns `bun server.bundle.mjs` via `tauri-plugin-shell` at runtime. Sidecar args are constrained to `["server.bundle.mjs"]` in `src-tauri/capabilities/default.json`.
+
+[kkrpc](https://github.com/kunkunsh/kkrpc) is the JS-side typesafe RPC layer between renderer ↔ Bun child; there is no Rust-side kkrpc crate (kkrpc's protocol is incompatible with the MCP stdio framing the Rust side uses). The Rust spawn is plain `tauri-plugin-shell`.
+
+For local development, `npx tsx src/mcp/server.ts` still works as the Node-host path — that's what `.claude/settings.local.json` typically uses.
+
 ## Three Modes of Use
 
 The MCP server is not just an API surface — it is the primary tool for agents to develop, test, and research in the running app.
