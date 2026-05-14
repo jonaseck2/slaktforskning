@@ -199,7 +199,10 @@ describe('tauri-window-api Rust command dispatch', () => {
     invokeSpy.mockResolvedValueOnce('data:image/jpeg;base64,xxx');
     const { api } = mountWindowApi(stubDb);
     const result = await api.media.thumbnailDataUrl('foo-media/x.jpg', 256);
-    expect(invokeSpy).toHaveBeenCalledWith('media_thumbnail', { fileRef: 'foo-media/x.jpg', maxWidth: 256 });
+    // Specta builds the wire payload from positional args, so `maxWidth: null`
+    // appears explicitly when the renderer-side wrapper passes `null` for the
+    // optional arg. The Rust command sees `Option<u32>` either way.
+    expect(invokeSpy).toHaveBeenCalledWith('mediaThumbnail', { fileRef: 'foo-media/x.jpg', maxWidth: 256 });
     expect(result).toBe('data:image/jpeg;base64,xxx');
   });
 
@@ -214,11 +217,15 @@ describe('tauri-window-api Rust command dispatch', () => {
     invokeSpy.mockResolvedValueOnce({ canceled: true });
     const { api } = mountWindowApi(stubDb);
     await api.gedcom.selectFile();
+    // Specta-generated binding always includes every positional arg in the
+    // wire payload, including the unused `defaultName` slot — Rust sees the
+    // same `Option<String>::None` either way.
     expect(invokeSpy).toHaveBeenCalledWith('dialog_pick', {
       kind: 'openFile',
       title: 'Select GEDCOM File',
       extensions: ['ged', 'gedcom', 'zip'],
       extensionLabel: 'GEDCOM Files',
+      defaultName: null,
     });
   });
 
@@ -231,6 +238,7 @@ describe('tauri-window-api Rust command dispatch', () => {
       title: 'Select Holger GEDCOM export',
       extensions: ['ged', 'zip'],
       extensionLabel: 'GEDCOM / Zip',
+      defaultName: null,
     });
   });
 

@@ -744,12 +744,13 @@ fn open_new_window(app: &tauri::AppHandle) -> Result<(), String> {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-/// Construct the Specta builder. The set of commands here mirrors what's
-/// registered with `tauri::generate_handler!` below, **for the subset that
-/// has been annotated with `#[specta::specta]`**. As more commands are
-/// annotated (Task 4 of docs/plans/2026-05-14-specta-migration.md), they
-/// move into `collect_commands!` here too; the runtime invoke_handler
-/// swaps to `builder.invoke_handler()` once the sets match.
+/// Construct the Specta builder. This is the single source of truth for the
+/// app's IPC surface — `run()` builds it once, hands it to
+/// `tauri::Builder::invoke_handler()` for runtime dispatch, and exports it to
+/// `src/renderer/bindings.ts` in debug builds for the renderer's static
+/// analysis. Adding a Tauri command means: annotate the Rust function with
+/// `#[tauri::command] #[specta::specta]`, add it to `collect_commands!` here,
+/// rebuild — the TypeScript binding appears in `bindings.ts` automatically.
 pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::<tauri::Wry>::new()
         .commands(tauri_specta::collect_commands![
@@ -804,12 +805,17 @@ pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
 }
 
 pub fn run() {
+    // Build the Specta builder once. It's both the IPC dispatcher (passed
+    // into `.invoke_handler` below) and the source of `bindings.ts` (exported
+    // in debug builds + by `cargo test export_specta_bindings`).
+    let specta = specta_builder();
+
     // Export bindings at app startup in debug builds. This is also produced
     // out-of-band by `cargo test export_specta_bindings` and by the
     // `bindgen` example binary (`cargo run --example bindgen`) so CI and the
     // build pipeline don't need to launch the app to refresh bindings.ts.
     #[cfg(debug_assertions)]
-    specta_builder()
+    specta
         .export(
             specta_typescript::Typescript::default(),
             "../src/renderer/bindings.ts",
@@ -827,56 +833,11 @@ pub fn run() {
         // `plugins.updater`. The renderer triggers checks via the
         // `plugin:updater|check` invoke (see src/renderer/tauri-window-api.ts).
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![
-            db_open,
-            db_close,
-            db_is_open,
-            db_stats,
-            persons_list,
-            get_ancestor_tree,
-            probe_mcp_sidecar,
-            open_second_window,
-            broadcast_data_changed,
-            // Generic primitives the TS shim invokes
-            db_batch,
-            db_run,
-            db_batch_run,
-            db_run_changes,
-            db_get,
-            db_all,
-            default_db_path,
-            db_current_path,
-            db_pick_existing,
-            db_pick_new,
-            media_pick_and_copy,
-            media_read_as_data_url,
-            dialog_pick,
-            fs_read_text,
-            fs_write_text,
-            fs_read_bytes_base64,
-            fs_write_bytes_base64,
-            fs_write_temp_bytes_base64,
-            fs_remove_file,
-            fs_remove_dir,
-            holger_extract_ged,
-            holger_bulk_copy_media,
-            holger_consolidate_media,
-            secondary_db_open,
-            secondary_db_close,
-            secondary_db_run,
-            secondary_db_get,
-            secondary_db_all,
-            shell_reveal,
-            shell_open_path,
-            app_version,
-            fs_copy_file,
-            read_bundled_resource,
-            media::media_thumbnail,
-            media::website_bake_preview_thumbnails,
-            media::website_load_static_index_html,
-            media::website_export_media,
-            ui_server::ui_eval_response,
-        ])
+        // IPC dispatch comes from the Specta builder — same command set
+        // declared in `collect_commands!` above, no hand-maintained mirror.
+        // Renames a Rust command parameter, breaks `tsc --noEmit` at the
+        // matching renderer call site.
+        .invoke_handler(specta.invoke_handler())
         .setup(|app| {
             ui_server::spawn(app.handle().clone());
             // Build + apply the application menu. Menu events fan out to

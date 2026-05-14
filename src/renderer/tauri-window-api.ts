@@ -23,6 +23,33 @@ import * as persons from '../api/persons';
 import * as duplicates from '../api/duplicates';
 import { queryAll } from '../api/db';
 import { undoManager } from '../api/undo';
+import { commands } from './bindings';
+
+// Specta wraps every `Result<T, String>` return in an `{ status, data | error }`
+// envelope so the renderer can distinguish typed errors from thrown JS errors.
+// Every renderer call site in this file used to invoke<T>(...) and either
+// receive T or reject — preserve that contract by unwrapping the envelope into
+// either a resolved value or a thrown Error.
+async function unwrap<T>(
+  p: Promise<{ status: 'ok'; data: T } | { status: 'error'; error: unknown }>,
+): Promise<T> {
+  const r = await p;
+  if (r.status === 'error') {
+    const msg = typeof r.error === 'string' ? r.error : JSON.stringify(r.error);
+    throw new Error(msg);
+  }
+  return r.data;
+}
+
+// Some commands return `serde_json::Value` on the Rust side (wrapped in
+// JsonValueWire for Specta), which Specta types as `Record<string, never>`.
+// The renderer knows the actual shape at the call site; this helper makes the
+// cast explicit and keeps the unwrap path uniform.
+async function unwrapAs<T>(
+  p: Promise<{ status: 'ok'; data: Record<string, never> } | { status: 'error'; error: unknown }>,
+): Promise<T> {
+  return (await unwrap(p)) as unknown as T;
+}
 
 // Side-effect imports register every channel on the registry at module load.
 // Without these, the registry is empty and listChannels() returns nothing.
@@ -160,19 +187,19 @@ export function mountWindowApi(db: Database): MountResult {
   // generated stubs with real implementations.
   if (!api.db) api.db = {};
   api.db.getCurrent = async () => {
-    const path = await invoke<string | null>('db_current_path');
+    const path = await commands.dbCurrentPath();
     if (!path) return null;
     // Match the shape the renderer expects from the Electron build.
     return { path, name: deriveDbName(path) };
   };
   api.db.openExisting = async () => {
-    const path = await invoke<string | null>('db_pick_existing');
+    const path = await unwrap(commands.dbPickExisting());
     if (!path) return { cancelled: true };
     await switchDbTo(path, /* createSchema */ false);
     return { path, name: deriveDbName(path) };
   };
   api.db.createNew = async () => {
-    const path = await invoke<string | null>('db_pick_new');
+    const path = await unwrap(commands.dbPickNew());
     if (!path) return { cancelled: true };
     await switchDbTo(path, /* createSchema */ true);
     return { path, name: deriveDbName(path) };
@@ -209,8 +236,8 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.media) api.media = {};
   api.media.attach = async (data: unknown) => {
     const opts = data as { entityType?: string; entityId?: string } | undefined;
-    const r = await invoke<{ canceled: boolean; fileRef?: string; format?: string | null; title?: string }>(
-      'media_pick_and_copy',
+    const r = await unwrapAs<{ canceled: boolean; fileRef?: string; format?: string | null; title?: string }>(
+      commands.mediaPickAndCopy(),
     );
     if (r.canceled) return { canceled: true };
     const item = await media.createMedia(getDb(), {
@@ -239,7 +266,7 @@ export function mountWindowApi(db: Database): MountResult {
       else fileRef = mediaIdOrRef;  // assume it's a file_ref
     }
     if (!fileRef) return null;
-    return await invoke<string | null>('media_read_as_data_url', { fileRef });
+    return await unwrap(commands.mediaReadAsDataUrl(fileRef));
   };
   api.media.getFilePath = async (mediaId: unknown) => {
     if (typeof mediaId !== 'string') return null;
@@ -251,8 +278,8 @@ export function mountWindowApi(db: Database): MountResult {
   // step. Mirrors the Electron handler at src/main/ipc/media.ts:144.
   api.media.createFromFile = async (data: unknown) => {
     const opts = data as { suggestedTitle?: string } | undefined;
-    const r = await invoke<{ canceled: boolean; fileRef?: string; format?: string | null; title?: string }>(
-      'media_pick_and_copy',
+    const r = await unwrapAs<{ canceled: boolean; fileRef?: string; format?: string | null; title?: string }>(
+      commands.mediaPickAndCopy(),
     );
     if (r.canceled) return { canceled: true };
     const item = await media.createMedia(getDb(), {
@@ -271,7 +298,7 @@ export function mountWindowApi(db: Database): MountResult {
     if (typeof mediaId !== 'string') return { success: false, error: 'missing media id' };
     const row = await media.getMedia(getDb(), mediaId);
     if (!row?.file_ref) return { success: false, error: 'Media not found or no file_ref' };
-    const cur = await invoke<string | null>('db_current_path');
+    const cur = await commands.dbCurrentPath();
     if (!cur) return { success: false, error: 'no DB open' };
     const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
     // file_ref is normally relative (`<dbname>-media/foo.jpg`); if it ever
@@ -279,7 +306,7 @@ export function mountWindowApi(db: Database): MountResult {
     const isAbsolute = /^([A-Za-z]:[\\/]|\/)/.test(row.file_ref);
     const absPath = isAbsolute ? row.file_ref : `${dbDir}/${row.file_ref}`;
     try {
-      await invoke('shell_open_path', { path: absPath });
+      await unwrap(commands.shellOpenPath(absPath));
       return { success: true };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
@@ -292,8 +319,8 @@ export function mountWindowApi(db: Database): MountResult {
   api.media.thumbnailDataUrl = async (fileRefArg: unknown, maxWidthArg?: unknown) => {
     const fileRef = typeof fileRefArg === 'string' ? fileRefArg : null;
     if (!fileRef) return null;
-    const maxWidth = typeof maxWidthArg === 'number' && maxWidthArg > 0 ? maxWidthArg : undefined;
-    return await invoke<string | null>('media_thumbnail', { fileRef, maxWidth });
+    const maxWidth = typeof maxWidthArg === 'number' && maxWidthArg > 0 ? maxWidthArg : null;
+    return await unwrap(commands.mediaThumbnail(fileRef, maxWidth));
   };
 
   // Duplicates: mergeMedia is intentionally NOT registered in
@@ -317,7 +344,7 @@ export function mountWindowApi(db: Database): MountResult {
     if (keepFileArg !== 'target' && keepFileArg !== 'source') {
       throw new Error("duplicates.mergeMedia: keepFile must be 'target' or 'source'");
     }
-    const dbPath = await invoke<string | null>('db_current_path');
+    const dbPath = await commands.dbCurrentPath();
     if (!dbPath) throw new Error('duplicates.mergeMedia: no database open');
     const result = await duplicates.mergeMedia(getDb(), targetIdArg, sourceIdArg, keepFileArg, { dbPath });
     fireDataChanged();
@@ -330,7 +357,7 @@ export function mountWindowApi(db: Database): MountResult {
   // cancelled here — the user-visible effect is just slower checks.
   if (!api.checks) api.checks = {};
   const dbDirFromPath = async (): Promise<string | undefined> => {
-    const cur = await invoke<string | null>('db_current_path');
+    const cur = await commands.dbCurrentPath();
     if (!cur) return undefined;
     return cur.replace(/[\\/][^\\/]+$/, '');
   };
@@ -408,11 +435,11 @@ export function mountWindowApi(db: Database): MountResult {
   // main thread; Tauri uses tauri-plugin-dialog via a generic Rust command).
   type Pick = { canceled: boolean; path?: string };
   const pickFile = (title: string, exts?: string[], extLabel?: string): Promise<Pick> =>
-    invoke<Pick>('dialog_pick', { kind: 'openFile', title, extensions: exts, extensionLabel: extLabel });
+    unwrapAs<Pick>(commands.dialogPick('openFile', title, exts ?? null, extLabel ?? null, null));
   const pickFolder = (title: string): Promise<Pick> =>
-    invoke<Pick>('dialog_pick', { kind: 'openDirectory', title });
+    unwrapAs<Pick>(commands.dialogPick('openDirectory', title, null, null, null));
   const saveFile = (title: string, defaultName: string, exts?: string[], extLabel?: string): Promise<Pick> =>
-    invoke<Pick>('dialog_pick', { kind: 'saveFile', title, defaultName, extensions: exts, extensionLabel: extLabel });
+    unwrapAs<Pick>(commands.dialogPick('saveFile', title, exts ?? null, extLabel ?? null, defaultName));
 
   if (!api.gedcom) api.gedcom = {};
   api.gedcom.selectFile = () => pickFile('Select GEDCOM File', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
@@ -420,7 +447,7 @@ export function mountWindowApi(db: Database): MountResult {
   // GEDCOM import: read bytes via Rust, decode encoding-aware in JS, parse +
   // import via the existing api/ functions. The Electron build's worker
   // handler does the same flow but with sync fs.readFileSync; the renderer
-  // can't use fs so it goes through invoke('fs_read_bytes_base64').
+  // can't use fs so it goes through `commands.fsReadBytesBase64` (generated).
   api.gedcom.import = async (opts: unknown) => {
     const o = opts as { filePath?: string; mediaDir?: string; profile?: 'standard' | 'minimal' } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
@@ -431,7 +458,7 @@ export function mountWindowApi(db: Database): MountResult {
         import('../gedcom/parser'),
         import('../import/gedcom'),
       ]);
-      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
       const bytes = base64ToUint8Array(b64);
       const text = enc.decodeGedcomBytes(bytes);
       const tree = parserMod.parseGedcom(text);
@@ -459,7 +486,7 @@ export function mountWindowApi(db: Database): MountResult {
         import('../gedcom/parser'),
         import('../import/gedcom'),
       ]);
-      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
       const bytes = base64ToUint8Array(b64);
       const text = enc.decodeGedcomBytes(bytes);
       const tree = parserMod.parseGedcom(text);
@@ -482,7 +509,7 @@ export function mountWindowApi(db: Database): MountResult {
         version,
         exportOptions: o?.exportOptions as Parameters<typeof exporterMod.exportGedcom>[1]['exportOptions'],
       });
-      await invoke('fs_write_text', { path: r.path, contents: ged });
+      await unwrap(commands.fsWriteText(r.path, ged));
       return { exported: true, filePath: r.path, report };
     } catch (e) {
       return { canceled: false, error: String((e as Error)?.message || e) };
@@ -526,7 +553,7 @@ export function mountWindowApi(db: Database): MountResult {
     _importInProgress = true;
     try {
       const grampsMod = await import('../import/gramps');
-      const b64 = await invoke<string>('fs_read_bytes_base64', { path: o.filePath });
+      const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
       const bytes = base64ToUint8Array(b64);
       const result = await grampsMod.importFromGrampsBytes(getDb(), bytes, { onProgress: (m) => fireProgress('gramps', m) });
       fireDataChanged();
@@ -564,9 +591,9 @@ export function mountWindowApi(db: Database): MountResult {
       // sandbox might not grant Rust the same access on all platforms,
       // and (b) the .rmgc may live on a network share where read-only
       // SQLite open + journal probing is unreliable.
-      const b64 = await invoke<string>('fs_read_bytes_base64', { path });
+      const b64 = await unwrap(commands.fsReadBytesBase64(path));
       const baseName = path.split(/[\\/]/).pop() ?? 'rootsmagic.rmgc';
-      tempPath = await invoke<string>('fs_write_temp_bytes_base64', { name: baseName, b64 });
+      tempPath = await unwrap(commands.fsWriteTempBytesBase64(baseName, b64));
       secondary = await SecondaryDatabase.open(tempPath);
       const result = await rmMod.importFromRootsMagicDb(
         getDb(),
@@ -582,7 +609,7 @@ export function mountWindowApi(db: Database): MountResult {
         try { secondary.close(); } catch { /* ignore */ }
       }
       if (tempPath) {
-        try { await invoke('fs_remove_file', { path: tempPath }); } catch { /* ignore */ }
+        try { await unwrap(commands.fsRemoveFile(tempPath)); } catch { /* ignore */ }
       }
     }
   };
@@ -609,7 +636,7 @@ export function mountWindowApi(db: Database): MountResult {
     if (!o?.sourcePath) return { success: false, error: 'sourcePath is required' };
     let tempDir: string | null = null;
     try {
-      const cur = await invoke<string | null>('db_current_path');
+      const cur = await commands.dbCurrentPath();
       if (!cur) return { success: false, error: 'no DB open' };
       const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
       const dbBase = (cur.split(/[\\/]/).pop() ?? '').replace(/\.(db|sqlite|sqlite3)$/i, '');
@@ -617,13 +644,10 @@ export function mountWindowApi(db: Database): MountResult {
       const destMediaDir = `${dbDir}/${mediaFolderName}`;
 
       // Step 1 — bulk copy media folder if user provided one.
-      let bulkCopiedFromDir: string | undefined;
+      let bulkCopiedFromDir: string | null = null;
       if (o.mediaDir) {
         try {
-          const r = await invoke<{ copied: number; skipped: number; ms: number }>(
-            'holger_bulk_copy_media',
-            { srcDir: o.mediaDir, destDir: destMediaDir },
-          );
+          const r = await unwrap(commands.holgerBulkCopyMedia(o.mediaDir, destMediaDir));
           bulkCopiedFromDir = o.mediaDir;
           console.log(`[holger] bulk_copy_media — copied=${r.copied} skipped=${r.skipped} in ${r.ms}ms`);
         } catch (e) {
@@ -632,10 +656,7 @@ export function mountWindowApi(db: Database): MountResult {
       }
 
       // Step 2 — extract .ged bytes.
-      const extracted = await invoke<{ gedBytesB64: string; tempDir: string | null; gedName: string }>(
-        'holger_extract_ged',
-        { sourcePath: o.sourcePath },
-      );
+      const extracted = await unwrap(commands.holgerExtractGed(o.sourcePath));
       tempDir = extracted.tempDir;
       const gedBytes = base64ToUint8Array(extracted.gedBytesB64);
       console.log(`[holger] extract_ged — ${extracted.gedName} (${gedBytes.length} bytes)`);
@@ -664,10 +685,7 @@ export function mountWindowApi(db: Database): MountResult {
       fireProgress('holger', `Imported ${report?.persons ?? 0} persons; consolidating media…`);
 
       // Step 4 — copy + rewrite media file_refs.
-      const consol = await invoke<{ copied: number; skipped: number; missing: number; ms: number }>(
-        'holger_consolidate_media',
-        { dbPath: cur, bulkCopiedFromDir },
-      );
+      const consol = await unwrap(commands.holgerConsolidateMedia(cur, bulkCopiedFromDir));
       console.log(`[holger] consolidate_media — copied=${consol.copied} skipped=${consol.skipped} missing=${consol.missing} in ${consol.ms}ms`);
 
       fireDataChanged();
@@ -676,7 +694,7 @@ export function mountWindowApi(db: Database): MountResult {
       return { success: false, error: String((e as Error)?.message || e) };
     } finally {
       if (tempDir) {
-        try { await invoke('fs_remove_dir', { path: tempDir }); } catch { /* ignore */ }
+        try { await unwrap(commands.fsRemoveDir(tempDir)); } catch { /* ignore */ }
       }
     }
   };
@@ -715,7 +733,7 @@ export function mountWindowApi(db: Database): MountResult {
       const mediaReader = async (relPath: string): Promise<Uint8Array | null> => {
         try {
           const abs = dbDir ? `${dbDir}/${relPath}` : relPath;
-          const b64 = await invoke<string>('fs_read_bytes_base64', { path: abs });
+          const b64 = await unwrap(commands.fsReadBytesBase64(abs));
           return base64ToUint8Array(b64);
         } catch {
           return null;
@@ -727,7 +745,7 @@ export function mountWindowApi(db: Database): MountResult {
         { gedcomVersion: version },
       );
       const b64 = uint8ArrayToBase64(zipBytes);
-      await invoke('fs_write_bytes_base64', { path: r.path, b64 });
+      await unwrap(commands.fsWriteBytesBase64(r.path, b64));
       return { exported: true, filePath: r.path, report };
     } catch (e) {
       return { canceled: false, error: String((e as Error)?.message || e) };
@@ -744,20 +762,20 @@ export function mountWindowApi(db: Database): MountResult {
     if (r.canceled || !r.path) return { canceled: true };
     try {
       const archiveMod = await import('../api/archive_import');
-      const cur = await invoke<string | null>('db_current_path');
+      const cur = await commands.dbCurrentPath();
       if (!cur) return { canceled: false, error: 'no DB open' };
       const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
       const dbBase = (cur.split(/[\\/]/).pop() ?? '').replace(/\.(db|sqlite|sqlite3)$/i, '');
       const mediaFolderName = `${dbBase}-media`;
       const mediaDir = `${dbDir}/${mediaFolderName}`;
 
-      const b64 = await invoke<string>('fs_read_bytes_base64', { path: r.path });
+      const b64 = await unwrap(commands.fsReadBytesBase64(r.path));
       const zipBytes = base64ToUint8Array(b64);
 
       const mediaWriter = async (filename: string, bytes: Uint8Array): Promise<void> => {
         const dest = `${mediaDir}/${filename}`;
         const outB64 = uint8ArrayToBase64(bytes);
-        await invoke('fs_write_bytes_base64', { path: dest, b64: outB64 });
+        await unwrap(commands.fsWriteBytesBase64(dest, outB64));
       };
 
       const report = await archiveMod.importArchiveFromBytes(
@@ -823,7 +841,7 @@ export function mountWindowApi(db: Database): MountResult {
       .map(m => ({ id: m.id, fileRef: m.file_ref as string }));
     const previewMediaDataUrls = imageRefs.length === 0
       ? {} as Record<string, string>
-      : await invoke<Record<string, string>>('website_bake_preview_thumbnails', { mediaRefs: imageRefs });
+      : await unwrap(commands.websiteBakePreviewThumbnails(imageRefs));
     // Trim media (and dependent rows) to the items we actually inlined,
     // matching the Electron handler's behaviour so the preview gallery
     // shows real photos and no broken images.
@@ -837,7 +855,7 @@ export function mountWindowApi(db: Database): MountResult {
       preview_media_limit: String(PREVIEW_THUMB_COUNT),
       preview_media_total_linked: String(totalMediaInScope),
     };
-    const html = await invoke<string>('website_load_static_index_html');
+    const html = await unwrap(commands.websiteLoadStaticIndexHtml());
     // Shared with the test harness via src/shared/preview-html-inject.ts.
     // Throws when the marker is missing — silent no-op was the original
     // failure mode (blank iframe with a `fetch ./data.json` error from
@@ -911,10 +929,7 @@ export function mountWindowApi(db: Database): MountResult {
         const mediaRefs = snapshot.media
           .filter(m => !!m.file_ref)
           .map(m => ({ id: m.id, fileRef: m.file_ref as string }));
-        const r = await invoke<{ exportedIds: string[]; copied: number }>(
-          'website_export_media',
-          { destFullDir: fullDir, mediaRefs },
-        );
+        const r = await unwrap(commands.websiteExportMedia(fullDir, mediaRefs));
         exportedIds = new Set(r.exportedIds);
       }
 
@@ -937,12 +952,12 @@ export function mountWindowApi(db: Database): MountResult {
       const gzipped = gzipSync(textEncode(json), { level: 9 });
       const b64 = uint8ArrayToBase64(gzipped);
 
-      const html = await invoke<string>('website_load_static_index_html');
+      const html = await unwrap(commands.websiteLoadStaticIndexHtml());
       const tag = `<script>window.__SNAPSHOT_GZ__=${JSON.stringify(b64)};</script>`;
       const injected = html.includes('</head>')
         ? html.replace('</head>', `${tag}</head>`)
         : `${tag}${html}`;
-      await invoke('fs_write_text', { path: `${outDir}/index.html`, contents: injected });
+      await unwrap(commands.fsWriteText(`${outDir}/index.html`, injected));
 
       return { canceled: false, outputDir: outDir };
     } catch (e) {
@@ -960,7 +975,7 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.export) api.export = {};
   api.export.openFolder = async (folderPath: unknown) => {
     if (typeof folderPath !== 'string') return { ok: false };
-    await invoke('shell_reveal', { path: folderPath });
+    await unwrap(commands.shellReveal(folderPath));
     return { ok: true };
   };
 
@@ -973,14 +988,14 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.backup) api.backup = {};
   api.backup.backup = async () => {
     try {
-      const currentPath = await invoke<string | null>('db_current_path');
+      const currentPath = await commands.dbCurrentPath();
       if (!currentPath) return { success: false, error: 'No database open' };
       const base = (currentPath.split(/[\\/]/).pop() ?? 'family.db').replace(/\.db$/i, '');
       const today = new Date().toISOString().slice(0, 10);
       const defaultName = `${base}-backup-${today}.db`;
       const r = await saveFile('Spara säkerhetskopia', defaultName, ['db'], 'SQLite Database');
       if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
-      await invoke('fs_copy_file', { src: currentPath, dest: r.path });
+      await unwrap(commands.fsCopyFile(currentPath, r.path));
       return { success: true, path: r.path };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
@@ -1058,7 +1073,7 @@ export function mountWindowApi(db: Database): MountResult {
     const r = await saveFile('Save Wall Chart SVG', (typeof fileNameHint === 'string' ? fileNameHint : 'chart.svg'), ['svg'], 'SVG');
     if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
     try {
-      await invoke('fs_write_text', { path: r.path, contents: svgContent });
+      await unwrap(commands.fsWriteText(r.path, svgContent));
       return { success: true, path: r.path };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
@@ -1085,7 +1100,7 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.app) api.app = {};
   api.app.getVersion = async () => {
     try {
-      return await invoke<string>('app_version');
+      return await commands.appVersion();
     } catch {
       return 'unknown';
     }
@@ -1105,7 +1120,7 @@ export function mountWindowApi(db: Database): MountResult {
     // invoke fails — return '' so Settings → About shows an empty viewer
     // rather than a hard error.
     try {
-      return await invoke<string>('read_bundled_resource', { name: 'THIRD_PARTY_LICENSES.txt' });
+      return await unwrap(commands.readBundledResource('THIRD_PARTY_LICENSES.txt'));
     } catch {
       return '';
     }
@@ -1214,7 +1229,7 @@ export function mountWindowApi(db: Database): MountResult {
       if (result.error) return { success: false, error: result.error };
       const encoding = o.encoding ?? 'utf-8';
       const csvOut = encoding === 'utf-8-bom' ? '﻿' + (result.csv ?? '') : (result.csv ?? '');
-      await invoke('fs_write_text', { path: r.path, contents: csvOut });
+      await unwrap(commands.fsWriteText(r.path, csvOut));
       return { success: true, filePath: r.path };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
@@ -1276,8 +1291,8 @@ function deriveDbName(path: string): string {
 
 async function switchDbTo(path: string, createSchema: boolean): Promise<void> {
   // Close + reopen the global rusqlite connection on the Rust side.
-  await invoke('db_close');
-  await invoke('db_open', { path });
+  await commands.dbClose();
+  await unwrap(commands.dbOpen(path));
   // The shim's `dbInstance` is a renderer-side handle that proxies to the
   // global Rust connection — no per-instance state, so no re-construction
   // needed. Just (re-)init schema if creating new, then refresh the UI.
