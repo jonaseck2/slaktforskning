@@ -159,7 +159,18 @@ pub async fn run_import(
         args.push(s.to_string());
     }
 
-    let sidecar = sidecar.args(args);
+    // Route the Derby jar cache into a writable app-cache subdir so the
+    // importer's `ensureJars` can download into it on first use. Without
+    // this the cache defaults to `<bundle>/src/import/genney/lib/` which is
+    // read-only inside a packaged macOS .app. Best-effort: if app_cache_dir
+    // isn't resolvable, fall through and let ensureJars use its default.
+    let mut sidecar = sidecar.args(args);
+    if let Ok(cache_dir) = app.path().app_cache_dir() {
+        let lib_dir = cache_dir.join("genney").join("lib");
+        if std::fs::create_dir_all(&lib_dir).is_ok() {
+            sidecar = sidecar.env("GENNEY_LIB_DIR", lib_dir.to_string_lossy().to_string());
+        }
+    }
 
     let (mut rx, _child) = sidecar
         .spawn()

@@ -72,7 +72,12 @@ const DERBY_JARS = [
 ];
 const MAVEN_BASE = `https://repo1.maven.org/maven2/org/apache/derby`;
 
-const LIB_DIR = path.join(__dirname, 'lib');
+// Where downloaded Derby jars + a runtime copy of DerbyExtractor.java live.
+// Default: next to the importer source (the dev / Electron / sidecar-cwd path).
+// Override via the GENNEY_LIB_DIR env var so the Tauri Bun sidecar can route
+// the cache into a writable app-cache directory (the packaged bundle's
+// resource_dir is read-only on macOS).
+const LIB_DIR = process.env.GENNEY_LIB_DIR || path.join(__dirname, 'lib');
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
