@@ -71,6 +71,29 @@ interface ImportCase {
   spotCheckName?: string;
 }
 
+// Deferred coverage — native binary importer formats
+// ===================================================
+// The cases below cover each importer's GEDCOM-export dialect path via
+// gedcom.import (and import.holgerRun for the holger profile). That covers
+// the importer LOGIC, where almost all regressions actually happen.
+//
+// Native binary format DECODING is NOT covered here:
+//   - Genney .gcc / .backup (XML inside a zip)
+//   - RootsMagic .rmgc / .rmtree (SQLite database file)
+//   - Gramps .gramps / .gpkg (XML, optionally zipped with media)
+//   - Holger .zip with embedded media (the bare-.ged case below skips the
+//     zip-extract + Windows-path-remap branch)
+//
+// Un-defer trigger (one is enough):
+//   (a) A native-format regression escapes into production and a user
+//       reports it. Add the failing case + minimal fixture as a regression
+//       test (this is the canonical "test the bug we just fixed" path).
+//   (b) A contributor with the source apps wants to author fixtures.
+//       Spec: a tiny 3-person family tree exported from each app to its
+//       native binary format, committed under
+//       tests/e2e/fixtures/imports/<format>.
+//
+// Until then, the GEDCOM-dialect cases below are the right cost/value point.
 const CASES: ImportCase[] = [
   // --- GEDCOM 5.5.1 -------------------------------------------------------
   // tests/fixtures/gedcom/minimal.ged has 1 INDI ("Anna Svensson") + 1 SUBM.

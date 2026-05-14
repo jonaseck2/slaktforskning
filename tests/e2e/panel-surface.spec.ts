@@ -45,11 +45,19 @@ async function getSectionRowCount(driver: AppDriver, sectionTitle: string): Prom
       const body = header.parentElement?.querySelector('.panel-section-body');
       if (!body) return 0;
       // Tables (events, names) — count tbody rows. Lists (groups, tasks) —
-      // count clickable-row instances.
+      // count clickable-row. LinkedXSection (MediaPanel Linked Persons /
+      // Places) renders one .linked-row per linked entity.
+      //
+      // NOT counted here: .timeline-entry. Timeline components are derived
+      // views over the canonical Events section; per Surface Contract
+      // check 3, the row-level edit/delete lifecycle lives on the canonical
+      // primary section, not on every derived rendering of the same data.
+      // Skipping check 3 for Timeline sections is the correct behaviour.
       const trRows = body.querySelectorAll('tbody tr').length;
       if (trRows > 0) return trRows;
       const clickableRows = body.querySelectorAll('.clickable-row').length;
-      return clickableRows;
+      if (clickableRows > 0) return clickableRows;
+      return body.querySelectorAll('.linked-row').length;
     })()
   `);
 }
@@ -474,7 +482,15 @@ function runSection(
         }
         const rowCount = await getSectionRowCount(driver, section.title);
         if (rowCount === 0) {
-          test.skip(true, `No rows in section "${section.title}" to inspect — pilot pre-seeds only Events/Names/People.`);
+          // Deferred: this runtime skip fires when a section's UI doesn't render
+          // rows via any of the helpers' recognised selectors (tbody tr /
+          // .clickable-row / .linked-row). Known cases:
+          //   - PersonPanel.Life map: leaflet map widget; markers, not rows.
+          //   - PersonPanel.Timeline / PlacePanel.Timeline: derived view of
+          //     events; lifecycle-parity lives on the canonical Events section.
+          // Un-defer trigger: a section adopts a row-shaped UI that fits one
+          // of the existing patterns, OR a new affordance helper is added.
+          test.skip(true, `[${descriptor.name}] no rows in section "${section.title}" to inspect — see Deferred comment in panel-surface.spec.ts.`);
           return;
         }
         const affordances = await driver.executeJs<{ edit: boolean; deleteOrUnlink: boolean }>(`
