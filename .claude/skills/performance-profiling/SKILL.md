@@ -351,3 +351,32 @@ When a user reports CPU saturation or slowness:
 7. [ ] Apply the appropriate fix (4-way JOIN → 2-query+JS, NOT EXISTS → Set, N+1 → bulk)
 8. [ ] `npm test` — all tests must pass before declaring done
 9. [ ] Re-run to verify the hot function is gone from the profile
+
+---
+
+## Baseline Storage Convention
+
+Before-and-after CPU profiles for any refactor with a perf claim live at
+`docs/baseline-perf/YYYY-MM-DD/`. Each dated directory contains:
+
+- `<workload>-rust.json` — samply Rust-side profile (gecko-profile JSON)
+- `<workload>-rust.syms.json` — symbol sidecar (auto-discovered by `samply load`)
+- `<workload>-renderer.cpuprofile` — Chromium DevTools / Safari Web Inspector trace (when GUI-driven)
+- `summary.md` — wall-clock + top-3 self-time per workload + observation paragraph
+
+The first such baseline lives at [`docs/baseline-perf/2026-05-14/`](../../../docs/baseline-perf/2026-05-14/summary.md)
+(boot + place-resolve + dedup, Rust-side only). View any profile interactively:
+
+```
+samply load docs/baseline-perf/2026-05-14/<workload>-rust.json
+```
+
+When closing out a perf refactor that claims to speed up workload X:
+1. Capture an after-trace into `docs/baseline-perf/<after-date>/` using the same
+   capture command listed in the prior `summary.md`.
+2. Compare wall-clock + top-3 self-time deltas in the close-out commit message.
+3. The plan's Verification section must name the specific row(s) it expects to move.
+
+Renderer-side capture on macOS Tauri requires Safari Web Inspector (WKWebView; no
+Chromium DevTools). On Linux/Windows, the renderer is a Chromium-family webview
+and the standard `.cpuprofile` workflow applies.
