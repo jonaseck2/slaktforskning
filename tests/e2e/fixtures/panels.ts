@@ -1,10 +1,14 @@
 /**
- * Pilot panel descriptors — Task 2 of the e2e-expansion plan.
+ * Panel descriptors — Tasks 2 (pilot) + 3 (fan-out) of the e2e-expansion plan.
  *
- * Two panels (PersonPanel + PlacePanel) — the two with the most historical
- * Surface Contract bugs (`+ Add person` orphan, `+ Event` lying handler,
- * Persons-section derived-view confusion). Validates the data-driven shape
- * before fan-out in Task 3.
+ * Task 2 piloted two panels with the most historical Surface Contract bugs
+ * (PersonPanel + PlacePanel — `+ Add person` orphan, `+ Event` lying handler,
+ * Persons-section derived-view confusion). Task 3 fans the same descriptors
+ * out to every remaining right-side panel: Source, Group, ResearchTask, Media,
+ * Report, Website. ExportOptionsPanel is intentionally excluded — its leading
+ * HTML comment documents it as NOT a right-side panel (embedded options card,
+ * not migrated to EntityPanel). Section titles + CTA labels verified against
+ * the running binary in `en` locale on 2026-05-14.
  *
  * Each section declares a `kind` that tells the runner what flavour of CTA
  * it has and how to exercise the four Surface Contract checks.
@@ -60,12 +64,38 @@ export interface PanelSection {
 
 export interface PanelDescriptor {
   /** Display name in test output. */
-  name: 'PersonPanel' | 'PlacePanel';
-  /** Seed the host entity + one row per add-shaped section. Returns the host id. */
+  name:
+    | 'PersonPanel'
+    | 'PlacePanel'
+    | 'SourcePanel'
+    | 'GroupPanel'
+    | 'ResearchTaskPanel'
+    | 'MediaPanel'
+    | 'ReportPanel'
+    | 'WebsitePanel';
+  /**
+   * Seed the host entity + one row per add-shaped section. Returns the host id.
+   * For host-less panels (Report / Website — configuration forms) return any
+   * stable placeholder; the runner won't pass it to a route helper.
+   */
   seed: (driver: AppDriver) => Promise<string>;
-  /** Build the panel route from the seeded host id. */
+  /**
+   * Build the panel route from the seeded host id. For MediaPanel — which has
+   * no /media/:id route — return `/media` and pair with `selectAfterNavigate`.
+   */
   route: (id: string) => string;
-  /** What the host name reads as in-DOM (used for host-flows-in assertions). */
+  /**
+   * Optional hook fired after the runner navigates to `route(id)`. Used for
+   * MediaPanel: clicks the row matching the seeded host so the panel mounts
+   * with the right selection. Receives a driver-like proxy that can run JS
+   * inside the renderer.
+   */
+  selectAfterNavigate?: (driver: AppDriver, id: string) => Promise<void>;
+  /**
+   * What the host name reads as in-DOM (used for host-flows-in assertions).
+   * Empty string for host-less config panels (Report / Website) — the runner
+   * skips the host-name assertion when this is empty.
+   */
   hostName: string;
   /** Sections to verify, in display order. */
   sections: PanelSection[];
@@ -119,6 +149,196 @@ export const PANELS: PanelDescriptor[] = [
       { title: 'Quality', ctaLabel: null, kind: 'none' },
     ],
     hostDeletable: true,
+  },
+
+  {
+    name: 'SourcePanel',
+    hostName: 'Test Source',
+    seed: async (driver) => {
+      const s = await mutateViaMcp<{ id: string }>(driver, 'sources.create', {
+        title: 'Test Source',
+      });
+      // Pre-seed one citation so the Citations section has a row for
+      // lifecycle-parity (edit + delete affordance check).
+      const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
+        given_name: 'Cited',
+        surname: 'Person',
+        sex: 'U',
+      });
+      await mutateViaMcp(driver, 'citations.create', {
+        source_id: s.id,
+        person_id: person.id,
+        confidence: 3, // numeric (0..3), see CONFIDENCE_LEVEL_VALUES
+      });
+      return s.id;
+    },
+    route: (id) => `/sources/${id}`,
+    sections: [
+      { title: 'Source Details', ctaLabel: null, kind: 'none' },
+      // CitationModal title is `citations.addTitle` (no host name) — but the
+      // sourceId flows in via prop, verified behaviourally by count++.
+      { title: 'Citations', ctaLabel: '+ Citation', kind: 'modal-anonymous' },
+      { title: 'Media', ctaLabel: '+ Media', kind: 'media-attach' },
+      { title: 'Quality', ctaLabel: null, kind: 'none' },
+    ],
+    hostDeletable: true,
+  },
+
+  {
+    name: 'GroupPanel',
+    hostName: 'Test Group',
+    seed: async (driver) => {
+      const g = await mutateViaMcp<{ id: string }>(driver, 'groups.create', {
+        name: 'Test Group',
+      });
+      // Pre-seed one person + link so the People section has a row for
+      // lifecycle-parity.
+      const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
+        given_name: 'Group',
+        surname: 'Member',
+        sex: 'U',
+      });
+      // groups:addLink takes positional args: (groupId, entityType, entityId).
+      await mutateViaMcp(driver, 'groups.addLink', g.id, 'person', person.id);
+      return g.id;
+    },
+    route: (id) => `/groups/${id}`,
+    sections: [
+      // "Groups" header is the group-info section title — counterintuitive,
+      // but it's the host details (`groups.title` = 'Groups' in en).
+      { title: 'Groups', ctaLabel: null, kind: 'none' },
+      // All three link sections share the same `+ Add` label (LinkedXSection
+      // pattern). Each opens an inline picker scoped to the host group.
+      { title: 'People', ctaLabel: '+ Add', kind: 'picker' },
+      { title: 'Places', ctaLabel: '+ Add', kind: 'picker' },
+      { title: 'Media', ctaLabel: '+ Add', kind: 'picker' },
+    ],
+    hostDeletable: true,
+  },
+
+  {
+    name: 'ResearchTaskPanel',
+    hostName: 'Test research task',
+    seed: async (driver) => {
+      const t = await mutateViaMcp<{ id: string }>(driver, 'researchTasks.create', {
+        task: 'Test research task',
+      });
+      // Pre-seed one linked person so People has a row.
+      const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
+        given_name: 'Task',
+        surname: 'Subject',
+        sex: 'U',
+      });
+      // researchTasks:addLink takes positional args: (taskId, entityType, entityId).
+      await mutateViaMcp(driver, 'researchTasks.addLink', t.id, 'person', person.id);
+      return t.id;
+    },
+    route: (id) => `/research-tasks/${id}`,
+    sections: [
+      // 'Task' is the task-detail section title (researchTasks.task = 'Task').
+      { title: 'Task', ctaLabel: null, kind: 'none' },
+      { title: 'People', ctaLabel: '+ Add', kind: 'picker' },
+      { title: 'Places', ctaLabel: '+ Add', kind: 'picker' },
+      { title: 'Media', ctaLabel: '+ Add', kind: 'picker' },
+    ],
+    hostDeletable: true,
+  },
+
+  {
+    name: 'MediaPanel',
+    // MediaPanel renders the title inside an editable input, not a static
+    // .panel-name span. Host-flows-in check still works because the inline
+    // pickers are scoped to the host media id (verified behaviourally), but
+    // we leave hostName empty to skip the dialog-title assertion.
+    hostName: '',
+    seed: async (driver) => {
+      const m = await mutateViaMcp<{ id: string }>(driver, 'media.create', {
+        // file_ref is optional; tests don't need a real file because none of
+        // the descriptor's CTAs are `media-attach`. Skipping the file fixture
+        // keeps the seed minimal.
+        title: 'Test Media',
+      });
+      // Pre-seed one linked person so Linked Persons has a row.
+      const person = await mutateViaMcp<{ id: string }>(driver, 'persons.create', {
+        given_name: 'Media',
+        surname: 'Subject',
+        sex: 'U',
+      });
+      await mutateViaMcp(driver, 'media.addLink', {
+        media_id: m.id,
+        entity_type: 'person',
+        entity_id: person.id,
+      });
+      return m.id;
+    },
+    // /media/:id doesn't exist — MediaView uses stateful selection.
+    // selectAfterNavigate (below) clicks the matching list row to mount the panel.
+    route: () => '/media',
+    selectAfterNavigate: async (driver, id) => {
+      await driver.executeJs(`
+        (async () => {
+          await new Promise(r => setTimeout(r, 500));
+          // The MediaView card/row has a clickable element that, when clicked,
+          // sets selectedMediaId. Find by title (we seeded with 'Test Media').
+          const candidates = [...document.querySelectorAll('.media-card, .clickable-row')];
+          const card = candidates.find(el => el.textContent?.includes('Test Media'));
+          if (card) {
+            card.click();
+            await new Promise(r => setTimeout(r, 400));
+          }
+        })()
+      `);
+    },
+    sections: [
+      { title: 'Caption', ctaLabel: null, kind: 'none' },
+      // `+ Person` and `+ Place` open inline picker-wrap pickers scoped to
+      // this media. The picker-wrap selector is recognised by the spec's
+      // hasInlinePicker helper.
+      { title: 'Linked Persons', ctaLabel: '+ Person', kind: 'picker' },
+      // Face Tags `+ Draw` toggles draw mode on the viewer — it's not a CTA
+      // that creates a primitive on click in the panel. Tagged as `none` to
+      // skip the modal/picker checks; section-renders still fires.
+      // TODO: face-tag draw-mode is a unique surface that warrants its own
+      // SectionKind and a viewer-roundtrip test. Out of scope for Task 3.
+      { title: 'Face Tags', ctaLabel: null, kind: 'none' },
+      { title: 'Linked Places', ctaLabel: '+ Place', kind: 'picker' },
+      // Linked Events has no CTA in the panel — events link via the event
+      // modal's media attachment. No label-lie risk.
+      { title: 'Linked Events', ctaLabel: null, kind: 'none' },
+      { title: 'Quality', ctaLabel: null, kind: 'none' },
+    ],
+    hostDeletable: true,
+  },
+
+  {
+    name: 'ReportPanel',
+    // Config form, no host entity, no danger zone — `hostName: ''` opts the
+    // spec out of host-name and Danger-zone assertions.
+    hostName: '',
+    seed: async () => 'report',
+    route: () => '/reports',
+    sections: [
+      // Default report tab is 'alife' → subjectSectionTitle = 'Person'.
+      { title: 'Person', ctaLabel: null, kind: 'none' },
+      { title: 'Header & footer', ctaLabel: null, kind: 'none' },
+      { title: 'Options', ctaLabel: null, kind: 'none' },
+    ],
+    hostDeletable: false,
+  },
+
+  {
+    name: 'WebsitePanel',
+    hostName: '',
+    seed: async () => 'website',
+    route: () => '/website',
+    sections: [
+      { title: 'Focus person', ctaLabel: null, kind: 'none' },
+      { title: 'Data scope', ctaLabel: null, kind: 'none' },
+      { title: 'Privacy', ctaLabel: null, kind: 'none' },
+      { title: 'Include', ctaLabel: null, kind: 'none' },
+      { title: 'Site', ctaLabel: null, kind: 'none' },
+    ],
+    hostDeletable: false,
   },
 
   {

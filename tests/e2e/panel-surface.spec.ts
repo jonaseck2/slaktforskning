@@ -132,8 +132,13 @@ async function probeDialog(driver: AppDriver): Promise<DialogProbe> {
 
 /** True if the panel has an inline picker / media-attach picker visible. */
 async function hasInlinePicker(driver: AppDriver): Promise<boolean> {
+  // `.add-row` covers LinkedPersonsSection / LinkedPlacesSection /
+  // LinkedMediaSection (Group + ResearchTask panels). `.picker-wrap` covers
+  // MediaPanel's PersonPicker / PlacePicker inline pickers. The older
+  // `.panel-group-picker-wrap` / `.group-picker` / `.task-picker` /
+  // `.media-picker` selectors stay for PersonPanel + PlacePanel coverage.
   return driver.executeJs<boolean>(`
-    !!document.querySelector('.panel-group-picker-wrap, .group-picker, .task-picker, .media-picker')
+    !!document.querySelector('.panel-group-picker-wrap, .group-picker, .task-picker, .media-picker, .add-row, .picker-wrap')
   `);
 }
 
@@ -158,8 +163,13 @@ async function closeDialog(driver: AppDriver): Promise<void> {
 async function closePicker(driver: AppDriver): Promise<void> {
   await driver.executeJs(`
     (() => {
+      // .add-row's ghost cancel button covers LinkedXSection pickers
+      // (Group + ResearchTask panels). The first one found is enough.
       const cancel = document.querySelector('.add-row .app-btn--ghost');
       if (cancel) { cancel.click(); return; }
+      // MediaPanel's picker-wrap has its own ghost cancel button.
+      const mediaCancel = document.querySelector('.picker-wrap .app-btn--ghost');
+      if (mediaCancel) { mediaCancel.click(); return; }
       // Group/Task pickers — find the visible picker, then toggle its section's
       // CTA to dismiss. Mirrors the panel's @action="showXPicker = !showXPicker".
       const picker = document.querySelector('.panel-group-picker-wrap');
@@ -183,11 +193,32 @@ async function fillModalAndSave(driver: AppDriver, marker: string): Promise<bool
     (async () => {
       const dialog = document.querySelector('[role=dialog]');
       if (!dialog) return false;
-      // Prefer "Original wording" text input (Event modal); fall back to first
-      // text input (Name modal: Given Name).
-      const orig = dialog.querySelector('input[placeholder*="Original"]')
-                || dialog.querySelector('input[type=text]:not([readonly])')
-                || dialog.querySelector('textarea');
+      // Prefer "Original wording" text input (Event modal); fall back to the
+      // first non-readonly text input that is NOT inside a combobox / picker.
+      // Picker inputs (SourcePicker, PersonPicker) interpret synthetic
+      // input events as the user typing a new search query and *clear* the
+      // model value — which makes save() bail. Avoiding them keeps the saved
+      // source/person id intact.
+      const skipPickerInputs = (el) => {
+        let cur = el;
+        while (cur && cur !== dialog) {
+          if (
+            cur.getAttribute && (
+              cur.getAttribute('role') === 'combobox' ||
+              cur.classList?.contains('source-picker') ||
+              cur.classList?.contains('person-picker') ||
+              cur.classList?.contains('place-picker') ||
+              cur.classList?.contains('picker-wrap')
+            )
+          ) return false;
+          cur = cur.parentElement;
+        }
+        return true;
+      };
+      const allInputs = [
+        ...dialog.querySelectorAll('input[placeholder*="Original"], input[type=text]:not([readonly]), input:not([type]):not([readonly]), textarea'),
+      ].filter(skipPickerInputs);
+      const orig = allInputs[0] ?? null;
       if (orig) {
         const proto = orig.tagName === 'TEXTAREA'
           ? HTMLTextAreaElement.prototype
@@ -228,6 +259,10 @@ for (const descriptor of PANELS) {
       hostId = await descriptor.seed(driver);
       await driver.navigate(descriptor.route(hostId));
       await driver.settle(500);
+      if (descriptor.selectAfterNavigate) {
+        await descriptor.selectAfterNavigate(driver, hostId);
+        await driver.settle(300);
+      }
     });
 
     test.afterAll(async () => {
@@ -259,6 +294,10 @@ for (const descriptor of PANELS) {
           })()
         `);
         await driver.settle(400);
+        if (descriptor.selectAfterNavigate) {
+          await descriptor.selectAfterNavigate(driver, hostId);
+          await driver.settle(300);
+        }
       } catch (err) {
         console.error('[beforeEach]', err);
       }
@@ -281,6 +320,26 @@ for (const descriptor of PANELS) {
         ).toMatch(/panel-danger-zone/);
       });
     }
+
+    // ---- Panel-level: floor assertion (mount + visible header) -------------
+    //
+    // Every panel — including host-less config panels (Report / Website) that
+    // don't have a Danger-zone — must mount with a visible `.panel-name`
+    // header. This is the minimum a user can see; if the panel fails to
+    // render, every other Surface Contract check is meaningless.
+    test('panel mounts with a visible header', async () => {
+      // `.panel-role-label` is owned by the EntityPanel shell — every panel
+      // renders it from `:label`. It's the most robust mount-sanity probe
+      // across panels with custom header slots (PersonPanel + MediaPanel
+      // replace .panel-name with their own summary card / title input).
+      const roleLabel = await driver.executeJs<string | null>(`
+        document.querySelector('.panel-role-label')?.textContent?.trim() ?? null
+      `);
+      expect(
+        roleLabel,
+        `${descriptor.name} must render a non-empty .panel-role-label (panel mount sanity — EntityPanel shell rendered).`,
+      ).toBeTruthy();
+    });
   });
 }
 
@@ -424,11 +483,20 @@ function runSection(
             const header = headers.find(h => h.querySelector('.section-title')?.textContent === ${JSON.stringify(section.title)});
             const body = header?.parentElement?.querySelector('.panel-section-body');
             if (!body) return { edit: false, deleteOrUnlink: false };
-            // Edit: row is a button OR has aria-label starting with "Edit ", OR an explicit edit button.
-            const editRow = body.querySelector('[aria-label^="Edit "], .clickable-row, [role=button][tabindex]');
-            // Delete or unlink button.
+            // Edit: row is a button OR has aria-label starting with "Edit ", OR an
+            // explicit edit button, OR (LinkedXSection pattern) a router-link
+            // back to the linked entity — that's how Group/ResearchTask panels
+            // surface "edit this row's entity" since the modal lives on the
+            // navigated-to entity's panel.
+            const editRow = body.querySelector('[aria-label^="Edit "], .clickable-row, [role=button][tabindex], .person-link, a[href^="#/persons/"], a[href^="#/places/"], a[href^="#/media"]');
+            // Delete or unlink button. Accept either the "Delete <item>"
+            // a11y shape (LinkedXSection rows) or the bare "Delete" /
+            // "Remove" label (SourcePanel Citations: aria-label is just
+            // common.delete = "Delete" with no item suffix). Also accept the
+            // raw icon-trash class as a fallback for rows that render IconTrash
+            // inside a ghost button.
             const delBtn = body.querySelector(
-              '.btn-delete, button[aria-label^="Delete "], button[aria-label^="Unlink "], button[aria-label^="Remove "], .icon-trash, .icon-unlink'
+              '.btn-delete, button[aria-label^="Delete"], button[aria-label^="Unlink"], button[aria-label^="Remove"], .icon-trash, .icon-unlink'
             );
             return {
               edit: !!editRow,
