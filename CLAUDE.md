@@ -165,6 +165,8 @@ npx tsx src/mcp/server.ts  # Run MCP server standalone (Node-host path, for non-
 
 The Rust core takes ~3 s to incrementally recompile on `src-tauri/` changes; renderer changes are instant via Vite HMR. The first build on a cold `target/` cache takes 5–10 minutes — that's expected; the dependency graph is large.
 
+**Type-driven Specta coupling is enforced by `vue-tsc`, not bare `tsc`.** Renaming a Rust command parameter or changing its type regenerates `src/renderer/bindings.ts` on the next `cargo build`. `npx vue-tsc --noEmit --ignoreDeprecations 6.0` will then flag every renderer call site that no longer matches. The bare `npx tsc --noEmit` doesn't reach the call sites because the project's TypeScript pin's `@types/node` lib types fail to parse — CI uses `vue-tsc` for this reason.
+
 Reference docs (load on demand): `docs/PLAN.md` (roadmap), `docs/DATA_MODEL.md`, `docs/MCP.md`, `docs/IPC_REFERENCE.md`, `.claude/napkin.md`.
 
 ## Skills
