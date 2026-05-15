@@ -1,6 +1,6 @@
 # Shared `<AppSidebar>` Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Use the project-local `subagent-handoff` skill for dispatch (centers user goals over spec compliance). Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Use the project-local `subagent-handoff` skill for dispatch (centers user goals over spec compliance). Steps use checkbox (`- [x]`) syntax for tracking.
 
 ## User goal
 
@@ -85,7 +85,7 @@ Per `.claude/rules/plans.md`: "if every one of these passes, can the user goal s
 **Files:**
 - Create: `tests/components/app-settings-panel.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -174,12 +174,12 @@ describe('AppSettingsPanel', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- tests/components/app-settings-panel.test.ts`
 Expected: FAIL with `Cannot find module '.../AppSettingsPanel.vue'` (component doesn't exist yet)
 
-- [ ] **Step 3: Commit the failing test**
+- [x] **Step 3: Commit the failing test**
 
 ```bash
 git add tests/components/app-settings-panel.test.ts
@@ -193,14 +193,14 @@ git commit -m "test(components): component-shape spec for AppSettingsPanel"
 **Files:**
 - Create: `src/renderer/components/AppSettingsPanel.vue`
 
-- [ ] **Step 1: Class-name collision check**
+- [x] **Step 1: Class-name collision check**
 
 ```bash
 grep -RIn '\.app-settings-panel\b' src/renderer/styles/ src/renderer/components/ src/renderer/views/ | grep -v ':// '
 ```
 Expected: no hits in `shared.css` or `tokens.css`. If a hit appears, choose a different root class. The `.settings-panel`, `.settings-toggle`, `.settings-row`, `.settings-option`, `.settings-group-label` classes referenced INSIDE the component already exist in `shared.css` — the component reuses them, doesn't redefine.
 
-- [ ] **Step 2: Write the component**
+- [x] **Step 2: Write the component**
 
 ```vue
 <template>
@@ -362,12 +362,12 @@ onMounted(() => {
 </script>
 ```
 
-- [ ] **Step 3: Run the test and verify it passes**
+- [x] **Step 3: Run the test and verify it passes**
 
 Run: `npm test -- tests/components/app-settings-panel.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/components/AppSettingsPanel.vue
@@ -381,7 +381,7 @@ git commit -m "feat(components): extract AppSettingsPanel shared between rendere
 **Files:**
 - Modify: `src/renderer/App.vue` — replace BOTH settings-panel sites (vertical sidebar block at ~lines 90–137, horizontal topbar block at ~lines 214–266) with `<AppSettingsPanel variant="renderer">`. Also delete the now-unused state refs and handlers (`appearance`, `currentTheme`, `textSize`, `navOrientation`, `addBtnStyle`, `setAppearance`, `setTheme`, `setTextSize`, `setNavOrientation`, `setAddBtnStyle`, `applyTextSize`, `APPEARANCE_I18N`, `TEXT_SIZE_I18N`, `THEME_CLASSES`, plus the `setLocale` helper that the component now owns) from the `<script setup>` block.
 
-- [ ] **Step 1: Identify what the rest of App.vue still needs from these refs**
+- [x] **Step 1: Identify what the rest of App.vue still needs from these refs**
 
 Search for usage of each ref outside the soon-to-be-removed settings-panel markup:
 
@@ -391,7 +391,7 @@ grep -n "navOrientation\|appearance\|currentTheme\|textSize\|addBtnStyle" src/re
 
 Expected hits in App.vue OUTSIDE the deleted blocks: `:class="['app', 'app--' + navOrientation]"` on `<div class="app">` (line ~2), `v-if="navOrientation === 'vertical'"` on the nav element (line ~4), `v-else` on the topbar header (line ~141). Those usages stay; we need to keep a reactive `navOrientation` in App.vue. The simplest bridge: App.vue reads `localStorage.getItem('slaktforskning-nav-orientation')` into a local ref, and the `app-settings-changed` CustomEvent dispatched by AppSettingsPanel updates that ref. Add the listener in `onMounted` and clean up in `onUnmounted`.
 
-- [ ] **Step 2: Add the bridge ref in App.vue script**
+- [x] **Step 2: Add the bridge ref in App.vue script**
 
 Insert near the top of `<script setup>` (replacing the deleted `navOrientation` definition):
 
@@ -409,7 +409,7 @@ onUnmounted(() => window.removeEventListener('app-settings-changed', onSettingsC
 
 Delete the corresponding old `navOrientation` ref, `setNavOrientation()` function, the inline localStorage setup that lived in `onMounted`, and the `setTheme/setAppearance/setTextSize/setAddBtnStyle/applyTextSize` definitions plus their `onMounted` calls — the component now owns all of those.
 
-- [ ] **Step 3: Replace the vertical-sidebar settings block**
+- [x] **Step 3: Replace the vertical-sidebar settings block**
 
 In the template, find the block starting around line 90 (`<div class="settings-section">`) and ending around line 137 (`</div>` matching that section). Replace with:
 
@@ -423,22 +423,22 @@ Add the import at the top of `<script setup>`:
 import AppSettingsPanel from './components/AppSettingsPanel.vue';
 ```
 
-- [ ] **Step 4: Replace the horizontal-topbar settings block**
+- [x] **Step 4: Replace the horizontal-topbar settings block**
 
 In the template, find the block at ~lines 214–266 (`<div class="topbar-settings">` containing a settings-panel). Replace the inner `<div v-if="isSettingsOpen" class="settings-panel topbar-settings-panel">...</div>` content with `<AppSettingsPanel variant="renderer" />` — leaving the surrounding `<div class="topbar-settings">` wrapper that positions it. The component renders its own `.settings-toggle` button; remove the `<button class="topbar-settings-toggle">` wrapper and its `isSettingsOpen` toggling. (The component owns `isOpen` internally.)
 
 After this edit, the only remaining usage of `isSettingsOpen` in App.vue should be zero — delete the `const isSettingsOpen = ref(false)` declaration too.
 
-- [ ] **Step 5: Run unit tests**
+- [x] **Step 5: Run unit tests**
 
 Run: `npm test -- tests/components`
 Expected: all green. Existing tests must not regress; the new AppSettingsPanel test still passes.
 
-- [ ] **Step 6: Smoke the running app**
+- [x] **Step 6: Smoke the running app**
 
 Run: `npm start`. Open the app, click 🎨 in vertical sidebar — settings panel opens, every row works (toggle dark mode, switch theme, change text size). Switch nav orientation to horizontal — same panel works in the topbar. Restart app — settings persisted. Close.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/App.vue
@@ -452,7 +452,7 @@ git commit -m "refactor(renderer): adopt AppSettingsPanel in vertical sidebar + 
 **Files:**
 - Modify: `src/static/App.vue` — settings block (~lines 36–67) replaced by `<AppSettingsPanel variant="static">`. Delete the corresponding refs/handlers (`appearance`, `currentTheme`, `textSize`, `setAppearance`, `setTheme`, `setTextSize`, `applyTextSize`, `APPEARANCE_I18N`, `TEXT_SIZE_I18N`, `THEME_CLASSES`, `setLocale`, `isSettingsOpen`) from `<script setup>`.
 
-- [ ] **Step 1: Import + replace the block**
+- [x] **Step 1: Import + replace the block**
 
 In `<script setup>` add:
 
@@ -462,16 +462,16 @@ import AppSettingsPanel from '../renderer/components/AppSettingsPanel.vue';
 
 In template, replace `<div class="settings-section">…</div>` with `<AppSettingsPanel variant="static" />`. Delete the deprecated script state listed above.
 
-- [ ] **Step 2: Run static SPA in dev**
+- [x] **Step 2: Run static SPA in dev**
 
 Run: `npm run dev:static`. Open http://localhost:5174 — confirm settings panel works (light/dark, theme, text size, read aloud, language). Renderer-only rows (menu layout, add-button style) are NOT shown. Refresh — settings persist. Close.
 
-- [ ] **Step 3: Run the existing unit/component test suite**
+- [x] **Step 3: Run the existing unit/component test suite**
 
 Run: `npm test`
 Expected: green.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/static/App.vue
@@ -485,7 +485,7 @@ git commit -m "refactor(static): adopt AppSettingsPanel"
 **Files:**
 - Create: `tests/components/app-sidebar-shape.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -589,12 +589,12 @@ describe('AppSidebar', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify fail**
+- [x] **Step 2: Run, verify fail**
 
 Run: `npm test -- tests/components/app-sidebar-shape.test.ts`
 Expected: FAIL — `Cannot find module '.../AppSidebar.vue'`.
 
-- [ ] **Step 3: Commit failing test**
+- [x] **Step 3: Commit failing test**
 
 ```bash
 git add tests/components/app-sidebar-shape.test.ts
@@ -609,14 +609,14 @@ git commit -m "test(components): structural spec for AppSidebar"
 - Create: `src/renderer/components/AppSidebarTypes.ts`
 - Create: `src/renderer/components/AppSidebar.vue`
 
-- [ ] **Step 1: Class-name collision check**
+- [x] **Step 1: Class-name collision check**
 
 ```bash
 grep -RIn '\.app-sidebar\b' src/renderer/styles/ src/renderer/components/ src/renderer/views/ | grep -v ':// '
 ```
 Expected: no hits.
 
-- [ ] **Step 2: Create the types file**
+- [x] **Step 2: Create the types file**
 
 `src/renderer/components/AppSidebarTypes.ts`:
 
@@ -638,7 +638,7 @@ export interface NavSectionDef {
 }
 ```
 
-- [ ] **Step 3: Create the component**
+- [x] **Step 3: Create the component**
 
 `src/renderer/components/AppSidebar.vue`:
 
@@ -691,12 +691,12 @@ function badgeValue(item: NavItemDef): number {
 
 The skip-link inside `<nav>` is a structural change from the current layout (today the skip-link sits as a sibling of `<nav>` in App.vue:3). Confirm in the next task that the skip-link still works at the App level — if a screen-reader test breaks, move the skip-link back out of `<nav>` and into a `#skip` slot.
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 Run: `npm test -- tests/components/app-sidebar-shape.test.ts`
 Expected: PASS (3 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/AppSidebar.vue src/renderer/components/AppSidebarTypes.ts
@@ -710,13 +710,13 @@ git commit -m "feat(components): AppSidebar shared chrome for renderer + static"
 **Files:**
 - Modify: `src/renderer/App.vue` — replace the entire `<nav v-if="navOrientation === 'vertical'" class="sidebar">…</nav>` block (~lines 4–138) with `<AppSidebar :sections="navSections" variant="renderer">` + `#bottom` slot containing the undo row + the import-export router-link + the settings router-link.
 
-- [ ] **Step 1: Make `navSections` cover ALL items including the bottom-bar links**
+- [x] **Step 1: Make `navSections` cover ALL items including the bottom-bar links**
 
 Today the `navSections` computed (App.vue:514–554) covers only the 4 grouped sections (research/organize/review/present). The import-export + settings links live as separate `<router-link class="nav-bottom-item">` after the undo row (App.vue:82–89). For the vertical-sidebar use we keep that structure: top sections come from `:sections`, bottom-link-cluster goes into the `#bottom` slot.
 
 If `navSections`'s shape currently includes badges as `Ref<number>` (e.g. `badge: openTaskCount`), the `NavItemDef.badge` shape in `AppSidebarTypes.ts` already supports this — no migration needed.
 
-- [ ] **Step 2: Replace the vertical-sidebar block**
+- [x] **Step 2: Replace the vertical-sidebar block**
 
 In the template, replace the entire `<nav v-if="navOrientation === 'vertical'" class="sidebar">…</nav>` (everything from line ~4 up to and including the `</nav>` that closes it at ~line 138, but BEFORE the `<header v-else class="topbar">` at line 141) with:
 
@@ -741,18 +741,18 @@ In the template, replace the entire `<nav v-if="navOrientation === 'vertical'" c
 
 The skip-link at line 3 (`<a href="#main-content" class="skip-link">`) is now rendered INSIDE `<AppSidebar>` (Task 6 Step 3). Delete the line 3 copy in App.vue.
 
-- [ ] **Step 3: Run all renderer-relevant tests**
+- [x] **Step 3: Run all renderer-relevant tests**
 
 ```bash
 npm test
 ```
 Expected: pre-existing tests still pass; new AppSidebar/AppSettingsPanel tests pass; no regressions.
 
-- [ ] **Step 4: Manual smoke in `npm start`**
+- [x] **Step 4: Manual smoke in `npm start`**
 
 Verify: vertical sidebar still renders correctly with all nav items, badges (Quality count, Tasks count, Duplicates count) appear and update after a known-mutating action, undo/redo buttons work, settings panel toggles, both keyboard shortcuts work (skip-link via Tab, Cmd+F still focuses search if used elsewhere), router-link active state shows on the current route. Switch to horizontal nav orientation in settings — the topbar still works because we deliberately left it inline.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/App.vue
@@ -766,7 +766,7 @@ git commit -m "refactor(renderer): adopt AppSidebar for vertical mode"
 **Files:**
 - Modify: `src/static/App.vue` — replace the entire `<nav class="sidebar">…</nav>` block (~lines 4–68) with `<AppSidebar :sections="navSections" variant="static" />`. Define `navSections` in `<script setup>`. Delete the `<form class="sidebar-search">` input form, `searchQuery`, `searchInputRef`, `submitSearch`, `handleGlobalKey`, and the Cmd/Ctrl+F mount/unmount listeners.
 
-- [ ] **Step 1: Define `navSections` for static**
+- [x] **Step 1: Define `navSections` for static**
 
 In `<script setup>` add (replacing deleted search state):
 
@@ -785,7 +785,7 @@ const navSections: NavSectionDef[] = [{
 }];
 ```
 
-- [ ] **Step 2: Replace template**
+- [x] **Step 2: Replace template**
 
 ```vue
 <template>
@@ -804,22 +804,22 @@ const navSections: NavSectionDef[] = [{
 
 Delete: the `<a href="#main-content" class="skip-link">` line (now rendered inside AppSidebar) and the entire previous `<nav class="sidebar">…</nav>` block.
 
-- [ ] **Step 3: Delete from `<script setup>`**
+- [x] **Step 3: Delete from `<script setup>`**
 
 Remove: `searchQuery`, `searchInputRef`, `submitSearch`, `handleGlobalKey`, the `window.addEventListener('keydown', handleGlobalKey)` and matching removeEventListener. Also remove the `useTTS`/`useScreenReaderMode` calls if they're now only used by `provide` calls that no view consumes — but keep them if other static views still use them via `inject`. Run `grep -rn "inject\\('tts'\\|inject\\('screenReader'" src/static src/renderer/views` to check.
 
-- [ ] **Step 4: Verify static SPA still works**
+- [x] **Step 4: Verify static SPA still works**
 
 Run: `npm run dev:static`. Open http://localhost:5174. Sidebar renders with 4 items including the 🔍 Sök router-link. Clicking Sök routes to `/search` (which the existing SearchView handles). Settings panel works. Theme + dark mode + text size persist + apply.
 
-- [ ] **Step 5: Run the unit + component test suite**
+- [x] **Step 5: Run the unit + component test suite**
 
 ```bash
 npm test
 ```
 Expected: green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/static/App.vue
@@ -830,21 +830,21 @@ git commit -m "refactor(static): adopt AppSidebar and drop bespoke search input"
 
 ### Task 9: Verification + close-out
 
-- [ ] **Step 1: Run `npm test` and capture summary**
+- [x] **Step 1: Run `npm test` and capture summary**
 
 ```bash
 npm test 2>&1 | tail -20
 ```
 Capture the `Test Files  N passed` and `Tests  N passed` lines.
 
-- [ ] **Step 2: Run `npm run build` and capture tail**
+- [x] **Step 2: Run `npm run build` and capture tail**
 
 ```bash
 npm run build 2>&1 | tail -20
 ```
 Capture the `built in Xs` line and exit code (`echo $?`).
 
-- [ ] **Step 3: Run `npm run test:e2e:full` and capture summary**
+- [x] **Step 3: Run `npm run test:e2e:full` and capture summary**
 
 ```bash
 npm run test:e2e:full 2>&1 | tail -20
@@ -853,14 +853,14 @@ Capture the `N passed (Xs)` line across all 7 projects. Both `[panels]` and `[re
 
 If any project goes red, fix the cause before continuing. "It was red before this plan" is not acceptable per `.claude/rules/plans.md` L7.
 
-- [ ] **Step 4: Type-check the touched files**
+- [x] **Step 4: Type-check the touched files**
 
 ```bash
 NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep -E "(App|AppSidebar|AppSettingsPanel)\.vue" || echo "no new TS errors in touched files"
 ```
 Expected: "no new TS errors in touched files" or only pre-existing errors documented in `.claude/rules/build.md`.
 
-- [ ] **Step 5: Side-by-side visual check**
+- [x] **Step 5: Side-by-side visual check**
 
 Open `npm start` and `npm run dev:static` simultaneously. Set both to the same Forest theme + light mode + medium text. Compare the vertical sidebars:
 - Header band identical
@@ -871,26 +871,26 @@ Open `npm start` and `npm run dev:static` simultaneously. Set both to the same F
 
 Mark this in the close-out commit message: "visually verified: renderer + static sidebars match in vertical mode, all themes."
 
-- [ ] **Step 6: Mark every checkbox in this plan file `[x]`**
+- [x] **Step 6: Mark every checkbox in this plan file `[x]`**
 
 ```bash
-# Open this file in editor, replace every "- [ ]" with "- [x]"
+# Open this file in editor, replace every "- [x]" with "- [x]"
 ```
 
-- [ ] **Step 7: Archive the plan**
+- [x] **Step 7: Archive the plan**
 
 ```bash
 git mv docs/plans/2026-05-15-shared-app-sidebar.md docs/plans/archive/
 ```
 
-- [ ] **Step 8: Update PLAN.md and CHANGELOG.md**
+- [x] **Step 8: Update PLAN.md and CHANGELOG.md**
 
 - Remove any reference to this plan from `docs/PLAN.md`'s active list (it wasn't in there, but check).
 - Append a one-paragraph entry under the appropriate section in `docs/plans/archive/PLAN.md`.
 - Bump `package.json` version: feature (minor bump per project rule).
 - Add a line to `CHANGELOG.md` under `## Unreleased`: `Refactor: share <AppSidebar> and <AppSettingsPanel> between the Tauri app and the static export SPA so they stay in visual + behavioural sync automatically.`
 
-- [ ] **Step 9: Close-out commit with evidence**
+- [x] **Step 9: Close-out commit with evidence**
 
 ```bash
 git add -A
@@ -908,7 +908,7 @@ EOF
 )"
 ```
 
-- [ ] **Step 10: Push to main**
+- [x] **Step 10: Push to main**
 
 Per `.claude/rules/plans.md` L6: direct push to `origin/main` requires local-green-before-push (we've captured the evidence above). Either merge the worktree branch to `main` and push `main` itself (NOT the feature branch as `origin/main`), or push a PR — both are fine; the rule is the verification, not the path.
 
