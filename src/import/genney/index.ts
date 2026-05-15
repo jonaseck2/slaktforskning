@@ -129,8 +129,22 @@ export async function importFromGenney(
       const result = await extractArchive(sourcePath, onProgress);
       tempDir = result.tempDir;
       if (result.gedcomPath) {
-        // Encrypted — caller should use GEDCOM fallback
-        return { summary: emptyImportSummary(), gedcomFallbackPath: result.gedcomPath };
+        // Encrypted-archive or no-Derby-DB case — caller should use the
+        // extracted GEDCOM as a fallback. The .ged lives inside `tempDir`,
+        // which this function's `finally` block deletes on the way out.
+        // Copy it to a sibling temp location so the path the caller reads
+        // back via `fs_read_bytes_base64` outlives the cleanup. Without
+        // this, the caller gets `read: No such file or directory (os
+        // error 2)` against a path the sidecar already deleted. Preserve
+        // the original basename (e.g. `family.ged`, `export.gedcom`) so
+        // log lines can identify the source file; nest under a per-run
+        // dir so two concurrent imports don't collide on the same name.
+        const stableDir = fs.mkdtempSync(
+          path.join(os.tmpdir(), 'genney-fallback-'),
+        );
+        const stableGed = path.join(stableDir, path.basename(result.gedcomPath));
+        fs.copyFileSync(result.gedcomPath, stableGed);
+        return { summary: emptyImportSummary(), gedcomFallbackPath: stableGed };
       }
       derbyPath = result.derbyPath;
     }

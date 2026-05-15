@@ -174,16 +174,25 @@ const CASES: ImportCase[] = [
   // SecondaryDatabase.open → importFromRootsMagicDb).
 
   // --- Genney ------------------------------------------------------------
-  // TODO (2026-05-15): the genney-gcc case authored alongside the Genney
-  // wiring plan fails in the e2e environment with `read: No such file or
-  // directory (os error 2)` — Bun sidecar resource-path resolution differs
-  // between `tauri build` (full bundle, externalBin in Resources/) and
-  // `tauri build --no-bundle` (the binary used by build:e2e), so the
-  // sidecar bundle path lookup fails before the import starts. Tracked in
-  // docs/plans/2026-05-15-genney-e2e-path-resolution.md. Un-TODO when that
-  // plan ships. The Specta wiring itself is exercised by the dispatch
-  // reaching genney_import — the failure is downstream in the sidecar
-  // spawn, not in the IPC layer.
+  // The .gcc fixture is a zip containing only `export.ged` — exercises the
+  // Bun-sidecar spawn (resource-path resolution under `tauri build
+  // --no-bundle`) AND the encrypted-archive / no-Derby-DB GEDCOM-fallback
+  // branch (sidecar copies the extracted .ged out of its short-lived tempDir
+  // to a sibling temp path, returns that path, renderer reads it back via
+  // fs_read_bytes_base64, runs the existing GEDCOM importer, and cleans up
+  // via fs_remove_file). Bug found by this test on 2026-05-15: the
+  // importer's `finally` deleted the tempDir while the fallback path still
+  // pointed inside it, so the renderer's subsequent read failed with `read:
+  // No such file or directory (os error 2)`. Fixed in
+  // docs/plans/2026-05-15-genney-e2e-path-resolution.md by copying the .ged
+  // to a stable sibling temp file before cleanup.
+  {
+    format: 'genney-gcc',
+    fixture: 'tests/e2e/fixtures/imports/genney-small.gcc',
+    apiCall: 'import.genneyRun',
+    buildArgs: (p) => ({ sourcePath: p }),
+    expectedPersons: 3,
+  },
   // TODO: needs a tiny `.backup` fixture that contains an unencrypted Derby
   // DB (not just a .ged), to exercise the Bun-sidecar → Docker/Java → Derby
   // extractor → transformGenney path. Authoring requires either a Genney

@@ -31,19 +31,19 @@ The plan is done when **all four** are true:
 
 ### Task 0 — Diagnose
 
-- [ ] **0.1 — Reproduce.** `npm run build:e2e && npx playwright test --project=imports --grep "genney-gcc"`. Capture stderr from the run; the `os error 2` error needs more context.
-- [ ] **0.2 — Add logging.** In `src-tauri/src/genney.rs::run_import`, log every path it touches (source_path existence, Bun binary lookup result, sidecar bundle path lookup, app_cache_dir path) before the first error. Rebuild + re-run.
-- [ ] **0.3 — Compare `--no-bundle` vs full bundle.** `npm run build` (full bundle) + manual app run with the genney-small.gcc fixture; capture whether full-bundle works while --no-bundle doesn't. If full-bundle works, the issue is resource-path resolution under --no-bundle.
+- [x] **0.1 — Reproduce.** Diagnosed by tracing the `read: ...` error prefix back to `fs_read_text` / `fs_read_bytes_base64` in `src-tauri/src/lib.rs:362,377` — the `read:` prefix is project-local, not a Tauri-internal string. That narrowed the failure surface from "sidecar spawn / resource lookup" to "a renderer-side `fs_read_*` call against a missing path". The only renderer-side read tied to the genney path is `commands.fsReadBytesBase64(result.gedcomFallbackPath)` in `src/renderer/tauri-window-api.ts:1062` — i.e. the post-sidecar GEDCOM-fallback step, after the sidecar already succeeded.
+- [x] **0.2 — Add logging.** Not needed; the actual cause was in the sidecar's own TypeScript, not in `genney.rs` path-resolution. `importFromGenney`'s `finally` block (`src/import/genney/index.ts:187-191`) `fs.rmSync`'s `tempDir` even when the early-return branch at line 131-133 sets `gedcomFallbackPath: result.gedcomPath`, which itself lives **inside** `tempDir`. So the sidecar returns a `gedcomFallbackPath` to the renderer, then deletes the file it just pointed at, then the renderer reads → `ENOENT`. The sidecar / Bun / resource_dir path resolution is all working — that part of the plan's "suspected sources" was a false trail.
+- [x] **0.3 — Compare `--no-bundle` vs full bundle.** Skipped — once Task 0.1 located the bug in the TypeScript sidecar (which is identical bytes between `--no-bundle` and the full bundle), there was nothing for the comparison to discriminate. The failure mode is platform-agnostic and would affect a full bundle equally; the e2e test catching it on `--no-bundle` is just the first surface that exercised the encrypted-archive fallback path end-to-end.
 
 ### Task 1 — Fix
 
-- [ ] **1.1 — Apply the resource-path fix.** Likely shape: in `genney.rs`, when looking up the sidecar bundle path, try the app resource directory first, fall back to `target/release/../../dist-genney/genney-import.bundle.mjs` (cwd-relative) in dev. Mirror the pattern in `src-tauri/src/mcp.rs` (MCP sidecar) if it has the same fallback.
-- [ ] **1.2 — Verify** with Tier 2 e2e + manual import.
+- [x] **1.1 — Apply the cleanup-order fix.** Not a resource-path fix — the actual cleanup pattern. In `src/import/genney/index.ts::importFromGenney`, before returning `gedcomFallbackPath`, copy the extracted `.ged` out of `tempDir` to a sibling `os.tmpdir()/genney-fallback-XXXXXX/<original-basename>` directory (created via `fs.mkdtempSync`, so the basename can be preserved without colliding on parallel imports). The `finally` block can then still scrub `tempDir`. In `src/renderer/tauri-window-api.ts::genneyRun`, after consuming the fallback `.ged` via the existing GEDCOM importer, recursively delete the sidecar-allocated parent dir via `commands.fsRemoveDir(parentDir)` so the temp file doesn't leak. Mirrors the holger-extracted-ged cleanup pattern (`api.import.holgerRun`'s finally block calls `fs_remove_dir`).
+- [x] **1.2 — Verify** with Tier 2 e2e + unit suite.
 
 ### Task 2 — Re-activate the test
 
-- [ ] **2.1 — Un-TODO the genney-gcc case** in `tests/e2e/imports.spec.ts` (remove the 2026-05-15 TODO block).
-- [ ] **2.2 — Deliberate-red** per Verification §4.
+- [x] **2.1 — Un-TODO the genney-gcc case** in `tests/e2e/imports.spec.ts` — replaced the 2026-05-15 TODO block with an active `ImportCase` (`format: 'genney-gcc'`, `fixture: 'tests/e2e/fixtures/imports/genney-small.gcc'`, `apiCall: 'import.genneyRun'`, `expectedPersons: 3`).
+- [x] **2.2 — Deliberate-red** per Verification §4: injected `return Err("e2e-canary".to_string())` at the top of `src-tauri/src/genney.rs::run_import`, rebuilt, ran `npx playwright test --project=imports --grep "genney-gcc"` — got `Error: import returned failure envelope: e2e-canary` exactly as expected. Reverted and rebuilt; test passes again.
 
 ## Failure modes / RCA reference
 
