@@ -202,7 +202,7 @@ describe('tauri-window-api Rust command dispatch', () => {
     // Specta builds the wire payload from positional args, so `maxWidth: null`
     // appears explicitly when the renderer-side wrapper passes `null` for the
     // optional arg. The Rust command sees `Option<u32>` either way.
-    expect(invokeSpy).toHaveBeenCalledWith('mediaThumbnail', { fileRef: 'foo-media/x.jpg', maxWidth: 256 });
+    expect(invokeSpy).toHaveBeenCalledWith('media_thumbnail', { fileRef: 'foo-media/x.jpg', maxWidth: 256 });
     expect(result).toBe('data:image/jpeg;base64,xxx');
   });
 
