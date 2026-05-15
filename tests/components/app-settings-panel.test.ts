@@ -33,12 +33,14 @@ describe('AppSettingsPanel', () => {
     document.documentElement.className = '';
   });
 
-  it('renders the shared rows for both variants', () => {
+  it('renders the shared rows for both variants', async () => {
     for (const variant of ['renderer', 'static'] as const) {
       const w = mount(AppSettingsPanel, {
         props: { variant },
         global: { plugins: [makeI18n()] },
       });
+      // Panel is collapsed by default; expand it before asserting rows.
+      await w.find('.settings-toggle').trigger('click');
       const labels = w.findAll('.settings-group-label').map(n => n.text());
       expect(labels).toContain('Utseende');
       expect(labels).toContain('Tema');
@@ -49,9 +51,11 @@ describe('AppSettingsPanel', () => {
     }
   });
 
-  it('renderer variant includes menu-layout + add-button-style rows; static variant does not', () => {
+  it('renderer variant includes menu-layout + add-button-style rows; static variant does not', async () => {
     const wR = mount(AppSettingsPanel, { props: { variant: 'renderer' }, global: { plugins: [makeI18n()] } });
     const wS = mount(AppSettingsPanel, { props: { variant: 'static' }, global: { plugins: [makeI18n()] } });
+    await wR.find('.settings-toggle').trigger('click');
+    await wS.find('.settings-toggle').trigger('click');
     const rLabels = wR.findAll('.settings-group-label').map(n => n.text());
     const sLabels = wS.findAll('.settings-group-label').map(n => n.text());
     expect(rLabels).toContain('Menyläge');
