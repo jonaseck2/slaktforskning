@@ -158,3 +158,73 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+/* Self-contained styling — App.vue's matching .settings-* rules will be deleted in Waves 2 and 3 once the markup is removed from there. */
+.settings-section {
+  margin-top: 4px;
+  border-top: 1px solid var(--sidebar-border);
+  padding-top: 6px;
+}
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  text-align: left;
+}
+.settings-toggle:hover {
+  background: var(--sidebar-active-bg);
+}
+.settings-arrow {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+}
+.settings-panel {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-group-label {
+  font-size: var(--font-xs);
+  color: var(--sidebar-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.settings-row {
+  display: flex;
+  gap: 3px;
+}
+.settings-option {
+  flex: 1;
+  background: var(--sidebar-active-bg);
+  border: none;
+  color: var(--sidebar-text);
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: var(--font-xs);
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.15s;
+}
+.settings-option:hover {
+  color: var(--sidebar-active-text);
+}
+.settings-option.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+</style>
