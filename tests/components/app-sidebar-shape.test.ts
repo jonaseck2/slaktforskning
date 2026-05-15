@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createMemoryHistory } from 'vue-router';
 import AppSidebar from '../../src/renderer/components/AppSidebar.vue';
 import type { NavSectionDef } from '../../src/renderer/components/AppSidebarTypes';
 
@@ -24,7 +24,7 @@ function makeI18n() {
 }
 
 function makeRouter() {
-  return createRouter({ history: createWebHashHistory(), routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div/>' } }] });
+  return createRouter({ history: createMemoryHistory(), routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div/>' } }] });
 }
 
 const STATIC_SECTIONS: NavSectionDef[] = [{
@@ -57,6 +57,7 @@ describe('AppSidebar', () => {
 
   it('renders the same outer chrome for renderer and static section sets', async () => {
     const router = makeRouter();
+    await router.push('/');
     await router.isReady();
     const w = mount(AppSidebar, {
       props: { sections: STATIC_SECTIONS, variant: 'static' },
@@ -73,6 +74,7 @@ describe('AppSidebar', () => {
 
   it('renders section labels when a section has labelKey', async () => {
     const router = makeRouter();
+    await router.push('/');
     await router.isReady();
     const w = mount(AppSidebar, {
       props: { sections: RENDERER_SECTIONS, variant: 'renderer' },
@@ -84,6 +86,7 @@ describe('AppSidebar', () => {
 
   it('renders a #bottom slot consumer above the settings panel', async () => {
     const router = makeRouter();
+    await router.push('/');
     await router.isReady();
     const w = mount(AppSidebar, {
       props: { sections: STATIC_SECTIONS, variant: 'renderer' },
