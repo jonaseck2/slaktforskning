@@ -9,51 +9,51 @@
       <template v-if="variant === 'renderer'">
         <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
         <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
-          <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="String(navOrientation === 'vertical')" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
-          <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="String(navOrientation === 'horizontal')" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
+          <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="navOrientation === 'vertical'" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
+          <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="navOrientation === 'horizontal'" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
         </div>
       </template>
 
       <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
       <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
-        <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
-        <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
-        <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
+        <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="appearance === 'light'" @click="setAppearance('light')">☀</button>
+        <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="appearance === 'dark'" @click="setAppearance('dark')">🌙</button>
+        <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="appearance === 'contrast'" @click="setAppearance('contrast')">👁</button>
       </div>
 
       <div class="settings-group-label">{{ $t('settings.theme') }}</div>
       <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
-        <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
-        <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
-        <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
+        <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="currentTheme === 'forest'" @click="setTheme('forest')">🌲</button>
+        <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="currentTheme === 'nordic'" @click="setTheme('nordic')">❄️</button>
+        <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="currentTheme === 'twilight'" @click="setTheme('twilight')">🌅</button>
       </div>
 
       <template v-if="variant === 'renderer'">
         <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
         <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
-          <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
-          <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
+          <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="addBtnStyle === 'plus'" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
+          <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="addBtnStyle === 'leaf'" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
         </div>
       </template>
 
       <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
       <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
-        <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
-        <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
-        <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
+        <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="textSize === 'small'" @click="setTextSize('small')">S</button>
+        <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="textSize === 'medium'" @click="setTextSize('medium')">M</button>
+        <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="textSize === 'large'" @click="setTextSize('large')">L</button>
       </div>
 
       <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
       <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
-        <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
-        <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
-        <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
+        <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="screenReader.mode.value === 'off'" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
+        <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="screenReader.mode.value === 'narrate'" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
+        <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="screenReader.mode.value === 'screenReader'" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
       </div>
 
       <div class="settings-group-label">{{ $t('settings.language') }}</div>
       <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
-        <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
-        <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
+        <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="locale === 'sv'" @click="setLocale('sv')">Sv</button>
+        <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="locale === 'en'" @click="setLocale('en')">En</button>
       </div>
     </div>
   </div>
