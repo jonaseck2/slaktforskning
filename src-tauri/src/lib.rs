@@ -98,13 +98,13 @@ fn broadcast_data_changed(app: tauri::AppHandle, kind: String) -> Result<(), Str
 // pre-fix Tauri build.
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_batch(sql: String) -> Result<(), String> {
     db::db_batch(sql).await
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_run(sql: String, params: Option<Vec<JsonValueWire>>) -> Result<RunResult, String> {
     db::db_run(sql, wire::unwrap_params(params)).await
 }
@@ -117,16 +117,16 @@ async fn db_run(sql: String, params: Option<Vec<JsonValueWire>>) -> Result<RunRe
 /// `prepare_cached` and one mutex hold; the surrounding JS-side
 /// `BEGIN/COMMIT` is unchanged.
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_batch_run(
     sql: String,
-    params_list: Vec<Vec<JsonValueWire>>,
+    #[allow(non_snake_case)] paramsList: Vec<Vec<JsonValueWire>>,
 ) -> Result<Vec<RunResult>, String> {
-    db::db_batch_run(sql, wire::unwrap_params_list(params_list)).await
+    db::db_batch_run(sql, wire::unwrap_params_list(paramsList)).await
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_run_changes(sql: String, params: Option<Vec<JsonValueWire>>) -> Result<u32, String> {
     // u32 not u64 so the binding renders as `number`. SQLite per-statement
     // change counts comfortably fit a u32 for any realistic workload
@@ -137,7 +137,7 @@ async fn db_run_changes(sql: String, params: Option<Vec<JsonValueWire>>) -> Resu
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_get(
     sql: String,
     params: Option<Vec<JsonValueWire>>,
@@ -148,7 +148,7 @@ async fn db_get(
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn db_all(
     sql: String,
     params: Option<Vec<JsonValueWire>>,
@@ -404,7 +404,7 @@ fn fs_write_bytes_base64(path: String, b64: String) -> Result<(), String> {
 /// so concurrent imports don't collide; the renderer is responsible for
 /// calling `fs_remove_file` after the import completes.
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 fn fs_write_temp_bytes_base64(name: String, b64: String) -> Result<String, String> {
     use base64::Engine;
     let bytes = base64::engine::general_purpose::STANDARD
@@ -445,24 +445,27 @@ fn fs_remove_file(path: String) -> Result<(), String> {
 // wrappers.
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
-fn holger_extract_ged(source_path: String) -> Result<import::ExtractGedResult, String> {
-    import::extract_ged(&source_path)
+#[tauri::command]
+#[allow(non_snake_case)]
+fn holger_extract_ged(sourcePath: String) -> Result<import::ExtractGedResult, String> {
+    import::extract_ged(&sourcePath)
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
-fn holger_bulk_copy_media(src_dir: String, dest_dir: String) -> Result<import::BulkCopyResult, String> {
-    import::bulk_copy_media(&src_dir, &dest_dir)
+#[tauri::command]
+#[allow(non_snake_case)]
+fn holger_bulk_copy_media(srcDir: String, destDir: String) -> Result<import::BulkCopyResult, String> {
+    import::bulk_copy_media(&srcDir, &destDir)
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
+#[allow(non_snake_case)]
 fn holger_consolidate_media(
-    db_path: String,
-    bulk_copied_from_dir: Option<String>,
+    dbPath: String,
+    bulkCopiedFromDir: Option<String>,
 ) -> Result<import::ConsolidateResult, String> {
-    import::consolidate_media(&db_path, bulk_copied_from_dir.as_deref())
+    import::consolidate_media(&dbPath, bulkCopiedFromDir.as_deref())
 }
 
 /// Recursively delete a directory (e.g. the temp dir created when
@@ -484,19 +487,19 @@ fn fs_remove_dir(path: String) -> Result<(), String> {
 // can reuse the same primitives without bespoke Rust additions.
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 fn secondary_db_open(path: String) -> Result<u32, String> {
     db::secondary_db_open(&path)
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 fn secondary_db_close(handle: u32) {
     db::secondary_db_close(handle)
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn secondary_db_run(
     handle: u32,
     sql: String,
@@ -506,7 +509,7 @@ async fn secondary_db_run(
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn secondary_db_get(
     handle: u32,
     sql: String,
@@ -518,7 +521,7 @@ async fn secondary_db_get(
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
 async fn secondary_db_all(
     handle: u32,
     sql: String,

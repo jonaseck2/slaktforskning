@@ -201,12 +201,31 @@ async function closePicker(driver: AppDriver): Promise<void> {
 /**
  * Fill the modal's first text input with the marker, then click Save.
  * Returns true if the dialog closed (i.e. save succeeded).
+ *
+ * For modals that require a categorical choice before Save is enabled (the
+ * EventModal's `event_type` quick-segment row is the canonical example: on
+ * PlacePanel `+ Event` the modal opens with no pre-selected type and Save
+ * stays disabled until the user clicks one), pick the first available
+ * segment option before filling text inputs. This mirrors what a real user
+ * does — they click "Birth" or "Death" before typing the date.
  */
 async function fillModalAndSave(driver: AppDriver, marker: string): Promise<boolean> {
   return driver.executeJs<boolean>(`
     (async () => {
       const dialog = document.querySelector('[role=dialog]');
       if (!dialog) return false;
+      // If the modal has a quick-segment categorical picker with no option
+      // currently selected (e.g. EventModal opened from PlacePanel where
+      // defaultEventType is empty), click the first option. This is the
+      // user-equivalent of "pick a type before saving."
+      const segs = dialog.querySelectorAll('.ep-seg-opt');
+      if (segs.length > 0) {
+        const anySelected = Array.from(segs).some(b => b.classList.contains('ep-seg-opt--on'));
+        if (!anySelected) {
+          (segs[0]).click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
       // Prefer "Original wording" text input (Event modal); fall back to the
       // first non-readonly text input that is NOT inside a combobox / picker.
       // Picker inputs (SourcePicker, PersonPicker) interpret synthetic

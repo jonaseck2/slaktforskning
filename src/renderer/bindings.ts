@@ -13,8 +13,8 @@ export const commands = {
 	probeMcpSidecar: (repoRoot: string, dbPath: string) => __TAURI_INVOKE<McpProbe>("probe_mcp_sidecar", { repoRoot, dbPath }),
 	openSecondWindow: (label: string) => typedError<null, string>(__TAURI_INVOKE("open_second_window", { label })),
 	broadcastDataChanged: (kind: string) => typedError<null, string>(__TAURI_INVOKE("broadcast_data_changed", { kind })),
-	dbBatch: (sql: string) => typedError<null, string>(__TAURI_INVOKE("dbBatch", { sql })),
-	dbRun: (sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("dbRun", { sql, params })),
+	dbBatch: (sql: string) => typedError<null, string>(__TAURI_INVOKE("db_batch", { sql })),
+	dbRun: (sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("db_run", { sql, params })),
 	/**
 	 *  Bulk-run one prepared SQL string against many parameter rows in a single
 	 *  IPC roundtrip + a single connection-mutex hold. The renderer importer
@@ -24,10 +24,10 @@ export const commands = {
 	 *  `prepare_cached` and one mutex hold; the surrounding JS-side
 	 *  `BEGIN/COMMIT` is unchanged.
 	 */
-	dbBatchRun: (sql: string, paramsList: ((Record<string, never>)[])[]) => typedError<RunResult[], string>(__TAURI_INVOKE("dbBatchRun", { sql, paramsList })),
-	dbRunChanges: (sql: string, params: (Record<string, never>)[] | null) => typedError<number, string>(__TAURI_INVOKE("dbRunChanges", { sql, params })),
-	dbGet: (sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("dbGet", { sql, params })),
-	dbAll: (sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("dbAll", { sql, params })),
+	dbBatchRun: (sql: string, paramsList: ((Record<string, never>)[])[]) => typedError<RunResult[], string>(__TAURI_INVOKE("db_batch_run", { sql, paramsList })),
+	dbRunChanges: (sql: string, params: (Record<string, never>)[] | null) => typedError<number, string>(__TAURI_INVOKE("db_run_changes", { sql, params })),
+	dbGet: (sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("db_get", { sql, params })),
+	dbAll: (sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("db_all", { sql, params })),
 	/**
 	 *  Returns the absolute path to the default database file. Resolution order:
 	 *    1. `SLAKTFORSKNING_DB` env override (used by the Playwright fixture).
@@ -105,7 +105,7 @@ export const commands = {
 	 *  so concurrent imports don't collide; the renderer is responsible for
 	 *  calling `fs_remove_file` after the import completes.
 	 */
-	fsWriteTempBytesBase64: (name: string, b64: string) => typedError<string, string>(__TAURI_INVOKE("fsWriteTempBytesBase64", { name, b64 })),
+	fsWriteTempBytesBase64: (name: string, b64: string) => typedError<string, string>(__TAURI_INVOKE("fs_write_temp_bytes_base64", { name, b64 })),
 	/**
 	 *  Best-effort delete of a single file. Used to clean up temp files written
 	 *  by `fs_write_temp_bytes_base64` after an import completes (success or
@@ -119,14 +119,14 @@ export const commands = {
 	 *  the `finally` block of `api.import.holgerRun`. No-op when missing.
 	 */
 	fsRemoveDir: (path: string) => typedError<null, string>(__TAURI_INVOKE("fs_remove_dir", { path })),
-	holgerExtractGed: (sourcePath: string) => typedError<ExtractGedResult, string>(__TAURI_INVOKE("holgerExtractGed", { sourcePath })),
-	holgerBulkCopyMedia: (srcDir: string, destDir: string) => typedError<BulkCopyResult, string>(__TAURI_INVOKE("holgerBulkCopyMedia", { srcDir, destDir })),
-	holgerConsolidateMedia: (dbPath: string, bulkCopiedFromDir: string | null) => typedError<ConsolidateResult, string>(__TAURI_INVOKE("holgerConsolidateMedia", { dbPath, bulkCopiedFromDir })),
-	secondaryDbOpen: (path: string) => typedError<number, string>(__TAURI_INVOKE("secondaryDbOpen", { path })),
-	secondaryDbClose: (handle: number) => __TAURI_INVOKE<void>("secondaryDbClose", { handle }),
-	secondaryDbRun: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("secondaryDbRun", { handle, sql, params })),
-	secondaryDbGet: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("secondaryDbGet", { handle, sql, params })),
-	secondaryDbAll: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("secondaryDbAll", { handle, sql, params })),
+	holgerExtractGed: (sourcePath: string) => typedError<ExtractGedResult, string>(__TAURI_INVOKE("holger_extract_ged", { sourcePath })),
+	holgerBulkCopyMedia: (srcDir: string, destDir: string) => typedError<BulkCopyResult, string>(__TAURI_INVOKE("holger_bulk_copy_media", { srcDir, destDir })),
+	holgerConsolidateMedia: (dbPath: string, bulkCopiedFromDir: string | null) => typedError<ConsolidateResult, string>(__TAURI_INVOKE("holger_consolidate_media", { dbPath, bulkCopiedFromDir })),
+	secondaryDbOpen: (path: string) => typedError<number, string>(__TAURI_INVOKE("secondary_db_open", { path })),
+	secondaryDbClose: (handle: number) => __TAURI_INVOKE<void>("secondary_db_close", { handle }),
+	secondaryDbRun: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("secondary_db_run", { handle, sql, params })),
+	secondaryDbGet: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<Record<string, never> | null, string>(__TAURI_INVOKE("secondary_db_get", { handle, sql, params })),
+	secondaryDbAll: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<(Record<string, never>)[], string>(__TAURI_INVOKE("secondary_db_all", { handle, sql, params })),
 	/**  Reveal a file or folder in the OS file manager. */
 	shellReveal: (path: string) => typedError<null, string>(__TAURI_INVOKE("shell_reveal", { path })),
 	/**
@@ -170,7 +170,7 @@ export const commands = {
 	 *  already caches in-memory via Vue keep-alive). Adding it later is a
 	 *  pure-Rust change with no API impact.
 	 */
-	mediaThumbnail: (fileRef: string, maxWidth: number | null) => typedError<string | null, string>(__TAURI_INVOKE("mediaThumbnail", { fileRef, maxWidth })),
+	mediaThumbnail: (fileRef: string, maxWidth: number | null) => typedError<string | null, string>(__TAURI_INVOKE("media_thumbnail", { fileRef, maxWidth })),
 	/**
 	 *  Bake preview thumbnails for the website-export preview iframe. Mirrors
 	 *  `buildPreviewThumbnails` in `src/main/ipc/website-export.ts`:
@@ -183,7 +183,7 @@ export const commands = {
 	 *  passing only image media (filtered by extension or MIME) — keeps the
 	 *  Rust side dumb.
 	 */
-	websiteBakePreviewThumbnails: (mediaRefs: MediaRefInput[]) => typedError<{ [key in string]: string }, string>(__TAURI_INVOKE("websiteBakePreviewThumbnails", { mediaRefs })),
+	websiteBakePreviewThumbnails: (mediaRefs: MediaRefInput[]) => typedError<{ [key in string]: string }, string>(__TAURI_INVOKE("website_bake_preview_thumbnails", { mediaRefs })),
 	/**
 	 *  Locate the dist-static SPA bundle's `index.html` and return its
 	 *  contents. The website-export preview iframe in
@@ -200,7 +200,7 @@ export const commands = {
 	 *  follow-up plan.
 	 */
 	websiteLoadStaticIndexHtml: () => typedError<string, string>(__TAURI_INVOKE("website_load_static_index_html")),
-	websiteExportMedia: (destFullDir: string, mediaRefs: MediaRefInput[]) => typedError<WebsiteExportMediaResult, string>(__TAURI_INVOKE("websiteExportMedia", { destFullDir, mediaRefs })),
+	websiteExportMedia: (destFullDir: string, mediaRefs: MediaRefInput[]) => typedError<WebsiteExportMediaResult, string>(__TAURI_INVOKE("website_export_media", { destFullDir, mediaRefs })),
 	uiEvalResponse: (id: string, value: Record<string, never>) => __TAURI_INVOKE<void>("ui_eval_response", { id, value }),
 };
 

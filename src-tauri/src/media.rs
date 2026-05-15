@@ -86,14 +86,15 @@ fn make_thumbnail_jpeg(abs_path: &Path, max_width: u32, quality: u8) -> Result<O
 /// already caches in-memory via Vue keep-alive). Adding it later is a
 /// pure-Rust change with no API impact.
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
-pub async fn media_thumbnail(file_ref: String, max_width: Option<u32>) -> Result<Option<String>, String> {
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn media_thumbnail(fileRef: String, maxWidth: Option<u32>) -> Result<Option<String>, String> {
     // Async + spawn_blocking because thumbnail generation does sync image
     // decode + JPEG re-encode — many ms per call. Doing this on the Wry
     // main thread blocked scrolling and chart drawing in the pre-fix build.
     tokio::task::spawn_blocking(move || {
-        let abs = resolve_file_ref(&file_ref)?;
-        let width = max_width.unwrap_or(DEFAULT_THUMB_WIDTH).max(1);
+        let abs = resolve_file_ref(&fileRef)?;
+        let width = maxWidth.unwrap_or(DEFAULT_THUMB_WIDTH).max(1);
         let jpeg = match make_thumbnail_jpeg(&abs, width, DEFAULT_THUMB_QUALITY)? {
             Some(j) => j,
             None => return Ok(None),
@@ -171,18 +172,19 @@ pub struct WebsiteExportMediaResult {
 }
 
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
+#[allow(non_snake_case)]
 pub async fn website_export_media(
-    dest_full_dir: String,
-    media_refs: Vec<MediaRefInput>,
+    destFullDir: String,
+    mediaRefs: Vec<MediaRefInput>,
 ) -> Result<WebsiteExportMediaResult, String> {
     tokio::task::spawn_blocking(move || {
-        let dest_dir = std::path::PathBuf::from(&dest_full_dir);
+        let dest_dir = std::path::PathBuf::from(&destFullDir);
         std::fs::create_dir_all(&dest_dir)
             .map_err(|e| format!("mkdir {}: {e}", dest_dir.display()))?;
         let mut exported_ids = Vec::<String>::new();
         let mut copied: u64 = 0;
-        for entry in media_refs {
+        for entry in mediaRefs {
             let Some(file_ref) = entry.file_ref else { continue };
             if file_ref.is_empty() { continue; }
             let abs = match resolve_file_ref(&file_ref) {
@@ -231,13 +233,14 @@ pub async fn website_export_media(
 /// passing only image media (filtered by extension or MIME) — keeps the
 /// Rust side dumb.
 #[specta::specta]
-#[tauri::command(rename_all = "camelCase")]
+#[tauri::command]
+#[allow(non_snake_case)]
 pub fn website_bake_preview_thumbnails(
-    media_refs: Vec<MediaRefInput>,
+    mediaRefs: Vec<MediaRefInput>,
 ) -> Result<std::collections::HashMap<String, String>, String> {
     let mut out = std::collections::HashMap::<String, String>::new();
     let mut total = 0usize;
-    for entry in media_refs.into_iter().take(PREVIEW_THUMB_COUNT) {
+    for entry in mediaRefs.into_iter().take(PREVIEW_THUMB_COUNT) {
         if total >= PREVIEW_THUMB_BUDGET_BYTES {
             break;
         }
