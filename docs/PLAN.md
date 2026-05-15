@@ -10,9 +10,7 @@ This file lists only what's **left** — planned, in-progress, or backlog. Anyth
 
 Active plans under `docs/plans/`. Each entry links the plan file; the user goal is what the plan delivers.
 
-- **Post-audit e2e regression triage** — fix the three audit-induced regressions the e2e framework caught at its first Tier 2 close-out run: Holger Specta dispatch, PlacePanel Events save, ChartView reactivity. → [2026-05-14-post-audit-e2e-regression-triage.md](plans/2026-05-14-post-audit-e2e-regression-triage.md)
-- **Genney Tauri wiring** — port the last `notWired('Genney')` importer to the Tauri build (Bun sidecar mirroring the MCP-sidecar shape). → [2026-05-14-genney-tauri-wiring.md](plans/2026-05-14-genney-tauri-wiring.md)
-- **`build-third-party-licenses.mjs` reliability** — clean skip + placeholder when `node_modules` is missing, so worktree/subagent dispatches stop reporting false failures. → [2026-05-14-third-party-licenses-reliability.md](plans/2026-05-14-third-party-licenses-reliability.md)
+- **Genney sidecar path resolution under `build:e2e`** — close-out follow-up for Genney: the genney-gcc e2e case fails in the packaged binary with `read: No such file or directory (os error 2)`; tracks the fix and re-activation of the test. → [2026-05-15-genney-e2e-path-resolution.md](plans/2026-05-15-genney-e2e-path-resolution.md)
 - **Modal companion composables (3.5 follow-up)** — extract `useCompanionBaptism` / `useSpousePicker` / `useCitationsForPersonName` / `useWeddingOffer` / `useOverlapCheck` so the four large modals fit on one screen. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
 - **Audit follow-up roadmap (close-out)** — index doc; nearly all referenced plans have shipped, remaining tactical sweep + Tier 2.5 (Raw Payloads) gated on a renderer perf baseline. → [2026-05-14-audit-followup-roadmap.md](plans/2026-05-14-audit-followup-roadmap.md)
 

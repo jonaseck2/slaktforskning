@@ -41,6 +41,7 @@ const CI_SAFE_SCRIPTS = [
   'build:static',
   'build:third-party-licenses',
   'build:mcp-sidecar',
+  'build:genney-sidecar',
 ] as const;
 
 // Scripts we INTENTIONALLY skip + the one-line reason.
