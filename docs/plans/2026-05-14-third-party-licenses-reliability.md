@@ -100,9 +100,9 @@ Per `.claude/rules/plans.md`:
 
 ## Tasks
 
-- [ ] Task 0: pre-plan audit (reproduce failure, confirm the pattern).
-- [ ] Task 1: add the early-return branch + placeholder write.
-- [ ] Task 2: run `node scripts/build-third-party-licenses.mjs` in main repo to confirm no regression.
-- [ ] Task 3: temporarily remove `node_modules` (or use a clean worktree) and confirm the skip path exits 0.
-- [ ] Task 4: run `tests/unit/scripts.thirdPartyLicenses.test.ts` + `tests/unit/scripts.npmScripts.test.ts` — update if either was asserting against exit 1.
-- [ ] Task 5: Commit + CHANGELOG entry.
+- [x] Task 0: pre-plan audit (reproduce failure, confirm the pattern).
+- [x] Task 1: add the early-return branch + placeholder write.
+- [x] Task 2: run `node scripts/build-third-party-licenses.mjs` in main repo to confirm no regression.
+- [x] Task 3: temporarily remove `node_modules` (or use a clean worktree) and confirm the skip path exits 0.
+- [x] Task 4: run `tests/unit/scripts.thirdPartyLicenses.test.ts` + `tests/unit/scripts.npmScripts.test.ts` — update if either was asserting against exit 1.
+- [x] Task 5: Commit + CHANGELOG entry.
