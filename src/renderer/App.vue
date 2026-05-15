@@ -87,54 +87,7 @@
         <span class="nav-icon" aria-hidden="true">⚙️</span>
         <span class="nav-label">{{ $t('nav.settings') }}</span>
       </router-link>
-      <div class="settings-section">
-        <button class="settings-toggle" :aria-expanded="isSettingsOpen" :aria-label="$t('a11y.settings')" @click="isSettingsOpen = !isSettingsOpen">
-          <span class="nav-icon" aria-hidden="true">🎨</span>
-          <span class="nav-label">{{ $t('settings.appearance') }}</span>
-          <span class="settings-arrow">{{ isSettingsOpen ? '▴' : '▾' }}</span>
-        </button>
-        <div v-if="isSettingsOpen" class="settings-panel">
-          <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
-            <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="String(navOrientation === 'vertical')" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
-            <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="String(navOrientation === 'horizontal')" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
-            <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
-            <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
-            <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.theme') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
-            <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
-            <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
-            <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
-            <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
-            <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
-            <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
-            <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
-            <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
-            <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
-            <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
-            <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
-          </div>
-          <div class="settings-group-label">{{ $t('settings.language') }}</div>
-          <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
-            <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
-            <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
-          </div>
-        </div>
-      </div>
+      <AppSettingsPanel variant="renderer" />
     </nav>
 
     <!-- ── Horizontal top-bar layout ───────────────────────────────── -->
@@ -212,56 +165,7 @@
           <span class="nav-label">{{ $t('nav.settings') }}</span>
         </router-link>
         <div class="topbar-settings">
-          <button
-            class="topbar-settings-toggle"
-            :aria-expanded="isSettingsOpen"
-            :aria-label="$t('a11y.settings')"
-            @click.stop="isSettingsOpen = !isSettingsOpen"
-          >
-            <span aria-hidden="true">🎨</span>
-            <span class="nav-label">{{ $t('settings.appearance') }}</span>
-          </button>
-          <div v-if="isSettingsOpen" class="settings-panel topbar-settings-panel">
-            <div class="settings-group-label">{{ $t('settings.menuLayout') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.menuLayout')">
-              <button :class="['settings-option', { active: navOrientation === 'vertical' }]" role="radio" :aria-checked="String(navOrientation === 'vertical')" @click="setNavOrientation('vertical')">{{ $t('settings.menuVertical') }}</button>
-              <button :class="['settings-option', { active: navOrientation === 'horizontal' }]" role="radio" :aria-checked="String(navOrientation === 'horizontal')" @click="setNavOrientation('horizontal')">{{ $t('settings.menuHorizontal') }}</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.appearance') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.appearance')">
-              <button :class="['settings-option', { active: appearance === 'light' }]" role="radio" :aria-checked="String(appearance === 'light')" @click="setAppearance('light')">☀</button>
-              <button :class="['settings-option', { active: appearance === 'dark' }]" role="radio" :aria-checked="String(appearance === 'dark')" @click="setAppearance('dark')">🌙</button>
-              <button :class="['settings-option', { active: appearance === 'contrast' }]" role="radio" :aria-checked="String(appearance === 'contrast')" @click="setAppearance('contrast')">👁</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.theme') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.theme')">
-              <button :class="['settings-option', { active: currentTheme === 'forest' }]" role="radio" :aria-checked="String(currentTheme === 'forest')" @click="setTheme('forest')">🌲</button>
-              <button :class="['settings-option', { active: currentTheme === 'nordic' }]" role="radio" :aria-checked="String(currentTheme === 'nordic')" @click="setTheme('nordic')">❄️</button>
-              <button :class="['settings-option', { active: currentTheme === 'twilight' }]" role="radio" :aria-checked="String(currentTheme === 'twilight')" @click="setTheme('twilight')">🌅</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.addBtnStyle') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.addBtnStyle')">
-              <button :class="['settings-option', { active: addBtnStyle === 'plus' }]" role="radio" :aria-checked="String(addBtnStyle === 'plus')" :title="$t('settings.addBtnPlus')" @click="setAddBtnStyle('plus')">＋</button>
-              <button :class="['settings-option', { active: addBtnStyle === 'leaf' }]" role="radio" :aria-checked="String(addBtnStyle === 'leaf')" :title="$t('settings.addBtnLeaf')" @click="setAddBtnStyle('leaf')">🍃</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.textSize') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.textSize')">
-              <button :class="['settings-option', { active: textSize === 'small' }]" role="radio" :aria-checked="String(textSize === 'small')" @click="setTextSize('small')">S</button>
-              <button :class="['settings-option', { active: textSize === 'medium' }]" role="radio" :aria-checked="String(textSize === 'medium')" @click="setTextSize('medium')">M</button>
-              <button :class="['settings-option', { active: textSize === 'large' }]" role="radio" :aria-checked="String(textSize === 'large')" @click="setTextSize('large')">L</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.readAloud') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.readAloud')">
-              <button :class="['settings-option', { active: screenReader.mode.value === 'off' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'off')" :aria-label="$t('settings.off')" @click="screenReader.setMode('off')">🔇</button>
-              <button :class="['settings-option', { active: screenReader.mode.value === 'narrate' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'narrate')" :aria-label="$t('settings.narrate')" @click="screenReader.setMode('narrate')">🔊</button>
-              <button :class="['settings-option', { active: screenReader.mode.value === 'screenReader' }]" role="radio" :aria-checked="String(screenReader.mode.value === 'screenReader')" :aria-label="$t('settings.screenReaderMode')" @click="screenReader.setMode('screenReader')">♿</button>
-            </div>
-            <div class="settings-group-label">{{ $t('settings.language') }}</div>
-            <div class="settings-row" role="radiogroup" :aria-label="$t('settings.language')">
-              <button :class="['settings-option', { active: locale === 'sv' }]" role="radio" :aria-checked="String(locale === 'sv')" @click="setLocale('sv')">Sv</button>
-              <button :class="['settings-option', { active: locale === 'en' }]" role="radio" :aria-checked="String(locale === 'en')" @click="setLocale('en')">En</button>
-            </div>
-          </div>
+          <AppSettingsPanel variant="renderer" />
         </div>
       </nav>
     </header>
@@ -290,8 +194,6 @@
 import { ref, computed, onMounted, onUnmounted, provide, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { saveLocale } from './i18n';
-import type { SupportedLocale } from './i18n';
 import { useDataVersionStore } from './stores/dataVersion';
 import { usePersonNameOptions } from './stores/personNameOptions';
 import { useLinkRulesStore } from './stores/linkRules';
@@ -299,53 +201,19 @@ import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
 import AboutModal from './components/AboutModal.vue';
+import AppSettingsPanel from './components/AppSettingsPanel.vue';
 import { useToast } from './composables/useToast';
 import { STORAGE_KEYS } from './utils/storage-keys';
 
 const router = useRouter();
 const route = useRoute();
-const { locale, t } = useI18n();
+const { t } = useI18n();
 const dataVersionStore = useDataVersionStore();
 const personNameOptions = usePersonNameOptions();
 const linkRulesStore = useLinkRulesStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
-
-type Appearance = 'light' | 'dark' | 'contrast';
-const appearance = ref<Appearance>(
-  (localStorage.getItem(STORAGE_KEYS.appearance) as Appearance) ||
-  (localStorage.getItem(STORAGE_KEYS.darkMode) === 'true' ? 'dark' : 'light')
-);
-
-const THEME_CLASSES = ['theme-forest', 'theme-nordic', 'theme-twilight'] as const;
-type Theme = 'forest' | 'nordic' | 'twilight';
-const currentTheme = ref<Theme>(
-  (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'forest'
-);
-
-function setTheme(theme: Theme) {
-  currentTheme.value = theme;
-  document.documentElement.classList.remove(...THEME_CLASSES);
-  document.documentElement.classList.add(`theme-${theme}`);
-  localStorage.setItem(STORAGE_KEYS.theme, theme);
-}
-
-const APPEARANCE_I18N = { light: 'settings.lightMode', dark: 'settings.darkMode', contrast: 'settings.contrastMode' } as const;
-
-function setAppearance(value: Appearance) {
-  appearance.value = value;
-  localStorage.setItem(STORAGE_KEYS.appearance, value);
-  document.documentElement.classList.remove('dark', 'high-contrast');
-  if (value === 'dark') document.documentElement.classList.add('dark');
-  if (value === 'contrast') document.documentElement.classList.add('high-contrast');
-  if (screenReader.isTtsEnabled.value) {
-    tts.speak(t(APPEARANCE_I18N[value]), locale.value);
-  }
-}
-
-// --- Sidebar / topbar appearance panel ---
-const isSettingsOpen = ref(false);
 
 // --- Undo / redo toolbar state ---
 // The undo manager lives in the worker; getState returns the next-action
@@ -402,27 +270,29 @@ if (typeof window !== 'undefined') {
 }
 
 // Nav orientation: vertical (left sidebar) or horizontal (top-bar with section
-// dropdowns). Persisted in localStorage; UI preference, not db_settings.
+// dropdowns). Owned by <AppSettingsPanel>; we mirror it locally so the
+// template can reactively switch layouts. The component dispatches
+// `app-settings-changed` on every write; we sync on receipt.
 type NavOrientation = 'vertical' | 'horizontal';
 const navOrientation = ref<NavOrientation>(
   (localStorage.getItem(STORAGE_KEYS.navOrientation) as NavOrientation) || 'vertical'
 );
-function setNavOrientation(value: NavOrientation) {
-  navOrientation.value = value;
-  localStorage.setItem(STORAGE_KEYS.navOrientation, value);
-}
 
 // Add-family-member button style — controls whether the badge in each
-// chart person-box is a round + or a tilted leaf. Persisted in
-// localStorage; provided through `appearance-store` so charts read it
-// reactively.
+// chart person-box is a round + or a tilted leaf. Owned by
+// <AppSettingsPanel>; mirrored here so charts can inject the ref reactively
+// through `appearance-store`.
 type AddBtnStyle = 'plus' | 'leaf';
 const addBtnStyle = ref<AddBtnStyle>(
   (localStorage.getItem(STORAGE_KEYS.addBtnStyle) as AddBtnStyle) || 'plus'
 );
-function setAddBtnStyle(value: AddBtnStyle) {
-  addBtnStyle.value = value;
-  localStorage.setItem(STORAGE_KEYS.addBtnStyle, value);
+
+function onAppSettingsChanged(e: Event) {
+  const ev = e as CustomEvent<{ key: string; value: string }>;
+  const detail = ev.detail;
+  if (!detail) return;
+  if (detail.key === 'navOrientation') navOrientation.value = detail.value as NavOrientation;
+  else if (detail.key === 'addBtnStyle') addBtnStyle.value = detail.value as AddBtnStyle;
 }
 
 provide('ttsEnabled', screenReader.isTtsEnabled);
@@ -430,11 +300,12 @@ provide('tts', tts);
 provide('screenReader', screenReader);
 // Appearance state shared with SettingsView's Utseende tab so both the
 // sidebar/topbar popover and /settings stay in sync without duplicating refs.
+// Setters live in <AppSettingsPanel>; consumers (chart components) only need
+// to *read* these refs, which mirror localStorage via the
+// `app-settings-changed` window event bridged in onMounted.
 provide('appearance-store', {
   navOrientation,
-  setNavOrientation,
   addBtnStyle,
-  setAddBtnStyle,
 });
 
 watch(() => route.path, () => {
@@ -561,33 +432,6 @@ function isSectionActive(sec: NavSectionDef): boolean {
 }
 function handleDocClick() { openSection.value = null; }
 
-const RAW_TEXT_SIZE = localStorage.getItem(STORAGE_KEYS.textSize);
-const textSize = ref<'small' | 'medium' | 'large'>(
-  (RAW_TEXT_SIZE === 'medium' || RAW_TEXT_SIZE === 'large') ? RAW_TEXT_SIZE : 'small'
-);
-
-function applyTextSize() {
-  document.documentElement.classList.remove('text-medium', 'text-large');
-  if (textSize.value === 'medium') document.documentElement.classList.add('text-medium');
-  if (textSize.value === 'large') document.documentElement.classList.add('text-large');
-}
-
-const TEXT_SIZE_I18N = { small: 'settings.textSizeSmall', medium: 'settings.textSizeMedium', large: 'settings.textSizeLarge' } as const;
-
-function setTextSize(size: 'small' | 'medium' | 'large') {
-  textSize.value = size;
-  localStorage.setItem(STORAGE_KEYS.textSize, size);
-  applyTextSize();
-  if (screenReader.isTtsEnabled.value) {
-    tts.speak(t(TEXT_SIZE_I18N[size]), locale.value);
-  }
-}
-
-function setLocale(val: SupportedLocale) {
-  locale.value = val;
-  saveLocale(val);
-}
-
 function handleGlobalKey(e: KeyboardEvent) {
   if (e.key === 'Escape') openSection.value = null;
 }
@@ -640,12 +484,10 @@ async function loadDuplicatesBadge() {
 }
 
 onMounted(() => {
-  setTheme(currentTheme.value);
-  setAppearance(appearance.value);
-  applyTextSize();
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
   window.addEventListener('click', handleDocClick);
+  window.addEventListener('app-settings-changed', onAppSettingsChanged);
   loadDefaultPerson();
   personNameOptions.init();
   linkRulesStore.init();
@@ -704,6 +546,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKey);
   window.removeEventListener('click', handleDocClick);
+  window.removeEventListener('app-settings-changed', onAppSettingsChanged);
 });
 
 </script>
@@ -978,73 +821,6 @@ body {
 .undo-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.settings-section {
-  margin-top: 4px;
-  border-top: 1px solid var(--sidebar-border);
-  padding-top: 6px;
-}
-.settings-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--sidebar-text);
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: var(--font-sm);
-  font-family: inherit;
-  text-align: left;
-}
-.settings-toggle:hover {
-  background: var(--sidebar-active-bg);
-}
-.settings-arrow {
-  margin-left: auto;
-  font-size: var(--font-xs);
-  color: var(--sidebar-text-muted);
-}
-.settings-panel {
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.settings-group-label {
-  font-size: var(--font-xs);
-  color: var(--sidebar-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 4px;
-}
-.settings-row {
-  display: flex;
-  gap: 3px;
-}
-.settings-option {
-  flex: 1;
-  background: var(--sidebar-active-bg);
-  border: none;
-  color: var(--sidebar-text);
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: var(--font-xs);
-  font-family: inherit;
-  text-align: center;
-  transition: all 0.15s;
-}
-.settings-option:hover {
-  color: var(--sidebar-active-text);
-}
-.settings-option.active {
-  background: var(--accent);
-  color: var(--accent-text);
-  font-weight: 600;
 }
 
 .error-badge {
