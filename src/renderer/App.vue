@@ -1,94 +1,35 @@
 <template>
   <div class="app" :class="['app--' + navOrientation]">
-    <a href="#main-content" class="skip-link">{{ $t('a11y.skipToMain') }}</a>
-    <nav v-if="navOrientation === 'vertical'" class="sidebar" aria-label="Main navigation">
-      <div class="sidebar-header">
-        <span class="sidebar-title">🌿 {{ $t('app.title') }}</span>
-      </div>
-      <h2 class="nav-section-label">{{ $t('nav.research') }}</h2>
-      <router-link to="/" class="nav-item" :aria-label="$t('nav.people')">
-        <span class="nav-icon" aria-hidden="true">👤</span>
-        <span class="nav-label">{{ $t('nav.people') }}</span>
-      </router-link>
-      <router-link to="/places" class="nav-item" :aria-label="$t('places.title')">
-        <span class="nav-icon" aria-hidden="true">📍</span>
-        <span class="nav-label">{{ $t('places.title') }}</span>
-      </router-link>
-      <router-link to="/media" class="nav-item" :aria-label="$t('media.nav')">
-        <span class="nav-icon" aria-hidden="true">📷</span>
-        <span class="nav-label">{{ $t('media.nav') }}</span>
-      </router-link>
-      <router-link to="/search" class="nav-item" :aria-label="$t('nav.search')">
-        <span class="nav-icon" aria-hidden="true">🔍</span>
-        <span class="nav-label">{{ $t('nav.search') }}</span>
-      </router-link>
-      <h2 class="nav-section-label">{{ $t('nav.organize') }}</h2>
-      <router-link to="/groups" class="nav-item" :aria-label="$t('nav.groups')">
-        <span class="nav-icon" aria-hidden="true">🏷️</span>
-        <span class="nav-label">{{ $t('nav.groups') }}</span>
-      </router-link>
-      <router-link to="/research-tasks" class="nav-item" :aria-label="openTaskCount > 0 ? $t('nav.researchTasks') + ', ' + openTaskCount + ' ' + $t('a11y.openTasks', { count: openTaskCount }) : $t('nav.researchTasks')">
-        <span class="nav-icon" aria-hidden="true">🔬</span>
-        <span class="nav-label">{{ $t('nav.researchTasks') }}</span>
-        <span v-if="openTaskCount > 0" class="error-badge">{{ openTaskCount }}</span>
-      </router-link>
-      <h2 class="nav-section-label">{{ $t('nav.review') }}</h2>
-      <router-link to="/sources" class="nav-item" :aria-label="$t('nav.sources')">
-        <span class="nav-icon" aria-hidden="true">📚</span>
-        <span class="nav-label">{{ $t('nav.sources') }}</span>
-      </router-link>
-      <router-link to="/quality" class="nav-item" :aria-label="qualityErrorCount > 0 ? $t('nav.quality') + ', ' + qualityErrorCount + ' ' + $t('a11y.qualityIssues', { count: qualityErrorCount }) : $t('nav.quality')">
-        <span class="nav-icon" aria-hidden="true">⚠️</span>
-        <span class="nav-label">{{ $t('nav.quality') }}</span>
-        <span v-if="qualityErrorCount > 0" class="error-badge">{{ qualityErrorCount }}</span>
-      </router-link>
-      <router-link to="/duplicates" class="nav-item" :aria-label="duplicateCount > 0 ? $t('nav.duplicates') + ', ' + duplicateCount + ' ' + $t('a11y.duplicates', { count: duplicateCount }) : $t('nav.duplicates')">
-        <span class="nav-icon" aria-hidden="true">👥</span>
-        <span class="nav-label">{{ $t('nav.duplicates') }}</span>
-        <span v-if="duplicateCount > 0" class="error-badge">{{ duplicateCount }}</span>
-      </router-link>
-      <h2 class="nav-section-label">{{ $t('nav.present') }}</h2>
-      <router-link to="/reports" class="nav-item" :aria-label="$t('reports.nav')">
-        <span class="nav-icon" aria-hidden="true">🖨️</span>
-        <span class="nav-label">{{ $t('reports.nav') }}</span>
-      </router-link>
-      <router-link to="/prints" class="nav-item" :aria-label="$t('nav.framablePrints')">
-        <span class="nav-icon" aria-hidden="true">🖼️</span>
-        <span class="nav-label">{{ $t('nav.framablePrints') }}</span>
-      </router-link>
-      <router-link to="/website" class="nav-item" :aria-label="$t('nav.website')">
-        <span class="nav-icon" aria-hidden="true">🌐</span>
-        <span class="nav-label">{{ $t('nav.website') }}</span>
-      </router-link>
-      <div class="sidebar-spacer"></div>
-      <div class="undo-row" role="group" :aria-label="$t('undo.toolbar')">
-        <button
-          type="button"
-          class="undo-btn"
-          :disabled="!undoState.canUndo"
-          :aria-label="undoTooltip"
-          :title="undoTooltip"
-          @click="doUndo"
-        >↶</button>
-        <button
-          type="button"
-          class="undo-btn"
-          :disabled="!undoState.canRedo"
-          :aria-label="redoTooltip"
-          :title="redoTooltip"
-          @click="doRedo"
-        >↷</button>
-      </div>
-      <router-link to="/import-export" class="nav-item nav-bottom-item" :aria-label="$t('nav.importExport')">
-        <span class="nav-icon" aria-hidden="true">📦</span>
-        <span class="nav-label">{{ $t('nav.importExport') }}</span>
-      </router-link>
-      <router-link to="/settings" class="nav-item nav-bottom-item" :aria-label="$t('nav.settings')">
-        <span class="nav-icon" aria-hidden="true">⚙️</span>
-        <span class="nav-label">{{ $t('nav.settings') }}</span>
-      </router-link>
-      <AppSettingsPanel variant="renderer" />
-    </nav>
+    <AppSidebar v-if="navOrientation === 'vertical'" :sections="navSections" variant="renderer">
+      <template #bottom>
+        <div class="undo-row" role="group" :aria-label="$t('undo.toolbar')">
+          <button
+            type="button"
+            class="undo-btn"
+            :disabled="!undoState.canUndo"
+            :aria-label="undoTooltip"
+            :title="undoTooltip"
+            @click="doUndo"
+          >↶</button>
+          <button
+            type="button"
+            class="undo-btn"
+            :disabled="!undoState.canRedo"
+            :aria-label="redoTooltip"
+            :title="redoTooltip"
+            @click="doRedo"
+          >↷</button>
+        </div>
+        <router-link to="/import-export" class="nav-item nav-bottom-item" :aria-label="$t('nav.importExport')">
+          <span class="nav-icon" aria-hidden="true">📦</span>
+          <span class="nav-label">{{ $t('nav.importExport') }}</span>
+        </router-link>
+        <router-link to="/settings" class="nav-item nav-bottom-item" :aria-label="$t('nav.settings')">
+          <span class="nav-icon" aria-hidden="true">⚙️</span>
+          <span class="nav-label">{{ $t('nav.settings') }}</span>
+        </router-link>
+      </template>
+    </AppSidebar>
 
     <!-- ── Horizontal top-bar layout ───────────────────────────────── -->
     <header v-else class="topbar" aria-label="App header">
@@ -202,6 +143,7 @@ import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
 import AboutModal from './components/AboutModal.vue';
 import AppSettingsPanel from './components/AppSettingsPanel.vue';
+import AppSidebar from './components/AppSidebar.vue';
 import { useToast } from './composables/useToast';
 import { STORAGE_KEYS } from './utils/storage-keys';
 
@@ -694,35 +636,6 @@ body {
 .topbar-row--nav .nav-item { padding: 6px 12px; }
 .nav-item--quiet { opacity: 0.85; }
 
-.sidebar {
-  width: 220px;
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  padding: 12px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-  overflow-y: auto;
-  border-radius: var(--radius-lg);
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px 10px;
-  border-bottom: 1px solid var(--sidebar-border);
-  margin-bottom: 8px;
-  flex-shrink: 0;
-}
-
-.sidebar-title {
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--sidebar-active-text);
-}
-
 .nav-section-label {
   font-size: var(--font-xs);
   font-weight: 600;
@@ -732,7 +645,6 @@ body {
   flex-shrink: 0;
 }
 
-.sidebar a,
 .nav-item {
   color: var(--sidebar-text);
   text-decoration: none;
@@ -745,8 +657,6 @@ body {
   flex-shrink: 0;
 }
 
-.sidebar a:hover,
-.sidebar a.router-link-active,
 .nav-item:hover,
 .nav-item.router-link-active {
   background: var(--sidebar-active-bg);
@@ -755,10 +665,6 @@ body {
 
 .nav-icon { font-size: var(--font-base); line-height: 1; flex-shrink: 0; }
 .nav-label { font-size: var(--font-sm); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.sidebar-spacer {
-  flex: 1;
-}
 
 .nav-bottom-item {
   margin-top: 2px;
@@ -842,7 +748,7 @@ body {
 }
 
 @media print {
-  .sidebar, .topbar { display: none !important; }
+  .topbar { display: none !important; }
   .app { display: block; height: auto; padding: 0; gap: 0; background: none; }
   .content, .content-paneled { padding: 0; height: auto; overflow: visible !important; background: none; border-radius: 0; }
   body { background: none; }
