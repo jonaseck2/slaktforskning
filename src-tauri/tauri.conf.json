@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "node scripts/fetch-bun-binaries.mjs && npx vite --config vite.renderer.config.ts",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "node scripts/fetch-bun-binaries.mjs && node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && npx vite build --config vite.renderer.config.ts",
+    "beforeBuildCommand": "node scripts/fetch-bun-binaries.mjs && node scripts/build-third-party-licenses.mjs && node scripts/build-mcp-sidecar.mjs && node scripts/build-genney-sidecar.mjs && npx vite build --config vite.renderer.config.ts",
     "frontendDist": "../dist-tauri"
   },
   "app": {
@@ -28,7 +28,9 @@
     "resources": [
       "../THIRD_PARTY_LICENSES.txt",
       "../dist-mcp/server.bundle.mjs",
-      "../dist-mcp/data/*"
+      "../dist-mcp/data/*",
+      "../dist-genney/genney-import.bundle.mjs",
+      "../dist-genney/DerbyExtractor.java"
     ],
     "externalBin": ["binaries/bun"],
     "macOS": {

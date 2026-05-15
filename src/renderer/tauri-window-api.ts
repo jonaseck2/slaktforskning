@@ -992,23 +992,105 @@ export function mountWindowApi(db: Database): MountResult {
       }
     }
   };
-  // The "progress" listener used by the Electron build is a Tauri event
-  // listener subscribed via window.api.import.onHolgerProgress(cb). We
-  // don't broadcast progress messages from the Rust side yet — the
+  // Deferred: the "progress" listener used by the Electron build is a
+  // Tauri event listener subscribed via window.api.import.onHolgerProgress(cb).
+  // We don't broadcast progress messages from the Rust side yet — the
   // import is fast enough on a modern Mac that a single "Importerar…"
   // banner from the Vue UI is acceptable. Wire as no-op so the UI's
   // listener registration doesn't crash.
+  // (NOTE: line 832 above wires `api.import.onHolgerProgress = subscribe('holger')`
+  // for in-process per-message progress; this assignment silently overrides
+  // it. Un-defer trigger: a Holger import that runs slowly enough for a user
+  // to want per-row progress — at that point, drop this override and the
+  // subscribe('holger') wiring delivers the messages.)
   api.import.onHolgerProgress = () => { /* not yet wired */ };
 
-  // Genney importer still does extensive fs operations (directory walks,
-  // Derby extraction via Docker/Java spawning) that need wholesale Rust-
-  // side replacements. Stays throw-on-call until that work lands.
-  const notWired = (label: string) => async () => ({
-    success: false,
-    error: `${label} import is not yet wired in the Tauri build (deferred)`,
-  });
-  api.import.genneyRun = notWired('Genney');
-  api.import.genneyDiscover = async () => ({ success: false, error: 'genneyDiscover not yet wired in Tauri build' });
+  // Genney importer — three-step flow:
+  //   1. invoke('genneyImport', ...) → Rust spawns the Bun sidecar bundling
+  //      src/import/genney/index.ts (Node-shape child_process / worker_threads /
+  //      https that the webview lacks). The sidecar opens the same SQLite file
+  //      with node-sqlite3-wasm and runs importFromGenney directly.
+  //   2. If the sidecar returns gedcomFallbackPath (encrypted .gcc, or .backup
+  //      with no Derby DB), the polyfill reads the temp .ged via
+  //      fs_read_bytes_base64 and runs the GEDCOM importer through the same
+  //      path Holger uses.
+  //   3. Cleanup of the temp dir owned by the GEDCOM fallback is the
+  //      sidecar's responsibility — the renderer's only post-import work is
+  //      consolidateMediaFolder + fireDataChanged.
+  api.import.genneyRun = async (opts: unknown) => {
+    const o = opts as { sourcePath?: string; mediaDir?: string; schema?: string } | undefined;
+    if (!o?.sourcePath) return { success: false, error: 'sourcePath is required' };
+    _importInProgress = true;
+    try {
+      const cur = await commands.dbCurrentPath();
+      if (!cur) return { success: false, error: 'no DB open' };
+      const dbDir = cur.replace(/[\\/][^\\/]+$/, '');
+      const dbBase = (cur.split(/[\\/]/).pop() ?? '').replace(/\.(db|sqlite|sqlite3)$/i, '');
+      const destMediaDir = `${dbDir}/${dbBase}-media`;
+
+      fireProgress('genney', 'Starting Genney import…');
+      // repoRoot is only used by the Rust dev-fallback to locate
+      // `dist-genney/genney-import.bundle.mjs`. The renderer doesn't
+      // know its own repo root (no fs in the webview); we pass an
+      // empty string and let the Rust side fall back to cwd, which is
+      // the project root under `tauri dev` / `tauri build --no-bundle`.
+      const result = await unwrap(commands.genneyImport(
+        '',
+        o.sourcePath,
+        cur,
+        o.mediaDir ?? null,
+        destMediaDir,
+        o.schema ?? null,
+      ));
+
+      // Replay progress messages the sidecar buffered so the toast UI
+      // sees the same stream the importer emitted.
+      for (const msg of result.progress) fireProgress('genney', msg);
+
+      // GEDCOM fallback path: archive was encrypted (or had no Derby DB
+      // but a .ged inside). The sidecar extracts the .ged to a temp file
+      // and returns its path — read it back and run the normal GEDCOM
+      // importer through the same decode → parse → importGedcom path that
+      // api.gedcom.import uses.
+      if (result.gedcomFallbackPath) {
+        fireProgress('genney', 'Importing GEDCOM fallback…');
+        const [enc, parserMod, importerMod] = await Promise.all([
+          import('../gedcom/encoding'),
+          import('../gedcom/parser'),
+          import('../import/gedcom'),
+        ]);
+        const b64 = await unwrap(commands.fsReadBytesBase64(result.gedcomFallbackPath));
+        const gedBytes = base64ToUint8Array(b64);
+        const text = enc.decodeGedcomBytes(gedBytes);
+        const tree = parserMod.parseGedcom(text);
+        await importerMod.importGedcom(getDb(), tree, {
+          onProgress: (m) => fireProgress('genney', m),
+        });
+      }
+
+      // Consolidate any absolute file_refs that the importer wrote
+      // (mirrors the Holger flow). Idempotent — near-no-op when refs
+      // are already relative.
+      try {
+        await unwrap(commands.holgerConsolidateMedia(cur, o.mediaDir ?? null));
+      } catch (e) {
+        console.warn(`[genney] consolidate_media failed: ${(e as Error)?.message ?? e}`);
+      }
+
+      fireDataChanged();
+      return { success: true, summary: result.summary };
+    } catch (e) {
+      return { success: false, error: String((e as Error)?.message || e) };
+    } finally {
+      _importInProgress = false;
+    }
+  };
+  // Deferred: api.import.genneyDiscover is the UI affordance for picking which
+  // tables in a .gcc to scope the import to. Not load-bearing for the import
+  // itself — when the user picks a file the regular genneyRun path covers all
+  // tables. Tracked in docs/plans/2026-05-14-genney-tauri-wiring.md Scope
+  // deviations (option to add as follow-up if users ask).
+  api.import.genneyDiscover = async () => ({ success: false, error: 'genneyDiscover not yet wired in Tauri build (deferred — see 2026-05-14-genney-tauri-wiring.md)' });
 
   if (!api.archive) api.archive = {};
   // Archive export — open save dialog, build zip in memory via the pure

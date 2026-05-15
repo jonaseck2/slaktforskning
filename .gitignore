@@ -27,6 +27,7 @@ sbom.cdx.json
 target/
 dist-mcp/
 dist-mcp-test/
+dist-genney/
 
 # Bun runtime binaries — fetched per build by scripts/fetch-bun-binaries.mjs.
 # Lockfile (bun-binaries.lock) is committed; binaries themselves are not.

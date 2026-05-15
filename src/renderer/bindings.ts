@@ -122,6 +122,7 @@ export const commands = {
 	holgerExtractGed: (sourcePath: string) => typedError<ExtractGedResult, string>(__TAURI_INVOKE("holger_extract_ged", { sourcePath })),
 	holgerBulkCopyMedia: (srcDir: string, destDir: string) => typedError<BulkCopyResult, string>(__TAURI_INVOKE("holger_bulk_copy_media", { srcDir, destDir })),
 	holgerConsolidateMedia: (dbPath: string, bulkCopiedFromDir: string | null) => typedError<ConsolidateResult, string>(__TAURI_INVOKE("holger_consolidate_media", { dbPath, bulkCopiedFromDir })),
+	genneyImport: (repoRoot: string, sourcePath: string, dbPath: string, mediaDir: string | null, destMediaDir: string | null, schema: string | null) => typedError<GenneyImportResult, string>(__TAURI_INVOKE("genney_import", { repoRoot, sourcePath, dbPath, mediaDir, destMediaDir, schema })),
 	secondaryDbOpen: (path: string) => typedError<number, string>(__TAURI_INVOKE("secondary_db_open", { path })),
 	secondaryDbClose: (handle: number) => __TAURI_INVOKE<void>("secondary_db_close", { handle }),
 	secondaryDbRun: (handle: number, sql: string, params: (Record<string, never>)[] | null) => typedError<RunResult, string>(__TAURI_INVOKE("secondary_db_run", { handle, sql, params })),
@@ -251,6 +252,31 @@ export type ExtractGedResult = {
 	tempDir: string | null,
 	/**  Filename of the .ged the bytes came from (debug aid; not load-bearing). */
 	gedName: string,
+};
+
+export type GenneyImportResult = {
+	/**
+	 *  JSON-serialised ImportSummary from src/import/genney/transform.ts.
+	 *  Returned as opaque JSON so changes to the TS-side summary shape
+	 *  don't require Rust edits — the renderer deserialises into the
+	 *  existing type. Wrapped in `JsonValueWire` because `serde_json::Value`
+	 *  has no Specta `Type` impl that survives bindings codegen.
+	 */
+	summary: Record<string, never>,
+	/**
+	 *  When the source archive is encrypted or has no Derby DB, the
+	 *  importer falls back to extracting the newest GEDCOM file out of the
+	 *  archive and returns its temp-dir path here. The renderer is expected
+	 *  to read it back with `fs_read_bytes_base64` and pass it through the
+	 *  normal GEDCOM importer, then clean up via `fs_remove_dir`.
+	 */
+	gedcomFallbackPath: string | null,
+	/**
+	 *  All progress messages the sidecar emitted, in order. The renderer
+	 *  uses these to drive the import-progress toast; capturing them on the
+	 *  Rust side avoids a separate event-channel wire.
+	 */
+	progress: string[],
 };
 
 export type McpProbe = {

@@ -2,6 +2,7 @@
 // surface to whatever extent the spike needs to prove end-to-end works.
 
 mod db;
+mod genney;
 mod import;
 mod mcp;
 mod media;
@@ -477,6 +478,38 @@ fn fs_remove_dir(path: String) -> Result<(), String> {
     import::remove_dir(&path)
 }
 
+// ── Genney import command ──────────────────────────────────────────────────
+// The renderer's polyfill in src/renderer/tauri-window-api.ts
+// (`api.import.genneyRun`) invokes this to drive a Genney `.gcc` / `.backup`
+// import. We spawn the Bun-based Genney sidecar (which bundles the existing
+// `importFromGenney` logic with its node-shape deps — child_process,
+// worker_threads, https — that the Tauri webview lacks) and stream its
+// NDJSON result back. See `src-tauri/src/genney.rs` for the wire protocol.
+
+#[specta::specta]
+#[tauri::command]
+#[allow(non_snake_case)]
+async fn genney_import(
+    app: tauri::AppHandle,
+    repoRoot: String,
+    sourcePath: String,
+    dbPath: String,
+    mediaDir: Option<String>,
+    destMediaDir: Option<String>,
+    schema: Option<String>,
+) -> Result<genney::GenneyImportResult, String> {
+    genney::run_import(
+        &app,
+        &repoRoot,
+        &sourcePath,
+        &dbPath,
+        mediaDir.as_deref(),
+        destMediaDir.as_deref(),
+        schema.as_deref(),
+    )
+    .await
+}
+
 // ── Secondary read-only DB commands ────────────────────────────────────────
 // Open an arbitrary SQLite file (e.g. a .rmgc) as a read-only secondary
 // connection. The renderer drives the import via the SecondaryDatabase shim
@@ -789,6 +822,7 @@ pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             holger_extract_ged,
             holger_bulk_copy_media,
             holger_consolidate_media,
+            genney_import,
             secondary_db_open,
             secondary_db_close,
             secondary_db_run,
