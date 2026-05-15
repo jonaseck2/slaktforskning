@@ -172,6 +172,37 @@ pub async fn run_import(
         }
     }
 
+    // Augment PATH so the sidecar's `spawnSync('docker' | 'java', ...)`
+    // calls succeed on macOS when the app was launched from Finder/Dock —
+    // GUI-launched processes inherit a stripped PATH (typically
+    // `/usr/bin:/bin:/usr/sbin:/sbin`), without `/usr/local/bin` or
+    // `/opt/homebrew/bin` where Docker Desktop and Homebrew Java live.
+    // Linux Snap/Flatpak Docker also installs to non-default locations.
+    // The importer's `getDockerExecutable` falls through to a literal
+    // `'docker'` lookup that only resolves via PATH, so without this
+    // augmentation a perfectly-running Docker Desktop reports as missing.
+    {
+        let existing = std::env::var("PATH").unwrap_or_default();
+        #[cfg(target_os = "macos")]
+        let extras = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin";
+        #[cfg(target_os = "linux")]
+        let extras = "/usr/local/bin:/usr/bin:/bin:/snap/bin";
+        #[cfg(target_os = "windows")]
+        let extras = ""; // Windows-side fallback lives in the sidecar's
+                         // `getDockerExecutable` (probes Program Files etc.).
+        let sep = if cfg!(target_os = "windows") { ";" } else { ":" };
+        let augmented = if existing.is_empty() {
+            extras.to_string()
+        } else if extras.is_empty() {
+            existing
+        } else {
+            format!("{extras}{sep}{existing}")
+        };
+        if !augmented.is_empty() {
+            sidecar = sidecar.env("PATH", augmented);
+        }
+    }
+
     let (mut rx, _child) = sidecar
         .spawn()
         .map_err(|e| format!("spawn bun sidecar: {e}"))?;

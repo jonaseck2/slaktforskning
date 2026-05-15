@@ -116,14 +116,13 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
-async function checkDocker(): Promise<boolean> {
-  const r = await window.api.import.genneyCheckDocker() as { available: boolean };
-  if (!r.available) {
-    setStatus(t('importExport.genneyDerbyNoDocker'), 'error');
-    return false;
-  }
-  return true;
-}
+// Upfront Docker probe removed (2026-05-15): the importer detects
+// Docker / local Java / GEDCOM-fallback internally and surfaces a
+// specific error if none of the paths work. The previous pre-flight
+// check called a renderer stub that always returned `available: false`
+// (the Tauri build never wired the actual probe) AND would have hit a
+// stripped-PATH problem on macOS GUI launches even if it had been
+// wired. Just run the import and let it report what failed.
 
 async function pickGcc() {
   const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
@@ -183,13 +182,11 @@ async function pickAndImportBackup() {
   if (busy.value) return;
   const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
   if (r.canceled || !r.path) return;
-  if (!await checkDocker()) return;
   await runDerbyImport(r.path);
 }
 
 async function importGcc() {
   if (!gccPath.value || busy.value) return;
-  if (!await checkDocker()) return;
   await runDerbyImport(gccPath.value, gccMediaDir.value || undefined);
 }
 
