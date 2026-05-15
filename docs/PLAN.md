@@ -10,7 +10,6 @@ This file lists only what's **left** — planned, in-progress, or backlog. Anyth
 
 Active plans under `docs/plans/`. Each entry links the plan file; the user goal is what the plan delivers.
 
-- **Genney sidecar path resolution under `build:e2e`** — close-out follow-up for Genney: the genney-gcc e2e case fails in the packaged binary with `read: No such file or directory (os error 2)`; tracks the fix and re-activation of the test. → [2026-05-15-genney-e2e-path-resolution.md](plans/2026-05-15-genney-e2e-path-resolution.md)
 - **Modal companion composables (3.5 follow-up)** — extract `useCompanionBaptism` / `useSpousePicker` / `useCitationsForPersonName` / `useWeddingOffer` / `useOverlapCheck` so the four large modals fit on one screen. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
 - **Audit follow-up roadmap (close-out)** — index doc; nearly all referenced plans have shipped, remaining tactical sweep + Tier 2.5 (Raw Payloads) gated on a renderer perf baseline. → [2026-05-14-audit-followup-roadmap.md](plans/2026-05-14-audit-followup-roadmap.md)
 
