@@ -5,14 +5,14 @@
 
 /* ── 1. CSS custom properties ──────────────────────────── */
 :root {
-  /* -- Typography -- */
-  --font-xs:   11px;
-  --font-sm:   13px;
-  --font-base: 14px;
-  --font-md:   15px;
-  --font-lg:   16px;
-  --font-xl:   18px;
-  --font-2xl:  22px;
+  /* -- Typography -- (rem so all sizes scale with the OS/browser root font size) */
+  --font-xs:   0.6875rem;  /* 11px @ 16px root */
+  --font-sm:   0.8125rem;  /* 13px */
+  --font-base: 0.875rem;   /* 14px */
+  --font-md:   0.9375rem;  /* 15px */
+  --font-lg:   1rem;       /* 16px */
+  --font-xl:   1.125rem;   /* 18px */
+  --font-2xl:  1.375rem;   /* 22px */
 
   /* -- Semantic badge colors — derived from tokens -- */
   --color-sex-m-bg:       var(--sex-m-bg);
@@ -63,22 +63,22 @@
 /* ── 2. Text size tiers (screen only — never affects print/export) */
 @media screen {
   html.text-medium {
-    --font-xs:   13px;
-    --font-sm:   17px;
-    --font-base: 18px;
-    --font-md:   19px;
-    --font-lg:   20px;
-    --font-xl:   22px;
-    --font-2xl:  26px;
+    --font-xs:   0.8125rem;  /* 13px @ 16px root */
+    --font-sm:   1.0625rem;  /* 17px */
+    --font-base: 1.125rem;   /* 18px */
+    --font-md:   1.1875rem;  /* 19px */
+    --font-lg:   1.25rem;    /* 20px */
+    --font-xl:   1.375rem;   /* 22px */
+    --font-2xl:  1.625rem;   /* 26px */
   }
   html.text-large {
-    --font-xs:   15px;
-    --font-sm:   21px;
-    --font-base: 22px;
-    --font-md:   23px;
-    --font-lg:   24px;
-    --font-xl:   26px;
-    --font-2xl:  30px;
+    --font-xs:   0.9375rem;  /* 15px @ 16px root */
+    --font-sm:   1.3125rem;  /* 21px */
+    --font-base: 1.375rem;   /* 22px */
+    --font-md:   1.4375rem;  /* 23px */
+    --font-lg:   1.5rem;     /* 24px */
+    --font-xl:   1.625rem;   /* 26px */
+    --font-2xl:  1.875rem;   /* 30px */
   }
 }
 
