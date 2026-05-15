@@ -602,22 +602,7 @@ body {
 }
 
 .topbar-settings { position: relative; flex-shrink: 0; }
-.topbar-settings-toggle {
-  background: none;
-  border: 1px solid var(--sidebar-border);
-  color: var(--sidebar-active-text);
-  padding: 5px 10px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: var(--font-sm);
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: inherit;
-}
-.topbar-settings-toggle:hover { background: var(--sidebar-active-bg); }
-.topbar-settings-panel {
+.topbar-settings .settings-panel {
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
