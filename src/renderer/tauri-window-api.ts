@@ -1066,6 +1066,23 @@ export function mountWindowApi(db: Database): MountResult {
         await importerMod.importGedcom(getDb(), tree, {
           onProgress: (m) => fireProgress('genney', m),
         });
+        // Sidecar copied the .ged to a sibling temp dir (outside its
+        // own short-lived tempDir) precisely so this read could still
+        // succeed; now that we've consumed it, drop the whole dir.
+        // Best-effort: a leak here just costs disk space until the OS
+        // sweeps /tmp.
+        try {
+          const lastSep = Math.max(
+            result.gedcomFallbackPath.lastIndexOf('/'),
+            result.gedcomFallbackPath.lastIndexOf('\\'),
+          );
+          const parentDir = lastSep > 0
+            ? result.gedcomFallbackPath.slice(0, lastSep)
+            : result.gedcomFallbackPath;
+          await unwrap(commands.fsRemoveDir(parentDir));
+        } catch (e) {
+          console.warn(`[genney] fallback ged cleanup failed: ${(e as Error)?.message ?? e}`);
+        }
       }
 
       // Consolidate any absolute file_refs that the importer wrote
