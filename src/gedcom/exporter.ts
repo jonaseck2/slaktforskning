@@ -38,6 +38,17 @@ export interface ExportReport {
     count: number;
     reason: string;
   }[];
+  /**
+   * Per-row disclosure of authored data dropped on export. Added in T03 for
+   * the GEDCOM-alignment plan: when a 5.5.1 FAM cannot carry every
+   * parent_child link to a child (multi-parent triad — 3+ parents), the
+   * extra parent_child rows are dropped and one warning is appended here
+   * per dropped row. Empty on a fully-faithful export.
+   *
+   * Per-version contract: 7.0 emits ASSO ROLE PARENT for extras (lossless,
+   * no warning); 5.5.1 has no spec slot, drops + warns (lossy).
+   */
+  warnings: string[];
 }
 
 const EVENT_TYPE_TO_TAG: Record<string, string> = {
@@ -352,6 +363,88 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   const personXref = new Map<string, string>();
   persons.forEach((p, i) => personXref.set(p.id, `@I${i + 1}@`));
 
+  // ── T03 pre-compute: FAM xrefs + orphan-FAM grouping ──────────────────────
+  // INDI emission needs FAMC / FAMS pointers that reference FAM xrefs the
+  // exporter doesn't allocate until the couples loop runs (further down).
+  // Pre-fetch relationships and allocate every FAM xref up front:
+  //   - couples → @F1@..@Fc@
+  //   - orphan parent_child rows (parent in no couple) → @F(c+1)@..
+  // Two collections feed both the INDI block (FAMC / FAMS lines) and the
+  // FAM emission block (orphan-FAM body).
+  const relationships = await listRelationships(db);
+  const couples = relationships.filter(r => {
+    if (r.type !== 'couple') return false;
+    if (!allowedPersonIds) return true;
+    const p1In = r.person1_id ? allowedPersonIds.has(r.person1_id) : false;
+    const p2In = r.person2_id ? allowedPersonIds.has(r.person2_id) : false;
+    return p1In || p2In;
+  });
+  // couples → FAM xref. Allocated dense per couple-row position so the
+  // existing couples loop below can re-derive the same xref via index.
+  const coupleXref = new Map<string, string>();
+  couples.forEach((c, i) => coupleXref.set(c.id, `@F${i + 1}@`));
+
+  // Orphan parent_child rows: a parent whose person1_id is in NO couple,
+  // AND whose link to the child is not already representable via a couple
+  // FAM (the multi-parent triad case — see below). Group by parent so one
+  // orphan FAM can carry all children of a never-coupled parent.
+  //
+  // Multi-parent triad: a 3rd parent of a child whose other two parents
+  // ARE in a couple together gets carried on the couple FAM via ASSO
+  // ROLE PARENT (7.0) or warning-and-drop (5.5.1). Emitting an orphan
+  // single-parent FAM for them in addition would double-link the child
+  // and break the per-version classification (the file would imply two
+  // distinct FAM contexts for the same child). The right shape is: the
+  // couple FAM owns the link on 7.0 via ASSO; on 5.5.1 it's dropped.
+  // We exclude such parents from orphan-FAM allocation by checking
+  // whether the (parent, child) link's "other parents" form a couple.
+  const parentChildRels = relationships.filter(r => r.type === 'parent_child');
+  const orphanByParentId = new Map<string, Array<{ childId: string; subtype: string }>>();
+  for (const pc of parentChildRels) {
+    if (!pc.person1_id || !pc.person2_id) continue;
+    if (allowedPersonIds && !allowedPersonIds.has(pc.person1_id)) continue;
+    if (allowedPersonIds && !allowedPersonIds.has(pc.person2_id)) continue;
+    const parentId = pc.person1_id;
+    const childId = pc.person2_id;
+    const inCouple = couples.some(c =>
+      c.person1_id === parentId || c.person2_id === parentId
+    );
+    if (inCouple) continue;
+    // Is there a couple FAM that already names two OTHER parents of this
+    // child? If so, this is a multi-parent-triad extra — the link belongs
+    // on that FAM (as ASSO on 7.0, dropped+warned on 5.5.1).
+    const childOtherParents = parentChildRels
+      .filter(r => r.person2_id === childId && r.person1_id !== parentId)
+      .map(r => r.person1_id)
+      .filter((id): id is string => !!id);
+    const hostedByCouple = couples.some(c =>
+      c.person1_id && c.person2_id &&
+      childOtherParents.includes(c.person1_id) &&
+      childOtherParents.includes(c.person2_id)
+    );
+    if (hostedByCouple) continue;
+    const entry = orphanByParentId.get(parentId) ?? [];
+    entry.push({ childId, subtype: pc.subtype ?? 'biological' });
+    orphanByParentId.set(parentId, entry);
+  }
+  const orphanFamilyByPersonId = new Map<string, string>(); // parent → FAM xref
+  const orphanFamilyByChildId = new Map<string, string[]>(); // child → list of orphan FAM xrefs (a child can have several single-parent FAMs if multiple parents are uncoupled)
+  let orphanFamCounter = couples.length;
+  for (const [parentId, kids] of orphanByParentId) {
+    orphanFamCounter++;
+    const xr = `@F${orphanFamCounter}@`;
+    orphanFamilyByPersonId.set(parentId, xr);
+    for (const { childId } of kids) {
+      const list = orphanFamilyByChildId.get(childId) ?? [];
+      list.push(xr);
+      orphanFamilyByChildId.set(childId, list);
+    }
+  }
+
+  // Warnings collected during this export (T03: dropped extra parents on
+  // 5.5.1 multi-parent triad). Attached to the final ExportReport.
+  const warnings: string[] = [];
+
   for (let i = 0; i < persons.length; i++) {
     const p = persons[i];
     const xr = `@I${i + 1}@`;
@@ -399,6 +492,37 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     }
 
     lines.push(`1 SEX ${p.sex}`);
+
+    // ── T03 FAMC / FAMS pointers ────────────────────────────────────────
+    // FAMC: this person is a child of these FAMs. Includes both couple
+    // FAMs (when a parent_child row links the person to either spouse) and
+    // orphan single-parent FAMs (when the parent has no couple at all).
+    for (const couple of couples) {
+      const isChild = parentChildRels.some(r =>
+        r.person2_id === p.id &&
+        (r.person1_id === couple.person1_id || r.person1_id === couple.person2_id)
+      );
+      if (isChild) {
+        const famXref = coupleXref.get(couple.id);
+        if (famXref) lines.push(`1 FAMC ${famXref}`);
+      }
+    }
+    const orphanFamcs = orphanFamilyByChildId.get(p.id) ?? [];
+    for (const fxr of orphanFamcs) lines.push(`1 FAMC ${fxr}`);
+
+    // FAMS: this person is a spouse in these FAMs. Includes both couple
+    // FAMs and the orphan single-parent FAM (where this person IS the
+    // single parent — same person can't be in more than one orphan FAM by
+    // construction, but the lookup is symmetric with FAMC).
+    for (const couple of couples) {
+      if (couple.person1_id === p.id || couple.person2_id === p.id) {
+        const famXref = coupleXref.get(couple.id);
+        if (famXref) lines.push(`1 FAMS ${famXref}`);
+      }
+    }
+    const orphanFams = orphanFamilyByPersonId.get(p.id);
+    if (orphanFams) lines.push(`1 FAMS ${orphanFams}`);
+
     if (includeNotes && p.notes) lines.push(`1 NOTE ${p.notes}`);
 
     // Person events — only emit events where this person is the PRIMARY participant.
@@ -572,15 +696,11 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   }
 
   // ── Families ───────────────────────────────────────────────────────────────
-  const relationships = await listRelationships(db);
-  const couples = relationships.filter(r => {
-    if (r.type !== 'couple') return false;
-    if (!allowedPersonIds) return true;
-    // Include couple only if at least one person is in the filtered set
-    const p1In = r.person1_id ? allowedPersonIds.has(r.person1_id) : false;
-    const p2In = r.person2_id ? allowedPersonIds.has(r.person2_id) : false;
-    return p1In || p2In;
-  });
+  // `relationships`, `couples`, `parentChildRels`, `coupleXref`,
+  // `orphanFamilyByPersonId`, `orphanFamilyByChildId`, `orphanByParentId`
+  // and `warnings` were all populated above (before the persons loop) so
+  // INDI emission could write FAMC / FAMS pointers. The couple-FAM loop
+  // here re-uses them; no second `listRelationships` query.
   for (let i = 0; i < couples.length; i++) {
     const rel = couples[i];
     const xr = `@F${i + 1}@`;
@@ -594,28 +714,104 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       if (p2xr) lines.push(`1 WIFE ${p2xr}`);
     }
 
-    // Children + PEDI sub-tag for non-biological relationships
+    // Children + PEDI sub-tag (T03 per-parent correctness).
+    //
+    // For each unique child appearing under this FAM (the import side
+    // creates one parent_child row per parent slot, so a child of two
+    // parents in this FAM has two rows), we emit a single CHIL line and
+    // then collect ALL parent_child rows for that child whose parent is
+    // in this FAM's HUSB/WIFE pair. The non-biological subtypes are
+    // emitted per-parent — on 7.0 disambiguated with a custom `3 _PARENT`
+    // sub-tag pointing at the relevant parent INDI xref, on 5.5.1 emitted
+    // unambiguously when all non-biological rows agree (typical case),
+    // and unconditionally for any non-biological row (the importer reads
+    // a single PEDI per CHIL — semantic merge is acceptable and tracked
+    // in the registry).
     const childIds = new Set<string>();
-    for (const r of relationships) {
-      if (r.type !== 'parent_child') continue;
+    for (const r of parentChildRels) {
       if (r.person2_id && (r.person1_id === rel.person1_id || r.person1_id === rel.person2_id)) {
         childIds.add(r.person2_id);
       }
     }
     for (const childId of childIds) {
       const cxr = personXref.get(childId);
-      if (cxr) {
-        lines.push(`1 CHIL ${cxr}`);
-        // Find a parent_child rel for this child to get the subtype
-        const pcRel = relationships.find(r =>
-          r.type === 'parent_child' && r.person2_id === childId &&
+      if (!cxr) continue;
+      lines.push(`1 CHIL ${cxr}`);
+      // Collect BOTH parent_child rows (one per parent) for this child in
+      // this couple's HUSB/WIFE pair. Sort so non-biological subtypes are
+      // emitted FIRST: the importer reads a single PEDI per CHIL (first
+      // wins), so a non-biological subtype on one parent must take
+      // precedence over the other parent's biological default when
+      // re-importing. The custom `3 _PARENT` disambiguator below lets a
+      // future importer enhancement recover full per-parent fidelity.
+      const pcRelsForChild = parentChildRels
+        .filter(r =>
+          r.person2_id === childId &&
           (r.person1_id === rel.person1_id || r.person1_id === rel.person2_id)
+        )
+        .slice()
+        .sort((a, b) => {
+          const aBio = a.subtype === 'biological' || !a.subtype ? 1 : 0;
+          const bBio = b.subtype === 'biological' || !b.subtype ? 1 : 0;
+          return aBio - bBio;
+        });
+      for (const pcRel of pcRelsForChild) {
+        if (!pcRel.subtype) continue;
+        // Map 'biological' → 'birth' (standard GEDCOM PEDI value); other
+        // subtypes pass through. Uppercase on 7.0. Emitting `birth` /
+        // `BIRTH` explicitly is allowed under both versions even though
+        // it's the implicit default — preserved for fidelity with pre-T03
+        // exports and for parsers that don't infer the default.
+        let pedi = pcRel.subtype === 'biological' ? 'birth' : pcRel.subtype;
+        if (version === '7.0') pedi = pedi.toUpperCase();
+        lines.push(`2 PEDI ${pedi}`);
+        if (version === '7.0' && pcRelsForChild.length > 1 && pcRel.person1_id) {
+          // Disambiguate WHICH parent this PEDI refers to. Custom
+          // `3 _PARENT @Ix@` sub-tag — round-trippable as long as the
+          // importer reads it (a future enhancement; today only the FAM
+          // PEDI is read, so this is a write-only audit trail).
+          const parentXref = personXref.get(pcRel.person1_id);
+          if (parentXref) lines.push(`3 _PARENT ${parentXref}`);
+        }
+      }
+
+      // ── T03 multi-parent triad: extras via ASSO ROLE PARENT (7.0) /
+      //                                       warning (5.5.1) ──────────
+      // Parents of this child who are NOT in this FAM's HUSB/WIFE pair.
+      // Per-spec pair-election: existing-couple wins, so the FAM's pair
+      // IS the elected pair and everyone else is an extra.
+      const extraParents = parentChildRels.filter(r =>
+        r.person2_id === childId &&
+        r.person1_id !== rel.person1_id &&
+        r.person1_id !== rel.person2_id
+      );
+      for (const extra of extraParents) {
+        if (!extra.person1_id) continue;
+        // Skip extras that ARE in another (filtered-out or sibling) couple
+        // — they'd belong on that FAM, not as an ASSO here.
+        const extraInAnotherCouple = couples.some(c =>
+          c.id !== rel.id &&
+          (c.person1_id === extra.person1_id || c.person2_id === extra.person1_id)
         );
-        if (pcRel?.subtype) {
-          // Map 'biological' → 'birth' (standard GEDCOM PEDI value)
-          let pedi = pcRel.subtype === 'biological' ? 'birth' : pcRel.subtype;
-          if (version === '7.0') pedi = pedi.toUpperCase();
-          lines.push(`2 PEDI ${pedi}`);
+        if (extraInAnotherCouple) continue;
+        const extraXref = personXref.get(extra.person1_id);
+        if (!extraXref) continue;
+        if (version === '7.0') {
+          lines.push(`1 ASSO ${extraXref}`);
+          lines.push(`2 ROLE PARENT`);
+          if (extra.subtype && extra.subtype !== 'biological') {
+            // Custom _PEDI sub-tag carries the subtype on the extra
+            // parent's ASSO link (uppercase per 7.0 convention).
+            lines.push(`2 _PEDI ${extra.subtype.toUpperCase()}`);
+          }
+        } else {
+          // 5.5.1 has no spec-conformant slot. Drop + disclose per-row.
+          warnings.push(
+            `Extra parent dropped (5.5.1 spec limit): person ${extra.person1_id} ` +
+            `is a ${extra.subtype ?? 'biological'} parent of ${childId} but the FAM ` +
+            `already carries 2 parents (HUSB / WIFE). On 7.0 this would round-trip ` +
+            `via ASSO ROLE PARENT.`
+          );
         }
       }
     }
@@ -685,6 +881,39 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // (stubs until T04 / T06).
     await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines);
     await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines);
+  }
+
+  // ── T03 orphan single-parent FAM records ────────────────────────────────
+  //
+  // A parent_child row whose parent is in NO couple needs its OWN FAM so
+  // the parent ↔ child link survives a GEDCOM round-trip. We use a
+  // sex-appropriate HUSB / WIFE slot for the single parent: persons with
+  // sex='M' go to HUSB; F/X/U go to WIFE (HUSB is conventionally the
+  // earlier slot in 5.5.1 readers but the GEDCOM spec is sex-agnostic
+  // about which slot a single parent occupies — F to WIFE is the
+  // genealogist-intuitive default and keeps the file readable by
+  // strictness-checking parsers that expect WIFE to be female).
+  const personById = new Map(persons.map(p => [p.id, p]));
+  for (const [parentId, kids] of orphanByParentId) {
+    const xr = orphanFamilyByPersonId.get(parentId);
+    if (!xr) continue;
+    lines.push(`0 ${xr} FAM`);
+    const parentXref = personXref.get(parentId);
+    const parent = personById.get(parentId);
+    if (parentXref) {
+      const slot = parent?.sex === 'M' ? 'HUSB' : 'WIFE';
+      lines.push(`1 ${slot} ${parentXref}`);
+    }
+    for (const { childId, subtype } of kids) {
+      const cxr = personXref.get(childId);
+      if (!cxr) continue;
+      lines.push(`1 CHIL ${cxr}`);
+      if (subtype && subtype !== 'biological') {
+        let pedi = subtype;
+        if (version === '7.0') pedi = pedi.toUpperCase();
+        lines.push(`2 PEDI ${pedi}`);
+      }
+    }
   }
 
   // ── Top-level _PLAC and OBJE records for places / media reachable from
@@ -812,9 +1041,10 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
   const report: ExportReport = {
     persons: persons.length,
-    families: couples.length,
+    families: couples.length + orphanByParentId.size,
     events: totalEventCount,
     sources: sources.length,
+    warnings,
     excluded,
   };
 

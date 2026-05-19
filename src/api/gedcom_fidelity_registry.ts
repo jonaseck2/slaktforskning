@@ -12,6 +12,26 @@
  * The coverage-guard test in tests/unit/gedcom-fidelity-registry-coverage.test.ts
  * fails CI if a column is missing here.
  *
+ * T03 corner-case context (2026-05-19 GEDCOM-alignment plan):
+ *  - Single-parent FAM: orphan parent_child rows now emit a synthetic FAM
+ *    record (HUSB or WIFE chosen by sex). Round-trips on both versions.
+ *  - PEDI per-parent: a child can have different parent_child subtypes per
+ *    parent in the same FAM. Exporter emits the non-biological subtype
+ *    first; the importer reads a single PEDI per CHIL ("first wins"), so
+ *    a step + biological pair re-imports as step/step on both rows. The
+ *    custom `3 _PARENT` disambiguator (7.0 only) is a write-only audit
+ *    trail until the importer reads it.
+ *  - Multi-parent triad: a child with 3+ parent_child rows is lossless on
+ *    7.0 (extras emit as `1 ASSO @Ix@ / 2 ROLE PARENT` on the couple FAM)
+ *    and lossy on 5.5.1 (extras dropped + one warning per row in
+ *    ExportReport.warnings — there is no spec slot for a 3rd parent under
+ *    a single FAM). The per-row drop is not represented in the registry
+ *    because it's a row-existence drop (the parent_child row itself
+ *    disappears), not a per-column degradation; the disclosure surface is
+ *    `ExportReport.warnings`, which the per-field tests don't consult.
+ *    See tests/unit/gedcom-roundtrip-corner-cases.test.ts for the
+ *    mechanical assertion.
+ *
  * Authoring guidance for new entries:
  *  - `lossless`     — column survives unchanged. Add ownedBy pointers to the
  *                     exporter/importer files that carry the value.
