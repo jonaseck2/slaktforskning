@@ -110,6 +110,18 @@ const canPreview = computed(() => scopeMode.value === 'everyone' || !!focusPerso
 
 let pendingToken = 0;
 
+const DEBUG_PREVIEW_TIMING = (() => {
+  try { return localStorage.getItem('slaktforskning-debug-preview-timing') === '1'; }
+  catch { return false; }
+})();
+
+async function timedPhase<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  if (!DEBUG_PREVIEW_TIMING) return fn();
+  const start = performance.now();
+  try { return await fn(); }
+  finally { console.log(`[preview-timing] ${label}: ${(performance.now() - start).toFixed(0)} ms`); }
+}
+
 async function refreshPreview() {
   if (!canPreview.value) {
     snapshot.value = null;
@@ -134,13 +146,17 @@ async function refreshPreview() {
   try {
     // Two parallel calls: lightweight stats for the pills, plus the full
     // SPA HTML (with snapshot inlined) for the iframe srcdoc.
+    // Each branch is wrapped in timedPhase so users can enable
+    // `slaktforskning-debug-preview-timing` in localStorage to see where
+    // wall-clock goes when a preview build feels slow.
+    const totalStart = DEBUG_PREVIEW_TIMING ? performance.now() : 0;
     const [statsResult, htmlResult] = await Promise.all([
-      previewFn({
+      timedPhase('previewSnapshot (stats)', () => previewFn({
         siteTitle: siteTitle.value,
         scope,
         options: { excludeLiving: excludeLiving.value, redactLiving: redactLiving.value },
-      }),
-      buildHtmlFn({
+      })),
+      timedPhase('buildPreviewHtml (snapshot+thumbs+inject)', () => buildHtmlFn({
         siteTitle: siteTitle.value,
         focusPersonId: focusPersonId.value,
         scope,
@@ -149,8 +165,9 @@ async function refreshPreview() {
           redactLiving: redactLiving.value,
           mediaPersonOnly: mediaPersonOnly.value,
         },
-      }),
+      })),
     ]);
+    if (DEBUG_PREVIEW_TIMING) console.log(`[preview-timing] total (both parallel): ${(performance.now() - totalStart).toFixed(0)} ms`);
     if (token !== pendingToken) return;
     snapshot.value = statsResult as PreviewSnapshot;
     setIframeUrl(htmlResult as string);
