@@ -98,6 +98,11 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   // 'Sentinel' as given_name for the row under test, so the preferred-name
   // sentinel must be 'Sentinel'.
   'person_names.preferred_name': 'Sentinel',
+  // person_associations.role is CHECK-constrained to the 6 values. The
+  // assoc-emitter (T05) writes lowercase exact values; the importer matches
+  // exact lowercase, so a non-default value like 'friend' is the appropriate
+  // sentinel (distinguishable from the seeder's default 'other').
+  'person_associations.role': 'friend',
 };
 
 export function makeSentinelValue(table: string, col: string, colType: string): unknown {
@@ -814,9 +819,9 @@ function seedPersonAssociations(db: Database, col: string, value: unknown): stri
     person_id: personId, related_person_id: relatedId,
     role: 'other', notes: '',
   };
-  // Skip override for CHECK-constrained columns (registry declares lossy → null).
-  const checkConstrained = new Set(['role']);
-  if (!['id', 'person_id', 'related_person_id', 'created_at'].includes(col) && !checkConstrained.has(col)) {
+  // T05: `role` is now lossless via assoc-emitter (lowercase exact). The
+  // sentinel ('friend') is in the CHECK vocabulary so the override is safe.
+  if (!['id', 'person_id', 'related_person_id', 'created_at'].includes(col)) {
     overrides[col] = value;
   }
   const cols = ['id', ...Object.keys(overrides)];

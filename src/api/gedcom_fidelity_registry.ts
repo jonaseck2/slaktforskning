@@ -1092,32 +1092,31 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'note_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
-  // ----- person_associations (added T02; filled by T05) -----
+  // ----- person_associations (T05) -----
+  // GEDCOM 5.5.1: emits `1 ASSO @Ix@ / 2 RELA <role>` under the owning INDI.
+  // GEDCOM 7.0:   emits `1 ASSO @Ix@ / 2 ROLE <role>` (the 7.0 spec renamed
+  //               the role tag from RELA to ROLE under ASSO). Both versions
+  //               carry the six role values losslessly.
+  // The on-wire lowercase role value is the importer signal that routes the
+  // ASSO to `person_associations` (vs the legacy `relationships` path which
+  // emits capitalized `RELA Godparent/Sibling/Other`).
   'person_associations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'person_associations.person_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'person_associations.related_person_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'person_associations.role': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — person_associations rows are not written by the import stubs yet; row vanishes on round-trip',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — person_associations rows are not written by the import stubs yet; row vanishes on round-trip',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/assoc-emitter.ts',
+      importer: 'src/import/gedcom/phases/asso.ts',
     },
   },
   'person_associations.notes': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — ASSO NOTE carrier finalized by T05',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — ASSO NOTE carrier finalized by T05',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/assoc-emitter.ts',
+      importer: 'src/import/gedcom/phases/asso.ts',
     },
   },
   'person_associations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },

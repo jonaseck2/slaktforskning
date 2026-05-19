@@ -27,6 +27,7 @@ import * as places from '../api/places';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as relationships from '../api/relationships';
+import * as personAssociations from '../api/person_associations';
 import * as groups from '../api/groups';
 import * as notes from '../api/notes';
 import * as repositories from '../api/repositories';
@@ -318,6 +319,18 @@ export function mountWindowApi(db: Database): MountResult {
     add: mutating((db, data: Parameters<typeof relationships.addEventParticipant>[1]) => uw.addEventParticipantUndo(db, data)),
     getForEvent: readOnly((db, eventId: string) => relationships.getEventParticipants(db, eventId)),
     remove: mutating((db, id: string) => uw.removeEventParticipantUndo(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // personAssociations (T05 — GEDCOM ASSO without an event)
+  api.personAssociations = {
+    create: mutating((db, data: Parameters<typeof personAssociations.createPersonAssociation>[1]) =>
+      personAssociations.createPersonAssociation(db, data)),
+    get: readOnly((db, id: string) => personAssociations.getPersonAssociation(db, id)),
+    forPerson: readOnly((db, personId: string) => personAssociations.getAssociationsForPerson(db, personId)),
+    toPerson: readOnly((db, personId: string) => personAssociations.getAssociationsToPerson(db, personId)),
+    update: mutating((db, id: string, data: Parameters<typeof personAssociations.updatePersonAssociation>[2]) =>
+      personAssociations.updatePersonAssociation(db, id, data)),
+    delete: mutating((db, id: string) => personAssociations.deletePersonAssociation(db, id)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
   // groups

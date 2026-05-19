@@ -32,6 +32,8 @@ import type {
   Note,
   NoteLink,
   NoteEntityType,
+  PersonAssociation,
+  PersonAssociationRole,
 } from '../../api/types';
 
 type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -119,6 +121,22 @@ declare global {
         }) => Promise<EventParticipant>;
         getForEvent: (eventId: string) => Promise<EventParticipant[]>;
         remove: (id: string) => Promise<boolean>;
+      };
+      personAssociations: {
+        create: (data: {
+          person_id: string;
+          related_person_id: string;
+          role: PersonAssociationRole;
+          notes?: string;
+        }) => Promise<PersonAssociation>;
+        get: (id: string) => Promise<PersonAssociation | null>;
+        forPerson: (personId: string) => Promise<PersonAssociation[]>;
+        toPerson: (personId: string) => Promise<PersonAssociation[]>;
+        update: (
+          id: string,
+          data: Partial<Pick<PersonAssociation, 'role' | 'notes' | 'person_id' | 'related_person_id'>>,
+        ) => Promise<PersonAssociation | null>;
+        delete: (id: string) => Promise<boolean>;
       };
       events: {
         create: (data: Partial<Omit<GenealogyEvent, 'id' | 'created_at' | 'updated_at'>>) => Promise<GenealogyEvent>;
