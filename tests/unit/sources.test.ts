@@ -80,11 +80,14 @@ describe('sources', async () => {
     // omit `abstract` and `call_number` even though both were declared on
     // the Source type and accepted by the MCP add_source tool. Authored
     // values were silently dropped — Prime Directive violation.
+    // T02: sources.repository free-text column was dropped. Repository
+    // affiliation is now carried by structured Repository rows linked via
+    // source_repositories; the same regression coverage applies to the
+    // remaining authored fields here.
     const source = await createSource(db, {
       title: 'Pau parish register',
       author: 'Béarn parish clerk',
       publication_info: 'Pau, France, 1763',
-      repository: 'Archives Pyrénées-Atlantiques',
       url: 'https://example.invalid/pau',
       source_type: 'church_record',
       call_number: 'AD64-Pau-Baptisms-1763',
@@ -94,7 +97,6 @@ describe('sources', async () => {
     expect(reread?.title).toBe('Pau parish register');
     expect(reread?.author).toBe('Béarn parish clerk');
     expect(reread?.publication_info).toBe('Pau, France, 1763');
-    expect(reread?.repository).toBe('Archives Pyrénées-Atlantiques');
     expect(reread?.url).toBe('https://example.invalid/pau');
     expect(reread?.source_type).toBe('church_record');
     expect(reread?.call_number).toBe('AD64-Pau-Baptisms-1763');

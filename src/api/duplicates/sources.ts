@@ -198,6 +198,11 @@ export async function mergeSources(
   );
   const sourceMediaLinks = await queryAll<{ id: string; media_id: string }>(db,
     "SELECT id, media_id FROM media_links WHERE entity_type = 'source' AND entity_id = ?", [sourceId]);
+  // T02: source_coverage_events.source_id is a FK to sources.id — must
+  // repoint on merge so the coverage facts follow the surviving source.
+  const coverageEventsTouched = await queryAll<{ id: string; source_id: string }>(
+    db, 'SELECT id, source_id FROM source_coverage_events WHERE source_id = ?', [sourceId]
+  );
   const ignoredRows = await queryAll<{ entity_type: string; person1_id: string; person2_id: string; created_at: string }>(
     db,
     "SELECT entity_type, person1_id, person2_id, created_at FROM ignored_duplicates WHERE entity_type = 'source' AND (person1_id = ? OR person2_id = ?)",
@@ -265,7 +270,13 @@ export async function mergeSources(
     }
     moved.media_links = updatedMediaLinks.length;
 
-    // 4. ignored_duplicates rows that mention the source — drop them.
+    // 4. source_coverage_events.source_id — straight repoint. T02 introduced.
+    for (const ev of coverageEventsTouched) {
+      await runSql(db, 'UPDATE source_coverage_events SET source_id = ? WHERE id = ?', [targetId, ev.id]);
+    }
+    moved.source_coverage_events = coverageEventsTouched.length;
+
+    // 5. ignored_duplicates rows that mention the source — drop them.
     await runSql(db,
       "DELETE FROM ignored_duplicates WHERE entity_type = 'source' AND (person1_id = ? OR person2_id = ?)",
       [sourceId, sourceId]
@@ -291,12 +302,12 @@ export async function mergeSources(
       try {
         // Recreate the source source-row exactly as it was.
         await runSql(db, `
-          INSERT INTO sources (id, title, author, publication_info, repository, url, source_type,
+          INSERT INTO sources (id, title, author, publication_info, url, source_type,
                                call_number, abstract, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
           sourceSnapshot.id, sourceSnapshot.title, sourceSnapshot.author,
-          sourceSnapshot.publication_info, sourceSnapshot.repository, sourceSnapshot.url,
+          sourceSnapshot.publication_info, sourceSnapshot.url,
           sourceSnapshot.source_type, sourceSnapshot.call_number, sourceSnapshot.abstract,
           sourceSnapshot.created_at, sourceSnapshot.updated_at,
         ]);
@@ -304,6 +315,10 @@ export async function mergeSources(
         // Revert citations.source_id
         for (const c of citationsTouched) {
           await runSql(db, 'UPDATE citations SET source_id = ? WHERE id = ?', [c.source_id, c.id]);
+        }
+        // Revert source_coverage_events.source_id
+        for (const ev of coverageEventsTouched) {
+          await runSql(db, 'UPDATE source_coverage_events SET source_id = ? WHERE id = ?', [ev.source_id, ev.id]);
         }
         // Revert moved source_repositories rows
         for (const repoId of updatedRepoLinks) {

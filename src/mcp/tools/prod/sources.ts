@@ -8,12 +8,11 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
   const { getDb } = ctx;
 
   server.registerTool('add_source', {
-    description: 'Add a source record (book, document, website, etc.)',
+    description: 'Add a source record (book, document, website, etc.). To attach a repository (archive / library / collection), create it via add_repository and link with link_source_repository — the free-text repository field on this tool was removed in favour of structured Repository records.',
     inputSchema: {
       title: z.string().optional().describe('Source title'),
       author: z.string().optional().describe('Author name(s)'),
       publication_info: z.string().optional().describe('Publication info (place, year, publisher)'),
-      repository: z.string().optional().describe('Repository name or location'),
       url: z.string().optional().describe('URL'),
       source_type: z.string().optional().describe('Type: vital_record, census, church_record, newspaper, photograph, oral_history, etc.'),
       call_number: z.string().optional().describe('Call number or reference'),
@@ -80,13 +79,12 @@ export function registerSourceTools(server: McpServer, ctx: ToolContext): void {
   });
 
   server.registerTool('update_source', {
-    description: 'Update fields on an existing source (title, author, publication_info, repository, url, source_type, call_number, abstract). Use to fix typos, add missing fields, or change the source_type.',
+    description: 'Update fields on an existing source (title, author, publication_info, url, source_type, call_number, abstract). Use to fix typos, add missing fields, or change the source_type. Repository links are managed via link_source_repository / unlink_source_repository.',
     inputSchema: {
       id: z.string().describe('Source ID'),
       title: z.string().optional(),
       author: z.string().optional(),
       publication_info: z.string().optional(),
-      repository: z.string().optional(),
       url: z.string().optional(),
       source_type: z.string().optional().describe('e.g. vital_record, census, church_record, newspaper, photograph, oral_history, website, video'),
       call_number: z.string().optional(),

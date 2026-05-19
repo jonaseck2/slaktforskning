@@ -152,14 +152,15 @@ async function seedComprehensive(db: Database): void {
   });
   await addEventParticipant(db, { event_id: deat.id, person_id: p1.id, role: 'primary' });
 
-  // ── Source with author + publication_info + repository (free-text) +
-  // url + source_type. call_number / abstract intentionally omitted —
-  // registry documents both as lossy → null.
+  // ── Source with author + publication_info + url + source_type.
+  // T02: legacy free-text `sources.repository` column was dropped — the
+  // structured Repository link below carries archive identity.
+  // call_number / abstract intentionally omitted — registry documents both
+  // as lossy → null.
   const src = await createSource(db, {
     title: 'Bjorkvik Parish Records',
     author: 'Pastor Olsson',
     publication_info: 'compiled 1880',
-    repository: 'Riksarkivet',
     url: 'https://example.org/bjorkvik',
     source_type: 'parish-register',
   });

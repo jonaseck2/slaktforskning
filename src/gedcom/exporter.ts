@@ -19,6 +19,14 @@ import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
+// T02 GEDCOM-alignment per-concept emitters (stubs; filled by Phase 2 tasks).
+// Wired here so the orchestration surface exists — Phase 2 fills function
+// bodies without re-touching exporter.ts.
+import { emitNotesForEntity, emitSharedNoteRecords } from './exporters/notes-emitter';
+import { emitPersonAssociations } from './exporters/assoc-emitter';
+import { emitNegationsForEntity } from './exporters/negation-emitter';
+import { emitNameTranslations, emitPlaceTranslations } from './exporters/translations-emitter';
+import { emitSourceCoverageEvents } from './exporters/coverage-emitter';
 
 export interface ExportReport {
   persons: number;
@@ -286,7 +294,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     if (src.title) lines.push(`1 TITL ${src.title}`);
     if (src.author) lines.push(`1 AUTH ${src.author}`);
     if (src.publication_info) lines.push(`1 PUBL ${src.publication_info}`);
-    if (src.repository) lines.push(`1 _REPO_TEXT ${src.repository}`);
+    // T02: legacy `sources.repository` free-text column was dropped — REPO
+    // structures are emitted below via structured `source_repositories` joins.
     if (src.url) lines.push(`1 _URL ${src.url}`);
     // source_type is exported as a raw enum string via the custom _STYPE sub-tag.
     // Lossless under both 5.5.1 and 7.0 — the importer reads _STYPE back verbatim,
@@ -320,7 +329,18 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       const repoXr = repoXref.get(repo.id);
       if (repoXr) lines.push(`1 REPO ${repoXr}`);
     }
+    // T02 per-concept emitter hook (stub until T08).
+    // Note: forEach can't await — sources.forEach is rewritten in T08 to a
+    // for-of so this stub call can be awaited. Until then the call is a
+    // synchronous no-op return that does nothing.
+    void emitSourceCoverageEvents(db, src.id, 1, version, lines);
   });
+
+  // T02 per-concept emitter hook — top-level shared NOTE records (stub
+  // until T04). GEDCOM 7.0 SNOTE records sit at the top level alongside
+  // SUBM / REPO / SOUR; this is the canonical slot. No-op on 5.5.1 (5.5.1
+  // inlines notes per-entity).
+  await emitSharedNoteRecords(db, version, lines);
 
   // ── Persons ────────────────────────────────────────────────────────────────
   const allPersons = await listPersons(db);
@@ -374,6 +394,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
           if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
         }
       }
+      // T02 per-concept emitter hook — NAME TRAN (stub until T07).
+      await emitNameTranslations(db, n.id, 2, version, lines);
     }
 
     lines.push(`1 SEX ${p.sex}`);
@@ -411,6 +433,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          // T02 per-concept emitter hook — PLAC TRAN (stub until T07).
+          await emitPlaceTranslations(db, place.id, 3, version, lines);
           emittedPlac = true;
         }
       }
@@ -538,6 +562,13 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
     // Person-level media
     if (includeMedia) await emitMediaBlocks(lines, db, 'person', p.id, 1);
+
+    // T02 per-concept emitter hooks (stubs until Phase 2). The orchestration
+    // surface exists so T04–T07 can fill the bodies without re-touching the
+    // INDI block here.
+    await emitNotesForEntity(db, 'person', p.id, 1, version, lines);
+    await emitPersonAssociations(db, p.id, 1, version, personXref, lines);
+    await emitNegationsForEntity(db, 'person', p.id, 1, version, lines);
   }
 
   // ── Families ───────────────────────────────────────────────────────────────
@@ -613,6 +644,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
+          // T02 per-concept emitter hook — PLAC TRAN (stub until T07).
+          await emitPlaceTranslations(db, place.id, 3, version, lines);
           emittedPlac = true;
         }
       }
@@ -647,6 +680,11 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
     // Relationship-level media
     if (includeMedia) await emitMediaBlocks(lines, db, 'relationship', rel.id, 1);
+
+    // T02 per-concept emitter hooks — relationship-level notes + negations
+    // (stubs until T04 / T06).
+    await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines);
+    await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines);
   }
 
   // ── Top-level _PLAC and OBJE records for places / media reachable from

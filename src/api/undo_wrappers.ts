@@ -435,8 +435,8 @@ export async function deleteSourceUndo(
     label: 'undo.deleteSource',
     undo: async () => {
       await runSql(db,
-        `INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [old.id, old.title, old.author, old.publication_info, old.repository, old.url, old.source_type, old.call_number, old.abstract]
+        `INSERT INTO sources (id, title, author, publication_info, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [old.id, old.title, old.author, old.publication_info, old.url, old.source_type, old.call_number, old.abstract]
       );
       for (const c of citations) {
         await runSql(db,

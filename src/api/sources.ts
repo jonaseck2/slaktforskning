@@ -17,14 +17,13 @@ export async function createSource(
   // by the 2026-05-09 Bernadotte test session and listed as gap #8 in
   // docs/plans/2026-05-09-bernadotte-test-findings.md.
   await runSql(db, `
-    INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO sources (id, title, author, publication_info, url, source_type, call_number, abstract)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id,
     data.title ?? '',
     data.author ?? '',
     data.publication_info ?? '',
-    data.repository ?? '',
     data.url ?? '',
     data.source_type ?? '',
     data.call_number ?? null,
@@ -56,7 +55,6 @@ export async function bulkCreateSources(
       r.title ?? '',
       r.author ?? '',
       r.publication_info ?? '',
-      r.repository ?? '',
       r.url ?? '',
       r.source_type ?? '',
       r.call_number ?? null,
@@ -65,7 +63,7 @@ export async function bulkCreateSources(
   }
   await runBatch(
     db,
-    'INSERT INTO sources (id, title, author, publication_info, repository, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO sources (id, title, author, publication_info, url, source_type, call_number, abstract) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     params,
   );
   return ids;

@@ -40,9 +40,12 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
                       'city', 'country'],
   events:            ['id', 'event_type', 'date_type', 'date_value', 'date_value_end', 'date_original',
                       'place_id', 'value', 'notes', 'created_at', 'updated_at',
-                      'cause', 'place_address', 'relationship_id'],
+                      'cause', 'place_address', 'relationship_id',
+                      // T02 GEDCOM-alignment additions.
+                      'is_negation', 'negation_event_type'],
   event_participants:['id', 'event_id', 'person_id', 'role'],
-  sources:           ['id', 'title', 'author', 'publication_info', 'repository', 'url', 'source_type',
+  // T02: sources.repository free-text column dropped.
+  sources:           ['id', 'title', 'author', 'publication_info', 'url', 'source_type',
                       'created_at', 'updated_at', 'call_number', 'abstract'],
   citations:         ['id', 'source_id', 'page', 'date_accessed', 'confidence', 'transcription', 'notes',
                       'event_id', 'person_id', 'person_name_id', 'created_at',
@@ -60,6 +63,14 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
   db_settings:       ['key', 'value'],
   gazetteers:        ['id', 'name', 'locale', 'description', 'source_json', 'data', 'created_at'],
   ignored_duplicates:['entity_type', 'person1_id', 'person2_id', 'created_at'],
+  // ── T02 GEDCOM-alignment new tables ──────────────────────────────────────
+  notes:                  ['id', 'text', 'language', 'created_at', 'updated_at'],
+  note_links:             ['id', 'note_id', 'entity_type', 'entity_id', 'sort_order', 'created_at'],
+  person_associations:    ['id', 'person_id', 'related_person_id', 'role', 'notes', 'created_at'],
+  name_translations:      ['id', 'person_name_id', 'value', 'language', 'transliteration_scheme', 'created_at'],
+  place_translations:     ['id', 'place_id', 'value', 'language', 'transliteration_scheme', 'created_at'],
+  source_coverage_events: ['id', 'source_id', 'event_type', 'date_value_from', 'date_value_to',
+                           'place_id', 'notes', 'created_at'],
 };
 
 async function tableCols(db: Database, table: string): string[] {

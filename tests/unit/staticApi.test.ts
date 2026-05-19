@@ -30,7 +30,7 @@ const fixture: Snapshot = {
     { id: 'pl1', name: 'Stockholm', normalized_name: 'stockholm', place_type: null, parent_place_id: null, latitude: null, longitude: null, date_from: null, date_to: null, notes: '', street: null, postal_code: null, city: null, country: null },
   ],
   sources: [
-    { id: 's1', title: 'Birth record', author: '', publication_info: '', repository: '', url: '', source_type: 'vital_record', call_number: null, abstract: null, created_at: '', updated_at: '' },
+    { id: 's1', title: 'Birth record', author: '', publication_info: '', url: '', source_type: 'vital_record', call_number: null, abstract: null, created_at: '', updated_at: '' },
   ],
   citations: [
     { id: 'c1', source_id: 's1', page: '', date_accessed: '', confidence: 2, transcription: '', notes: '', event_id: null, person_id: 'p1', relationship_id: null, place_id: null, created_at: '' },

@@ -195,6 +195,13 @@ export async function mergePlaces(
   const citationsTouched = await queryAll<{ id: string; place_id: string | null }>(
     db, 'SELECT id, place_id FROM citations WHERE place_id = ?', [sourceId]
   );
+  // T02: new FK columns to places.id.
+  const placeTranslationsTouched = await queryAll<{ id: string; place_id: string }>(
+    db, 'SELECT id, place_id FROM place_translations WHERE place_id = ?', [sourceId]
+  );
+  const coverageEventsPlaceTouched = await queryAll<{ id: string; place_id: string | null }>(
+    db, 'SELECT id, place_id FROM source_coverage_events WHERE place_id = ?', [sourceId]
+  );
   // Polymorphic link rows where the source was the entity. We snapshot
   // every row that may be either updated to point at target OR deleted as a
   // duplicate of an existing target-link.
@@ -261,6 +268,20 @@ export async function mergePlaces(
       await runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [targetId, c.id]);
     }
     moved.citations = citationsTouched.length;
+
+    // 3a. place_translations.place_id — T02 introduced.
+    for (const pt of placeTranslationsTouched) {
+      await runSql(db, 'UPDATE place_translations SET place_id = ? WHERE id = ?', [targetId, pt.id]);
+    }
+    moved.place_translations = placeTranslationsTouched.length;
+
+    // 3b. source_coverage_events.place_id — T02 introduced. SET NULL on
+    // schema-side delete; we explicitly repoint to target instead so the
+    // coverage fact survives the merge.
+    for (const ev of coverageEventsPlaceTouched) {
+      await runSql(db, 'UPDATE source_coverage_events SET place_id = ? WHERE id = ?', [targetId, ev.id]);
+    }
+    moved.source_coverage_events = coverageEventsPlaceTouched.length;
 
     // 4. group_links — UNIQUE(group_id, entity_type, entity_id) means we
     // must skip when target already in same group.
@@ -369,6 +390,14 @@ export async function mergePlaces(
         // Revert citations.place_id
         for (const c of citationsTouched) {
           await runSql(db, 'UPDATE citations SET place_id = ? WHERE id = ?', [c.place_id, c.id]);
+        }
+        // Revert place_translations.place_id (T02)
+        for (const pt of placeTranslationsTouched) {
+          await runSql(db, 'UPDATE place_translations SET place_id = ? WHERE id = ?', [pt.place_id, pt.id]);
+        }
+        // Revert source_coverage_events.place_id (T02)
+        for (const ev of coverageEventsPlaceTouched) {
+          await runSql(db, 'UPDATE source_coverage_events SET place_id = ? WHERE id = ?', [ev.place_id, ev.id]);
         }
         // Revert moved group_links
         for (const id of updatedGroupLinks) {

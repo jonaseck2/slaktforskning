@@ -149,25 +149,26 @@ export async function exportEventsCsv(db: Database, options: CsvOptions = {}): P
 
 export async function exportSourcesCsv(db: Database, options: CsvOptions = {}): Promise<string> {
   const delimiter = options.delimiter ?? ',';
-  const headers = ['id', 'title', 'author', 'publication_info', 'repository', 'url', 'source_type', 'call_number', 'abstract'];
+  // T02: sources.repository column was dropped — repository affiliation
+  // now lives on structured Repository rows linked via source_repositories.
+  const headers = ['id', 'title', 'author', 'publication_info', 'url', 'source_type', 'call_number', 'abstract'];
 
   const rows = await queryAll<{
     id: string;
     title: string | null;
     author: string | null;
     publication_info: string | null;
-    repository: string | null;
     url: string | null;
     source_type: string | null;
     call_number: string | null;
     abstract: string | null;
-  }>(db, `SELECT id, title, author, publication_info, repository, url, source_type, call_number, abstract FROM sources ORDER BY title`);
+  }>(db, `SELECT id, title, author, publication_info, url, source_type, call_number, abstract FROM sources ORDER BY title`);
 
   const lines = [csvRow(headers, delimiter)];
   for (const r of rows) {
     lines.push(csvRow([
       r.id, r.title, r.author, r.publication_info,
-      r.repository, r.url, r.source_type, r.call_number, r.abstract,
+      r.url, r.source_type, r.call_number, r.abstract,
     ], delimiter));
   }
 

@@ -184,6 +184,10 @@ interface RawSource {
   author: string | null;
   publication_info: string | null;
   url: string | null;
+  // T02: sources.repository free-text column was dropped. Kept on the shape
+  // (always null) so the existing `v-if="src.repository"` template branch
+  // is a no-op without erroring; reports can render a structured repository
+  // name from getRepositoriesForSource() in a follow-up.
   repository: string | null;
 }
 
