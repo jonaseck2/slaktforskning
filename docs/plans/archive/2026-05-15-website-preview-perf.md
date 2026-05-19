@@ -1,6 +1,6 @@
 # Website-Preview Performance Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Use the project-local `subagent-handoff` skill for dispatch. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Use the project-local `subagent-handoff` skill for dispatch. Steps use checkbox (`- [x]`) syntax for tracking.
 
 ## User goal
 
@@ -80,7 +80,7 @@ Goal: lock current behaviour into a regression net, AND capture the BEFORE numbe
 - Modify: `src/renderer/views/WebsiteExportView.vue`
 - Create: `tests/unit/preview-snapshot-stability.test.ts`
 
-- [ ] **Step 1: Add opt-in timing instrumentation in WebsiteExportView**
+- [x] **Step 1: Add opt-in timing instrumentation in WebsiteExportView**
 
 Insert in the `<script setup>` block of `src/renderer/views/WebsiteExportView.vue`, before the watch/debounce that fires `previewFn`+`buildHtmlFn`. Add a helper that wraps each preview rebuild:
 
@@ -102,7 +102,7 @@ Wrap each phase of the preview rebuild — the scope+snapshot build, the thumbna
 
 Verify by setting `localStorage.setItem('slaktforskning-debug-preview-timing', '1')` in the dev app's console, opening WebsiteExportView, and confirming each phase logs.
 
-- [ ] **Step 2: Add a snapshot-stability test (TDD foundation for fidelity)**
+- [x] **Step 2: Add a snapshot-stability test (TDD foundation for fidelity)**
 
 Create `tests/unit/preview-snapshot-stability.test.ts`. Seed a deterministic DB using `createTestDb()` + the existing seed-family helpers (or hand-build with 50 persons across 3 generations, some events, a couple of relationships, a media link with file_ref, a couple of sources/citations, one group). Build the snapshot via `buildWebsiteSnapshot()` for "everyone" scope. Hash the JSON-serialised snapshot with `crypto.createHash('sha256').update(JSON.stringify(snapshot, Object.keys(snapshot).sort())).digest('hex')`.
 
@@ -133,13 +133,13 @@ describe('website preview snapshot stability', () => {
 
 Run the test, capture the hash, paste it in, re-run. Expected: green. The test file is committed with the populated hash.
 
-- [ ] **Step 3: Capture BEFORE timing**
+- [x] **Step 3: Capture BEFORE timing**
 
 With the dev app running (`npm start`), set the debug flag in console, open WebsiteExportView, run a full "Everyone"-scope preview build on the user's family.db. Capture each `[preview-timing] <phase>: NNN ms` log line. Paste the captured numbers into the close-out commit's commit message.
 
 If the BEFORE wall-clock total is already under 30 seconds: **stop the plan**. The user goal is met by the instrumentation as a regression net; later optimizations are speculative. Document the early-exit in the close-out commit.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/views/WebsiteExportView.vue tests/unit/preview-snapshot-stability.test.ts
@@ -155,19 +155,19 @@ Goal: collapse the per-generation N+1 query pattern into bulk frontier lookups. 
 **Files:**
 - Modify: `src/api/html_site/scope.ts`
 
-- [ ] **Step 1: Identify every per-row IPC site**
+- [x] **Step 1: Identify every per-row IPC site**
 
 Read `src/api/html_site/scope.ts` end-to-end. Note every call site that fires inside a `for` / `while` loop over person IDs. Expected hits: `getParents(id)` per frontier-person per generation, `getChildren(id)` per frontier-person per generation, `getSpouses(id)` per in-scope person at the end.
 
 For each, identify whether there's an existing bulk variant in the api/ layer (`src/api/persons.ts`, `src/api/relationships.ts`). The bulk-api plan (2026-05-12) added bulk inserts; reads may or may not have parallels. Check `bulkGet*` / `findManyBy*` / `*ByIds` patterns.
 
-- [ ] **Step 2: Write a focused fail-first benchmark**
+- [x] **Step 2: Write a focused fail-first benchmark**
 
 Append a microbenchmark to `tests/unit/preview-snapshot-stability.test.ts` (same file, same DB seed). Measure scope-resolution wall-clock with `performance.now()` for "everyone" + "focus + 5 ancestors + 3 descendants" against the deterministic seed. Assert `< 500 ms` for a 50-person tree.
 
 If the benchmark passes on current code (50-person seed is too small to hit N+1), enlarge the seed to 500 persons. Iterate until the assertion fails meaningfully (current N+1 code takes >500 ms; target code <100 ms).
 
-- [ ] **Step 3: Refactor to bulk-frontier lookups**
+- [x] **Step 3: Refactor to bulk-frontier lookups**
 
 For each `for` loop over person IDs that fires `getParents`/`getChildren`/`getSpouses`:
 
@@ -190,11 +190,11 @@ SELECT DISTINCT person_id FROM ancestors;
 
 Pick the simpler bulk-frontier approach unless it doesn't bring the benchmark under target.
 
-- [ ] **Step 4: Verify the benchmark passes**
+- [x] **Step 4: Verify the benchmark passes**
 
 Re-run the test. The < 500 ms assertion now passes. Run the snapshot-stability test from Task 1 — must still pass (same hash).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/html_site/scope.ts tests/unit/preview-snapshot-stability.test.ts
@@ -210,11 +210,11 @@ Goal: stop pulling whole tables across the IPC just to filter in JS. Push the in
 **Files:**
 - Modify: `src/api/html_site/snapshot.ts`
 
-- [ ] **Step 1: Identify the full-table-scan hot spots**
+- [x] **Step 1: Identify the full-table-scan hot spots**
 
 Read `src/api/html_site/snapshot.ts`. Find every `queryAll(SELECT * FROM <table>)` followed by a `.filter()` in JS. Expected: events, event_participants, citations, media_links, maybe more.
 
-- [ ] **Step 2: Push the filter into SQL**
+- [x] **Step 2: Push the filter into SQL**
 
 For each, rewrite as:
 
@@ -230,11 +230,11 @@ const events = personIds.length === 0 ? [] : db.queryAll(
 
 For very large in-scope sets (the "everyone" case), the `IN (?,?,?,...)` form will exceed SQLite's default `SQLITE_MAX_VARIABLE_NUMBER` (32766 on modern SQLite, 999 on default builds). For >900 IDs, fall back to: insert the scope into a temporary table (`CREATE TEMP TABLE scope_persons(id TEXT PRIMARY KEY)`, bulk-insert via `db_batch_run`, then use `WHERE person_id IN (SELECT id FROM scope_persons)`), drop the temp table at the end.
 
-- [ ] **Step 3: Verify snapshot-stability test still passes**
+- [x] **Step 3: Verify snapshot-stability test still passes**
 
 The hash must be unchanged. If it changed: the SQL-side filter is returning a different row set than the JS filter (likely a corner case like NULL handling or sort order). Diff the snapshots, find the difference, fix.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/html_site/snapshot.ts
@@ -250,7 +250,7 @@ Goal: turn the sequential JPEG-decode loop into a rayon parallel iterator. Small
 **Files:**
 - Modify: `src-tauri/src/media.rs`
 
-- [ ] **Step 1: Confirm rayon is available**
+- [x] **Step 1: Confirm rayon is available**
 
 ```bash
 cargo --manifest-path src-tauri/Cargo.toml tree -p rayon 2>&1 | head -5
@@ -258,7 +258,7 @@ cargo --manifest-path src-tauri/Cargo.toml tree -p rayon 2>&1 | head -5
 
 If absent, add `rayon = "1"` to `src-tauri/Cargo.toml` dependencies (or use `std::thread::scope` to avoid a new dep).
 
-- [ ] **Step 2: Rewrite the bake loop**
+- [x] **Step 2: Rewrite the bake loop**
 
 Current shape (rough): `for media_ref in &media_refs { let jpeg = make_thumbnail_jpeg(...); out.push(jpeg); }`.
 
@@ -284,19 +284,19 @@ for r in results.into_iter().flatten() {
 }
 ```
 
-- [ ] **Step 3: Verify it builds**
+- [x] **Step 3: Verify it builds**
 
 ```bash
 cargo --manifest-path src-tauri/Cargo.toml check 2>&1 | tail -10
 ```
 
-- [ ] **Step 4: Verify the e2e website-export test still passes**
+- [x] **Step 4: Verify the e2e website-export test still passes**
 
 ```bash
 npx playwright test --project=website-export 2>&1 | tail -5
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/src/media.rs src-tauri/Cargo.toml src-tauri/Cargo.lock
@@ -307,11 +307,11 @@ git commit -m "perf(media): parallelise preview thumbnail bake via rayon"
 
 ### Task 5: Verification + close-out
 
-- [ ] **Step 1: Capture AFTER timing.** Same procedure as Task 1 Step 3 (debug flag, dev app, `npm start`, WebsiteExportView, "Everyone" scope, full build). Paste each phase's `[preview-timing] ...` line.
+- [x] **Step 1: Capture AFTER timing.** Same procedure as Task 1 Step 3 (debug flag, dev app, `npm start`, WebsiteExportView, "Everyone" scope, full build). Paste each phase's `[preview-timing] ...` line.
 
-- [ ] **Step 2: BEFORE → AFTER comparison.** Confirm wall-clock total is < 30 s for cold preview AND < 5 s for incremental option-flip. If either target is missed, NOT done — investigate which phase still dominates; consider a follow-up plan.
+- [x] **Step 2: BEFORE → AFTER comparison.** Confirm wall-clock total is < 30 s for cold preview AND < 5 s for incremental option-flip. If either target is missed, NOT done — investigate which phase still dominates; consider a follow-up plan.
 
-- [ ] **Step 3: Run automated gates.**
+- [x] **Step 3: Run automated gates.**
 
 ```bash
 npm test 2>&1 | tail -5                       # all green
@@ -320,6 +320,6 @@ npm run test:e2e:full 2>&1 | tail -5          # all 7 projects, ChartView reacti
 NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep "^src/" | grep -E "scope|snapshot|WebsiteExportView" | head
 ```
 
-- [ ] **Step 4: Mark every checkbox `[x]`. Archive plan + version bump (minor — performance feature) + CHANGELOG entry + `docs/plans/archive/PLAN.md` entry. Same shape as the previous plan's close-out.**
+- [x] **Step 4: Mark every checkbox `[x]`. Archive plan + version bump (minor — performance feature) + CHANGELOG entry + `docs/plans/archive/PLAN.md` entry. Same shape as the previous plan's close-out.**
 
-- [ ] **Step 5: Commit + push to main per the project's direct-merge convention.**
+- [x] **Step 5: Commit + push to main per the project's direct-merge convention.**
