@@ -49,7 +49,7 @@ Holger uses our standard GEDCOM importer with `profile='holger'` ([`src/import/h
 | `ignored_duplicates` ([schema:257](../src/api/schema.ts#L257)) | n/a | n/a | n/a | n/a | n/a | n/a | excluded (UI state for duplicate-merge workflow; not authored content) |
 | `quality_issue_counts` ([schema:588](../src/api/schema.ts#L588)) | n/a | n/a | n/a | n/a | n/a | n/a | excluded (render-time cache, refreshed from current DB state) |
 
-**Sixteen tables claimed in `.claude/rules/api.md`; this audit enumerates twenty.** The four extra are `ignored_duplicates`, `quality_issue_counts`, `gazetteers`, and `media_regions` — all `excluded` from GEDCOM by design (UI state, render cache, gazetteer data, app-specific overlay). The "16 tables" count in the rule predates the additions in v0.218, v0.220, v0.236, v0.249.
+**Sixteen tables claimed in `.claude/rules/api.md`; this audit enumerates twenty-two.** The four extra are `ignored_duplicates`, `quality_issue_counts`, `gazetteers`, and `media_regions` — all `excluded` from GEDCOM by design (UI state, render cache, gazetteer data, app-specific overlay). The "16 tables" count in the rule predates the additions in v0.218, v0.220, v0.236, v0.249.
 
 ### Deliberate model deviations (called out explicitly)
 
