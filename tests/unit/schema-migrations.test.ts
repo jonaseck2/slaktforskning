@@ -321,4 +321,63 @@ describe('schema migrations', async () => {
     // Re-running initializeSchema on an already-migrated DB must be a no-op.
     expect(async () => await initializeSchema(db)).not.toThrow();
   });
+
+  it('upgrades a pre-T02 database — synthesizes Repository rows from non-empty sources.repository values (Prime Directive: authored data preserved)', async () => {
+    // The existing pre-v0.3 fixture above seeds sources with the default
+    // `repository = ''` so the migration's `WHERE repository IS NOT NULL AND
+    // TRIM(repository) != ''` filter excludes them — meaning the
+    // synthesize-Repository + link path is never exercised by that test.
+    //
+    // This test seeds the pre-T02 fixture with two sources sharing a
+    // repository name (different casing) and asserts:
+    //   (a) exactly one Repository row is synthesized, with the canonical
+    //       casing taken from the first row encountered;
+    //   (b) BOTH source rows get a `source_repositories` link to that row;
+    //   (c) the `sources.repository` column is gone after migration.
+    const db = new Database(':memory:');
+
+    // Build just enough of the pre-T02 schema to exercise the backfill.
+    await runSql(db, `
+      CREATE TABLE sources (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL DEFAULT '',
+        author TEXT NOT NULL DEFAULT '',
+        publication_info TEXT NOT NULL DEFAULT '',
+        repository TEXT NOT NULL DEFAULT '',
+        url TEXT NOT NULL DEFAULT '',
+        source_type TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    // First row sets the canonical casing ('Riksarkivet'); second row uses a
+    // different casing ('RIKSARKIVET') that must dedup to the same Repository.
+    await runSql(db, `INSERT INTO sources (id, title, repository) VALUES ('s1', 'Parish book A', 'Riksarkivet')`);
+    await runSql(db, `INSERT INTO sources (id, title, repository) VALUES ('s2', 'Parish book B', 'RIKSARKIVET')`);
+
+    await initializeSchema(db);
+
+    // (a) exactly one Repository row synthesized, with the canonical casing
+    //     from the first occurrence per the implementation.
+    const repos = await queryAll<{ id: string; name: string; notes: string }>(
+      db, 'SELECT id, name, notes FROM repositories ORDER BY name'
+    );
+    expect(repos).toHaveLength(1);
+    expect(repos[0].name).toBe('Riksarkivet');
+    expect(repos[0].notes).toBe('');
+    const repoId = repos[0].id;
+
+    // (b) BOTH source rows linked to that same repository via source_repositories.
+    const links = await queryAll<{ source_id: string; repository_id: string }>(
+      db, 'SELECT source_id, repository_id FROM source_repositories ORDER BY source_id'
+    );
+    expect(links).toEqual([
+      { source_id: 's1', repository_id: repoId },
+      { source_id: 's2', repository_id: repoId },
+    ]);
+
+    // (c) the `sources.repository` column is gone.
+    expect(await tableCols(db, 'sources')).not.toContain('repository');
+  });
 });
