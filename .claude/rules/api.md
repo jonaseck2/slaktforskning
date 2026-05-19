@@ -12,49 +12,68 @@ Loads when working in `src/api/`, the DB worker, or unit tests.
 ## Domain Types (`src/api/types.ts`)
 
 ```typescript
-Person           { id, sex: 'M'|'F'|'U', living: boolean, notes, created_at, updated_at }
-PersonName       { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier?, preferred_name?, nickname? }
-PersonIdentifier { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
-Relationship     { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
-EventParticipant { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
-GenealogyEvent   { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, place_address?, cause?, value?, notes, relationship_id?, created_at, updated_at }
-Place            { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes, street?, postal_code?, city?, country? }
-Source           { id, title, author, publication_info, repository, url, source_type, call_number?, abstract?, created_at, updated_at }
-Citation         { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, created_at }
-Group            { id, name, notes, created_at }
-GroupLink        { id, group_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
-Repository       { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
-ResearchTask     { id, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
-TaskLink         { id, task_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
-Media            { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
-MediaLink        { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, sort_order: number, created_at }
-MediaRegion      { id, media_id, person_id?, x: number, y: number, width: number, height: number, label?, created_at }
+Person              { id, sex: 'M'|'F'|'U'|'X', living: boolean, notes, created_at, updated_at }
+PersonName          { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier?, preferred_name?, nickname? }
+PersonIdentifier    { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
+Relationship        { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
+PersonAssociation   { id, person_id, related_person_id, role: 'godparent'|'friend'|'colleague'|'enemy'|'neighbor'|'other', notes, created_at }
+EventParticipant    { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
+GenealogyEvent      { id, event_type, date_type, date_value?, date_value_end?, date_original, place_id?, place_address?, cause?, value?, notes, relationship_id?, is_negation: boolean, negation_event_type?, created_at, updated_at }
+Place               { id, name, normalized_name, place_type?, parent_place_id?, latitude?, longitude?, date_from?, date_to?, notes, street?, postal_code?, city?, country? }
+PlaceTranslation    { id, place_id, value, language, transliteration_scheme, created_at }
+Source              { id, title, author, publication_info, url, source_type, call_number?, abstract?, created_at, updated_at }
+SourceCoverageEvent { id, source_id, event_type, date_value_from, date_value_to, place_id?, notes, created_at }
+Citation            { id, source_id, page, date_accessed, confidence: 0-3, transcription, notes, event_id?, person_id?, relationship_id?, place_id?, person_name_id?, created_at }
+Note                { id, text, language, created_at, updated_at }
+NoteLink            { id, note_id, entity_type: 'person'|'event'|'relationship'|'place'|'source'|'repository'|'media'|'family', entity_id, sort_order, created_at }
+NameTranslation     { id, person_name_id, value, language, transliteration_scheme, created_at }
+Group               { id, name, notes, created_at }
+GroupLink           { id, group_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
+Repository          { id, name, address?, city?, postal_code?, state?, country?, phone?, email?, web?, call_number?, notes, created_at }
+ResearchTask        { id, priority: number, status: 'open'|'in_progress'|'done'|'stopped', task, notes, result, created_at, updated_at }
+TaskLink            { id, task_id, entity_type: 'person'|'place'|'media', entity_id, sort_order, created_at }
+Media               { id, file_ref?, title, format?, notes, is_printable: boolean, created_at }
+MediaLink           { id, media_id, entity_type: 'person'|'event'|'relationship'|'place'|'source', entity_id, link_type?, sort_order: number, created_at }
+MediaRegion         { id, media_id, person_id?, x: number, y: number, width: number, height: number, label?, created_at }
 ```
+
+**`Source.repository` (free-text string column) was DROPPED in T02 of the GEDCOM alignment plan.** Source ↔ Repository linkage is now FK-only via `source_repositories`. Importers synthesize a structured Repository from any legacy `_REPO_TEXT` / unbracketed REPO value on import (preserving authored fidelity from old files per Prime Directive).
+
+**GEDCOM 7.0 alignment context.** The six new tables `notes` + `note_links` (SNOTE), `person_associations` (ASSO without event), `name_translations` (NAME/TRAN), `place_translations` (PLAC/TRAN), `source_coverage_events` (SOUR/DATA/EVEN), plus `events.is_negation` + `events.negation_event_type` (NO X) and `persons.sex='X'` (intersex), are GEDCOM 7.0 concepts the schema didn't model before T02. See `docs/GEDCOM_AUDIT.md` for the per-version round-trip status per column and the task that closes each gap.
 
 ## Database Schema
 
-16 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent).
+22 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent). The audit doc `docs/GEDCOM_AUDIT.md` §1 maintains the canonical per-table comparison against GEDCOM 5.5.1 / 7.0 / Holger / Genney / RootsMagic / Gramps — refer to that file for the authoritative classification.
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
-| `persons` | id, sex, notes (living is derived from events at read time) | — |
+| `persons` | id, sex (M/F/U/X), notes (living is derived from events at read time) | — |
 | `person_names` | person_id, given_name, surname, name_type, sort_order, preferred_name, nickname | person_id → CASCADE |
+| `person_identifiers` | person_id, identifier_type, identifier_value | person → CASCADE |
 | `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
-| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes, relationship_id | relationship → SET NULL, place → SET NULL |
+| `person_associations` | person_id, related_person_id, role (godparent/friend/colleague/enemy/neighbor/other), notes (UNIQUE on triple) | both → CASCADE |
+| `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes, relationship_id, **is_negation, negation_event_type** | relationship → SET NULL, place → SET NULL |
 | `event_participants` | event_id, person_id, role (UNIQUE event+person) | both → CASCADE |
 | `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes, street, postal_code, city, country | parent → SET NULL |
-| `sources` | title, author, publication_info, repository, url, source_type, call_number, abstract | — |
-| `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id | source → CASCADE, event/person/relationship → SET NULL |
+| `place_translations` | place_id, value, language, transliteration_scheme | place → CASCADE |
+| `sources` | title, author, publication_info, url, source_type, call_number, abstract (legacy `repository` string DROPPED in T02) | — |
+| `source_coverage_events` | source_id, event_type, date_value_from, date_value_to, place_id, notes | source → CASCADE, place → SET NULL |
+| `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id | source → CASCADE, event/person/relationship → SET NULL, person_name → CASCADE |
+| `notes` | text, language | — |
+| `note_links` | note_id, entity_type ∈ {person\|event\|relationship\|place\|source\|repository\|media\|family}, entity_id, sort_order (UNIQUE on triple) | note → CASCADE; entity_id polymorphic |
+| `name_translations` | person_name_id, value, language, transliteration_scheme | person_name → CASCADE |
 | `groups` | name, notes | — |
 | `group_links` | group_id, entity_type ∈ {person\|place\|media}, entity_id, sort_order (UNIQUE on triple) | group → CASCADE; entity_id polymorphic — cleaned up by `deletePerson`/`deletePlace`/`deleteMedia` |
 | `repositories` | name, address, city, postal_code, state, country, phone, email, web, call_number, notes | — |
-| `source_repositories` | source_id, repository_id (UNIQUE) | both → CASCADE |
+| `source_repositories` | source_id, repository_id (UNIQUE) — **the only Source ↔ Repository link mechanism** | both → CASCADE |
 | `research_tasks` | priority, status, task, notes, result | — |
 | `task_links` | task_id, entity_type ∈ {person\|place\|media}, entity_id, sort_order (UNIQUE on triple) | task → CASCADE; entity_id polymorphic |
 | `media` | file_ref, title, format, notes, is_printable | — |
 | `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
 | `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
 | `gazetteers` | id, name, locale, description, source_json, data (BLOB), created_at | — |
+
+**Tables added in T02 of the GEDCOM-alignment plan (v0.262.0):** `person_associations`, `notes`, `note_links`, `name_translations`, `place_translations`, `source_coverage_events`. Two columns added to `events`: `is_negation` and `negation_event_type`. `persons.sex` CHECK extended to accept `'X'`. Column dropped: `sources.repository` (replaced by FK-only `source_repositories`).
 
 ## API function pattern
 
