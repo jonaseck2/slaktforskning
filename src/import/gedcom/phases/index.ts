@@ -18,7 +18,7 @@
  *   SUBM  Submitter name collection
  */
 
-export { phaseNotes } from './notes';
+export { phaseNotes, phaseNoteLinks } from './notes';
 export { phasePrepPlaces } from './prep-places';
 export { phasePrepInlineMedia } from './prep-inline-media';
 export { phaseObje } from './obje';

@@ -29,6 +29,9 @@ import type {
   TaskLink,
   Media,
   MediaLink,
+  Note,
+  NoteLink,
+  NoteEntityType,
 } from '../../api/types';
 
 type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -209,6 +212,19 @@ declare global {
         forPerson: (personId: string) => Promise<Group[]>;
         forPlace: (placeId: string) => Promise<Group[]>;
         forMedia: (mediaId: string) => Promise<Group[]>;
+      };
+      notes: {
+        list: () => Promise<Note[]>;
+        get: (id: string) => Promise<Note | null>;
+        create: (data: { text: string; language?: string }) => Promise<Note>;
+        update: (id: string, data: { text?: string; language?: string }) => Promise<Note | null>;
+        delete: (id: string) => Promise<boolean>;
+        forEntity: (entityType: NoteEntityType, entityId: string) => Promise<Note[]>;
+      };
+      noteLinks: {
+        link: (noteId: string, entityType: NoteEntityType, entityId: string) => Promise<NoteLink>;
+        unlink: (noteId: string, entityType: NoteEntityType, entityId: string) => Promise<boolean>;
+        forNote: (noteId: string) => Promise<NoteLink[]>;
       };
       repositories: {
         list: () => Promise<Repository[]>;

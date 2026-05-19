@@ -65,6 +65,12 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   'group_links.entity_type': 'place',
   'task_links.entity_type': 'place',
   'media_links.entity_type': 'event',
+  // note_links.entity_type — use 'person' (the default seed shape). The
+  // exporter walks per-link via emitNotesForEntity(...), which is fanned out
+  // for every entity kind (person / event / relationship / source / repository
+  // / media / family); per-field equality on 'person' suffices to prove the
+  // link survives the round-trip without standing up an extra parent row.
+  'note_links.entity_type': 'person',
   'research_tasks.status': 'in_progress',
   // events.event_type sentinel must be a value the EVENT_TYPE_TO_TAG map knows
   // — a free-form string would round-trip to 'other'. 'occupation' is a stable
@@ -758,23 +764,32 @@ function seedNotes(db: Database, col: string, value: unknown): string {
   runSql(db,
     `INSERT INTO notes (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
     params);
+  // T04: every notes row needs at least one note_links row to survive a
+  // round-trip — both v551 (inline NOTE under each link) and v70 (SNOTE
+  // pointer per link) export through the link list, not by walking the
+  // notes table on its own. An orphaned notes row is not emitted, so the
+  // per-field test would always see null on import.
+  const personId = insertPersonWithDefaultName(db);
+  runSql(db,
+    `INSERT INTO note_links (id, note_id, entity_type, entity_id, sort_order)
+     VALUES (?, ?, 'person', ?, 0)`,
+    [crypto.randomUUID(), id, personId]);
   return id;
 }
 
 function seedNoteLinks(db: Database, col: string, value: unknown): string {
   // Parent note row + a person to attach to.
-  const noteId = col === 'note_id' ? String(value) : seedNotes(db, 'text', 'sentinel');
-  if (col === 'note_id') {
-    // The note_id sentinel needs an actual notes row to satisfy FK.
-    runSql(db, `INSERT INTO notes (id, text) VALUES (?, 'sentinel')`, [noteId]);
-  }
+  const noteId = col === 'note_id' ? String(value) : crypto.randomUUID();
+  // The notes row must exist (FK target).
+  runSql(db, `INSERT INTO notes (id, text) VALUES (?, 'sentinel')`, [noteId]);
   const entityId = col === 'entity_id' ? String(value) : insertPersonWithDefaultName(db);
   const id = col === 'id' ? String(value) : crypto.randomUUID();
   const overrides: Record<string, unknown> = {
     note_id: noteId, entity_type: 'person', entity_id: entityId, sort_order: 0,
   };
-  // Skip override for CHECK-constrained columns; the registry declares them
-  // lossy → null, so the sentinel never needs to round-trip equality.
+  // Skip override for CHECK-constrained columns; sentinel value would
+  // violate the CHECK and the registry only requires the surrounding
+  // contract to round-trip — `entity_type` itself rides through as 'person'.
   const checkConstrained = new Set(['entity_type']);
   if (!['id', 'note_id', 'entity_id', 'created_at'].includes(col) && !checkConstrained.has(col)) {
     overrides[col] = value;

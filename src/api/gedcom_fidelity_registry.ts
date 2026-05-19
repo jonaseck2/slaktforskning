@@ -1021,61 +1021,73 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   // until the emitter/phase pair lands, so the per-field round-trip tests
   // (added in T04–T08) start from a known-honest baseline.
 
-  // ----- notes (added T02; filled by T04) -----
+  // ----- notes (T04) -----
+  // GEDCOM 7.0: lossless via top-level SNOTE records + SNOTE @Nx@ pointers.
+  // GEDCOM 5.5.1: lossy — no SNOTE record concept exists; shared notes
+  // degrade to repeated inline NOTE under each owning entity (disclosure
+  // warning emitted per shared note on export).
   'notes.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'notes.text': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 SNOTE degradation to inline NOTE finalized by T04',
+      reason: '5.5.1 has no SNOTE record concept. Shared notes degrade to inline NOTE under each linked entity; the importer absorbs that inline text into the entity\'s own `notes` column (persons.notes, repositories.notes, etc.), not into the shared `notes` table. The first-class shared-note row identity is therefore lost on 5.5.1 round-trip — the round-tripped DB has zero rows in `notes`. Export to GEDCOM 7.0 to preserve the sharing.',
       expectedAfterRoundTrip: () => null,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SNOTE emission finalized by T04',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/notes-emitter.ts',
+      importer: 'src/import/gedcom/phases/notes.ts',
     },
   },
   'notes.language': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no language on inline NOTE; T04 confirms',
+      reason: '5.5.1 has no SNOTE record (see notes.text); the notes row is lost entirely on round-trip, so language goes with it.',
       expectedAfterRoundTrip: () => null,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SNOTE LANG emission finalized by T04',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/notes-emitter.ts',
+      importer: 'src/import/gedcom/phases/notes.ts',
     },
   },
   'notes.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
   'notes.updated_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
-  // ----- note_links (added T02; filled by T04) -----
+  // ----- note_links (T04) -----
+  // Note↔entity attachments. Lossless on 7.0 (each SNOTE @Nx@ pointer
+  // round-trips to a note_links row). Lossy on 5.5.1 — the link target is
+  // preserved in spirit (inline NOTE under the same entity), but the
+  // first-class link identity is lost (no shared `notes` row to link to).
   'note_links.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'note_links.note_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'note_links.entity_type': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      reason: '5.5.1 has no SNOTE record concept; note↔entity sharing collapses to inline NOTE per entity. The shared `notes` + `note_links` row pair is lost on round-trip — inline NOTE text lands on the entity\'s own `notes` column, not on a fresh note_links row.',
       expectedAfterRoundTrip: () => null,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/notes-emitter.ts',
+      importer: 'src/import/gedcom/phases/notes.ts',
     },
   },
   'note_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'note_links.sort_order': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      reason: '5.5.1 has no SNOTE record (see note_links.entity_type) — link row is lost on round-trip, so sort_order goes with it.',
       expectedAfterRoundTrip: () => null,
     },
     v70: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
-      expectedAfterRoundTrip: () => null,
+      reason: 'GEDCOM 7.0 SNOTE @Nx@ pointer order is preserved on a per-entity basis, but the cross-entity `sort_order` value the app stores is recomputed on import (MAX+1 per entity). The link round-trips losslessly in its other columns; only the integer is reseeded from zero.',
+      expectedAfterRoundTrip: () => 0,
+    },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/notes-emitter.ts',
+      importer: 'src/import/gedcom/phases/notes.ts',
     },
   },
   'note_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
