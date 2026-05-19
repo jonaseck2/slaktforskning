@@ -2278,18 +2278,26 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 ### T27: HTML site export — surface new fields on static site
 
-**Goal:** The static-site export renders person/event/place/source pages from the DB. Extend the rendering to surface notes, associations, translations, source coverage in the appropriate sections.
+**Goal:** The static-site export renders person/event/place/source pages via the SAME Vue views and components used by the renderer (`src/static/` reuses `src/renderer/`'s view + component tree; only the data backing differs — `static-api.ts` replaces `window.api` with read-only queries against a preloaded JSON snapshot). Extend the static export so notes, associations, translations, source coverage, and any other new-schema data appears on rendered static pages WITHOUT building duplicate UI components.
+
+**No new UI components in T27.** The section components (PersonSourcesSection from T11, EntityNotesSection from T20, PersonAssociationsSection from T21, PersonNameTranslationsSection from T23, SourceCoverageSection from T24, RepositoryPanel from T10) render in both renderer AND static contexts because they're shared. T27 only needs the DATA backing to match.
 
 **Files:**
-- Modify: `src/api/html_site/` (templates and serialization)
-- Modify: `src/static/views/` (renderer views used in the static build)
+- Modify: `src/api/html_site/` (JSON snapshot shape — add new tables to the dump)
+- Modify: `src/static/static-api.ts` (add read-only methods matching `window.api.notes.forEntity`, `personAssociations.forPerson`, `translations.forName`, `translations.forPlace`, `sourceCoverageEvents.forSource`, `repositories.list`, etc. — exact same signatures so shared components don't need conditional logic)
+- Verify (no edit usually needed): `src/static/views/` and shared components — they call `window.api.*` which the static SPA replaces at boot
 - Test: `tests/unit/html_site-newconcepts.test.ts`
 
-**Dependencies:** T04, T05, T06, T07, T08.
+**Dependencies:** T04, T05, T06, T07, T08 (schema-feature integration provides the data); T11, T20, T21, T23, T24 (the shared section components rendered in static mode).
 
-**Verification:** Render a fixture DB through the html_site exporter; assert the new sections appear with correct content.
+**Verification:**
+- Run the html_site exporter on a fixture DB seeded with rows in every new table; assert the produced JSON snapshot contains those rows.
+- `npm run build:static && npm run dev:static`, navigate in a browser to a person page with a shared note + a person association + an alt-script name; all three render via the SAME section components used in the renderer's PersonPanel.
+- Confirm `static-api` signatures match `window.api` exactly (compare types from `src/renderer/api.d.ts` — that's the contract both backings implement).
 
-**Steps:** Follow T26 pattern. Commit: `feat(html-site): surface notes/associations/translations/coverage in static export — T27`.
+**Anti-pattern this task must avoid:** building a parallel set of static-only components for the new fields. If a T27 PR adds new Vue components instead of extending `static-api.ts` + JSON snapshot, that's the wrong shape — reject and re-scope. The whole point of `src/static/` reusing the renderer's component tree is that surfacing new fields in the renderer (T20-T24) automatically surfaces them in the static export once the data backing exists.
+
+**Steps:** Follow T26 pattern (JSON shape extension first, then test the snapshot, then verify in dev:static). Commit: `feat(html-site): surface new fields via shared components + static-api — T27`.
 
 ---
 
