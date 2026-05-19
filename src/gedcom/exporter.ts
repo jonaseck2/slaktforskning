@@ -22,7 +22,7 @@ import { formatGedcomDate, isStandardGedcomDate } from './date';
 // T02 GEDCOM-alignment per-concept emitters (stubs; filled by Phase 2 tasks).
 // Wired here so the orchestration surface exists — Phase 2 fills function
 // bodies without re-touching exporter.ts.
-import { emitNotesForEntity, emitSharedNoteRecords } from './exporters/notes-emitter';
+import { emitNotesForEntity, emitSharedNoteRecords, resetNoteXrefs } from './exporters/notes-emitter';
 import { emitPersonAssociations } from './exporters/assoc-emitter';
 import { emitNegationsForEntity } from './exporters/negation-emitter';
 import { emitNameTranslations, emitPlaceTranslations } from './exporters/translations-emitter';
@@ -294,6 +294,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     if (repo.email) lines.push(`1 EMAIL ${repo.email}`);
     if (repo.web) lines.push(`1 WWW ${repo.web}`);
     if (repo.notes) lines.push(`1 NOTE ${repo.notes}`);
+    // T04: shared notes attached to this repository
+    if (includeNotes) await emitNotesForEntity(db, 'repository', repo.id, 1, version, lines);
   }
 
   // ── Sources ────────────────────────────────────────────────────────────────
@@ -347,11 +349,12 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     void emitSourceCoverageEvents(db, src.id, 1, version, lines);
   });
 
-  // T02 per-concept emitter hook — top-level shared NOTE records (stub
-  // until T04). GEDCOM 7.0 SNOTE records sit at the top level alongside
-  // SUBM / REPO / SOUR; this is the canonical slot. No-op on 5.5.1 (5.5.1
-  // inlines notes per-entity).
-  await emitSharedNoteRecords(db, version, lines);
+  // T04: reset the SNOTE xref allocator at the top of every export so
+  // back-to-back exports do not share state. The top-level SNOTE record
+  // block itself is emitted AFTER every per-entity emitNotesForEntity call
+  // has run (just before TRLR below) — the xref allocator needs to see
+  // every reference before the records can be emitted.
+  resetNoteXrefs();
 
   // ── Persons ────────────────────────────────────────────────────────────────
   const allPersons = await listPersons(db);
@@ -583,6 +586,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         }
       }
       if (includeMedia) await emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      // T04: shared notes attached to this event
+      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines);
       // Collect ASSO blocks for non-primary participants in this event
       for (const part of participants) {
         if (part.person_id === p.id) continue;
@@ -863,6 +868,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         }
       }
       if (includeMedia) await emitMediaBlocks(lines, db, 'event', ev.id, 2);
+      // T04: shared notes attached to this family event
+      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines);
     }
 
     // Relationship-level citations
@@ -1020,6 +1027,14 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         lines.push(`2 REF ${refXr}`);
       }
     }
+  }
+
+  // T04: emit top-level SNOTE records (7.0) for every SNOTE @Nx@ xref
+  // allocated by emitNotesForEntity above, OR push shared-note disclosure
+  // warnings (5.5.1). Must run AFTER every per-entity emit call so the
+  // xref allocator has seen every reference, and BEFORE the 0 TRLR terminator.
+  if (includeNotes) {
+    await emitSharedNoteRecords(db, version, lines, { warnings });
   }
 
   lines.push('0 TRLR');

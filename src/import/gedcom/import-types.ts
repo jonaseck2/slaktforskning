@@ -15,6 +15,12 @@ import type { ImportOptions } from './import-core';
 export interface ImportContext {
   db: Database;
   tree: GedcomNode[];
+  /** Original parsed tree (pre-normalization). Phases that need the raw 7.0
+   *  structure — notably T04's SNOTE @Nx@ pointers, which `normalize.ts`
+   *  rewrites as inline NOTE text on entities — read from this map.
+   *  Always non-null on the live import path; left optional for legacy
+   *  tests that build a context manually. */
+  originalTree?: GedcomNode[];
   options: ImportOptions | undefined;
   isGenney: boolean;
   isHolger: boolean;
@@ -29,7 +35,12 @@ export interface ImportContext {
   inlineMediaMap?: Map<GedcomNode, string>;
 
   // ── Maps built & consumed across phases ──────────────────────────────────
-  noteMap: Map<string, string>;                         // xref → note text
+  noteMap: Map<string, string>;                         // xref → note text (legacy: text-into-entity-`notes`-column path; populated for top-level NOTE records and, on 7.0, also for SNOTE records via normalize.ts)
+  /** xref → noteId from `notes` table (T04). Populated by phaseNotes from
+   *  the original pre-normalize tree's top-level SNOTE records.
+   *  phaseNoteLinks reads this to build `note_links` rows for SNOTE @Nx@
+   *  pointer children on entities. */
+  noteIdMap: Map<string, string>;
   objeMap: Map<string, string>;                         // xref → app media UUID
   repoMap: Map<string, string>;                         // xref → app repository id
   grpMap: Map<string, string>;                          // xref → app group id

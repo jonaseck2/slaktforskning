@@ -32,7 +32,7 @@ import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
 import type { ImportContext } from './import-types';
 import {
   PERSON_EVENT_TAGS, FAMILY_EVENT_TAGS,
-  phaseNotes, phaseObje, phaseRepo, phaseGroups, phasePrepPlaces, phasePrepInlineMedia,
+  phaseNotes, phaseNoteLinks, phaseObje, phaseRepo, phaseGroups, phasePrepPlaces, phasePrepInlineMedia,
   phaseSources, phaseIndividuals, phaseFamilies,
   phaseAsso, phasePlaceCitations, phaseGroupRecords, phaseTodos, phaseSubmitters,
   // T02 GEDCOM-alignment new phases (stubs; filled by Phase 2).
@@ -104,7 +104,7 @@ export interface ValidationReport extends ImportReport {
 
 // ── Import context factory ──────────────────────────────────────────────────
 
-function createImportContext(db: Database, tree: GedcomNode[], options?: ImportOptions): ImportContext {
+function createImportContext(db: Database, tree: GedcomNode[], options?: ImportOptions, originalTree?: GedcomNode[]): ImportContext {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
   const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
@@ -112,12 +112,14 @@ function createImportContext(db: Database, tree: GedcomNode[], options?: ImportO
   return {
     db,
     tree,
+    originalTree,
     options,
     isGenney,
     isHolger,
     resolvePlaceFn,
 
     noteMap: new Map(),
+    noteIdMap: new Map(),
     objeMap: new Map(),
     repoMap: new Map(),
     grpMap: new Map(),
@@ -149,8 +151,9 @@ async function doImportGedcom(
   db: Database,
   tree: GedcomNode[],
   options?: ImportOptions,
+  originalTree?: GedcomNode[],
 ): Promise<{ skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] }> {
-  const ctx = createImportContext(db, tree, options);
+  const ctx = createImportContext(db, tree, options, originalTree);
 
   // Total = 17 phases below (14 legacy + 3 T02-added stubs). Each runPhase
   // call emits a determinate (current / total) tick so the toast bar always
@@ -158,7 +161,7 @@ async function doImportGedcom(
   // emit their own per-row progress (e.g. phaseNotes, phaseAsso). Phases
   // that do emit their own per-row progress overwrite this with
   // finer-grained counts.
-  const phaseTotal = 17;
+  const phaseTotal = 18;
   let phaseIdx = 0;
   const runPhase = async (name: string, fn: (c: typeof ctx) => Promise<void>) => {
     phaseIdx++;
@@ -197,6 +200,10 @@ async function doImportGedcom(
   await runPhase('groupRecords',   phaseGroupRecords);
   await runPhase('todos',          phaseTodos);
   await runPhase('submitters',     phaseSubmitters);
+  // T04: link SNOTE @Nx@ pointers to their owning entities. Runs last so
+  // personMap / sourceMap / repoMap / objeMap are all populated by the time
+  // we resolve link targets.
+  await runPhase('noteLinks',      phaseNoteLinks);
   console.log(`[import-timing]   maps: noteMap=${ctx.noteMap.size} objeMap=${ctx.objeMap.size} sourceMap=${ctx.sourceMap.size} personMap=${ctx.personMap.size} placeIdMap=${ctx.placeIdMap.size}`);
 
   // Build and return partial report
@@ -435,7 +442,7 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
   await runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
   try {
-    partial = await doImportGedcom(cachedDb, normalizedTree, options);
+    partial = await doImportGedcom(cachedDb, normalizedTree, options, tree);
     await runSql(db, 'COMMIT');
   } catch (err) {
     await runSql(db, 'ROLLBACK');

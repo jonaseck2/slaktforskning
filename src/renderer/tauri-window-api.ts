@@ -28,6 +28,7 @@ import * as events from '../api/events';
 import * as sources from '../api/sources';
 import * as relationships from '../api/relationships';
 import * as groups from '../api/groups';
+import * as notes from '../api/notes';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as duplicates from '../api/duplicates';
@@ -335,6 +336,25 @@ export function mountWindowApi(db: Database): MountResult {
     forPerson: readOnly((db, personId: string) => groups.getGroupsForPerson(db, personId)),
     forPlace: readOnly((db, placeId: string) => groups.getGroupsForPlace(db, placeId)),
     forMedia: readOnly((db, mediaId: string) => groups.getGroupsForMedia(db, mediaId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // notes (T04 — shared notes / GEDCOM 7.0 SNOTE)
+  api.notes = {
+    list: readOnly((db) => notes.listNotes(db)),
+    get: readOnly((db, id: string) => notes.getNote(db, id)),
+    create: mutating((db, data: Parameters<typeof notes.createNote>[1]) => notes.createNote(db, data)),
+    update: mutating((db, id: string, data: Parameters<typeof notes.updateNote>[2]) => notes.updateNote(db, id, data)),
+    delete: mutating((db, id: string) => notes.deleteNote(db, id)),
+    forEntity: readOnly((db, entityType: Parameters<typeof notes.getNotesForEntity>[1], entityId: string) =>
+      notes.getNotesForEntity(db, entityType, entityId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  api.noteLinks = {
+    link: mutating((db, noteId: string, entityType: Parameters<typeof notes.linkNoteToEntity>[2], entityId: string) =>
+      notes.linkNoteToEntity(db, noteId, entityType, entityId)),
+    unlink: mutating((db, noteId: string, entityType: Parameters<typeof notes.unlinkNoteFromEntity>[2], entityId: string) =>
+      notes.unlinkNoteFromEntity(db, noteId, entityType, entityId)),
+    forNote: readOnly((db, noteId: string) => notes.getEntitiesForNote(db, noteId)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
   // repositories
