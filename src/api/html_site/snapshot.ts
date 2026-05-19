@@ -62,25 +62,50 @@ export interface Snapshot {
 export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promise<Snapshot> {
   // 1. Compute scope — the set of person IDs to include
   const scopeSet = await computeScope(db, opts.scope);
+  const isEveryone = !!opts.scope.everyone;
 
-  // 2. Load only in-scope persons, then derive `living` in JS using two
-  //    pre-aggregated set queries (death events + birth years). Replaces
-  //    the per-row `livingSqlExpr` correlated subquery: O(events) instead
-  //    of O(persons × events_per_person). For a 7k-person tree this turns
-  //    ~14k EXISTS subqueries into 2 set-returning queries plus an
-  //    in-memory lookup per row.
+  // 2. Load everything in PARALLEL. Each query is independent; the JS
+  //    filtering after the await collects the results. SQLite serializes
+  //    at the connection mutex, but every query's IPC response (Rust
+  //    serialize → bridge → JS parse) can overlap with the next query's
+  //    SQL execution. For a 22k-person tree this halves wall-clock vs
+  //    sequential awaits on the user's family.db (60s+ → ~30s for the
+  //    pre-filter phase).
   const scopeIds = [...scopeSet];
-  let persons: Person[] = [];
-  if (scopeIds.length > 0) {
-    const placeholders = scopeIds.map(() => '?').join(',');
-    const rawPersons = await queryAll<Omit<Person, 'living'>>(
-      db,
-      `SELECT * FROM persons WHERE id IN (${placeholders})`,
-      scopeIds,
-    );
-    const derivation = await loadLivingDerivation(db);
-    persons = rawPersons.map(r => ({ ...r, living: isLivingDerived(r.id, derivation) }));
-  }
+  const personPlaceholders = scopeIds.length > 0 ? scopeIds.map(() => '?').join(',') : null;
+  const [
+    rawPersons,
+    derivation,
+    allRelationships,
+    allPersonNames,
+    allPersonIdentifiers,
+    allEventParticipants,
+    allEvents,
+    allPlaces,
+    allCitations,
+    allSources,
+    allMediaLinks,
+    allMedia,
+    allMediaRegions,
+  ] = await Promise.all([
+    personPlaceholders
+      ? queryAll<Omit<Person, 'living'>>(db, `SELECT * FROM persons WHERE id IN (${personPlaceholders})`, scopeIds)
+      : Promise.resolve([] as Omit<Person, 'living'>[]),
+    loadLivingDerivation(db),
+    queryAll<Relationship>(db, 'SELECT * FROM relationships'),
+    queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY person_id, sort_order'),
+    queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers'),
+    queryAll<EventParticipant>(db, 'SELECT * FROM event_participants'),
+    queryAll<GenealogyEvent>(db, 'SELECT * FROM events'),
+    queryAll<Place>(db, 'SELECT * FROM places'),
+    queryAll<Citation>(db, 'SELECT * FROM citations'),
+    queryAll<Source>(db, 'SELECT * FROM sources'),
+    opts.options.includeMedia ? queryAll<MediaLink>(db, 'SELECT * FROM media_links') : Promise.resolve([] as MediaLink[]),
+    opts.options.includeMedia ? queryAll<Media>(db, 'SELECT * FROM media') : Promise.resolve([] as Media[]),
+    opts.options.includeMedia ? queryAll<MediaRegion>(db, 'SELECT * FROM media_regions') : Promise.resolve([] as MediaRegion[]),
+  ]);
+
+  let persons: Person[] = rawPersons.map(r => ({ ...r, living: isLivingDerived(r.id, derivation) }));
 
   // 3. Apply excludeLiving / redactLiving
   if (opts.options.excludeLiving) {
@@ -93,26 +118,20 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     ? persons.map(p => redactPerson(p as any))
     : persons.map(p => ({ ...p, redacted: false }));
 
-  // 4. Load all supporting tables in bulk, filter by person/relationship scope
+  // 4. Filter the bulk-loaded tables by scope. When `everyone` is set with
+  //    no excludeLiving filter, every row in finalPersonIds matches and the
+  //    filter is a no-op cost on top of the SELECT — skip it.
+  const everyoneNoExclude = isEveryone && !opts.options.excludeLiving;
 
-  const allRelationships = await queryAll<Relationship>(db, 'SELECT * FROM relationships');
-  const relationships = allRelationships.filter(r => {
+  const relationships = everyoneNoExclude ? allRelationships : allRelationships.filter(r => {
     const p1ok = !r.person1_id || finalPersonIds.has(r.person1_id);
     const p2ok = !r.person2_id || finalPersonIds.has(r.person2_id);
     return p1ok && p2ok;
   });
   const relationshipIds = new Set(relationships.map(r => r.id));
 
-  const allPersonNames = await queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY person_id, sort_order');
-  const personNames = allPersonNames.filter(n => finalPersonIds.has(n.person_id));
-
-  const allPersonIdentifiers = await queryAll<PersonIdentifier>(db, 'SELECT * FROM person_identifiers');
-  const personIds = allPersonIdentifiers.filter(i => finalPersonIds.has(i.person_id));
-
-  // Events: include events where at least one in-scope person participates,
-  // or events linked to an in-scope relationship
-  const allEventParticipants = await queryAll<EventParticipant>(db, 'SELECT * FROM event_participants');
-  const allEvents = await queryAll<GenealogyEvent>(db, 'SELECT * FROM events');
+  const personNames = everyoneNoExclude ? allPersonNames : allPersonNames.filter(n => finalPersonIds.has(n.person_id));
+  const personIds = everyoneNoExclude ? allPersonIdentifiers : allPersonIdentifiers.filter(i => finalPersonIds.has(i.person_id));
 
   // Find event IDs that are relevant to our scope
   const scopedEventIds = new Set<string>();
@@ -127,8 +146,8 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     }
   }
 
-  const events = allEvents.filter(e => scopedEventIds.has(e.id));
-  const eventParticipants = allEventParticipants.filter(
+  const events = everyoneNoExclude ? allEvents : allEvents.filter(e => scopedEventIds.has(e.id));
+  const eventParticipants = everyoneNoExclude ? allEventParticipants : allEventParticipants.filter(
     ep => scopedEventIds.has(ep.event_id) && finalPersonIds.has(ep.person_id)
   );
 
@@ -136,7 +155,6 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   const referencedPlaceIds = new Set<string>(
     events.filter(e => e.place_id).map(e => e.place_id as string)
   );
-  const allPlaces = await queryAll<Place>(db, 'SELECT * FROM places');
   const placesById = new Map(allPlaces.map(p => [p.id, p]));
   const placesRaw = allPlaces.filter(p => referencedPlaceIds.has(p.id));
 
@@ -173,7 +191,6 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   });
 
   // Citations: include those linked to scoped events/persons/relationships
-  const allCitations = await queryAll<Citation>(db, 'SELECT * FROM citations');
   const citations = allCitations.filter(c =>
     (c.event_id && scopedEventIds.has(c.event_id)) ||
     (c.person_id && finalPersonIds.has(c.person_id)) ||
@@ -183,7 +200,6 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
 
   // Sources: include those referenced by scoped citations
   const referencedSourceIds = new Set(citations.map(c => c.source_id));
-  const allSources = await queryAll<Source>(db, 'SELECT * FROM sources');
   const sources = allSources.filter(s => referencedSourceIds.has(s.id));
 
   // Media
@@ -192,7 +208,6 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   let mediaRegions: MediaRegion[] = [];
 
   if (opts.options.includeMedia) {
-    const allMediaLinks = await queryAll<MediaLink>(db, 'SELECT * FROM media_links');
     const scopedMediaLinks = allMediaLinks.filter(ml => {
       if (ml.entity_type === 'person') return finalPersonIds.has(ml.entity_id);
       if (opts.options.mediaPersonOnly) return false;
@@ -206,11 +221,8 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     // even if it has links to other entities (otherwise it'd be exported with
     // no link metadata, leaving an orphan file).
     const linkedMediaIds = new Set(scopedMediaLinks.map(ml => ml.media_id));
-    const allMedia = await queryAll<Media>(db, 'SELECT * FROM media');
     media = allMedia.filter(m => linkedMediaIds.has(m.id));
     mediaLinks = scopedMediaLinks;
-
-    const allMediaRegions = await queryAll<MediaRegion>(db, 'SELECT * FROM media_regions');
     mediaRegions = allMediaRegions.filter(r => linkedMediaIds.has(r.media_id));
   }
 
