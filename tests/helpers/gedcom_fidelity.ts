@@ -741,6 +741,155 @@ function seedMediaLinks(db: Database, col: string, value: unknown): string {
   return id;
 }
 
+// ── T02 seeders for GEDCOM-alignment placeholder tables ─────────────────────
+// Every column on these tables is declared lossy → null in the registry
+// (the importer phase stubs don't write rows yet). The seeders insert one
+// row so the source-DB INSERT path is exercised; after round-trip the
+// imported DB has zero rows and readColumnFromOnlyRow returns null,
+// matching the registry's lossy expectation. T04–T08 will tighten these
+// once each concept's emitter+phase pair lands.
+
+function seedNotes(db: Database, col: string, value: unknown): string {
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = { text: 'sentinel', language: '' };
+  if (col !== 'id') overrides[col] = value;
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO notes (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
+function seedNoteLinks(db: Database, col: string, value: unknown): string {
+  // Parent note row + a person to attach to.
+  const noteId = col === 'note_id' ? String(value) : seedNotes(db, 'text', 'sentinel');
+  if (col === 'note_id') {
+    // The note_id sentinel needs an actual notes row to satisfy FK.
+    runSql(db, `INSERT INTO notes (id, text) VALUES (?, 'sentinel')`, [noteId]);
+  }
+  const entityId = col === 'entity_id' ? String(value) : insertPersonWithDefaultName(db);
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = {
+    note_id: noteId, entity_type: 'person', entity_id: entityId, sort_order: 0,
+  };
+  // Skip override for CHECK-constrained columns; the registry declares them
+  // lossy → null, so the sentinel never needs to round-trip equality.
+  const checkConstrained = new Set(['entity_type']);
+  if (!['id', 'note_id', 'entity_id', 'created_at'].includes(col) && !checkConstrained.has(col)) {
+    overrides[col] = value;
+  }
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO note_links (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
+function seedPersonAssociations(db: Database, col: string, value: unknown): string {
+  const personId = col === 'person_id'
+    ? insertPersonWithDefaultName(db, String(value))
+    : insertPersonWithDefaultName(db);
+  const relatedId = col === 'related_person_id'
+    ? insertPersonWithDefaultName(db, String(value))
+    : insertPersonWithDefaultName(db);
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = {
+    person_id: personId, related_person_id: relatedId,
+    role: 'other', notes: '',
+  };
+  // Skip override for CHECK-constrained columns (registry declares lossy → null).
+  const checkConstrained = new Set(['role']);
+  if (!['id', 'person_id', 'related_person_id', 'created_at'].includes(col) && !checkConstrained.has(col)) {
+    overrides[col] = value;
+  }
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO person_associations (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
+function seedNameTranslations(db: Database, col: string, value: unknown): string {
+  // Parent: person + person_name.
+  const personId = insertPersonWithDefaultName(db);
+  // Read back the person_name id (insertPersonWithDefaultName creates one).
+  const nameRow = (db.prepare('SELECT id FROM person_names WHERE person_id = ?').all([personId]) as Array<{ id: string }>)[0];
+  const personNameId = col === 'person_name_id' ? String(value) : nameRow.id;
+  if (col === 'person_name_id') {
+    // The sentinel needs an actual person_names row to satisfy FK.
+    runSql(db,
+      `INSERT INTO person_names (id, person_id, given_name, surname, name_type, sort_order)
+       VALUES (?, ?, 'Test', 'Person', 'birth', 0)`,
+      [personNameId, personId]);
+  }
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = {
+    person_name_id: personNameId, value: 'sentinel',
+    language: '', transliteration_scheme: '',
+  };
+  if (!['id', 'person_name_id', 'created_at'].includes(col)) {
+    overrides[col] = value;
+  }
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO name_translations (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
+function seedPlaceTranslations(db: Database, col: string, value: unknown): string {
+  const placeId = col === 'place_id' ? String(value) : crypto.randomUUID();
+  runSql(db,
+    `INSERT INTO places (id, name, normalized_name) VALUES (?, 'Sentinel', 'sentinel')`,
+    [placeId]);
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = {
+    place_id: placeId, value: 'sentinel',
+    language: '', transliteration_scheme: '',
+  };
+  if (!['id', 'place_id', 'created_at'].includes(col)) {
+    overrides[col] = value;
+  }
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO place_translations (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
+function seedSourceCoverageEvents(db: Database, col: string, value: unknown): string {
+  const sourceId = col === 'source_id' ? String(value) : crypto.randomUUID();
+  runSql(db,
+    `INSERT INTO sources (id, title) VALUES (?, 'Sentinel source')`,
+    [sourceId]);
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const overrides: Record<string, unknown> = {
+    source_id: sourceId, event_type: 'birth',
+    date_value_from: '', date_value_to: '',
+    notes: '',
+  };
+  if (col === 'place_id') {
+    const placeId = String(value);
+    runSql(db,
+      `INSERT INTO places (id, name, normalized_name) VALUES (?, 'Sentinel', 'sentinel')`,
+      [placeId]);
+    overrides.place_id = placeId;
+  } else if (!['id', 'source_id', 'created_at'].includes(col)) {
+    overrides[col] = value;
+  }
+  const cols = ['id', ...Object.keys(overrides)];
+  const params = [id, ...Object.values(overrides)];
+  runSql(db,
+    `INSERT INTO source_coverage_events (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    params);
+  return id;
+}
+
 function seedByTable(db: Database, table: string, col: string, value: unknown): string {
   switch (table) {
     case 'persons': return seedPersons(db, col, value);
@@ -760,6 +909,15 @@ function seedByTable(db: Database, table: string, col: string, value: unknown): 
     case 'task_links': return seedTaskLinks(db, col, value);
     case 'media': return seedMedia(db, col, value);
     case 'media_links': return seedMediaLinks(db, col, value);
+    // ── T02 GEDCOM-alignment new tables (seeded for per-field tests; the
+    // importer/exporter stubs don't yet round-trip rows so post-roundtrip
+    // tables are empty — matching the lossy → null registry expectations).
+    case 'notes': return seedNotes(db, col, value);
+    case 'note_links': return seedNoteLinks(db, col, value);
+    case 'person_associations': return seedPersonAssociations(db, col, value);
+    case 'name_translations': return seedNameTranslations(db, col, value);
+    case 'place_translations': return seedPlaceTranslations(db, col, value);
+    case 'source_coverage_events': return seedSourceCoverageEvents(db, col, value);
     default:
       throw new Error(
         `seedRowWithColumn: no seeder for table=${table} (col=${col})`,

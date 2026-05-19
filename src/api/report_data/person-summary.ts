@@ -21,13 +21,21 @@ export interface PersonSummary {
 
 async function resolveCitationSource(db: Database, citation: Citation): Promise<CitationWithSource> {
   const source = await getSource(db, citation.source_id);
+  // T02: sources.repository free-text column was dropped. Repository
+  // metadata now lives on structured Repository rows linked via the
+  // source_repositories join; computing the "first linked repository name"
+  // here on every citation render would N+1 the DB. Keep the
+  // source_repository field on CitationWithSource as null for now;
+  // downstream reports already render it conditionally (v-if="src.repository")
+  // and a future plan can backfill from getRepositoriesForSource at the
+  // PersonSummary aggregate level if the reports need it.
   return {
     ...citation,
     source_title: source?.title ?? null,
     source_author: source?.author ?? null,
     source_publication_info: source?.publication_info ?? null,
     source_url: source?.url ?? null,
-    source_repository: source?.repository ?? null,
+    source_repository: null,
   };
 }
 

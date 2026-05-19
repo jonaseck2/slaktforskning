@@ -32,4 +32,8 @@ export { phasePlaceCitations } from './place-citations';
 export { phaseGroupRecords } from './group-records';
 export { phaseTodos } from './todos';
 export { phaseSubmitters } from './submitters';
+// T02 GEDCOM-alignment new phases (stubs; filled by Phase 2 tasks).
+export { phaseNegations } from './negations';
+export { phaseTranslations } from './translations';
+export { phaseCoverage } from './coverage';
 export { PERSON_EVENT_TAGS, FAMILY_EVENT_TAGS } from './shared';

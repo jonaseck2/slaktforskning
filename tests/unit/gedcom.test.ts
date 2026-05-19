@@ -842,10 +842,22 @@ describe('Extended GEDCOM roundtrip — sources & citations', async () => {
     expect((await listSources(db2))[0].source_type).toBe(sourceType);
   });
 
-  it('source repository survives roundtrip via REPO', async () => {
-    await createSource(db, { title: 'Census 1880', repository: 'Riksarkivet' });
+  it('source repository survives roundtrip via REPO (free-text → synthesized Repository)', async () => {
+    // T02: the legacy free-text `sources.repository` column was dropped.
+    // The importer now synthesizes a structured Repository row from any
+    // `_REPO_TEXT` (or unbracketed REPO value) on a SOUR. We seed via
+    // createRepository + linkSourceRepository (the new authoring path)
+    // and assert the structured Repository round-trips.
+    const { createSource } = await import('../../src/api/sources');
+    const { createRepository, linkSourceRepository, getRepositoriesForSource } = await import('../../src/api/repositories');
+    const src = await createSource(db, { title: 'Census 1880' });
+    const repo = await createRepository(db, { name: 'Riksarkivet' });
+    await linkSourceRepository(db, src.id, repo.id);
     const db2 = await roundtrip(db);
-    expect((await listSources(db2))[0].repository).toBe('Riksarkivet');
+    const importedSources = await listSources(db2);
+    expect(importedSources).toHaveLength(1);
+    const linkedRepos = await getRepositoriesForSource(db2, importedSources[0].id);
+    expect(linkedRepos.map(r => r.name)).toContain('Riksarkivet');
   });
 
   it('source.abstract survives roundtrip via _ABSTRACT', async () => {

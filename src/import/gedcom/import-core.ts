@@ -35,6 +35,8 @@ import {
   phaseNotes, phaseObje, phaseRepo, phaseGroups, phasePrepPlaces, phasePrepInlineMedia,
   phaseSources, phaseIndividuals, phaseFamilies,
   phaseAsso, phasePlaceCitations, phaseGroupRecords, phaseTodos, phaseSubmitters,
+  // T02 GEDCOM-alignment new phases (stubs; filled by Phase 2).
+  phaseNegations, phaseTranslations, phaseCoverage,
 } from './phases';
 
 // ── Public types (re-exported via index.ts) ─────────────────────────────────
@@ -150,12 +152,13 @@ async function doImportGedcom(
 ): Promise<{ skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] }> {
   const ctx = createImportContext(db, tree, options);
 
-  // Total = 14 phases below. Each runPhase call emits a determinate
-  // (current / total) tick so the toast bar always shows visible progress,
-  // even for fast phases that finish before they emit their own per-row
-  // progress (e.g. phaseNotes, phaseAsso). Phases that do emit their own
-  // per-row progress overwrite this with finer-grained counts.
-  const phaseTotal = 14;
+  // Total = 17 phases below (14 legacy + 3 T02-added stubs). Each runPhase
+  // call emits a determinate (current / total) tick so the toast bar always
+  // shows visible progress, even for fast phases that finish before they
+  // emit their own per-row progress (e.g. phaseNotes, phaseAsso). Phases
+  // that do emit their own per-row progress overwrite this with
+  // finer-grained counts.
+  const phaseTotal = 17;
   let phaseIdx = 0;
   const runPhase = async (name: string, fn: (c: typeof ctx) => Promise<void>) => {
     phaseIdx++;
@@ -179,10 +182,18 @@ async function doImportGedcom(
   await runPhase('repo',           phaseRepo);
   await runPhase('groups',         phaseGroups);
   await runPhase('sources',        phaseSources);
+  // T02 coverage stub runs after sources so source ids exist in sourceMap.
+  await runPhase('coverage',       phaseCoverage);
   await runPhase('individuals',    phaseIndividuals);
   await runPhase('families',       phaseFamilies);
   await runPhase('asso',           phaseAsso);
   await runPhase('placeCitations', phasePlaceCitations);
+  // T02 translations stub runs after individuals + placeCitations so both
+  // person_names and places exist as attachment targets.
+  await runPhase('translations',   phaseTranslations);
+  // T02 negations stub runs after individuals + families + asso so persons
+  // and relationships exist as attachment targets.
+  await runPhase('negations',      phaseNegations);
   await runPhase('groupRecords',   phaseGroupRecords);
   await runPhase('todos',          phaseTodos);
   await runPhase('submitters',     phaseSubmitters);

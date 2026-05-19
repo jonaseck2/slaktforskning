@@ -460,6 +460,34 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },
+  // T02 placeholder — final classification + ownedBy filled by T06 (negation
+  // emitter / importer phase). 5.5.1 has no negative-assertion concept;
+  // 7.0 NO is the canonical carrier. The placeholder is conservative so
+  // unauthored events behave correctly until T06 lands.
+  'events.is_negation': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02 scaffolding) — 5.5.1 has no NO structure; T06 finalizes either lossy or _NO custom',
+      expectedAfterRoundTrip: () => 0,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02 scaffolding) — emission of GEDCOM 7.0 NO X structure deferred to T06',
+      expectedAfterRoundTrip: () => 0,
+    },
+  },
+  'events.negation_event_type': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02 scaffolding) — 5.5.1 has no NO structure; T06 finalizes',
+      expectedAfterRoundTrip: () => '',
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02 scaffolding) — emission of GEDCOM 7.0 NO X structure deferred to T06',
+      expectedAfterRoundTrip: () => '',
+    },
+  },
 
   // ----- event_participants -----
   'event_participants.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
@@ -488,11 +516,10 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     v70: { kind: 'lossless' },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
-  'sources.repository': {
-    v551: { kind: 'lossless-via', mechanism: 'custom 1 _REPO_TEXT sub-tag (free-text repository name on the source)' },
-    v70: { kind: 'lossless-via', mechanism: 'custom 1 _REPO_TEXT sub-tag (free-text repository name on the source)' },
-    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
-  },
+  // T02: sources.repository free-text column was dropped. Repository
+  // affiliation now rides the structured source_repositories junction
+  // (entries below); the importer synthesizes Repository rows from
+  // _REPO_TEXT for back-compat with files exported by older versions.
   'sources.url': {
     v551: { kind: 'lossless-via', mechanism: 'custom 1 _URL sub-tag' },
     v70: { kind: 'lossless-via', mechanism: 'custom 1 _URL sub-tag' },
@@ -966,4 +993,236 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'media_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ── T02 GEDCOM-alignment placeholder entries ─────────────────────────────
+  // Final `kind`, `ownedBy`, and where applicable `expectedAfterRoundTrip`
+  // are refined by the corresponding Phase 2 task. The placeholders are
+  // conservative — anything authored on these columns is declared lossy
+  // until the emitter/phase pair lands, so the per-field round-trip tests
+  // (added in T04–T08) start from a known-honest baseline.
+
+  // ----- notes (added T02; filled by T04) -----
+  'notes.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'notes.text': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 SNOTE degradation to inline NOTE finalized by T04',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SNOTE emission finalized by T04',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'notes.language': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no language on inline NOTE; T04 confirms',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SNOTE LANG emission finalized by T04',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'notes.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+  'notes.updated_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ----- note_links (added T02; filled by T04) -----
+  'note_links.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'note_links.note_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'note_links.entity_type': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'note_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'note_links.sort_order': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — note_links rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'note_links.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ----- person_associations (added T02; filled by T05) -----
+  'person_associations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'person_associations.person_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'person_associations.related_person_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'person_associations.role': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — person_associations rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — person_associations rows are not written by the import stubs yet; row vanishes on round-trip',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'person_associations.notes': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — ASSO NOTE carrier finalized by T05',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — ASSO NOTE carrier finalized by T05',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'person_associations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ----- name_translations (added T02; filled by T07) -----
+  'name_translations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'name_translations.person_name_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'name_translations.value': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no NAME TRAN; T07 finalizes as lossy or custom',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — NAME TRAN emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'name_translations.language': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no NAME TRAN LANG; T07 finalizes',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — NAME TRAN LANG emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'name_translations.transliteration_scheme': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no transliteration scheme; T07 finalizes',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — NAME TRAN.TYPE emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'name_translations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ----- place_translations (added T02; filled by T07) -----
+  'place_translations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'place_translations.place_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'place_translations.value': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no PLAC TRAN; T07 finalizes',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — PLAC TRAN emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'place_translations.language': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no PLAC TRAN LANG; T07 finalizes',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — PLAC TRAN LANG emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'place_translations.transliteration_scheme': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — 5.5.1 has no transliteration scheme; T07 finalizes',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — PLAC TRAN.TYPE emission finalized by T07',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'place_translations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
+  // ----- source_coverage_events (added T02; filled by T08) -----
+  'source_coverage_events.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'source_coverage_events.source_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'source_coverage_events.event_type': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'source_coverage_events.date_value_from': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE FROM emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE FROM emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'source_coverage_events.date_value_to': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE TO emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE TO emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'source_coverage_events.place_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'source_coverage_events.notes': {
+    v551: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA NOTE emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: 'placeholder (T02) — SOUR DATA NOTE emission finalized by T08',
+      expectedAfterRoundTrip: () => null,
+    },
+  },
+  'source_coverage_events.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 };

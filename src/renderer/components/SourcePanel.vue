@@ -64,16 +64,10 @@
                 @blur="save('publication_info')"
               />
             </div>
-            <div class="compact-field">
-              <label class="compact-label">{{ $t('sources.repository') }}</label>
-              <input
-                class="compact-control"
-                type="text"
-                :value="fields.repository ?? ''"
-                @input="(fields as SourceData).repository = ($event.target as HTMLInputElement).value"
-                @blur="save('repository')"
-              />
-            </div>
+            <!-- T02: free-text repository was dropped from the schema —
+                 structured Repository records linked via source_repositories
+                 are the canonical home (managed via the linked-repositories
+                 list below). -->
             <div class="compact-field">
               <label class="compact-label">{{ $t('sources.url') }}</label>
               <input
@@ -260,7 +254,6 @@ interface SourceData {
   title: string;
   author: string;
   publication_info: string;
-  repository: string;
   url: string;
   source_type: string;
   call_number: string;

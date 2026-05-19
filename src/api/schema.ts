@@ -16,7 +16,7 @@ export async function initializeSchema(db: Database): Promise<void> {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS persons (
       id TEXT PRIMARY KEY,
-      sex TEXT NOT NULL DEFAULT 'U' CHECK(sex IN ('M', 'F', 'U')),
+      sex TEXT NOT NULL DEFAULT 'U' CHECK(sex IN ('M', 'F', 'U', 'X')),
       notes TEXT NOT NULL DEFAULT '',
       display_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -91,6 +91,8 @@ export async function initializeSchema(db: Database): Promise<void> {
       place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
       value TEXT,
       notes TEXT NOT NULL DEFAULT '',
+      is_negation INTEGER NOT NULL DEFAULT 0,
+      negation_event_type TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -110,7 +112,6 @@ export async function initializeSchema(db: Database): Promise<void> {
       title TEXT NOT NULL DEFAULT '',
       author TEXT NOT NULL DEFAULT '',
       publication_info TEXT NOT NULL DEFAULT '',
-      repository TEXT NOT NULL DEFAULT '',
       url TEXT NOT NULL DEFAULT '',
       source_type TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -262,6 +263,84 @@ export async function initializeSchema(db: Database): Promise<void> {
       PRIMARY KEY (entity_type, person1_id, person2_id),
       CHECK (person1_id < person2_id)
     );
+
+    -- ── T02 GEDCOM-alignment schema additions ─────────────────────────────
+    -- Shared notes (GEDCOM 7.0 SNOTE / 5.5.1 inline NOTE). Filled by T04.
+    CREATE TABLE IF NOT EXISTS notes (
+      id TEXT PRIMARY KEY,
+      text TEXT NOT NULL DEFAULT '',
+      language TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Polymorphic note-to-entity attachments. Mirrors group_links / task_links.
+    CREATE TABLE IF NOT EXISTS note_links (
+      id TEXT PRIMARY KEY,
+      note_id TEXT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL CHECK(entity_type IN ('person', 'event', 'relationship', 'place', 'source', 'repository', 'media', 'family')),
+      entity_id TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(note_id, entity_type, entity_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_note_links_note_id ON note_links(note_id);
+    CREATE INDEX IF NOT EXISTS idx_note_links_entity ON note_links(entity_type, entity_id);
+
+    -- Person-to-person associations (GEDCOM ASSO/RELA). Distinct from
+    -- relationships table — these are non-family roles (godparent, friend,
+    -- colleague, etc.) carried on an INDI. Filled by T05.
+    CREATE TABLE IF NOT EXISTS person_associations (
+      id TEXT PRIMARY KEY,
+      person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      related_person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'other' CHECK(role IN ('godparent', 'friend', 'colleague', 'enemy', 'neighbor', 'other')),
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(person_id, related_person_id, role)
+    );
+    CREATE INDEX IF NOT EXISTS idx_person_associations_person_id ON person_associations(person_id);
+    CREATE INDEX IF NOT EXISTS idx_person_associations_related_person_id ON person_associations(related_person_id);
+
+    -- Translation / transliteration of a person name (GEDCOM 7.0 TRAN).
+    -- Filled by T07.
+    CREATE TABLE IF NOT EXISTS name_translations (
+      id TEXT PRIMARY KEY,
+      person_name_id TEXT NOT NULL REFERENCES person_names(id) ON DELETE CASCADE,
+      value TEXT NOT NULL,
+      language TEXT NOT NULL DEFAULT '',
+      transliteration_scheme TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_name_translations_person_name_id ON name_translations(person_name_id);
+
+    -- Translation / transliteration of a place name (GEDCOM 7.0 PLAC/TRAN).
+    -- Filled by T07.
+    CREATE TABLE IF NOT EXISTS place_translations (
+      id TEXT PRIMARY KEY,
+      place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+      value TEXT NOT NULL,
+      language TEXT NOT NULL DEFAULT '',
+      transliteration_scheme TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_place_translations_place_id ON place_translations(place_id);
+
+    -- Source coverage events — what events / date ranges / places a source
+    -- covers (e.g. parish register covers births 1850-1900 in Råda parish).
+    -- Distinct from citations (which attach a source to a specific authored
+    -- event). Filled by T08.
+    CREATE TABLE IF NOT EXISTS source_coverage_events (
+      id TEXT PRIMARY KEY,
+      source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+      event_type TEXT NOT NULL,
+      date_value_from TEXT NOT NULL DEFAULT '',
+      date_value_to TEXT NOT NULL DEFAULT '',
+      place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_source_coverage_events_source_id ON source_coverage_events(source_id);
   `);
 
   // v0.3.0 column migrations — idempotent (skips if column already present)
@@ -346,6 +425,16 @@ export async function initializeSchema(db: Database): Promise<void> {
   if (!eventCols.includes('place_address')) {
     await db.exec('ALTER TABLE events ADD COLUMN place_address TEXT');
   }
+  // T02 GEDCOM-alignment: events.is_negation + events.negation_event_type
+  // for GEDCOM 7.0 NO X negative-assertion support. Idempotent — the main
+  // CREATE TABLE block above includes them; this guard upgrades pre-T02 DBs
+  // and is exercised by tests/unit/schema-migrations.test.ts.
+  if (!eventCols.includes('is_negation')) {
+    await runSql(db, "ALTER TABLE events ADD COLUMN is_negation INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!eventCols.includes('negation_event_type')) {
+    await runSql(db, "ALTER TABLE events ADD COLUMN negation_event_type TEXT NOT NULL DEFAULT ''");
+  }
 
   // v0.7.0 sources: call_number + abstract
   const sourcesCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(sources)')).map(c => c.name);
@@ -354,6 +443,52 @@ export async function initializeSchema(db: Database): Promise<void> {
   }
   if (!sourcesCols.includes('abstract')) {
     await db.exec('ALTER TABLE sources ADD COLUMN abstract TEXT');
+  }
+  // T02 GEDCOM-alignment: drop legacy free-text `sources.repository` column.
+  // Idempotent — the main CREATE TABLE block above omits it; this guard
+  // strips it from pre-T02 DBs. Repository affiliation now rides the
+  // structured `source_repositories` junction. Free-text values that were
+  // present are preserved as synthesized Repository rows.
+  if (sourcesCols.includes('repository')) {
+    // Backfill: for every source with a non-empty repository value that
+    // isn't already linked to a Repository, synthesize a Repository row and
+    // link it. Idempotent: a source already linked to a repository with the
+    // same name is left alone.
+    const rowsWithRepoText = await queryAll<{ id: string; repository: string }>(
+      db,
+      "SELECT id, repository FROM sources WHERE repository IS NOT NULL AND TRIM(repository) != ''",
+    );
+    // Deduplicate by case-insensitive name within this migration batch.
+    const synthByName = new Map<string, string>();
+    for (const row of rowsWithRepoText) {
+      const key = row.repository.trim().toLowerCase();
+      let repoId = synthByName.get(key);
+      if (!repoId) {
+        // Look for an existing Repository with the same name (case-insensitive).
+        const existing = await queryOne<{ id: string }>(db,
+          'SELECT id FROM repositories WHERE LOWER(name) = ?', [key]);
+        if (existing) {
+          repoId = existing.id;
+        } else {
+          repoId = crypto.randomUUID();
+          await runSql(db,
+            "INSERT INTO repositories (id, name, notes) VALUES (?, ?, '')",
+            [repoId, row.repository.trim()]);
+        }
+        synthByName.set(key, repoId);
+      }
+      // Link if not already linked.
+      const alreadyLinked = await queryOne<{ source_id: string }>(db,
+        'SELECT source_id FROM source_repositories WHERE source_id = ? AND repository_id = ?',
+        [row.id, repoId]);
+      if (!alreadyLinked) {
+        await runSql(db,
+          'INSERT INTO source_repositories (source_id, repository_id) VALUES (?, ?)',
+          [row.id, repoId]);
+      }
+    }
+    // Drop the column. node-sqlite3-wasm supports DROP COLUMN (SQLite 3.35+).
+    await runSql(db, 'ALTER TABLE sources DROP COLUMN repository');
   }
 
   // v0.8.0 media: is_missing flag for files that couldn't be found/extracted

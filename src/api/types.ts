@@ -1,6 +1,8 @@
 export interface Person {
   id: string;
-  sex: 'M' | 'F' | 'U';
+  // 'X' = non-binary / intersex (GEDCOM 7.0 also allows X; 5.5.1 only M/F/U
+  // and our exporter falls back to U on 5.5.1).
+  sex: 'M' | 'F' | 'U' | 'X';
   living: boolean;
   notes: string;
   display_id: number | null;
@@ -69,6 +71,12 @@ export interface GenealogyEvent {
   cause: string | null;
   value: string | null;
   notes: string;
+  // GEDCOM 7.0 negative-assertion family of structures (NO BIRT, NO DEAT,
+  // etc.). When true, the event records the *absence* of the named event
+  // (negation_event_type) — e.g. "no death record found before 1900".
+  // Filled by T06. is_negation persisted as 0/1 in SQLite.
+  is_negation: number;
+  negation_event_type: string;
   relationship_id: string | null;
   created_at: string;
   updated_at: string;
@@ -98,7 +106,6 @@ export interface Source {
   title: string;
   author: string;
   publication_info: string;
-  repository: string;
   url: string;
   source_type: string;
   call_number: string | null;
@@ -211,6 +218,81 @@ export interface MediaRegion {
   width: number;
   height: number;
   label: string | null;
+  created_at: string;
+}
+
+// ── T02 GEDCOM-alignment domain types ───────────────────────────────────────
+
+export type NoteEntityType =
+  | 'person'
+  | 'event'
+  | 'relationship'
+  | 'place'
+  | 'source'
+  | 'repository'
+  | 'media'
+  | 'family';
+
+export interface Note {
+  id: string;
+  text: string;
+  language: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NoteLink {
+  id: string;
+  note_id: string;
+  entity_type: NoteEntityType;
+  entity_id: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export type PersonAssociationRole =
+  | 'godparent'
+  | 'friend'
+  | 'colleague'
+  | 'enemy'
+  | 'neighbor'
+  | 'other';
+
+export interface PersonAssociation {
+  id: string;
+  person_id: string;
+  related_person_id: string;
+  role: PersonAssociationRole;
+  notes: string;
+  created_at: string;
+}
+
+export interface NameTranslation {
+  id: string;
+  person_name_id: string;
+  value: string;
+  language: string;
+  transliteration_scheme: string;
+  created_at: string;
+}
+
+export interface PlaceTranslation {
+  id: string;
+  place_id: string;
+  value: string;
+  language: string;
+  transliteration_scheme: string;
+  created_at: string;
+}
+
+export interface SourceCoverageEvent {
+  id: string;
+  source_id: string;
+  event_type: string;
+  date_value_from: string;
+  date_value_to: string;
+  place_id: string | null;
+  notes: string;
   created_at: string;
 }
 

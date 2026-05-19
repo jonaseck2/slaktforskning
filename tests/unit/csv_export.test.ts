@@ -122,7 +122,7 @@ describe('exportSourcesCsv', async () => {
     const csv = await exportSourcesCsv(db);
     const lines = csv.trim().split('\n');
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toBe('id,title,author,publication_info,repository,url,source_type,call_number,abstract');
+    expect(lines[0]).toBe('id,title,author,publication_info,url,source_type,call_number,abstract');
   });
 
   it('includes source data', async () => {

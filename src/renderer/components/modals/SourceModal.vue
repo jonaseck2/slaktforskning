@@ -34,10 +34,8 @@
         <label class="ep-field-label" for="source-field-4">{{ $t('sources.publicationInfo') }}</label>
         <input id="source-field-4" class="ep-input" v-model="form.publication_info" :placeholder="$t('sources.publicationInfoPlaceholder')" />
       </div>
-      <div class="ep-field">
-        <label class="ep-field-label" for="source-field-5">{{ $t('sources.repository') }}</label>
-        <input id="source-field-5" class="ep-input" v-model="form.repository" :placeholder="$t('sources.repositoryPlaceholder')" />
-      </div>
+      <!-- T02: free-text repository field removed — structured Repository
+           records (linked via source_repositories) are the canonical home. -->
       <div class="ep-field">
         <label class="ep-field-label" for="source-field-6">{{ $t('sources.url') }}</label>
         <input id="source-field-6" class="ep-input" v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
@@ -130,7 +128,6 @@ const form = reactive({
   source_type: 'church_record',
   author: '',
   publication_info: '',
-  repository: '',
   url: '',
 });
 
@@ -180,7 +177,6 @@ async function save() {
       source_type: form.source_type,
       author: form.author,
       publication_info: form.publication_info,
-      repository: form.repository,
       url: form.url,
     };
     let source: Source;
