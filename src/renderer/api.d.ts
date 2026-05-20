@@ -36,6 +36,7 @@ import type {
   PersonAssociationRole,
   NameTranslation,
   PlaceTranslation,
+  SourceCoverageEvent,
 } from '../../api/types';
 
 type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -256,6 +257,20 @@ declare global {
         forPlace: (placeId: string) => Promise<PlaceTranslation[]>;
         create: (data: { place_id: string; value: string; language?: string; transliteration_scheme?: string }) => Promise<PlaceTranslation>;
         update: (id: string, updates: Partial<Pick<PlaceTranslation, 'value' | 'language' | 'transliteration_scheme'>>) => Promise<PlaceTranslation | null>;
+        delete: (id: string) => Promise<boolean>;
+      };
+      sourceCoverage: {
+        create: (data: {
+          source_id: string;
+          event_type: string;
+          date_value_from?: string;
+          date_value_to?: string;
+          place_id?: string | null;
+          notes?: string;
+        }) => Promise<SourceCoverageEvent>;
+        get: (id: string) => Promise<SourceCoverageEvent | null>;
+        forSource: (sourceId: string) => Promise<SourceCoverageEvent[]>;
+        update: (id: string, data: Partial<Pick<SourceCoverageEvent, 'event_type' | 'date_value_from' | 'date_value_to' | 'place_id' | 'notes'>>) => Promise<SourceCoverageEvent | null>;
         delete: (id: string) => Promise<boolean>;
       };
       repositories: {

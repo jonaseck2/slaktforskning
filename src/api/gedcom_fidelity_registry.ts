@@ -1223,56 +1223,46 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'place_translations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
-  // ----- source_coverage_events (added T02; filled by T08) -----
+  // ----- source_coverage_events (T08) -----
+  // SOUR/DATA/EVEN substructure is identical on 5.5.1 and 7.0 — all columns
+  // round-trip losslessly on both versions. Event types are emitted verbatim
+  // as the `EVEN <type>` value (no enum gating). Dates use `DATE FROM x TO y`
+  // (degrades to FROM-only or TO-only when one endpoint is missing). Place
+  // resolves via `findOrCreatePlace(name)` on re-import, matching the same
+  // semantics every other importer phase uses.
   'source_coverage_events.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'source_coverage_events.source_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'source_coverage_events.event_type': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/coverage-emitter.ts',
+      importer: 'src/import/gedcom/phases/coverage.ts',
     },
   },
   'source_coverage_events.date_value_from': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE FROM emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE FROM emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/coverage-emitter.ts',
+      importer: 'src/import/gedcom/phases/coverage.ts',
     },
   },
   'source_coverage_events.date_value_to': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE TO emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA/EVEN DATE TO emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/coverage-emitter.ts',
+      importer: 'src/import/gedcom/phases/coverage.ts',
     },
   },
   'source_coverage_events.place_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'source_coverage_events.notes': {
-    v551: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA NOTE emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
-    },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — SOUR DATA NOTE emission finalized by T08',
-      expectedAfterRoundTrip: () => null,
+    v551: { kind: 'lossless' },
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/coverage-emitter.ts',
+      importer: 'src/import/gedcom/phases/coverage.ts',
     },
   },
   'source_coverage_events.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
