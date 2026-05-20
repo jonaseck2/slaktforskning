@@ -490,8 +490,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
           if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
         }
       }
-      // T02 per-concept emitter hook — NAME TRAN (stub until T07).
-      await emitNameTranslations(db, n.id, 2, version, lines);
+      // T07 — NAME TRAN: 7.0 lossless; 5.5.1 degrades to additional 1 NAME blocks (handled inside emitter).
+      await emitNameTranslations(db, n.id, 2, version, lines, { warnings });
     }
 
     lines.push(`1 SEX ${p.sex}`);
@@ -563,8 +563,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
-          // T02 per-concept emitter hook — PLAC TRAN (stub until T07).
-          await emitPlaceTranslations(db, place.id, 3, version, lines);
+          // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
+          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings });
           emittedPlac = true;
         }
       }
@@ -850,8 +850,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
-          // T02 per-concept emitter hook — PLAC TRAN (stub until T07).
-          await emitPlaceTranslations(db, place.id, 3, version, lines);
+          // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
+          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings });
           emittedPlac = true;
         }
       }

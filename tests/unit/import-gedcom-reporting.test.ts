@@ -76,10 +76,20 @@ describe('GEDCOM import — data integrity reporting', async () => {
     expect(entry!.count).toBeGreaterThan(0);
   });
 
-  it('reports TRAN translations in warnings', async () => {
+  it('imports NAME/TRAN as a first-class name_translations row (T07)', async () => {
     const db = await createTestDb();
-    const report = await importGedcom(db, parseGedcom(TRAN_GED));
-    expect(report.warnings.some(w => w.includes('TRAN') || w.includes('translation'))).toBe(true);
+    await importGedcom(db, parseGedcom(TRAN_GED));
+    // T07: TRAN is now lossless on 7.0 — no warning, the row lands in
+    // name_translations attached to the primary person_names row.
+    const { listPersons, getPersonNames } = await import('../../src/api/persons');
+    const { getTranslationsForName } = await import('../../src/api/translations');
+    const persons = await listPersons(db);
+    expect(persons).toHaveLength(1);
+    const names = await getPersonNames(db, persons[0].id);
+    expect(names).toHaveLength(1);
+    const trans = await getTranslationsForName(db, names[0].id);
+    expect(trans).toHaveLength(1);
+    expect(trans[0].language).toBe('sv');
   });
 
   it('reports NO negative assertions in unmappedData', async () => {

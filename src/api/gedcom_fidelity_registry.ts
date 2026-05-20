@@ -1124,84 +1124,101 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'person_associations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
-  // ----- name_translations (added T02; filled by T07) -----
+  // ----- name_translations (T07) -----
+  // 7.0: lossless via NAME/TRAN with LANG (+ _SCHEME custom tag).
+  // 5.5.1: lossy — degrades to additional `1 NAME <value>` with `2 TYPE <lang>`.
+  //        Language survives ONLY if the secondary NAME's TYPE matches a
+  //        recognized BCP-47 short code; the transliteration scheme is dropped.
+  //        The "additional NAME" row also lands in person_names (sort_order >0)
+  //        on import — the round-trip yields *some* person_names row that
+  //        carries the translation value, but the first-class name_translations
+  //        row identity is recreated by the secondary-NAME→TRAN heuristic.
   'name_translations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'name_translations.person_name_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'name_translations.value': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no NAME TRAN; T07 finalizes as lossy or custom',
-      expectedAfterRoundTrip: () => null,
+      reason: '5.5.1 has no NAME/TRAN substructure. Emitted as an additional `1 NAME <value>` with `2 TYPE <lang>` under the same INDI. Re-imported into name_translations only when the TYPE matches a known BCP-47 short code (ru, zh, ja, ar, he, el, …) — the same-exporter round-trip recovers the value, but interop with non-language-aware 5.5.1 tools may surface the value as an extra alias instead.',
+      expectedAfterRoundTrip: (seeded: unknown) => seeded,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — NAME TRAN emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'name_translations.language': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no NAME TRAN LANG; T07 finalizes',
-      expectedAfterRoundTrip: () => null,
+      reason: '5.5.1 carries the language as `2 TYPE <lang>` under the additional NAME (degraded path). Survives a same-exporter / same-importer round-trip when the value is a recognized BCP-47 short code; arbitrary language strings would not be re-recognised on import.',
+      expectedAfterRoundTrip: (seeded: unknown) => seeded,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — NAME TRAN LANG emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'name_translations.transliteration_scheme': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no transliteration scheme; T07 finalizes',
-      expectedAfterRoundTrip: () => null,
+      reason: '5.5.1 has no slot for a transliteration scheme on the degraded `1 NAME / 2 TYPE` shape. Dropped on 5.5.1 export.',
+      expectedAfterRoundTrip: () => '',
     },
     v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — NAME TRAN.TYPE emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism: 'custom `_SCHEME` sub-tag under TRAN (the 7.0 spec does not name a canonical tag for transliteration scheme; the custom tag is round-trip-safe within this app)',
+    },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'name_translations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
-  // ----- place_translations (added T02; filled by T07) -----
+  // ----- place_translations (T07) -----
+  // 7.0: lossless via PLAC/TRAN with LANG (+ _SCHEME custom tag).
+  // 5.5.1: fully lossy — 5.5.1 has no PLAC translation slot. The row is dropped
+  //        on export with a per-row warning surfaced via the export report.
   'place_translations.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'place_translations.place_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'place_translations.value': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no PLAC TRAN; T07 finalizes',
+      reason: '5.5.1 has no PLAC/TRAN substructure or equivalent. Row is dropped on export with a warning; the round-tripped DB has zero rows for this place.',
       expectedAfterRoundTrip: () => null,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — PLAC TRAN emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'place_translations.language': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no PLAC TRAN LANG; T07 finalizes',
+      reason: '5.5.1 has no PLAC/TRAN/LANG slot (see place_translations.value).',
       expectedAfterRoundTrip: () => null,
     },
-    v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — PLAC TRAN LANG emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+    v70: { kind: 'lossless' },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'place_translations.transliteration_scheme': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02) — 5.5.1 has no transliteration scheme; T07 finalizes',
+      reason: '5.5.1 has no PLAC/TRAN slot of any kind, so the scheme has no carrier.',
       expectedAfterRoundTrip: () => null,
     },
     v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02) — PLAC TRAN.TYPE emission finalized by T07',
-      expectedAfterRoundTrip: () => null,
+      kind: 'lossless-via',
+      mechanism: 'custom `_SCHEME` sub-tag under PLAC/TRAN (same pattern as name_translations)',
+    },
+    ownedBy: {
+      exporter: 'src/gedcom/exporters/translations-emitter.ts',
+      importer: 'src/import/gedcom/phases/translations.ts',
     },
   },
   'place_translations.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },

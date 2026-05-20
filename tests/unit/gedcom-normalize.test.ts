@@ -262,8 +262,13 @@ describe('normalizeForImport', () => {
     });
   });
 
-  describe('TRAN → additional NAME node (aka)', () => {
-    it('creates an aka NAME node from a TRAN child on NAME', () => {
+  describe('TRAN → first-class translation (T07)', () => {
+    // T07 removed the TRAN→aka NAME normalization. NAME/TRAN is now a
+    // first-class name_translations row, handled by phases/translations.ts
+    // against ctx.originalTree (the pre-normalize tree). The normalizer
+    // leaves TRAN children attached to their parent NAME unchanged so the
+    // translations phase can see them.
+    it('leaves NAME/TRAN children attached to their parent NAME', () => {
       const gedcom = [
         '0 @I1@ INDI',
         '1 NAME Johann /Müller/',
@@ -274,14 +279,13 @@ describe('normalizeForImport', () => {
       const result = normalizeForImport(nodes, '7.0');
 
       const indi = result.find(n => n.tag === 'INDI');
-      // Get all NAME children of INDI
       const nameNodes = childAll(indi!, 'NAME');
-      expect(nameNodes).toHaveLength(2);
-      const akaName = nameNodes.find(n =>
-        n.children.some(c => c.tag === 'TYPE' && c.value === 'aka')
-      );
-      expect(akaName).toBeDefined();
-      expect(akaName!.value).toBe('Johan /Miller/');
+      // No expansion — only the original NAME node.
+      expect(nameNodes).toHaveLength(1);
+      // The TRAN child remains under NAME for phaseTranslations to read.
+      const tran = nameNodes[0].children.find(c => c.tag === 'TRAN');
+      expect(tran).toBeDefined();
+      expect(tran!.value).toBe('Johan /Miller/');
     });
   });
 });

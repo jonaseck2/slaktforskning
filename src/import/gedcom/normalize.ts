@@ -96,40 +96,13 @@ function convertExidToRefn(node: GedcomNode): GedcomNode {
   return { ...node, children: newChildren };
 }
 
-// ── Transformation 3: TRAN → additional NAME node ───────────────────────────
-
-/**
- * For NAME records with a TRAN child, create an additional NAME node (aka) from TRAN value.
- * Applied recursively so it catches NAME records inside INDI nodes.
- */
-function expandNameTran(node: GedcomNode): GedcomNode {
-  const newChildren: GedcomNode[] = [];
-  for (const child of node.children) {
-    newChildren.push(expandNameTran(child));
-    if (child.tag === 'NAME') {
-      for (const tran of getChildren(child, 'TRAN')) {
-        if (tran.value) {
-          newChildren.push({
-            level: child.level,
-            xref: null,
-            tag: 'NAME',
-            value: tran.value,
-            children: [
-              {
-                level: child.level + 1,
-                xref: null,
-                tag: 'TYPE',
-                value: 'aka',
-                children: [],
-              },
-            ],
-          });
-        }
-      }
-    }
-  }
-  return { ...node, children: newChildren };
-}
+// ── Transformation 3: TRAN → additional NAME node — REMOVED (T07) ──────────
+//
+// Previously expanded NAME/TRAN into extra NAME nodes (typed 'aka'). T07
+// moved NAME/TRAN into first-class name_translations rows handled by
+// phases/translations.ts against ctx.originalTree. Removing the expansion
+// here ensures phaseIndividuals doesn't create duplicate person_names rows
+// from the translations.
 
 // ── Transformation 4: Uppercase TYPE/PEDI values → lowercase ────────────────
 
@@ -243,7 +216,9 @@ export function normalizeForImport(nodes: GedcomNode[], version: GedcomVersion):
   // 2–7: Apply remaining transformations
   working = working.map(n => {
     n = convertExidToRefn(n);
-    n = expandNameTran(n);
+    // T07: previously expanded NAME/TRAN into extra NAME nodes (typed 'aka').
+    // Now NAME/TRAN is a first-class name_translations row, handled by
+    // phaseTranslations against ctx.originalTree. Do NOT expand.
     n = lowercaseTypeValues(n);
     n = dropConcNodes(n);
     n = applyDatePhrase(n);

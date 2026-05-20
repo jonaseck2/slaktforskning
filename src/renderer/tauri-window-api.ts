@@ -30,6 +30,7 @@ import * as relationships from '../api/relationships';
 import * as personAssociations from '../api/person_associations';
 import * as groups from '../api/groups';
 import * as notes from '../api/notes';
+import * as translations from '../api/translations';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as duplicates from '../api/duplicates';
@@ -368,6 +369,22 @@ export function mountWindowApi(db: Database): MountResult {
     unlink: mutating((db, noteId: string, entityType: Parameters<typeof notes.unlinkNoteFromEntity>[2], entityId: string) =>
       notes.unlinkNoteFromEntity(db, noteId, entityType, entityId)),
     forNote: readOnly((db, noteId: string) => notes.getEntitiesForNote(db, noteId)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // nameTranslations (T07 — GEDCOM 7.0 NAME/TRAN)
+  api.nameTranslations = {
+    forName: readOnly((db, personNameId: string) => translations.getTranslationsForName(db, personNameId)),
+    create: mutating((db, data: Parameters<typeof translations.createNameTranslation>[1]) => translations.createNameTranslation(db, data)),
+    update: mutating((db, id: string, updates: Parameters<typeof translations.updateNameTranslation>[2]) => translations.updateNameTranslation(db, id, updates)),
+    delete: mutating((db, id: string) => translations.deleteNameTranslation(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // placeTranslations (T07 — GEDCOM 7.0 PLAC/TRAN)
+  api.placeTranslations = {
+    forPlace: readOnly((db, placeId: string) => translations.getTranslationsForPlace(db, placeId)),
+    create: mutating((db, data: Parameters<typeof translations.createPlaceTranslation>[1]) => translations.createPlaceTranslation(db, data)),
+    update: mutating((db, id: string, updates: Parameters<typeof translations.updatePlaceTranslation>[2]) => translations.updatePlaceTranslation(db, id, updates)),
+    delete: mutating((db, id: string) => translations.deletePlaceTranslation(db, id)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
   // repositories
