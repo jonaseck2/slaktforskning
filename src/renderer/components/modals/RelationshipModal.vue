@@ -113,6 +113,32 @@
         </div>
       </div>
       <div style="height:8px"></div>
+
+      <!-- Sources section (T13) — citations attached directly to the relationship.
+           Citations on events of this relationship live in the per-event citations
+           list; this section is for evidence about the relationship itself. -->
+      <div class="ep-sec-header" data-entity="citation">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📚 {{ $t('relationshipSources.title') }}</span>
+          <span class="ep-sec-count">{{ sourceCount }}</span>
+        </div>
+        <span class="ep-sec-open">›</span>
+      </div>
+      <div class="ep-sec-content">
+        <input
+          class="ep-search-input"
+          :placeholder="$t('relationshipSources.add')"
+          readonly
+          @click="openAddCitation"
+        />
+        <RelationshipSourcesSection
+          ref="sourcesSectionRef"
+          :relationship-id="savedRelationshipId!"
+          @add-source="openAddCitation"
+          @edit-citation="onEditCitation"
+        />
+      </div>
+      <div style="height:8px"></div>
     </template>
 
     <!-- Sub-panels -->
@@ -126,6 +152,15 @@
         @cancel="onWeddingEventClosed"
         @close="onWeddingEventClosed"
         @saved="onWeddingEventSaved"
+      />
+      <CitationModal
+        v-if="subPanel === 'citation' && savedRelationshipId"
+        mode="subpanel"
+        :relationship-id="savedRelationshipId"
+        :editing-citation="editingCitation"
+        @close="closeCitationModal"
+        @cancel="closeCitationModal"
+        @saved="onCitationSaved"
       />
     </template>
   </BaseSubPanel>
@@ -172,8 +207,10 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './BaseSubPanel.vue';
 import EventModal from './EventModal.vue';
+import CitationModal from './CitationModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import PersonPicker from '../PersonPicker.vue';
+import RelationshipSourcesSection, { type CitationRow } from '../RelationshipSourcesSection.vue';
 import {
   RELATIONSHIP_TYPE_VALUES,
   COUPLE_SUBTYPE_VALUES,
@@ -276,7 +313,7 @@ async function loadEvents() {
 }
 
 // Sub-panel state
-const subPanel = ref<'event' | null>(null);
+const subPanel = ref<'event' | 'citation' | null>(null);
 const activeEvent = ref<EventRow | null>(null);
 
 function openAddEvent() {
@@ -292,6 +329,28 @@ function openEditEvent(ev: EventRow) {
 function closeSubPanel() {
   subPanel.value = null;
   activeEvent.value = null;
+}
+
+// ── Sources section (T13) ───────────────────────────────────────────────────
+const sourcesSectionRef = ref<InstanceType<typeof RelationshipSourcesSection> | null>(null);
+const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+const editingCitation = ref<CitationRow | null>(null);
+
+function openAddCitation() {
+  editingCitation.value = null;
+  subPanel.value = 'citation';
+}
+function onEditCitation(cit: CitationRow) {
+  editingCitation.value = cit;
+  subPanel.value = 'citation';
+}
+function closeCitationModal() {
+  subPanel.value = null;
+  editingCitation.value = null;
+}
+async function onCitationSaved() {
+  closeCitationModal();
+  await sourcesSectionRef.value?.reload();
 }
 
 // Load person names when editing an existing relationship

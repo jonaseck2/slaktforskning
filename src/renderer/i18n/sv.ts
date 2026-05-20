@@ -508,7 +508,25 @@ export default {
     newCitation: 'Ny hänvisning',
     copyFrom: 'Kopiera från befintlig',
     copyFromSource: 'Kopiera från källa',
-    selectToCopy: 'Välj hänvisning att kopiera\u2026',
+    selectToCopy: 'Välj hänvisning att kopiera…',
+  },
+  personSources: {
+    title: 'Källor',
+    add: '+ Källa',
+    empty: 'Inga källor ännu.',
+    confirmDelete: 'Ta bort källhänvisning?',
+  },
+  placeSources: {
+    title: 'Källor',
+    add: '+ Källa',
+    empty: 'Inga källor ännu.',
+    confirmDelete: 'Ta bort källhänvisning?',
+  },
+  relationshipSources: {
+    title: 'Källor',
+    add: '+ Källa',
+    empty: 'Inga källor ännu.',
+    confirmDelete: 'Ta bort källhänvisning?',
   },
   dateInput: {
     to: 'till',
@@ -2115,6 +2133,18 @@ export default {
       },
       sourceQualityChecks: {
         purpose: 'Här ser du vad som saknas eller skaver i hur källan är beskriven — ingen titel, ingen källtyp, lösa citat utan transkription, inga skanningar — så att du vet var nästa städsteg ligger.',
+      },
+      personSources: {
+        purpose: 'Här samlar du källhänvisningar direkt kopplade till personen — bevis för identitet, härkomst eller berättelsen om dem som inte hör hemma vid en enskild händelse. Lägg till nya hänvisningar, öppna en för att redigera, eller koppla bort.',
+        cta: 'Lägg till källa',
+      },
+      placeSources: {
+        purpose: 'Här samlar du källhänvisningar direkt kopplade till platsen — kartor, sockenbeskrivningar, gränsbeslut — bevis som rör platsen själv snarare än en enskild händelse där.',
+        cta: 'Lägg till källa',
+      },
+      relationshipSources: {
+        purpose: 'Här samlar du källhänvisningar direkt kopplade till relationen — vigselbevis, skilsmässobeslut, släktanteckningar — bevis som rör relationen snarare än en enskild händelse.',
+        cta: 'Lägg till källa',
       },
       eventMedia: {
         purpose: 'Här bifogar du foton och dokument som hör till händelsen — en sockenboksskanning, ett bröllopsfoto, en tidningsnotis — så att registret är förankrat visuellt i källan.',
