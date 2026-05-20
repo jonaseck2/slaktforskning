@@ -19,6 +19,13 @@ import type {
   Media,
   MediaLink,
   MediaRegion,
+  Note,
+  NoteLink,
+  PersonAssociation,
+  NameTranslation,
+  PlaceTranslation,
+  SourceCoverageEvent,
+  Repository,
 } from '../types';
 import { redactPerson } from './redact';
 import { computeScope } from './scope';
@@ -56,6 +63,14 @@ export interface Snapshot {
   media: Media[];
   mediaLinks: MediaLink[];
   mediaRegions: MediaRegion[];
+  notes: Note[];
+  noteLinks: NoteLink[];
+  personAssociations: PersonAssociation[];
+  nameTranslations: NameTranslation[];
+  placeTranslations: PlaceTranslation[];
+  sourceCoverage: SourceCoverageEvent[];
+  repositories: Repository[];
+  sourceRepositories: { source_id: string; repository_id: string }[];
   settings: Record<string, string>;
 }
 
@@ -219,6 +234,61 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     mediaRegions = allMediaRegions.filter(r => linkedMediaIds.has(r.media_id));
   }
 
+  // Notes + note_links: include notes that link to any in-scope entity (persons,
+  // events, relationships, places, sources, repositories, media).
+  const allNoteLinks = await queryAll<NoteLink>(db, 'SELECT * FROM note_links');
+  const linkedMediaIdsSet = new Set(media.map(m => m.id));
+  const scopedNoteLinks = allNoteLinks.filter(nl => {
+    switch (nl.entity_type) {
+      case 'person': return finalPersonIds.has(nl.entity_id);
+      case 'event': return scopedEventIds.has(nl.entity_id);
+      case 'relationship': return relationshipIds.has(nl.entity_id);
+      case 'place': return referencedPlaceIds.has(nl.entity_id);
+      case 'source': return referencedSourceIds.has(nl.entity_id);
+      case 'media': return linkedMediaIdsSet.has(nl.entity_id);
+      case 'repository': return true; // repositories are global
+      case 'family': return relationshipIds.has(nl.entity_id);
+      default: return false;
+    }
+  });
+  const scopedNoteIds = new Set(scopedNoteLinks.map(nl => nl.note_id));
+  const allNotes = await queryAll<Note>(db, 'SELECT * FROM notes');
+  const notes = allNotes.filter(n => scopedNoteIds.has(n.id));
+
+  // Person associations: include when both ends are in scope.
+  const allPersonAssociations = await queryAll<PersonAssociation>(db, 'SELECT * FROM person_associations');
+  const personAssociations = allPersonAssociations.filter(pa =>
+    finalPersonIds.has(pa.person_id) && finalPersonIds.has(pa.related_person_id),
+  );
+
+  // Name translations: include for any person_name belonging to a scoped person.
+  const scopedPersonNameIds = new Set(personNames.map(n => n.id));
+  const allNameTranslations = await queryAll<NameTranslation>(db, 'SELECT * FROM name_translations');
+  const nameTranslations = allNameTranslations.filter(nt => scopedPersonNameIds.has(nt.person_name_id));
+
+  // Place translations: include for any in-scope place.
+  const allPlaceTranslations = await queryAll<PlaceTranslation>(db, 'SELECT * FROM place_translations');
+  const placeTranslations = allPlaceTranslations.filter(pt => referencedPlaceIds.has(pt.place_id));
+
+  // Source coverage events: include for any in-scope source.
+  const allSourceCoverage = await queryAll<SourceCoverageEvent>(db, 'SELECT * FROM source_coverage_events');
+  const sourceCoverage = allSourceCoverage.filter(sc => referencedSourceIds.has(sc.source_id));
+
+  // Repositories + source_repositories: include all repositories referenced by
+  // an in-scope source, plus those that have note_links to in-scope notes.
+  const allSourceRepositories = await queryAll<{ source_id: string; repository_id: string }>(
+    db,
+    'SELECT source_id, repository_id FROM source_repositories',
+  );
+  const sourceRepositories = allSourceRepositories.filter(sr => referencedSourceIds.has(sr.source_id));
+  const referencedRepositoryIds = new Set<string>(sourceRepositories.map(sr => sr.repository_id));
+  // Note-linked repositories (repository_id stored in entity_id of repository-typed note_links)
+  for (const nl of scopedNoteLinks) {
+    if (nl.entity_type === 'repository') referencedRepositoryIds.add(nl.entity_id);
+  }
+  const allRepositories = await queryAll<Repository>(db, 'SELECT * FROM repositories');
+  const repositories = allRepositories.filter(r => referencedRepositoryIds.has(r.id));
+
   // Bake the tree subject in as `default_person_id` so the static site
   // (and the preview iframe) lands on the same person the editor's tree is
   // focused on, instead of bouncing to a random first row. Only set when
@@ -255,6 +325,14 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     media,
     mediaLinks,
     mediaRegions,
+    notes,
+    noteLinks: scopedNoteLinks,
+    personAssociations,
+    nameTranslations,
+    placeTranslations,
+    sourceCoverage,
+    repositories,
+    sourceRepositories,
     settings,
   };
 }

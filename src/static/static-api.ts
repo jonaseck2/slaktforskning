@@ -1,6 +1,21 @@
 import lunr from 'lunr';
 import type { Snapshot } from '../api/html_site/snapshot';
-import type { GenealogyEvent, Media, MediaRegion, Place, Relationship, Source, Citation } from '../api/types';
+import type {
+  GenealogyEvent,
+  Media,
+  MediaRegion,
+  Place,
+  Relationship,
+  Source,
+  Citation,
+  Note,
+  NoteLink,
+  PersonAssociation,
+  NameTranslation,
+  PlaceTranslation,
+  SourceCoverageEvent,
+  Repository,
+} from '../api/types';
 
 // Builds rich indices once from the snapshot for O(1) lookups.
 interface Indices {
@@ -319,6 +334,75 @@ function filterAndSortMedia(
 export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   const idx = buildIndices(snapshot);
 
+  // Backward-compat: older snapshots predate T26/T27 and don't carry the
+  // new tables. Default each to [] so the static SPA mounts cleanly against
+  // any vintage of exported site.
+  const notesData: Note[] = snapshot.notes ?? [];
+  const noteLinksData: NoteLink[] = snapshot.noteLinks ?? [];
+  const personAssociationsData: PersonAssociation[] = snapshot.personAssociations ?? [];
+  const nameTranslationsData: NameTranslation[] = snapshot.nameTranslations ?? [];
+  const placeTranslationsData: PlaceTranslation[] = snapshot.placeTranslations ?? [];
+  const sourceCoverageData: SourceCoverageEvent[] = snapshot.sourceCoverage ?? [];
+  const repositoriesData: Repository[] = snapshot.repositories ?? [];
+  const sourceRepositoriesData: { source_id: string; repository_id: string }[] =
+    snapshot.sourceRepositories ?? [];
+
+  // Indices for the new tables
+  const notesById = new Map(notesData.map(n => [n.id, n]));
+  const noteLinksByEntity = new Map<string, NoteLink[]>();
+  const noteLinksByNote = new Map<string, NoteLink[]>();
+  for (const nl of noteLinksData) {
+    const key = `${nl.entity_type}:${nl.entity_id}`;
+    const list = noteLinksByEntity.get(key) ?? [];
+    list.push(nl);
+    noteLinksByEntity.set(key, list);
+    const byNote = noteLinksByNote.get(nl.note_id) ?? [];
+    byNote.push(nl);
+    noteLinksByNote.set(nl.note_id, byNote);
+  }
+  const personAssociationsByPerson = new Map<string, PersonAssociation[]>();
+  const personAssociationsToPerson = new Map<string, PersonAssociation[]>();
+  for (const pa of personAssociationsData) {
+    const a = personAssociationsByPerson.get(pa.person_id) ?? [];
+    a.push(pa);
+    personAssociationsByPerson.set(pa.person_id, a);
+    const b = personAssociationsToPerson.get(pa.related_person_id) ?? [];
+    b.push(pa);
+    personAssociationsToPerson.set(pa.related_person_id, b);
+  }
+  const nameTranslationsByName = new Map<string, NameTranslation[]>();
+  for (const nt of nameTranslationsData) {
+    const list = nameTranslationsByName.get(nt.person_name_id) ?? [];
+    list.push(nt);
+    nameTranslationsByName.set(nt.person_name_id, list);
+  }
+  const placeTranslationsByPlace = new Map<string, PlaceTranslation[]>();
+  for (const pt of placeTranslationsData) {
+    const list = placeTranslationsByPlace.get(pt.place_id) ?? [];
+    list.push(pt);
+    placeTranslationsByPlace.set(pt.place_id, list);
+  }
+  const sourceCoverageBySource = new Map<string, SourceCoverageEvent[]>();
+  for (const sc of sourceCoverageData) {
+    const list = sourceCoverageBySource.get(sc.source_id) ?? [];
+    list.push(sc);
+    sourceCoverageBySource.set(sc.source_id, list);
+  }
+  const repositoriesById = new Map(repositoriesData.map(r => [r.id, r]));
+  const repositoriesBySource = new Map<string, Repository[]>();
+  const sourcesByRepository = new Map<string, string[]>();
+  for (const sr of sourceRepositoriesData) {
+    const repo = repositoriesById.get(sr.repository_id);
+    if (repo) {
+      const list = repositoriesBySource.get(sr.source_id) ?? [];
+      list.push(repo);
+      repositoriesBySource.set(sr.source_id, list);
+    }
+    const srcList = sourcesByRepository.get(sr.repository_id) ?? [];
+    srcList.push(sr.source_id);
+    sourcesByRepository.set(sr.repository_id, srcList);
+  }
+
   const personsWithNames = snapshot.persons.map(p => {
     const name = idx.namesByPerson.get(p.id)?.[0];
     return { ...p, given_name: name?.given_name ?? '', surname: name?.surname ?? '' };
@@ -497,10 +581,74 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   };
 
   const repositories = {
-    list: async () => [],
-    get: noop,
-    forSource: async () => [],
+    list: async () => repositoriesData,
+    listPage: async (limit: number, offset: number, _sortBy?: string, _sortDir?: string, query?: string) => {
+      const q = (query ?? '').trim().toLowerCase();
+      const filtered = !q ? repositoriesData : repositoriesData.filter(r =>
+        (r.name ?? '').toLowerCase().includes(q) ||
+        (r.city ?? '').toLowerCase().includes(q) ||
+        (r.country ?? '').toLowerCase().includes(q),
+      );
+      const out = [...filtered].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+      return { items: out.slice(offset, offset + limit), total: out.length };
+    },
+    get: async (id: string) => repositoriesById.get(id) ?? null,
+    forSource: async (sourceId: string) => repositoriesBySource.get(sourceId) ?? [],
+    forRepository: async (repoId: string) => {
+      const srcIds = sourcesByRepository.get(repoId) ?? [];
+      return srcIds.map(id => idx.sourceById.get(id)).filter(Boolean);
+    },
     create: noop, update: noop, delete: noopFalse, linkSource: noop, unlinkSource: noopFalse,
+  };
+
+  const notes = {
+    list: async () => notesData,
+    get: async (id: string) => notesById.get(id) ?? null,
+    forEntity: async (entityType: string, entityId: string) => {
+      const links = noteLinksByEntity.get(`${entityType}:${entityId}`) ?? [];
+      return links.map(l => notesById.get(l.note_id)).filter(Boolean) as Note[];
+    },
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  const noteLinks = {
+    link: noop, unlink: noopFalse,
+    forNote: async (noteId: string) => noteLinksByNote.get(noteId) ?? [],
+  };
+
+  const personAssociations = {
+    create: noop,
+    get: async (id: string) => personAssociationsData.find(pa => pa.id === id) ?? null,
+    forPerson: async (personId: string) => personAssociationsByPerson.get(personId) ?? [],
+    toPerson: async (personId: string) => personAssociationsToPerson.get(personId) ?? [],
+    update: noop, delete: noopFalse,
+  };
+
+  const nameTranslations = {
+    forName: async (personNameId: string) => nameTranslationsByName.get(personNameId) ?? [],
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  const placeTranslations = {
+    forPlace: async (placeId: string) => placeTranslationsByPlace.get(placeId) ?? [],
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  const sourceCoverage = {
+    get: async (id: string) => sourceCoverageData.find(sc => sc.id === id) ?? null,
+    forSource: async (sourceId: string) => sourceCoverageBySource.get(sourceId) ?? [],
+    create: noop, update: noop, delete: noopFalse,
+  };
+
+  // FK-only Source ↔ Repository link table — exposed for any consumer that
+  // wants the raw join rows (matches the IPC `sourceRepositories.*` namespace
+  // in tauri-window-api.ts).
+  const sourceRepositories = {
+    forSource: async (sourceId: string) => repositoriesBySource.get(sourceId) ?? [],
+    forRepository: async (repoId: string) => {
+      const srcIds = sourcesByRepository.get(repoId) ?? [];
+      return srcIds.map(id => idx.sourceById.get(id)).filter(Boolean);
+    },
   };
 
   const researchTasks = {
@@ -669,6 +817,8 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   return {
     persons, places, events, eventParticipants, sources, citations, relationships,
     groups, repositories, researchTasks, reports, checks, media, mediaRegions,
+    notes, noteLinks, personAssociations, nameTranslations, placeTranslations,
+    sourceCoverage, sourceRepositories,
     db, undo, shell, export: exportApi, print: printApi, csv, backup, gazetteers,
     duplicates, gedcom, import: importApi, archive, website, chart, onboarding,
     onDataChanged: () => {},
