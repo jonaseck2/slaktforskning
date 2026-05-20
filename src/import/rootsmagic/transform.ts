@@ -13,7 +13,45 @@
  * Schema reference: tested against RootsMagic 7+ databases (same schema
  * used in v8/v9/v10). Tables consumed: PersonTable, NameTable, EventTable,
  * FactTypeTable, FamilyTable, ChildTable, PlaceTable, SourceTable,
- * CitationTable, MultimediaTable, MediaLinkTable, WitnessTable.
+ * CitationTable, MultimediaTable, MediaLinkTable, WitnessTable, NoteTable
+ * (T25), RoleTable (T25 best-effort).
+ *
+ * ── T25 audit (2026-05-20) ────────────────────────────────────────────────
+ * Per-concept RootsMagic coverage of the T02 Phase 2 schema additions:
+ *
+ *  - Shared notes (T04 `notes` + `note_links`):
+ *      RootsMagic stores long-form notes in `NoteTable(NoteID, OwnerType,
+ *      OwnerID, NoteType, Name, Note, ...)` rather than the per-row Note
+ *      columns. Multiple rows can target the same entity, and one row
+ *      targets exactly one entity in standard RM usage (RM has no true
+ *      SNOTE-shaped multi-link). We map each NoteTable row to a `notes`
+ *      row + a `note_links` row keyed by OwnerType → person / family /
+ *      event / source / place. This is new in T25; the previous importer
+ *      read only the inline Note columns and dropped NoteTable entirely.
+ *  - Person associations (T05 `person_associations`):
+ *      RootsMagic has no ASSO-shaped person-to-person table independent
+ *      of events. WitnessTable (event participants) is already mapped
+ *      with role='witness'. Nothing to add.
+ *  - Negative assertions (T06 `events.is_negation`):
+ *      RM does not natively model negative assertions. Nothing to map.
+ *  - Name translations (T07 `name_translations`):
+ *      RM is single-script. Multiple NameTable rows per person with
+ *      NameType 0/2/3/4/6 are alternate names, not translations of the
+ *      primary; already mapped via mapNameType().
+ *  - Place translations (T07 `place_translations`):
+ *      PlaceTable has a single Name column; no multi-script variants.
+ *  - Source coverage (T08 `source_coverage_events`):
+ *      RM's SourceTable has no DATA/EVEN-shaped columns. Nothing to map.
+ *  - HEAD metadata (T09 `db_settings.header_metadata`):
+ *      RM stores researcher info elsewhere (UserTable / config blob, not
+ *      a portable HEAD-shape record). Not surfaced in this pass.
+ *  - WitnessTable roles via RoleTable:
+ *      Previously the importer maps all RM witnesses to role='witness'.
+ *      RM's RoleTable maps each Role FK to a free-text name; we now read
+ *      RoleTable and map known role names (Godparent, Officiant) to the
+ *      finer event_participants.role values.
+ *  - sex='X' / extended date qualifiers:
+ *      RM has no UI for either; not present in source data.
  */
 
 import type { Database } from 'node-sqlite3-wasm';
@@ -23,7 +61,9 @@ import { bulkCreateEvents } from '../../api/events';
 import { findOrCreatePlace } from '../../api/places';
 import { bulkCreateSources, bulkCreateCitations } from '../../api/sources';
 import { bulkCreateMedia, bulkAddMediaLinks } from '../../api/media';
+import { createNote, linkNoteToEntity } from '../../api/notes';
 import { queryAll, runSql } from '../../api/db';
+import type { EventParticipantRole, NoteEntityType } from '../../api/types';
 
 // ── RootsMagic row shapes ──────────────────────────────────────────────────
 
@@ -131,6 +171,20 @@ interface RmWitness {
   Role: number;           // role-table FK
 }
 
+interface RmNote {
+  NoteID: number;
+  OwnerType: number;      // 0=person, 1=family, 2=event, 3=source, 5=place (RM convention)
+  OwnerID: number;
+  NoteType: number | null;
+  Name: string | null;
+  Note: string | null;
+}
+
+interface RmRole {
+  RoleID: number;
+  RoleName: string | null;
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────
 
 export interface RootsMagicImportSummary {
@@ -142,6 +196,8 @@ export interface RootsMagicImportSummary {
   sources: number;
   citations: number;
   media: number;
+  /** T25: shared notes created from NoteTable. */
+  notes: number;
   warnings: string[];
   skipped: { category: string; count: number; reason: string }[];
 }
@@ -149,7 +205,7 @@ export interface RootsMagicImportSummary {
 export function emptyRootsMagicSummary(): RootsMagicImportSummary {
   return {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
-    events: 0, places: 0, sources: 0, citations: 0, media: 0,
+    events: 0, places: 0, sources: 0, citations: 0, media: 0, notes: 0,
     warnings: [], skipped: [],
   };
 }
@@ -412,6 +468,20 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
   await bulkCreateEvents(ourDb, eventRows);
 
   // WitnessTable: extra event participants (witness, godparent, officiant).
+  // T25: read RoleTable so we can map specific roles ('Godparent',
+  // 'Officiant') to the corresponding event_participants.role values
+  // instead of collapsing everything to 'witness'. RoleTable is optional —
+  // older RM databases may not have it; the query is wrapped to fall back
+  // to the default 'witness' role.
+  const roleMap = new Map<number, string>();
+  try {
+    const rmRoles = await queryAll<RmRole>(rmDb, 'SELECT RoleID, RoleName FROM RoleTable');
+    for (const r of rmRoles) {
+      if (r.RoleName) roleMap.set(r.RoleID, r.RoleName.toLowerCase());
+    }
+  } catch {
+    // RoleTable not present — older RM schema; all witnesses get 'witness'.
+  }
   const rmWitnesses = await queryAll<RmWitness>(rmDb,
     'SELECT WitnessID, EventID, PersonID, Role FROM WitnessTable'
   );
@@ -422,7 +492,7 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
     participantRows.push({
       event_id: eventId,
       person_id: personId,
-      role: 'witness',
+      role: mapRmRoleName(roleMap.get(w.Role)),
     });
   }
   await bulkAddEventParticipants(ourDb, participantRows);
@@ -529,7 +599,65 @@ export async function transformRootsMagic(ourDb: Database, rmDb: Database): Prom
   }
   await bulkAddMediaLinks(ourDb, mediaLinkRows);
 
+  // ── Phase 8 (T25): notes from NoteTable ────────────────────────────────
+  // RootsMagic's long-form notes live in NoteTable rather than the per-row
+  // Note columns. Map each note to a `notes` row + a `note_links` row
+  // keyed by OwnerType. NoteTable may not exist on older RM schemas — wrap
+  // the query so absence falls through cleanly.
+  try {
+    const rmNotes = await queryAll<RmNote>(rmDb,
+      'SELECT NoteID, OwnerType, OwnerID, NoteType, Name, Note FROM NoteTable'
+    );
+    for (const n of rmNotes) {
+      const text = (n.Note ?? '').trim();
+      if (!text) continue;
+      const entityType = mapNoteOwnerType(n.OwnerType);
+      if (!entityType) continue;
+      const entityId =
+        entityType === 'person' ? personMap.get(n.OwnerID)
+        : entityType === 'family' ? familyToCoupleId.get(n.OwnerID)
+        : entityType === 'event' ? eventMap.get(n.OwnerID)
+        : entityType === 'source' ? sourceMap.get(n.OwnerID)
+        : entityType === 'place' ? placeMap.get(n.OwnerID)
+        : undefined;
+      if (!entityId) continue;
+      // 'family' note-link targets the couple relationship row.
+      const noteEntityType: NoteEntityType =
+        entityType === 'family' ? 'relationship' : entityType;
+      const note = await createNote(ourDb, { text });
+      await linkNoteToEntity(ourDb, note.id, noteEntityType, entityId);
+      summary.notes++;
+    }
+  } catch {
+    // NoteTable not present on this RM schema — skip; inline Note columns
+    // on Person/Family/Event/Place/Source rows are already mapped above.
+  }
+
   return summary;
+}
+
+// Map RootsMagic NoteTable.OwnerType → our entity_type names.
+function mapNoteOwnerType(ownerType: number):
+  'person' | 'family' | 'event' | 'source' | 'place' | null {
+  switch (ownerType) {
+    case 0: return 'person';
+    case 1: return 'family';
+    case 2: return 'event';
+    case 4: return 'event';   // RM also uses 4 for fact-shaped events in some versions
+    case 3: return 'source';
+    case 5: return 'place';
+    default: return null;
+  }
+}
+
+// Map a free-text role name (from RM's RoleTable) to our enum.
+function mapRmRoleName(roleName: string | undefined): EventParticipantRole {
+  if (!roleName) return 'witness';
+  const n = roleName.trim().toLowerCase();
+  if (n.includes('godparent') || n.includes('godmother') || n.includes('godfather')) return 'godparent';
+  if (n.includes('officiant') || n.includes('clergy') || n.includes('priest') || n.includes('minister')) return 'officiant';
+  if (n.includes('witness')) return 'witness';
+  return 'witness';
 }
 
 // ── Mapping helpers ────────────────────────────────────────────────────────

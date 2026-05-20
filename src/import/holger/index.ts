@@ -17,6 +17,47 @@
  *    profile. The Tauri renderer's polyfill calls this after the Rust side
  *    has extracted the .ged from any zip + bulk-copied the media folder
  *    into `<dbname>-media/`. Mirrors `importFromGrampsBytes` shape.
+ *
+ * ── T25 audit (2026-05-20) ────────────────────────────────────────────────
+ * Holger 8 exports plain GEDCOM 5.5.1 (ANSI). All Holger imports go through
+ * the standard GEDCOM importer at `src/import/gedcom/` with `profile='holger'`
+ * (see `src/import/gedcom/profiles/holger.ts` for the per-profile branches).
+ * Consequently every new T02 schema concept that the GEDCOM 5.5.1 importer
+ * already handles is automatically handled for Holger too:
+ *
+ *  - SNOTE shared notes        → Holger 8 emits inline NOTE only (no SNOTE in
+ *                                 5.5.1); the GEDCOM importer's `phaseNotes`
+ *                                 still handles top-level NOTE records the
+ *                                 same way. No additional mapping needed.
+ *  - ASSO person associations  → Holger 8 emits ASSO RELA on events (witness-
+ *                                 shaped), which the GEDCOM importer routes
+ *                                 to `event_participants` with role mapping.
+ *                                 Pure-INDI ASSO without event (the
+ *                                 `person_associations` shape) is rare in
+ *                                 Holger exports but the GEDCOM importer's
+ *                                 phaseAsso handles it when it appears.
+ *  - NO negative assertions    → Not present in Holger 5.5.1 exports
+ *                                 (Holger has no UI for negative assertions).
+ *  - NAME/TRAN translations    → Not present (Holger is single-script
+ *                                 Swedish; the GEDCOM importer's tranCount
+ *                                 stays at 0 for Holger inputs).
+ *  - PLAC/TRAN translations    → Not present (same reason).
+ *  - SOUR/DATA/EVEN coverage   → Not emitted by Holger; the GEDCOM importer
+ *                                 maps it when present in other 5.5.1 files.
+ *  - sex='X'                   → Holger UI has M/F/U only; never emits X.
+ *  - HEAD preservation         → Holger 5.5.1 HEAD is handled by the GEDCOM
+ *                                 importer's phaseHeaderMetadata.
+ *  - Extended date qualifiers  → Standard 5.5.1 DATE qualifiers; same shape.
+ *
+ * Holger-specific custom tags handled in `profiles/holger.ts`:
+ *   - ENGA TYPE on FAM         → couple subtype (Sambo/Partner/Parter/Särbo)
+ *   - ADOP on INDI with FAMC   → parent_child subtype override
+ *   - _NOTE / _TODO / _GROUP   → either rolled into person notes (`REMA`,
+ *                                 `MISC` — counted via `holgerRemarkCount`)
+ *                                 or surfaced via the GEDCOM importer's
+ *                                 vendor-extension warnings.
+ *
+ * No Holger-specific concepts remain unmapped for the T02 Phase 2 work.
  */
 
 import * as fs from 'fs';

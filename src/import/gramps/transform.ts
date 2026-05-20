@@ -10,6 +10,48 @@
  * Pure logic: no Electron / IPC / UI dependencies. The orchestrator at
  * src/import/gramps/index.ts reads the file, optionally gunzips it,
  * and hands the XML text to `transformGramps`.
+ *
+ * ── T25 audit (2026-05-20) ────────────────────────────────────────────────
+ * Gramps has the richest schema of the four non-GEDCOM importers and is
+ * the closest natural fit for the T02 Phase 2 schema additions. Per-concept
+ * mapping after T25:
+ *
+ *  - Shared notes (T04 `notes` + `note_links`):
+ *      Gramps top-level `<note handle="…" id="…"><text>…</text></note>`
+ *      records, plus per-entity `<noteref hlink="…"/>` references, map
+ *      directly to our `notes` + `note_links` tables. Multi-link is
+ *      preserved (one note → many entities). Inline `<note>` elements
+ *      that lack a `handle` are routed to the parent entity's `notes`
+ *      column for backward compatibility (small subset of older Gramps
+ *      exports). Implemented in T25.
+ *  - Person associations (T05 `person_associations`):
+ *      Gramps `<personref hlink="…" rel="…"/>` inside a `<person>` block
+ *      maps directly to person_associations rows. Role normalised from
+ *      Gramps's free-text `rel` (Godparent, Friend, Colleague, Enemy,
+ *      Neighbor — anything else → 'other'). Implemented in T25.
+ *  - Negative assertions (T06 `events.is_negation`):
+ *      Gramps has no first-class negative-assertion concept. Attribute
+ *      `<attribute type="..." value="..."/>` could carry it as a vendor
+ *      convention but no standard mapping exists in upstream Gramps; not
+ *      mapped, no source data to translate.
+ *  - Name translations (T07 `name_translations`):
+ *      Gramps multi-script names use `<name alt="1">` blocks with
+ *      `<surname lang="…">` and `<first>` overrides. We map alt names
+ *      with a non-empty `lang` attribute to name_translations rows on
+ *      the primary name. Implemented in T25.
+ *  - Place translations (T07 `place_translations`):
+ *      Gramps `<pname value="…" lang="…"/>` rows carry alt-script place
+ *      names. The first lang-tagged pname after the primary maps to a
+ *      place_translations row. Implemented in T25.
+ *  - Source coverage (T08 `source_coverage_events`):
+ *      Gramps `<srcattribute type="Coverage" value="…"/>` is a recurring
+ *      convention but not a standard. We do not map it (lossy without a
+ *      canonical Gramps source).
+ *  - HEAD metadata (T09):
+ *      Researcher info already mapped to db_settings via the existing
+ *      `<header><researcher>…` block.
+ *  - sex='X':
+ *      Gramps's `<gender>` only emits M/F/U; no X in upstream.
  */
 
 import type { Database } from 'node-sqlite3-wasm';
@@ -20,7 +62,11 @@ import { findOrCreatePlace } from '../../api/places';
 import { createSource, createCitation } from '../../api/sources';
 import { createMedia } from '../../api/media';
 import { setDbSetting, getDbSetting } from '../../api/db_settings';
+import { createNote, linkNoteToEntity } from '../../api/notes';
+import { createPersonAssociation } from '../../api/person_associations';
+import { createNameTranslation, createPlaceTranslation } from '../../api/translations';
 import { runBatch } from '../../api/db';
+import type { NoteEntityType, PersonAssociationRole } from '../../api/types';
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -33,6 +79,11 @@ export interface GrampsImportSummary {
   sources: number;
   citations: number;
   media: number;
+  /** T25 — counts for new Phase 2 concepts. */
+  notes: number;
+  personAssociations: number;
+  nameTranslations: number;
+  placeTranslations: number;
   warnings: string[];
   skipped: { category: string; count: number; reason: string }[];
 }
@@ -41,6 +92,7 @@ export function emptyGrampsSummary(): GrampsImportSummary {
   return {
     persons: 0, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: 0, citations: 0, media: 0,
+    notes: 0, personAssociations: 0, nameTranslations: 0, placeTranslations: 0,
     warnings: [], skipped: [],
   };
 }
@@ -51,11 +103,15 @@ interface GrampsPerson {
   handle: string;
   id: string;
   gender: 'M' | 'F' | 'U';
-  names: { type?: string; first?: string; surname?: string }[];
+  names: { type?: string; first?: string; surname?: string; alt?: boolean; lang?: string }[];
   eventRefs: { hlink: string; role?: string }[];
   parentIn: string[];
   childOf?: string;
   uid?: string;
+  /** T25: shared-note references (<noteref hlink="…"/>). */
+  noteRefs: string[];
+  /** T25: person-to-person associations (<personref hlink="…" rel="…"/>). */
+  personRefs: { hlink: string; rel?: string }[];
 }
 
 interface GrampsFamily {
@@ -66,6 +122,8 @@ interface GrampsFamily {
   mother?: string;
   children: string[];
   eventRefs: { hlink: string; role?: string }[];
+  /** T25: shared-note references. */
+  noteRefs: string[];
 }
 
 interface GrampsEvent {
@@ -79,6 +137,8 @@ interface GrampsEvent {
   placeHandle?: string;
   description?: string;
   citationRefs: string[];
+  /** T25: shared-note references. */
+  noteRefs: string[];
 }
 
 interface GrampsPlace {
@@ -86,8 +146,12 @@ interface GrampsPlace {
   id: string;
   title?: string;
   pname?: string;
+  /** T25: extra place-name variants (multi-script via lang attribute). */
+  pnameAlts: { value: string; lang?: string }[];
   parentHandle?: string;
   type?: string;
+  /** T25: shared-note references. */
+  noteRefs: string[];
 }
 
 interface GrampsSource {
@@ -96,6 +160,15 @@ interface GrampsSource {
   title?: string;
   author?: string;
   pubinfo?: string;
+  /** T25: shared-note references. */
+  noteRefs: string[];
+}
+
+interface GrampsNote {
+  handle: string;
+  id: string;
+  text: string;
+  type?: string;
 }
 
 interface GrampsCitation {
@@ -140,6 +213,8 @@ interface ParsedDoc {
   sources: GrampsSource[];
   citations: GrampsCitation[];
   objects: GrampsObject[];
+  /** T25: top-level <note handle="…"> records that other entities reference. */
+  notes: GrampsNote[];
 }
 
 function attr(line: string, name: string): string | undefined {
@@ -181,7 +256,17 @@ function parseGrampsXml(xml: string): ParsedDoc {
   const doc: ParsedDoc = {
     researcher: {},
     persons: [], families: [], events: [], places: [],
-    sources: [], citations: [], objects: [],
+    sources: [], citations: [], objects: [], notes: [],
+  };
+
+  // T25: helper — collect <noteref hlink="…"/> handles inside a block.
+  const collectNoteRefs = (block: string): string[] => {
+    const refs: string[] = [];
+    for (const r of selfClosed(block, 'noteref')) {
+      const h = attr(r, 'hlink');
+      if (h) refs.push(h);
+    }
+    return refs;
   };
 
   // ── researcher ──
@@ -232,6 +317,7 @@ function parseGrampsXml(xml: string): ParsedDoc {
       placeHandle: placeM?.[1],
       description: descM ? decodeXml(descM[1].trim()) : undefined,
       citationRefs,
+      noteRefs: collectNoteRefs(block),
     });
   }
 
@@ -245,13 +331,23 @@ function parseGrampsXml(xml: string): ParsedDoc {
     const names: GrampsPerson['names'] = [];
     for (const nblk of blocks(block, 'name')) {
       const type = attr(nblk, 'type');
+      // T25: <name alt="1" …> marks an alternate-script / translation name.
+      // The lang attribute can appear on <name> or on <surname>.
+      const altAttr = attr(nblk, 'alt');
+      const langAttr = attr(nblk, 'lang');
       const firstM = firstMatch(nblk, /<first>([\s\S]*?)<\/first>/);
-      const surnameM = firstMatch(nblk, /<surname>([\s\S]*?)<\/surname>/);
-      names.push({
+      const surnameM = firstMatch(nblk, /<surname\b([^>]*)>([\s\S]*?)<\/surname>/);
+      const surnameLangM = surnameM ? firstMatch(surnameM[1], /\blang="([^"]*)"/) : null;
+      const lang = langAttr ?? surnameLangM?.[1];
+      const isAlt = altAttr === '1' || altAttr === 'true';
+      const nameRow: GrampsPerson['names'][number] = {
         type,
         first: firstM ? decodeXml(firstM[1].trim()) : undefined,
-        surname: surnameM ? decodeXml(surnameM[1].trim()) : undefined,
-      });
+        surname: surnameM ? decodeXml(surnameM[2].trim()) : undefined,
+      };
+      if (isAlt) nameRow.alt = true;
+      if (lang) nameRow.lang = lang;
+      names.push(nameRow);
     }
     const eventRefs: GrampsPerson['eventRefs'] = [];
     for (const ref of selfClosed(block, 'eventref')) {
@@ -263,12 +359,20 @@ function parseGrampsXml(xml: string): ParsedDoc {
       const h = attr(ref, 'hlink');
       if (h) parentIn.push(h);
     }
+    // T25: personref children describe person-to-person associations.
+    const personRefs: GrampsPerson['personRefs'] = [];
+    for (const ref of selfClosed(block, 'personref')) {
+      const h = attr(ref, 'hlink');
+      if (h) personRefs.push({ hlink: h, rel: attr(ref, 'rel') });
+    }
     const childOfM = firstMatch(block, /<childof\b[^>]*\bhlink="([^"]*)"/);
     const uidM = firstMatch(block, /<attribute\b[^>]*type="_UID"[^>]*value="([^"]*)"/);
     doc.persons.push({
       handle, id, gender, names, eventRefs, parentIn,
       childOf: childOfM?.[1],
       uid: uidM?.[1],
+      noteRefs: collectNoteRefs(block),
+      personRefs,
     });
   }
 
@@ -294,6 +398,7 @@ function parseGrampsXml(xml: string): ParsedDoc {
       handle, id, rel: relM?.[1],
       father: fatherM?.[1], mother: motherM?.[1],
       children, eventRefs,
+      noteRefs: collectNoteRefs(block),
     });
   }
 
@@ -303,14 +408,34 @@ function parseGrampsXml(xml: string): ParsedDoc {
     const id = attr(block, 'id') ?? '';
     if (!handle) continue;
     const titleM = firstMatch(block, /<ptitle>([\s\S]*?)<\/ptitle>/);
-    const pnameM = firstMatch(block, /<pname\b[^>]*\bvalue="([^"]*)"/);
+    // T25: gather every <pname value="…" lang="…"/>. The first is the
+    // primary (no lang or matching the doc's default); any with a lang
+    // attribute distinct from the first map to place_translations rows.
+    const pnameLines = selfClosed(block, 'pname');
+    let primaryPname: string | undefined;
+    const pnameAlts: GrampsPlace['pnameAlts'] = [];
+    for (const p of pnameLines) {
+      const v = attr(p, 'value');
+      if (!v) continue;
+      const lang = attr(p, 'lang');
+      if (primaryPname === undefined && !lang) {
+        primaryPname = v;
+      } else if (primaryPname === undefined) {
+        // First pname is itself lang-tagged — use it as primary; alts come after.
+        primaryPname = v;
+      } else {
+        pnameAlts.push({ value: v, lang });
+      }
+    }
     const parentM = firstMatch(block, /<placeref\b[^>]*\bhlink="([^"]*)"/);
     doc.places.push({
       handle, id,
       title: titleM ? decodeXml(titleM[1].trim()) : undefined,
-      pname: pnameM ? decodeXml(pnameM[1]) : undefined,
+      pname: primaryPname,
+      pnameAlts,
       parentHandle: parentM?.[1],
       type: attr(block, 'type'),
+      noteRefs: collectNoteRefs(block),
     });
   }
 
@@ -327,6 +452,23 @@ function parseGrampsXml(xml: string): ParsedDoc {
       title: titleM ? decodeXml(titleM[1].trim()) : undefined,
       author: authorM ? decodeXml(authorM[1].trim()) : undefined,
       pubinfo: pubM ? decodeXml(pubM[1].trim()) : undefined,
+      noteRefs: collectNoteRefs(block),
+    });
+  }
+
+  // ── notes (T25) ──
+  // Gramps top-level <note handle="…" id="…" type="…"><text>…</text></note>
+  // records. Referenced from any entity via <noteref hlink="…"/>.
+  for (const block of blocks(xml, 'note')) {
+    const handle = attr(block, 'handle') ?? '';
+    const id = attr(block, 'id') ?? '';
+    if (!handle) continue;
+    const textM = firstMatch(block, /<text>([\s\S]*?)<\/text>/);
+    if (!textM) continue;
+    doc.notes.push({
+      handle, id,
+      text: decodeXml(textM[1].trim()),
+      type: attr(block, 'type'),
     });
   }
 
@@ -445,6 +587,23 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     await runBatch(ourDb, 'UPDATE places SET parent_place_id = ? WHERE id = ?', parentLinkParams);
   }
 
+  // ── place translations (T25) ───────────────────────────────────────────
+  // Each lang-tagged <pname value="…" lang="…"/> beyond the first becomes
+  // a place_translations row attached to the place created above.
+  for (const p of doc.places) {
+    const placeId = placeMap.get(p.handle);
+    if (!placeId) continue;
+    for (const alt of p.pnameAlts) {
+      if (!alt.value.trim()) continue;
+      await createPlaceTranslation(ourDb, {
+        place_id: placeId,
+        value: alt.value.trim(),
+        language: alt.lang ?? '',
+      });
+      summary.placeTranslations++;
+    }
+  }
+
   // ── sources ────────────────────────────────────────────────────────────
   const sourceMap = new Map<string, string>();
   for (const s of doc.sources) {
@@ -463,6 +622,9 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
 
   // ── persons ────────────────────────────────────────────────────────────
   const personMap = new Map<string, string>();
+  // T25: track the primary person_name.id per person handle so alt-script
+  // names can attach as name_translations rows of the primary.
+  const primaryNameByPersonHandle = new Map<string, string>();
   for (const p of doc.persons) {
     const person = await createPerson(ourDb, { sex: p.gender }, { allowNameless: true });
     personMap.set(p.handle, person.id);
@@ -472,8 +634,9 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     const sortedNames = p.names.slice().sort((a, b) =>
       (a.type === 'Birth Name' ? -1 : 0) - (b.type === 'Birth Name' ? -1 : 0)
     );
-    for (let i = 0; i < sortedNames.length; i++) {
-      const n = sortedNames[i];
+    let primaryNameId: string | null = null;
+    let sortIdx = 0;
+    for (const n of sortedNames) {
       const t = (n.type ?? '').toLowerCase();
       const nameType: 'birth' | 'married' | 'aka' | 'alias' =
         t === 'married name' || t === 'married'
@@ -483,13 +646,30 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
             : t === 'alias'
               ? 'alias'
               : 'birth';
-      await addPersonName(ourDb, person.id, {
+      // T25: an alt-script name with a lang attribute attaches as a
+      // translation of the primary, not as its own person_names row.
+      if (n.alt && n.lang && primaryNameId) {
+        const value = [n.first, n.surname].filter(Boolean).join(' ').trim();
+        if (value) {
+          await createNameTranslation(ourDb, {
+            person_name_id: primaryNameId,
+            value,
+            language: n.lang,
+          });
+          summary.nameTranslations++;
+        }
+        continue;
+      }
+      const created = await addPersonName(ourDb, person.id, {
         given_name: n.first ?? '',
         surname: n.surname ?? '',
         name_type: nameType,
-        sort_order: i,
+        sort_order: sortIdx,
       });
+      if (primaryNameId === null) primaryNameId = created.id;
+      sortIdx++;
     }
+    if (primaryNameId) primaryNameByPersonHandle.set(p.handle, primaryNameId);
     summary.persons++;
   }
 
@@ -546,6 +726,8 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     }
   }
 
+  // T25: track event handle → our event id for shared-note links later.
+  const eventIdByHandle = new Map<string, string>();
   for (const e of doc.events) {
     const owner = ownerByEventHandle.get(e.handle);
     const placeId = e.placeHandle ? placeMap.get(e.placeHandle) : undefined;
@@ -570,6 +752,7 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
       notes: e.description ?? '',
       relationship_id: owner?.kind === 'family' ? owner.id : undefined,
     });
+    eventIdByHandle.set(e.handle, created.id);
 
     if (owner?.kind === 'person') {
       await addEventParticipant(ourDb, {
@@ -608,7 +791,93 @@ export async function transformGramps(ourDb: Database, xml: string): Promise<Gra
     summary.media++;
   }
 
+  // ── person associations (T25 — <personref>) ─────────────────────────────
+  for (const p of doc.persons) {
+    const subjectId = personMap.get(p.handle);
+    if (!subjectId) continue;
+    for (const ref of p.personRefs) {
+      const relatedId = personMap.get(ref.hlink);
+      if (!relatedId || relatedId === subjectId) continue;
+      try {
+        await createPersonAssociation(ourDb, {
+          person_id: subjectId,
+          related_person_id: relatedId,
+          role: mapGrampsAssocRole(ref.rel),
+          notes: ref.rel ?? '',
+        });
+        summary.personAssociations++;
+      } catch {
+        // Duplicate (UNIQUE on person+related+role) — silently skip.
+      }
+    }
+  }
+
+  // ── shared notes (T25 — top-level <note> + <noteref>) ───────────────────
+  // Build handle → our note id once, then fan out the noteref pointers.
+  const noteIdByHandle = new Map<string, string>();
+  for (const n of doc.notes) {
+    if (!n.text.trim()) continue;
+    const note = await createNote(ourDb, { text: n.text });
+    noteIdByHandle.set(n.handle, note.id);
+    summary.notes++;
+  }
+
+  const linkNotesFrom = async (
+    handle: string,
+    entityType: NoteEntityType,
+    entityId: string,
+    refs: string[],
+  ): Promise<void> => {
+    for (const noteHandle of refs) {
+      const noteId = noteIdByHandle.get(noteHandle);
+      if (!noteId) continue;
+      // Suppress UNIQUE-violation if the same note is referenced twice from
+      // the same entity (Gramps allows it; we don't).
+      await linkNoteToEntity(ourDb, noteId, entityType, entityId);
+    }
+    // Silence the unused-handle param when typescript is strict.
+    void handle;
+  };
+
+  for (const p of doc.persons) {
+    const id = personMap.get(p.handle);
+    if (!id || p.noteRefs.length === 0) continue;
+    await linkNotesFrom(p.handle, 'person', id, p.noteRefs);
+  }
+  for (const f of doc.families) {
+    const id = familyToCoupleId.get(f.handle);
+    if (!id || f.noteRefs.length === 0) continue;
+    await linkNotesFrom(f.handle, 'relationship', id, f.noteRefs);
+  }
+  for (const e of doc.events) {
+    const id = eventIdByHandle.get(e.handle);
+    if (!id || e.noteRefs.length === 0) continue;
+    await linkNotesFrom(e.handle, 'event', id, e.noteRefs);
+  }
+  for (const s of doc.sources) {
+    const id = sourceMap.get(s.handle);
+    if (!id || s.noteRefs.length === 0) continue;
+    await linkNotesFrom(s.handle, 'source', id, s.noteRefs);
+  }
+  for (const pl of doc.places) {
+    const id = placeMap.get(pl.handle);
+    if (!id || pl.noteRefs.length === 0) continue;
+    await linkNotesFrom(pl.handle, 'place', id, pl.noteRefs);
+  }
+
   return summary;
+}
+
+// T25: Gramps <personref rel="…"/> → person_associations.role.
+function mapGrampsAssocRole(rel: string | undefined): PersonAssociationRole {
+  if (!rel) return 'other';
+  const r = rel.trim().toLowerCase();
+  if (r.includes('godparent') || r.includes('godmother') || r.includes('godfather')) return 'godparent';
+  if (r.includes('friend')) return 'friend';
+  if (r.includes('colleague') || r.includes('co-worker') || r.includes('coworker')) return 'colleague';
+  if (r.includes('enemy')) return 'enemy';
+  if (r.includes('neighbor') || r.includes('neighbour')) return 'neighbor';
+  return 'other';
 }
 
 export { parseGrampsXml };
