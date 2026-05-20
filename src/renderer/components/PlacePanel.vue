@@ -191,6 +191,29 @@
         </div>
       </div>
 
+      <!-- Sources section (T12) — citations attached directly to the place.
+           Citations on events at this place live in the per-event citations
+           list; this section is for evidence about the place itself. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('placeSources.title')"
+          :count="sourceCount"
+          :collapsed="!sections.sources"
+          :action-label="!props.readonly ? $t('placeSources.add') : undefined"
+          @toggle="toggleSection('sources')"
+          @action="openAddCitation"
+        />
+        <div v-if="sections.sources" class="panel-section-body">
+          <PlaceSourcesSection
+            ref="sourcesSectionRef"
+            :place-id="placeId!"
+            :readonly="props.readonly"
+            @add-source="openAddCitation"
+            @edit-citation="onEditCitation"
+          />
+        </div>
+      </div>
+
       <!-- Quality section. v-show (not v-if) keeps the child mounted so its
            defineExpose({ count }) is live — otherwise the (N) count badge
            is 0 whenever the section is closed, contradicting the DB. The
@@ -213,6 +236,18 @@
         @deleted="onDeleted"
       />
     </template>
+
+    <!-- Citation modal — opens with placeId pre-set so the new citation is
+         attached directly to this place (T12). -->
+    <CitationModal
+      v-if="showCitationModal && placeId"
+      mode="standalone"
+      :place-id="placeId"
+      :editing-citation="editingCitation"
+      @close="closeCitationModal"
+      @cancel="closeCitationModal"
+      @saved="onCitationSaved"
+    />
 
     <!-- Research task form modal -->
     <ResearchTaskModal
@@ -241,6 +276,8 @@ import PlaceTimeline from './PlaceTimeline.vue';
 import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
 import PlaceNameAutocomplete from './PlaceNameAutocomplete.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
+import PlaceSourcesSection, { type CitationRow } from './PlaceSourcesSection.vue';
+import CitationModal from './modals/CitationModal.vue';
 import EntityPanel from './EntityPanel.vue';
 import PanelDangerZone from './PanelDangerZone.vue';
 import type { ComponentPublicInstance, Ref } from 'vue';
@@ -298,11 +335,11 @@ const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
     place: true, persons: true, events: true, timeline: false,
-    media: false, mediaTimeline: false, tasks: false, quality: false,
+    media: false, mediaTimeline: false, tasks: false, sources: false, quality: false,
   },
   {
     place: true, persons: true, events: true, timeline: true,
-    media: true, mediaTimeline: true, tasks: true, quality: false,
+    media: true, mediaTimeline: true, tasks: true, sources: false, quality: false,
   },
 );
 
@@ -313,6 +350,30 @@ const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null
 const checksSectionRef = ref<InstanceType<typeof PlaceChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
+const sourcesSectionRef = ref<InstanceType<typeof PlaceSourcesSection> | null>(null);
+const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+
+// ── Citation modal state (T12) ──────────────────────────────────────────────
+
+const showCitationModal = ref(false);
+const editingCitation = ref<CitationRow | null>(null);
+
+function openAddCitation() {
+  editingCitation.value = null;
+  showCitationModal.value = true;
+}
+function onEditCitation(cit: CitationRow) {
+  editingCitation.value = cit;
+  showCitationModal.value = true;
+}
+function closeCitationModal() {
+  showCitationModal.value = false;
+  editingCitation.value = null;
+}
+async function onCitationSaved() {
+  closeCitationModal();
+  await sourcesSectionRef.value?.reload();
+}
 
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('place-panel-notes');
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('place');

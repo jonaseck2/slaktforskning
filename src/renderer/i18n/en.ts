@@ -510,6 +510,24 @@ export default {
     copyFromSource: 'Copy from source',
     selectToCopy: 'Select citation to copy\u2026',
   },
+  personSources: {
+    title: 'Sources',
+    add: '+ Source',
+    empty: 'No sources yet.',
+    confirmDelete: 'Delete this source citation?',
+  },
+  placeSources: {
+    title: 'Sources',
+    add: '+ Source',
+    empty: 'No sources yet.',
+    confirmDelete: 'Delete this source citation?',
+  },
+  relationshipSources: {
+    title: 'Sources',
+    add: '+ Source',
+    empty: 'No sources yet.',
+    confirmDelete: 'Delete this source citation?',
+  },
   dateInput: {
     to: 'to',
     originalPlaceholder: "Original text (e.g. 'abt. 1845')",
@@ -2136,6 +2154,18 @@ export default {
       },
       sourceQualityChecks: {
         purpose: 'A user would use this section to see what\'s missing or shaky about how this source is described — no title, no source type, dangling citations with no transcription, no scans of the record — so they know where to direct their next bit of cleanup work.',
+      },
+      personSources: {
+        purpose: 'A user would use this section to attach source citations directly to the person — evidence of identity, origin, or biographical claims that don\'t belong to a single event. Add new citations, click to edit, or remove.',
+        cta: 'Add source',
+      },
+      placeSources: {
+        purpose: 'A user would use this section to attach source citations directly to the place itself — maps, parish descriptions, boundary records — evidence about the place rather than a single event there.',
+        cta: 'Add source',
+      },
+      relationshipSources: {
+        purpose: 'A user would use this section to attach source citations directly to the relationship — marriage records, divorce decrees, family-tree notes — evidence about the relationship rather than a single event.',
+        cta: 'Add source',
       },
       eventMedia: {
         purpose: 'A user would use this section to attach photos and documents that depict this event — a parish-book scan, a wedding photograph, a newspaper clipping — so the record is anchored visually to the source.',

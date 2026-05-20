@@ -199,6 +199,29 @@
         </div>
       </div>
 
+      <!-- Sources section (T11) — citations attached directly to the person.
+           Citations on this person's events live in the per-event citations
+           list; this section is for evidence about the person themselves. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('personSources.title')"
+          :count="sourceCount"
+          :collapsed="!sections.sources"
+          v-bind="props.readonly ? {} : { actionLabel: $t('personSources.add') }"
+          @toggle="toggleSection('sources')"
+          @action="openAddCitation"
+        />
+        <div v-if="sections.sources" class="panel-section-body">
+          <PersonSourcesSection
+            ref="sourcesSectionRef"
+            :person-id="personId!"
+            :readonly="props.readonly"
+            @add-source="openAddCitation"
+            @edit-citation="onEditCitation"
+          />
+        </div>
+      </div>
+
       <!-- Quality section. Same v-show rationale as Forskning above. -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -264,6 +287,18 @@
       @saved="onTaskSaved"
     />
 
+    <!-- Citation modal — opens with personId pre-set so the new citation is
+         attached directly to this person (T11). -->
+    <CitationModal
+      v-if="showCitationModal && personId"
+      mode="standalone"
+      :person-id="personId"
+      :editing-citation="editingCitation"
+      @close="closeCitationModal"
+      @cancel="closeCitationModal"
+      @saved="onCitationSaved"
+    />
+
     <!-- Add relative modal -->
     <PersonModal
       v-if="showAddRelative && personId"
@@ -298,6 +333,8 @@ import PersonIdentifiersSection from './PersonIdentifiersSection.vue';
 import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
+import PersonSourcesSection, { type CitationRow } from './PersonSourcesSection.vue';
+import CitationModal from './modals/CitationModal.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonDetailsSection from './PersonDetailsSection.vue';
 import PersonTimeline from './PersonTimeline.vue';
@@ -510,12 +547,13 @@ const { sections, toggleSection } = usePanelSections(
     research: false,
     media: false,
     mediaTimeline: false,
+    sources: false,
     quality: false,
   },
   {
     person: true, names: true, events: true, timeline: true, map: true,
     relationships: true, groups: true, research: false,
-    media: true, mediaTimeline: true, quality: false,
+    media: true, mediaTimeline: true, sources: false, quality: false,
   },
 );
 
@@ -530,6 +568,30 @@ const researchTaskCount = computed(() => researchSectionRef.value?.count ?? 0);
 const researchTaskIds = computed<string[]>(() => researchSectionRef.value?.taskIds ?? []);
 const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> | null>(null);
 const identifierCount = computed(() => identifiersSectionRef.value?.count ?? 0);
+const sourcesSectionRef = ref<InstanceType<typeof PersonSourcesSection> | null>(null);
+const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+
+// ── Citation modal state (T11) ──────────────────────────────────────────────
+
+const showCitationModal = ref(false);
+const editingCitation = ref<CitationRow | null>(null);
+
+function openAddCitation() {
+  editingCitation.value = null;
+  showCitationModal.value = true;
+}
+function onEditCitation(cit: CitationRow) {
+  editingCitation.value = cit;
+  showCitationModal.value = true;
+}
+function closeCitationModal() {
+  showCitationModal.value = false;
+  editingCitation.value = null;
+}
+async function onCitationSaved() {
+  closeCitationModal();
+  await sourcesSectionRef.value?.reload();
+}
 
 // ── Cross-section add actions ───────────────────────────────────────────────
 
