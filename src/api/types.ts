@@ -62,7 +62,7 @@ export interface EventParticipant {
 export interface GenealogyEvent {
   id: string;
   event_type: string;
-  date_type: 'exact' | 'about' | 'before' | 'after' | 'between' | 'calculated' | 'unknown';
+  date_type: 'exact' | 'about' | 'before' | 'after' | 'between' | 'from_to' | 'interpreted' | 'calculated' | 'unknown';
   date_value: string | null;
   date_value_end: string | null;
   date_original: string;

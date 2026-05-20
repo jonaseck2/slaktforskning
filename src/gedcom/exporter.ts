@@ -213,6 +213,20 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     lines.push('0 HEAD', '1 GEDC', '2 VERS 5.5.1', '1 CHAR UTF-8');
   }
 
+  // T09: HEAD originating-app preservation. If a previous import captured
+  // metadata from the source file's HEAD (SOUR/NAME/CORP/VERS/LANG/COPR),
+  // re-emit it as a custom `1 _ORIG_SOUR <json>` extension line on the HEAD
+  // block so a subsequent round-trip can recover it. Both versions accept
+  // unknown extension tags (`_` prefix) — neither spec rejects them.
+  // Emitted as a single JSON line; round-trip parser reads it back via the
+  // header-metadata phase. See src/import/gedcom/phases/header-metadata.ts.
+  const headerMetadataJson = await getDbSetting(db, 'header_metadata');
+  if (headerMetadataJson && headerMetadataJson.trim()) {
+    // Strip newlines defensively — `_ORIG_SOUR` is a single-line tag.
+    const oneLine = headerMetadataJson.replace(/[\r\n]+/g, ' ');
+    lines.push(`1 _ORIG_SOUR ${oneLine}`);
+  }
+
   // ── SUBM: write the researcher (genealogist filing this file) ─────────────
   // Per GEDCOM spec, SUBM identifies the submitter — the person filing the
   // file — not the proband / tree subject. The proband is tracked separately
@@ -495,7 +509,14 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       await emitNameTranslations(db, n.id, 2, version, lines, { warnings });
     }
 
-    lines.push(`1 SEX ${p.sex}`);
+    // T09 — Sex X (intersex): GEDCOM 7.0 spec allows X; 5.5.1 only M/F/U.
+    // On 5.5.1, downgrade to U and disclose via warning.
+    if (p.sex === 'X' && version === '5.5.1') {
+      lines.push(`1 SEX U`);
+      warnings.push(`Person ${p.id} sex=X downgraded to U for 5.5.1 (X not in 5.5.1 spec).`);
+    } else {
+      lines.push(`1 SEX ${p.sex}`);
+    }
 
     // ── T03 FAMC / FAMS pointers ────────────────────────────────────────
     // FAMC: this person is a child of these FAMs. Includes both couple

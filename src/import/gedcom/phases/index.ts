@@ -32,6 +32,8 @@ export { phasePlaceCitations } from './place-citations';
 export { phaseGroupRecords } from './group-records';
 export { phaseTodos } from './todos';
 export { phaseSubmitters } from './submitters';
+// T09: HEAD originating-app metadata preservation.
+export { phaseHeaderMetadata } from './header-metadata';
 // T02 GEDCOM-alignment new phases (stubs; filled by Phase 2 tasks).
 export { phaseNegations } from './negations';
 export { phaseTranslations } from './translations';

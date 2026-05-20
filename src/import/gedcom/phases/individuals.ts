@@ -91,13 +91,14 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
     ctx.personMap.set(xref, personId);
     if (ctx.isHolger && ctx.firstPersonId === null) ctx.firstPersonId = personId;
 
-    // Normalize SEX to schema's M / F / U vocabulary. Per GEDCOM 5.5.1 only
-    // M/F/U are valid; GEDCOM 7.0 adds X / N; some files emit bare or lowercase.
-    // Anything outside M/F maps to U so the importer doesn't crash on the
-    // schema's CHECK constraint. Lossy — disclosed via skippedTags below.
+    // Normalize SEX to schema's M / F / U / X vocabulary. Per GEDCOM 5.5.1
+    // only M/F/U are valid; GEDCOM 7.0 adds X (intersex). T09: X preserved
+    // lossless on 7.0 round-trip; the schema CHECK already allows X.
+    // Anything outside M/F/X maps to U; lossy — disclosed via skippedTags.
     const rawSex = getChild(node, 'SEX')?.value?.trim().toUpperCase() ?? '';
-    const sex: 'M' | 'F' | 'U' = rawSex === 'M' ? 'M' : rawSex === 'F' ? 'F' : 'U';
-    if (rawSex && rawSex !== 'M' && rawSex !== 'F' && rawSex !== 'U') {
+    const sex: 'M' | 'F' | 'U' | 'X' =
+      rawSex === 'M' ? 'M' : rawSex === 'F' ? 'F' : rawSex === 'X' ? 'X' : 'U';
+    if (rawSex && rawSex !== 'M' && rawSex !== 'F' && rawSex !== 'U' && rawSex !== 'X') {
       ctx.skippedTags.set(`SEX=${rawSex}`, (ctx.skippedTags.get(`SEX=${rawSex}`) ?? 0) + 1);
     }
 

@@ -117,9 +117,11 @@ describe('parseGedcomDate', () => {
     expect(r.date_value_end).toBe('1850');
   });
 
-  it('parses FROM TO', () => {
+  it('parses FROM TO as from_to (directional range, distinct from BET..AND)', () => {
+    // T09: FROM..TO is a directional range. Pre-T09 this collapsed onto
+    // 'between' which lost the FROM/TO vs BET/AND distinction on export.
     const r = parseGedcomDate('FROM 1840 TO 1850');
-    expect(r.date_type).toBe('between');
+    expect(r.date_type).toBe('from_to');
     expect(r.date_value).toBe('1840');
     expect(r.date_value_end).toBe('1850');
   });
