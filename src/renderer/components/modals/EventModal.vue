@@ -240,6 +240,28 @@
       :exclude-person-ids="extraParticipantsExcludeIds"
     />
 
+    <!-- Shared notes (T20) — only after first save so we have an event id
+         to link the note to. Distinct from the inline `events.notes`
+         text-blob above. -->
+    <template v-if="savedEventId">
+      <div class="ep-sec-header" data-entity="note">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📝 {{ $t('notes.title') }}</span>
+          <span class="ep-sec-count">{{ sharedNotesCount }}</span>
+        </div>
+        <button type="button" class="ep-sec-action" @click="sharedNotesSectionRef?.openAddChoice()">
+          {{ $t('notes.add') }}
+        </button>
+      </div>
+      <div class="ep-sec-content">
+        <EntityNotesSection
+          ref="sharedNotesSectionRef"
+          entity-type="event"
+          :entity-id="savedEventId"
+        />
+      </div>
+    </template>
+
     <!-- Sub-panels -->
     <template #subpanels>
       <CitationModal
@@ -291,6 +313,7 @@ import SimpleDateInput from '../SimpleDateInput.vue';
 import PlacePicker from '../PlacePicker.vue';
 import PersonPicker from '../PersonPicker.vue';
 import EventParticipantsSection from '../EventParticipantsSection.vue';
+import EntityNotesSection from '../EntityNotesSection.vue';
 import PersonModal from './PersonModal.vue';
 import { useEventForm, type EventForm } from '../../composables/useEventForm';
 import { useEventValidation } from '../../composables/useEventValidation';
@@ -387,6 +410,8 @@ async function loadEventTypeSort() {
 // branch of useEventForm is skipped because the modal already received the
 // row via props (no need for a second fetch).
 const savedEventId = ref<string | null>(props.editingEvent?.id ?? null);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const editingEventDefaults: Partial<EventForm> | undefined = props.editingEvent
   ? {
       event_type: props.editingEvent.event_type,

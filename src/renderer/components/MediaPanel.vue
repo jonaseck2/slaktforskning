@@ -247,6 +247,29 @@
         </div>
       </div>
 
+      <!-- Shared notes (T20) — first-class notes attached to this media item.
+           Distinct from the per-row `media.notes` text-blob shown above as
+           caption — those are the inline caption; these are the GEDCOM SNOTE
+           records that can be linked to multiple entities at once. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('notes.title')"
+          :count="sharedNotesCount"
+          :collapsed="!sections.sharedNotes"
+          v-bind="props.readonly ? {} : { actionLabel: $t('notes.add') }"
+          @toggle="toggleSection('sharedNotes')"
+          @action="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <div v-if="sections.sharedNotes" class="panel-section-body">
+          <EntityNotesSection
+            ref="sharedNotesSectionRef"
+            entity-type="media"
+            :entity-id="mediaId!"
+            :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
       <!-- Quality -->
       <div class="panel-section">
         <SectionHeader
@@ -314,6 +337,7 @@ import LinkedText from './LinkedText.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';
+import EntityNotesSection from './EntityNotesSection.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
 import { useTextareaHeight } from '../composables/useTextareaHeight';
 import { useMonospacedNotes } from '../composables/useMonospacedNotes';
@@ -382,6 +406,8 @@ const toast = useToast();
 
 const checksSectionRef = ref<InstanceType<typeof MediaChecksSection> | null>(null);
 const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
 
@@ -408,8 +434,8 @@ const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonosp
 
 const { sections, toggleSection } = usePanelSections(
   'media-panel-section-',
-  { notes: false, persons: true, places: true, events: false, faceTags: false, quality: false },
-  { notes: true, persons: true, places: true, events: true, faceTags: true, quality: false },
+  { notes: false, persons: true, places: true, events: false, faceTags: false, sharedNotes: false, quality: false },
+  { notes: true, persons: true, places: true, events: true, faceTags: true, sharedNotes: false, quality: false },
 );
 
 // ── Data (race-safe load) ────────────────────────────────────────────────────

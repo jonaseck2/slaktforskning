@@ -189,6 +189,25 @@
         </div>
       </div>
 
+      <!-- Shared notes (T20) — first-class notes attached to this source. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('notes.title')"
+          :count="sharedNotesCount"
+          :collapsed="!sections.sharedNotes"
+          :action-label="$t('notes.add')"
+          @toggle="toggleSection('sharedNotes')"
+          @action="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <div v-if="sections.sharedNotes" class="panel-section-body">
+          <EntityNotesSection
+            ref="sharedNotesSectionRef"
+            entity-type="source"
+            :entity-id="props.sourceId!"
+          />
+        </div>
+      </div>
+
       <!-- Quality section -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -254,6 +273,7 @@ import EntityPanel from './EntityPanel.vue';
 import PanelDangerZone from './PanelDangerZone.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
+import EntityNotesSection from './EntityNotesSection.vue';
 import SourceRepositoriesSection from './SourceRepositoriesSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
@@ -316,8 +336,8 @@ const sortedSourceTypes = computed(() => {
 
 const { sections, toggleSection } = usePanelSections(
   'source-panel-section-',
-  { source: true, citations: true, repositories: false, media: false, quality: false },
-  { source: true, citations: true, repositories: true, media: true, quality: false },
+  { source: true, citations: true, repositories: false, media: false, sharedNotes: false, quality: false },
+  { source: true, citations: true, repositories: true, media: true, sharedNotes: false, quality: false },
 );
 
 const showRepoPicker = ref(false);
@@ -329,6 +349,8 @@ function openRepoPicker() {
 // ── Refs / state ────────────────────────────────────────────────────────────
 
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const showCitationForm = ref(false);
 const editingCitation = ref<CitationRow | null>(null);
 

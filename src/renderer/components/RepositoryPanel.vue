@@ -175,6 +175,25 @@
         </div>
       </div>
 
+      <!-- Shared notes (T20) — first-class notes attached to this repository. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('notes.title')"
+          :count="sharedNotesCount"
+          :collapsed="!sections.sharedNotes"
+          :action-label="$t('notes.add')"
+          @toggle="toggleSection('sharedNotes')"
+          @action="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <div v-if="sections.sharedNotes" class="panel-section-body">
+          <EntityNotesSection
+            ref="sharedNotesSectionRef"
+            entity-type="repository"
+            :entity-id="props.repositoryId!"
+          />
+        </div>
+      </div>
+
       <PanelDangerZone
         v-if="props.repositoryId"
         entity-type="repository"
@@ -188,12 +207,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRef } from 'vue';
+import { computed, ref, toRef } from 'vue';
 import type { Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import EntityPanel from './EntityPanel.vue';
 import PanelDangerZone from './PanelDangerZone.vue';
+import EntityNotesSection from './EntityNotesSection.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import { useToast } from '../composables/useToast';
 import { usePanelSections } from '../composables/usePanelSections';
@@ -235,8 +255,11 @@ const router = useRouter();
 
 const { sections, toggleSection } = usePanelSections(
   'repository-panel-section-',
-  { info: true, sources: true },
+  { info: true, sources: true, sharedNotes: false },
 );
+
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 
 interface PanelData {
   repository: RepositoryData | null;
