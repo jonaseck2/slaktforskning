@@ -30,29 +30,29 @@
 
 **Steps:**
 
-- [ ] **Step 1: Inventory every (table, column) pair in `src/api/schema.ts`**
+- [x] **Step 1: Inventory every (table, column) pair in `src/api/schema.ts`**
 
    List all 16 tables with their columns. Cross-reference with `src/api/gedcom_fidelity_registry.ts` to confirm coverage (the coverage-guard test in `tests/unit/gedcom-fidelity-registry-coverage.test.ts` enforces this).
 
-- [ ] **Step 2: Write the "Entity model alignment" section**
+- [x] **Step 2: Write the "Entity model alignment" section**
 
    For each table, one row with columns: `Our table` | `GEDCOM 5.5.1` | `GEDCOM 7.0` | `Holger` | `Genney` | `RootsMagic` | `Gramps` | `Verdict`. Verdict is ✅ aligned / ⚠️ different shape that round-trips / ❌ gap. Cite the GEDCOM tag (INDI, FAM, SOUR, REPO, OBJE, PLAC, NOTE, SNOTE, ASSO, etc.) and explain mapping per importer.
 
    Document the deliberate-deviations explicitly: `relationships`+`event_participants` is GEDCOM-X-influenced (more expressive than FAM); `citations` is a normalized inline-SOUR factoring; `media_regions` and `groups`/`research_tasks` are app-specific.
 
-- [ ] **Step 3: Write the "Gap classification" section**
+- [x] **Step 3: Write the "Gap classification" section**
 
    Enumerate every gap from the corner-case table in the spec + the UI audit + the new-concept additions. Each row: `Concept` | `Severity` (silent-loss / authoring-blocked / nice-to-have) | `Surface` (schema / importer / exporter / UI / all) | `5.5.1 status` | `7.0 status` | `Task-id` (T03–T28).
 
    Per-importer impact column: for each non-GEDCOM importer, note whether the source format carries the concept (yes/no/partial).
 
-- [ ] **Step 4: Write the "Recommended future work" section**
+- [x] **Step 4: Write the "Recommended future work" section**
 
    RECOMMEND (do not execute) `relationships` → `families`+`family_members`+`person_associations` rename as a follow-up plan. Document why the rename is model-cleanliness rather than Prime-Directive-load-bearing once T03 patches land (per the design spec's open-question #4).
 
    Note: each per-version `lossy` entry in the fidelity registry has an `expectedAfterRoundTrip` callback that documents the recoverable state; this is mechanical, not aspirational.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
    ```bash
    git add docs/GEDCOM_AUDIT.md
@@ -101,7 +101,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 **Steps:**
 
-- [ ] **Step 1: Write schema test assertions for every new table/column**
+- [x] **Step 1: Write schema test assertions for every new table/column**
 
    Add to `tests/unit/schema.test.ts`:
 
@@ -163,7 +163,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
    });
    ```
 
-- [ ] **Step 2: Run schema test to confirm it fails**
+- [x] **Step 2: Run schema test to confirm it fails**
 
    ```bash
    npm test -- schema.test.ts -t "T02" 2>&1 | tail -30
@@ -171,7 +171,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: 8 failures (the new tables/columns don't exist yet).
 
-- [ ] **Step 3: Add new tables to `src/api/schema.ts`**
+- [x] **Step 3: Add new tables to `src/api/schema.ts`**
 
    In the main schema string (the multi-line `CREATE TABLE IF NOT EXISTS` block), append:
 
@@ -247,7 +247,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    For `sources.repository` column removal: remove from the `CREATE TABLE sources` block. Confirm `source_repositories` join table already exists (it does).
 
-- [ ] **Step 4: Add TypeScript domain types to `src/api/types.ts`**
+- [x] **Step 4: Add TypeScript domain types to `src/api/types.ts`**
 
    ```typescript
    export interface Note {
@@ -312,7 +312,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Remove `Source.repository` field from the `Source` interface.
 
-- [ ] **Step 5: Add fidelity-registry placeholders for every new column**
+- [x] **Step 5: Add fidelity-registry placeholders for every new column**
 
    In `src/api/gedcom_fidelity_registry.ts`, append entries for every new (table, column) pair. Use placeholders that Phase 2 tasks will refine. Example:
 
@@ -348,7 +348,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Continue this pattern for `person_associations.*`, `events.is_negation`, `events.negation_event_type`, `name_translations.*`, `place_translations.*`, `source_coverage_events.*`. T04–T08 refine these (set `ownedBy`, refine `kind`).
 
-- [ ] **Step 6: Refactor `src/gedcom/exporter.ts` to call per-concept emitter modules**
+- [x] **Step 6: Refactor `src/gedcom/exporter.ts` to call per-concept emitter modules**
 
    Identify the section of `exporter.ts` that emits inline tags under INDI/FAM (NOTE, ASSO, OBJE, etc.). Extract notes/associations/negations/translations/coverage emission into separate functions in the new `src/gedcom/exporters/<name>-emitter.ts` files. The main `exporter.ts` orchestrator calls each in turn.
 
@@ -390,7 +390,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Same shape for `assoc-emitter.ts`, `negation-emitter.ts`, `translations-emitter.ts`, `coverage-emitter.ts`. Each has placeholder function(s) that the corresponding Phase 2 task fills.
 
-- [ ] **Step 7: Refactor `src/import/gedcom/phases.ts` to call per-concept phase modules**
+- [x] **Step 7: Refactor `src/import/gedcom/phases.ts` to call per-concept phase modules**
 
    `phases.ts` is already organized as an orchestrator calling per-phase modules under `src/import/gedcom/phases/`. Add stub imports and calls for the new phases:
 
@@ -409,7 +409,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Each new stub module exports `phaseFoo(ctx: ImportContext): Promise<void>` that no-ops in T02; Phase 2 tasks fill in the logic.
 
-- [ ] **Step 8: Run schema test to confirm passes**
+- [x] **Step 8: Run schema test to confirm passes**
 
    ```bash
    npm test -- schema.test.ts -t "T02" 2>&1 | tail -10
@@ -417,7 +417,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: 8 passed.
 
-- [ ] **Step 9: Run full unit test suite to catch regressions**
+- [x] **Step 9: Run full unit test suite to catch regressions**
 
    ```bash
    npm test 2>&1 | tail -20
@@ -425,7 +425,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: no new failures vs the previous baseline (pre-T02 git HEAD).
 
-- [ ] **Step 10: Run build**
+- [x] **Step 10: Run build**
 
    ```bash
    npm run build:bin 2>&1 | tail -5
@@ -434,7 +434,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: exit 0.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
    ```bash
    git add src/api/schema.ts src/api/types.ts src/api/gedcom_fidelity_registry.ts \
@@ -480,7 +480,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 **Steps:**
 
-- [ ] **Step 1: Write failing tests for all 6 corner cases**
+- [x] **Step 1: Write failing tests for all 6 corner cases**
 
    Create `tests/unit/gedcom-roundtrip-corner-cases.test.ts`:
 
@@ -603,7 +603,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    The above shows the test shape; the T03 executor fills the remaining body of each test using the helpers cited (`createPerson`, `createRelationship`, `exportGedcom`, `importGedcom`, `listRelationships`). The test file's first test (single-parent 5.5.1) is fully written; the executor mirrors its pattern.
 
-- [ ] **Step 2: Run tests to verify all 6 fail**
+- [x] **Step 2: Run tests to verify all 6 fail**
 
    ```bash
    npm test -- gedcom-roundtrip-corner-cases 2>&1 | tail -20
@@ -611,7 +611,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: 6 failures (corner cases not yet handled).
 
-- [ ] **Step 3: Patch single-parent FAM emission in `src/gedcom/exporter.ts`**
+- [x] **Step 3: Patch single-parent FAM emission in `src/gedcom/exporter.ts`**
 
    After the existing `couples` loop (around line 590), add an "orphan parent_child" pass:
 
@@ -661,7 +661,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Declare `const orphanFamilyByPersonId = new Map<string, string>();` and `const orphanFamilyByChildId = new Map<string, string>();` near the couples Map.
 
-- [ ] **Step 4: Patch PEDI subtype per-parent correctness**
+- [x] **Step 4: Patch PEDI subtype per-parent correctness**
 
    Replace the `Array.find()` call at exporter.ts:579 with an explicit per-parent lookup. The current code:
 
@@ -704,7 +704,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    This is one of two reasonable shapes; the spec section "Multi-parent triad pair-election rule" gives the deterministic algorithm. The executor follows the test expectations exactly — the test file is the source of truth.
 
-- [ ] **Step 5: Patch FAMC/FAMS emission on INDI records**
+- [x] **Step 5: Patch FAMC/FAMS emission on INDI records**
 
    In the INDI emission block (before SOUR/OBJE/NOTE), after the existing `1 SEX ...` line, add:
 
@@ -739,7 +739,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Requires `coupleXref` to be a Map populated when the couples loop emits FAM blocks. Add `coupleXref.set(rel.id, xr)` inside the couples loop.
 
-- [ ] **Step 6: Patch same-couple-twice handling in importer**
+- [x] **Step 6: Patch same-couple-twice handling in importer**
 
    `src/import/gedcom/phases/families.ts` already creates one couple row per FAM (line 92: `const coupleId = uuid()`). Re-reading: it DOES already do this. The bug isn't in the importer. Verify by writing the import-side test (Step 1) and running — it should pass already. If it does pass, mark Step 6 as a no-op and document in the test comment.
 
@@ -747,7 +747,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    If both sides pass without changes, this corner case is already lossless — the only thing missing was the test. Document in the test that the exporter/importer happens to handle this correctly by virtue of relationship rows being independent.
 
-- [ ] **Step 7: Patch multi-parent triad (7.0 ASSO ROLE PARENT + 5.5.1 disclosure)**
+- [x] **Step 7: Patch multi-parent triad (7.0 ASSO ROLE PARENT + 5.5.1 disclosure)**
 
    In the exporter's FAM-children loop:
 
@@ -784,7 +784,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    For 5.5.1, the importer reads back FAM with 2 parents only; the 3rd parent's parent_child row doesn't exist in the re-imported DB. The fidelity registry classifies `relationships.person1_id` etc. as already-XREF-via, so the 3rd parent's relationship row is genuinely lost on 5.5.1 round-trip. The `expectedAfterRoundTrip` callback for the relevant registry entry returns the 2-parent-only state.
 
-- [ ] **Step 8: Update fidelity-registry entries**
+- [x] **Step 8: Update fidelity-registry entries**
 
    In `src/api/gedcom_fidelity_registry.ts`, find entries for `relationships.*` columns. Update them to reflect:
 
@@ -793,7 +793,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Add a top-of-file comment in the registry explaining the corner-case patches.
 
-- [ ] **Step 9: Run all corner-case tests**
+- [x] **Step 9: Run all corner-case tests**
 
    ```bash
    npm test -- gedcom-roundtrip-corner-cases 2>&1 | tail -30
@@ -801,7 +801,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: 6 passed.
 
-- [ ] **Step 10: Run full GEDCOM test suite for regressions**
+- [x] **Step 10: Run full GEDCOM test suite for regressions**
 
    ```bash
    npm test -- gedcom 2>&1 | tail -20
@@ -809,7 +809,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
    Expected: no new failures vs pre-T03 baseline. The existing round-trip tests may pick up new FAMC/FAMS lines in their output — if they used "exact text" assertions, those tests need updates (acceptable; structural change).
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
    ```bash
    git add src/gedcom/exporter.ts src/import/gedcom/phases/families.ts \
@@ -860,7 +860,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
 **Steps:**
 
-- [ ] **Step 1: Write CRUD test in `tests/unit/notes.test.ts`**
+- [x] **Step 1: Write CRUD test in `tests/unit/notes.test.ts`**
 
    ```typescript
    import { describe, it, expect } from 'vitest';
@@ -924,7 +924,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
    });
    ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
    ```bash
    npm test -- notes.test.ts 2>&1 | tail -10
@@ -932,7 +932,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Expected: "Cannot find module '../../src/api/notes'" / 5 failures.
 
-- [ ] **Step 3: Implement `src/api/notes.ts`**
+- [x] **Step 3: Implement `src/api/notes.ts`**
 
    Follow the existing CRUD pattern in `src/api/groups.ts` for the entity shape and `src/api/group_links.ts` for the polymorphic link pattern. Functions:
 
@@ -1019,7 +1019,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
    }
    ```
 
-- [ ] **Step 4: Wire `window.api.notes` and `window.api.noteLinks`**
+- [x] **Step 4: Wire `window.api.notes` and `window.api.noteLinks`**
 
    In `src/renderer/tauri-window-api.ts`, add (following the pattern of `groups`):
 
@@ -1044,7 +1044,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Update `src/renderer/api.d.ts` to include the new `notes` and `noteLinks` namespaces with the corresponding type signatures.
 
-- [ ] **Step 5: Run CRUD test to verify passes**
+- [x] **Step 5: Run CRUD test to verify passes**
 
    ```bash
    npm test -- notes.test.ts 2>&1 | tail -10
@@ -1052,7 +1052,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Expected: 5 passed.
 
-- [ ] **Step 6: Write GEDCOM round-trip test**
+- [x] **Step 6: Write GEDCOM round-trip test**
 
    `tests/unit/gedcom-notes-roundtrip.test.ts`:
 
@@ -1105,7 +1105,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
    });
    ```
 
-- [ ] **Step 7: Run round-trip test to verify it fails**
+- [x] **Step 7: Run round-trip test to verify it fails**
 
    ```bash
    npm test -- gedcom-notes-roundtrip 2>&1 | tail -10
@@ -1113,7 +1113,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Expected: 2 failures (SNOTE emitter not yet implemented).
 
-- [ ] **Step 8: Implement `src/gedcom/exporters/notes-emitter.ts`**
+- [x] **Step 8: Implement `src/gedcom/exporters/notes-emitter.ts`**
 
    Fill the stub from T02:
 
@@ -1184,7 +1184,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Wire `emitNotesForEntity` into every entity-emission block in `src/gedcom/exporter.ts` (INDI, FAM, EVEN, PLAC, SOUR, REPO, OBJE). Call `emitSharedNoteRecords` once before TRLR.
 
-- [ ] **Step 9: Implement `src/import/gedcom/phases/notes.ts`**
+- [x] **Step 9: Implement `src/import/gedcom/phases/notes.ts`**
 
    ```typescript
    import { v4 as uuid } from 'uuid';
@@ -1226,7 +1226,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Same shape in `families.ts`, `events.ts` (note: this expands the existing `noteMap` usage from "inline note text dedup" to "SNOTE xref resolution"; `noteMap` semantics shift slightly — document in the import-types.ts ImportContext interface).
 
-- [ ] **Step 10: Refine fidelity-registry entries**
+- [x] **Step 10: Refine fidelity-registry entries**
 
    In `src/api/gedcom_fidelity_registry.ts`, update the placeholder entries from T02 to set `ownedBy`:
 
@@ -1239,7 +1239,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
    // ... etc for all notes.* and note_links.* entries
    ```
 
-- [ ] **Step 11: Run round-trip tests**
+- [x] **Step 11: Run round-trip tests**
 
    ```bash
    npm test -- gedcom-notes-roundtrip 2>&1 | tail -10
@@ -1247,7 +1247,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Expected: 2 passed.
 
-- [ ] **Step 12: Run full test suite**
+- [x] **Step 12: Run full test suite**
 
    ```bash
    npm test 2>&1 | tail -10
@@ -1255,7 +1255,7 @@ Each Phase 2 task lands one new concept end-to-end: api functions + GEDCOM impor
 
    Expected: no new failures.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
    ```bash
    git add src/api/notes.ts src/api/types.ts \
@@ -1307,17 +1307,17 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 Follow the same TDD pattern as T04 with these specifics:
 
-- [ ] **Step 1: Write CRUD test** following T04 Step 1 pattern; functions: `createPersonAssociation`, `getPersonAssociation`, `getAssociationsForPerson`, `getAssociationsToPerson` (reverse direction), `updatePersonAssociation`, `deletePersonAssociation`. Test all 6 role values.
+- [x] **Step 1: Write CRUD test** following T04 Step 1 pattern; functions: `createPersonAssociation`, `getPersonAssociation`, `getAssociationsForPerson`, `getAssociationsToPerson` (reverse direction), `updatePersonAssociation`, `deletePersonAssociation`. Test all 6 role values.
 
-- [ ] **Step 2: Run test** to confirm failure.
+- [x] **Step 2: Run test** to confirm failure.
 
-- [ ] **Step 3: Implement `src/api/person_associations.ts`** — same shape as `src/api/relationships.ts` but simpler (no event coupling). Unique-on-(person_id, related_person_id, role) per the schema.
+- [x] **Step 3: Implement `src/api/person_associations.ts`** — same shape as `src/api/relationships.ts` but simpler (no event coupling). Unique-on-(person_id, related_person_id, role) per the schema.
 
-- [ ] **Step 4: Wire `window.api.personAssociations`** in `src/renderer/tauri-window-api.ts` + `src/renderer/api.d.ts`.
+- [x] **Step 4: Wire `window.api.personAssociations`** in `src/renderer/tauri-window-api.ts` + `src/renderer/api.d.ts`.
 
-- [ ] **Step 5: Run CRUD test** — expect passing.
+- [x] **Step 5: Run CRUD test** — expect passing.
 
-- [ ] **Step 6: Write round-trip test** `tests/unit/gedcom-associations-roundtrip.test.ts`:
+- [x] **Step 6: Write round-trip test** `tests/unit/gedcom-associations-roundtrip.test.ts`:
 
    ```typescript
    describe('GEDCOM associations round-trip (T05)', () => {
@@ -1341,19 +1341,19 @@ Follow the same TDD pattern as T04 with these specifics:
    });
    ```
 
-- [ ] **Step 7: Run round-trip test** — confirm failure.
+- [x] **Step 7: Run round-trip test** — confirm failure.
 
-- [ ] **Step 8: Implement `src/gedcom/exporters/assoc-emitter.ts`** — emit `1 ASSO @Ix@ / 2 RELA <role>` for 5.5.1, `1 ASSO @Ix@ / 2 ROLE <role>` for 7.0 (5.5.1 uses RELA tag; 7.0 renamed to ROLE).
+- [x] **Step 8: Implement `src/gedcom/exporters/assoc-emitter.ts`** — emit `1 ASSO @Ix@ / 2 RELA <role>` for 5.5.1, `1 ASSO @Ix@ / 2 ROLE <role>` for 7.0 (5.5.1 uses RELA tag; 7.0 renamed to ROLE).
 
-- [ ] **Step 9: Extend `src/import/gedcom/phases/asso.ts`** — currently handles ASSO under specific event types as witness etc.; add a branch for standalone ASSO on INDI: create `person_associations` row.
+- [x] **Step 9: Extend `src/import/gedcom/phases/asso.ts`** — currently handles ASSO under specific event types as witness etc.; add a branch for standalone ASSO on INDI: create `person_associations` row.
 
-- [ ] **Step 10: Refine fidelity-registry entries** — `person_associations.*` all `lossless` both versions.
+- [x] **Step 10: Refine fidelity-registry entries** — `person_associations.*` all `lossless` both versions.
 
-- [ ] **Step 11: Run round-trip test** — confirm passing.
+- [x] **Step 11: Run round-trip test** — confirm passing.
 
-- [ ] **Step 12: Run full test suite** — no regressions.
+- [x] **Step 12: Run full test suite** — no regressions.
 
-- [ ] **Step 13: Commit** with message `feat(asso): person-to-person associations integration — T05`.
+- [x] **Step 13: Commit** with message `feat(asso): person-to-person associations integration — T05`.
 
 ---
 
@@ -1379,11 +1379,11 @@ Follow the same TDD pattern as T04 with these specifics:
 
 **Steps:** Follow T04 pattern. Key implementation notes:
 
-- [ ] Negation events are stored exactly like normal events but with `is_negation=1` and `negation_event_type` carrying the event-type-being-negated (e.g., `is_negation=1, negation_event_type='marriage', date_value_from='1850', date_value_to='1900', notes='No marriage record found in parish registry'`).
-- [ ] Exporter on 7.0: emit `1 NO MARR / 2 DATE FROM 1 JAN 1850 TO 31 DEC 1900 / 2 NOTE ...`. Per GEDCOM 7.0 spec section "NO event".
-- [ ] Exporter on 5.5.1: skip the event entirely + emit warning to report.
-- [ ] Importer on 7.0: recognize NO X under INDI, create event row with is_negation=1.
-- [ ] Importer on 5.5.1: nothing to import (5.5.1 has no NO tag).
+- [x] Negation events are stored exactly like normal events but with `is_negation=1` and `negation_event_type` carrying the event-type-being-negated (e.g., `is_negation=1, negation_event_type='marriage', date_value_from='1850', date_value_to='1900', notes='No marriage record found in parish registry'`).
+- [x] Exporter on 7.0: emit `1 NO MARR / 2 DATE FROM 1 JAN 1850 TO 31 DEC 1900 / 2 NOTE ...`. Per GEDCOM 7.0 spec section "NO event".
+- [x] Exporter on 5.5.1: skip the event entirely + emit warning to report.
+- [x] Importer on 7.0: recognize NO X under INDI, create event row with is_negation=1.
+- [x] Importer on 5.5.1: nothing to import (5.5.1 has no NO tag).
 
 Commit message: `feat(negations): NO X negative assertions integration — T06`.
 
@@ -1414,9 +1414,9 @@ Commit message: `feat(negations): NO X negative assertions integration — T06`.
 
 **Steps:** Follow T04 pattern. Key notes:
 
-- [ ] CRUD: `createNameTranslation`, `createPlaceTranslation`, `getTranslationsForName`, `getTranslationsForPlace`, etc.
-- [ ] 7.0 emission: `2 NAME Иван /Сидоров/` immediate-child of INDI, then `3 TRAN Иван /Сидоров/ / 4 LANG ru / 4 _SCHEME cyrillic`. Per GEDCOM 7.0 spec.
-- [ ] 5.5.1 emission: additional `1 NAME` block with `2 TYPE alternative` and a 5.5.1-friendly `2 _LANG ru`. Lossy registry entry: language attribute may not round-trip if external app doesn't recognize `_LANG`.
+- [x] CRUD: `createNameTranslation`, `createPlaceTranslation`, `getTranslationsForName`, `getTranslationsForPlace`, etc.
+- [x] 7.0 emission: `2 NAME Иван /Сидоров/` immediate-child of INDI, then `3 TRAN Иван /Сидоров/ / 4 LANG ru / 4 _SCHEME cyrillic`. Per GEDCOM 7.0 spec.
+- [x] 5.5.1 emission: additional `1 NAME` block with `2 TYPE alternative` and a 5.5.1-friendly `2 _LANG ru`. Lossy registry entry: language attribute may not round-trip if external app doesn't recognize `_LANG`.
 
 Commit message: `feat(translations): TRAN name and place translations — T07`.
 
@@ -1478,9 +1478,9 @@ Commit message: `feat(translations): TRAN name and place translations — T07`.
 
 **Steps:**
 
-- [ ] **Step 1: Write all three test files** with both-version coverage.
-- [ ] **Step 2: Run** — confirm failure.
-- [ ] **Step 3: Update exporter for sex X**:
+- [x] **Step 1: Write all three test files** with both-version coverage.
+- [x] **Step 2: Run** — confirm failure.
+- [x] **Step 3: Update exporter for sex X**:
 
    ```typescript
    // In INDI emission, around the existing 1 SEX line:
@@ -1495,21 +1495,21 @@ Commit message: `feat(translations): TRAN name and place translations — T07`.
    }
    ```
 
-- [ ] **Step 4: Update importer for sex X** — accept X as a valid value; no schema change needed since T02 added X to the CHECK constraint.
+- [x] **Step 4: Update importer for sex X** — accept X as a valid value; no schema change needed since T02 added X to the CHECK constraint.
 
-- [ ] **Step 5: Implement HEAD preservation**:
+- [x] **Step 5: Implement HEAD preservation**:
    - Importer in `phases.ts` top-level pass: when seeing `0 HEAD`, extract SOUR/CORP/NAME, GEDC/VERS, LANG, COPR; store as JSON in `db_settings` under key `header_metadata`.
    - Exporter in `exporter.ts` HEAD emission: read `header_metadata` from db_settings; if present, emit preserved values (e.g., source app of original file) as `1 _ORIG_SOUR <name>` extension tag so we don't pretend OUR app was the original importer; if absent, emit our own SOUR/CORP/NAME as before.
 
-- [ ] **Step 6: Implement date qualifier changes**:
+- [x] **Step 6: Implement date qualifier changes**:
    - Add `interpreted` to `events.date_type` valid values (along with existing `exact/about/before/after/between/calculated/unknown`).
    - For FROM/TO: introduce a `date_direction: 'between' | 'from_to'` distinction. If a 7.0 file has `FROM 1850 TO 1860`, store as date_type=between, date_value=1850, date_value_end=1860, and a new column `date_direction='from_to'` so the exporter can emit FROM/TO not BET/AND. Alternative: extend `date_type` to include `from_to` directly. The executor picks the cleaner of these and updates the fidelity registry.
 
-- [ ] **Step 7: Refine fidelity-registry entries** for persons.sex, events.date_type (extended values), db_settings.header_metadata.
+- [x] **Step 7: Refine fidelity-registry entries** for persons.sex, events.date_type (extended values), db_settings.header_metadata.
 
-- [ ] **Step 8: Run all three test files** — confirm passing.
+- [x] **Step 8: Run all three test files** — confirm passing.
 
-- [ ] **Step 9: Commit** `feat(gedcom-7): sex X, HEAD preservation, INTERPRETED/FROM-TO date qualifiers — T09`.
+- [x] **Step 9: Commit** `feat(gedcom-7): sex X, HEAD preservation, INTERPRETED/FROM-TO date qualifiers — T09`.
 
 ---
 
@@ -1544,7 +1544,7 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
 
 **Steps:**
 
-- [ ] **Step 1: Add routes to `src/renderer/router.ts`**
+- [x] **Step 1: Add routes to `src/renderer/router.ts`**
 
    Following the existing pattern for `/groups`:
 
@@ -1559,9 +1559,9 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    },
    ```
 
-- [ ] **Step 2: Add navigation link** in the sidebar component (follow pattern of "Källor" / Sources link).
+- [x] **Step 2: Add navigation link** in the sidebar component (follow pattern of "Källor" / Sources link).
 
-- [ ] **Step 3: Add i18n keys** to both `sv.ts` and `en.ts`:
+- [x] **Step 3: Add i18n keys** to both `sv.ts` and `en.ts`:
 
    ```typescript
    repositories: {
@@ -1585,46 +1585,46 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    },
    ```
 
-- [ ] **Step 4: Write `RepositoryPanel.test.ts`** asserting:
+- [x] **Step 4: Write `RepositoryPanel.test.ts`** asserting:
    - Mounts with a repository ID
    - Renders name, address, city, country, etc.
    - Calls `window.api.repositories.update` on field blur
    - Renders danger-zone delete button
 
-- [ ] **Step 5: Run test** — confirm failure (component doesn't exist).
+- [x] **Step 5: Run test** — confirm failure (component doesn't exist).
 
-- [ ] **Step 6: Implement `RepositoryPanel.vue`** following the pattern of `src/renderer/components/SourcePanel.vue` (closest analog — same panel shape, different field set):
+- [x] **Step 6: Implement `RepositoryPanel.vue`** following the pattern of `src/renderer/components/SourcePanel.vue` (closest analog — same panel shape, different field set):
 
    - Wrap in `<EntityPanel entity-type="repository" :title="...">`
    - Sections: Basic info (name, address, city, country, etc.), Sources (using `SourceRepositoriesSection` reverse — sources linked to this repo), Danger zone
    - Use `useEntityData` to load + auto-subscribe to `onDataChanged`
    - Use `useEditableFields` for per-field auto-save
 
-- [ ] **Step 7: Implement `RepositoryModal.vue`** following `SourceModal.vue`:
+- [x] **Step 7: Implement `RepositoryModal.vue`** following `SourceModal.vue`:
 
    - `<BaseSubPanel entity-type="repository" :title="...">`
    - Form fields for all repository columns
    - Save → `window.api.repositories.create` or `.update`
 
-- [ ] **Step 8: Implement `RepositoriesView.vue`** following `SourcesView.vue`:
+- [x] **Step 8: Implement `RepositoriesView.vue`** following `SourcesView.vue`:
 
    - List with `usePagedList({ fetchPage: window.api.repositories.listPage, defaultSortBy: 'name' })`
    - Filter chips by country (derived from loaded rows)
    - `+ Repository` button opens RepositoryModal in standalone mode
    - Drag handle + RepositoryPanel on selected row
 
-- [ ] **Step 9: Implement `SourceRepositoriesSection.vue`**:
+- [x] **Step 9: Implement `SourceRepositoriesSection.vue`**:
 
    - Hosted in SourcePanel
    - Shows repositories linked to this source via `window.api.sourceRepositories.forSource(sourceId)`
    - `+ Repository` button: opens a picker modal (RepositoryPicker — derived from `RepositoryListPicker` pattern, follow existing PlacePicker for shape) to select an existing repository, then calls `window.api.sourceRepositories.link(sourceId, repoId)`
    - Each row has unlink (✕) button calling `window.api.sourceRepositories.unlink`
 
-- [ ] **Step 10: Add section to SourcePanel.vue** — slot in `<SourceRepositoriesSection :source-id="source.id" />`.
+- [x] **Step 10: Add section to SourcePanel.vue** — slot in `<SourceRepositoriesSection :source-id="source.id" />`.
 
-- [ ] **Step 11: Run mounted-component test** — confirm passing.
+- [x] **Step 11: Run mounted-component test** — confirm passing.
 
-- [ ] **Step 12: Write Playwright e2e test** `tests/e2e/[panels]/repositories.spec.ts`:
+- [x] **Step 12: Write Playwright e2e test** `tests/e2e/[panels]/repositories.spec.ts`:
 
    ```typescript
    test('user can create, edit, link to source, and delete a repository', async ({ page }) => {
@@ -1660,9 +1660,9 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    });
    ```
 
-- [ ] **Step 13: Run e2e test** — `npx playwright test --project=panels repositories`. Confirm passing.
+- [x] **Step 13: Run e2e test** — `npx playwright test --project=panels repositories`. Confirm passing.
 
-- [ ] **Step 14: Commit** `feat(repositories): CRUD UI surface — T10`.
+- [x] **Step 14: Commit** `feat(repositories): CRUD UI surface — T10`.
 
 ---
 
@@ -1683,16 +1683,16 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
 
 **Steps:**
 
-- [ ] **Step 1: Write component test** asserting:
+- [x] **Step 1: Write component test** asserting:
    - Section mounts with `personId` prop
    - Calls `window.api.citations.forPerson(personId)` on load
    - Renders empty state when no citations
    - Renders list rows when citations exist
    - `+ Source` button opens CitationModal with `personId` prop set
 
-- [ ] **Step 2: Run test** — confirm failure.
+- [x] **Step 2: Run test** — confirm failure.
 
-- [ ] **Step 3: Implement `PersonSourcesSection.vue`** following the pattern of an existing self-loading section like `PersonMediaSection.vue`:
+- [x] **Step 3: Implement `PersonSourcesSection.vue`** following the pattern of an existing self-loading section like `PersonMediaSection.vue`:
 
    ```vue
    <template>
@@ -1773,11 +1773,11 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    </script>
    ```
 
-- [ ] **Step 4: Slot section into PersonPanel.vue**
+- [x] **Step 4: Slot section into PersonPanel.vue**
 
    In the panel's body, after the Events section (or wherever it logically fits per the panel's existing section ordering), add `<PersonSourcesSection :person-id="personId" />`.
 
-- [ ] **Step 5: Add i18n keys** to both locales:
+- [x] **Step 5: Add i18n keys** to both locales:
 
    ```typescript
    personSources: {
@@ -1788,9 +1788,9 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    },
    ```
 
-- [ ] **Step 6: Run component test** — confirm passing.
+- [x] **Step 6: Run component test** — confirm passing.
 
-- [ ] **Step 7: Write e2e test** `tests/e2e/[panels]/person-citations.spec.ts`:
+- [x] **Step 7: Write e2e test** `tests/e2e/[panels]/person-citations.spec.ts`:
 
    ```typescript
    test('user can add source citation directly to person', async ({ page }) => {
@@ -1813,9 +1813,9 @@ These tasks touch only renderer code. No schema, no api, no importer/exporter. C
    });
    ```
 
-- [ ] **Step 8: Run e2e test** — confirm passing.
+- [x] **Step 8: Run e2e test** — confirm passing.
 
-- [ ] **Step 9: Commit** `feat(person-citations): Sources section on PersonPanel — T11`.
+- [x] **Step 9: Commit** `feat(person-citations): Sources section on PersonPanel — T11`.
 
 ---
 
@@ -1874,9 +1874,9 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write/extend `SourceModal.test.ts`** asserting field binding + save behavior.
-- [ ] **Step 2: Run test** — confirm failure.
-- [ ] **Step 3: Add form fields** to `SourceModal.vue` after the url field:
+- [x] **Step 1: Write/extend `SourceModal.test.ts`** asserting field binding + save behavior.
+- [x] **Step 2: Run test** — confirm failure.
+- [x] **Step 3: Add form fields** to `SourceModal.vue` after the url field:
 
    ```vue
    <div class="ep-field">
@@ -1891,8 +1891,8 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Update `form` ref initial value to include `call_number: '', abstract: ''`. Update the save handler to pass these to `window.api.sources.create` / `update`.
 
-- [ ] **Step 4: Run test** — confirm passing.
-- [ ] **Step 5: Commit** `feat(source-modal): add call_number + abstract fields — T14`.
+- [x] **Step 4: Run test** — confirm passing.
+- [x] **Step 5: Commit** `feat(source-modal): add call_number + abstract fields — T14`.
 
 ---
 
@@ -1911,9 +1911,9 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write test** asserting six new fields bind + persist.
-- [ ] **Step 2: Run** — confirm failure.
-- [ ] **Step 3: Add fields** to `PlaceFormFields.vue`. Address fields in a grouped sub-section (`<fieldset class="address-block">`); lifecycle dates in another sub-section. Both behind `<details>` to keep the modal compact:
+- [x] **Step 1: Write test** asserting six new fields bind + persist.
+- [x] **Step 2: Run** — confirm failure.
+- [x] **Step 3: Add fields** to `PlaceFormFields.vue`. Address fields in a grouped sub-section (`<fieldset class="address-block">`); lifecycle dates in another sub-section. Both behind `<details>` to keep the modal compact:
 
    ```vue
    <details class="ep-collapsible">
@@ -1952,8 +1952,8 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
    </details>
    ```
 
-- [ ] **Step 4: Run** — confirm passing.
-- [ ] **Step 5: Commit** `feat(place-form): address + lifecycle date fields — T15`.
+- [x] **Step 4: Run** — confirm passing.
+- [x] **Step 5: Commit** `feat(place-form): address + lifecycle date fields — T15`.
 
 ---
 
@@ -1971,14 +1971,14 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write test** asserting fields render outside any `<details>` block (or in a collapsed-by-default details that the test opens via `summary.click()`).
-- [ ] **Step 2: Run** — confirm failure if fields are gated behind UI that test doesn't open.
-- [ ] **Step 3: Restructure PersonNameModal.vue**:
+- [x] **Step 1: Write test** asserting fields render outside any `<details>` block (or in a collapsed-by-default details that the test opens via `summary.click()`).
+- [x] **Step 2: Run** — confirm failure if fields are gated behind UI that test doesn't open.
+- [x] **Step 3: Restructure PersonNameModal.vue**:
    - Move name_prefix and name_suffix inputs out of `<details>` into the main form grid (compact 2-column row).
    - Move name_qualifier picker out of `<details>`; its values are `'sr'/'jr'/'iii'/'patronymic'/'matronymic'/'aka'/'cmtoc'/etc.` — picker shows all options; patronymic_base only shown when qualifier='patronymic' or 'matronymic'.
    - Confirm the rendered DOM matches what the test expects.
-- [ ] **Step 4: Run** — confirm passing.
-- [ ] **Step 5: Commit** `feat(person-name-modal): surface buried name fields — T16`.
+- [x] **Step 4: Run** — confirm passing.
+- [x] **Step 5: Commit** `feat(person-name-modal): surface buried name fields — T16`.
 
 ---
 
@@ -1997,14 +1997,14 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write three tests** — one per change (place_address binding, date_value_end unconditional, cause-on-non-death).
-- [ ] **Step 2: Run** — confirm failures.
-- [ ] **Step 3: Update EventModal**:
+- [x] **Step 1: Write three tests** — one per change (place_address binding, date_value_end unconditional, cause-on-non-death).
+- [x] **Step 2: Run** — confirm failures.
+- [x] **Step 3: Update EventModal**:
    - Add place_address input inside the place selection block (textarea, optional, label "Address override").
    - Remove the conditional `v-if` gating date_value_end so it shows whenever `date_type ∈ {between, from_to}`.
    - Remove the conditional gating on cause; show for any event type with appropriate placeholder text.
-- [ ] **Step 4: Run** — confirm passing.
-- [ ] **Step 5: Commit** `feat(event-modal): place_address + unconditional date_end + cause-on-any-event — T17`.
+- [x] **Step 4: Run** — confirm passing.
+- [x] **Step 5: Commit** `feat(event-modal): place_address + unconditional date_end + cause-on-any-event — T17`.
 
 ---
 
@@ -2023,11 +2023,11 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write test** asserting per-row role display + edit.
-- [ ] **Step 2: Run** — confirm failure.
-- [ ] **Step 3: Add role display + picker** to each participant row. Picker is a small inline `<select>` (or `<AppPicker>` if shared component exists) with the 8 role values from `EVENT_PARTICIPANT_ROLE_VALUES`. Auto-save on change.
-- [ ] **Step 4: Run** — confirm passing.
-- [ ] **Step 5: Commit** `feat(event-participants): role picker per participant — T18`.
+- [x] **Step 1: Write test** asserting per-row role display + edit.
+- [x] **Step 2: Run** — confirm failure.
+- [x] **Step 3: Add role display + picker** to each participant row. Picker is a small inline `<select>` (or `<AppPicker>` if shared component exists) with the 8 role values from `EVENT_PARTICIPANT_ROLE_VALUES`. Auto-save on change.
+- [x] **Step 4: Run** — confirm passing.
+- [x] **Step 5: Commit** `feat(event-participants): role picker per participant — T18`.
 
 ---
 
@@ -2045,11 +2045,11 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write three small tests**, one per modal.
-- [ ] **Step 2: Run** — confirm failures.
-- [ ] **Step 3: Make the three modifications.** Each is small (~5-10 lines of template + a v-model binding).
-- [ ] **Step 4: Run** — confirm passing.
-- [ ] **Step 5: Commit** `feat(misc-modals): ResearchTask result + Relationship subtypes + Media fields — T19`.
+- [x] **Step 1: Write three small tests**, one per modal.
+- [x] **Step 2: Run** — confirm failures.
+- [x] **Step 3: Make the three modifications.** Each is small (~5-10 lines of template + a v-model binding).
+- [x] **Step 4: Run** — confirm passing.
+- [x] **Step 5: Commit** `feat(misc-modals): ResearchTask result + Relationship subtypes + Media fields — T19`.
 
 ---
 
@@ -2076,9 +2076,9 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Write component test** for EntityNotesSection covering all 8 entity_type values.
-- [ ] **Step 2: Run** — confirm failure.
-- [ ] **Step 3: Implement `EntityNotesSection.vue`**:
+- [x] **Step 1: Write component test** for EntityNotesSection covering all 8 entity_type values.
+- [x] **Step 2: Run** — confirm failure.
+- [x] **Step 3: Implement `EntityNotesSection.vue`**:
 
    ```vue
    <template>
@@ -2141,21 +2141,21 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    SectionHeader actions: have both `+ Note` (creates new) and `Link existing…` (opens NotePicker). Either follow a header-with-dropdown pattern or simply have the SectionHeader `@action` open a small modal that lets the user choose between "Create new" or "Link existing."
 
-- [ ] **Step 4: Implement `NoteModal.vue`** — standard create/edit pattern using BaseSubPanel; text textarea + language input (picker of common ISO 639-1 codes); save calls `window.api.notes.create` or `.update`.
+- [x] **Step 4: Implement `NoteModal.vue`** — standard create/edit pattern using BaseSubPanel; text textarea + language input (picker of common ISO 639-1 codes); save calls `window.api.notes.create` or `.update`.
 
-- [ ] **Step 5: Implement `NotePicker.vue`** — usePagedList-driven filter + list; click row to emit `picked` with note ID. Follow the existing PlacePicker pattern.
+- [x] **Step 5: Implement `NotePicker.vue`** — usePagedList-driven filter + list; click row to emit `picked` with note ID. Follow the existing PlacePicker pattern.
 
-- [ ] **Step 6: Slot `<EntityNotesSection>` into every panel** — PersonPanel, PlacePanel, SourcePanel, RelationshipPanel, RepositoryPanel (created by T10), MediaPanel, plus inside EventModal (for event-level notes), plus inside FamilyPanel if/when families exist.
+- [x] **Step 6: Slot `<EntityNotesSection>` into every panel** — PersonPanel, PlacePanel, SourcePanel, RelationshipPanel, RepositoryPanel (created by T10), MediaPanel, plus inside EventModal (for event-level notes), plus inside FamilyPanel if/when families exist.
 
-- [ ] **Step 7: Add i18n keys**.
+- [x] **Step 7: Add i18n keys**.
 
-- [ ] **Step 8: Run component test** — confirm passing.
+- [x] **Step 8: Run component test** — confirm passing.
 
-- [ ] **Step 9: Write e2e test** for cross-entity sharing.
+- [x] **Step 9: Write e2e test** for cross-entity sharing.
 
-- [ ] **Step 10: Run e2e** — confirm passing.
+- [x] **Step 10: Run e2e** — confirm passing.
 
-- [ ] **Step 11: Commit** `feat(shared-notes): EntityNotesSection + NoteModal + NotePicker across all entity panels — T20`.
+- [x] **Step 11: Commit** `feat(shared-notes): EntityNotesSection + NoteModal + NotePicker across all entity panels — T20`.
 
 ---
 
@@ -2245,17 +2245,17 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Audit each importer's source format** — read the existing importer code + format docs (online) to identify which new concepts each format carries. Document findings in a comment at the top of each importer file.
+- [x] **Step 1: Audit each importer's source format** — read the existing importer code + format docs (online) to identify which new concepts each format carries. Document findings in a comment at the top of each importer file.
 
-- [ ] **Step 2: For each (importer, concept) where mapping is possible**, write a test + add the mapping code.
+- [x] **Step 2: For each (importer, concept) where mapping is possible**, write a test + add the mapping code.
 
-- [ ] **Step 3: For each (importer, concept) where mapping is NOT possible**, the format doesn't carry that data — no test, no code. Document in the audit comment.
+- [x] **Step 3: For each (importer, concept) where mapping is NOT possible**, the format doesn't carry that data — no test, no code. Document in the audit comment.
 
-- [ ] **Step 4: Update each importer's `unmappedData` disclosure** to mention if the format carries a concept-shaped thing we now model but the importer didn't bring over.
+- [x] **Step 4: Update each importer's `unmappedData` disclosure** to mention if the format carries a concept-shaped thing we now model but the importer didn't bring over.
 
-- [ ] **Step 5: Run all importer tests** — confirm passing.
+- [x] **Step 5: Run all importer tests** — confirm passing.
 
-- [ ] **Step 6: Commit** `feat(non-gedcom-importers): map new concepts where source format carries them — T25`.
+- [x] **Step 6: Commit** `feat(non-gedcom-importers): map new concepts where source format carries them — T25`.
 
 ---
 
@@ -2321,7 +2321,7 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
 **Steps:**
 
-- [ ] **Step 1: Run `npm test` and capture summary line**
+- [x] **Step 1: Run `npm test` and capture summary line**
 
    ```bash
    npm test 2>&1 | tail -5
@@ -2329,7 +2329,7 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Expected: `N passed (Xs)`.
 
-- [ ] **Step 2: Run `npm run lint`**
+- [x] **Step 2: Run `npm run lint`**
 
    ```bash
    npm run lint 2>&1 | tail -3
@@ -2337,7 +2337,7 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Expected: 0 errors.
 
-- [ ] **Step 3: Run `npm run build` and `npm run build:static` and `npm run build:mcp-sidecar`**
+- [x] **Step 3: Run `npm run build` and `npm run build:static` and `npm run build:mcp-sidecar`**
 
    ```bash
    npm run build 2>&1 | tail -3
@@ -2347,7 +2347,7 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Expected: all exit 0; capture tail lines.
 
-- [ ] **Step 4: Run `npm run test:e2e:full`** across all 7 Playwright projects.
+- [x] **Step 4: Run `npm run test:e2e:full`** across all 7 Playwright projects.
 
    ```bash
    npm run test:e2e:full 2>&1 | tail -20
@@ -2355,7 +2355,7 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Expected: all projects green; capture per-project pass counts.
 
-- [ ] **Step 5: Run the dedicated GEDCOM round-trip diff e2e check**
+- [x] **Step 5: Run the dedicated GEDCOM round-trip diff e2e check**
 
    ```bash
    npx playwright test --project=imports gedcom-roundtrip-comprehensive 2>&1 | tail -10
@@ -2363,26 +2363,26 @@ Commit: `feat(place-citations): Sources section on PlacePanel — T12`.
 
    Capture the diff output (or "no diff" indicator).
 
-- [ ] **Step 6: Run a live walkthrough**
+- [x] **Step 6: Run a live walkthrough**
 
    `npm start`; manually navigate to each new UI surface (RepositoriesView, every panel with new sections, every modal with new fields), confirm by inspection. Capture screenshots in a `docs/plans/archive/2026-05-19-gedcom-alignment-screenshots/` directory.
 
-- [ ] **Step 7: Mark every checkbox in `docs/plans/2026-05-19-gedcom-alignment.md` as `[x]`**
+- [x] **Step 7: Mark every checkbox in `docs/plans/2026-05-19-gedcom-alignment.md` as `[x]`**
 
-- [ ] **Step 8: Update `docs/PLAN.md` and `docs/plans/archive/PLAN.md`**
+- [x] **Step 8: Update `docs/PLAN.md` and `docs/plans/archive/PLAN.md`**
 
-- [ ] **Step 9: Version bump in `package.json`** (minor — many features shipped)
+- [x] **Step 9: Version bump in `package.json`** (minor — many features shipped)
 
-- [ ] **Step 10: Update `CHANGELOG.md`** with an Unreleased entry summarizing the plan
+- [x] **Step 10: Update `CHANGELOG.md`** with an Unreleased entry summarizing the plan
 
-- [ ] **Step 11: `git mv` plan + design spec to archive**
+- [x] **Step 11: `git mv` plan + design spec to archive**
 
    ```bash
    git mv docs/plans/2026-05-19-gedcom-alignment.md docs/plans/archive/
    git mv docs/plans/2026-05-19-gedcom-alignment-design.md docs/plans/archive/
    ```
 
-- [ ] **Step 12: Commit close-out**
+- [x] **Step 12: Commit close-out**
 
    ```bash
    git add docs/plans/archive/ docs/PLAN.md docs/plans/archive/PLAN.md \
@@ -2412,7 +2412,7 @@ EOF
 )"
    ```
 
-- [ ] **Step 13: Push to main**
+- [x] **Step 13: Push to main**
 
    ```bash
    git push origin main
