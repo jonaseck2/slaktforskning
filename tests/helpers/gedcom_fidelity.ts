@@ -107,6 +107,10 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   // the negation emitter / importer to see the row. The default INTEGER
   // sentinel (42) would never trigger the negation path.
   'events.is_negation': 1,
+  // name_translations.language — the 5.5.1 degraded path requires a recognized
+  // BCP-47 short code under `2 TYPE` for the importer to recognize the
+  // secondary NAME as a translation. 'ru' is the canonical sentinel.
+  'name_translations.language': 'ru',
   // events.negation_event_type must be a value the EVENT_TYPE_TO_TAG map
   // knows (else the negation emitter emits nothing). 'marriage' is a stable
   // mapped type.
@@ -866,9 +870,13 @@ function seedNameTranslations(db: Database, col: string, value: unknown): string
       [personNameId, personId]);
   }
   const id = col === 'id' ? String(value) : crypto.randomUUID();
+  // Default language='ru' so the 5.5.1 degraded path (1 NAME <value> / 2 TYPE ru)
+  // is recognized by phaseTranslations on re-import. Without a recognized
+  // BCP-47 code in TYPE, the secondary NAME would round-trip as a plain
+  // person_names row and never re-land in name_translations.
   const overrides: Record<string, unknown> = {
     person_name_id: personNameId, value: 'sentinel',
-    language: '', transliteration_scheme: '',
+    language: 'ru', transliteration_scheme: '',
   };
   if (!['id', 'person_name_id', 'created_at'].includes(col)) {
     overrides[col] = value;
@@ -886,6 +894,17 @@ function seedPlaceTranslations(db: Database, col: string, value: unknown): strin
   runSql(db,
     `INSERT INTO places (id, name, normalized_name) VALUES (?, 'Sentinel', 'sentinel')`,
     [placeId]);
+  // The exporter only emits PLAC nodes (and any TRAN children) when a PLAC is
+  // referenced by an event under an entity (person / family). Anchor the
+  // place via a birth event so the round-trip exercises PLAC/TRAN emission.
+  const personId = insertPersonWithDefaultName(db);
+  const eventId = crypto.randomUUID();
+  runSql(db,
+    `INSERT INTO events (id, event_type, date_type, place_id) VALUES (?, 'birth', 'unknown', ?)`,
+    [eventId, placeId]);
+  runSql(db,
+    `INSERT INTO event_participants (id, event_id, person_id, role) VALUES (?, ?, ?, 'primary')`,
+    [crypto.randomUUID(), eventId, personId]);
   const id = col === 'id' ? String(value) : crypto.randomUUID();
   const overrides: Record<string, unknown> = {
     place_id: placeId, value: 'sentinel',

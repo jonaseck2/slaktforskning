@@ -546,11 +546,10 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
   if (partial.ldsCount > 0) {
     unmappedData.push({ category: `LDS ordinances (BAPL, SLGC, CONL, ENDL, SLGS) — not relevant outside LDS context, not imported`, count: partial.ldsCount });
   }
-  // TRAN is a GEDCOM 7.0 construct, but we count and warn regardless of version
-  // since some extended 5.5.1 dialects also use it.
-  if (partial.tranCount > 0) {
-    partial.warnings.push(`${partial.tranCount} TRAN translation node(s) converted to 'aka' name entries — translation language/script metadata not preserved`);
-  }
+  // T07: TRAN under NAME / PLAC is imported as first-class name_translations
+  // / place_translations rows by phaseTranslations. No warning needed —
+  // the round-trip is lossless on GEDCOM 7.0 export. Counter kept for
+  // telemetry but no longer surfaced as a "lossy aka conversion" warning.
   if (partial.noCount > 0) {
     unmappedData.push({ category: `NO negative assertions (GEDCOM 7.0) — no app concept for explicit non-events, not imported`, count: partial.noCount });
   }

@@ -34,6 +34,8 @@ import type {
   NoteEntityType,
   PersonAssociation,
   PersonAssociationRole,
+  NameTranslation,
+  PlaceTranslation,
 } from '../../api/types';
 
 type LooseFallback = Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -243,6 +245,18 @@ declare global {
         link: (noteId: string, entityType: NoteEntityType, entityId: string) => Promise<NoteLink>;
         unlink: (noteId: string, entityType: NoteEntityType, entityId: string) => Promise<boolean>;
         forNote: (noteId: string) => Promise<NoteLink[]>;
+      };
+      nameTranslations: {
+        forName: (personNameId: string) => Promise<NameTranslation[]>;
+        create: (data: { person_name_id: string; value: string; language?: string; transliteration_scheme?: string }) => Promise<NameTranslation>;
+        update: (id: string, updates: Partial<Pick<NameTranslation, 'value' | 'language' | 'transliteration_scheme'>>) => Promise<NameTranslation | null>;
+        delete: (id: string) => Promise<boolean>;
+      };
+      placeTranslations: {
+        forPlace: (placeId: string) => Promise<PlaceTranslation[]>;
+        create: (data: { place_id: string; value: string; language?: string; transliteration_scheme?: string }) => Promise<PlaceTranslation>;
+        update: (id: string, updates: Partial<Pick<PlaceTranslation, 'value' | 'language' | 'transliteration_scheme'>>) => Promise<PlaceTranslation | null>;
+        delete: (id: string) => Promise<boolean>;
       };
       repositories: {
         list: () => Promise<Repository[]>;
