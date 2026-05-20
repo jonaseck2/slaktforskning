@@ -222,6 +222,28 @@
         </div>
       </div>
 
+      <!-- Shared notes (T20) — first-class notes attached to this person via
+           note_links. Distinct from the per-row `persons.notes` text-blob
+           column, which is edited inline in the Person section above. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('notes.title')"
+          :count="sharedNotesCount"
+          :collapsed="!sections.sharedNotes"
+          v-bind="props.readonly ? {} : { actionLabel: $t('notes.add') }"
+          @toggle="toggleSection('sharedNotes')"
+          @action="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <div v-if="sections.sharedNotes" class="panel-section-body">
+          <EntityNotesSection
+            ref="sharedNotesSectionRef"
+            entity-type="person"
+            :entity-id="personId!"
+            :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
       <!-- Quality section. Same v-show rationale as Forskning above. -->
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
@@ -334,6 +356,7 @@ import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonSourcesSection, { type CitationRow } from './PersonSourcesSection.vue';
+import EntityNotesSection from './EntityNotesSection.vue';
 import CitationModal from './modals/CitationModal.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
 import PersonDetailsSection from './PersonDetailsSection.vue';
@@ -548,12 +571,14 @@ const { sections, toggleSection } = usePanelSections(
     media: false,
     mediaTimeline: false,
     sources: false,
+    sharedNotes: false,
     quality: false,
   },
   {
     person: true, names: true, events: true, timeline: true, map: true,
     relationships: true, groups: true, research: false,
-    media: true, mediaTimeline: true, sources: false, quality: false,
+    media: true, mediaTimeline: true, sources: false,
+    sharedNotes: false, quality: false,
   },
 );
 
@@ -562,6 +587,8 @@ const { sections, toggleSection } = usePanelSections(
 const eventListRef = ref<(ComponentPublicInstance & { openAddForm: (eventType?: string) => void }) | null>(null);
 const mediaSectionRef = ref<InstanceType<typeof PersonMediaSection> | null>(null);
 const checksSectionRef = ref<(InstanceType<typeof PersonChecksSection> & { count: number; reload: () => void }) | null>(null);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const relSectionRef = ref<InstanceType<typeof PersonRelationshipsSection> | null>(null);
 const researchSectionRef = ref<InstanceType<typeof PersonResearchTasksSection> | null>(null);
 const researchTaskCount = computed(() => researchSectionRef.value?.count ?? 0);

@@ -218,6 +218,26 @@
            defineExpose({ count }) is live — otherwise the (N) count badge
            is 0 whenever the section is closed, contradicting the DB. The
            child caches via useEntityData so the per-mount fetch is cheap. -->
+      <!-- Shared notes (T20) — first-class notes attached to this place. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('notes.title')"
+          :count="sharedNotesCount"
+          :collapsed="!sections.sharedNotes"
+          v-bind="props.readonly ? {} : { actionLabel: $t('notes.add') }"
+          @toggle="toggleSection('sharedNotes')"
+          @action="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <div v-if="sections.sharedNotes" class="panel-section-body">
+          <EntityNotesSection
+            ref="sharedNotesSectionRef"
+            entity-type="place"
+            :entity-id="placeId!"
+            :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
       <div class="panel-section">
         <SectionHeader :title="$t('quality.nav')" :count="checkCount" :collapsed="!sections.quality" @toggle="toggleSection('quality')" />
         <div v-show="sections.quality" class="panel-section-body">
@@ -277,6 +297,7 @@ import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
 import PlaceNameAutocomplete from './PlaceNameAutocomplete.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import PlaceSourcesSection, { type CitationRow } from './PlaceSourcesSection.vue';
+import EntityNotesSection from './EntityNotesSection.vue';
 import CitationModal from './modals/CitationModal.vue';
 import EntityPanel from './EntityPanel.vue';
 import PanelDangerZone from './PanelDangerZone.vue';
@@ -335,11 +356,13 @@ const { sections, toggleSection } = usePanelSections(
   'place-panel-section-',
   {
     place: true, persons: true, events: true, timeline: false,
-    media: false, mediaTimeline: false, tasks: false, sources: false, quality: false,
+    media: false, mediaTimeline: false, tasks: false, sources: false,
+    sharedNotes: false, quality: false,
   },
   {
     place: true, persons: true, events: true, timeline: true,
-    media: true, mediaTimeline: true, tasks: true, sources: false, quality: false,
+    media: true, mediaTimeline: true, tasks: true, sources: false,
+    sharedNotes: false, quality: false,
   },
 );
 
@@ -352,6 +375,8 @@ const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
 const sourcesSectionRef = ref<InstanceType<typeof PlaceSourcesSection> | null>(null);
 const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 
 // ── Citation modal state (T12) ──────────────────────────────────────────────
 

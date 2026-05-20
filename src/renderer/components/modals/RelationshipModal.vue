@@ -150,6 +150,29 @@
         />
       </div>
       <div style="height:8px"></div>
+
+      <!-- Shared notes (T20) -->
+      <div class="ep-sec-header" data-entity="note">
+        <div class="ep-sec-left">
+          <span class="ep-sec-title">📝 {{ $t('notes.title') }}</span>
+          <span class="ep-sec-count">{{ sharedNotesCount }}</span>
+        </div>
+        <span class="ep-sec-open">›</span>
+      </div>
+      <div class="ep-sec-content">
+        <input
+          class="ep-search-input"
+          :placeholder="$t('notes.add')"
+          readonly
+          @click="sharedNotesSectionRef?.openAddChoice()"
+        />
+        <EntityNotesSection
+          ref="sharedNotesSectionRef"
+          entity-type="relationship"
+          :entity-id="savedRelationshipId!"
+        />
+      </div>
+      <div style="height:8px"></div>
     </template>
 
     <!-- Sub-panels -->
@@ -222,6 +245,7 @@ import CitationModal from './CitationModal.vue';
 import ConfirmModal from '../ConfirmModal.vue';
 import PersonPicker from '../PersonPicker.vue';
 import RelationshipSourcesSection, { type CitationRow } from '../RelationshipSourcesSection.vue';
+import EntityNotesSection from '../EntityNotesSection.vue';
 import {
   RELATIONSHIP_TYPE_VALUES,
   COUPLE_SUBTYPE_VALUES,
@@ -345,6 +369,8 @@ function closeSubPanel() {
 // ── Sources section (T13) ───────────────────────────────────────────────────
 const sourcesSectionRef = ref<InstanceType<typeof RelationshipSourcesSection> | null>(null);
 const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
+const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const editingCitation = ref<CitationRow | null>(null);
 
 function openAddCitation() {
