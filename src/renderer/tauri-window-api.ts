@@ -31,6 +31,7 @@ import * as personAssociations from '../api/person_associations';
 import * as groups from '../api/groups';
 import * as notes from '../api/notes';
 import * as translations from '../api/translations';
+import * as sourceCoverage from '../api/source_coverage';
 import * as repositories from '../api/repositories';
 import * as researchTasks from '../api/research_tasks';
 import * as duplicates from '../api/duplicates';
@@ -385,6 +386,17 @@ export function mountWindowApi(db: Database): MountResult {
     create: mutating((db, data: Parameters<typeof translations.createPlaceTranslation>[1]) => translations.createPlaceTranslation(db, data)),
     update: mutating((db, id: string, updates: Parameters<typeof translations.updatePlaceTranslation>[2]) => translations.updatePlaceTranslation(db, id, updates)),
     delete: mutating((db, id: string) => translations.deletePlaceTranslation(db, id)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // sourceCoverage (T08 — GEDCOM SOUR/DATA/EVEN coverage events)
+  api.sourceCoverage = {
+    create: mutating((db, data: Parameters<typeof sourceCoverage.createSourceCoverageEvent>[1]) =>
+      sourceCoverage.createSourceCoverageEvent(db, data)),
+    get: readOnly((db, id: string) => sourceCoverage.getSourceCoverageEvent(db, id)),
+    forSource: readOnly((db, sourceId: string) => sourceCoverage.getCoverageForSource(db, sourceId)),
+    update: mutating((db, id: string, data: Parameters<typeof sourceCoverage.updateSourceCoverageEvent>[2]) =>
+      sourceCoverage.updateSourceCoverageEvent(db, id, data)),
+    delete: mutating((db, id: string) => sourceCoverage.deleteSourceCoverageEvent(db, id)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
   // repositories

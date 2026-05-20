@@ -300,7 +300,11 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
   // ── Sources ────────────────────────────────────────────────────────────────
   const sourceXref = new Map<string, string>();
-  sources.forEach((src, i) => {
+  // T08: converted from `sources.forEach` to `for-of` so the async
+  // `emitSourceCoverageEvents` call below can be awaited (forEach swallows
+  // returned promises).
+  for (let i = 0; i < sources.length; i++) {
+    const src = sources[i];
     const xr = `@S${i + 1}@`;
     sourceXref.set(src.id, xr);
     lines.push(`0 ${xr} SOUR`);
@@ -342,12 +346,9 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       const repoXr = repoXref.get(repo.id);
       if (repoXr) lines.push(`1 REPO ${repoXr}`);
     }
-    // T02 per-concept emitter hook (stub until T08).
-    // Note: forEach can't await — sources.forEach is rewritten in T08 to a
-    // for-of so this stub call can be awaited. Until then the call is a
-    // synchronous no-op return that does nothing.
-    void emitSourceCoverageEvents(db, src.id, 1, version, lines);
-  });
+    // T08: emit SOUR/DATA/EVEN coverage events (lossless under 5.5.1 + 7.0).
+    await emitSourceCoverageEvents(db, src.id, 1, version, lines);
+  }
 
   // T04: reset the SNOTE xref allocator at the top of every export so
   // back-to-back exports do not share state. The top-level SNOTE record
