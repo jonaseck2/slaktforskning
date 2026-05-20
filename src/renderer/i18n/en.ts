@@ -474,6 +474,10 @@ export default {
     participantsRemove: 'Remove participant',
     participantsAlreadyAdded: 'This person is already on the event',
     participantRoleLabel: 'Role',
+    // T22 — Negative assertions (GEDCOM 7.0 NO X)
+    isNegation: 'Negative assertion (event did NOT happen)',
+    negationHint: 'e.g. "no marriage found in the parish register between 1850-1900"',
+    negationPrefix: 'No',
     value: {
       occupation: 'Occupation',
       education: 'Degree',
@@ -1430,6 +1434,51 @@ export default {
     pickerTitle: 'Pick a note to link',
     pickerEmpty: 'No notes to link.',
     countLabel: 'Showing {shown} of {total} notes',
+  },
+  // T21 — Person associations (GEDCOM ASSO without event)
+  personAssociations: {
+    title: 'Associations',
+    add: '+ Association',
+    empty: 'No associations yet.',
+    relatedPerson: 'Related person',
+    role: 'Role',
+    notes: 'Notes',
+    roles: {
+      godparent: 'Godparent',
+      friend: 'Friend',
+      colleague: 'Colleague',
+      enemy: 'Enemy',
+      neighbor: 'Neighbor',
+      other: 'Other',
+    },
+    addTitle: 'Add association',
+    editTitle: 'Edit association',
+    deleteConfirm: 'Remove association?',
+  },
+  // T23 — GEDCOM 7.0 NAME/TRAN + PLAC/TRAN
+  translations: {
+    nameTitle: 'Alternate spellings / scripts',
+    placeTitle: 'Alternate names',
+    add: '+ Translation',
+    value: 'Value',
+    language: 'Language (BCP 47)',
+    transliterationScheme: 'Transliteration scheme (optional)',
+    empty: 'No translations yet.',
+    deleteConfirm: 'Remove translation?',
+  },
+  // T24 — Source coverage events (GEDCOM SOUR/DATA/EVEN)
+  sourceCoverage: {
+    title: 'Coverage',
+    add: '+ Coverage',
+    empty: 'No coverage specified.',
+    eventType: 'Event type',
+    dateFrom: 'From',
+    dateTo: 'To',
+    place: 'Place',
+    notes: 'Notes',
+    addTitle: 'Add coverage',
+    editTitle: 'Edit coverage',
+    deleteConfirm: 'Remove coverage?',
   },
   groups: {
     title: 'Groups',

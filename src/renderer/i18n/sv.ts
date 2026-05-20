@@ -474,6 +474,10 @@ export default {
     participantsRemove: 'Ta bort deltagare',
     participantsAlreadyAdded: 'Personen är redan med i händelsen',
     participantRoleLabel: 'Roll',
+    // T22 — Negative assertions (GEDCOM 7.0 NO X)
+    isNegation: 'Negativt påstående (händelsen inträffade INTE)',
+    negationHint: 'T.ex. "ingen vigsel hittad i kyrkoboken mellan 1850-1900"',
+    negationPrefix: 'Saknad',
     value: {
       occupation: 'Yrke',
       education: 'Examen',
@@ -1430,6 +1434,51 @@ export default {
     pickerTitle: 'Välj anteckning att länka',
     pickerEmpty: 'Inga anteckningar att länka.',
     countLabel: 'Visar {shown} av {total} anteckningar',
+  },
+  // T21 — Person associations (GEDCOM ASSO without event)
+  personAssociations: {
+    title: 'Personrelationer',
+    add: '+ Relation',
+    empty: 'Inga personrelationer ännu.',
+    relatedPerson: 'Relaterad person',
+    role: 'Roll',
+    notes: 'Anteckningar',
+    roles: {
+      godparent: 'Fadder',
+      friend: 'Vän',
+      colleague: 'Kollega',
+      enemy: 'Fiende',
+      neighbor: 'Granne',
+      other: 'Annan',
+    },
+    addTitle: 'Lägg till relation',
+    editTitle: 'Redigera relation',
+    deleteConfirm: 'Ta bort personrelation?',
+  },
+  // T23 — GEDCOM 7.0 NAME/TRAN + PLAC/TRAN
+  translations: {
+    nameTitle: 'Alternativa stavningar / skrifter',
+    placeTitle: 'Alternativa namn',
+    add: '+ Översättning',
+    value: 'Värde',
+    language: 'Språk (BCP 47)',
+    transliterationScheme: 'Translittereringssystem (valfritt)',
+    empty: 'Inga översättningar ännu.',
+    deleteConfirm: 'Ta bort översättning?',
+  },
+  // T24 — Source coverage events (GEDCOM SOUR/DATA/EVEN)
+  sourceCoverage: {
+    title: 'Täcker',
+    add: '+ Täckning',
+    empty: 'Ingen täckning angiven.',
+    eventType: 'Händelsetyp',
+    dateFrom: 'Från',
+    dateTo: 'Till',
+    place: 'Plats',
+    notes: 'Anteckningar',
+    addTitle: 'Lägg till täckning',
+    editTitle: 'Redigera täckning',
+    deleteConfirm: 'Ta bort täckning?',
   },
   groups: {
     title: 'Grupper',

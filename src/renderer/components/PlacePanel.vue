@@ -112,6 +112,26 @@
         </div>
       </div>
 
+      <!-- Translations section (T23 — GEDCOM 7.0 PLAC/TRAN). Alternate
+           names / scripts attached directly to this place. Only renders
+           when the panel has a persisted placeId. -->
+      <div v-if="placeId" class="panel-section">
+        <SectionHeader
+          :title="$t('translations.placeTitle')"
+          :count="placeTranslationsCount"
+          :collapsed="!sections.translations"
+          @toggle="toggleSection('translations')"
+        />
+        <div v-if="sections.translations" class="panel-section-body">
+          <PersonNameTranslationsSection
+            ref="placeTranslationsSectionRef"
+            kind="place"
+            :parent-id="placeId"
+            :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
       <!-- Events section -->
       <div class="panel-section">
         <SectionHeader :title="$t('panel.events')" :count="eventCount" :collapsed="!sections.events" :action-label="!props.readonly ? '+ ' + $t('events.event') : undefined" @toggle="toggleSection('events')" @action="eventListRef?.openAddForm()" />
@@ -294,6 +314,7 @@ import EntityMediaSection from './EntityMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PlaceTimeline from './PlaceTimeline.vue';
 import PlaceFormFields, { type PlaceFormShape } from './PlaceFormFields.vue';
+import PersonNameTranslationsSection from './PersonNameTranslationsSection.vue';
 import PlaceNameAutocomplete from './PlaceNameAutocomplete.vue';
 import PlaceChecksSection from './PlaceChecksSection.vue';
 import PlaceSourcesSection, { type CitationRow } from './PlaceSourcesSection.vue';
@@ -357,11 +378,13 @@ const { sections, toggleSection } = usePanelSections(
   {
     place: true, persons: true, events: true, timeline: false,
     media: false, mediaTimeline: false, tasks: false, sources: false,
+    translations: false,
     sharedNotes: false, quality: false,
   },
   {
     place: true, persons: true, events: true, timeline: true,
     media: true, mediaTimeline: true, tasks: true, sources: false,
+    translations: false,
     sharedNotes: false, quality: false,
   },
 );
@@ -375,6 +398,8 @@ const checkCount = computed(() => checksSectionRef.value?.count ?? 0);
 const personsSectionRef = ref<InstanceType<typeof PlacePersonsSection> | null>(null);
 const sourcesSectionRef = ref<InstanceType<typeof PlaceSourcesSection> | null>(null);
 const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+const placeTranslationsSectionRef = ref<(InstanceType<typeof PersonNameTranslationsSection> & { count: number; reload: () => void }) | null>(null);
+const placeTranslationsCount = computed(() => placeTranslationsSectionRef.value?.count ?? 0);
 const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
 const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 

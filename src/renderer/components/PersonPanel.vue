@@ -222,6 +222,28 @@
         </div>
       </div>
 
+      <!-- Person associations section (T21) — GEDCOM 7.0 ASSO without event.
+           Friends, colleagues, godparents-in-general, neighbours, enemies.
+           Distinct from event_participants (godparents tied to a specific
+           baptism) and from relationships (couple/parent-child/sibling). -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('personAssociations.title')"
+          :count="associationCount"
+          :collapsed="!sections.associations"
+          v-bind="props.readonly ? {} : { actionLabel: $t('personAssociations.add') }"
+          @toggle="toggleSection('associations')"
+          @action="associationsSectionRef?.openAddForm()"
+        />
+        <div v-if="sections.associations" class="panel-section-body">
+          <PersonAssociationsSection
+            ref="associationsSectionRef"
+            :person-id="personId!"
+            :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
       <!-- Shared notes (T20) — first-class notes attached to this person via
            note_links. Distinct from the per-row `persons.notes` text-blob
            column, which is edited inline in the Person section above. -->
@@ -356,6 +378,7 @@ import PersonMediaSection from './PersonMediaSection.vue';
 import MediaTimeline from './MediaTimeline.vue';
 import PersonChecksSection from './PersonChecksSection.vue';
 import PersonSourcesSection, { type CitationRow } from './PersonSourcesSection.vue';
+import PersonAssociationsSection from './PersonAssociationsSection.vue';
 import EntityNotesSection from './EntityNotesSection.vue';
 import CitationModal from './modals/CitationModal.vue';
 import PersonRelationshipsSection from './PersonRelationshipsSection.vue';
@@ -571,6 +594,7 @@ const { sections, toggleSection } = usePanelSections(
     media: false,
     mediaTimeline: false,
     sources: false,
+    associations: false,
     sharedNotes: false,
     quality: false,
   },
@@ -578,6 +602,7 @@ const { sections, toggleSection } = usePanelSections(
     person: true, names: true, events: true, timeline: true, map: true,
     relationships: true, groups: true, research: false,
     media: true, mediaTimeline: true, sources: false,
+    associations: false,
     sharedNotes: false, quality: false,
   },
 );
@@ -597,6 +622,8 @@ const identifiersSectionRef = ref<InstanceType<typeof PersonIdentifiersSection> 
 const identifierCount = computed(() => identifiersSectionRef.value?.count ?? 0);
 const sourcesSectionRef = ref<InstanceType<typeof PersonSourcesSection> | null>(null);
 const sourceCount = computed(() => sourcesSectionRef.value?.count ?? 0);
+const associationsSectionRef = ref<(InstanceType<typeof PersonAssociationsSection> & { count: number; reload: () => void; openAddForm: () => void }) | null>(null);
+const associationCount = computed(() => associationsSectionRef.value?.count ?? 0);
 
 // ── Citation modal state (T11) ──────────────────────────────────────────────
 

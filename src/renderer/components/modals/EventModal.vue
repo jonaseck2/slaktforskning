@@ -10,6 +10,18 @@
   >
     <!-- Fields -->
     <div class="ep-fields">
+      <!-- T22 — Negative assertion toggle (GEDCOM 7.0 NO X). When ticked the
+           row records the *absence* of the chosen event type within the
+           given date range / place: "no marriage found in the parish
+           register between 1850-1900". The event_type picker below still
+           drives which event we are negating. -->
+      <div class="ep-field ep-negation-toggle">
+        <label class="ep-checkbox">
+          <input type="checkbox" v-model="form.is_negation" />
+          <span>{{ $t('events.isNegation') }}</span>
+        </label>
+        <span v-if="form.is_negation" class="ep-field-hint">{{ $t('events.negationHint') }}</span>
+      </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('common.type') }}</span>
         <div class="ep-seg">
@@ -235,7 +247,13 @@
          yet (in which case eventId is null). Excludes the primary
          (props.personId) and spouse (secondPersonId) so they aren't
          double-listed below the slots already showing them above. -->
+    <!-- T22 — hide the participants section when this is a negative assertion.
+         A negation says "this event did NOT happen" — there isn't anyone
+         else to attach as witness / godparent / etc. The primary participant
+         (panel-owner) is still attached because the negation is *about*
+         them, but the rest of the role surface is intentionally hidden. -->
     <EventParticipantsSection
+      v-if="!form.is_negation"
       :event-id="savedEventId"
       :exclude-person-ids="extraParticipantsExcludeIds"
     />
@@ -359,6 +377,10 @@ interface EventData {
   cause: string | null;
   value: string | null;
   notes: string;
+  // T22 — negation flags optional on the inbound EventData so older callers
+  // still type-check; both default to absent (treated as not-a-negation).
+  is_negation?: boolean | number | null;
+  negation_event_type?: string | null;
 }
 
 const props = withDefaults(defineProps<{
@@ -424,6 +446,9 @@ const editingEventDefaults: Partial<EventForm> | undefined = props.editingEvent
       cause: props.editingEvent.cause,
       value: props.editingEvent.value,
       notes: props.editingEvent.notes,
+      // T22 — SQLite stores is_negation as 0/1; coerce to boolean for the form.
+      is_negation: !!props.editingEvent.is_negation,
+      negation_event_type: props.editingEvent.negation_event_type ?? '',
     }
   : {
       event_type: props.defaultEventType,
@@ -454,7 +479,10 @@ const valueLabelKey = computed(() => valueFieldI18nKey(form.event_type));
 const contextName = ref('');
 
 const eventTitle = computed(() => {
-  const base = form.event_type ? t('eventTypes.' + form.event_type) : t('events.newEvent');
+  let base = form.event_type ? t('eventTypes.' + form.event_type) : t('events.newEvent');
+  // T22 — Prefix the base label with the negation-prefix word when the user
+  // has flagged this row as a negative assertion. "Saknad vigsel" / "No marriage".
+  if (form.is_negation) base = t('events.negationPrefix') + ' ' + base.toLowerCase();
   return contextName.value ? t('events.titleOf', { event: base, name: contextName.value }) : base;
 });
 

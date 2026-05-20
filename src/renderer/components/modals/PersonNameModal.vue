@@ -177,6 +177,25 @@
         </div>
       </details>
 
+      <!-- Translations (T23) — GEDCOM 7.0 NAME/TRAN. Gated on savedNameId
+           so the section can attach rows directly to a persisted name row;
+           in add mode the section appears after the first Save. -->
+      <template v-if="savedNameId">
+        <div class="ep-sec-header" data-entity="translation">
+          <div class="ep-sec-left">
+            <span class="ep-sec-title">🌐 {{ $t('translations.nameTitle') }}</span>
+            <span class="ep-sec-count">{{ translationsSectionRef?.count ?? 0 }}</span>
+          </div>
+        </div>
+        <div class="ep-sec-content">
+          <PersonNameTranslationsSection
+            ref="translationsSectionRef"
+            kind="name"
+            :parent-id="savedNameId"
+          />
+        </div>
+      </template>
+
       <!-- Citations / Hänvisning. Mirrors EventModal's pattern: in add mode
            (no editingName.id yet) we buffer pending citations and persist
            them after the name row is created. In edit mode we attach
@@ -246,6 +265,7 @@ import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import SimpleDateInput from '../SimpleDateInput.vue';
 import LinkedText from '../LinkedText.vue';
+import PersonNameTranslationsSection from '../PersonNameTranslationsSection.vue';
 import { usePersonNameForm } from '../../composables/usePersonNameForm';
 import { usePersonNameValidation } from '../../composables/usePersonNameValidation';
 import { usePersonNameSave } from '../../composables/usePersonNameSave';
@@ -385,6 +405,7 @@ async function loadPersonName() {
 // it remains null until handleSave creates the row, at which point any
 // pending citations are flushed.
 const savedNameId = ref<string | null>(props.editingName?.id ?? null);
+const translationsSectionRef = ref<(InstanceType<typeof PersonNameTranslationsSection> & { count: number; reload: () => void }) | null>(null);
 
 watch(() => props.editingName, (n) => {
   savedNameId.value = n?.id ?? null;
