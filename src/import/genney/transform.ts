@@ -8,6 +8,40 @@
  * per row would produce ~31,000 compilations for a typical Genney database (833 persons,
  * 3008 events, 5910 citations), saturating the CPU for minutes. Reusing statements
  * reduces this to ~9 compilations total.
+ *
+ * ── T25 audit (2026-05-20) ────────────────────────────────────────────────
+ * Per-concept Genney coverage of the T02 Phase 2 schema additions:
+ *
+ *  - Shared notes (T04 `notes` + `note_links`):
+ *      REMARK table (OWNER → PERSON.RID, NOTE) is per-person 1:1, NOT a
+ *      shared-note shape. Existing behaviour preserved: REMARK text is
+ *      concatenated into `persons.notes`. SOURCE.NOTE (also previously
+ *      dropped) IS now routed into `notes` + `note_links` linked to the
+ *      source — see the source loop below. EVENT.NOTE remains inline on
+ *      `events.notes` (same shape as our schema). No source-side concept
+ *      for cross-entity shared notes exists in Genney to map further.
+ *  - Person associations (T05 `person_associations`):
+ *      Genney has no ASSO-shaped person-to-person table independent of
+ *      events. Witness-shaped participants ride OWNER_EVENT and are
+ *      already mapped via the existing participant pipeline. Nothing to
+ *      add for pure-INDI associations.
+ *  - Negative assertions (T06 `events.is_negation`):
+ *      Genney has no negative-assertion concept. Nothing to map.
+ *  - Name translations (T07 `name_translations`):
+ *      Genney is single-script Swedish; no multi-script NAME column.
+ *      Nothing to map.
+ *  - Place translations (T07 `place_translations`):
+ *      Genney SPLACE has a single NAME column; no multi-script variants.
+ *      Nothing to map.
+ *  - Source coverage (T08 `source_coverage_events`):
+ *      Genney SOURCE has no DATA/EVEN-shaped coverage columns. Nothing
+ *      to map.
+ *  - HEAD metadata (T09 `db_settings.header_metadata`):
+ *      Genney INI singleton holds user preferences, not GEDCOM-HEAD-shape
+ *      submitter / encoding / version metadata. INI.SUBMITTER → researcher
+ *      mapping is already wired via importGenneyResearcher below.
+ *  - Extended date qualifiers / sex='X':
+ *      Genney has no UI for either; not present in source data.
  */
 
 import type { Database } from 'node-sqlite3-wasm';
@@ -445,6 +479,15 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     insertCitation: db.prepare(
       `INSERT INTO citations (id, source_id, event_id, person_id, relationship_id, page, confidence, transcription, notes, date_accessed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ),
+    // T25: shared notes (T04 schema) — for SOURCE.NOTE content that would
+    // otherwise be dropped. Routed to the shared `notes` table + a
+    // `note_links` row pointing at the source.
+    insertNote: db.prepare(
+      `INSERT INTO notes (id, text, language) VALUES (?, ?, '')`
+    ),
+    insertNoteLink: db.prepare(
+      `INSERT OR IGNORE INTO note_links (id, note_id, entity_type, entity_id, sort_order) VALUES (?, ?, ?, ?, 0)`
+    ),
   };
 
   // ── Per-statement parameter queues for bulk flush ────────────────────────
@@ -594,9 +637,13 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
   // ── 3. Import sources ────────────────────────────────────────────────────
   const sourceMap = new Map<string, string>(); // Genney S-ID → UUID
 
-  // Count sources with non-empty NOTE (NOTE field is not mapped to any app field)
-  sourceNoteCount = tables.SOURCE.filter(s => s.NOTE?.trim()).length;
-
+  // T25 audit (2026-05-20): SOURCE.NOTE was previously dropped (only counted
+  // via `sourceNoteCount` for the import-report warning). With the T04 shared-
+  // notes schema we now persist the text as a `notes` row linked to the
+  // source via `note_links`. This is a per-source note in Genney's model
+  // (1:1), not a SNOTE-style shared note across multiple entities, but the
+  // T04 schema is the closest cross-entity-compatible store and lets the
+  // content round-trip back out as `1 NOTE` / `1 SNOTE` on export.
   for (const src of tables.SOURCE) {
     const title = (src.TITLE || src.ABBREVIATION || '').trim();
     const id = crypto.randomUUID();
@@ -605,6 +652,12 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
       src.CALLNUMBER ?? null, src.TEXT ?? null,
     ]);
     sourceMap.set(src.RID, id);
+    if (src.NOTE && src.NOTE.trim()) {
+      const noteId = crypto.randomUUID();
+      enq('insertNote', [noteId, src.NOTE.trim()]);
+      enq('insertNoteLink', [crypto.randomUUID(), noteId, 'source', id]);
+      sourceNoteCount++;
+    }
     summary.sources++;
   }
   await flushAll();
@@ -951,7 +1004,7 @@ export async function transformGenney(db: Database, tables: GenneyTables, opts: 
     });
   }
   if (sourceNoteCount > 0) {
-    summary.warnings.push(`${sourceNoteCount} source(s) have a NOTE field — not mapped to any app field, content not imported`);
+    summary.warnings.push(`${sourceNoteCount} source(s) had a NOTE field — imported as shared notes linked to the source (T25)`);
   }
   if (namelessPersonCount > 0) {
     summary.warnings.push(`${namelessPersonCount} PERSON record(s) had no GIVENNAME or SURNAME — imported as nameless persons (visible under quality checks)`);
