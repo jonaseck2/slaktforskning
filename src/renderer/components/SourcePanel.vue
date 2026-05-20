@@ -155,6 +155,26 @@
         </div>
       </div>
 
+      <!-- Repositories section (T10) — structured Repository records linked
+           via source_repositories. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('sourcePanel.repositories')"
+          :collapsed="!sections.repositories"
+          :action-label="!showRepoPicker ? '+ ' + $t('repositories.singular') : ''"
+          @toggle="toggleSection('repositories')"
+          @action="openRepoPicker"
+        />
+        <div v-if="sections.repositories" class="panel-section-body">
+          <SourceRepositoriesSection
+            v-if="props.sourceId"
+            :source-id="props.sourceId"
+            :show-picker="showRepoPicker"
+            @cancel-picker="showRepoPicker = false"
+          />
+        </div>
+      </div>
+
       <!-- Media section -->
       <div class="panel-section">
         <SectionHeader
@@ -234,6 +254,7 @@ import EntityPanel from './EntityPanel.vue';
 import PanelDangerZone from './PanelDangerZone.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
+import SourceRepositoriesSection from './SourceRepositoriesSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
@@ -295,9 +316,15 @@ const sortedSourceTypes = computed(() => {
 
 const { sections, toggleSection } = usePanelSections(
   'source-panel-section-',
-  { source: true, citations: true, media: false, quality: false },
-  { source: true, citations: true, media: true, quality: false },
+  { source: true, citations: true, repositories: false, media: false, quality: false },
+  { source: true, citations: true, repositories: true, media: true, quality: false },
 );
+
+const showRepoPicker = ref(false);
+function openRepoPicker() {
+  if (!sections.repositories) toggleSection('repositories');
+  showRepoPicker.value = true;
+}
 
 // ── Refs / state ────────────────────────────────────────────────────────────
 

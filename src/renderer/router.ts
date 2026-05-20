@@ -15,6 +15,8 @@ export const router = createRouter({
     { path: '/relationships/:id', redirect: '/persons' },
     { path: '/sources', component: SourcesView },
     { path: '/sources/:id', component: SourcesView },
+    { path: '/repositories', component: () => import('./views/RepositoriesView.vue') },
+    { path: '/repositories/:id', component: () => import('./views/RepositoriesView.vue') },
     { path: '/search', component: SearchView },
     { path: '/places', component: () => import('./views/PlacesView.vue') },
     { path: '/places/:id', component: () => import('./views/PlacesView.vue') },

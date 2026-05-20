@@ -56,6 +56,12 @@ export default defineConfig({
       retries: 1,
     },
     {
+      name: 'repositories',
+      testMatch: 'repositories.spec.ts',
+      timeout: 60_000,
+      retries: 1,
+    },
+    {
       name: 'panels',
       testMatch: 'panel-surface.spec.ts',
       timeout: 60_000,
