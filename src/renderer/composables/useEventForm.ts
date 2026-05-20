@@ -28,6 +28,12 @@ export interface EventForm {
   cause: string | null;
   value: string | null;
   notes: string;
+  // T22 — GEDCOM 7.0 negative assertions (NO X). is_negation is the boolean
+  // flag, negation_event_type holds the GEDCOM tag that was negated when
+  // is_negation is true (the row's own event_type stays 'other' or whatever
+  // the user picks for display ordering).
+  is_negation: boolean;
+  negation_event_type: string;
 }
 
 export interface UseEventFormOptions {
@@ -47,6 +53,8 @@ const EMPTY_FORM: EventForm = {
   cause: null,
   value: null,
   notes: '',
+  is_negation: false,
+  negation_event_type: '',
 };
 
 // Window typing — composable is loaded by both the renderer (where window.api

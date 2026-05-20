@@ -155,6 +155,26 @@
         </div>
       </div>
 
+      <!-- Coverage section (T24 — GEDCOM SOUR/DATA/EVEN). Describes which
+           event types / date ranges / places the source covers as a whole,
+           distinct from per-event citations. -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('sourceCoverage.title')"
+          :count="coverageCount"
+          :collapsed="!sections.coverage"
+          :action-label="'+ ' + $t('sourceCoverage.add')"
+          @toggle="toggleSection('coverage')"
+          @action="coverageSectionRef?.openAddForm()"
+        />
+        <div v-if="sections.coverage && props.sourceId" class="panel-section-body">
+          <SourceCoverageSection
+            ref="coverageSectionRef"
+            :source-id="props.sourceId"
+          />
+        </div>
+      </div>
+
       <!-- Repositories section (T10) — structured Repository records linked
            via source_repositories. -->
       <div class="panel-section">
@@ -275,6 +295,7 @@ import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import EntityMediaSection from './EntityMediaSection.vue';
 import EntityNotesSection from './EntityNotesSection.vue';
 import SourceRepositoriesSection from './SourceRepositoriesSection.vue';
+import SourceCoverageSection from './SourceCoverageSection.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
 import SectionHeader from './ui/SectionHeader.vue';
 import AppButton from './ui/AppButton.vue';
@@ -336,8 +357,8 @@ const sortedSourceTypes = computed(() => {
 
 const { sections, toggleSection } = usePanelSections(
   'source-panel-section-',
-  { source: true, citations: true, repositories: false, media: false, sharedNotes: false, quality: false },
-  { source: true, citations: true, repositories: true, media: true, sharedNotes: false, quality: false },
+  { source: true, citations: true, coverage: false, repositories: false, media: false, sharedNotes: false, quality: false },
+  { source: true, citations: true, coverage: false, repositories: true, media: true, sharedNotes: false, quality: false },
 );
 
 const showRepoPicker = ref(false);
@@ -351,6 +372,8 @@ function openRepoPicker() {
 const mediaSectionRef = ref<InstanceType<typeof EntityMediaSection> | null>(null);
 const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { count: number; openAddChoice: () => void }) | null>(null);
 const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
+const coverageSectionRef = ref<(InstanceType<typeof SourceCoverageSection> & { count: number; reload: () => void; openAddForm: () => void }) | null>(null);
+const coverageCount = computed(() => coverageSectionRef.value?.count ?? 0);
 const showCitationForm = ref(false);
 const editingCitation = ref<CitationRow | null>(null);
 

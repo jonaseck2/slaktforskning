@@ -103,6 +103,14 @@ export function useEventSave(options: UseEventSaveOptions): UseEventSaveReturn {
       cause: options.form.cause || null,
       value: options.form.value || null,
       notes: options.form.notes || '',
+      // T22 — Negative assertions. is_negation always written; the negated
+      // event_type only when the flag is true so toggling back to a
+      // positive assertion clears it (Prime Directive: we don't preserve
+      // dead-state metadata that the user explicitly switched off).
+      is_negation: !!options.form.is_negation,
+      negation_event_type: options.form.is_negation
+        ? (options.form.negation_event_type || options.form.event_type || '')
+        : '',
     };
   }
 
