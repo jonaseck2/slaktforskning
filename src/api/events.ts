@@ -16,12 +16,14 @@ export async function createEvent(
     cause?: string | null;
     value?: string | null;
     notes?: string;
+    is_negation?: boolean;
+    negation_event_type?: string;
   }
 ): Promise<GenealogyEvent> {
   const id = uuid();
   await runSql(db, `
-    INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, value, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, cause, value, notes, is_negation, negation_event_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id,
     data.event_type,
@@ -33,7 +35,9 @@ export async function createEvent(
     data.place_id ?? null,
     data.cause ?? null,
     data.value ?? null,
-    data.notes ?? ''
+    data.notes ?? '',
+    data.is_negation ? 1 : 0,
+    data.negation_event_type ?? '',
   ]);
   return (await getEvent(db, id))!;
 }
@@ -67,6 +71,8 @@ export async function bulkCreateEvents(
     cause?: string | null;
     value?: string | null;
     notes?: string;
+    is_negation?: boolean;
+    negation_event_type?: string;
   }>,
 ): Promise<string[]> {
   if (rows.length === 0) return [];
@@ -89,11 +95,13 @@ export async function bulkCreateEvents(
       r.cause ?? null,
       r.value ?? null,
       r.notes ?? '',
+      r.is_negation ? 1 : 0,
+      r.negation_event_type ?? '',
     ];
   }
   await runBatch(
     db,
-    'INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO events (id, event_type, relationship_id, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes, is_negation, negation_event_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     params,
   );
   return ids;
@@ -156,7 +164,14 @@ export async function updateEvent(
   const values: unknown[] = [];
   for (const [key, value] of Object.entries(data)) {
     fields.push(`${key} = ?`);
-    values.push(value ?? null);
+    // T06: coerce booleans to SQLite 0/1 for is_negation (the column is
+    // INTEGER NOT NULL DEFAULT 0; passing JS boolean true would bind as
+    // text 'true' under some drivers).
+    if (key === 'is_negation') {
+      values.push(value ? 1 : 0);
+    } else {
+      values.push(value ?? null);
+    }
   }
   if (fields.length === 0) return await getEvent(db, id);
   fields.push("updated_at = datetime('now')");

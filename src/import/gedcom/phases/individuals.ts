@@ -27,6 +27,8 @@ const KNOWN_INDI_TAGS = new Set([
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
   'CREM', 'BARM', 'BASM', 'ORDN', '_MILT',
   'TITL', 'RELI', 'DSCR', 'FACT', 'OBJE',
+  // T06: NO X negative-assertion blocks — imported by phaseNegations.
+  'NO',
   // Holger custom tags imported as notes:
   'REMA', 'MISC',
 ]);
@@ -383,7 +385,9 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       for (const grandchild of child.children) {
         if (grandchild.tag === 'TRAN') ctx.tranCount++;
       }
-      if (child.tag === 'NO') ctx.noCount++;
+      // T06: NO blocks are now imported by phaseNegations (which is the
+      // authoritative counter source). Skip the legacy ctx.noCount++ here
+      // to avoid double-counting.
       if (!KNOWN_INDI_TAGS.has(child.tag)) {
         ctx.skippedTags.set(child.tag, (ctx.skippedTags.get(child.tag) ?? 0) + 1);
       }
