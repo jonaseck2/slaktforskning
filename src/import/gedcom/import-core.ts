@@ -37,6 +37,8 @@ import {
   phaseAsso, phasePlaceCitations, phaseGroupRecords, phaseTodos, phaseSubmitters,
   // T02 GEDCOM-alignment new phases (stubs; filled by Phase 2).
   phaseNegations, phaseTranslations, phaseCoverage,
+  // T09 GEDCOM-alignment HEAD originating-app metadata.
+  phaseHeaderMetadata,
 } from './phases';
 
 // ── Public types (re-exported via index.ts) ─────────────────────────────────
@@ -155,13 +157,13 @@ async function doImportGedcom(
 ): Promise<{ skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] }> {
   const ctx = createImportContext(db, tree, options, originalTree);
 
-  // Total = 17 phases below (14 legacy + 3 T02-added stubs). Each runPhase
-  // call emits a determinate (current / total) tick so the toast bar always
-  // shows visible progress, even for fast phases that finish before they
-  // emit their own per-row progress (e.g. phaseNotes, phaseAsso). Phases
-  // that do emit their own per-row progress overwrite this with
-  // finer-grained counts.
-  const phaseTotal = 18;
+  // Total = 19 phases below (14 legacy + 3 T02-added stubs + noteLinks
+  // + T09 headerMetadata). Each runPhase call emits a determinate
+  // (current / total) tick so the toast bar always shows visible progress,
+  // even for fast phases that finish before they emit their own per-row
+  // progress (e.g. phaseNotes, phaseAsso). Phases that do emit their own
+  // per-row progress overwrite this with finer-grained counts.
+  const phaseTotal = 19;
   let phaseIdx = 0;
   const runPhase = async (name: string, fn: (c: typeof ctx) => Promise<void>) => {
     phaseIdx++;
@@ -200,6 +202,9 @@ async function doImportGedcom(
   await runPhase('groupRecords',   phaseGroupRecords);
   await runPhase('todos',          phaseTodos);
   await runPhase('submitters',     phaseSubmitters);
+  // T09: HEAD originating-app metadata. Persists JSON under db_settings
+  // 'header_metadata'. Reads ctx.tree only; no FK dependency on other phases.
+  await runPhase('headerMetadata', phaseHeaderMetadata);
   // T04: link SNOTE @Nx@ pointers to their owning entities. Runs last so
   // personMap / sourceMap / repoMap / objeMap are all populated by the time
   // we resolve link targets.

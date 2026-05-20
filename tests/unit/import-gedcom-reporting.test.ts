@@ -642,8 +642,11 @@ describe('GEDCOM import - external identifiers (RIN/_UID/AFN/SSN/FSID)', async (
 
 describe('GEDCOM import - SEX value normalization', async () => {
   // Real-world files from FamilySearch GEDCOM 7.0 reference, webtreeprint,
-  // and others ship sex values our schema's CHECK (M/F/U) rejects:
-  //   - GEDCOM 7.0 introduces X (intersex/non-binary) and N (no entry)
+  // and others ship sex values our schema's CHECK rejects:
+  //   - GEDCOM 7.0 introduces X (intersex/non-binary) and N (no entry).
+  //     T09: X is now part of the schema's CHECK vocab and round-trips
+  //     lossless on 7.0; on 5.5.1 export it downgrades to U with a
+  //     disclosure warning.
   //   - Some older files emit bare "1 SEX" (empty value)
   //   - Some emit lowercase ("1 SEX m")
   // None of these should crash the importer with a CHECK constraint failure.
@@ -651,11 +654,14 @@ describe('GEDCOM import - SEX value normalization', async () => {
     return `0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 @I1@ INDI\n1 NAME Test /Person/\n${sexLine}\n0 TRLR`;
   }
 
-  it('does not crash on GEDCOM 7.0 SEX X (intersex/non-binary)', async () => {
+  it('preserves GEDCOM 7.0 SEX X (intersex/non-binary) — schema now accepts X', async () => {
+    // T09: SEX X is part of the schema's CHECK vocab. The importer preserves
+    // it on import; on 5.5.1 export it downgrades to U with a warning. See
+    // tests/unit/gedcom-sex-x-roundtrip.test.ts for the round-trip.
     const db = await createTestDb();
     await importGedcom(db, parseGedcom(buildGed('1 SEX X')));
     const row = (db.prepare('SELECT sex FROM persons').get([]) as { sex: string } | undefined);
-    expect(row?.sex).toBe('U');
+    expect(row?.sex).toBe('X');
   });
 
   it('normalizes lowercase sex values to uppercase', async () => {
@@ -671,9 +677,12 @@ describe('GEDCOM import - SEX value normalization', async () => {
   });
 
   it('discloses unsupported sex values in the report skipped list', async () => {
+    // T09: 'X' is now a supported vocab value (not unsupported). Use 'N' (the
+    // GEDCOM 7.0 "no entry" value, still outside the schema's CHECK list) as
+    // the still-unsupported sentinel for this disclosure path.
     const db = await createTestDb();
-    const report = await importGedcom(db, parseGedcom(buildGed('1 SEX X')));
-    expect(report.skipped.find(s => s.tag === 'SEX=X')?.count).toBe(1);
+    const report = await importGedcom(db, parseGedcom(buildGed('1 SEX N')));
+    expect(report.skipped.find(s => s.tag === 'SEX=N')?.count).toBe(1);
   });
 });
 

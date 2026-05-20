@@ -84,7 +84,7 @@ export async function initializeSchema(db: Database): Promise<void> {
     CREATE TABLE IF NOT EXISTS events (
       id TEXT PRIMARY KEY,
       event_type TEXT NOT NULL,
-      date_type TEXT NOT NULL DEFAULT 'unknown' CHECK(date_type IN ('exact', 'about', 'before', 'after', 'between', 'calculated', 'unknown')),
+      date_type TEXT NOT NULL DEFAULT 'unknown' CHECK(date_type IN ('exact', 'about', 'before', 'after', 'between', 'from_to', 'interpreted', 'calculated', 'unknown')),
       date_value TEXT,
       date_value_end TEXT,
       date_original TEXT NOT NULL DEFAULT '',
@@ -785,6 +785,70 @@ export async function initializeSchema(db: Database): Promise<void> {
       }
       await runSql(db, 'DROP TABLE ignored_duplicates');
       await runSql(db, 'ALTER TABLE ignored_duplicates_new RENAME TO ignored_duplicates');
+    } finally {
+      await runSql(db, 'PRAGMA foreign_keys = ON');
+    }
+  }
+
+  // T09 GEDCOM-alignment: extend events.date_type CHECK to include 'from_to'
+  // (GEDCOM FROM..TO directional range, distinct from BET..AND) and
+  // 'interpreted' (GEDCOM INT keyword for an interpreted date with a
+  // user-authored phrase). Idempotent — the main CREATE TABLE block above
+  // already includes them; this guard rebuilds the table on pre-T09 DBs to
+  // relax the CHECK constraint. SQLite CHECK constraints are baked in;
+  // ALTER cannot change them — table redefinition is the SQLite-recommended
+  // approach. See SQL pattern docs at sqlite.org/lang_altertable.html step 12.
+  const eventsCheck = (await queryOne<{ sql: string }>(db,
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='events'`
+  ))?.sql ?? '';
+  if (!eventsCheck.includes("'from_to'") || !eventsCheck.includes("'interpreted'")) {
+    await runSql(db, 'DROP TABLE IF EXISTS events_new');
+    await runSql(db, 'PRAGMA foreign_keys = OFF');
+    try {
+      // Pull current column list from the live table to assemble a SELECT that
+      // works whether the DB has every late-migration column or not.
+      const liveCols = (await queryAll<{ name: string }>(db, 'PRAGMA table_info(events)')).map(c => c.name);
+      const has = (c: string): boolean => liveCols.includes(c);
+      await runSql(db, `
+        CREATE TABLE events_new (
+          id TEXT PRIMARY KEY,
+          event_type TEXT NOT NULL,
+          date_type TEXT NOT NULL DEFAULT 'unknown' CHECK(date_type IN ('exact', 'about', 'before', 'after', 'between', 'from_to', 'interpreted', 'calculated', 'unknown')),
+          date_value TEXT,
+          date_value_end TEXT,
+          date_original TEXT NOT NULL DEFAULT '',
+          place_id TEXT REFERENCES places(id) ON DELETE SET NULL,
+          place_address TEXT,
+          cause TEXT,
+          value TEXT,
+          notes TEXT NOT NULL DEFAULT '',
+          relationship_id TEXT REFERENCES relationships(id) ON DELETE SET NULL,
+          is_negation INTEGER NOT NULL DEFAULT 0,
+          negation_event_type TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      const selectCols = [
+        'id', 'event_type', 'date_type', 'date_value', 'date_value_end', 'date_original',
+        'place_id',
+        has('place_address') ? 'place_address' : 'NULL AS place_address',
+        has('cause') ? 'cause' : 'NULL AS cause',
+        has('value') ? 'value' : 'NULL AS value',
+        'notes',
+        has('relationship_id') ? 'relationship_id' : 'NULL AS relationship_id',
+        has('is_negation') ? 'is_negation' : '0 AS is_negation',
+        has('negation_event_type') ? 'negation_event_type' : "'' AS negation_event_type",
+        'created_at', 'updated_at',
+      ].join(', ');
+      await runSql(db, `INSERT INTO events_new SELECT ${selectCols} FROM events`);
+      await runSql(db, 'DROP TABLE events');
+      await runSql(db, 'ALTER TABLE events_new RENAME TO events');
+      // Re-create indexes on the rebuilt table (the originals were dropped
+      // with the old table).
+      await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_events_relationship_id ON events(relationship_id)');
+      await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type)');
+      await runSql(db, 'CREATE INDEX IF NOT EXISTS idx_events_type_datetype ON events(event_type, date_type)');
     } finally {
       await runSql(db, 'PRAGMA foreign_keys = ON');
     }

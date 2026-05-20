@@ -12,6 +12,19 @@
  * The coverage-guard test in tests/unit/gedcom-fidelity-registry-coverage.test.ts
  * fails CI if a column is missing here.
  *
+ * T09 extension context (2026-05-20 GEDCOM-alignment plan):
+ *  - `persons.sex='X'` round-trips lossless on 7.0; on 5.5.1 it downgrades
+ *    to 'U' with an ExportReport.warnings entry. Modelled as a per-field
+ *    lossy entry below.
+ *  - `db_settings.header_metadata`: not a registry entry because db_settings
+ *    is row-keyed (key/value), not column-tracked. The originating-app HEAD
+ *    block (SOUR/NAME/CORP/VERS/LANG/COPR) is captured at import time and
+ *    re-emitted via a custom `1 _ORIG_SOUR <json>` extension on the HEAD
+ *    block of both 5.5.1 and 7.0 exports. Round-trip verified by
+ *    tests/unit/gedcom-head-preservation.test.ts.
+ *  - `events.date_type` adds `interpreted` (GEDCOM INT) and `from_to` (GEDCOM
+ *    FROM..TO range with directionality, distinct from BET..AND `between`).
+ *
  * T03 corner-case context (2026-05-19 GEDCOM-alignment plan):
  *  - Single-parent FAM: orphan parent_child rows now emit a synthetic FAM
  *    record (HUSB or WIFE chosen by sex). Round-trips on both versions.
@@ -110,7 +123,14 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   // ----- persons -----
   'persons.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'persons.sex': {
-    v551: { kind: 'lossless' },
+    // T09: GEDCOM 7.0 added 'X' (intersex) as a valid SEX value. 5.5.1 only
+    // permits M/F/U — on 5.5.1 export, an authored 'X' downgrades to 'U' and
+    // the export report's `warnings[]` discloses the loss.
+    v551: {
+      kind: 'lossy',
+      reason: '5.5.1-spec-limit: SEX X (intersex) not in 5.5.1 vocab (only M/F/U); downgrades to U',
+      expectedAfterRoundTrip: (seeded) => (seeded === 'X' ? 'U' : seeded),
+    },
     v70: { kind: 'lossless' },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },

@@ -444,6 +444,10 @@ function extractFkReferencesToPlaces(schema: string): Array<{ table: string; col
   let tm: RegExpExecArray | null;
   while ((tm = tableRegex.exec(schema)) !== null) {
     const table = tm[1];
+    // Skip transient migration tables (e.g. `events_new`, `person_names_new`)
+    // that are created briefly inside a migration block, then RENAMEd over
+    // the original. The FK contract is owned by the final table name.
+    if (table.endsWith('_new')) continue;
     const body = tm[2];
     const colRegex = /^\s*(\w+)\s+[^,]*?REFERENCES\s+places\s*\(\s*id\s*\)/gim;
     let cm: RegExpExecArray | null;
