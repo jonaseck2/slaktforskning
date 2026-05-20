@@ -99,6 +99,7 @@ export function useEventSave(options: UseEventSaveOptions): UseEventSaveReturn {
       date_value_end: options.form.date_value_end || null,
       date_original: options.form.date_original,
       place_id: options.form.place_id,
+      place_address: options.form.place_address || null,
       cause: options.form.cause || null,
       value: options.form.value || null,
       notes: options.form.notes || '',

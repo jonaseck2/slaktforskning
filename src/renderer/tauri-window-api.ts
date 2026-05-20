@@ -320,6 +320,7 @@ export function mountWindowApi(db: Database): MountResult {
   api.eventParticipants = {
     add: mutating((db, data: Parameters<typeof relationships.addEventParticipant>[1]) => uw.addEventParticipantUndo(db, data)),
     getForEvent: readOnly((db, eventId: string) => relationships.getEventParticipants(db, eventId)),
+    update: mutating((db, id: string, data: Parameters<typeof relationships.updateEventParticipant>[2]) => uw.updateEventParticipantUndo(db, id, data)),
     remove: mutating((db, id: string) => uw.removeEventParticipantUndo(db, id)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 

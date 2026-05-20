@@ -442,7 +442,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const eventParticipants = {
     getForEvent: async (eventId: string) => idx.participantsByEvent.get(eventId) ?? [],
-    add: noop, remove: noopFalse,
+    add: noop, update: noop, remove: noopFalse,
   };
 
   const sources = {

@@ -40,6 +40,14 @@
         <label class="ep-field-label" for="source-field-6">{{ $t('sources.url') }}</label>
         <input id="source-field-6" class="ep-input" v-model="form.url" type="url" :placeholder="$t('sources.urlPlaceholder')" />
       </div>
+      <div class="ep-field">
+        <label class="ep-field-label" for="source-field-7">{{ $t('sources.callNumber') }}</label>
+        <input id="source-field-7" class="ep-input" v-model="form.call_number" />
+      </div>
+      <div class="ep-field ep-field-full">
+        <label class="ep-field-label" for="source-field-8">{{ $t('sources.abstract') }}</label>
+        <textarea id="source-field-8" class="ep-input" v-model="form.abstract" rows="3" />
+      </div>
     </div>
 
     <!-- Citations section — only in standalone mode after first save -->
@@ -84,7 +92,12 @@ declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
 };
 
-interface Source { id: string; title: string; }
+interface Source {
+  id: string;
+  title: string;
+  call_number?: string | null;
+  abstract?: string | null;
+}
 interface Citation {
   id: string;
   page: string | null;
@@ -129,6 +142,8 @@ const form = reactive({
   author: '',
   publication_info: '',
   url: '',
+  call_number: props.editingSource?.call_number ?? '',
+  abstract: props.editingSource?.abstract ?? '',
 });
 
 function citationLabel(c: Citation): string {
@@ -178,6 +193,8 @@ async function save() {
       author: form.author,
       publication_info: form.publication_info,
       url: form.url,
+      call_number: form.call_number,
+      abstract: form.abstract,
     };
     let source: Source;
     if (savedSourceId.value) {

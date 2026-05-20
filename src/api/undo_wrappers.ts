@@ -294,6 +294,25 @@ export async function addEventParticipantUndo(
   return result;
 }
 
+export async function updateEventParticipantUndo(
+  db: Database,
+  id: string,
+  data: Parameters<typeof relationships.updateEventParticipant>[2]
+): Promise<EventParticipant | null> {
+  const old = await queryOne<EventParticipant>(db, `SELECT * FROM event_participants WHERE id = ?`, [id]);
+  if (!old) return null;
+  const result = await relationships.updateEventParticipant(db, id, data);
+  if (!result) return null;
+  const previousRole = old.role;
+  const newRole = result.role;
+  undoManager.push({
+    label: 'undo.updateEventParticipant',
+    undo: async () => { await relationships.updateEventParticipant(db, id, { role: previousRole }); },
+    redo: async () => { await relationships.updateEventParticipant(db, id, { role: newRole }); },
+  });
+  return result;
+}
+
 export async function removeEventParticipantUndo(
   db: Database,
   id: string

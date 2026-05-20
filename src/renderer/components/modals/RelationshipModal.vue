@@ -25,7 +25,9 @@
         </div>
       </div>
 
-      <!-- Subtype (conditional) -->
+      <!-- Subtype: couple → enum dropdown, parent_child → role-direction dropdown,
+           any other type → free-text input (T19.2: sibling / godparent / other
+           can have free-form subtype like 'half', 'step', 'best-friend'). -->
       <div v-if="form.type === 'couple'" class="ep-field">
         <label class="ep-field-label" for="relationship-field-1">{{ $t('relationshipDetail.subtype') }}</label>
         <select id="relationship-field-1" class="ep-input" v-model="form.subtype">
@@ -34,7 +36,7 @@
           </option>
         </select>
       </div>
-      <div v-if="form.type === 'parent_child'" class="ep-field">
+      <div v-else-if="form.type === 'parent_child'" class="ep-field">
         <label class="ep-field-label" for="relationship-field-2">{{ $t('relationshipDetail.subtype') }}</label>
         <select id="relationship-field-2" class="ep-input" v-model="form.subtype">
           <!--
@@ -47,6 +49,15 @@
             {{ parentSubtypeOptionLabel(st) }}
           </option>
         </select>
+      </div>
+      <div v-else class="ep-field">
+        <label class="ep-field-label" for="relationship-field-subtype-free">{{ $t('relationshipDetail.subtype') }}</label>
+        <input
+          id="relationship-field-subtype-free"
+          class="ep-input"
+          v-model="form.subtype"
+          :placeholder="$t('relationshipDetail.subtypeFreePlaceholder')"
+        />
       </div>
 
       <!-- Person 1 -->

@@ -490,6 +490,12 @@ const placeFormView = computed<PlaceFormShape>(() => ({
   parent_place_id: place.value?.parent_place_id ?? null,
   latitude: place.value?.latitude ?? null,
   longitude: place.value?.longitude ?? null,
+  street: (place.value as unknown as { street?: string | null } | null)?.street ?? null,
+  postal_code: (place.value as unknown as { postal_code?: string | null } | null)?.postal_code ?? null,
+  city: (place.value as unknown as { city?: string | null } | null)?.city ?? null,
+  country: (place.value as unknown as { country?: string | null } | null)?.country ?? null,
+  date_from: (place.value as unknown as { date_from?: string | null } | null)?.date_from ?? null,
+  date_to: (place.value as unknown as { date_to?: string | null } | null)?.date_to ?? null,
 }));
 
 function onPlaceFieldUpdate(field: keyof PlaceFormShape, value: unknown) {

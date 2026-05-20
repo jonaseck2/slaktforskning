@@ -222,3 +222,21 @@ export async function getEventParticipants(db: Database, eventId: string): Promi
 export async function removeEventParticipant(db: Database, id: string): Promise<boolean> {
   return (await runSqlChanges(db, `DELETE FROM event_participants WHERE id = ?`, [id])) > 0;
 }
+
+export async function updateEventParticipant(
+  db: Database,
+  id: string,
+  data: { role: EventParticipantRole },
+): Promise<EventParticipant | null> {
+  const changes = await runSqlChanges(
+    db,
+    `UPDATE event_participants SET role = ? WHERE id = ?`,
+    [data.role, id],
+  );
+  if (changes === 0) return null;
+  return (await queryOne<EventParticipant>(
+    db,
+    `SELECT * FROM event_participants WHERE id = ?`,
+    [id],
+  )) ?? null;
+}
