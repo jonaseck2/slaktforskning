@@ -60,8 +60,8 @@
         />
       </div>
 
-      <!-- Result (only when done/stopped) -->
-      <div v-if="form.status === 'done' || form.status === 'stopped'" class="ep-field">
+      <!-- Result — always visible (T19.1: users want to jot interim findings, not just final results) -->
+      <div class="ep-field">
         <label class="ep-field-label" for="researchtask-field-3">{{ $t('researchTasks.result') }}</label>
         <textarea id="researchtask-field-3"
           class="ep-textarea"
@@ -155,7 +155,9 @@ async function handleSave() {
       status: form.status,
       priority: form.priority,
       notes: form.notes.trim(),
-      result: (form.status === 'done' || form.status === 'stopped') ? form.result.trim() : '',
+      // T19.1: always persist authored result regardless of status — Prime Directive
+      // forbids discarding authored data based on a UI mode (status) change.
+      result: form.result.trim(),
     };
     let saved: ResearchTask;
     if (props.editingTask) {

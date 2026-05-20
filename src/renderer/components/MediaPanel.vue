@@ -29,7 +29,17 @@
             />
           </div>
           <div class="media-meta">
-            <span v-if="media?.format" class="media-format">{{ media.format.toUpperCase() }}</span>
+            <span v-if="props.readonly" class="media-format">{{ (media?.format || '').toUpperCase() }}</span>
+            <input
+              v-else
+              class="media-format-input"
+              :value="formatDraft"
+              :placeholder="$t('media.formatPlaceholder')"
+              :aria-label="$t('media.formatLabel')"
+              @input="formatDraft = ($event.target as HTMLInputElement).value"
+              @blur="saveFormat"
+              @keydown.enter="($event.target as HTMLInputElement).blur()"
+            />
             <AppButton variant="soft" size="sm" @click="emit('open-viewer')">{{ $t('panel.view') }}</AppButton>
           </div>
         </div>
@@ -391,6 +401,7 @@ function openPlacePicker() {
 const editingTagId = ref<string | null>(null);
 const titleDraft = ref('');
 const notesDraft = ref('');
+const formatDraft = ref('');
 const { textareaRef: notesRef, storedHeight: notesStoredHeight, persistHeight: persistNotesHeight } = useTextareaHeight('media-panel-notes');
 const profilePicStore = useProfilePicStore();
 const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonospacedNotes('media');
@@ -534,6 +545,7 @@ const regionIsProfile = computed(() => panelData.value?.regionIsProfile ?? {});
 watch(media, (m) => {
   titleDraft.value = m?.title ?? '';
   notesDraft.value = m?.notes ?? '';
+  formatDraft.value = m?.format ?? '';
   if (m?.notes) sections.notes = true;
 }, { immediate: true });
 
@@ -572,6 +584,14 @@ async function saveNotes() {
   await window.api.media.update(props.mediaId, { notes: next });
   media.value.notes = next;
   emit('media-updated', props.mediaId, { notes: next });
+}
+
+async function saveFormat() {
+  if (!props.mediaId || !media.value) return;
+  const next = formatDraft.value.trim() || null;
+  if (next === (media.value.format ?? null)) return;
+  await window.api.media.update(props.mediaId, { format: next });
+  media.value.format = next;
 }
 
 const delLink = useDeleteConfirm<string>(async (linkId) => {
@@ -765,6 +785,28 @@ defineExpose({ reload, expandFaceTags });
 }
 .media-format {
   flex-shrink: 0;
+}
+
+.media-format-input {
+  flex: 0 0 auto;
+  width: 80px;
+  font-size: var(--font-xs);
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  text-transform: uppercase;
+}
+.media-format-input:hover {
+  border-color: var(--surface-border);
+}
+.media-format-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
 /* Sections */

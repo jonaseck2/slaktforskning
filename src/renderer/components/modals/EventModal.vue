@@ -76,13 +76,31 @@
         <span class="ep-field-label">{{ $t('events.place') }}</span>
         <PlacePicker v-model="form.place_id" :placeholder="$t('events.placePlaceholder')" />
       </div>
+      <div class="ep-field" data-testid="event-place-address-field">
+        <label class="ep-field-label" for="event-field-place-address">{{ $t('events.placeAddress') }}</label>
+        <textarea
+          id="event-field-place-address"
+          class="ep-input"
+          v-model="form.place_address"
+          rows="2"
+          :placeholder="$t('events.placeAddressPlaceholder')"
+        />
+      </div>
       <div v-if="showFactValueField" class="ep-field" data-testid="event-value-field">
         <label class="ep-field-label" for="event-field-1">{{ $t(valueLabelKey) }}</label>
         <input id="event-field-1" class="ep-input" v-model="form.value" :placeholder="$t('events.valuePlaceholder')" />
       </div>
-      <div v-if="form.event_type === 'death'" class="ep-field">
+      <!-- T17: cause surfaced for ALL event types — GEDCOM CAUS applies to any event,
+           not just death. The label stays "Cause" so it reads correctly outside the
+           death-specific context. -->
+      <div class="ep-field" data-testid="event-cause-field">
         <label class="ep-field-label" for="event-field-2">{{ $t('events.cause') }}</label>
-        <input id="event-field-2" class="ep-input" v-model="form.cause" :placeholder="$t('events.causePlaceholder')" />
+        <input
+          id="event-field-2"
+          class="ep-input"
+          v-model="form.cause"
+          :placeholder="$t('events.causeOptionalPlaceholder')"
+        />
       </div>
 
       <!-- Second person (only for couple events when called from a person panel) -->
@@ -314,6 +332,7 @@ interface EventData {
   date_value_end: string | null;
   date_original: string;
   place_id: string | null;
+  place_address?: string | null;
   cause: string | null;
   value: string | null;
   notes: string;
@@ -376,6 +395,7 @@ const editingEventDefaults: Partial<EventForm> | undefined = props.editingEvent
       date_value_end: props.editingEvent.date_value_end,
       date_original: props.editingEvent.date_original,
       place_id: props.editingEvent.place_id,
+      place_address: props.editingEvent.place_address ?? null,
       cause: props.editingEvent.cause,
       value: props.editingEvent.value,
       notes: props.editingEvent.notes,
@@ -415,8 +435,12 @@ const eventTitle = computed(() => {
 
 // Span events (residence, occupation, education, military, travel) accept an
 // optional end date even when date_type is not 'between' (BENGT #28a).
+// T17: also surface the end-date whenever date_type is 'from_to' regardless of
+// event_type — GEDCOM 7.0 FROM/TO dates carry an explicit span end (T09).
 const showSpanEndDate = computed(
-  () => isSpanEventType(form.event_type) && form.date_type !== 'between'
+  () =>
+    (isSpanEventType(form.event_type) && form.date_type !== 'between') ||
+    form.date_type === 'from_to'
 );
 // Local end-date type (the schema only has date_value_end as a string, no
 // matching `date_type_end` column). Defaults to 'unknown' so a span event

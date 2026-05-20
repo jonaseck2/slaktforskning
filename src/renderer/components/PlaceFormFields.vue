@@ -94,6 +94,70 @@
         <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
       </span>
     </div>
+
+    <!-- Address details (collapsible) -->
+    <details class="pff-details">
+      <summary class="pff-details-summary">{{ $t('places.addressDetails') }}</summary>
+      <div class="pff-field">
+        <label class="pff-label" for="place-street">{{ $t('places.street') }}</label>
+        <input
+          id="place-street"
+          class="pff-control"
+          :value="form.street ?? ''"
+          @input="emit('update:field', 'street', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+      <div class="pff-field">
+        <label class="pff-label" for="place-postal-code">{{ $t('places.postalCode') }}</label>
+        <input
+          id="place-postal-code"
+          class="pff-control"
+          :value="form.postal_code ?? ''"
+          @input="emit('update:field', 'postal_code', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+      <div class="pff-field">
+        <label class="pff-label" for="place-city">{{ $t('places.city') }}</label>
+        <input
+          id="place-city"
+          class="pff-control"
+          :value="form.city ?? ''"
+          @input="emit('update:field', 'city', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+      <div class="pff-field">
+        <label class="pff-label" for="place-country">{{ $t('places.country') }}</label>
+        <input
+          id="place-country"
+          class="pff-control"
+          :value="form.country ?? ''"
+          @input="emit('update:field', 'country', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+    </details>
+
+    <!-- Lifecycle dates (collapsible) -->
+    <details class="pff-details">
+      <summary class="pff-details-summary">{{ $t('places.lifecycleDates') }}</summary>
+      <div class="pff-field">
+        <label class="pff-label" for="place-date-from">{{ $t('places.dateFrom') }}</label>
+        <input
+          id="place-date-from"
+          class="pff-control"
+          :value="form.date_from ?? ''"
+          @input="emit('update:field', 'date_from', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+      <div class="pff-field">
+        <label class="pff-label" for="place-date-to">{{ $t('places.dateTo') }}</label>
+        <input
+          id="place-date-to"
+          class="pff-control"
+          :value="form.date_to ?? ''"
+          @input="emit('update:field', 'date_to', ($event.target as HTMLInputElement).value || null)"
+        />
+      </div>
+    </details>
   </div>
 </template>
 
@@ -108,6 +172,12 @@ export interface PlaceFormShape {
   parent_place_id: string | null;
   latitude: number | null;
   longitude: number | null;
+  street?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  country?: string | null;
+  date_from?: string | null;
+  date_to?: string | null;
 }
 
 const props = defineProps<{
@@ -290,5 +360,25 @@ function onCoordBlur(field: 'latitude' | 'longitude', e: FocusEvent) {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+.pff-details {
+  margin-top: var(--space-xs);
+}
+.pff-details-summary {
+  font-size: var(--font-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  padding: var(--space-xs) 0;
+  user-select: none;
+}
+.pff-details-summary:hover {
+  color: var(--text-secondary);
+}
+.pff-details[open] .pff-details-summary {
+  margin-bottom: var(--space-xs);
 }
 </style>

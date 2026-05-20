@@ -24,6 +24,7 @@ export interface EventForm {
   date_value_end: string | null;
   date_original: string;
   place_id: string | null;
+  place_address: string | null;
   cause: string | null;
   value: string | null;
   notes: string;
@@ -42,6 +43,7 @@ const EMPTY_FORM: EventForm = {
   date_value_end: null,
   date_original: '',
   place_id: null,
+  place_address: null,
   cause: null,
   value: null,
   notes: '',

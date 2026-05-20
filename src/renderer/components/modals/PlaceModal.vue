@@ -58,6 +58,12 @@ interface Place {
   latitude: number | null;
   longitude: number | null;
   notes: string | null;
+  street?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  country?: string | null;
+  date_from?: string | null;
+  date_to?: string | null;
 }
 
 const props = withDefaults(defineProps<{
@@ -92,6 +98,12 @@ const form = reactive<ModalForm>({
   latitude: props.editingPlace?.latitude ?? null,
   longitude: props.editingPlace?.longitude ?? null,
   notes: props.editingPlace?.notes ?? null,
+  street: props.editingPlace?.street ?? null,
+  postal_code: props.editingPlace?.postal_code ?? null,
+  city: props.editingPlace?.city ?? null,
+  country: props.editingPlace?.country ?? null,
+  date_from: props.editingPlace?.date_from ?? null,
+  date_to: props.editingPlace?.date_to ?? null,
 });
 
 // Track the parent's ancestor chain (leaf → root names) so the resolver sees
@@ -146,6 +158,12 @@ async function handleSave() {
       latitude: form.latitude,
       longitude: form.longitude,
       notes: form.notes ?? '',
+      street: form.street ?? null,
+      postal_code: form.postal_code ?? null,
+      city: form.city ?? null,
+      country: form.country ?? null,
+      date_from: form.date_from ?? null,
+      date_to: form.date_to ?? null,
     };
     let place: Place;
     if (props.editingPlace) {

@@ -107,34 +107,8 @@
         />
       </div>
 
-      <!-- Advanced / rare fields -->
-      <details class="ep-details">
-        <summary class="ep-details-summary">{{ $t('common.more') }}</summary>
-
-        <!-- Qualifier -->
-        <div class="ep-field">
-          <label class="ep-field-label" for="personname-field-3">{{ $t('names.qualifier') }}</label>
-          <select id="personname-field-3" class="ep-input" v-model="form.name_qualifier">
-            <option value="">—</option>
-            <option value="patronymic">{{ $t('names.qualifierPatronymic') }}</option>
-            <option value="matronymic">{{ $t('names.qualifierMatronymic') }}</option>
-            <option value="particle">{{ $t('names.qualifierParticle') }}</option>
-          </select>
-        </div>
-
-        <!-- Patronymic base (only when qualifier is patronymic/matronymic) -->
-        <div v-if="form.name_qualifier === 'patronymic' || form.name_qualifier === 'matronymic'" class="ep-field">
-          <label class="ep-field-label" for="personname-field-4">{{ $t('names.patronymicBase') }}</label>
-          <input id="personname-field-4"
-            class="ep-input"
-            v-model="form.patronymic_base"
-            type="text"
-            :placeholder="$t('names.patronymicBasePlaceholder')"
-            @keydown.enter.prevent="handleSave"
-          />
-        </div>
-
-        <!-- Prefix -->
+      <!-- Prefix + Suffix (T16: surfaced from buried <details> so they're authorable) -->
+      <div class="ep-field-row">
         <div class="ep-field">
           <label class="ep-field-label" for="personname-field-5">{{ $t('names.prefix') }}</label>
           <input id="personname-field-5"
@@ -145,8 +119,6 @@
             @keydown.enter.prevent="handleSave"
           />
         </div>
-
-        <!-- Suffix -->
         <div class="ep-field">
           <label class="ep-field-label" for="personname-field-6">{{ $t('names.suffix') }}</label>
           <input id="personname-field-6"
@@ -157,6 +129,34 @@
             @keydown.enter.prevent="handleSave"
           />
         </div>
+      </div>
+
+      <!-- Qualifier (T16: surfaced from buried <details>) -->
+      <div class="ep-field">
+        <label class="ep-field-label" for="personname-field-3">{{ $t('names.qualifier') }}</label>
+        <select id="personname-field-3" class="ep-input" v-model="form.name_qualifier">
+          <option value="">—</option>
+          <option value="patronymic">{{ $t('names.qualifierPatronymic') }}</option>
+          <option value="matronymic">{{ $t('names.qualifierMatronymic') }}</option>
+          <option value="particle">{{ $t('names.qualifierParticle') }}</option>
+        </select>
+      </div>
+
+      <!-- Patronymic base (only when qualifier is patronymic/matronymic) -->
+      <div v-if="form.name_qualifier === 'patronymic' || form.name_qualifier === 'matronymic'" class="ep-field">
+        <label class="ep-field-label" for="personname-field-4">{{ $t('names.patronymicBase') }}</label>
+        <input id="personname-field-4"
+          class="ep-input"
+          v-model="form.patronymic_base"
+          type="text"
+          :placeholder="$t('names.patronymicBasePlaceholder')"
+          @keydown.enter.prevent="handleSave"
+        />
+      </div>
+
+      <!-- Advanced / rare fields -->
+      <details class="ep-details">
+        <summary class="ep-details-summary">{{ $t('common.more') }}</summary>
 
         <!--
           Date to (rare). Hidden for `birth` and `name_change`:
@@ -584,6 +584,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.ep-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
 .ep-details {
   margin-top: var(--space-xs);
 }

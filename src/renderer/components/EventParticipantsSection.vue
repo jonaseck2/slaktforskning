@@ -36,6 +36,18 @@
             />
           </div>
         </div>
+        <select
+          class="ep-participant-role"
+          :value="row.role"
+          :aria-label="$t('events.participantRoleLabel')"
+          @change="onRoleChange(row.id, ($event.target as HTMLSelectElement).value)"
+        >
+          <option
+            v-for="r in EVENT_PARTICIPANT_ROLE_VALUES"
+            :key="r"
+            :value="r"
+          >{{ $t('eventParticipantRoles.' + r) }}</option>
+        </select>
         <button
           type="button"
           class="btn-sm btn-delete"
@@ -66,6 +78,7 @@ import { useEntityData } from '../composables/useEntityData';
 import { useToast } from '../composables/useToast';
 import { usePersonNameOptions } from '../stores/personNameOptions';
 import { pickDisplayedName, pickBirthSurnameForDisplay } from '../utils/nameUtils';
+import { EVENT_PARTICIPANT_ROLE_VALUES } from '../constants/eventTypes';
 
 interface EventParticipantRow {
   id: string;
@@ -77,6 +90,7 @@ interface EventParticipantRow {
 interface ParticipantWithName {
   id: string;
   person_id: string;
+  role: string;
   given_name: string | null;
   surname: string | null;
   preferred_name: string | null;
@@ -89,6 +103,7 @@ declare const window: Window & {
     eventParticipants?: {
       getForEvent: (eventId: string) => Promise<EventParticipantRow[]>;
       add: (input: { event_id: string; person_id: string; role: string }) => Promise<{ id: string } | null>;
+      update: (id: string, data: { role: string }) => Promise<EventParticipantRow | null>;
       remove: (id: string) => Promise<boolean>;
     };
     persons?: {
@@ -154,6 +169,7 @@ async function resolveNames(rows: EventParticipantRow[]): Promise<ParticipantWit
       out.push({
         id: r.id,
         person_id: r.person_id,
+        role: r.role,
         given_name: picked.given_name,
         surname: picked.surname,
         preferred_name: picked.preferred_name,
@@ -162,7 +178,7 @@ async function resolveNames(rows: EventParticipantRow[]): Promise<ParticipantWit
       });
     } catch {
       out.push({
-        id: r.id, person_id: r.person_id,
+        id: r.id, person_id: r.person_id, role: r.role,
         given_name: null, surname: null, preferred_name: null, nickname: null, birth_surname: null,
       });
     }
@@ -235,6 +251,17 @@ async function onPicked(id: string | null) {
   }
 }
 
+async function onRoleChange(participantId: string, newRole: string) {
+  if (!window.api?.eventParticipants) return;
+  try {
+    await window.api.eventParticipants.update(participantId, { role: newRole });
+    // List refresh is automatic via useEntityData → onDataChanged.
+  } catch (err) {
+    console.error('[EventParticipantsSection] role update failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
 async function onRemove(participantId: string) {
   if (!window.api?.eventParticipants) return;
   try {
@@ -257,5 +284,15 @@ async function onRemove(participantId: string) {
 }
 .ep-participants-add {
   margin-top: var(--space-xs);
+}
+.ep-participant-role {
+  flex-shrink: 0;
+  font-size: var(--font-xs);
+  padding: 2px 4px;
+  margin-right: var(--space-xs);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
 }
 </style>
