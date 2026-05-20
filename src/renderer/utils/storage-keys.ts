@@ -68,6 +68,11 @@ export const STORAGE_KEYS = {
   tasksPanelOpen: 'tasks-panel-open',
   tasksPanelWidth: 'tasks-panel-width',
 
+  // Repositories view
+  repositoriesSelectedId: 'repositories-selected-id',
+  repositoriesPanelOpen: 'repositories-panel-open',
+  repositoriesPanelWidth: 'repositories-panel-width',
+
   // Reports view
   reportsPanelOpen: 'reports-panel-open',
   reportsPanelWidth: 'reports-panel-width',

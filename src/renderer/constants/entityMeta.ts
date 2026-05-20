@@ -16,6 +16,7 @@ export type EntityType =
   | 'task'
   | 'group'
   | 'name'
+  | 'repository'
   | 'neutral';
 
 export const ENTITY_META: Record<EntityType, EntityMeta> = {
@@ -29,5 +30,6 @@ export const ENTITY_META: Record<EntityType, EntityMeta> = {
   task:         { icon: '📋', labelKey: 'researchTasks.entity' },
   group:        { icon: '👥', labelKey: 'groups.entity' },
   name:         { icon: '🏷️', labelKey: 'persons.nameEntity' },
+  repository:   { icon: '🏛️', labelKey: 'repositories.entity' },
   neutral:      { icon: '',   labelKey: '' },
 };

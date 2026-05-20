@@ -348,6 +348,7 @@ const navSections = computed<NavSectionDef[]>(() => [
     labelKey: 'nav.review',
     items: [
       { to: '/sources', icon: '📚', labelKey: 'nav.sources' },
+      { to: '/repositories', icon: '🏛️', labelKey: 'repositories.nav' },
       { to: '/quality', icon: '⚠️', labelKey: 'nav.quality', badge: qualityErrorCount },
       { to: '/duplicates', icon: '👥', labelKey: 'nav.duplicates', badge: duplicateCount },
     ],

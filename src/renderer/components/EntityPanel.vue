@@ -39,7 +39,7 @@
 import EntityTimestamps from './ui/EntityTimestamps.vue';
 
 defineProps<{
-  entityType: 'person' | 'place' | 'source' | 'relationship' | 'group' | 'task' | 'media' | 'report' | 'website';
+  entityType: 'person' | 'place' | 'source' | 'relationship' | 'group' | 'task' | 'media' | 'report' | 'website' | 'repository';
   entity: { id: string; created_at?: string | null; updated_at?: string | null } | null;
   label: string;
   editable?: boolean;

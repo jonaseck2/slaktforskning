@@ -46,7 +46,8 @@ export type PanelDangerZoneEntityType =
   | 'source'
   | 'media'
   | 'group'
-  | 'research-task';
+  | 'research-task'
+  | 'repository';
 
 const props = defineProps<{
   entityType: PanelDangerZoneEntityType;
@@ -89,6 +90,7 @@ function deleteApi(): (id: string) => Promise<unknown> {
     case 'media': return api.media.delete;
     case 'group': return api.groups.delete;
     case 'research-task': return api.researchTasks.delete;
+    case 'repository': return api.repositories.delete;
   }
 }
 
