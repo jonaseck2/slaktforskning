@@ -19,6 +19,8 @@ const KNOWN_FAM_TAGS = new Set([
   'MARR', 'DIV', 'CENS', 'ENGA', 'EVEN',
   'ANUL', 'MARL', '_SEPR',
   'OBJE',
+  // T06: NO X negative-assertion blocks — imported by phaseNegations.
+  'NO',
 ]);
 
 export async function phaseFamilies(ctx: ImportContext): Promise<void> {

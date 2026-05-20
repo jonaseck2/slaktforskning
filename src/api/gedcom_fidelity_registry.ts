@@ -480,32 +480,35 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
     },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_EVENTS },
   },
-  // T02 placeholder — final classification + ownedBy filled by T06 (negation
-  // emitter / importer phase). 5.5.1 has no negative-assertion concept;
-  // 7.0 NO is the canonical carrier. The placeholder is conservative so
-  // unauthored events behave correctly until T06 lands.
+  // T06: NO X negative-assertion structure. 7.0 carries it losslessly via
+  // `1 NO <tag> / 2 DATE FROM…TO… / 2 NOTE …`; 5.5.1 has no NO concept and
+  // drops with a disclosure warning per row.
   'events.is_negation': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02 scaffolding) — 5.5.1 has no NO structure; T06 finalizes either lossy or _NO custom',
-      expectedAfterRoundTrip: () => 0,
+      reason: '5.5.1 spec has no NO structure; negation events dropped entirely with a disclosure warning on the export report. Reading the column after re-import returns null (no row at all).',
+      expectedAfterRoundTrip: () => null,
     },
     v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02 scaffolding) — emission of GEDCOM 7.0 NO X structure deferred to T06',
-      expectedAfterRoundTrip: () => 0,
+      kind: 'lossless',
+      ownedBy: {
+        exporter: 'src/gedcom/exporters/negation-emitter.ts',
+        importer: 'src/import/gedcom/phases/negations.ts',
+      },
     },
   },
   'events.negation_event_type': {
     v551: {
       kind: 'lossy',
-      reason: 'placeholder (T02 scaffolding) — 5.5.1 has no NO structure; T06 finalizes',
-      expectedAfterRoundTrip: () => '',
+      reason: '5.5.1 spec has no NO structure; negation_event_type dropped with disclosure warning. Reading the column after re-import returns null (no row at all).',
+      expectedAfterRoundTrip: () => null,
     },
     v70: {
-      kind: 'lossy',
-      reason: 'placeholder (T02 scaffolding) — emission of GEDCOM 7.0 NO X structure deferred to T06',
-      expectedAfterRoundTrip: () => '',
+      kind: 'lossless',
+      ownedBy: {
+        exporter: 'src/gedcom/exporters/negation-emitter.ts',
+        importer: 'src/import/gedcom/phases/negations.ts',
+      },
     },
   },
 

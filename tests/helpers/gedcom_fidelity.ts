@@ -103,6 +103,14 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   // exact lowercase, so a non-default value like 'friend' is the appropriate
   // sentinel (distinguishable from the seeder's default 'other').
   'person_associations.role': 'friend',
+  // events.is_negation: 1 means "this row is a negation" — the only way for
+  // the negation emitter / importer to see the row. The default INTEGER
+  // sentinel (42) would never trigger the negation path.
+  'events.is_negation': 1,
+  // events.negation_event_type must be a value the EVENT_TYPE_TO_TAG map
+  // knows (else the negation emitter emits nothing). 'marriage' is a stable
+  // mapped type.
+  'events.negation_event_type': 'marriage',
 };
 
 export function makeSentinelValue(table: string, col: string, colType: string): unknown {
@@ -362,6 +370,18 @@ function seedEvents(db: Database, col: string, value: unknown): string {
     // BET..AND ranges need date_type='between' and a starting date_value too.
     overrides.date_type = 'between';
     overrides.date_value = '1789-05-12';
+  }
+  // T06: is_negation / negation_event_type need to be set TOGETHER for the
+  // row to be a valid negation. The exporter reads is_negation as the gate
+  // and uses negation_event_type to pick the NO X tag. Seeding only one of
+  // the two leaves the row in an inconsistent state.
+  if (col === 'is_negation') {
+    overrides.is_negation = 1;
+    overrides.negation_event_type = 'marriage';
+  }
+  if (col === 'negation_event_type') {
+    overrides.is_negation = 1;
+    overrides.negation_event_type = String(value);
   }
   const cols = ['id', ...Object.keys(overrides)];
   const params = [id, ...Object.values(overrides)];

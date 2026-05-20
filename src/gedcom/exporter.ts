@@ -534,6 +534,9 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     const assoLines: string[] = [];
     for (const ev of events) {
       if (ev.relationship_id) continue;
+      // T06: negation events are emitted by emitNegationsForEntity as `NO X`,
+      // not as a regular event tag. Skip them here.
+      if (ev.is_negation) continue;
       const participants = await getEventParticipants(db, ev.id);
       const isPrimary = participants.some(part => part.person_id === p.id && part.role === 'primary');
       // Skip events where this person is a secondary participant — those events
@@ -697,7 +700,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // INDI block here.
     await emitNotesForEntity(db, 'person', p.id, 1, version, lines);
     await emitPersonAssociations(db, p.id, 1, version, personXref, lines);
-    await emitNegationsForEntity(db, 'person', p.id, 1, version, lines);
+    await emitNegationsForEntity(db, 'person', p.id, 1, version, lines, warnings);
   }
 
   // ── Families ───────────────────────────────────────────────────────────────
@@ -828,6 +831,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // Family events
     const famEvents = await getEventsForRelationship(db, rel.id);
     for (const ev of famEvents) {
+      // T06: negation events handled by emitNegationsForEntity below.
+      if (ev.is_negation) continue;
       const tag = EVENT_TYPE_TO_TAG[ev.event_type] ?? 'EVEN';
       const lineValueFirstLine = ev.value ? ev.value.split(/\r?\n/)[0] : '';
       lines.push(`1 ${tag}${lineValueFirstLine ? ' ' + lineValueFirstLine : ''}`);
@@ -887,7 +892,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // T02 per-concept emitter hooks — relationship-level notes + negations
     // (stubs until T04 / T06).
     await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines);
-    await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines);
+    await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines, warnings);
   }
 
   // ── T03 orphan single-parent FAM records ────────────────────────────────
