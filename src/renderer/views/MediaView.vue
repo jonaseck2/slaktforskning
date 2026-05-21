@@ -595,7 +595,7 @@ async function onRegionDrawn(rect: { x: number; y: number; width: number; height
 }
 
 async function onRegionUpdated(id: string, rect: { x: number; y: number; width: number; height: number }) {
-  await window.api.mediaRegions.updateGeometry(id, rect);
+  await window.api.mediaRegions.update(id, rect);
   await viewerRef.value?.reloadRegions();
   // Read person_id from the viewer's already-loaded regions instead of a second IPC.
   const r = viewerRef.value?.regions.value.find((rr: { id: string }) => rr.id === id) as

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: face-tag drag now actually saves — drag-to-move was silently failing since 2026-05-12
 - fix: app shown as "Släktforskning" everywhere — About modal, licenses header, README
 - docs: README importer list, gazetteer count, and MCP tool count refreshed
 - chore: drop SECURITY.md — vulnerability reports go through GitHub Private Vulnerability Reporting instead

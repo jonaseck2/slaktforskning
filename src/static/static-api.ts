@@ -753,7 +753,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   const mediaRegions = {
     getForMedia: async (mediaId: string) => idx.regionsByMedia.get(mediaId) ?? [],
     getForPerson: async (personId: string) => idx.regionsByPerson.get(personId) ?? [],
-    create: noop, update: noop, updateGeometry: noop, delete: noopFalse,
+    create: noop, update: noop, delete: noopFalse,
   };
 
   const db = {
