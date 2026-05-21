@@ -372,10 +372,6 @@ Recommended backup cadence:
 
 **Imports report `unmappedData`.** That's expected and useful — Släktforskning tells you what it couldn't model from your source file. Common cases: LDS ordinances (intentionally not carried), private/sealed data (skipped), pre-1582 Julian/Gregorian-ambiguous dates (preserved as `date_original` but `date_type` stays `unknown`).
 
-**Face-tag rectangle doesn't move when I drag it.** Should work in v0.263.3+. If you see boxes that don't drag, ensure you're on the latest version (Settings → About).
-
-**The app forgot which database I had open.** Should be fixed in v0.263.5+. The app now writes the last-opened DB path to localStorage and resumes from there on next launch. The very first launch after a fresh install opens the bundled `family.db`.
-
 **Where do I report bugs?** Open an issue at <https://github.com/jonaseck2/slaktforskning/issues>. For security issues, use GitHub's [Private Vulnerability Reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability) on the repo.
 
 **Where can I see the bigger roadmap and release history?** [docs/PLAN.md](docs/PLAN.md) for active work; [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) for the per-milestone history; [CHANGELOG.md](CHANGELOG.md) for per-version release notes.

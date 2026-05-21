@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: trim two pre-launch bug-fix references from MANUAL.md's Troubleshooting & FAQ — v0.264.0 ships with those fixes baked in
 - docs: CHANGELOG trimmed to the last 10 version blocks — earlier release notes archived in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log
 - docs: quickstart moved to QUICKSTART.md — README points to it from a short "Getting started" section, keeping the README skimmable
 - docs: README quickstart and MANUAL.md now include 20 inline screenshots — 8 step-by-step in the quickstart, 12 across the manual sections
