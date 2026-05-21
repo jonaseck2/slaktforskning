@@ -82,8 +82,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13          # Intel
-            target: x86_64-apple-darwin
+          # macOS Apple Silicon only — every Mac sold since 2020 is ARM.
+          # The pre-Tauri Electron releases (v0.204.0) also shipped arm64-only.
+          # GitHub's free macos-13 (Intel) runner queue routinely exceeds
+          # 2 hours, blocking the rest of the matrix; not worth it for a
+          # shrinking Intel Mac user base.
           - os: macos-14          # Apple Silicon
             target: aarch64-apple-darwin
           # ubuntu-24.04 — needed for libpipewire-0.3-dev >= 1.0 to satisfy
