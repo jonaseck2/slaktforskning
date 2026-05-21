@@ -362,6 +362,17 @@ fn fs_read_text(path: String) -> Result<String, String> {
     std::fs::read_to_string(&path).map_err(|e| format!("read: {e}"))
 }
 
+/// Cheap "does this path exist as a regular file?" check. Used by the
+/// renderer's boot sequence to validate the persisted last-used DB path
+/// before reopening it — if the file was moved or deleted, the renderer
+/// falls back to the bundled default instead of recreating an empty DB at
+/// the stale location.
+#[specta::specta]
+#[tauri::command]
+fn fs_exists(path: String) -> bool {
+    std::path::Path::new(&path).is_file()
+}
+
 /// Write utf-8 text to a file. Used by GEDCOM export.
 #[specta::specta]
 #[tauri::command]
@@ -813,6 +824,7 @@ pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             media_read_as_data_url,
             dialog_pick,
             fs_read_text,
+            fs_exists,
             fs_write_text,
             fs_read_bytes_base64,
             fs_write_bytes_base64,

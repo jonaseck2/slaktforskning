@@ -83,6 +83,14 @@ export const commands = {
 	 *  chosen file's contents to a JS parser running in the renderer.
 	 */
 	fsReadText: (path: string) => typedError<string, string>(__TAURI_INVOKE("fs_read_text", { path })),
+	/**
+	 *  Cheap "does this path exist as a regular file?" check. Used by the
+	 *  renderer's boot sequence to validate the persisted last-used DB path
+	 *  before reopening it — if the file was moved or deleted, the renderer
+	 *  falls back to the bundled default instead of recreating an empty DB at
+	 *  the stale location.
+	 */
+	fsExists: (path: string) => __TAURI_INVOKE<boolean>("fs_exists", { path }),
 	/**  Write utf-8 text to a file. Used by GEDCOM export. */
 	fsWriteText: (path: string, contents: string) => typedError<null, string>(__TAURI_INVOKE("fs_write_text", { path, contents })),
 	/**

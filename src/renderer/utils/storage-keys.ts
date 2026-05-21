@@ -24,6 +24,10 @@ export const STORAGE_KEYS = {
   addBtnStyle: 'slaktforskning-add-btn-style',
   textSize: 'textSize',
   lastRoute: 'slaktforskning-last-route',
+  // Last-opened DB path — set by switchDbTo on every switch, read by main.ts
+  // at boot so the app reopens whatever DB the user was last using instead of
+  // always defaulting back to `family.db`.
+  lastDbPath: 'slaktforskning-last-db-path',
 
   // Persons view
   personsListOpen: 'persons-list-open',

@@ -1786,6 +1786,11 @@ async function switchDbTo(path: string, createSchema: boolean): Promise<void> {
       await dbSet.setDbSetting(dbInstance, 'recent_dbs', JSON.stringify(next));
     }
   } catch { /* ignore — recent-files is best-effort */ }
+  // Persist the chosen path so a full app restart (where the Rust
+  // db::CURRENT_PATH global is reset) can resume the same DB instead of
+  // falling back to the bundled `family.db`. Read by src/renderer/main.ts
+  // before the Database constructor is called.
+  try { localStorage.setItem('slaktforskning-last-db-path', path); } catch { /* private mode etc. */ }
   fireDbSwitched();
   fireDataChanged();
 }

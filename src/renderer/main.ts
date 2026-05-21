@@ -69,9 +69,34 @@ if ('__TAURI_INTERNALS__' in window) {
     // every reload would reopen the bundled default and silently undo the
     // user's switch, leaving a divergence where MCP / sqlite3 see one DB
     // and the renderer sees another.
+    // Resolution order across an app restart:
+    //   1. `db::CURRENT_PATH` (Rust in-memory) — survives a renderer reload
+    //      but is reset on a full process restart. Honours window.api.db.switchTo
+    //      done since the process started.
+    //   2. `localStorage["slaktforskning-last-db-path"]` — written by switchDbTo
+    //      so the app reopens whatever DB the user was last using. Falls
+    //      through to (3) if the file no longer exists on disk.
+    //   3. `default_db_path()` — bundled `family.db` (portable or app data dir).
     const currentPath = await coreMod.invoke<string | null>('db_current_path');
-    const dbPath = currentPath ?? (await coreMod.invoke<string>('default_db_path'));
-    bootLog('db path: ' + dbPath + (currentPath ? ' (resumed)' : ' (default)'));
+    let lastDbPath: string | null = null;
+    let lastDbSource: 'rust' | 'localStorage' | 'default' = 'default';
+    if (currentPath) {
+      lastDbPath = currentPath;
+      lastDbSource = 'rust';
+    } else {
+      try {
+        const stored = localStorage.getItem('slaktforskning-last-db-path');
+        if (stored && stored.length > 0) {
+          const exists = await coreMod.invoke<boolean>('fs_exists', { path: stored }).catch(() => false);
+          if (exists) {
+            lastDbPath = stored;
+            lastDbSource = 'localStorage';
+          }
+        }
+      } catch { /* localStorage unavailable; fall through */ }
+    }
+    const dbPath = lastDbPath ?? (await coreMod.invoke<string>('default_db_path'));
+    bootLog('db path: ' + dbPath + ' (' + lastDbSource + ')');
     // UI-server callback bridge for the dev MCP. Rust sends scripts via the
     // webview that end with window.__taurisUiCallback(id, value), routing the
     // value back to a pending oneshot on the Rust side.
