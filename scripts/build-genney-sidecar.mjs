@@ -43,7 +43,10 @@ const args = [
   '--external:node-sqlite3-wasm',
 ];
 
-const p = spawn('npx', args, { cwd: repoRoot, stdio: 'inherit' });
+// `shell: true` so Windows resolves `npx` to `npx.cmd` via the shell;
+// posix shells handle it identically. Without this, the raw `spawn` on
+// Windows fails with ENOENT because `npx` is a `.cmd` shim, not a binary.
+const p = spawn('npx', args, { cwd: repoRoot, stdio: 'inherit', shell: true });
 p.on('exit', (code) => {
   if (code !== 0) process.exit(code ?? 1);
   // Post-bundle: copy DerbyExtractor.java next to the bundle so the
