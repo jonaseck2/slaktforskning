@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: quickstart moved to QUICKSTART.md — README points to it from a short "Getting started" section, keeping the README skimmable
 - docs: README quickstart and MANUAL.md now include 20 inline screenshots — 8 step-by-step in the quickstart, 12 across the manual sections
 
 ## 0.264.0 — Public OSS launch (2026-05-21)
