@@ -10,6 +10,8 @@
 - fix(ci): Linux AppImage bundling now sets `APPIMAGE_EXTRACT_AND_RUN=1` — ubuntu-24.04 (ubuntu-latest) dropped libfuse2, so `linuxdeploy` and its plugins (themselves AppImages) need extract-and-run mode instead of FUSE-mount
 - fix(ci): also install `libfuse2t64` (the ubuntu-24.04 transitional package for libfuse2) — the env var alone wasn't enough; linuxdeploy still failed silently without the FUSE library present
 - chore(ci): scope the CI bundle matrix to pull-requests only — on push to main the Release workflow already builds and publishes the same artifacts, so the CI matrix was duplicate work (~30 min of runner time per push saved)
+- fix(ci): Release Linux pinned to ubuntu-22.04 needs `libfuse2` (already pre-installed), not `libfuse2t64` (which only exists on ubuntu-24.04) — reverting the t64 install from release.yml
+- fix(ci): Release workflow now uploads to a **draft** release — every matrix leg appends its artifacts to the same draft, and the human publishes when all platforms are in. The previous `releaseDraft: false` made GitHub mark the release immutable on the first leg's publish, so subsequent legs got "Cannot upload assets to an immutable release"
 - docs: trim two pre-launch bug-fix references from MANUAL.md's Troubleshooting & FAQ — v0.264.0 ships with those fixes baked in
 - docs: CHANGELOG trimmed to the last 10 version blocks — earlier release notes archived in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log
 - docs: quickstart moved to QUICKSTART.md — README points to it from a short "Getting started" section, keeping the README skimmable
