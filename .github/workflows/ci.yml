@@ -96,7 +96,12 @@ jobs:
       # Build the Tauri bundle. macOS = .app + .dmg.
       # Windows = .msi + .exe (NSIS). Linux = .deb + .rpm + .AppImage.
       # No signing here — that's the release workflow.
+      # APPIMAGE_EXTRACT_AND_RUN: linuxdeploy and its plugins are themselves AppImages;
+      # on ubuntu-24.04 (ubuntu-latest) libfuse2 is gone, so AppImages can't FUSE-mount.
+      # This env makes them extract+run instead of mount.
       - run: npm run build
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
 
       # Surface the bundle paths so a human (or a downstream signing
       # job) can grab them.

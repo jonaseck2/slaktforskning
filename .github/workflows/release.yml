@@ -120,6 +120,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # linuxdeploy + its plugins are AppImages; ubuntu-24.04 has no libfuse2,
+          # so they need extract+run mode instead of FUSE-mounting themselves.
+          APPIMAGE_EXTRACT_AND_RUN: 1
           # macOS signing + notarization (optional)
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
