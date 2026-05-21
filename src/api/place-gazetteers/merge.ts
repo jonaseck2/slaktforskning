@@ -168,28 +168,36 @@ function applyTranslations(lang: Gazetteer, idx: NodeIndex): void {
       //    overlays without touching the data, we look for the closest
       //    available anchor inside the SAME subtree the overlay points at.
       //
-      //    Peel path segments from the right; for each existing prefix
-      //    (scoped to that prefix's subtree to avoid escaping into unrelated
-      //    branches):
-      //      a. Search the prefix's descendants for a node whose name or
-      //         alias matches the overlay path's last segment (the
-      //         English-canonical form).
-      //      b. Exactly one match → attach BOTH `names` AND the path's last
-      //         segment as aliases on that descendant.
-      //      c. Two or more matches → ambiguous; skip silently. Honest
-      //         ambiguity is better than a wrong attachment.
-      //      d. Zero matches → continue peeling to the next-shallower
-      //         prefix.
-      //    If we exhaust all peels with no descendant match but the deepest
-      //    existing prefix is at admin1 level or deeper (path length ≥ 4),
-      //    attach the aliases to that deepest existing prefix itself. This
-      //    treats the prefix as the closest available anchor for the
-      //    overlay's intent (e.g. lang-sv-geonames says "Copenhagen is in
-      //    Capital Region"; the merged tree has Capital Region as a leaf;
-      //    attaching Köpenhamn/Copenhagen there lands resolution within a
-      //    few hundred meters of the actual city). The depth guard prevents
-      //    attaching to the country/continent/world root, which would yield
-      //    a country-centroid match.
+      //    Algorithm:
+      //      a. Peel path segments from the right until idx.lookup(prefix)
+      //         resolves. That single prefix is the "deepest existing
+      //         prefix" — we never search beyond it.
+      //      b. Search the prefix's descendant subtree for a node whose
+      //         name or alias matches the overlay path's last segment (the
+      //         English-canonical form). Scoped strictly to this subtree —
+      //         never escape into a different branch (this is the
+      //         knock-on-risk guard from the T03 investigation: Köpenhamn
+      //         must not attach to Copenhagen, NY, because NY lives under
+      //         a different prefix).
+      //      c. Exactly one match → attach BOTH `names` AND the path's
+      //         last segment as aliases on that descendant. Both
+      //         "Köpenhamn" (Swedish translation value) and "Copenhagen"
+      //         (English-canonical last segment) become resolvable.
+      //      d. Two or more matches → ambiguous within the subtree; skip
+      //         silently. Honest ambiguity beats a wrong attachment.
+      //      e. Zero matches AND the prefix is at admin1 level or deeper
+      //         (path length ≥ 4 = [World, Continent, Country, Admin1+])
+      //         → attach the aliases to the prefix itself, as the closest
+      //         available anchor for the overlay's intent. The depth guard
+      //         prevents attaching to country/continent/world roots, which
+      //         would resolve to country-centroid coordinates and defeat
+      //         the famous-city user goal.
+      //
+      //    Single-prefix-only (no recursive peeling on 0-match): keeps the
+      //    cost at O(N_entries) instead of O(N_entries × continent_subtree)
+      //    — important because lang-sv-geonames has ~1500 entries and a
+      //    naive multi-level BFS made every gazetteer load exceed the
+      //    Vitest 60s timeout.
       if (parts.length < 2) continue;
       const needle = parts[parts.length - 1];
 
