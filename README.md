@@ -55,6 +55,8 @@ Download the latest installer from the [Releases](https://github.com/jonaseck2/s
 
 New to the app? [QUICKSTART.md](QUICKSTART.md) walks you from empty install to a small, sourced family in about 10 minutes. The full reference is in [MANUAL.md](MANUAL.md).
 
+Want to see what a populated database looks like first? Clone this repo, then open [`examples/swedish-royals.db`](examples/) from **Settings → Database → Open** — a small demo tree of the Swedish royal House of Holstein-Gottorp with portraits, face tags, sources, and a real research task. Every screenshot in the docs comes from it.
+
 ## MCP Server
 
 Släktforskning includes a built-in MCP server that lets AI agents interact with your genealogy data. Use Claude Desktop or Claude Code to research, write narratives, audit sources, and manage your tree through natural conversation.
