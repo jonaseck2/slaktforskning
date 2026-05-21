@@ -1,10 +1,19 @@
 # Examples
 
+> **Built by an AI agent through the MCP.** Every person, marriage, parent-child link, event, source, repository, group, research task, and face-tag region in `swedish-royals.db` was authored by Claude calling the Släktforskning MCP server's CRUD tools — no manual data entry, no SQL, no GEDCOM-import shortcut. The agent researched the Swedish royal lineage via web search, sourced PD-art portraits from Wikimedia Commons, downloaded them, attached each to the right person, and drew face-tag rectangles on Roslin's group portrait. This is what the MCP is for.
+
 ## `swedish-royals.db`
 
 A populated demo database — the Swedish royal **House of Holstein-Gottorp** (1751–1818), which ruled Sweden in the dynasty immediately before Bernadotte. Used for every screenshot in [README.md](../README.md), [QUICKSTART.md](../QUICKSTART.md), and [MANUAL.md](../MANUAL.md).
 
 Open it from the running app via **Settings → Database → Open** and pick this file. Your other databases stay intact; you can switch back at any time.
+
+Two GEDCOM exports of the same tree are bundled alongside:
+
+- **`swedish-royals.5.5.1.ged`** — GEDCOM 5.5.1 export. The lowest-common-denominator interchange format every other genealogy app reads. Lossy in places where the spec can't carry the data (e.g. `ASSO` without event, sex='X', shared notes); the export report flags each loss.
+- **`swedish-royals.7.0.ged`** — GEDCOM 7.0 export. Lossless round-trip back into Släktforskning — every authored field survives.
+
+Both `.ged` files reference the portraits in `swedish-royals-media/` via `OBJE FILE` records; importing them into another app will preserve the photo references provided you copy that folder along too.
 
 ### What's in it
 

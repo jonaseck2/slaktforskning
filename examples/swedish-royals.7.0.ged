@@ -1,0 +1,247 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SUBM @SUBM@
+0 @SUBM@ SUBM
+1 NAME Gustav av Holstein-Gottorp
+0 @I1@ INDI
+1 NAME Fredrika /av Baden/
+1 SEX F
+1 FAMS @F4@
+1 NOTE Sveriges drottning 1797–1809 som gemål till Gustav IV Adolf. Gifte sig vid 16 års ålder. Skildes från Gustav i februari 1812 efter avsättningen. Dog i Schweiz, 45 år gammal. Fem barn, varav fyra nådde vuxen ålder.
+1 BIRT
+2 DATE
+3 PHRASE 1781-03-12
+2 _EVID 946bfae7-e14b-488f-93b0-a262b0962968
+2 PLAC Karlsruhe, Markgrevskapet Baden
+3 _PLAC_ID 76181e1f-d6bb-46ed-9b2a-d4280bbd630a
+1 DEAT
+2 DATE
+3 PHRASE 1826-09-25
+2 _EVID a7defa30-66d2-4dc0-906f-5cdacc7084f9
+1 OBJE
+2 FILE swedish-royals-media/10-frederica-of-baden.jpg
+2 TITL Fredrika av Baden — porträtt av Joseph Karl Stieler, ca 1826
+0 @I2@ INDI
+1 NAME Sofia Magdalena /av Danmark/
+1 SEX F
+1 FAMS @F2@
+1 NOTE Sveriges drottning 1771–1792 som gemål till Gustav III. Trolovades vid fem års ålder. Äktenskapet förblev obesegrat i nio år, vilket gav upphov till hovskvaller om kronprinsens börd.
+1 BIRT
+2 DATE
+3 PHRASE 1746-07-03
+2 _EVID 63a68e59-a505-47ac-a52c-32514781813f
+2 PLAC Charlottenborgs slott, Köpenhamn
+3 _PLAC_ID 02806bdb-eaf3-4501-9b58-d32a21449923
+1 DEAT
+2 DATE
+3 PHRASE 1813-08-21
+2 _EVID ad893bd1-0131-472c-8c27-feeabebf99c1
+1 OBJE
+2 FILE swedish-royals-media/07-sofia-magdalena.jpg
+2 TITL Sofia Magdalena av Danmark — samtida porträtt
+0 @I3@ INDI
+1 NAME Adolf /av Holstein-Gottorp/
+1 SEX M
+1 FAMS @F1@
+1 NOTE Sveriges kung 1751–1771. Stamfar för det Holstein-Gottorpska kungahuset i Sverige. Dödsorsaken var sannolikt hjärtsvikt eller förgiftning — den populära berättelsen om att han åt ihjäl sig på semla räknas som samtida propaganda.
+1 BIRT
+2 DATE
+3 PHRASE 1710-05-14
+2 _EVID 885aa439-591a-4b02-82e9-144c95d40ed4
+2 PLAC Gottorps slott, Schleswig
+3 _PLAC_ID 51d38688-5c45-48dc-941f-6bd5b0e787df
+1 DEAT
+2 DATE
+3 PHRASE 1771-02-12
+2 _EVID 7520bb37-9f57-4a9c-af95-4017a651159b
+2 CAUS Sannolikt hjärtsvikt eller förgiftning enligt modern forskning. Den populära berättelsen om att han åt ihjäl sig på semla räknas som samtida propaganda.
+1 OBJE
+2 FILE swedish-royals-media/01-adolf-fredrik.jpg
+2 TITL Adolf Fredrik — porträtt av Gustaf Lundberg, ca 1751
+0 @I4@ INDI
+1 NAME Fredrik Adolf /av Holstein-Gottorp/
+1 SEX M
+1 FAMC @F1@
+1 NOTE Hertig av Östergötland. Tredje son till Adolf Fredrik och Lovisa Ulrika. Gifte sig aldrig — fick istället hjälp av sin syster Sofia Albertina med ceremoniella plikter. Reste i sina senare år och dog i Montpellier i Frankrike, 53 år gammal.
+1 BIRT
+2 DATE
+3 PHRASE 1750-07-18
+2 _EVID cd01c5f3-a6b0-4a20-990b-b34d0890e22d
+2 PLAC Drottningholms slott
+3 _PLAC_ID 42414538-fa0d-4ce8-8b70-97094dac302e
+1 DEAT
+2 DATE
+3 PHRASE 1803-12-12
+2 _EVID 03e48962-eefb-4efd-87ae-515230f25fdb
+1 OBJE
+2 FILE swedish-royals-media/05-fredrik-adolf.jpg
+2 TITL Fredrik Adolf — porträtt av Alexander Roslin, ca 1771
+1 OBJE
+2 FILE swedish-royals-media/11-gustav-iii-and-brothers-1771.jpg
+2 TITL Gustav III och hans bröder — gruppporträtt av Alexander Roslin, 1771
+0 @I5@ INDI
+1 NAME Gustav /av Holstein-Gottorp/
+1 SEX M
+1 FAMC @F1@
+1 FAMS @F2@
+1 NOTE Sveriges kung 1771–1792. Krönt 29 maj 1772 efter Gustavianska revolutionen samma år. Sköts på Kungliga Operans maskeradbal natten till den 16 mars 1792 av Jacob Johan Anckarström; avled av sårfeber den 29 mars 1792. Grundade Svenska Akademien (1786) och byggde upp Operan och Dramaten.
+1 BIRT
+2 DATE
+3 PHRASE 1746-01-24
+2 _EVID 0a670449-01de-4694-93e5-f36438c5873a
+2 PLAC Stockholm
+3 _PLAC_ID 8eebe7d5-b37a-4403-a315-0812c5d142bb
+1 DEAT
+2 DATE
+3 PHRASE 1792-03-29
+2 _EVID 03944ae1-64a3-47df-9877-726957cba520
+2 CAUS Sårfeber efter skottskada — sköts i ryggen av Jacob Johan Anckarström på Operans maskeradbal natten till 16 mars 1792; avled 13 dagar senare.
+1 OBJE
+2 FILE swedish-royals-media/03-gustav-iii.jpg
+2 TITL Gustav III — porträtt av Alexander Roslin, 1777
+1 OBJE
+2 FILE swedish-royals-media/11-gustav-iii-and-brothers-1771.jpg
+2 TITL Gustav III och hans bröder — gruppporträtt av Alexander Roslin, 1771
+0 @I6@ INDI
+1 NAME Gustav /av Holstein-Gottorp/
+1 SEX M
+1 FAMC @F2@
+1 FAMS @F4@
+1 NOTE Sveriges kung 1792–1809. Tillträdde 13 år gammal efter faderns mord. Avsattes i 1809 års statskupp efter att ha förlorat Finland till Ryssland (1808–1809). Levde resten av sitt liv i landsflykt under namnet "överste Gustafsson" på ett enkelt hotell i Sankt Gallen där han dog efter en stroke 1837. Återbegravdes i Riddarholmskyrkan 1884.
+1 BIRT
+2 DATE
+3 PHRASE 1778-11-01
+2 _EVID a3dfaae6-7479-4806-8cf6-084d047a54d3
+2 PLAC Stockholms slott
+3 _PLAC_ID 70e9bb40-b0b8-4cd2-824a-6d9ed0de34cf
+1 DEAT
+2 DATE
+3 PHRASE 1837-02-07
+2 _EVID 1f4d2904-5f22-4f9c-aa70-e9ce4ce8f2d0
+2 CAUS Stroke. Levde i landsflykt under namnet "överste Gustafsson" på ett enkelt hotell. Återbegravd i Riddarholmskyrkan 1884.
+1 OBJE
+2 FILE swedish-royals-media/09-gustav-iv-adolf.jpg
+2 TITL Gustav IV Adolf — samtida porträtt
+0 @I7@ INDI
+1 NAME Hedvig Elisabet Charlotta /av Holstein-Gottorp/
+1 SEX F
+1 FAMS @F3@
+1 NOTE Sveriges drottning 1809–1818 som gemål till Karl XIII (hennes kusin). Är mest känd för sin omfattande dagbok som täcker svenskt hovliv 1775–1817 — en av de viktigaste primärkällorna till tidsperioden. Hennes båda barn dog som spädbarn.
+1 BIRT
+2 DATE
+3 PHRASE 1759-03-22
+2 _EVID c0cb59ee-5997-4cd0-ade6-baa45faeebb9
+2 PLAC Eutin, Lübeck
+3 _PLAC_ID a2cc2276-5536-4e60-82a6-4eb498bdc183
+1 DEAT
+2 DATE
+3 PHRASE 1818-06-20
+2 _EVID 8366b5dc-b622-43ef-ab4d-f975b88d40bc
+1 OBJE
+2 FILE swedish-royals-media/08-hedvig-elisabet-charlotta.jpg
+2 TITL Hedvig Elisabet Charlotta — porträtt av Carl Fredrik von Breda, ca 1809
+0 @I8@ INDI
+1 NAME Karl /av Holstein-Gottorp/
+1 SEX M
+1 FAMC @F1@
+1 FAMS @F3@
+1 NOTE Sveriges kung 1809–1818 och Norges kung 1814–1818. Sista regenten av den Holstein-Gottorpska ätten. Blev kung efter statskuppen 1809 då brorsonen Gustav IV Adolf avsattes. Eftersom hans äktenskap med Hedvig Elisabet Charlotta var barnlöst adopterades Jean Baptiste Bernadotte som tronföljare 1810 — vilket är hur Bernadotteätten kom till.
+1 BIRT
+2 DATE
+3 PHRASE 1748-10-07
+2 _EVID ab62b462-5ca3-44d2-b064-5ccbdab7b233
+2 PLAC Stockholm
+3 _PLAC_ID 8eebe7d5-b37a-4403-a315-0812c5d142bb
+1 DEAT
+2 DATE
+3 PHRASE 1818-02-05
+2 _EVID 2081ddd5-1445-4eb3-89ee-5f9364804d5c
+1 OBJE
+2 FILE swedish-royals-media/04-karl-xiii.jpg
+2 TITL Karl XIII — porträtt av Cornelius Höyer
+1 OBJE
+2 FILE swedish-royals-media/11-gustav-iii-and-brothers-1771.jpg
+2 TITL Gustav III och hans bröder — gruppporträtt av Alexander Roslin, 1771
+0 @I9@ INDI
+1 NAME Sofia Albertina /av Holstein-Gottorp/
+1 SEX F
+1 FAMC @F1@
+1 NOTE Furstinna och regerande abbedissa av Quedlinburg 1787–1803. Yngsta dottern till Adolf Fredrik och Lovisa Ulrika. Gifte sig aldrig. Kallades "prinsessan med ishjärtat", men hade samtidigt ett romantiskt privatliv och rykten om ett hemligt barn omkring 1785.
+1 BIRT
+2 DATE
+3 PHRASE 1753-10-08
+2 _EVID ab359cb6-402c-419d-b1c0-08b2a0ced50d
+2 PLAC Stockholm
+3 _PLAC_ID 8eebe7d5-b37a-4403-a315-0812c5d142bb
+1 DEAT
+2 DATE
+3 PHRASE 1829-03-17
+2 _EVID 8a44afda-7268-4a6f-a629-72d6160e42fe
+1 OBJE
+2 FILE swedish-royals-media/06-sofia-albertina.jpg
+2 TITL Sofia Albertina — porträtt av Alexander Roslin, ca 1771
+0 @I10@ INDI
+1 NAME Lovisa Ulrika /av Preussen/
+1 SEX F
+1 FAMS @F1@
+1 NOTE Sveriges drottning 1751–1771. Syster till Fredrik II av Preussen (Fredrik den store). Gift med Adolf Fredrik 1744. Drottningsdag 26 november 1751.
+1 BIRT
+2 DATE
+3 PHRASE 1720-07-24
+2 _EVID 8248c580-4bbb-4073-8d6a-542e0a53ca68
+2 PLAC Berlin, Preussen
+3 _PLAC_ID 150d5c52-9ead-497a-b75a-cde2f6dc272b
+1 DEAT
+2 DATE
+3 PHRASE 1782-07-16
+2 _EVID 55d0534a-f168-425f-b179-3a411302c41e
+1 OBJE
+2 FILE swedish-royals-media/02-lovisa-ulrika.jpg
+2 TITL Lovisa Ulrika — porträtt av Antoine Pesne, ca 1744
+0 @F1@ FAM
+1 HUSB @I3@
+1 WIFE @I10@
+1 CHIL @I5@
+2 PEDI BIRTH
+3 _PARENT @I3@
+2 PEDI BIRTH
+3 _PARENT @I10@
+1 CHIL @I8@
+2 PEDI BIRTH
+3 _PARENT @I3@
+2 PEDI BIRTH
+3 _PARENT @I10@
+1 CHIL @I4@
+2 PEDI BIRTH
+3 _PARENT @I3@
+2 PEDI BIRTH
+3 _PARENT @I10@
+1 CHIL @I9@
+2 PEDI BIRTH
+3 _PARENT @I3@
+2 PEDI BIRTH
+3 _PARENT @I10@
+1 _SUBTYPE marriage
+1 _RELNOTES Trolovade i Berlin 18 augusti 1744; vigseln genomfördes 29 augusti 1744 i Stockholm.
+0 @F2@ FAM
+1 HUSB @I5@
+1 WIFE @I2@
+1 CHIL @I6@
+2 PEDI BIRTH
+3 _PARENT @I5@
+2 PEDI BIRTH
+3 _PARENT @I2@
+1 _SUBTYPE marriage
+1 _RELNOTES Trolovade vid fem års ålder. Vigda per ombud i Köpenhamn 1 oktober 1766, fysiskt vigda 4 november 1766 i Stockholm.
+0 @F3@ FAM
+1 HUSB @I8@
+1 WIFE @I7@
+1 _SUBTYPE marriage
+1 _RELNOTES Karl och Hedvig Elisabet Charlotta var kusiner. Vigseln ordnades för att säkra tronföljden, men paret fick inga överlevande barn.
+0 @F4@ FAM
+1 HUSB @I6@
+1 WIFE @I1@
+1 _SUBTYPE marriage
+1 _RELNOTES Skildes i februari 1812 efter Gustav IV Adolfs avsättning. Fem barn, varav fyra nådde vuxen ålder.
+0 TRLR

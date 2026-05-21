@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- feat: ship `examples/swedish-royals.db` — a populated demo of the Swedish royal House of Holstein-Gottorp (10 persons, portraits, face tags, sources). Open it from Settings → Database to see what a real tree looks like
+- feat: ship `examples/swedish-royals.db` — a populated demo of the Swedish royal House of Holstein-Gottorp (10 persons, portraits, face tags, sources, all authored by an AI agent through the MCP) plus GEDCOM 5.5.1 + 7.0 exports of the same tree. Open the .db from Settings → Database
 - chore: bundle identifier renamed to `io.github.jonaseck2.slaktforskning` — drops the misleading `com.slaktforskning.*` reverse-DNS claim and removes the macOS "`.app` suffix" warning. App data dir moves accordingly; dev installs need a one-time `mv` of the old folder
 - fix(ci): Windows build no longer fails on `npx ENOENT` — sidecar bundling now uses `shell: true` so `npx.cmd` resolves
 - fix(ci): Linux build now installs `libpipewire-0.3-dev` so the Tauri screen-capture crate compiles
