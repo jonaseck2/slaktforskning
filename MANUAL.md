@@ -50,6 +50,8 @@ The app remembers the last database you switched to, so reopening picks up where
 
 ## Persons
 
+![Person panel for Gustav III showing the full record: name, birth/death, sex, notes, names, events, timeline, life map, relationships](docs/manual/01-person-panel.png)
+
 The Persons view is the heart of the app. The left list shows every person in the active database; the center pane shows either the list or a family-tree chart; the right side panel shows everything about the selected person.
 
 The side panel is split into sections — every section is collapsible, every section's collapsed/expanded state is per-database. The full set:
@@ -92,6 +94,8 @@ Add an event: from any person's side panel, expand the **Events** section and cl
 
 ## Places
 
+![Places view with the map showing pins across Scandinavia and central Europe for the demo Swedish royals](docs/manual/02-places-map.png)
+
 Places are organized hierarchically — a parish is a child of a county, which is a child of a country. The Places view (left sidebar → 📍 Places) shows your places either as a list or on a map.
 
 - The **map** view plots every place with resolved coordinates as a pin. Pins cluster at low zoom.
@@ -111,6 +115,8 @@ The 29 bundled gazetteers cover Sweden (parishes via SCB), Denmark (sogne via DA
 
 ## Sources and Citations
 
+![Source panel for Svenskt biografiskt lexikon with author, URL, abstract, and linked repository](docs/manual/03-source-panel.png)
+
 Sources are documents you cite — a birth certificate, a church record, an online tree, a published book. Citations link a specific source to a specific claim (an event, a person, a relationship, a name).
 
 The Sources view shows every source in your database. Click a source to open the Source panel:
@@ -126,11 +132,15 @@ Citing: from any event in a person's side panel, click **Cite**. The modal lets 
 
 ## Repositories
 
+![Repository panel for Riksarkivet with city, country, web URL, notes, and linked sources](docs/manual/04-repository-panel.png)
+
 Repositories are archives — physical or online — that hold sources. Riksarkivet, the LDS Family History Library, your local parish archive, ancestry.com. The Repositories view has its own panel with the standard fields (name, address, city, postal code, state, country, phone, email, web, call number, notes) plus the list of sources held by this repository.
 
 Repositories are decoupled from sources via the `source_repositories` join table — a single repository (say Riksarkivet) can hold thousands of sources, and a single source can be held by multiple repositories (a microfilm + the original).
 
 ## Media and Face Tags
+
+![Media viewer showing Alexander Roslin's 1771 group portrait of Gustav III and his brothers, with three face-tag boxes (Gustav, Karl, Fredrik Adolf) overlaid on the painting and the MediaPanel listing each tagged person with their cropped-face avatar](docs/manual/05-media-face-tags.png)
 
 The Media view shows every photo, document, audio, or video attached to your database. Each media item:
 
@@ -152,11 +162,15 @@ The MediaPanel (right side) shows:
 
 ## Groups
 
+![Group panel for "Holstein-Gottorpska kungahuset" with three linked members and a notes field](docs/manual/06-group-panel.png)
+
 Groups organize persons (and places and media) into custom collections — "Emigrants 1845", "Military service", "Photos from grandma's box". The Groups view lists every group; the Group panel shows its members plus quick-add affordances for linking new members.
 
 A person can be in many groups simultaneously. Groups are GEDCOM 7.0-modeled via SNOTE on the person; they round-trip cleanly through GEDCOM 7.0 export/import, and degrade to plain notes in GEDCOM 5.5.1.
 
 ## Research Tasks
+
+![Research task panel showing the task "Hitta primärkälla för Gustav III:s skottskada" with priority, status, and notes](docs/manual/07-research-task-panel.png)
 
 Research tasks are your to-do list. Each task has:
 
@@ -168,6 +182,8 @@ Research tasks are your to-do list. Each task has:
 The Research Tasks view shows every task; filter chips slice by status. The task panel mirrors the person/place/source pattern — a task is a first-class entity. Tasks degrade to NOTE blocks in GEDCOM export (no native task representation in either spec).
 
 ## Reports
+
+![Reports view listing the seven keepsake reports with their configuration panels](docs/manual/08-reports.png)
 
 The Reports view (Present → 📑 Reports) is where you print or save shareable artifacts about your tree. Seven keepsake reports ship by default:
 
@@ -182,6 +198,8 @@ The Reports view (Present → 📑 Reports) is where you print or save shareable
 Each report has a configuration panel (which person, which date range, which sections to include). Save to PDF, save to SVG, or print directly. The print CSS is tuned for A4 and US Letter.
 
 ## Family tree charts (Prints)
+
+![Hourglass chart with Gustav III in the center, parents above, siblings to the side, and his son Gustav IV Adolf below — every node showing a contemporary portrait](docs/manual/09-hourglass-chart.png)
 
 Family-tree charts live under Present → 📐 Prints (also reachable from any person's center pane via the **Family tree** tab). Five chart types:
 
@@ -202,6 +220,8 @@ The Map view (left sidebar → 📍 Places, then **Map** tab) plots every place 
 The map supports filtering by country (via the FilterChips above the map) and by has-coordinates / has-events / has-persons (derived dimensions, computed at render time per the Prime Directive).
 
 ## Importing GEDCOM
+
+![Import/Export view with tabs for each importer (GEDCOM, Genney, Holger, RootsMagic, Gramps) and the file picker for the active tab](docs/manual/11-import-export.png)
 
 GEDCOM 5.5.1 and 7.0 are the genealogy interchange formats. The importer accepts both. Drop a `.ged` file via Settings → Import → GEDCOM.
 
@@ -265,6 +285,8 @@ Export reports list `excluded[]` entries — research tasks and groups are Släk
 
 ## Website export
 
+![Website export view with scope, living-person handling, media, and theme options](docs/manual/12-website-export.png)
+
 The **Website** view (Present → 🌐 Website) bakes your tree into a self-contained HTML site you can host anywhere. Configure:
 
 - **Scope** — everyone, or every descendant/ancestor of a focal person, or every member of a group.
@@ -277,6 +299,8 @@ Click **Build site**. The output goes to a folder you pick — a single self-con
 The site is GitHub Pages-ready, Netlify-ready, or just zip-it-and-email-it ready.
 
 ## Settings
+
+![Settings view with sections for appearance, theme, text size, language, database, gazetteers, link rules, event defaults, and researcher info](docs/manual/10-settings.png)
 
 Settings (left sidebar → ⚙️ Settings) covers:
 

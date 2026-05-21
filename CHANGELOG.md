@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- docs: README quickstart and MANUAL.md now include 20 inline screenshots — 8 step-by-step in the quickstart, 12 across the manual sections
+
 ## 0.264.0 — Public OSS launch (2026-05-21)
 
 The first publicly released version of Släktforskning ("genealogy" in Swedish). A local-first, cross-platform desktop genealogy app — your family tree, your data, your machine.
