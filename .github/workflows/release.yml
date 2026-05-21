@@ -171,8 +171,22 @@ jobs:
           # Keep the release as a draft until every matrix leg has uploaded
           # its artifacts. If any leg publishes (releaseDraft: false), GitHub
           # marks the release immutable on first publish and subsequent legs
-          # get "Cannot upload assets to an immutable release". Manual publish
-          # from the GitHub UI when all assets are present.
+          # get "Cannot upload assets to an immutable release". The `publish`
+          # job below flips this draft to published once all matrix legs succeed.
           releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
+
+  # Flip the draft v$VERSION release to published once every matrix leg has
+  # uploaded successfully. Runs only if `release` succeeded on all platforms.
+  # On partial failure the draft is left intact for inspection.
+  publish:
+    needs: [check-version, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+        run: gh release edit "v$VERSION" --draft=false --latest
