@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix: place names in foreign languages now pin at the actual famous city — "Köpenhamn" and "Copenhagen" both land in Denmark
 - fix: face-tag drag now actually saves — drag-to-move was silently failing since 2026-05-12
 - fix: app shown as "Släktforskning" everywhere — About modal, licenses header, README
 - docs: README importer list, gazetteer count, and MCP tool count refreshed
