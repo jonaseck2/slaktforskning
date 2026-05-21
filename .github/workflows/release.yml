@@ -18,8 +18,13 @@
 
 name: Release
 
+# Triggered AFTER the CI workflow completes successfully on main. This avoids
+# running the 4-OS Tauri bundle matrix in parallel with `test` + `e2e` — if
+# tests fail, we don't burn ~30 minutes of runner time on bundles.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -27,12 +32,20 @@ permissions:
 
 jobs:
   check-version:
+    # Only run if the CI workflow that triggered us actually succeeded.
+    # `workflow_run` fires on every completion (success, failure, cancelled).
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.read.outputs.version }}
       should-release: ${{ steps.check.outputs.should-release }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          # workflow_run runs against the default branch's SHA by default;
+          # pin to the exact SHA the upstream CI run validated, so the bundle
+          # reflects what the tests passed against.
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - id: read
         run: |
@@ -73,6 +86,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - uses: actions/setup-node@v6
         with:
@@ -123,14 +138,9 @@ jobs:
           # linuxdeploy + its plugins are AppImages; ubuntu-24.04 has no libfuse2,
           # so they need extract+run mode instead of FUSE-mounting themselves.
           APPIMAGE_EXTRACT_AND_RUN: 1
-          # macOS signing + notarization (optional)
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_PROVIDER_SHORT_NAME: ${{ secrets.APPLE_PROVIDER_SHORT_NAME }}
+          # No macOS codesigning — we don't ship an Apple Developer certificate.
+          # The .app + .dmg are produced unsigned; users will see Gatekeeper's
+          # "unidentified developer" prompt on first launch.
           # Windows Authenticode signing (optional)
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
