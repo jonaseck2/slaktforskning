@@ -7,11 +7,6 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     ignore:
-      # @electron-forge/plugin-fuses@7.x requires @electron/fuses@^1.x.
-      # v2 is a breaking API change — re-enable when forge bumps plugin-fuses to support v2.
-      - dependency-name: "@electron/fuses"
-        update-types: ["version-update:semver-major"]
-
       # vite 5→8 is a rolldown-backed rewrite; major jumps require simultaneous updates
       # to @vitejs/plugin-vue and the three vite.*.config.ts files. Batch manually.
       - dependency-name: "vite"
@@ -21,12 +16,6 @@ updates:
       # Block independent bumps here; update together with vite above.
       - dependency-name: "@vitejs/plugin-vue"
         update-types: ["version-update:semver-major"]
-
-      # NOTE (OS-level, no npm ignore applicable):
-      # @electron-forge/maker-rpm@7.x generates RPM spec files incompatible with
-      # rpmbuild 4.20 shipped in ubuntu-24.04 / ubuntu-latest as of 2025-04.
-      # The Linux release job uses ubuntu-22.04 (rpmbuild 4.18) as a workaround.
-      # Re-evaluate when electron-forge or electron-installer-redhat publishes a fix.
 
       # eslint 9+ uses flat config (eslint.config.js) — a breaking format change.
       # @typescript-eslint/* must stay in lockstep with eslint major.
@@ -47,9 +36,9 @@ updates:
         update-types: ["version-update:semver-major"]
 
     groups:
-      electron:
+      tauri:
         patterns:
-          - "electron*"
+          - "@tauri-apps/*"
       testing:
         patterns:
           - "vitest*"
