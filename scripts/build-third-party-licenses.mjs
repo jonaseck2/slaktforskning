@@ -21,8 +21,10 @@
  * file and exits 0 rather than failing — CI always runs `npm ci` first so
  * release builds still produce the real list.
  *
- * App name in the header: "OurLegacy" (the public product name; the package is
- * named "slaktforskning" internally).
+ * App name in the header: "Släktforskning" (the public product name; matches
+ * the `productName` in package.json and src-tauri/tauri.conf.json). "Släktforskning"
+ * is Swedish for "genealogy" — the npm package keeps the ASCII-folded form
+ * "slaktforskning" as its internal identifier.
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
@@ -271,9 +273,10 @@ function main() {
     ? [...cargoCrates].sort((a, b) => `${a.name}@${a.version}`.localeCompare(`${b.name}@${b.version}`))
     : [];
 
-  // Use the public-facing product name "OurLegacy" in the header; the npm
-  // package is named "slaktforskning" internally but the app ships as OurLegacy.
-  const productName = 'OurLegacy';
+  // Use the public-facing product name "Släktforskning" in the header
+  // (Swedish for "genealogy"). The npm package keeps the ASCII-folded form
+  // "slaktforskning" as its internal identifier.
+  const productName = 'Släktforskning';
 
   const totalCount = sortedNpm.length + sortedCargo.length;
   const lines = [];

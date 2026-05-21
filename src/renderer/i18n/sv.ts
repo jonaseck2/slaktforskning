@@ -2330,7 +2330,8 @@ export default {
     },
   },
   about: {
-    title: 'Om OurLegacy',
+    title: 'Om Släktforskning',
+    nameMeaning: '',
     version: 'Version {version}',
     description: 'Ett släktforskningsprogram som körs lokalt på din dator. All data ligger kvar hos dig.',
     openSource: 'Öppen källkod (MIT-licens).',

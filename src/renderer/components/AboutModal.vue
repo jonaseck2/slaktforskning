@@ -11,7 +11,8 @@
     @close="close"
   >
     <div class="about-body">
-      <h3 class="about-app-name">OurLegacy</h3>
+      <h3 class="about-app-name">Släktforskning</h3>
+      <p v-if="$t('about.nameMeaning')" class="about-name-meaning">{{ $t('about.nameMeaning') }}</p>
       <p class="about-version">{{ $t('about.version', { version }) }}</p>
       <p class="about-description">{{ $t('about.description') }}</p>
       <p class="about-license">
@@ -71,6 +72,12 @@ function openRepo() {
   margin: 0;
   font-size: var(--font-lg);
   font-weight: 700;
+}
+.about-name-meaning {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-style: italic;
 }
 .about-version {
   margin: 0;

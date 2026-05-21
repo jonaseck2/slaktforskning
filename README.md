@@ -1,5 +1,7 @@
 # Släktforskning
 
+*Swedish for "genealogy".*
+
 A local-first, cross-platform desktop app for genealogy research. Your family tree, your data, your machine.
 
 [![CI](https://github.com/jonaseck2/slaktforskning/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaseck2/slaktforskning/actions/workflows/ci.yml)
@@ -18,11 +20,11 @@ Släktforskning is a desktop genealogy application built with Tauri 2, Vue 3, an
 ## Features
 
 - **Local SQLite database** — no cloud, no account, full data ownership
-- **Import from** GEDCOM 5.5.1 / 7.0, Genney, and Holger; **export to** GEDCOM 5.5.1 / 7.0
+- **Import from** GEDCOM 5.5.1 / 7.0, Genney, Holger, RootsMagic, and Gramps; **export to** GEDCOM 5.5.1 / 7.0
 - **Family tree charts** — pedigree, hourglass, descendant, fan, timeline
 - **Keepsake reports** — A Life, A Marriage, Place Chronicle, Your Ancestors, Life on One Page, Family in Year X, Photo Album
 - **Places with interactive map** — pin life events, browse place history, view boundary polygons
-- **Place resolution** with 27 bundled gazetteers covering Scandinavia, North America, and the world
+- **Place resolution** with 29 bundled gazetteers covering Scandinavia, North America, and the world
 - **Source citations** with confidence levels and verbatim transcriptions
 - **Source link rules** — auto-link references to ArkivDigital, Riksarkivet, FamilySearch, Ancestry, MyHeritage, and more
 - **Repositories** — track archives and link them to sources
@@ -32,7 +34,7 @@ Släktforskning is a desktop genealogy application built with Tauri 2, Vue 3, an
 - **Quality checks** — automated data validation with per-row fix actions
 - **Duplicate detection & merge** — find and combine duplicate persons
 - **Multi-database** — switch between separate family trees without restarting
-- **Built-in MCP server** — 34 tools for AI-powered genealogy research
+- **Built-in MCP server** — 80 tools for AI-powered genealogy research
 - **Multi-window** — open multiple windows for different parts of your tree
 - **Themes & appearance** — three color themes (Forest, Nordic, Twilight) × three modes (Light, Dark, High Contrast)
 - **Accessibility** — screen reader mode, WCAG AAA high-contrast, keyboard navigation, TTS
@@ -57,7 +59,7 @@ The app opens with a sidebar showing **Persons**, **Relationships**, **Sources**
 - Click **Add Person** to create your first person
 - Click any row to open the detail view — add names, events, and citations there
 - Use **Cmd+N** (macOS) or **Ctrl+N** (Windows/Linux) to open a second window for side-by-side research
-- Import an existing tree via **Settings > Import** (GEDCOM, Genney, or Holger format)
+- Import an existing tree via **Settings > Import** (GEDCOM, Genney, Holger, RootsMagic, or Gramps format)
 
 ## MCP Server
 
@@ -84,7 +86,7 @@ Add this to your `claude_desktop_config.json`:
 
 The repo includes a `.mcp.json` that Claude Code picks up automatically when you open the project.
 
-The server exposes 34 tools covering persons, families, events, sources, places, research tasks, media, and data management. See [docs/MCP.md](docs/MCP.md) for the full tool reference.
+The server exposes 80 tools covering persons, families, events, sources, places, research tasks, media, repositories, groups, duplicates, and data management. See [docs/MCP.md](docs/MCP.md) for the full tool reference.
 
 ## Development
 

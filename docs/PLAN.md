@@ -19,7 +19,6 @@ Plans that are valid and ready to grab but are not actively scheduled. Pull into
 
 - **Native importer binary fixtures** — close the e2e gaps for native binary decoders (Holger `.zip+media`, RootsMagic `.rmtree`, Gramps `.gramps` / `.gpkg`). Contributor-blocked (requires source-app installs). Un-defer trigger codified in [`tests/e2e/imports.spec.ts:74`](../tests/e2e/imports.spec.ts#L74). → [2026-05-14-importer-binary-fixtures.md](plans/2026-05-14-importer-binary-fixtures.md)
 - **Renderer-side perf baseline** — Safari Web Inspector traces (boot / place-resolve / dedup) to pair with the existing Rust-side `samply` baselines. 30-min user-driven task; grab when the next renderer-perf complaint arrives, or when starting audit-roadmap Tier 2.5 (Raw Payloads). → [2026-05-14-perf-baseline-renderer.md](plans/2026-05-14-perf-baseline-renderer.md)
-- **App Naming** — decide on a product name. Candidates: OurHumanLegacy, OurLegacy, MyLegacy, Släktforskning.
 
 ---
 

@@ -2351,7 +2351,8 @@ export default {
     },
   },
   about: {
-    title: 'About OurLegacy',
+    title: 'About Släktforskning',
+    nameMeaning: 'Swedish for "genealogy".',
     version: 'Version {version}',
     description: 'A local-first genealogy app. All your data stays on your computer.',
     openSource: 'Open source (MIT licence).',

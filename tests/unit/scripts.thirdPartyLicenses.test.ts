@@ -22,7 +22,7 @@ describe('build-third-party-licenses script', async () => {
 
   it('starts with a project header naming the file purpose', async () => {
     const content = readFileSync(OUTPUT, 'utf8');
-    expect(content.split('\n')[0]).toMatch(/^# Third-Party Licenses for OurLegacy/);
+    expect(content.split('\n')[0]).toMatch(/^# Third-Party Licenses for Släktforskning/);
   });
 
   it('includes Vue (a known production dependency)', async () => {
