@@ -31,7 +31,7 @@ function readIdentifier() {
   } catch {
     // fall through to a sensible default
   }
-  return 'com.slaktforskning.app';
+  return 'io.github.jonaseck2.slaktforskning';
 }
 const bundleIdentifier = readIdentifier();
 

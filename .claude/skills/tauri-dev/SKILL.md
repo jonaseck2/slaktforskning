@@ -53,14 +53,14 @@ The running app's current rusqlite-open DB path is exposed by the dev MCP HTTP b
 
 ```bash
 curl http://127.0.0.1:19241/db_path
-# → {"path":"/Users/.../com.slaktforskning.app/family.db"}
+# → {"path":"/Users/.../io.github.jonaseck2.slaktforskning/family.db"}
 ```
 
 Useful when:
 - The MCP server's `app_status.dbPath` is stale (it's set at MCP startup; if the user switched DB after that, this curl returns the live truth).
 - You want to inspect the live DB with the `sqlite3` CLI without touching the running app.
 
-The default DB lives at `~/Library/Application Support/com.slaktforskning.app/family.db` on macOS. If you have legacy data from before the 0.254.0 identifier rename, see the CHANGELOG for the one-line `mv` to relocate it.
+The default DB lives at `~/Library/Application Support/io.github.jonaseck2.slaktforskning/family.db` on macOS. (Earlier dev builds used `com.slaktforskning.app/` — manually `mv` that folder to the new path if you have data there.)
 
 ## The dev MCP UI bridge
 

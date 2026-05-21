@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Släktforskning",
-  "version": "0.264.5",
-  "identifier": "com.slaktforskning.app",
+  "version": "0.264.6",
+  "identifier": "io.github.jonaseck2.slaktforskning",
   "build": {
     "beforeDevCommand": "node scripts/fetch-bun-binaries.mjs && npx vite --config vite.renderer.config.ts",
     "devUrl": "http://localhost:1420",

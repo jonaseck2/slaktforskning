@@ -44,7 +44,7 @@ Image credits for the demo family used in screenshots are in [docs/manual/image-
 On first launch the app opens to an empty Persons view. The database lives in either:
 
 - **Portable mode**: `family.db` alongside the executable (if its directory is writable — useful for USB-stick installs).
-- **Installed mode**: the platform's app data dir (`~/Library/Application Support/com.slaktforskning.app/family.db` on macOS; `%APPDATA%/com.slaktforskning.app/` on Windows; `~/.local/share/com.slaktforskning.app/` on Linux).
+- **Installed mode**: the platform's app data dir (`~/Library/Application Support/io.github.jonaseck2.slaktforskning/family.db` on macOS; `%APPDATA%/io.github.jonaseck2.slaktforskning/` on Windows; `~/.local/share/io.github.jonaseck2.slaktforskning/` on Linux).
 
 The app remembers the last database you switched to, so reopening picks up where you left off. Use Settings → Database to switch to a different `.db` file at any time.
 
