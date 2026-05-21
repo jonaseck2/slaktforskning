@@ -51,8 +51,12 @@ jobs:
       - run: npm ci
       - name: Run e2e (Tier 1, headless via Xvfb + SLAKTFORSKNING_HEADLESS)
         run: xvfb-run -a npm run test:e2e
+  # Bundle smoke on every OS — runs on PRs only.
+  # On push to main, the Release workflow produces the same artifacts (and
+  # publishes them), so running the matrix again here is duplicate work.
   build:
     needs: test
+    if: github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:

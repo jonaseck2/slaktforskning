@@ -9,6 +9,7 @@
 - fix(ci): Linux build also installs `libgbm-dev` — `xcap` v0.9 links against `libgbm` and `rust-lld` was failing with "unable to find library -lgbm"
 - fix(ci): Linux AppImage bundling now sets `APPIMAGE_EXTRACT_AND_RUN=1` — ubuntu-24.04 (ubuntu-latest) dropped libfuse2, so `linuxdeploy` and its plugins (themselves AppImages) need extract-and-run mode instead of FUSE-mount
 - fix(ci): also install `libfuse2t64` (the ubuntu-24.04 transitional package for libfuse2) — the env var alone wasn't enough; linuxdeploy still failed silently without the FUSE library present
+- chore(ci): scope the CI bundle matrix to pull-requests only — on push to main the Release workflow already builds and publishes the same artifacts, so the CI matrix was duplicate work (~30 min of runner time per push saved)
 - docs: trim two pre-launch bug-fix references from MANUAL.md's Troubleshooting & FAQ — v0.264.0 ships with those fixes baked in
 - docs: CHANGELOG trimmed to the last 10 version blocks — earlier release notes archived in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log
 - docs: quickstart moved to QUICKSTART.md — README points to it from a short "Getting started" section, keeping the README skimmable
