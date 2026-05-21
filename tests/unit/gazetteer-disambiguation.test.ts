@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getAllGazetteers } from '../../src/api/place-gazetteers/bundled';
+import { loadGazetteers } from '../../src/api/place-gazetteers/merge';
 import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
 
 /**
@@ -27,7 +28,15 @@ import { resolvePlace } from '../../src/api/place-gazetteers/resolver';
  *   - 'Richmond, Kalifornien USA'          → California, USA (PASS — guard)
  */
 describe('gazetteer resolver — famous-city disambiguation', () => {
-  const gazetteers = getAllGazetteers();
+  // Use the same merged-tree shape that the running app uses (see
+  // src/renderer/composables/usePlaceResolver.ts:47). Raw getAllGazetteers()
+  // bypasses applyTranslations, so language-overlay aliases never attach.
+  const bundled = getAllGazetteers();
+  const gazetteers = loadGazetteers(
+    { enabledGazetteers: bundled.map(g => g.id) },
+    bundled,
+    [],
+  );
 
   // Canonical Copenhagen city tolerance box. Wide enough to accept any node
   // in the city of Copenhagen (e.g. district-level parishes), narrow enough
