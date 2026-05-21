@@ -105,15 +105,133 @@ export function buildNodeIndex(roots: GazetteerNode[]): NodeIndex {
   return { lookup: (path) => index.get(pathKey(path)) ?? null };
 }
 
+/**
+ * Attach `extras` as aliases on `node` (de-duped, preserves existing).
+ */
+function attachAliases(node: GazetteerNode, extras: string[]): void {
+  if (extras.length === 0) return;
+  const set = new Set(node.aliases ?? []);
+  for (const e of extras) set.add(e);
+  node.aliases = Array.from(set);
+}
+
+/**
+ * Search the subtree rooted at `root` (excluding `root` itself) for nodes
+ * whose `name` or `aliases` match `needle` (case-insensitive). Returns
+ * every match found. Scoped to this subtree so the search cannot escape
+ * into an unrelated branch (e.g. Köpenhamn must not attach to Copenhagen,
+ * NY because that lives under a different prefix).
+ */
+function findDescendantsByNameOrAlias(root: GazetteerNode, needle: string): GazetteerNode[] {
+  const needleLc = needle.toLowerCase();
+  const matches: GazetteerNode[] = [];
+  // BFS the subtree, skipping the root itself.
+  const queue: GazetteerNode[] = [];
+  if (root.children) queue.push(...root.children);
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    if (node.name.toLowerCase() === needleLc) {
+      matches.push(node);
+    } else if (node.aliases) {
+      for (const a of node.aliases) {
+        if (a.toLowerCase() === needleLc) {
+          matches.push(node);
+          break;
+        }
+      }
+    }
+    if (node.children) for (const c of node.children) queue.push(c);
+  }
+  return matches;
+}
+
 function applyTranslations(lang: Gazetteer, idx: NodeIndex): void {
   if (!lang.translations) return;
   for (const [_targetId, translations] of Object.entries(lang.translations)) {
     for (const [pathStr, names] of Object.entries(translations)) {
-      const node = idx.lookup(pathStr.split(' › '));
-      if (!node) continue;
-      const set = new Set(node.aliases ?? []);
-      for (const n of names) set.add(n);
-      node.aliases = Array.from(set);
+      const parts = pathStr.split(' › ');
+
+      // 1. Happy path: full-path exact lookup. Preserve existing behavior —
+      //    attach only `names`, do NOT add the path's last segment.
+      const exact = idx.lookup(parts);
+      if (exact) {
+        attachAliases(exact, names);
+        continue;
+      }
+
+      // 2. Fallback: the overlay's full path doesn't resolve in the merged
+      //    tree because the data gazetteer that actually carries the leaf
+      //    uses a structurally-different parent (e.g. lang-sv-geonames keys
+      //    on "Denmark > Capital Region > Copenhagen" — from world-admin1's
+      //    English vocabulary — but dk-sogne-dawa places the city under
+      //    "Region Hovedstaden > København"). To salvage these dormant
+      //    overlays without touching the data, we look for the closest
+      //    available anchor inside the SAME subtree the overlay points at.
+      //
+      //    Peel path segments from the right; for each existing prefix
+      //    (scoped to that prefix's subtree to avoid escaping into unrelated
+      //    branches):
+      //      a. Search the prefix's descendants for a node whose name or
+      //         alias matches the overlay path's last segment (the
+      //         English-canonical form).
+      //      b. Exactly one match → attach BOTH `names` AND the path's last
+      //         segment as aliases on that descendant.
+      //      c. Two or more matches → ambiguous; skip silently. Honest
+      //         ambiguity is better than a wrong attachment.
+      //      d. Zero matches → continue peeling to the next-shallower
+      //         prefix.
+      //    If we exhaust all peels with no descendant match but the deepest
+      //    existing prefix is at admin1 level or deeper (path length ≥ 4),
+      //    attach the aliases to that deepest existing prefix itself. This
+      //    treats the prefix as the closest available anchor for the
+      //    overlay's intent (e.g. lang-sv-geonames says "Copenhagen is in
+      //    Capital Region"; the merged tree has Capital Region as a leaf;
+      //    attaching Köpenhamn/Copenhagen there lands resolution within a
+      //    few hundred meters of the actual city). The depth guard prevents
+      //    attaching to the country/continent/world root, which would yield
+      //    a country-centroid match.
+      if (parts.length < 2) continue;
+      const needle = parts[parts.length - 1];
+
+      // Find the deepest prefix of the overlay path that exists in the
+      // merged tree. We only search descendants of this single prefix —
+      // never escape into unrelated subtrees, and never BFS multiple levels
+      // (which would be O(N_entries × continent_subtree_size) on every
+      // gazetteer load).
+      let deepestExistingPrefix: GazetteerNode | null = null;
+      let deepestExistingPrefixLen = 0;
+      for (let i = parts.length - 1; i >= 1; i--) {
+        const prefixNode = idx.lookup(parts.slice(0, i));
+        if (prefixNode) {
+          deepestExistingPrefix = prefixNode;
+          deepestExistingPrefixLen = i;
+          break;
+        }
+      }
+      if (!deepestExistingPrefix) continue;
+
+      const matches = findDescendantsByNameOrAlias(deepestExistingPrefix, needle);
+      if (matches.length === 1) {
+        // Exactly one descendant matches the path's last segment — attach
+        // both the translation values AND the path's last segment.
+        attachAliases(matches[0], [...names, needle]);
+        continue;
+      }
+      if (matches.length >= 2) {
+        // Ambiguous within the subtree — skip silently. Honest ambiguity is
+        // better than a wrong attachment.
+        continue;
+      }
+
+      // Zero descendant matches. As a last resort, attach the aliases to
+      // the deepest existing prefix itself — but ONLY if that prefix is at
+      // admin1 level or deeper (length ≥ 4 = [World, Continent, Country,
+      // Admin1+]). Otherwise the attachment would land on a country root or
+      // higher and we'd resolve to country-centroid coordinates, defeating
+      // the user goal of "famous-city pins land at the city".
+      if (deepestExistingPrefixLen >= 4) {
+        attachAliases(deepestExistingPrefix, [...names, needle]);
+      }
     }
   }
 }
