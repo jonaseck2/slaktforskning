@@ -34,3 +34,6 @@ dist-genney/
 src-tauri/binaries/.cache/
 src-tauri/binaries/bun-*
 !src-tauri/binaries/bun-binaries.lock
+
+# OSS-launch demo scratch (Swedish royal lineage portraits + temp DB)
+examples/scratch/
