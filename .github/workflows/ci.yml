@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
 
+# Only one CI run per branch / PR at a time. Rapid pushes cancel the previous
+# in-flight run — we only care about the latest state.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest

@@ -14,6 +14,7 @@
 - fix(ci): Release workflow now uploads to a **draft** release — every matrix leg appends its artifacts to the same draft, and the human publishes when all platforms are in. The previous `releaseDraft: false` made GitHub mark the release immutable on the first leg's publish, so subsequent legs got "Cannot upload assets to an immutable release"
 - chore(ci): Release workflow now triggers via `workflow_run` after CI succeeds (not in parallel on push). If `test` or `e2e` fails, the 4-OS Tauri bundle matrix doesn't run — saves ~30 minutes of runner time per red push
 - chore(ci): drop macOS codesigning env vars from Release — we don't ship an Apple Developer certificate. macOS .app + .dmg are produced unsigned; users will see Gatekeeper's "unidentified developer" warning on first launch (right-click → Open to bypass)
+- fix(ci): add `concurrency` groups to both CI and Release — rapid pushes (e.g. iterating on CI fixes) no longer fire N parallel matrices; the older in-flight run is cancelled when a newer one queues. Fixes the "Release fires twice in a row" symptom seen when the workflow_run trigger first landed
 - docs: trim two pre-launch bug-fix references from MANUAL.md's Troubleshooting & FAQ — v0.264.0 ships with those fixes baked in
 - docs: CHANGELOG trimmed to the last 10 version blocks — earlier release notes archived in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log
 - docs: quickstart moved to QUICKSTART.md — README points to it from a short "Getting started" section, keeping the README skimmable

@@ -27,6 +27,15 @@ on:
     types: [completed]
     branches: [main]
 
+# Only one Release per branch at a time. If a new CI completion triggers a
+# Release while an older one is still running, cancel the older one. Without
+# this, every CI completion since the workflow_run trigger landed will fire
+# its own Release matrix — N parallel bundle builds when the user is rapidly
+# iterating fixes.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
