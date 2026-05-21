@@ -190,6 +190,7 @@ The CHANGELOG is for the **user**, not the engineer. Treat it as a release-notes
 - **When adding a new entry, glance at the last 3–5.** If they're sliding back into engineering detail, trim them in the same commit. Drift compounds; correct it on contact.
 - **When shipping multiple related patches close together, prefer one minor bump with a few bullets** over five sequential patch bumps that each get their own entry. The version sequence is permanent; CHANGELOG entries should reflect meaningful units, not git tags.
 - **Skim test:** can a non-developer user read 100 entries in 60 seconds and get the gist of how the product evolved? If a single entry takes 30 seconds to read, it's too long.
+- **Keep ≤10 version blocks visible.** CHANGELOG.md displays Unreleased + the most recent 10 versioned `## X.Y.Z` blocks. Older entries are trimmed on contact — when you add a new version block, delete the oldest one (or oldest two, etc.) so the total stays ≤10. The footer pointer ("Earlier release notes archived. … see [docs/plans/archive/PLAN.md]") stays at the bottom; engineering-level history lives in the git log and the archive plan index. The first OSS-launch cleanup truncated 100s of pre-launch entries to enforce this; future commits maintain it. **Why ≤10:** any longer and skimmers don't get past the recent stuff that's actually relevant to their version; the archive captures everything for the rare deep-dive reader.
 
 #### Examples
 
