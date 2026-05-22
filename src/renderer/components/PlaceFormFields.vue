@@ -91,7 +91,7 @@
           {{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}
         </span>
         <code v-if="resolvedSource" class="resolved-gaz">{{ resolvedSource }}</code>
-        <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
+        <span class="resolved-path">{{ displayPlacePath(resolvedMatch.matchedPath) }}</span>
       </span>
     </div>
 
@@ -166,6 +166,7 @@ import { computed } from 'vue';
 import PlacePicker from './PlacePicker.vue';
 import { PLACE_TYPE_VALUES } from '../constants/eventTypes';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+import { displayPlacePath } from '../utils/placePathDisplay';
 
 export interface PlaceFormShape {
   place_type: string | null;

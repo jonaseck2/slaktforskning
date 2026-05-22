@@ -85,6 +85,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { searchGazetteer, resolveHierarchical, tokenizePlaceString } from '../../api/place-gazetteers/resolver';
+import { stripScaffolding } from '../utils/placePathDisplay';
 
 interface PlaceRow { id: string; name: string; place_type: string | null; parent_name?: string | null; }
 interface GazetteerSuggestion {
@@ -192,7 +193,8 @@ async function runSearch(query: string) {
         const key = `${leafName.toLowerCase()}|${pathStr}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        const parentChain = [...cand.path].reverse().map(n => n.name).join(' › ');
+        const stripped = stripScaffolding(cand.path.map(n => n.name));
+        const parentChain = [...stripped].reverse().join(' › ');
         suggestions.push({
           name: leafName,
           leafType: node.type ?? null,
@@ -214,7 +216,7 @@ async function runSearch(query: string) {
       suggestions.push({
         name: hit.node.name,
         leafType: hit.node.type ?? null,
-        parentChain: hit.path.map(n => n.name).join(' › '),
+        parentChain: stripScaffolding(hit.path.map(n => n.name)).join(' › '),
       });
     }
   }

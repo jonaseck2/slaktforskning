@@ -90,7 +90,7 @@
           <span class="place-type">{{ gaz.pathNodes[gaz.pathNodes.length - 1]?.type }}</span>
           <span v-if="gaz.contributors.length > 0" class="gazetteer-badge">{{ gaz.contributors.length === 1 ? gaz.contributors[0] : `${gaz.contributors.length} sources` }}</span>
         </div>
-        <div class="place-subtitle">{{ gaz.parentChain || gaz.matchedPath.join(' › ') }}</div>
+        <div class="place-subtitle">{{ gaz.parentChain || displayPlacePath(gaz.matchedPath) }}</div>
       </li>
       <li
         v-if="showCreateNew"
@@ -124,6 +124,7 @@ import { ref, watch, inject, onMounted, onBeforeUnmount, nextTick, computed } fr
 import { useI18n } from 'vue-i18n';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
 import { searchGazetteer, resolveHierarchical, tokenizePlaceString } from '../../api/place-gazetteers/resolver';
+import { displayPlacePath, stripScaffolding } from '../utils/placePathDisplay';
 import PlaceTreePickerModal from './modals/PlaceTreePickerModal.vue';
 
 const pickerId = 'place-picker-' + Math.random().toString(36).slice(2, 8);
@@ -278,8 +279,8 @@ async function runSearch() {
         const key = `${leafName.toLowerCase()}|${pathStr}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        const reversed = [...cand.path].reverse();
-        const parentChain = reversed.map(n => n.name).join(' › ');
+        const stripped = stripScaffolding(cand.path.map(n => n.name));
+        const parentChain = [...stripped].reverse().join(' › ');
         gazSuggestions.push({
           name: leafName,
           lat: node.lat,
@@ -316,7 +317,7 @@ async function runSearch() {
         pathNodes: hit.path.map(n => ({ name: n.name, type: n.type, lat: n.lat, lon: n.lon })),
         gazetteer: hit.gazetteer,
         contributors: ((hit.node as { __contributors?: string[] }).__contributors ?? []).slice(),
-        parentChain: hit.path.map(n => n.name).join(' › '),
+        parentChain: stripScaffolding(hit.path.map(n => n.name)).join(' › '),
       });
     }
     gazSuggestions.sort((a, b) => b.pathNodes.length - a.pathNodes.length);
