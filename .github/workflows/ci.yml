@@ -25,6 +25,7 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+      - run: npm run audit
       - run: npm test
 
   # Tier 1 e2e — the 4-project Playwright suite (boot / crud / website-export

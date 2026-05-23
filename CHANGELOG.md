@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.264.21 — 2026-05-23
+
+- fix(deps): patch 7 runtime npm advisories (1 high `fast-uri`, plus moderate `hono` / `ip-address` / `qs` / `uuid` / `ws`) via lockfile-only `npm audit fix`
+- chore(ci): `npm run audit` (`npm audit --omit=dev --audit-level=moderate`) now runs in the CI test job — new runtime vulnerabilities fail the build instead of sliding past us
+
 ## 0.264.20 — 2026-05-23
 
 - fix: remove the undo/redo buttons from the nav bar — Cmd+Z / Cmd+Shift+Z and the macOS Edit menu still trigger undo/redo, so the toolbar buttons were redundant clutter
