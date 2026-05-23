@@ -24,7 +24,7 @@ Read 2-3 sibling panels before flagging anything. Quality of findings matters mo
 
 ## Resources
 
-`.claude/rules/renderer.md` auto-loads on `src/renderer/**` and is the spec to review against — modal pattern (`BaseSubPanel` only), list-view + side-panel layout, design tokens, shared classes, panel-section padding, chart outlines, screen-reader rules. `/frontend-design` is the canonical component catalog for props/emits and the full panel shell (panel-header / panel-header-content / panel-close-btn structure, `usePanelSections(prefix, defaults)` for collapsible state, section ordering: main entity → linked entities → media → notes → quality). `/a11y` covers the ARIA patterns and WCAG token thresholds.
+`.claude/rules/renderer.md` is the spec to review against — modal pattern (`BaseSubPanel` only), list-view + side-panel layout, design tokens, shared classes, panel-section padding, chart outlines, screen-reader rules. `/frontend-design` is the canonical component catalog for props/emits and the full panel shell (panel-header / panel-header-content / panel-close-btn structure, `usePanelSections(prefix, defaults)` for collapsible state, section ordering: main entity → linked entities → media → notes → quality). `/a11y` covers the ARIA patterns and WCAG token thresholds.
 
 Real anti-patterns worth flagging:
 - Modals built with raw `<div class="modal-overlay">` instead of `<BaseSubPanel>`

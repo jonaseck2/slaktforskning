@@ -18,7 +18,7 @@ When asked to commit, or when a commit is appropriate after completing work:
 4. **Bump the version in `package.json`** — every commit that ships a fix or feature MUST bump it. No exceptions, no batching.
    - Fix (bug, i18n, CSS, config) → patch bump (0.x.Y → 0.x.Y+1)
    - Feature (new component, new API, new UI element) → minor bump (0.X.0 → 0.X+1.0)
-   - Then add a one-line entry under `## Unreleased` in `CHANGELOG.md`.
+   - Then add a new `## X.Y.Z — YYYY-MM-DD` block at the top of `CHANGELOG.md` with one bullet summarising the change. **Never append to a `## Unreleased` section** — there is no `## Unreleased` in this repo; every commit bumps the version, so every commit gets its own versioned block. CI auto-publishes a GitHub release at tag `vX.Y.Z` once the commit lands on main.
 5. Compose a clear commit message:
    - First line: concise summary (imperative mood, under 72 chars)
    - Blank line, then details if the change is non-trivial
@@ -80,7 +80,7 @@ Long-running worktrees (multi-task plans taking hours/days) collide with whateve
 
 **`package.json` + `package-lock.json` (version conflict):** Main probably has one or more patch bumps; the feature has a minor bump set when the release task ran. Take the feature's minor bump IF it's still higher than main. If main has overshot (e.g. main released v0.131.x while the feature targeted v0.131.0), bump the feature again to the next unused minor (v0.132.0). Never take main's version — that drops the feature's release semantics.
 
-**`CHANGELOG.md`:** Take the feature's entry verbatim (only the feature knows the release's full scope). Place it after the `## Unreleased` header, before main's entries.
+**`CHANGELOG.md`:** Take the feature's `## X.Y.Z` block verbatim (only the feature knows the release's full scope) and place it at the top, above main's entries. If the trim rule (below) puts you over 10 versioned blocks, move the oldest one(s) to `docs/plans/archive/CHANGELOG.md`.
 
 **`docs/PLAN.md` Roadmap section:** Remove the feature's `[planned]` or `[in progress]` entry — it's now Done and recorded in CHANGELOG.md. Keep any parallel-work `[done]` entries that landed on main.
 
@@ -152,64 +152,7 @@ All four lines must show the same `X.Y.Z`. The bumped version becomes the canoni
 
 **Path convention (overrides superpowers defaults):** All plans and design specs in this repo live under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`. Design spec → `-design.md` suffix; implementation plan → no suffix; both archive to `docs/plans/archive/` when done. If a commit contains files under `docs/superpowers/` or `.claude/plans/`, that's a bug — move them before committing.
 
-**Every version-bumped commit must have an entry in `CHANGELOG.md`.** This includes small fixes — they still get a one-line entry under `## Unreleased`:
-```
-- fix: cause field restricted to death events
-```
-
-### CHANGELOG style
-
-The CHANGELOG is for the **user**, not the engineer. Treat it as a release-notes feed they can skim — not a project log. Follow these rules every time you write or touch an entry.
-
-#### Per-bullet rules (writing each line)
-
-- **Bullet points only.** No paragraphs, no prose blocks, no nested sub-bullets.
-- **≤100 characters per bullet** — hard cap. If a bullet won't fit, split it or rephrase.
-- **One sentence per bullet.** No semicolons stringing two thoughts together. Period or em-dash, not "; also …".
-- **What changes for the user, not how it's implemented.** Talk about behaviour, surfaces, outcomes — not refactors, function names, file paths, line counts, or internal mechanics.
-- **Lead with intent.** What was the user pain or goal? Bake the why into the bullet — don't make the reader reverse-engineer it from the diff. Pull intent from the conversation context (bug report, feature request, use case) — the why is almost always upthread.
-- **No file paths, function names, class names, SQL fragments, or commit SHAs.** They belong in the commit message body, not CHANGELOG.
-- **No "this commit", "this PR", "this release"** — drop the framing word and describe the change.
-- **Type prefixes are fine** (`fix:`, `feat:`, `perf:`, `docs:`, `chore:`) — keep them short, skip the parenthetical scope unless it's a real disambiguator.
-
-#### Per-entry rules (writing the whole release block)
-
-- **≤5 bullets per release.** Most releases need 1–3. If you're at 6+, you're listing implementation work as if it were user-facing — collapse or cut.
-- **No restating the version title in bullets.** The header already says what the release is about; don't repeat it on the first bullet.
-- **Don't enumerate the same change three different ways.** If three bullets all describe slices of the same user-facing thing, collapse to one.
-- **Pure-internal version bumps get one short line.** Any release that touches only tests, refactors, build config, agent tooling, lint cleanup, or other stuff a user can't see should look like:
-  ```
-  ## v0.X.Y — Short title
-  - chore: internal only
-  ```
-  Or fold one specific signal in: `- chore: imports faster, no behaviour change`.
-
-#### Anti-bloat / no-regrowth rules (every time you touch CHANGELOG)
-
-- **Don't backfill detail into old entries.** If you want to preserve detail later, put it in the commit message or in `docs/plans/archive/` — never grow an existing CHANGELOG bullet.
-- **When adding a new entry, glance at the last 3–5.** If they're sliding back into engineering detail, trim them in the same commit. Drift compounds; correct it on contact.
-- **When shipping multiple related patches close together, prefer one minor bump with a few bullets** over five sequential patch bumps that each get their own entry. The version sequence is permanent; CHANGELOG entries should reflect meaningful units, not git tags.
-- **Skim test:** can a non-developer user read 100 entries in 60 seconds and get the gist of how the product evolved? If a single entry takes 30 seconds to read, it's too long.
-- **Keep ≤10 version blocks visible.** CHANGELOG.md displays Unreleased + the most recent 10 versioned `## X.Y.Z` blocks. Older entries are trimmed on contact — when you add a new version block, delete the oldest one (or oldest two, etc.) so the total stays ≤10. The footer pointer ("Earlier release notes archived. … see [docs/plans/archive/PLAN.md]") stays at the bottom; engineering-level history lives in the git log and the archive plan index. The first OSS-launch cleanup truncated 100s of pre-launch entries to enforce this; future commits maintain it. **Why ≤10:** any longer and skimmers don't get past the recent stuff that's actually relevant to their version; the archive captures everything for the rare deep-dive reader.
-
-#### Examples
-
-Good (terse, user-facing, one sentence each):
-```
-- fix: place picker no longer commits on the first row click — press OK to confirm
-- feat: Duplicates view shows all candidates with infinite scroll instead of capping at 100
-- perf: imports of 50k+ persons now finish in seconds instead of minutes
-- chore: internal only
-```
-
-Bad (engineering detail, multi-thought, restating the title):
-```
-- fix(ui): wired stageSelection() through PlaceTreePickerModal's :selected binding so onClick stages instead of immediately calling emit('select')
-- feat(api): added countDuplicates(db) and refactored findDuplicates to share collectDuplicateCandidates()
-- perf(db): wrap bulk createPerson loop in BEGIN IMMEDIATE / COMMIT, drop redundant prepared-statement compiles; also added test coverage and updated CLAUDE.md
-```
-
-Engineering detail from the "bad" examples still belongs in the **commit message body** — just not in CHANGELOG.
+**Every version-bumped commit gets a new `## X.Y.Z — YYYY-MM-DD` block at the top of `CHANGELOG.md`** — no Unreleased section, ≤10 blocks visible, oldest demoted to `docs/plans/archive/CHANGELOG.md` on rollover. Block structure, bullet style, anti-bloat rules, and examples are owned by `oss-release` — read that skill before touching CHANGELOG.md. The commit, the block, and any archive trim ship in the same commit.
 
 If the commit completes a milestone (or part of one) that has a plan file in `docs/plans/`:
 - Mark the completed task checkboxes in the plan file (`- [x]`)
@@ -218,8 +161,8 @@ If the commit completes a milestone (or part of one) that has a plan file in `do
 
 If the commit **fully completes** a milestone:
 - Move the plan file to `docs/plans/archive/` (mark all checkboxes done)
-- Add a `## vX.Y.Z — short description` entry to `CHANGELOG.md`
-- **Remove the milestone's heading and checkbox list from the `docs/PLAN.md` Roadmap section** — the CHANGELOG entry is the permanent record; the Roadmap must only contain future work
+- Add a `## X.Y.Z — YYYY-MM-DD` block to `CHANGELOG.md` per `oss-release`
+- **Remove the milestone's heading and checkbox list from the `docs/PLAN.md` Roadmap section** — the CHANGELOG block is the permanent record; the Roadmap holds only future work
 - Include all of the above in the same commit
 
 If the commit introduces a new plan file:
@@ -253,4 +196,4 @@ What was changed and why.
 - `path/to/file.ts` — what changed
 ```
 
-Add a `- fix: short description` line to `CHANGELOG.md` under `## Unreleased`. No Roadmap entry is needed for fixes.
+Add the `## X.Y.Z — YYYY-MM-DD` block per `oss-release` with a `- fix: short description` line. No Roadmap entry is needed for fixes.

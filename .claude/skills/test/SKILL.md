@@ -5,55 +5,35 @@ description: Run tests, write new tests, and verify code changes. Use when imple
 
 # Test Skill
 
-## Running Tests
+Three layers: Vitest unit + component tests, Playwright e2e against the packaged Tauri binary, and manual/MCP-driven UI verification for changes the test suite can't see.
 
-### Unit tests (API layer)
+## Running tests
+
 ```bash
-npm test                   # Run all unit + component tests (Vitest)
-npm test -- --coverage     # Run with coverage report (v8, src/api/ only)
-npm run test:watch         # Watch mode for active development
+npm test                # Vitest unit + component (~4000 tests, 80% coverage threshold on src/api/)
+npm test -- --coverage  # Coverage report (v8, src/api/ only)
+npm run test:watch      # Watch mode
+
+npm run test:e2e        # Tier 1 Playwright: boot, crud, website-export, duplicates (gates CI/merge, <5 min)
+npm run test:e2e:full   # Tier 1 + Tier 2: panels, reactivity, imports (plan close-out)
+npx playwright test --project=boot     # One project (the `pretest:e2e` script builds the bundle for you)
+
+npm run lint            # ESLint (must pass 0 errors)
 ```
 
-### E2E tests (Electron GUI + MCP server)
-```bash
-npx playwright test                              # All 11 projects in parallel
-npx playwright test --project=gui-persons        # Single project
-npx playwright test --project=gui-quality --project=gui-media  # Multiple projects
-npx playwright test -g 'create a person'         # Filter by test name
-```
+Full verify before commit: `npm run lint && npm test`. E2E runs in CI on PRs; for direct-to-main pushes the executor runs the appropriate tier locally and captures the summary in the commit message (see `e2e-evidence` skill).
 
-Full run: ~1.5 min wall clock (11 suites × 10 workers). Slowest suite governs total time; Electron cold-start dominates per-suite time.
+## Writing unit tests
 
-### Lint
-```bash
-npm run lint                # Run ESLint (must pass with 0 errors)
-```
-
-### Full verification before committing
-```bash
-npm run lint && npm test && npx playwright test
-```
-
-### Coverage thresholds
-`vitest.config.mts` enforces **80% lines and functions** on `src/api/`. The build fails if coverage drops below. Current baseline: ~90% statements, 100% lines, 100% functions.
-
-## Writing Unit Tests
-
-Unit tests live in `tests/unit/` and test the `src/api/` layer with an in-memory SQLite database.
-
-### Pattern — always follow this structure:
+`tests/unit/<entity>.test.ts` mirrors `src/api/<entity>.ts`. Fresh in-memory SQLite per test via `createTestDb()`.
 
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers';
-// Import the api functions you're testing:
 import { createThing, getThing, listThings } from '../../src/api/things';
 
 let db: any;
-
-beforeEach(() => {
-  db = createTestDb();  // Fresh in-memory DB with full schema
-});
+beforeEach(() => { db = createTestDb(); });
 
 describe('things', () => {
   it('creates a thing', () => {
@@ -61,479 +41,90 @@ describe('things', () => {
     expect(thing.id).toBeDefined();
     expect(thing.name).toBe('test');
   });
-
-  it('lists things', () => {
-    createThing(db, { name: 'a' });
-    createThing(db, { name: 'b' });
-    const list = listThings(db);
-    expect(list).toHaveLength(2);
-  });
 });
 ```
 
-### Key rules:
-- **Test the `src/api/` functions directly** — not IPC, not Vue components
-- **Use `createTestDb()`** from `tests/unit/helpers.ts` — gives you a fresh `:memory:` SQLite with full schema
-- **Each `beforeEach` creates a fresh DB** — tests are isolated
-- **node-sqlite3-wasm quirk**: `db.get()` returns `undefined` not `null`. The api/ functions handle this with `?? null`, but be aware in raw assertions.
-- **Parameter binding uses arrays**: `stmt.run([a, b])` not `stmt.run(a, b)`
+Rules:
+- Test `src/api/` functions directly; never IPC, never Vue components, never mocks.
+- Use the actual api functions to seed data — never hand-rolled SQL inserts.
+- `db.get()` returns `undefined` not `null`; parameter binding via arrays (see `rules/api.md`).
+- Coverage thresholds (80% lines + functions on `src/api/`) are enforced by `vitest.config.mts`.
 
-### Test file naming:
-- `tests/unit/persons.test.ts` — tests `src/api/persons.ts`
-- `tests/unit/families.test.ts` — tests `src/api/families.ts`
-- `tests/unit/events.test.ts` — tests `src/api/events.ts`
-- `tests/unit/sources.test.ts` — tests `src/api/sources.ts`
+### Per-CRUD-function checklist (don't skip the negatives)
 
-### What to test for each CRUD function:
 1. **Create** — returns entity with UUID id, fields match input, defaults work
 2. **Get by ID** — returns entity; **returns null for missing ID** (not undefined — api/ uses `?? null`)
 3. **List** — returns array, respects ordering
 4. **Update** — changes specified fields, leaves others untouched, returns updated entity
 5. **Delete** — returns true on success; **returns false for missing ID**; cascades correctly (verify child rows are gone)
 
-Negative cases (null returns, false returns) are easy to skip and frequently missed. Always include them.
-
-### Import/transform tests — assert DB outcomes, not just fixtures
-
-When testing import transforms (GEDCOM, Genney, etc.), **always query the DB and assert actual row counts/values** after running the import — don't only compare the transform output against a fixture.
+### Import/transform tests — assert DB state, not just return values
 
 ```typescript
 const report = importGedcom(db, gedcomString);
-// Assert DB state, not just the report object:
-expect(listPersons(db)).toHaveLength(3);
+expect(listPersons(db)).toHaveLength(3);          // query the DB
 expect(listPlaces(db)).toHaveLength(2);
 expect(getEventsForPerson(db, id)).toHaveLength(1);
 ```
 
-Why: if both the transform code and the test fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison will silently pass while the bug exists. DB-level assertions catch this.
+Why: when the transform and the fixture share the same wrong assumption (e.g. a misnamed column), a fixture-only comparison silently passes while the bug exists. DB-level assertions catch this — the EVENT_PLACE column-name bug is the canonical case.
 
 ### Design-token tests — WCAG contrast
 
-Any change to color tokens in `tokens.css` or `shared.css` is guarded by `tests/unit/wcagContrast.test.ts`. It parses both CSS files, builds the effective palette for every (theme × appearance) combination (Forest/Nordic/Twilight × light/dark/high-contrast), and asserts every text-on-bg pair against its WCAG 2.1 threshold:
-- **High-contrast mode** → AAA (≥7:1 body, ≥4.5:1 large)
-- **Light + dark modes** → AA (≥4.5:1 body, ≥3:1 large)
-- **Non-text UI** (borders on surfaces) → ≥3:1
+Any change to color tokens in `tokens.css` or `shared.css` is guarded by `tests/unit/wcagContrast.test.ts`. Parses both CSS files, builds the effective palette for every (theme × appearance) combination (Forest/Nordic/Twilight × light/dark/high-contrast), asserts every text-on-bg pair against its WCAG threshold:
+- High-contrast → AAA (≥7:1 body, ≥4.5:1 large)
+- Light/dark → AA (≥4.5:1 body, ≥3:1 large)
+- Non-text UI (borders on surfaces) → ≥3:1
 
-The math lives in `src/renderer/utils/wcag.ts` and is independently tested by `tests/unit/wcag.test.ts` (W3C reference values for luminance, contrast, and thresholds). Run `npx vitest run tests/unit/wcag*` after any color-token edit — failure messages print the exact ratio and the threshold it needs to clear.
+Run `npx vitest run tests/unit/wcag*` after any color-token edit.
 
 ### Design-token tests — export colour invariance
 
-Exports (PDF, SVG, print) must render identically regardless of current theme/appearance. Two tests guard this:
+`tests/components/exportTextColorInvariance.test.ts` proves PDF/SVG/print render identically regardless of current theme. Inlines `tokens.css` + `shared.css` with `@media print` unwrapped, wraps text in `.export-scope`, toggles `html` classes across all theme × appearance combos, asserts `getComputedStyle(el).color` identical everywhere. Includes a sanity test that bare elements outside the scope *do* drift. Run after any edit to `tokens.css`, `shared.css`, or `useChartColors.ts`.
 
-- `tests/components/exportTextColorInvariance.test.ts` — proves the DOM path stays scoped. Inlines `tokens.css` + `shared.css` (with `@media print { … }` unwrapped to simulate print media), wraps representative text elements in `.export-scope`, toggles `html` classes across all theme × appearance combos, and asserts `getComputedStyle(el).color` is identical everywhere. Includes a sanity test that bare elements outside the scope *do* drift, so the invariance test can't silently pass on a broken measurement.
+## Component tests
 
-Run after any edit to `tokens.css`, `shared.css`, or `useChartColors.ts`.
+`tests/components/` — Vue components with Happy DOM (no real browser). Use for components with significant interaction logic.
 
-## Component Tests
+**Worth component-testing:** form components with validation/debounce (DateInput, PersonPicker, PlacePicker); modal workflows (EventModal, CitationModal, PersonModal with relatedTo); chart/layout components; keyboard/a11y logic.
 
-Component tests live in `tests/components/` and test Vue components with Happy DOM (no real browser). Use for components with significant interaction logic.
+**Not worth:** presentational components (AppBadge, AppAvatar, AppButton) — e2e covers them; simple list/table views — e2e covers CRUD flows.
 
-### Good candidates for component tests:
-- Form components with validation/debounce (DateInput, PersonPicker, PlacePicker)
-- Modal components with multi-step workflows (EventModal, CitationModal, PersonModal with relatedTo)
-- Chart/layout components (PedigreeChart, PersonsView)
-- Components with keyboard navigation or accessibility logic
+## E2E tests
 
-### Not worth component-testing:
-- Presentational components (AppBadge, AppAvatar, AppButton) — E2E covers them
-- Simple list/table views — E2E covers CRUD flows
+`tests/e2e/` runs Playwright against the packaged Tauri binary, driven by the dev MCP HTTP bridge inside the running app. **`rules/tests.md` is canonical** — it lists every project, the two tiers, fixture-driven shapes (`panels.ts`, `reactivity-triples.ts`, `imports.spec.ts CASES`), and adding-a-new-X guidance. **`e2e-evidence` skill** decides which tier to run and what to capture for plan close-out.
 
-## E2E Tests
+When writing e2e specs, follow the existing fixture-driven shape — append a `PanelDescriptor` / `ReactivityTriple` / `CASES` entry rather than creating new spec files for one-off scenarios.
 
-E2E tests live in `tests/e2e/` and use the `AppDriver` class to control a live Electron app via the UI HTTP bridge. Each test file spawns its own Electron instance on a unique port.
+## UI verification (required for UI changes)
 
-### Architecture
+Unit and component tests don't cover the rendering stack, modal lifecycle, Vue Router behavior, or visual correctness. Verify in the running app via the `slaktforskning-dev` MCP before committing UI changes.
 
 ```
-tests/e2e/
-├── fixture.ts                  # AppDriver class + startApp/teardownApp helpers
-├── app.test.ts                 # Smoke: app launch + MCP server handshake
-├── gui-persons.test.ts         # Persons CRUD, navigation, search, add related person (port 19242)
-├── gui-sources-rels.test.ts    # Sources CRUD, relationships CRUD, global search (port 19243)
-├── gui-places.test.ts          # Places CRUD, detail, address fields, hierarchy (port 19244)
-├── gui-viz.test.ts             # Visualization: empty state, tabs, SVG rendering (port 19245)
-├── gui-a11y.test.ts            # ARIA accessibility verification (port 19246)
-├── gui-quality.test.ts         # Quality checks: run, filter, ignore/restore (port 19247)
-├── gui-media.test.ts           # Media library: gallery/list, search, panel title edit (.media-title-input + blur), delete (port 19248)
-├── gui-settings.test.ts        # Settings: database tab, tree subject, tab navigation (port 19249)
-├── gui-research-tasks.test.ts  # Research tasks: CRUD, status cycling, inline edit, filters (port 19250)
-└── gui-dark-mode.test.ts       # Per-theme dark mode surface distinctness (port 19251)
+ui_navigate { path: '/your-route' }
+ui_screenshot { selector: '.your-target' }    # crops to the element; <1 KB PNG if scoped
+ui_query_styles { selector: '.your-target' }  # computed styles + bounding rect
+ui_get_dom { selector: '.your-target' }       # outerHTML of one element
+ui_click { selector: 'button.btn-add' }
+ui_fill { selector: 'input.name', value: 'X' }
+ui_aria_audit                                 # ARIA findings against WCAG
 ```
 
-All 11 projects run in parallel. Each gets a fresh temp DB via `SLAKTFORSKNING_DB` env var. Windows use `SLAKTFORSKNING_NO_FOCUS=1` to avoid stealing focus during tests.
+See `tauri-dev` for launching the app under the dev MCP, `dom-first-debugging` for the read-DOM-before-reasoning discipline. The Chrome DevTools MCPs are **not** the right tool here — Tauri uses the system WebView, not Chromium with CDP; `chrome-devtools list_pages` returns only `about:blank`.
 
-**Port must be unique per test file.** Two files sharing a port cause one Electron instance to kill the other mid-run, producing confusing "Vue did not initialize in time" errors. Allocate the next free port when adding a suite.
+**Use UI verification:** after any Vue component / modal / routing change; when reproducing a reported bug visually; to confirm an IPC binding wires end-to-end; to validate a fix before committing.
 
-### Writing a new E2E test file
+## When tests fail
 
-```typescript
-import { test, expect } from '@playwright/test';
-import { AppDriver, AppInstance, startApp, teardownApp } from './fixture';
+- Read the error message; don't blindly re-run.
+- Decide whether it's a test bug or a code bug — the test may have wrong expectations after a legitimate code change.
+- For SQLite errors: `db.get()` returns `undefined`, parameter binding uses arrays.
+- For e2e timeouts: a previous app instance may still be holding the port — kill and retry; CSS selectors may not match the rendered class (grep the component source for the actual classes used by AppButton / FilterChips / etc.); localStorage state from a previous retry may need clearing.
 
-const UI_PORT = 192XX; // Unique port — check existing files!
-let instance: AppInstance;
-const app = new AppDriver(UI_PORT);
+## When to run tests
 
-test.beforeAll(async () => {
-  instance = await startApp(UI_PORT, 'tag-for-db-filename');
-  await app.settle(150);
-  await app.setLocale('en');
-  await app.settle(300); // Extra settle for locale to take effect
-});
-
-test.afterAll(async () => {
-  await teardownApp(instance);
-});
-
-test.setTimeout(30_000);
-```
-
-Then add the test file to `playwright.config.ts` as a new project:
-```typescript
-{
-  name: 'gui-xxx',
-  testMatch: 'gui-xxx.test.ts',
-  timeout: 120000,
-  retries: 1,
-},
-```
-
-### AppDriver API
-
-**Navigation & DOM:**
-- `app.navigate(path)` — Vue Router push (calls `settle()`; does NOT await async redirects)
-- `app.getDom()` — full rendered HTML (includes `<style>` blocks!)
-- `app.waitForText(text, timeoutMs?)` — poll DOM until text appears (default 12s)
-- `app.expectText(text)` — polls up to 5s for text; `expectNoText(text)` settles first
-- `app.settle(ms?)` — wait for Vue to re-render (requestAnimationFrame + 50ms default)
-
-**Interaction:**
-- `app.click(selector, timeoutMs?)` — polls up to 8s for element to exist, then clicks
-- `app.fillInput(selector, value)` — set value via native setter + `input` event (fails if missing)
-- `app.waitAndFill(selector, value)` — wait for element to exist, then fill
-- `app.executeJs<T>(code)` — run JS in renderer, return serialized result (must be IIFE for multi-statement)
-
-**Data seeding** (call `window.api.*` in the renderer):
-- `app.createPerson({ given_name, surname, sex? })`
-- `app.createEvent({ event_type, date_original?, relationship_id? })`
-- `app.addEventParticipant({ event_id, person_id, role })`
-- `app.createSource({ title, author? })`
-- `app.createCitation({ source_id, event_id?, person_id?, confidence? })`
-- `app.createPlace({ name, place_type?, street?, postal_code?, city?, country? })`
-- `app.createRelationship({ type, person1_id?, person2_id?, subtype? })`
-- `app.createResearchTask({ task, priority?, status?, notes? })` (use `addTaskLink` afterwards to attach persons/places/media)
-- `app.createMedia({ title, file_ref?, format?, notes? })`
-- `app.addMediaLink({ media_id, entity_type, entity_id, sort_order? })`
-- `app.createGroup({ name, notes? })`
-- `app.addGroupMember(groupId, personId)` — convenience helper around `addLink('person', …)`
-
-### Critical E2E patterns and pitfalls
-
-#### 1. CSS selector mismatches — the #1 source of failures
-
-**Always check the actual rendered class names.** Vue scoped styles and component abstractions mean the class you see in the template may not match what you expect:
-
-| Component | Template usage | Rendered class | Common mistake |
-|-----------|---------------|----------------|----------------|
-| `AppButton variant="soft"` | `<AppButton variant="soft">+ Add Person</AppButton>` | `.app-btn.app-btn--soft` | Using `.btn-add` |
-| `AppButton variant="ghost" size="sm"` | `<AppButton variant="ghost" size="sm">✕</AppButton>` | `.app-btn.app-btn--ghost.app-btn--sm` | Using `.btn-delete` |
-| `AppButton variant="primary"` | `<AppButton variant="primary" type="submit">` | `.app-btn.app-btn--primary` | Using `button[type="submit"]` alone |
-| `FilterChips` | `<FilterChips :options="..." />` | `.chip-btn`, `.chip-btn--active` | Using `.chip`, `.tab-btn`, `[data-testid="tab-*"]` |
-| Visualization tabs | `<FilterChips>` for chart tabs | `.chip-btn` | `[data-testid="tab-hourglass"]` (removed) |
-| Settings tabs | `<FilterChips>` for tabs | `.chip-btn` | Using `.tab-btn` (doesn't exist) |
-
-**shared.css also defines `.btn-add`, `.btn-delete`, `.btn-cancel`** — these are used directly in some components (ResearchTasksTable save, MediaLightbox, QualityView ignore button, GazetteersView) but NOT in views that use AppButton.
-
-**Common real patterns in the current codebase:**
-- PersonsView/SourcesView/PlacesView: `<AppButton variant="soft">+ {label}</AppButton>` for add, `<AppButton variant="ghost" size="sm">✕</AppButton>` for delete
-- PersonPanel add relative buttons: `<AppButton variant="soft" size="sm">+ Father/Mother/Spouse/Child</AppButton>` (text is the role word only — no "Add Parent")
-- EventList add: `<AppButton variant="soft" size="sm">+ Event</AppButton>`
-- No back buttons exist on any view — paneled views close the panel via the panel's `✕` button instead
-
-Before writing selectors, grep the component source to see what classes are actually used:
-```bash
-# Check what class AppButton renders
-grep 'class.*btn\|:class' src/renderer/components/ui/AppButton.vue
-# Check what a view uses for its "add" button
-grep 'btn-add\|AppButton' src/renderer/views/ResearchTasksView.vue
-```
-
-**When multiple `.app-btn--soft` exist on one view** (e.g., PersonsView has an active view-toggle + Add Person button), match by text to disambiguate:
-```typescript
-await app.executeJs(`
-  Array.from(document.querySelectorAll('.app-btn--soft'))
-    .find(b => b.textContent.includes('Person'))?.click()
-`);
-```
-
-#### 2. executeJs must use IIFEs for multi-statement code
-
-The `execute_js` endpoint evaluates code in the renderer context. Multi-statement code with `return` will fail unless wrapped. **Always wrap in an IIFE:**
-
-```typescript
-// WRONG — throws "return not in function"
-const count = await app.executeJs<number>(`
-  const rows = document.querySelectorAll('.row');
-  return rows.length;
-`);
-
-// RIGHT — IIFE
-const count = await app.executeJs<number>(`
-  (() => {
-    const rows = document.querySelectorAll('.row');
-    return rows.length;
-  })()
-`);
-
-// ALSO RIGHT — single expression (no return needed)
-const count = await app.executeJs<number>(`
-  document.querySelectorAll('.row').length
-`);
-```
-
-#### 3. getDom() includes `<style>` blocks
-
-`getDom()` returns the full HTML including `<style>` tags. If you check `dom.includes('row-ignored')`, it will match the CSS class definition in the stylesheet, not actual DOM elements.
-
-```typescript
-// WRONG — matches CSS definition ".row-ignored { opacity: 0.5 }"
-const dom = await app.getDom();
-expect(dom).not.toContain('row-ignored');
-
-// RIGHT — check actual DOM elements
-const hasIgnored = await app.executeJs<boolean>(`
-  !!document.querySelector('.quality-table .row-ignored')
-`);
-expect(hasIgnored).toBe(false);
-```
-
-Use `getDom()` + `toContain()` only for **text content** (person names, labels, etc.), never for CSS class names.
-
-#### 4. Data seeding requires navigate-away-then-back
-
-After seeding data via `window.api.*`, the current view may not reload. Force a fresh mount:
-
-```typescript
-await app.createResearchTask({ task: 'New Task' });
-// WRONG — view may show stale data
-await app.navigate('/research-tasks');
-
-// RIGHT — force remount
-await app.navigate('/');
-await app.navigate('/research-tasks');
-await app.waitForText('New Task');
-```
-
-#### 5. Vue `:value` + `@blur` pattern (inline edit fields)
-
-Some inputs use `:value` + `@blur` instead of `v-model`. The native setter trick doesn't update Vue state — only the `blur` handler saves:
-
-```typescript
-// For :value + @blur inputs (e.g. MediaPanel's .media-title-input)
-await app.executeJs(`
-  new Promise(resolve => {
-    const input = document.querySelector('.media-title-input');
-    if (input) {
-      input.focus();
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype, 'value'
-      ).set;
-      setter.call(input, 'New Value');
-      input.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-    }
-    setTimeout(resolve, 200);
-  })
-`);
-```
-
-Note: the media table list view is read-only — title and notes editing only happens in MediaPanel via the `.media-title-input` (header) and `.notes-textarea` (Notes section). The panel emits `media-updated` after a successful save so MediaView can patch its items array and the MediaViewer caption preview re-renders without a reload.
-
-#### 6. localStorage persists across Playwright retries
-
-The same Electron process runs for all retries. If your test writes to localStorage (e.g., quality ignore state), clear it at the start:
-
-```typescript
-await app.executeJs(`localStorage.removeItem('quality:ignored')`);
-await app.navigate('/');
-await app.navigate('/quality');
-```
-
-#### 7. setLocale timing
-
-`setLocale('en')` updates Vue reactivity but views need time to re-render:
-
-```typescript
-await app.setLocale('en');
-await app.settle(300); // Must settle before navigating
-```
-
-#### 8. Port allocation
-
-Each E2E file needs a unique port. Current assignments: 19242–19251. Check with:
-```bash
-grep 'UI_PORT = ' tests/e2e/gui-*.test.ts
-```
-
-Port conflicts (two files sharing a port) cause "Vue did not initialize in time" on the second suite — deterministic, but looks like flakiness.
-
-#### 8a. Route `/` redirects to `/persons`
-
-`router.ts` maps `/` → `/persons`. `PersonsView` is the canonical persons route — it hosts both the tree view, the embedded list table, and the `PersonPanel` side panel. The legacy `/visualisering` and `/visualisering/:personId` paths still resolve as redirects to `/persons` and `/persons/:personId`.
-
-To make the persons list (rather than the tree) visible after navigating to `/persons`, set view mode in `beforeAll`:
-```typescript
-await app.executeJs(`localStorage.setItem('persons-view-mode', 'list')`);
-```
-
-View-mode localStorage keys (both default to non-list):
-- PersonsView: `persons-view-mode` → `'tree'` (default) or `'list'`
-- PlacesView: `slaktforskning-places-view` → `'map'` (default) or `'list'`
-
-Assertions after `navigate('/')` should expect `currentRoute.value.path === '/persons'` (the redirect target).
-
-#### 8b. No back buttons anywhere
-
-There are **no `DetailView` components** in the codebase — every entity is a list/tree view that hosts its own resizable side panel (`PersonPanel`, `SourcePanel`, `PlacePanel`, `GroupPanel`, `ResearchTaskPanel`). The `:id` route opens the same list view with the panel pre-selected (e.g. `/sources/abc123` opens `SourcesView` with `SourcePanel` showing source `abc123`). Relationships are intentionally not browsable as a standalone entity — they're managed per-person via `PersonPanel → Relations` (see UX_INVENTORY finding #9).
-
-There are no back buttons on any view. To "leave" a paneled view, either close the panel via its `✕` button or navigate via the sidebar: `await app.navigate('/persons')`. Side-panel state lives in localStorage:
-- `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`
-- Section open/close: `<entity>-section-<name>-open`
-
-Clear these between tests if your assertions depend on a known panel state.
-
-#### 9. Clicking buttons by text content
-
-When AppButton or FilterChips make simple CSS selectors unreliable, match by text:
-
-```typescript
-await app.executeJs(`
-  (() => {
-    const btns = document.querySelectorAll('.view-toggle button');
-    for (const btn of btns) {
-      if (btn.textContent.trim() === 'List') { btn.click(); return; }
-    }
-  })()
-`);
-```
-
-#### 10. Confirm dialogs in delete operations
-
-Delete buttons often use `window.confirm()`. Override it before clicking:
-
-```typescript
-await app.executeJs(`
-  (() => {
-    window.confirm = () => true;
-    const rows = document.querySelectorAll('.clickable-row');
-    for (const row of rows) {
-      if (row.textContent.includes('Target Item')) {
-        const delBtn = row.querySelector('.btn-delete');
-        if (delBtn) { delBtn.click(); return; }
-      }
-    }
-  })()
-`);
-```
-
-### What to E2E test vs. not
-
-**Good E2E candidates:**
-- CRUD flows (create via modal, list, detail, delete)
-- Filter/search interactions
-- State management visible in UI (ignore/restore, status cycling)
-- Cross-view navigation (list → panel pre-selected via `:id` route → close panel)
-- Form validation visible to user
-
-**Not worth E2E testing:**
-- Map/canvas rendering (flaky viewport-dependent tests)
-- File dialog operations (OS-level, can't automate)
-- Multi-window behavior (fragile Electron window management)
-- AI-generated content (non-deterministic)
-
-## UI Verification (REQUIRED for UI changes)
-
-**Unit tests alone are not sufficient for UI changes.** They don't cover the rendering stack, modal lifecycle, Vue Router behavior, or visual correctness. Always verify in the running app before committing.
-
-### Setup
-
-Ask the user to launch the app with debugging enabled:
-```bash
-./.devcontainer/dev-debug.sh   # CDP port 9222, UI server port 19241
-```
-
-Verify the connection:
-```bash
-./.devcontainer/verify-cdp.sh                              # check CDP
-curl -s http://127.0.0.1:19241/status                # check UI server
-```
-
-**Cannot launch Electron from Claude Code's shell** — it needs macOS window server access. Always ask the user to run the script from their terminal.
-
-### Verification via UI server (always available when app is running)
-
-```bash
-# Navigate to the view you changed
-curl -s -X POST http://127.0.0.1:19241/navigate -d '{"path":"/your-route"}'
-
-# Take a screenshot and inspect visually
-curl -s -X POST http://127.0.0.1:19241/screenshot | python3 -c "
-import sys,json,base64; d=json.load(sys.stdin)
-open('/tmp/verify.png','wb').write(base64.b64decode(d['data']))"
-
-# Read the file to see it
-# Read /tmp/verify.png
-
-# Click elements
-curl -s -X POST http://127.0.0.1:19241/click -d '{"selector":"button.btn-add"}'
-
-# Execute JS to check state
-curl -s -X POST http://127.0.0.1:19241/execute_js -d '{"code":"document.querySelector(\".modal\") !== null"}'
-```
-
-### Verification via Chrome DevTools MCP (when CDP is active)
-
-```
-list_pages()          → find the Släktforskning page (not DevTools)
-select_page(id)       → select it
-take_snapshot()       → accessibility tree with uid's
-click(uid)            → click elements reliably
-fill(uid, value)      → fill form inputs (triggers Vue reactivity)
-take_screenshot()     → capture current state
-```
-
-### When to use it
-
-- **ALWAYS** after changing Vue components, modals, or routing behavior
-- When a UI bug is reported — reproduce it visually before fixing
-- To confirm IPC wiring is correct end-to-end
-- After fixing a bug — verify the fix visually, then commit
-
-### Common pitfalls caught by UI verification
-
-- Modal opens but immediately closes (route key change destroys component)
-- Form fields not pre-filled (ref timing issues)
-- Click handlers on wrong element (event bubbling)
-- Autocomplete dropdowns not appearing (gazetteer not loaded)
-
-### Notes
-
-- MCP data tools work without the Electron app — they go straight to SQLite
-- UI server tools require the app to be running
-- The MCP server and the running app share the same SQLite DB
-
-## When Tests Fail
-
-- **Read the error message first** — don't blindly re-run or change code.
-- **Check if it's a test bug or a code bug** — the test may have wrong expectations after a legitimate code change.
-- **For SQLite errors** — remember `db.get()` returns `undefined` not `null`, and parameter binding uses arrays.
-- **For E2E timeouts** — check if a previous Electron process is still running (`pkill -f "electron-forge"`).
-- **For E2E flaky tests** — common causes: timing (add `settle()`), stale data (navigate away/back), localStorage from previous retry (clear it), CSS selector matching wrong element.
-
-## When to Run Tests
-
-- **After changing any `src/api/*.ts` file** → `npm test`
-- **After adding a new API function** → `npm test -- --coverage` to verify thresholds still pass
-- **After changing IPC, preload, or main process** → `npx playwright test`
-- **After changing a Vue view or component** → `npx playwright test --project=gui-xxx` (the relevant project)
-- **Before every commit** → `npm run lint && npm test && npx playwright test`
-- **When adding a new feature** → write unit tests for the api/ functions FIRST, then implement
+- Edited `src/api/*.ts` → `npm test`
+- Added a new API function → `npm test -- --coverage` (thresholds must still pass)
+- Edited a Rust command, db-shim, or `tauri-window-api.ts` → `npm run test:e2e` (boot + crud)
+- Edited a panel, modal, list view, importer, or data-changed consumer → `npm run test:e2e:full`
+- Before commit → `npm run lint && npm test`

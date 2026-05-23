@@ -36,7 +36,7 @@ Every entity-list view hosts its own resizable side panel. All `:id` routes navi
 | `/database`, `/import-export`, `/link-rules`, `/gazetteers` | redirect | Redirect to `/settings` |
 | `/map` | redirect | Redirects to `/places` |
 
-Router uses `createWebHashHistory()` (required for Electron file:// protocol).
+Router uses `createWebHashHistory()` — works under Tauri's `tauri://` scheme, dev `http://localhost`, and the static SPA's `file://` export. Don't switch to `createWebHistory()`.
 
 ## Component patterns
 
@@ -368,11 +368,10 @@ See `/a11y` for the full ARIA pattern reference (combobox, focus trap, contrast 
 
 ## Static SPA & website-export gotchas
 
-The static SPA bundle reuses renderer views, so subtle quirks bite when those views run outside Electron.
+The static SPA bundle reuses renderer views, so subtle quirks bite when those views run outside the Tauri host.
 
 - **`window.api` may be undefined in static-mode component setup.** Any composable touching `window.api` from a top-level call site (component setup, module body) needs an optional-chain guard, because the static SPA's bundled renderer views (PersonsView etc.) lazy-load and instantiate components like PersonPicker before `window.api` is wired. `useDefaultPerson` and `chartData.resolvePersonPhotoUrl` both bit us here. The renderer's own `App.vue` `onMounted` should also use `?.` for `db.onSwitched`, `undo.onPerformed`, `undo.onChanged`, `onDataChanged`.
-- **Don't use Electron `protocol.handle` for content that may contain U+FFFD.** Internal Headers ByteString conversion throws `TypeError: Cannot convert argument to a ByteString — character at index N has a value of 65533`. The dist-static SPA bundle has a literal U+FFFD as a fallback glyph. Use a Blob URL instead.
 - **Don't put HTML over ~1 MB into `<iframe srcdoc>`.** Chromium silently rejects oversized attribute values and the iframe falls back to loading its parent renderer's URL — looks like full-app inception inside the iframe with no console error. Use `URL.createObjectURL(new Blob([html], { type: 'text/html' }))` and bind to `iframe.src`. Revoke the previous Blob URL on each refresh and on view unmount.
 - **`file://` has no CORS in Chromium — `img.crossOrigin = 'anonymous'` blocks the load.** When loading an image into a canvas for cropping/encoding, only set `img.crossOrigin = 'anonymous'` if `src` doesn't start with `file:`. Without the attribute, the canvas is tainted by file:// images, so wrap `canvas.toDataURL()` in try/catch and fall back to returning the original src.
-- **Preview iframe can't reach local media — inline a thumbnail subset.** `website:buildPreviewHtml` resizes the first 24 image media to 400px JPEGs @ 70% via Electron's `nativeImage` (5 MB total budget), bakes them into `snapshot.meta.previewMediaDataUrls`, and trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
+- **Preview iframe can't reach local media — inline a thumbnail subset.** `website:buildPreviewHtml` resizes the first 24 image media to 400 px JPEGs @ 70% (5 MB total budget) via the Rust-side `media_*` commands, bakes them into `snapshot.meta.previewMediaDataUrls`, and trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
 - **The preview iframe sets `window.__SNAPSHOT__` via the `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->` marker in `src/static/index.html`.** `src/main/preview-html-inject.ts` `injectSnapshotIntoHtml(html, snapshot)` is the pure swap; it **throws** if the marker is missing rather than returning the unmodified bundle. The previous version pattern-matched `<script src="./data.js"></script>` and silently no-op'd when Track B removed that tag — the iframe loaded with no `__SNAPSHOT__`, fell through to `installStaticApi`'s last-resort `fetch('./data.json')`, and crashed on the iframe's blob: origin. Lesson: never silently no-op a string-replace against a build artifact whose source you don't fully control. The pattern fix is a stable purpose-named comment marker plus a thrown error on miss; regression-tested in `tests/unit/preview-html-inject.test.ts` (covers marker present / missing / placement-before-module / `</script>` escape / null-snapshot / dist-static survives viteSingleFile).

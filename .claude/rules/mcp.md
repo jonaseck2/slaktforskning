@@ -50,7 +50,7 @@ Entry point: `npx tsx src/mcp/devServer.ts`
 
 **Seed (3):** `seed_person` (realistic test person with events), `seed_family` (couple + children), `clear_test_data`
 
-**Inspect (2):** `app_status` (Electron running, UI bridge reachable, DB path), `db_stats` (table row counts)
+**Inspect (2):** `app_status` (Tauri app running, UI bridge reachable, DB path), `db_stats` (table row counts)
 
 ## Adding a new tool
 

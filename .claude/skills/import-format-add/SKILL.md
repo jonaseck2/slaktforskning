@@ -200,8 +200,7 @@ api.import.<format>Run = async (opts: unknown) => {
 - `npm run lint` 0 errors.
 - The `<format>-transform.test.ts` real-sample suite green and prints sensible counts.
 - The renderer compiles without TypeScript errors on the new section.
-- `git diff package.json` shows the version bumped (minor for a new importer — feature).
-- CHANGELOG `## Unreleased` has a user-facing line in plain language ("imports a Foo database directly — no need to first export to GEDCOM").
+- `/commit` produced the version bump and the CHANGELOG entry. The entry's bullet should be in plain user-facing language ("imports a Foo database directly — no need to first export to GEDCOM"), not engineering detail. The commit and oss-release skills own the mechanics — your job here is just to confirm the bullet reads well to a non-developer.
 
 ## Anti-patterns from prior attempts
 

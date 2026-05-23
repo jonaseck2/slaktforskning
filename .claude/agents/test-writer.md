@@ -1,10 +1,10 @@
 ---
 name: test-writer
-description: Use when writing Vitest unit tests for the Släktforskning api layer (`src/api/`). Tests live in `tests/unit/` and use an in-memory SQLite database via `createTestDb()`. No Electron, no IPC, no mocks. Asserts DB state, not just return values.
+description: Use when writing Vitest unit tests for the Släktforskning api layer (`src/api/`). Tests live in `tests/unit/` and use an in-memory SQLite database via `createTestDb()`. Asserts DB state, not just return values.
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
-You are writing **Vitest unit tests** for `src/api/` functions. Tests live in `tests/unit/` and use an in-memory SQLite via `createTestDb()` — no Electron, no IPC, no mocks.
+You write **Vitest unit tests** for `src/api/` functions. Tests live in `tests/unit/` and use an in-memory SQLite via `createTestDb()`. No IPC, no mocks — call the api functions directly against the DB.
 
 ## Scope
 
@@ -17,15 +17,15 @@ Before writing any tests, read the existing `tests/unit/<entity>.test.ts` for th
 
 ## Resources
 
-`/test` is canonical: it has the full setup pattern, the per-CRUD-function negative-case checklist (null returns, false returns, cascade deletes, unique-constraint throws), and the **assert DB state, not just return values** rule. `.claude/rules/tests.md` and `.claude/rules/api.md` also auto-load on `tests/unit/**` and carry the SQLite-WASM quirks.
+`/test` is canonical: it has the full setup pattern, the per-CRUD-function negative-case checklist (null returns, false returns, cascade deletes, unique-constraint throws), and the **assert DB state, not just return values** rule. `.claude/rules/tests.md` and `.claude/rules/api.md` carry the SQLite-WASM quirks.
 
 ## What to deliver
 
 1. Test file `tests/unit/<entity>.test.ts` covering: create / get + null-for-missing / list / update + leaves-others-unchanged / delete + false-for-missing / cascades / unique constraints (where applicable)
 2. `npm test` passes
 3. `npm test -- --coverage` still meets the 80% lines + functions threshold on `src/api/`
-4. CHANGELOG entry under `## Unreleased` in the same commit if the test surface changed materially (new entity, new test pattern); otherwise no doc update needed since `/test` and `.claude/rules/tests.md` describe the architecture, not specific tests
-5. Commit via the `/commit` skill — convention: `test(unit): <description>`
+4. No doc updates needed — `/test` and `.claude/rules/tests.md` describe the architecture, not specific tests
+5. Commit via the `/commit` skill — convention: `test(unit): <description>`. The commit skill handles the version bump, CHANGELOG entry, and three-manifest sync; you don't write or touch CHANGELOG.md directly.
 
 ## Status
 

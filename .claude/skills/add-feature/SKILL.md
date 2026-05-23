@@ -39,7 +39,7 @@ Follow this order. Each step builds on the previous.
 
 1. **Types** — define or extend the TypeScript interface in `src/api/types.ts`
 2. **Schema** — add/alter tables in `src/api/schema.ts`; new tables use `CREATE TABLE IF NOT EXISTS`; new columns on existing tables **must** use a migration guard block (see below)
-3. **API functions** — implement CRUD in `src/api/*.ts` (pure TS, `db: Database` as first arg, no Electron deps)
+3. **API functions** — implement CRUD in `src/api/*.ts` (pure runtime-neutral TS, `db: Database` as first arg)
 4. **Unit tests** — write tests in `tests/unit/` using `createTestDb()` before wiring anything else
 5. **IPC binding** — two paths depending on whether the new operation needs Rust services or is pure TS over the renderer-side DB shim:
    - **Pure TS handler** (most CRUD): add an explicit binding to `src/renderer/tauri-window-api.ts` (`api.things.create = mutating((db, data) => things.createThing(db, data))` or `readOnly(...)` for non-mutating). The `mutating()` helper fires `data:changed` after the call.
@@ -114,14 +114,16 @@ Rules:
 - Match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE` statement above
 - **Never skip this** — missing migration = runtime crash for any user with a pre-existing database
 
-### SQLite quirks (node-sqlite3-wasm)
+### SQLite quirks
 
-These differ from better-sqlite3 — get them wrong and nothing breaks at compile time:
+Vitest tests run on `node-sqlite3-wasm`; renderer/MCP run on rusqlite via the db-shim. The shared `Database` shape papers over most of the difference but a few quirks bleed through:
 
 - Parameter binding uses **arrays**: `stmt.run([a, b])` not `stmt.run(a, b)`
-- `db.get()` returns `undefined` not `null` — use `?? null` on every result
-- No `.pragma()` — use `db.exec('PRAGMA foreign_keys = ON')`
+- `db.get()` returns `undefined`, not `null` — use `?? null` on every result
+- No `.pragma()` method — use `runSql(db, 'PRAGMA foreign_keys = ON')`
 - `.run()` returns `{ changes: number }` — cast if TypeScript complains
+
+Always go through `queryOne` / `queryAll` / `runSql` / `runBatch` from `src/api/db.ts` rather than raw `db.prepare(...).run(...)`. See `rules/api.md`.
 
 ### API function pattern
 
@@ -434,11 +436,12 @@ The checklist maps to focused subagents in `.claude/agents/` (auto-discovered by
 |-------|-------|--------------------------|
 | `api-implementer` | 1–3 | test-writer (after signatures are committed) |
 | `test-writer` | 4 | — |
-| `ipc-mcp-wirer` | 5–7 | vue-ui-builder |
-| `vue-ui-builder` | 8 | ipc-mcp-wirer |
+| `vue-ui-builder` | 7 | — |
 | `ux-reviewer` | (review) | — — read-only consistency check |
 
-Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent. Each agent commits its OWN work AND its own docs in the same commit per the `/commit` bundle rule. The last commit of a multi-commit feature handles milestone closeout (plan archival, PLAN.md roadmap update, `## vX.Y.Z` CHANGELOG header) — also handled by `/commit`, no separate doc-sync phase.
+Steps 5 (IPC binding) and 6 (MCP tool) have no dedicated agent — they're done by the implementer alongside the API code. See `tauri-bridge` for the IPC binding recipe and `slaktforskning-mcp-dev` for the MCP tool template.
+
+Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent. Each agent commits its OWN work AND its own docs in the same commit per the `/commit` bundle rule. The last commit of a multi-commit feature handles milestone closeout (plan archival, PLAN.md roadmap update, CHANGELOG block) — also handled by `/commit` + `oss-release`, no separate doc-sync phase.
 
 ## After implementing
 

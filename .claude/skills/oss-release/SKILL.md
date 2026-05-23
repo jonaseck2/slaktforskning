@@ -1,116 +1,94 @@
 ---
 name: oss-release
-description: Cut a new release — bump version, update CHANGELOG.md, commit, tag, push, and publish a GitHub release. Use whenever the user says "cut a release", "ship a release", "release v1.2.3", "publish a new version", or asks to tag and release the current state of main.
+description: Owns CHANGELOG.md — block structure, bullet style, the 10-block rolling window, and the archive flow. Releases auto-publish per commit via CI; this skill is the changelog discipline around that. Use whenever editing CHANGELOG.md, bumping the version, or asked to "cut a release", "ship a release", "publish a release".
 ---
 
 # OSS Release
 
-Fully automated release: version bump → changelog → commit → tag → push → publish.
+Releases auto-publish. Every commit on `main` that bumps the version triggers `.github/workflows/release.yml`, which builds the Tauri matrix and publishes a GitHub Release tagged `vX.Y.Z`. **There is no manual release ceremony.** This skill owns the CHANGELOG.md discipline around that flow.
 
-## Step 1 — Determine what changed
+## Block contract
 
-Get the last published tag and collect commits since then:
+1. **One `## X.Y.Z — YYYY-MM-DD` block per version-bumped commit.** Prepend to the top of `CHANGELOG.md`. No `## Unreleased` section — it doesn't exist in this repo; every commit IS a release.
+2. **CHANGELOG.md keeps the most recent 10 versioned blocks.** When prepending a new block puts the total over 10, take the oldest block (bottom of file, above the footer pointer) and prepend it to `docs/plans/archive/CHANGELOG.md`. Demote, never delete.
+3. **Footer pointer stays at the bottom of `CHANGELOG.md`:**
 
-```bash
-git describe --tags --abbrev=0        # last tag
-git log <last-tag>..HEAD --pretty=format:"%s" --no-merges
+   ```markdown
+   ---
+
+   *Earlier release notes archived. See [docs/plans/archive/CHANGELOG.md](docs/plans/archive/CHANGELOG.md) for older entries; the complete per-milestone development history (commit-level detail, RCA write-ups, design rationale) lives in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log.*
+   ```
+
+4. **The version bump is a `commit`-skill concern** (`package.json` + `src-tauri/Cargo.toml` + `src-tauri/tauri.conf.json` + `src-tauri/Cargo.lock`, all four in lockstep). This skill owns only the changelog block. They happen in the same commit.
+
+## Bullet style
+
+Per-bullet:
+- Bullet list only. No paragraphs, no nested sub-bullets.
+- ≤100 chars per bullet. Hard cap. Split or rephrase if longer.
+- One sentence. No semicolons stringing two thoughts.
+- User-facing language: behaviour, surface, outcome. Not refactor names, function names, file paths, line counts.
+- Lead with intent (the pain or goal) — pull it from the conversation, not from the diff.
+- No "this commit / this PR / this release" framing.
+- Type prefixes OK (`fix:`, `feat:`, `perf:`, `docs:`, `chore:`). Skip the parenthetical scope unless it disambiguates.
+- Never reference file paths, function names, SQL fragments, or commit SHAs.
+
+Per-block:
+- ≤5 bullets per release. Most blocks are 1–3. If at 6+, you're listing implementation work as user-facing — collapse or cut.
+- Don't restate the version title in the first bullet.
+- Don't enumerate the same change three ways. Collapse slices of one user-facing thing into one bullet.
+- Pure-internal version bumps get one bullet: `- chore: internal only` (or `- chore: imports faster, no behaviour change`).
+
+Anti-bloat:
+- Don't backfill detail into old blocks. Detail goes in the commit message body or `docs/plans/archive/PLAN.md`, never into a past CHANGELOG entry.
+- When adding a new block, glance at the last 3–5. If they're drifting into engineering detail, trim them in the same commit.
+- Prefer one minor-bump block with a few bullets over five sequential patch bumps. Versions are permanent; bullets reflect meaningful units.
+- Skim test: a non-developer reads 100 entries in 60 s and gets how the product evolved. A single entry that takes 30 s to read is too long.
+
+## Examples
+
+Good:
+```
+- fix: place picker no longer commits on the first row click — press OK to confirm
+- feat: Duplicates view shows all candidates with infinite scroll instead of capping at 100
+- perf: imports of 50k+ persons finish in seconds instead of minutes
+- chore: internal only
 ```
 
-Parse commit subjects using conventional commit prefixes:
-
-| Prefix | Bump |
-|--------|------|
-| `feat:`, `feat(...):`  | minor |
-| `fix:`, `fix(...):`, `perf:`, `refactor:` | patch |
-| `BREAKING CHANGE` in body, or `!` after type | major |
-| `docs:`, `chore:`, `style:`, `test:` | patch (if no feat/fix, still ship) |
-
-Take the highest bump across all commits. If there are no conventional commits, default to patch.
-
-This repo keeps major at 0 until the first official release. Never bump major.
-
-## Step 2 — Calculate new version
-
-Read current version from `package.json`. Apply the bump:
-- minor: x.Y.0 (reset patch to 0)
-- patch: x.y.Z
-
-## Step 3 — Update CHANGELOG.md
-
-Prepend a new section after `## Unreleased` (or at the top if no Unreleased section):
-
-```markdown
-## vX.Y.Z — YYYY-MM-DD
-
-### Features
-- feat: description (from commit subjects)
-
-### Fixes
-- fix: description
-
-### Other
-- chore/docs/etc
+Bad:
+```
+- fix(ui): wired stageSelection() through PlaceTreePickerModal's :selected binding so onClick stages instead of immediately calling emit('select')
+- feat(api): added countDuplicates(db) and refactored findDuplicates to share collectDuplicateCandidates()
+- perf(db): wrap bulk createPerson loop in BEGIN IMMEDIATE / COMMIT, drop redundant prepared-statement compiles; also added test coverage and updated CLAUDE.md
 ```
 
-Group commits by type. Omit `chore:` and `style:` unless there's nothing else. Use the commit subject verbatim, stripping the type prefix.
+The engineering detail belongs in the commit message body, not CHANGELOG.
 
-## Step 4 — Bump version in all three manifests
+## Procedure
 
-The version lives in **three files** that must move in lockstep — `package.json` is the npm package, `src-tauri/Cargo.toml` is the Rust crate (this is what `cargo build` prints as `Compiling slaktforskning v…`), and `src-tauri/tauri.conf.json` is what the packaged installer reports. Drift between them means the build banner, the bundle metadata, and `package.json` disagree.
+For every version-bumped commit:
 
-Update all three:
+1. Bump the four manifests via `commit` skill rules.
+2. Prepend a new `## X.Y.Z — YYYY-MM-DD` block to `CHANGELOG.md` with the bullet(s).
+3. Count `## ` headers in `CHANGELOG.md`. If > 10, move the oldest block to the top of `docs/plans/archive/CHANGELOG.md`.
+4. Stage `CHANGELOG.md`, `docs/plans/archive/CHANGELOG.md` (if touched), and the four manifest files in the same commit as the code change.
+5. Push to `main`. `release.yml` reads `package.json` version, builds the matrix, attaches bundles to a draft release, auto-publishes once all legs succeed.
 
-1. `package.json` — `"version": "X.Y.Z"`
-2. `src-tauri/Cargo.toml` — `version = "X.Y.Z"` (under `[package]`)
-3. `src-tauri/tauri.conf.json` — `"version": "X.Y.Z"` (top-level field)
+## Auto-release failure
 
-Then run `cargo update -p slaktforskning --manifest-path src-tauri/Cargo.toml` (or just `cargo build --manifest-path src-tauri/Cargo.toml` once) so `src-tauri/Cargo.lock` picks up the new crate version. The lock-file change must be in the release commit too — otherwise the next CI build re-touches it.
+CI matrix red → the draft release at `vX.Y.Z` stays on GitHub for inspection. Fix the underlying issue, push another commit (which bumps the version again), the next push auto-publishes the higher version. **Don't retroactively fix the failing release** — it's superseded by the next bump.
 
-Verify before committing:
+## Anti-patterns
 
-```bash
-grep '"version"' package.json
-grep '^version' src-tauri/Cargo.toml
-grep '"version"' src-tauri/tauri.conf.json
-grep -A1 'name = "slaktforskning"' src-tauri/Cargo.lock | grep version
-```
+- Appending to `## Unreleased`. No such section exists.
+- Skipping the date in the header. `## 0.264.19` alone is half-done.
+- Deleting old blocks instead of archiving them.
+- Bundling many changes into one block when they shipped in separate commits.
+- Backfilling detail into past blocks.
 
-All four lines must show the same `X.Y.Z`.
+## Out of scope
 
-## Step 5 — Commit, tag, push
-
-```bash
-git add -A
-git commit -m "chore: release vX.Y.Z
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
-
-git tag vX.Y.Z
-git push
-git push --tags
-```
-
-Run `npm run lint && npm test` before committing. If either fails, stop and report what failed — do not release broken code.
-
-## Step 6 — Publish GitHub release
-
-```bash
-gh release create vX.Y.Z \
-  --title "vX.Y.Z" \
-  --notes "$(cat <<'EOF'
-<paste the changelog section here>
-EOF
-)"
-```
-
-Do not use `--draft` — publish immediately.
-
-## Step 7 — Report
-
-```
-Released vX.Y.Z
-  Tag: vX.Y.Z
-  Commits included: N
-  Bump type: minor/patch
-  GitHub release: <url>
-```
+This skill does not:
+- Run `gh release create` (CI does).
+- Create git tags (`tauri-action` in `release.yml` does).
+- Invoke a release script (there isn't one — version bumps drive everything).

@@ -13,7 +13,7 @@ You are building Vue 3 components, views, modals, and panels for the Släktforsk
 
 ## Investigate before writing — REQUIRED
 
-This is the difference between writing code that compiles and writing code that lands. The auto-loaded rules describe patterns at a high level; they do NOT capture the specific CSS class names, i18n key paths, composable names, or section conventions you need to match.
+This is the difference between writing code that compiles and writing code that lands. The rules describe patterns at a high level; they do NOT capture the specific CSS class names, i18n key paths, composable names, or section conventions you need to match.
 
 Before writing any Vue code, you MUST read:
 
@@ -26,7 +26,7 @@ Don't write Vue code from memory. The slim agent body deliberately omits impleme
 
 ## Resources
 
-`.claude/rules/renderer.md` auto-loads on `src/renderer/**` and carries the canonical patterns: routes, modal dialog (`<BaseSubPanel>` only — never raw `<div class="modal-overlay">`), list view + side panel, person section component pattern (`watch(personId, load, { immediate: true })`, never `onMounted`), design tokens, shared classes, chart outline rules, screen-reader hotkeys, drag/maps/static-SPA gotchas. The `/frontend-design` skill is canonical for the full component catalog (props, emits, composables, Pinia stores, reports). `/a11y` covers ARIA patterns (combobox, focus trap, contrast tokens). `/tree-layout` covers chart layout if you're touching pedigree/hourglass/descendant. `docs/IPC_REFERENCE.md` is the authoritative `window.api` surface. The data-fidelity prime directive in CLAUDE.md is non-negotiable — render-time computation only; never persist inferred values.
+`.claude/rules/renderer.md` carries the canonical patterns: routes, modal dialog (`<BaseSubPanel>` only — never raw `<div class="modal-overlay">`), list view + side panel, person section component pattern (`watch(personId, load, { immediate: true })`, never `onMounted`), design tokens, shared classes, chart outline rules, screen-reader hotkeys, drag/maps/static-SPA gotchas. The `/frontend-design` skill is canonical for the full component catalog (props, emits, composables, Pinia stores, reports). `/a11y` covers ARIA patterns (combobox, focus trap, contrast tokens). `/tree-layout` covers chart layout if you're touching pedigree/hourglass/descendant. `docs/IPC_REFERENCE.md` is the authoritative `window.api` surface. The data-fidelity prime directive in CLAUDE.md is non-negotiable — render-time computation only; never persist inferred values.
 
 ## What to deliver
 
@@ -34,8 +34,8 @@ Don't write Vue code from memory. The slim agent body deliberately omits impleme
 2. i18n keys added to **both** `sv.ts` (primary) and `en.ts` (fallback) — even single-word labels like Save / Spara
 3. Router entry + sidebar link if a new top-level route was added
 4. Verify the running app via the `slaktforskning-dev` MCP (`ui_navigate`, `ui_screenshot`, `ui_click`) before declaring done — unit tests do not cover the rendering stack
-5. Docs updated **in the same commit** per `/commit`'s bundle rule: `.claude/rules/renderer.md` if you introduced a new shared component / pattern / design token, and a CHANGELOG entry under `## Unreleased`. README.md only if the feature added something a user would notice on first launch.
-6. Commit via the `/commit` skill — convention: `feat(ui): <description>`
+5. `.claude/rules/renderer.md` updated in the same commit if you introduced a new shared component / pattern / design token. README.md only if the feature added something a user would notice on first launch.
+6. Commit via the `/commit` skill — convention: `feat(ui): <description>`. The commit skill handles the version bump, CHANGELOG entry, and three-manifest sync; you don't write or touch CHANGELOG.md directly.
 
 ## Status
 

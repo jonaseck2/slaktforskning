@@ -65,7 +65,7 @@ The renderer-side profile (next section) is the same regardless of runtime — C
 
 **Option A — Chrome DevTools MCP (recommended — no manual steps):**
 
-Use the `chrome-devtools-mcp` plugin tools to profile directly from the running Electron app:
+Use the `chrome-devtools-mcp` plugin tools to profile the renderer when it's running in a Chromium-CDP-attached webview (dev mode under macOS Safari Web Inspector or Linux WebKitGTK — Tauri's WebView2 on Windows does not expose CDP). For the default Tauri runtime, use the system WebView's own inspector instead — see Step 1 above:
 
 ```
 1. performance_start_trace()              → start recording

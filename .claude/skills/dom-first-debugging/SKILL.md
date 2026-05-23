@@ -31,7 +31,7 @@ The anti-pattern: "I bet it's a flex thing" → start editing flex rules → no 
 
 ### Step 1 — read the DOM and computed styles BEFORE forming a hypothesis
 
-For this Electron app, the project's dev MCP is the fastest path. **In this order:**
+The project's dev MCP is the fastest path. **In this order:**
 
 ```
 mcp__slaktforskning-dev__ui_query_styles { selector: '.side-panel' }
@@ -46,7 +46,7 @@ mcp__slaktforskning-dev__ui_get_dom { selector: '.side-panel' }
   // (NOT the no-arg form: that dumps the full document, often 12+ MB)
 ```
 
-If you find yourself wanting `getComputedStyle` on a single element, reach for `ui_query_styles` — that *is* the tool. The legacy fall-through (`mcp__plugin_chrome-devtools-mcp_chrome-devtools__evaluate_script`) only works when the Electron app was launched under `dev-debug.sh` so CDP is exposed; if `chrome-devtools list_pages` shows only `about:blank`, the dev-MCP tools above are the right tools, not a workaround.
+If you find yourself wanting `getComputedStyle` on a single element, reach for `ui_query_styles` — that *is* the tool. Don't reach for `chrome-devtools` MCPs; Tauri uses the system WebView, not Chromium with CDP — `chrome-devtools list_pages` will show only `about:blank`.
 
 The user will often paste DOM dumps directly — read them carefully. Note: classes, computed dimensions, data-v hashes, inline styles. Anything surprising is a clue.
 

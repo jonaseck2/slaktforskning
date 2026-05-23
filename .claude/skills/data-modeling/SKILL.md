@@ -156,9 +156,9 @@ try {
 
 `BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). Use it for any import or migration that writes multiple rows.
 
-### Rule 2 — Keep CPU work off the main Electron process
+### Rule 2 — Keep CPU work off the renderer thread
 
-`JSON.parse`, bulk data transformation, and long loops block the Node.js event loop in the Electron main process, freezing the UI. For any operation that takes more than ~0.5s:
+`JSON.parse` of large outputs, bulk data transformation, and long loops block the renderer's main thread and freeze the UI. The Rust host is naturally off-thread (Tauri commands use `spawn_blocking` for DB work), but JS-side CPU work on the renderer still blocks paint. For any operation that takes more than ~0.5 s:
 
 **JSON parsing of large outputs** — move to a `worker_threads` Worker (eval mode requires no build changes):
 
