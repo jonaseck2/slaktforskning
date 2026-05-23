@@ -5,20 +5,14 @@ description: Stage the files belonging to the current concern and create a git c
 
 # Commit Skill
 
-**Quick-decode user intent → bump type:**
-- "commit the fix" / "commit this fix" / "commit the bug fix" / "commit the patch" → **patch bump**
-- "commit the feature" / "commit this feature" / "commit the new …" → **minor bump**
-- When in doubt, patch. Never skip the bump.
+**Bump decision:** see Version bumping below. Same code = same version. Bump each manifest only when its code changed. Pure docs / `.claude/**` / repo-meta → no bump (`docs(claude):` / `docs(plan):` / `chore:`).
 
 When asked to commit, or when a commit is appropriate after completing work:
 
 1. **Stage by concern, not by tree.** Run `git status` first. If everything in the tree belongs to the current change, `git add -A` is fine. If the tree contains unrelated WIP from a previous session (different feature, different fix, different file family), stage explicitly by path: `git add <file1> <file2> ...`. Inside the same concern, never selectively skip a file — bundle every file your change touched (sources, tests, CHANGELOG, package.json, CLAUDE.md, docs). If unsure whether a modified file belongs to your concern, ask the user before committing.
 2. Run `git status` to review what will be committed.
 3. Run `git diff --cached --stat` to see a summary of changes.
-4. **Bump the version in `package.json`** — every commit that ships a fix or feature MUST bump it. No exceptions, no batching.
-   - Fix (bug, i18n, CSS, config) → patch bump (0.x.Y → 0.x.Y+1)
-   - Feature (new component, new API, new UI element) → minor bump (0.X.0 → 0.X+1.0)
-   - Then add a new `## X.Y.Z — YYYY-MM-DD` block at the top of `CHANGELOG.md` with one bullet summarising the change. **Never append to a `## Unreleased` section** — there is no `## Unreleased` in this repo; every commit bumps the version, so every commit gets its own versioned block. CI auto-publishes a GitHub release at tag `vX.Y.Z` once the commit lands on main.
+4. **Bump only what changed** (see Version bumping). Bumped manifests + a `## X.Y.Z — YYYY-MM-DD` CHANGELOG block ship in the same commit. No `## Unreleased`. CI auto-publishes a GH release at `vX.Y.Z` (keyed on `package.json` today) once a bumped commit hits `main`.
 5. Compose a clear commit message:
    - First line: concise summary (imperative mood, under 72 chars)
    - Blank line, then details if the change is non-trivial
@@ -112,41 +106,27 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 ## Version bumping
 
-**Every commit that ships a fix or feature MUST bump the version in all three manifests.** No exceptions, no batching. If it's worth committing, it's worth versioning.
+**Same code = same version.** Three independent manifests, each tracks its own code. Bump only what changed.
 
-- **Any feature** (new event type, new component, new API function, new UI element) → **minor bump** (e.g. 0.69.0 → 0.70.0)
-- **Any fix** (bug fix, i18n correction, config tweak, user feedback fix) → **patch bump** (e.g. 0.69.0 → 0.69.1)
-- **Major version stays at 0** until the first official release. Minor bumps past 9 go to 10, 11, … — never bump the major.
+| Manifest | Bumps when |
+|---|---|
+| `src-tauri/Cargo.toml` (+ `Cargo.lock`) | `src-tauri/` changed |
+| `package.json` | `src/` (renderer / api / MCP), `vite.*.config.ts`, `tsconfig.json`, or `package.json` deps/scripts changed |
+| `src-tauri/tauri.conf.json` | Anything that ends up in the bundle changed (union of above + `src/api/place-gazetteers/data/`, Tauri config, signing config) |
 
-**This applies to small changes too.** Adding one event type, fixing one i18n string, changing a CSS rule — all get a version bump. A stream of unbumped commits makes it impossible to track what changed when.
+Fix → patch (0.x.Y → 0.x.Y+1). Feature → minor (0.X.0 → 0.X+1.0). Major stays at 0. Each manifest moves independently — three different version numbers is normal.
 
-### Version lives in three files (keep them in lockstep)
+**No bump** for changes that don't ship: `.claude/**`, `docs/**`, `tests/**`-only, `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`, `README.md`, `.gitignore`, `.editorconfig`, lockfile-only churn. Commit as `docs(claude):` / `docs(plan):` / `docs:` / `chore:`.
 
-The version string is duplicated across three manifests. They MUST move together every commit:
+**CI release trigger gotcha.** `.github/workflows/release.yml` reads `package.json` and fires when `vX.Y.Z` doesn't exist. A Rust-only fix bumps `Cargo.toml` + `tauri.conf.json` but not `package.json` → no release fires until the next renderer change. If users need a Rust-only fix promptly, also patch-bump `package.json`. (Structural fix: switch CI to key on `tauri.conf.json` — TODO.)
 
-1. `package.json` → `"version": "X.Y.Z"`
-2. `src-tauri/Cargo.toml` → `version = "X.Y.Z"` under `[package]` (this is what `cargo build` prints as `Compiling slaktforskning vX.Y.Z` and what shows up in the binary)
-3. `src-tauri/tauri.conf.json` → `"version": "X.Y.Z"` (top-level field, used in the bundled installer's metadata)
-
-`src-tauri/Cargo.lock` also pins `name = "slaktforskning" / version = "…"` — update it too (the next `cargo build` would touch it anyway, so doing it in the same commit avoids a churn diff).
-
-**Why all three:** drift means the build banner, the bundle metadata, and `package.json` disagree. The crate version was at `0.1.0` for ~250 commits because only `package.json` was being bumped — every Tauri build banner reported the wrong version, and the packaged installer would have shipped `0.1.0` to users.
-
-Steps:
-1. Determine bump type from the nature of the change.
-2. Read current version from `package.json`.
-3. Calculate new version (bump the right segment, reset lower segments to 0 for minor bumps).
-4. Update `"version"` in `package.json`, `version` in `src-tauri/Cargo.toml`, `"version"` in `src-tauri/tauri.conf.json`, and the `version = "…"` line under `name = "slaktforskning"` in `src-tauri/Cargo.lock`.
-5. Include all four files in the same commit.
-
-Verify with one grep before committing:
+**CHANGELOG.** Whenever any manifest bumps, add a `## X.Y.Z — YYYY-MM-DD` block at the top per `oss-release`, using the bundle version (`tauri.conf.json`). Same commit as the bump. Verify:
 
 ```bash
-grep -E '"version"|^version' package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml | head -3
-grep -A1 'name = "slaktforskning"' src-tauri/Cargo.lock | grep version | head -1
+grep -E '"version"|^version' package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml
 ```
 
-All four lines must show the same `X.Y.Z`. The bumped version becomes the canonical version — use it in the `CHANGELOG.md` entry.
+The three values may differ — that's the point.
 
 ## Plan + Roadmap sync
 
