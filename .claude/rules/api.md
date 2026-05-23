@@ -36,13 +36,13 @@ MediaLink           { id, media_id, entity_type: 'person'|'event'|'relationship'
 MediaRegion         { id, media_id, person_id?, x: number, y: number, width: number, height: number, label?, created_at }
 ```
 
-**`Source.repository` (free-text string column) was DROPPED in T02 of the GEDCOM alignment plan.** Source ↔ Repository linkage is now FK-only via `source_repositories`. Importers synthesize a structured Repository from any legacy `_REPO_TEXT` / unbracketed REPO value on import (preserving authored fidelity from old files per Prime Directive).
+**`Source.repository` (free-text string column) was DROPPED in T02 of the GEDCOM alignment plan.** Source ↔ Repository linkage is FK-only via `source_repositories`. Importers synthesize a structured Repository from any legacy `_REPO_TEXT` / unbracketed REPO value on import.
 
-**GEDCOM 7.0 alignment context.** The six new tables `notes` + `note_links` (SNOTE), `person_associations` (ASSO without event), `name_translations` (NAME/TRAN), `place_translations` (PLAC/TRAN), `source_coverage_events` (SOUR/DATA/EVEN), plus `events.is_negation` + `events.negation_event_type` (NO X) and `persons.sex='X'` (intersex), are GEDCOM 7.0 concepts the schema didn't model before T02. See `docs/GEDCOM_AUDIT.md` for the per-version round-trip status per column and the task that closes each gap.
+**GEDCOM 7.0 alignment context.** Six tables — `notes` + `note_links` (SNOTE), `person_associations` (ASSO without event), `name_translations` (NAME/TRAN), `place_translations` (PLAC/TRAN), `source_coverage_events` (SOUR/DATA/EVEN) — plus `events.is_negation` + `events.negation_event_type` (NO X) and `persons.sex='X'` (intersex), are GEDCOM 7.0 concepts the schema didn't model before T02. See `docs/GEDCOM_AUDIT.md` for per-version round-trip status.
 
 ## Database Schema
 
-22 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent). The audit doc `docs/GEDCOM_AUDIT.md` §1 maintains the canonical per-table comparison against GEDCOM 5.5.1 / 7.0 / Holger / Genney / RootsMagic / Gramps — refer to that file for the authoritative classification.
+22 tables with foreign keys and cascade deletes. Schema in `src/api/schema.ts`, applied via `initializeSchema(db)` (idempotent). Canonical per-table comparison against GEDCOM 5.5.1 / 7.0 / Holger / Genney / RootsMagic / Gramps lives in `docs/GEDCOM_AUDIT.md` §1.
 
 | Table | Key Columns | FK Cascades |
 |-------|-------------|-------------|
@@ -50,12 +50,12 @@ MediaRegion         { id, media_id, person_id?, x: number, y: number, width: num
 | `person_names` | person_id, given_name, surname, name_type, sort_order, preferred_name, nickname | person_id → CASCADE |
 | `person_identifiers` | person_id, identifier_type, identifier_value | person → CASCADE |
 | `relationships` | type, person1_id, person2_id, subtype, notes | person1/person2 → CASCADE |
-| `person_associations` | person_id, related_person_id, role (godparent/friend/colleague/enemy/neighbor/other), notes (UNIQUE on triple) | both → CASCADE |
+| `person_associations` | person_id, related_person_id, role, notes (UNIQUE on triple) | both → CASCADE |
 | `events` | event_type, date_type, date_value, date_value_end, date_original, place_id, place_address, cause, value, notes, relationship_id, **is_negation, negation_event_type** | relationship → SET NULL, place → SET NULL |
 | `event_participants` | event_id, person_id, role (UNIQUE event+person) | both → CASCADE |
 | `places` | name, normalized_name, place_type, latitude, longitude, parent_place_id, date_from, date_to, notes, street, postal_code, city, country | parent → SET NULL |
 | `place_translations` | place_id, value, language, transliteration_scheme | place → CASCADE |
-| `sources` | title, author, publication_info, url, source_type, call_number, abstract (legacy `repository` string DROPPED in T02) | — |
+| `sources` | title, author, publication_info, url, source_type, call_number, abstract (legacy `repository` DROPPED in T02) | — |
 | `source_coverage_events` | source_id, event_type, date_value_from, date_value_to, place_id, notes | source → CASCADE, place → SET NULL |
 | `citations` | source_id, page, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id | source → CASCADE, event/person/relationship → SET NULL, person_name → CASCADE |
 | `notes` | text, language | — |
@@ -72,33 +72,33 @@ MediaRegion         { id, media_id, person_id?, x: number, y: number, width: num
 | `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
 | `gazetteers` | id, name, locale, description, source_json, data (BLOB), created_at | — |
 
-**Tables added in T02 of the GEDCOM-alignment plan (v0.262.0):** `person_associations`, `notes`, `note_links`, `name_translations`, `place_translations`, `source_coverage_events`. Two columns added to `events`: `is_negation` and `negation_event_type`. `persons.sex` CHECK extended to accept `'X'`. Column dropped: `sources.repository` (replaced by FK-only `source_repositories`).
+Tables added in T02 (v0.262.0): `person_associations`, `notes`, `note_links`, `name_translations`, `place_translations`, `source_coverage_events`. Columns added to `events`: `is_negation`, `negation_event_type`. `persons.sex` CHECK extended to accept `'X'`. Column dropped: `sources.repository`.
 
 ## API function pattern
 
-Every function takes `db: Database` as its first argument and returns domain types from `types.ts` — **no global DB singletons; always pass `db` as a parameter.** One file per entity domain following CRUD naming (`create*`, `get*`, `list*`, `update*`, `delete*`, plus per-relationship helpers like `getCitationsForPerson`, `addEventParticipant`, `findOrCreatePlace`, `mergePersons`).
+Every function takes `db: Database` as its first argument and returns domain types from `types.ts` — **no global DB singletons; always pass `db` as a parameter.** One file per entity domain. CRUD naming (`create*`, `get*`, `list*`, `update*`, `delete*`), plus per-relationship helpers (`getCitationsForPerson`, `addEventParticipant`, `findOrCreatePlace`, `mergePersons`).
 
 ## Storage conventions
 
-- **UUIDs (v4)** for all primary keys
-- **ISO date strings** in DB; genealogy dates use `date_type` + `date_original` to preserve uncertainty (see Domain Types above)
-- **`PRAGMA foreign_keys = ON`** set in `src/api/schema.ts` on connection open. **DELETE journaling** is the canonical mode (not WAL). Reasons + recovery for externally-WAL-tagged files: `sqlite-wal` skill.
+- **UUIDs (v4)** for all primary keys.
+- **ISO date strings** in DB; genealogy dates use `date_type` + `date_original` to preserve uncertainty.
+- **`PRAGMA foreign_keys = ON`** in `src/api/schema.ts` on connection open. **DELETE journaling** is canonical (not WAL). Reasons + recovery for externally-WAL-tagged files: `sqlite-wal` skill.
 
-`docs/IPC_REFERENCE.md` is the authoritative function-by-function reference; the source files are the truth.
+`docs/IPC_REFERENCE.md` is the authoritative function-by-function reference; source files are the truth.
 
 ## SQLite quirks (both runtimes)
 
-Renderer/MCP runs on rusqlite; Vitest tests run on `node-sqlite3-wasm`. The shared `Database` shape papers over the differences, but a few quirks bleed through:
+Renderer/MCP on rusqlite; Vitest on `node-sqlite3-wasm`. Shared `Database` shape papers over differences; quirks that bleed through:
 
 - Parameter binding uses arrays: `stmt.run([a, b])` — never `stmt.run(a, b)`.
 - `db.get()` returns `undefined`, not `null`. Api functions use `?? null`.
 - No `.pragma()` method — issue `PRAGMA …` via `runSql(db, 'PRAGMA …')`.
 - Always go through `queryOne` / `queryAll` / `runSql` / `runBatch` from `src/api/db.ts`. These handle finalization and shape both backends consistently. Never call `db.prepare(...).run(...)` raw.
-- Security hook flags SQLite's bulk-statement method `Database.<x>` (where `<x>` is `e-x-e-c`, the four-letter substring also used by `child_process.<x>`) as command injection — false positive on the method name. Use `runSql` or `db.prepare('...').run([])`. Avoid the literal four-letter substring in source, plans, and commit messages.
+- Security hook flags SQLite's bulk-statement method `Database.<x>` (where `<x>` is `e-x-e-c`, the four-letter substring also used by `child_process.<x>`) as command injection — false positive. Use `runSql` or `db.prepare('...').run([])`. Avoid the literal four-letter substring in source, plans, and commit messages.
 
 ## Database migrations — adding columns to existing tables
 
-`CREATE TABLE IF NOT EXISTS` only creates the table if it doesn't exist — it **never** adds missing columns to an existing database. Any new column on an existing table requires a migration guard at the end of `initializeSchema()` in `src/api/schema.ts`:
+`CREATE TABLE IF NOT EXISTS` never adds missing columns to an existing DB. Any new column on an existing table requires a migration guard at the end of `initializeSchema()` in `src/api/schema.ts`:
 
 ```typescript
 // v0.5.0 migrations
@@ -108,15 +108,15 @@ if (!thingsCols.includes('new_column')) {
 }
 ```
 
-One `PRAGMA table_info` call per table, then check each new column separately. Match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE` statement above. Never skip — a missing migration is a runtime crash for any user with a pre-existing database.
+One `PRAGMA table_info` per table, check each new column separately, match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE`. A missing migration is a runtime crash for any user with a pre-existing database.
 
 ## Per-database settings
 
-`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table. Known keys: `default_person_id`, `link_rules_config`, `gazetteer_config`, `event_defaults_config`, `researcher_name` / `address` / `phone` / `email`, `report_show_header_footer`. Exposed to renderer via `window.api.db.getSetting / setSetting / deleteSetting`.
+`src/api/db_settings.ts` provides `getDbSetting(db, key)`, `setDbSetting(db, key, value)`, `deleteDbSetting(db, key)` backed by the `db_settings` table. Known keys: `default_person_id`, `link_rules_config`, `gazetteer_config`, `event_defaults_config`, `researcher_name` / `address` / `phone` / `email`, `report_show_header_footer`. Renderer access via `window.api.db.getSetting / setSetting / deleteSetting`.
 
 ## SQLite bulk-write performance — mandatory rules
 
-Any operation that writes more than ~50 rows **must** use a single transaction. Without this, each prepared `.run()` is its own autocommit, triggering an individual WAL flush — for large imports this produces hundreds of MB of disk writes and takes minutes instead of seconds.
+Any operation writing more than ~50 rows **must** use a single transaction. Without this, each prepared `.run()` is its own autocommit, triggering a per-row WAL flush — hundreds of MB of disk writes, minutes instead of seconds.
 
 ```typescript
 runSql(db, 'BEGIN IMMEDIATE');
@@ -129,9 +129,9 @@ try {
 }
 ```
 
-`BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). The rule applies to **any writes-in-loop**, not just imports or migrations — `consolidateMediaFolder`'s 12k `UPDATE media SET file_ref = ?` rewrites shipped without it (v0.210.7) and turned ~50 ms of work into 30+ seconds of fsyncs. Audit any new `for (const row of rows) <DB-write>` loop against this rule. For bulk imports, also use `runBatch` (below) so the SQL prepares once.
+`BEGIN IMMEDIATE` acquires the write lock upfront (avoids upgrade deadlocks). Applies to **any writes-in-loop**, not just imports or migrations. Audit any new `for (const row of rows) <DB-write>` loop. For bulk imports, also use `runBatch` (below).
 
-**Use `runBatch` instead of `for (const row of rows) await stmt.run([...])` whenever the row count is unbounded or > ~50.** Under the Tauri build, every `await stmt.run([...])` pays ~1 ms of IPC roundtrip (renderer → Rust → rusqlite → return). For a 1.5 GB Holger import (millions of rows), that turns minutes-of-work into hours-of-IPC. `runBatch` collapses N IPC roundtrips into one: the Rust side prepares the SQL once, holds the connection mutex for the whole batch, and iterates the rows under the lock. Mid-batch failures still propagate so the surrounding `BEGIN/COMMIT` ROLLBACKs the whole batch.
+**Use `runBatch` instead of `for (const row of rows) await stmt.run([...])` whenever row count is unbounded or > ~50.** Under Tauri, every `await stmt.run([...])` pays ~1 ms of IPC roundtrip (renderer → Rust → rusqlite → return). For a 1.5 GB Holger import (millions of rows), that's hours of IPC. `runBatch` collapses N IPC roundtrips into one: Rust prepares the SQL once, holds the connection mutex for the whole batch, iterates rows under the lock. Mid-batch failures propagate so the surrounding `BEGIN/COMMIT` ROLLBACKs.
 
 ```typescript
 import { runBatch, runBatchOnStatement } from '../api/db';
@@ -142,18 +142,17 @@ await runBatch(db, 'INSERT INTO things (id, name) VALUES (?, ?)', rows.map(r => 
 // Inside an importer with a cached prepared statement:
 const stmt = db.prepare('INSERT INTO things (id, name) VALUES (?, ?)');
 try {
-  // Collect rows into a buffer, flush with runBatchOnStatement.
   await runBatchOnStatement(stmt, rowsBuffer);
 } finally {
   stmt.finalize();
 }
 ```
 
-Same surface in Vitest (node-sqlite3-wasm has no IPC cost so `runBatch` is a sync per-row loop, but the API shape is identical so importer code stays single-sourced). Per-row `await stmt.run(...)` is reserved for one-shot writes (bulk db_settings update, per-form-submit insert). Audit any new `for (const row of rows) await stmt.run(...)` loop against this rule. The mechanical regression check is `tests/unit/import-batching.test.ts` — runs the Genney importer through the Tauri shim and asserts `db_run` calls stay in the small-constant range while `db_batch_run` covers the bulk inserts. Green after a new per-row loop means it wasn't on a hot path; red means batching was reverted, use `runBatch`.
+Same surface in Vitest (node-sqlite3-wasm has no IPC cost; `runBatch` is a sync per-row loop, but the API shape is identical so importer code stays single-sourced). Per-row `await stmt.run(...)` is reserved for one-shot writes. Regression check: `tests/unit/import-batching.test.ts` runs the Genney importer through the Tauri shim and asserts `db_run` calls stay in the small-constant range while `db_batch_run` covers bulk inserts.
 
 ### Bulk api/ functions for the importer hot paths
 
-The GEDCOM/Holger importer goes through `src/api/` rather than raw `stmt.run`, so the `runBatch` wrapper above isn't enough on its own — the api/ surface needs bulk siblings. Current set (use these from any importer collect+flush loop):
+The GEDCOM/Holger importer goes through `src/api/`, so the `runBatch` wrapper isn't enough on its own — api/ needs bulk siblings. Current set:
 
 - `bulkCreatePersons`, `bulkAddPersonNames`, `bulkAddPersonIdentifiers` (persons.ts)
 - `bulkCreateMedia`, `bulkAddMediaLinks` (media.ts)
@@ -164,8 +163,8 @@ The GEDCOM/Holger importer goes through `src/api/` rather than raw `stmt.run`, s
 
 **Contract for new bulk variants:**
 
-- **Return `Promise<string[]>` of assigned ids** (caller-supplied or generated), not full row objects. The post-INSERT `SELECT * WHERE id IN (?, ?, ...)` readback pattern was tried and rejected — for 66k events the IN clause blows past `SQLITE_MAX_VARIABLE_NUMBER` (32766 on modern builds) and the import fails with "too many SQL variables". The caller already has the ids; tests that need the full row shape query the DB themselves.
-- **Accept caller-supplied `id`** so the importer can collect downstream rows (citations, participants, media links) that reference these ids before the flush runs.
+- **Return `Promise<string[]>` of assigned ids** (caller-supplied or generated), not full row objects. The post-INSERT `SELECT * WHERE id IN (?, ?, ...)` readback was tried and rejected — for 66k events the IN clause blows past `SQLITE_MAX_VARIABLE_NUMBER` (32766) and import fails with "too many SQL variables". The caller already has the ids; tests that need the full row shape query the DB themselves.
+- **Accept caller-supplied `id`** so the importer can collect downstream rows (citations, participants, media links) that reference these ids before flush.
 - **Empty-input check up front** — `if (rows.length === 0) return [];` — every bulk function has bulk-shaped callers that may legitimately pass an empty array.
 - **Use `runBatch`** for the actual INSERT; one prepared statement, N execute calls under one mutex hold.
 
@@ -190,11 +189,11 @@ await bulkCreateCitations(db, citationRows);
 await bulkAddEventParticipants(db, participantRows);
 ```
 
-`collectEventNode` (event-importer.ts) is the canonical "return specs with pre-allocated UUIDs, zero IPC for row inserts" pattern. New per-row-IPC paths in the importer should be migrated to this shape rather than left as singular `createX` calls.
+`collectEventNode` (event-importer.ts) is the canonical "return specs with pre-allocated UUIDs, zero IPC for row inserts" pattern.
 
 ## Worker-thread sync I/O — mandatory rules
 
-The DB worker is a **single thread** that serves every DB-touching IPC channel. Any synchronous I/O call inside a worker handler pins the worker for that call's full duration, queuing every other handler behind it. With media in the DB and a list view mounted, this turns the renderer into a slideshow inside a second.
+The DB worker is a single thread serving every DB-touching IPC channel. Any synchronous I/O inside a worker handler pins the worker for that call's duration, queuing every other handler.
 
 **Banned in worker handlers** (`src/main/db-worker.ts`, anything `src/api/` reachable from a worker channel):
 
@@ -205,17 +204,11 @@ The DB worker is a **single thread** that serves every DB-touching IPC channel. 
 
 **Use instead:**
 
-- `fs/promises` versions — they dispatch to libuv's threadpool. Multiple in-flight calls run in parallel; the worker yields between them and stays responsive to other IPCs.
+- `fs/promises` versions — dispatch to libuv's threadpool. Multiple in-flight calls run in parallel; the worker yields between them.
 - For "is the file there?", `await fsp.access(p, fs.constants.F_OK)` (catch → false) instead of `existsSync`.
 - For per-row file ops at scale, a bounded-concurrency worker pool (8 in flight) saturates libuv without blowing it up.
 
-**Past bugs this rule was written against:**
-- `media:readAsDataUrl` did `readFileSync` + base64 — every avatar in PersonsListTab pinned the worker for ~50 ms (5 MB JPEG); 50 rows = 2.5 s of frozen worker. Fixed in v0.210.9.
-- `wrap-handler.ts` wrote a per-IPC timing log via `appendFileSync` — after a long session the log hit 1 GB and every IPC call inherited 100s-of-ms of disk-write latency. `persons:list` was observed taking 4.5 minutes from queue to response. Fixed in v0.210.7 by gating behind `SLAKTFORSKNING_IPC_LOG=1` and switching to a buffered write stream.
-- `consolidateMediaFolder` did 7 sequential `await fsp.*` calls per file → libuv's 4-worker threadpool ran at 75% idle. Fixed in v0.210.7 with a worker pool + `bulkCopyMediaFolder` that uses one `fsp.cp({ recursive: true })` instead of N `copyFile` calls.
-- Same shape lurked in Genney's `fs.cpSync` — sync, blocked main thread for the duration of the media copy. Fixed in v0.210.7.
-
-**Diagnostic logging is in scope.** If you add `console.log` instrumentation that's "just for debugging," gate it behind an env var from day one. A diagnostic that ships unconditionally and writes synchronously becomes a slow-burning regression as the log file grows.
+**Diagnostic logging is in scope.** Any `console.log` instrumentation "just for debugging" gets gated behind an env var from day one. A diagnostic that ships unconditionally and writes synchronously becomes a slow-burning regression as the log file grows.
 
 ## "Bulk" / "Batch" naming — mandatory contract
 
@@ -242,8 +235,8 @@ export function getPersonProfilePicRefs(db: Database, personIds: string[]): Reco
 }
 ```
 
-The IPC layer will trust the name — every avatar batch goes through `media:profilePicRefs` expecting one cheap call. A JS-loop fake-bulk function makes batching at the renderer pointless. Fixed example shipped in v0.210.10 (`getPersonProfilePicRefs`).
+The IPC layer trusts the name — every avatar batch goes through `media:profilePicRefs` expecting one cheap call. A JS-loop fake-bulk function makes renderer-side batching pointless.
 
 ## Import/export data integrity
 
-`import_file` and the underlying import functions return a report object with `warnings: string[]` and `unmappedData` / `skipped` arrays documenting what data was lost and why (LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, and `researchTasks` counts. SUBM records are matched to persons and stored as `default_person_id`. `export_gedcom` returns `{ ged: string; report: ExportReport }` with `excluded[]` for entities that cannot be represented in GEDCOM 5.5.1 (Research Tasks, Groups, place_address fields).
+`import_file` and underlying import functions return a report with `warnings: string[]` and `unmappedData` / `skipped` arrays documenting what was lost and why (LDS ordinances, TRAN translations, NO negative assertions, dropped ASSO associations, orphaned events/citations, unknown event types). `ImportReport` includes `repositories`, `groups`, `researchTasks` counts. SUBM records match to persons and store as `default_person_id`. `export_gedcom` returns `{ ged: string; report: ExportReport }` with `excluded[]` for entities that cannot be represented in GEDCOM 5.5.1 (Research Tasks, Groups, place_address fields).

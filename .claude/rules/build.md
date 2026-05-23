@@ -31,15 +31,13 @@ Loads when touching the build/test configs.
 
 ## Never silent-replace on build artifacts
 
-Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFile HTML/JS, `dist-static/` HTML, exported GEDCOM, MCP-bundled JS) **must throw when the pattern doesn't match**. Silent no-op is the failure mode that breeds blank-screen bugs which still pass unit tests.
-
-**Why this is a rule:** v0.227.5 — `preview-protocol.ts` did `html.replace(/<script\s+src="\.\/data\.js"><\/script>/, inline)` to inject the snapshot into the preview iframe. Track B removed exactly that script tag from `src/static/index.html` for unrelated reasons. The replace silently returned the unmodified HTML, the renderer shipped a snapshot-less bundle to the iframe, `installStaticApi` fell through to its last-resort `fetch('./data.json')`, and the user got a blank iframe with a cryptic `"Failed to parse URL from ./data.json"` console error. Unit tests passed because none of them asserted that the replace actually mutated anything.
+Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFile HTML/JS, `dist-static/` HTML, exported GEDCOM, MCP-bundled JS) **must throw when the pattern doesn't match**. Silent no-op breeds blank-screen bugs that still pass unit tests.
 
 **How to apply:**
 - Anchor the replacement on a **stable purpose-named marker** (e.g. `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->`), not on a source-code substring that could legitimately change shape.
 - Compare `before === after` and `throw new Error('marker not found: ' + name)` if equal.
 - Extract the pure mutation into a helper file with no fs / DOM dependencies so it's unit-testable.
-- Test both directions: "replace happens" AND "throws when marker missing". The second is the one that catches the bug class — it would have caught v0.227.5 before merge.
+- Test both directions: "replace happens" AND "throws when marker missing". The second catches the bug class.
 
 ## Dev container caveats
 

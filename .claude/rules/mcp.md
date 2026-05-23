@@ -14,7 +14,7 @@ The MCP server has two entry points. DB path: `SLAKTFORSKNING_DB` env var, or pl
 
 ### Production Server (`src/mcp/createProdServer.ts`)
 
-77 workflow tools (counted via `grep -c registerTool src/mcp/tools/prod/*.ts`) designed for genealogy research and AI narrative generation. The set was sized for parity: an agent can author and curate every kind of record the renderer can — full CRUD on persons (incl. names + identifiers), relationships, event participants, events, sources, citations, places, repositories, groups, media (incl. links + regions), research tasks, plus GEDCOM and `.zip`-archive backup round-trip. Each workflow tool does more in a single call — creates relationships, resolves places, records citations — so agents need fewer round-trips. Coverage is enforced by `tests/unit/mcp.test.ts` ("registers every tool the agent needs to author + curate a genealogy database").
+77 workflow tools (counted via `grep -c registerTool src/mcp/tools/prod/*.ts`). Parity goal: full CRUD on persons (incl. names + identifiers), relationships, event participants, events, sources, citations, places, repositories, groups, media (incl. links + regions), research tasks, plus GEDCOM and `.zip`-archive round-trip. Each workflow tool does more in a single call to reduce round-trips. Coverage enforced by `tests/unit/mcp.test.ts`.
 
 Entry point: `npx tsx src/mcp/server.ts`
 

@@ -15,13 +15,13 @@ npm run test:e2e:full   # Tier 2 — 7 projects, required when UI / panels / dat
 | Tier | Projects | When required as close-out evidence |
 |---|---|---|
 | **Tier 1** (`test:e2e`) | `boot`, `crud`, `website-export`, `duplicates` | Every plan. These are the core user-observable surfaces — app launches, basic CRUD round-trips, website export produces a valid SPA, duplicate-finding works. Never archive without all four green. |
-| **Tier 2** (`test:e2e:full`) | Tier 1 + `panels`, `reactivity`, `imports` | Any plan whose user goal touches a panel, modal, list-view, importer, or `data-changed` consumer. The Tauri full-port close-out failed because nobody ran the suite that observed the boot regression — same shape applies to panel/reactivity/import regressions today. |
+| **Tier 2** (`test:e2e:full`) | Tier 1 + `panels`, `reactivity`, `imports` | Any plan whose user goal touches a panel, modal, list-view, importer, or `data-changed` consumer. |
 
 Non-UI plans (Rust-side-only changes, schema-only migrations, doc-only) are exempt from Tier 2 and only need Tier 1.
 
 ## What each project protects
 
-- **`boot`** — `npm start` doesn't immediately crash; the renderer mounts, the Rust host opens a DB, the first view paints. This is the project that would have caught the Tauri-port `npm start = electron-forge start` regression.
+- **`boot`** — `npm start` doesn't immediately crash; the renderer mounts, the Rust host opens a DB, the first view paints.
 - **`crud`** — minimum-viable round-trip: create-person → edit → delete via the running UI + IPC + rusqlite. Any regression in the api/ layer that breaks normal mutations surfaces here.
 - **`website-export`** — `npm run build:static` plus an `archive:export` round-trip produces a valid static SPA. Protects the read-only viewer surface.
 - **`duplicates`** — `find_duplicates` from the running app surfaces real matches. Protects the duplicate-detection user goal end-to-end.
@@ -53,7 +53,7 @@ If `[boot]` / `[crud]` / any Tier 1 project is failing or flaky, the plan trying
 Both paths are legitimate. The rule is the verification, not the path.
 
 - **PR.** CI runs Tier 1 + Tier 2 on every push; iterate on red. Evidence-before-push isn't strictly required — CI is the appropriate verification surface.
-- **Direct merge to `main`** (the common case for solo plan-driven work here, and for small fixes). The executor runs Tier 1 (and Tier 2 if UI-touching) locally before push and captures the output in the commit message. Direct-to-main without local-green is the failure mode the Tauri-port RCA called out. After merging the worktree branch into `main`, push `main` itself — don't push the feature branch to `origin/main` by mistake.
+- **Direct merge to `main`** (the common case for solo plan-driven work, and for small fixes). The executor runs Tier 1 (and Tier 2 if UI-touching) locally before push and captures the output in the commit message. After merging the worktree branch into `main`, push `main` itself — don't push the feature branch to `origin/main` by mistake.
 
 ## When to add a new project vs extend an existing one
 

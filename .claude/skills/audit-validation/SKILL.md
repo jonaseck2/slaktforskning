@@ -5,23 +5,11 @@ description: When an audit, third-party finding, AI-generated codebase claim, or
 
 # Audit Validation — Grep Before Plan
 
-Audits drift. Third-party findings drift. Any LLM-generated codebase analysis drifts. **Before you write a plan against a claim about the code, verify the claim against the code itself.**
-
-## Why this exists
-
-The 2026-05-14 audit-followup batch produced 11 plans. **Three of them had factually wrong premises** that grep would have caught in under 5 minutes:
-
-| Plan | Audit claimed | Reality (verified during execution) |
-|---|---|---|
-| 3.2 chart-layout | "1,663 LOC of golden snapshots; replace with property assertions" | Zero `toMatchSnapshot` calls. The file was already property-style with 165 `toBeCloseTo` / `toBeLessThan` etc. The plan still shipped a useful property-assertion library, but the framing was wrong. |
-| 3.5 modal extraction | "EventModal: 1,052 LOC of template branching; extract event-type field components" | 105 LOC `<template>` + 721 LOC `<script setup>`. Bottleneck was composition logic, not template branching. Plan pivoted mid-design to composable extraction. |
-| 3.7 panel danger-zone | "Extract `usePanelSections` composable — 4,936 LOC of section-management boilerplate across 10 panels" | `usePanelSections` already existed and was used by 8 of 10 panels. The "4,936 LOC" was the panels themselves (domain markup), not reducible to a section composable. Plan re-investigated, found the real duplication: `panel-danger-zone` blocks in 6 panels (~50 LOC × 6). |
-
-The shared failure mode: each plan was authored from the audit summary without first opening the named file. Each plan would have been authored differently if the audit's claim had been spot-checked at intake.
+Before writing a plan against a claim about the code, verify the claim against the code itself.
 
 ## The rule
 
-Before brainstorming or writing a plan that names a specific file, LOC count, or pattern claim, **verify each claim independently** with grep / wc / read. Don't trust the source — even a self-authored audit drifts between when it's written and when its plan executes.
+Before brainstorming or writing a plan that names a specific file, LOC count, or pattern claim, **verify each claim independently** with grep / wc / read. Audits, third-party findings, and LLM-generated codebase analysis drift between when they're written and when their plan executes.
 
 ## What to verify (in order)
 
@@ -62,14 +50,11 @@ ANY of these in the input:
    - `grep -rln '<symbol>' src/` for symbol-existence claims
 3. Run all verifications BEFORE writing the plan.
 4. For each verified claim: record the actual measurement next to the audit's claim in the plan's Scope section. Discrepancies get a one-line explanation.
-5. If a verification reveals the audit's premise is wrong: **don't paper over it**. Either reframe the plan around the actual code state, or close the plan as "audit premise didn't hold" with a one-paragraph note for the historical record.
-
-## Verification (per `.claude/rules/plans.md` Rule A3)
-
-If the next plan in this repo opens its Scope section with **measured numbers paired against any audit claims** (not just paraphrased audit claims), the skill works. If a future plan ships with an unverified audit claim that turns out wrong on execution, this skill failed and needs strengthening.
+5. If a verification reveals the audit's premise is wrong: **don't paper over it**. Either reframe the plan around the actual code state, or close as "audit premise didn't hold" with a one-paragraph note.
 
 ## What this skill does NOT cover
 
 - Writing plans (use `superpowers:writing-plans`).
 - Brainstorming intent (use `superpowers:brainstorming`).
-- This skill is a one-step intake check, not a brainstorming framework. After validation, normal plan workflows apply.
+
+This is a one-step intake check, not a brainstorming framework. After validation, normal plan workflows apply.

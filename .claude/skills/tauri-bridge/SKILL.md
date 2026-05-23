@@ -5,12 +5,12 @@ description: How the renderer talks to Rust in the Tauri build — the Specta-ge
 
 # Tauri Bridge — Renderer ↔ Rust
 
-This skill is the canonical reference for **how a renderer-side `window.api.foo.bar(...)` call gets answered** in the Tauri build, after the Specta migration deleted the Electron-era `src/shared/channels/` registry. The `window.api` surface is now built from two ingredients:
+The `window.api` surface is built from two ingredients:
 
-1. **Specta-generated bindings** (`src/renderer/bindings.ts`): every `#[tauri::command] #[specta::specta]` Rust function in `src-tauri/` produces a typed wrapper. `cargo build` regenerates this file; it is the source of truth for the Rust-IPC surface.
+1. **Specta-generated bindings** (`src/renderer/bindings.ts`): every `#[tauri::command] #[specta::specta]` Rust function in `src-tauri/` produces a typed wrapper. `cargo build` regenerates; this is the source of truth for the Rust-IPC surface.
 2. **Inlined renderer-local bindings** (`src/renderer/tauri-window-api.ts → mountWindowApi()`): every `api.<domain>.<method>` that runs as pure TS over the renderer-side DB shim is bound directly to its `src/api/*` function, with `mutating()` / `readOnly()` helpers for the `data:changed` broadcast.
 
-There is no registry, no auto-walk, no preload, no parity test gate between four layers. Adding a binding edits one file (or two if it's Rust-backed).
+No registry, no auto-walk, no preload, no parity test gate. Adding a binding edits one file (or two if Rust-backed).
 
 ## The decision tree
 

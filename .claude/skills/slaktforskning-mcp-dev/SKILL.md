@@ -19,7 +19,7 @@ MCP tools are an interface for *the agent's* authored input. They are not a plac
 - Argument validation (rejecting clearly invalid input).
 - Document the contract in the tool's `describe()` so agents know when to supply structured fields vs free-form fallbacks.
 
-This rule is in `CLAUDE.md` as the prime directive. Past violations corrupted real databases. Treat MCP tool arguments as a write API, not a guessing game.
+Treat MCP tool arguments as a write API, not a guessing game.
 
 ## Prod vs Dev Server
 
@@ -46,8 +46,6 @@ In the bundled Tauri app, the prod server is NOT run via `npx tsx`. The build pi
 For local development, `npx tsx src/mcp/server.ts` still works as the Node-host path — that's what `.claude/settings.local.json` typically uses.
 
 ## Three Modes of Use
-
-The MCP server is not just an API surface — it is the primary tool for agents to develop, test, and research in the running app.
 
 ### Mode 1: Agent-Driven Development
 

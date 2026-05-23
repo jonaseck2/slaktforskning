@@ -5,7 +5,7 @@ description: Add a new feature, entity type, or field to the Släktforskning cod
 
 # Adding a Feature to Släktforskning
 
-This codebase has a strict layered architecture. Every data feature touches all layers in order. Skipping a layer means the feature is unreachable from either the UI or MCP agents.
+Strict layered architecture. Every data feature touches all layers in order. Skipping a layer means the feature is unreachable from either the UI or MCP agents.
 
 **Pattern enforcement:** if you build/refactor a reusable shell (panel, list, modal), every same-shaped component must adopt it in the same change. See `.claude/rules/renderer.md` "Pattern migrations are all-or-nothing" and `.claude/rules/plans.md` Rule A2.
 
@@ -13,25 +13,25 @@ This codebase has a strict layered architecture. Every data feature touches all 
 
 **Before writing any code that mutates the DB, re-read the prime-directive section of `CLAUDE.md`.**
 
-The user's data is sacred. Any value an algorithm produced — a gazetteer-resolved coordinate, a "best guess" date_type from a free-form string, a fuzzy-matched normalized name, an auto-applied quality-check fix, a default-when-the-agent-was-vague — **must NOT be persisted**. Inferred values are computed at render time, every render, against the current rules. Authored values (UI input, modal save, picker click on a structured suggestion, MCP tool call with explicit fields, file import preserving source content) are persisted.
+Any value an algorithm produced — gazetteer-resolved coordinate, "best guess" date_type from a free-form string, fuzzy-matched normalized name, auto-applied quality-check fix, default-when-the-agent-was-vague — **must NOT be persisted**. Inferred values are computed at render time, every render. Authored values (UI input, modal save, picker click on a structured suggestion, MCP tool call with explicit fields, file import preserving source content) are persisted.
 
-Common traps when adding features:
-- A new picker that resolves names to coordinates and "helpfully" persists them. → DON'T. The map computes coords from gazetteers at render.
-- A new MCP tool that defaults `date_type` to `'exact'` because the agent passed `date_value`. → DON'T. Pass through what the agent gave; let the schema default to `'unknown'` if omitted.
-- A new auto-fix button on a quality-check row that writes the suggested string. → OK only if the user explicitly clicks "apply this fix" and the suggestion is a deterministic transformation, not a guess. A passively-applied fix is forbidden.
-- A new import path that fills in fields the source file didn't contain. → DON'T. Import only what's in the source.
+Common traps:
+- New picker resolving names to coordinates and "helpfully" persisting them. → DON'T. The map computes coords from gazetteers at render.
+- New MCP tool that defaults `date_type` to `'exact'` because the agent passed `date_value`. → DON'T. Pass through; let the schema default to `'unknown'` if omitted.
+- New auto-fix button on a quality-check row that writes the suggested string. → OK only if user explicitly clicks "apply this fix" AND the suggestion is a deterministic transformation, not a guess. Passively-applied fix is forbidden.
+- New import path filling in fields the source file didn't contain. → DON'T.
 
-If a feature seems to need inferred persistence to work, the design is wrong — find the render-time path. This rule is non-negotiable.
+If a feature seems to need inferred persistence, the design is wrong.
 
 ## Execution mode
 
-Any feature backed by a plan file (`docs/plans/*.md`) runs in a **git worktree** with **subagent-driven execution**. Don't work plan-driven features on `main`.
+Plan-backed features (`docs/plans/*.md`) run in a **git worktree** with **subagent-driven execution**. Don't work plan-driven features on `main`.
 
-1. After `writing-plans` writes the plan, invoke `superpowers:using-git-worktrees` to spin up an isolated worktree.
-2. Then invoke `superpowers:subagent-driven-development` to execute the plan task-by-task with fresh-context subagents + two-stage review.
-3. When the plan is fully implemented, merge the worktree back to `main` (`superpowers:finishing-a-development-branch`).
+1. After `writing-plans` writes the plan, invoke `superpowers:using-git-worktrees`.
+2. Then invoke `superpowers:subagent-driven-development` (with `subagent-handoff` templates).
+3. When the plan is fully implemented, merge worktree back to `main` (`superpowers:finishing-a-development-branch`).
 
-Small fixes without a plan (typo, i18n tweak, single-file bug fix) can still be done directly on `main` — see the `commit` skill's branch-strategy rule.
+Small fixes without a plan can go directly to `main` — see the `commit` skill's branch-strategy rule.
 
 ## The Checklist
 
@@ -59,42 +59,42 @@ Follow this order. Each step builds on the previous.
 
 ## Cross-platform rules
 
-Släktforskning targets macOS, Windows, and Linux from a single codebase. The number one source of cross-platform breakage is spawning external processes that are not guaranteed to exist.
+Targets macOS, Windows, Linux from a single codebase. Number-one source of breakage is spawning external processes not guaranteed to exist.
 
-**In app code (`src/`):** never `spawn` or `exec` a tool that the user must install separately. Use pure-JS/Node.js libraries instead.
+**In app code (`src/`):** never spawn or execFile a tool the user must install separately. Use pure-JS/Node.js libraries.
 
 | Don't (app code) | Do instead |
 |------------------|------------|
 | `spawnSync('unzip', ...)` | `fflate.unzipSync()` |
 | `spawnSync('tar', ...)` | a JS tar library |
-| `execFile('ffmpeg', ...)` | a wasm/JS media library |
-| `execFile('convert', ...)` | a wasm/JS image library |
+| ffmpeg via execFile | a wasm/JS media library |
+| ImageMagick via execFile | a wasm/JS image library |
 
-**Exception — explicit user-facing prerequisites:** Docker is an explicit prerequisite for the Genney Derby import. The UI tells the user Docker is required, checks for it before starting, and falls back gracefully when it is absent. This is acceptable because the dependency is intentional, documented, and user-visible. Apply the same bar before adding any new external-process dependency: it must be deliberate, checked, and fallback-handled.
+**Exception — explicit user-facing prerequisites:** Docker is required for the Genney Derby import. UI tells the user, checks for it before starting, falls back gracefully. Apply the same bar before any new external-process dependency: deliberate, checked, fallback-handled.
 
-**In tests and dev scripts (`tests/`, `scripts/`, `forge.config.ts`):** spawning processes is fine — test environments control what tools are available.
+**In tests and dev scripts (`tests/`, `scripts/`, `forge.config.ts`):** spawning processes is fine.
 
-## Architectural Decision: Enrich Presentation vs. Store Derived Data
+## Enrich Presentation vs. Store Derived Data
 
 When a feature derives information from existing data (auto-linking text, computed labels, resolved references), prefer computing at render time over adding new tables or columns.
 
-**Enrich presentation (prefer this):**
-- Compute in a pure function, render in the component
-- No schema change, no sync obligations, works retroactively on all existing data
-- Example: `linkify()` scans source text for ArkivDigital AID codes and renders inline `<a>` tags
+**Enrich presentation (prefer):**
+- Compute in a pure function, render in the component.
+- No schema change, no sync obligations, works retroactively on all existing data.
+- Example: `linkify()` scans source text for ArkivDigital AID codes and renders inline `<a>` tags.
 
 **Store derived data (only when needed):**
-- When computation is expensive (seconds, not milliseconds)
-- When the derivation requires external data not available at render time
-- When the result needs to be searchable/queryable
+- Computation is expensive (seconds, not milliseconds).
+- Derivation requires external data not available at render time.
+- Result needs to be searchable/queryable.
 
-The data model should store facts, not interpretations. One source of truth.
+The data model stores facts, not interpretations. One source of truth.
 
 ## API Layer (Steps 1-4)
 
 ### Database migrations — adding columns to existing tables
 
-`CREATE TABLE IF NOT EXISTS` only creates the table if it doesn't exist — it **never** adds missing columns to an existing database. Any new column on an existing table requires a migration guard at the end of `initializeSchema()` in `src/api/schema.ts`:
+`CREATE TABLE IF NOT EXISTS` never adds missing columns to an existing DB. Any new column on an existing table requires a migration guard at the end of `initializeSchema()` in `src/api/schema.ts`:
 
 ```typescript
 // Append inside initializeSchema(), after the main db.exec block.
@@ -110,18 +110,18 @@ if (!thingsCols.includes('another_column')) {
 ```
 
 Rules:
-- One `PRAGMA table_info` call per table, then check each new column separately
-- Match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE` statement above
-- **Never skip this** — missing migration = runtime crash for any user with a pre-existing database
+- One `PRAGMA table_info` call per table, check each new column separately.
+- Match the column definition exactly (type, DEFAULT, constraints) to the `CREATE TABLE` statement.
+- **Never skip** — missing migration = runtime crash for any user with a pre-existing database.
 
 ### SQLite quirks
 
-Vitest tests run on `node-sqlite3-wasm`; renderer/MCP run on rusqlite via the db-shim. The shared `Database` shape papers over most of the difference but a few quirks bleed through:
+Vitest tests on `node-sqlite3-wasm`; renderer/MCP on rusqlite via the db-shim. Quirks that bleed through:
 
-- Parameter binding uses **arrays**: `stmt.run([a, b])` not `stmt.run(a, b)`
-- `db.get()` returns `undefined`, not `null` — use `?? null` on every result
-- No `.pragma()` method — use `runSql(db, 'PRAGMA foreign_keys = ON')`
-- `.run()` returns `{ changes: number }` — cast if TypeScript complains
+- Parameter binding uses **arrays**: `stmt.run([a, b])` not `stmt.run(a, b)`.
+- `db.get()` returns `undefined`, not `null` — use `?? null`.
+- No `.pragma()` method — use `runSql(db, 'PRAGMA foreign_keys = ON')`.
+- `.run()` returns `{ changes: number }` — cast if TypeScript complains.
 
 Always go through `queryOne` / `queryAll` / `runSql` / `runBatch` from `src/api/db.ts` rather than raw `db.prepare(...).run(...)`. See `rules/api.md`.
 
@@ -145,19 +145,19 @@ export function deleteThing(db: Database, id: string): boolean {
 
 ### Unit tests
 
-See `/test` for the unit-test template, the `createTestDb()` helper, the per-CRUD-function negative-case checklist (null returns, false returns), and the **assert DB state, not just return values** rule (the EVENT_PLACE column-name bug shows why fixture-mirrored assertions silently pass on broken transforms).
+See `/test` for the unit-test template, `createTestDb()`, per-CRUD-function negative-case checklist, and the **assert DB state, not just return values** rule.
 
-Run after writing: `npm test -- --coverage` — coverage thresholds (80% lines and functions on `src/api/`) must still pass.
+Run after writing: `npm test -- --coverage` — 80% lines+functions coverage on `src/api/` must still pass.
 
 ## IPC Layer (Step 5)
 
 ### Adding a new window.api binding
 
-The Electron-era `src/shared/channels/` registry is gone. There's no `defineChannel`, no preload coverage test, no auto-walk. Two paths exist now depending on what the new operation needs.
+Two paths depending on what the new operation needs.
 
 #### Path A — pure TS over the renderer-side DB shim (most CRUD)
 
-Add an explicit binding to `src/renderer/tauri-window-api.ts`. The helpers `mutating()` and `readOnly()` thread the renderer-side `Database` and (for mutations) fire `data:changed` afterwards:
+Add an explicit binding to `src/renderer/tauri-window-api.ts`. `mutating()` and `readOnly()` thread the renderer-side `Database` and (for mutations) fire `data:changed` afterwards:
 
 ```typescript
 api.things = {
@@ -169,11 +169,11 @@ api.things = {
 };
 ```
 
-That's it — the binding is live on `window.api.things.*`. Mutating ones automatically broadcast `data:changed` so `useEntityData` / `usePagedList` reload.
+Binding is live on `window.api.things.*`. Mutating ones broadcast `data:changed` so `useEntityData` / `usePagedList` reload.
 
 #### Path B — Rust-backed command (file dialog, fs, shell, multi-window, image processing)
 
-The Specta generator is the source of truth. Add the command to Rust, annotate it, and `bindings.ts` regenerates:
+Specta generator is the source of truth. Add the command to Rust, annotate it, `bindings.ts` regenerates:
 
 ```rust
 // src-tauri/src/lib.rs (or sibling module)
@@ -186,9 +186,9 @@ async fn thing_export(id: String, path: String) -> Result<u64, String> {
 }
 ```
 
-Register the command in the `tauri_specta::Builder::collect_commands!` macro in `lib.rs`. `cargo build` regenerates `src/renderer/bindings.ts` with `commands.thingExport(id, path)` and the right TypeScript types.
+Register in the `tauri_specta::Builder::collect_commands!` macro in `lib.rs`. `cargo build` regenerates `src/renderer/bindings.ts` with `commands.thingExport(id, path)`.
 
-Then add a polyfill in `src/renderer/tauri-window-api.ts` that calls the generated command:
+Then add a polyfill in `src/renderer/tauri-window-api.ts`:
 
 ```typescript
 api.things.exportToFile = async (id: unknown) => {
@@ -199,15 +199,15 @@ api.things.exportToFile = async (id: unknown) => {
 };
 ```
 
-Use `unwrap()` for `Result<T, String>` returns (Specta wraps them in `{ status, data | error }` envelopes); plain `await` for `Result<T, void>` ones. The polyfill is also where you call `fireDataChanged()` if the command mutates renderer-observable state.
+Use `unwrap()` for `Result<T, String>` returns (Specta wraps them in `{ status, data | error }` envelopes); plain `await` for `Result<T, void>`. Call `fireDataChanged()` if the command mutates renderer-observable state.
 
-See `/tauri-bridge` for the full Specta annotation walkthrough including how to derive `specta::Type` on parameter and return types.
+See `/tauri-bridge` for the full Specta annotation walkthrough.
 
 #### Step 5b — type the new surface
 
-Update `src/renderer/api.d.ts` to add the method signature under `window.api.<domain>` so call sites in Vue components keep their compile-time types.
+Update `src/renderer/api.d.ts` with the method signature under `window.api.<domain>`.
 
-#### Step 5c — Vue component use:
+#### Step 5c — Vue component use
 
 ```typescript
 await window.api.things.create({ name: 'test' });
@@ -215,37 +215,35 @@ await window.api.things.create({ name: 'test' });
 
 ### Required tests after adding a binding
 
-Compared to the Electron-era four-test parity gate, the post-Specta surface is much smaller:
-
 ```bash
 npx vitest run tests/unit/static-api-coverage.test.ts \
                 tests/unit/tauri-window-api.test.ts
 ```
 
-- `static-api-coverage` — every legacy-shaped renderer-callable channel (dialog, fs, shell) still has a stub in the static SPA api for the website-export bundle.
-- `tauri-window-api.test.ts` — covers the polyfill dispatch shape for Rust-backed bindings (Specta wire arguments).
+- `static-api-coverage` — every legacy-shaped renderer-callable channel (dialog, fs, shell) has a stub in the static SPA api for the website-export bundle.
+- `tauri-window-api.test.ts` — polyfill dispatch shape for Rust-backed bindings.
 
-The Specta builder itself verifies that every annotated command appears in `bindings.ts` — there is no separate parity test to drift against; if the Rust function and its annotations compile, the TypeScript binding exists.
+Specta builder verifies that every annotated command appears in `bindings.ts` — no separate parity test.
 
 See `docs/IPC_REFERENCE.md` for the complete `window.api` surface map.
 
 ## MCP Layer (Step 6)
 
-See `/slaktforskning-mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split (`src/mcp/createProdServer.ts` for genealogy workflow tools, `src/mcp/createDevServer.ts` for UI/chart/seed tools), Zod inputSchema with `.describe()`, the thin-wrapper rule (all logic stays in `src/api/`), and the `tests/unit/mcp.test.ts` `call()` helper. The MCP-tool prime directive (pass-through, never synthesize defaults) lives there too.
+See `/slaktforskning-mcp-dev` for the full pattern: `registerTool()` template, prod vs dev server split, Zod inputSchema with `.describe()`, thin-wrapper rule (logic stays in `src/api/`), and `tests/unit/mcp.test.ts` `call()` helper. MCP-tool prime directive (pass-through, never synthesize defaults) lives there.
 
 ## Vue UI Layer (Step 7)
 
-For modal patterns, the three-sheet layout, paneled-view checklist, list view + side panel pattern, the shared component catalog (`BaseSubPanel`, pickers, `DateInput`, `EventModal`, `EventList`, `CitationModal`, `CitationBadge`, `AppButton`/`AppBadge`/etc.), the design tokens, and the `@media print` rules — see `/frontend-design`. It is the canonical reference; do not duplicate that knowledge here. CLAUDE.md's component table also lists every existing component by props/emits so you can find what to reuse.
+For modal patterns, three-sheet layout, paneled-view checklist, list view + side panel pattern, shared component catalog (`BaseSubPanel`, pickers, `DateInput`, `EventModal`, `EventList`, `CitationModal`, `CitationBadge`, `AppButton`/`AppBadge`/etc.), design tokens, `@media print` rules — see `/frontend-design`. CLAUDE.md's component table lists every existing component by props/emits.
 
-A11y patterns (combobox, focus trap, contrast tokens, screen-reader narration via `v-narrate`) live in `/a11y`.
+A11y patterns (combobox, focus trap, contrast tokens, `v-narrate`) live in `/a11y`.
 
 ### Adding a new entity color identity
 
-If your new entity warrants its own color: add it to `EntityType` in `entityMeta.ts`, define `--entity-{name}-text/-bg` (light in `tokens.css`, dark + HC overrides in `shared.css`), and add a `[data-entity="{name}"]` remap rule. `tests/unit/wcagContrast.test.ts` will catch any contrast failures across the 9 (theme × mode) combinations automatically.
+If your new entity warrants its own color: add it to `EntityType` in `entityMeta.ts`, define `--entity-{name}-text/-bg` (light in `tokens.css`, dark + HC overrides in `shared.css`), add a `[data-entity="{name}"]` remap rule. `tests/unit/wcagContrast.test.ts` catches contrast failures across the 9 (theme × mode) combinations automatically.
 
 ### Error handling in async operations
 
-Every `await window.api.*` call that mutates data must have a try/catch that shows a toast. Never silently swallow errors:
+Every `await window.api.*` mutating call must have a try/catch that shows a toast:
 
 ```typescript
 import { useToast } from '../composables/useToast';
@@ -269,7 +267,7 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 
 ### Person Section Component pattern
 
-**Every data section for a person is a self-contained, reusable component** used inside `PersonPanel` (the side panel hosted by `PersonsView`), and shared with any other view that needs the same section (e.g. `ResearchTasksTable` is used in both `PersonPanel` and `ResearchTasksView`). When adding a new per-person section, always make it a component — never inline it in just one view.
+**Every per-person data section is a self-contained, reusable component** used inside `PersonPanel` and shared with any other view needing the same section. When adding, always make it a component — never inline in just one view.
 
 #### Existing person section components
 
@@ -286,7 +284,7 @@ Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `error
 
 #### Self-loading section component template
 
-Use this when the section owns its own data (no benefit to the parent holding the array). **Always go through `useEntityData`** — it handles race-safe loading on id change AND auto-subscribes to `onDataChanged` so the section refreshes after any mutation (own component, sibling section, modal, MCP call). Never roll a manual `watch(() => props.id, load, { immediate: true })`, and never call `window.api.onDataChanged(...)` directly.
+When the section owns its own data, **always go through `useEntityData`** — race-safe loading on id change AND auto-subscribes to `onDataChanged`. Never roll a manual `watch(() => props.id, load, { immediate: true })`. Never call `window.api.onDataChanged(...)` directly.
 
 ```vue
 <script setup lang="ts">
@@ -322,12 +320,12 @@ defineExpose({ openAddForm: () => { showForm.value = true; }, reload });
 ```
 
 Key rules:
-- **Always `useEntityData(toRef(props, 'personId'), loader)`** — never a manual `watch(() => props.X, load, { immediate: true })`. The composable owns race safety AND mutation reactivity.
-- **Never register `window.api.onDataChanged(...)` from a component.** The composable subscribes for you. If you find yourself wanting to, you're either (a) not using the composable yet, (b) wanting a Pattern-1 targeted refresh (see `frontend-design` skill), or (c) doing app-wide cross-entity work that belongs in `App.vue`.
-- Export the row interface so parents can type their own refs (e.g. `ref<import('./PersonXxx.vue').ThingRow[]>([])`)
-- Use `defineExpose` when the parent's header button must trigger an action inside the component (add form, file picker, etc.). Re-export `reload` so the parent can imperatively refresh when needed.
-- The parent keeps the `<section>` header with the `<h4>` and action `<button>`; the component renders only the table/content below.
-- For new list views (left column), use `usePagedList({ ..., fetchPage })` — same auto-subscription, race guard, debounce.
+- **Always `useEntityData(toRef(props, 'personId'), loader)`** — never a manual `watch`. Composable owns race safety AND mutation reactivity.
+- **Never register `window.api.onDataChanged(...)` from a component.** Composable subscribes for you.
+- Export the row interface so parents can type their own refs.
+- Use `defineExpose` when the parent's header button must trigger an action inside. Re-export `reload` for imperative refresh.
+- Parent keeps the `<section>` header with `<h4>` and action `<button>`; component renders only the table/content.
+- For new list views (left column), use `usePagedList({ ..., fetchPage })`.
 
 #### Parent wiring (panel-section style)
 
@@ -364,73 +362,73 @@ const thingsSectionRef = ref<InstanceType<typeof PersonThingsSection> | null>(nu
 Add `things: loadSection('things', false)` to the `sections` reactive object.
 
 ### UI consistency rules
-- **Picker inputs fill their container** — `PersonPicker` and `PlacePicker` both have `width: 100%` on their root. Place them inside a `<label>` or grid cell and they will fill it. Never wrap them in a `class="full-width"` override.
-- **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`. This applies to events, persons, sources, and places.
-- **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Only use `grid-column: 1 / -1` for a field that genuinely needs extra width (e.g. a long textarea). Never use it for picker inputs.
-- **Always use `formatFullName()` for plain-text name rendering** — Any code that renders a person name as a string (report headings, ahnentafel lists, relationship lists, dropdown labels, log strings) MUST import and call `formatFullName()` from `src/renderer/utils/nameUtils.ts`. Never use inline logic like `preferred_name ?? given_name?.split(' ')[0]` or a local `primaryName()` function. This ensures all given names, the nickname in quotes, and any prefix/suffix are always shown. For Vue template rendering (PersonName component contexts), use `<PersonName>` instead.
+- **Picker inputs fill their container** — `PersonPicker` / `PlacePicker` have `width: 100%`. Place inside a `<label>` or grid cell. Never wrap in `class="full-width"` override.
+- **Clickable rows, no Edit buttons** — all list/table rows clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`.
+- **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Only use `grid-column: 1 / -1` for fields needing extra width.
+- **Always use `formatFullName()`** for plain-text name rendering. Import from `src/renderer/utils/nameUtils.ts`. Never inline `preferred_name ?? given_name?.split(' ')[0]`. For Vue template rendering use `<PersonName>`.
 
 ### i18n
 
-Every user-visible string — including button labels, table headers, placeholders, section headings, and empty-state messages — goes through `$t('key')`. No hardcoded Swedish or English in templates or script. This applies even to single-word labels like "Spara" or "Save".
+Every user-visible string — button labels, table headers, placeholders, section headings, empty-state messages — goes through `$t('key')`. No hardcoded Swedish or English in templates or script. Even single-word labels like "Spara"/"Save".
 
-Add all new keys to **both** `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English) in the same changeset.
+Add all new keys to **both** `src/renderer/i18n/sv.ts` (primary) and `src/renderer/i18n/en.ts` in the same changeset.
 
 ### Component size
 
-If a component grows beyond ~300 lines, extract sections following the Person Section Component pattern before adding more code. Large components are a sign that multiple independently reusable sections have been inlined. Extract each section into its own self-loading component — see the pattern above.
+If a component grows beyond ~300 lines, extract sections following the Person Section Component pattern before adding more code.
 
 ### Minimizing data entry actions
 
-Every new UI feature should be evaluated against the number of user actions (clicks, selections, text entries) needed to accomplish a task. A usability analysis of this app (see `docs/plans/archive/2026-04-10-usability-test-plan.md`) found that creating a fully-sourced 10-person family tree required ~792 actions. Six optimizations reduced this by ~50%.
+Evaluate every new UI feature against the number of user actions needed.
 
-**Principles — apply to any new feature:**
+**Principles:**
 
-1. **Combine related entity creation** — When creating entity A always requires creating entity B, offer B's fields inline in A's form. Example: `PersonModal` with `relatedTo` creates person + relationship + birth event + citation in one modal instead of 4 separate workflows. Use `<details>` for optional sections to keep the form clean.
+1. **Combine related entity creation** — when creating entity A always requires creating entity B, offer B's fields inline in A's form. `PersonModal` with `relatedTo` creates person + relationship + birth event + citation in one modal. Use `<details>` for optional sections.
 
-2. **Pre-fill from context** — When a user's intent is clear from context, pre-fill fields:
+2. **Pre-fill from context:**
    - Sex: auto-infer from role (father→M, mother→F, spouse→opposite)
    - Surname: pre-fill child's surname from parent
-   - Source: remember last-used source across forms (Pinia store `sourceSession`)
+   - Source: remember last-used source across forms (Pinia `sourceSession`)
 
-3. **Reduce navigation clicks** — Offer actions where the user already is:
+3. **Reduce navigation clicks** — offer actions where the user already is:
    - "Add Father/Mother/Child/Spouse" buttons on person detail and panel
    - Ghost placeholder boxes in the pedigree chart for missing parents
-   - "Cite" button per event row instead of requiring full event edit
-   - "Save & Add Another" to batch-enter multiple items without closing the modal
+   - "Cite" button per event row instead of full event edit
+   - "Save & Add Another" to batch-enter items
 
-4. **Composables for multi-entity creation** — Use `useBirthEventCreation` pattern: a composable that wraps multiple IPC calls (create event + add participant + create citation) into a single function. This keeps the logic DRY across modals.
+4. **Composables for multi-entity creation** — `useBirthEventCreation` pattern wraps multiple IPC calls into one function.
 
 **Key components for data entry optimization:**
-- `PersonModal` with `relatedTo` — combined person + relationship + birth event creation with inference
+- `PersonModal` with `relatedTo` — combined person + relationship + birth event creation
 - `useBirthEventCreation` composable — shared birth event + participant + citation creation
 - `sourceSession` Pinia store — last-used source memory for citation pre-fill
 - `EventList` cite button — quick citation without full event edit
-- `EventModal` "Save & Add Another" — batch event entry
-- Ghost placeholder boxes in `PedigreeChart` — click-to-add missing parents
+- `EventModal` "Save & Add Another"
+- Ghost placeholder boxes in `PedigreeChart`
 
 ## UI Verification (Step 8 — REQUIRED for any UI change)
 
-**Unit tests alone do not verify UI changes** (they miss modal lifecycle, route remount on key change, ref timing, async-gated rendering, event-bubble overlap). Before committing, verify in the running app.
+**Unit tests alone do not verify UI changes** (modal lifecycle, route remount on key change, ref timing, async-gated rendering, event-bubble overlap). Before committing, verify in the running app.
 
 - Headless / CI: `npx playwright test --project=gui-xxx`
-- Interactive: ask the user to launch `npm start` (or `./.devcontainer/dev-debug.sh` for CDP), then drive the app with the `slaktforskning-dev` MCP tools (`ui_navigate`, `ui_screenshot`, `ui_click`, `ui_get_dom`).
+- Interactive: ask the user to launch `npm start`, then drive via `slaktforskning-dev` MCP tools (`ui_navigate`, `ui_screenshot`, `ui_click`, `ui_get_dom`).
 
-See `/test` for the full E2E architecture, the `AppDriver` API, and the common pitfalls list. See `/tauri-dev` for the launch + dev-loop reference. See `/commit` for the rule that UI changes must NOT be committed without visual verification.
+See `/test`, `/tauri-dev`, and `/commit` (UI changes must NOT be committed without visual verification).
 
 ## Before implementing a non-trivial feature
 
-Use `superpowers:writing-plans` to write a plan first. Existing plans in `docs/plans/` (and `docs/plans/archive/`) are good templates — they show the expected task structure, file map format, and TDD step granularity for this codebase.
+Use `superpowers:writing-plans`. Existing plans in `docs/plans/` (and `docs/plans/archive/`) are good templates.
 
-**Path convention (overrides superpowers defaults):** This project puts all plans and design specs under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`.
-- Design spec: `docs/plans/YYYY-MM-DD-<topic>-design.md` (with `-design` suffix)
+**Path convention (overrides superpowers defaults):** All plans and design specs under `docs/plans/` — never `docs/superpowers/specs/` or `.claude/plans/`.
+- Design spec: `docs/plans/YYYY-MM-DD-<topic>-design.md`
 - Implementation plan: `docs/plans/YYYY-MM-DD-<topic>.md` (no suffix)
 - Archived (when complete): move both to `docs/plans/archive/`
 
-When invoking `superpowers:brainstorming` or `superpowers:writing-plans`, explicitly tell the subagent to write to `docs/plans/` with the suffix convention above. The superpowers skills default to `docs/superpowers/specs/` — always override.
+When invoking `superpowers:brainstorming` or `superpowers:writing-plans`, explicitly write to `docs/plans/`. Superpowers default is `docs/superpowers/specs/` — always override.
 
 ## Speeding up with subagents
 
-The checklist maps to focused subagents in `.claude/agents/` (auto-discovered by Claude Code as Task agent types — invoke them by name via the Task tool):
+Checklist maps to focused subagents in `.claude/agents/`:
 
 | Agent | Steps | Can run in parallel with |
 |-------|-------|--------------------------|
@@ -439,23 +437,23 @@ The checklist maps to focused subagents in `.claude/agents/` (auto-discovered by
 | `vue-ui-builder` | 7 | — |
 | `ux-reviewer` | (review) | — — read-only consistency check |
 
-Steps 5 (IPC binding) and 6 (MCP tool) have no dedicated agent — they're done by the implementer alongside the API code. See `tauri-bridge` for the IPC binding recipe and `slaktforskning-mcp-dev` for the MCP tool template.
+Steps 5 (IPC binding) and 6 (MCP tool) have no dedicated agent — done by the implementer alongside the API code. See `tauri-bridge` for the IPC binding recipe and `slaktforskning-mcp-dev` for the MCP tool template.
 
-Use `superpowers:subagent-driven-development` to dispatch these with two-stage review (spec compliance, then code quality) after each agent. Each agent commits its OWN work AND its own docs in the same commit per the `/commit` bundle rule. The last commit of a multi-commit feature handles milestone closeout (plan archival, PLAN.md roadmap update, CHANGELOG block) — also handled by `/commit` + `oss-release`, no separate doc-sync phase.
+Use `superpowers:subagent-driven-development` to dispatch with two-stage review (spec compliance, then code quality). Each agent commits its OWN work AND its own docs in the same commit per the `/commit` bundle rule. The last commit of a multi-commit feature handles milestone closeout (plan archival, PLAN.md roadmap update, CHANGELOG block).
 
 ## After implementing
 
-Use the `/test` skill to run and write tests. Then commit with `/commit`.
+Use `/test` to run tests. Then commit with `/commit`.
 
 ### Release-commit archival checklist
 
-**Every release commit (`release: vX.Y.Z — …`) MUST do the following in the same commit, not a follow-up:**
+**Every release commit (`release: vX.Y.Z — …`) MUST do the following in the same commit:**
 
-1. `git mv docs/plans/YYYY-MM-DD-<topic>.md docs/plans/archive/` — the plan file itself, not just the spec
-2. `git mv docs/plans/YYYY-MM-DD-<topic>-design.md docs/plans/archive/` — if a design spec exists
+1. `git mv docs/plans/YYYY-MM-DD-<topic>.md docs/plans/archive/` — the plan file itself.
+2. `git mv docs/plans/YYYY-MM-DD-<topic>-design.md docs/plans/archive/` — if a design spec exists.
 3. Add a `## vX.Y.Z — description` entry to `CHANGELOG.md` with links to BOTH the archived plan and archived spec.
-4. Bump `package.json` version
+4. Bump `package.json` version.
 
-**When writing plan files, the final task must explicitly include `git mv` lines for both the plan and the spec.** The common failure mode is archiving only the spec and leaving the plan file in `docs/plans/`. Reviewers should check `ls docs/plans/` after every release and flag any lingering feature plans.
+**When writing plan files, the final task must explicitly include `git mv` lines for both the plan and the spec.** Common failure mode: archiving only the spec and leaving the plan file in `docs/plans/`. Reviewers check `ls docs/plans/` after every release.
 
-If the plan is executed by a subagent via a direct-commit flow (not `/commit`), the final-task `git add` line must list the archived plan path explicitly — subagents follow plans literally and will not archive unless told to.
+If executed by a subagent via a direct-commit flow (not `/commit`), the final-task `git add` line must list the archived plan path explicitly — subagents follow plans literally and will not archive unless told.

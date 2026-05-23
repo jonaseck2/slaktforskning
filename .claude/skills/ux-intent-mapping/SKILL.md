@@ -80,20 +80,6 @@ A surface that offers something in one state must keep offering it (or signal th
 
 **Test:** walk the user's task as a sequence of states (`empty → typed`, `open → collapsed`, `first save → reopen`); at each transition, ask whether state B still offers everything state A did. If features drop quietly between A and B, that's the bug.
 
-### Past failures this rule was written against
-
-These all passed lint, unit tests, and `panel-cta-conventions.test.ts`. The genealogist found each by clicking. That's the bar this section lifts.
-
-| Failure | Check it failed |
-|---|---|
-| `PlacePanel + Add person` created a person with no link to the place — orphan | #1 (host place_id never flowed into the modal) |
-| `MediaTimeline + Media` was a duplicate of the Media section's attach handler | #2 (derived view duplicating canonical Add) |
-| Five panels (Place, Source, Media, Group, ResearchTask) had no host-level delete affordance — places had no UI delete path at all | #3 (host-level lifecycle) |
-| Place picker filter excluded gazetteer suggestions when the user typed | #4 (silent scope loss between empty and typed states) |
-| `+ Media` on a collapsed Media section silently no-op'd because the handler depended on a child component behind `v-if` | #4 (silent degradation between open and collapsed states) |
-
-All five were marked ✅ resolved in `docs/UX_INVENTORY.md` while the bugs still shipped, or passed `panel-cta-conventions.test.ts` — which checks label shapes and verb glyphs but **cannot see** whether handlers wire the host entity into modals or whether collapsing a section breaks an action.
-
 ### Pre-commit checklist for any panel-touching change
 
 Before claiming a panel change done — even one as small as adding a CTA or relabeling a section header:
@@ -206,6 +192,3 @@ But: clicking a sub-entity that lives in *the panel's own context* (e.g. a resea
 - `dom-first-debugging` — visual-bug sibling; different problem, same first-truth-then-reason discipline.
 - `add-feature` — full vertical for a new entity; this skill should fire for the panel-section step.
 
-## Verification
-
-The next plan in `docs/plans/` that touches a `*Panel.vue` or modal: each affected surface gets a Purpose sentence somewhere in the plan body, in the user's words. If a plan ships opening with mechanism instead of Purpose, this skill didn't fire — re-read this file and tighten the trigger.

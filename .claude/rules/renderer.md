@@ -9,46 +9,46 @@ paths:
 
 Loads when working in the renderer or static SPA. The `/frontend-design` skill is the canonical reference for component patterns; this file holds project-wide rules and at-a-glance design tokens.
 
-**Pointers (read these first when relevant):**
-- Plan authoring → [.claude/rules/plans.md](../rules/plans.md). Plans must open with a User goal section, enumerate full pattern scope, verify by user-observable outcome.
-- Layout / visual debugging → use the `dom-first-debugging` skill. The first action on any "looks wrong" report is reading the rendered DOM, not reasoning about CSS.
-- Subagent dispatch → use the `subagent-handoff` skill. Project-local prompt templates that center user goals (not just spec compliance).
+**Pointers:**
+- Plan authoring → [.claude/rules/plans.md](../rules/plans.md).
+- Layout / visual debugging → `dom-first-debugging` skill. First action on any "looks wrong" report: read the rendered DOM, not reason about CSS.
+- Subagent dispatch → `subagent-handoff` skill.
 
 ## Routes
 
-Every entity-list view hosts its own resizable side panel. All `:id` routes navigate to the **list view with the panel pre-selected** — there are no separate detail-view components. Editing happens in modals opened from within the panel.
+Every entity-list view hosts its own resizable side panel. All `:id` routes navigate to the **list view with the panel pre-selected** — no separate detail-view components. Editing happens in modals opened from the panel.
 
 | Path | Component | Description |
 |------|-----------|-------------|
-| `/` | redirect | Redirects to `/persons` |
+| `/` | redirect | → `/persons` |
 | `/persons`, `/persons/:personId` | `PersonsView` | Tree + list tabs + PersonPanel |
 | `/sources`, `/sources/:id` | `SourcesView` | Source list + SourcePanel |
 | `/places`, `/places/:id` | `PlacesView` | Map + list tabs + PlacePanel |
 | `/groups`, `/groups/:id` | `GroupsView` | Group list + GroupPanel |
 | `/research-tasks`, `/research-tasks/:id` | `ResearchTasksView` | Task list + ResearchTaskPanel |
 | `/search` | `SearchView` | Global search across persons and sources |
-| `/relationships`, `/relationships/:id` | redirect | Redirects to `/persons` (relationships are managed per-person via PersonPanel → Relations) |
+| `/relationships`, `/relationships/:id` | redirect | → `/persons` (managed per-person via PersonPanel → Relations) |
 | `/settings` | `SettingsView` | Theme, appearance, text size, language, database, import/export |
 | `/quality` | `QualityView` | Data quality checks — row click navigates to entity panel with quality section expanded |
 | `/reports` | `ReportsView` | Print-ready reports + framable charts |
 | `/media` | `MediaView` | Media library browser |
-| `/visualisering`, `/visualisering/:personId` | redirect | Redirect to `/persons`, `/persons/:personId` (legacy) |
-| `/database`, `/import-export`, `/link-rules`, `/gazetteers` | redirect | Redirect to `/settings` |
-| `/map` | redirect | Redirects to `/places` |
+| `/visualisering`, `/visualisering/:personId` | redirect | → `/persons`, `/persons/:personId` (legacy) |
+| `/database`, `/import-export`, `/link-rules`, `/gazetteers` | redirect | → `/settings` |
+| `/map` | redirect | → `/places` |
 
-Router uses `createWebHashHistory()` — works under Tauri's `tauri://` scheme, dev `http://localhost`, and the static SPA's `file://` export. Don't switch to `createWebHistory()`.
+Router uses `createWebHashHistory()` — works under Tauri's `tauri://`, dev `http://localhost`, and the static SPA's `file://`. Don't switch to `createWebHistory()`.
 
 ## Component patterns
 
 ### Script setup
 
-All components use Vue 3 Composition API with `<script setup lang="ts">`. `window.api` is typed globally via `src/renderer/api.d.ts` — no local `declare` needed.
+Vue 3 Composition API with `<script setup lang="ts">`. `window.api` is typed globally via `src/renderer/api.d.ts` — no local `declare` needed.
 
 ### Modal Dialog Pattern
 
 Used for all create/edit forms. Stays in context (no page navigation).
 
-Always use `<BaseSubPanel>` from `src/renderer/components/modals/` — it handles overlay, Escape key, focus trap, and the entity-colored header. Click-outside does NOT close modals. Save labels use action verbs and are auto-derived per entity; override with `save-label` if needed. Use `tone="danger"` for destructive confirmations and `hide-save` for purely informational dialogs.
+Always use `<BaseSubPanel>` from `src/renderer/components/modals/` — it handles overlay, Escape, focus trap, entity-colored header. Click-outside does NOT close. Save labels auto-derive per entity; override with `save-label` if needed. Use `tone="danger"` for destructive confirmations, `hide-save` for informational dialogs.
 
 ```vue
 <BaseSubPanel
@@ -68,71 +68,69 @@ Always use `<BaseSubPanel>` from `src/renderer/components/modals/` — it handle
 </BaseSubPanel>
 ```
 
-For nested modal flows (e.g. picking a source from inside an event), set `mode="subpanel"` on the inner modal and render it inside the parent's `#subpanels` slot — they appear side-by-side instead of stacking.
+For nested modal flows (e.g. picking a source from inside an event), set `mode="subpanel"` on the inner modal and render it inside the parent's `#subpanels` slot — appears side-by-side instead of stacking.
 
 ### List View + Side Panel Pattern
 
-Every entity (persons, sources, places, groups, research tasks) follows this pattern. The `:id` route opens the same list view with the panel pre-selected — never a separate page. (Relationships are intentionally not browsable as a standalone entity — they're managed per-person via `PersonPanel → Relations`. See cross-cutting finding #9 in `docs/UX_INVENTORY.md`.)
+Every entity (persons, sources, places, groups, research tasks) follows this. The `:id` route opens the same list view with the panel pre-selected — never a separate page. (Relationships are not browsable as a standalone entity — managed per-person via `PersonPanel → Relations`.)
 
-- **Left pane:** list/table/map/tree of entities with `selectedId` highlighted
-- **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`
-- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` rendered when `panelOpen && selectedId`. Every paneled view's right pane is an `EntityPanel`-wrapped panel — there are no exceptions. The shell owns the surface, radius, shadow, collapse button (▶), and role-label band.
-- **Reopen button:** small "▶" affordance shown when the panel is closed
-- **localStorage keys:** `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`, plus per-section `<entity>-section-<name>-open`
-- **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with the panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
-- **Cross-entity navigation:** clicking a related entity inside a panel routes to that entity's list view (which auto-opens its panel) — never inline-edit across entity types.
-- **Editing:** all create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel. Inline auto-save fields are limited; most edits go through the modal.
-- **Infinite scroll is the default — never a hardcoded slice.** Every list/table view drives its rows through `usePagedList` with a server-paged `fetchPage(limit, offset, sortBy, sortDir, query)`, a `<div ref="sentinel" class="scroll-sentinel"></div>` after the table, and `attachSentinel(el)` wired in a `watch`. The scroll container has `flex: 1; min-height: 0; overflow-y: auto`. A view that returns the first N rows and stops (the old `find(100)` shape) is a bug — it hides data without telling the user. If the underlying API doesn't yet support paging, add `findPage(limit, offset) → { items, total }` (single scan, returns both) before building the view. Even small/derived lists (duplicates, quality issues, search results) follow this rule — what's small today grows. **Modal pickers count too:** if a picker (place tree, person picker, source picker) shows a filterable list of rows, route the filter+rows through `usePagedList` exactly like the entity-list views — same `.list-filter` wrapper, same `.list-filter-input`, same sentinel + count-label. The filter field never does its own client-side `.filter()`; it always sets `searchQuery` on the composable. For tree-shaped pickers, switch the picker between two modes — empty filter shows the lazy-expand tree, ≥2-char filter switches to a flat `usePagedList` of search results. Trying to filter a tree by walking and expanding every subtree is a performance trap.
-- **Summary line is mandatory.** Every list view shows a `<p class="count-label">` above the table: `"Showing {shown} of {total} <entities>"` when paged, falling back to the singular/plural total when fully loaded. Drive it from `usePagedList`'s `items.length` and `total`.
-- **`<FilterChips>` is mandatory on every center list view.** Persons, Places, Media, Sources, Relationships, Groups, Research Tasks, Quality, Duplicates — all of them. Place it between the header and the table. The chip set is **derived from the loaded entities, never hardcoded from an enum**: bucket the rows by the chosen dimension (country for places, type/status/face-tag for media, status for tasks, severity for quality, source type for sources), drop empty buckets, lead with `{ value: 'all', label: t('common.all'), count: total }`, sort the rest by count desc, and pin any unresolved/unknown bucket to the end. For derived dimensions (gazetteer-resolved country, has-coordinates, missing-on-disk) compute at render — never persist. Show a placeholder `{ value: 'all', label: t('common.loading'), count: total }` while the resolver/loader warms up. If a view feels like it has "nothing to filter on", look harder — the `place_type` chips that produced "All / Other" on every database are the cautionary tale.
+- **Left pane:** list/table/map/tree with `selectedId` highlighted.
+- **Drag handle:** `<div class="panel-drag-handle">` bound to `usePanelResize({ storageKey, maxWidthRatio })`.
+- **Right pane:** `<EntityPanel :entity-id="selectedId" @close="closePanel" />` when `panelOpen && selectedId`. Every right pane is an `EntityPanel`-wrapped panel — no exceptions. The shell owns surface, radius, shadow, collapse button (▶), role-label band.
+- **Reopen button:** small "▶" affordance shown when panel is closed.
+- **localStorage keys:** `<entity>-selected-id`, `<entity>-panel-open`, `<entity>-panel-width`, plus per-section `<entity>-section-<name>-open`.
+- **Routing:** `/entity` shows the list; `/entity/:id` shows the same view with panel pre-selected. Drive `selectId(id)` from `route.params.id` in both `onMounted` and `onActivated` (for `<keep-alive>` round-trips).
+- **Cross-entity navigation:** clicking a related entity inside a panel routes to that entity's list view — never inline-edit across entity types.
+- **Editing:** all create/edit happens in modals (`<EntityModal mode="standalone">`) opened from inside the panel.
+- **Infinite scroll is the default — never a hardcoded slice.** Every list/table drives rows through `usePagedList` with a server-paged `fetchPage(limit, offset, sortBy, sortDir, query)`, a `<div ref="sentinel" class="scroll-sentinel"></div>` after the table, and `attachSentinel(el)` wired in a `watch`. Scroll container: `flex: 1; min-height: 0; overflow-y: auto`. Views returning the first N rows and stopping (the old `find(100)` shape) are bugs. If the underlying API doesn't yet support paging, add `findPage(limit, offset) → { items, total }` first. Applies even to small/derived lists (duplicates, quality issues, search results). **Modal pickers count:** route filter+rows through `usePagedList` exactly like entity-list views — same `.list-filter` wrapper, same `.list-filter-input`, same sentinel + count-label. Filter field never does its own client-side `.filter()`; it sets `searchQuery` on the composable. For tree-shaped pickers, switch between two modes — empty filter shows the lazy-expand tree, ≥2-char filter switches to a flat `usePagedList` of search results.
+- **Summary line is mandatory.** Every list view shows `<p class="count-label">` above the table: `"Showing {shown} of {total} <entities>"` when paged, falling back to total when fully loaded. Drive from `usePagedList`'s `items.length` and `total`.
+- **`<FilterChips>` is mandatory on every center list view.** Persons, Places, Media, Sources, Relationships, Groups, Research Tasks, Quality, Duplicates. Place between header and table. Chip set is **derived from loaded entities, never hardcoded from an enum**: bucket rows by the dimension (country for places, type/status/face-tag for media, status for tasks, severity for quality, source type for sources), drop empty buckets, lead with `{ value: 'all', label: t('common.all'), count: total }`, sort the rest by count desc, pin unresolved/unknown to the end. For derived dimensions (gazetteer-resolved country, has-coordinates, missing-on-disk) compute at render — never persist. Show placeholder `{ value: 'all', label: t('common.loading'), count: total }` while resolver warms up.
 
 The `/frontend-design` skill has the full step-by-step layout checklist (PANELED_ROUTES registration, sheet padding, drag handle wiring, paged-list wiring, chip derivation).
 
 ### Person Section Component Pattern
 
-**Every per-person data section is a reusable component**, shared between `PersonsView` (list mode) and `PersonPanel` (the side panel hosted in PersonsView). **Never inline a section in just one view** — extract it as a component from the start.
-
-Two flavours:
+**Every per-person data section is a reusable component**, shared between `PersonsView` (list mode) and `PersonPanel` (side panel). **Never inline a section in just one view** — extract as a component from the start.
 
 **Self-loading** (`PersonIdentifiersSection`, `PersonMediaSection`, `PersonChecksSection`, `EventList`):
-- Takes `personId: string` prop
-- Loads its own data with `useEntityData(toRef(props, 'personId'), loader)` — the canonical pattern. The composable handles race-safe loading on id change AND auto-subscribes to `onDataChanged` so the section refreshes after any mutation (own component, sibling section, modal, MCP call). **Never** roll a manual `watch(() => props.personId, load, { immediate: true })` and **never** call `window.api.onDataChanged(...)` directly.
-- Uses `defineExpose({ action })` when the parent's header button must trigger something inside (e.g. open add form, file picker)
+- Takes `personId: string` prop.
+- Loads its own data with `useEntityData(toRef(props, 'personId'), loader)` — the canonical pattern. Composable handles race-safe loading on id change AND auto-subscribes to `onDataChanged` so the section refreshes after any mutation. **Never** roll a manual `watch(() => props.personId, load, { immediate: true })`. **Never** call `window.api.onDataChanged(...)` directly.
+- Uses `defineExpose({ action })` when the parent's header button must trigger something inside.
 
 **Prop-driven** (`PersonNamesTable`, `ResearchTasksTable`, `GroupsTable`):
-- Parent fetches data and passes it as a prop; component emits `updated` / `remove` / `edit` / `delete` back up
-- Reusable across list views (e.g. `ResearchTasksTable` is used in both `ResearchTasksView` and `PersonPanel`)
+- Parent fetches data, passes as prop; component emits `updated` / `remove` / `edit` / `delete` back up.
+- Reusable across list views.
 
-Parent structure is always the same — the component renders only the table/content; the parent owns the section header. See `/add-feature` for the full template and PersonPanel wiring.
+Parent structure is always the same — component renders only the table/content; parent owns the section header. See `/add-feature` for the full template.
 
 ### Cross-view reactivity (left list + right panel + center view)
 
-Every list+panel route shows three things at once: a left list of entities, a right side panel, and a center view (chart / map / timeline). When data is mutated anywhere — panel save, modal, MCP tool call, undo, import — **all three must update without the user navigating away and back**.
+Every list+panel route shows three things at once: left list, right side panel, center view (chart / map / timeline). When data is mutated anywhere — panel save, modal, MCP call, undo, import — **all three must update without navigating away**.
 
-**The contract:**
+**Contract:**
 - Use `useEntityData` for any self-loading section, panel, chart, or single-entity view.
 - Use `usePagedList` for any list view.
-- Both composables auto-subscribe to `window.api.onDataChanged` and reload (debounced ~150–200 ms) on every mutation, with `onScopeDispose` cleanup.
-- **Components must NOT register `window.api.onDataChanged(...)` themselves.** The composables own the subscription. If a component currently does, it's a refactor target — replace with the composable.
-- Opt-out: `useEntityData(idRef, loader, { subscribe: false })` for snapshot/read-only views (report previews, undo viewers). Rare.
-- The only justified ad-hoc `onDataChanged` listeners are: `App.vue` (badge debouncing across all entity types) and the panel-emits-`entity-updated` Pattern-1 in views like `MapView` that need a *targeted single-row refresh* on top of the auto-subscription (cheaper than a full reload).
+- Both composables auto-subscribe to `window.api.onDataChanged` and reload (debounced ~150–200 ms), with `onScopeDispose` cleanup.
+- **Components must NOT register `window.api.onDataChanged(...)` themselves.** The composables own the subscription. Refactor any component that does.
+- Opt-out: `useEntityData(idRef, loader, { subscribe: false })` for snapshot/read-only views (report previews, undo viewers).
+- The only justified ad-hoc `onDataChanged` listeners are: `App.vue` (badge debouncing across all entity types) and panel-emits-`entity-updated` Pattern-1 in views like `MapView` that need a *targeted single-row refresh* on top of the auto-subscription.
 
-The mechanism: `preload/index.ts` wraps every mutating IPC call in `mutating()` which fans out to `dataChangedListeners`. Composables register and unregister against this single source of truth.
+Mechanism: `preload/index.ts` wraps every mutating IPC call in `mutating()` which fans out to `dataChangedListeners`. Composables register/unregister against this source of truth.
 
 ### Per-row IPC fan-out — mandatory batching
 
-A list view that renders N rows and fires one IPC per row is an N-times-too-loud caller of the DB worker. The worker is single-threaded; serialised per-row IPCs pin it for seconds on a paginated list with media in the DB.
+A list rendering N rows that fires one IPC per row pins the worker for seconds on a paginated list with media in the DB.
 
-**The contract:**
-- A component rendered per-row (`AppAvatar`, thumbnail strip, per-row `count` badge) must NOT call `window.api.*` directly. It calls a Pinia store method that **microtask-coalesces** all calls in the same tick into a single batched IPC.
-- The store method exposes a per-id Promise (so the component still says "give me X for this id"); under the hood, every same-tick caller shares one round-trip via the bulk endpoint (`media:profilePicRefs`, etc.).
-- The bulk endpoint must be SQL-level bulk per `.claude/rules/api.md` "Bulk / Batch naming" — otherwise the renderer-side batching is just hiding an N+1 inside one IPC.
+**Contract:**
+- A per-row component (`AppAvatar`, thumbnail strip, per-row `count` badge) must NOT call `window.api.*` directly. It calls a Pinia store method that **microtask-coalesces** all calls in the same tick into one batched IPC.
+- Store method exposes a per-id Promise; under the hood, same-tick callers share one round-trip via the bulk endpoint (`media:profilePicRefs`, etc.).
+- Bulk endpoint must be SQL-level bulk per `.claude/rules/api.md` "Bulk / Batch naming" — otherwise renderer batching is just hiding an N+1 inside one IPC.
 
-**Reference implementation:** `src/renderer/stores/profilePic.ts` `ensureLoaded` (microtask-batched dispatcher) + `getPersonProfilePicRefs` (single SQL query with `ROW_NUMBER() OVER PARTITION BY`). Vue flushes child component setups within the same microtask, so a 50-row list collapses to one round-trip with no UX change.
+**Reference:** `src/renderer/stores/profilePic.ts` `ensureLoaded` (microtask-batched dispatcher) + `getPersonProfilePicRefs` (single SQL query with `ROW_NUMBER() OVER PARTITION BY`).
 
 ### Existence checks — never use un-paged `list()`
 
-`window.api.persons.list()` returns every row + every joined name. Calling it just to check `length === 0` (or any other one-bit answer) hits the worker with a 22k-row query. Use a cheap probe instead:
+`window.api.persons.list()` returns every row + joined names. Calling it to check `length === 0` hits the worker with a 22k-row query. Use a cheap probe:
 
 ```typescript
 // ❌ Pulls 22k rows + joined names just to compare to zero
@@ -144,79 +142,71 @@ const probe = await window.api.persons.listPage(1, 0, 'surname', 'asc') as { per
 noPersonsExist.value = probe.total === 0;
 ```
 
-The same shape applies to any `*.list()` endpoint that has a paged sibling — sources, places, media, etc. Past bug: `PersonsView.load()` (v0.210.7).
+Applies to any `*.list()` endpoint that has a paged sibling.
 
 ### Shared component catalog
 
-The full list of UI primitives, modals, pickers, panels, composables, Pinia stores, reports, and report primitives lives in `/frontend-design`. Quick orientation:
+Full list in `/frontend-design`. Quick orientation:
 
-- `src/renderer/components/ui/` — primitives (`AppAvatar`, `AppBadge`, `AppButton`, `AppEmptyState`, `AppInput`, `AppLoadingState`, `FilterChips`, `SectionHeader`)
-- `src/renderer/components/modals/` — every modal extends `BaseSubPanel` (`PersonModal`, `EventModal`, `CitationModal`, etc.)
-- `src/renderer/components/EntityPanel.vue` — **shared shell for ALL right-side panels (no exceptions)**: `panel-collapse-btn` (▶), `panel-role-label`, `#empty` / `#header` / default body slots, optional `editable` Edit button. Every `*Panel.vue` in `src/renderer/components/` MUST use it. New panels go through it from day one. The only documented exception is `ExportOptionsPanel.vue`, which is an embedded options form inside a card (not a list-view-hosted side panel) — see the leading HTML comment in that file. Layout consistency is regression-tested by `tests/components/panel-layout-consistency.test.ts` (asserts root `.side-panel` class, rejects the `.entity-panel` collision class).
-- `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask,Media,Report,Website}Panel.vue` — side panels, hosted by their list/tab/export view
-- `src/renderer/components/reports/` — 7 keepsake reports + 5 chart prints; primitives shared across reports in `reports/primitives/`
-- `src/renderer/composables/` — **canonical reactive loaders:** `useEntityData(idRef, loader)` (single-entity, auto-subscribes to `onDataChanged`) and `usePagedList({ defaultSortBy, fetchPage })` (server-paged list, auto-subscribes too). Also: `useEditableFields(idRef, dataRef, persist)` (race-safe per-field saves), `usePanelResize`, `usePanelSections`, `useResizableColumns({ tableId, columns })` (per-table resizable columns persisted to localStorage), `usePersonProfilePic`, `useLifeMap`, `useMediaChronological`.
+- `src/renderer/components/ui/` — primitives (`AppAvatar`, `AppBadge`, `AppButton`, `AppEmptyState`, `AppInput`, `AppLoadingState`, `FilterChips`, `SectionHeader`).
+- `src/renderer/components/modals/` — every modal extends `BaseSubPanel` (`PersonModal`, `EventModal`, `CitationModal`, etc.).
+- `src/renderer/components/EntityPanel.vue` — **shared shell for ALL right-side panels (no exceptions)**: `panel-collapse-btn` (▶), `panel-role-label`, `#empty` / `#header` / default body slots, optional `editable` Edit button. Every `*Panel.vue` in `src/renderer/components/` MUST use it. Only documented exception: `ExportOptionsPanel.vue` (embedded options form inside a card, not a list-view-hosted side panel). Layout consistency regression-tested by `tests/components/panel-layout-consistency.test.ts` (asserts root `.side-panel` class; rejects `.entity-panel` collision class).
+- `src/renderer/components/{Person,Place,Source,Relationship,Group,ResearchTask,Media,Report,Website}Panel.vue` — side panels.
+- `src/renderer/components/reports/` — 7 keepsake reports + 5 chart prints; primitives in `reports/primitives/`.
+- `src/renderer/composables/` — **canonical reactive loaders:** `useEntityData(idRef, loader)` and `usePagedList({ defaultSortBy, fetchPage })`. Also: `useEditableFields(idRef, dataRef, persist)`, `usePanelResize`, `usePanelSections`, `useResizableColumns({ tableId, columns })`, `usePersonProfilePic`, `useLifeMap`, `useMediaChronological`.
 - `src/renderer/utils/storage-keys.ts` — typed `STORAGE_KEYS` registry. Every `localStorage.{get,set,remove}Item('...')` call site uses an entry from here. Helpers: `getJSON(key, fallback)`, `setJSON(key, value)`, `removeKey(key)`.
-- `src/renderer/stores/` — Pinia stores (`sourceSession`, `profilePic`, `reportConfig`, `dataVersion` — incremented by `App.vue` for badge debouncing only; views use `useEntityData`/`usePagedList`).
+- `src/renderer/stores/` — Pinia stores (`sourceSession`, `profilePic`, `reportConfig`, `dataVersion` — incremented by `App.vue` for badge debouncing only).
 
-### Class-name collision check (mandatory before naming a new component class)
+### Class-name collision check (mandatory)
 
-Before introducing a new CSS class name on any element in `src/renderer/`, grep `shared.css` and every existing `<style scoped>` block for the name. **Class names in `shared.css` are the project's reserved namespace** — picking a name that's already used silently inherits whatever rules `shared.css` set on it.
-
-Required check:
+Before introducing a new CSS class name on any element in `src/renderer/`, grep `shared.css` and every existing `<style scoped>` block. **Class names in `shared.css` are the project's reserved namespace** — picking an already-used name silently inherits whatever rules `shared.css` set.
 
 ```bash
 grep -RIn '\.<new-class-name>\b' src/renderer/styles/ src/renderer/components/ src/renderer/views/ | grep -v ':// '
 ```
 
-If any hit returns from `shared.css`, **rename your class**. Hits in scoped blocks of unrelated components are usually fine (Vue scoping isolates them) but inspect them first.
+If any hit returns from `shared.css`, **rename your class**. Hits in scoped blocks of unrelated components are usually fine (Vue scoping isolates them) but inspect first.
 
-**Why:** the panel-composables refactor introduced `EntityPanel` whose root used `class="entity-panel side-panel"`. `.entity-panel` was already in `shared.css:1253` (BaseSubPanel modal chrome — `width: 320px; max-height: calc(100vh - 64px); flex-shrink: 0; overflow: hidden`). Every migrated side panel silently inherited those rules. Tests passed, lint passed, two-stage review approved. The user found it by inspecting computed styles in the running app. This rule exists so the next refactor doesn't repeat that.
+### Pattern migrations are all-or-nothing
 
-### Pattern migrations are all-or-nothing (component level)
-
-This is the component-level companion to `.claude/rules/plans.md` Rule A2 (plan level). When a refactor touches a reusable pattern (a side panel, a list view, a modal, a chart), every instance migrates in the same change or it doesn't ship. Half-migrations are anti-consistency.
+Component-level companion to `.claude/rules/plans.md` Rule A2. When a refactor touches a reusable pattern (side panel, list view, modal, chart), every instance migrates in the same change or it doesn't ship.
 
 Before merging:
 1. Enumerate every same-shaped component. Panels: `src/renderer/components/*Panel.vue`. List views: every entity-list in `src/renderer/views/`. Modals: every consumer of `BaseSubPanel`.
-2. Migrate every one. The plan's "Scope" section lists them with state per `.claude/rules/plans.md` Rule A2.
-3. If a target genuinely can't adopt the new pattern, document why in the plan AND in a code comment in the unmigrated file (`/* Not migrated to <pattern>: <specific reason> */`). "Awkward" is not a reason. "The pattern doesn't fit because <constraint>" is.
-
-**Anti-pattern:** "the plan covered 6 panels; the other 4 are out of scope." User's mental model is "every right-side panel works the same."
+2. Migrate every one. Plan's "Scope" section lists them per `.claude/rules/plans.md` Rule A2.
+3. If a target genuinely can't adopt the new pattern, document why in the plan AND in a code comment in the unmigrated file (`/* Not migrated to <pattern>: <specific reason> */`). "Awkward" is not a reason.
 
 ### CTA fulfillment check (every panel-section action button)
 
-Apply this on every section-header action you implement, modify, or review in `*Panel.vue` files and the section components they host. Label-shape review (`+ <Noun>` form, icon-vs-trash semantics — owned by `panel-cta-conventions.test.ts`) is necessary but not sufficient. The two failure modes it misses are (a) a button wired to a no-op or to the same handler as a sibling section, and (b) a modal that opens with no awareness of the panel it was opened from.
+Apply on every section-header action in `*Panel.vue` and section components. Label-shape review (owned by `panel-cta-conventions.test.ts`) is necessary but not sufficient. Two failure modes it misses: (a) button wired to a no-op or the same handler as a sibling section; (b) modal that opens with no awareness of the panel it was opened from.
 
-For each CTA, ask all five questions before claiming the work done:
+For each CTA, ask all five questions:
 
-1. **Promise** — what does the label literally claim? (`+ Event` promises an event is created. `+ Add person` promises a person becomes part of the surrounding context.)
-2. **Wiring** — does the handler actually perform that primitive? Anti-patterns: identical to a sibling section's handler, scroll-only, opens a modal that creates an unrelated entity. (Caught case: `MediaTimeline + Media` was identical to `Media + Media`.)
-3. **Context lift** — this section is hosted on a specific entity (place, person, media, source…). Does that entity ID flow into the action as a default prop on whatever modal/picker opens? Test: if the modal would behave identically when opened from any other entity's panel, the context wasn't lifted. (Caught case: `PlacePanel + Add person` opened a generic person form, no `place_id` passed; created an orphan person with no link to the current place.)
-4. **Lifecycle parity** — can the user also edit, view, and delete the same primitive from this surface? Add-only sections, or view-only sections with no add path, strand the user.
-5. **Reactivity** — after the mutation completes, does the section's list update without a route change or panel re-open? Usually free via `useEntityData` / `usePagedList`, but verify on first wiring of any new section.
+1. **Promise** — what does the label literally claim? (`+ Event` promises an event is created.)
+2. **Wiring** — does the handler actually perform that primitive? Anti-patterns: identical to a sibling section's handler, scroll-only, opens a modal that creates an unrelated entity.
+3. **Context lift** — this section is hosted on a specific entity. Does that entity ID flow into the action as a default prop on whatever modal/picker opens? Test: if the modal would behave identically opened from any other entity's panel, context wasn't lifted.
+4. **Lifecycle parity** — can the user also edit, view, and delete the same primitive from this surface?
+5. **Reactivity** — after the mutation completes, does the section's list update without a route change or panel re-open? Usually free via `useEntityData` / `usePagedList`; verify on first wiring of any new section.
 
-**Anti-pattern:** assuming UX_INVENTORY's "✅ resolved" status reflects functional wiring. The doc tracks intent, not delivery — the same `PlacePanel + Add person` regression was marked "✅ relabeled" in `docs/UX_INVENTORY.md` while the underlying handler still produced an orphan person. Read the *code*, run the check, then update the doc.
-
-**When reviewing PR diffs that touch panel sections:** run the 5-step check on every modified or added CTA in the diff, not just the labels.
+UX_INVENTORY's "✅ resolved" status reflects intent, not delivery. Read the code, run the check, then update the doc.
 
 ### Project-wide UI rules
 
-- **Every modal uses `BaseSubPanel`** — never `BaseModal` directly (it's the internal overlay).
-- **Pickers fill their container** (`width: 100%`); never wrap them in a `class="full-width"` override.
+- **Every modal uses `BaseSubPanel`** — never `BaseModal` directly (internal overlay).
+- **Pickers fill their container** (`width: 100%`); never wrap in `class="full-width"` override.
 - **Always use `formatFullName()` from `nameUtils.ts`** for plain-text person-name rendering — never inline `preferred_name ?? given_name?.split(' ')[0]`. For Vue templates, use `<PersonName>`.
 - **Clickable rows, no Edit buttons** — all list/table rows are clickable (`@click`, `cursor: pointer`). Action buttons (Cite, Delete) use `@click.stop`.
-- **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Only use `grid-column: 1 / -1` for fields needing extra width (e.g. long textareas).
-- **Tables with mixed cell-content widths use `useResizableColumns`** — when a table has a small badge column next to a long-text message column (Quality, Person events, Source citations, etc.), default flexible-layout produces sparse columns that truncate the message column with whitespace next to it. Add `class="data-table table-resizable"` on the table, bind `:style="{ width: widths.<key> + 'px' }"` on each `<th>`, and put `<span class="col-resize-handle" @mousedown.prevent="startResize($event, '<key>')" />` inside each header cell. Widths persist to `localStorage["slaktforskning-table-cols-<tableId>"]` per-table; pick a stable, unique `tableId` (the route or component name is usually right). **The wrapping element must have `overflow-x: auto`** so columns wider than the viewport scroll horizontally instead of clipping. Without it, dragging Issue wider does nothing visible — the column extends past the parent's right edge but is hidden.
-- **Never combine `table-layout: fixed` with `width: 100%`** — they fight. The browser scales every column width down proportionally to fit `width: 100%`, so inline column widths set by drag-handlers get silently squashed back to their proportional share. The `.table-resizable` rule in shared.css overrides to `width: auto; min-width: 100%` for exactly this reason. If you find yourself reaching for `table-layout: fixed`, the resizable-columns pattern is what you want.
+- **2-column field-grid** — detail views use `display: grid; grid-template-columns: 1fr 1fr`. Use `grid-column: 1 / -1` only for fields needing extra width.
+- **Tables with mixed cell-content widths use `useResizableColumns`** — when a table has a small badge column next to a long-text message column (Quality, Person events, Source citations), default flexible-layout produces sparse columns. Add `class="data-table table-resizable"`, bind `:style="{ width: widths.<key> + 'px' }"` on each `<th>`, put `<span class="col-resize-handle" @mousedown.prevent="startResize($event, '<key>')" />` inside each header cell. Widths persist to `localStorage["slaktforskning-table-cols-<tableId>"]` per-table; pick a stable unique `tableId`. **The wrapping element must have `overflow-x: auto`** so columns wider than the viewport scroll horizontally instead of clipping.
+- **Never combine `table-layout: fixed` with `width: 100%`** — they fight. The browser scales every column width down proportionally to fit `width: 100%`, so inline column widths from drag-handlers get squashed. `.table-resizable` overrides to `width: auto; min-width: 100%`. If reaching for `table-layout: fixed`, the resizable-columns pattern is what you want.
 
 ### i18n
 
-Every user-visible string goes through `$t('key')`. No hardcoded Swedish or English in templates or script — even single-word labels. Add new keys to **both** `src/renderer/i18n/sv.ts` (Swedish, primary) and `src/renderer/i18n/en.ts` (English) in the same changeset.
+Every user-visible string goes through `$t('key')`. No hardcoded Swedish or English in templates or script — even single-word labels. Add new keys to **both** `src/renderer/i18n/sv.ts` (primary) and `src/renderer/i18n/en.ts` in the same changeset.
 
 ### Error handling in async operations
 
-Every `await window.api.*` call that mutates data must have a try/catch that shows a toast. Never silently swallow errors:
+Every `await window.api.*` call that mutates data must have a try/catch that shows a toast:
 
 ```typescript
 try {
@@ -228,7 +218,7 @@ try {
 }
 ```
 
-Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `errors.loadFailed` for reads. These keys exist in both `en.ts` and `sv.ts`.
+Use `errors.saveFailed` for mutations, `errors.deleteFailed` for deletes, `errors.loadFailed` for reads. Keys exist in both `en.ts` and `sv.ts`.
 
 ### Component size
 
@@ -236,11 +226,11 @@ If a component grows beyond ~300 lines, extract sections following the Person Se
 
 ## UI Design System
 
-**Design tokens** are defined in `src/renderer/styles/tokens.css` (imported first in `main.ts`). Three color themes (Forest, Nordic, Twilight) set sidebar, surface, text, and accent token values. Semantic tokens (`--error-*`, `--warning-*`, `--success-*`, `--info-*`, `--sex-*`) are theme-invariant *at the base level*, but each appearance mode (dark, high-contrast) can override them. Dark and high-contrast modes override tokens in `shared.css` **per theme** — `html.dark.theme-forest`, `html.high-contrast.theme-nordic`, etc. mirror the base theme's color identity while adjusting luminance and saturation. **Always use token variables — never hardcode hex colors.**
+**Design tokens** in `src/renderer/styles/tokens.css` (imported first in `main.ts`). Three color themes (Forest, Nordic, Twilight) set sidebar, surface, text, accent token values. Semantic tokens (`--error-*`, `--warning-*`, `--success-*`, `--info-*`, `--sex-*`) are theme-invariant at the base level; each appearance mode (dark, high-contrast) can override. Dark and high-contrast modes override tokens in `shared.css` **per theme** — `html.dark.theme-forest`, `html.high-contrast.theme-nordic`, etc. mirror the base theme's color identity while adjusting luminance/saturation. **Always use token variables — never hardcode hex colors.**
 
-**WCAG 2.1 AAA compliance** is enforced for high-contrast mode by `tests/unit/wcagContrast.test.ts`, which parses `tokens.css` + `shared.css`, builds the effective palette for every (theme × appearance) combination, and asserts ≥7:1 body / ≥4.5:1 large text / ≥3:1 non-text UI. Light and dark modes are regression-tested against AA (≥4.5:1 / ≥3:1). The math lives in `src/renderer/utils/wcag.ts`. After any color-token edit, run `npx vitest run tests/unit/wcag*` — failure messages print the exact ratio and threshold. See `/a11y` for full details.
+**WCAG 2.1 AAA compliance** is enforced for high-contrast mode by `tests/unit/wcagContrast.test.ts`, which parses `tokens.css` + `shared.css`, builds the effective palette for every (theme × appearance) combination, asserts ≥7:1 body / ≥4.5:1 large text / ≥3:1 non-text UI. Light and dark modes regression-tested against AA (≥4.5:1 / ≥3:1). Math in `src/renderer/utils/wcag.ts`. After any color-token edit, run `npx vitest run tests/unit/wcag*`. See `/a11y`.
 
-Shared classes are defined **once** in `src/renderer/styles/shared.css` (imported globally in `main.ts`). **Never redefine these in `<style scoped>` blocks** — scoped styles have higher specificity than global styles and will override the CSS variables that power the text-size accessibility feature.
+Shared classes are defined **once** in `src/renderer/styles/shared.css` (imported globally in `main.ts`). **Never redefine these in `<style scoped>` blocks** — scoped styles have higher specificity than global and will override CSS variables that power text-size accessibility.
 
 **Shared classes (do NOT copy to scoped blocks):**
 - Layout: `.header`, `.count-label`, `.running-hint`, `.empty`, `.empty-hint`, `.scroll-sentinel`
@@ -251,7 +241,7 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 - Person links: `.person-link`, `.person-link:hover`
 - Sex badges: `.sex-badge`, `.sex-M`, `.sex-F`, `.sex-U`
 - Tabs: `.tab-bar`, `.tab-btn`, `.tab-btn.active`, `.tab-btn:hover`
-- Side panels: `.side-panel` (right-side entity panels — bakes in surface/radius/shadow + 28px left padding for the collapse tab), `.list-column` (left-side list columns — bakes in surface/radius/shadow + 28px right padding for the collapse tab)
+- Side panels: `.side-panel` (right-side entity panels — bakes in surface/radius/shadow + 28px left padding for collapse tab), `.list-column` (left-side list columns — bakes in surface/radius/shadow + 28px right padding for collapse tab)
 
 **Design token categories** (from `tokens.css`):
 ```css
@@ -271,17 +261,17 @@ Shared classes are defined **once** in `src/renderer/styles/shared.css` (importe
 
 **Person name links:** `<router-link :to="'/persons/' + personId" class="person-link" @click.stop>` in table cells.
 
-**Reference view:** `QualityView.vue` is the canonical implementation.
+**Reference view:** `QualityView.vue`.
 
 ## Chart Outline Placeholders — Separation of Concerns
 
-All three chart types (Pedigree, Hourglass, Descendants) share the same outline architecture via the **TreePerson** data model. When a user selects a person in any chart, outline placeholders show where new relatives can be added.
+All three chart types (Pedigree, Hourglass, Descendants) share the same outline architecture via the **TreePerson** data model. When the user selects a person in any chart, outline placeholders show where new relatives can be added.
 
 **Shared data pipeline** (`hourglass-tree.ts`):
-1. **Convert** input data to TreePerson: `buildPedigreeTreePerson(PedigreeTree)`, `buildHourglassTree(HourglassTree)`, `buildDescendantTreePerson(DescendantNode)`
+1. **Convert** input to TreePerson: `buildPedigreeTreePerson(PedigreeTree)`, `buildHourglassTree(HourglassTree)`, `buildDescendantTreePerson(DescendantNode)`.
 2. **Inject** outlines via `injectOutlines(root, selectedPersonId)` — always adds father + mother + child + spouse. No conditions, no branching.
-3. **Layout** — each chart's layout algorithm positions all nodes (real + outline) identically
-4. **Extract** placeholders — boxes with `PLACEHOLDER_PREFIX` IDs are moved from `boxes[]` to `placeholders[]`, lines touching them become `placeholderLines[]`
+3. **Layout** — each chart's algorithm positions all nodes (real + outline) identically.
+4. **Extract** placeholders — boxes with `PLACEHOLDER_PREFIX` IDs moved from `boxes[]` to `placeholders[]`; lines touching them become `placeholderLines[]`.
 5. **Render** — real → solid boxes, outlines → dashed boxes with "+". Click handlers open `PersonModal` with `relatedTo` set.
 
 | Chart | Orientation | Spouse outline | Child outline | Parent outlines |
@@ -290,13 +280,13 @@ All three chart types (Pedigree, Hourglass, Descendants) share the same outline 
 | **Hourglass** | Vertical (ancestors up, descendants down) | Beside selected (sex-dependent side) | Below selected | Above selected — via ancestor layout |
 | **Descendants** | Vertical (focal top, descendants down) | Beside selected (edge of row) | Below selected — via descendant layout | Above selected |
 
-**Pedigree-specific:** Spouse outlines reserve a leaf slot during `assignLeafSlots()` so the compact vertical layout naturally creates space. The outline is placed at `selBox.y + BOX_H + V_GAP` for tight couple-like spacing.
+**Pedigree-specific:** Spouse outlines reserve a leaf slot during `assignLeafSlots()` so the compact vertical layout creates space. Outline placed at `selBox.y + BOX_H + V_GAP` for tight couple-like spacing.
 
-**Post-layout pass:** All three charts have a post-layout pass that places outline nodes not handled by the main traversal (e.g., spouse outlines for ancestors in pedigree, child outlines for ancestors in hourglass).
+**Post-layout pass:** all three charts have a post-layout pass that places outline nodes not handled by the main traversal (e.g., spouse outlines for ancestors in pedigree, child outlines for ancestors in hourglass).
 
-**Key rule:** The selected person ≠ the focal person. The focal person controls the tree scope. The selected person controls where outlines appear. These are independent concepts.
+**Key rule:** selected person ≠ focal person. Focal controls tree scope. Selected controls where outlines appear. Independent concepts.
 
-See `/tree-layout` for the full layout pipeline (measurement, placement, collision avoidance).
+See `/tree-layout` for the full layout pipeline.
 
 ## Constants (`src/renderer/constants/eventTypes.ts`)
 
@@ -316,17 +306,17 @@ NAME_TYPE_VALUES               // birth, married, alias, aka
 
 ## Accessibility / i18n / Screen Reader Mode
 
-- `a11y` i18n namespace — skip link label, ARIA labels for charts and controls, TTS button strings
-- TTS enabled/disabled via localStorage key `slaktforskning-tts` (set from Settings > Read aloud toggle)
+- `a11y` i18n namespace — skip link label, ARIA labels for charts and controls, TTS button strings.
+- TTS enabled/disabled via localStorage key `slaktforskning-tts`.
 
-A standalone screen reader mode (third Read Aloud option alongside Off and Narrate) narrates every focused element, provides single-key hotkey navigation, and supports arrow-key family tree traversal.
+Standalone screen reader mode (third Read Aloud option) narrates every focused element, provides single-key hotkey navigation, supports arrow-key family tree traversal.
 
 **Architecture:**
-- `v-narrate` Vue directive stores narration text on elements via WeakMap
-- `useScreenReaderMode` composable manages mode state, focus-driven narration, hotkeys, and live-region observation
-- `useChartNavigation` composable handles arrow-key tree traversal
-- `HotkeyRegistry` class manages global + view-scoped keyboard shortcuts
-- Narration builders in `src/renderer/utils/screenReaderNarration.ts`
+- `v-narrate` Vue directive stores narration text on elements via WeakMap.
+- `useScreenReaderMode` composable manages mode state, focus-driven narration, hotkeys, live-region observation.
+- `useChartNavigation` composable handles arrow-key tree traversal.
+- `HotkeyRegistry` class manages global + view-scoped keyboard shortcuts.
+- Narration builders in `src/renderer/utils/screenReaderNarration.ts`.
 
 **Global hotkeys (screen reader mode only):**
 
@@ -343,23 +333,23 @@ A standalone screen reader mode (third Read Aloud option alongside Off and Narra
 | `Arrow keys` | Navigate family tree (charts) |
 | `Ctrl+.` | Stop speech |
 
-**Settings:** Three-way Appearance (Light/Dark/High Contrast) and three-way Read Aloud (Off/Narrate/Screen Reader), both independent.
+**Settings:** three-way Appearance (Light/Dark/High Contrast) and three-way Read Aloud (Off/Narrate/Screen Reader), both independent.
 
-**i18n:** `screenReader.*` namespace (~80 keys) in both sv.ts and en.ts.
+**i18n:** `screenReader.*` namespace (~80 keys) in both `sv.ts` and `en.ts`.
 
-See `/a11y` for the full ARIA pattern reference (combobox, focus trap, contrast tokens).
+See `/a11y` for the full ARIA pattern reference.
 
 ## Drag/mouse interactions
 
 - **Window listeners for drag, never element listeners.** Attach mousemove/mouseup to `window` on mousedown. Kill all `pointer-events` on the container during drag via CSS class (`!important` + `*` selector).
 - **Never reset reactive state inside listener cleanup.** Keep `clearWindowListeners()` pure — only removes event listeners. Use a separate `resetDragState()` for refs.
-- **Screen pixels during drag, fractions only on save.** Use raw `e.clientX/Y` deltas for drag math; cache display dimensions at drag start; convert to fractional coords only on mouseup.
+- **Screen pixels during drag, fractions only on save.** Use raw `e.clientX/Y` deltas; cache display dimensions at drag start; convert to fractional coords only on mouseup.
 
 ## Maps
 
 - **Never replace the map with a full empty state.** Always render `BaseMap` when not loading. Show a small floating pill overlay (`position: absolute; top: var(--space-xl); left: 50%; transform: translateX(-50%); z-index: 10`) with the "No places" text and an optional `router-link` action. Apply `pointer-events: auto` to the overlay and `white-space: nowrap`.
-- **Leaflet icon fix happens at module level.** `BaseMap.vue` handles this centrally — don't duplicate in consuming components.
-- **`usePlaceResolver` must default to all bundled gazetteers when `gazetteer_config` is null** (matches GazetteersView's behaviour) — otherwise new databases show no map pins.
+- **Leaflet icon fix happens at module level.** `BaseMap.vue` handles centrally — don't duplicate in consuming components.
+- **`usePlaceResolver` must default to all bundled gazetteers when `gazetteer_config` is null** — otherwise new databases show no map pins.
 
 ## Import/export views
 
@@ -368,10 +358,10 @@ See `/a11y` for the full ARIA pattern reference (combobox, focus trap, contrast 
 
 ## Static SPA & website-export gotchas
 
-The static SPA bundle reuses renderer views, so subtle quirks bite when those views run outside the Tauri host.
+The static SPA bundle reuses renderer views, so quirks bite when those views run outside the Tauri host.
 
-- **`window.api` may be undefined in static-mode component setup.** Any composable touching `window.api` from a top-level call site (component setup, module body) needs an optional-chain guard, because the static SPA's bundled renderer views (PersonsView etc.) lazy-load and instantiate components like PersonPicker before `window.api` is wired. `useDefaultPerson` and `chartData.resolvePersonPhotoUrl` both bit us here. The renderer's own `App.vue` `onMounted` should also use `?.` for `db.onSwitched`, `undo.onPerformed`, `undo.onChanged`, `onDataChanged`.
-- **Don't put HTML over ~1 MB into `<iframe srcdoc>`.** Chromium silently rejects oversized attribute values and the iframe falls back to loading its parent renderer's URL — looks like full-app inception inside the iframe with no console error. Use `URL.createObjectURL(new Blob([html], { type: 'text/html' }))` and bind to `iframe.src`. Revoke the previous Blob URL on each refresh and on view unmount.
-- **`file://` has no CORS in Chromium — `img.crossOrigin = 'anonymous'` blocks the load.** When loading an image into a canvas for cropping/encoding, only set `img.crossOrigin = 'anonymous'` if `src` doesn't start with `file:`. Without the attribute, the canvas is tainted by file:// images, so wrap `canvas.toDataURL()` in try/catch and fall back to returning the original src.
-- **Preview iframe can't reach local media — inline a thumbnail subset.** `website:buildPreviewHtml` resizes the first 24 image media to 400 px JPEGs @ 70% (5 MB total budget) via the Rust-side `media_*` commands, bakes them into `snapshot.meta.previewMediaDataUrls`, and trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
-- **The preview iframe sets `window.__SNAPSHOT__` via the `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->` marker in `src/static/index.html`.** `src/main/preview-html-inject.ts` `injectSnapshotIntoHtml(html, snapshot)` is the pure swap; it **throws** if the marker is missing rather than returning the unmodified bundle. The previous version pattern-matched `<script src="./data.js"></script>` and silently no-op'd when Track B removed that tag — the iframe loaded with no `__SNAPSHOT__`, fell through to `installStaticApi`'s last-resort `fetch('./data.json')`, and crashed on the iframe's blob: origin. Lesson: never silently no-op a string-replace against a build artifact whose source you don't fully control. The pattern fix is a stable purpose-named comment marker plus a thrown error on miss; regression-tested in `tests/unit/preview-html-inject.test.ts` (covers marker present / missing / placement-before-module / `</script>` escape / null-snapshot / dist-static survives viteSingleFile).
+- **`window.api` may be undefined in static-mode component setup.** Any composable touching `window.api` from a top-level call site needs an optional-chain guard, because the static SPA's bundled renderer views lazy-load and instantiate components like PersonPicker before `window.api` is wired. The renderer's own `App.vue` `onMounted` should use `?.` for `db.onSwitched`, `undo.onPerformed`, `undo.onChanged`, `onDataChanged`.
+- **Don't put HTML over ~1 MB into `<iframe srcdoc>`.** Chromium silently rejects oversized attribute values and the iframe falls back to loading its parent renderer's URL. Use `URL.createObjectURL(new Blob([html], { type: 'text/html' }))` and bind to `iframe.src`. Revoke the previous Blob URL on each refresh and on view unmount.
+- **`file://` has no CORS in Chromium — `img.crossOrigin = 'anonymous'` blocks the load.** When loading an image into a canvas for cropping/encoding, only set `img.crossOrigin = 'anonymous'` if `src` doesn't start with `file:`. Without the attribute, canvas is tainted by `file://` images, so wrap `canvas.toDataURL()` in try/catch and fall back to returning the original src.
+- **Preview iframe can't reach local media — inline a thumbnail subset.** `website:buildPreviewHtml` resizes the first 24 image media to 400 px JPEGs @ 70% (5 MB total budget) via the Rust-side `media_*` commands, bakes them into `snapshot.meta.previewMediaDataUrls`, trims `snapshot.media`/`mediaLinks`/`mediaRegions` to those IDs. `static-api.media.readAsDataUrl` checks the inlined map first, falls through to relative `./media/full/...` for the actual export.
+- **The preview iframe sets `window.__SNAPSHOT__` via the `<!--PREVIEW_SNAPSHOT_INJECTION_POINT-->` marker in `src/static/index.html`.** `src/main/preview-html-inject.ts` `injectSnapshotIntoHtml(html, snapshot)` is the pure swap; it **throws** if the marker is missing rather than returning the unmodified bundle. Never silently no-op a string-replace against a build artifact whose source you don't fully control. Stable purpose-named comment marker + thrown error on miss; regression-tested in `tests/unit/preview-html-inject.test.ts`.

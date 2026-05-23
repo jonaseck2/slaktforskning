@@ -5,19 +5,13 @@ description: Use when investigating any layout, visual, or "this looks different
 
 # DOM-First Debugging
 
-When the user reports a visual or layout problem, **the rendered DOM is the truth.** Read it before reasoning about CSS. Inspecting computed styles takes 30 seconds and tells you what's actually happening; reasoning about flex chains and scope hashes can burn an hour and still miss it.
+On any visual/layout report, the rendered DOM is the truth. Read it before reasoning about CSS.
 
 ## The rule
 
-**On any layout / visual / "looks different" report, the first tool call is a DOM read or computed-style read.** Not a `grep` of CSS files. Not a code-only analysis of flex rules. Not "I bet it's a min-height: 0 thing." Read the truth first, reason after.
+**On any layout / visual / "looks different" report, the first tool call is a DOM read or computed-style read.** Not a `grep` of CSS files. Not code-only analysis of flex rules. Not "I bet it's a min-height: 0 thing." Read the truth first, reason after.
 
-## Why this exists (read this case study)
-
-In v0.190.0 the user reported "right panels are 320px wide and don't fill height." I spent a non-trivial chunk of session reasoning about flex / min-height / box-sizing, iterating on EntityPanel CSS and wrapper rules through multiple commits. Eventually the user opened DevTools, found `width: 320px; max-height: calc(100vh - 64px);` on the panel, and asked me where it came from. One grep later: `.entity-panel` was already a class in `shared.css:1253` (BaseSubPanel modal chrome). My new component's root class collided. **Visible in 30 seconds of DOM inspection. Took an hour of CSS reasoning to even reach that hypothesis.**
-
-The anti-pattern: "I bet it's a flex thing" → start editing flex rules → no progress → "maybe min-height" → edit → no progress → "maybe box-sizing" → edit → user reads the DOM and finds the answer. This skill exists so I read the DOM first instead.
-
-## Triggers (when this skill activates)
+## Triggers
 
 - "Panel doesn't fill width / height"
 - "X looks different from Y" (especially "X uses our common component")
@@ -78,6 +72,3 @@ Don't iterate by eye. After every CSS change, re-read computed styles to confirm
 
 This skill is for visual / layout / "rendered thing looks wrong" reports specifically.
 
-## Verification
-
-The next layout / visual bug in this repo: the first tool call after the user's report should be a DOM read or computed-style read. If a session transcript shows me reasoning about CSS before reading the DOM, the skill didn't fire — re-read this file and tighten the trigger.
