@@ -1,6 +1,6 @@
 # Worktree Command Rules
 
-Loads when the controller is operating against a worktree (`.worktrees/<feature>/` or `.claude/worktrees/<agent>/`). These rules exist because the user has called repeated permission-prompt loops and silent test-corruption "workflow blockers." The patterns below are non-negotiable; deviations require the user's explicit OK in the moment.
+Loads when the controller is operating against a worktree under `.worktrees/<feature>/` — the canonical and only worktree location in this repo. These rules exist because the user has called repeated permission-prompt loops and silent test-corruption "workflow blockers." The patterns below are non-negotiable; deviations require the user's explicit OK in the moment.
 
 ## 1. Directory flags are mandatory; `cd <path> && <tool>` is FORBIDDEN
 
