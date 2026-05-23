@@ -109,6 +109,7 @@ import AboutModal from './components/AboutModal.vue';
 import AppSettingsPanel from './components/AppSettingsPanel.vue';
 import AppSidebar from './components/AppSidebar.vue';
 import { useToast } from './composables/useToast';
+import { useAppUpdater } from './composables/useAppUpdater';
 import { STORAGE_KEYS } from './utils/storage-keys';
 
 const router = useRouter();
@@ -120,6 +121,7 @@ const linkRulesStore = useLinkRulesStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
+const updater = useAppUpdater();
 
 // About dialog — opened from the macOS app menu's "About Släktforskning" item
 // (Rust: src-tauri/src/lib.rs `build_menu` → 'menu:item' event → main.ts
@@ -180,6 +182,14 @@ provide('screenReader', screenReader);
 provide('appearance-store', {
   navOrientation,
   addBtnStyle,
+});
+
+// Updater toast: fires once when `available` flips from null → an update.
+// The toast is awareness only — install happens from the About modal.
+watch(() => updater.available.value, (next, prev) => {
+  if (next && !prev) {
+    toast.info(t('updater.toastAvailable', { version: next.version }));
+  }
 });
 
 watch(() => route.path, () => {
@@ -370,6 +380,10 @@ onMounted(() => {
   setTimeout(loadQualityBadge, 5000);
   setTimeout(loadDuplicatesBadge, 5000);
   setTimeout(loadResearchBadge, 1000);
+  // Tauri-only: schedule a one-shot updater check 5s after mount. The
+  // watcher on `updater.available` below fires the toast when a new
+  // version is found; AboutModal exposes the install button.
+  updater.checkOnBoot();
   window.api?.db?.onSwitched?.(() => {
     // `personNameOptions` is per-DB; the page reload re-runs onMounted,
     // which re-invokes init() against the newly-active DB.

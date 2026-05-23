@@ -2340,4 +2340,16 @@ export default {
     licensesTitle: 'Öppen källkod-information',
     licensesElectronNote: 'Electron och Chromium har sina egna licensfiler i programmets resurser-mapp.',
   },
+  updater: {
+    toastAvailable: 'Uppdatering tillgänglig: version {version}. Öppna Om för att installera.',
+    available: 'Version {version} är tillgänglig.',
+    upToDate: 'Du har den senaste versionen.',
+    checkNow: 'Sök efter uppdateringar',
+    checking: 'Söker…',
+    installNow: 'Installera uppdatering',
+    installing: 'Installerar…',
+    installFailed: 'Uppdateringen misslyckades. Se konsolen för detaljer.',
+    confirmTitle: 'Installera uppdatering?',
+    confirmMessage: 'Programmet laddar ner uppdateringen och startar om. Spara osparat arbete först.',
+  },
 };

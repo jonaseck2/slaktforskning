@@ -2361,4 +2361,16 @@ export default {
     licensesTitle: 'Open source notices',
     licensesElectronNote: 'Electron and Chromium ship their own license files in the application resources folder.',
   },
+  updater: {
+    toastAvailable: 'Update available: version {version}. Open About to install.',
+    available: 'Version {version} is available.',
+    upToDate: 'You’re on the latest version.',
+    checkNow: 'Check for updates',
+    checking: 'Checking…',
+    installNow: 'Install update',
+    installing: 'Installing…',
+    installFailed: 'Update failed. Check the console for details.',
+    confirmTitle: 'Install update?',
+    confirmMessage: 'The app will download the update and restart. Save any unsaved work first.',
+  },
 };

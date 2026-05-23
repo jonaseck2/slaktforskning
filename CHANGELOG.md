@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.265.0 — 2026-05-23
+
+- feat(updater): About dialog now shows whether an update is available + a "Check for updates" / "Install update" pair, and a toast surfaces when the boot check finds a new version — previously the renderer logged "[updater] update available" to the console and there was no way for a user to install without DevTools
+
 ## 0.264.21 — 2026-05-23
 
 - fix(deps): patch 7 runtime npm advisories (1 high `fast-uri`, plus moderate `hono` / `ip-address` / `qs` / `uuid` / `ws`) via lockfile-only `npm audit fix`

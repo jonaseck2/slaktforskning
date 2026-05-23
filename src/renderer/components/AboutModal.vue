@@ -22,23 +22,66 @@
       <p class="about-license">
         <a href="#" class="about-link" @click.prevent="openLicenses">{{ $t('about.viewLicenses') }}</a>
       </p>
+
+      <div v-if="updaterSupported" class="about-updater">
+        <p v-if="updater.available.value" class="about-updater-status about-updater-status--available">
+          {{ $t('updater.available', { version: updater.available.value.version }) }}
+        </p>
+        <p v-else-if="checkedAt" class="about-updater-status">{{ $t('updater.upToDate') }}</p>
+        <div class="about-updater-actions">
+          <button type="button" class="btn-add" :disabled="updater.checking.value" @click="onCheck">
+            {{ updater.checking.value ? $t('updater.checking') : $t('updater.checkNow') }}
+          </button>
+          <button
+            v-if="updater.available.value"
+            type="button"
+            class="btn-add"
+            :disabled="updater.installing.value"
+            @click="onInstall"
+          >
+            {{ updater.installing.value ? $t('updater.installing') : $t('updater.installNow') }}
+          </button>
+        </div>
+        <p v-if="updater.available.value?.body" class="about-updater-notes">{{ updater.available.value.body }}</p>
+      </div>
     </div>
     <LicensesViewerModal :visible="licensesVisible" @close="licensesVisible = false" />
+    <ConfirmModal
+      :visible="confirmInstall"
+      :title="$t('updater.confirmTitle')"
+      :message="$t('updater.confirmMessage')"
+      icon="↻"
+      :confirm-label="$t('updater.installNow')"
+      @cancel="confirmInstall = false"
+      @confirm="performInstall"
+    />
   </BaseSubPanel>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseSubPanel from './modals/BaseSubPanel.vue';
 import LicensesViewerModal from './LicensesViewerModal.vue';
+import ConfirmModal from './ConfirmModal.vue';
+import { useAppUpdater } from '../composables/useAppUpdater';
+import { useToast } from '../composables/useToast';
 
 const REPO_URL = 'https://github.com/jonaseck2/slaktforskning';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 
+const { t } = useI18n();
+const updater = useAppUpdater();
+const toast = useToast();
+
 const version = ref('');
 const licensesVisible = ref(false);
+const checkedAt = ref<number | null>(null);
+const confirmInstall = ref(false);
+
+const updaterSupported = computed(() => typeof window.api?.app?.checkForUpdates === 'function');
 
 async function loadVersion() {
   if (!window.api?.app?.getVersion) return;
@@ -57,6 +100,27 @@ function openRepo() {
   if (window.api?.app?.openExternal) {
     window.api.app.openExternal(REPO_URL);
   }
+}
+
+async function onCheck() {
+  const result = await updater.checkNow();
+  checkedAt.value = Date.now();
+  if (!result) {
+    toast.info(t('updater.upToDate'));
+  }
+}
+
+function onInstall() {
+  confirmInstall.value = true;
+}
+
+async function performInstall() {
+  confirmInstall.value = false;
+  const res = await updater.installNow();
+  if (!res.ok) {
+    toast.error(t('updater.installFailed'));
+  }
+  // On success the plugin restarts the app — no further UI needed.
 }
 </script>
 
@@ -101,5 +165,33 @@ function openRepo() {
 }
 .about-link:hover {
   color: var(--accent-hover);
+}
+.about-updater {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--surface-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.about-updater-status {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+.about-updater-status--available {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.about-updater-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.about-updater-notes {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  white-space: pre-wrap;
 }
 </style>

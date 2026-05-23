@@ -90,6 +90,14 @@ Before committing UI changes, verify they work in the running app:
 
 **Never `pkill -f Tauri` or `pkill -f slaktforskning`** — this kills the user's running instance. Kill only the specific PID you started.
 
+**Mutations to `window.api.*` or other module-scope state inside `ui_eval` leak across `location.reload()`.** Vite keeps the ES-module cache through soft reloads, so a `delete window.api.app.foo` or a stubbed `window.api.x.y = …` you set to walk a code path stays gone (or stays stubbed) on the next page render — even though the source on disk is untouched. Symptom: polyfill keys missing after reload, or stubs persisting between probes. To restart the renderer cleanly, do a fresh URL navigation that re-imports `main.ts` from scratch:
+
+```js
+window.location.href = '/?bust=' + Date.now() + '#/';
+```
+
+`location.reload()` is not enough. This matters anytime you're verifying a change to the `tauri-window-api.ts` polyfill or any composable that holds module-scope state.
+
 ## Architecture reference
 
 ```
