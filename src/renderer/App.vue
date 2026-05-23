@@ -2,24 +2,6 @@
   <div class="app" :class="['app--' + navOrientation]">
     <AppSidebar v-if="navOrientation === 'vertical'" :sections="navSections" variant="renderer">
       <template #bottom>
-        <div class="undo-row" role="group" :aria-label="$t('undo.toolbar')">
-          <button
-            type="button"
-            class="undo-btn"
-            :disabled="!undoState.canUndo"
-            :aria-label="undoTooltip"
-            :title="undoTooltip"
-            @click="doUndo"
-          >↶</button>
-          <button
-            type="button"
-            class="undo-btn"
-            :disabled="!undoState.canRedo"
-            :aria-label="redoTooltip"
-            :title="redoTooltip"
-            @click="doRedo"
-          >↷</button>
-        </div>
         <router-link to="/import-export" class="nav-item nav-bottom-item" :aria-label="$t('nav.importExport')">
           <span class="nav-icon" aria-hidden="true">📦</span>
           <span class="nav-label">{{ $t('nav.importExport') }}</span>
@@ -79,24 +61,6 @@
           </div>
         </template>
         <span class="nav-spacer"></span>
-        <div class="undo-row undo-row--topbar" role="group" :aria-label="$t('undo.toolbar')">
-          <button
-            type="button"
-            class="undo-btn"
-            :disabled="!undoState.canUndo"
-            :aria-label="undoTooltip"
-            :title="undoTooltip"
-            @click="doUndo"
-          >↶</button>
-          <button
-            type="button"
-            class="undo-btn"
-            :disabled="!undoState.canRedo"
-            :aria-label="redoTooltip"
-            :title="redoTooltip"
-            @click="doRedo"
-          >↷</button>
-        </div>
         <router-link to="/import-export" class="nav-item nav-item--quiet">
           <span class="nav-icon" aria-hidden="true">📦</span>
           <span class="nav-label">{{ $t('nav.importExport') }}</span>
@@ -156,38 +120,6 @@ const linkRulesStore = useLinkRulesStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
-
-// --- Undo / redo toolbar state ---
-// The undo manager lives in the worker; getState returns the next-action
-// labels and whether the buttons should be enabled. Refreshed on every
-// undo:changed broadcast (which fires after undo, redo, and any wrapped
-// mutation) plus once at mount.
-type UndoState = { canUndo: boolean; canRedo: boolean; undoLabel: string | null; redoLabel: string | null };
-const undoState = ref<UndoState>({ canUndo: false, canRedo: false, undoLabel: null, redoLabel: null });
-async function refreshUndoState() {
-  try {
-    const s = await window.api?.undo?.getState?.() as UndoState | undefined;
-    if (s) undoState.value = s;
-  } catch { /* ignore — stale state is harmless */ }
-}
-async function doUndo() {
-  if (!undoState.value.canUndo) return;
-  try { await window.api?.undo?.undo?.(); } catch { /* toast comes from onPerformed */ }
-}
-async function doRedo() {
-  if (!undoState.value.canRedo) return;
-  try { await window.api?.undo?.redo?.(); } catch { /* toast comes from onPerformed */ }
-}
-const undoTooltip = computed(() => {
-  if (!undoState.value.canUndo) return t('undo.nothingToUndo');
-  const label = undoState.value.undoLabel ? t(undoState.value.undoLabel) : '';
-  return label ? t('undo.tooltipUndoWithAction', { action: label }) : t('undo.tooltipUndo');
-});
-const redoTooltip = computed(() => {
-  if (!undoState.value.canRedo) return t('undo.nothingToRedo');
-  const label = undoState.value.redoLabel ? t(undoState.value.redoLabel) : '';
-  return label ? t('undo.tooltipRedoWithAction', { action: label }) : t('undo.tooltipRedo');
-});
 
 // About dialog — opened from the macOS app menu's "About Släktforskning" item
 // (Rust: src-tauri/src/lib.rs `build_menu` → 'menu:item' event → main.ts
@@ -460,11 +392,7 @@ onMounted(() => {
     researchDebounce = setTimeout(loadResearchBadge, 400);
     if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
     duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
-    void refreshUndoState();
   });
-  // Mutating IPC also fans out via onDataChanged; refresh the undo button
-  // state on every mutation so the next-action tooltip is current.
-  void refreshUndoState();
   window.addEventListener('data-imported', () => {
     dataVersionStore.increment();
     // Debounce heavy checks so navigation/data loading IPC isn't blocked
@@ -669,50 +597,6 @@ body {
 
 .nav-bottom-item {
   margin-top: 2px;
-}
-
-/* Undo / redo toolbar — sidebar variant. */
-.undo-row {
-  display: flex;
-  gap: 4px;
-  margin: 4px 8px 8px;
-}
-.undo-row--topbar {
-  margin: 0 8px 0 0;
-}
-.undo-btn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid var(--sidebar-border);
-  border-radius: var(--radius-sm);
-  color: var(--sidebar-text);
-  font-size: var(--font-md);
-  font-family: inherit;
-  cursor: pointer;
-  padding: 4px 0;
-  line-height: 1;
-}
-.undo-row--topbar .undo-btn {
-  flex: 0 0 auto;
-  width: 32px;
-  height: 28px;
-  border-color: var(--surface-border);
-  color: var(--text-secondary);
-}
-.undo-btn:hover:not(:disabled) {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
-}
-.undo-row--topbar .undo-btn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-.undo-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .error-badge {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.264.19 — 2026-05-23
+
+- fix: remove the undo/redo buttons from the nav bar — Cmd+Z / Cmd+Shift+Z and the macOS Edit menu still trigger undo/redo, so the toolbar buttons were redundant clutter
+
 ## 0.264.18 — 2026-05-22
 
 - chore(ci): the Release workflow now auto-publishes the draft once every matrix leg has uploaded — no more "release sat as a draft until someone clicked Publish"
@@ -36,10 +40,6 @@
 ## 0.264.10 — 2026-05-21
 
 - fix(ci): Linux AppImage bundling sets `APPIMAGE_EXTRACT_AND_RUN=1` — ubuntu-24.04 dropped libfuse2, so linuxdeploy needs extract-and-run mode
-
-## 0.264.9 — 2026-05-21
-
-- fix(ci): Linux build installs `libgbm-dev` — `xcap` v0.9 links against `libgbm` and `rust-lld` was failing with "unable to find library -lgbm"
 
 ---
 

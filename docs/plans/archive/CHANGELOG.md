@@ -2,6 +2,10 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.264.9 — 2026-05-21
+
+- fix(ci): Linux build installs `libgbm-dev` — `xcap` v0.9 links against `libgbm` and `rust-lld` was failing with "unable to find library -lgbm"
+
 ## 0.264.8 — 2026-05-21
 
 - feat: GEDCOM 5.5.1 + 7.0 exports of the demo `examples/swedish-royals.db` ship alongside the .db itself, with the AI-agent attribution surfaced in the description
