@@ -55,6 +55,7 @@ const SKIPPED_WITH_REASON: Record<string, string> = {
   'test:e2e': 'Playwright against packaged Tauri binary',
   'pretest:e2e:full': 'chains build:e2e (Tier 1 + Tier 2 runner)',
   'test:e2e:full': 'Tier 1 + Tier 2 Playwright projects — local + on-demand only (panels / reactivity / imports)',
+  audit: 'npm audit — runs in its own CI step',
   test: 'running vitest from vitest = recursion + slow',
   'test:watch': 'long-lived watch mode',
   'dev:static': 'long-lived dev server (vite dev for the static SPA)',
