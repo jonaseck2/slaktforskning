@@ -2,6 +2,10 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.264.10 — 2026-05-21
+
+- fix(ci): Linux AppImage bundling sets `APPIMAGE_EXTRACT_AND_RUN=1` — ubuntu-24.04 dropped libfuse2, so linuxdeploy needs extract-and-run mode
+
 ## 0.264.9 — 2026-05-21
 
 - fix(ci): Linux build installs `libgbm-dev` — `xcap` v0.9 links against `libgbm` and `rust-lld` was failing with "unable to find library -lgbm"

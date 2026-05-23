@@ -98,6 +98,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { useThemeSignal } from '../composables/useThemeSignal';
 import { useI18n } from 'vue-i18n';
 import type { PlaceResolveResult } from '../../api/place-gazetteers/types';
+import { displayPlacePath } from '../utils/placePathDisplay';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 const { t } = useI18n();
@@ -199,7 +200,7 @@ function showPopup(id: string) {
   if (place.resolved) {
     const qClass = 'match-' + place.resolved.matchQuality;
     html += `<div class="popup-resolved"><span class="${qClass}">${t('gazetteers.match.' + place.resolved.matchQuality)}</span>`;
-    html += `<span class="match-path">${place.resolved.matchedPath.join(' &gt; ')}</span>`;
+    html += `<span class="match-path">${displayPlacePath(place.resolved.matchedPath, ' &gt; ')}</span>`;
     // Source provenance: the merge engine returns a synthetic id; the actual
     // contributing gazetteers live on the matched node's `__contributors`.
     const node = place.resolved.matchedNode as { __contributors?: string[] };

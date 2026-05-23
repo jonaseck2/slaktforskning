@@ -7,6 +7,7 @@
 
 export { loadGazetteers } from './merge';
 export { resolvePlace, resolveBoundary, searchGazetteer, resolveHierarchical, tokenizePlaceString } from './resolver';
+export { displayPlacePath, stripScaffolding } from './displayPath';
 export type {
   GazetteerSearchHit,
   BoundaryHint,

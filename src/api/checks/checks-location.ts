@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll } from '../db';
 import { resolvePlace } from '../place-gazetteers/resolver';
+import { displayPlacePath } from '../place-gazetteers/displayPath';
 import type { Gazetteer, GazetteerNode } from '../place-gazetteers/types';
 import type { CheckResult, CheckSeverity } from './check-utils';
 import { haversineKm } from './check-utils';
@@ -161,13 +162,13 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
       results.push({
         code: 'PLACE_MATCH_WRONG_LEVEL',
         severity: 'warning',
-        message: `Platsen "${place.name}" verkar matcha en specifik ort (${resolved.matchedPath.join(', ')}) snarare än det angivna området`,
-        messageParams: { placeName: place.name, matchedPath: resolved.matchedPath.join(', ') },
+        message: `Platsen "${place.name}" verkar matcha en specifik ort (${displayPlacePath(resolved.matchedPath, ', ')}) snarare än det angivna området`,
+        messageParams: { placeName: place.name, matchedPath: displayPlacePath(resolved.matchedPath, ', ') },
         personIds: [],
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
-        matchedPath: resolved.matchedPath.join(', '),
+        matchedPath: displayPlacePath(resolved.matchedPath, ', '),
       });
     } else if (resolved.matchQuality === 'ambiguous') {
       results.push({
@@ -179,7 +180,7 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
-        matchedPath: resolved.matchedPath.join(', '),
+        matchedPath: displayPlacePath(resolved.matchedPath, ', '),
       });
     } else if (resolved.matchQuality === 'partial') {
       results.push({
@@ -191,7 +192,7 @@ export async function checkGazetteerMatchQuality(db: Database, gazetteers: Gazet
         placeIds: [place.id],
         resolvedLat: resolved.lat,
         resolvedLon: resolved.lon,
-        matchedPath: resolved.matchedPath.join(', '),
+        matchedPath: displayPlacePath(resolved.matchedPath, ', '),
       });
     }
     // matchQuality === 'exact' → no result

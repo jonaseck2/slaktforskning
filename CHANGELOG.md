@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.264.19 — 2026-05-23
+## 0.264.20 — 2026-05-23
 
 - fix: remove the undo/redo buttons from the nav bar — Cmd+Z / Cmd+Shift+Z and the macOS Edit menu still trigger undo/redo, so the toolbar buttons were redundant clutter
+
+## 0.264.19 — 2026-05-22
+
+- fix(places): scaffolding levels ("World" + continent) no longer appear in rendered place paths — paths now read "Sverige › Stockholms län › Stockholm" instead of "World › Europe › Sweden › Stockholms län › Stockholm". The scaffolding stays in gazetteer data (still disambiguates Georgia-country vs Georgia-state) and is shown in GazetteersView's Test Lookup.
 
 ## 0.264.18 — 2026-05-22
 
@@ -36,10 +40,6 @@
 ## 0.264.11 — 2026-05-21
 
 - fix(ci): Linux AppImage bundling also installs `libfuse2t64` — the EXTRACT_AND_RUN env var alone wasn't enough; linuxdeploy still needs the FUSE library present
-
-## 0.264.10 — 2026-05-21
-
-- fix(ci): Linux AppImage bundling sets `APPIMAGE_EXTRACT_AND_RUN=1` — ubuntu-24.04 dropped libfuse2, so linuxdeploy needs extract-and-run mode
 
 ---
 

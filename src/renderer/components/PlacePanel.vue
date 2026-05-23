@@ -101,7 +101,7 @@
               <span class="resolved-value">
                 <span :class="'resolved-quality match-' + resolvedMatch.matchQuality">{{ $t('gazetteers.match.' + resolvedMatch.matchQuality) }}</span>
                 <code v-if="resolvedSource" class="resolved-gaz">{{ resolvedSource }}</code>
-                <span class="resolved-path">{{ resolvedMatch.matchedPath.join(' › ') }}</span>
+                <span class="resolved-path">{{ displayPlacePath(resolvedMatch.matchedPath) }}</span>
               </span>
             </div>
             <div v-if="place.notes" class="compact-field">
@@ -333,6 +333,7 @@ import { useMonospacedNotes } from '../composables/useMonospacedNotes';
 import { useEntityData } from '../composables/useEntityData';
 import { useEditableFields } from '../composables/useEditableFields';
 import { useResolvedPlace } from '../composables/useResolvedPlace';
+import { displayPlacePath } from '../utils/placePathDisplay';
 import type { ResearchTask } from '../../api/types';
 
 declare const window: Window & {

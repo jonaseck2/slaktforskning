@@ -144,6 +144,7 @@ import { usePanelResize } from '../composables/usePanelResize';
 import { narratePlaceRow } from '../utils/screenReaderNarration';
 import { usePagedList } from '../composables/usePagedList';
 import { usePlaceResolver } from '../composables/usePlaceResolver';
+import { displayPlacePath } from '../utils/placePathDisplay';
 import { STORAGE_KEYS } from '../utils/storage-keys';
 
 defineOptions({ name: 'PlacesView' });
@@ -265,7 +266,7 @@ function resolvedPathFor(id: string): string | null {
   if (!path) return null;
   const match = resolve(path);
   if (!match) return null;
-  return match.matchedPath.join(' › ');
+  return displayPlacePath(match.matchedPath);
 }
 
 // Country filter — derived at render time from gazetteer resolution. The DB
