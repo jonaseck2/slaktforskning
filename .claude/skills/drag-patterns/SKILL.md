@@ -106,3 +106,14 @@ Add `v-if="imgNaturalWidth > 0"` (or equivalent) on any overlay component whose 
 - Any panel resizer that drags a divider
 
 If you build a new drag interaction, diff against the closest existing one — these files have already been hardened through several rounds of "fast drag exits the element" / "drag dies on reload" / "overlay snaps to wrong corner" bug-fixes.
+
+## Verification — MCP can't simulate drag
+
+The `slaktforskning-dev` MCP UI bridge supports `ui_screenshot`, `ui_click` (single click), `ui_fill`, `ui_get_dom`, `ui_query_styles`, `ui_reload`, `ui_navigate`. It can't synthesize `mousedown` + `mousemove` + `mouseup`. Never claim "verified live" on resize/pan/zoom from MCP output alone.
+
+For features whose acceptance is a drag (resizable columns, panel resize, chart pan, zoom):
+1. Verify **structure** via MCP — handles present at the right rect, computed `cursor: col-resize`, `pointerEvents: auto`.
+2. Mutate the **persisted state** directly (set localStorage), reload, confirm the new state renders.
+3. Ask the user to do one drag to confirm runtime behavior.
+
+The resizable-columns rollout took two iterations because structural state was correct on round 1 but the runtime drag was being squashed by an unrelated `width: 100%`. MCP couldn't see it; the user did.

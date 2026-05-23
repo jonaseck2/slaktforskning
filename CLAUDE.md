@@ -155,6 +155,10 @@ Reference docs (load on demand): `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/MCP
 
 `oss-release`, `oss-triage`, `oss-stale`, `oss-welcome` are invoked by a scheduled maintainer agent on the public GitHub repo, not interactively. Ignore them in normal coding work.
 
+## Project conventions live in the workspace, not in user memory
+
+Project-wide rules belong in `CLAUDE.md`, `.claude/rules/*.md`, or `.claude/skills/**/SKILL.md` — loaded for every contributor and every subagent. User memory is per-user, per-installation; nothing there reaches a fresh session or a subagent. If a "feedback memory" describes how this project works (not the individual user), promote it into the workspace and delete the memory. Inverse: don't ask the user to memorize something that belongs in `CLAUDE.md`.
+
 ## Workflow
 
 **Plan format:** every plan in `docs/plans/` follows [`.claude/rules/plans.md`](.claude/rules/plans.md). **Subagent dispatch:** use the `subagent-handoff` skill.
