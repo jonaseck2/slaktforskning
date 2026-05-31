@@ -1806,8 +1806,10 @@ export default {
     linkedPersons: 'Länkade personer',
     linkedPlaces: 'Länkade platser',
     linkedEvents: 'Länkade händelser',
+    linkedSources: 'Källor',
     linkPerson: '+ Person',
     linkPlace: '+ Plats',
+    linkSource: '+ Källa',
     linkEvent: '+ Händelse',
     faceTags: 'Ansiktsmarkeringar',
     untitled: 'Namnlös',
@@ -2297,6 +2299,10 @@ export default {
       mediaLinkedEvents: {
         purpose: 'Här ser du händelserna som mediafilen dokumenterar — bröllopet på fotot, dopet i kyrkboksskanningen, begravningen på minneskortet.',
         hint: 'Koppla mediafilen till en händelse genom att lägga till media på själva händelsen.',
+      },
+      mediaLinkedSources: {
+        purpose: 'Här kopplar du mediafilen till de källor den kommer från eller hör till — en kyrkboksskanning till husförhörslängden, ett foto till arkivposten — så att samma fil syns på källans sida.',
+        cta: 'Lägg till källa',
       },
       eventParticipants: {
         purpose: 'Här lägger du till övriga deltagare i händelsen — faddrar vid dop, vittnen vid vigsel, sörjande vid begravning — utöver händelsens primära person.',

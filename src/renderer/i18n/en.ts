@@ -1806,8 +1806,10 @@ export default {
     linkedPersons: 'Linked Persons',
     linkedPlaces: 'Linked Places',
     linkedEvents: 'Linked Events',
+    linkedSources: 'Linked Sources',
     linkPerson: '+ Person',
     linkPlace: '+ Place',
+    linkSource: '+ Source',
     linkEvent: '+ Event',
     faceTags: 'Face Tags',
     untitled: 'Untitled',
@@ -2318,6 +2320,10 @@ export default {
       mediaLinkedEvents: {
         purpose: 'A user would use this section to see the events this media documents — the wedding in the photo, the baptism in the parish-book scan, the funeral on the memorial card.',
         hint: 'Link this media to an event by attaching media on the event itself.',
+      },
+      mediaLinkedSources: {
+        purpose: 'Link this media to the sources it comes from or belongs to — a church-record scan to the household examination roll, a photo to its archive record — so the same file appears on the source’s page.',
+        cta: 'Add source',
       },
       eventParticipants: {
         purpose: 'A user would use this section to add other participants in this event — godparents at a baptism, witnesses at a wedding, mourners at a funeral — beyond the event\'s primary person.',
