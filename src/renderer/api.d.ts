@@ -346,8 +346,6 @@ declare global {
         openExternal: (url: string) => Promise<void>;
         onOpenAbout: (cb: () => void) => void;
         readThirdPartyLicenses: () => Promise<string>;
-        checkForUpdates: () => Promise<{ available: false } | { available: true; version: string; body: string }>;
-        downloadAndInstallUpdate: () => Promise<{ ok: true } | { ok: false; error: string }>;
       };
       backup: {
         backup: () => Promise<{ success: boolean; path?: string; error?: string }>;

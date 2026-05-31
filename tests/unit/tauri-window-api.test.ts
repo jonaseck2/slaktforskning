@@ -124,22 +124,8 @@ describe('tauri-window-api Rust command dispatch', () => {
     expect(invokeSpy).toHaveBeenCalledWith('plugin:opener|open_url', { url: 'https://example.org/foo' });
   });
 
-  it('app.checkForUpdates invokes plugin:updater|check and returns { available }', async () => {
-    invokeSpy.mockResolvedValueOnce({ available: false });
-    const { api } = mountWindowApi(stubDb);
-    const r = await api.app.checkForUpdates();
-    expect(invokeSpy).toHaveBeenCalledWith('plugin:updater|check', undefined);
-    expect(r).toEqual({ available: false });
-  });
-
-  it('app.checkForUpdates surfaces a real update payload', async () => {
-    invokeSpy.mockResolvedValueOnce({ available: true, version: '0.250.1', body: 'fixes' });
-    const { api } = mountWindowApi(stubDb);
-    const r = (await api.app.checkForUpdates()) as { available: boolean; version: string; body: string };
-    expect(r.available).toBe(true);
-    expect(r.version).toBe('0.250.1');
-    expect(r.body).toBe('fixes');
-  });
+  // Auto-update is wired in src/renderer/composables/useAppUpdater.ts via
+  // @tauri-apps/plugin-updater directly — no window.api.app.* surface.
 
   it('print.print and print.exportPdf both call window.print() (no invoke)', async () => {
     // Re-stub print on the shared stubWindow.
@@ -253,13 +239,6 @@ describe('tauri-window-api Rust command dispatch', () => {
     invokeSpy.mockRejectedValueOnce(new Error('not bundled (dev)'));
     const empty = await api.app.readThirdPartyLicenses();
     expect(empty).toBe('');
-  });
-
-  it('app.downloadAndInstallUpdate forwards to plugin:updater', async () => {
-    const { api } = mountWindowApi(stubDb);
-    const r = (await api.app.downloadAndInstallUpdate()) as { ok: boolean };
-    expect(invokeSpy).toHaveBeenCalledWith('plugin:updater|download_and_install', undefined);
-    expect(r.ok).toBe(true);
   });
 
   it('website.export skips the dialog when _outputDir is provided and writes index.html', async () => {

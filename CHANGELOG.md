@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.266.0 — 2026-05-31
+
+- feat(updater): switch to the official `@tauri-apps/plugin-updater` JS wrapper and surface download progress — the About dialog now shows a "12.3 MB of 78 MB" bar while installing, instead of a fire-and-restart invoke with no feedback. Removes the unused `window.api.app.checkForUpdates` / `downloadAndInstallUpdate` polyfill in favour of a `useAppUpdater` composable that imports the wrapper directly.
+
 ## 0.265.0 — 2026-05-23
 
 - feat(updater): About dialog now shows whether an update is available + a "Check for updates" / "Install update" pair, and a toast surfaces when the boot check finds a new version — previously the renderer logged "[updater] update available" to the console and there was no way for a user to install without DevTools

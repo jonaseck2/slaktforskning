@@ -1582,47 +1582,9 @@ export function mountWindowApi(db: Database): MountResult {
     }
   };
 
-  // Auto-update polyfill. Calls the tauri-plugin-updater plugin via its
-  // invoke surface so we don't bloat the renderer bundle with the
-  // @tauri-apps/plugin-updater wrapper. Returns a normalized shape the
-  // renderer-side toast in main.ts consumes.
-  //
-  // In `tauri dev` (no signed update manifest reachable), the underlying
-  // invoke throws — we swallow the error and return { available: false }
-  // so the boot path doesn't crash. In packaged builds against a real
-  // GitHub Releases endpoint, errors are still swallowed (the user sees
-  // the warning in the console; we don't bother them with a toast for
-  // "couldn't reach update server").
-  api.app.checkForUpdates = async () => {
-    try {
-      const update = await invoke<
-        { available: boolean; currentVersion?: string; version?: string; body?: string } | null
-      >('plugin:updater|check');
-      if (!update || !update.available) {
-        return { available: false };
-      }
-      return {
-        available: true,
-        version: update.version ?? '',
-        body: update.body ?? '',
-      };
-    } catch (e) {
-      // Includes "no_update_available", network errors, manifest not signed
-      // (dev mode with placeholder pubkey), etc. Treat all as "no update".
-      console.warn('[updater] check failed:', e);
-      return { available: false };
-    }
-  };
-
-  api.app.downloadAndInstallUpdate = async () => {
-    try {
-      await invoke('plugin:updater|download_and_install');
-      return { ok: true };
-    } catch (e) {
-      console.error('[updater] download/install failed:', e);
-      return { ok: false, error: String(e) };
-    }
-  };
+  // Auto-update lives in src/renderer/composables/useAppUpdater.ts, which
+  // imports `@tauri-apps/plugin-updater` directly to get progress events
+  // during download. No window.api.app.* surface needed.
 
   // Onboarding ("seen" callout state). The Electron build stores this in the
   // per-user settings.json (src/main/ipc/onboarding.ts → loadSettings); the

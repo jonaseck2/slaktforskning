@@ -23,13 +23,25 @@
         <a href="#" class="about-link" @click.prevent="openLicenses">{{ $t('about.viewLicenses') }}</a>
       </p>
 
-      <div v-if="updaterSupported" class="about-updater">
-        <p v-if="updater.available.value" class="about-updater-status about-updater-status--available">
+      <div v-if="updater.supported.value" class="about-updater">
+        <p v-if="updater.installed.value" class="about-updater-status about-updater-status--available">
+          {{ $t('updater.installedRestart') }}
+        </p>
+        <p v-else-if="updater.available.value" class="about-updater-status about-updater-status--available">
           {{ $t('updater.available', { version: updater.available.value.version }) }}
         </p>
         <p v-else-if="checkedAt" class="about-updater-status">{{ $t('updater.upToDate') }}</p>
-        <div class="about-updater-actions">
-          <button type="button" class="btn-add" :disabled="updater.checking.value" @click="onCheck">
+
+        <div v-if="updater.installing.value && updater.progress.value" class="about-updater-progress">
+          <div class="about-updater-progress-bar" :class="{ indeterminate: !isDeterminate }">
+            <div v-if="isDeterminate" class="about-updater-progress-fill" :style="{ width: percent + '%' }" />
+            <div v-else class="about-updater-progress-pulse" />
+          </div>
+          <p class="about-updater-progress-label">{{ progressLabel }}</p>
+        </div>
+
+        <div v-if="!updater.installed.value" class="about-updater-actions">
+          <button type="button" class="btn-add" :disabled="updater.checking.value || updater.installing.value" @click="onCheck">
             {{ updater.checking.value ? $t('updater.checking') : $t('updater.checkNow') }}
           </button>
           <button
@@ -42,7 +54,9 @@
             {{ updater.installing.value ? $t('updater.installing') : $t('updater.installNow') }}
           </button>
         </div>
-        <p v-if="updater.available.value?.body" class="about-updater-notes">{{ updater.available.value.body }}</p>
+        <p v-if="updater.available.value?.body && !updater.installed.value" class="about-updater-notes">
+          {{ updater.available.value.body }}
+        </p>
       </div>
     </div>
     <LicensesViewerModal :visible="licensesVisible" @close="licensesVisible = false" />
@@ -81,7 +95,31 @@ const licensesVisible = ref(false);
 const checkedAt = ref<number | null>(null);
 const confirmInstall = ref(false);
 
-const updaterSupported = computed(() => typeof window.api?.app?.checkForUpdates === 'function');
+const isDeterminate = computed(() =>
+  !!updater.progress.value && updater.progress.value.total !== null && updater.progress.value.total > 0
+);
+
+const percent = computed(() => {
+  const p = updater.progress.value;
+  if (!p || p.total === null || p.total === 0) return 0;
+  const pct = (p.downloaded / p.total) * 100;
+  return Math.max(0, Math.min(100, pct));
+});
+
+const progressLabel = computed(() => {
+  const p = updater.progress.value;
+  if (!p) return '';
+  if (p.total !== null) {
+    return t('updater.progressOf', { downloaded: formatBytes(p.downloaded), total: formatBytes(p.total) });
+  }
+  return t('updater.progressUnknown', { downloaded: formatBytes(p.downloaded) });
+});
+
+function formatBytes(n: number): string {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
 async function loadVersion() {
   if (!window.api?.app?.getVersion) return;
@@ -119,8 +157,9 @@ async function performInstall() {
   const res = await updater.installNow();
   if (!res.ok) {
     toast.error(t('updater.installFailed'));
+  } else {
+    toast.success(t('updater.installedRestart'));
   }
-  // On success the plugin restarts the app — no further UI needed.
 }
 </script>
 
@@ -193,5 +232,42 @@ async function performInstall() {
   font-size: var(--font-xs);
   color: var(--text-muted);
   white-space: pre-wrap;
+}
+.about-updater-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.about-updater-progress-bar {
+  height: 6px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+.about-updater-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 0.18s ease-out;
+}
+.about-updater-progress-pulse {
+  position: absolute;
+  height: 100%;
+  width: 40%;
+  background: var(--accent);
+  border-radius: inherit;
+  animation: about-updater-pulse 1.2s ease-in-out infinite;
+}
+@keyframes about-updater-pulse {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+.about-updater-progress-label {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 </style>
