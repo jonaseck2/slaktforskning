@@ -21,14 +21,18 @@ ls docs/plans/ | grep -v '^archive$' | grep -v '^README'
 
 For each plan file, classify:
 - **In progress** — at least one `[ ]` exists in the file.
-- **Drift** — every checkbox is `[x]` but file is not in `archive/`. Per `.claude/rules/plans.md` lifecycle hygiene, this is a violation. **Action: surface for close-out.**
-- **Design-only** — filename ends `-design.md`, no Tasks section. Blocked on the implementation plan being written.
-- **Blocked** — has Tasks but the user goal explicitly waits on external input (e.g. "needs Ben's framing answer").
+- **Design-only** — filename ends `-design.md`. These spec out a question/decision; they have no Tasks section by intent. Not drift.
+- **Blocked** — has Tasks but the user goal explicitly waits on external input (e.g. "needs Ben's framing answer"). The file's body says so explicitly.
+- **Drift** — every checkbox is `[x]`, filename does NOT end `-design.md`, and the file is not in `archive/`. Per `.claude/rules/plans.md` lifecycle hygiene, this is a violation. **Action: surface for close-out.**
 
-Mechanical check:
+Mechanical check (exclude `-design.md` files from the drift sweep):
 ```bash
 for f in docs/plans/*.md; do
-  if [ -f "$f" ] && ! grep -q '\[ \]' "$f"; then echo "DRIFT: $f"; fi
+  [ -f "$f" ] || continue
+  case "$f" in
+    *-design.md) continue ;;  # design specs have no tasks by intent
+  esac
+  grep -q '\[ \]' "$f" || echo "DRIFT: $f"
 done
 ```
 
@@ -40,18 +44,27 @@ For every entry under `docs/PLAN.md` "Planned", verify the linked file exists in
 
 The last 3 entries in `CHANGELOG.md` should each have a corresponding archive entry in `docs/plans/archive/PLAN.md` (linked plan file, archive paragraph). If `package.json` version > last CHANGELOG block, the release was incomplete.
 
-### 4. Stale memories
+### 4. Memory leaks (project-shape memories are violations, not just "stale")
+
+Per `.claude/rules/mandate.md` "Memory hygiene" + CLAUDE.md "Project conventions live in the workspace": project memory is a leak. Memories that describe *how the codebase works* belong in skills or rules, not in per-user memory (which doesn't reach subagents).
 
 ```bash
-ls /Users/jonasahnstedt/.claude/projects/-Users-jonasahnstedt-git-slaktforskning/memory/
+# Claude Code stores per-project user memory under ~/.claude/projects/<url-encoded-project-path>/memory/
+# Derive the path portably from the current working directory:
+MEM_DIR="$HOME/.claude/projects/$(pwd | sed 's|/|-|g')/memory"
+ls "$MEM_DIR"
 ```
 
-For each memory file, the agent flags:
-- **Project-shape memory** (describes how the codebase works) — should be promoted to `CLAUDE.md` or `.claude/rules/`. User-memory is per-user, doesn't reach subagents.
-- **Code-references-stale** — memory names a file/function. If `grep -L` reports it doesn't exist, the memory is wrong. **Action: update or delete.**
-- **Decision memories that contradict current state** — older than the most recent plan that touched the same surface; check for conflict.
+Each `feedback_*.md` memory is a violation **by default** — `feedback` is the leak shape. The agent classifies each:
 
-Cheap heuristic: `grep -l "src/" memory/` flags memories with explicit file references → audit those first.
+- **Already captured in a skill/rule** → delete the memory; index entry in MEMORY.md updated to record the sweep.
+- **Not yet captured but project-shape** → promote the content to the right `.claude/skills/<name>/SKILL.md` or `.claude/rules/<name>.md`, then delete.
+- **Truly user-personal preference** (writing style, communication preferences, what they care about as a person) — `user_*.md` shape — keep.
+- **Personal/family fact** (`project_family_tree` etc.) — keep.
+
+The mandate is Tier 1: the agent sweeps and reports in commit, doesn't ask permission for each individual memory.
+
+Stale code references (memory names a file/function that no longer exists) is a separate check applied to all surviving memories — `grep -L "src/" memory/` flags memories with explicit file refs → audit if any path has been removed/renamed.
 
 ### 5. Beta-tester / GitHub backlog
 

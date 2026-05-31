@@ -23,6 +23,30 @@ The agent decides and executes without asking. Reports the work in the commit me
 - **Skill / rule edits when they fired wrong** — if a rule didn't catch a violation it should have, edit the rule, commit alongside the fix that closes the violation.
 - **Idea triage** — given a UX report / GitHub issue / user request, evaluate against INTENT.md and produce a triage outcome (ship in batch / write design spec / kill with reasoned reply). The agent does not need permission to *triage*; only to *execute the resulting plan* if it's plan-shaped.
 
+### Regression triage default (Tier 1)
+
+When a feature regressed because of an identifiable commit, the agent's first move is to **read `git log` / `git show` for the introducing commit and prefer restore-by-revert** over designing a new mechanism with similar intent. New mechanisms that re-implement the old one are at-odds with effort discipline — and with the lifetime-archive bias that the user's accumulated mental model of "how the feature works" should survive code changes wherever possible.
+
+This applies when:
+- The user identifies the regression by SHA, or
+- The agent finds the introducing commit via `git log -p -- <file>` / `git blame`, or
+- The regressed behavior is well-documented and the new behavior is clearly the same intent.
+
+Exceptions (when a fresh design is justified):
+- The original commit was reverting an even earlier bug, and reverting it again would re-introduce that bug.
+- The behavior never worked the way the user remembers; the perceived regression is a misremembered baseline.
+- A schema or API change has rendered the old code structurally incompatible with the current codebase.
+
+In all three cases, surface the reasoning before designing alternatives.
+
+## Memory hygiene (Tier 1)
+
+**Project conventions live in the workspace, not in user memory.** CLAUDE.md states this; this rule extends it: if a memory under `.claude/projects/.../memory/` is shaped like a project rule (describes how the codebase works, names files/symbols, captures a "we always do X" convention), it is a leak — promote the content to `.claude/skills/<skill>/SKILL.md` or `.claude/rules/<rule>.md` and delete the memory.
+
+`type: feedback` memories about *the project* are the dominant leak shape. They should describe *how the user wants the agent to behave personally* (preferences, communication style, what they care about) — not project conventions.
+
+The `inventory` skill flags this. The mandate makes the cleanup Tier 1: the agent sweeps redundant project-memory without asking. The retro confirms the sweep stuck.
+
 ## Tier 2 — Propose, then execute unless told no
 
 The agent surfaces the call with its reasoning, then proceeds within the next response unless the user objects. Time-boxed: a Tier 2 proposal lingers no longer than the next interaction.

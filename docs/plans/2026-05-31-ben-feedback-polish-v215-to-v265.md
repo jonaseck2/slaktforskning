@@ -85,7 +85,7 @@ Running the test list aloud: *if every component test, every unit test, every e2
 ## Failure modes / RCA reference
 
 - **Prior plan** [2026-05-04-event-participants-and-marriage-flow](./archive/2026-05-04-event-participants-and-marriage-flow.md) introduced the `EventParticipantsSection.vue` participants section and the "save first" hint that C4 replaces. Review that plan's verification approach before changing the hint — the e2e tests for the marriage flow assert participant counts after save and should still pass after C4.
-- **Prior incident** — Ben's [feedback_subagent_cwd_drift](../../.claude/projects/-Users-jonasahnstedt-git-slaktforskning/memory/) and [feedback_worktree_git_commands](../../.claude/projects/-Users-jonasahnstedt-git-slaktforskning/memory/) memory entries: when executing this plan under worktree + subagents, follow `.claude/rules/worktrees.md` strictly (`git -C` / `npm --prefix <wt>` / vitest `--root <wt>`). The subagent-handoff skill encodes this.
+- **Prior incident** — subagent CWD drift and worktree-vs-controller command shape have bitten this project before. When executing this plan under worktree + subagents, follow [`.claude/rules/worktrees.md`](../../.claude/rules/worktrees.md) strictly (`git -C` / `npm --prefix <wt>` / vitest `--root <wt>`). The subagent-handoff skill encodes this.
 
 ---
 
