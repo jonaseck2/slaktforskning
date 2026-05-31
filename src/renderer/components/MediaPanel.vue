@@ -247,6 +247,36 @@
         </div>
       </div>
 
+      <!-- Linked Sources (rapport 104, framing B) -->
+      <div class="panel-section">
+        <SectionHeader
+          :title="$t('media.linkedSources')"
+          :count="linkedSources.length"
+          :collapsed="!sections.sources"
+          :action-label="props.readonly ? undefined : $t('media.linkSource')"
+          @toggle="toggleSection('sources')"
+          @action="openSourcePicker"
+        />
+        <div v-if="sections.sources" class="panel-section-body">
+          <div v-if="!props.readonly && showSourcePicker" class="picker-wrap">
+            <SourcePicker :model-value="null" @select="linkSource" @create-new="createAndLinkSource" />
+            <AppButton variant="ghost" size="sm" @click="showSourcePicker = false">{{ $t('common.cancel') }}</AppButton>
+          </div>
+          <SectionEmpty
+            v-if="linkedSources.length === 0 && !showSourcePicker"
+            purpose-key="onboarding.empty.mediaLinkedSources.purpose"
+            :action-label-key="props.readonly ? undefined : 'onboarding.empty.mediaLinkedSources.cta'"
+            @action="showSourcePicker = true"
+          />
+          <div v-for="ls in linkedSources" :key="ls.linkId" class="linked-row">
+            <router-link :to="'/sources/' + ls.entityId" class="person-link">{{ ls.label }}</router-link>
+            <AppButton v-if="!props.readonly" variant="ghost" size="sm" class="unlink-btn" :aria-label="$t('a11y.unlinkItem', { item: ls.label })" :title="$t('common.unlinkTooltip')" @click="unlinkEntity(ls.linkId)">
+              <IconUnlink :size="14" />
+            </AppButton>
+          </div>
+        </div>
+      </div>
+
       <!-- Shared notes (T20) — first-class notes attached to this media item.
            Distinct from the per-row `media.notes` text-blob shown above as
            caption — those are the inline caption; these are the GEDCOM SNOTE
@@ -336,6 +366,7 @@ import PanelDangerZone from './PanelDangerZone.vue';
 import LinkedText from './LinkedText.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import PlacePicker from './PlacePicker.vue';
+import SourcePicker from './SourcePicker.vue';
 import MediaChecksSection from './MediaChecksSection.vue';
 import EntityNotesSection from './EntityNotesSection.vue';
 import { resolvePersonDisplayName } from '../utils/nameUtils';
@@ -412,6 +443,7 @@ const sharedNotesSectionRef = ref<(InstanceType<typeof EntityNotesSection> & { c
 const sharedNotesCount = computed(() => sharedNotesSectionRef.value?.count ?? 0);
 const showPersonPicker = ref(false);
 const showPlacePicker = ref(false);
+const showSourcePicker = ref(false);
 
 // Always expand the section AND open the picker. Without the auto-expand
 // step the first click on `+ Person` / `+ Place` while the section is
@@ -426,6 +458,10 @@ function openPlacePicker() {
   if (!sections.places) toggleSection('places');
   showPlacePicker.value = true;
 }
+function openSourcePicker() {
+  if (!sections.sources) toggleSection('sources');
+  showSourcePicker.value = true;
+}
 const editingTagId = ref<string | null>(null);
 const titleDraft = ref('');
 const notesDraft = ref('');
@@ -436,8 +472,8 @@ const { monospaced: notesMonospaced, toggle: toggleNotesMonospaced } = useMonosp
 
 const { sections, toggleSection } = usePanelSections(
   'media-panel-section-',
-  { notes: false, persons: true, places: true, events: false, faceTags: false, sharedNotes: false, quality: false },
-  { notes: true, persons: true, places: true, events: true, faceTags: true, sharedNotes: false, quality: false },
+  { notes: false, persons: true, places: true, events: false, sources: true, faceTags: false, sharedNotes: false, quality: false },
+  { notes: true, persons: true, places: true, events: true, sources: true, faceTags: true, sharedNotes: false, quality: false },
 );
 
 // ── Data (race-safe load) ────────────────────────────────────────────────────
@@ -658,6 +694,31 @@ async function linkPlace(place: { id: string }) {
   });
   showPlacePicker.value = false;
   emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
+  await reload();
+}
+
+async function linkSource(source: { id: string }) {
+  if (!props.mediaId) return;
+  await window.api.media.addLink({
+    media_id: props.mediaId,
+    entity_type: 'source',
+    entity_id: source.id,
+  });
+  showSourcePicker.value = false;
+  emit('link-changed');
+  await reload();
+}
+
+async function createAndLinkSource(title: string) {
+  if (!props.mediaId) return;
+  const source = (await window.api.sources.create({ title })) as { id: string };
+  await window.api.media.addLink({
+    media_id: props.mediaId,
+    entity_type: 'source',
+    entity_id: source.id,
+  });
+  showSourcePicker.value = false;
+  emit('link-changed');
   await reload();
 }
 
