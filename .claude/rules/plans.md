@@ -131,8 +131,41 @@ git add docs/plans/<file>.md && git commit -m "docs(plan): …"   # or docs(spec
 - After every `docs/plans/YYYY-MM-DD-*.md` write → `git add` + `git commit -m "docs(plan): …"` before any other tool call.
 - Before creating a worktree, check `git status` on the source branch — anything doc-related must be committed first.
 
+## Lifecycle hygiene
+
+A plan file in `docs/plans/` is in one of two states. There is no third state.
+
+- **Active:** at least one `[ ]` checkbox exists in the file. The plan is in flight.
+- **Done:** every checkbox is `[x]`. The plan MUST be in `docs/plans/archive/`, not `docs/plans/`.
+
+If the last `[ ]` flips to `[x]` and the file still lives in `docs/plans/`, that is a **lifecycle violation**. The fix is not a TODO, not a comment, not "we'll archive it next time" — the fix is to invoke the `close-out` skill, which walks CLAUDE.md "Finishing a plan" in order and refuses partial work.
+
+**Mechanical check** (run before any commit that touches a plan file, and inside the `inventory` skill):
+
+```bash
+for f in docs/plans/*.md; do
+  [ -f "$f" ] && grep -q '\[ \]' "$f" || echo "DRIFT: $f has no [ ] but is not archived"
+done
+```
+
+Any non-archive output is a drift violation. The `close-out` skill is the canonical fix; manually moving the file without walking the 6 steps is also a violation (skips version bump, CHANGELOG, PLAN.md sync, archive PLAN.md append, and Step 7 post-close hygiene).
+
+**Why this is a rule, not a guideline:** through 2026-04 and -05 the project accumulated four checked-but-unarchived plans from 2026-05-14. The drift was structural: no rule said "this state is illegal," and no skill enforced the close-out as a single command. This rule + the `close-out` skill close the loop.
+
+**Authority:** archiving a done plan is `.claude/rules/mandate.md` Tier 1 (own outright). The agent does not ask "should I archive this?"; it invokes `close-out` and reports in the commit.
+
+## Plan ↔ INTENT.md alignment
+
+Before writing any plan, the agent verifies the proposed user goal is defensible against `docs/INTENT.md` §§ "What's in scope" and "What this app explicitly rejects". If the plan's user goal is at-odds with INTENT:
+
+- The agent does NOT write the plan.
+- The agent writes a reasoned reply: "Closed without plan — at-odds with INTENT.md §<section>: <reason>."
+- If the user disagrees, the discussion is about INTENT, not about the plan. Either INTENT changes (rare, Tier 3 escalation) or the proposed plan stays closed.
+
+This rule is the upstream gate that keeps `docs/plans/` from accumulating mechanism-shaped or value-misaligned ideas. The downstream gate (lifecycle hygiene above) keeps `docs/plans/` clean *given* that what's in there is legitimate.
+
 ## Meta verification
 
 The verification of these rules is the next plan written. If the next plan opens with mechanism instead of user goal, or scopes implicitly, or verifies via lint+vitest only, the rule didn't fire — iterate the rule.
 
-Every two weeks: re-read the most recent three plans against this file. If any drifted, rewrite or strengthen.
+Every two weeks: re-read the most recent three plans against this file AND against `docs/INTENT.md`. If any drifted, rewrite or strengthen — the `retro` skill is the canonical implementation. The retro covers both plan-format drift (this file) and product-intent drift (INTENT.md), since both can produce bad plans.
