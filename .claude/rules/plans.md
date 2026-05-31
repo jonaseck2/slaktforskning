@@ -131,6 +131,66 @@ git add docs/plans/<file>.md && git commit -m "docs(plan): …"   # or docs(spec
 - After every `docs/plans/YYYY-MM-DD-*.md` write → `git add` + `git commit -m "docs(plan): …"` before any other tool call.
 - Before creating a worktree, check `git status` on the source branch — anything doc-related must be committed first.
 
+## Task completability — every task tagged with its tier
+
+Every task in a plan's `## Tasks` section is tagged with the mandate tier that owns it, per `.claude/rules/mandate.md`. The tag answers "who executes this task?" upfront, so an autonomous executor doesn't silently skip Tier 4 work or fumble a Tier 3 escalation.
+
+```markdown
+- [ ] **T05 (Tier 1)** — Run `npm test` and capture the summary line.
+- [ ] **T07 (Tier 4)** — Author face-tag regions via UI drag. *(Human-required: coord drift on MCP-driven coords. Fallback: skip the group portrait from the demo, accept the degraded screenshot.)*
+- [ ] **T11 (Tier 3)** — Push to `origin/main`. *(Escalate before pushing if any other plan landed since the worktree was created.)*
+```
+
+Convention:
+- **(Tier 1)** — Agent owns; just executes.
+- **(Tier 2)** — Agent surfaces with reasoning before executing.
+- **(Tier 3)** — Agent escalates; waits for explicit user go-ahead.
+- **(Tier 4)** — Human-required (genuine, not punt). The task body MUST declare the alternative path or the degraded outcome.
+
+Missing tags is a plan-format violation. Tier 4 tasks without an alternative-or-degraded-outcome clause are a plan-format violation — see §"Tier 4 tasks must carve their fallback".
+
+## Tier 4 tasks must carve their fallback
+
+A task tagged **(Tier 4)** is genuinely human-required: external GUI, paid-license software, hardware-bound work, first-time-user perspective, irreversible communication. Such tasks block the plan unless the human executes them. The plan acknowledges this by stating ONE of:
+
+- **Alternative agent-completable path** — "T07 alternative: synthesize face-tag regions via image-tagger coords + visual diff against natural-resolution screenshot. Less robust than human drag but verifiable."
+- **Degraded user-observable outcome** — "T14 fallback: skip the timed walkthrough; replace Verification §1's '< 10 min' assertion with 'README quickstart steps complete' (mechanical). The shipped README loses the timing claim."
+- **Escalation gate** — "T07 requires user to drag the regions in a single session. Plan halts on this task; agent invokes /inventory + surfaces to user when reached."
+
+A Tier 4 task without one of these three clauses is incompletable AND under-specified. The plan as a whole is `Blocked` (per `docs/PLAN.md`) until the Tier 4 task is rewritten.
+
+## No self-referential tasks
+
+A plan in `docs/plans/` exists because it was written. The act of writing + committing is its existence, not a task within it. Tasks like:
+
+- ❌ "T01 — Write this plan, commit it"
+- ❌ "T00 — Create the plan file"
+- ❌ "T-final — Mark every task complete"
+
+… are noise. They produce false `[ ]` checkboxes that confuse the lifecycle check, and they describe the meta-state of the plan rather than the work the plan delivers.
+
+The first real task is the first task that produces a file change OR a verifiable observation. Setup (worktree creation, gitignore updates) can be a task if it touches files; commit-this-plan is not a task.
+
+## Atomic task discipline
+
+Each task in `## Tasks` must satisfy:
+
+1. **Single user-observable verb** — "Author the .gramps fixture", "Write the citation-modal label tests", "Run the e2e suite and capture output." Tasks that bundle 5+ files or 19+ sections fail this and must be decomposed.
+2. **Verifiable mid-flight** — the task either commits something (`git commit`) or produces a verifiable file/output that the next task references. A task with no output (e.g. "T12: write the MANUAL.md") is undecidable.
+3. **Bounded effort** — rough ceiling: ~2 hours of focused work, or one logical commit. Larger work decomposes into multiple tasks. The Self-review checklist explicitly checks this.
+
+Tasks that violate this are flagged by the `retro` skill when it re-reads the plan post-archive.
+
+## Close-out tasks reference the /close-out skill
+
+The final task of every plan is **not** a re-statement of the CLAUDE.md "Finishing a plan" 6 steps. It is a single line:
+
+```markdown
+- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence.
+```
+
+Inlining the 6 steps in every plan is duplication; the `/close-out` skill is the canonical implementation, and the executor invokes it once tests pass.
+
 ## Lifecycle hygiene
 
 A plan file in `docs/plans/` is in one of two states. There is no third state.
