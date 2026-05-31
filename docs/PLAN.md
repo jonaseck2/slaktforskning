@@ -2,32 +2,38 @@
 
 A local-first desktop genealogy app. Includes a built-in MCP server so that **external** AI agents (Claude Desktop, Claude Code, etc.) can read, write, and test the database — the app itself ships **no integrated agent**, no in-app chatbot, no in-process LLM. Architecture and tech decisions live in [`CLAUDE.md`](../CLAUDE.md). Version history: [CHANGELOG.md](../CHANGELOG.md). Completed milestones: [plans/archive/PLAN.md](plans/archive/PLAN.md).
 
-This file lists only what's **left** — planned, in-progress, or backlog. Anything done lives in the archive PLAN linked above; this file never carries `[done]` entries.
+This file lists what's **planned**. Two states only: planned (here) or done (archive). No "in flight" — if it's worth tracking it's planned; if it's not getting done it's closed in the archive with the reason.
 
 ---
 
-## In flight
+## Planned
 
-Active plans under `docs/plans/`. Each entry links the plan file; the user goal is what the plan delivers.
+Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
-- **Modal companion composables (3.5 follow-up)** — extract `useCompanionBaptism` / `useSpousePicker` / `useCitationsForPersonName` / `useWeddingOffer` / `useOverlapCheck` so the four large modals fit on one screen. → [2026-05-14-modal-companion-composables.md](plans/2026-05-14-modal-companion-composables.md)
-- **Audit follow-up roadmap (close-out)** — index doc; nearly all referenced plans have shipped, remaining tactical sweep + Tier 2.5 (Raw Payloads) gated on a renderer perf baseline. → [2026-05-14-audit-followup-roadmap.md](plans/2026-05-14-audit-followup-roadmap.md)
+- **OSS launch demo + manual** — README screenshot + 8-step quickstart + full MANUAL.md across 19 sections, against a Swedish royal House of Holstein-Gottorp demo database. Currently the only blocker between the repo and a public OSS launch. → [2026-05-21-oss-launch-demo-and-manual.md](plans/2026-05-21-oss-launch-demo-and-manual.md)
+- **Ben feedback polish (rapport 100-103, 105)** — beta-tester UI/i18n batch from v215→v265: citation modal labels + dropdown affordance + confidence order, EventModal section count parens + trash icon, per-event-type residence labels + inline save-and-continue, research-tasks rename, PersonPanel Timeline/Map reorder. → [2026-05-31-ben-feedback-polish-v215-to-v265.md](plans/2026-05-31-ben-feedback-polish-v215-to-v265.md)
+- **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding (the open-source half of the original native-binary-fixtures plan; RootsMagic + Holger halves closed as contributor-driven). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md)
 
-## Backlog
+## Blocked
 
-Plans that are valid and ready to grab but are not actively scheduled. Pull into "In flight" when triggered.
+Plans that exist as files but cannot move forward without an external input.
 
-- **Native importer binary fixtures** — close the e2e gaps for native binary decoders (Holger `.zip+media`, RootsMagic `.rmtree`, Gramps `.gramps` / `.gpkg`). Contributor-blocked (requires source-app installs). Un-defer trigger codified in [`tests/e2e/imports.spec.ts:74`](../tests/e2e/imports.spec.ts#L74). → [2026-05-14-importer-binary-fixtures.md](plans/2026-05-14-importer-binary-fixtures.md)
-- **Renderer-side perf baseline** — Safari Web Inspector traces (boot / place-resolve / dedup) to pair with the existing Rust-side `samply` baselines. 30-min user-driven task; grab when the next renderer-perf complaint arrives, or when starting audit-roadmap Tier 2.5 (Raw Payloads). → [2026-05-14-perf-baseline-renderer.md](plans/2026-05-14-perf-baseline-renderer.md)
+- **Media citations design (rapport 104)** — design spec waiting on Ben's framing answer (Framing A `citations.media_id` vs Framing B surface existing `media_links→source`). No implementation plan exists yet; the spec captures the question and the round-trip implications of each path. → [2026-05-31-media-citations-design.md](plans/2026-05-31-media-citations-design.md)
 
 ---
 
 ## Considered, not now
 
-Things we thought about and decided against / deferred. Not backlog — listed only so we don't re-derive the same idea cold.
+Things we thought about and decided against / deferred with an explicit reopen trigger. Not backlog — listed so we don't re-derive the same idea cold.
 
-- **Historical place names** — parishes that changed names or borders over time, with date ranges (e.g. "Stettin" → "Szczecin" 1945, Schleswig-Holstein county splits, Swedish parish mergers post-2000). Considered as a place-gazetteers extension. Out of scope: pinning the database to a specific historical-resolver version would conflict with the Prime Directive (DB stores authored values; everything else derives at read time). If revisited, the right shape is render-time alias resolution from a versioned alias table — not stored historical coordinates. Open it as a GitHub issue post-OSS so users can vote.
-- **Hourglass layout internal refactor (Phase 2 of 3.2)** — explicit "execute only if a real chart feature is blocked" plan. No chart feature is blocked today; the file works and is tested. The audit's "this file is too big" framing was a wrong premise twice in this batch. Reopen if a specific chart-feature request makes the file's shape the blocker. Design lives at [`plans/2026-05-14-hourglass-layout-refactor-design.md`](plans/2026-05-14-hourglass-layout-refactor-design.md).
+- **Historical place names** — parishes that changed names or borders over time. Considered as a place-gazetteers extension. Out of scope: pinning the database to a specific historical-resolver version would conflict with the Prime Directive. If revisited, the right shape is render-time alias resolution from a versioned alias table — not stored historical coordinates. **Reopen trigger:** post-OSS, if users vote for it on GitHub.
+- **Hourglass layout internal refactor (Phase 2 of 3.2)** — no chart feature is blocked today; the file works and is tested. **Reopen trigger:** a specific chart-feature request blocked by the file's shape. Design lives at [`plans/archive/2026-05-14-hourglass-layout-refactor-design.md`](plans/archive/2026-05-14-hourglass-layout-refactor-design.md).
+- **Renderer-side perf baseline** — original consumer (Tier 3 refactors) shipped. **Reopen trigger:** next user-reported renderer perf complaint; capture against the real repro, not on-shelf.
+- **Modal companion composables (5 extractions)** — 3.5 already met its user goal; remaining LOC targets aspirational. **Reopen trigger:** a real modal bug whose root cause is hard to locate because the file is too big.
+- **Tauri Raw Payloads adoption (audit T2.5)** — speculative; no IPC bandwidth complaint exists. **Reopen trigger:** a specific IPC bandwidth or roundtrip complaint with a measurable workload.
+- **Holger + RootsMagic native binary fixtures** — contributor-driven (requires paid Windows software). **Reopen trigger:** a contributor opens a GitHub issue with a 3-person fixture attached for their tool.
+- **Rapport 102 §5** (add second resident doesn't work) — Ben self-diagnosed as viewport in v215.2; ~60 versions of layout churn since. **Reopen trigger:** repros on next release Ben ships against.
+- **Rapport 106** (cannot update relationship event) — update path reads correctly at HEAD; may be incidentally fixed in the churn since v215.2. **Reopen trigger:** repros on next release Ben ships against.
 
 ---
 
