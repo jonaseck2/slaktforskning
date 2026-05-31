@@ -873,64 +873,7 @@ git add tests/unit/i18n-parity.test.ts
 git commit -m "test(i18n): assert sv ↔ en key parity"
 ```
 
-### Task 10: Close-out
+### Task 10 (Tier 1): Close-out via /close-out skill
 
-- [ ] **Step 1: Run the full verification suite locally**
-
-```bash
-npm test
-npm run build
-npm run test:e2e:full
-```
-
-Capture the summary lines for the close-out commit per `.claude/rules/plans.md` "Verification discipline at close-out":
-
-- `npm test` → `N passed (Xs)`
-- `npm run build` → `built in Xs` + exit code
-- `npm run test:e2e:full` → `N passed (Xs)` across 7 projects
-
-- [ ] **Step 2: Manual screenshot capture**
-
-```bash
-npm start
-```
-
-Walk each of the 6 user-observable outcomes from the Verification section. Capture one screenshot per outcome into `/tmp/ben-rapport-100-105/`. Include the SourcePicker chevron shot (A2 has no automated test).
-
-- [ ] **Step 3: Self-review checklist (mark this `[x]` only after the checklist actually passes)**
-
-Read `.claude/rules/plans.md` "Verification discipline at close-out" and `.claude/rules/plans.md` worked-example. Confirm:
-
-- [ ] User goal §1 reads in plain user language and matches what the tests assert.
-- [ ] Every task's checkboxes are `[x]`.
-- [ ] Scope deviations (102 §5, 104, 106, ep-sec-header migration) are still legitimately carved out, not silently absorbed.
-- [ ] e2e:full ran green; the panel e2e project specifically does not depend on the old section order.
-
-- [ ] **Step 4: Version bump + CHANGELOG block**
-
-This is a feature batch (Ben-visible UX). Per `oss-release` skill: minor bump. From `0.265.0` → `0.266.0`. Add a CHANGELOG block summarizing the six bullets in close-out commit-message wording.
-
-- [ ] **Step 5: Archive the plan**
-
-```bash
-git mv docs/plans/2026-05-31-ben-feedback-polish-v215-to-v265.md docs/plans/archive/
-```
-
-Update `docs/PLAN.md` (remove the milestone block) and `docs/plans/archive/PLAN.md` (append one-paragraph entry).
-
-- [ ] **Step 6: Final close-out commit**
-
-```bash
-git add CHANGELOG.md package.json docs/plans/archive/2026-05-31-ben-feedback-polish-v215-to-v265.md docs/PLAN.md docs/plans/archive/PLAN.md
-git commit -m "chore: archive 2026-05-31-ben-feedback-polish-v215-to-v265
-
-Verification evidence:
-- npm test → N passed (Xs)
-- npm run build → built in Xs (exit 0)
-- npm run test:e2e:full → N passed (Xs) across 7 projects
-
-Manual screenshots in /tmp/ben-rapport-100-105/ cover the 6 user-observable
-outcomes from the Verification section, including the SourcePicker chevron
-(A2, which has no automated test).
-"
-```
+- [ ] **Step 1** — Capture A2 (SourcePicker chevron) screenshot via dev MCP: navigate to a citation modal, `ui_screenshot` the SourcePicker, save to `/tmp/ben-polish-A2-chevron.png`. A2 has no automated test, so the screenshot is the load-bearing user-observable evidence for that item.
+- [ ] **Step 2** — Invoke `/close-out` skill. The skill walks the 6+1 steps (evidence capture from `npm test` / `npm run build` / `npm run test:e2e:full`, archive, version bump to minor per feature plan, CHANGELOG, PLAN.md, archive PLAN.md, commit, post-close hygiene sweep). The A2 screenshot from Step 1 is referenced in the close-out commit body.

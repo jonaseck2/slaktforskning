@@ -97,6 +97,31 @@ Default to Tier 1 when:
 
 ---
 
+## Over-escalation anti-patterns (specific, observed)
+
+These specific shapes are over-escalation. The agent has done all of them; the mandate calls them out so they don't recur.
+
+### "Recommended X" + asking which option
+
+If the agent writes `Recommended: option A` and then asks "should I do A or B or C?", the question is over-escalation. The recommendation IS the call. **Execute A, surface "doing A; tell me if wrong" in the response, move on.**
+
+The AskUserQuestion shape "Recommended (first option) + 2 fallbacks" is itself a smell — if there's a defensible recommendation, the action is Tier 1 or Tier 2 (propose+execute), not Tier 3 (escalate). Reserve AskUserQuestion for genuine forks where the agent has NO defensible recommendation, or where the user's preference materially changes downstream work.
+
+### Confusing local-state irreversibility with Tier 3
+
+Tier 3 destructive ops affect **shared** state (origin/main, GitHub releases, public branches, schema deletes that take user data with them) or are recoverable only via heroic means. Local-machine state changes that are theoretically irreversible but obviously safe (stale stashes from years-old branches, branches merged into main, build artifacts, temp files, redundant memories) are **Tier 1**. The right test isn't "can this be undone?" but "does undoing it require coordinating with anyone else or doing forensics?"
+
+`git stash clear` after a stash-list inspection that shows only ancient orphans — Tier 1.
+`git branch -D` of a branch with unmerged commits — Tier 3.
+`rm -rf node_modules` to fix a build glitch — Tier 1.
+Deleting `src/api/` — Tier 3 even though "recoverable from git".
+
+### "Surfacing for go/no-go" when the mandate already greenlit
+
+Tier 2 means "surface with reasoning + execute unless told no in the same response." It does NOT mean "surface and wait for a yes before executing." If the user has set the overall mandate ("do all of them", "continue", "ask me for direction not permission"), each individual Tier-2 step is a propose-then-execute within the same turn, not a pause-and-poll cycle.
+
+Test: would the user have said "yes, do it" if asked? If yes, just do it. If you're 70%+ sure of the answer, that's a propose-and-execute, not an escalation.
+
 ## Failure modes this mandate is designed to eliminate
 
 - **"Should I spin up the worktree?"** — Tier 1 says no, just do it.

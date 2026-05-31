@@ -10,14 +10,14 @@ This file lists what's **planned**. Two states only: planned (here) or done (arc
 
 Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
+- **OSS launch demo + manual** — README screenshot + 8-step quickstart + full MANUAL.md across 19 sections, against a Swedish royal House of Holstein-Gottorp demo database. Rewritten 2026-05-31 for full agent-completability: face-tag regions via MCP coords + visual-diff verification (was: human drag), quickstart-screenshotted-coherence check (was: human timed walkthrough), MANUAL.md decomposed into 19 atomic per-section tasks (was: one mega-task). 40 Tier 1 tasks; zero Tier 4. → [2026-05-21-oss-launch-demo-and-manual.md](plans/2026-05-21-oss-launch-demo-and-manual.md)
 - **Ben feedback polish (rapport 100-103, 105)** — beta-tester UI/i18n batch from v215→v265: citation modal labels + dropdown affordance + confidence order, EventModal section count parens + trash icon, per-event-type residence labels + inline save-and-continue, research-tasks rename, PersonPanel Timeline/Map reorder. → [2026-05-31-ben-feedback-polish-v215-to-v265.md](plans/2026-05-31-ben-feedback-polish-v215-to-v265.md)
-- **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding (the open-source half of the original native-binary-fixtures plan; RootsMagic + Holger halves closed as contributor-driven). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md) — **Tasks 1+2 currently Tier 4 (Gramps GUI authoring); see plan for the agent-completable XML-direct alternative pending rewrite.**
+- **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding via XML-direct authoring (rewritten 2026-05-31 from GUI-authoring to hand-written XML + gzip + zip, removing the Gramps-install gate). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md)
 
 ## Blocked
 
-Plans that exist as files but cannot move forward without an external input or rewrite to remove Tier 4 gates.
+Plans that exist as files but cannot move forward without an external input.
 
-- **OSS launch demo + manual** — README screenshot + 8-step quickstart + full MANUAL.md across 19 sections, against a Swedish royal House of Holstein-Gottorp demo database. **Blocked: contains Tier 4 (human-required) tasks** — T07 (face-tag region authoring via UI drag), T14 (fresh-install + first-time-user timed walkthrough) — neither has an alternative path or carved fallback per `.claude/rules/plans.md` "Tier 4 tasks must carve their fallback". Also contains atomic-task violations (T12 = entire MANUAL.md). Reopen after a rewrite that either marks each Tier 4 task with its fallback, or commits the user to executing T07 + T14 in a planned session. → [2026-05-21-oss-launch-demo-and-manual.md](plans/2026-05-21-oss-launch-demo-and-manual.md)
 - **Media citations design (rapport 104)** — design spec waiting on Ben's framing answer (Framing A `citations.media_id` vs Framing B surface existing `media_links→source`). No implementation plan exists yet; the spec captures the question and the round-trip implications of each path. → [2026-05-31-media-citations-design.md](plans/2026-05-31-media-citations-design.md)
 
 ---

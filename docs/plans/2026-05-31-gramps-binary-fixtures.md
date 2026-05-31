@@ -74,45 +74,71 @@ If items 1, 2, 3 pass, can the user goal ("regressions caught before users notic
 
 ## Tasks
 
-### Task 1: Author the `.gramps` fixture
+### Task 1 (Tier 1): Author the `.gramps` fixture via XML-direct
 
 **Files:**
 - Create: `tests/e2e/fixtures/imports/gramps-small.gramps`
+- Create (transient): `tests/e2e/fixtures/imports/gramps-small.xml` (deleted after gzip)
 
-- [ ] **Step 1: Install Gramps locally**
+Rewritten 2026-05-31 from "use Gramps GUI" to XML-direct authoring. The Gramps XML schema is documented at https://gramps-project.org/wiki/index.php/Gramps_XML and the importer at `src/import/gramps/` already parses it. A 3-person fixture is small enough to hand-author without installing Gramps. Round-trip through the importer is the test that the XML is valid.
 
-```bash
-brew install --cask gramps          # macOS
-# or: apt install gramps             # Debian/Ubuntu
-# or: download from https://gramps-project.org/
+- [ ] **Step 1: Write the XML source**
+
+Create `tests/e2e/fixtures/imports/gramps-small.xml` with three persons (Anna + Erik = couple → Lisa). Minimal Gramps XML schema, only fields the importer reads. Inspect `src/import/gramps/index.ts` first to confirm which fields are required vs ignored.
+
+Template (adjust namespaces / version to match what the project's parser accepts — check `src/import/gramps/` for the version string used in tests):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.7.1//EN" "http://gramps-project.org/xml/1.7.1/grampsxml.dtd">
+<database xmlns="http://gramps-project.org/xml/1.7.1/">
+  <header>
+    <created date="2026-05-31" version="5.2.0"/>
+    <researcher><resname>slaktforskning-e2e-fixture</resname></researcher>
+  </header>
+  <people>
+    <person handle="_p0001" id="I0001">
+      <gender>F</gender>
+      <name type="Birth Name"><first>Anna</first><surname>Andersson</surname></name>
+      <eventref hlink="_e0001" role="Primary"/>
+    </person>
+    <person handle="_p0002" id="I0002">
+      <gender>M</gender>
+      <name type="Birth Name"><first>Erik</first><surname>Andersson</surname></name>
+      <eventref hlink="_e0002" role="Primary"/>
+    </person>
+    <person handle="_p0003" id="I0003">
+      <gender>F</gender>
+      <name type="Birth Name"><first>Lisa</first><surname>Andersson</surname></name>
+      <eventref hlink="_e0003" role="Primary"/>
+      <childof hlink="_f0001"/>
+    </person>
+  </people>
+  <families>
+    <family handle="_f0001" id="F0001">
+      <rel type="Married"/>
+      <father hlink="_p0002"/>
+      <mother hlink="_p0001"/>
+      <childref hlink="_p0003"/>
+    </family>
+  </families>
+  <events>
+    <event handle="_e0001" id="E0001"><type>Birth</type><dateval val="1850-01-15"/></event>
+    <event handle="_e0002" id="E0002"><type>Birth</type><dateval val="1845-06-20"/></event>
+    <event handle="_e0003" id="E0003"><type>Birth</type><dateval val="1875-03-10"/></event>
+  </events>
+</database>
 ```
 
-Verify with `gramps --version`. Any Gramps 5.x or 6.x release works.
-
-- [ ] **Step 2: Author the 3-person family in Gramps GUI**
-
-Open Gramps → File → New Family Tree → name it `slaktforskning-e2e-fixture`. Add three persons:
-
-| Given name | Surname | Sex | Birth date | Birth place |
-|---|---|---|---|---|
-| Anna | Andersson | F | 1850-01-15 | Stockholm |
-| Erik | Andersson | M | 1845-06-20 | Göteborg |
-| Lisa | Andersson | F | 1875-03-10 | Stockholm |
-
-Link Erik + Anna as a couple. Link Lisa as their child. Save.
-
-- [ ] **Step 3: Export as `.gramps` package**
-
-File → Export → "Gramps XML (.gramps)" → choose `tests/e2e/fixtures/imports/gramps-small.gramps`. Confirm the file lands at the expected path.
+- [ ] **Step 2: Gzip into `.gramps` (gzipped XML is the .gramps format)**
 
 ```bash
-ls -la tests/e2e/fixtures/imports/gramps-small.gramps
-file tests/e2e/fixtures/imports/gramps-small.gramps
+gzip -c tests/e2e/fixtures/imports/gramps-small.xml > tests/e2e/fixtures/imports/gramps-small.gramps
+rm tests/e2e/fixtures/imports/gramps-small.xml
+file tests/e2e/fixtures/imports/gramps-small.gramps  # should report: gzip compressed data
 ```
 
-Expected: ≤ 10 KB, identified as `gzip compressed data`.
-
-- [ ] **Step 4: Sanity-check it parses through our importer**
+- [ ] **Step 3: Sanity-check parsing**
 
 ```bash
 npx tsx -e "
@@ -120,43 +146,68 @@ import { importFromGramps } from './src/import/gramps/index.ts';
 import { createTestDb } from './tests/helpers.ts';
 const db = await createTestDb();
 const report = await importFromGramps(db, 'tests/e2e/fixtures/imports/gramps-small.gramps');
-console.log('persons:', report.persons, 'events:', report.events);
+console.log(JSON.stringify({ persons: report.persons, events: report.events }));
 "
 ```
 
-Expected: `persons: 3, events: ≥3`.
+Expected: `{"persons":3,"events":3}`. If the importer rejects the XML (schema-version mismatch, missing required field), adjust the template per the error and re-run Step 2. Iterating against the real importer IS the validation that the hand-authored XML matches a real Gramps export's shape for our purposes.
 
-If it errors out, the fixture is malformed — return to Step 2 and re-export.
-
-- [ ] **Step 5: Commit the fixture**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add tests/e2e/fixtures/imports/gramps-small.gramps .gitattributes  # if .gitattributes updated
-git commit -m "test(e2e): add gramps-small.gramps fixture (3 persons, 1 family)"
+git add tests/e2e/fixtures/imports/gramps-small.gramps
+git commit -m "test(e2e): add gramps-small.gramps fixture (XML-direct, 3 persons)"
 ```
 
-### Task 2: Author the `.gpkg` fixture (XML + media)
+### Task 2 (Tier 1): Author the `.gpkg` fixture via XML + zip
 
 **Files:**
 - Create: `tests/e2e/fixtures/imports/gramps-small.gpkg`
 
-- [ ] **Step 1: In Gramps, attach a 1×1 PNG to Anna Andersson**
+`.gpkg` is a zip containing `data.gramps` (the gzipped XML) + a `media/` subfolder. We reuse Task 1's gzipped XML and bundle it with a 1×1 PNG.
 
-In the same family tree from Task 1, open Anna Andersson → Gallery tab → "+" → Add a new media object. Use a 1×1 transparent PNG (generate with `python -c "from PIL import Image; Image.new('RGBA', (1, 1)).save('/tmp/blank.png')"` or any 1×1 PNG you have). Title it "Anna portrait placeholder".
+- [ ] **Step 1: Generate a 1×1 PNG**
 
-- [ ] **Step 2: Export as `.gpkg`**
-
-File → Export → "Gramps package (.gpkg)" → choose `tests/e2e/fixtures/imports/gramps-small.gpkg`.
+The minimum-valid PNG is documented in the spec. Use a known-good byte sequence (gunzipped PNG header + IHDR + IDAT + IEND) instead of generating one via a library — agent-completable without Python/PIL:
 
 ```bash
-ls -la tests/e2e/fixtures/imports/gramps-small.gpkg
-file tests/e2e/fixtures/imports/gramps-small.gpkg
-unzip -l tests/e2e/fixtures/imports/gramps-small.gpkg  # should show data.gramps + media file
+# 67-byte minimum-valid 1x1 transparent PNG
+printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cb\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82' > /tmp/blank.png
+file /tmp/blank.png  # should report: PNG image data, 1 x 1
 ```
 
-Expected: ≤ 20 KB. Identified as `Zip archive`. Contents include both the XML file and the media PNG.
+If the printf-byte form is brittle, fallback: download a pre-existing 1×1 PNG from a known source or commit a tiny PNG to `tests/e2e/fixtures/imports/static/blank.png` once and reuse it.
 
-- [ ] **Step 3: Sanity-check it imports through the .gpkg branch**
+- [ ] **Step 2: Author the XML with a media reference**
+
+Reuse the Task 1 XML, append a `<media>` block referencing `blank.png` and an `<objref>` on Anna's `<person>`:
+
+```xml
+<media>
+  <object handle="_m0001" id="O0001">
+    <file src="blank.png" mime="image/png"/>
+  </object>
+</media>
+```
+
+Add `<objref hlink="_m0001"/>` inside Anna's `<person>`.
+
+Write this expanded XML to `/tmp/gramps-with-media.xml`, then gzip it to `/tmp/data.gramps`.
+
+- [ ] **Step 3: Bundle the zip**
+
+```bash
+mkdir -p /tmp/gpkg-build/media
+cp /tmp/data.gramps /tmp/gpkg-build/
+cp /tmp/blank.png /tmp/gpkg-build/media/
+( cd /tmp/gpkg-build && zip -r ../gramps-small.gpkg . )
+mv /tmp/gramps-small.gpkg tests/e2e/fixtures/imports/
+rm -rf /tmp/gpkg-build /tmp/data.gramps /tmp/gramps-with-media.xml
+file tests/e2e/fixtures/imports/gramps-small.gpkg  # should report: Zip archive
+unzip -l tests/e2e/fixtures/imports/gramps-small.gpkg  # should show: data.gramps + media/blank.png
+```
+
+- [ ] **Step 4: Sanity-check parsing**
 
 ```bash
 npx tsx -e "
@@ -164,20 +215,20 @@ import { importFromGramps } from './src/import/gramps/index.ts';
 import { createTestDb } from './tests/helpers.ts';
 const db = await createTestDb();
 const report = await importFromGramps(db, 'tests/e2e/fixtures/imports/gramps-small.gpkg');
-console.log('persons:', report.persons, 'media:', report.media);
+console.log(JSON.stringify({ persons: report.persons, media: report.media }));
 "
 ```
 
-Expected: `persons: 3, media: 1`.
+Expected: `{"persons":3,"media":1}`. Adjust XML / zip layout per error if needed.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add tests/e2e/fixtures/imports/gramps-small.gpkg
-git commit -m "test(e2e): add gramps-small.gpkg fixture (3 persons + 1 media)"
+git commit -m "test(e2e): add gramps-small.gpkg fixture (XML-direct + 1x1 PNG)"
 ```
 
-### Task 3: Wire the e2e cases + re-shape the deferred-coverage comment
+### Task 3 (Tier 1): Wire the e2e cases + re-shape the deferred-coverage comment
 
 **Files:**
 - Modify: `tests/e2e/imports.spec.ts`
@@ -270,40 +321,7 @@ git add tests/e2e/imports.spec.ts
 git commit -m "test(e2e): wire Gramps .gramps + .gpkg cases; re-shape native-binary deferred block as contributor trigger"
 ```
 
-### Task 4: Close-out
+### Task 4 (Tier 1): Close-out via /close-out skill
 
-- [ ] **Step 1: Full verification suite**
-
-```bash
-npm test
-npm run build
-npm run test:e2e:full
-```
-
-Capture summary lines for the close-out commit per `.claude/rules/plans.md`.
-
-- [ ] **Step 2: Archive the plan**
-
-```bash
-git mv docs/plans/2026-05-31-gramps-binary-fixtures.md docs/plans/archive/
-```
-
-Update `docs/PLAN.md` (remove from Planned) and append an entry to `docs/plans/archive/PLAN.md` summarizing what shipped + the deliberate-red evidence.
-
-- [ ] **Step 3: Version bump + CHANGELOG block**
-
-Patch bump (this is hygiene/CI work, not user-facing feature) per `oss-release` skill. Add a CHANGELOG block.
-
-- [ ] **Step 4: Final commit**
-
-```bash
-git add CHANGELOG.md package.json docs/plans/archive/2026-05-31-gramps-binary-fixtures.md docs/PLAN.md docs/plans/archive/PLAN.md
-git commit -m "chore: archive 2026-05-31-gramps-binary-fixtures
-
-Verification evidence:
-- npm test → N passed (Xs)
-- npm run build → built in Xs (exit 0)
-- npm run test:e2e:full → N passed (Xs) across 7 projects; +2 cases in [imports]
-- Deliberate-red: e2e-canary in importFromGramps → both new cases red; revert → both green
-"
+- [ ] **Step 1** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence (npm test / npm run build / npm run test:e2e:full output + the deliberate-red verification from Task 3 Step 5). Patch bump per `oss-release` (hygiene/CI work). Skill handles the archive + PLAN.md + CHANGELOG + commit.
 ```
