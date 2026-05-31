@@ -448,6 +448,7 @@ interface MediaPanelData {
   linkedPersons: LinkedEntity[];
   linkedPlaces: LinkedEntity[];
   linkedEvents: LinkedEntity[];
+  linkedSources: LinkedEntity[];
   regions: RegionData[];
   regionIsProfile: Record<string, boolean>;
 }
@@ -455,7 +456,7 @@ interface MediaPanelData {
 const idRef = computed(() => props.mediaId ?? null);
 const { data: panelData, reload } = useEntityData<MediaPanelData>(idRef, async (id) => {
   const m = await window.api.media.get(id) as MediaData | null;
-  if (!m) return { media: null, thumbnailSrc: null, linkedPersons: [], linkedPlaces: [], linkedEvents: [], regions: [], regionIsProfile: {} };
+  if (!m) return { media: null, thumbnailSrc: null, linkedPersons: [], linkedPlaces: [], linkedEvents: [], linkedSources: [], regions: [], regionIsProfile: {} };
 
   let thumbnailSrc: string | null = null;
   if (isImageMedia(m.format, m.file_ref)) {
@@ -472,6 +473,7 @@ const { data: panelData, reload } = useEntityData<MediaPanelData>(idRef, async (
   const persons: LinkedEntity[] = [];
   const places: LinkedEntity[] = [];
   const events: LinkedEntity[] = [];
+  const sources: LinkedEntity[] = [];
 
   for (const link of links) {
     const label = await resolveEntityLabel(link.entity_type, link.entity_id);
@@ -509,6 +511,7 @@ const { data: panelData, reload } = useEntityData<MediaPanelData>(idRef, async (
     if (link.entity_type === 'person') persons.push(entity);
     else if (link.entity_type === 'place') places.push(entity);
     else if (link.entity_type === 'event') events.push(entity);
+    else if (link.entity_type === 'source') sources.push(entity);
   }
 
   // Load face tag regions
@@ -558,7 +561,7 @@ const { data: panelData, reload } = useEntityData<MediaPanelData>(idRef, async (
   );
   const regionIsProfile = Object.fromEntries(profileResults);
 
-  return { media: m, thumbnailSrc, linkedPersons: persons, linkedPlaces: places, linkedEvents: events, regions: enrichedRegions, regionIsProfile };
+  return { media: m, thumbnailSrc, linkedPersons: persons, linkedPlaces: places, linkedEvents: events, linkedSources: sources, regions: enrichedRegions, regionIsProfile };
 });
 
 const media = computed(() => panelData.value?.media ?? null);
@@ -566,6 +569,7 @@ const thumbnailSrc = computed(() => panelData.value?.thumbnailSrc ?? null);
 const linkedPersons = computed(() => panelData.value?.linkedPersons ?? []);
 const linkedPlaces = computed(() => panelData.value?.linkedPlaces ?? []);
 const linkedEvents = computed(() => panelData.value?.linkedEvents ?? []);
+const linkedSources = computed(() => panelData.value?.linkedSources ?? []);
 const regions = computed(() => panelData.value?.regions ?? []);
 const regionIsProfile = computed(() => panelData.value?.regionIsProfile ?? {});
 
