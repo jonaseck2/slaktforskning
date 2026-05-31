@@ -32,8 +32,8 @@ Things we thought about and decided against / deferred with an explicit reopen t
 - **Modal companion composables (5 extractions)** — 3.5 already met its user goal; remaining LOC targets aspirational. **Reopen trigger:** a real modal bug whose root cause is hard to locate because the file is too big.
 - **Tauri Raw Payloads adoption (audit T2.5)** — speculative; no IPC bandwidth complaint exists. **Reopen trigger:** a specific IPC bandwidth or roundtrip complaint with a measurable workload.
 - **Holger + RootsMagic native binary fixtures** — contributor-driven (requires paid Windows software). **Reopen trigger:** a contributor opens a GitHub issue with a 3-person fixture attached for their tool.
-- **Rapport 102 §5** (add second resident doesn't work) — Ben self-diagnosed as viewport in v215.2; ~60 versions of layout churn since. **Reopen trigger:** repros on next release Ben ships against.
-- **Rapport 106** (cannot update relationship event) — update path reads correctly at HEAD; may be incidentally fixed in the churn since v215.2. **Reopen trigger:** repros on next release Ben ships against.
+- **Rapport 102 §5** (add second resident doesn't work) — **verified non-reproducible on 0.265.0 via dev MCP, 2026-05-31.** API path: added 3 participants to a residence event without error. UI path: the `.ep-body` modal container is `overflow-y: auto` with 337px of scrollable content; the participant picker initially renders below a 1280×768 viewport but is reachable via scroll. The v215.2 symptom Ben self-diagnosed ("händelsen hämnar nedanför min visade skärmbild") was pre-scrollable-modal. **Reopen trigger:** Ben (or any user) reports it again on a current release.
+- **Rapport 106** (cannot update relationship event) — **verified non-reproducible on 0.265.0 via dev MCP, 2026-05-31.** `window.api.events.update()` on a relationship-linked event succeeds and preserves `relationship_id`; UI EventModal Save persists the change without toast or console error. Likely incidentally fixed in the ~60 versions of churn since v215.2. **Reopen trigger:** Ben (or any user) reports it again on a current release.
 
 ---
 
