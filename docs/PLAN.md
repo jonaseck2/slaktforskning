@@ -13,12 +13,7 @@ Active plan files under `docs/plans/`. Each entry links the plan and states the 
 - **OSS launch demo + manual** — README screenshot + 8-step quickstart + full MANUAL.md across 19 sections, against a Swedish royal House of Holstein-Gottorp demo database. Rewritten 2026-05-31 for full agent-completability: face-tag regions via MCP coords + visual-diff verification (was: human drag), quickstart-screenshotted-coherence check (was: human timed walkthrough), MANUAL.md decomposed into 19 atomic per-section tasks (was: one mega-task). 40 Tier 1 tasks; zero Tier 4. → [2026-05-21-oss-launch-demo-and-manual.md](plans/2026-05-21-oss-launch-demo-and-manual.md)
 - **Ben feedback polish (rapport 100-103, 105)** — beta-tester UI/i18n batch from v215→v265: citation modal labels + dropdown affordance + confidence order, EventModal section count parens + trash icon, per-event-type residence labels + inline save-and-continue, research-tasks rename, PersonPanel Timeline/Map reorder. → [2026-05-31-ben-feedback-polish-v215-to-v265.md](plans/2026-05-31-ben-feedback-polish-v215-to-v265.md)
 - **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding via XML-direct authoring (rewritten 2026-05-31 from GUI-authoring to hand-written XML + gzip + zip, removing the Gramps-install gate). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md)
-
-## Blocked
-
-Plans that exist as files but cannot move forward without an external input.
-
-- **Media citations design (rapport 104)** — design spec waiting on Ben's framing answer (Framing A `citations.media_id` vs Framing B surface existing `media_links→source`). No implementation plan exists yet; the spec captures the question and the round-trip implications of each path. → [2026-05-31-media-citations-design.md](plans/2026-05-31-media-citations-design.md)
+- **Media → source links (rapport 104)** — surface the `media_links→source` association (already in the schema, lossless GEDCOM) as a "Källor" section on MediaPanel, with link/create-and-link/unlink. Framing B chosen 2026-05-31; Framing A (per-media citation FK) deferred. → [2026-05-31-media-source-links.md](plans/2026-05-31-media-source-links.md) (design: [2026-05-31-media-citations-design.md](plans/2026-05-31-media-citations-design.md))
 
 ---
 
