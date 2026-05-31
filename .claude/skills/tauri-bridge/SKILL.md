@@ -5,6 +5,18 @@ description: How the renderer talks to Rust in the Tauri build — the Specta-ge
 
 # Tauri Bridge — Renderer ↔ Rust
 
+## ⚠️ Tauri 2 is new — check the docs before implementing
+
+Tauri 2 shipped post-training-cutoff for most models, and plugin APIs change between RCs. **Before writing any code that touches a Tauri plugin or Tauri-core API, WebFetch the official page** — don't rely on what feels familiar.
+
+- Plugin docs: `https://v2.tauri.app/plugin/<name>/` (updater, dialog, fs, shell, opener, store, process, etc.)
+- Core: `https://v2.tauri.app/reference/` and `https://v2.tauri.app/security/`
+- The plugin's JS package on npmjs.com — the README usually has the canonical "5-line example."
+
+Specific failure mode caught **2026-05-31** (commit `27afc686`): the auto-updater was wired via raw `invoke('plugin:updater|check')` + `invoke('plugin:updater|download_and_install')` because that looked like "the plugin invoke pattern" from training data. The official path is `import { check } from '@tauri-apps/plugin-updater'`, then `update.downloadAndInstall(progressCb)` — which is the only way to receive download progress events. The raw-invoke shape silently lost a major capability (progress) and left the `@tauri-apps/plugin-updater` npm dep installed-but-unused as a dead-giveaway smell. **An unused `@tauri-apps/plugin-*` dependency is a red flag: either you're meant to be using it, or you should remove it.**
+
+**Decision rule for Tauri plugins:** start from the plugin's JS package (`@tauri-apps/plugin-<name>`). Drop to raw `invoke('plugin:<name>|<cmd>')` only when (a) the plugin ships no JS wrapper, or (b) you've read the wrapper's source and it offers nothing the raw invoke doesn't (e.g. one-shot fire-and-forget, no channels, no Update-style stateful objects, no progress). Default to the wrapper.
+
 The `window.api` surface is built from two ingredients:
 
 1. **Specta-generated bindings** (`src/renderer/bindings.ts`): every `#[tauri::command] #[specta::specta]` Rust function in `src-tauri/` produces a typed wrapper. `cargo build` regenerates; this is the source of truth for the Rust-IPC surface.
@@ -209,20 +221,37 @@ A useful sanity check: **does the renderer have everything it needs to do this w
 - Renderer needs to spawn a sidecar binary, copy a directory tree, take a screenshot, open a second window → new Rust command (the renderer can't do these at all).
 - Renderer needs a complex multi-step DB transaction with rollback semantics → pure-TS binding with `BEGIN IMMEDIATE` / `COMMIT` via the api/ layer (rusqlite is single-threaded; serialise via `withStatementCache`).
 
-## The `invoke()` shape (for pre-Specta plugin commands)
+## Tauri plugin commands — prefer the JS wrapper
 
-Specta replaces direct `invoke()` calls for our own commands. There are still a few legitimate `invoke()` call sites in `tauri-window-api.ts` — for Tauri plugin commands that the plugin packages own (not us):
+For **our own** Rust commands, always use `commands.*` from `bindings.ts` — Specta types catch parameter/return drift at compile time.
+
+For **plugin** commands (anything namespaced `plugin:<name>|<cmd>` in raw `invoke`), the order is:
+
+1. **First choice — the plugin's JS package.** `@tauri-apps/plugin-updater`, `@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-shell`, `@tauri-apps/plugin-opener`, etc. These ship typed wrappers, handle the plugin's channel-based progress events, and surface stateful objects (`Update`, `Watcher`, `Store`) that raw invokes can't return cleanly. Live-binding pattern:
+
+   ```typescript
+   import { check } from '@tauri-apps/plugin-updater';
+   const update = await check();
+   if (update) await update.downloadAndInstall(event => { /* Started | Progress | Finished */ });
+   ```
+
+   For lazy-loading inside a composable that runs in both Tauri and the static SPA, dynamic-import:
+
+   ```typescript
+   if (!isTauri()) return null;
+   const { check } = await import('@tauri-apps/plugin-updater');
+   ```
+
+2. **Fallback — raw `invoke('plugin:foo|bar')`.** Only when the plugin ships no JS wrapper, or when you've verified the wrapper offers nothing the invoke doesn't (fire-and-forget, no event channels, no stateful object). One real example in this repo: `plugin:opener|open_url` is a one-line invoke because `@tauri-apps/plugin-opener` would add ~5 KB for a wrapper that just calls the same invoke under the hood — but even then, the trade-off was deliberate, not the default.
+
+**Symptom of the wrong choice:** a `@tauri-apps/plugin-*` package sitting in `package.json` that nothing imports. Either start using it or remove the dep — never leave it as a "we'll get to it" stub. See the dated callout at the top of this file.
+
+The shape of a raw plugin invoke:
 
 ```typescript
 import { invoke } from '@tauri-apps/api/core';
-
-// Plugin commands keep the string-name invoke pattern because their types
-// come from the plugin's npm package, not our Specta builder.
 await invoke('plugin:opener|open_url', { url: 'https://example.org' });
-await invoke('plugin:updater|check');
 ```
-
-For our own commands, always use `commands.*` from `bindings.ts`. The compiler enforces the parameter and return types.
 
 ## Error-handling convention
 

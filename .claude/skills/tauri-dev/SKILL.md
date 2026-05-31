@@ -5,6 +5,10 @@ description: Launch, debug, and verify the Tauri app during development. Use whe
 
 # Tauri Dev Skill
 
+## ⚠️ Implementing Tauri features
+
+This skill covers **running** the Tauri app. For **wiring** anything new through Tauri's bridge — plugins, Rust commands, capabilities — see `/tauri-bridge`, which opens with a hard rule: Tauri 2 is post-cutoff for most models, so **WebFetch `https://v2.tauri.app/plugin/<name>/` before implementing** rather than guessing from training data. Reach for the plugin's `@tauri-apps/plugin-<name>` JS wrapper before raw `invoke('plugin:foo|bar')` — the wrapper is where progress channels, stateful objects, and typed responses live. An unused `@tauri-apps/plugin-*` dep in `package.json` is a smell.
+
 ## Launching the app
 
 ### Dev mode (with HMR)
