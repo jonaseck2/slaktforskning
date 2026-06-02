@@ -990,16 +990,24 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
       reason:
         'derived at import from the parent GEDCOM record nesting the OBJE block; ' +
         'the literal value of the entity_type column is determined by where the importer ' +
-        'sees the OBJE, not preserved from the exporter side. The link as a whole is verified ' +
-        'by golden round-trip tests.',
+        'sees the OBJE, not preserved from the exporter side. person/event/relationship ' +
+        "links derive from inline OBJE under INDI/event/FAM; entity_type='source' links " +
+        'derive from OBJE under SOUR (wired 2026-06; the exporter previously emitted none, ' +
+        'so the source link was silently dropped — a Round-Trip Fidelity violation now ' +
+        'closed). The golden round-trip test EXCLUDES media_links, so it does NOT cover ' +
+        'this column; source links are covered by tests/unit/media-source-link-roundtrip.ts.',
     },
     v70: {
       kind: 'excluded',
       reason:
         'derived at import from the parent GEDCOM record nesting the OBJE block; ' +
         'the literal value of the entity_type column is determined by where the importer ' +
-        'sees the OBJE, not preserved from the exporter side. The link as a whole is verified ' +
-        'by golden round-trip tests.',
+        'sees the OBJE, not preserved from the exporter side. person/event/relationship ' +
+        "links derive from inline OBJE under INDI/event/FAM; entity_type='source' links " +
+        'derive from OBJE under SOUR (wired 2026-06; the exporter previously emitted none, ' +
+        'so the source link was silently dropped — a Round-Trip Fidelity violation now ' +
+        'closed). The golden round-trip test EXCLUDES media_links, so it does NOT cover ' +
+        'this column; source links are covered by tests/unit/media-source-link-roundtrip.ts.',
     },
   },
   'media_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
