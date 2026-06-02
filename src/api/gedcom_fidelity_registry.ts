@@ -995,7 +995,7 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
         'derive from OBJE under SOUR (wired 2026-06; the exporter previously emitted none, ' +
         'so the source link was silently dropped — a Round-Trip Fidelity violation now ' +
         'closed). The golden round-trip test EXCLUDES media_links, so it does NOT cover ' +
-        'this column; source links are covered by tests/unit/media-source-link-roundtrip.ts.',
+        'this column; source links are covered by tests/unit/media-source-link-roundtrip.test.ts.',
     },
     v70: {
       kind: 'excluded',
@@ -1007,7 +1007,7 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
         'derive from OBJE under SOUR (wired 2026-06; the exporter previously emitted none, ' +
         'so the source link was silently dropped — a Round-Trip Fidelity violation now ' +
         'closed). The golden round-trip test EXCLUDES media_links, so it does NOT cover ' +
-        'this column; source links are covered by tests/unit/media-source-link-roundtrip.ts.',
+        'this column; source links are covered by tests/unit/media-source-link-roundtrip.test.ts.',
     },
   },
   'media_links.entity_id': { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },

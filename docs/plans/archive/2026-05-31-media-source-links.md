@@ -1,6 +1,6 @@
 # Media → Source links (Ben rapport 104, Framing B) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Ben can open a media item, see which sources it is linked to, and link it to another source (existing or newly created) directly from the Media panel.
 
@@ -102,7 +102,7 @@ Tasks tagged with mandate tier per `.claude/rules/mandate.md`. All are Tier 1 (o
 
 **Files:** none (creates `.worktrees/media-source-links`)
 
-- [ ] **Step 1: Create the worktree from `main`**
+- [x] **Step 1: Create the worktree from `main`**
 
 Use the `superpowers:using-git-worktrees` skill. Target path: `.worktrees/media-source-links`, branch `media-source-links`, from `main`. All subsequent tasks run inside that worktree (subagents are cwd-correct; the controller uses `git -C` / `npm --prefix` / vitest `--root` per `.claude/rules/worktrees.md`).
 
@@ -115,7 +115,7 @@ Use the `superpowers:using-git-worktrees` skill. Target path: `.worktrees/media-
 - Modify: `src/renderer/i18n/en.ts:1806-1810` and the parallel `onboarding.empty` block near `src/renderer/i18n/en.ts:2295`
 - Test: `tests/unit/i18n-parity.test.ts` (existing — do not create; it auto-covers new keys)
 
-- [ ] **Step 1: Add the Swedish keys**
+- [x] **Step 1: Add the Swedish keys**
 
 In `src/renderer/i18n/sv.ts`, in the `media:` object alongside `linkedEvents`/`linkPlace` (around line 1808-1810), add:
 
@@ -133,7 +133,7 @@ In the same file's `onboarding.empty` object, right after the `mediaLinkedEvents
       },
 ```
 
-- [ ] **Step 2: Add the English keys (parity)**
+- [x] **Step 2: Add the English keys (parity)**
 
 In `src/renderer/i18n/en.ts`, in the `media:` object (around line 1808-1810):
 
@@ -151,12 +151,12 @@ In the same file's `onboarding.empty` object, after `mediaLinkedEvents`:
       },
 ```
 
-- [ ] **Step 3: Run the i18n parity test**
+- [x] **Step 3: Run the i18n parity test**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/i18n-parity.test.ts`
 Expected: PASS (both files carry identical key sets).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -171,7 +171,7 @@ git commit -m "i18n: media linked-sources section keys (rapport 104, framing B)"
 - Create: `tests/components/media-panel-sources-section.test.ts`
 - Modify: `src/renderer/components/MediaPanel.vue` (data layer only this task)
 
-- [ ] **Step 1: Write the failing component test**
+- [x] **Step 1: Write the failing component test**
 
 Create `tests/components/media-panel-sources-section.test.ts`. Mirror the `window.api` proxy-mock approach used by `tests/components/panel-layout-consistency.test.ts`, but stub the specific calls `MediaPanel` makes during load. The first test asserts the rendered Källor section shows the linked source's title:
 
@@ -225,12 +225,12 @@ describe('MediaPanel Källor section', () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/components/media-panel-sources-section.test.ts`
 Expected: FAIL — "Husförhörslängd Ödeshög" not found (no Källor section exists yet; the source link is dropped on the floor in the load loop).
 
-- [ ] **Step 3: Add the data layer in MediaPanel.vue**
+- [x] **Step 3: Add the data layer in MediaPanel.vue**
 
 In `src/renderer/components/MediaPanel.vue`, extend the `MediaPanelData` interface (around line 443-451) with a sources bucket:
 
@@ -276,12 +276,12 @@ const linkedSources = computed(() => panelData.value?.linkedSources ?? []);
 
 `resolveEntityLabel` already returns the source title for `entity_type === 'source'` (line 582-584) — no change needed there.
 
-- [ ] **Step 4: Run the test — still fails (no template yet)**
+- [x] **Step 4: Run the test — still fails (no template yet)**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/components/media-panel-sources-section.test.ts`
 Expected: FAIL — title still not rendered (data is loaded but no DOM emits it). This is correct; Task 4 adds the template.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/MediaPanel.vue tests/components/media-panel-sources-section.test.ts
@@ -295,7 +295,7 @@ git commit -m "feat(media): load entity_type='source' links into a linkedSources
 **Files:**
 - Modify: `src/renderer/components/MediaPanel.vue`
 
-- [ ] **Step 1: Import SourcePicker**
+- [x] **Step 1: Import SourcePicker**
 
 In the `<script setup>` imports (near line 338 where `PlacePicker` is imported), add:
 
@@ -303,7 +303,7 @@ In the `<script setup>` imports (near line 338 where `PlacePicker` is imported),
 import SourcePicker from './SourcePicker.vue';
 ```
 
-- [ ] **Step 2: Register the section in `usePanelSections`**
+- [x] **Step 2: Register the section in `usePanelSections`**
 
 In the `usePanelSections(...)` call (line 435-439), add a `sources` key to **both** maps, mirroring `places` (open by default for discoverability — surfacing this section is the whole point):
 
@@ -315,7 +315,7 @@ const { sections, toggleSection } = usePanelSections(
 );
 ```
 
-- [ ] **Step 3: Add the picker state + handlers**
+- [x] **Step 3: Add the picker state + handlers**
 
 Next to `showPlacePicker` (line 412) add:
 
@@ -363,7 +363,7 @@ async function createAndLinkSource(title: string) {
 
 The existing generic `delLink` / `unlinkEntity` (line 623-631) already removes any link by id — source links unlink with no change (the `linkedPersons.find` lookup returns undefined → `personId` null → plain `removeLink`).
 
-- [ ] **Step 4: Add the template section**
+- [x] **Step 4: Add the template section**
 
 In the template, insert a new `<div class="panel-section">` block **immediately after the Linked Events section** (after line 248, before the Shared notes comment at line 250). Mirror the Linked Places block (line 197-225) exactly, swapping the picker and router-link target:
 
@@ -401,12 +401,12 @@ In the template, insert a new `<div class="panel-section">` block **immediately 
 
 > **Verify the source route shape** before committing: confirm `/sources/:id` or the `?source=` query is how the rest of the app links to a source panel (grep `path: '/sources'` and `query: { source` in `src/renderer/`). Use whichever shape SourcePanel navigation already uses; the block above assumes the `?source=` query mirror of the Places `?place=` pattern. If the app uses `/sources/:id`, switch the `:to` to `'/sources/' + ls.entityId`.
 
-- [ ] **Step 5: Run the render test — now passes**
+- [x] **Step 5: Run the render test — now passes**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/components/media-panel-sources-section.test.ts`
 Expected: PASS — "Källor" and "Husförhörslängd Ödeshög" both render.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/MediaPanel.vue
@@ -420,7 +420,7 @@ git commit -m "feat(media): Källor section on MediaPanel — link media to sour
 **Files:**
 - Modify: `tests/components/media-panel-sources-section.test.ts`
 
-- [ ] **Step 1: Add the add-link test**
+- [x] **Step 1: Add the add-link test**
 
 Append to the describe block. Drive `SourcePicker`'s `select` emit and assert `addLink`:
 
@@ -449,7 +449,7 @@ Append to the describe block. Drive `SourcePicker`'s `select` emit and assert `a
 
 > If `openSourcePicker` is not exposed on the instance, click the section's action button instead: find the Källor `SectionHeader` and emit its `action` event, or `await wrapper.find('[data-test="media-link-source"]').trigger('click')` after adding that `data-test` attr. Prefer the real DOM path; only reach into the instance if the harness makes the button hard to target.
 
-- [ ] **Step 2: Add the create-and-link test**
+- [x] **Step 2: Add the create-and-link test**
 
 ```ts
   it('creates and links a new source from the picker', async () => {
@@ -471,7 +471,7 @@ Append to the describe block. Drive `SourcePicker`'s `select` emit and assert `a
   });
 ```
 
-- [ ] **Step 3: Add the unlink test**
+- [x] **Step 3: Add the unlink test**
 
 ```ts
   it('unlinks a source link after confirmation', async () => {
@@ -495,12 +495,12 @@ Append to the describe block. Drive `SourcePicker`'s `select` emit and assert `a
 
 > `delLink` may not be exposed on the instance. If so, drive the unlink through the rendered `ConfirmModal`: click the row's unlink button, then emit `confirm` on the `ConfirmModal` whose title is `media.unlinkConfirmTitle`. Use the DOM path; reach into the instance only as a fallback.
 
-- [ ] **Step 4: Run the full test file**
+- [x] **Step 4: Run the full test file**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/components/media-panel-sources-section.test.ts`
 Expected: PASS — all four tests green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/components/media-panel-sources-section.test.ts
@@ -518,7 +518,7 @@ This is one coherent round-trip capability: the failing test only goes green whe
 - Modify: `src/gedcom/exporter.ts`
 - Modify: `src/import/gedcom/phases/sources.ts`
 
-- [ ] **Step 1: Write the failing per-field round-trip test**
+- [x] **Step 1: Write the failing per-field round-trip test**
 
 Create `tests/unit/media-source-link-roundtrip.test.ts`. Use `createTestDb()` from `tests/unit/helpers.ts` (the in-memory SQLite harness). For each version, seed a source + a media + a source-link, export, re-import into a fresh DB, and assert the link survived:
 
@@ -558,12 +558,12 @@ describe.each(['5.5.1', '7.0'] as const)('media→source link round-trips under 
 
 > **Verify the exact api signatures first** (`createSource`, `createMedia`, `addMediaLink`, `getLinksForMedia`, `searchSources`, and the media-list function name — it may be `listMedia`, `findMedia`, or similar; `getLinksForMedia` is confirmed at `src/api/media.ts:393`). Adjust imports/calls to the real names. The `importGedcom` entrypoint is in `src/gedcom/importer.ts` — confirm its signature `(db, gedString)` and adapt if it differs (some call sites pass an options object).
 
-- [ ] **Step 2: Run it — verify it fails**
+- [x] **Step 2: Run it — verify it fails**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/media-source-link-roundtrip.test.ts`
 Expected: FAIL — the `1 OBJE` assertion fails (exporter emits no OBJE under SOUR), or the link assertion fails (importer doesn't read it). This is the empirical reproduction of the code-quality finding.
 
-- [ ] **Step 3: Exporter — emit `OBJE` under `SOUR`**
+- [x] **Step 3: Exporter — emit `OBJE` under `SOUR`**
 
 In `src/gedcom/exporter.ts`, widen the `emitMediaBlocks` signature (line 154) to include `'source'`:
 
@@ -579,7 +579,7 @@ Then, inside the SOUR-record writer loop, immediately after the `await emitSourc
 
 (`includeMedia` is the top-level const resolved at line ~206; `getMediaForEntity(db, 'source', id)` already queries `media_links` by `entity_type`, so no change to that helper is needed.)
 
-- [ ] **Step 4: Importer — read `OBJE` under `SOUR` into `media_links`**
+- [x] **Step 4: Importer — read `OBJE` under `SOUR` into `media_links`**
 
 In `src/import/gedcom/phases/sources.ts`, mirror the event-importer's media-link pattern (`src/import/gedcom/event-importer.ts:156-159`). Read those reference lines and `src/import/gedcom/import-types.ts` for the exact `ImportContext` field names before writing.
 
@@ -609,17 +609,17 @@ Collect media-link pairs during the parse loop (the source `id` is already gener
 
 > Confirm `importObjeNode`'s real parameter order/names against `src/import/gedcom/obje-importer.ts` and the `ImportContext` field names (`ctx.objeMap`, `ctx.inlineMediaMap`, `ctx.options`) against `import-types.ts` — adjust the call to match. `phaseSources` runs after the OBJE / prep-inline-media phases, so those maps are populated.
 
-- [ ] **Step 5: Run the round-trip test — now green (both versions)**
+- [x] **Step 5: Run the round-trip test — now green (both versions)**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/media-source-link-roundtrip.test.ts`
 Expected: PASS for both `5.5.1` and `7.0`.
 
-- [ ] **Step 6: Regression — existing media + golden tests still green**
+- [x] **Step 6: Regression — existing media + golden tests still green**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/media.test.ts tests/unit/gedcom-fidelity-golden.test.ts tests/unit/gedcom*.test.ts`
 Expected: PASS. The new SOUR-OBJE export adds output; confirm no golden/exporter test asserted the *absence* of OBJE under SOUR. If a golden snapshot needs updating because the export now legitimately includes source media, update it and note why in the commit.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/gedcom/exporter.ts src/import/gedcom/phases/sources.ts tests/unit/media-source-link-roundtrip.test.ts
@@ -633,16 +633,16 @@ git commit -m "feat(gedcom): round-trip media→source links via OBJE under SOUR
 **Files:**
 - Modify: `src/api/gedcom_fidelity_registry.ts` (the `media_links.entity_type` entry, ~line 987-1004)
 
-- [ ] **Step 1: Read the current entry and correct the rationale**
+- [x] **Step 1: Read the current entry and correct the rationale**
 
 The entry's prose claims the link is "verified by golden round-trip tests" and "derived at import from the parent GEDCOM record nesting the OBJE block." That was false for `entity_type='source'` (no OBJE was emitted; golden excludes `media_links`). Update the prose to state the truth as of this plan: person/event/relationship links derive from inline OBJE under those records; **source links derive from OBJE under SOUR (added in this plan), covered by `tests/unit/media-source-link-roundtrip.test.ts`** — not by the golden test, which still excludes the join table. Keep the status value (`lossless` / `lossless-via:…`) accurate for all entity_type values. Do not weaken any other column's entry.
 
-- [ ] **Step 2: Run the registry + schema-introspection test**
+- [x] **Step 2: Run the registry + schema-introspection test**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/gedcom-fidelity-registry.test.ts` (or whichever test asserts registry completeness — `grep -rln "fidelity_registry\|registry" tests/unit`).
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/api/gedcom_fidelity_registry.ts
@@ -656,11 +656,11 @@ git commit -m "docs(gedcom): correct media_links.entity_type registry — source
 **Files:**
 - Modify: one spec in the `[panels]` e2e project (mirror the nearest existing MediaPanel spec)
 
-- [ ] **Step 1: Identify the nearest existing MediaPanel `[panels]` e2e spec**
+- [x] **Step 1: Identify the nearest existing MediaPanel `[panels]` e2e spec**
 
 Run: `ls tests/e2e` and `grep -rln "MediaPanel\|linkedPlaces\|media" tests/e2e`. Read the closest spec to learn the project's `AppDriver` (fixture.ts) selectors and navigation helpers. Do **not** invent a Playwright API; copy the established one.
 
-- [ ] **Step 2: Add the link-add + reciprocal e2e**
+- [x] **Step 2: Add the link-add + reciprocal e2e**
 
 In the chosen `[panels]` spec, add a test that, against the packaged binary:
 1. Creates (or seeds) one media item and one source.
@@ -670,12 +670,12 @@ In the chosen `[panels]` spec, add a test that, against the packaged binary:
 
 Mirror the assertions and selectors of the sibling spec you read in Step 1 (text-based locators on the section title + row are safest; avoid brittle nth-child).
 
-- [ ] **Step 3: Run the `[panels]` project**
+- [x] **Step 3: Run the `[panels]` project**
 
 Run: `npx playwright test --project=panels` (build first if `out/` is stale: `npm run build:bin`).
 Expected: PASS, including the new test.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/e2e
@@ -688,27 +688,27 @@ git commit -m "test(e2e): link media to source via Källor section + reciprocal 
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Lint**
+- [x] **Step 1: Lint**
 
 Run: `npm run lint --prefix <worktree-abs-path>`
 Expected: 0 errors.
 
-- [ ] **Step 2: Unit + component tests**
+- [x] **Step 2: Unit + component tests**
 
 Run: `npx vitest run --root <worktree-abs-path>`
 Expected: `N passed (Xs)`. Capture the summary line.
 
-- [ ] **Step 3: Build**
+- [x] **Step 3: Build**
 
 Run: `npm run build --prefix <worktree-abs-path>`
 Expected: exits 0; capture the `built in Xs` tail line.
 
-- [ ] **Step 4: e2e full**
+- [x] **Step 4: e2e full**
 
 Run: `npm run test:e2e:full --prefix <worktree-abs-path>` (or `npx playwright test` if `out/` is built).
 Expected: all 7 projects pass. Capture per-project pass counts — **`[panels]`** is the load-bearing one for this plan.
 
-- [ ] **Step 5: Record evidence**
+- [x] **Step 5: Record evidence**
 
 Paste the captured summary lines (test count, build tail, e2e per-project counts) into the close-out commit message in the next task. Invoke `superpowers:verification-before-completion`.
 
@@ -716,18 +716,18 @@ Paste the captured summary lines (test count, build tail, e2e per-project counts
 
 ### Task 10 (Tier 1): Close-out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. It walks the 6+1 steps (mark checkboxes, `git mv` this plan + the design sibling to `docs/plans/archive/`, version bump (feature → minor) + CHANGELOG block, `docs/PLAN.md` sync — remove the Blocked "Media citations design" entry and add a "Considered, not now" entry for Framing A with its reopen trigger, archive PLAN.md append, commit, merge/push), captures evidence, refuses partial. Note in the close-out: the design spec moves to archive too, since its framing question is now answered.
+- [x] **T-final (Tier 1)** — Invoke `/close-out` skill. It walks the 6+1 steps (mark checkboxes, `git mv` this plan + the design sibling to `docs/plans/archive/`, version bump (feature → minor) + CHANGELOG block, `docs/PLAN.md` sync — remove the Blocked "Media citations design" entry and add a "Considered, not now" entry for Framing A with its reopen trigger, archive PLAN.md append, commit, merge/push), captures evidence, refuses partial. Note in the close-out: the design spec moves to archive too, since its framing question is now answered.
 
 ---
 
 ## Self-review checklist
 
-- [ ] User goal is the first thing in the plan and is user-observable (no mechanism).
-- [ ] Scope enumerates the only changed surface (MediaPanel) and lists deviations (no reciprocal code, no schema, no per-link fields, Framing A deferred).
-- [ ] Verification §1 has checks that fail if the user goal is unmet (component test renders + add + create + unlink; e2e reciprocal; round-trip green).
-- [ ] No placeholders — every code step shows the actual code; the one runtime check (source route shape) is flagged with a verify-before-commit note.
-- [ ] Type consistency: `linkedSources` / `LinkedEntity` / `addLink({media_id, entity_type, entity_id})` / `sources.create({title})` match the real signatures read from the codebase.
-- [ ] Every task tagged with its mandate tier (all Tier 1).
-- [ ] No self-referential tasks (no "write this plan" task).
-- [ ] Final task is the single `/close-out` line, not an inlined 6-step restatement.
-- [ ] No "smoke" identifiers.
+- [x] User goal is the first thing in the plan and is user-observable (no mechanism).
+- [x] Scope enumerates the only changed surface (MediaPanel) and lists deviations (no reciprocal code, no schema, no per-link fields, Framing A deferred).
+- [x] Verification §1 has checks that fail if the user goal is unmet (component test renders + add + create + unlink; e2e reciprocal; round-trip green).
+- [x] No placeholders — every code step shows the actual code; the one runtime check (source route shape) is flagged with a verify-before-commit note.
+- [x] Type consistency: `linkedSources` / `LinkedEntity` / `addLink({media_id, entity_type, entity_id})` / `sources.create({title})` match the real signatures read from the codebase.
+- [x] Every task tagged with its mandate tier (all Tier 1).
+- [x] No self-referential tasks (no "write this plan" task).
+- [x] Final task is the single `/close-out` line, not an inlined 6-step restatement.
+- [x] No "smoke" identifiers.
