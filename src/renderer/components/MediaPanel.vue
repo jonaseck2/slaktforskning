@@ -705,7 +705,7 @@ async function linkSource(source: { id: string }) {
     entity_id: source.id,
   });
   showSourcePicker.value = false;
-  emit('link-changed');
+  emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
   await reload();
 }
 
@@ -718,7 +718,7 @@ async function createAndLinkSource(title: string) {
     entity_id: source.id,
   });
   showSourcePicker.value = false;
-  emit('link-changed');
+  emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
   await reload();
 }
 
