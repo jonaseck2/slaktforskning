@@ -191,7 +191,7 @@
         :draw-mode="drawMode"
         :highlighted-region-id="highlightedRegionId"
         :readonly="isStaticMode"
-        @link-changed="reload"
+        @link-changed="onLinkChanged"
         @close="closePanel"
         @start-draw-mode="onStartDrawMode"
         @stop-draw-mode="drawMode = false"
@@ -618,6 +618,22 @@ function onMediaUpdated(mediaId: string, fields: { title?: string; notes?: strin
   const found = items.value.find(i => i.id === mediaId);
   if (found) patch(found);
   const deep = deepLinkItems.value?.find(i => i.id === mediaId);
+  if (deep) patch(deep);
+}
+
+// A link was added/removed from the open media's panel. Patch just that gallery
+// row's link_count badge in place — a full listPage() re-query here was the
+// reason tagging an unlinked person felt slow: it contended with the panel's own
+// reload on the single SQLite connection. usePagedList's onDataChanged
+// auto-subscription still reconciles the page in the background (debounced).
+function onLinkChanged(payload: { mediaId: string; linkDelta: number }) {
+  if (payload.linkDelta === 0) return;
+  const patch = (item: MediaItem) => {
+    item.linkCount = Math.max(0, item.linkCount + payload.linkDelta);
+  };
+  const found = items.value.find(i => i.id === payload.mediaId);
+  if (found) patch(found);
+  const deep = deepLinkItems.value?.find(i => i.id === payload.mediaId);
   if (deep) patch(deep);
 }
 

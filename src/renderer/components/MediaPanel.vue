@@ -391,7 +391,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'link-changed': [];
+  // linkDelta: signed change to this media's link_count (+1 add, -1 remove, 0 no-count-change).
+  // The host patches its gallery row in place from this — no full re-query on the critical path.
+  'link-changed': [payload: { mediaId: string; linkDelta: number }];
   'close': [];
   'start-draw-mode': [];
   'stop-draw-mode': [];
@@ -625,7 +627,7 @@ const delLink = useDeleteConfirm<string>(async (linkId) => {
   const personId = lp?.entityId ?? null;
   await window.api.media.removeLink(linkId);
   if (personId) profilePicStore.invalidatePerson(personId);
-  emit('link-changed');
+  if (props.mediaId) emit('link-changed', { mediaId: props.mediaId, linkDelta: -1 });
   await reload();
 });
 function unlinkEntity(linkId: string) { delLink.ask(linkId); }
@@ -639,7 +641,7 @@ async function linkPerson(person: { id: string }) {
   });
   profilePicStore.invalidatePerson(person.id);
   showPersonPicker.value = false;
-  emit('link-changed');
+  emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
   await reload();
 }
 
@@ -651,7 +653,7 @@ async function linkPlace(place: { id: string }) {
     entity_id: place.id,
   });
   showPlacePicker.value = false;
-  emit('link-changed');
+  emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
   await reload();
 }
 
@@ -680,7 +682,7 @@ async function assignPersonToRegion(regionId: string, personId: string) {
       entity_type: 'person',
       entity_id: personId,
     });
-    emit('link-changed');
+    emit('link-changed', { mediaId: props.mediaId, linkDelta: 1 });
   }
   emit('region-deleted'); // triggers viewer reload too
   await reload();
@@ -691,7 +693,10 @@ async function setProfileForRegion(r: RegionData) {
   if (regionIsProfile.value[r.id]) return; // already profile
   await setMediaAsPersonProfile(r.person_id, props.mediaId);
   await reload();
-  emit('link-changed');
+  // Setting a profile picture changes no media link/face count, so the gallery
+  // row needs no patch. What it *does* change is this person's avatar elsewhere —
+  // invalidate their cached profile-pic ref so other views repaint.
+  profilePicStore.invalidatePerson(r.person_id);
 }
 
 function expandFaceTags() {
