@@ -4,7 +4,7 @@
 
 **Goal:** Ben can open a media item, see which sources it is linked to, and link it to another source (existing or newly created) directly from the Media panel.
 
-**Architecture:** Implements **Framing B** of the [media-citations design spec](2026-05-31-media-citations-design.md) (chosen 2026-05-31). Surfaces the `media_links` rows with `entity_type='source'` that the schema *already* supports but the MediaPanel never showed. A new "Källor" section is added to `MediaPanel.vue` as a fourth linked-entity bucket alongside the existing Linked Persons / Places / Events sections — same data source (`media.linksForMedia`), same add/unlink mechanics. **Zero schema change. Lossless GEDCOM round-trip under 5.5.1 and 7.0** (media↔source maps to `OBJE` under `SOUR`, already covered by existing round-trip tests). The reciprocal direction (a source showing its linked media) already exists on `SourcePanel.vue` via `EntityMediaSection`.
+**Architecture:** Implements **Framing B** of the [media-citations design spec](2026-05-31-media-citations-design.md) (chosen 2026-05-31). Surfaces the `media_links` rows with `entity_type='source'` that the schema *already* supports but the MediaPanel never showed. A new "Källor" section is added to `MediaPanel.vue` as a fourth linked-entity bucket alongside the existing Linked Persons / Places / Events sections — same data source (`media.linksForMedia`), same add/unlink mechanics. **Zero schema change.** The media↔source link is **made lossless** by extending the GEDCOM exporter to emit `OBJE` under `SOUR` records and the importer to read it back into a `media_links(entity_type='source')` row, backed by a **new per-field round-trip test**. (`OBJE` under `SOURCE_RECORD` is spec-legal in both 5.5.1 and 7.0; the exporter simply never wired sources — it already emits inline OBJE for persons/events/relationships. The existing golden round-trip test explicitly *excludes* `media_links`, so "covered by existing tests" was false — corrected here.) The reciprocal direction (a source showing its linked media) already exists on `SourcePanel.vue` via `EntityMediaSection`.
 
 **Tech Stack:** Vue 3 `<script setup>`, `useEntityData` reactive loader, `useDeleteConfirm`, existing `window.api.media.{linksForMedia,addLink,removeLink}` + `window.api.sources.create`, `SourcePicker.vue`, Vitest component tests, Playwright `[panels]` e2e.
 
@@ -14,21 +14,25 @@
 
 Ben opens a media item (a portrait, a scanned page) and sees a **"Källor"** section listing every source that media is linked to. He can click **"+ Källa"** to link it to an existing source — or type a new title to create-and-link in one step — and he can remove a link he no longer wants. Opening the source's own panel shows the same media in its media list (the link is reciprocal). Nothing he records is lost across a GEDCOM export + re-import.
 
-This is the "expose what I can already do elsewhere" shape Ben's reports consistently ask for: the link type already exists in the data model and round-trips losslessly; it was simply never surfaced on the Media panel.
+This is the "expose what I can already do elsewhere" shape Ben's reports consistently ask for: the link type already exists in the data model; it was simply never surfaced on the Media panel — and never wired through GEDCOM export/import, which this plan corrects so the link survives the round-trip.
 
 ## Scope
 
 The only surface that changes is **`MediaPanel.vue`** plus its i18n keys and tests. Enumeration of every touched file is in **File Structure** below.
 
-- **MediaPanel.vue** — gains a "Källor" section (the one new surface).
+- **MediaPanel.vue** — gains a "Källor" section (the one new UI surface).
 - **i18n (`sv.ts` + `en.ts`)** — three new keys + one onboarding-empty block.
-- **Tests** — one new component test file; existing media round-trip tests asserted still-green; one new `[panels]` e2e step.
+- **`src/gedcom/exporter.ts`** — widen `emitMediaBlocks` to accept `'source'` and call it from the SOUR-record writer (emit `OBJE` under `SOUR`).
+- **`src/import/gedcom/phases/sources.ts`** — read inline/referenced `OBJE` children under each `SOUR` node and create `media_links(entity_type='source')`, mirroring the event-importer (`event-importer.ts:156-159`).
+- **`src/api/gedcom_fidelity_registry.ts`** — correct the `media_links.entity_type` entry prose (its "verified by golden round-trip tests" rationale was false for the source case).
+- **Tests** — one new component test file; one new per-field GEDCOM round-trip test (seed media→source link → export 5.5.1 + 7.0 → re-import → assert survives); one new `[panels]` e2e step.
 
 ### Scope deviations (explicit)
 
 - **No new panel/section *pattern* is introduced.** This is a fourth instance of MediaPanel's existing inline linked-entity section pattern (Persons / Places / Events). The renderer rule "pattern migrations are all-or-nothing" does not trigger — there is no reusable shell being extracted, only one more bucket added to an existing panel. The four sibling sections in the same panel already differ slightly (Events has no picker); adding Sources alongside them is consistent, not divergent.
 - **Reciprocal direction is NOT built** — `SourcePanel.vue:199-210` already renders linked media via `<EntityMediaSection entity-type="source" :entity-id="sourceId">`. The plan *asserts* the reciprocal shows up; it writes no reciprocal code.
-- **No `citations.media_id` column, no schema migration, no `gedcom_fidelity_registry.ts` edit.** That is Framing A, explicitly deferred. With zero schema change the schema-introspection registry test is unaffected. Framing A stays in `docs/PLAN.md` "Considered, not now" with a reopen trigger (a user asking for per-scan page/confidence/transcription).
+- **No `citations.media_id` column, no schema migration.** That is Framing A, explicitly deferred. With zero schema change the schema-introspection registry test is unaffected (the `media_links.entity_type` entry already exists; this plan corrects its prose, not its presence). Framing A stays in `docs/PLAN.md` "Considered, not now" with a reopen trigger (a user asking for per-scan page/confidence/transcription).
+- **Exporter/importer scope correction (added 2026-05-31 after code-quality review):** the original plan asserted the round-trip was "already lossless / covered by existing tests." That was an unverified, false claim — the exporter emits no `OBJE` under `SOUR` and the golden test excludes `media_links`. Making the round-trip genuinely lossless is *load-bearing for the user goal's "nothing lost across export + re-import" clause*, so it is in scope (per `.claude/rules/plans.md` §5). It is NOT a new pattern, schema change, or Framing-A creep — it wires an existing inline-OBJE export/import pattern to the source entity.
 - **No per-link page / confidence / transcription.** Those are Framing A fields. Under Framing B a media-to-source association is a plain link; provenance detail is recorded on the source row itself. This is the documented limitation of the chosen framing.
 
 ## Verification
@@ -40,7 +44,7 @@ The only surface that changes is **`MediaPanel.vue`** plus its i18n keys and tes
 3. In the same picker, type a title that doesn't exist and choose create → a new source is created and immediately linked; it appears in the Källor list.
 4. Click the unlink (IconUnlink) control on a Källor row → confirm → the link is removed and the row disappears.
 5. Open that source's own panel (`/sources/:id`) → its **Media** section lists the media you just linked (reciprocal link is live).
-6. Export the database to GEDCOM 5.5.1 **and** 7.0, re-import → the media↔source link survives (already covered by existing round-trip tests; this plan asserts they stay green).
+6. Export the database to GEDCOM 5.5.1 **and** 7.0, re-import → the media↔source link survives. Proven by a **new per-field round-trip test** (the existing golden test excludes `media_links`, so it does NOT cover this — that gap is closed here).
 
 ### Tests that observe the user goal (not structure)
 
@@ -49,7 +53,7 @@ The only surface that changes is **`MediaPanel.vue`** plus its i18n keys and tes
   - Click the section's `+ Källa` action, drive `SourcePicker`'s `select` emit → assert `window.api.media.addLink` was called with `{ media_id, entity_type: 'source', entity_id }` (outcome 2).
   - Drive `SourcePicker`'s `create-new` emit with a title → assert `window.api.sources.create({ title })` then `addLink` were called (outcome 3).
   - Assert each Källor row renders an `IconUnlink` (never a raw ✕ — enforced separately by `panel-cta-conventions.test.ts`); click it, confirm → assert `window.api.media.removeLink(linkId)` (outcome 4).
-- **Existing round-trip tests asserted green** (outcome 6): `tests/unit/media.test.ts`, `tests/unit/gedcom-fidelity-golden.test.ts`.
+- **New per-field round-trip test** (outcome 6) `tests/unit/media-source-link-roundtrip.test.ts`: seed a source + a media + `addMediaLink({entity_type:'source'})`; for each version in `['5.5.1','7.0']` export → re-import into a fresh DB → assert a `media_links` row with `entity_type='source'` links the same source (by title) to the same media (by `file_ref`/`title`). Plus the existing `tests/unit/media.test.ts` and `tests/unit/gedcom-fidelity-golden.test.ts` asserted still-green.
 - **`[panels]` e2e step** (outcomes 2 + 5): link a media to a source through the real UI, assert it shows on the Källor section, navigate to the source panel, assert the media shows in its Media section.
 
 ### Required CI gates (per `.claude/rules/plans.md` "e2e is load-bearing verification")
@@ -66,7 +70,8 @@ The only surface that changes is **`MediaPanel.vue`** plus its i18n keys and tes
 
 ## Failure modes / RCA reference
 
-- **No prior failed attempt** at media-source-links exists in `docs/plans/archive/`.
+- **This plan's own first version made an unverified round-trip claim (caught by code-quality review, 2026-05-31).** The design spec and the original plan asserted Framing B was "entirely lossless / already covered by existing round-trip tests." Reading the exporter (`emitMediaBlocks` typed `person|relationship|event` only; SOUR writer emits no OBJE) and the golden test (explicitly excludes `media_links`) showed the link was **silently dropped on export** — a Round-Trip Fidelity Prime Directive violation. RCA: a spec claim about round-trip status was written without grepping the exporter/importer. Lesson reinforced: a "maps to OBJE under SOUR" *spec* statement is not evidence the *code* emits it. Tasks 6–7 close the gap; the round-trip test (Task 6) is the standing guard.
+- **No prior failed *plan* attempt** at media-source-links exists in `docs/plans/archive/`.
 - **Adjacent contract:** the `panel-cta-conventions.test.ts` gate rejects a raw `✕` glyph inside a panel button — the Källor unlink control MUST be `<IconUnlink>` (severs link, keeps entity), matching the sibling Places/Events rows. Using `IconTrash` would wrongly imply deleting the source.
 - **Adjacent contract:** `panel-empty-state-coverage.test.ts` rejects a `v-for` with no adjacent `SectionEmpty` — the new section's empty state is mandatory, not optional.
 - **Prior incident — subagent CWD drift.** When executing under worktree + subagents, follow [`.claude/rules/worktrees.md`](../../.claude/rules/worktrees.md) strictly (`git -C` / `npm --prefix <wt>` / vitest `--root <wt>`).
@@ -80,14 +85,18 @@ The only surface that changes is **`MediaPanel.vue`** plus its i18n keys and tes
 | `src/renderer/components/MediaPanel.vue` | Modify | New "Källor" section: template block, `linkedSources` data bucket + computed, `sections.sources` key, `showSourcePicker`, `openSourcePicker`, `linkSource`, `createAndLinkSource`. The existing generic `delLink`/`unlinkEntity` already handles source links — no change there. |
 | `src/renderer/i18n/sv.ts` | Modify | `media.linkedSources`, `media.linkSource`, `onboarding.empty.mediaLinkedSources.{purpose,cta}` |
 | `src/renderer/i18n/en.ts` | Modify | English parity of the same three keys |
+| `src/gedcom/exporter.ts` | Modify | Widen `emitMediaBlocks` to `'source'`; call it from the SOUR-record writer (emit `OBJE` under `SOUR`) |
+| `src/import/gedcom/phases/sources.ts` | Modify | Read `OBJE` under each `SOUR` → `addMediaLink(entity_type='source')`, mirroring `event-importer.ts:156-159` |
+| `src/api/gedcom_fidelity_registry.ts` | Modify | Correct the `media_links.entity_type` entry prose (source links now round-trip via SOUR-OBJE, covered by the new test — not the golden test) |
 | `tests/components/media-panel-sources-section.test.ts` | Create | All four component assertions above |
+| `tests/unit/media-source-link-roundtrip.test.ts` | Create | Per-field round-trip (seed link → export 5.5.1 + 7.0 → re-import → assert survives) |
 | `tests/e2e/...` (the `[panels]` project) | Modify | One spec exercising link-add + reciprocal (mirror nearest existing MediaPanel `[panels]` spec) |
 
 ---
 
 ## Tasks
 
-Tasks tagged with mandate tier per `.claude/rules/mandate.md`. All are Tier 1 (own outright) — this is additive UI work with zero schema, zero data-model, zero outbound communication.
+Tasks tagged with mandate tier per `.claude/rules/mandate.md`. All are Tier 1 (own outright) — additive UI + GEDCOM export/import wiring, zero schema, zero data-model migration, zero outbound communication. (Tasks 1–5 are the in-app UI, already implemented + reviewed; Tasks 6–8 are the round-trip wiring added after code-quality review caught the false "already lossless" claim.)
 
 ### Task 1 (Tier 1): Worktree setup
 
@@ -500,21 +509,158 @@ git commit -m "test(media): cover link/create-and-link/unlink for the Källor se
 
 ---
 
-### Task 6 (Tier 1): Reciprocal + GEDCOM round-trip regression + e2e
+### Task 6 (Tier 1): GEDCOM round-trip — emit + read `OBJE` under `SOUR` (TDD)
+
+This is one coherent round-trip capability: the failing test only goes green when **both** the exporter and importer halves land, so they ship in one task.
+
+**Files:**
+- Create: `tests/unit/media-source-link-roundtrip.test.ts`
+- Modify: `src/gedcom/exporter.ts`
+- Modify: `src/import/gedcom/phases/sources.ts`
+
+- [ ] **Step 1: Write the failing per-field round-trip test**
+
+Create `tests/unit/media-source-link-roundtrip.test.ts`. Use `createTestDb()` from `tests/unit/helpers.ts` (the in-memory SQLite harness). For each version, seed a source + a media + a source-link, export, re-import into a fresh DB, and assert the link survived:
+
+```ts
+import { describe, it, expect } from 'vitest';
+import { createTestDb } from './helpers';
+import { createSource } from '../../src/api/sources';
+import { createMedia, addMediaLink, getLinksForMedia, listMedia } from '../../src/api/media';
+import { searchSources } from '../../src/api/sources';
+import { exportGedcom } from '../../src/gedcom/exporter';
+import { importGedcom } from '../../src/gedcom/importer';
+
+describe.each(['5.5.1', '7.0'] as const)('media→source link round-trips under GEDCOM %s', (version) => {
+  it('survives export + re-import', async () => {
+    const db = createTestDb();
+    const src = await createSource(db, { title: 'Husförhörslängd Ödeshög AI:1' });
+    const med = await createMedia(db, { title: 'Scan p.42', file_ref: 'family-media/scan-42.jpg', format: 'image/jpeg' });
+    await addMediaLink(db, { media_id: med.id, entity_type: 'source', entity_id: src.id });
+
+    const { ged } = await exportGedcom(db, version);
+    expect(ged).toMatch(/0 @S\d+@ SOUR[\s\S]*?\n1 OBJE/); // OBJE emitted under SOUR
+
+    const db2 = createTestDb();
+    await importGedcom(db2, ged);
+
+    // Find the re-imported source + media, assert the link reconstructed.
+    const sources2 = await searchSources(db2, 'Husförhörslängd');
+    expect(sources2.length).toBe(1);
+    const media2 = await listMedia(db2);
+    const scan = media2.find((m: any) => (m.title ?? '').includes('Scan p.42') || (m.file_ref ?? '').includes('scan-42'));
+    expect(scan, 'media re-imported').toBeTruthy();
+    const links = await getLinksForMedia(db2, scan!.id);
+    expect(links.some((l: any) => l.entity_type === 'source' && l.entity_id === sources2[0].id)).toBe(true);
+  });
+});
+```
+
+> **Verify the exact api signatures first** (`createSource`, `createMedia`, `addMediaLink`, `getLinksForMedia`, `searchSources`, and the media-list function name — it may be `listMedia`, `findMedia`, or similar; `getLinksForMedia` is confirmed at `src/api/media.ts:393`). Adjust imports/calls to the real names. The `importGedcom` entrypoint is in `src/gedcom/importer.ts` — confirm its signature `(db, gedString)` and adapt if it differs (some call sites pass an options object).
+
+- [ ] **Step 2: Run it — verify it fails**
+
+Run: `npx vitest run --root <worktree-abs-path> tests/unit/media-source-link-roundtrip.test.ts`
+Expected: FAIL — the `1 OBJE` assertion fails (exporter emits no OBJE under SOUR), or the link assertion fails (importer doesn't read it). This is the empirical reproduction of the code-quality finding.
+
+- [ ] **Step 3: Exporter — emit `OBJE` under `SOUR`**
+
+In `src/gedcom/exporter.ts`, widen the `emitMediaBlocks` signature (line 154) to include `'source'`:
+
+```ts
+async function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event' | 'source', entityId: string, baseLevel: number): Promise<void> {
+```
+
+Then, inside the SOUR-record writer loop, immediately after the `await emitSourceCoverageEvents(db, src.id, 1, version, lines);` call (line 364, still inside the `for` loop over `sources`), add:
+
+```ts
+    if (includeMedia) await emitMediaBlocks(lines, db, 'source', src.id, 1);
+```
+
+(`includeMedia` is the top-level const resolved at line ~206; `getMediaForEntity(db, 'source', id)` already queries `media_links` by `entity_type`, so no change to that helper is needed.)
+
+- [ ] **Step 4: Importer — read `OBJE` under `SOUR` into `media_links`**
+
+In `src/import/gedcom/phases/sources.ts`, mirror the event-importer's media-link pattern (`src/import/gedcom/event-importer.ts:156-159`). Read those reference lines and `src/import/gedcom/import-types.ts` for the exact `ImportContext` field names before writing.
+
+Add imports at the top:
+```ts
+import { addMediaLink } from '../../../api/media';
+import { importObjeNode } from '../obje-importer';
+import { getChild, getChildren } from '../node-utils';   // getChildren in addition to existing getChild
+```
+
+Collect media-link pairs during the parse loop (the source `id` is already generated there as `const id = uuid()`), then flush them after `bulkCreateSources` — mirror exactly how `repoLinks` is collected-then-flushed. For each `node` in the parse loop:
+
+```ts
+    for (const objeNode of getChildren(node, 'OBJE')) {
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
+      if (mediaId) mediaLinkPairs.push({ media_id: mediaId, entity_id: id });
+    }
+```
+
+…where `mediaLinkPairs: Array<{ media_id: string; entity_id: string }> = []` is declared next to `repoLinks`, and after `await bulkCreateSources(ctx.db, rows);`:
+
+```ts
+  for (const { media_id, entity_id } of mediaLinkPairs) {
+    await addMediaLink(ctx.db, { media_id, entity_type: 'source', entity_id });
+  }
+```
+
+> Confirm `importObjeNode`'s real parameter order/names against `src/import/gedcom/obje-importer.ts` and the `ImportContext` field names (`ctx.objeMap`, `ctx.inlineMediaMap`, `ctx.options`) against `import-types.ts` — adjust the call to match. `phaseSources` runs after the OBJE / prep-inline-media phases, so those maps are populated.
+
+- [ ] **Step 5: Run the round-trip test — now green (both versions)**
+
+Run: `npx vitest run --root <worktree-abs-path> tests/unit/media-source-link-roundtrip.test.ts`
+Expected: PASS for both `5.5.1` and `7.0`.
+
+- [ ] **Step 6: Regression — existing media + golden tests still green**
+
+Run: `npx vitest run --root <worktree-abs-path> tests/unit/media.test.ts tests/unit/gedcom-fidelity-golden.test.ts tests/unit/gedcom*.test.ts`
+Expected: PASS. The new SOUR-OBJE export adds output; confirm no golden/exporter test asserted the *absence* of OBJE under SOUR. If a golden snapshot needs updating because the export now legitimately includes source media, update it and note why in the commit.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/gedcom/exporter.ts src/import/gedcom/phases/sources.ts tests/unit/media-source-link-roundtrip.test.ts
+git commit -m "feat(gedcom): round-trip media→source links via OBJE under SOUR (5.5.1 + 7.0)"
+```
+
+---
+
+### Task 7 (Tier 1): Correct the `media_links.entity_type` fidelity-registry entry
+
+**Files:**
+- Modify: `src/api/gedcom_fidelity_registry.ts` (the `media_links.entity_type` entry, ~line 987-1004)
+
+- [ ] **Step 1: Read the current entry and correct the rationale**
+
+The entry's prose claims the link is "verified by golden round-trip tests" and "derived at import from the parent GEDCOM record nesting the OBJE block." That was false for `entity_type='source'` (no OBJE was emitted; golden excludes `media_links`). Update the prose to state the truth as of this plan: person/event/relationship links derive from inline OBJE under those records; **source links derive from OBJE under SOUR (added in this plan), covered by `tests/unit/media-source-link-roundtrip.test.ts`** — not by the golden test, which still excludes the join table. Keep the status value (`lossless` / `lossless-via:…`) accurate for all entity_type values. Do not weaken any other column's entry.
+
+- [ ] **Step 2: Run the registry + schema-introspection test**
+
+Run: `npx vitest run --root <worktree-abs-path> tests/unit/gedcom-fidelity-registry.test.ts` (or whichever test asserts registry completeness — `grep -rln "fidelity_registry\|registry" tests/unit`).
+Expected: PASS.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/api/gedcom_fidelity_registry.ts
+git commit -m "docs(gedcom): correct media_links.entity_type registry — source links now round-trip via SOUR-OBJE"
+```
+
+---
+
+### Task 8 (Tier 1): Reciprocal + `[panels]` e2e
 
 **Files:**
 - Modify: one spec in the `[panels]` e2e project (mirror the nearest existing MediaPanel spec)
 
-- [ ] **Step 1: Assert the existing media round-trip tests still pass**
-
-Run: `npx vitest run --root <worktree-abs-path> tests/unit/media.test.ts tests/unit/gedcom-fidelity-golden.test.ts`
-Expected: PASS. These cover `OBJE` under `SOUR` round-trip — the media↔source link is already lossless; this proves Framing B added no regression. If either was already red on `main` before this work, stop and surface (per `.claude/rules/plans.md` "already broken is not a pass").
-
-- [ ] **Step 2: Identify the nearest existing MediaPanel `[panels]` e2e spec**
+- [ ] **Step 1: Identify the nearest existing MediaPanel `[panels]` e2e spec**
 
 Run: `ls tests/e2e` and `grep -rln "MediaPanel\|linkedPlaces\|media" tests/e2e`. Read the closest spec to learn the project's `AppDriver` (fixture.ts) selectors and navigation helpers. Do **not** invent a Playwright API; copy the established one.
 
-- [ ] **Step 3: Add the link-add + reciprocal e2e**
+- [ ] **Step 2: Add the link-add + reciprocal e2e**
 
 In the chosen `[panels]` spec, add a test that, against the packaged binary:
 1. Creates (or seeds) one media item and one source.
@@ -522,14 +668,14 @@ In the chosen `[panels]` spec, add a test that, against the packaged binary:
 3. Asserts the source title now appears in the Källor list (outcome 2).
 4. Navigates to that source's panel, asserts the media appears in its Media section (outcome 5 — reciprocal).
 
-Mirror the assertions and selectors of the sibling spec you read in Step 2 (text-based locators on the section title + row are the safest; avoid brittle nth-child).
+Mirror the assertions and selectors of the sibling spec you read in Step 1 (text-based locators on the section title + row are safest; avoid brittle nth-child).
 
-- [ ] **Step 4: Run the `[panels]` project**
+- [ ] **Step 3: Run the `[panels]` project**
 
 Run: `npx playwright test --project=panels` (build first if `out/` is stale: `npm run build:bin`).
 Expected: PASS, including the new test.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add tests/e2e
@@ -538,7 +684,7 @@ git commit -m "test(e2e): link media to source via Källor section + reciprocal 
 
 ---
 
-### Task 7 (Tier 1): Full verification
+### Task 9 (Tier 1): Full verification
 
 **Files:** none (verification only)
 
@@ -568,7 +714,7 @@ Paste the captured summary lines (test count, build tail, e2e per-project counts
 
 ---
 
-### Task 8 (Tier 1): Close-out
+### Task 10 (Tier 1): Close-out
 
 - [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. It walks the 6+1 steps (mark checkboxes, `git mv` this plan + the design sibling to `docs/plans/archive/`, version bump (feature → minor) + CHANGELOG block, `docs/PLAN.md` sync — remove the Blocked "Media citations design" entry and add a "Considered, not now" entry for Framing A with its reopen trigger, archive PLAN.md append, commit, merge/push), captures evidence, refuses partial. Note in the close-out: the design spec moves to archive too, since its framing question is now answered.
 
