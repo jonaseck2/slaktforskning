@@ -151,7 +151,7 @@ function emitCitationBlock(
 }
 
 /** Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for INDI/FAM, 2 for events. */
-async function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event', entityId: string, baseLevel: number): Promise<void> {
+async function emitMediaBlocks(lines: string[], db: Database, entityType: 'person' | 'relationship' | 'event' | 'source', entityId: string, baseLevel: number): Promise<void> {
   const mediaItems = await getMediaForEntity(db, entityType, entityId);
   for (const m of mediaItems) {
     lines.push(`${baseLevel} OBJE`);
@@ -362,6 +362,9 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     }
     // T08: emit SOUR/DATA/EVEN coverage events (lossless under 5.5.1 + 7.0).
     await emitSourceCoverageEvents(db, src.id, 1, version, lines);
+    // Rapport 104 (framing B): emit OBJE under SOUR for media→source links so
+    // they round-trip. `OBJE` under SOURCE_RECORD is spec-legal in 5.5.1 and 7.0.
+    if (includeMedia) await emitMediaBlocks(lines, db, 'source', src.id, 1);
   }
 
   // T04: reset the SNOTE xref allocator at the top of every export so

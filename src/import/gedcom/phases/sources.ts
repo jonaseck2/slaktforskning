@@ -3,8 +3,10 @@
 import { v4 as uuid } from 'uuid';
 import { bulkCreateSources } from '../../../api/sources';
 import { createRepository, linkSourceRepository } from '../../../api/repositories';
+import { addMediaLink } from '../../../api/media';
 import type { ImportContext } from '../import-types';
-import { getChild } from '../node-utils';
+import { getChild, getChildren } from '../node-utils';
+import { importObjeNode } from '../obje-importer';
 
 export async function phaseSources(ctx: ImportContext): Promise<void> {
   // Two-pass: parse + collect; bulk INSERT once; then per-row repo links.
@@ -29,6 +31,11 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
   // deduplicate by name (case-insensitive) so multiple sources that named
   // the same archive share one Repository row.
   const freeTextRepoLinks: Array<{ sourceId: string; repoName: string }> = [];
+  // Media→source links (rapport 104, framing B): OBJE under SOUR. Collected
+  // during the parse pass, flushed after the bulk source insert — mirrors the
+  // repoLinks collect-then-flush. The OBJE / prep-inline-media phases ran
+  // before this one, so ctx.objeMap + ctx.inlineMediaMap are populated.
+  const mediaLinkPairs: Array<{ media_id: string; entity_id: string }> = [];
   for (let i = 0; i < total; i++) {
     const node = sourNodes[i];
     const id = uuid();
@@ -50,12 +57,22 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
       const freeText = getChild(node, '_REPO_TEXT')?.value || (repoVal && !repoVal.startsWith('@') ? repoVal : '');
       if (freeText) freeTextRepoLinks.push({ sourceId: id, repoName: freeText });
     }
+    // OBJE under SOUR → media→source link.
+    for (const objeNode of getChildren(node, 'OBJE')) {
+      const mediaId = await importObjeNode(ctx.db, objeNode, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
+      if (mediaId) mediaLinkPairs.push({ media_id: mediaId, entity_id: id });
+    }
     if ((i + 1) % 200 === 0 || (i + 1) === total) {
       ctx.options?.onProgress?.(`Importerar källor (${i + 1} / ${total})`);
     }
   }
   ctx.options?.onProgress?.(`Sparar ${total} källor…`);
   await bulkCreateSources(ctx.db, rows);
+
+  // Flush media→source links (rapport 104, framing B) now the source rows exist.
+  for (const { media_id, entity_id } of mediaLinkPairs) {
+    await addMediaLink(ctx.db, { media_id, entity_type: 'source', entity_id });
+  }
 
   // XREF-based repo links — small set; per-row is fine.
   for (const { sourceId, repoXref } of repoLinks) {
