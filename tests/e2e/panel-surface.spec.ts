@@ -609,3 +609,142 @@ function runSection(
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// Media → Source link round-trip (media-source-links plan, outcomes 2 + 5).
+//
+// User goal: a genealogist opens a media item, sees a "Källor" (Linked
+// Sources) section, clicks "+ Source" to link an existing source, the source
+// shows up in the Källor list — and the source's own panel reciprocally shows
+// that media in its Media section.
+//
+// This drives the *real* add-link flow through the packaged UI: it clicks the
+// section CTA, drives the teleported SourcePicker dropdown (the same
+// `mousedown.prevent` select a user fires), and asserts the user-observable
+// outcome at both ends of the reciprocal link. It's separate from the
+// data-driven PANELS loop above because it walks a specific cross-panel
+// journey, not a generic Surface Contract check. It reuses PORT 19255 and runs
+// after the PANELS loop in the same worker (each describe owns its own
+// startApp/teardownApp lifecycle).
+// ---------------------------------------------------------------------------
+
+test.describe.serial('Media → Source link reciprocal', () => {
+  let app: AppInstance | undefined;
+  let driver: AppDriver;
+  let mediaId: string;
+  let sourceId: string;
+
+  const MEDIA_TITLE = 'Vigselattest 1887';
+  const SOURCE_TITLE = 'Husförhörslängd Väster 1887';
+
+  test.beforeAll(async () => {
+    app = await startApp(PORT, 'media-source-link');
+    driver = new AppDriver(PORT);
+    await driver.setLocale('en');
+    // Seed one media item and one source via the same window.api the UI uses.
+    ({ id: mediaId } = await driver.createMedia({ title: MEDIA_TITLE }));
+    ({ id: sourceId } = await driver.createSource({ title: SOURCE_TITLE }));
+  });
+
+  test.afterAll(async () => {
+    await teardownApp(app);
+  });
+
+  test('link a source from the Källor section, then see the media on the source panel', async () => {
+    // ── 1. Open the media library and select the seeded media so its panel
+    //       mounts. The list row carries data-media-id. ───────────────────
+    await driver.navigate('/media');
+    await driver.settle(600);
+    await driver.click(`[data-media-id="${mediaId}"]`);
+    await driver.settle(400);
+
+    // The MediaPanel must be showing our media — confirm the Källor section
+    // renders (en: "Linked Sources").
+    const SECTION_TITLE = 'Linked Sources';
+    await driver.waitForText(SECTION_TITLE);
+
+    // ── 2. Expand the Källor section if collapsed, then click "+ Source". ──
+    if (!(await isSectionExpanded(driver, SECTION_TITLE))) {
+      await toggleSection(driver, SECTION_TITLE);
+      await driver.settle(200);
+    }
+    const clicked = await clickSectionCta(driver, SECTION_TITLE);
+    expect(clicked, 'The "+ Source" CTA must be present and clickable.').toBe(true);
+    await driver.settle(400);
+
+    // The inline SourcePicker should now be visible inside the section.
+    const pickerVisible = await driver.executeJs<boolean>(
+      `!!document.querySelector('.picker-wrap .source-picker input[role=combobox]')`,
+    );
+    expect(pickerVisible, 'Clicking "+ Source" must reveal the SourcePicker.').toBe(true);
+
+    // ── 3. Drive the picker: focus + type the source title, wait for the
+    //       debounced search (~150 ms) to populate the teleported dropdown,
+    //       then fire the real `mousedown.prevent` select on the matching
+    //       option. This is exactly what a user does. ─────────────────────
+    await driver.executeJs(`
+      (() => {
+        const input = document.querySelector('.picker-wrap .source-picker input[role=combobox]');
+        if (!input) throw new Error('SourcePicker input not found');
+        input.focus();
+        input.dispatchEvent(new Event('focus', { bubbles: true }));
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(SOURCE_TITLE)});
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      })()
+    `);
+    await driver.settle(600); // > 150 ms debounce + search round-trip
+
+    // Find the dropdown option whose title matches and fire mousedown (the
+    // SourcePicker selects on `@mousedown.prevent`, not click).
+    const selected = await driver.executeJs<boolean>(`
+      (() => {
+        const items = Array.from(document.querySelectorAll('.dropdown .dropdown-item'));
+        const match = items.find(li =>
+          li.querySelector('.source-title')?.textContent?.trim() === ${JSON.stringify(SOURCE_TITLE)}
+        );
+        if (!match) return false;
+        match.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+        return true;
+      })()
+    `);
+    expect(selected, 'The seeded source must appear in the SourcePicker dropdown and be selectable.').toBe(true);
+    await driver.settle(600);
+
+    // ── 4. Outcome 2: the source title now appears as a linked row in the
+    //       Källor section of the media panel. ─────────────────────────────
+    const linkedRowText = await driver.executeJs<string | null>(`
+      (() => {
+        const headers = Array.from(document.querySelectorAll('.section-header-bar'));
+        const header = headers.find(h => h.querySelector('.section-title')?.textContent === ${JSON.stringify(SECTION_TITLE)});
+        if (!header) return null;
+        const body = header.parentElement?.querySelector('.panel-section-body');
+        if (!body) return null;
+        const rows = Array.from(body.querySelectorAll('.linked-row'));
+        const row = rows.find(r => r.textContent?.includes(${JSON.stringify(SOURCE_TITLE)}));
+        return row ? row.textContent?.trim() ?? null : null;
+      })()
+    `);
+    expect(
+      linkedRowText,
+      'After linking, the source title must show as a linked row in the Källor (Linked Sources) section.',
+    ).toContain(SOURCE_TITLE);
+
+    // ── 5. Outcome 5 (reciprocal): navigate to the source's own panel and
+    //       assert the media appears in its Media section (served by
+    //       EntityMediaSection via media.forEntity('source', id)). ─────────
+    await driver.navigate(`/sources/${sourceId}`);
+    await driver.settle(600);
+    // The source panel's "Media" section may default to collapsed on a narrow
+    // panel — expand it so EntityMediaSection's table renders.
+    const MEDIA_SECTION_TITLE = 'Media';
+    await driver.waitForText(MEDIA_SECTION_TITLE);
+    if (!(await isSectionExpanded(driver, MEDIA_SECTION_TITLE))) {
+      await toggleSection(driver, MEDIA_SECTION_TITLE);
+      await driver.settle(300);
+    }
+    // The media title (rendered via mediaDisplayName for our titled media)
+    // must now be present — the reciprocal of the link we just made.
+    await driver.waitForText(MEDIA_TITLE);
+  });
+});
