@@ -205,7 +205,7 @@
     <div class="ep-sec-header" data-entity="citation">
       <div class="ep-sec-left">
         <span class="ep-sec-title">📖 {{ $t('citations.title') }}</span>
-        <span class="ep-sec-count">{{ allCitationRows.length }}</span>
+        <span class="ep-sec-count">({{ allCitationRows.length }})</span>
       </div>
       <button type="button" class="ep-sec-action" @click="openAddCitation">
         + {{ $t('sourceDetail.addCitation') }}
@@ -235,7 +235,7 @@
           style="flex-shrink:0"
           :aria-label="$t('common.remove')"
           @click.stop="cit.isPending ? removePendingCitation(cit.id) : deleteCitation(cit.id)"
-        >✕</button>
+        ><IconTrash :size="14" /></button>
       </div>
     </div>
 
@@ -324,6 +324,7 @@ import BaseSubPanel from './BaseSubPanel.vue';
 import CitationModal, { type DeferredCitationPayload } from './CitationModal.vue';
 import LinkedText from '../LinkedText.vue';
 import ConfirmModal from '../ConfirmModal.vue';
+import IconTrash from '../ui/IconTrash.vue';
 import { useDeleteConfirm } from '../../composables/useDeleteConfirm';
 import { useToast } from '../../composables/useToast';
 import DateInput from '../DateInput.vue';

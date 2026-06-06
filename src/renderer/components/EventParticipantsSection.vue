@@ -55,7 +55,7 @@
           :aria-label="$t('events.participantsRemove')"
           :title="$t('events.participantsRemove')"
           @click="onRemove(row.id)"
-        >✕</button>
+        ><IconTrash :size="14" /></button>
       </div>
       <div class="ep-participants-add">
         <PersonPicker
@@ -74,6 +74,7 @@ import { useI18n } from 'vue-i18n';
 import PersonName from './PersonName.vue';
 import PersonPicker from './PersonPicker.vue';
 import SectionEmpty from './ui/SectionEmpty.vue';
+import IconTrash from './ui/IconTrash.vue';
 import { useEntityData } from '../composables/useEntityData';
 import { useToast } from '../composables/useToast';
 import { usePersonNameOptions } from '../stores/personNameOptions';
