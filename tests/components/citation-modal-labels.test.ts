@@ -91,4 +91,19 @@ describe('CitationModal — Swedish label rewrites (rapport 100 §1, §3, §4)',
 
     expect(wrapper.text()).toContain('Källans tillförlitlighet');
   });
+
+  it('A5: confidence buttons render most-reliable-first (Primärkälla → Sekundärkälla → Tveksam → Opålitlig)', async () => {
+    const wrapper = mount(CitationModal, {
+      global: globalConfig,
+      props: {},
+    });
+    await flushPromises();
+
+    const buttons = wrapper.findAll('.ep-seg-opt');
+    expect(buttons).toHaveLength(4);
+    expect(buttons[0].text()).toBe('Primärkälla');
+    expect(buttons[1].text()).toBe('Sekundärkälla');
+    expect(buttons[2].text()).toBe('Tveksam');
+    expect(buttons[3].text()).toBe('Opålitlig');
+  });
 });

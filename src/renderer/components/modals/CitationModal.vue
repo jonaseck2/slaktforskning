@@ -50,7 +50,7 @@
         <span class="ep-field-label">{{ $t('citations.confidence') }}</span>
         <div class="ep-seg">
           <button
-            v-for="level in CONFIDENCE_LEVEL_VALUES"
+            v-for="level in CONFIDENCE_LEVEL_VALUES_REVERSED"
             :key="level"
             type="button"
             class="ep-seg-opt"
@@ -87,6 +87,10 @@ import SourcePicker from '../SourcePicker.vue';
 import SourceModal from './SourceModal.vue';
 import { CONFIDENCE_LEVEL_VALUES } from '../../constants/eventTypes';
 import { useSourceSession } from '../../stores/sourceSession';
+
+// Render order: most-reliable first (Primärkälla → Sekundärkälla → Tveksam → Opålitlig).
+// Spread first to avoid mutating the shared exported constant.
+const CONFIDENCE_LEVEL_VALUES_REVERSED = [...CONFIDENCE_LEVEL_VALUES].reverse() as unknown as (0 | 1 | 2 | 3)[];
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
