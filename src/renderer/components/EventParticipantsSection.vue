@@ -5,7 +5,7 @@
        godparents / mourners / witnesses can be recorded uniformly. -->
   <div class="ep-sec-header" data-entity="person">
     <div class="ep-sec-left">
-      <span class="ep-sec-title">👥 {{ $t('events.participants') }}</span>
+      <span class="ep-sec-title">👥 {{ label ?? $t('events.participants') }}</span>
       <span class="ep-sec-count">{{ extraParticipants.length }}</span>
     </div>
   </div>
@@ -128,6 +128,7 @@ declare const window: Window & {
 const props = defineProps<{
   eventId: string | null;
   excludePersonIds: string[];
+  label?: string;
 }>();
 
 const { t } = useI18n();

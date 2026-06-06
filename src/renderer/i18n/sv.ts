@@ -467,6 +467,12 @@ export default {
     notes: 'Anteckningar',
     notesPlaceholder: 'Fri text om händelsen…',
     valuePlaceholder: 't.ex. Snickare',
+    dateLabels: {
+      residence: { start: 'Inflyttningsdatum', end: 'Eventuellt utflyttningsdatum' },
+    },
+    participantsLabels: {
+      residence: 'Övriga boende i bostaden',
+    },
     participants: 'Deltagare',
     participantsSaveFirstHint: 'Spara händelsen först för att lägga till fler deltagare',
     participantsEmpty: 'Inga ytterligare deltagare',

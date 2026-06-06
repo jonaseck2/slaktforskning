@@ -467,6 +467,12 @@ export default {
     notes: 'Notes',
     notesPlaceholder: 'Free-form notes about the event…',
     valuePlaceholder: 'e.g. Carpenter',
+    dateLabels: {
+      residence: { start: 'Move-in date', end: 'Optional move-out date' },
+    },
+    participantsLabels: {
+      residence: 'Other residents',
+    },
     participants: 'Participants',
     participantsSaveFirstHint: 'Save the event first to add additional participants',
     participantsEmpty: 'No additional participants',

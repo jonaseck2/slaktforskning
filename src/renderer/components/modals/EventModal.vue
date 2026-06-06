@@ -57,7 +57,7 @@
         </ul>
       </div>
       <div class="ep-field">
-        <span class="ep-field-label">{{ $t('events.date') }}</span>
+        <span class="ep-field-label">{{ dateLabels.start }}</span>
         <DateInput
           :date-type="form.date_type"
           :date-value="form.date_value ?? ''"
@@ -70,7 +70,7 @@
         />
       </div>
       <div v-if="showSpanEndDate" class="ep-field">
-        <span class="ep-field-label">{{ $t('events.endDateOptional') }}</span>
+        <span class="ep-field-label">{{ dateLabels.end }}</span>
         <DateInput
           simple
           :date-type="endDateType"
@@ -82,7 +82,7 @@
           @update:date-value-end="() => {}"
           @update:date-original="() => {}"
         />
-        <p class="ep-field-hint">{{ $t('events.endDateHint') }}</p>
+        <p v-if="dateLabels.endHint" class="ep-field-hint">{{ dateLabels.endHint }}</p>
       </div>
       <div class="ep-field">
         <span class="ep-field-label">{{ $t('events.place') }}</span>
@@ -256,6 +256,7 @@
       v-if="!form.is_negation"
       :event-id="savedEventId"
       :exclude-person-ids="extraParticipantsExcludeIds"
+      :label="participantsLabel"
     />
 
     <!-- Shared notes (T20) — only after first save so we have an event id
@@ -406,8 +407,31 @@ const emit = defineEmits<{
   saved: [event: EventData];
 }>();
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const toast = useToast();
+
+// Per-event-type date labels (C1) and participants label (C3).
+// Mechanism: check if a per-type key exists in the i18n map; fall back to
+// the generic key if not. endHint is null when the per-type entry omits it
+// (residence — "pågick under en enda tidpunkt" is nonsense for a residence).
+const dateLabels = computed(() => {
+  const type = form.event_type;
+  const startKey = `events.dateLabels.${type}.start`;
+  const endKey = `events.dateLabels.${type}.end`;
+  const hasEntry = te(startKey);
+  return {
+    start: hasEntry ? t(startKey) : t('events.date'),
+    end: hasEntry ? t(endKey) : t('events.endDateOptional'),
+    // endHint is null when the type has a dateLabels entry that omits it.
+    // Otherwise show the generic hint.
+    endHint: hasEntry ? null : t('events.endDateHint'),
+  };
+});
+
+const participantsLabel = computed(() => {
+  const key = `events.participantsLabels.${form.event_type}`;
+  return te(key) ? t(key) : t('events.participants');
+});
 
 // User-controlled sort order (BENGT #1, #3). Default: alphabetical.
 const eventTypeSort = ref<EventTypeSortMode>('alphabetical');
