@@ -474,7 +474,6 @@ export default {
       residence: 'Övriga boende i bostaden',
     },
     participants: 'Deltagare',
-    participantsSaveFirstHint: 'Spara händelsen först för att lägga till fler deltagare',
     participantsEmpty: 'Inga ytterligare deltagare',
     participantsAddPlaceholder: 'Lägg till deltagare…',
     participantsRemove: 'Ta bort deltagare',

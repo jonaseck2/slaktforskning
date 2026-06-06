@@ -287,13 +287,6 @@ async function onRemove(participantId: string) {
 </script>
 
 <style scoped>
-.ep-participants-hint {
-  font-size: var(--font-xs);
-  color: var(--text-muted);
-  margin: 0 0 var(--space-xs) 0;
-  line-height: 1.4;
-  font-style: italic;
-}
 .ep-participants-add {
   margin-top: var(--space-xs);
 }

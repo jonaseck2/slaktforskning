@@ -474,7 +474,6 @@ export default {
       residence: 'Other residents',
     },
     participants: 'Participants',
-    participantsSaveFirstHint: 'Save the event first to add additional participants',
     participantsEmpty: 'No additional participants',
     participantsAddPlaceholder: 'Add a participant…',
     participantsRemove: 'Remove participant',
