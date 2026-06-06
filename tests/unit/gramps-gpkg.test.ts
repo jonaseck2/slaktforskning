@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { writeFileSync, mkdtempSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { createTar } from 'nanotar';
 import { gzipSync } from 'fflate';
 import { extractGrampsArchive } from '../../src/import/gramps/archive';
+import { importFromGramps, importFromGrampsBytes } from '../../src/import/gramps';
+import { queryAll } from '../../src/api/db';
+import { createTestDb } from './helpers';
 
 // 67-byte 1x1 transparent PNG
 const PNG = new Uint8Array([
@@ -61,14 +67,6 @@ describe('extractGrampsArchive', () => {
 });
 
 export { PNG, GPKG_XML };
-
-import { beforeEach } from 'vitest';
-import { writeFileSync, mkdtempSync, existsSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { importFromGramps, importFromGrampsBytes } from '../../src/import/gramps';
-import { queryAll } from '../../src/api/db';
-import { createTestDb } from './helpers';
 
 let db: ReturnType<typeof createTestDb>;
 beforeEach(async () => { db = await createTestDb(); });
