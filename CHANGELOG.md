@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.267.1 — 2026-06-06
+
+- test(docs): close the verification hole on the OSS-launch quickstart — a new `tests/unit/readme-quickstart-coherence.test.ts` parses `QUICKSTART.md` and asserts the README links to it, that all 8 numbered steps each carry a sequentially-numbered screenshot, that every referenced `docs/quickstart/*.png` exists, and that no screenshot is orphaned. The OSS-launch demo + manual themselves shipped across 0.264.x; this completes its planned coverage and archives the plan.
+
 ## 0.267.0 — 2026-06-02
 
 - feat(media): a media item can now record which sources it came from — the Media panel has a new "Källor" section listing the sources the media is linked to, with link-an-existing-source, create-and-link-in-one-step, and unlink. The link round-trips through GEDCOM 5.5.1 **and** 7.0 (emitted as `OBJE` under the `SOUR` record and read back on import — previously it was silently dropped on export), and shows reciprocally in the source's own Media section. Implements Framing B of the rapport-104 media-citations design; per-media page/confidence/transcription (Framing A) stays deferred.

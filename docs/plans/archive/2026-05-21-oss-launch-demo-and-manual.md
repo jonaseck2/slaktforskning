@@ -127,76 +127,84 @@ Tasks tagged with mandate tier per `.claude/rules/mandate.md`. Tasks 1-19 were r
 
 ### Setup
 
-- [ ] **T01 (Tier 1)** — `.gitignore` entry for `examples/scratch/`. Single-file change.
-- [ ] **T02 (Tier 1)** — Create worktree `.worktrees/oss-launch-demo` from `main`. Execute remaining tasks there.
+- [x] **T01 (Tier 1)** — `.gitignore` entry for `examples/scratch/`. Single-file change.
+- [x] **T02 (Tier 1)** — Create worktree `.worktrees/oss-launch-demo` from `main`. Execute remaining tasks there.
 
 ### Research + image sourcing
 
-- [ ] **T03 (Tier 1)** — Research outline. WebFetch sv.wikipedia.org + en.wikipedia.org for each of the 10 persons (Adolf Fredrik, Lovisa Ulrika, Gustav III, Karl XIII, Fredrik Adolf, Sofia Albertina, Sofia Magdalena, Hedvig Elisabet Charlotta, Gustav IV Adolf, Frederica of Baden). Write `examples/scratch/family-outline.md` with dates, places, marriages, key events.
-- [ ] **T04 (Tier 1)** — Image sourcing. WebFetch Wikimedia Commons for canonical portraits. For each, document source URL, file URL, license tag, author + dates. Reject anything not explicit `PD-old-100`. Find Roslin "Gustav III and his brothers" (1771). Write `docs/manual/image-credits.md` incrementally.
-- [ ] **T05 (Tier 1)** — Image download. `curl` each image into `examples/scratch/swedish-royals-media/`. Verify ≥ 800px long edge via `sips -g pixelWidth -g pixelHeight` (mac) or `identify -format "%w %h"` (imagemagick).
+- [x] **T03 (Tier 1)** — Research outline. WebFetch sv.wikipedia.org + en.wikipedia.org for each of the 10 persons (Adolf Fredrik, Lovisa Ulrika, Gustav III, Karl XIII, Fredrik Adolf, Sofia Albertina, Sofia Magdalena, Hedvig Elisabet Charlotta, Gustav IV Adolf, Frederica of Baden). Write `examples/scratch/family-outline.md` with dates, places, marriages, key events.
+- [x] **T04 (Tier 1)** — Image sourcing. WebFetch Wikimedia Commons for canonical portraits. For each, document source URL, file URL, license tag, author + dates. Reject anything not explicit `PD-old-100`. Find Roslin "Gustav III and his brothers" (1771). Write `docs/manual/image-credits.md` incrementally.
+- [x] **T05 (Tier 1)** — Image download. `curl` each image into `examples/scratch/swedish-royals-media/`. Verify ≥ 800px long edge via `sips -g pixelWidth -g pixelHeight` (mac) or `identify -format "%w %h"` (imagemagick).
 
 ### Demo DB build (via dev MCP)
 
-- [ ] **T06 (Tier 1)** — Confirm dev MCP reachable: `mcp__slaktforskning-dev__app_status`. If not running, surface and pause (Tier 3 — local dev mode requires user-side `npm start`).
-- [ ] **T07 (Tier 1)** — Switch to fresh DB: `mcp__slaktforskning-dev__switch_database` pointed at `examples/scratch/swedish-royals.db`.
-- [ ] **T08 (Tier 1)** — Persons: `create_person` × 10 with given_name + surname + sex + Wikidata QID as `other`-type identifier (`add_person_identifier`).
-- [ ] **T09 (Tier 1)** — Relationships: `add_relationship` × 6 couple-marriages between the documented pairs.
-- [ ] **T10 (Tier 1)** — Events: `record_event` × ~25 (births, deaths, marriages, coronations, the 1792 assassination at Royal Opera, the 1809 coup, the 1809 deposition). Place via `place` field for single-component names; `place_chain` for hierarchies.
-- [ ] **T11 (Tier 1)** — Sources + repository + citations: `add_source` × 3 (Svenskt biografiskt lexikon online, Riksarkivet record group, Wikipedia citation), `add_repository` × 1 (Riksarkivet), `link_source_repository`, `cite` on key events.
+- [x] **T06 (Tier 1)** — Confirm dev MCP reachable: `mcp__slaktforskning-dev__app_status`. If not running, surface and pause (Tier 3 — local dev mode requires user-side `npm start`).
+- [x] **T07 (Tier 1)** — Switch to fresh DB: `mcp__slaktforskning-dev__switch_database` pointed at `examples/scratch/swedish-royals.db`.
+- [x] **T08 (Tier 1)** — Persons: `create_person` × 10 with given_name + surname + sex + Wikidata QID as `other`-type identifier (`add_person_identifier`).
+- [x] **T09 (Tier 1)** — Relationships: `add_relationship` × 6 couple-marriages between the documented pairs.
+- [x] **T10 (Tier 1)** — Events: `record_event` × ~25 (births, deaths, marriages, coronations, the 1792 assassination at Royal Opera, the 1809 coup, the 1809 deposition). Place via `place` field for single-component names; `place_chain` for hierarchies.
+- [x] **T11 (Tier 1)** — Sources + repository + citations: `add_source` × 3 (Svenskt biografiskt lexikon online, Riksarkivet record group, Wikipedia citation), `add_repository` × 1 (Riksarkivet), `link_source_repository`, `cite` on key events.
 
 ### Media attach + face tagging (MCP-coords variant)
 
-- [ ] **T12 (Tier 1)** — Individual portraits: `attach_media` per person, then `link_media` person↔media if needed. 10 portraits.
-- [ ] **T13 (Tier 1)** — Group portrait: `attach_media` the Roslin painting.
-- [ ] **T14 (Tier 1)** — Face-tag regions via MCP coords. Replaces the original Tier 4 manual-drag step. For each of the three subjects (Gustav III, Karl, Fredrik Adolf), open the painting in the image tagger via `ui_navigate` to the media detail; read natural dimensions via `ui_eval` on the `<img>` element; pick coord boxes from a documented mapping (committed at `examples/scratch/face-tag-coords.json`) based on Roslin's known composition; call `tag_person_in_media` with the fractional coords. **Verification: capture `ui_screenshot` of the rendered overlay and visually confirm each box lands on the intended subject's face.** If a box lands wrong, adjust the JSON and re-run. Coord drift risk addressed by the visual-diff loop, not by human hands.
+- [x] **T12 (Tier 1)** — Individual portraits: `attach_media` per person, then `link_media` person↔media if needed. 10 portraits.
+- [x] **T13 (Tier 1)** — Group portrait: `attach_media` the Roslin painting.
+- [x] **T14 (Tier 1)** — Face-tag regions via MCP coords. Replaces the original Tier 4 manual-drag step. For each of the three subjects (Gustav III, Karl, Fredrik Adolf), open the painting in the image tagger via `ui_navigate` to the media detail; read natural dimensions via `ui_eval` on the `<img>` element; pick coord boxes from a documented mapping (committed at `examples/scratch/face-tag-coords.json`) based on Roslin's known composition; call `tag_person_in_media` with the fractional coords. **Verification: capture `ui_screenshot` of the rendered overlay and visually confirm each box lands on the intended subject's face.** If a box lands wrong, adjust the JSON and re-run. Coord drift risk addressed by the visual-diff loop, not by human hands.
 
 ### Screenshots
 
-- [ ] **T15 (Tier 1)** — Primary README screenshot. `ui_navigate` to chart view, `chart_focus_person` on Gustav III, ensure side panel open + portrait visible. `ui_screenshot` full-window; save as `docs/screenshot.png` (≥ 1920×1200).
-- [ ] **T16 (Tier 1)** — Quickstart sub-screenshots × 8. Use a second fresh DB (`examples/scratch/quickstart-walkthrough.db`); drive each step via MCP + capture `ui_screenshot` at the moment the step completes. Save as `docs/quickstart/01-empty-state.png` … `08-done.png`. The same dev MCP that authored the demo authors the walkthrough.
+- [x] **T15 (Tier 1)** — Primary README screenshot. `ui_navigate` to chart view, `chart_focus_person` on Gustav III, ensure side panel open + portrait visible. `ui_screenshot` full-window; save as `docs/screenshot.png` (≥ 1920×1200).
+- [x] **T16 (Tier 1)** — Quickstart sub-screenshots × 8. Use a second fresh DB (`examples/scratch/quickstart-walkthrough.db`); drive each step via MCP + capture `ui_screenshot` at the moment the step completes. Save as `docs/quickstart/01-empty-state.png` … `08-done.png`. The same dev MCP that authored the demo authors the walkthrough.
 
 ### MANUAL.md — decomposed per section
 
 Decomposition addresses the T12 atomic-task violation. One task per section, each ~80 lines max, each with its own screenshot under `docs/manual/`. Each task: write the section + capture its primary screenshot via dev MCP.
 
-- [ ] **T17 (Tier 1)** — `MANUAL.md` Section 1: Installing & first launch.
-- [ ] **T18 (Tier 1)** — Section 2: Persons (panel + modal + every section).
-- [ ] **T19 (Tier 1)** — Section 3: Events (modal + per-event-type quirks).
-- [ ] **T20 (Tier 1)** — Section 4: Places (panel + tree picker + gazetteer + history view + map).
-- [ ] **T21 (Tier 1)** — Section 5: Sources & Citations (panel + repositories + coverage events + link rules).
-- [ ] **T22 (Tier 1)** — Section 6: Repositories (panel + linking).
-- [ ] **T23 (Tier 1)** — Section 7: Media & Face Tags (attach, link, regions, profile pictures, reports inclusion).
-- [ ] **T24 (Tier 1)** — Section 8: Groups (panel + linking).
-- [ ] **T25 (Tier 1)** — Section 9: Research Tasks (Fortsatt forskning) (panel + priority + status + linking).
-- [ ] **T26 (Tier 1)** — Section 10: Reports (every keepsake report + every chart print).
-- [ ] **T27 (Tier 1)** — Section 11: Family tree charts (pedigree, hourglass, descendant, fan; outlines, navigation).
-- [ ] **T28 (Tier 1)** — Section 12: Map view (pins, polygons, filtering).
-- [ ] **T29 (Tier 1)** — Section 13: Import (GEDCOM 5.5.1 / 7.0, Genney, Holger, RootsMagic, Gramps).
-- [ ] **T30 (Tier 1)** — Section 14: Export (GEDCOM, archive .zip, HTML website).
-- [ ] **T31 (Tier 1)** — Section 15: Settings (themes, appearance, text size, language, screen-reader mode).
-- [ ] **T32 (Tier 1)** — Section 16: Keyboard shortcuts (global + screen reader).
-- [ ] **T33 (Tier 1)** — Section 17: Accessibility features.
-- [ ] **T34 (Tier 1)** — Section 18: Data ownership & backup.
-- [ ] **T35 (Tier 1)** — Section 19: Troubleshooting / FAQ.
+- [x] **T17 (Tier 1)** — `MANUAL.md` Section 1: Installing & first launch.
+- [x] **T18 (Tier 1)** — Section 2: Persons (panel + modal + every section).
+- [x] **T19 (Tier 1)** — Section 3: Events (modal + per-event-type quirks).
+- [x] **T20 (Tier 1)** — Section 4: Places (panel + tree picker + gazetteer + history view + map).
+- [x] **T21 (Tier 1)** — Section 5: Sources & Citations (panel + repositories + coverage events + link rules).
+- [x] **T22 (Tier 1)** — Section 6: Repositories (panel + linking).
+- [x] **T23 (Tier 1)** — Section 7: Media & Face Tags (attach, link, regions, profile pictures, reports inclusion).
+- [x] **T24 (Tier 1)** — Section 8: Groups (panel + linking).
+- [x] **T25 (Tier 1)** — Section 9: Research Tasks (Fortsatt forskning) (panel + priority + status + linking).
+- [x] **T26 (Tier 1)** — Section 10: Reports (every keepsake report + every chart print).
+- [x] **T27 (Tier 1)** — Section 11: Family tree charts (pedigree, hourglass, descendant, fan; outlines, navigation).
+- [x] **T28 (Tier 1)** — Section 12: Map view (pins, polygons, filtering).
+- [x] **T29 (Tier 1)** — Section 13: Import (GEDCOM 5.5.1 / 7.0, Genney, Holger, RootsMagic, Gramps).
+- [x] **T30 (Tier 1)** — Section 14: Export (GEDCOM, archive .zip, HTML website).
+- [x] **T31 (Tier 1)** — Section 15: Settings (themes, appearance, text size, language, screen-reader mode).
+- [x] **T32 (Tier 1)** — Section 16: Keyboard shortcuts (global + screen reader).
+- [x] **T33 (Tier 1)** — Section 17: Accessibility features.
+- [x] **T34 (Tier 1)** — Section 18: Data ownership & backup.
+- [x] **T35 (Tier 1)** — Section 19: Troubleshooting / FAQ.
 
 ### README + verification
 
-- [ ] **T36 (Tier 1)** — README rewrite. Remove the TODO marker. Embed `docs/screenshot.png`. Add the "Your first family tree in 10 minutes" section right after "What is this?".
-- [ ] **T37 (Tier 1)** — Coverage test `tests/unit/manual-coverage.test.ts`: parse MANUAL.md headings, assert one heading per `PANELED_ROUTES` entry + per importer file in `src/import/<dialect>/` + per `docs/manual/*.png` existence + `docs/quickstart/0[1-8]-*.png` existence.
-- [ ] **T38 (Tier 1)** — Quickstart step verification (replaces Tier 4 fresh-install timing). Mechanical test `tests/unit/readme-quickstart-coherence.test.ts`: parses the "Your first family tree in 10 minutes" section out of README, asserts each numbered step references a `docs/quickstart/0N-*.png` that exists. **Drops the "< 10 min" timing assertion** — replaced by "every documented step is screenshotted and the screenshots match the documented sequence." If a real first-time user is later available to time the walkthrough, the data updates the README; for OSS launch readiness the screenshotted-coherence check is sufficient. Document this delta in the close-out commit so the trade-off is visible.
+- [x] **T36 (Tier 1)** — README rewrite. Remove the TODO marker. Embed `docs/screenshot.png`. Add the "Your first family tree in 10 minutes" section right after "What is this?".
+- [x] **T37 (Tier 1)** — Coverage test `tests/unit/manual-coverage.test.ts`: parse MANUAL.md headings, assert one heading per `PANELED_ROUTES` entry + per importer file in `src/import/<dialect>/` + per `docs/manual/*.png` existence + `docs/quickstart/0[1-8]-*.png` existence.
+- [x] **T38 (Tier 1)** — Quickstart step verification (replaces Tier 4 fresh-install timing). Mechanical test `tests/unit/readme-quickstart-coherence.test.ts`: parses the "Your first family tree in 10 minutes" section out of README, asserts each numbered step references a `docs/quickstart/0N-*.png` that exists. **Drops the "< 10 min" timing assertion** — replaced by "every documented step is screenshotted and the screenshots match the documented sequence." If a real first-time user is later available to time the walkthrough, the data updates the README; for OSS launch readiness the screenshotted-coherence check is sufficient. Document this delta in the close-out commit so the trade-off is visible.
 
 ### Cleanup + close-out
 
-- [ ] **T39 (Tier 1)** — Scratch cleanup. Delete `examples/scratch/swedish-royals.db`, `examples/scratch/swedish-royals-media/`, `examples/scratch/quickstart-walkthrough.db`, `examples/scratch/family-outline.md`, `examples/scratch/face-tag-coords.json`. Confirm `.gitignore` keeps the directory out of future churn.
-- [ ] **T40 (Tier 1)** — Invoke `/close-out` skill. Walks the 6+1 steps, refuses partial, captures evidence. This is a feature plan → minor bump per `oss-release`.
+- [x] **T39 (Tier 1)** — Scratch cleanup. Delete `examples/scratch/swedish-royals.db`, `examples/scratch/swedish-royals-media/`, `examples/scratch/quickstart-walkthrough.db`, `examples/scratch/family-outline.md`, `examples/scratch/face-tag-coords.json`. Confirm `.gitignore` keeps the directory out of future churn.
+- [x] **T40 (Tier 1)** — Invoke `/close-out` skill. Walks the 6+1 steps, refuses partial, captures evidence. This is a feature plan → minor bump per `oss-release`.
 
 ## Self-review checklist
 
-- [ ] User goal is the first thing in the plan and is user-observable.
-- [ ] Scope is enumerated; deviations explicit.
-- [ ] Verification §1 contains at least one check that would fail if the user goal is unmet.
-- [ ] Verification §1 includes a mechanical test (manual coverage) so future panels can't silently fall out of the manual.
-- [ ] Cleanup (scratch DB + images) is named and not deferred to "post-launch follow-up".
-- [ ] No "smoke" identifiers anywhere.
-- [ ] Tasks list is the smallest set that delivers the user goal.
+- [x] User goal is the first thing in the plan and is user-observable.
+- [x] Scope is enumerated; deviations explicit.
+- [x] Verification §1 contains at least one check that would fail if the user goal is unmet.
+- [x] Verification §1 includes a mechanical test (manual coverage) so future panels can't silently fall out of the manual.
+- [x] Cleanup (scratch DB + images) is named and not deferred to "post-launch follow-up".
+- [x] No "smoke" identifiers anywhere.
+- [x] Tasks list is the smallest set that delivers the user goal.
+
+## Close-out notes (2026-06-06)
+
+The user-facing deliverables shipped piecemeal across **v0.264.0–v0.264.7** (commits `dd432b54` → `2eb109cd`); the checkboxes were never flipped and the plan was never archived — caught as lifecycle drift. Archived now. Deltas from the plan as written:
+
+- **T38 adapted target.** The "Your first family tree in 10 minutes" quickstart was moved out of the README into a standalone `QUICKSTART.md` (commit `2c90c505`), with the README linking to it. T38's coherence test (`tests/unit/readme-quickstart-coherence.test.ts`) was therefore never written against the README; it was written at close-out and parses `QUICKSTART.md` instead — asserting README→QUICKSTART link, 8 numbered steps, step↔screenshot index match, file existence, and no orphan screenshots. 5/5 green.
+- **Scope deviation overridden during execution.** The plan's *Scope deviations* said "No `examples/swedish-royals.db` shipped." It **was** shipped (commit `2eb109cd`) as a committed demo DB with portraits + face tags. Recording the override, not undoing it — the shipped demo is a net positive for first-time users.
+- **Close-out gate exception.** `npm test` had 1 unrelated failing test at close-out (`scripts.thirdPartyLicenses` / `scripts.npmScripts`): the `vue-router 5.0.7→5.1.0` bump (`7a0cd35e`) pulls `vite→esbuild@0.28.0` into the prod dep tree, and `@esbuild/darwin-arm64` ships no LICENSE file. This regression is orthogonal to this plan; the plan's own Verification §1 tests (`manual-coverage` 4/4 + `readme-quickstart-coherence` 5/5) are green. Archived per explicit user decision; the esbuild-license-script fix is tracked as a separate follow-up.
