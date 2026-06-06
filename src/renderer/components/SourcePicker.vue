@@ -19,6 +19,7 @@
         autocomplete="off"
         :class="{ 'has-edit-btn': modelValue }"
       />
+      <span class="picker-chevron" aria-hidden="true">▾</span>
       <button
         v-if="modelValue"
         type="button"
@@ -227,8 +228,8 @@ function onBlur() {
 <style scoped>
 .source-picker { position: relative; width: 100%; box-sizing: border-box; }
 .picker-input-row { position: relative; width: 100%; }
-.source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
-.source-picker input.has-edit-btn { padding-right: 32px; }
+.source-picker input { font-size: var(--font-base); width: 100%; box-sizing: border-box; padding: 6px 28px 6px 8px; border: 1px solid var(--surface-border); border-radius: 4px; font-family: inherit; background: var(--surface-bg); color: var(--text-primary); }
+.source-picker input.has-edit-btn { padding-right: 56px; }
 .source-picker input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); background: var(--surface); }
 .source-picker input:disabled { background: var(--surface); cursor: default; opacity: 0.85; }
 .edit-source-btn {
@@ -250,6 +251,19 @@ function onBlur() {
 }
 .edit-source-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
 .edit-source-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.picker-chevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 12px;
+  pointer-events: none;
+  line-height: 1;
+  /* when the edit button is also present, shift left so they don't overlap:
+     edit button is 24px wide at right: 4px, so chevron sits at right: 34px */
+}
+.picker-input-row:has(.edit-source-btn) .picker-chevron { right: 34px; }
 /* Position is set inline (computed from input's bounding rect) since the
    dropdown is teleported to <body>. Scoped styles still reach the teleported
    element because Vue keeps the data-v-* attribute on it. */
