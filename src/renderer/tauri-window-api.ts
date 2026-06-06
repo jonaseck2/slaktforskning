@@ -912,7 +912,28 @@ export function mountWindowApi(db: Database): MountResult {
       const grampsMod = await import('../import/gramps');
       const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
       const bytes = base64ToUint8Array(b64);
-      const result = await grampsMod.importFromGrampsBytes(getDb(), bytes, { onProgress: (m) => fireProgress('gramps', m) });
+
+      const cur = await commands.dbCurrentPath();
+      let mediaWriter: ((filename: string, b: Uint8Array) => Promise<void>) | undefined;
+      let mediaFolderName: string | undefined;
+      if (cur) {
+        mediaFolderName = media.getMediaFolderName(cur);
+        const mediaDir = media.getMediaDir(cur);
+        mediaWriter = async (filename, b) => {
+          await unwrap(commands.fsWriteBytesBase64(`${mediaDir}/${filename}`, uint8ArrayToBase64(b)));
+        };
+      }
+
+      const result = await grampsMod.importFromGrampsBytes(getDb(), bytes, {
+        onProgress: (m) => fireProgress('gramps', m),
+        mediaWriter,
+        mediaFolderName,
+      });
+
+      if (cur) {
+        const { consolidateMediaFolder } = await import('../api/media_consolidate');
+        await consolidateMediaFolder(getDb(), cur);
+      }
       fireDataChanged();
       return { success: true, summary: result.summary };
     } catch (e) {
