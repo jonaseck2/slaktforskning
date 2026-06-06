@@ -10,6 +10,15 @@
  * no-silent-string-replace rule). If a package legitimately has its license
  * text in README only, add it to KNOWN_LICENSE_HINTS.
  *
+ * Build-only tooling that leaks into the production tree via an OPTIONAL peer
+ * dependency (e.g. vue-router 5.1+ declares `vite` as an optional peer for its
+ * typed-routing plugin) is pruned via BUILD_ONLY_SUBTREES. vite / esbuild /
+ * rollup and their platform-specific binary packages are the build toolchain —
+ * they are never bundled into the shipped desktop app, so they don't belong in
+ * a "licenses for code bundled into the app" file. This prune is EXPLICIT and
+ * logged (not a silent skip): esbuild/rollup platform packages also ship no
+ * LICENSE file, so without it the script would hard-fail on `@esbuild/<plat>`.
+ *
  * Rust side: walks the Cargo.lock for the Tauri Rust shell (`src-tauri/`) via
  * `cargo license --json --avoid-dev-deps` and merges those crates into the
  * output as a separate section. If `cargo license` is not installed (or
@@ -61,6 +70,17 @@ const KNOWN_LICENSE_HINTS = new Map([
   ['kkrpc', 'README.md'],
 ]);
 
+// Package names whose entire subtree is build-time tooling, pruned from the
+// production license walk. These reach `npm ls --omit=dev --all` only as an
+// OPTIONAL peer dependency of a real prod dep — vue-router 5.1+ lists `vite` as
+// an optional peer for its typed-routing plugin, which drags vite → esbuild →
+// rollup and their platform binaries into the tree. None of it is bundled into
+// the shipped app, and the platform-binary packages (`@esbuild/<plat>`,
+// `@rollup/rollup-<plat>`) ship no LICENSE file at all. We prune the subtree
+// here explicitly and log each prune (per the no-silent-skip rule) rather than
+// fabricating license resolution for tooling that never ships.
+const BUILD_ONLY_SUBTREES = new Set(['vite']);
+
 /**
  * Run `npm ls <args> --json` and return the parsed JSON tree.
  * Forwards any stderr to our process's stderr so warnings (peer-dep advisories,
@@ -106,6 +126,15 @@ function walk(node, out, parentPath) {
   const deps = node.dependencies ?? {};
   for (const [name, info] of Object.entries(deps)) {
     if (!info?.version || info.extraneous) continue;
+    if (BUILD_ONLY_SUBTREES.has(name)) {
+      // Build tooling reached only via an optional peer dep; not bundled into
+      // the app. Skip it and everything under it. Logged, not silent.
+      console.warn(
+        `[third-party-licenses] pruning build-only subtree '${name}@${info.version}' ` +
+        `(optional peer of a prod dep — build toolchain, not bundled into the app).`,
+      );
+      continue;
+    }
     const key = `${name}@${info.version}`;
     const pkgPath = info.path ?? findPath(name, parentPath);
     if (!out.has(key)) {
