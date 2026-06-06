@@ -257,6 +257,7 @@
       :event-id="savedEventId"
       :exclude-person-ids="extraParticipantsExcludeIds"
       :label="participantsLabel"
+      @request-save="onParticipantRequestSave"
     />
 
     <!-- Shared notes (T20) — only after first save so we have an event id
@@ -315,6 +316,17 @@
     :confirm-label="$t('common.delete')"
     @cancel="delCitation.cancel"
     @confirm="delCitation.confirm"
+  />
+
+  <!-- Save-and-continue confirm when adding a participant on an unsaved event (C4). -->
+  <ConfirmModal
+    :visible="showParticipantSaveConfirm"
+    :title="$t('events.participantSaveFirstTitle')"
+    :message="$t('events.participantSaveFirstBody')"
+    :confirm-label="$t('events.saveAndContinue')"
+    :cancel-label="$t('common.cancel')"
+    @cancel="onParticipantSaveCancel"
+    @confirm="onParticipantSaveConfirm"
   />
 </template>
 
@@ -1069,6 +1081,56 @@ async function syncBaptismCompanion(birthEventId: string) {
 
 function handleCancel() {
   emit('cancel');
+}
+
+// ── Save-and-continue when adding a participant on an unsaved event (C4) ──
+//
+// EventParticipantsSection emits 'request-save' when the user picks a person
+// but the event has not been saved yet (savedEventId === null). We store the
+// pending person id and show a confirm dialog asking whether to save now and
+// then add the participant. On confirm: save the event (composableSave),
+// then add the participant with the same default role ('other') the normal
+// add flow uses. On cancel: clear the pending id (picker is already cleared
+// by EventParticipantsSection before the emit).
+
+const pendingParticipantId = ref<string | null>(null);
+const showParticipantSaveConfirm = ref(false);
+
+function onParticipantRequestSave(personId: string) {
+  pendingParticipantId.value = personId;
+  showParticipantSaveConfirm.value = true;
+}
+
+function onParticipantSaveCancel() {
+  pendingParticipantId.value = null;
+  showParticipantSaveConfirm.value = false;
+}
+
+async function onParticipantSaveConfirm() {
+  showParticipantSaveConfirm.value = false;
+  const personId = pendingParticipantId.value;
+  pendingParticipantId.value = null;
+  if (!personId) return;
+
+  // Save the event. composableSave sets savedEventId via eventIdRef on success.
+  await composableSave();
+
+  // After save, savedEventId should be set. Attach the participant now.
+  const eventId = savedEventId.value;
+  if (!eventId || !window.api) return;
+  try {
+    await (window.api as unknown as {
+      eventParticipants: { add: (input: { event_id: string; person_id: string; role: string }) => Promise<unknown> };
+    }).eventParticipants.add({
+      event_id: eventId,
+      person_id: personId,
+      role: 'other',
+    });
+    // List refresh is automatic via useEntityData → onDataChanged.
+  } catch (err) {
+    console.error('[EventModal] participant add after save failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
 }
 </script>
 

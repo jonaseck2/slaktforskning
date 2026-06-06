@@ -479,6 +479,9 @@ export default {
     participantsAddPlaceholder: 'Add a participant…',
     participantsRemove: 'Remove participant',
     participantsAlreadyAdded: 'This person is already on the event',
+    participantSaveFirstTitle: 'Event must be saved',
+    participantSaveFirstBody: 'The event must be saved before participants can be added.',
+    saveAndContinue: 'Save and continue',
     participantRoleLabel: 'Role',
     // T22 — Negative assertions (GEDCOM 7.0 NO X)
     isNegation: 'Negative assertion (event did NOT happen)',

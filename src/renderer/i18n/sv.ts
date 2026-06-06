@@ -479,6 +479,9 @@ export default {
     participantsAddPlaceholder: 'Lägg till deltagare…',
     participantsRemove: 'Ta bort deltagare',
     participantsAlreadyAdded: 'Personen är redan med i händelsen',
+    participantSaveFirstTitle: 'Händelsen måste sparas',
+    participantSaveFirstBody: 'Händelsen måste sparas innan deltagare kan läggas till.',
+    saveAndContinue: 'Spara och fortsätt',
     participantRoleLabel: 'Roll',
     // T22 — Negative assertions (GEDCOM 7.0 NO X)
     isNegation: 'Negativt påstående (händelsen inträffade INTE)',

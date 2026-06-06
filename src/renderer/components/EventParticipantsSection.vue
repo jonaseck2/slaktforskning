@@ -10,10 +10,7 @@
     </div>
   </div>
   <div class="ep-sec-content">
-    <p v-if="!eventId" class="ep-participants-hint">
-      {{ $t('events.participantsSaveFirstHint') }}
-    </p>
-    <template v-else>
+    <template v-if="eventId">
       <SectionEmpty
         v-if="extraParticipants.length === 0"
         purpose-key="onboarding.empty.eventParticipants.purpose"
@@ -57,14 +54,14 @@
           @click="onRemove(row.id)"
         ><IconTrash :size="14" /></button>
       </div>
-      <div class="ep-participants-add">
-        <PersonPicker
-          v-model="pickedId"
-          :placeholder="$t('events.participantsAddPlaceholder')"
-          @update:modelValue="onPicked"
-        />
-      </div>
     </template>
+    <div class="ep-participants-add">
+      <PersonPicker
+        v-model="pickedId"
+        :placeholder="$t('events.participantsAddPlaceholder')"
+        @update:modelValue="onPicked"
+      />
+    </div>
   </div>
 </template>
 
@@ -129,6 +126,10 @@ const props = defineProps<{
   eventId: string | null;
   excludePersonIds: string[];
   label?: string;
+}>();
+
+const emit = defineEmits<{
+  'request-save': [personId: string];
 }>();
 
 const { t } = useI18n();
@@ -231,7 +232,16 @@ async function onPicked(id: string | null) {
   // Reset the picker immediately — UX expectation is "pick → added, picker
   // clears so I can pick the next one".
   pickedId.value = null;
-  if (!props.eventId || !window.api?.eventParticipants) return;
+
+  // Unsaved event: the picker is always rendered, but we can't attach a
+  // participant without an event id. Emit request-save so the parent can
+  // confirm save-and-continue and then call the add itself.
+  if (!props.eventId) {
+    emit('request-save', id);
+    return;
+  }
+
+  if (!window.api?.eventParticipants) return;
   // Defensive: don't double-add if the picked person is already on this
   // event (or is the primary/spouse). Surface contract Check #4: filtering
   // the picker should already prevent this, but the picker doesn't take an
