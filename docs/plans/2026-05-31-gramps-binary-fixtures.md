@@ -19,9 +19,11 @@ Two new e2e cases in `tests/e2e/imports.spec.ts`, each backed by a tiny native b
 
 Each fixture contains exactly **3 persons** with one event each (birth) and one media file in the `.gpkg` case (a 1×1 px PNG placeholder). Person-count assertion in the e2e step is `count === 3`.
 
+> **⚠️ Task 2 (.gpkg) prerequisite — resolved 2026-06-06.** Executing this plan surfaced that the `.gpkg` native-decoder branch it assumed **did not exist**: the importer only gunzip-or-utf8'd → parsed as XML, with no tar/zip extraction. A zip-form `.gpkg` imported nothing (silently); a tar.gz-form parsed XML by accident and dropped every media file. That branch is now implemented by [2026-06-06-gramps-gpkg-archive-import.md](archive/2026-06-06-gramps-gpkg-archive-import.md) (tar.gz unpack via nanotar → media written into `<dbname>-media/` with relative `file_ref`). Task 2 is therefore now executable — **with one correction: build the `.gpkg` fixture as a tar.gz (`tar czf`), NOT a zip (`zip -r`).** Real Gramps writes tar.gz; the importer expects it. Update Task 2's Step 3 commands accordingly when this plan is resumed.
+
 ### Scope deviations
 
-- **No new importer code.** This plan adds fixtures + activates test cases only. If a fixture surfaces a real regression, that's a separate small-fix PR; the plan's verification (item 5) explicitly includes deliberate-red verification proving the e2e load-bearing.
+- **No new importer code.** This plan adds fixtures + activates test cases only. For `.gpkg` this assumption proved wrong — the missing native-decoder branch was an unimplemented feature, not a regression, and was delivered by a separate plan (see the note above) before this plan's Task 2 can pass. The plan's verification (item 5) explicitly includes deliberate-red verification proving the e2e load-bearing.
 - **Family Tree Maker (.ftm) is out of scope** — no FTM importer exists.
 - **Holger (.zip+media) and RootsMagic (.rmtree) are closed as contributor-driven** — see archive entry for the original plan. The `// Deferred coverage` comment in `imports.spec.ts` gets re-shaped to read as a contributor-issue trigger (not maintainer backlog) as part of Task 3 below.
 
