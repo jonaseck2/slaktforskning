@@ -43,8 +43,16 @@ export function registerDataManagementTools(server: McpServer, ctx: UtilityToolC
     if (format === 'gramps') {
       const messages: string[] = [];
       try {
+        const fsp = await import('node:fs/promises');
+        const mediaDir = getMediaDir(getDbPath());
+        const mediaFolderName = nodePath.basename(mediaDir);
         const result = await importFromGramps(db, args.file_path, {
           onProgress: (msg) => messages.push(msg),
+          mediaFolderName,
+          mediaWriter: async (filename, bytes) => {
+            await fsp.mkdir(mediaDir, { recursive: true });
+            await fsp.writeFile(nodePath.join(mediaDir, filename), bytes);
+          },
         });
         return { content: [{ type: 'text', text: JSON.stringify({ ...result, progress: messages }, null, 2) }] };
       } catch (err) {
