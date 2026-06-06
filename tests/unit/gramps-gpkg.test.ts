@@ -61,3 +61,60 @@ describe('extractGrampsArchive', () => {
 });
 
 export { PNG, GPKG_XML };
+
+import { beforeEach } from 'vitest';
+import { writeFileSync, mkdtempSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { importFromGramps, importFromGrampsBytes } from '../../src/import/gramps';
+import { queryAll } from '../../src/api/db';
+import { createTestDb } from './helpers';
+
+let db: ReturnType<typeof createTestDb>;
+beforeEach(async () => { db = await createTestDb(); });
+
+describe('importFromGrampsBytes — .gpkg with in-memory writer', () => {
+  it('imports 3 persons + 1 media row, writes the media file, rewrites file_ref', async () => {
+    const writes: Record<string, Uint8Array> = {};
+    const { summary } = await importFromGrampsBytes(db, buildGpkgBytes(), {
+      mediaWriter: async (filename, bytes) => { writes[filename] = bytes; },
+      mediaFolderName: 'fam-media',
+    });
+    expect(summary.persons).toBe(3);
+    expect(summary.media).toBe(1);
+    expect(writes['blank.png']).toEqual(PNG);
+    const rows = await queryAll<{ file_ref: string }>(db, 'SELECT file_ref FROM media');
+    expect(rows.map((r) => r.file_ref)).toEqual(['fam-media/blank.png']);
+  });
+});
+
+describe('importFromGramps — .gpkg path variant with fs writer', () => {
+  it('writes the media file to disk and rewrites file_ref', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gpkg-test-'));
+    const gpkgPath = join(dir, 'sample.gpkg');
+    writeFileSync(gpkgPath, buildGpkgBytes());
+    const mediaDir = join(dir, 'sample-media');
+    const { summary } = await importFromGramps(db, gpkgPath, {
+      mediaWriter: async (filename, bytes) => {
+        const { mkdirSync, writeFileSync: wf } = await import('node:fs');
+        mkdirSync(mediaDir, { recursive: true });
+        wf(join(mediaDir, filename), bytes);
+      },
+      mediaFolderName: 'sample-media',
+    });
+    expect(summary.persons).toBe(3);
+    expect(existsSync(join(mediaDir, 'blank.png'))).toBe(true);
+    expect(readFileSync(join(mediaDir, 'blank.png'))).toEqual(Buffer.from(PNG));
+    const rows = await queryAll<{ file_ref: string }>(db, 'SELECT file_ref FROM media');
+    expect(rows.map((r) => r.file_ref)).toEqual(['sample-media/blank.png']);
+  });
+});
+
+describe('importFromGramps — plain .gramps regression (no writer)', () => {
+  it('still imports persons from gzipped XML with no media options', async () => {
+    const xml = GPKG_XML.replace(/<objects>[\s\S]*<\/objects>/, '').replace(/<objref[^/]*\/>/g, '');
+    const { summary } = await importFromGrampsBytes(db, gzipSync(new TextEncoder().encode(xml)));
+    expect(summary.persons).toBe(3);
+    expect(summary.media).toBe(0);
+  });
+});

@@ -1,74 +1,108 @@
 /**
  * Gramps .gramps / .gpkg import orchestrator.
  *
- * `.gramps` is plain XML (sometimes gzipped despite the bare extension —
- * the auto-magic-byte sniff handles that). `.gpkg` is a tar.gz bundle of
- * the XML plus a media folder; for the first cut we read the XML out
- * via the XML-only path and let media file_refs resolve later via the
- * existing media-consolidate pipeline.
+ * `.gramps` is XML (optionally gzipped). `.gpkg` is a gzipped USTAR tar of
+ * the XML plus a `media/` folder — `extractGrampsArchive` (archive.ts) pulls
+ * both apart. Media bytes are written through a caller-supplied
+ * `GrampsMediaWriter` (renderer → fs_write_bytes_base64; MCP → Node fs), then
+ * each media `file_ref` is rewritten to `<mediaFolderName>/<basename>` so the
+ * refs are relative per .claude/rules/media.md.
  */
 
 import * as fs from 'node:fs';
-import { gunzipSync } from 'node:zlib';
-import { runSql } from '../../api/db';
+import { queryAll, runSql } from '../../api/db';
 import type { Database } from 'node-sqlite3-wasm';
 import { transformGramps, emptyGrampsSummary, type GrampsImportSummary } from './transform';
+import { extractGrampsArchive, type GrampsMediaEntry } from './archive';
+
+export type GrampsMediaWriter = (filename: string, bytes: Uint8Array) => Promise<void>;
 
 export interface GrampsImportOptions {
   onProgress?: (msg: string) => void;
+  /** Persist a bundled media file. Omit for plain `.gramps` (no media). */
+  mediaWriter?: GrampsMediaWriter;
+  /** Sibling media folder name (e.g. `family-media`) for file_ref rewrite. */
+  mediaFolderName?: string;
 }
 
 export interface GrampsImportResult {
   summary: GrampsImportSummary;
 }
 
-export async function importFromGrampsBytes(
-  ourDb: Database,
-  bytes: Uint8Array,
-  options: GrampsImportOptions = {},
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
+
+async function applyGrampsMedia(
+  db: Database,
+  media: GrampsMediaEntry[],
+  mediaFolderName: string,
+  writer: GrampsMediaWriter,
+  onProgress: (msg: string) => void,
+): Promise<void> {
+  onProgress('Writing media…');
+  const written = new Set<string>();
+  for (const { name, bytes } of media) {
+    try {
+      await writer(name, bytes);
+      written.add(name);
+    } catch {
+      // Tolerate a failed write; consolidateMediaFolder is the safety net.
+    }
+  }
+  if (written.size === 0) return;
+  const rows = await queryAll<{ id: string; file_ref: string }>(
+    db,
+    'SELECT id, file_ref FROM media WHERE file_ref IS NOT NULL',
+  );
+  for (const row of rows) {
+    const base = baseName(row.file_ref);
+    const target = `${mediaFolderName}/${base}`;
+    if (written.has(base) && row.file_ref !== target) {
+      await runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [target, row.id]);
+    }
+  }
+}
+
+async function runGrampsImport(
+  db: Database,
+  fileBytes: Uint8Array,
+  options: GrampsImportOptions,
 ): Promise<GrampsImportResult> {
-  const { onProgress = () => { /* noop */ } } = options;
+  const { onProgress = () => { /* noop */ }, mediaWriter, mediaFolderName } = options;
+
   onProgress('Importing…');
-  const buf = Buffer.from(bytes);
-  const xml = (buf[0] === 0x1f && buf[1] === 0x8b)
-    ? gunzipSync(buf).toString('utf-8')
-    : buf.toString('utf-8');
+  const { xml, media } = extractGrampsArchive(fileBytes);
+
   let summary = emptyGrampsSummary();
-  await runSql(ourDb, 'BEGIN IMMEDIATE');
+  await runSql(db, 'BEGIN IMMEDIATE');
   try {
-    summary = await transformGramps(ourDb, xml);
-    await runSql(ourDb, 'COMMIT');
+    summary = await transformGramps(db, xml);
+    await runSql(db, 'COMMIT');
   } catch (err) {
-    try { await runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
+    try { await runSql(db, 'ROLLBACK'); } catch { /* ignore */ }
     throw err;
+  }
+
+  if (media.length > 0 && mediaWriter && mediaFolderName) {
+    await applyGrampsMedia(db, media, mediaFolderName, mediaWriter, onProgress);
   }
   return { summary };
 }
 
+export async function importFromGrampsBytes(
+  db: Database,
+  bytes: Uint8Array,
+  options: GrampsImportOptions = {},
+): Promise<GrampsImportResult> {
+  return runGrampsImport(db, bytes, options);
+}
+
 export async function importFromGramps(
-  ourDb: Database,
+  db: Database,
   filePath: string,
   options: GrampsImportOptions = {},
 ): Promise<GrampsImportResult> {
   const { onProgress = () => { /* noop */ } } = options;
-
   onProgress('Reading Gramps file…');
-  const buf = fs.readFileSync(filePath);
-  // Gzip-magic check: 1f 8b. Gramps writes plain XML by default but the
-  // bigger reference databases (and .gpkg bundles) are gzipped.
-  const xml = (buf[0] === 0x1f && buf[1] === 0x8b)
-    ? gunzipSync(buf).toString('utf-8')
-    : buf.toString('utf-8');
-
-  onProgress('Importing…');
-  let summary = emptyGrampsSummary();
-  await runSql(ourDb, 'BEGIN IMMEDIATE');
-  try {
-    summary = await transformGramps(ourDb, xml);
-    await runSql(ourDb, 'COMMIT');
-  } catch (err) {
-    try { await runSql(ourDb, 'ROLLBACK'); } catch { /* ignore */ }
-    throw err;
-  }
-  return { summary };
+  const fileBytes = new Uint8Array(fs.readFileSync(filePath));
+  return runGrampsImport(db, fileBytes, options);
 }
