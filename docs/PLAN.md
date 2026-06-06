@@ -10,7 +10,6 @@ This file lists what's **planned**. Two states only: planned (here) or done (arc
 
 Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
-- **Ben feedback polish (rapport 100-103, 105)** — beta-tester UI/i18n batch from v215→v265: citation modal labels + dropdown affordance + confidence order, EventModal section count parens + trash icon, per-event-type residence labels + inline save-and-continue, research-tasks rename, PersonPanel Timeline/Map reorder. → [2026-05-31-ben-feedback-polish-v215-to-v265.md](plans/2026-05-31-ben-feedback-polish-v215-to-v265.md)
 - **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding via XML-direct authoring (rewritten 2026-05-31 from GUI-authoring to hand-written XML + gzip + zip, removing the Gramps-install gate). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md)
 
 ---

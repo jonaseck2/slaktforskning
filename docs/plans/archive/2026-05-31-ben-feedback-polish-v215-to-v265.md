@@ -116,7 +116,7 @@ Running the test list aloud: *if every component test, every unit test, every e2
 - Modify: `src/renderer/i18n/sv.ts:501-509`
 - Modify: `src/renderer/i18n/en.ts:507,509`
 
-- [ ] **Step 1: Write the failing test** — `tests/components/citation-modal-labels.test.ts`
+- [x] **Step 1: Write the failing test** — `tests/components/citation-modal-labels.test.ts`
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -155,7 +155,7 @@ describe('CitationModal labels (Rapport 100)', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npm test -- citation-modal-labels
@@ -163,7 +163,7 @@ npm test -- citation-modal-labels
 
 Expected: 3 failing assertions ("Lägg till hänvisning" doesn't include "källhänvisning", etc.)
 
-- [ ] **Step 3: Apply the i18n changes**
+- [x] **Step 3: Apply the i18n changes**
 
 In `src/renderer/i18n/sv.ts`:
 
@@ -191,7 +191,7 @@ In `src/renderer/i18n/en.ts`:
     confidence: 'Source reliability',         // was 'Confidence'
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 npm test -- citation-modal-labels
@@ -199,7 +199,7 @@ npm test -- citation-modal-labels
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts tests/components/citation-modal-labels.test.ts
@@ -211,7 +211,7 @@ git commit -m "feat(i18n): clarify citation modal labels (Ben rapport 100 §1, �
 **Files:**
 - Modify: `src/renderer/components/SourcePicker.vue`
 
-- [ ] **Step 1: Add the chevron element**
+- [x] **Step 1: Add the chevron element**
 
 In `src/renderer/components/SourcePicker.vue` template, after the `<input>` element and before the edit button:
 
@@ -246,7 +246,7 @@ Adjust the `.source-picker input` padding-right so the input text doesn't run un
 .source-picker input.has-edit-btn { padding-right: 56px; }
 ```
 
-- [ ] **Step 2: Verify visually in the running app**
+- [x] **Step 2: Verify visually in the running app**
 
 ```bash
 npm start
@@ -256,7 +256,7 @@ Open Persons → any person → Sources → "+ Källa" → confirm a ▾ glyph i
 
 Capture a screenshot for the close-out commit.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/components/SourcePicker.vue
@@ -269,7 +269,7 @@ git commit -m "feat(ui): add dropdown affordance to SourcePicker (Ben rapport 10
 - Modify: `src/renderer/components/modals/CitationModal.vue:51-61`
 - Test: `tests/components/citation-modal-labels.test.ts` (extend)
 
-- [ ] **Step 1: Extend the test**
+- [x] **Step 1: Extend the test**
 
 Append to `tests/components/citation-modal-labels.test.ts`:
 
@@ -288,7 +288,7 @@ it('renders confidence buttons most-reliable-first (Primärkälla → Opålitlig
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 ```bash
 npm test -- citation-modal-labels
@@ -296,7 +296,7 @@ npm test -- citation-modal-labels
 
 Expected: the new assertion fails (current order is Opålitlig first).
 
-- [ ] **Step 3: Reverse the iteration in CitationModal.vue**
+- [x] **Step 3: Reverse the iteration in CitationModal.vue**
 
 ```vue
 <button
@@ -307,7 +307,7 @@ Expected: the new assertion fails (current order is Opålitlig first).
 
 Leave `CONFIDENCE_LEVEL_VALUES` in `src/renderer/constants/eventTypes.ts` untouched — it's the storage enum, not a render hint.
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 ```bash
 npm test -- citation-modal-labels
@@ -315,7 +315,7 @@ npm test -- citation-modal-labels
 
 Expected: all assertions pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/components/modals/CitationModal.vue tests/components/citation-modal-labels.test.ts
@@ -329,7 +329,7 @@ git commit -m "feat(ui): show citation confidence most-reliable-first (Ben rappo
 - Modify: `src/renderer/components/EventParticipantsSection.vue:51-58`
 - Test: `tests/components/event-modal-section-counts.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -355,13 +355,13 @@ describe('EventModal citation section (Rapport 101)', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 ```bash
 npm test -- event-modal-section-counts
 ```
 
-- [ ] **Step 3: Patch EventModal.vue**
+- [x] **Step 3: Patch EventModal.vue**
 
 At [src/renderer/components/modals/EventModal.vue:208](../../src/renderer/components/modals/EventModal.vue):
 
@@ -389,7 +389,7 @@ Add the import at the top of `<script setup>`:
 import IconTrash from '../ui/IconTrash.vue';
 ```
 
-- [ ] **Step 4: Patch EventParticipantsSection.vue (sibling fix)**
+- [x] **Step 4: Patch EventParticipantsSection.vue (sibling fix)**
 
 At [src/renderer/components/EventParticipantsSection.vue:51-58](../../src/renderer/components/EventParticipantsSection.vue):
 
@@ -412,7 +412,7 @@ Add to `<script setup>`:
 import IconTrash from './ui/IconTrash.vue';
 ```
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 ```bash
 npm test -- event-modal-section-counts
@@ -420,7 +420,7 @@ npm test -- event-modal-section-counts
 
 Expected: both pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/modals/EventModal.vue src/renderer/components/EventParticipantsSection.vue tests/components/event-modal-section-counts.test.ts
@@ -436,7 +436,7 @@ git commit -m "feat(ui): parens for citation count + IconTrash on row delete (Be
 - Modify: `src/renderer/components/EventParticipantsSection.vue:8` (override label per event-type)
 - Test: `tests/components/event-modal-residence.test.ts`
 
-- [ ] **Step 1: Define the label map in i18n**
+- [x] **Step 1: Define the label map in i18n**
 
 In `sv.ts` under `events`:
 
@@ -467,7 +467,7 @@ Mirror in `en.ts`:
     },
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -508,7 +508,7 @@ describe('EventModal residence labels (Rapport 102)', () => {
 });
 ```
 
-- [ ] **Step 3: Wire the helper + labels in EventModal.vue**
+- [x] **Step 3: Wire the helper + labels in EventModal.vue**
 
 Inside `<script setup>` near the other computed values:
 
@@ -553,7 +553,7 @@ At line 85, wrap with v-if:
 <p v-if="dateLabels.endHint" class="ep-field-hint">{{ dateLabels.endHint }}</p>
 ```
 
-- [ ] **Step 4: Wire the participants override**
+- [x] **Step 4: Wire the participants override**
 
 Pass `:label="participantsLabel"` from `EventModal.vue` to `EventParticipantsSection`. Inside the section, replace the hardcoded title:
 
@@ -563,7 +563,7 @@ Pass `:label="participantsLabel"` from `EventModal.vue` to `EventParticipantsSec
 
 with a new optional prop `label?: string`.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 ```bash
 npm test -- event-modal-residence
@@ -571,7 +571,7 @@ npm test -- event-modal-residence
 
 Expected: all 4 pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts \
@@ -588,7 +588,7 @@ git commit -m "feat(ui): per-event-type date and participant labels for residenc
 - Modify: `src/renderer/components/modals/EventModal.vue` (expose save trigger)
 - Test: `tests/components/event-modal-participants-save.test.ts`
 
-- [ ] **Step 1: Decide the contract**
+- [x] **Step 1: Decide the contract**
 
 `EventParticipantsSection` currently hides the picker when `eventId === null` and shows a static hint. Replace with:
 
@@ -599,7 +599,7 @@ git commit -m "feat(ui): per-event-type date and participant labels for residenc
   - On confirm: `await composableSave()`, then `await window.api.eventParticipants.add({ event_id: savedEventId.value, person_id: personId, role: 'other' })`.
   - On cancel: clear the picker's `pickedId`.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
@@ -623,7 +623,7 @@ describe('EventModal participant add on unsaved event (Rapport 102 §4)', () => 
 });
 ```
 
-- [ ] **Step 3: Implement EventParticipantsSection changes**
+- [x] **Step 3: Implement EventParticipantsSection changes**
 
 Replace the existing `<p v-if="!eventId">` block with the picker emitting an event when no eventId is present. Add an emit type:
 
@@ -643,7 +643,7 @@ async function onPicked(personId: string | null) {
 }
 ```
 
-- [ ] **Step 4: Implement EventModal handler**
+- [x] **Step 4: Implement EventModal handler**
 
 ```vue
 <EventParticipantsSection
@@ -683,14 +683,14 @@ async function onConfirmSaveForParticipant() {
 
 Add the three i18n keys (`participantSaveFirstTitle`, `participantSaveFirstBody`, `saveAndContinue`) to both `sv.ts` and `en.ts` under `events`.
 
-- [ ] **Step 5: Run the test, then run e2e to make sure existing participant flows still pass**
+- [x] **Step 5: Run the test, then run e2e to make sure existing participant flows still pass**
 
 ```bash
 npm test -- event-modal-participants-save
 npm run test:e2e -- [panels]
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/EventParticipantsSection.vue \
@@ -705,7 +705,7 @@ git commit -m "feat(ui): inline save-and-continue when adding participant on uns
 **Files:**
 - Modify: `src/renderer/i18n/sv.ts:25, 1387-1388`
 
-- [ ] **Step 1: Apply the rename**
+- [x] **Step 1: Apply the rename**
 
 ```typescript
 nav: {
@@ -724,7 +724,7 @@ researchTasks: {
 
 Leave `en.ts` alone unless an English-speaking user reports it (commit message documents the deliberate skip).
 
-- [ ] **Step 2: Spot-check by running the app**
+- [x] **Step 2: Spot-check by running the app**
 
 ```bash
 npm start
@@ -732,7 +732,7 @@ npm start
 
 Sidebar reads "Fortsatt forskning". PersonPanel section header at the bottom reads "Fortsatt forskning". The "+ Uppgift" action button keeps the singular entity wording.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/renderer/i18n/sv.ts
@@ -745,7 +745,7 @@ git commit -m "feat(i18n): rename research-tasks section to 'Fortsatt forskning'
 - Modify: `src/renderer/components/PersonPanel.vue`
 - Test: `tests/components/person-panel-section-order.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -775,25 +775,25 @@ describe('PersonPanel section order (Rapport 105)', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch fail**
+- [x] **Step 2: Run and watch fail**
 
 ```bash
 npm test -- person-panel-section-order
 ```
 
-- [ ] **Step 3: Move the Timeline and Map `<div class="panel-section">` blocks**
+- [x] **Step 3: Move the Timeline and Map `<div class="panel-section">` blocks**
 
 Cut [PersonPanel.vue:112-128](../../src/renderer/components/PersonPanel.vue#L112-L128) (the two `panel-section` blocks for `sections.timeline` and `sections.map`) and paste them immediately above the Research section (`<SectionHeader :title="$t('researchTasks.nav')"…>`) at line 182.
 
 Verify the surrounding `<template v-if="…">` wrappers (if any) still bracket the right set of children.
 
-- [ ] **Step 4: Run the test + the existing panel-layout-consistency test**
+- [x] **Step 4: Run the test + the existing panel-layout-consistency test**
 
 ```bash
 npm test -- person-panel-section-order panel-layout-consistency
 ```
 
-- [ ] **Step 5: Run the panel e2e tier**
+- [x] **Step 5: Run the panel e2e tier**
 
 ```bash
 npm run test:e2e -- [panels]
@@ -801,7 +801,7 @@ npm run test:e2e -- [panels]
 
 If any selectors broke, fix them in the same commit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/PersonPanel.vue tests/components/person-panel-section-order.test.ts
@@ -814,7 +814,7 @@ git commit -m "feat(ui): move Timeline and Life Map sections below authored data
 - Modify: `tests/unit/i18n-parity.test.ts` (if exists) OR create
 - Verify: `src/renderer/i18n/sv.ts` and `en.ts` parity for new keys
 
-- [ ] **Step 1: Confirm or add an i18n parity check**
+- [x] **Step 1: Confirm or add an i18n parity check**
 
 ```bash
 grep -l i18n-parity tests/unit/
@@ -858,7 +858,7 @@ describe('i18n parity', () => {
 });
 ```
 
-- [ ] **Step 2: Run**
+- [x] **Step 2: Run**
 
 ```bash
 npm test -- i18n-parity
@@ -866,7 +866,7 @@ npm test -- i18n-parity
 
 If failing, add missing keys to either side (D1 deliberately keeps `researchTasks.title/nav` in English untouched; if the test fails on those, mark them as accepted divergence in the test by listing them in an allowlist constant — but only if no other approach works).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/unit/i18n-parity.test.ts
@@ -875,5 +875,5 @@ git commit -m "test(i18n): assert sv ↔ en key parity"
 
 ### Task 10 (Tier 1): Close-out via /close-out skill
 
-- [ ] **Step 1** — Capture A2 (SourcePicker chevron) screenshot via dev MCP: navigate to a citation modal, `ui_screenshot` the SourcePicker, save to `/tmp/ben-polish-A2-chevron.png`. A2 has no automated test, so the screenshot is the load-bearing user-observable evidence for that item.
-- [ ] **Step 2** — Invoke `/close-out` skill. The skill walks the 6+1 steps (evidence capture from `npm test` / `npm run build` / `npm run test:e2e:full`, archive, version bump to minor per feature plan, CHANGELOG, PLAN.md, archive PLAN.md, commit, post-close hygiene sweep). The A2 screenshot from Step 1 is referenced in the close-out commit body.
+- [x] **Step 1** — Capture A2 (SourcePicker chevron) screenshot via dev MCP: navigate to a citation modal, `ui_screenshot` the SourcePicker, save to `/tmp/ben-polish-A2-chevron.png`. A2 has no automated test, so the screenshot is the load-bearing user-observable evidence for that item.
+- [x] **Step 2** — Invoke `/close-out` skill. The skill walks the 6+1 steps (evidence capture from `npm test` / `npm run build` / `npm run test:e2e:full`, archive, version bump to minor per feature plan, CHANGELOG, PLAN.md, archive PLAN.md, commit, post-close hygiene sweep). The A2 screenshot from Step 1 is referenced in the close-out commit body.
