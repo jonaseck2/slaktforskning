@@ -61,15 +61,29 @@ describe('EventParticipantsSection', async () => {
     };
   });
 
-  it('renders the save-first hint and no PersonPicker when eventId is null', async () => {
+  // Rapport 102 §4 (plan 2026-05-31-ben-feedback-polish): on an unsaved event
+  // the picker is now ALWAYS rendered (no static "save first" hint). Picking a
+  // person emits `request-save` so the parent (EventModal) can offer
+  // save-and-continue, instead of silently doing nothing.
+  it('renders the PersonPicker (no save-first hint) and emits request-save when eventId is null', async () => {
     const wrapper = mount(EventParticipantsSection, {
       global: { plugins: [i18n] },
       props: { eventId: null, excludePersonIds: [] },
     });
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Save the event first to add additional participants');
-    expect(wrapper.findComponent({ name: 'PersonPicker' }).exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Save the event first to add additional participants');
+    const picker = wrapper.findComponent({ name: 'PersonPicker' });
+    expect(picker.exists()).toBe(true);
+
+    // Picking a person on an unsaved event must NOT call the add API directly;
+    // it emits request-save with the picked person id for the parent to handle.
+    picker.vm.$emit('update:modelValue', NEW_GUEST_ID);
+    await flushPromises();
+
+    expect(addMock).not.toHaveBeenCalled();
+    expect(wrapper.emitted('request-save')).toBeTruthy();
+    expect(wrapper.emitted('request-save')![0]).toEqual([NEW_GUEST_ID]);
   });
 
   it('renders only non-excluded participants and shows the PersonPicker for adding more', async () => {
