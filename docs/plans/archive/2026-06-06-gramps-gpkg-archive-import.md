@@ -1,6 +1,6 @@
 # Gramps `.gpkg` archive import — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Importing a Gramps `.gpkg` package brings in the persons/events *and* writes the bundled media files into `<dbname>-media/` with relative `file_ref`s — from both the desktop file picker and the MCP `import_file` tool.
 
@@ -80,20 +80,20 @@ User pre-approved `nanotar` (AskUserQuestion, 2026-06-06). Mechanical add.
 
 **Files:** Modify `package.json`, `package-lock.json`.
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```bash
 npm install nanotar@^0.3.0 --save --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import
 ```
 
-- [ ] **Step 2: Verify it resolves and is zero-dep**
+- [x] **Step 2: Verify it resolves and is zero-dep**
 
 ```bash
 node -e "console.log(require('/Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import/node_modules/nanotar/package.json').version)"
 # Expected: 0.3.0
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add package.json package-lock.json
@@ -106,7 +106,7 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 - Create: `src/import/gramps/archive.ts`
 - Test: `tests/unit/gramps-gpkg.test.ts`
 
-- [ ] **Step 1: Write the failing test for `extractGrampsArchive`**
+- [x] **Step 1: Write the failing test for `extractGrampsArchive`**
 
 Create `tests/unit/gramps-gpkg.test.ts`:
 
@@ -176,14 +176,14 @@ describe('extractGrampsArchive', () => {
 export { PNG, GPKG_XML };
 ```
 
-- [ ] **Step 2: Run it; verify it fails**
+- [x] **Step 2: Run it; verify it fails**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vitest run --root /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import tests/unit/gramps-gpkg.test.ts
 ```
 Expected: FAIL — `Cannot find module '../../src/import/gramps/archive'`.
 
-- [ ] **Step 3: Implement `archive.ts`**
+- [x] **Step 3: Implement `archive.ts`**
 
 ```ts
 import { gunzipSync } from 'fflate';
@@ -246,14 +246,14 @@ export function extractGrampsArchive(fileBytes: Uint8Array): GrampsArchiveConten
 }
 ```
 
-- [ ] **Step 4: Run it; verify it passes**
+- [x] **Step 4: Run it; verify it passes**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vitest run --root /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import tests/unit/gramps-gpkg.test.ts
 ```
 Expected: PASS (3 tests in `extractGrampsArchive`).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add src/import/gramps/archive.ts tests/unit/gramps-gpkg.test.ts
@@ -266,7 +266,7 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 - Modify: `src/import/gramps/index.ts`
 - Test: `tests/unit/gramps-gpkg.test.ts` (add cases)
 
-- [ ] **Step 1: Add the failing importer tests**
+- [x] **Step 1: Add the failing importer tests**
 
 Append to `tests/unit/gramps-gpkg.test.ts`:
 
@@ -329,14 +329,14 @@ describe('importFromGramps — plain .gramps regression (no writer)', () => {
 });
 ```
 
-- [ ] **Step 2: Run it; verify it fails**
+- [x] **Step 2: Run it; verify it fails**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vitest run --root /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import tests/unit/gramps-gpkg.test.ts
 ```
 Expected: FAIL — `importFromGrampsBytes` ignores `mediaWriter`/`mediaFolderName` (no media file written, `file_ref` not rewritten).
 
-- [ ] **Step 3: Rewrite `src/import/gramps/index.ts`**
+- [x] **Step 3: Rewrite `src/import/gramps/index.ts`**
 
 Replace the entire file with:
 
@@ -451,14 +451,14 @@ export async function importFromGramps(
 }
 ```
 
-- [ ] **Step 4: Run it; verify it passes**
+- [x] **Step 4: Run it; verify it passes**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vitest run --root /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import tests/unit/gramps-gpkg.test.ts tests/unit/gramps-transform.test.ts
 ```
 Expected: PASS — all `gramps-gpkg` cases + the unchanged `gramps-transform` suite.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add src/import/gramps/index.ts tests/unit/gramps-gpkg.test.ts
@@ -469,7 +469,7 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 
 **Files:** Modify `src/renderer/tauri-window-api.ts` (the `api.import.grampsRun` handler, around line 907).
 
-- [ ] **Step 1: Replace the handler body**
+- [x] **Step 1: Replace the handler body**
 
 Find `api.import.grampsRun = async (opts: unknown) => {` and replace its body with (mirrors `api.archive.import`, using the `media` helpers already imported at the top of the file):
 
@@ -514,14 +514,14 @@ Find `api.import.grampsRun = async (opts: unknown) => {` and replace its body wi
   };
 ```
 
-- [ ] **Step 2: Typecheck the renderer**
+- [x] **Step 2: Typecheck the renderer**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vue-tsc --noEmit --ignoreDeprecations 6.0
 ```
 Expected: exit 0 (no new errors at the `grampsRun` call site). If `media.getMediaFolderName`/`getMediaDir` aren't found, confirm the top-of-file `import * as media from '../api/media'` exists (it does at ~line 21).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add src/renderer/tauri-window-api.ts
@@ -532,7 +532,7 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 
 **Files:** Modify `src/mcp/tools/prod/data-management.ts` (the `if (format === 'gramps')` branch, around line 44).
 
-- [ ] **Step 1: Replace the gramps branch**
+- [x] **Step 1: Replace the gramps branch**
 
 `getMediaDir` is already imported (line 13); `nodePath` is already in scope (line 127). Add a Node-`fs/promises` import at the top if absent, then replace the branch:
 
@@ -559,14 +559,14 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
     }
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 ```bash
 npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import exec -- vue-tsc --noEmit --ignoreDeprecations 6.0
 ```
 Expected: exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add src/mcp/tools/prod/data-management.ts
@@ -577,7 +577,7 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 
 **Files:** none (verification only).
 
-- [ ] **Step 1: Deliberate-red**
+- [x] **Step 1: Deliberate-red**
 
 Temporarily edit `src/import/gramps/archive.ts` — add `throw new Error('e2e-canary');` as the first line inside `extractGrampsArchive`. Run:
 
@@ -586,7 +586,7 @@ npm --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gp
 ```
 Expected: the `.gpkg` cases FAIL with `e2e-canary`. **Revert the throw** and re-run → PASS. Capture both outputs for close-out.
 
-- [ ] **Step 2: Full unit suite + lint + build**
+- [x] **Step 2: Full unit suite + lint + build**
 
 ```bash
 npm test --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import
@@ -595,7 +595,7 @@ npm run build --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees
 ```
 Expected: `npm test` summary `N passed`; lint 0 errors; build exits 0. Capture the summary lines.
 
-- [ ] **Step 3: e2e (importer touched → `:full` required)**
+- [x] **Step 3: e2e (importer touched → `:full` required)**
 
 ```bash
 npm run test:e2e:full --prefix /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import
@@ -606,11 +606,11 @@ Expected: all 7 projects pass; `imports` project green. Capture per-project pass
 
 **Files:** Modify `docs/plans/2026-05-31-gramps-binary-fixtures.md`.
 
-- [ ] **Step 1: Annotate Task 2's prerequisite**
+- [x] **Step 1: Annotate Task 2's prerequisite**
 
 Add a note under the fixtures plan's Task 2 (and its Scope deviation about "no new importer code") that the `.gpkg` native-decoder branch is delivered by `2026-06-06-gramps-gpkg-archive-import.md` (now merged), so Task 2 is executable: the `.gpkg` fixture must be built as a **tar.gz** (`tar czf`, not `zip`), and the importer extracts media into `<dbname>-media/`.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-import add docs/plans/2026-05-31-gramps-binary-fixtures.md
@@ -619,4 +619,4 @@ git -C /Users/jonasahnstedt/git/slaktforskning/.claude/worktrees/gramps-gpkg-imp
 
 ### Task 8 (Tier 1): Close-out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. It walks the 6+1 steps, refuses partial, captures evidence (the Task 6 deliberate-red red+green output, `npm test`/`build`/`test:e2e:full` summaries). Minor bump (new feature). Skill handles archive + PLAN.md + CHANGELOG + merge to `main`.
+- [x] **T-final (Tier 1)** — Invoke `/close-out` skill. It walks the 6+1 steps, refuses partial, captures evidence (the Task 6 deliberate-red red+green output, `npm test`/`build`/`test:e2e:full` summaries). Minor bump (new feature). Skill handles archive + PLAN.md + CHANGELOG + merge to `main`.
