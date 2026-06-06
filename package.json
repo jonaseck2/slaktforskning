@@ -71,6 +71,7 @@
     "kkrpc": "^0.6.7",
     "leaflet": "^1.9.4",
     "lunr": "^2.3.9",
+    "nanotar": "^0.3.0",
     "node-sqlite3-wasm": "^0.8.56",
     "pinia": "^3.0.4",
     "uuid": "^13.0.0",
