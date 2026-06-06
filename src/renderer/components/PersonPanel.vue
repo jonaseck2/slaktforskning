@@ -111,22 +111,6 @@
         </div>
       </div>
 
-      <!-- Timeline section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('personTimeline.title')" :count="eventCount" :collapsed="!sections.timeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('timeline')" @action="triggerAddEvent" />
-        <div v-if="sections.timeline" class="panel-section-body">
-          <PersonTimeline :person-id="personId!" />
-        </div>
-      </div>
-
-      <!-- Life Map section -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('map.personMap')" :count="mapPointCount" :collapsed="!sections.map" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('map')" @action="triggerAddEvent" />
-        <div v-if="sections.map" class="panel-section-body">
-          <PersonMap :person-id="personId!" />
-        </div>
-      </div>
-
       <!-- Relationer section -->
       <div class="panel-section">
         <SectionHeader :title="$t('personDetail.relationships')" :count="relationshipCount" :collapsed="!sections.relationships" @toggle="toggleSection('relationships')" />
@@ -170,32 +154,6 @@
             @action="showGroupPicker = true"
           />
           <GroupsTable v-else :groups="groups" :readonly="props.readonly" v-bind="props.readonly ? {} : { onRemove: removeFromGroup }" @select="(id) => router.push('/groups/' + id)" />
-        </div>
-      </div>
-
-      <!-- Forskning section. v-show (not v-if) keeps the section component
-           mounted while collapsed so its `defineExpose({ count })` is live —
-           otherwise the (N) count badge falls back to 0 whenever the section
-           is closed, contradicting the DB and confusing the user. The child
-           uses useEntityData with caching so the per-mount fetch is cheap. -->
-      <div class="panel-section">
-        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskPicker()" />
-        <div v-show="sections.research" class="panel-section-body">
-          <div v-if="!props.readonly && showTaskPicker && personId" class="panel-group-picker-wrap">
-            <ResearchTaskPicker
-              :person-id="personId"
-              :exclude-ids="researchTaskIds"
-              @added="onTaskAdded"
-              @cancel="showTaskPicker = false"
-            />
-          </div>
-          <PersonResearchTasksSection
-            ref="researchSectionRef"
-            :person-id="personId!"
-            :readonly="props.readonly"
-            @select="openTaskForm"
-            @add-task="openTaskPicker()"
-          />
         </div>
       </div>
 
@@ -262,6 +220,48 @@
             entity-type="person"
             :entity-id="personId!"
             :readonly="props.readonly"
+          />
+        </div>
+      </div>
+
+      <!-- Timeline section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('personTimeline.title')" :count="eventCount" :collapsed="!sections.timeline" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('timeline')" @action="triggerAddEvent" />
+        <div v-if="sections.timeline" class="panel-section-body">
+          <PersonTimeline :person-id="personId!" />
+        </div>
+      </div>
+
+      <!-- Life Map section -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('map.personMap')" :count="mapPointCount" :collapsed="!sections.map" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('events.event') }" @toggle="toggleSection('map')" @action="triggerAddEvent" />
+        <div v-if="sections.map" class="panel-section-body">
+          <PersonMap :person-id="personId!" />
+        </div>
+      </div>
+
+      <!-- Forskning section. v-show (not v-if) keeps the section component
+           mounted while collapsed so its `defineExpose({ count })` is live —
+           otherwise the (N) count badge falls back to 0 whenever the section
+           is closed, contradicting the DB and confusing the user. The child
+           uses useEntityData with caching so the per-mount fetch is cheap. -->
+      <div class="panel-section">
+        <SectionHeader :title="$t('researchTasks.nav')" :count="researchTaskCount" :collapsed="!sections.research" v-bind="props.readonly ? {} : { actionLabel: '+ ' + $t('researchTasks.addTask') }" @toggle="toggleSection('research')" @action="openTaskPicker()" />
+        <div v-show="sections.research" class="panel-section-body">
+          <div v-if="!props.readonly && showTaskPicker && personId" class="panel-group-picker-wrap">
+            <ResearchTaskPicker
+              :person-id="personId"
+              :exclude-ids="researchTaskIds"
+              @added="onTaskAdded"
+              @cancel="showTaskPicker = false"
+            />
+          </div>
+          <PersonResearchTasksSection
+            ref="researchSectionRef"
+            :person-id="personId!"
+            :readonly="props.readonly"
+            @select="openTaskForm"
+            @add-task="openTaskPicker()"
           />
         </div>
       </div>
