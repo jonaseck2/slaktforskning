@@ -405,6 +405,18 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   const coupleXref = new Map<string, string>();
   couples.forEach((c, i) => coupleXref.set(c.id, `@F${i + 1}@`));
 
+  // ── O(N) index maps — built once, eliminate O(N²/N³) inner loops ──────────
+  // personsInAnyCouple / couplesByPersonId: O(couples)
+  const personsInAnyCouple = new Set<string>();
+  const couplesByPersonId = new Map<string, typeof couples>();
+  for (const c of couples) {
+    for (const pid of [c.person1_id, c.person2_id]) {
+      if (!pid) continue;
+      personsInAnyCouple.add(pid);
+      const cs = couplesByPersonId.get(pid) ?? []; cs.push(c); couplesByPersonId.set(pid, cs);
+    }
+  }
+
   // Orphan parent_child rows: a parent whose person1_id is in NO couple,
   // AND whose link to the child is not already representable via a couple
   // FAM (the multi-parent triad case — see below). Group by parent so one
@@ -420,28 +432,31 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   // We exclude such parents from orphan-FAM allocation by checking
   // whether the (parent, child) link's "other parents" form a couple.
   const parentChildRels = relationships.filter(r => r.type === 'parent_child');
+  // childrenByParentId / parentsByChildId: O(parentChildRels)
+  const childrenByParentId = new Map<string, string[]>();
+  const parentsByChildId   = new Map<string, string[]>();
+  for (const r of parentChildRels) {
+    if (!r.person1_id || !r.person2_id) continue;
+    const kids = childrenByParentId.get(r.person1_id) ?? []; kids.push(r.person2_id); childrenByParentId.set(r.person1_id, kids);
+    const pars = parentsByChildId.get(r.person2_id) ?? []; pars.push(r.person1_id); parentsByChildId.set(r.person2_id, pars);
+  }
   const orphanByParentId = new Map<string, Array<{ childId: string; subtype: string }>>();
   for (const pc of parentChildRels) {
     if (!pc.person1_id || !pc.person2_id) continue;
     if (allowedPersonIds && !allowedPersonIds.has(pc.person1_id)) continue;
     if (allowedPersonIds && !allowedPersonIds.has(pc.person2_id)) continue;
     const parentId = pc.person1_id;
-    const childId = pc.person2_id;
-    const inCouple = couples.some(c =>
-      c.person1_id === parentId || c.person2_id === parentId
-    );
-    if (inCouple) continue;
-    // Is there a couple FAM that already names two OTHER parents of this
-    // child? If so, this is a multi-parent-triad extra — the link belongs
-    // on that FAM (as ASSO on 7.0, dropped+warned on 5.5.1).
-    const childOtherParents = parentChildRels
-      .filter(r => r.person2_id === childId && r.person1_id !== parentId)
-      .map(r => r.person1_id)
-      .filter((id): id is string => !!id);
-    const hostedByCouple = couples.some(c =>
-      c.person1_id && c.person2_id &&
-      childOtherParents.includes(c.person1_id) &&
-      childOtherParents.includes(c.person2_id)
+    const childId  = pc.person2_id;
+    // O(1) via pre-built set (replaces couples.some — was O(couples) per row)
+    if (personsInAnyCouple.has(parentId)) continue;
+    // Is another pair of this child's parents already in a couple (multi-parent triad)?
+    // O(other_parents × avg_couples_per_person) — effectively O(1) for real trees
+    const otherParents = (parentsByChildId.get(childId) ?? []).filter(id => id !== parentId);
+    const hostedByCouple = otherParents.some(otherPid =>
+      (couplesByPersonId.get(otherPid) ?? []).some(c => {
+        const partnerId = c.person1_id === otherPid ? c.person2_id : c.person1_id;
+        return partnerId && otherParents.includes(partnerId);
+      })
     );
     if (hostedByCouple) continue;
     const entry = orphanByParentId.get(parentId) ?? [];
@@ -459,6 +474,38 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       const list = orphanFamilyByChildId.get(childId) ?? [];
       list.push(xr);
       orphanFamilyByChildId.set(childId, list);
+    }
+  }
+
+  // ── FAMC / FAMS / children lookup maps — O(couples + parentChildRels) ────────
+  // Replaces O(persons × couples × parentChildRels) inner loops in INDI emission
+  // and O(couples × parentChildRels) scans in FAM emission.
+  const childToCoupleXrefs  = new Map<string, string[]>();  // childId  → famXrefs
+  const personToFamsXrefs   = new Map<string, string[]>();  // personId → famXrefs
+  const childrenByCoupleId  = new Map<string, Set<string>>(); // coupleId → childIds
+  const parentChildByChildId = new Map<string, typeof parentChildRels>(); // childId → pc rows
+
+  for (const r of parentChildRels) {
+    if (!r.person2_id) continue;
+    const arr = parentChildByChildId.get(r.person2_id) ?? []; arr.push(r); parentChildByChildId.set(r.person2_id, arr);
+  }
+  for (let ci = 0; ci < couples.length; ci++) {
+    const c   = couples[ci];
+    const fxr = `@F${ci + 1}@`;
+    for (const pid of [c.person1_id, c.person2_id]) {
+      if (!pid) continue;
+      const a = personToFamsXrefs.get(pid) ?? []; a.push(fxr); personToFamsXrefs.set(pid, a);
+    }
+    const childSet = new Set<string>();
+    for (const pid of [c.person1_id, c.person2_id]) {
+      if (!pid) continue;
+      for (const cid of (childrenByParentId.get(pid) ?? [])) {
+        if (!allowedPersonIds || allowedPersonIds.has(cid)) childSet.add(cid);
+      }
+    }
+    childrenByCoupleId.set(c.id, childSet);
+    for (const cid of childSet) {
+      const a = childToCoupleXrefs.get(cid) ?? []; a.push(fxr); childToCoupleXrefs.set(cid, a);
     }
   }
 
@@ -522,32 +569,10 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     }
 
     // ── T03 FAMC / FAMS pointers ────────────────────────────────────────
-    // FAMC: this person is a child of these FAMs. Includes both couple
-    // FAMs (when a parent_child row links the person to either spouse) and
-    // orphan single-parent FAMs (when the parent has no couple at all).
-    for (const couple of couples) {
-      const isChild = parentChildRels.some(r =>
-        r.person2_id === p.id &&
-        (r.person1_id === couple.person1_id || r.person1_id === couple.person2_id)
-      );
-      if (isChild) {
-        const famXref = coupleXref.get(couple.id);
-        if (famXref) lines.push(`1 FAMC ${famXref}`);
-      }
-    }
-    const orphanFamcs = orphanFamilyByChildId.get(p.id) ?? [];
-    for (const fxr of orphanFamcs) lines.push(`1 FAMC ${fxr}`);
-
-    // FAMS: this person is a spouse in these FAMs. Includes both couple
-    // FAMs and the orphan single-parent FAM (where this person IS the
-    // single parent — same person can't be in more than one orphan FAM by
-    // construction, but the lookup is symmetric with FAMC).
-    for (const couple of couples) {
-      if (couple.person1_id === p.id || couple.person2_id === p.id) {
-        const famXref = coupleXref.get(couple.id);
-        if (famXref) lines.push(`1 FAMS ${famXref}`);
-      }
-    }
+    // O(1) map lookups — pre-built above to eliminate O(persons × couples) scan.
+    for (const fxr of (childToCoupleXrefs.get(p.id) ?? [])) lines.push(`1 FAMC ${fxr}`);
+    for (const fxr of (orphanFamilyByChildId.get(p.id) ?? []))  lines.push(`1 FAMC ${fxr}`);
+    for (const fxr of (personToFamsXrefs.get(p.id) ?? []))      lines.push(`1 FAMS ${fxr}`);
     const orphanFams = orphanFamilyByPersonId.get(p.id);
     if (orphanFams) lines.push(`1 FAMS ${orphanFams}`);
 
@@ -725,7 +750,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // INDI block here.
     await emitNotesForEntity(db, 'person', p.id, 1, version, lines);
     await emitPersonAssociations(db, p.id, 1, version, personXref, lines);
-    await emitNegationsForEntity(db, 'person', p.id, 1, version, lines, warnings);
+    await emitNegationsForEntity(db, 'person', p.id, 1, version, lines, warnings, events);
   }
 
   // ── Families ───────────────────────────────────────────────────────────────
@@ -760,12 +785,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // and unconditionally for any non-biological row (the importer reads
     // a single PEDI per CHIL — semantic merge is acceptable and tracked
     // in the registry).
-    const childIds = new Set<string>();
-    for (const r of parentChildRels) {
-      if (r.person2_id && (r.person1_id === rel.person1_id || r.person1_id === rel.person2_id)) {
-        childIds.add(r.person2_id);
-      }
-    }
+    const childIds = childrenByCoupleId.get(rel.id) ?? new Set<string>();
     for (const childId of childIds) {
       const cxr = personXref.get(childId);
       if (!cxr) continue;
@@ -777,11 +797,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       // precedence over the other parent's biological default when
       // re-importing. The custom `3 _PARENT` disambiguator below lets a
       // future importer enhancement recover full per-parent fidelity.
-      const pcRelsForChild = parentChildRels
-        .filter(r =>
-          r.person2_id === childId &&
-          (r.person1_id === rel.person1_id || r.person1_id === rel.person2_id)
-        )
+      const pcRelsForChild = (parentChildByChildId.get(childId) ?? [])
+        .filter(r => r.person1_id === rel.person1_id || r.person1_id === rel.person2_id)
         .slice()
         .sort((a, b) => {
           const aBio = a.subtype === 'biological' || !a.subtype ? 1 : 0;
@@ -810,22 +827,13 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
       // ── T03 multi-parent triad: extras via ASSO ROLE PARENT (7.0) /
       //                                       warning (5.5.1) ──────────
-      // Parents of this child who are NOT in this FAM's HUSB/WIFE pair.
-      // Per-spec pair-election: existing-couple wins, so the FAM's pair
-      // IS the elected pair and everyone else is an extra.
-      const extraParents = parentChildRels.filter(r =>
-        r.person2_id === childId &&
-        r.person1_id !== rel.person1_id &&
-        r.person1_id !== rel.person2_id
+      const extraParents = (parentChildByChildId.get(childId) ?? []).filter(r =>
+        r.person1_id !== rel.person1_id && r.person1_id !== rel.person2_id
       );
       for (const extra of extraParents) {
         if (!extra.person1_id) continue;
-        // Skip extras that ARE in another (filtered-out or sibling) couple
-        // — they'd belong on that FAM, not as an ASSO here.
-        const extraInAnotherCouple = couples.some(c =>
-          c.id !== rel.id &&
-          (c.person1_id === extra.person1_id || c.person2_id === extra.person1_id)
-        );
+        // O(1) via pre-built couplesByPersonId (replaces couples.some — was O(couples))
+        const extraInAnotherCouple = (couplesByPersonId.get(extra.person1_id) ?? []).some(c => c.id !== rel.id);
         if (extraInAnotherCouple) continue;
         const extraXref = personXref.get(extra.person1_id);
         if (!extraXref) continue;
@@ -917,7 +925,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // T02 per-concept emitter hooks — relationship-level notes + negations
     // (stubs until T04 / T06).
     await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines);
-    await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines, warnings);
+    await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines, warnings, famEvents);
   }
 
   // ── T03 orphan single-parent FAM records ────────────────────────────────

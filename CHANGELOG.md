@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.270.1 — 2026-06-07
+
+- fix(gedcom): GEDCOM export no longer stalls or consumes tens of GB of RAM on large trees. The exporter was running O(persons × couples × parent_child_rows) inner loops to build FAMC/FAMS pointers and O(parent_child_rows² × couples) to detect multi-parent triads — all cubic or quartic on the data. Five pre-built O(N) lookup Maps replace every inner scan, reducing the hot path from billions of iterations to O(N). Also eliminates a redundant second event-fetch per person/couple in the negation emitter.
+
 ## 0.270.0 — 2026-06-07
 
 - feat(charts): the three family-tree charts — Pedigree, Hourglass, and Descendants — now look and behave identically wherever they share a concept. A person box renders the same in all three (portrait, name, dates, the "+" add-relative button, the focus highlight); selecting a person scrolls it into view in every chart; double-clicking a box re-roots the tree in every chart (previously only Hourglass did); and every chart exposes the same `role="tree"` / `treeitem` accessibility structure with keyboard focus. Behaviour that used to exist in only one chart is now shared by all three.

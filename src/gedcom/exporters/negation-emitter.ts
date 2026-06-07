@@ -51,10 +51,11 @@ export async function emitNegationsForEntity(
   version: '5.5.1' | '7.0',
   lines: string[],
   warnings?: string[],
+  prefetchedEvents?: Awaited<ReturnType<typeof getEventsForPerson>>,
 ): Promise<void> {
-  const events = ownerEntityType === 'person'
+  const events = prefetchedEvents ?? (ownerEntityType === 'person'
     ? await getEventsForPerson(db, ownerEntityId)
-    : await getEventsForRelationship(db, ownerEntityId);
+    : await getEventsForRelationship(db, ownerEntityId));
   const negations = events.filter(ev => Boolean(ev.is_negation));
   if (negations.length === 0) return;
 
