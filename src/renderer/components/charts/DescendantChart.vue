@@ -9,6 +9,7 @@
     :readonly="readonly"
     :color-mode="props.colorMode"
     :selected-id="layoutSelectedId"
+    :focused-person="props.focusedPerson"
     :ariaLabel="'a11y.descendantChart'"
     test-id="descendant-svg"
     :add-btn-style="addBtnStyle"
@@ -65,7 +66,7 @@ import { descendantGenerations } from '../../composables/useChartGenerations';
 // template (the zoom-controls slot references $t directly).
 useI18n();
 
-const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 
 // Add-family-member badge style — provided by App.vue's appearance-store.
 const appearanceStore = inject<{ addBtnStyle: Ref<'plus' | 'leaf'> } | undefined>('appearance-store', undefined);

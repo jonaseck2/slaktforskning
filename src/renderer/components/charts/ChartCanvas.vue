@@ -227,6 +227,7 @@ const props = defineProps<{
   readonly?: boolean;
   colorMode?: ColorMode;
   selectedId: string | null;
+  focusedPerson?: string | null; // parent-controlled focus ring (screen-reader nav)
   ariaLabel: string;             // i18n KEY for the svg role="tree" aria-label
   testId?: string;               // data-testid for the svg root (chart-specific)
   addBtnStyle: 'plus' | 'leaf';
@@ -247,8 +248,11 @@ const emit = defineEmits<{
 // in onMounted. ChartCanvas only EXPOSES it; pan/zoom stays in the parent.
 const scrollEl = ref<HTMLElement | null>(null);
 
-// Focus state for the keyboard-navigation focus ring. Pure local UI state.
+// Focus state for the keyboard-navigation focus ring. Driven by box @focus/@blur
+// (keyboard nav) and by the parent-controlled focusedPerson prop (screen-reader
+// nav sets which box shows the ring).
 const focusedBoxId = ref<string | null>(null);
+watch(() => props.focusedPerson, (pid) => { if (pid) focusedBoxId.value = pid; });
 
 const solidPaths = computed(() =>
   props.layout.paths.filter(d => !d.startsWith('D:')),

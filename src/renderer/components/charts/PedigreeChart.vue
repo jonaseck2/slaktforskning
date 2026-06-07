@@ -9,6 +9,7 @@
     :readonly="readonly"
     :color-mode="props.colorMode"
     :selected-id="layoutSelectedId"
+    :focused-person="props.focusedPerson"
     :ariaLabel="'a11y.pedigreeChart'"
     test-id="pedigree-svg"
     :add-btn-style="addBtnStyle"
@@ -87,9 +88,6 @@ watch(genTarget, (n) => {
   if (n > loadedGens.value) load();
   else applyGenerationDepth(n);
 });
-
-// Focus state for keyboard navigation
-const focusedBoxId = ref<string | null>(null);
 
 const PAD = 10;
 function generationOf(box: BoxLayout): number {
@@ -274,10 +272,8 @@ function refetch() {
   return reload();
 }
 
-// Sync focused box with parent-controlled focusedPerson prop (screen reader nav)
-watch(() => props.focusedPerson, (pid) => {
-  if (pid) focusedBoxId.value = pid;
-});
+// focusedPerson now flows through to ChartCanvas (via :focused-person), which
+// owns the focus-ring state. No local sync needed.
 
 defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>

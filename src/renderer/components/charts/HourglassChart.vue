@@ -9,6 +9,7 @@
     :readonly="readonly"
     :color-mode="props.colorMode"
     :selected-id="selectedIdRef"
+    :focused-person="props.focusedPerson"
     :ariaLabel="'a11y.hourglassChart'"
     test-id="hourglass-svg"
     :add-btn-style="addBtnStyle"
@@ -77,7 +78,12 @@ import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 // template (the zoom-controls slot references $t directly).
 useI18n();
 
-const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
+// focusedPerson is declared for parity (so the host can forward it consistently
+// across all three charts). PersonsView intentionally does NOT bind it on
+// Hourglass — the single-focus invariant (Bengt R50) keeps Hourglass's
+// highlight driven solely by selectedPersonId. The prop being present-but-unbound
+// is harmless: ChartCanvas only moves the ring when focusedPerson is truthy.
+const props = defineProps<{ personId: string | undefined; focusedPerson?: string | null; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 
 // Add-family-member badge style — provided by App.vue's appearance-store.
 const appearanceStore = inject<{ addBtnStyle: Ref<'plus' | 'leaf'> } | undefined>('appearance-store', undefined);
