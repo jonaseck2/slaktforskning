@@ -75,6 +75,35 @@ Strong rule, not a Prime Directive. Apply when wiring or reviewing any `<Section
 
 **Applies to:** every `*Panel.vue` and its section components; every modal opened from a panel section; every CTA wired in a `<SectionHeader>`. Read-only snapshot views (reports, exports) are exempt.
 
+## Product principles (north star)
+
+The single referent for "is this in scope, is this at-odds, is this worth building?" Changing these principles is sovereign — `.claude/rules/mandate.md` Tier 3 (escalate; never edit on a whim). Enforcement is the human's at the issue/PR gate; this section is the criteria they (and you, when triaging) reason with.
+
+**What the app is:** a local-first desktop archive for **one researcher's lifetime** of genealogy. Local-first (DB, media, gazetteers all on the user's machine — no cloud, no sync, no telemetry), lifetime-scale (must outlast subscriptions, app stores, OS releases — SQLite + plaintext media + GEDCOM round-trip are the survivability primitives), single-user (collaboration exists only as *exports*), desktop (Tauri/Vue/SQLite — not mobile, not web, not PWA).
+
+**Who it serves:** the 60+ hobbyist genealogist who has outgrown commercial tools (Holger / Ancestry / MyHeritage / Gramps / RootsMagic) and wants their decades of work on their own machine, forever. Reads carefully, types in Swedish (or their language), prefers explicit text to icons, may have limited vision (large text / high-contrast / screen reader). **Does not want an AI to "finish" their tree or recommend anything — the act of researching IS the value; the data is sacred.** Second-order: the family who inherits the file (HTML-export target). Out of scope: casual roots-curious users, DNA/ethnicity discovery, live shared-tree collaboration.
+
+**The scope gate (the operational test):** a change is in scope iff it makes the local archive **more accurate, more accessible, more portable, or more durable**. Failing all four → at-odds, kill. Serving one while breaking another (e.g. a feature that breaks GEDCOM round-trip) → at-odds *unless* it ships with the round-trip preserved or explicitly excluded. The gate is **asymmetric**: one "more accurate" is enough to ship; a single rejection-hit kills it. It's a gate, not a vote.
+
+**Explicit rejections (each protects a value, not a constraint — reopening one means changing the value):**
+
+| Rejection | Value it protects |
+|---|---|
+| Cloud sync / remote DB / subscription | The data is yours forever, never rented back or held hostage. |
+| In-app AI / integrated chatbot / in-process LLM | The DB stores what the user authored, never what an algorithm guessed. (The MCP server gives *external* agents access; the app ships no integrated agent.) |
+| Inferred values written back to the DB | Prime Directive — inference is render-time, never persisted. |
+| Silent GEDCOM data loss | Prime Directive (cont.) — every authored field round-trips or is documented `lossy` with a spec citation. |
+| Auto-suggestions that mutate the DB / recommendation engines | The user does the work; tools surface possibilities, never commit. |
+| Telemetry / analytics / "anonymous usage data" | A local-first archive that phones home isn't local-first. |
+| Social features (sharing, comments, following) | The tree is private until the user exports it. |
+| DNA matching / autosomal tooling | Different domain, different ethical surface. |
+| Mobile / web / PWA target | Real desktop, real keyboard, real filesystem. |
+| Forced breaking changes without migration | A lifetime archive can't orphan its users — every schema change ships a migration, every UI rename ships an i18n key continuation. |
+
+**Worth building** when: serves ≥1 of the four dimensions; violates no rejection; grounded in a real user surface (panel / modal / export / import / MCP tool), not a "platform/framework" abstraction; user goal statable in plain user language (per `.claude/rules/plans.md` §1); smallest version is shippable.
+
+**Worth killing** (write "closed — at-odds with the product principles: <reason>") when: it serves a different archetype (casual / DNA / collaborator) or value system (recommendation / social / cloud / subscription); requires phoning home or mutating data without authoring; is mechanism-first with no user-observable outcome; or its smallest version is multi-week with no intermediate user-observable result. Bad ideas are bad because they're at-odds, not because they're hard.
+
 ## Project Overview
 
 Cross-platform desktop genealogy app built with Tauri 2 (Rust host) + Vue 3 + TypeScript. All data local in SQLite. Built-in MCP server lets AI agents read/write genealogy data without the UI; in the bundled app it ships as a child Bun process spawned by the Rust host.

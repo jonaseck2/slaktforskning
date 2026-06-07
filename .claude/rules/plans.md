@@ -214,13 +214,13 @@ Any non-archive output is a drift violation. The `close-out` skill is the canoni
 
 **Authority:** archiving a done plan is `.claude/rules/mandate.md` Tier 1 (own outright). The agent does not ask "should I archive this?"; it invokes `close-out` and reports in the commit.
 
-## Plan ↔ INTENT.md alignment
+## Plan ↔ product-principles alignment
 
-Before writing any plan, the agent verifies the proposed user goal is defensible against `docs/INTENT.md` §§ "What's in scope" and "What this app explicitly rejects". If the plan's user goal is at-odds with INTENT:
+Before writing any plan, the agent verifies the proposed user goal is defensible against the product principles in `CLAUDE.md` (the scope gate + explicit rejections). If the plan's user goal is at-odds with them:
 
 - The agent does NOT write the plan.
-- The agent writes a reasoned reply: "Closed without plan — at-odds with INTENT.md §<section>: <reason>."
-- If the user disagrees, the discussion is about INTENT, not about the plan. Either INTENT changes (rare, Tier 3 escalation) or the proposed plan stays closed.
+- The agent writes a reasoned reply: "Closed without plan — at-odds with the product principles: <reason>."
+- If the user disagrees, the discussion is about the product principles, not about the plan. Either the principles change (rare, Tier 3 escalation) or the proposed plan stays closed.
 
 This rule is the upstream gate that keeps `docs/plans/` from accumulating mechanism-shaped or value-misaligned ideas. The downstream gate (lifecycle hygiene above) keeps `docs/plans/` clean *given* that what's in there is legitimate.
 
@@ -228,4 +228,4 @@ This rule is the upstream gate that keeps `docs/plans/` from accumulating mechan
 
 The verification of these rules is the next plan written. If the next plan opens with mechanism instead of user goal, or scopes implicitly, or verifies via lint+vitest only, the rule didn't fire — iterate the rule.
 
-Every two weeks: re-read the most recent three plans against this file AND against `docs/INTENT.md`. If any drifted, rewrite or strengthen — the `retro` skill is the canonical implementation. The retro covers both plan-format drift (this file) and product-intent drift (INTENT.md), since both can produce bad plans.
+Every two weeks: re-read the most recent three plans against this file AND against the product principles in `CLAUDE.md`. If any drifted, rewrite or strengthen — the `retro` skill is the canonical implementation. The retro covers both plan-format drift (this file) and product-intent drift (the principles), since both can produce bad plans.

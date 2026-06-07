@@ -137,7 +137,7 @@ These are not optional. They are the difference between "the plan shipped" and "
 
 - It doesn't write the plan (that's `superpowers:writing-plans`).
 - It doesn't execute plan tasks (that's `superpowers:subagent-driven-development` or inline execution).
-- It doesn't decide whether the plan is *worth* archiving (that's INTENT.md + the human).
+- It doesn't decide whether the plan is *worth* archiving (that's the product principles + the human).
 - It doesn't merge to `main` from a worktree (that's the executor's call per `.claude/rules/plans.md` "CI catches PRs, executor catches direct-to-main").
 
 This skill owns ONLY the archival mechanics. Everything upstream (writing, executing, verifying) and everything downstream (push, merge, release) is a separate concern.

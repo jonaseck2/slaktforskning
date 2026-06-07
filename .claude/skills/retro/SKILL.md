@@ -1,11 +1,11 @@
 ---
 name: retro
-description: Periodic re-read of recent shipped work against docs/INTENT.md, .claude/rules/plans.md, and .claude/rules/mandate.md. Catches plan-format drift, intent drift, workflow drift, and rules that didn't fire when they should have. Use every 2 weeks, after archiving 3+ plans, or when the user calls "let's retro." Outputs: a list of rule deltas to commit, or "clean — no drift found."
+description: Periodic re-read of recent shipped work against the product principles (CLAUDE.md), .claude/rules/plans.md, and .claude/rules/mandate.md. Catches plan-format drift, intent drift, workflow drift, and rules that didn't fire when they should have. Use every 2 weeks, after archiving 3+ plans, or when the user calls "let's retro." Outputs: a list of rule deltas to commit, or "clean — no drift found."
 ---
 
 # Retro Skill
 
-**Announce at start:** "Running /retro — re-reading the most recent N plans against INTENT and rules."
+**Announce at start:** "Running /retro — re-reading the most recent N plans against the product principles and rules."
 
 The retrospective lens. Where `inventory` is "what's hanging *now*?" and `close-out` is "this plan is done", retro is "did the last N plans we shipped honor the workflow we said we follow?"
 
@@ -43,7 +43,7 @@ For each plan, score:
 
 Any "no" is a plan-format finding.
 
-### Step 3 — INTENT alignment check (per `docs/INTENT.md`)
+### Step 3 — Product-principles alignment check (per `CLAUDE.md`)
 
 For each plan:
 
@@ -51,7 +51,7 @@ For each plan:
 - Did the plan touch any explicit-rejection area (cloud, in-app AI, inference-persist, social, etc.)? If yes, was it acknowledged?
 - Was the plan's smallest version shippable? Were intermediate states user-observable?
 
-Any "no" is an INTENT-alignment finding — the plan should have been kill-shaped, not ship-shaped.
+Any "no" is a product-principles-alignment finding — the plan should have been kill-shaped, not ship-shaped.
 
 ### Step 4 — Mandate / workflow drift check (per `.claude/rules/mandate.md`)
 
@@ -79,7 +79,7 @@ A structured retro record. Either:
 
 Plans reviewed: <list of N filenames>
 Period: <since-date> → <today>
-No format drift, no INTENT drift, no workflow drift. Next retro in 2 weeks.
+No format drift, no product-principles drift, no workflow drift. Next retro in 2 weeks.
 ```
 
 **B. Findings** — one or more rules/skills need iteration.
@@ -94,7 +94,7 @@ Plans reviewed: <list>
 1. **<finding title>** — observed in <plan-file>. <One-sentence description.>
    - Rule that should have fired: `.claude/rules/<rule>.md` §<section>.
    - Why it didn't: <one sentence>.
-   - Proposed fix: <skill edit / rule edit / mandate clarification / INTENT sharpening>.
+   - Proposed fix: <skill edit / rule edit / mandate clarification / product-principles sharpening>.
 
 2. <next finding…>
 
@@ -119,11 +119,11 @@ Per `.claude/rules/mandate.md` Tier 2 (workflow rule changes), the retro propose
 - **Cherry-picking plans that look clean.** Pick by recency, not by perceived quality. Bad plans need finding.
 - **Outputting findings without committing rule deltas.** Per Tier 2, the retro is execution-bound: findings → edits → commit. Lingering findings re-fail the next retro.
 - **Treating retro as a debate.** If a rule didn't fire, fix the rule. If the rule was right but unused, fix the skill that should have invoked it. If both were right but inattention won, fix the cadence (more retros, smaller batches).
-- **Skipping the INTENT alignment step.** Plan-format checks are mechanical; INTENT alignment requires reading the user goal against the product values. The dominant failure mode of the broader workflow is INTENT misalignment dressed up as well-formed plans.
+- **Skipping the product-principles alignment step.** Plan-format checks are mechanical; product-principles alignment requires reading the user goal against the product values. The dominant failure mode of the broader workflow is product-principles misalignment dressed up as well-formed plans.
 
 ## Related rules + skills
 
-- `docs/INTENT.md` — the product anchor.
+- `CLAUDE.md` “Product principles” — the product anchor.
 - `.claude/rules/plans.md` — the plan-format anchor.
 - `.claude/rules/mandate.md` — the workflow / authority anchor.
 - `inventory` skill — the "what's hanging now" complement (different cadence, different output).

@@ -1,6 +1,6 @@
 # Workflow: Släktforskning
 
-The process artifact. Companion to `docs/INTENT.md` (what to build) and `.claude/rules/mandate.md` (agent's authority). Describes how an idea becomes shipped code without human-walked steps in the middle.
+The process artifact. Companion to the product principles in `CLAUDE.md` (what to build) and `.claude/rules/mandate.md` (agent's authority). Describes how an idea becomes shipped code without human-walked steps in the middle.
 
 **The workflow is a first-class deliverable.** It ships with the app, versions with the app, breaks if neglected just like the app does. When the workflow degrades, the app degrades on the next release.
 
@@ -18,7 +18,7 @@ This document is the canonical map. The rules in `.claude/rules/*` are the laws;
         ▼
    ┌──────────────────┐
    │  TRIAGE          │  /evaluate-ux-report
-   │  vs INTENT.md    │
+   │  vs principles   │
    └────┬─────────────┘
         │
    ┌────┴──────┬─────────────┬──────────────┐
@@ -62,7 +62,7 @@ This document is the canonical map. The rules in `.claude/rules/*` are the laws;
                                  ▼
                           ┌─────────────┐
                           │  RETRO      │  /retro (every 2 weeks)
-                          │  vs INTENT  │
+                          │  vs values  │
                           │  vs rules   │
                           └─────────────┘
 ```
@@ -86,7 +86,7 @@ Inputs are NOT prioritized at this stage. Prioritization happens in triage.
 
 ### 2. TRIAGE — `evaluate-ux-report` skill
 
-Every input passes through INTENT scoring:
+Every input passes through product-principles scoring:
 
 - **Accurate / accessible / portable / durable** → keep, continue to plan or polish.
 - **Explicit-reject hit** → kill, write reasoned reply, archive in "Considered, not now."
@@ -97,7 +97,7 @@ Triage output is one of:
 - **POLISH BATCH** → wording / affordance / minor UX. Adds to the active polish plan.
 - **DESIGN SPEC** → substantive new surface or behavior. Writes `-design.md`, returns to triage once design lands.
 - **NEEDS-PLAN** → in-scope and clear enough to plan directly.
-- **KILL** → at-odds with INTENT, or non-reproducible bug, or mechanism-only request scoring zero.
+- **KILL** → at-odds with the product principles, or non-reproducible bug, or mechanism-only request scoring zero.
 
 This stage is `.claude/rules/mandate.md` Tier 1 (own). The agent triages without asking.
 
@@ -106,7 +106,7 @@ This stage is `.claude/rules/mandate.md` Tier 1 (own). The agent triages without
 For NEEDS-PLAN inputs: write a plan in `docs/plans/YYYY-MM-DD-<feature>.md`.
 
 Mandatory shape:
-- **User goal** in user language, defensible against INTENT.
+- **User goal** in user language, defensible against the product principles.
 - **Scope** explicit, with deviations called out (per `.claude/rules/plans.md` §2).
 - **Verification** user-observable, falsifiability-tested (per §3).
 - **Failure modes / RCA reference** if applicable.
@@ -158,7 +158,7 @@ For PRs: CI is the contract; iterate until green.
 
 ### 8. RETRO — `retro` skill
 
-Every 2 weeks (or every 3 archives, or on demand): re-read recent shipped work against INTENT + plans.md + mandate.md. Surface findings, commit rule deltas in the same response.
+Every 2 weeks (or every 3 archives, or on demand): re-read recent shipped work against the product principles + plans.md + mandate.md. Surface findings, commit rule deltas in the same response.
 
 ---
 
@@ -197,14 +197,14 @@ Mirrors `.claude/rules/mandate.md` Tier 1/2/3/4:
 | "Want me to spin up the worktree?" | Stalled execution | Mandate Tier 1 — just do it. |
 | Every UX report becomes a plan | docs/plans/ accumulates wording fixes as plan files | TRIAGE outputs: polish / design / kill — only 2 of 3 produce plans. |
 | Releases ship without CHANGELOG / archive update | Version bumps with no corresponding archive entry | `close-out` Step 3-5; drift sweep at next session start. |
-| Plans drift from INTENT silently | A plan to add cloud sync would have been writable | Plan ↔ INTENT alignment rule in plans.md; agent refuses to write. |
+| Plans drift from the principles silently | A plan to add cloud sync would have been writable | Plan ↔ product-principles alignment rule in plans.md; agent refuses to write. |
 | Stale memories that contradict code | Past incident memories not pruned | `inventory` and `retro` flag stale memory references. |
 
 ---
 
 ## When the workflow itself needs changing
 
-`docs/WORKFLOW.md` changes the same way `docs/INTENT.md` changes — through retros that surface drift between workflow-as-written and workflow-as-executed. Per `.claude/rules/mandate.md` Tier 2 (workflow rule changes), the agent proposes the diff in a retro and commits it in the same response.
+`docs/WORKFLOW.md` changes the same way the product principles change — through retros that surface drift between workflow-as-written and workflow-as-executed. Per `.claude/rules/mandate.md` Tier 2 (workflow rule changes), the agent proposes the diff in a retro and commits it in the same response.
 
 This file is not aspirational. If a stage isn't being executed, the diagram is wrong — fix the diagram or fix the execution, but don't let them diverge silently.
 
@@ -215,7 +215,7 @@ This file is not aspirational. If a stage isn't being executed, the diagram is w
 This file (and the seven supporting artifacts written in the same change) was created on 2026-05-31 after a retrospective identified that the project was shipping substantial features while the workflow was drifting — four plans from 2026-05-14 stale, PLAN.md out of sync, multiple "if X reproduces..." FELRAPPORTs deferred to user. The structural cause was that the workflow was an unowned artifact: every artifact in the repo had a guardian rule except the workflow itself.
 
 Reading order for a new agent:
-1. `docs/INTENT.md` — what the product is.
+1. The product principles in `CLAUDE.md` — what the product is.
 2. `docs/WORKFLOW.md` — this file. How work flows through.
 3. `.claude/rules/mandate.md` — what the agent owns.
 4. `.claude/rules/plans.md` — how plans are written, verified, and archived.
