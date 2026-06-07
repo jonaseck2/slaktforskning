@@ -22,6 +22,9 @@
 # GEDCOM fixtures are real exporter output — preserve byte-for-byte so
 # round-trip and dialect tests see exactly what each tool produced.
 *.ged  binary
+# Gramps native fixtures: .gramps is gzipped XML, .gpkg is a gzipped tar.
+*.gramps binary
+*.gpkg binary
 *.mp4  binary
 *.woff binary
 *.woff2 binary

@@ -69,18 +69,30 @@ interface ImportCase {
    * leave undefined if the fixture has no reliably-readable names.
    */
   spotCheckName?: string;
+  /**
+   * Media-row count after import, for formats that bundle media files
+   * (e.g. Gramps `.gpkg`). When > 0, the test additionally asserts the
+   * first media row's `file_ref` is a relative `<dbname>-media/<file>`
+   * path — proving the importer wrote the bundled file into the sibling
+   * media folder rather than leaving an absolute or bare ref. Optional;
+   * omit for formats with no bundled media.
+   */
+  expectedMedia?: number;
 }
 
-// Deferred coverage — native binary importer formats
-// ===================================================
-// The cases below cover each importer's GEDCOM-export dialect path via
+// Coverage — native binary importer formats
+// ==========================================
+// Most cases below cover each importer's GEDCOM-export dialect path via
 // gedcom.import (and import.holgerRun for the holger profile). That covers
 // the importer LOGIC, where almost all regressions actually happen.
 //
-// Native binary format DECODING is NOT covered here:
-//   - Genney .gcc / .backup (XML inside a zip)
+// Gramps native decoding IS covered below (gramps-gramps + gramps-gpkg) —
+// the gzipped-XML `.gramps` path and the tar.gz `.gpkg` unpack-and-write-media
+// path both run through import.grampsRun against real fixtures.
+//
+// Native binary format DECODING still NOT covered here:
+//   - Genney .backup (encrypted Derby DB inside the archive; .gcc IS covered)
 //   - RootsMagic .rmgc / .rmtree (SQLite database file)
-//   - Gramps .gramps / .gpkg (XML, optionally zipped with media)
 //   - Holger .zip with embedded media (the bare-.ged case below skips the
 //     zip-extract + Windows-path-remap branch)
 //
@@ -144,10 +156,9 @@ const CASES: ImportCase[] = [
   // refs) to exercise the zip-extract + path-remap branch of holgerRun.
 
   // --- Gramps (GEDCOM-export flavour) -------------------------------------
-  // The native Gramps importer reads `.gramps` (XML, sometimes gzipped) or
-  // `.gpkg` (zipped XML+media). We don't yet have a tiny fixture for either,
-  // so we exercise gramps's GEDCOM-export dialect through `gedcom.import`
-  // (gramps's `gramps.ged` dialect fixture exists and has 2 INDI records).
+  // Exercises gramps's GEDCOM-export dialect through `gedcom.import`
+  // (gramps's `gramps.ged` dialect fixture has 2 INDI records). Complements
+  // the two native-decoder cases below.
   {
     format: 'gramps-dialect',
     fixture: 'tests/fixtures/gedcom/dialects/gramps.ged',
@@ -155,8 +166,34 @@ const CASES: ImportCase[] = [
     buildArgs: (p) => ({ filePath: p }),
     expectedPersons: 2,
   },
-  // TODO: needs a tiny `.gramps` XML fixture to exercise `import.grampsRun`'s
-  // native path (importFromGrampsBytes + fs_read_bytes_base64 round-trip).
+
+  // --- Gramps native `.gramps` (gzipped XML) ------------------------------
+  // Exercises import.grampsRun's native decoder: fs_read_bytes_base64 →
+  // importFromGrampsBytes → gunzip → parse. Fixture is a 3-person family
+  // (Anna/Erik → Lisa Andersson) authored as Gramps XML and gzipped.
+  {
+    format: 'gramps-gramps',
+    fixture: 'tests/e2e/fixtures/imports/gramps-small.gramps',
+    apiCall: 'import.grampsRun',
+    buildArgs: (p) => ({ filePath: p }),
+    expectedPersons: 3,
+    spotCheckName: 'Anna',
+  },
+
+  // --- Gramps native `.gpkg` (tar.gz: XML + media/) -----------------------
+  // Exercises the .gpkg unpack-and-write-media branch: nanotar untar →
+  // transform → each media/ file written into <dbname>-media/ with a
+  // relative file_ref. Same 3-person family plus a 1×1 PNG bundled as
+  // media/blank.png (referenced from Anna via <objref>).
+  {
+    format: 'gramps-gpkg',
+    fixture: 'tests/e2e/fixtures/imports/gramps-small.gpkg',
+    apiCall: 'import.grampsRun',
+    buildArgs: (p) => ({ filePath: p }),
+    expectedPersons: 3,
+    expectedMedia: 1,
+    spotCheckName: 'Anna',
+  },
 
   // --- RootsMagic (GEDCOM-export flavour) ---------------------------------
   // Native rootsmagic import reads `.rmgc` / `.rmtree` as a secondary SQLite
@@ -266,6 +303,34 @@ for (const c of CASES) {
           allNames,
           `${c.format}: imported persons do not contain spot-check name "${c.spotCheckName}"`,
         ).toContain(c.spotCheckName);
+      }
+
+      // For media-bundling formats (.gpkg), assert the media row landed and
+      // its file_ref is a relative `<dbname>-media/<file>` path — proving the
+      // importer wrote the bundled file into the sibling media folder rather
+      // than leaving an absolute path or a bare basename.
+      if (c.expectedMedia !== undefined) {
+        let media: Array<{ file_ref?: string }> = [];
+        for (let i = 0; i < 50; i++) {
+          media = await driver.executeJs<typeof media>(`window.api.media.list()`);
+          if (media.length >= c.expectedMedia) break;
+          await new Promise((r) => setTimeout(r, 100));
+        }
+        expect(
+          media.length,
+          `${c.format}: expected ${c.expectedMedia} media, got ${media.length}`,
+        ).toBe(c.expectedMedia);
+        if (c.expectedMedia > 0) {
+          const ref = media[0]?.file_ref ?? '';
+          expect(
+            ref,
+            `${c.format}: media file_ref must be a relative <dbname>-media/<file> path, got "${ref}"`,
+          ).toMatch(/-media[\\/][^\\/]+$/);
+          expect(
+            ref.startsWith('/'),
+            `${c.format}: media file_ref must not be absolute, got "${ref}"`,
+          ).toBe(false);
+        }
       }
     } finally {
       await teardownApp(app);
