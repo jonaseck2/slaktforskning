@@ -153,7 +153,9 @@ Reference docs (load on demand): `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/MCP
 
 ## Skills
 
-`oss-release`, `oss-triage`, `oss-stale`, `oss-welcome` are invoked by a scheduled maintainer agent on the public GitHub repo, not interactively. Ignore them in normal coding work.
+`oss-release` is shared release infrastructure, used in normal interactive work: `close-out` (step 3), the `commit` skill, and the dev-pipeline agents all delegate CHANGELOG block structure, the 10-block rolling window, version-bump-in-lockstep, and the archive flow to it. Agents never touch `CHANGELOG.md` directly. Invoke it whenever a version-bumped commit lands.
+
+`oss-triage`, `oss-stale`, `oss-welcome` are GitHub issue/PR maintenance for the public repo (label, dedup, stale-close, greet first-timers), invoked by the scheduled maintainer agent — not by interactive coding work. Ignore these three in normal coding.
 
 ## Project conventions live in the workspace, not in user memory
 
