@@ -691,14 +691,22 @@ git commit -m "feat(charts): selection auto-pans into view in all three charts (
 
 ### Task 13: ARIA roles + box keyboard focus parity
 
-`<ChartCanvas>` already carries `role="tree"` + `role="treeitem"` + `tabindex="0"` + `boxAriaLabel` (moved verbatim from Pedigree in Task 7). Adopting the canvas (Tasks 8-10) gives Hourglass + Descendant these for free. This task verifies it and adds the per-chart aria-label keys.
+`<ChartCanvas>` already carries `role="tree"` + `role="treeitem"` + `tabindex="0"` + `boxAriaLabel` (moved verbatim from Pedigree in Task 7). Adopting the canvas (Tasks 8-10) gives Hourglass + Descendant these for free. This task verifies it, adds the per-chart aria-label keys, AND restores the `focusedPerson` external-focus path that Task 8 left dangling.
 
 **Files:**
-- Modify: `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts` (if not already added in Tasks 9-10)
+- Modify: `src/renderer/components/charts/ChartCanvas.vue` (add `focusedPerson` prop), the three chart components (pass it through), `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts`.
 
-- [ ] **(Tier 1) Step 1: Write the failing assertion (folded into Task 15's test)**
+- [ ] **(Tier 1) Step 0: Restore `focusedPerson` external-focus forwarding (regression from Task 8)**
 
-This parity is asserted by the Task 15 `chart-parity.test.ts` (`role="tree"` + `treeitem` present). No separate test here — the canvas adoption is the implementation.
+Task 8 discovered that PedigreeChart's `focusedPerson` prop (screen-reader-driven external focus — a parent sets which box shows the focus ring) became a **dead write** after adoption: `ChartCanvas` owns its own internal `focusedBoxId` and has no `focusedPerson` prop, so external focus forwarding is a no-op in all three charts. Fix it and make it a parity feature:
+  1. Add `focusedPerson?: string | null` to `ChartCanvas`'s `defineProps`.
+  2. In `ChartCanvas`, `watch(() => props.focusedPerson, (pid) => { if (pid) focusedBoxId.value = pid; })` — drives the existing internal `focusedBoxId` ring.
+  3. In each of the three chart components, pass `:focused-person="props.focusedPerson"` to `<ChartCanvas>` (PedigreeChart already receives a `focusedPerson` prop; confirm Hourglass/Descendant do too — if not, add it to their `defineProps` so the host view can forward it consistently — parity).
+  4. Delete each chart's now-redundant local `focusedBoxId` ref + `watch(() => props.focusedPerson, …)` (that logic now lives in ChartCanvas).
+
+- [ ] **(Tier 1) Step 1: ARIA parity is asserted by Task 15's test**
+
+The `role="tree"` + `treeitem` parity is asserted by the Task 15 `chart-parity.test.ts`. The canvas adoption (Tasks 8-10) is the implementation; Step 0 above is the only code change in this task beyond i18n keys.
 
 - [ ] **(Tier 1) Step 2: Confirm the i18n keys exist**
 
