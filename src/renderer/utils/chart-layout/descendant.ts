@@ -1,11 +1,12 @@
 // Standalone descendant chart layout algorithm — operates on TreePerson graph.
 // Focal at top, descendants fan out downward. Supports outline injection.
 
-import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
+import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton, Line } from './types';
 import { BOX_W, MIN_BOX_H, V_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
 import { buildDescendantTreePerson, findPerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { extractPlaceholders } from './extract-placeholders';
 
 export function computeDescendantLayout(
   root: DescendantNode,
@@ -293,33 +294,12 @@ export function computeDescendantLayout(
   const svgHeight = (maxBoxBottom + 20 + PAD) + (viewBoxMinY < 0 ? -viewBoxMinY : 0);
 
   // ── Extract placeholders ─────────────────────────────────────────────────
-  const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
-
-  for (let i = boxes.length - 1; i >= 0; i--) {
-    const box = boxes[i];
-    if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
-    const pid = box.person.id;
-    let role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
-    let childPersonId: string;
-    if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
-      role = 'father'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'father_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
-      role = 'mother'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
-      role = 'spouse'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'son_')) {
-      role = 'son'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'son_').length);
-    } else {
-      role = 'daughter'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'daughter_').length);
-    }
-    placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
-    boxes.splice(i, 1);
-  }
+  const { boxes: realBoxes, placeholders } = extractPlaceholders(boxes);
 
   for (const d of placeholderPaths) paths.push('D:' + d);
 
-  return { boxes, lines: [], paths, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+  return { boxes: realBoxes, lines: [], paths, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
 }
 
 function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {

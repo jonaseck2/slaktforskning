@@ -10,11 +10,12 @@
 // 6. Recursive placement — ALL outlines placed inline (no post-layout)
 // 7. SVG dimensions, shift, collapse buttons, extract placeholders
 
-import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox } from './types';
+import type { TreePerson, ChartLayout, BoxLayout, CollapseButton } from './types';
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow, marriageJog } from './connectors';
 import { findPerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { extractPlaceholders } from './extract-placeholders';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1012,30 +1013,9 @@ export function computeHourglassLayout(
   }
 
   // ── 9. Extract placeholders ────────────────────────────────────────────────
-  const placeholders: PlaceholderBox[] = [];
-
-  for (let i = boxes.length - 1; i >= 0; i--) {
-    const box = boxes[i];
-    if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
-    const pid = box.person.id;
-    let role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
-    let childPersonId: string;
-    if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
-      role = 'father'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'father_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
-      role = 'mother'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
-      role = 'spouse'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'son_')) {
-      role = 'son'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'son_').length);
-    } else {
-      role = 'daughter'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'daughter_').length);
-    }
-    placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
-    boxes.splice(i, 1);
-  }
+  const { boxes: realBoxes, placeholders } = extractPlaceholders(boxes);
 
   for (const d of placeholderPaths) paths.push('D:' + d);
 
-  return { boxes, lines: [], paths, svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: [] };
+  return { boxes: realBoxes, lines: [], paths, svgWidth: finalSvgWidth, svgHeight: finalHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines: [] };
 }
