@@ -723,16 +723,14 @@ Pedigree's `onBoxKeydown` (`PedigreeChart.vue:279-313`) navigates by generation/
 - Modify: the three chart components (pass orientation + wire `@box-keydown`)
 - Test: `tests/components/chart-parity.test.ts` (added in Task 15)
 
-- [ ] **(Tier 3) Step 1: Confirm the orientation→axis mapping with the user**
+- [x] **(Tier 1) Step 1: Orientation→axis mapping — LOCKED (user-approved 2026-06-07)**
 
-> Tier 3 — escalate. The design spec flagged this as the one behavior whose generalization isn't mechanical. Confirm the intended mapping before implementing:
-> - **Pedigree** (focal left, ancestors right): ArrowRight = toward ancestors, ArrowLeft = toward focal, ArrowUp/Down = sibling in same generation. *(current behavior — keep)*
-> - **Hourglass** (focal center, ancestors up, descendants down): ArrowUp = toward ancestors, ArrowDown = toward descendants, ArrowLeft/Right = spouse/sibling on focal row.
-> - **Descendant** (focal top, descendants down): ArrowDown = toward descendants, ArrowUp = toward focal, ArrowLeft/Right = sibling.
->
-> Wait for explicit go-ahead on this mapping. Fallback if the user defers: ship Tasks 1-13 + 15-17 (the mapping-independent parity), and split arrow-nav-in-vertical-charts into a follow-up plan — Pedigree keeps its existing nav, Hourglass/Descendant keep box focus + Enter/Space (already gained via canvas) without arrow traversal. Degraded outcome: keyboard users can focus and activate boxes in all three, but arrow-tree-traversal remains Pedigree-only until the follow-up.
+The mapping is decided; implement it directly (no escalation):
+- **Pedigree** (focal left, ancestors right): ArrowRight = toward ancestors, ArrowLeft = toward focal, ArrowUp/Down = sibling in same generation. *(current behavior — keep)*
+- **Hourglass** (focal center, ancestors up, descendants down): ArrowUp = toward ancestors, ArrowDown = toward descendants, ArrowLeft/Right = spouse/sibling on focal row.
+- **Descendant** (focal top, descendants down): ArrowDown = toward descendants, ArrowUp = toward focal, ArrowLeft/Right = sibling.
 
-- [ ] **(Tier 1) Step 2: Write the failing test** *(only after Step 1 go-ahead)*
+- [ ] **(Tier 1) Step 2: Write the failing test**
 
 In `tests/components/chart-parity.test.ts`, add a case mounting `<ChartCanvas>` with a seeded multi-gen layout, focus a box, dispatch `Arrow*` keydowns, and assert focus moves to the geometrically-correct neighbor for each orientation.
 
