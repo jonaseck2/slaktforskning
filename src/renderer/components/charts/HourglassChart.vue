@@ -187,8 +187,8 @@ async function handleCollapseButton(btn: CollapseButton) {
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomHourglass);
 
 // ChartCanvas owns the actual scroll element; bind useChartZoom's scrollRef to
-// it on mount so pan/zoom (and centerOnFocal / scrollSelectedBoxIntoView)
-// operate on it.
+// it on mount so pan/zoom and centerOnFocal operate on it. (Selection auto-pan
+// now lives in ChartCanvas.)
 const canvasRef = ref<InstanceType<typeof ChartCanvas> | null>(null);
 onMounted(() => { scrollRef.value = (canvasRef.value?.scrollEl ?? null) as HTMLDivElement | null; });
 
