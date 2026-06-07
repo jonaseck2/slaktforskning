@@ -19,7 +19,20 @@ Releases auto-publish. Every commit on `main` that bumps the version triggers `.
    *Earlier release notes archived. See [docs/plans/archive/CHANGELOG.md](docs/plans/archive/CHANGELOG.md) for older entries; the complete per-milestone development history (commit-level detail, RCA write-ups, design rationale) lives in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log.*
    ```
 
-4. **The version bump is a `commit`-skill concern** (`package.json` + `src-tauri/Cargo.toml` + `src-tauri/tauri.conf.json` + `src-tauri/Cargo.lock`, all four in lockstep). This skill owns only the changelog block. They happen in the same commit.
+4. **The version bump is a `commit`-skill concern.** This skill owns only the changelog block. The bump and the block ship in the same commit. **Not "four files in lockstep"** — see the objective below.
+
+### Release-version objective (detect + deliver)
+
+The goal is two things, nothing more: a release is **detected** (published at the right tag) and **delivered** correctly (the installed app reports the version it was tagged as). Two files carry the *app/release* version and **must always be equal**:
+
+| File | Role | Cost to bump |
+|---|---|---|
+| `package.json` `version` | **Detect** — `release.yml` reads it, publishes/tags `vX.Y.Z`, skips if the tag exists. | cheap (no rebuild) |
+| `src-tauri/tauri.conf.json` `version` | **Deliver** — baked into the bundle; the in-app auto-updater reports it as "the running version" and compares against the latest tag. | cheap (no rebuild) |
+
+**Invariant:** `package.json.version === tauri.conf.json.version`, always. Bump them together for every user-facing release. If they diverge, the bundle ships tagged `vX.Y.Z` but self-reports the other number, so the updater shows a **phantom "update available"** on an already-current install (this happened across 0.268.0–0.269.1). Guarded by `tests/unit/release-version-consistency.test.ts`.
+
+`src-tauri/Cargo.toml` + `Cargo.lock` `version` are **internal Rust crate metadata** — not the release tag, not the delivered/updater version. **Do NOT step them unless `src-tauri/` actually changed**: bumping the crate version forces a local Rust recompile and an app restart during `npm start`, for zero delivery benefit. The Rust crate version may legitimately lag the app version.
 
 ## Bullet style
 
@@ -68,10 +81,10 @@ The engineering detail belongs in the commit message body, not CHANGELOG.
 
 For every version-bumped commit:
 
-1. Bump the four manifests via `commit` skill rules.
+1. Bump the app version in **both** `package.json` and `src-tauri/tauri.conf.json` to the same number (per `commit` skill rules). Bump `Cargo.toml`/`Cargo.lock` **only if `src-tauri/` changed**.
 2. Prepend a new `## X.Y.Z — YYYY-MM-DD` block to `CHANGELOG.md` with the bullet(s).
 3. Count `## ` headers in `CHANGELOG.md`. If > 10, move the oldest block to the top of `docs/plans/archive/CHANGELOG.md`.
-4. Stage `CHANGELOG.md`, `docs/plans/archive/CHANGELOG.md` (if touched), and the four manifest files in the same commit as the code change.
+4. Stage `CHANGELOG.md`, `docs/plans/archive/CHANGELOG.md` (if touched), and the bumped manifest files in the same commit as the code change.
 5. Push to `main`. `release.yml` reads `package.json` version, builds the matrix, attaches bundles to a draft release, auto-publishes once all legs succeed.
 
 ## Auto-release failure

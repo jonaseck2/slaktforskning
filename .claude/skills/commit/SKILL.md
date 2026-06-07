@@ -108,19 +108,20 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 ## Version bumping
 
-**Same code = same version.** Three independent manifests, each tracks its own code. Bump only what changed.
+**Two concepts, not three manifests.** The *app/release version* and the *Rust crate version* are separate; conflating them is what caused the 0.268.0–0.269.1 phantom-update lag.
 
-| Manifest | Bumps when |
-|---|---|
-| `src-tauri/Cargo.toml` (+ `Cargo.lock`) | `src-tauri/` changed |
-| `package.json` | `src/` (renderer / api / MCP), `vite.*.config.ts`, `tsconfig.json`, or `package.json` deps/scripts changed |
-| `src-tauri/tauri.conf.json` | Anything that ends up in the bundle changed (union of above + `src/api/place-gazetteers/data/`, Tauri config, signing config) |
+**1. App / release version — `package.json` + `src-tauri/tauri.conf.json`, ALWAYS equal.** Bump them together to the same number for any shippable change.
+- `package.json` is what `release.yml` reads to **detect + tag** the release (`vX.Y.Z`).
+- `tauri.conf.json` is what gets baked into the bundle and what the in-app **auto-updater reports** as the running version.
+- If they diverge, the bundle ships tagged `vX.Y.Z` but self-reports the other number → the updater shows a phantom "update available" on a current install. Guarded by `tests/unit/release-version-consistency.test.ts`.
 
-Fix → patch (0.x.Y → 0.x.Y+1). Feature → minor (0.X.0 → 0.X+1.0). Major stays at 0. Each manifest moves independently — three different version numbers is normal.
+**2. Rust crate version — `src-tauri/Cargo.toml` (+ `Cargo.lock`).** Internal metadata. NOT the release tag, NOT the delivered/updater version. **Bump it only when `src-tauri/` actually changed** — bumping the crate version forces a local Rust recompile + app restart during `npm start`, for zero delivery benefit. It may legitimately lag the app version.
+
+Fix → patch (0.x.Y → 0.x.Y+1). Feature → minor (0.X.0 → 0.X+1.0). Major stays at 0.
 
 **No bump** for changes that don't ship: `.claude/**`, `docs/**`, `tests/**`-only, `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`, `README.md`, `.gitignore`, `.editorconfig`, lockfile-only churn. Commit as `docs(claude):` / `docs(plan):` / `docs:` / `chore:`.
 
-**CI release trigger gotcha.** `.github/workflows/release.yml` reads `package.json` and fires when `vX.Y.Z` doesn't exist. A Rust-only fix bumps `Cargo.toml` + `tauri.conf.json` but not `package.json` → no release fires until the next renderer change. If users need a Rust-only fix promptly, also patch-bump `package.json`. (Structural fix: switch CI to key on `tauri.conf.json` — TODO.)
+**A Rust-only fix you want released still bumps the app version.** `release.yml` keys on `package.json`, so bump `package.json` + `tauri.conf.json` (the app version) to publish it; bump `Cargo.toml`/`Cargo.lock` too since `src-tauri/` changed. Never bump Cargo *without* a src-tauri change just to "keep numbers aligned" — that's a needless local rebuild.
 
 **CHANGELOG.** Whenever any manifest bumps, add a `## X.Y.Z — YYYY-MM-DD` block at the top per `oss-release`, using the bundle version (`tauri.conf.json`). Same commit as the bump. Verify:
 
