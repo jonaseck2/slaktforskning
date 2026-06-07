@@ -81,6 +81,30 @@ The agent never originates these; the agent's job is to be ready when the input 
 
 ---
 
+## Autonomous (pipeline) mode — the tiers collapse toward action
+
+There are two execution contexts and the tier ladder behaves differently in each:
+
+- **Interactive:** a human is in the session, turn by turn. The tiers read literally — Tier 2 proposes, Tier 3 asks.
+- **Autonomous / pipeline:** a single headless `claude -p` run inside the `agentic-dev-pipeline` (issue → plan → PR), `--dangerously-skip-permissions`, no human mid-run. **There is no one to ask.** A task that waits for input doesn't pause — it fails (the pod hits its deadline) or burns a clarification round-trip. Stopping for a question you could have answered yourself is the dominant failure mode here.
+
+**Flags vs. governance.** `-p` + `--dangerously-skip-permissions` already remove every *mechanical* stop: no tool-approval prompts, no interactivity. They do **not** stop the agent from *deciding* to ask. That's this rule's job.
+
+**In autonomous mode the tiers shift:**
+
+| Tier | Interactive | Autonomous |
+|---|---|---|
+| 1 | do it | do it (unchanged) |
+| 2 — propose then execute | surface reasoning, proceed unless told no | **just execute**; record the reasoning in the commit/PR body (no one to propose to) |
+| 3 — escalate | ask and wait | **make the best defensible call and proceed**, recording the decision + the alternatives you rejected in the PR description — UNLESS the op is irreversible shared-state (force-push, history deletion, a migration that drops data, a new *major* release): for those, do not proceed — exit via the pipeline's clarification path (draft PR + `/clarification:` comment), never silently. |
+| 4 — human-required | wait | cannot be done headless → clarification exit; never fake it (don't fabricate a Holger fixture, don't claim a screenshot you can't take) |
+
+**"Ask the user" across skills collapses to a default.** Any skill step phrased as "ask the user / surface to the user / if unsure, ask first" (it appears in `commit`, `inventory`, `retro`, `ux-intent-mapping`, and others) means, in autonomous mode: **pick the defensible default, record it, proceed.** Never emit an `AskUserQuestion` in a headless run — it has no recipient and stalls the task.
+
+**The bias:** a PR with a recorded, defensible decision is success; a task parked waiting on a human is failure. Reserve the clarification exit for genuine ambiguity that changes *what gets built*, or a Tier-3 irreversible — not for "I'd normally confirm." When you would have asked, instead write what you decided and why into the PR, so the human reviews it at merge (the gate where their judgment actually belongs) rather than mid-run.
+
+---
+
 ## Resolving "is this Tier 1 or Tier 2?"
 
 A check fires Tier 2 (propose) instead of Tier 1 (own) when **any of:**
