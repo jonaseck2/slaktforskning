@@ -2,6 +2,10 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.264.18 — 2026-05-22
+
+- chore(ci): the Release workflow now auto-publishes the draft once every matrix leg has uploaded — no more "release sat as a draft until someone clicked Publish"
+
 ## 0.264.17 — 2026-05-21
 
 - chore(ci): drop the macOS Intel (macos-13) Release leg — GitHub's free `macos-13` queue was 2½ hours per push, blocking every release. arm64-only matches what the pre-Tauri Electron releases shipped; Intel users can still build from source

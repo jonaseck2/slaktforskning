@@ -1,6 +1,6 @@
 [package]
 name = "slaktforskning"
-version = "0.267.0"
+version = "0.269.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
