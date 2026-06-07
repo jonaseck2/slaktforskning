@@ -28,7 +28,7 @@ Every database has a sibling folder named `<dbname>-media/`:
 | `import:holgerRun` | Importer remaps Windows paths, consolidate copies + rewrites |
 | `import:genneyRun` (.gcc) | Same |
 | `import:genneyRun` (.backup) | Bulk-copies the extracted `media/` folder into `<dbname>-media/` up front; consolidate is a no-op afterwards |
-| `import:grampsRun` (.gpkg) | Untars the bundled `media/` (nanotar) and writes each file into `<dbname>-media/` via an injected `mediaWriter`, rewrites `file_ref` to `<folder>/<basename>`; consolidate is the safety net. Plain `.gramps` XML has no media. |
+| `import:grampsRun` (.gpkg) | Untars the bundled `media/` (nanotar) and writes each file into `<dbname>-media/` via an injected `mediaWriter` (renderer → `fs_write_bytes_base64`; MCP → node fs), rewriting `file_ref` to `<folder>/<basename>` inside the importer. Does **not** call `consolidateMediaFolder` — that uses node `fs/promises` and throws in the Tauri renderer; the writer + in-importer rewrite are the whole path. Plain `.gramps` XML has no media. |
 
 ## When adding a new import path
 

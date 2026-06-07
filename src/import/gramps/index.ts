@@ -45,7 +45,10 @@ async function applyGrampsMedia(
       await writer(name, bytes);
       written.add(name);
     } catch {
-      // Tolerate a failed write; consolidateMediaFolder is the safety net.
+      // Tolerate a failed write: the row keeps its bare basename ref and the
+      // file simply isn't on disk. Gramps does not run consolidateMediaFolder
+      // (it uses node fs, unavailable in the renderer) — the writer + the
+      // rewrite below are the whole media path.
     }
   }
   if (written.size === 0) return;

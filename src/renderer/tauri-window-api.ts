@@ -924,16 +924,16 @@ export function mountWindowApi(db: Database): MountResult {
         };
       }
 
+      // Media is written by `mediaWriter` (fs_write_bytes_base64) and each
+      // file_ref is rewritten to `<folder>/<basename>` inside the importer —
+      // mirroring api.archive.import. Do NOT call consolidateMediaFolder here:
+      // it uses node:fs/promises, which throws in the Tauri renderer.
       const result = await grampsMod.importFromGrampsBytes(getDb(), bytes, {
         onProgress: (m) => fireProgress('gramps', m),
         mediaWriter,
         mediaFolderName,
       });
 
-      if (cur) {
-        const { consolidateMediaFolder } = await import('../api/media_consolidate');
-        await consolidateMediaFolder(getDb(), cur);
-      }
       fireDataChanged();
       return { success: true, summary: result.summary };
     } catch (e) {
