@@ -2,6 +2,27 @@
 
 Roadmap origin: plan 3.2 (chart-layout property tests) shipped a property-assertion library but discovered the audit's "1,663 LOC of golden snapshots" premise was wrong (zero snapshots existed). The plan's stated motivation — "the test refactor unlocks the file refactor" — therefore needs revisiting. The `hourglass.ts` 1,052-LOC restructure is NOT cascade-blocked by snapshots; it was never blocked at all. **This Phase 2 plan exists as an option, not a commitment.** Execute only if a real chart feature is blocked by hourglass.ts's current shape.
 
+## Current state — verified 2026-06-07 (DO NOT execute)
+
+Authored 2026-05-14; ~3.5 weeks elapsed. Re-audited against live code:
+
+- **`hourglass.ts` is still 1,052 LOC**, no `hourglass/` subdirectory — the file is in the exact shape this design describes, so the blueprint below remains accurate and executable.
+- **The trigger named in this plan fired — and disproved the premise.** A new `timeline` chart (`src/renderer/utils/chart-layout/timeline.ts`) shipped (commits `9a31e81d`, `5b158510`). "Timeline-on-the-wall" is the literal example this plan listed under "Execute IF a specific chart-feature request is on the table." It landed importing only `./types` and `./utils` — **zero absorption of `hourglass.ts`**. Adding a new chart type did not require splitting the monolith.
+- **Multiple hourglass *features* shipped since 2026-05-14** (foster edges, multi-partner connector routing, shared-children hanging, outline-placeholder removal) — all edited `hourglass.ts` directly; none found its shape blocking.
+- **The 130-test gate is intact**: `npx vitest run tests/unit/chartLayout.test.ts` → 130 passed; `tests/unit/chart-layout/properties.ts` (with `assertNoOverlaps` / `assertGenerationAlignment` / `assertCoupleSpacing` / …) and `regression-fixtures.ts` are present.
+
+**Verdict: skip.** The premise ("this file's size is blocking new charts") has now been tested by reality and held false. This remains a parked "fuse" blueprint, not pending work. Deletion clause (bottom of file) matures ~2026-11-14 if no genuine shape-blocked trigger appears before then.
+
+### Structural finding: hourglass is the *union* of pedigree + descendant, not a different algorithm
+
+Re-reading all three layout files confirms hourglass is not "so different" — it is structurally a superset:
+
+- All three follow the same 6-phase pipeline (build `TreePerson` → measure → collapse-prune → geometric placement → unplaced-outline post-pass → SVG-dims + placeholder extraction).
+- **Phase 4 is the only real divergence**, and it is additive: pedigree places ancestors rightward only; descendant places descendants downward only; hourglass runs *both* directions from a focal row plus a spouse/focal-row join layer (`placeSpouses`, `marriageJog`, `realSpouseCXAt`, `siblingCXOf`) and a four-direction outline pass (`placeOutlineGroup`). That join is why it is ~3× the LOC — two jobs at once, not bloat.
+- **The genuinely-shared duplication cuts across all three files, not within hourglass:** `findPersonInTree` is byte-identical in `pedigree.ts`, `descendant.ts`, and `hourglass.ts`; the placeholder-extraction role-parse tail is copy-pasted near-identically across them; `measureAll` / `recordAndPrune` are parallel.
+
+Consequence: an *hourglass-only internal split* (this plan's scope) would carve up logic only hourglass uses, while the duplication that actually costs maintenance is cross-chart. If a refactor ever becomes worth it, the higher-value target is extracting the shared cross-chart helpers (`findPersonInTree`, the extraction tail, the build/measure/prune pre-passes) into `chart-layout/`-level modules — which this plan explicitly fenced off as a separate analysis. That fence still holds; the observation is now concrete rather than speculative.
+
 ## User goal
 
 Adding a new chart type (e.g., timeline-on-the-wall, generation-stacked-bar) doesn't require absorbing the entire `hourglass.ts` to find the parts that should be shared. Inside `hourglass.ts` itself: a bug in tree-shape derivation lives in `tree-shape.ts`, a bug in collision avoidance lives in `geometric-layout.ts`, a bug in placeholder-extraction lives in `placeholder-extraction.ts`. The 1,052-LOC monolith is no longer the unit of read-and-understand.
@@ -62,7 +83,7 @@ src/renderer/utils/chart-layout/hourglass/
 ### Scope deviations
 
 - **The other two charts (`pedigree.ts`, `descendant.ts`)** stay as-is unless THEY have a feature request blocked by their shape. The hourglass-shape doesn't generalize until at least one other chart actually shares a piece.
-- **The `tree-shape.ts` extraction** is the highest-value piece — both pedigree and descendant likely already have their own tree-shape derivation that could share helpers. But that's a *separate* analysis pass post-split; don't bundle.
+- **The `tree-shape.ts` extraction** is the highest-value piece — and the 2026-06-07 re-audit confirms it: pedigree and descendant don't just "likely" share derivation, they carry a **byte-identical `findPersonInTree`** and a copy-pasted placeholder-extraction tail plus parallel `measureAll`/`recordAndPrune`. The real shared surface is cross-chart, not hourglass-internal. But that's a *separate* analysis pass; don't bundle it into a within-hourglass split.
 - **No new tests added in the split.** The 130-test property suite from 3.2 covers the integration; the split is purely organizational.
 
 ## Approach
