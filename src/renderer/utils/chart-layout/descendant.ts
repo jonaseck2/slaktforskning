@@ -5,7 +5,7 @@ import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton
 import { BOX_W, MIN_BOX_H, V_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
-import { buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { buildDescendantTreePerson, findPerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 export function computeDescendantLayout(
   root: DescendantNode,
@@ -54,7 +54,7 @@ export function computeDescendantLayout(
   const extraRightExtent = new Map<string, number>();
   const extraLeftExtent = new Map<string, number>();
   if (selectedPersonId) {
-    const target = findPersonInTree(tp, selectedPersonId);
+    const target = findPerson(tp, selectedPersonId);
     if (target) {
       const spouseCount = target.spouses.filter(s => s.isPlaceholder).length;
       if (spouseCount > 0) {
@@ -180,7 +180,7 @@ export function computeDescendantLayout(
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));
     if (selBox) {
-      const selNode = findPersonInTree(tp, selectedPersonId);
+      const selNode = findPerson(tp, selectedPersonId);
       if (selNode) {
         const selCX = selBox.x + BOX_W / 2;
         const selCY = selBox.y + selBox.h / 2;
@@ -330,15 +330,5 @@ function findParentOf(root: TreePerson, childId: string, visited = new Set<strin
     const found = findParentOf(c, childId, visited);
     if (found) return found;
   }
-  return null;
-}
-
-function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
-  if (node.person.id === id) return node;
-  if (visited.has(node.person.id)) return null;
-  visited.add(node.person.id);
-  for (const p of node.parents) { const f = findPersonInTree(p, id, visited); if (f) return f; }
-  for (const c of node.children) { const f = findPersonInTree(c, id, visited); if (f) return f; }
-  for (const s of node.spouses) { const f = findPersonInTree(s, id, visited); if (f) return f; }
   return null;
 }

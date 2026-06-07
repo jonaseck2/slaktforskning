@@ -14,20 +14,9 @@ import type { TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox
 import { BOX_W, MIN_BOX_H, V_GAP, H_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow, marriageJog } from './connectors';
-import { injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { findPerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
-  if (node.person.id === id) return node;
-  if (visited.has(node.person.id)) return null;
-  visited.add(node.person.id);
-  for (const p of node.parents) { const f = findPersonInTree(p, id, visited); if (f) return f; }
-  for (const c of node.children) { const f = findPersonInTree(c, id, visited); if (f) return f; }
-  for (const s of node.spouses) { const f = findPersonInTree(s, id, visited); if (f) return f; }
-  for (const s of (node.siblings ?? [])) { const f = findPersonInTree(s, id, visited); if (f) return f; }
-  return null;
-}
 
 /** Deep-clone a TreePerson graph so layout mutations don't affect the source. */
 function cloneTree(node: TreePerson, visited = new Map<string, TreePerson>()): TreePerson {
@@ -804,7 +793,7 @@ export function computeHourglassLayout(
   if (selectedPersonId) {
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     if (selBox) {
-      const selNode = findPersonInTree(root, selectedPersonId);
+      const selNode = findPerson(root, selectedPersonId);
       if (selNode) {
         const selCX = selBox.x + BOX_W / 2;
         const selIsFemale = selNode.person.sex === 'F';
