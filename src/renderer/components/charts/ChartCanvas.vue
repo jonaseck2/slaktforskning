@@ -206,7 +206,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, PORTRAIT_GAP } from '../../utils/chart-layout';
 import type { ChartLayout, BoxLayout, CollapseButton, PlaceholderBox } from '../../utils/chart-layout';
@@ -289,6 +289,26 @@ const {
   placeholderLabel,
   boxAriaLabel,
 } = useChartBox({ colors, colorMode: colorModeRef, selectedId: selectedIdRef });
+
+// Selection auto-pan — when the selected person changes, pan the scroll
+// container so the box is on screen (~100 px inset from each edge). Shared by
+// all three charts so selecting a relative always scrolls it into view, not
+// just in Hourglass. Uses getBoundingClientRect against the rendered box <g>
+// (every box carries data-testid="person-box-<id>"), so it's chart-agnostic —
+// no per-chart layout/zoom/viewBox math needed.
+function scrollSelectedIntoView(id: string | null) {
+  if (!id || !scrollEl.value) return;
+  const el = scrollEl.value.querySelector(`[data-testid="person-box-${id}"]`) as SVGGElement | null;
+  if (!el) return;
+  const box = el.getBoundingClientRect();
+  const container = scrollEl.value.getBoundingClientRect();
+  const inset = 100;
+  if (box.left < container.left + inset) scrollEl.value.scrollLeft -= (container.left + inset - box.left);
+  else if (box.right > container.right - inset) scrollEl.value.scrollLeft += (box.right - (container.right - inset));
+  if (box.top < container.top + inset) scrollEl.value.scrollTop -= (container.top + inset - box.top);
+  else if (box.bottom > container.bottom - inset) scrollEl.value.scrollTop += (box.bottom - (container.bottom - inset));
+}
+watch(() => props.selectedId, async (id) => { await nextTick(); scrollSelectedIntoView(id); });
 
 defineExpose({ scrollEl });
 </script>
