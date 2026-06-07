@@ -1880,6 +1880,8 @@ export default {
     duplicates: '{count} possible duplicate | {count} possible duplicates',
     pedigreeChart: 'Pedigree chart',
     pedigreeChartDesc: 'Pedigree chart showing {count} generations for {name}',
+    hourglassChart: 'Hourglass chart',
+    descendantChart: 'Descendant chart',
     fanChart: 'Fan chart',
     fanChartDesc: 'Fan chart showing {count} generations for {name}',
     generation: 'Generation {n}',

@@ -1,249 +1,81 @@
 <template>
-  <div class="chart-outer" ref="outerRef">
-    <div v-if="loading && tree" class="chart-reload-indicator" aria-live="polite">{{ $t('common.loading') }}</div>
-    <div :class="['chart-scroll', { panning: isPanning }]" ref="scrollRef" @wheel="onWheel"
-         @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp">
-      <div v-if="loading && !tree" class="chart-loading">{{ $t('common.loading') }}</div>
-      <svg
-        v-if="tree"
-        :width="layout.svgWidth * zoom"
-        :height="layout.svgHeight * zoom"
-        :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
-        data-testid="hourglass-svg"
-      >
-        <defs>
-          <filter id="chart-shadow" x="-3%" y="-6%" width="106%" height="116%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.06" />
-          </filter>
-        </defs>
-        <path
-          v-for="(d, i) in solidPaths"
-          :key="'p' + i"
-          :d="d"
-          fill="none"
-          :stroke="chartTokens.line"
-          stroke-width="1.5"
-          vector-effect="non-scaling-stroke"
-        />
-        <g
-          v-for="box in layout.boxes"
-          :key="box.person.id"
-          :ref="(el) => box.isFocal && setFocusBoxEl(el as Element | null)"
-          v-memo="[box.x, box.y, box.w, box.h, box.isFocal, box.person.id, box.person.sex, box.person.living, box.person.givenName, box.person.surname, box.person.preferredName, box.person.nickname, box.person.birthDate, box.person.birthPlace, box.person.deathDate, box.person.deathPlace, box.person.photoUrl, props.colorMode, props.readonly, addBtnStyle]"
-          :data-testid="'person-box-' + box.person.id"
-          filter="url(#chart-shadow)"
-          :class="['person-box', 'clickable']"
-          :style="{ cursor: 'pointer' }"
-          @click="$emit('navigate', box.person.id)"
-          @dblclick="onPersonDblClick(box.person.id)"
-        >
-          <!-- Box background -->
-          <rect
-            :x="box.x" :y="box.y" :width="box.w" :height="box.h"
-            rx="6"
-            :fill="boxFill(box)"
-            :stroke="boxStroke(box)"
-            stroke-width="1"
-          />
-          <!-- Sex indicator bar -->
-          <rect
-            :x="box.x" :y="box.y"
-            width="3" :height="box.h"
-            rx="1.5"
-            :fill="sexBg(box.person.sex)"
-          />
-          <!-- Portrait area -->
-          <rect
-            :x="box.x + BOX_PAD_X_LEFT" :y="portraitY(box)"
-            :width="PORTRAIT_W" :height="PORTRAIT_H"
-            rx="3"
-            :fill="portraitBg(box)"
-          />
-          <image
-            v-if="box.person.photoUrl"
-            :href="box.person.photoUrl"
-            :x="box.x + BOX_PAD_X_LEFT" :y="portraitY(box)"
-            :width="PORTRAIT_W" :height="PORTRAIT_H"
-            preserveAspectRatio="xMidYMid slice"
-          />
-          <text
-            v-else
-            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W / 2"
-            :y="portraitY(box) + PORTRAIT_H / 2"
-            text-anchor="middle"
-            dominant-baseline="central"
-            font-size="11"
-            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="portraitTextColor()"
-          >{{ initials(box) }}</text>
-          <!-- Name lines -->
-          <text
-            font-size="12"
-            font-weight="600"
-            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="nameColor(box)"
-            xml:space="preserve"
-          >
-            <tspan
-              v-for="(line, li) in wrappedName(box)"
-              :key="li"
-              :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
-              :y="nameStartY(box) + li * 16"
-            ><tspan
-                v-for="(seg, si) in line"
-                :key="si"
-                :text-decoration="seg.underline ? 'underline' : ''"
-              >{{ seg.text }}</tspan></tspan>
-          </text>
-          <!-- Birth line -->
-          <text
-            v-if="box.person.birthDate || box.person.birthPlace"
-            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
-            :y="birthY(box)"
-            font-size="10"
-            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="dateColor(box)"
-          >{{ birthText(box) }}</text>
-          <!-- Death line -->
-          <text
-            v-if="box.person.deathDate || box.person.deathPlace"
-            :x="box.x + BOX_PAD_X_LEFT + PORTRAIT_W + PORTRAIT_GAP"
-            :y="deathY(box)"
-            font-size="10"
-            font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-            :fill="dateColor(box)"
-          >{{ deathText(box) }}</text>
-          <!-- Add-family-member badge — small floating shape at the top-right corner.
-               Shape (plus circle vs tilted leaf) is configurable in Utseende → Knapp. -->
-          <g
-            v-if="!readonly"
-            :class="['add-relative-btn', `add-relative-btn--${addBtnStyle}`]"
-            :transform="`translate(${box.x + box.w}, ${box.y})`"
-            role="button"
-            :aria-label="$t('personDetail.addRelativeLabel')"
-            @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
-          >
-            <template v-if="addBtnStyle === 'plus'">
-              <circle r="10" />
-              <line x1="-5" y1="0" x2="5" y2="0" />
-              <line x1="0" y1="-5" x2="0" y2="5" />
-            </template>
-            <template v-else>
-              <rect x="-12" y="-12" width="24" height="24" fill="transparent" />
-              <text class="add-relative-leaf-glyph" text-anchor="middle" dominant-baseline="central" font-size="20">🍃</text>
-            </template>
-          </g>
-        </g>
-        <template v-if="!readonly">
-          <g
-            v-for="btn in layout.collapseButtons"
-            :key="`${btn.personId}:${btn.direction}:${btn.coParentId ?? ''}`"
-            class="collapse-btn"
-            @click.stop="handleCollapseButton(btn)"
-          >
-            <circle
-              :cx="btn.cx" :cy="btn.cy" r="8"
-              :fill="btn.isExpanded ? 'white' : '#888'"
-              :stroke="btn.isExpanded ? '#aaa' : '#555'"
-              stroke-width="1.5"
-            />
-            <text
-              :x="btn.cx" :y="btn.cy"
-              text-anchor="middle" dominant-baseline="central"
-              font-size="9"
-              font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              :fill="btn.isExpanded ? '#666' : 'white'"
-              style="pointer-events: none; user-select: none;"
-            >{{ { up: '▲', down: '▼', left: '◀', right: '▶' }[btn.direction] }}</text>
-          </g>
-          <path
-            v-for="(d, i) in dashedPaths"
-            :key="'dp' + i"
-            :d="d"
-            fill="none"
-            :stroke="chartTokens.placeholderStroke"
-            stroke-width="1"
-            stroke-dasharray="4 3"
-            vector-effect="non-scaling-stroke"
-          />
-          <g
-            v-for="ph in layout.placeholders"
-            :key="'ph-' + (ph.key ?? ph.role + '-' + ph.childPersonId)"
-            class="ghost-box"
-            tabindex="0"
-            role="button"
-            :aria-label="placeholderLabel(ph.role)"
-            @click="startAddFromPlaceholder(ph)"
-            @keydown.enter="startAddFromPlaceholder(ph)"
-            @keydown.space.prevent="startAddFromPlaceholder(ph)"
-          >
-            <rect
-              :x="ph.x + BOX_W / 4" :y="ph.y + MIN_BOX_H / 4" :width="BOX_W / 2" :height="MIN_BOX_H / 2"
-              rx="6" ry="6"
-              fill="transparent" :stroke="chartTokens.placeholderStroke" stroke-dasharray="4 3" stroke-width="1.5"
-            />
-            <text
-              :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 - 2"
-              text-anchor="middle" :fill="chartTokens.placeholderText" font-size="14"
-            >+</text>
-            <text
-              :x="ph.x + BOX_W / 2" :y="ph.y + MIN_BOX_H / 2 + 12"
-              text-anchor="middle" :fill="chartTokens.placeholderText" font-size="11"
-            >{{ placeholderLabel(ph.role) }}</text>
-          </g>
-        </template>
-      </svg>
-    </div>
-    <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
-      <span class="zoom-extra-label" :title="$t('chart.tooltip.generationCount')" :aria-label="$t('chart.tooltip.generationCount')">{{ $t('reports.generations') }}</span>
-      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationDecrease')" :aria-label="$t('chart.tooltip.generationDecrease')" @click="decrGens" :disabled="genTarget <= 1">−</button>
-      <span class="zoom-extra-value" :title="$t('chart.tooltip.generationCount')" :aria-label="$t('chart.tooltip.generationCount')">{{ genTarget }}</span>
-      <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationIncrease')" :aria-label="$t('chart.tooltip.generationIncrease')" @click="incrGens">+</button>
-    </ZoomControls>
+  <ChartCanvas
+    ref="canvasRef"
+    :layout="layout"
+    :tree="tree"
+    :loading="loading"
+    :zoom="zoom"
+    :is-panning="isPanning"
+    :readonly="readonly"
+    :color-mode="props.colorMode"
+    :selected-id="selectedIdRef"
+    :ariaLabel="'a11y.hourglassChart'"
+    test-id="hourglass-svg"
+    :add-btn-style="addBtnStyle"
+    @navigate="(id) => $emit('navigate', id)"
+    @focus-person="onPersonDblClick"
+    @person-context-menu="(p) => $emit('person-context-menu', p)"
+    @collapse-toggle="handleCollapseButton"
+    @add-from-placeholder="startAddFromPlaceholder"
+    @box-keydown="() => {}"
+    @wheel="onWheel"
+    @mousedown="onMouseDown"
+    @mousemove="onMouseMove"
+    @mouseup="onMouseUp"
+  >
+    <template #zoom-controls>
+      <ZoomControls overlay :zoom="zoom" @zoom-in="zoomIn" @zoom-out="zoomOut" @reset="resetZoom">
+        <span class="zoom-extra-label" :title="$t('chart.tooltip.generationCount')" :aria-label="$t('chart.tooltip.generationCount')">{{ $t('reports.generations') }}</span>
+        <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationDecrease')" :aria-label="$t('chart.tooltip.generationDecrease')" @click="decrGens" :disabled="genTarget <= 1">−</button>
+        <span class="zoom-extra-value" :title="$t('chart.tooltip.generationCount')" :aria-label="$t('chart.tooltip.generationCount')">{{ genTarget }}</span>
+        <button class="zoom-extra-btn" :title="$t('chart.tooltip.generationIncrease')" :aria-label="$t('chart.tooltip.generationIncrease')" @click="incrGens">+</button>
+      </ZoomControls>
+    </template>
+  </ChartCanvas>
 
-    <!-- Add related person modal -->
-    <PersonModal
-      v-if="showAddRelative && addRelativePersonId"
-      mode="standalone"
-      :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode, personSex: addRelativePersonSex, personSurname: addRelativePersonSurname }"
-      @saved="onRelativeSaved"
-      @close="showAddRelative = false"
-      @cancel="showAddRelative = false"
-    />
+  <!-- Add related person modal -->
+  <PersonModal
+    v-if="showAddRelative && addRelativePersonId"
+    mode="standalone"
+    :add-related-to="{ personId: addRelativePersonId, mode: addRelativeMode, personSex: addRelativePersonSex, personSurname: addRelativePersonSurname }"
+    @saved="onRelativeSaved"
+    @close="showAddRelative = false"
+    @cancel="showAddRelative = false"
+  />
 
-    <!-- First-encounter coachmark anchored on the focus person box. Auto-dismisses
-         once the user double-clicks any person (focusChangedOnce flips true). -->
-    <Coachmark
-      seen-key="coach.hourglass.focus"
-      :anchor-el="focusBoxEl"
-      tip-key="onboarding.coach.hourglassFocus.tip"
-      dismiss-key="onboarding.coach.hourglassFocus.dismiss"
-      placement="below"
-      :auto-dismiss-on="() => focusChangedOnce"
-    />
-  </div>
+  <!-- First-encounter coachmark anchored on the focus person box. Auto-dismisses
+       once the user double-clicks any person (focusChangedOnce flips true). -->
+  <Coachmark
+    seen-key="coach.hourglass.focus"
+    :anchor-el="focusBoxEl"
+    tip-key="onboarding.coach.hourglassFocus.tip"
+    dismiss-key="onboarding.coach.hourglassFocus.dismiss"
+    placement="below"
+    :auto-dismiss-on="() => focusChangedOnce"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, toRef, inject } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, toRef, inject } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computeHourglassLayout, BOX_W, MIN_BOX_H, PORTRAIT_W, PORTRAIT_H, BOX_PAD_X_LEFT, PORTRAIT_GAP, ADD_BTN_AREA_W, BOX_PAD_X_RIGHT } from '../../utils/chart-layout';
-import { useChartBox } from '../../composables/useChartBox';
+import { computeHourglassLayout } from '../../utils/chart-layout';
 import { fetchHourglassTreePerson, loadAncestorGenerationTP, loadChildrenForNodeTP } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
 import { STORAGE_KEYS } from '../../utils/storage-keys';
-import type { BoxLayout, CollapseButton, TreePerson, PlaceholderBox } from '../../utils/chart-layout';
-import { useChartColors, applyColorMode } from '../../composables/useChartColors';
+import type { CollapseButton, TreePerson, PlaceholderBox, BoxLayout } from '../../utils/chart-layout';
 import { useEntityData } from '../../composables/useEntityData';
 import type { ColorMode } from '../../../api/chart-export';
 import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
+import ChartCanvas from './ChartCanvas.vue';
 import Coachmark from '../ui/Coachmark.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';
 import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 
-const { t } = useI18n();
+// useI18n must be called within setup so $t resolves inside this component's
+// template (the zoom-controls slot references $t directly).
+useI18n();
 
 const props = defineProps<{ personId: string | undefined; readonly?: boolean; selectedPersonId?: string | null; colorMode?: ColorMode }>();
 
@@ -257,14 +89,10 @@ const emit = defineEmits<{
   'focus-person': [id: string];
 }>();
 
-// Coachmark anchor — set to the focal person's <g> element via callback ref
-// inside the v-for. Stays null until the layout renders the focal box.
+// Coachmark anchor — the focal person's <g> element, resolved by querying
+// ChartCanvas's scroll element once the layout has rendered. Stays null until
+// the focal box exists in the DOM.
 const focusBoxEl = ref<HTMLElement | null>(null);
-function setFocusBoxEl(el: Element | null) {
-  // SVG <g> elements are Element, not HTMLElement, but Coachmark only calls
-  // getBoundingClientRect() on it — which is on Element — so the cast is safe.
-  focusBoxEl.value = (el as HTMLElement | null) ?? null;
-}
 
 // Flips on the first focus-switch double-click; drives the Coachmark's
 // auto-dismiss so the user only ever sees the hint once they've
@@ -295,20 +123,13 @@ const addRelativePersonSurname = ref<string | undefined>(undefined);
 
 const selectedParentInfo = useSelectedParentInfo(toRef(props, 'selectedPersonId'));
 
+// Hourglass feeds selectedPersonId directly to its layout fn (no RAF defer).
+const selectedIdRef = computed<string | null>(() => props.selectedPersonId ?? null);
+
 const layout = computed(() => {
   if (!tree.value) return { boxes: [], lines: [], paths: [], svgWidth: 1400, svgHeight: 688, viewBoxMinY: 0, collapseButtons: [], placeholders: [], placeholderLines: [] };
   return computeHourglassLayout(tree.value, collapsed.value, props.selectedPersonId, selectedParentInfo.value);
 });
-
-// Path-class prefixes:
-//   'D:' — outline placeholder connectors (rendered dashed 4 3, placeholder colour)
-//   (no prefix) — parent_child + couple connectors (solid)
-const solidPaths = computed(() =>
-  layout.value.paths.filter(d => !d.startsWith('D:')),
-);
-const dashedPaths = computed(() =>
-  layout.value.paths.filter(d => d.startsWith('D:')).map(d => d.slice(2)),
-);
 
 function toggle(personId: string, dir: 'up' | 'down' | 'left' | 'right', coParentId?: string | null) {
   const key = coParentId !== undefined
@@ -359,36 +180,11 @@ async function handleCollapseButton(btn: CollapseButton) {
 
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomHourglass);
 
-const outerRef = ref<HTMLElement | null>(null);
-const baseColors = useChartColors(true, outerRef);
-const colors = computed(() => applyColorMode(baseColors.value, props.colorMode ?? 'themed'));
-
-const chartTokens = computed(() => ({
-  line: colors.value.line,
-  placeholderStroke: colors.value.placeholderStroke,
-  placeholderText: colors.value.placeholderText,
-}));
-
-const colorModeRef = computed<ColorMode>(() => props.colorMode ?? 'themed');
-const selectedIdRef = computed<string | null>(() => props.selectedPersonId ?? null);
-const {
-  sexBg,
-  boxFill,
-  boxStroke,
-  nameColor,
-  dateColor,
-  portraitBg,
-  portraitTextColor,
-  wrappedName,
-  birthText,
-  deathText,
-  initials,
-  nameStartY,
-  portraitY,
-  birthY,
-  deathY,
-  placeholderLabel,
-} = useChartBox({ colors, colorMode: colorModeRef, selectedId: selectedIdRef });
+// ChartCanvas owns the actual scroll element; bind useChartZoom's scrollRef to
+// it on mount so pan/zoom (and centerOnFocal / scrollSelectedBoxIntoView)
+// operate on it.
+const canvasRef = ref<InstanceType<typeof ChartCanvas> | null>(null);
+onMounted(() => { scrollRef.value = (canvasRef.value?.scrollEl ?? null) as HTMLDivElement | null; });
 
 function startAddFromPlaceholder(ph: PlaceholderBox) {
   const childBox = layout.value.boxes.find((b: BoxLayout) => b.person.id === ph.childPersonId);
@@ -477,6 +273,20 @@ function refetch() {
   return reload();
 }
 
+// Resolve the focal box element for the Coachmark anchor. The focal box lives
+// inside ChartCanvas's scroll element now, so we query for it by data-testid
+// after the layout settles. Re-runs whenever the focal id or load state
+// changes. (Declared after useEntityData so `loading` is in scope.)
+const focalId = computed<string | null>(() => layout.value.boxes.find((b: BoxLayout) => b.isFocal)?.person.id ?? null);
+function resolveFocusBoxEl() {
+  const id = focalId.value;
+  const scrollEl = canvasRef.value?.scrollEl;
+  if (!id || !scrollEl) { focusBoxEl.value = null; return; }
+  focusBoxEl.value = scrollEl.querySelector(`[data-testid="person-box-${id}"]`) as HTMLElement | null;
+}
+watch([focalId, loading], () => { nextTick(resolveFocusBoxEl); });
+onMounted(() => { nextTick(resolveFocusBoxEl); });
+
 function centerOnFocal() {
   const focal = layout.value.boxes.find(b => b.isFocal);
   if (!focal || !scrollRef.value) return;
@@ -540,111 +350,3 @@ watch(() => props.selectedPersonId, (id) => {
 
 defineExpose({ boxes: computed(() => layout.value.boxes), refetch });
 </script>
-
-<style scoped>
-.chart-outer {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.chart-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  cursor: grab;
-}
-.chart-scroll.panning {
-  cursor: grabbing;
-  user-select: none;
-}
-.chart-scroll.panning * {
-  cursor: grabbing;
-}
-.chart-loading { color: #999; padding: 40px; text-align: center; }
-.chart-reload-indicator {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  color: var(--text-muted);
-  font-size: var(--font-xs);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  pointer-events: none;
-  z-index: 20;
-  box-shadow: var(--shadow-sm);
-}
-.person-box.clickable { cursor: pointer; }
-.person-box.clickable:hover rect:first-child { opacity: 0.9; }
-.collapse-btn { cursor: pointer; }
-.collapse-btn:hover circle { opacity: 0.7; }
-
-.ghost-box { cursor: pointer; }
-.ghost-box:hover rect { stroke: var(--color-primary, #3b82f6); }
-.ghost-box:hover text { fill: var(--color-primary, #3b82f6); }
-.ghost-box:focus { outline: 2px solid var(--color-primary, #3b82f6); outline-offset: 2px; border-radius: 6px; }
-
-/* Add-family-member badge that overhangs the top-right corner of each
-   person box. Shape and styling match the box (rounded rect, border,
-   surface fill) so it reads as a small attached tile. */
-.add-relative-btn { cursor: pointer; }
-.add-relative-btn circle {
-  fill: var(--surface);
-  stroke: var(--surface-border);
-  stroke-width: 1;
-  transition: fill 0.1s, stroke 0.1s;
-}
-.add-relative-btn line {
-  stroke: var(--text-muted);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  pointer-events: none;
-}
-.add-relative-btn:hover circle {
-  fill: var(--accent);
-  stroke: var(--accent);
-}
-.add-relative-btn:hover line {
-  stroke: var(--accent-text);
-}
-.add-relative-leaf-glyph {
-  pointer-events: none;
-  user-select: none;
-  transition: transform 0.1s;
-}
-.add-relative-btn:hover .add-relative-leaf-glyph {
-  transform: scale(1.15);
-}
-
-/* Floating legend in the bottom-left corner. Shown only when the chart
-   contains non-biological parent_child edges, so the common all-biological
-   case stays uncluttered. */
-.chart-legend {
-  position: absolute;
-  bottom: var(--space-md);
-  left: var(--space-md);
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  z-index: 10;
-  pointer-events: none;
-  font-size: var(--font-xs);
-  color: var(--text-secondary);
-}
-.chart-legend-entry {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-.chart-legend-swatch {
-  flex-shrink: 0;
-}
-</style>
