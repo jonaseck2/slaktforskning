@@ -1,11 +1,12 @@
 // Standalone descendant chart layout algorithm — operates on TreePerson graph.
 // Focal at top, descendants fan out downward. Supports outline injection.
 
-import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton, PlaceholderBox, Line } from './types';
+import type { DescendantNode, TreePerson, ChartLayout, BoxLayout, CollapseButton, Line } from './types';
 import { BOX_W, MIN_BOX_H, V_GAP, GEN_GAP, PAD } from './constants';
 import { measureBoxHeight } from './measure';
 import { curvedElbow } from './connectors';
-import { buildDescendantTreePerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { buildDescendantTreePerson, findPerson, injectOutlines, PLACEHOLDER_PREFIX, type SelectedParentInfo } from './hourglass-tree';
+import { extractPlaceholders } from './extract-placeholders';
 
 export function computeDescendantLayout(
   root: DescendantNode,
@@ -54,7 +55,7 @@ export function computeDescendantLayout(
   const extraRightExtent = new Map<string, number>();
   const extraLeftExtent = new Map<string, number>();
   if (selectedPersonId) {
-    const target = findPersonInTree(tp, selectedPersonId);
+    const target = findPerson(tp, selectedPersonId);
     if (target) {
       const spouseCount = target.spouses.filter(s => s.isPlaceholder).length;
       if (spouseCount > 0) {
@@ -180,7 +181,7 @@ export function computeDescendantLayout(
     const selBox = boxes.find(b => b.person.id === selectedPersonId);
     const placedIds = new Set(boxes.map(b => b.person.id));
     if (selBox) {
-      const selNode = findPersonInTree(tp, selectedPersonId);
+      const selNode = findPerson(tp, selectedPersonId);
       if (selNode) {
         const selCX = selBox.x + BOX_W / 2;
         const selCY = selBox.y + selBox.h / 2;
@@ -293,33 +294,12 @@ export function computeDescendantLayout(
   const svgHeight = (maxBoxBottom + 20 + PAD) + (viewBoxMinY < 0 ? -viewBoxMinY : 0);
 
   // ── Extract placeholders ─────────────────────────────────────────────────
-  const placeholders: PlaceholderBox[] = [];
   const placeholderLines: Line[] = [];
-
-  for (let i = boxes.length - 1; i >= 0; i--) {
-    const box = boxes[i];
-    if (!box.person.id.startsWith(PLACEHOLDER_PREFIX)) continue;
-    const pid = box.person.id;
-    let role: 'father' | 'mother' | 'son' | 'daughter' | 'spouse';
-    let childPersonId: string;
-    if (pid.startsWith(PLACEHOLDER_PREFIX + 'father_')) {
-      role = 'father'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'father_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'mother_')) {
-      role = 'mother'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'mother_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'spouse_')) {
-      role = 'spouse'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'spouse_').length);
-    } else if (pid.startsWith(PLACEHOLDER_PREFIX + 'son_')) {
-      role = 'son'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'son_').length);
-    } else {
-      role = 'daughter'; childPersonId = pid.slice((PLACEHOLDER_PREFIX + 'daughter_').length);
-    }
-    placeholders.push({ type: 'placeholder', role, childPersonId, x: box.x, y: box.y });
-    boxes.splice(i, 1);
-  }
+  const { boxes: realBoxes, placeholders } = extractPlaceholders(boxes);
 
   for (const d of placeholderPaths) paths.push('D:' + d);
 
-  return { boxes, lines: [], paths, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
+  return { boxes: realBoxes, lines: [], paths, svgWidth, svgHeight, viewBoxMinY, collapseButtons, placeholders, placeholderLines };
 }
 
 function findParentOf(root: TreePerson, childId: string, visited = new Set<string>()): TreePerson | null {
@@ -330,15 +310,5 @@ function findParentOf(root: TreePerson, childId: string, visited = new Set<strin
     const found = findParentOf(c, childId, visited);
     if (found) return found;
   }
-  return null;
-}
-
-function findPersonInTree(node: TreePerson, id: string, visited = new Set<string>()): TreePerson | null {
-  if (node.person.id === id) return node;
-  if (visited.has(node.person.id)) return null;
-  visited.add(node.person.id);
-  for (const p of node.parents) { const f = findPersonInTree(p, id, visited); if (f) return f; }
-  for (const c of node.children) { const f = findPersonInTree(c, id, visited); if (f) return f; }
-  for (const s of node.spouses) { const f = findPersonInTree(s, id, visited); if (f) return f; }
   return null;
 }

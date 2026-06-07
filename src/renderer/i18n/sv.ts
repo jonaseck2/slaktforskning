@@ -1880,6 +1880,8 @@ export default {
     duplicates: '{count} möjlig dubblett | {count} möjliga dubbletter',
     pedigreeChart: 'Antavla',
     pedigreeChartDesc: 'Antavla med {count} generationer för {name}',
+    hourglassChart: 'Timglasdiagram',
+    descendantChart: 'Stamtavla',
     fanChart: 'Solfjäder',
     fanChartDesc: 'Solfjäder med {count} generationer för {name}',
     generation: 'Generation {n}',

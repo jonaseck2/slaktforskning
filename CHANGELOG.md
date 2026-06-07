@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.270.0 — 2026-06-07
+
+- feat(charts): the three family-tree charts — Pedigree, Hourglass, and Descendants — now look and behave identically wherever they share a concept. A person box renders the same in all three (portrait, name, dates, the "+" add-relative button, the focus highlight); selecting a person scrolls it into view in every chart; double-clicking a box re-roots the tree in every chart (previously only Hourglass did); and every chart exposes the same `role="tree"` / `treeitem` accessibility structure with keyboard focus. Behaviour that used to exist in only one chart is now shared by all three.
+- feat(charts): arrow-key navigation works in all three charts, oriented to how each chart grows — in Pedigree, → moves toward ancestors and ↑/↓ between siblings; in Hourglass, ↑ goes to ancestors and ↓ to descendants; in Descendants, ↓ goes to descendants — so a keyboard or screen-reader user traverses the tree the natural way in each.
+- refactor(charts): the rendering, box-drawing, selection, pan/zoom, collapse, placeholder, and add-relative logic that was copy-pasted across the three chart components now lives in one shared `ChartCanvas` component + `useChartBox` composable, so the charts can no longer drift apart as the code changes. Locked by a `chart-parity` test that mounts the shared canvas and asserts every shared behaviour, plus the 130-test layout property suite proving the layout maths are unchanged.
+
 ## 0.269.1 — 2026-06-07
 
 - fix(import): importing a Gramps `.gpkg` package with media through the desktop file picker no longer fails with "fs/promises.mkdir called in renderer". The 0.268.0 `.gpkg` handler called `consolidateMediaFolder` (which uses Node `fs`) in the renderer, where Node fs is unavailable — so any real `.gpkg`-with-media import via the UI threw. The bundled media is already written and its `file_ref` made relative inside the importer (as the `.zip` archive importer does), so the extra call was redundant as well as broken; it's removed. Importing via the MCP `import_file` tool was unaffected.
@@ -42,7 +48,3 @@
 
 - fix(deps): patch 7 runtime npm advisories (1 high `fast-uri`, plus moderate `hono` / `ip-address` / `qs` / `uuid` / `ws`) via lockfile-only `npm audit fix`
 - chore(ci): `npm run audit` (`npm audit --omit=dev --audit-level=moderate`) now runs in the CI test job — new runtime vulnerabilities fail the build instead of sliding past us
-
-## 0.264.20 — 2026-05-23
-
-- fix: remove the undo/redo buttons from the nav bar — Cmd+Z / Cmd+Shift+Z and the macOS Edit menu still trigger undo/redo, so the toolbar buttons were redundant clutter
