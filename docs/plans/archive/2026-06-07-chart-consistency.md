@@ -1,6 +1,6 @@
 # Chart Consistency Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Project workflow (CLAUDE.md): execute in a git worktree under `.worktrees/chart-consistency/`; dispatch a fresh subagent per task with `subagent-handoff` templates; verify user-observable outcomes (not just "tests pass") before marking a task done.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking. Project workflow (CLAUDE.md): execute in a git worktree under `.worktrees/chart-consistency/`; dispatch a fresh subagent per task with `subagent-handoff` templates; verify user-observable outcomes (not just "tests pass") before marking a task done.
 
 **Goal:** The three `TreePerson` family-tree charts (Pedigree, Hourglass, Descendant) render and behave identically wherever they share a concept, with the shared code living in one place so it cannot drift.
 
@@ -40,16 +40,16 @@
 - Modify: `src/renderer/utils/chart-layout/pedigree.ts:324-332`, `hourglass.ts:21-30`, `descendant.ts:336-344`
 - Reference: `src/renderer/utils/chart-layout/hourglass-tree.ts:163`
 
-- [ ] **(Tier 1) Step 1: Confirm the shared `findPerson` is a superset**
+- [x] **(Tier 1) Step 1: Confirm the shared `findPerson` is a superset**
 
 Read `hourglass-tree.ts:163`. Confirm its body traverses `parents`, `children`, and `spouses` (and `siblings` if present) with a `visited` cycle-guard. The three local `findPersonInTree` copies traverse parents/children/spouses only. The shared one must cover at least that set. If the shared `findPerson` is missing any of parents/children/spouses traversal, STOP and surface — do not silently narrow behavior.
 
-- [ ] **(Tier 1) Step 2: Run the property suite to capture the green baseline**
+- [x] **(Tier 1) Step 2: Run the property suite to capture the green baseline**
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 Expected: `Tests  130 passed (130)`
 
-- [ ] **(Tier 1) Step 3: Replace local copies with the shared import**
+- [x] **(Tier 1) Step 3: Replace local copies with the shared import**
 
 In each of `pedigree.ts`, `descendant.ts`, `hourglass.ts`:
 1. Delete the local `function findPersonInTree(...) { ... }` definition.
@@ -58,17 +58,17 @@ In each of `pedigree.ts`, `descendant.ts`, `hourglass.ts`:
 
 `descendant.ts` also has `findParentOf` (lines 325-334) — leave it; it is descendant-specific and not duplicated.
 
-- [ ] **(Tier 1) Step 4: Verify the property suite still passes**
+- [x] **(Tier 1) Step 4: Verify the property suite still passes**
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 Expected: `Tests  130 passed (130)` — identical count, all green.
 
-- [ ] **(Tier 1) Step 5: Verify the grep gate**
+- [x] **(Tier 1) Step 5: Verify the grep gate**
 
 Run: `grep -rn "function findPersonInTree" src/renderer/utils/chart-layout/`
 Expected: no output (zero matches).
 
-- [ ] **(Tier 1) Step 6: Commit**
+- [x] **(Tier 1) Step 6: Commit**
 
 ```bash
 git add src/renderer/utils/chart-layout/pedigree.ts src/renderer/utils/chart-layout/hourglass.ts src/renderer/utils/chart-layout/descendant.ts
@@ -86,7 +86,7 @@ The placeholder role-parse tail is copy-pasted near-identically: `pedigree.ts:28
 - Create: `tests/unit/chart-layout/extract-placeholders.test.ts`
 - Modify: `pedigree.ts`, `descendant.ts`, `hourglass.ts`, `index.ts`
 
-- [ ] **(Tier 1) Step 1: Write the failing unit test**
+- [x] **(Tier 1) Step 1: Write the failing unit test**
 
 Create `tests/unit/chart-layout/extract-placeholders.test.ts`:
 
@@ -136,12 +136,12 @@ describe('extractPlaceholders', () => {
 });
 ```
 
-- [ ] **(Tier 1) Step 2: Run it to verify it fails**
+- [x] **(Tier 1) Step 2: Run it to verify it fails**
 
 Run: `npx vitest run tests/unit/chart-layout/extract-placeholders.test.ts`
 Expected: FAIL — `Failed to resolve import` / `extractPlaceholders is not a function`.
 
-- [ ] **(Tier 1) Step 3: Write the implementation**
+- [x] **(Tier 1) Step 3: Write the implementation**
 
 Create `src/renderer/utils/chart-layout/extract-placeholders.ts`:
 
@@ -184,12 +184,12 @@ export function extractPlaceholders(
 }
 ```
 
-- [ ] **(Tier 1) Step 4: Run it to verify it passes**
+- [x] **(Tier 1) Step 4: Run it to verify it passes**
 
 Run: `npx vitest run tests/unit/chart-layout/extract-placeholders.test.ts`
 Expected: `Tests  3 passed (3)`.
 
-- [ ] **(Tier 1) Step 5: Re-export from index.ts**
+- [x] **(Tier 1) Step 5: Re-export from index.ts**
 
 In `src/renderer/utils/chart-layout/index.ts`, add (matching the file's existing `export ... from './...'` style):
 
@@ -197,7 +197,7 @@ In `src/renderer/utils/chart-layout/index.ts`, add (matching the file's existing
 export { extractPlaceholders } from './extract-placeholders';
 ```
 
-- [ ] **(Tier 1) Step 6: Replace the three copy-pasted tails**
+- [x] **(Tier 1) Step 6: Replace the three copy-pasted tails**
 
 In each layout file, replace the manual back-to-front placeholder loop with:
 
@@ -209,12 +209,12 @@ Then return `realBoxes` as `boxes` in the `ChartLayout` result, and `placeholder
 
 Add `extractPlaceholders` to each file's import from `'./extract-placeholders'` (or from `'./index'` if the file already imports from there — match the existing import source).
 
-- [ ] **(Tier 1) Step 7: Verify the property suite is unchanged**
+- [x] **(Tier 1) Step 7: Verify the property suite is unchanged**
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 Expected: `Tests  130 passed (130)`.
 
-- [ ] **(Tier 1) Step 8: Commit**
+- [x] **(Tier 1) Step 8: Commit**
 
 ```bash
 git add src/renderer/utils/chart-layout/extract-placeholders.ts tests/unit/chart-layout/extract-placeholders.test.ts src/renderer/utils/chart-layout/index.ts src/renderer/utils/chart-layout/pedigree.ts src/renderer/utils/chart-layout/hourglass.ts src/renderer/utils/chart-layout/descendant.ts
@@ -232,7 +232,7 @@ The ~16 render helpers are currently defined verbatim in each of the three compo
 **Files:**
 - Create: `src/renderer/composables/useChartBox.ts`
 
-- [ ] **(Tier 1) Step 1: Write the composable**
+- [x] **(Tier 1) Step 1: Write the composable**
 
 Create `src/renderer/composables/useChartBox.ts`. Bodies are moved verbatim from `PedigreeChart.vue` (cited lines); only the dependency wiring changes — `colors`, `colorMode`, and `selectedId` arrive as args instead of being closed-over component locals:
 
@@ -325,12 +325,12 @@ export function useChartBox(opts: {
 }
 ```
 
-- [ ] **(Tier 1) Step 2: Type-check**
+- [x] **(Tier 1) Step 2: Type-check**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep useChartBox || echo "clean"`
 Expected: `clean` (no type errors referencing the new file). If `ChartColors` structurally mismatches `applyColorMode`'s return, widen the local type to match the real fields used — do not cast to `any`.
 
-- [ ] **(Tier 1) Step 3: Commit**
+- [x] **(Tier 1) Step 3: Commit**
 
 ```bash
 git add src/renderer/composables/useChartBox.ts
@@ -344,7 +344,7 @@ git commit -m "feat(charts): add useChartBox composable (shared box-render helpe
 **Files:**
 - Modify: `src/renderer/components/charts/PedigreeChart.vue`
 
-- [ ] **(Tier 1) Step 1: Wire the composable**
+- [x] **(Tier 1) Step 1: Wire the composable**
 
 In the `<script setup>`, after the `colors` computed (line 414) and the existing `layoutSelectedId` ref (line 323), add:
 
@@ -355,18 +355,18 @@ const colorModeRef = computed<ColorMode>(() => props.colorMode ?? 'themed');
 const { sexBg, boxFill, boxStroke, nameColor, dateColor, portraitBg, portraitTextColor, wrappedName, birthText, deathText, initials, nameStartY, portraitY, birthY, deathY, placeholderLabel, boxAriaLabel } = useChartBox({ colors, colorMode: colorModeRef, selectedId: layoutSelectedId });
 ```
 
-- [ ] **(Tier 1) Step 2: Delete the now-duplicated local definitions**
+- [x] **(Tier 1) Step 2: Delete the now-duplicated local definitions**
 
 Delete from `PedigreeChart.vue`: `sexBg` (423-427), `isHighlighted` (429-431), `boxFill` (433-438), `boxStroke` (440-442), `nameColor` (444-446), `dateColor` (448-450), `portraitBg` (452-454), `portraitTextColor` (456-458), `wrappedName` (460-469), `birthText` (471-475), `deathText` (477-481), `initials` (483-489), `nameStartY` (491-493), `portraitY` (495-497), `birthY` (499-502), `deathY` (504-507), `placeholderLabel` (509-518), and `boxAriaLabel` (267-272). Keep the `wrapFullNameSegments` / `truncateToWidth` import only if still used elsewhere — if not, remove it (now used inside the composable).
 
-- [ ] **(Tier 1) Step 3: Type-check + render-shape guard**
+- [x] **(Tier 1) Step 3: Type-check + render-shape guard**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep PedigreeChart || echo "clean"`
 Expected: `clean`.
 Run: `npx vitest run tests/unit/chartLayout.test.ts`
 Expected: `Tests  130 passed (130)` (layout fns untouched; sanity that nothing leaked).
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add src/renderer/components/charts/PedigreeChart.vue
@@ -380,21 +380,21 @@ git commit -m "refactor(charts): PedigreeChart uses useChartBox"
 **Files:**
 - Modify: `src/renderer/components/charts/HourglassChart.vue`
 
-- [ ] **(Tier 1) Step 1: Locate the local helpers**
+- [x] **(Tier 1) Step 1: Locate the local helpers**
 
 Run: `grep -nE "function (sexBg|boxFill|boxStroke|nameColor|dateColor|portraitBg|portraitTextColor|wrappedName|birthText|deathText|initials|nameStartY|portraitY|birthY|deathY|placeholderLabel|boxAriaLabel|isHighlighted)" src/renderer/components/charts/HourglassChart.vue`
 Expected: the list of line numbers for the locally-defined copies.
 
-- [ ] **(Tier 1) Step 2: Wire the composable + delete local copies**
+- [x] **(Tier 1) Step 2: Wire the composable + delete local copies**
 
 Add the same import + destructure as Task 4 Step 1 (using Hourglass's own `colors` computed and its `selectedId`/`layoutSelectedId` ref — confirm the ref name via the grep in Task 5 Step 1; Hourglass uses `props.selectedPersonId` directly per the divergence audit, so introduce a `selectedId` ref mirroring Pedigree's `layoutSelectedId` if one doesn't exist, OR pass `toRef`-wrapped `props.selectedPersonId`). Delete each local helper found in Step 1.
 
-- [ ] **(Tier 1) Step 3: Type-check**
+- [x] **(Tier 1) Step 3: Type-check**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep HourglassChart || echo "clean"`
 Expected: `clean`.
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add src/renderer/components/charts/HourglassChart.vue
@@ -408,11 +408,11 @@ git commit -m "refactor(charts): HourglassChart uses useChartBox"
 **Files:**
 - Modify: `src/renderer/components/charts/DescendantChart.vue`
 
-- [ ] **(Tier 1) Step 1: Locate + replace**
+- [x] **(Tier 1) Step 1: Locate + replace**
 
 Same procedure as Task 5: `grep -nE "function (sexBg|boxFill|...)" src/renderer/components/charts/DescendantChart.vue`, wire `useChartBox`, delete the local copies.
 
-- [ ] **(Tier 1) Step 2: Type-check + commit**
+- [x] **(Tier 1) Step 2: Type-check + commit**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep DescendantChart || echo "clean"`
 Expected: `clean`.
@@ -433,7 +433,7 @@ git commit -m "refactor(charts): DescendantChart uses useChartBox"
 **Files:**
 - Create: `src/renderer/components/charts/ChartCanvas.vue`
 
-- [ ] **(Tier 2) Step 1: Define props + emits**
+- [x] **(Tier 2) Step 1: Define props + emits**
 
 > Tier 2 — surface the prop/emit contract before building, since all three charts will bind to it. Propose, then proceed unless told otherwise.
 
@@ -465,7 +465,7 @@ const emit = defineEmits<{
 
 The scroll container's `ref` is owned by the parent's `useChartZoom` (it returns `scrollRef`); `<ChartCanvas>` exposes its inner scroll element via `defineExpose({ scrollEl })` so the parent can bind `scrollRef` to it, OR the parent passes `scrollRef` down as a template ref. Choose the template-ref-down approach: add `const scrollRef = defineModel<HTMLElement | null>('scrollRef')` is NOT valid for elements — instead accept a callback: the parent binds `:ref` on `<ChartCanvas>` and reads `canvasRef.value.scrollEl`. Implement `defineExpose({ scrollEl })`.
 
-- [ ] **(Tier 1) Step 2: Build the template**
+- [x] **(Tier 1) Step 2: Build the template**
 
 Move the `<div class="chart-outer">…</div>` wrapper through the `<svg>…</svg>` block verbatim from `PedigreeChart.vue:1-208` into `ChartCanvas.vue`'s `<template>`, then rewire:
 - `boxFill(box)` etc. → from `useChartBox` (destructured in this component, fed by props).
@@ -480,12 +480,12 @@ Move the `<div class="chart-outer">…</div>` wrapper through the `<svg>…</svg
 
 The `PersonModal` add-relative flow + `startAddFromPlaceholder`/`onRelativeSaved` local state stays in each *chart* component (it needs the chart's `reload`), so `<ChartCanvas>` only emits `add-from-placeholder` and the parent opens the modal.
 
-- [ ] **(Tier 1) Step 3: Type-check**
+- [x] **(Tier 1) Step 3: Type-check**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep ChartCanvas || echo "clean"`
 Expected: `clean`.
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add src/renderer/components/charts/ChartCanvas.vue
@@ -499,7 +499,7 @@ git commit -m "feat(charts): add shared ChartCanvas component (SVG shell + inter
 **Files:**
 - Modify: `src/renderer/components/charts/PedigreeChart.vue`
 
-- [ ] **(Tier 1) Step 1: Replace the inline SVG with `<ChartCanvas>`**
+- [x] **(Tier 1) Step 1: Replace the inline SVG with `<ChartCanvas>`**
 
 Replace `PedigreeChart.vue`'s `<div class="chart-outer">…</svg>…</div>` (lines 1-202, keeping `ZoomControls` + `PersonModal` below) with:
 
@@ -537,16 +537,16 @@ Replace `PedigreeChart.vue`'s `<div class="chart-outer">…</svg>…</div>` (lin
 
 Bind `scrollRef` from `useChartZoom` to the canvas's exposed `scrollEl` in `onMounted` (`scrollRef.value = canvasRef.value?.scrollEl ?? null`) so pan/zoom keeps working. Delete the now-unused box-render helper destructure if `useChartBox` is only used inside `<ChartCanvas>` (it is — remove the Task-4 destructure from the chart component, keep it only in `ChartCanvas`).
 
-- [ ] **(Tier 1) Step 2: Add the `focus-person` emit to the chart's `defineEmits`**
+- [x] **(Tier 1) Step 2: Add the `focus-person` emit to the chart's `defineEmits`**
 
 `PedigreeChart.vue`'s emits (lines 247-251) gain `'focus-person': [id: string];`.
 
-- [ ] **(Tier 1) Step 3: Type-check + property suite**
+- [x] **(Tier 1) Step 3: Type-check + property suite**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep PedigreeChart || echo "clean"` → `clean`.
 Run: `npx vitest run tests/unit/chartLayout.test.ts` → `Tests  130 passed (130)`.
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add src/renderer/components/charts/PedigreeChart.vue
@@ -562,18 +562,18 @@ git commit -m "refactor(charts): PedigreeChart renders via ChartCanvas"
 **Files:**
 - Modify: `src/renderer/components/charts/HourglassChart.vue`
 
-- [ ] **(Tier 2) Step 1: Replace inline SVG with `<ChartCanvas>`**
+- [x] **(Tier 2) Step 1: Replace inline SVG with `<ChartCanvas>`**
 
 > Tier 2 — Hourglass is the highest-risk migration (most behaviors). Surface the diff before committing.
 
 Same shape as Task 8, with `aria-label="a11y.hourglassChart"` (add this i18n key to `sv.ts` + `en.ts` if absent — mirror `a11y.pedigreeChart`). Keep Hourglass's `onPersonDblClick` → `focus-person` path: wire the canvas `@focus-person` to Hourglass's existing handler (which also dismisses the Coachmark) rather than a bare re-emit. Keep the `Coachmark` + `focusBoxEl` callback-ref by exposing the focal box element from `<ChartCanvas>` (`defineExpose({ scrollEl, focalBoxEl })`) OR leave the Coachmark anchor in Hourglass by having it query `canvasRef.value.scrollEl.querySelector('[data-testid=person-box-<focalId>]')`.
 
-- [ ] **(Tier 1) Step 2: Verify the collapse-button set is unchanged**
+- [x] **(Tier 1) Step 2: Verify the collapse-button set is unchanged**
 
 Run: `npx vitest run tests/unit/chartLayout.test.ts` → `Tests  130 passed (130)` (the layout fn produces the buttons; untouched).
 Manual/dev-MCP (deferred to Task 16): confirm up/down/left/right + multi-parent group buttons render and toggle.
 
-- [ ] **(Tier 1) Step 3: Type-check + commit**
+- [x] **(Tier 1) Step 3: Type-check + commit**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep HourglassChart || echo "clean"` → `clean`.
 
@@ -589,11 +589,11 @@ git commit -m "refactor(charts): HourglassChart renders via ChartCanvas"
 **Files:**
 - Modify: `src/renderer/components/charts/DescendantChart.vue`
 
-- [ ] **(Tier 1) Step 1: Replace inline SVG with `<ChartCanvas>`**
+- [x] **(Tier 1) Step 1: Replace inline SVG with `<ChartCanvas>`**
 
 Same shape as Task 8, `aria-label="a11y.descendantChart"` (add i18n key if absent). Opportunistically delete the dead `isExpanded ? '▼' : '▼'` ternary — it lives in `<ChartCanvas>` now as the shared direction-keyed glyph map, so it disappears automatically.
 
-- [ ] **(Tier 1) Step 2: Type-check + property suite + commit**
+- [x] **(Tier 1) Step 2: Type-check + property suite + commit**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep DescendantChart || echo "clean"` → `clean`.
 Run: `npx vitest run tests/unit/chartLayout.test.ts` → `Tests  130 passed (130)`.
@@ -614,20 +614,20 @@ Hourglass already emits `focus-person` on double-click (re-roots the tree). `<Ch
 **Files:**
 - Modify: the parent view(s) that host the charts — `src/renderer/views/PersonsView.vue` (the chart tab host). Confirm via `grep -rln "HourglassChart\|PedigreeChart\|DescendantChart" src/renderer/views src/renderer/components`.
 
-- [ ] **(Tier 1) Step 1: Find how Hourglass's `focus-person` is handled today**
+- [x] **(Tier 1) Step 1: Find how Hourglass's `focus-person` is handled today**
 
 Run: `grep -rn "focus-person\|@focus-person\|focusPerson" src/renderer/views src/renderer/components`
 Identify the handler that re-roots Hourglass (sets the focal `personId`). This is the path to reuse.
 
-- [ ] **(Tier 1) Step 2: Wire the same handler for Pedigree + Descendant**
+- [x] **(Tier 1) Step 2: Wire the same handler for Pedigree + Descendant**
 
 In the host view, add `@focus-person="<sameHandler>"` to the `<PedigreeChart>` and `<DescendantChart>` usages, matching the existing `<HourglassChart>` binding (regression-triage default: reuse the existing path, don't invent a parallel one).
 
-- [ ] **(Tier 1) Step 3: Verify via build (behavior tested in Task 15 + 16)**
+- [x] **(Tier 1) Step 3: Verify via build (behavior tested in Task 15 + 16)**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | tail -3` → no new errors.
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add src/renderer/views/PersonsView.vue
@@ -644,12 +644,12 @@ Hourglass scrolls the selected box into view (`scrollSelectedBoxIntoView`); Pedi
 - Modify: `src/renderer/components/charts/ChartCanvas.vue`
 - Reference: `HourglassChart.vue` `scrollSelectedBoxIntoView` (grep for it)
 
-- [ ] **(Tier 1) Step 1: Locate the reference implementation**
+- [x] **(Tier 1) Step 1: Locate the reference implementation**
 
 Run: `grep -n "scrollSelectedBoxIntoView\|scrollSelectedBox\|scrollIntoView" src/renderer/components/charts/HourglassChart.vue`
 Read the function: it pans the scroll container to show the box with the given id (≈100px inset).
 
-- [ ] **(Tier 1) Step 2: Move it into `<ChartCanvas>` and watch `selectedId`**
+- [x] **(Tier 1) Step 2: Move it into `<ChartCanvas>` and watch `selectedId`**
 
 Add to `ChartCanvas.vue` `<script setup>`:
 
@@ -674,11 +674,11 @@ watch(() => props.selectedId, async (id) => { await nextTick(); scrollSelectedIn
 
 Then remove the now-redundant `scrollSelectedBoxIntoView` from `HourglassChart.vue` (its `watch(selectedPersonId)` that called it). If Hourglass's version had Hourglass-specific math, reconcile to the shared version and confirm parity in Task 16.
 
-- [ ] **(Tier 1) Step 2b: Reconcile with Hourglass's existing `centerOnFocal`**
+- [x] **(Tier 1) Step 2b: Reconcile with Hourglass's existing `centerOnFocal`**
 
 Leave each chart's one-time `centerOnFocal()`-on-load as-is (it's load-time, not selection-time). This task only unifies selection-driven panning.
 
-- [ ] **(Tier 1) Step 3: Type-check + commit**
+- [x] **(Tier 1) Step 3: Type-check + commit**
 
 Run: `npx vue-tsc --noEmit --ignoreDeprecations 6.0 2>&1 | grep -E "ChartCanvas|HourglassChart" || echo "clean"` → `clean`.
 
@@ -696,7 +696,7 @@ git commit -m "feat(charts): selection auto-pans into view in all three charts (
 **Files:**
 - Modify: `src/renderer/components/charts/ChartCanvas.vue` (add `focusedPerson` prop), the three chart components (pass it through), `src/renderer/i18n/sv.ts`, `src/renderer/i18n/en.ts`.
 
-- [ ] **(Tier 1) Step 0: Restore `focusedPerson` external-focus forwarding (regression from Task 8)**
+- [x] **(Tier 1) Step 0: Restore `focusedPerson` external-focus forwarding (regression from Task 8)**
 
 Task 8 discovered that PedigreeChart's `focusedPerson` prop (screen-reader-driven external focus — a parent sets which box shows the focus ring) became a **dead write** after adoption: `ChartCanvas` owns its own internal `focusedBoxId` and has no `focusedPerson` prop, so external focus forwarding is a no-op in all three charts. Fix it and make it a parity feature:
   1. Add `focusedPerson?: string | null` to `ChartCanvas`'s `defineProps`.
@@ -704,16 +704,16 @@ Task 8 discovered that PedigreeChart's `focusedPerson` prop (screen-reader-drive
   3. In each of the three chart components, pass `:focused-person="props.focusedPerson"` to `<ChartCanvas>` (PedigreeChart already receives a `focusedPerson` prop; confirm Hourglass/Descendant do too — if not, add it to their `defineProps` so the host view can forward it consistently — parity).
   4. Delete each chart's now-redundant local `focusedBoxId` ref + `watch(() => props.focusedPerson, …)` (that logic now lives in ChartCanvas).
 
-- [ ] **(Tier 1) Step 1: ARIA parity is asserted by Task 15's test**
+- [x] **(Tier 1) Step 1: ARIA parity is asserted by Task 15's test**
 
 The `role="tree"` + `treeitem` parity is asserted by the Task 15 `chart-parity.test.ts`. The canvas adoption (Tasks 8-10) is the implementation; Step 0 above is the only code change in this task beyond i18n keys.
 
-- [ ] **(Tier 1) Step 2: Confirm the i18n keys exist**
+- [x] **(Tier 1) Step 2: Confirm the i18n keys exist**
 
 Run: `grep -n "pedigreeChart\|hourglassChart\|descendantChart" src/renderer/i18n/en.ts src/renderer/i18n/sv.ts`
 Expected: all three present in both files. Add any missing key mirroring `a11y.pedigreeChart`.
 
-- [ ] **(Tier 1) Step 3: Commit (if i18n changed)**
+- [x] **(Tier 1) Step 3: Commit (if i18n changed)**
 
 ```bash
 git add src/renderer/i18n/sv.ts src/renderer/i18n/en.ts
@@ -738,15 +738,15 @@ The mapping is decided; implement it directly (no escalation):
 - **Hourglass** (focal center, ancestors up, descendants down): ArrowUp = toward ancestors, ArrowDown = toward descendants, ArrowLeft/Right = spouse/sibling on focal row.
 - **Descendant** (focal top, descendants down): ArrowDown = toward descendants, ArrowUp = toward focal, ArrowLeft/Right = sibling.
 
-- [ ] **(Tier 1) Step 2: Write the failing test**
+- [x] **(Tier 1) Step 2: Write the failing test**
 
 In `tests/components/chart-parity.test.ts`, add a case mounting `<ChartCanvas>` with a seeded multi-gen layout, focus a box, dispatch `Arrow*` keydowns, and assert focus moves to the geometrically-correct neighbor for each orientation.
 
-- [ ] **(Tier 1) Step 3: Implement `useChartKeyboardNav`** *(after go-ahead)*
+- [x] **(Tier 1) Step 3: Implement `useChartKeyboardNav`** *(after go-ahead)*
 
 Create `src/renderer/composables/useChartKeyboardNav.ts` exporting `onBoxKeydown(event, box, opts: { boxes, orientation, scrollEl, onActivate })` that resolves the target box by geometry (using `box.x`/`box.y` neighbors per orientation, not the pedigree-only X formula) and calls `.focus()` on the target's `[data-testid]` element. Each chart passes `orientation: 'pedigree' | 'hourglass' | 'descendant'` via the `@box-keydown` handler.
 
-- [ ] **(Tier 1) Step 4: Verify + commit**
+- [x] **(Tier 1) Step 4: Verify + commit**
 
 Run: `npx vitest run tests/components/chart-parity.test.ts` → all green.
 
@@ -764,7 +764,7 @@ git commit -m "feat(charts): arrow-key tree navigation in all three charts (pari
 **Files:**
 - Create: `tests/components/chart-parity.test.ts`
 
-- [ ] **(Tier 1) Step 1: Write the test**
+- [x] **(Tier 1) Step 1: Write the test**
 
 Mount `<ChartCanvas>` with a seeded `ChartLayout` (2 boxes incl. a focal, 1 placeholder, 1 collapse button). Assert the shared behaviors that constitute "the charts behave identically":
 
@@ -836,7 +836,7 @@ describe('chart parity (shared ChartCanvas)', () => {
 });
 ```
 
-- [ ] **(Tier 1) Step 2: Add the structural delegation guard**
+- [x] **(Tier 1) Step 2: Add the structural delegation guard**
 
 Append a second `describe` that shallow-mounts each of the three chart components (stub `window.api` minimally so `useEntityData` doesn't throw) and asserts `findComponent(ChartCanvas).exists()` is true — proving no chart reintroduced bespoke rendering. If full mount is too heavy, assert on the component source instead:
 
@@ -851,12 +851,12 @@ for (const f of ['PedigreeChart', 'HourglassChart', 'DescendantChart']) {
 }
 ```
 
-- [ ] **(Tier 1) Step 3: Run + verify**
+- [x] **(Tier 1) Step 3: Run + verify**
 
 Run: `npx vitest run tests/components/chart-parity.test.ts`
 Expected: all cases pass.
 
-- [ ] **(Tier 1) Step 4: Commit**
+- [x] **(Tier 1) Step 4: Commit**
 
 ```bash
 git add tests/components/chart-parity.test.ts
@@ -871,11 +871,11 @@ git commit -m "test(charts): chart-parity test asserts shared ChartCanvas behavi
 
 **Files:** none (capture evidence).
 
-- [ ] **(Tier 1) Step 1: Launch + seed**
+- [x] **(Tier 1) Step 1: Launch + seed**
 
 Per `tauri-dev` / `slaktforskning-mcp-dev` skills: `npm start`, then via the dev MCP seed (or open an existing DB with) a person who has ≥3 generations of ancestors AND descendants AND a spouse.
 
-- [ ] **(Tier 1) Step 2: For each of Pedigree / Hourglass / Descendant**
+- [x] **(Tier 1) Step 2: For each of Pedigree / Hourglass / Descendant**
 
 Capture screenshots and confirm:
 1. Select a non-focal person → the viewport pans it into view (Task 12) — same in all three.
@@ -883,7 +883,7 @@ Capture screenshots and confirm:
 3. Tab to a box, press arrows → focus traverses per the Task-14 mapping (or, if Task 14 was deferred, Enter/Space activates in all three).
 4. Box rendering (name/dates/portrait/+) is pixel-consistent across the three.
 
-- [ ] **(Tier 1) Step 3: Record evidence**
+- [x] **(Tier 1) Step 3: Record evidence**
 
 Paste the screenshot paths + a one-line per-chart confirmation into the Task 17 evidence block.
 
@@ -893,28 +893,28 @@ Paste the screenshot paths + a one-line per-chart confirmation into the Task 17 
 
 **Files:** none (capture evidence for close-out).
 
-- [ ] **(Tier 1) Step 1: Unit + component tests**
+- [x] **(Tier 1) Step 1: Unit + component tests**
 
 Run: `npm test`
 Expected: all pass; capture the `N passed (Xs)` summary line. The new `extract-placeholders.test.ts` and `chart-parity.test.ts` are included; `chartLayout.test.ts` still `130 passed`.
 
-- [ ] **(Tier 1) Step 2: Build**
+- [x] **(Tier 1) Step 2: Build**
 
 Run: `npm run build`
 Expected: exit 0; capture the `built in Xs` tail line.
 
-- [ ] **(Tier 1) Step 3: e2e (UI-touching plan → full tier required)**
+- [x] **(Tier 1) Step 3: e2e (UI-touching plan → full tier required)**
 
 This plan touches panels/charts (a `data-changed` consumer + chart components), so per CLAUDE.md the full tier is required.
 Run: `npm run test:e2e:full`
 Expected: `N passed (Xs)` across the 7 projects. Capture per-project pass counts.
 
-- [ ] **(Tier 1) Step 4: Lint**
+- [x] **(Tier 1) Step 4: Lint**
 
 Run: `npm run lint`
 Expected: 0 errors.
 
-- [ ] **(Tier 1) Step 5: Commit the evidence block**
+- [x] **(Tier 1) Step 5: Commit the evidence block**
 
 Capture all of the above (test summary, build tail, e2e per-project counts, dev-MCP confirmations from Task 16) — they go into the close-out commit message in Task 18.
 
@@ -922,7 +922,7 @@ Capture all of the above (test summary, build tail, e2e per-project counts, dev-
 
 ### Task 18: Close out
 
-- [ ] **(Tier 1) T-final — Invoke `/close-out` skill.** The skill walks the 6+1 steps (mark checkboxes, `git mv` plan + `-design.md` to `docs/plans/archive/`, version bump — feature ⇒ minor — + CHANGELOG block via `oss-release`, `docs/PLAN.md` sync incl. removing the parked hourglass-refactor reopen-trigger entry which this plan supersedes, archive PLAN.md append, commit, merge/push), captures evidence, refuses partial. Also delete `docs/plans/2026-05-14-hourglass-layout-refactor-design.md` as superseded (note in archive PLAN.md that it was authored, deferred, and superseded by this plan).
+- [x] **(Tier 1) T-final — Invoke `/close-out` skill.** The skill walks the 6+1 steps (mark checkboxes, `git mv` plan + `-design.md` to `docs/plans/archive/`, version bump — feature ⇒ minor — + CHANGELOG block via `oss-release`, `docs/PLAN.md` sync incl. removing the parked hourglass-refactor reopen-trigger entry which this plan supersedes, archive PLAN.md append, commit, merge/push), captures evidence, refuses partial. Also delete `docs/plans/2026-05-14-hourglass-layout-refactor-design.md` as superseded (note in archive PLAN.md that it was authored, deferred, and superseded by this plan).
 
 ---
 
