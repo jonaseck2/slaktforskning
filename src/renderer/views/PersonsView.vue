@@ -64,6 +64,7 @@
           @navigate="navigateTo"
           @reload="reloadChart"
           @person-context-menu="openContextMenu"
+          @focus-person="setTreeSubject"
         />
         <!-- Single-focus invariant (Bengt R50). HourglassChart intentionally does NOT receive
              :focused-person — its highlight is driven solely by :selected-person-id. If you
@@ -87,10 +88,12 @@
           :key="'descendants-' + chartKey"
           :person-id="personId"
           :selected-person-id="selectedPersonId"
+          :focused-person="screenReader.isScreenReader.value ? chartNavFocusedPerson : null"
           :readonly="isStaticMode"
           @navigate="navigateTo"
           @reload="reloadChart"
           @person-context-menu="openContextMenu"
+          @focus-person="setTreeSubject"
         />
         <FanChart
           v-if="activeTab === 'fan'"
