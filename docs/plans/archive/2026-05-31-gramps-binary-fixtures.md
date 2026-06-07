@@ -8,6 +8,12 @@
 
 When a regression lands in the Gramps native binary decoding path — the `.gramps` (gzipped XML) extraction or the `.gpkg` (XML + media, zipped) unpack-and-remap-media branch — **a test fails in CI before the user notices broken import**. Today the `imports` e2e project covers Gramps' GEDCOM-export path through our GEDCOM importer's `profile='gramps'` dialect, but the native binary decoder layer that runs when a user picks a `.gramps` or `.gpkg` in the file picker has no e2e coverage. That layer has historically broken silently across Tauri-port / ESM / async sweeps and only surfaced when a user tried a real Gramps file.
 
+> **Execution note (2026-06-07) — deltas from the as-written tasks.** Executed after [2026-06-06-gramps-gpkg-archive-import.md](archive/2026-06-06-gramps-gpkg-archive-import.md) unblocked the `.gpkg` decoder. Both fixtures were authored XML-direct (no Gramps GUI). Several task details below were corrected during execution:
+> - **`.gpkg` is a tar.gz, not a zip.** Task 2's `zip -r` was wrong; the fixture is built `tar --format ustar -czf` (`data.gramps` plain XML + `media/blank.png`). Validated: `extractGrampsArchive` detects the USTAR magic and unpacks both.
+> - **Importer return shape is `{ summary }`.** Task 1/2's sanity snippets used `report.persons`; the real field is `report.summary.persons` / `.media`. Sanity-checked via a throwaway vitest: `.gramps` → persons 3 / media 0; `.gpkg` → persons 3 / media 1, file written, `file_ref` rewritten to `<folder>/blank.png`.
+> - **The real `ImportCase` interface** is `{ format, fixture, apiCall, buildArgs, expectedPersons, spotCheckName? }` — not the `fixturePath` / `expectedNames` / `expectedMediaCount` Task 3 sketched. Both cases use `apiCall: 'import.grampsRun'`, `buildArgs: (p) => ({ filePath: p })`, `spotCheckName: 'Anna'`. A new optional `expectedMedia?: number` field was added to the interface; the `.gpkg` case sets `expectedMedia: 1` and the test asserts the media row's `file_ref` is a relative `<dbname>-media/<file>` path (proving the unpack-and-write-media branch ran end-to-end in the packaged app).
+> - **The deferred-coverage comment was already a well-shaped "un-defer trigger" block**, not a bare TODO. Trimmed `.gramps`/`.gpkg` out of its "not covered" list (now covered); Genney `.backup` / RootsMagic / Holger `.zip` stay deferred. `*.gramps` + `*.gpkg` marked `binary` in `.gitattributes`.
+
 ## Scope
 
 Two new e2e cases in `tests/e2e/imports.spec.ts`, each backed by a tiny native binary fixture authored by running Gramps locally. After this plan ships, the e2e `imports` project has coverage for both Gramps native decoder paths.
@@ -84,7 +90,7 @@ If items 1, 2, 3 pass, can the user goal ("regressions caught before users notic
 
 Rewritten 2026-05-31 from "use Gramps GUI" to XML-direct authoring. The Gramps XML schema is documented at https://gramps-project.org/wiki/index.php/Gramps_XML and the importer at `src/import/gramps/` already parses it. A 3-person fixture is small enough to hand-author without installing Gramps. Round-trip through the importer is the test that the XML is valid.
 
-- [ ] **Step 1: Write the XML source**
+- [x] **Step 1: Write the XML source**
 
 Create `tests/e2e/fixtures/imports/gramps-small.xml` with three persons (Anna + Erik = couple → Lisa). Minimal Gramps XML schema, only fields the importer reads. Inspect `src/import/gramps/index.ts` first to confirm which fields are required vs ignored.
 
@@ -132,7 +138,7 @@ Template (adjust namespaces / version to match what the project's parser accepts
 </database>
 ```
 
-- [ ] **Step 2: Gzip into `.gramps` (gzipped XML is the .gramps format)**
+- [x] **Step 2: Gzip into `.gramps` (gzipped XML is the .gramps format)**
 
 ```bash
 gzip -c tests/e2e/fixtures/imports/gramps-small.xml > tests/e2e/fixtures/imports/gramps-small.gramps
@@ -140,7 +146,7 @@ rm tests/e2e/fixtures/imports/gramps-small.xml
 file tests/e2e/fixtures/imports/gramps-small.gramps  # should report: gzip compressed data
 ```
 
-- [ ] **Step 3: Sanity-check parsing**
+- [x] **Step 3: Sanity-check parsing**
 
 ```bash
 npx tsx -e "
@@ -154,7 +160,7 @@ console.log(JSON.stringify({ persons: report.persons, events: report.events }));
 
 Expected: `{"persons":3,"events":3}`. If the importer rejects the XML (schema-version mismatch, missing required field), adjust the template per the error and re-run Step 2. Iterating against the real importer IS the validation that the hand-authored XML matches a real Gramps export's shape for our purposes.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/e2e/fixtures/imports/gramps-small.gramps
@@ -168,7 +174,7 @@ git commit -m "test(e2e): add gramps-small.gramps fixture (XML-direct, 3 persons
 
 `.gpkg` is a zip containing `data.gramps` (the gzipped XML) + a `media/` subfolder. We reuse Task 1's gzipped XML and bundle it with a 1×1 PNG.
 
-- [ ] **Step 1: Generate a 1×1 PNG**
+- [x] **Step 1: Generate a 1×1 PNG**
 
 The minimum-valid PNG is documented in the spec. Use a known-good byte sequence (gunzipped PNG header + IHDR + IDAT + IEND) instead of generating one via a library — agent-completable without Python/PIL:
 
@@ -180,7 +186,7 @@ file /tmp/blank.png  # should report: PNG image data, 1 x 1
 
 If the printf-byte form is brittle, fallback: download a pre-existing 1×1 PNG from a known source or commit a tiny PNG to `tests/e2e/fixtures/imports/static/blank.png` once and reuse it.
 
-- [ ] **Step 2: Author the XML with a media reference**
+- [x] **Step 2: Author the XML with a media reference**
 
 Reuse the Task 1 XML, append a `<media>` block referencing `blank.png` and an `<objref>` on Anna's `<person>`:
 
@@ -196,7 +202,7 @@ Add `<objref hlink="_m0001"/>` inside Anna's `<person>`.
 
 Write this expanded XML to `/tmp/gramps-with-media.xml`, then gzip it to `/tmp/data.gramps`.
 
-- [ ] **Step 3: Bundle the zip**
+- [x] **Step 3: Bundle the zip**
 
 ```bash
 mkdir -p /tmp/gpkg-build/media
@@ -209,7 +215,7 @@ file tests/e2e/fixtures/imports/gramps-small.gpkg  # should report: Zip archive
 unzip -l tests/e2e/fixtures/imports/gramps-small.gpkg  # should show: data.gramps + media/blank.png
 ```
 
-- [ ] **Step 4: Sanity-check parsing**
+- [x] **Step 4: Sanity-check parsing**
 
 ```bash
 npx tsx -e "
@@ -223,7 +229,7 @@ console.log(JSON.stringify({ persons: report.persons, media: report.media }));
 
 Expected: `{"persons":3,"media":1}`. Adjust XML / zip layout per error if needed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/e2e/fixtures/imports/gramps-small.gpkg
@@ -235,7 +241,7 @@ git commit -m "test(e2e): add gramps-small.gpkg fixture (XML-direct + 1x1 PNG)"
 **Files:**
 - Modify: `tests/e2e/imports.spec.ts`
 
-- [ ] **Step 1: Read the existing CASES array**
+- [x] **Step 1: Read the existing CASES array**
 
 ```bash
 grep -n 'CASES\|Deferred coverage' tests/e2e/imports.spec.ts
@@ -243,7 +249,7 @@ grep -n 'CASES\|Deferred coverage' tests/e2e/imports.spec.ts
 
 Find the `CASES` array definition and the `// Deferred coverage` comment block above it. Confirm the existing pattern for adding a case (file path, expected person count, optional name match).
 
-- [ ] **Step 2: Add two new cases**
+- [x] **Step 2: Add two new cases**
 
 Append to `CASES`:
 
@@ -265,7 +271,7 @@ Append to `CASES`:
 
 Match the existing case shape — if `expectedMediaCount` isn't a field today, either add it (small typescript update + assertion) or assert media count inline in the test body.
 
-- [ ] **Step 3: Re-shape the `// Deferred coverage` comment**
+- [x] **Step 3: Re-shape the `// Deferred coverage` comment**
 
 Replace the existing deferred block with a contributor-trigger paragraph:
 
@@ -287,7 +293,7 @@ Replace the existing deferred block with a contributor-trigger paragraph:
 // exists yet.
 ```
 
-- [ ] **Step 4: Run the e2e suite**
+- [x] **Step 4: Run the e2e suite**
 
 ```bash
 npm run test:e2e -- --grep gramps
@@ -295,7 +301,7 @@ npm run test:e2e -- --grep gramps
 
 Expected: both new cases pass.
 
-- [ ] **Step 5: Deliberate-red verification**
+- [x] **Step 5: Deliberate-red verification**
 
 Inject a canary at the top of `src/import/gramps/index.ts`'s `importFromGramps` function:
 
@@ -316,7 +322,7 @@ Expected: both new cases fail with the canary message in the error output. Rever
 
 Capture the red + green outputs for the close-out commit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/e2e/imports.spec.ts
@@ -325,5 +331,5 @@ git commit -m "test(e2e): wire Gramps .gramps + .gpkg cases; re-shape native-bin
 
 ### Task 4 (Tier 1): Close-out via /close-out skill
 
-- [ ] **Step 1** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence (npm test / npm run build / npm run test:e2e:full output + the deliberate-red verification from Task 3 Step 5). Patch bump per `oss-release` (hygiene/CI work). Skill handles the archive + PLAN.md + CHANGELOG + commit.
+- [x] **Step 1** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence (npm test / npm run build / npm run test:e2e:full output + the deliberate-red verification from Task 3 Step 5). Patch bump per `oss-release` (hygiene/CI work). Skill handles the archive + PLAN.md + CHANGELOG + commit.
 ```

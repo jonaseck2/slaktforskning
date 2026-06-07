@@ -10,7 +10,7 @@ This file lists what's **planned**. Two states only: planned (here) or done (arc
 
 Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
-- **Gramps binary importer fixtures** — close the e2e gap on Gramps native `.gramps` and `.gpkg` decoding via XML-direct authoring (rewritten 2026-05-31 from GUI-authoring to hand-written XML + gzip + zip, removing the Gramps-install gate). → [2026-05-31-gramps-binary-fixtures.md](plans/2026-05-31-gramps-binary-fixtures.md)
+_None currently — all planned work is archived._
 
 ---
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.269.1 — 2026-06-07
+
+- fix(import): importing a Gramps `.gpkg` package with media through the desktop file picker no longer fails with "fs/promises.mkdir called in renderer". The 0.268.0 `.gpkg` handler called `consolidateMediaFolder` (which uses Node `fs`) in the renderer, where Node fs is unavailable — so any real `.gpkg`-with-media import via the UI threw. The bundled media is already written and its `file_ref` made relative inside the importer (as the `.zip` archive importer does), so the extra call was redundant as well as broken; it's removed. Importing via the MCP `import_file` tool was unaffected.
+- test(e2e): the `imports` suite now covers both Gramps native decoder paths with tiny fixtures — `gramps-small.gramps` (gzipped XML) and `gramps-small.gpkg` (tar.gz with a bundled image) — the latter asserting the media row lands with a relative `<dbname>-media/` ref. This new `.gpkg` case is what caught the regression above.
+
 ## 0.269.0 — 2026-06-06
 
 - feat(citations): the citation entry form is clearer — its title now reads "Lägg till källhänvisning" / "Redigera källhänvisning", the page field is labelled "Sida / Plats / URL", the confidence section is "Källans tillförlitlighet", and the confidence buttons are ordered most-reliable-first (Primärkälla → Opålitlig). The source field shows a ▾ dropdown affordance so it's obvious it opens a list. (Ben rapport 100)
@@ -41,7 +46,3 @@
 ## 0.264.20 — 2026-05-23
 
 - fix: remove the undo/redo buttons from the nav bar — Cmd+Z / Cmd+Shift+Z and the macOS Edit menu still trigger undo/redo, so the toolbar buttons were redundant clutter
-
-## 0.264.19 — 2026-05-22
-
-- fix(places): scaffolding levels ("World" + continent) no longer appear in rendered place paths — paths now read "Sverige › Stockholms län › Stockholm" instead of "World › Europe › Sweden › Stockholms län › Stockholm". The scaffolding stays in gazetteer data (still disambiguates Georgia-country vs Georgia-state) and is shown in GazetteersView's Test Lookup.

@@ -2,6 +2,9 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.264.19 — 2026-05-22
+
+- fix(places): scaffolding levels ("World" + continent) no longer appear in rendered place paths — paths now read "Sverige › Stockholms län › Stockholm" instead of "World › Europe › Sweden › Stockholms län › Stockholm". The scaffolding stays in gazetteer data (still disambiguates Georgia-country vs Georgia-state) and is shown in GazetteersView's Test Lookup.
 ## 0.264.18 — 2026-05-22
 
 - chore(ci): the Release workflow now auto-publishes the draft once every matrix leg has uploaded — no more "release sat as a draft until someone clicked Publish"
