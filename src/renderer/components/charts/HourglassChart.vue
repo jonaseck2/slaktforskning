@@ -18,7 +18,7 @@
     @person-context-menu="(p) => $emit('person-context-menu', p)"
     @collapse-toggle="handleCollapseButton"
     @add-from-placeholder="startAddFromPlaceholder"
-    @box-keydown="() => {}"
+    @box-keydown="({ event, box }) => onBoxKeydown(event, box, { boxes: layout.boxes, orientation: 'hourglass', scrollEl: canvasRef?.scrollEl ?? null, onActivate: (id) => $emit('navigate', id) })"
     @wheel="onWheel"
     @mousedown="onMouseDown"
     @mousemove="onMouseMove"
@@ -73,6 +73,7 @@ import ChartCanvas from './ChartCanvas.vue';
 import Coachmark from '../ui/Coachmark.vue';
 import { hourglassGenerations } from '../../composables/useChartGenerations';
 import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
+import { onBoxKeydown } from '../../composables/useChartKeyboardNav';
 
 // useI18n must be called within setup so $t resolves inside this component's
 // template (the zoom-controls slot references $t directly).

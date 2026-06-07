@@ -18,7 +18,7 @@
     @person-context-menu="(p) => $emit('person-context-menu', p)"
     @collapse-toggle="handleCollapseButton"
     @add-from-placeholder="startAddFromPlaceholder"
-    @box-keydown="() => {}"
+    @box-keydown="({ event, box }) => onBoxKeydown(event, box, { boxes: layout.boxes, orientation: 'descendant', scrollEl: canvasRef?.scrollEl ?? null, onActivate: (id) => $emit('navigate', id) })"
     @wheel="onWheel"
     @mousedown="onMouseDown"
     @mousemove="onMouseMove"
@@ -61,6 +61,7 @@ import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
 import ChartCanvas from './ChartCanvas.vue';
 import { descendantGenerations } from '../../composables/useChartGenerations';
+import { onBoxKeydown } from '../../composables/useChartKeyboardNav';
 
 // useI18n must be called within setup so $t resolves inside this component's
 // template (the zoom-controls slot references $t directly).

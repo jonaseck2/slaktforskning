@@ -18,7 +18,7 @@
     @person-context-menu="(p) => $emit('person-context-menu', p)"
     @collapse-toggle="handleCollapseButton"
     @add-from-placeholder="startAddFromPlaceholder"
-    @box-keydown="({ event, box }) => onBoxKeydown(event, box)"
+    @box-keydown="({ event, box }) => onBoxKeydown(event, box, { boxes: layout.boxes, orientation: 'pedigree', scrollEl: canvasRef?.scrollEl ?? null, onActivate: (id) => $emit('navigate', id) })"
     @wheel="onWheel"
     @mousedown="onMouseDown"
     @mousemove="onMouseMove"
@@ -49,7 +49,7 @@
 import { ref, computed, watch, onUnmounted, onMounted, toRef, inject } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { computePedigreeLayout, BOX_W, H_GAP } from '../../utils/chart-layout';
+import { computePedigreeLayout } from '../../utils/chart-layout';
 import { useSelectedParentInfo } from '../../composables/useSelectedParentInfo';
 import { fetchPedigreeTree, loadAncestorGeneration } from '../../utils/chartData';
 import { useChartZoom } from '../../utils/useChartZoom';
@@ -61,6 +61,7 @@ import PersonModal from '../modals/PersonModal.vue';
 import ZoomControls from '../ZoomControls.vue';
 import ChartCanvas from './ChartCanvas.vue';
 import { pedigreeGenerations } from '../../composables/useChartGenerations';
+import { onBoxKeydown } from '../../composables/useChartKeyboardNav';
 
 // useI18n must be called within setup so $t resolves inside this component's
 // template (the zoom-controls slot references $t directly).
@@ -89,46 +90,10 @@ watch(genTarget, (n) => {
   else applyGenerationDepth(n);
 });
 
-const PAD = 10;
-function generationOf(box: BoxLayout): number {
-  return Math.round((box.x - PAD) / (BOX_W + H_GAP));
-}
-
-function onBoxKeydown(e: KeyboardEvent, box: BoxLayout) {
-  const boxes = layout.value.boxes;
-  const idx = boxes.findIndex((b) => b.person.id === box.person.id);
-  const gen = generationOf(box);
-  let targetIdx = -1;
-
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    emit('navigate', box.person.id);
-    return;
-  }
-  if (e.key === 'ArrowRight') {
-    // Next person in higher generation (further ancestor)
-    targetIdx = boxes.findIndex((b, i) => i > idx && generationOf(b) === gen + 1);
-  } else if (e.key === 'ArrowLeft') {
-    // Previous person in lower generation (closer to focal)
-    targetIdx = boxes.findIndex((b) => generationOf(b) === gen - 1);
-  } else if (e.key === 'ArrowDown') {
-    // Next sibling in same generation
-    targetIdx = boxes.findIndex((b, i) => i > idx && generationOf(b) === gen);
-  } else if (e.key === 'ArrowUp') {
-    // Previous sibling in same generation
-    for (let i = idx - 1; i >= 0; i--) {
-      if (generationOf(boxes[i]) === gen) { targetIdx = i; break; }
-    }
-  }
-
-  if (targetIdx >= 0) {
-    e.preventDefault();
-    const targetEl = scrollRef.value?.querySelector(
-      `[data-testid="person-box-${boxes[targetIdx].person.id}"]`
-    ) as HTMLElement | null;
-    targetEl?.focus();
-  }
-}
+// Arrow-key tree navigation is shared across all three charts via
+// useChartKeyboardNav (orientation: 'pedigree'). Right = toward ancestors,
+// Left = toward focal, Up/Down = previous/next sibling — the chart's natural
+// orientation. The handler is wired directly in the template's @box-keydown.
 
 const showAddRelative = ref(false);
 const addRelativePersonId = ref<string | null>(null);
@@ -221,7 +186,8 @@ async function handleCollapseButton(btn: CollapseButton) {
 const { zoom, scrollRef, onWheel, zoomIn, zoomOut, resetZoom, isPanning, onMouseDown, onMouseMove, onMouseUp } = useChartZoom(1, STORAGE_KEYS.vizZoomPedigree);
 
 // ChartCanvas owns the actual scroll element; bind useChartZoom's scrollRef to
-// it on mount so pan/zoom (and onBoxKeydown's querySelector) operate on it.
+// it on mount so pan/zoom operate on it. (Arrow-key nav resolves its target
+// element via canvasRef.scrollEl directly, passed into useChartKeyboardNav.)
 const canvasRef = ref<InstanceType<typeof ChartCanvas> | null>(null);
 onMounted(() => { scrollRef.value = (canvasRef.value?.scrollEl ?? null) as HTMLDivElement | null; });
 
