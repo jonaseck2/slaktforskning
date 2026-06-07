@@ -9,7 +9,7 @@
         :width="layout.svgWidth * zoom"
         :height="layout.svgHeight * zoom"
         :viewBox="`0 ${layout.viewBoxMinY} ${layout.svgWidth} ${layout.svgHeight}`"
-        data-testid="pedigree-svg"
+        :data-testid="testId ?? 'chart-svg'"
         role="tree"
         :aria-label="$t(props.ariaLabel)"
       >
@@ -123,13 +123,13 @@
           <!-- Add-family-member badge — shape from Utseende → Knapp -->
           <g
             v-if="!readonly"
-            :class="['add-relative-btn', `add-relative-btn--${addBtnStyle}`]"
+            :class="['add-relative-btn', `add-relative-btn--${props.addBtnStyle}`]"
             :transform="`translate(${box.x + box.w}, ${box.y})`"
             role="button"
             :aria-label="$t('personDetail.addRelativeLabel')"
             @click.stop="(ev: MouseEvent) => $emit('person-context-menu', { personId: box.person.id, x: ev.clientX, y: ev.clientY })"
           >
-            <template v-if="addBtnStyle === 'plus'">
+            <template v-if="props.addBtnStyle === 'plus'">
               <circle r="10" />
               <line x1="-5" y1="0" x2="5" y2="0" />
               <line x1="0" y1="-5" x2="0" y2="5" />
@@ -228,6 +228,7 @@ const props = defineProps<{
   colorMode?: ColorMode;
   selectedId: string | null;
   ariaLabel: string;             // i18n KEY for the svg role="tree" aria-label
+  testId?: string;               // data-testid for the svg root (chart-specific)
   addBtnStyle: 'plus' | 'leaf';
 }>();
 
@@ -241,11 +242,6 @@ const emit = defineEmits<{
   wheel: [e: WheelEvent];
   mousedown: [e: MouseEvent]; mousemove: [e: MouseEvent]; mouseup: [e: MouseEvent];
 }>();
-
-// The add-relative badge style flows in from the parent (App.vue's
-// appearance-store). Exposed as a local alias so the template reads the same
-// `addBtnStyle` name it did in PedigreeChart.
-const addBtnStyle = computed<'plus' | 'leaf'>(() => props.addBtnStyle);
 
 // Inner scroll element — the parent binds its useChartZoom scrollRef to this
 // in onMounted. ChartCanvas only EXPOSES it; pan/zoom stays in the parent.
