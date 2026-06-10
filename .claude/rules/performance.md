@@ -59,6 +59,43 @@ for (const person of persons) {
 }
 ```
 
+## Rule for per-row DB queries in loops
+
+**Never call a per-entity api/ getter inside a loop over a DB-scale array.**
+
+The nested-scan rule above covers in-memory arrays; this covers SQL. Every
+`await get*(db, id)` inside a `for` loop over persons / events / sources /
+couples is one SQL execution — and under the Tauri db-shim, one IPC
+round-trip (~1 ms) per call. A 10k-person export with 6 per-person getters
+pays 60k+ round-trips: minutes of wall clock with the CPU idle.
+
+```ts
+// ❌ O(persons) IPC round-trips per getter
+for (const p of persons) {
+  const names = await getPersonNames(db, p.id);
+  const idents = await getPersonIdentifiers(db, p.id);
+}
+
+// ✅ One bulk query per table, grouped into a Map before the loop
+const allNames = await queryAll<PersonName>(db, 'SELECT * FROM person_names ORDER BY sort_order');
+const namesByPersonId = groupBy(allNames, n => n.person_id);
+for (const p of persons) {
+  const names = namesByPersonId.get(p.id) ?? [];
+}
+```
+
+When the bulk query replaces a per-entity getter, **replicate its ORDER BY
+exactly** — a global sort preserves relative order within each group, so the
+output stays byte-identical. Reference implementation:
+`src/gedcom/export-prefetch.ts` (`prefetchExportData` — one fetch per table,
+fourteen per-row getters eliminated from the GEDCOM exporter).
+
+The per-concept GEDCOM emitters (`notes-emitter`, `translations-emitter`,
+`coverage-emitter`, `assoc-emitter`) still fetch per entity — acceptable while
+their row counts stay small, but any of them showing up in a profile means
+extending `ExportPrefetch` with that table, not adding a cache inside the
+emitter.
+
 ## Rule for DB fetch caching within a pass
 
 **Never fetch the same rows twice in a single export or import pass.**
