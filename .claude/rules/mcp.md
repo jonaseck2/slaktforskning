@@ -14,7 +14,7 @@ The MCP server has two entry points. DB path: `SLAKTFORSKNING_DB` env var, or pl
 
 ### Production Server (`src/mcp/createProdServer.ts`)
 
-77 workflow tools (counted via `grep -c registerTool src/mcp/tools/prod/*.ts`). Parity goal: full CRUD on persons (incl. names + identifiers), relationships, event participants, events, sources, citations, places, repositories, groups, media (incl. links + regions), research tasks, plus GEDCOM and `.zip`-archive round-trip. Each workflow tool does more in a single call to reduce round-trips. Coverage enforced by `tests/unit/mcp.test.ts`.
+80 workflow tools (counted via `grep -c registerTool src/mcp/tools/prod/*.ts`). Parity goal: full CRUD on persons (incl. names + identifiers), relationships, event participants, events, sources, citations, places, repositories, groups, media (incl. links + regions), research tasks, plus GEDCOM and `.zip`-archive round-trip. Each workflow tool does more in a single call to reduce round-trips. Coverage enforced by `tests/unit/mcp.test.ts`.
 
 Entry point: `npx tsx src/mcp/server.ts`
 
@@ -40,7 +40,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 ### Development Server (`src/mcp/createDevServer.ts`)
 
-All 77 prod tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection.
+All 80 prod tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection.
 
 Entry point: `npx tsx src/mcp/devServer.ts`
 

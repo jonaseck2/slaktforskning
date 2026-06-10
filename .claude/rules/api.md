@@ -191,11 +191,11 @@ await bulkAddEventParticipants(db, participantRows);
 
 `collectEventNode` (event-importer.ts) is the canonical "return specs with pre-allocated UUIDs, zero IPC for row inserts" pattern.
 
-## Worker-thread sync I/O — mandatory rules
+## Sync I/O in api/ — mandatory rules
 
-The DB worker is a single thread serving every DB-touching IPC channel. Any synchronous I/O inside a worker handler pins the worker for that call's duration, queuing every other handler.
+There is no worker thread anymore (api/ runs in the renderer; the MCP server is its own process), but the constraint survives: api/ code runs on a single JS thread per process. Any synchronous I/O inside an api/ function pins that thread for the call's duration — the renderer freezes, or the MCP server queues every other tool call.
 
-**Banned in worker handlers** (`src/main/db-worker.ts`, anything `src/api/` reachable from a worker channel):
+**Banned in `src/api/` and `src/mcp/` code paths:**
 
 - `fs.readFileSync`, `fs.writeFileSync`, `fs.appendFileSync`
 - `fs.existsSync`, `fs.statSync`, `fs.accessSync`

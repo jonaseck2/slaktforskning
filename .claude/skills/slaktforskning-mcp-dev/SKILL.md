@@ -1,6 +1,6 @@
 ---
 name: slaktforskning-mcp-dev
-description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire defineChannel + Tauri auto-walk / polyfill + static-api, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Also covers the dev MCP HTTP bridge (src-tauri/src/ui_server.rs) used by ui_screenshot / ui_click / ui_eval / chart_*. Use when modifying anything in src/mcp/, src/shared/channels/, src/renderer/tauri-window-api.ts, or src-tauri/src/ui_server.rs. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
+description: Extend the Släktforskning MCP server — add new tools to createProdServer.ts / createDevServer.ts, wire window.api bindings in tauri-window-api.ts + static-api stubs, test via tests/unit/mcp.test.ts, debug agent-facing IPC. Also covers the dev MCP HTTP bridge (src-tauri/src/ui_server.rs) used by ui_screenshot / ui_click / ui_eval / chart_*. Use when modifying anything in src/mcp/, src/renderer/tauri-window-api.ts, or src-tauri/src/ui_server.rs. Distinct from `slaktforskning-mcp` (which is for an agent *using* the MCP tools to do genealogy work for the user).
 ---
 
 # Släktforskning MCP — Server-Dev Skill
@@ -233,7 +233,7 @@ Several long-running processes share the codebase: the **Tauri Rust host** (comp
 | `src/api/**` (any) | Restart app **and** restart MCP server | The renderer-side api/ layer loads at app boot. The MCP server is a separate Node process that loads its own copy of the same files at boot. Both need to restart. |
 | `src/api/checks/**` | Same as above — restart app + MCP server | These run inside the renderer (called from `checks:runAll`). |
 | `src-tauri/src/**` | Restart `npm start` — Rust recompiles automatically (~3 s incremental) | The Rust host is a compiled binary; tauri-cli watches and recompiles. |
-| `src/shared/channels/**` | Restart app **and** restart MCP server | Both processes import the channel registry at boot. |
+| `src/shared/**` | Restart app **and** restart MCP server | Both processes import the shared helpers at boot. |
 | `src/mcp/createProdServer.ts`, `src/mcp/createDevServer.ts`, `src/mcp/server.ts`, `src/mcp/devServer.ts` | Restart MCP server only | The MCP server is its own `npx tsx` process; restarting the Tauri app doesn't touch it. |
 | `src/mcp/tools/**` | Restart MCP server only | Same. |
 | `.claude/skills/**`, `.claude/rules/**` | Nothing — picked up automatically at next prompt | Read by Claude Code on each turn. |
@@ -302,8 +302,8 @@ server.registerTool('tool_name', {
 1. Implement the function in `src/api/*.ts`
 2. Write unit tests in `tests/unit/`
 3. Add the MCP tool in `src/mcp/createProdServer.ts` (or `createDevServer.ts` for dev-only tools)
-4. Add the channel via `defineChannel()` in `src/shared/channels/<domain>.ts` — picked up automatically by `tauri-window-api.ts` auto-walk
-5. Add a polyfill in `src/renderer/tauri-window-api.ts` only if the channel needs Tauri-native services (file dialog, fs, shell, multi-window). Add a stub in `src/static/static-api.ts` so the website-export build still type-checks.
+4. If the renderer should reach the same function, bind it in `mountWindowApi()` in `src/renderer/tauri-window-api.ts` — `mutating()` for writes (fires `data:changed`), `readOnly()` for reads. (The Electron-era `src/shared/channels/` registry is gone; bindings are explicit.)
+5. Add a stub in `src/static/static-api.ts` so the website-export build still type-checks (`static-api-coverage.test.ts` enforces this).
 6. Test: `npm test && npm run test:e2e`
 
 ## Common pitfalls (real bugs we shipped)

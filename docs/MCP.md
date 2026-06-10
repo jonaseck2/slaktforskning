@@ -10,7 +10,7 @@ The server shares the same SQLite database as the Electron app. Override the DB 
 
 Entry point: `npx tsx src/mcp/server.ts`
 
-77 workflow tools designed for genealogy research and AI narrative generation. The set provides full CRUD parity with the desktop app — every record type the renderer can author or curate, an agent can too. Each workflow tool does more in one call — creates relationships, resolves places, records citations — so agents need fewer round-trips. Coverage is enforced by `tests/unit/mcp.test.ts` ("registers every tool the agent needs to author + curate a genealogy database").
+80 workflow tools designed for genealogy research and AI narrative generation. The set provides full CRUD parity with the desktop app — every record type the renderer can author or curate, an agent can too. Each workflow tool does more in one call — creates relationships, resolves places, records citations — so agents need fewer round-trips. Coverage is enforced by `tests/unit/mcp.test.ts` ("registers every tool the agent needs to author + curate a genealogy database").
 
 ### Persons
 
@@ -152,7 +152,7 @@ Entry point: `npx tsx src/mcp/server.ts`
 
 Entry point: `npx tsx src/mcp/devServer.ts`
 
-All 77 production tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection. Use this server when developing or testing UI features.
+All 80 production tools PLUS 15 dev-only tools for UI automation, chart inspection, test data seeding, and app inspection. Use this server when developing or testing UI features.
 
 ### UI Automation (requires app running)
 

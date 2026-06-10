@@ -36,7 +36,7 @@ cd /Users/.../.worktrees/feature-x && npm install
 cd /Users/.../.worktrees/feature-x && npm install && npm test
 ```
 
-Cross-referenced in `.claude/skills/commit/SKILL.md` (Working in a worktree — STRICT) and `.claude/napkin.md` (Shell & Command Reliability).
+Cross-referenced in `.claude/skills/commit/SKILL.md` (Working in a worktree — STRICT).
 
 ## 2. Vitest in a worktree needs explicit `--root`
 

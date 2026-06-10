@@ -148,10 +148,10 @@ npm start
 | `src-tauri/src/ui_server.rs` | Dev MCP HTTP bridge. |
 | `vite.tauri-renderer.config.ts` | Renderer build for the Tauri webview — aliases out `node:fs`, `worker_threads`, etc. |
 
-## Adding new IPC channels
+## Adding new IPC bindings
 
-Channels are defined once via the typed registry in `src/shared/channels/<domain>.ts`. One `defineChannel()` call covers both runtimes — in Tauri, `tauri-window-api.ts` walks the registry on startup and wires every channel into `window.api.*` automatically. Polyfills are only needed when the channel needs Tauri-native services. See `/add-feature` IPC Layer and `/tauri-bridge` for the polyfill recipe.
+There is no channel registry (the Electron-era `src/shared/channels/` + `defineChannel()` pattern was deleted in the Specta migration). `mountWindowApi()` in `src/renderer/tauri-window-api.ts` binds every `window.api.<domain>.<method>` explicitly: mutations wrap their `src/api/*` handler in `mutating()` (fires `data:changed` after resolve), reads wrap in `readOnly()`. Rust-backed commands come from the Specta-generated `src/renderer/bindings.ts`. See `/add-feature` IPC Layer and `/tauri-bridge` for when a binding needs a Rust command.
 
 Coverage tests catch any miss:
-- `tests/unit/tauri-channel-coverage.test.ts` — every registry channel auto-walks or has an explicit polyfill
-- `tests/unit/static-api-coverage.test.ts` — every registry channel has a stub in the static SPA api
+- `tests/unit/tauri-window-api.test.ts` — bindings exist on `window.api` and dispatch to the right Rust commands
+- `tests/unit/static-api-coverage.test.ts` — every renderer-callable surface has a stub in the static SPA api

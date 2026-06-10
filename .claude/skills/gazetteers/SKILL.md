@@ -341,6 +341,62 @@ Requires:
 
 Use `scripts/build-dk-parishes-dawa.ts` as template. Each API is different -- adapt the fetch and parsing logic.
 
+## Custom (user-imported) gazetteers
+
+Bundled gazetteers cover socknar, församlingar, orter, gårdar, kyrkor, etc. for Sweden plus Wikidata global admin. They do **not** cover named royal palaces, specific buildings, named landmarks, or microlocations ("Haga Slott, Solna"). Those need a custom gazetteer JSON imported at runtime. This section is the canonical authoring + import contract; the `genealogy` skill links here from its research workflow.
+
+### Authoring contract (it WILL fail validation if you skip a field)
+
+- Every node — including the World root — needs `name`, `type`, `lat`, `lon`. The validator (`src/api/gazetteers.ts` `validateNode`) hard-throws on any missing one. **For a top-level "World" root, use `lat: 0, lon: 0`** — never used (the resolver never anchors at root) but the field must exist.
+- The top level needs `kind: "point"`. Without it the import succeeds silently but resolution behaves unexpectedly.
+- The root must be `name: "World"` or `name: "World (Historical)"`. Self-rooted ("Sverige") gazetteers are rejected by design — they wouldn't structurally merge with the canonical hierarchy (`gazetteers.ts:91-104`).
+
+Skeleton:
+
+```json
+{
+  "id": "se-royal-residences",
+  "name": "Swedish Royal Residences",
+  "locale": "sv",
+  "kind": "point",
+  "description": "Custom gazetteer for ...",
+  "source": { "name": "...", "url": "...", "license": "CC0", "fetched": "2026-05-11" },
+  "root": {
+    "name": "World", "type": "root", "lat": 0, "lon": 0,
+    "children": [
+      { "name": "Sverige", "type": "country", "lat": 60.13, "lon": 18.64,
+        "children": [
+          { "name": "Stockholms län", "type": "admin1", "lat": 59.33, "lon": 18.07,
+            "children": [
+              { "name": "Solna", "type": "municipality", "lat": 59.36, "lon": 18.0,
+                "children": [
+                  { "name": "Haga Slott", "type": "palace", "lat": 59.3625, "lon": 18.042,
+                    "aliases": ["Haga slott", "Haga Palace"] }
+                ]}
+            ]}
+        ]}
+    ]
+  }
+}
+```
+
+### Importing and enabling
+
+There's no MCP tool for `import_gazetteer` (yet). Either:
+- **Renderer route**: `window.api.gazetteers.import(jsonString)` via the `/eval` bridge. Pass the string directly (NOT `{jsonText: ...}`). Confirm with `gazetteers.list().filter(g => !g.bundled)`.
+- **UI route**: Settings → Gazetteers → Import (manually pick the file).
+
+After import, **enable it explicitly** — imported gazetteers are NOT auto-added to `gazetteer_config.enabledGazetteers` (the default-fallback in `usePlaceResolver.ts` only enables bundled):
+
+```js
+const bundled = await window.api.gazetteers.getBundled();
+const ids = bundled.map(g => g.id);
+ids.push('your-custom-id');
+await window.api.db.setSetting('gazetteer_config', JSON.stringify({ enabledGazetteers: ids }));
+```
+
+**Don't** read the existing `gazetteer_config` and append — if it's null on first load, you'd write `{ enabledGazetteers: ['your-custom-id'] }` and silently disable every bundled gazetteer.
+
 ## GeoNames Reference
 
 **TSV columns:** 0=id, 1=name, 2=asciiName, 3=altNames(comma-sep), 4=lat, 5=lon, 6=featureClass, 7=featureCode, 8=countryCode, 9=cc2, 10=admin1, 11=admin2, 12=admin3, 13=admin4, 14=population

@@ -1,6 +1,6 @@
 ---
 name: genealogy
-description: Use when actually doing genealogy research with the Släktforskning MCP — building real family trees end-to-end, exporting/round-tripping, attaching media + face tags, importing custom gazetteers for places not in the bundled set. Pairs with `slaktforskning-mcp` (which lists the tools) and `slaktforskning-mcp-dev` (which is about extending the tools). Triggers on real research workflows, "research X family", "test the app end-to-end", "set up a Bernadotte-style demo".
+description: Use when actually doing genealogy research with the Släktforskning MCP — building real family trees end-to-end, exporting/round-tripping, attaching media + face tags, importing custom gazetteers for places not in the bundled set. Pairs with `slaktforskning-mcp` (which lists the tools). Distinct from `slaktforskning-mcp-dev` (extending the MCP server itself). Triggers on real research workflows, "research X family", "test the app end-to-end", "set up a Bernadotte-style demo".
 ---
 
 # Genealogy Research Workflow Skill
@@ -41,61 +41,12 @@ Skip steps that don't apply. Don't skip step 1.
 
 ## Custom gazetteer for a place not in the bundled set
 
-The bundled gazetteers cover socknar, församlingar, orter, gårdar, kyrkor, etc. for Sweden plus Wikidata global admin. They do **not** cover named royal palaces, specific buildings, named landmarks, or microlocations. If the user types "Haga Slott, Solna", the resolver returns nothing — needs a custom gazetteer.
+The bundled gazetteers do **not** cover named royal palaces, specific buildings, named landmarks, or microlocations. If the user types "Haga Slott, Solna", the resolver returns nothing — needs a custom gazetteer.
 
-### Authoring contract (it WILL fail validation if you skip a field)
+**The canonical authoring + import contract lives in the `gazetteers` skill** (§"Custom (user-imported) gazetteers") — JSON skeleton, validator requirements, import routes, enabling. Research-session reminders:
 
-Every node — including the World root — needs `name`, `type`, `lat`, `lon`. The validator (`src/api/gazetteers.ts:validateNode`) hard-throws on any missing one with a confusing error. **For a top-level "World" root, use `lat: 0, lon: 0`** — it's never used because the resolver never anchors at root, but the field must exist.
-
-The top level needs `kind: "point"`. Without it the renderer accepts the import (no error) but resolution behaves unexpectedly. (Friction §2.)
-
-The root must be `name: "World"` or `name: "World (Historical)"`. Self-rooted ("Sverige") gazetteers are rejected by design — they wouldn't structurally merge with the canonical hierarchy. (`gazetteers.ts:91-104`.)
-
-Skeleton:
-
-```json
-{
-  "id": "se-royal-residences",
-  "name": "Swedish Royal Residences",
-  "locale": "sv",
-  "kind": "point",
-  "description": "Custom gazetteer for ...",
-  "source": { "name": "...", "url": "...", "license": "CC0", "fetched": "2026-05-11" },
-  "root": {
-    "name": "World", "type": "root", "lat": 0, "lon": 0,
-    "children": [
-      { "name": "Sverige", "type": "country", "lat": 60.13, "lon": 18.64,
-        "children": [
-          { "name": "Stockholms län", "type": "admin1", "lat": 59.33, "lon": 18.07,
-            "children": [
-              { "name": "Solna", "type": "municipality", "lat": 59.36, "lon": 18.0,
-                "children": [
-                  { "name": "Haga Slott", "type": "palace", "lat": 59.3625, "lon": 18.042,
-                    "aliases": ["Haga slott", "Haga Palace"] }
-                ]}
-            ]}
-        ]}
-    ]
-  }
-}
-```
-
-### Importing it
-
-There's no MCP tool for `import_gazetteer` (yet). Either:
-- **Renderer route**: `window.api.gazetteers.import(jsonString)` via the `/eval` bridge. Pass the string directly (NOT `{jsonText: ...}` — that's a different polyfill spec). Confirm with `gazetteers.list().filter(g => !g.bundled)`.
-- **UI route**: Settings → Gazetteers → Import (manually pick the file).
-
-After import, **enable it explicitly**. Imported gazetteers are NOT auto-added to `gazetteer_config.enabledGazetteers`. The default-fallback in `usePlaceResolver.ts:43` only enables bundled. Concretely:
-
-```js
-const bundled = await window.api.gazetteers.getBundled();
-const ids = bundled.map(g => g.id);
-ids.push('your-custom-id');
-await window.api.db.setSetting('gazetteer_config', JSON.stringify({ enabledGazetteers: ids }));
-```
-
-**Don't** read the existing `gazetteer_config` and append — if it's null on first load, you'll write `{ enabledGazetteers: ['your-custom-id'] }` and silently disable every bundled gazetteer. (Friction §3 — happened during the Bernadotte test, took two passes to notice.)
+- Every node (incl. the World root) needs `name`/`type`/`lat`/`lon`; top level needs `kind: "point"`; root must be `"World"` or `"World (Historical)"`. (Friction §2.)
+- After import, enable explicitly — imported gazetteers are NOT auto-added to `gazetteer_config.enabledGazetteers`, and never write a config containing only your custom id or you silently disable every bundled gazetteer. (Friction §3 — happened during the Bernadotte test, took two passes to notice.)
 
 ## Photos that don't 404
 

@@ -72,11 +72,6 @@ export default defineConfig({
         // exercised in tests/unit/cropImage.test.ts but cannot contribute
         // enough covered lines to reach the 80% threshold on the file.
         'src/renderer/utils/cropImage.ts',
-
-        // Per-channel defineChannel() wrappers run in the IPC worker thread, not
-        // in unit tests. Parity between channel registry and preload is enforced
-        // by tests/unit/registry.test.ts and tests/unit/preload-coverage.test.ts.
-        'src/shared/channels/**',
       ],
       reporter: ['text', 'lcov'],
       thresholds: {

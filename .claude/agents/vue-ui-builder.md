@@ -9,7 +9,7 @@ You are building Vue 3 components, views, modals, and panels for the Släktforsk
 ## Scope
 
 - Touch: `src/renderer/**`, `src/static/**` (if the change must work in static-mode export), `src/renderer/i18n/sv.ts` (primary), `src/renderer/i18n/en.ts` (fallback), `src/renderer/router.ts` and `App.vue` (when adding a route or sidebar entry).
-- DO NOT touch: `src/api/`, `src/shared/channels/`, `src/main/`, `src/preload/`, `src/mcp/`, `tests/` — other agents handle these.
+- DO NOT touch: `src/api/`, `src/shared/`, `src/mcp/`, `src-tauri/`, `src/renderer/tauri-window-api.ts`, `tests/` — other agents handle these.
 
 ## Investigate before writing — REQUIRED
 

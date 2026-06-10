@@ -1,6 +1,6 @@
 ---
 name: import-format-add
-description: Add a new native importer for a genealogy file format (alongside the GEDCOM, Genney, Holger, RootsMagic, and Gramps importers we already ship). Use when the user asks to support a new app's file format — e.g. "add a Family Tree Maker importer", "let users import .ftm files directly", or "we should read .gpkg natively". Covers the multi-file pattern: src/import/<format>/, channel registry, file picker, Tauri polyfill (renderer-side fs read via invoke('fs_read_bytes_base64')), static-api stub, UI tab, MCP auto-detect, fixture-based tests.
+description: Add a new native importer for a genealogy file format (alongside the GEDCOM, Genney, Holger, RootsMagic, and Gramps importers we already ship). Use when the user asks to support a new app's file format — e.g. "add a Family Tree Maker importer", "let users import .ftm files directly", or "we should read .gpkg natively". Covers the multi-file pattern: src/import/<format>/, window.api bindings in tauri-window-api.ts, file picker, renderer-side fs read via invoke('fs_read_bytes_base64'), static-api stub, UI tab, MCP auto-detect, fixture-based tests.
 ---
 
 # Adding a Native Importer for a New Genealogy File Format
@@ -61,7 +61,6 @@ For binary: don't.
 src/import/<format>/transform.ts        # pure DB→DB transform; no IPC, no fs
 src/import/<format>/index.ts            # orchestrator: importFrom<Format>(db, path) AND importFrom<Format>Bytes(db, bytes) — both variants required
 tests/unit/<format>-transform.test.ts   # synthetic in-memory fixture + real-sample E2E (skipIf-gated)
-src/shared/channels/import.ts           # defineChannel('import:<format>Run', mutating: true)
 src/renderer/tauri-window-api.ts        # api.import.<format>SelectFile = pickFile(...); api.import.<format>Run = bytes-via-invoke + importFromBytes + fireDataChanged()
 src/static/static-api.ts                # noop stub for the website-export SPA build
 src/renderer/components/import/<Format>ImportSection.vue   # lean copy of GrampsImportSection
@@ -69,9 +68,10 @@ src/renderer/views/ImportExportView.vue                    # one filter chip + o
 src/renderer/i18n/{sv,en}.ts            # title, desc, pickFile, import, running, error
 src/mcp/tools/prod/data-management.ts   # extension match → format → native importer
 docs/MCP.md                             # update import_file row
-tests/unit/tauri-channel-coverage.test.ts  # confirm SelectFile + Run polyfills are present
 tests/unit/static-api-coverage.test.ts     # confirm static stubs present
 ```
+
+(The Electron-era `src/shared/channels/` registry is gone — the `window.api.import.*` bindings in `tauri-window-api.ts` ARE the IPC layer. Each `<format>Run` binding must call `fireDataChanged()` after the import resolves.)
 
 The dual-variant orchestrator (`importFrom<Format>` + `importFrom<Format>Bytes`) is mandatory because the Tauri renderer cannot read fs directly — bytes arrive via `invoke('fs_read_bytes_base64')`. The path variant exists for tests + MCP-server-host calls; both variants delegate to the same `transform<Format>` function.
 

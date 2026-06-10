@@ -9,10 +9,10 @@
  * the same way so the cross-window emit/listen wires don't crash at module
  * import time.
  *
- * This is the structural counterpart of `tauri-channel-coverage.test.ts`:
- * coverage proves the channel *exists* on window.api; this test proves it
- * *does the right thing*. Together they catch both classes of polyfill
- * drift: missing wiring (channel missing) and incorrect wiring (channel
+ * This is the structural counterpart of `static-api-coverage.test.ts`:
+ * coverage proves the binding *exists* on window.api; this test proves it
+ * *does the right thing*. Together they catch both classes of binding
+ * drift: missing wiring (binding missing) and incorrect wiring (binding
  * present but talking to the wrong Rust command).
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
