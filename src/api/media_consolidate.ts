@@ -89,7 +89,17 @@ export async function consolidateMediaFolder(
   async function indexDestRecursive(dir: string, prefix = ''): Promise<void> {
     let entries: import('fs').Dirent[];
     try { entries = await fsp.readdir(dir, { withFileTypes: true }); }
-    catch { return; }
+    catch (err) {
+      // Missing dir just means no fast-path candidates (slow path re-copies,
+      // idempotent). Anything else (EACCES, ENOTDIR) is worth a trace —
+      // the consolidate still succeeds via the slow path, but silently
+      // degraded indexing has masked permission problems before.
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== 'ENOENT') {
+        console.warn(`[media-consolidate] could not index dest folder ${dir}: ${String(err)}`);
+      }
+      return;
+    }
     for (const e of entries) {
       const full = path.join(dir, e.name);
       const rel = prefix ? path.join(prefix, e.name) : e.name;

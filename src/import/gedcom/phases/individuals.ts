@@ -362,7 +362,12 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       for (const grpNode of getChildren(node, '_GRP')) {
         const groupId = ctx.grpMap.get(grpNode.value ?? '');
         if (groupId) {
-          try { await addGroupLink(ctx.db, groupId, 'person', personId); } catch { /* ignore duplicate */ }
+          try {
+            await addGroupLink(ctx.db, groupId, 'person', personId);
+          } catch (err) {
+            // Duplicate membership is expected wire input; anything else surfaces.
+            if (!String(err).includes('UNIQUE constraint failed')) throw err;
+          }
         }
       }
     }

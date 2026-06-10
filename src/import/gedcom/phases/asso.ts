@@ -80,8 +80,10 @@ export async function phaseAsso(ctx: ImportContext): Promise<void> {
             role,
             notes,
           });
-        } catch {
+        } catch (err) {
           // UNIQUE collision under race / re-entrancy — safe to ignore.
+          // Anything else (FK violation, disk error) must surface, not vanish.
+          if (!String(err).includes('UNIQUE constraint failed')) throw err;
         }
       }
       continue;
