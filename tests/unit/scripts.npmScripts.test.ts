@@ -69,7 +69,7 @@ const SKIPPED_WITH_REASON: Record<string, string> = {
   'pretauri:build:test': 'auto-run hook for tauri:build:test',
 };
 
-describe('npm scripts smoke', () => {
+describe('npm scripts coverage', () => {
   it('every declared script is either CI-safe-exercised here or explicitly skipped with a reason', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { scripts: Record<string, string> };
     const declared = Object.keys(pkg.scripts);

@@ -1,12 +1,12 @@
 /**
- * European country coverage — roadmap-level smoke probes.
+ * European country coverage — roadmap-level resolution probes.
  *
  * Each country plan in docs/plans/2026-05-09-european-gazetteers-design.md
- * extends EUROPEAN_PROBES with its smoke list. The probes assert that
+ * extends EUROPEAN_PROBES with its probe list. The probes assert that
  * await resolvePlace() returns the expected (admin1, admin2, leaf) tuple.
  *
  * This test guards regressions; the *gate* for shipping any country plan is
- * the user smoke-check in the running app. See the per-country plan's
+ * the user verification in the running app. See the per-country plan's
  * Verification section.
  */
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -170,7 +170,7 @@ const EUROPEAN_PROBES: CountryProbeSet[] = [
       { query: 'Bochnia, Powiat bocheński, Poland', expectAdmin2: 'Powiat bocheński', expectCountry: 'Poland' },
     ],
   },
-  // ── Tier 2 Western Europe — minimal one-probe-per-country smoke set.
+  // ── Tier 2 Western Europe — minimal one-probe-per-country set.
   {
     countryCode: 'tier2w',
     countryName: 'Tier 2 Western Europe',
