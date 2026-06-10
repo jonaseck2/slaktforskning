@@ -140,10 +140,9 @@ if (typeof window !== 'undefined' && window.api?.app?.onOpenAbout) {
 }
 // In-renderer entry points (e.g. SettingsView's About link) dispatch a
 // CustomEvent on the window so we open the same modal without round-
-// tripping through the main process.
-if (typeof window !== 'undefined') {
-  window.addEventListener('app:openAbout', () => { aboutVisible.value = true; });
-}
+// tripping through the main process. Registered in onMounted / removed in
+// onUnmounted alongside the other window listeners.
+const onOpenAboutEvent = () => { aboutVisible.value = true; };
 
 // Nav orientation: vertical (left sidebar) or horizontal (top-bar with section
 // dropdowns). Owned by <AppSettingsPanel>; we mirror it locally so the
@@ -368,6 +367,21 @@ async function loadDuplicatesBadge() {
   } catch { /* ignore */ }
 }
 
+let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
+let researchDebounce: ReturnType<typeof setTimeout> | null = null;
+let duplicatesDebounce: ReturnType<typeof setTimeout> | null = null;
+
+function onDataImported() {
+  dataVersionStore.increment();
+  // Debounce heavy checks so navigation/data loading IPC isn't blocked
+  if (qualityDebounce) clearTimeout(qualityDebounce);
+  qualityDebounce = setTimeout(loadQualityBadge, 2000);
+  if (researchDebounce) clearTimeout(researchDebounce);
+  researchDebounce = setTimeout(loadResearchBadge, 400);
+  if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
+  duplicatesDebounce = setTimeout(loadDuplicatesBadge, 2000);
+}
+
 onMounted(() => {
   screenReader.init();
   window.addEventListener('keydown', handleGlobalKey);
@@ -389,9 +403,6 @@ onMounted(() => {
     // which re-invokes init() against the newly-active DB.
     window.location.reload();
   });
-  let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
-  let researchDebounce: ReturnType<typeof setTimeout> | null = null;
-  let duplicatesDebounce: ReturnType<typeof setTimeout> | null = null;
   // Undo/redo: show toast and refresh data
   window.api?.undo?.onPerformed?.((data: { type: string; label: string }) => {
     const actionLabel = t(data.label);
@@ -407,16 +418,8 @@ onMounted(() => {
     if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
     duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
   });
-  window.addEventListener('data-imported', () => {
-    dataVersionStore.increment();
-    // Debounce heavy checks so navigation/data loading IPC isn't blocked
-    if (qualityDebounce) clearTimeout(qualityDebounce);
-    qualityDebounce = setTimeout(loadQualityBadge, 2000);
-    if (researchDebounce) clearTimeout(researchDebounce);
-    researchDebounce = setTimeout(loadResearchBadge, 400);
-    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
-    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 2000);
-  });
+  window.addEventListener('data-imported', onDataImported);
+  window.addEventListener('app:openAbout', onOpenAboutEvent);
   window.api?.onDataChanged?.(() => {
     dataVersionStore.increment();
     if (qualityDebounce) clearTimeout(qualityDebounce);
@@ -432,6 +435,8 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKey);
   window.removeEventListener('click', handleDocClick);
   window.removeEventListener('app-settings-changed', onAppSettingsChanged);
+  window.removeEventListener('data-imported', onDataImported);
+  window.removeEventListener('app:openAbout', onOpenAboutEvent);
 });
 
 </script>

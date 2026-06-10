@@ -12,7 +12,8 @@
           v-if="heroSrc && heroMediaId"
           type="button"
           class="place-panel-hero-photo"
-          :title="$t('media.title')"
+          :title="$t('media.openPhoto')"
+          :aria-label="$t('media.openPhoto')"
           @click="$router.push('/media?open=' + heroMediaId)"
         >
           <img :src="heroSrc" :alt="place?.name ?? ''" />

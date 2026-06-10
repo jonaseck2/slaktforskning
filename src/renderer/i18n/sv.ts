@@ -768,6 +768,8 @@ export default {
     dateToUsed: 'Användes till',
     dateFromBirthEvent: 'Datum hämtat från födelsehändelsen',
     reorderInversionBlocked: 'Ett yngre datum kan inte placeras före ett äldre',
+    patronymicBadge: 'pat.',
+    matronymicBadge: 'mat.',
   },
   personName: {
     givenOrSurnameRequired: 'Fyll i förnamn eller efternamn',
@@ -1729,6 +1731,7 @@ export default {
   media: {
     title: 'Media',
     entity: 'Media',
+    openPhoto: 'Öppna foto i mediebiblioteket',
     nav: 'Media',
     open: 'Öppna',
     attach: 'Media',

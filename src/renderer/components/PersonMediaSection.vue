@@ -42,8 +42,8 @@
               :disabled="idx === 0"
               @click.stop="setAsProfile(idx)"
             >{{ idx === 0 ? '★' : '☆' }}</button>
-            <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')">&#9650;</button>
-            <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')">&#9660;</button>
+            <button class="btn-order" :disabled="idx === 0" @click.stop="moveUp(idx)" :title="$t('media.moveUp')" :aria-label="$t('media.moveUp')">&#9650;</button>
+            <button class="btn-order" :disabled="idx === media.length - 1" @click.stop="moveDown(idx)" :title="$t('media.moveDown')" :aria-label="$t('media.moveDown')">&#9660;</button>
           </td>
           <td class="title-cell" :title="mediaDisplayName(m.title, m.file_ref)">{{ mediaDisplayName(m.title, m.file_ref) }}</td>
           <td class="td-shrink">{{ m.format || '—' }}</td>

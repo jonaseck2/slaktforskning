@@ -16,8 +16,8 @@
           <span v-if="row.name_prefix" class="name-prefix">{{ row.name_prefix }} </span>
           <strong><PersonName :given-name="row.given_name" :preferred-name="row.preferred_name ?? null" :nickname="row.nickname ?? null" /></strong>{{ ' ' }}<span class="name-surname">{{ row.surname }}</span>
           <span v-if="row.name_suffix" class="name-suffix"> {{ row.name_suffix }}</span>
-          <span v-if="row.name_qualifier === 'patronymic'" class="name-qual-badge">pat.</span>
-          <span v-if="row.name_qualifier === 'matronymic'" class="name-qual-badge">mat.</span>
+          <span v-if="row.name_qualifier === 'patronymic'" class="name-qual-badge">{{ $t('names.patronymicBadge') }}</span>
+          <span v-if="row.name_qualifier === 'matronymic'" class="name-qual-badge">{{ $t('names.matronymicBadge') }}</span>
         </span>
         <span class="name-meta-line">
           <span class="type-badge">{{ $t('nameTypes.' + row.name_type) }}</span>

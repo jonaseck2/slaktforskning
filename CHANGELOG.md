@@ -1,8 +1,15 @@
 # Changelog
 
+## 0.270.2 — 2026-06-10
+
+- perf: GEDCOM export fetches each table once instead of one query per person, event, and source
+- fix: GEDCOM import no longer silently swallows real errors when linking associations and groups
+- fix: media reorder and place photo buttons gain screen-reader labels; name badges now translatable
+- test: the Repositories e2e suite is wired into the full tier (it was defined but never ran)
+
 ## 0.270.1 — 2026-06-07
 
-- fix(gedcom): GEDCOM export no longer stalls or consumes tens of GB of RAM on large trees. The exporter was running O(persons × couples × parent_child_rows) inner loops to build FAMC/FAMS pointers and O(parent_child_rows² × couples) to detect multi-parent triads — all cubic or quartic on the data. Five pre-built O(N) lookup Maps replace every inner scan, reducing the hot path from billions of iterations to O(N). Also eliminates a redundant second event-fetch per person/couple in the negation emitter.
+- fix(gedcom): export no longer stalls or eats tens of GB of RAM on large trees (cubic inner loops replaced with O(N) lookup maps)
 
 ## 0.270.0 — 2026-06-07
 
@@ -44,11 +51,6 @@
 
 - feat(updater): switch to the official `@tauri-apps/plugin-updater` JS wrapper and surface download progress — the About dialog now shows a "12.3 MB of 78 MB" bar while installing, instead of a fire-and-restart invoke with no feedback. Removes the unused `window.api.app.checkForUpdates` / `downloadAndInstallUpdate` polyfill in favour of a `useAppUpdater` composable that imports the wrapper directly.
 
-## 0.265.0 — 2026-05-23
+---
 
-- feat(updater): About dialog now shows whether an update is available + a "Check for updates" / "Install update" pair, and a toast surfaces when the boot check finds a new version — previously the renderer logged "[updater] update available" to the console and there was no way for a user to install without DevTools
-
-## 0.264.21 — 2026-05-23
-
-- fix(deps): patch 7 runtime npm advisories (1 high `fast-uri`, plus moderate `hono` / `ip-address` / `qs` / `uuid` / `ws`) via lockfile-only `npm audit fix`
-- chore(ci): `npm run audit` (`npm audit --omit=dev --audit-level=moderate`) now runs in the CI test job — new runtime vulnerabilities fail the build instead of sliding past us
+*Earlier release notes archived. See [docs/plans/archive/CHANGELOG.md](docs/plans/archive/CHANGELOG.md) for older entries; the complete per-milestone development history (commit-level detail, RCA write-ups, design rationale) lives in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log.*

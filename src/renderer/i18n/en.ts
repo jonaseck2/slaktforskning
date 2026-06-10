@@ -768,6 +768,8 @@ export default {
     dateToUsed: 'Used until',
     dateFromBirthEvent: 'Date taken from the birth event',
     reorderInversionBlocked: 'A more recent date cannot be placed before an older one',
+    patronymicBadge: 'pat.',
+    matronymicBadge: 'mat.',
   },
   personName: {
     givenOrSurnameRequired: 'Enter given name or surname',
@@ -1729,6 +1731,7 @@ export default {
   media: {
     title: 'Media',
     entity: 'Media',
+    openPhoto: 'Open photo in the media library',
     nav: 'Media',
     open: 'Open',
     attach: 'Media',
