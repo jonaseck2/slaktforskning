@@ -155,7 +155,7 @@ tests/
 └── e2e/                  # Playwright against the packaged Tauri binary. AppDriver in fixture.ts.
 
 docs/                     # PLAN.md, DATA_MODEL.md, MCP.md, IPC_REFERENCE.md, UX_INVENTORY.md, plans/
-.claude/                  # napkin.md, skills/
+.claude/                  # rules/, skills/, agents/
 .devcontainer/            # Linux dev container with Node 22 + Rust + Xvfb
 ```
 
@@ -178,7 +178,7 @@ Rust core: ~3 s incremental recompile on `src-tauri/` changes. Renderer changes:
 
 **Specta coupling is enforced by `vue-tsc`, not bare `tsc`.** Renaming a Rust command parameter regenerates `src/renderer/bindings.ts` on next `cargo build`. `npx vue-tsc --noEmit --ignoreDeprecations 6.0` flags renderer call sites that no longer match. Bare `npx tsc --noEmit` doesn't reach call sites because `@types/node` lib types fail to parse — CI uses `vue-tsc`.
 
-Reference docs (load on demand): `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/MCP.md`, `docs/IPC_REFERENCE.md`, `.claude/napkin.md`.
+Reference docs (load on demand): `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/MCP.md`, `docs/IPC_REFERENCE.md`.
 
 ## Skills
 
@@ -202,7 +202,7 @@ Project-wide rules belong in `CLAUDE.md`, `.claude/rules/*.md`, or `.claude/skil
    - `npm test` → `N passed (Xs)` (summary line).
    - `npm run build` → `built in Xs` (tail line + exit code).
    - `npm run test:e2e` → `N passed (Xs)` across 4 Tier 1 projects (`[boot]`, `[crud]`, `[website-export]`, `[duplicates]`).
-   - `npm run test:e2e:full` → `N passed (Xs)` across 7 projects (Tier 1 + `[panels]`, `[reactivity]`, `[imports]`) — **required when user goal touches a panel, modal, list-view, importer, or `data-changed` consumer**. Non-UI plans (Rust-only, schema-only, doc-only) exempt.
+   - `npm run test:e2e:full` → `N passed (Xs)` across 8 projects (Tier 1 + `[repositories]`, `[panels]`, `[reactivity]`, `[imports]`) — **required when user goal touches a panel, modal, list-view, importer, or `data-changed` consumer**. Non-UI plans (Rust-only, schema-only, doc-only) exempt.
 
 1. Mark every checkbox in the plan as `[x]` (Self-review checklist included). Skill/rule updates the plan called for must already have landed.
 

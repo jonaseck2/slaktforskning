@@ -1,7 +1,7 @@
 {
   "name": "slaktforskning",
   "productName": "Släktforskning",
-  "version": "0.270.1",
+  "version": "0.270.2",
   "description": "A genealogy desktop application",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "pretest:e2e": "npm run build:e2e",
     "test:e2e": "playwright test --project=boot --project=crud --project=website-export --project=duplicates",
     "pretest:e2e:full": "npm run build:e2e",
-    "test:e2e:full": "playwright test --project=boot --project=crud --project=website-export --project=duplicates --project=panels --project=reactivity --project=imports",
+    "test:e2e:full": "playwright test --project=boot --project=crud --project=website-export --project=duplicates --project=repositories --project=panels --project=reactivity --project=imports",
     "prebuild:e2e": "npm run build:static",
     "build:e2e": "tauri build --no-bundle",
     "build:static": "vite build --config vite.static.config.ts",

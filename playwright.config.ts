@@ -5,19 +5,20 @@ import { defineConfig } from '@playwright/test';
  *
  * Tier 1 (CI, `npm run test:e2e`):
  *   • boot              — app boot + Vue mount + MCP stdio handshake
- *   • crud              — renderer → preload → main → worker → SQLite IPC round-trip
+ *   • crud              — renderer → window.api → rusqlite IPC round-trip
  *   • website-export    — website export filesystem round-trip
  *   • duplicates        — duplicates + merge round-trip
  *
  * Tier 2 (local + nightly once OSS, `npm run test:e2e:full`):
+ *   • repositories      — Repositories entity CRUD + source-link round-trip
  *   • panels            — Surface Contract checks across every *Panel.vue
  *   • reactivity        — cross-view refresh (left list + center view + right panel)
  *   • imports           — importer regression coverage (GEDCOM, Holger, Genney, …)
  *
  * Tier 1 (boot/crud/website-export/duplicates) runs in CI; Tier 2
- * (panels/reactivity/imports) is `npm run test:e2e:full` only — it stays out of
- * PR CI until this repo has free OSS build minutes, at which point it gets
- * wired to a nightly workflow.
+ * (repositories/panels/reactivity/imports) is `npm run test:e2e:full` only —
+ * it stays out of PR CI until this repo has free OSS build minutes, at which
+ * point it gets wired to a nightly workflow.
  *
  * Tests run against the packaged binary built by `npm run build:e2e`.
  * The pretest:e2e script handles this automatically.

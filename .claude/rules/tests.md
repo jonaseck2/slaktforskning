@@ -38,6 +38,7 @@ Two tiers, two npm scripts:
 
 ### Tier 2 — `npm run test:e2e:full` (runs locally during plan close-out; nightly on `main` once public OSS)
 
+- `repositories` (repositories.spec.ts) — Repositories entity CRUD + source-link round-trip through the IPC chain
 - `panels` (panel-surface.spec.ts) — data-driven Surface Contract checks across all 8 right-side panels (PersonPanel, PlacePanel, SourcePanel, GroupPanel, ResearchTaskPanel, MediaPanel, ReportPanel, WebsitePanel). 4 checks per applicable section: host-flows-in, fulfills-label, lifecycle-parity, no-degradation. ExportOptionsPanel excluded — it's an embedded options card, not a paneled-route panel.
 - `reactivity` (reactivity.spec.ts) — every consumer surface refreshes after MCP-side mutations within ~2s without view-switch. ~14 triples covering the 6 host-having panels + 7 list views + chart.
 - `imports` (imports.spec.ts) — each native importer round-trips a tiny fixture (GEDCOM 5.5.1, GEDCOM 7.0, plus per-dialect GEDCOMs for Holger / RootsMagic / Gramps / Family Tree Maker). Native binary formats (.gpkg, .rmtree, .gramps) TODO'd until tiny fixtures exist.
