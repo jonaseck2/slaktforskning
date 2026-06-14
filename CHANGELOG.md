@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.270.3 — 2026-06-14
+
+- fix: searching the person list down to zero matches keeps the search box and shows a "no matches" message instead of the welcome screen, so you can refine or clear the search
+
 ## 0.270.2 — 2026-06-10
 
 - perf: GEDCOM export fetches each table once instead of one query per person, event, and source

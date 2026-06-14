@@ -13,12 +13,15 @@
       </div>
     </div>
 
-    <template v-if="loading && persons.length === 0">
+    <template v-if="loading && persons.length === 0 && !hasActiveFilter">
       <AppLoadingState :rows="5" />
     </template>
 
+    <!-- Welcome empty state: only when the register is genuinely empty, never
+         when a search filter merely matched nothing (that would hide the
+         search box and strand the user — Surface contract §4). -->
     <AppEmptyState
-      v-else-if="persons.length === 0 && !loading"
+      v-else-if="persons.length === 0 && !loading && !hasActiveFilter"
       icon="👤"
       :title="$t('empty.persons')"
       :description="$t('persons.emptyHint')"
@@ -27,7 +30,7 @@
     />
 
     <template v-else>
-      <div v-if="persons.length > 0" class="list-filter">
+      <div class="list-filter">
         <input
           v-model="searchQuery"
           type="text"
@@ -35,6 +38,19 @@
           class="list-filter-input"
         />
       </div>
+
+      <!-- Filter matched nothing — keep the search box above and offer a way
+           back instead of swapping in the add-first-person welcome state. -->
+      <AppEmptyState
+        v-if="persons.length === 0 && !loading"
+        icon="🔍"
+        :title="$t('persons.noMatchesTitle')"
+        :description="$t('persons.noMatchesHint')"
+        :action-label="$t('persons.clearSearch')"
+        @action="searchQuery = ''"
+      />
+
+      <template v-else>
       <p v-if="hasSecondarySort" class="sort-status-pill">
         {{ $t('persons.columnPicker.sortStatus', {
           primary: columnLabel(sortBy as PersonsColumnKey),
@@ -214,6 +230,7 @@
       <p v-if="total > 0" class="persons-list-footer count-label">
         {{ $t('persons.showingOf', { shown: persons.length, total }) }}
       </p>
+      </template>
     </template>
 
     <!-- Add Person Modal -->
@@ -383,6 +400,11 @@ const {
 });
 
 const hasSecondarySort = computed(() => sortBy2.value !== null);
+
+// True when the user has typed a filter — distinguishes "no people match the
+// search" from "the register is empty". Keeps the search box (and a clear
+// affordance) on screen rather than swapping in the welcome empty state.
+const hasActiveFilter = computed(() => searchQuery.value.trim() !== '');
 
 const showAddForm = ref(false);
 const sentinel = ref<HTMLElement | null>(null);
