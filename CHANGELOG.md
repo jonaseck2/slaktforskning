@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.270.4 — 2026-06-14
+
+- fix: the map in the Place Chronicle report no longer shows a dead blank box — it resolves the place location from the gazetteer (the same path the Places map uses) and always renders, centering a single place at a readable zoom
+
 ## 0.270.3 — 2026-06-14
 
 - fix: searching the person list down to zero matches keeps the search box and shows a "no matches" message instead of the welcome screen, so you can refine or clear the search

@@ -67,22 +67,41 @@ async function renderMap() {
   }).addTo(map);
 
   const place = (await window.api.places.get(props.placeId)) as PlaceRow | null;
-  if (!place) return;
 
   const bounds = L.latLngBounds([]);
+  const points: [number, number][] = [];
+  let hasBoundary = false;
 
-  if (place.latitude != null && place.longitude != null) {
-    L.circleMarker([place.latitude, place.longitude], {
-      radius: 8, color: '#fff', fillColor: '#2c5aa0', fillOpacity: 0.85, weight: 1.5,
-    }).addTo(map);
-    bounds.extend([place.latitude, place.longitude]);
-  }
-
-  if (props.showBoundary) {
+  // Effective coordinates: the DB row almost never carries lat/lon (per the
+  // Prime Directive, coordinates are gazetteer-resolved at render time, never
+  // persisted), so fall back to the resolver — same path the Places map and
+  // useLifeMap take. Without this the map below is never given a view and
+  // Leaflet renders a blank box for any place lacking a boundary polygon.
+  let effLat = place?.latitude ?? null;
+  let effLon = place?.longitude ?? null;
+  if (place && (effLat == null || effLon == null)) {
     try {
       await resolver.ensureLoaded();
-      const hint = (place.latitude != null && place.longitude != null)
-        ? { lat: place.latitude, lon: place.longitude }
+      const path = (await window.api.places.getPath(props.placeId)) as string | null;
+      const coords = resolver.resolveCoordinates(place, path || place.name) as
+        { lat: number; lon: number } | null;
+      if (coords) { effLat = coords.lat; effLon = coords.lon; }
+    } catch { /* point resolution is best-effort */ }
+  }
+
+  if (effLat != null && effLon != null) {
+    L.circleMarker([effLat, effLon], {
+      radius: 8, color: '#fff', fillColor: '#2c5aa0', fillOpacity: 0.85, weight: 1.5,
+    }).addTo(map);
+    bounds.extend([effLat, effLon]);
+    points.push([effLat, effLon]);
+  }
+
+  if (place && props.showBoundary) {
+    try {
+      await resolver.ensureLoaded();
+      const hint = (effLat != null && effLon != null)
+        ? { lat: effLat, lon: effLon }
         : undefined;
       const resolved = await resolver.resolveBoundary(place.name, hint);
       if (resolved && resolved.geometry) {
@@ -93,7 +112,7 @@ async function renderMap() {
         });
         geoLayer.addTo(map);
         const geoBounds = geoLayer.getBounds();
-        if (geoBounds.isValid()) bounds.extend(geoBounds);
+        if (geoBounds.isValid()) { bounds.extend(geoBounds); hasBoundary = true; }
       }
     } catch { /* boundary is best-effort */ }
   }
@@ -103,12 +122,21 @@ async function renderMap() {
       radius: 6, color: '#fff', fillColor: '#2c5aa0', fillOpacity: 0.85, weight: 1.5,
     }).bindTooltip(pin.label).addTo(map);
     bounds.extend([pin.lat, pin.lon]);
+    points.push([pin.lat, pin.lon]);
   }
 
-  if (bounds.isValid()) {
+  if ((hasBoundary || points.length >= 2) && bounds.isValid()) {
+    // A real area (boundary polygon) or several distinct points — frame them all.
     map.fitBounds(bounds, { padding: [30, 30], animate: false });
-  } else if (place.latitude != null && place.longitude != null) {
-    map.setView([place.latitude, place.longitude], 6, { animate: false });
+  } else if (points.length === 1) {
+    // A single point would make fitBounds zoom to max on a zero-area bounds, so
+    // set a town-level view instead (mirrors the Places map's single-pin path).
+    map.setView(points[0], 10, { animate: false });
+  } else {
+    // Last resort: nothing about this place could be located. Still give the
+    // map a view (Scandinavia, matching BaseMap's default) so it renders tiles
+    // instead of a dead blank box.
+    map.setView([55, 15], 4, { animate: false });
   }
 }
 
