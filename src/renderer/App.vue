@@ -85,7 +85,7 @@
         <keep-alive :include="CACHED_VIEWS">
           <component
             :is="Component"
-            :key="CACHED_VIEWS.includes(route.name as string) ? (route.name as string) : route.fullPath"
+            :key="CACHED_VIEWS.includes(route.name as string) ? (route.name as string) : route.path"
           />
         </keep-alive>
       </router-view>

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.270.5 — 2026-06-17
+
+- fix: the search box no longer loses focus after each letter you type — you can type a query straight through without re-clicking the field
+
 ## 0.270.4 — 2026-06-14
 
 - fix: the map in the Place Chronicle report no longer shows a dead blank box — it resolves the place location from the gazetteer (the same path the Places map uses) and always renders, centering a single place at a readable zoom
