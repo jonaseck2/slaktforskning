@@ -230,6 +230,21 @@ async function runChecks() {
     if (raw === null) { qualityStore.running = false; return; }
     qualityStore.setResults(raw);
     visibleCount.value = PAGE_SIZE;
+    // Persons-list "Kvalitet" column reads from a cache table populated from the
+    // same runAll output. This is the only place the full quality scan runs now
+    // (App.vue's sidebar badge derives from the store reactively rather than
+    // re-scanning), so the cache refresh lives here. See plan
+    // 2026-05-09-persons-list-aggregate-columns and
+    // 2026-06-17-instant-updates-on-large-databases.
+    if (window.api.persons?.refreshQualityIssueCounts) {
+      const counts: Record<string, number> = {};
+      for (const r of raw) {
+        for (const id of r.personIds ?? []) counts[id] = (counts[id] ?? 0) + 1;
+      }
+      try {
+        await window.api.persons.refreshQualityIssueCounts(counts);
+      } catch { /* cache refresh is best-effort */ }
+    }
   } catch (err) {
     if (myRunId !== checksRunId) return;
     console.error('[QualityView] runChecks failed:', err);

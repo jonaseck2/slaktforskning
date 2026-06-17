@@ -77,6 +77,7 @@ import AppLoadingState from '../ui/AppLoadingState.vue';
 import MergePersonsModal from '../MergePersonsModal.vue';
 import { useToast } from '../../composables/useToast';
 import { usePagedList } from '../../composables/usePagedList';
+import { useDuplicateCountStore } from '../../stores/duplicateCount';
 
 defineOptions({ name: 'DuplicatesPersonsTab' });
 
@@ -99,6 +100,7 @@ interface DuplicateCandidate {
 
 const { t } = useI18n();
 const toast = useToast();
+const duplicateCountStore = useDuplicateCountStore();
 
 const mergeCandidate = ref<DuplicateCandidate | null>(null);
 
@@ -124,6 +126,13 @@ const {
 
 const sentinel = ref<HTMLElement | null>(null);
 watch(sentinel, (el) => attachSentinel(el));
+
+// Mirror the persons-duplicate-pair count into the shared store so App.vue's
+// sidebar "Dubbletter" badge reflects this view's own computation — no separate
+// contending duplicates.count() scan on /duplicates entry. `total` is kept
+// fresh by the paged-list load, the optimistic ignore decrement, and the
+// post-merge reload below.
+watch(total, (n) => duplicateCountStore.setCount(n), { immediate: true });
 
 const summaryText = computed(() => {
   const shown = duplicates.value.length;

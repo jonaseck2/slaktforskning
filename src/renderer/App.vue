@@ -102,6 +102,9 @@ import { useI18n } from 'vue-i18n';
 import { useDataVersionStore } from './stores/dataVersion';
 import { usePersonNameOptions } from './stores/personNameOptions';
 import { useLinkRulesStore } from './stores/linkRules';
+import { useQualityStore } from './stores/quality';
+import { useDuplicateCountStore } from './stores/duplicateCount';
+import { isIgnored } from './utils/qualityIgnore';
 import { useTTS } from './composables/useTTS';
 import { useScreenReaderMode } from './composables/useScreenReaderMode';
 import ToastNotification from './components/ToastNotification.vue';
@@ -118,6 +121,8 @@ const { t } = useI18n();
 const dataVersionStore = useDataVersionStore();
 const personNameOptions = usePersonNameOptions();
 const linkRulesStore = useLinkRulesStore();
+const qualityStore = useQualityStore();
+const duplicateCountStore = useDuplicateCountStore();
 const tts = useTTS();
 const screenReader = useScreenReaderMode();
 const toast = useToast();
@@ -218,15 +223,13 @@ watch(() => route.path, () => {
       ?? route.path;
     screenReader.announceRoute(name);
   }
-  // Recompute the heavy badge counts (and the per-person quality_issue_counts
-  // cache the Persons-list "Kvalitet" column reads) only when the user actually
-  // navigates to the page that shows them — not on every edit. Those views run
-  // their own checks on mount anyway, so the badge + cache end up fresh whenever
-  // the relevant page is viewed; the count may lag slightly between visits, which
-  // is acceptable for a sidebar hint. This keeps the per-edit path free of any
-  // full-DB scan. See docs/plans/2026-06-17-instant-updates-on-large-databases.md.
-  if (route.path === '/quality') loadQualityBadge();
-  if (route.path === '/duplicates') loadDuplicatesBadge();
+  // The sidebar quality + duplicate badges derive from the QualityView /
+  // DuplicatesView Pinia stores (see the computed refs above). Navigation to
+  // /quality or /duplicates must NOT fire a separate badge scan here — those
+  // views run their own (single) computation on mount and write the store, and
+  // a second contending scan on the same SQLite connection starved the view's
+  // load. The per-edit path stays scan-free too. See
+  // docs/plans/2026-06-17-instant-updates-on-large-databases.md.
 });
 const CACHED_VIEWS = ['PersonsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/groups', '/research-tasks', '/website'];
@@ -265,9 +268,18 @@ const mainAriaLabel = computed(() => {
   }
   return best ? t(best.key) : t('app.title');
 });
-const qualityErrorCount = ref(0);
+// Sidebar badges for /quality and /duplicates derive from the same Pinia stores
+// the respective views populate when the user visits them — no separate full-DB
+// scan fires on navigation (that contended with the views' own loads on the
+// single SQLite connection). The count mirrors error+warning quality findings
+// (matching QualityView's badge semantics) and the persons-duplicate-pair total.
+// Both stay at 0 (badge hidden) until the user first opens those pages.
+// See docs/plans/2026-06-17-instant-updates-on-large-databases.md.
+const qualityErrorCount = computed(() =>
+  qualityStore.results.filter(r => (r.severity === 'error' || r.severity === 'warning') && !isIgnored(r)).length
+);
+const duplicateCount = computed(() => duplicateCountStore.count);
 const openTaskCount = ref(0);
-const duplicateCount = ref(0);
 
 // Section dropdowns (horizontal mode). The same items as the vertical
 // sidebar's section labels, just grouped behind toggle buttons.
@@ -347,45 +359,18 @@ async function loadResearchBadge() {
   } catch { /* ignore */ }
 }
 
-async function loadQualityBadge() {
-  if (!window.api?.checks) return;
-  try {
-    const results = await window.api.checks.runAll() as Array<{ severity: string; personIds?: string[] }> | null;
-    if (results === null) return;
-    qualityErrorCount.value = results.filter(r => r.severity === 'error' || r.severity === 'warning').length;
-    // Persons-list "Kvalitet" column reads from a cache table that we
-    // refresh from the same runAll output. See plan
-    // 2026-05-09-persons-list-aggregate-columns.
-    if (window.api.persons?.refreshQualityIssueCounts) {
-      const counts: Record<string, number> = {};
-      for (const r of results) {
-        if (!r.personIds) continue;
-        for (const id of r.personIds) counts[id] = (counts[id] ?? 0) + 1;
-      }
-      try {
-        await window.api.persons.refreshQualityIssueCounts(counts);
-      } catch { /* cache refresh is best-effort */ }
-    }
-  } catch { /* ignore */ }
-}
-
-async function loadDuplicatesBadge() {
-  if (!window.api?.duplicates?.count) return;
-  try {
-    duplicateCount.value = await window.api.duplicates.count();
-  } catch { /* ignore */ }
-}
-
 let researchDebounce: ReturnType<typeof setTimeout> | null = null;
 
 function onDataImported() {
   dataVersionStore.increment();
   // Only the cheap research-task badge runs on the per-mutation path. The two
-  // full-DB aggregate scans (quality `runAll` > 5 s, `duplicates.count` ~4 s on
+  // full-DB aggregate scans (quality `runAll` > 5 s, duplicate detection ~4 s on
   // a 22k-person DB) are deliberately NOT scheduled here — they serialized on the
   // single SQLite connection and starved the visible-view reloads (chart/list/
-  // panel), which is what caused the ~5 s edit-to-chart lag. They recompute on
-  // db-open and on navigation to /quality and /duplicates instead. See plan
+  // panel), which is what caused the ~5 s edit-to-chart lag. The quality +
+  // duplicate sidebar badges instead derive from the QualityView /
+  // DuplicatesView Pinia stores, refreshed by those views' own (single)
+  // computation when the user is on them. See plan
   // docs/plans/2026-06-17-instant-updates-on-large-databases.md (T01/T02).
   if (researchDebounce) clearTimeout(researchDebounce);
   researchDebounce = setTimeout(loadResearchBadge, 400);
@@ -399,9 +384,9 @@ onMounted(() => {
   loadDefaultPerson();
   personNameOptions.init();
   linkRulesStore.init();
-  // Delay heavy quality checks so initial navigation/data loading isn't blocked
-  setTimeout(loadQualityBadge, 5000);
-  setTimeout(loadDuplicatesBadge, 5000);
+  // The quality + duplicate sidebar badges are populated by their views'
+  // Pinia stores on first visit (no boot-time full-DB scan). Only the cheap
+  // research-task badge runs on boot.
   setTimeout(loadResearchBadge, 1000);
   // Tauri-only: schedule a one-shot updater check 5s after mount. The
   // watcher on `updater.available` below fires the toast when a new
