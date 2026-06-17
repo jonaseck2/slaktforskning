@@ -1586,6 +1586,7 @@ export default {
     importError: 'Import failed.',
     exportSuccess: 'Exported: {file}',
     exportError: 'Export failed.',
+    exportRunning: 'Exporting…',
     importReportTitle: 'Import complete',
     importReportPersons: '{n} persons',
     importReportFamilies: '{n} families',

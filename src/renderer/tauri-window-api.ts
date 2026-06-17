@@ -862,14 +862,22 @@ export function mountWindowApi(db: Database): MountResult {
     if (r.canceled || !r.path) return { canceled: true };
     try {
       const exporterMod = await import('../gedcom/exporter');
-      const { ged, report } = await exporterMod.exportGedcom(getDb(), {
+      // Positional signature: exportGedcom(db, version, exportOptions?, onProgress?).
+      // The previous call passed an object as arg 2 — silently ignoring both the
+      // 7.0 version selection AND every export option. Threaded onProgress fans
+      // status messages out to the export-progress UI listeners.
+      const { ged, report } = await exporterMod.exportGedcom(
+        getDb(),
         version,
-        exportOptions: o?.exportOptions as Parameters<typeof exporterMod.exportGedcom>[1]['exportOptions'],
-      });
+        o?.exportOptions as Parameters<typeof exporterMod.exportGedcom>[2],
+        (m) => fireExportProgress(m),
+      );
       await unwrap(commands.fsWriteText(r.path, ged));
       return { exported: true, filePath: r.path, report };
     } catch (e) {
       return { canceled: false, error: String((e as Error)?.message || e) };
+    } finally {
+      fireExportProgress('');
     }
   };
 
@@ -895,6 +903,22 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.onHolgerProgress = subscribe('holger');
   api.import.onRootsmagicProgress = subscribe('rootsmagic');
   api.import.onGrampsProgress = subscribe('gramps');
+
+  // Export progress fan-out — mirrors the import-progress registry above.
+  // The exporters (gedcom / website / archive) thread an onProgress callback;
+  // each export binding calls `fireExportProgress(msg)` and the export UI
+  // subscribes via `window.api.export.onProgress(cb)`. A single shared channel
+  // is enough because only one export runs at a time. Empty string is the
+  // "done — clear the line" signal, fired in each binding's `finally`.
+  const exportProgressListeners: Array<(msg: string) => void> = [];
+  const fireExportProgress = (msg: string): void => {
+    for (const cb of exportProgressListeners) try { cb(msg); } catch { /* ignore */ }
+  };
+  if (!api.export) api.export = {};
+  api.export.onProgress = (cb: unknown) => {
+    if (typeof cb !== 'function') return;
+    exportProgressListeners.push(cb as (msg: string) => void);
+  };
 
   api.import.genneyCheckDocker = async () => ({ available: false });
   api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
@@ -1220,12 +1244,15 @@ export function mountWindowApi(db: Database): MountResult {
         getDb(),
         mediaReader,
         { gedcomVersion: version },
+        (m) => fireExportProgress(m),
       );
       const b64 = uint8ArrayToBase64(zipBytes);
       await unwrap(commands.fsWriteBytesBase64(r.path, b64));
       return { exported: true, filePath: r.path, report };
     } catch (e) {
       return { canceled: false, error: String((e as Error)?.message || e) };
+    } finally {
+      fireExportProgress('');
     }
   };
 
@@ -1389,7 +1416,7 @@ export function mountWindowApi(db: Database): MountResult {
           includeReports: false,
           includePrints: false,
         },
-      }) as {
+      }, (m) => fireExportProgress(m)) as {
         meta: Record<string, unknown>;
         media: Array<{ id: string; file_ref: string | null; format?: string | null }>;
         mediaLinks: Array<{ media_id: string }>;
@@ -1429,6 +1456,7 @@ export function mountWindowApi(db: Database): MountResult {
       const gzipped = gzipSync(textEncode(json), { level: 9 });
       const b64 = uint8ArrayToBase64(gzipped);
 
+      fireExportProgress('Writing site files…');
       const html = await unwrap(commands.websiteLoadStaticIndexHtml());
       const tag = `<script>window.__SNAPSHOT_GZ__=${JSON.stringify(b64)};</script>`;
       const injected = html.includes('</head>')
@@ -1446,6 +1474,8 @@ export function mountWindowApi(db: Database): MountResult {
         return { bundleMissing: true };
       }
       return { canceled: false, error: msg };
+    } finally {
+      fireExportProgress('');
     }
   };
 

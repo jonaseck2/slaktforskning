@@ -188,6 +188,12 @@ declare global {
         } | null>;
         export: () => Promise<{ path: string } | null>;
       };
+      export: {
+        openFolder: (folderPath: string) => Promise<{ ok: boolean }>;
+        // Fan-out for export progress messages (gedcom / website / archive).
+        // Empty string is the "done — clear the line" signal.
+        onProgress: (cb: (msg: string) => void) => void;
+      };
       import: {
         genneyCheckDocker: () => Promise<boolean>;
         genneySelectDerby: () => Promise<string | null>;

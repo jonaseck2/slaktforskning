@@ -1586,6 +1586,7 @@ export default {
     importError: 'Import misslyckades.',
     exportSuccess: 'Exporterat: {file}',
     exportError: 'Export misslyckades.',
+    exportRunning: 'Exporterar…',
     importReportTitle: 'Import klar',
     importReportPersons: '{n} personer',
     importReportFamilies: '{n} familjer',

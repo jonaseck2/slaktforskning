@@ -97,6 +97,7 @@
       >
         {{ exporting ? $t('htmlSite.exporting') : $t('htmlSite.export') }}
       </AppButton>
+      <p v-if="exporting && exportProgress" class="section-progress">{{ exportProgress }}</p>
       <p v-if="lastOutput" class="panel-success-hint">
         {{ $t('htmlSite.exportedTo') }} <code>{{ lastOutput }}</code>
       </p>
@@ -126,10 +127,12 @@ const siteTitle = defineModel<string>('siteTitle', { required: true });
 
 withDefaults(defineProps<{
   exporting: boolean;
+  exportProgress?: string;
   lastOutput: string | null;
   bundleMissing: boolean;
   mediaCount?: number | null;
 }>(), {
+  exportProgress: '',
   mediaCount: null,
 });
 

@@ -34,6 +34,7 @@
           v-model:includeMedia="includeMedia"
           v-model:siteTitle="siteTitle"
           :exporting="exporting"
+          :export-progress="exportProgress"
           :media-count="mediaCount"
           :last-output="lastOutput"
           :bundle-missing="bundleMissing"
@@ -67,6 +68,7 @@ const mediaPersonOnly = ref(true);
 const includeMedia = ref(true);
 const siteTitle = ref('Family Tree');
 const exporting = ref(false);
+const exportProgress = ref('');
 const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
 
@@ -199,6 +201,9 @@ watch(
 // Default the subject to the database's tree subject and kick off the first
 // preview as soon as we have a focus.
 onMounted(async () => {
+  // Subscribe to export progress (fanned out from api.website.export's
+  // buildSnapshot onProgress). Empty string clears the running line.
+  window.api?.export?.onProgress?.((msg: string) => { exportProgress.value = msg; });
   if (!focusPersonId.value) {
     try {
       const id = await window.api.db.getSetting('default_person_id') as string | null;
@@ -212,6 +217,7 @@ onMounted(async () => {
 
 async function exportSite() {
   exporting.value = true;
+  exportProgress.value = '';
   lastOutput.value = null;
   bundleMissing.value = false;
   try {
@@ -237,6 +243,7 @@ async function exportSite() {
     console.error('Export failed', e);
   } finally {
     exporting.value = false;
+    exportProgress.value = '';
   }
 }
 </script>

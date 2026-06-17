@@ -18,6 +18,8 @@
       <button @click="handleImport" :disabled="busy">{{ $t('importExport.archiveImportButton') }}</button>
     </div>
 
+    <p v-if="progress" class="section-progress">{{ progress }}</p>
+
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
@@ -115,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
@@ -123,7 +125,7 @@ import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import PersonPicker from '../PersonPicker.vue';
 
 declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+  api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
 };
 
 interface ExportReport {
@@ -157,6 +159,7 @@ interface ImportReport {
 const { t } = useI18n();
 const toast = useToast();
 const busy = ref(false);
+const progress = ref('');
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showExportReport = ref(false);
@@ -206,9 +209,15 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
+onMounted(() => {
+  // Mirrors the import-progress subscription pattern. Empty string clears.
+  window.api?.export?.onProgress?.((msg: string) => { progress.value = msg; });
+});
+
 async function handleExport() {
   if (!window.api || busy.value) return;
   busy.value = true;
+  progress.value = t('importExport.exportRunning');
   try {
     const result = (await window.api.archive.export()) as {
       exported?: boolean;
@@ -229,6 +238,7 @@ async function handleExport() {
     toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
+    progress.value = '';
   }
 }
 

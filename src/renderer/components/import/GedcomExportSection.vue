@@ -20,6 +20,8 @@
       <button @click="handleExportGedcom('7.0')" :disabled="busy">{{ $t('gedcom.export70Button') }}</button>
     </div>
 
+    <p v-if="progress" class="section-progress">{{ progress }}</p>
+
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
 
     <!-- Export report modal -->
@@ -55,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from '../modals/BaseSubPanel.vue';
@@ -63,13 +65,14 @@ import ExportOptionsPanel from '../ExportOptionsPanel.vue';
 import type { ExportOptions } from '../ExportOptionsPanel.vue';
 
 declare const window: Window & {
-  api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
+  api: Record<string, Record<string, (...args: unknown[]) => unknown>>;
 };
 
 const { t } = useI18n();
 const toast = useToast();
 const busy = ref(false);
 const exportOpts = ref<ExportOptions | null>(null);
+const progress = ref('');
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
 const showExportReport = ref(false);
@@ -87,9 +90,16 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
+onMounted(() => {
+  // Fan-out from the export bindings in tauri-window-api.ts. Empty string is
+  // the "done" signal — clear the running line.
+  window.api?.export?.onProgress?.((msg: string) => { progress.value = msg; });
+});
+
 async function handleExportGedcom(version: '5.5.1' | '7.0') {
   if (!window.api || busy.value) return;
   busy.value = true;
+  progress.value = t('importExport.exportRunning');
   try {
     const result = (await window.api.gedcom.export({ version, exportOptions: exportOpts.value ?? undefined })) as {
       exported?: boolean;
@@ -116,6 +126,7 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
     toast.error(t('errors.saveFailed'));
   } finally {
     busy.value = false;
+    progress.value = '';
   }
 }
 </script>
