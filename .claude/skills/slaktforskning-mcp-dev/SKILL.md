@@ -251,6 +251,26 @@ After a real MCP restart:
 
 **Restarting the Tauri app** — ask the user. Claude Code can't restart their app without their consent (it would close their unsaved work).
 
+### Never `ui_reload` while DB `invoke`s are in flight — it wedges the bridge
+
+`ui_reload` (or Cmd+R) fired *during* pending `window.api.*` calls is the fastest way to make the whole app **appear hung**: plain-JS `ui_eval` still works (`1 + 1` → `2`), but every DB-backed `invoke` (`persons.listPage`, `persons.create`, …) times out. Two compounding Tauri failure modes, both visible in the `npm start` log:
+
+- **`[TAURI] Couldn't find callback id … reloaded while Rust is running an asynchronous operation`** — the reload tore down the webview before in-flight `db_*` commands returned, so their responses land on a context with no registered callback. Those promises orphan and never resolve. (tauri-apps/tauri#9613)
+- **`IPC custom protocol failed, Tauri will now use the postMessage interface instead`** — a reload mid-`fetch` trips Tauri's fetch-based custom-protocol IPC; it falls back to the slower `window.ipc.postMessage` path, and that fallback is **sticky for the rest of the session**. Every later `invoke` is slower → looks like a hang. (tauri-apps/tauri#12835)
+
+**Another `ui_reload` does NOT recover it** — the sticky postMessage flag and the wedged callback state survive a renderer reload. Recovery is a **full app restart** (`npm start`), which the user must do.
+
+**How to apply:**
+- Don't fire `ui_reload` right after a burst of `ui_eval` / seed / mutation calls — let outstanding work settle first.
+- To see freshly-seeded data, prefer `ui_navigate` over `ui_reload`. Only reload when you actually edited renderer source (per the matrix above).
+- If DB `invoke`s start timing out while `ui_eval` of plain JS still works → the bridge is wedged → ask the user to restart the app (see next section). Don't keep reloading.
+
+### IPC has no client-side backpressure — bursts serialize on one DB mutex
+
+`src/renderer/db-shim.ts` fires every `invoke()` independently; `src-tauri/src/db.rs` runs each `db_*` command on a `spawn_blocking` thread, but all SQL serializes through a single global `Mutex<Connection>` (SQLite is single-connection by design). So a *burst* of concurrent calls — a per-row fan-out across a long list, or a chart fetching relationships node-by-node — becomes N webview→Rust round-trips (~1 ms IPC each) queued behind one lock. On the 22k-row DB that's the "1-2 s lock-up" the `db.rs` async-wrapper comment cites. It degrades; it doesn't deadlock.
+
+Fix with **fewer, bigger calls**, not more threads. In order of leverage: (1) **coalesce/bulk** — one SQL endpoint + microtask batching, already mandated by `.claude/rules/performance.md` ("per-row IPC fan-out — mandatory batching"; `src/renderer/stores/profilePic.ts` is the reference); (2) **concurrency cap** — gate dispatch with `p-limit`/`p-queue` when a fan-out can't be collapsed; (3) **Tauri Channel API** — stream one large ordered result instead of N invokes; (4) **cancel superseded work** — generation guard (`useEntityData` already does this) so stale in-flight requests are dropped.
+
 ### When the dev MCP looks dead, ask — don't curl
 
 If `ui_screenshot` / `ui_get_dom` / `ui_click` / any `ui_aria_*` tool starts returning `{"error":"Not found"}` for every selector, or hangs, or returns suspiciously empty results across multiple unrelated calls, **stop and ask the user to start/restart the MCP**. Do not fall back to `curl http://127.0.0.1:19241/...` as a workaround.
