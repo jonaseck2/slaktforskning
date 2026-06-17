@@ -40,6 +40,17 @@ Every dispatch prompt MUST tell the subagent:
 
 Replace "Tasks 1-N done in main" phrasing with: **"Main is at commit `<sha>`; rebase your worktree onto it. Commits 1-N from previous waves provide [list of artifacts]."** SHA gives a concrete anchor; "in main" reads as "work on main."
 
+### B7 — Perf-sensitive diffs get a `performance-reviewer` pass
+
+Any task whose diff touches `src/gedcom/`, `src/import/`, or `src/api/` (including
+`src/api/html_site/` and `src/api/archive_*`) gets a read-only `performance-reviewer`
+pass in addition to the code-quality review, BEFORE the dispatcher marks done. It
+checks the two failure modes in `.claude/rules/performance.md`: per-row DB queries in
+DB-scale loops (N+1) and long async handlers with no yield/progress. A confirmed N+1
+or missing-yield finding is a re-dispatch, not a note. The query-count guard
+(`tests/unit/export-perf.test.ts`) is the mechanical backstop; the reviewer catches
+what a new untested path would miss.
+
 ## How to use
 
 When dispatching a subagent (implementer, spec-reviewer, or code-quality-reviewer):

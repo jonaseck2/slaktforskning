@@ -91,10 +91,48 @@ output stays byte-identical. Reference implementation:
 fourteen per-row getters eliminated from the GEDCOM exporter).
 
 The per-concept GEDCOM emitters (`notes-emitter`, `translations-emitter`,
-`coverage-emitter`, `assoc-emitter`) still fetch per entity — acceptable while
-their row counts stay small, but any of them showing up in a profile means
-extending `ExportPrefetch` with that table, not adding a cache inside the
-emitter.
+`coverage-emitter`, `assoc-emitter`) **are now prefetched too** — `ExportPrefetch`
+carries notes-by-entity, associations-by-person, name/place translations, and
+source coverage, each passed into its emitter (the `emitNegationsForEntity` shape:
+optional prefetched param + standalone-fetch fallback). This shipped after a live
+profile of a 22 243-person tree showed the export not completing in 3 min at ~0%
+CPU — ~150k per-entity round-trips. Any NEW emitter follows the same rule: extend
+`ExportPrefetch` with its table, never add a per-entity fetch inside the loop.
+
+**This is now mechanically guarded.** `tests/unit/export-perf.test.ts` seeds a
+5 000-person DB, spies on `db.prepare`, and asserts the GEDCOM export issues
+`< 200` queries (O(tables), not O(persons)). A reintroduced per-row fetch blows the
+budget and fails CI. When you add a new export path or emitter, add its query-count
+assertion to that file.
+
+## Responsiveness budget — long async handlers must yield AND report progress
+
+Throughput (it's slow) and responsiveness (it feels dead) are different failures
+with different fixes. The `spawn_blocking` architecture keeps SQL off the UI thread,
+so a slow export does NOT freeze the renderer — but a multi-second operation with no
+feedback reads to the user as a hang. Two obligations on any IPC handler / async
+callback that iterates a DB-scale array:
+
+1. **Prefetched, not N+1.** Covered by the per-row-query rule above. This is the
+   throughput half.
+
+2. **Progress + yield for anything that can exceed ~1 s.** This is the responsiveness
+   half:
+   - Thread an optional `onProgress?: (msg: string) => void` and emit at phase
+     boundaries + periodically inside the hot loop (every ~500 entities). Match the
+     importer's plain-string convention; the renderer fans it out via the
+     `export:*Progress` / `import:*Progress` listener registry in
+     `src/renderer/tauri-window-api.ts`, and the UI shows a running line.
+   - For an unbounded in-process loop (e.g. resolving gazetteers per place), call the
+     canonical wall-clock yield primitive `makeYieldBudget(75)` from
+     `src/api/checks/checks-location.ts` so other IPCs interleave. Do NOT reimplement
+     a yield; do NOT yield by row count (row cost is unpredictable — wall-clock isn't).
+
+**Applies to** `src/gedcom/`, `src/import/`, and `src/api/` — including
+`src/api/html_site/` (website export) and `src/api/archive_*` (archive export), all
+under the `src/api/` load trigger above. Reference: the GEDCOM/website/archive
+exporters all carry `onProgress`; `buildSnapshot`'s gazetteer loop uses
+`makeYieldBudget`.
 
 ## Rule for DB fetch caching within a pass
 
