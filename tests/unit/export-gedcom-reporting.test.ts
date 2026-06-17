@@ -39,6 +39,16 @@ describe('GEDCOM export — ExportReport', async () => {
     expect(report.excluded).toEqual([]);
   });
 
+  it('fires onProgress with at least one phase message during an export', async () => {
+    const db = await createTestDb();
+    await createPerson(db, { given_name: 'Lars' });
+    const messages: string[] = [];
+    await exportGedcom(db, '5.5.1', undefined, (msg) => messages.push(msg));
+    expect(messages.length).toBeGreaterThan(0);
+    expect(messages).toContain('Exporting persons…');
+    expect(messages.every(m => typeof m === 'string' && m.length > 0)).toBe(true);
+  });
+
   it('counts persons, families, events, and sources in the report', async () => {
     const db = await createTestDb();
     const p = await createPerson(db, { given_name: 'Anna' });

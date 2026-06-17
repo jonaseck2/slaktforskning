@@ -44,6 +44,18 @@ describe('archive export', async () => {
     expect(gedContent).toContain('Svensson');
   });
 
+  it('fires onProgress with at least one phase message during an export', async () => {
+    await createPerson(db, { given_name: 'Prog', surname: 'Ress', sex: 'F' });
+    const outputPath = path.join(tmpDir, 'progress.zip');
+    const messages: string[] = [];
+    await exportArchive(db, outputPath, tmpDir, undefined, (msg) => messages.push(msg));
+    expect(messages.length).toBeGreaterThan(0);
+    // Both the forwarded GEDCOM-phase messages and the archive-level
+    // boundaries should be present.
+    expect(messages).toContain('Exporting persons…');
+    expect(messages).toContain('Compressing archive…');
+  });
+
   it('includes media files and rewrites paths in GEDCOM', async () => {
     const person = await createPerson(db, { given_name: 'Erik', surname: 'Johansson' });
 

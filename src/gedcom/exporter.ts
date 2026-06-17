@@ -190,7 +190,22 @@ function emitDate(
   }
 }
 
-export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5.1', exportOptions?: ExportOptions): Promise<{ ged: string; report: ExportReport }> {
+/**
+ * Optional progress reporting. Matches the importer's convention
+ * (`src/import/gedcom/import-core.ts` — `onProgress?: (msg: string) => void`):
+ * a human-readable status string emitted at phase boundaries and periodically
+ * inside the slow person loop. Forwarded to the renderer so the export
+ * progress bar can advance mid-export instead of appearing frozen. Optional —
+ * omitting it is a no-op with zero behaviour change.
+ */
+export type ExportProgressFn = (msg: string) => void;
+
+export async function exportGedcom(
+  db: Database,
+  version: '5.5.1' | '7.0' = '5.5.1',
+  exportOptions?: ExportOptions,
+  onProgress?: ExportProgressFn,
+): Promise<{ ged: string; report: ExportReport }> {
   const lines: string[] = [];
 
   // Resolve export options into a filtered dataset descriptor
@@ -267,6 +282,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   }
 
   // ── Repositories ───────────────────────────────────────────────────────────
+  onProgress?.('Exporting sources…');
   const sources = includeSources ? await listSources(db) : [];
   // Collect all repositories used by any source, deduplicated by repo id.
   // Per-source rows come from the prefetched source_repositories join.
@@ -369,6 +385,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   resetNoteXrefs();
 
   // ── Persons ────────────────────────────────────────────────────────────────
+  onProgress?.('Exporting persons…');
   const allPersons = await listPersons(db);
   const persons = allowedPersonIds
     ? allPersons.filter(p => allowedPersonIds.has(p.id))
@@ -509,6 +526,11 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
   for (let i = 0; i < persons.length; i++) {
     const p = persons[i];
+    // Periodic progress inside the slow INDI loop (every ~500 persons) so the
+    // UI bar advances on large trees rather than appearing frozen.
+    if (onProgress && i > 0 && i % 500 === 0) {
+      onProgress(`Exported ${i} / ${persons.length} persons`);
+    }
     const xr = `@I${i + 1}@`;
     lines.push(`0 ${xr} INDI`);
 
@@ -753,6 +775,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   // and `warnings` were all populated above (before the persons loop) so
   // INDI emission could write FAMC / FAMS pointers. The couple-FAM loop
   // here re-uses them; no second `listRelationships` query.
+  onProgress?.('Exporting families…');
   for (let i = 0; i < couples.length; i++) {
     const rel = couples[i];
     const xr = `@F${i + 1}@`;
@@ -965,6 +988,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   // Determine which places and media need top-level records. Sources of demand:
   //   - place-level citations (existing behaviour)
   //   - group_links (entity_type ∈ person/place/media) — new in this plan
+  onProgress?.('Exporting places, media and groups…');
   const allGroups = await listGroups(db);
   const groupLinksByGroup = pre.groupLinksByGroupId;
   const groupLinkedPlaceIds = new Set<string>();

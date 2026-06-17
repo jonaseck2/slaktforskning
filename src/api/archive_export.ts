@@ -23,6 +23,16 @@ export interface ArchiveExportOptions {
 }
 
 /**
+ * Optional progress reporting. Matches the GEDCOM exporter / importer
+ * convention (`onProgress?: (msg: string) => void`): a human-readable status
+ * string emitted at the archive's phase boundaries (GEDCOM generation, media
+ * copy, zip) — and forwarded through to the underlying GEDCOM export so its
+ * per-phase messages surface too. Optional — omitting it is a no-op with zero
+ * behaviour change.
+ */
+export type ArchiveProgressFn = (msg: string) => void;
+
+/**
  * Reader callback signature: given a file_ref relative path (as stored in
  * the DB, e.g. `family-media/photo.jpg`), return the file bytes or `null`
  * if the file is missing. Used by `exportArchiveToBytes` so the pure
@@ -41,10 +51,15 @@ export async function exportArchiveToBytes(
   db: Database,
   mediaReader: ArchiveMediaReader,
   options?: ArchiveExportOptions,
+  onProgress?: ArchiveProgressFn,
 ): Promise<{ zipBytes: Uint8Array; report: ArchiveExportReport }> {
   const version = options?.gedcomVersion ?? '5.5.1';
-  const { ged, report: gedcomReport } = await exportGedcom(db, version);
+  // Forward the GEDCOM exporter's own per-phase messages through the archive
+  // progress channel so the UI bar advances during the (dominant) GEDCOM
+  // generation phase, not just at the archive-level boundaries.
+  const { ged, report: gedcomReport } = await exportGedcom(db, version, undefined, onProgress);
 
+  onProgress?.('Collecting media files…');
   const allMedia = await listMedia(db);
   const zipEntries: Record<string, Uint8Array> = {};
   let mediaCount = 0;
@@ -97,6 +112,7 @@ export async function exportArchiveToBytes(
   zipEntries['family_tree.ged'] = new Uint8Array(Buffer.from(rewrittenGed, 'utf-8'));
 
   // Create zip archive
+  onProgress?.('Compressing archive…');
   const zipBytes = zipSync(zipEntries, { level: 6 });
 
   return { zipBytes, report: { mediaCount, missingMedia, gedcomReport } };
@@ -118,6 +134,7 @@ export async function exportArchive(
   outputPath: string,
   dbDir: string,
   options?: ArchiveExportOptions,
+  onProgress?: ArchiveProgressFn,
 ): Promise<ArchiveExportReport> {
   const mediaReader: ArchiveMediaReader = async (relPath) => {
     const absPath = path.resolve(dbDir, relPath);
@@ -129,7 +146,7 @@ export async function exportArchive(
     }
   };
 
-  const { zipBytes, report } = await exportArchiveToBytes(db, mediaReader, options);
+  const { zipBytes, report } = await exportArchiveToBytes(db, mediaReader, options, onProgress);
   fs.writeFileSync(outputPath, zipBytes);
   return report;
 }

@@ -27,6 +27,7 @@ import type {
   SourceCoverageEvent,
   Repository,
 } from '../types';
+import { makeYieldBudget } from '../checks/checks-location';
 import { redactPerson } from './redact';
 import { computeScope } from './scope';
 import type { ScopeOptions } from './scope';
@@ -74,8 +75,22 @@ export interface Snapshot {
   settings: Record<string, string>;
 }
 
-export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promise<Snapshot> {
+/**
+ * Optional progress reporting. Matches the GEDCOM exporter / importer
+ * convention (`onProgress?: (msg: string) => void`): a human-readable status
+ * string emitted at the major `queryAll` phase boundaries so the website
+ * export progress bar advances mid-build instead of appearing frozen on a
+ * large tree. Optional — omitting it is a no-op with zero behaviour change.
+ */
+export type SnapshotProgressFn = (msg: string) => void;
+
+export async function buildSnapshot(
+  db: Database,
+  opts: SnapshotOptions,
+  onProgress?: SnapshotProgressFn,
+): Promise<Snapshot> {
   // 1. Compute scope — the set of person IDs to include
+  onProgress?.('Selecting persons…');
   const scopeSet = await computeScope(db, opts.scope);
   const isEveryone = !!opts.scope.everyone;
 
@@ -117,6 +132,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   //    of the SELECT — short-circuit with a direct assignment.
   const everyoneNoExclude = isEveryone && !opts.options.excludeLiving;
 
+  onProgress?.('Collecting relationships and names…');
   const allRelationships = await queryAll<Relationship>(db, 'SELECT * FROM relationships');
   const relationships = everyoneNoExclude ? allRelationships : allRelationships.filter(r => {
     const p1ok = !r.person1_id || finalPersonIds.has(r.person1_id);
@@ -133,6 +149,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
 
   // Events: include events where at least one in-scope person participates,
   // or events linked to an in-scope relationship.
+  onProgress?.('Collecting events…');
   const allEventParticipants = await queryAll<EventParticipant>(db, 'SELECT * FROM event_participants');
   const allEvents = await queryAll<GenealogyEvent>(db, 'SELECT * FROM events');
 
@@ -154,6 +171,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   );
 
   // Places: include places referenced by scoped events
+  onProgress?.('Collecting places…');
   const referencedPlaceIds = new Set<string>(
     events.filter(e => e.place_id).map(e => e.place_id as string)
   );
@@ -176,9 +194,20 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
     gazetteers = [];
   }
 
-  const places: Place[] = placesRaw.map(p => {
-    if (p.latitude != null && p.longitude != null) return p;
-    if (gazetteers.length === 0) return p;
+  // Gazetteer resolution is pure CPU (no IPC) but unbounded — one
+  // `resolvePlace` per place over potentially thousands of places can hold
+  // the JS thread for seconds on a large tree, freezing the UI and starving
+  // concurrent IPCs. Bound it with the canonical 75ms wall-clock yield
+  // budget (`makeYieldBudget`, shared with the checks system) so the event
+  // loop interleaves other work between bursts. Prime Directive: resolved
+  // coordinates are computed render-time into the snapshot, never written
+  // back to the DB.
+  if (gazetteers.length > 0) onProgress?.('Resolving place coordinates…');
+  const yieldIfNeeded = makeYieldBudget();
+  const places: Place[] = [];
+  for (const p of placesRaw) {
+    if (p.latitude != null && p.longitude != null) { places.push(p); continue; }
+    if (gazetteers.length === 0) { places.push(p); continue; }
     // Build "Place, Parent, Grandparent" string for the resolver
     const parts: string[] = [p.name];
     let cur = p.parent_place_id;
@@ -189,11 +218,12 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
       cur = parent.parent_place_id;
     }
     const resolved = resolvePlace(parts.join(', '), gazetteers);
-    if (!resolved) return p;
-    return { ...p, latitude: resolved.lat, longitude: resolved.lon };
-  });
+    places.push(resolved ? { ...p, latitude: resolved.lat, longitude: resolved.lon } : p);
+    await yieldIfNeeded();
+  }
 
   // Citations: include those linked to scoped events/persons/relationships
+  onProgress?.('Collecting sources and citations…');
   const allCitations = await queryAll<Citation>(db, 'SELECT * FROM citations');
   const citations = allCitations.filter(c =>
     (c.event_id && scopedEventIds.has(c.event_id)) ||
@@ -213,6 +243,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
   let mediaRegions: MediaRegion[] = [];
 
   if (opts.options.includeMedia) {
+    onProgress?.('Collecting media…');
     const allMediaLinks = await queryAll<MediaLink>(db, 'SELECT * FROM media_links');
     const scopedMediaLinks = allMediaLinks.filter(ml => {
       if (ml.entity_type === 'person') return finalPersonIds.has(ml.entity_id);
@@ -236,6 +267,7 @@ export async function buildSnapshot(db: Database, opts: SnapshotOptions): Promis
 
   // Notes + note_links: include notes that link to any in-scope entity (persons,
   // events, relationships, places, sources, repositories, media).
+  onProgress?.('Collecting notes and metadata…');
   const allNoteLinks = await queryAll<NoteLink>(db, 'SELECT * FROM note_links');
   const linkedMediaIdsSet = new Set(media.map(m => m.id));
   const scopedNoteLinks = allNoteLinks.filter(nl => {

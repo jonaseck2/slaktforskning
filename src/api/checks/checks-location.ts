@@ -11,7 +11,7 @@ import { haversineKm } from './check-utils';
  * `budgetMs` of wall-clock time has elapsed since the last yield. Use one
  * instance per loop so each loop gets its own timer.
  */
-function makeYieldBudget(budgetMs = 75): () => Promise<void> {
+export function makeYieldBudget(budgetMs = 75): () => Promise<void> {
   let last = Date.now();
   // Cross-runtime yield: setImmediate exists in Node + Electron's worker
   // thread; Tauri's webview only has the browser scheduler. setTimeout(0)

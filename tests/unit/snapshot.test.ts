@@ -66,4 +66,18 @@ describe('buildSnapshot', async () => {
     expect(snap.persons[0].notes).toBe('');
     expect(snap.persons[0].redacted).toBe(true);
   });
+
+  it('fires onProgress with at least one phase message during a build', async () => {
+    const p = await createPerson(db, { given_name: 'Prog' });
+    const messages: string[] = [];
+    const snap = await buildSnapshot(db, {
+      siteTitle: 'T',
+      focusPersonId: p.id,
+      scope: { everyone: true },
+      options: { includeMedia: true, includeReports: false, includePrints: false, excludeLiving: false, redactLiving: false, mediaPersonOnly: false },
+    }, (msg) => messages.push(msg));
+    expect(snap.persons.length).toBe(1);
+    expect(messages.length).toBeGreaterThan(0);
+    expect(messages.every(m => typeof m === 'string' && m.length > 0)).toBe(true);
+  });
 });
