@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.271.0 — 2026-06-17
+
+- feat: exporting (GEDCOM, website, or archive) now shows a live progress line while it runs, so a large export no longer looks frozen
+- perf: GEDCOM export of large trees no longer runs a separate database query per person and event for notes, associations, and name/place translations — they are fetched in bulk up front (on a 22 000-person tree this removes ~150 000 tiny queries)
+- fix: exporting GEDCOM from the app now respects the GEDCOM 7.0 choice and your export options, which were previously ignored
+
 ## 0.270.6 — 2026-06-17
 
 - perf: editing data (a name, a date, a place) now updates the family-tree chart, lists, and panels right away even on databases with tens of thousands of people — the sidebar Quality and Duplicates badge counts no longer trigger a full-database scan on every edit (they refresh when you open those pages). Previously a single edit could take ~5 seconds to show up in the chart on a large tree.
@@ -45,27 +51,6 @@
 - feat(events): residence events speak the right language — the date fields read "Inflyttningsdatum" and "Eventuellt utflyttningsdatum", the misleading "single point in time" end-date hint is suppressed, and the participants section is titled "Övriga boende i bostaden". Other event types are unchanged. (Ben rapport 102 §1–§3)
 - feat(events): adding a participant to a not-yet-saved event no longer dead-ends on a static hint — the picker is always available, and choosing a person offers "Spara och fortsätt" to save the event and attach the participant in one step. (Ben rapport 102 §4)
 - feat(persons): the research-tasks section and sidebar entry are renamed "Fortsatt forskning" (Swedish), and the person panel now orders Tidslinje and Livskarta below the authored data, just before Fortsatt forskning and Kvalitet — authored facts first, derived views last. (Ben rapport 103 + 105)
-
-## 0.268.0 — 2026-06-06
-
-- feat(import): importing a Gramps **`.gpkg`** package now brings in its bundled media. Previously a `.gpkg` (a gzipped tar of the family-tree XML plus a `media/` folder) silently imported nothing — or, for tar.gz files, imported the people but dropped every photo. The importer now unpacks the tar (via `nanotar`), writes each media file into the database's `<dbname>-media/` folder, and stores a relative `file_ref`, so a `.gpkg` import behaves exactly like importing the `.gramps` XML and attaching the photos. Works from both the desktop file picker and the MCP `import_file` tool. The plain `.gramps` XML path is unchanged.
-
-## 0.267.1 — 2026-06-06
-
-- test(docs): close the verification hole on the OSS-launch quickstart — a new `tests/unit/readme-quickstart-coherence.test.ts` parses `QUICKSTART.md` and asserts the README links to it, that all 8 numbered steps each carry a sequentially-numbered screenshot, that every referenced `docs/quickstart/*.png` exists, and that no screenshot is orphaned. The OSS-launch demo + manual themselves shipped across 0.264.x; this completes its planned coverage and archives the plan.
-- fix(licenses): the third-party-licenses generator no longer hard-fails after the vue-router 5.1 bump. vue-router 5.1 declares `vite` as an optional peer dependency, which dragged the build toolchain (`vite` → `esbuild` → `@esbuild/<platform>`) into the `npm ls --omit=dev --all` production tree; the platform-binary packages ship no LICENSE file, so `npm run build:third-party-licenses` threw and the `scripts.npmScripts` / `scripts.thirdPartyLicenses` tests went red. The generator now prunes that build-only subtree explicitly (it is never bundled into the shipped app) and logs each prune.
-
-## 0.267.0 — 2026-06-02
-
-- feat(media): a media item can now record which sources it came from — the Media panel has a new "Källor" section listing the sources the media is linked to, with link-an-existing-source, create-and-link-in-one-step, and unlink. The link round-trips through GEDCOM 5.5.1 **and** 7.0 (emitted as `OBJE` under the `SOUR` record and read back on import — previously it was silently dropped on export), and shows reciprocally in the source's own Media section. Implements Framing B of the rapport-104 media-citations design; per-media page/confidence/transcription (Framing A) stays deferred.
-
-## 0.266.1 — 2026-06-02
-
-- fix(media): tagging a face whose person isn't already linked no longer lags before the tag appears — adding the media↔person link fired a full media-gallery re-query (`listPage` with its link/face COUNT joins) that contended with the panel's own reload on the single SQLite connection. The gallery's "N linked" badge now updates in place from a signed delta carried on `link-changed`; no extra DB round-trip on the critical path.
-
-## 0.266.0 — 2026-05-31
-
-- feat(updater): switch to the official `@tauri-apps/plugin-updater` JS wrapper and surface download progress — the About dialog now shows a "12.3 MB of 78 MB" bar while installing, instead of a fire-and-restart invoke with no feedback. Removes the unused `window.api.app.checkForUpdates` / `downloadAndInstallUpdate` polyfill in favour of a `useAppUpdater` composable that imports the wrapper directly.
 
 ---
 

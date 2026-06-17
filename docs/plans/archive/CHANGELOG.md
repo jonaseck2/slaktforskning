@@ -2,6 +2,27 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.268.0 — 2026-06-06
+
+- feat(import): importing a Gramps **`.gpkg`** package now brings in its bundled media. Previously a `.gpkg` (a gzipped tar of the family-tree XML plus a `media/` folder) silently imported nothing — or, for tar.gz files, imported the people but dropped every photo. The importer now unpacks the tar (via `nanotar`), writes each media file into the database's `<dbname>-media/` folder, and stores a relative `file_ref`, so a `.gpkg` import behaves exactly like importing the `.gramps` XML and attaching the photos. Works from both the desktop file picker and the MCP `import_file` tool. The plain `.gramps` XML path is unchanged.
+
+## 0.267.1 — 2026-06-06
+
+- test(docs): close the verification hole on the OSS-launch quickstart — a new `tests/unit/readme-quickstart-coherence.test.ts` parses `QUICKSTART.md` and asserts the README links to it, that all 8 numbered steps each carry a sequentially-numbered screenshot, that every referenced `docs/quickstart/*.png` exists, and that no screenshot is orphaned. The OSS-launch demo + manual themselves shipped across 0.264.x; this completes its planned coverage and archives the plan.
+- fix(licenses): the third-party-licenses generator no longer hard-fails after the vue-router 5.1 bump. vue-router 5.1 declares `vite` as an optional peer dependency, which dragged the build toolchain (`vite` → `esbuild` → `@esbuild/<platform>`) into the `npm ls --omit=dev --all` production tree; the platform-binary packages ship no LICENSE file, so `npm run build:third-party-licenses` threw and the `scripts.npmScripts` / `scripts.thirdPartyLicenses` tests went red. The generator now prunes that build-only subtree explicitly (it is never bundled into the shipped app) and logs each prune.
+
+## 0.267.0 — 2026-06-02
+
+- feat(media): a media item can now record which sources it came from — the Media panel has a new "Källor" section listing the sources the media is linked to, with link-an-existing-source, create-and-link-in-one-step, and unlink. The link round-trips through GEDCOM 5.5.1 **and** 7.0 (emitted as `OBJE` under the `SOUR` record and read back on import — previously it was silently dropped on export), and shows reciprocally in the source's own Media section. Implements Framing B of the rapport-104 media-citations design; per-media page/confidence/transcription (Framing A) stays deferred.
+
+## 0.266.1 — 2026-06-02
+
+- fix(media): tagging a face whose person isn't already linked no longer lags before the tag appears — adding the media↔person link fired a full media-gallery re-query (`listPage` with its link/face COUNT joins) that contended with the panel's own reload on the single SQLite connection. The gallery's "N linked" badge now updates in place from a signed delta carried on `link-changed`; no extra DB round-trip on the critical path.
+
+## 0.266.0 — 2026-05-31
+
+- feat(updater): switch to the official `@tauri-apps/plugin-updater` JS wrapper and surface download progress — the About dialog now shows a "12.3 MB of 78 MB" bar while installing, instead of a fire-and-restart invoke with no feedback. Removes the unused `window.api.app.checkForUpdates` / `downloadAndInstallUpdate` polyfill in favour of a `useAppUpdater` composable that imports the wrapper directly.
+
 ## 0.265.0 — 2026-05-23
 
 - feat(updater): About dialog now shows whether an update is available + a "Check for updates" / "Install update" pair, and a toast surfaces when the boot check finds a new version — previously the renderer logged "[updater] update available" to the console and there was no way for a user to install without DevTools
