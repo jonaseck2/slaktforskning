@@ -31,10 +31,28 @@ Reusable patterns in scope — every instance is a migration target:
 
 This is the IPC-backpressure issue documented in `.claude/skills/slaktforskning-mcp-dev/SKILL.md` ("IPC has no client-side backpressure — bursts serialize on one DB mutex"), surfaced while investigating the `[reactivity]` e2e failure on 2026-06-17. The chart reactivity itself was proven correct via dev MCP (rename → chart updates, just slowly). Do **not** "fix" this by widening the e2e timeout — that masks the latency the user goal targets.
 
+## T01 findings (2026-06-17, dev MCP against the 22,240-person `test.db`)
+
+Timed everything that fires on `data-changed`:
+
+| What runs on `data-changed` | Where | Cost on 22k DB |
+|---|---|---|
+| `checks.runAll()` (full quality scan) | `App.vue` `loadQualityBadge`, 2 s debounce | **> 5 s** (exceeded the dev-bridge eval timeout) |
+| `duplicates.count()` | `App.vue` `loadDuplicatesBadge`, 2 s debounce | **4.1 s** (returned 3032) |
+| `persons.listPage(50,…)` | every list view (`usePagedList`) | ~0.45 s |
+| `persons.listPage(1,…)` (count probe) | — | ~0.32 s |
+| lone-person `fetchHourglassTreePerson` | chart (`useEntityData`) | < 1 s |
+
+**Conclusion:** the visible-view reloads (chart/list/panel) are cheap. The lag is the two **full-DB aggregate scans** — quality `runAll` (>5 s) and `duplicates.count` (~4 s) — that fire on *every* mutation (2 s debounce) and serialize on the single `Mutex<Connection>`. A burst of edits (e.g. e2e seeding, or fast manual edits) leaves these scans running and starving the visible reloads and the next write. The chart reactivity itself is correct.
+
+**Coupling discovered:** `loadQualityBadge`'s `runAll()` does double duty — besides the badge number it refreshes the per-person `quality_issue_counts` cache the Persons-list "Kvalitet" column reads (`src/api/persons.ts:680`). So the fix must keep that cache fresh by some path, not just drop `runAll`.
+
+**Fix direction (T02):** decouple the two heavy scans from the per-edit `data-changed` path — recompute on db-open/switch and on navigation to `/quality` and `/duplicates` (those views already recompute), not on every mutation. Badge counts may lag slightly between visits (acceptable for a sidebar hint); they're never stale *while viewing* the relevant page. This removes the per-edit full-DB scan that causes the contention.
+
 ## Tasks
 
-- [ ] **T01 (Tier 1)** — Profile one `data-changed` cycle on a ≥20k-person DB (per the `performance-profiling` skill): time each consumer's reload and the `App.vue` badge recompute, identify the dominant cost(s). Capture a cpuprofile / timing table as evidence. Output: a short findings note committed under `docs/plans/` notes, naming the dominant cost(s). *(This replaces the guessing — the fix in T02+ is chosen from this evidence.)*
-- [ ] **T02 (Tier 1)** — Based on T01, apply the highest-leverage fix in the shared composables. Candidate levers (pick per evidence, don't apply blindly): coalesce the fan-out so consumers don't all reload redundantly; a renderer-side concurrency cap on DB `invoke`s so the visible view isn't starved; cancel superseded reloads (generation guard already in `useEntityData`); make any profiled-expensive aggregate (badge counts) incremental or deferred.
+- [x] **T01 (Tier 1)** — Profiled (table above). Dominant costs: `checks.runAll()` (>5 s) + `duplicates.count()` (~4 s) on every `data-changed`.
+- [ ] **T02 (Tier 1)** — Decouple the quality + duplicate badge recompute from per-edit `data-changed` in `App.vue`: compute on db-open/switch + on navigation to `/quality` / `/duplicates`, drop the 2 s per-mutation timers. Keep the `quality_issue_counts` cache refreshed on those same triggers so the Persons-list "Kvalitet" column stays correct when viewed. Research-task badge (cheap) may stay on `data-changed`.
 - [ ] **T03 (Tier 1)** — Add/extend the `[reactivity]` e2e assertion on a large seeded DB (Verification §2). Seed via the existing fixture helpers; assert the chart reflects a rename within the profiled-and-fixed window.
 - [ ] **T04 (Tier 1)** — Run `npm test`, `npm run build`, and `npx playwright test --project=reactivity` (plus `[crud]`/`[panels]` for regression); capture output.
 - [ ] **T-final (Tier 1)** — Invoke `/close-out` skill.
