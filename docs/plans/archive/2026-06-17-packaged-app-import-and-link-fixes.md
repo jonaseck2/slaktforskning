@@ -1,5 +1,7 @@
 # Packaged-app import and panel-link fixes
 
+> **CLOSED 2026-06-17 — superseded by [instant-updates-on-large-databases](archive/2026-06-17-instant-updates-on-large-databases.md), not separately executed.** All three target failures (gramps-gpkg `file_ref`, genney-gcc sidecar read, Media→Source reciprocal link) were **contention-induced flakes**, not logic bugs — the importer core was proven correct via the MCP/Node import path on 2026-06-17. Once that plan took the per-edit full-DB quality+duplicate scans off the critical path, the single SQLite connection was no longer saturated, and all three specs went green in a clean `npm run test:e2e:full` (**175 passed, 0 failed, 0 flaky** across all 8 projects, incl. `[imports]` gramps-gpkg + genney-gcc and `[panels]` Media→Source link). No code change was needed here. The tasks below are retained for the record but were not executed.
+
 ## 1. User goal
 
 In the packaged desktop app:
