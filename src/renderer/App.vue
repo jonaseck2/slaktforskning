@@ -218,6 +218,15 @@ watch(() => route.path, () => {
       ?? route.path;
     screenReader.announceRoute(name);
   }
+  // Recompute the heavy badge counts (and the per-person quality_issue_counts
+  // cache the Persons-list "Kvalitet" column reads) only when the user actually
+  // navigates to the page that shows them — not on every edit. Those views run
+  // their own checks on mount anyway, so the badge + cache end up fresh whenever
+  // the relevant page is viewed; the count may lag slightly between visits, which
+  // is acceptable for a sidebar hint. This keeps the per-edit path free of any
+  // full-DB scan. See docs/plans/2026-06-17-instant-updates-on-large-databases.md.
+  if (route.path === '/quality') loadQualityBadge();
+  if (route.path === '/duplicates') loadDuplicatesBadge();
 });
 const CACHED_VIEWS = ['PersonsView', 'SourcesView', 'PlacesView', 'GroupsView', 'ResearchTasksView'];
 const PANELED_ROUTES = ['/persons', '/media', '/places', '/reports', '/prints', '/sources', '/groups', '/research-tasks', '/website'];
@@ -367,19 +376,19 @@ async function loadDuplicatesBadge() {
   } catch { /* ignore */ }
 }
 
-let qualityDebounce: ReturnType<typeof setTimeout> | null = null;
 let researchDebounce: ReturnType<typeof setTimeout> | null = null;
-let duplicatesDebounce: ReturnType<typeof setTimeout> | null = null;
 
 function onDataImported() {
   dataVersionStore.increment();
-  // Debounce heavy checks so navigation/data loading IPC isn't blocked
-  if (qualityDebounce) clearTimeout(qualityDebounce);
-  qualityDebounce = setTimeout(loadQualityBadge, 2000);
+  // Only the cheap research-task badge runs on the per-mutation path. The two
+  // full-DB aggregate scans (quality `runAll` > 5 s, `duplicates.count` ~4 s on
+  // a 22k-person DB) are deliberately NOT scheduled here — they serialized on the
+  // single SQLite connection and starved the visible-view reloads (chart/list/
+  // panel), which is what caused the ~5 s edit-to-chart lag. They recompute on
+  // db-open and on navigation to /quality and /duplicates instead. See plan
+  // docs/plans/2026-06-17-instant-updates-on-large-databases.md (T01/T02).
   if (researchDebounce) clearTimeout(researchDebounce);
   researchDebounce = setTimeout(loadResearchBadge, 400);
-  if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
-  duplicatesDebounce = setTimeout(loadDuplicatesBadge, 2000);
 }
 
 onMounted(() => {
@@ -411,23 +420,21 @@ onMounted(() => {
   });
   window.api?.undo?.onChanged?.(() => {
     dataVersionStore.increment();
-    if (qualityDebounce) clearTimeout(qualityDebounce);
-    qualityDebounce = setTimeout(loadQualityBadge, 800);
+    // Heavy quality + duplicate scans intentionally excluded from this per-edit
+    // path — see onDataImported and the plan
+    // docs/plans/2026-06-17-instant-updates-on-large-databases.md (T02).
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
-    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
-    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
   });
   window.addEventListener('data-imported', onDataImported);
   window.addEventListener('app:openAbout', onOpenAboutEvent);
   window.api?.onDataChanged?.(() => {
     dataVersionStore.increment();
-    if (qualityDebounce) clearTimeout(qualityDebounce);
-    qualityDebounce = setTimeout(loadQualityBadge, 800);
+    // Heavy quality + duplicate scans intentionally excluded from this per-edit
+    // path — see onDataImported and the plan
+    // docs/plans/2026-06-17-instant-updates-on-large-databases.md (T02).
     if (researchDebounce) clearTimeout(researchDebounce);
     researchDebounce = setTimeout(loadResearchBadge, 400);
-    if (duplicatesDebounce) clearTimeout(duplicatesDebounce);
-    duplicatesDebounce = setTimeout(loadDuplicatesBadge, 800);
   });
 });
 
