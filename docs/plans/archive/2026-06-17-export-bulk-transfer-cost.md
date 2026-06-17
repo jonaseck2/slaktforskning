@@ -106,16 +106,16 @@ injectable renderer. Pick one in T02 before profiling.
 
 ## Tasks
 
-- [ ] **T01 (Tier 1)** — Build the clean timing harness (see T01 reconnaissance: instrument
+- [x] **T01 (Tier 1)** — Build the clean timing harness (see T01 reconnaissance: instrument
   the exporter and drive it via the headless e2e export path, or add a metrics-only dev-MCP
   timing tool). The bundled-app + `ui_eval` approach is a dead end for the export's own path.
-- [ ] **T02 (Tier 1)** — With the harness, measure GEDCOM export on `test.db` with per-phase
+- [x] **T02 (Tier 1)** — With the harness, measure GEDCOM export on `test.db` with per-phase
   timing (each prefetch query vs the emit loop, serialize vs transfer vs parse), record into
   `docs/baseline-perf/<date>/`. Identify the dominant transfer cost; write the fix design into
   this plan's scope before implementing. (Also check whether `persons.list()`'s 70 s+ is raw
   transfer or an internal N+1 — if the latter, it is a separate finding worth its own fix.)
-- [ ] **T03 (Tier 1)** — Implement the chosen db-shim / prefetch transfer fix; keep
+- [x] **T03 (Tier 1)** — Implement the chosen db-shim / prefetch transfer fix; keep
   `export-perf.test.ts` green and GEDCOM output byte-identical.
-- [ ] **T04 (Tier 1)** — Re-measure release-build wall-clock; confirm §1 target met; record
+- [x] **T04 (Tier 1)** — Re-measure release-build wall-clock; confirm §1 target met; record
   before/after in `docs/baseline-perf/`.
-- [ ] **T-final (Tier 1)** — Invoke `/close-out`.
+- [x] **T-final (Tier 1)** — Invoke `/close-out`.

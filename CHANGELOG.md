@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.271.1 — 2026-06-17
+
+- perf: exporting a 20 000+ person tree to GEDCOM now finishes in about a second instead of minutes
+- perf: actions that load the whole person list on a large tree are fast again, not multi-second
+
 ## 0.271.0 — 2026-06-17
 
 - feat: exporting (GEDCOM, website, or archive) now shows a live progress line while it runs, so a large export no longer looks frozen
@@ -43,14 +48,6 @@
 
 - fix(import): importing a Gramps `.gpkg` package with media through the desktop file picker no longer fails with "fs/promises.mkdir called in renderer". The 0.268.0 `.gpkg` handler called `consolidateMediaFolder` (which uses Node `fs`) in the renderer, where Node fs is unavailable — so any real `.gpkg`-with-media import via the UI threw. The bundled media is already written and its `file_ref` made relative inside the importer (as the `.zip` archive importer does), so the extra call was redundant as well as broken; it's removed. Importing via the MCP `import_file` tool was unaffected.
 - test(e2e): the `imports` suite now covers both Gramps native decoder paths with tiny fixtures — `gramps-small.gramps` (gzipped XML) and `gramps-small.gpkg` (tar.gz with a bundled image) — the latter asserting the media row lands with a relative `<dbname>-media/` ref. This new `.gpkg` case is what caught the regression above.
-
-## 0.269.0 — 2026-06-06
-
-- feat(citations): the citation entry form is clearer — its title now reads "Lägg till källhänvisning" / "Redigera källhänvisning", the page field is labelled "Sida / Plats / URL", the confidence section is "Källans tillförlitlighet", and the confidence buttons are ordered most-reliable-first (Primärkälla → Opålitlig). The source field shows a ▾ dropdown affordance so it's obvious it opens a list. (Ben rapport 100)
-- feat(events): the event modal's citation count now reads "(1)" instead of a bare "1", and the per-row delete control on both citation and participant rows is a trash icon instead of a ✕ close glyph. (Ben rapport 101)
-- feat(events): residence events speak the right language — the date fields read "Inflyttningsdatum" and "Eventuellt utflyttningsdatum", the misleading "single point in time" end-date hint is suppressed, and the participants section is titled "Övriga boende i bostaden". Other event types are unchanged. (Ben rapport 102 §1–§3)
-- feat(events): adding a participant to a not-yet-saved event no longer dead-ends on a static hint — the picker is always available, and choosing a person offers "Spara och fortsätt" to save the event and attach the participant in one step. (Ben rapport 102 §4)
-- feat(persons): the research-tasks section and sidebar entry are renamed "Fortsatt forskning" (Swedish), and the person panel now orders Tidslinje and Livskarta below the authored data, just before Fortsatt forskning and Kvalitet — authored facts first, derived views last. (Ben rapport 103 + 105)
 
 ---
 

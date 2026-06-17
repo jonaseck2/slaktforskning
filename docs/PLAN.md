@@ -10,7 +10,7 @@ This file lists what's **planned**. Two states only: planned (here) or done (arc
 
 Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
-- **Export finishes in seconds on a 20k+ tree** — the emitter N+1 is fixed and gated (shipped 0.271.0), but a live measurement showed the residual export cost is bulk `SELECT *` payload transfer through the db-shim, not per-row queries. This plan owns a clean release-build measurement + the transfer optimization until a 22k-person GEDCOM export actually completes in seconds. [`plans/2026-06-17-export-bulk-transfer-cost.md`](plans/2026-06-17-export-bulk-transfer-cost.md)
+_None currently planned._
 
 ---
 
