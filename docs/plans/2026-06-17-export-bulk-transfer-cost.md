@@ -22,21 +22,33 @@ queries on a 22k tree move millions of cells across the bridge.
 
 ### In scope
 
-- **A clean, trustworthy measurement first (Rule Zero).** Before optimizing: capture the
-  GEDCOM export wall-clock on `export-import/test.db` in a **release** build (`npm run
-  build:bin`), with the renderer NOT also running heavy reactive views (or with the cost of
-  that contention measured separately). Record per-phase timing (each prefetch query vs the
-  emit loop) into `docs/baseline-perf/`. The debug-build + concurrent-app numbers in the
-  sibling plan's baseline are explicitly NOT the verdict.
-- **The db-shim bulk-transfer path.** `src/renderer/db-shim.ts` `Statement.all()` /
-  `db_all` and the Rust `db_all` command in `src-tauri/src/db.rs` — how a large result set
-  is serialized (serde_json row-by-row?) and transferred. Candidate fixes, chosen by what
-  the profile shows: narrower `SELECT` column lists in `prefetchExportData` (don't ship
-  columns the exporter never reads), a more compact transfer encoding, or chunked/streamed
-  reads. Pick the fix from the profile, not from this list.
-- **The same floor affects every bulk consumer**, not just export — checks, the website
-  snapshot, any `queryAll` over a DB-scale table. A fix at the db-shim layer benefits all;
-  scope the measurement to confirm export is the worst case before generalizing.
+- **A clean, trustworthy measurement first (Rule Zero).** ✅ DONE (T01/T02). Release build
+  (`npm run build:bin`), no concurrent reactive app, per-query timing recorded in
+  [`docs/baseline-perf/2026-06-17/export-bulk-transfer.md`](../baseline-perf/2026-06-17/export-bulk-transfer.md).
+
+- **Measurement result — the transfer hypothesis is FALSIFIED.** The db-shim bulk-transfer
+  floor this plan was written to fix **does not exist** at 22k scale. Breakdown of the 131 s
+  export: **130.5 s (99.5 %) is a single query** — `listPersons`'s per-row correlated
+  `EXISTS` subquery (`livingSqlExpr`, `src/api/personLiving.ts`) projected over all 22 243
+  persons, O(persons × events). Every genuine bulk-transfer query is fast: **200 774 rows
+  crossed the IPC boundary in < 600 ms combined**; the JS emit loop is 279 ms. The CPU
+  signature is Rust-host 100 % / WebView idle — `rusqlite` evaluating the correlated
+  subquery, not `serde_json` transfer cost. (The recon's ~0 %-CPU / I/O-bound reading was a
+  debug-build + concurrent-app artifact.)
+
+- **The actual fix (single-query algorithmic change, NOT a transport change).** Replace the
+  inline `livingSqlExpr` in the **un-paged** `listPersons` (`src/api/persons.ts`) with the
+  bulk set-membership derivation that already exists in `personLiving.ts` —
+  `loadLivingDerivation` (two O(events) queries) + `isLivingDerived` (computed in JS). The
+  two derivations are semantically identical (deceased on death/burial/cremation event, or
+  birth year below the 120-year cutoff), so GEDCOM output stays byte-identical. This fixes
+  the export AND `window.api.persons.list()` (the recon's 70 s+ observation — same query) in
+  one place. No db-shim/columnar/raw-bytes/narrow-SELECT change is warranted.
+
+- **Scope of the `living`-in-`listPersons` fix.** Only the un-paged `listPersons` pays the
+  cost (correlated subquery × 22 243 output rows). `listPersonsPage`, `getPerson`, and
+  `searchPersons` keep `livingSqlExpr` — each evaluates it for ≤ a page/result-limit of
+  output rows (≤ 50), so it is trivially fast there and changing them is unwarranted.
 
 ### Scope deviations
 
