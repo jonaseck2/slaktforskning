@@ -85,6 +85,32 @@ this scale: 200 774 rows transferred in < 600 ms. No columnar/raw-bytes/narrow-S
 transport change is warranted. The fix is a single-query algorithmic change in
 `listPersons`. See the plan's updated §2 Scope.
 
-## After
+## After (fix: `listPersons` uses bulk `loadLivingDerivation` instead of inline `livingSqlExpr`)
 
-See `## After` appended by T04.
+Same harness, same `test.db`, rebuilt release binary. Three consecutive runs:
+
+```
+run 1:  totalMs 967   queryMsSum 679   emitMsApprox 288
+run 2:  totalMs 935   queryMsSum 659   emitMsApprox 276
+run 3:  totalMs 904   queryMsSum 648   emitMsApprox 256
+gedBytes: 17 481 504  (IDENTICAL to the before-run — byte-identical output)
+```
+
+| | Before | After | Δ |
+|---|---:|---:|---:|
+| **Total export** | 131 260 ms | **904–967 ms** | **≈ 135× faster** |
+| `listPersons` query | 130 546 ms | 200 ms | ≈ 650× faster |
+| new `loadLivingDerivation` queries | — | 15 ms (deceased) + 28 ms (birth-year MIN) | — |
+| rows transferred | 200 774 | 226 846 | +26k (the two derivation queries) |
+| `gedBytes` | 17 481 504 | 17 481 504 | identical |
+
+The per-row correlated subquery (130.5 s) is gone; the persons SELECT is now a plain
+projection + name join (200 ms) plus two O(events) set-membership queries (43 ms total).
+
+**§1 user goal MET:** GEDCOM 5.5.1 export on the 22 243-person tree completes in **< 1 s**
+(target was < 15 s) — fast enough that the progress line barely moves.
+
+**Bonus (T02 sub-question answered):** `window.api.persons.list()` — the recon's 70 s+
+observation — routes through the same `listPersons` and now returns in **237 ms**. The
+70 s+ was the correlated subquery (per-row scan), NOT raw transfer.
+

@@ -2,7 +2,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import { v4 as uuid } from 'uuid';
 import type { Person, PersonName, PersonIdentifier } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
-import { livingSqlExpr } from './personLiving';
+import { livingSqlExpr, loadLivingDerivation, isLivingDerived } from './personLiving';
 
 /**
  * SQL fragment returning the id of the *displayed* name for a person.
@@ -287,15 +287,25 @@ export function getDisplayGivenName(name: { given_name: string | null; preferred
 }
 
 export async function listPersons(db: Database): Promise<(Person & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null })[]> {
-  type Row = Omit<Person, 'living'> & { living: number; given_name: string; surname: string; preferred_name: string | null; nickname: string | null };
+  // `living` is derived in JS via the bulk set-membership derivation
+  // (loadLivingDerivation: two O(events) queries) rather than the inline
+  // per-row correlated `livingSqlExpr`. Over the full un-paged person list the
+  // correlated subquery is O(persons × events) — on a 22k tree it dominated the
+  // GEDCOM export at 130s of a 131s run (docs/baseline-perf/2026-06-17/
+  // export-bulk-transfer.md). isLivingDerived is the exact JS equivalent of
+  // livingSqlExpr, so the derived value is identical. The paged listPersonsPage
+  // / getPerson / searchPersons keep livingSqlExpr — they evaluate it for ≤ a
+  // page of output rows, where it is trivially fast.
+  type Row = Omit<Person, 'living'> & { given_name: string; surname: string; preferred_name: string | null; nickname: string | null };
   const rows = await queryAll<Row>(db, `
-    SELECT p.*, ${livingSqlExpr('p')} AS living,
+    SELECT p.*,
            pn.given_name, pn.surname, pn.preferred_name, pn.nickname
     FROM persons p
     LEFT JOIN person_names pn ON pn.id = ${displayedNameIdSql('p.id')}
     ORDER BY pn.surname, pn.given_name
   `);
-  return rows.map(r => ({ ...r, living: r.living === 1 }));
+  const livingDerivation = await loadLivingDerivation(db);
+  return rows.map(r => ({ ...r, living: isLivingDerived(r.id, livingDerivation) }));
 }
 
 export async function updatePerson(
