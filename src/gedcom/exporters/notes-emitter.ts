@@ -26,7 +26,7 @@
  */
 
 import type { Database } from 'node-sqlite3-wasm';
-import type { NoteEntityType } from '../../api/types';
+import type { Note, NoteEntityType, NoteLink } from '../../api/types';
 import { getNotesForEntity, listNotes, getEntitiesForNote, getNote } from '../../api/notes';
 
 // ── Module-scoped xref allocation (per export call, reset by caller) ────────
@@ -70,8 +70,9 @@ export async function emitNotesForEntity(
   baseLevel: number,
   version: '5.5.1' | '7.0',
   lines: string[],
+  prefetchedNotes?: Note[],
 ): Promise<void> {
-  const notes = await getNotesForEntity(db, entityType, entityId);
+  const notes = prefetchedNotes ?? await getNotesForEntity(db, entityType, entityId);
   for (const note of notes) {
     if (version === '7.0') {
       let xr = noteXref.get(note.id);
@@ -108,12 +109,16 @@ export async function emitSharedNoteRecords(
   version: '5.5.1' | '7.0',
   lines: string[],
   report: { warnings: string[] },
+  prefetchedNotes?: Note[],
+  prefetchedLinksByNoteId?: Map<string, NoteLink[]>,
 ): Promise<void> {
   if (version === '5.5.1') {
     // Walk every notes row and disclose shared ones.
-    const allNotes = await listNotes(db);
+    const allNotes = prefetchedNotes ?? await listNotes(db);
     for (const note of allNotes) {
-      const links = await getEntitiesForNote(db, note.id);
+      const links = prefetchedLinksByNoteId
+        ? (prefetchedLinksByNoteId.get(note.id) ?? [])
+        : await getEntitiesForNote(db, note.id);
       if (links.length > 1) {
         report.warnings.push(
           `Shared note "${note.text.slice(0, 40)}${note.text.length > 40 ? '…' : ''}" `
@@ -125,9 +130,14 @@ export async function emitSharedNoteRecords(
     }
     return;
   }
-  // 7.0: emit one SNOTE record per allocated xref.
+  // 7.0: emit one SNOTE record per allocated xref. When the prefetched note
+  // list is supplied, resolve each note from an in-memory Map (O(1)) instead
+  // of a per-xref getNote query.
+  const notesById = prefetchedNotes
+    ? new Map(prefetchedNotes.map(n => [n.id, n]))
+    : null;
   for (const [noteId, xr] of noteXref) {
-    const note = await getNote(db, noteId);
+    const note = notesById ? notesById.get(noteId) : await getNote(db, noteId);
     if (!note) continue;
     emitNoteText(lines, 0, `${xr} SNOTE`, note.text);
     if (note.language) lines.push(`1 LANG ${note.language}`);

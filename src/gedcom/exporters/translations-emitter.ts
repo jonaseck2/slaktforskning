@@ -19,6 +19,7 @@
  */
 
 import type { Database } from 'node-sqlite3-wasm';
+import type { NameTranslation, PlaceTranslation } from '../../api/types';
 import { getTranslationsForName, getTranslationsForPlace } from '../../api/translations';
 
 interface WarningSink {
@@ -45,8 +46,9 @@ export async function emitNameTranslations(
   version: '5.5.1' | '7.0',
   lines: string[],
   report?: WarningSink,
+  prefetchedTranslations?: NameTranslation[],
 ): Promise<void> {
-  const translations = await getTranslationsForName(db, personNameId);
+  const translations = prefetchedTranslations ?? await getTranslationsForName(db, personNameId);
   if (translations.length === 0) return;
 
   if (version === '7.0') {
@@ -92,8 +94,9 @@ export async function emitPlaceTranslations(
   version: '5.5.1' | '7.0',
   lines: string[],
   report?: WarningSink,
+  prefetchedTranslations?: PlaceTranslation[],
 ): Promise<void> {
-  const translations = await getTranslationsForPlace(db, placeId);
+  const translations = prefetchedTranslations ?? await getTranslationsForPlace(db, placeId);
   if (translations.length === 0) return;
 
   if (version === '7.0') {

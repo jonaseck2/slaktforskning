@@ -202,7 +202,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
   // One bulk fetch per table, grouped into Maps — replaces per-entity api/
   // getters inside the persons / couples / sources / groups loops below.
-  const pre = await prefetchExportData(db, { includeSources, includeMedia });
+  const pre = await prefetchExportData(db, { includeSources, includeMedia, includeNotes });
 
   if (version === '7.0') {
     lines.push('0 HEAD', '1 GEDC', '2 VERS 7.0');
@@ -303,7 +303,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     if (repo.web) lines.push(`1 WWW ${repo.web}`);
     if (repo.notes) lines.push(`1 NOTE ${repo.notes}`);
     // T04: shared notes attached to this repository
-    if (includeNotes) await emitNotesForEntity(db, 'repository', repo.id, 1, version, lines);
+    if (includeNotes) await emitNotesForEntity(db, 'repository', repo.id, 1, version, lines, pre.notesByEntity.get(mediaEntityKey('repository', repo.id)) ?? []);
   }
 
   // ── Sources ────────────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       if (repoXr) lines.push(`1 REPO ${repoXr}`);
     }
     // T08: emit SOUR/DATA/EVEN coverage events (lossless under 5.5.1 + 7.0).
-    await emitSourceCoverageEvents(db, src.id, 1, version, lines);
+    await emitSourceCoverageEvents(db, src.id, 1, version, lines, pre.coverageBySourceId.get(src.id) ?? [], pre.placeById);
     // Rapport 104 (framing B): emit OBJE under SOUR for media→source links so
     // they round-trip. `OBJE` under SOURCE_RECORD is spec-legal in 5.5.1 and 7.0.
     if (includeMedia) emitMediaBlocks(lines, pre, 'source', src.id, 1);
@@ -550,7 +550,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
         }
       }
       // T07 — NAME TRAN: 7.0 lossless; 5.5.1 degrades to additional 1 NAME blocks (handled inside emitter).
-      await emitNameTranslations(db, n.id, 2, version, lines, { warnings });
+      await emitNameTranslations(db, n.id, 2, version, lines, { warnings }, pre.nameTranslationsByNameId.get(n.id) ?? []);
     }
 
     // T09 — Sex X (intersex): GEDCOM 7.0 spec allows X; 5.5.1 only M/F/U.
@@ -608,7 +608,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
-          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings });
+          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;
         }
       }
@@ -634,7 +634,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       }
       if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
       // T04: shared notes attached to this event
-      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines);
+      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines, pre.notesByEntity.get(mediaEntityKey('event', ev.id)) ?? []);
       // Collect ASSO blocks for non-primary participants in this event
       for (const part of participants) {
         if (part.person_id === p.id) continue;
@@ -742,8 +742,8 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
     // T02 per-concept emitter hooks (stubs until Phase 2). The orchestration
     // surface exists so T04–T07 can fill the bodies without re-touching the
     // INDI block here.
-    await emitNotesForEntity(db, 'person', p.id, 1, version, lines);
-    await emitPersonAssociations(db, p.id, 1, version, personXref, lines);
+    await emitNotesForEntity(db, 'person', p.id, 1, version, lines, pre.notesByEntity.get(mediaEntityKey('person', p.id)) ?? []);
+    await emitPersonAssociations(db, p.id, 1, version, personXref, lines, pre.associationsByPersonId.get(p.id) ?? []);
     await emitNegationsForEntity(db, 'person', p.id, 1, version, lines, warnings, events);
   }
 
@@ -878,7 +878,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
           lines.push(`2 PLAC ${place.name}`);
           emitPlaceSubTags(lines, place, 3);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
-          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings });
+          await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;
         }
       }
@@ -901,7 +901,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
       }
       if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
       // T04: shared notes attached to this family event
-      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines);
+      if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines, pre.notesByEntity.get(mediaEntityKey('event', ev.id)) ?? []);
     }
 
     // Relationship-level citations
@@ -918,7 +918,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
 
     // T02 per-concept emitter hooks — relationship-level notes + negations
     // (stubs until T04 / T06).
-    await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines);
+    await emitNotesForEntity(db, 'relationship', rel.id, 1, version, lines, pre.notesByEntity.get(mediaEntityKey('relationship', rel.id)) ?? []);
     await emitNegationsForEntity(db, 'relationship', rel.id, 1, version, lines, warnings, famEvents);
   }
 
@@ -1065,7 +1065,7 @@ export async function exportGedcom(db: Database, version: '5.5.1' | '7.0' = '5.5
   // warnings (5.5.1). Must run AFTER every per-entity emit call so the
   // xref allocator has seen every reference, and BEFORE the 0 TRLR terminator.
   if (includeNotes) {
-    await emitSharedNoteRecords(db, version, lines, { warnings });
+    await emitSharedNoteRecords(db, version, lines, { warnings }, pre.allNotes, pre.noteLinksByNoteId);
   }
 
   lines.push('0 TRLR');

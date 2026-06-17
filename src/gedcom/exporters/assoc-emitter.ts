@@ -25,6 +25,7 @@
  */
 
 import type { Database } from 'node-sqlite3-wasm';
+import type { PersonAssociation } from '../../api/types';
 import { getAssociationsForPerson } from '../../api/person_associations';
 
 /**
@@ -48,8 +49,9 @@ export async function emitPersonAssociations(
   version: '5.5.1' | '7.0',
   personXref: Map<string, string>,
   lines: string[],
+  prefetchedAssociations?: PersonAssociation[],
 ): Promise<void> {
-  const assocs = await getAssociationsForPerson(db, ownerPersonId);
+  const assocs = prefetchedAssociations ?? await getAssociationsForPerson(db, ownerPersonId);
   if (assocs.length === 0) return;
 
   const roleTag = version === '7.0' ? 'ROLE' : 'RELA';

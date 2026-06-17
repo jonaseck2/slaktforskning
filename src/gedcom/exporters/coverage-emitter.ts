@@ -9,6 +9,7 @@
  */
 
 import type { Database } from 'node-sqlite3-wasm';
+import type { Place, SourceCoverageEvent } from '../../api/types';
 import { getCoverageForSource } from '../../api/source_coverage';
 import { getPlace } from '../../api/places';
 
@@ -32,8 +33,10 @@ export async function emitSourceCoverageEvents(
   baseLevel: number,
   _version: '5.5.1' | '7.0',
   lines: string[],
+  prefetchedRows?: SourceCoverageEvent[],
+  prefetchedPlaceById?: Map<string, Place>,
 ): Promise<void> {
-  const rows = await getCoverageForSource(db, sourceId);
+  const rows = prefetchedRows ?? await getCoverageForSource(db, sourceId);
   if (rows.length === 0) return;
 
   lines.push(`${baseLevel} DATA`);
@@ -47,7 +50,9 @@ export async function emitSourceCoverageEvents(
       lines.push(`${baseLevel + 2} DATE TO ${row.date_value_to}`);
     }
     if (row.place_id) {
-      const place = await getPlace(db, row.place_id);
+      const place = prefetchedPlaceById
+        ? (prefetchedPlaceById.get(row.place_id) ?? null)
+        : await getPlace(db, row.place_id);
       if (place?.name) {
         lines.push(`${baseLevel + 2} PLAC ${place.name}`);
       }
