@@ -68,14 +68,40 @@ plan is not done — keep profiling and cutting transfer cost.
 - Reference: `docs/baseline-perf/2026-06-17/summary.md` "After" section documents the
   ~0 %-CPU I/O-bound observation and the raw-bulk-read localization that motivated this plan.
 
+## T01 reconnaissance (2026-06-17, recorded mid-session)
+
+Initial measurement attempts established two things and hit one obstacle:
+
+1. **The bottleneck is real in a release build, not a debug artifact.** A release binary was
+   built and driven (renderer switched to `test.db` via `window.api.db.switchTo`). A single
+   `window.api.persons.list()` (22 243 rows + joined names — a representative large-payload
+   IPC) ran **70 s+ and had not returned** when stopped. Large-payload transfer is slow even
+   in release. (Caveat: `persons.list()` is the known-heavy un-paged path and may carry its
+   own cost beyond raw transfer — it is a noisy proxy, not the export's own path.)
+2. **Measurement obstacle to solve FIRST.** The export's real code path
+   (`exportGedcom`/`prefetchExportData`) cannot be timed cleanly with the tools used so far:
+   the bundled release app serves no `/src/` modules (module-script injection fails), the
+   export button needs a native save dialog (hangs headless), and the dev-MCP `export_gedcom`
+   tool closes the connection on the multi-MB GEDCOM payload. The debug Vite app *can* inject
+   modules but runs the Rust host in debug profile (slow serde), confounding the number.
+
+So T01/T02 must begin by building a **clean, driveable timing harness**, then measure. Options
+to weigh: (a) add temporary per-phase `console.time` instrumentation inside `exportGedcom` +
+`prefetchExportData` and run via the e2e website/GEDCOM-export path (which already handles the
+save dialog in headless mode); (b) a dev-MCP raw-query / export-timing tool that returns only
+metrics, not the payload; (c) `tauri dev --release`-style config to get release Rust + an
+injectable renderer. Pick one in T02 before profiling.
+
 ## Tasks
 
-- [ ] **T01 (Tier 1)** — Build a release binary (`npm run build:bin`), run the GEDCOM export
-  on `test.db` with per-phase timing (prefetch-per-query vs emit loop), record into
-  `docs/baseline-perf/<date>/`. This number is the real baseline; the debug number is not.
-- [ ] **T02 (Tier 1)** — From the profile, identify the dominant transfer cost (which
-  query/queries, serialization vs transfer vs parse) and write the fix's design into this
-  plan's scope before implementing.
+- [ ] **T01 (Tier 1)** — Build the clean timing harness (see T01 reconnaissance: instrument
+  the exporter and drive it via the headless e2e export path, or add a metrics-only dev-MCP
+  timing tool). The bundled-app + `ui_eval` approach is a dead end for the export's own path.
+- [ ] **T02 (Tier 1)** — With the harness, measure GEDCOM export on `test.db` with per-phase
+  timing (each prefetch query vs the emit loop, serialize vs transfer vs parse), record into
+  `docs/baseline-perf/<date>/`. Identify the dominant transfer cost; write the fix design into
+  this plan's scope before implementing. (Also check whether `persons.list()`'s 70 s+ is raw
+  transfer or an internal N+1 — if the latter, it is a separate finding worth its own fix.)
 - [ ] **T03 (Tier 1)** — Implement the chosen db-shim / prefetch transfer fix; keep
   `export-perf.test.ts` green and GEDCOM output byte-identical.
 - [ ] **T04 (Tier 1)** — Re-measure release-build wall-clock; confirm §1 target met; record
