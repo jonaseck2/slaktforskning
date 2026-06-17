@@ -47,7 +47,36 @@ a parameter (exporter.ts L747). T03 applies that same pattern to the five above.
 
 ## After
 
-To be filled by T07: re-run the same `ui_eval` harness on `export-import/test.db`, record
-wall-clock; record the post-fix `export-perf.test.ts` query count. The plan's Verification
-expects the query-count row to drop from 40 020 → under 200, and the live export wall-clock
-to drop from "did not finish in 3 min" to under 15 s.
+### Deterministic (clean, isolated — in-memory, no IPC)
+
+- `tests/unit/export-perf.test.ts` query count: **40 020 → 27** on the 5 000-person seed.
+  The emitter N+1 is eliminated and mechanically gated (`< 200` budget). The 5.5.1
+  exporter now issues O(tables) queries, not O(persons).
+- GEDCOM golden / round-trip / fidelity suites: **all pass, byte-identical** — the
+  prefetch refactor changed how rows are fetched, not what is emitted.
+
+### Live 22k-tree wall-clock (debug build) — INCONCLUSIVE, a second bottleneck found
+
+Re-measuring `exportGedcom` on `test.db` via the dev-MCP harness did NOT cleanly confirm
+the "under 15 s" target. The run stayed slow (minutes) at **~0–3 % CPU on both the Rust
+host and the WebView process** — i.e. still I/O-bound, not CPU-bound. A drill-down (timing
+raw `SELECT *` reads of `events`/`person_names`/`relationships` + `prefetchExportData`)
+was itself slow, localizing the residual cost to **bulk-payload transfer through the
+db-shim** (tens of thousands of rows per query, serialized over IPC), NOT the per-entity
+round-trips this plan removed.
+
+Two confounds make this number untrustworthy as a verdict on the fix:
+1. **Debug build** — `rusqlite` row extraction + `serde_json` are unoptimized; a release
+   build serializes far faster. The before-baseline was also debug, so the *relative*
+   improvement (150k round-trips removed) is real, but the *absolute* "seconds" target
+   can't be judged on debug.
+2. **Concurrent reactive app** — the measurement ran against a live renderer (PersonsView +
+   open panel) sharing the single Rust `Mutex<Connection>`, so the export contended for the
+   connection with the app's reactive queries.
+
+**Conclusion:** the N+1 fix is correct, gated, and a strict improvement (it removes ~150k
+IPC round-trips that the before-run spent minutes on at idle CPU). But "export finishes in
+seconds on a 22k tree" is **NOT confirmed met** — a separate bulk-transfer bottleneck
+remains, which is out of scope for this plan (it targeted the emitter N+1). A clean
+release-build measurement and/or a follow-up plan for bulk-transfer cost is required before
+the absolute wall-clock target can be claimed.
