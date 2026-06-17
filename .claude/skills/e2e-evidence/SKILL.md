@@ -49,6 +49,17 @@ Paste the tail lines, not summaries. Per `.claude/rules/plans.md` "Verification 
 
 If `[boot]` / `[crud]` / any Tier 1 project is failing or flaky, the plan trying to archive owns either fixing it or filing a separate plan that explicitly covers fixing it before close-out. "The suite was already broken" is not a pass — it adds a layer the next contributor has to peel back.
 
+## Is it a real failure, or contention? (run clean before you conclude)
+
+An e2e failure is **not** automatically a logic bug. The whole suite drives the renderer over the dev-MCP-style IPC bridge against a single SQLite connection (`Mutex<Connection>`), with a per-eval timeout. Under load, *deterministic-looking* assertions fail as timing artifacts — not just `"didn't reflect within Ns"` timeouts, but asserts like `file_ref must not be absolute` (the import's media write timed out, so the rewrite never ran) or `read: No such file or directory` (a sidecar read raced cleanup). On 2026-06-17, **all four** triaged "failures" (`[reactivity]`, `[panels]` link, both `[imports]`) were the *same* contention — a per-edit full-DB scan saturating the connection — and all went green from one backpressure fix, with zero importer code change.
+
+Before concluding a spec is a real failure (or "fixing" it), rule out contention:
+
+1. **Kill competing local load.** A running `npm start` dev app + its MCP sidecars compete with the e2e's own packaged binary for the machine and inflate timeouts. `pkill -f "target/debug/<app>"`, tauri-dev, vite, and stray MCP `tsx` processes, then re-run. (This single thing turned a `1 flaky` full run into `0 flaky`.)
+2. **Run the one project in isolation** (`npx playwright test --project=<p>`, optionally `--repeat-each=5 --workers=1`). Green in isolation + red only under the full parallel suite ⇒ contention, not logic.
+3. **Note the project's `retries`.** Tier-2 projects carry `retries: 1`; a flake that passes on retry leaves the suite green (exit 0) but is still a quality signal — capture it, don't ignore it.
+4. **Don't mask it.** Widening a test timeout, or a magic-number debounce, to make a contention flake pass hides the real backpressure bug. Fix the contention (see `.claude/rules/renderer.md` "Never recompute an expensive whole-DB aggregate on every `onDataChanged`").
+
 ## Direct-to-main vs PR
 
 Both paths are legitimate. The rule is the verification, not the path.
