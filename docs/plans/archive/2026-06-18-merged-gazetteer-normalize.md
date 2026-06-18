@@ -1,6 +1,6 @@
 # Merged Gazetteer Carries Normalize Rules Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development or executing-plans. Steps use checkbox (`- [ ]`) syntax.
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development or executing-plans. Steps use checkbox (`- [x]`) syntax.
 
 **Goal:** Swedish (and other locale) place strings that use a suffix or genitive — "Ängby, Stockholms kn", "Mo, Bergs kn" — resolve to the correct Swedish place, not a stray ISO-coded country (Saint Kitts via "KN", Macao via "MO").
 
@@ -43,7 +43,7 @@
 
 **(Tier 1)**
 
-- [ ] **Step 1:** Add a `describe` block (or extend the corpus) with:
+- [x] **Step 1:** Add a `describe` block (or extend the corpus) with:
 
 ```ts
 it('suffix/genitive Swedish strings resolve to Sweden, not an ISO-coded country (merged normalize)', () => {
@@ -60,11 +60,11 @@ it('Boston, USA stays in the United States (no Boston, MA in bundled data — co
 });
 ```
 
-- [ ] **Step 2:** Run — confirm the two `not.toContain` assertions fail (Saint Kitts / Macao), Boston passes.
+- [x] **Step 2:** Run — confirm the two `not.toContain` assertions fail (Saint Kitts / Macao), Boston passes.
 
 Run: `npx vitest run --root <wt> <wt>/tests/unit/place-resolution-accuracy.test.ts`
 
-- [ ] **Step 3:** Commit `test(places): lock merged-normalize cases (red)`.
+- [x] **Step 3:** Commit `test(places): lock merged-normalize cases (red)`.
 
 ### Task 2: Merge carries the union of normalize rules
 
@@ -72,7 +72,7 @@ Run: `npx vitest run --root <wt> <wt>/tests/unit/place-resolution-accuracy.test.
 
 **(Tier 1)**
 
-- [ ] **Step 1:** In `loadGazetteers`, after collecting `dataGazetteers` (the non-language sources), build the union of their `normalize` rules and set it on each returned merged gazetteer object:
+- [x] **Step 1:** In `loadGazetteers`, after collecting `dataGazetteers` (the non-language sources), build the union of their `normalize` rules and set it on each returned merged gazetteer object:
 
 ```ts
 // Carry the union of every contributing source's normalize vocabulary onto the
@@ -99,29 +99,29 @@ const mergedNormalize = (() => {
 
 Assign `normalize: mergedNormalize` on the merged `Gazetteer` object(s) returned by `loadGazetteers`, set BEFORE any resolver call (so it's in place when `getNameIndex` first runs and caches).
 
-- [ ] **Step 2:** Run the new cases — verify green.
+- [x] **Step 2:** Run the new cases — verify green.
 
-- [ ] **Step 3:** Run the full place/gazetteer suites — no regression:
+- [x] **Step 3:** Run the full place/gazetteer suites — no regression:
 
 Run: `npx vitest run --root <wt> <wt>/tests/unit/place-resolution-accuracy.test.ts <wt>/tests/unit/gazetteer-disambiguation.test.ts <wt>/tests/unit/gazetteers.test.ts <wt>/tests/unit/gazetteer-merge.test.ts <wt>/tests/unit/gazetteer-sweden.test.ts <wt>/tests/unit/checks-perf.test.ts`
 
-- [ ] **Step 4:** Commit `fix(places): merged gazetteer carries union of source normalize rules`.
+- [x] **Step 4:** Commit `fix(places): merged gazetteer carries union of source normalize rules`.
 
 ### Task 3: Full verification + real-DB re-audit
 
 **(Tier 1)**
 
-- [ ] **Step 1:** `npm test --prefix <wt>` → capture summary.
-- [ ] **Step 2:** Re-run `scripts/check-reported-places.ts` (extend its CASES with the 3 new strings) → capture; confirm the 2 fixable cases resolve to Sweden.
-- [ ] **Step 3:** `npm run build --prefix <wt>` → capture tail.
-- [ ] **Step 4:** `npm run test:e2e:full --prefix <wt>` → capture per-project counts.
-- [ ] **Step 5:** Commit any harness change `test(places): extend reproduction harness`.
+- [x] **Step 1:** `npm test --prefix <wt>` → capture summary.
+- [x] **Step 2:** Re-run `scripts/check-reported-places.ts` (extend its CASES with the 3 new strings) → capture; confirm the 2 fixable cases resolve to Sweden.
+- [x] **Step 3:** `npm run build --prefix <wt>` → capture tail.
+- [x] **Step 4:** `npm run test:e2e:full --prefix <wt>` → capture per-project counts.
+- [x] **Step 5:** Commit any harness change `test(places): extend reproduction harness`.
 
 ### Task 4: Close out
 
 **(Tier 1)**
 
-- [ ] **T-final:** Invoke `/close-out` (patch bump 0.271.3; the skill walks the 6+1 steps).
+- [x] **T-final:** Invoke `/close-out` (patch bump 0.271.3; the skill walks the 6+1 steps).
 
 ## Self-Review
 

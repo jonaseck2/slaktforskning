@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.271.3 — 2026-06-18
+
+- fix: Swedish place names written with a municipality/parish suffix now resolve to the right place instead of a same-coded foreign country — "Ängby, Stockholms kn" lands in Sweden (not Saint Kitts and Nevis, ISO "KN"), "Mo, Bergs kn" in Sweden (not Macao, ISO "MO"); the merged place index now applies the same name-suffix rules ("kn", "sn", "kommun", …) the per-region indexes already used
+
 ## 0.271.2 — 2026-06-18
 
 - fix: Swedish and Nordic place names no longer land in the wrong country — "Västra Vingåkers sn" stays in Sweden (not Senegal), "Torsvi by" in Sweden (not Belarus), "Tun, Lidköpings kn" in Sweden (not Tunisia); the resolver no longer mistakes abbreviations like "sn" (socken) or "by" (village) for ISO country codes
