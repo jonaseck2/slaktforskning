@@ -17,6 +17,8 @@ import type { GazetteerNode } from '../src/api/place-gazetteers/types';
 import { round6 } from '../src/gazetteer-build/geo';
 import { parseWktPoint, generateAliases } from '../src/gazetteer-build/wikidata';
 import { sparqlFetch as sparqlFetchRaw, sleep } from '../src/gazetteer-build/sparql';
+import { getAllGazetteers } from '../src/api/place-gazetteers/bundled';
+import { buildModernNameSet, cleanHistoricalAliases } from './clean-historical-aliases';
 
 interface WikidataRow {
   item: string;       // "http://www.wikidata.org/entity/Q15180"
@@ -170,6 +172,13 @@ async function main() {
       children: nodes,
     },
   };
+
+  // Strip modern-name aliases the SPARQL build attaches to historical polities
+  // (e.g. "Iran" on Qajar Iran). See clean-historical-aliases.ts + the
+  // place-resolution-accuracy plan. Keeps a regeneration as clean as the
+  // shipped data.
+  const removed = cleanHistoricalAliases(gazetteer.root, buildModernNameSet(getAllGazetteers()));
+  console.log(`Stripped ${removed} modern-name aliases from historical nodes.`);
 
   const outputPath = path.join(
     __dirname, '..', 'src', 'api', 'place-gazetteers', 'data', 'world-historical.json',

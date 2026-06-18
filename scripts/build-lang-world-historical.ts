@@ -13,6 +13,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { sparqlFetch as sparqlFetchRaw, sleep } from '../src/gazetteer-build/sparql';
+import { getAllGazetteers } from '../src/api/place-gazetteers/bundled';
+import { buildModernNameSet, cleanTranslations } from './clean-historical-aliases';
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'api', 'place-gazetteers', 'data');
 const BATCH_SIZE = 80; // QIDs per label-fetch batch
@@ -208,6 +210,12 @@ async function main() {
       __merged__: translations,
     },
   };
+
+  // Strip modern-name exonyms (e.g. "Spanien" on Spanish Empire, "Edum" on
+  // Edom) that would let a historical node match a modern-place input. See
+  // clean-historical-aliases.ts + the place-resolution-accuracy plan.
+  const removedTr = cleanTranslations(gazetteer.translations, buildModernNameSet(getAllGazetteers()));
+  console.log(`Stripped ${removedTr} modern-name exonyms from translations.`);
 
   const outPath = path.join(DATA_DIR, 'lang-world-historical.json');
   fs.writeFileSync(outPath, JSON.stringify(gazetteer) + '\n', 'utf-8');
