@@ -383,19 +383,44 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
   });
 
   const best = candidates[0];
-  // Ambiguous if multiple candidates with the same quality resolve to
-  // different leaf nodes (i.e. different geographical locations)
-  const sameQuality = candidates.filter(
-    c => c.contradictions === best.contradictions &&
-         c.unmatched.length === best.unmatched.length
-  );
-  const distinctLocations = new Set(
-    sameQuality.map(c => {
-      const node = c.path[c.path.length - 1];
-      return `${node.lat},${node.lon}`;
-    })
-  );
-  return { best, ambiguous: distinctLocations.size > 1 };
+
+  // Ambiguous means the resolver genuinely cannot choose between two DIFFERENT
+  // real places — not merely that two candidates have slightly different
+  // centroids. A runner-up makes the result ambiguous only when ALL hold:
+  //   (1) it ties `best` on the semantic strong signals (the sort couldn't
+  //       rank it below best on anything meaningful), AND
+  //   (2) it is the same GRANULARITY (depth within 1) — a country vs a hamlet
+  //       is a decisive scope win for the shallower one, not a tie
+  //       ("Turkiet" → Turkey the country, not a Swedish village named
+  //       Turkiet), AND
+  //   (3) it is a genuinely DIFFERENT place — not the same pin from a second
+  //       gazetteer (point + boundary), and not a stem-vs-leaf of the same
+  //       branch (a province vs its own city).
+  const EPS = 0.05; // ~5 km — nodes this close are the same pin from different sources
+  const leafOf = (c: MatchCandidate) => c.path[c.path.length - 1];
+  const isPrefix = (short: readonly string[], long: readonly string[]): boolean =>
+    short.length <= long.length && short.every((n, i) => n === long[i]);
+  const samePlace = (a: MatchCandidate, b: MatchCandidate): boolean => {
+    if (isPrefix(a.matched, b.matched) || isPrefix(b.matched, a.matched)) return true;
+    const an = leafOf(a), bn = leafOf(b);
+    return Math.abs(an.lat - bn.lat) <= EPS && Math.abs(an.lon - bn.lon) <= EPS;
+  };
+
+  let ambiguous = false;
+  for (let i = 1; i < candidates.length; i++) {
+    const o = candidates[i];
+    const semanticTie =
+      o.contradictions === best.contradictions &&
+      o.unmatched.length === best.unmatched.length &&
+      o.lastComponentMatched === best.lastComponentMatched &&
+      o.pathNodesMatched === best.pathNodesMatched;
+    if (!semanticTie) break; // sorted by these signals — once untied, the rest are worse
+    if (Math.abs(o.depth - best.depth) > 1) continue; // different granularity → best wins cleanly
+    if (samePlace(best, o)) continue;
+    ambiguous = true;
+    break;
+  }
+  return { best, ambiguous };
 }
 
 export interface GazetteerSearchHit {
