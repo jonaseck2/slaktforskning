@@ -1,6 +1,6 @@
 # Place Resolution Accuracy Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Real places in a user's tree resolve to the correct location and aren't flagged "ambiguous" when the resolver actually knows the answer.
 
@@ -31,7 +31,7 @@
 
 **(Tier 1)** — Agent owns.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Each case asserts the resolved **root region/country** (first meaningful path segment after `World`/`World (Historical)`) and the `matchQuality`. Use `matchedPath` for the path assertion and `matchQuality` for the flag. Cases that depend on coordinates use a tolerant box.
 
@@ -102,12 +102,12 @@ describe('place resolution accuracy — reported corpus', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to confirm it fails (red)**
+- [x] **Step 2: Run the test to confirm it fails (red)**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts`
 Expected: FAIL — multiple assertions fail (Senegal/Belarus/Estado Novo/ambiguous). Capture the failure list; it is the baseline.
 
-- [ ] **Step 3: Commit the red corpus**
+- [x] **Step 3: Commit the red corpus**
 
 ```bash
 git add tests/unit/place-resolution-accuracy.test.ts
@@ -128,7 +128,7 @@ git commit -m "test(places): lock 15-case resolution-accuracy corpus (red)"
 
 **(Tier 1)** — Agent owns.
 
-- [ ] **Step 1: Add code-alias classification to the index types**
+- [x] **Step 1: Add code-alias classification to the index types**
 
 In `resolver.ts`, extend the index entry types:
 
@@ -146,7 +146,7 @@ type NodeEntry = {
 };
 ```
 
-- [ ] **Step 2: Populate code aliases in `getNameIndex`**
+- [x] **Step 2: Populate code aliases in `getNameIndex`**
 
 Detect code aliases from the RAW alias string (before normalization loses case). A code alias is excluded from `normAliases` (so it is never sub-token matched) but still added to the name `index` map so a whole-component lookup can anchor it.
 
@@ -184,7 +184,7 @@ for (const na of normCodeAliases) {
 }
 ```
 
-- [ ] **Step 3: Gate code-alias matches to whole-component in `findMatches`**
+- [x] **Step 3: Gate code-alias matches to whole-component in `findMatches`**
 
 In the per-component matching loop, a code alias only counts when the form being tried is the whole component (`form === whole`):
 
@@ -209,17 +209,17 @@ for (const form of forms) {
 }
 ```
 
-- [ ] **Step 4: Run the RC3 block — verify it goes green**
+- [x] **Step 4: Run the RC3 block — verify it goes green**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts -t "Africa/Belarus/Faroe"`
 Expected: the RC3/RC4 test passes (Vingåker→Sweden, Torsvi→Sweden, Tun→Sweden). `Kärret, Hov` may still fail if a foreign namesake wins — note it for Task 4.
 
-- [ ] **Step 5: Run the full resolver + gazetteer suites — no regression**
+- [x] **Step 5: Run the full resolver + gazetteer suites — no regression**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/gazetteer-disambiguation.test.ts tests/unit/gazetteers.test.ts tests/unit/gazetteer-sweden.test.ts tests/unit/place-gazetteers.test.ts`
 Expected: all PASS (whole-component codes like "USA" still resolve).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/place-gazetteers/resolver.ts
@@ -240,7 +240,7 @@ git commit -m "fix(places): ISO country codes match only as whole components (RC
 
 **(Tier 2)** — Surface reasoning before executing: this changes the ambiguity flag for *every* place in the app. The reasoning: ambiguity should mean "the resolver genuinely cannot tell which of two different real places you meant," not "two candidates have slightly different centroids." Report the before/after ambiguous-count from the real-DB audit (Task 6) in the commit.
 
-- [ ] **Step 1: Replace the ambiguity computation in `pickBest`**
+- [x] **Step 1: Replace the ambiguity computation in `pickBest`**
 
 After `candidates.sort(...)` and `const best = candidates[0]`, replace the existing `sameQuality` / `distinctLocations` block with a three-part predicate:
 
@@ -293,18 +293,18 @@ for (let i = 1; i < candidates.length; i++) {
 return { best, ambiguous };
 ```
 
-- [ ] **Step 2: Run the RC2 + guard blocks — verify green**
+- [x] **Step 2: Run the RC2 + guard blocks — verify green**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts -t "ambiguous"`
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts -t "right country"`
 Expected: Turkiet/Voss/Ytre Arna/Barcelona/Genève/Warszawa no longer `ambiguous`, and still resolve to the right country.
 
-- [ ] **Step 3: Run the full resolver + gazetteer suites — no regression**
+- [x] **Step 3: Run the full resolver + gazetteer suites — no regression**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/gazetteer-disambiguation.test.ts tests/unit/gazetteer-merge.test.ts tests/unit/gazetteers.test.ts`
 Expected: all PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/api/place-gazetteers/resolver.ts
@@ -325,7 +325,7 @@ git commit -m "fix(places): ambiguous means different places, not different coor
 
 **(Tier 1)** — Agent owns.
 
-- [ ] **Step 1: Add the historical signals to `MatchCandidate` and `findMatches`**
+- [x] **Step 1: Add the historical signals to `MatchCandidate` and `findMatches`**
 
 Add fields to the `MatchCandidate` interface:
 
@@ -356,7 +356,7 @@ candidates.push({
 });
 ```
 
-- [ ] **Step 2: Add the modern-beats-historical signal to `isBetterCandidate`**
+- [x] **Step 2: Add the modern-beats-historical signal to `isBetterCandidate`**
 
 Insert as the FIRST comparison in `isBetterCandidate` (above `lastComponentMatched`), so it dominates depth:
 
@@ -374,7 +374,7 @@ function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
 }
 ```
 
-- [ ] **Step 3: Mirror the signal in `pickBest`'s sort**
+- [x] **Step 3: Mirror the signal in `pickBest`'s sort**
 
 `pickBest` compares within one gazetteer; the merged tree is one gazetteer, so historical and modern candidates meet here. Add the same rule as the first comparator in the `candidates.sort(...)`:
 
@@ -388,17 +388,17 @@ candidates.sort((a, b) => {
 });
 ```
 
-- [ ] **Step 4: Run the RC1 block — verify improvement**
+- [x] **Step 4: Run the RC1 block — verify improvement**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts -t "historical empires"`
 Expected: New York→United States, Rasht→Iran, Spanien→Spain now pass. `Mellangården, Edum` may still fail if the modern Swedish "Edum" vs historical "Edom" tie isn't broken by scoring alone (Edom's `Edum` alias is the collision) — Task 5 (data cleanup) removes that alias and finishes this case. Also re-check `Kärret, Hov` from Task 2.
 
-- [ ] **Step 5: Run the full resolver suites — no regression**
+- [x] **Step 5: Run the full resolver suites — no regression**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/gazetteer-disambiguation.test.ts tests/unit/gazetteers.test.ts tests/unit/gazetteer-hierarchy.test.ts`
 Expected: all PASS. (Historical search by the entity's own name still resolves — only alias-only historical matches are down-ranked.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/api/place-gazetteers/resolver.ts
@@ -420,7 +420,7 @@ git commit -m "fix(places): modern matches beat alias-only historical matches (R
 
 **(Tier 2)** — Touches shipped gazetteer data. Surface the removed-alias count + the list of dropped aliases in the commit; the transform is committed and re-runnable, so the change is reviewable and reversible.
 
-- [ ] **Step 1: Write the failing unit test for the transform**
+- [x] **Step 1: Write the failing unit test for the transform**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -450,12 +450,12 @@ describe('cleanHistoricalAliases', () => {
 });
 ```
 
-- [ ] **Step 2: Run it — confirm fail**
+- [x] **Step 2: Run it — confirm fail**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/clean-historical-aliases.test.ts`
 Expected: FAIL — `clean-historical-aliases` not found.
 
-- [ ] **Step 3: Implement `scripts/clean-historical-aliases.ts`**
+- [x] **Step 3: Implement `scripts/clean-historical-aliases.ts`**
 
 ```ts
 // Offline transform: strip modern-name aliases from historical gazetteers.
@@ -527,26 +527,26 @@ function main() {
 if (require.main === module) main();
 ```
 
-- [ ] **Step 4: Run the transform unit test — verify pass**
+- [x] **Step 4: Run the transform unit test — verify pass**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/clean-historical-aliases.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the transform against the shipped data**
+- [x] **Step 5: Run the transform against the shipped data**
 
 Run: `npx tsx scripts/clean-historical-aliases.ts`
 Expected: prints `world-historical.json: removed N …` and `lang-world-historical.json: removed M …`. Capture N and M and the diff (`git diff --stat src/api/place-gazetteers/data/`). Confirm `Iran`, `Spanien`, `Edum`, `New` are gone; `Persia`, `Qajar` remain.
 
-- [ ] **Step 6: Fold the filter into the build scripts**
+- [x] **Step 6: Fold the filter into the build scripts**
 
 In `scripts/build-world-historical.ts` (before `fs.writeFileSync`) and `scripts/build-lang-world-historical.ts` (before its write), import and call `cleanHistoricalAliases(root, buildModernNameSet(getAllGazetteers()))` so a future SPARQL regeneration re-applies the cleanup. Add a one-line comment pointing at this plan.
 
-- [ ] **Step 7: Run the full corpus — RC1 fully green**
+- [x] **Step 7: Run the full corpus — RC1 fully green**
 
 Run: `npx vitest run --root <worktree-abs-path> tests/unit/place-resolution-accuracy.test.ts`
 Expected: PASS — including `Mellangården, Edum` → Sweden.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add scripts/clean-historical-aliases.ts tests/unit/clean-historical-aliases.test.ts \
@@ -569,19 +569,19 @@ git commit -m "fix(places): strip modern-name aliases from historical gazetteers
 
 **(Tier 1)** — Agent owns.
 
-- [ ] **Step 1: Re-run the reproduction harness**
+- [x] **Step 1: Re-run the reproduction harness**
 
 Run: `npx tsx scripts/check-reported-places.ts`
 Expected: every one of the 15 cases now resolves to the correct country/region and none are `ambiguous` (except any genuine true-tie). Capture the full output.
 
-- [ ] **Step 2: Audit at scale against the real DB — no new outliers**
+- [x] **Step 2: Audit at scale against the real DB — no new outliers**
 
 Adapt `scripts/check-us-places.ts` (or extend the harness) to iterate ALL places in `src-tauri/target/debug/family.db`, resolve each, and bucket outliers (wrong-country, ambiguous, unresolved). Compare the outlier count before (stash the change) and after. Capture both counts.
 
 Run: `npx tsx scripts/check-reported-places.ts` (and the all-places audit)
 Expected: the corpus cases fixed; total ambiguous + wrong-country count strictly lower than baseline; no place that previously resolved correctly now resolves wrong.
 
-- [ ] **Step 3: Full unit suite + build**
+- [x] **Step 3: Full unit suite + build**
 
 Run: `npm test --prefix <worktree-abs-path>`
 Expected: `N passed` — including the new corpus + transform tests; no regressions.
@@ -589,12 +589,12 @@ Expected: `N passed` — including the new corpus + transform tests; no regressi
 Run: `npm run build --prefix <worktree-abs-path>`
 Expected: `built in Xs`, exit 0.
 
-- [ ] **Step 4: e2e (places surface touched → website-export/crud tiers at minimum)**
+- [x] **Step 4: e2e (places surface touched → website-export/crud tiers at minimum)**
 
 Run: `npm run test:e2e --prefix <worktree-abs-path>` (Tier 1: `[boot]`, `[crud]`, `[website-export]`, `[duplicates]`)
 Expected: `4 passed`. Per `.claude/rules/plans.md`, this plan touches the resolver feeding the map/place panel; the `[panels]` project is relevant — run `npm run test:e2e:full --prefix <worktree-abs-path>` if the places panel/map has an e2e project. Capture pass counts.
 
-- [ ] **Step 5: Commit the audit evidence**
+- [x] **Step 5: Commit the audit evidence**
 
 ```bash
 git add scripts/check-reported-places.ts
@@ -607,7 +607,7 @@ git commit -m "test(places): real-DB re-audit confirms 15 cases fixed, no new ou
 
 **(Tier 1)** — Agent owns.
 
-- [ ] **T-final:** Invoke the `/close-out` skill. It walks the CLAUDE.md "Finishing a plan" 6+1 steps (evidence capture, checkbox completion, `git mv` plan + design to `docs/plans/archive/`, version bump + CHANGELOG via `oss-release`, `docs/PLAN.md` sync + archive PLAN.md append, commit, merge/push), refuses partial, captures evidence. This is a fix-only plan unless the ambiguity/scoring change is deemed a feature → patch vs minor decided by `oss-release`.
+- [x] **T-final:** Invoke the `/close-out` skill. It walks the CLAUDE.md "Finishing a plan" 6+1 steps (evidence capture, checkbox completion, `git mv` plan + design to `docs/plans/archive/`, version bump + CHANGELOG via `oss-release`, `docs/PLAN.md` sync + archive PLAN.md append, commit, merge/push), refuses partial, captures evidence. This is a fix-only plan unless the ambiguity/scoring change is deemed a feature → patch vs minor decided by `oss-release`.
 
 ---
 

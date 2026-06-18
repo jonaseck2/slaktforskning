@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.271.2 — 2026-06-18
+
+- fix: Swedish and Nordic place names no longer land in the wrong country — "Västra Vingåkers sn" stays in Sweden (not Senegal), "Torsvi by" in Sweden (not Belarus), "Tun, Lidköpings kn" in Sweden (not Tunisia); the resolver no longer mistakes abbreviations like "sn" (socken) or "by" (village) for ISO country codes
+- fix: modern places no longer resolve to historical empires — "New York" → United States, "Rasht, Iran" → Iran, "Spanien" → Spain, "Edum" → Sweden, instead of Estado Novo / Qajar Iran / Spanish Empire / Edom
+- fix: a place that resolves to one clear location is no longer wrongly flagged "ambiguous" — Turkiet, Voss, Barcelona, and Genève now show a clean match; a genuine multi-place namesake with no country hint (e.g. "Kärret, Hov") is still flagged so you can choose
+
 ## 0.271.1 — 2026-06-17
 
 - perf: exporting a 20 000+ person tree to GEDCOM now finishes in about a second instead of minutes
