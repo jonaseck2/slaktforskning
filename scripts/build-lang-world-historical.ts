@@ -185,7 +185,7 @@ async function main() {
   const CHECK = ['Soviet Union', 'Ottoman Empire', 'Byzantine Empire'];
   console.log('\nSpot-check:');
   for (const name of CHECK) {
-    const names = translations[name] ?? [];
+    const names = translations[`World (Historical)${SEP}${name}`] ?? [];
     const preview = names.slice(0, 4).join(', ');
     console.log(`  ${name}: ${names.length} translations (${preview}${names.length > 4 ? '...' : ''})`);
   }

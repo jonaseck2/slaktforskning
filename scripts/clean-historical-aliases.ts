@@ -64,6 +64,11 @@ export function buildModernNameSet(gazetteers: Gazetteer[]): Set<string> {
 /**
  * Drop, in place, any alias of any node under `root` whose normalized form is
  * a modern place name or a junk fragment. Returns the count removed.
+ *
+ * MUTATES `root` in place. Only call on a freshly-parsed gazetteer (build
+ * scripts, this file's main()) — NEVER on a live bundled gazetteer object, or
+ * the resolver's per-gazetteer nameIndexCache (keyed on object identity) would
+ * serve stale aliases for the session.
  */
 export function cleanHistoricalAliases(root: GazetteerNode, modernNames: Set<string>): number {
   let removed = 0;
@@ -88,6 +93,9 @@ export function cleanHistoricalAliases(root: GazetteerNode, modernNames: Set<str
  * Language gazetteers store exonyms as `translations[gazId][pathKey] = string[]`
  * rather than as node aliases. Drop, in place, any exonym that is a modern place
  * name or junk fragment. Returns the count removed.
+ *
+ * MUTATES `translations` in place — same caveat as cleanHistoricalAliases: only
+ * call on freshly-parsed data, never on a live bundled gazetteer.
  */
 export function cleanTranslations(
   translations: Record<string, Record<string, string[]>>,

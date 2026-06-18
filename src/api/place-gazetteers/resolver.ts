@@ -349,7 +349,10 @@ function findMatches(
         }
       }
 
-      const isHistorical = fullPath[0]?.name === 'World (Historical)';
+      // Read the root name from the CACHED pathNames (not the live node) so the
+      // warm path performs zero GazetteerNode.name reads — checks-perf.test.ts
+      // asserts this invariant.
+      const isHistorical = entry.pathNames[0] === 'World (Historical)';
       candidates.push({
         path: fullPath,
         matched: entry.pathNames,
@@ -436,7 +439,12 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
       o.contradictions === best.contradictions &&
       o.unmatched.length === best.unmatched.length &&
       o.lastComponentMatched === best.lastComponentMatched &&
-      o.pathNodesMatched === best.pathNodesMatched;
+      o.pathNodesMatched === best.pathNodesMatched &&
+      // Mirror the sort's step-0 signal: a modern best vs an alias-only
+      // historical runner-up is NOT a tie (best wins decisively), so it must
+      // not flag ambiguous — e.g. "Iran" (modern) vs Qajar Iran (alias).
+      (o.isHistorical && !o.matchedHistoricalByOwnName) ===
+        (best.isHistorical && !best.matchedHistoricalByOwnName);
     if (!semanticTie) break; // sorted by these signals — once untied, the rest are worse
     if (Math.abs(o.depth - best.depth) > 1) continue; // different granularity → best wins cleanly
     if (samePlace(best, o)) continue;
