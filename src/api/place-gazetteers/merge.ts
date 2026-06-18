@@ -293,6 +293,30 @@ export function loadGazetteers(
   const roots = Array.from(accumulators.values());
   if (roots.length === 0) return [];
 
+  // Carry the union of every contributing source's normalize vocabulary onto the
+  // merged gazetteer. Without this the merged tree strips no suffixes/prefixes, so
+  // Swedish strings like "Stockholms kn" / "Bergs kn" never reduce to "Stockholm" /
+  // "Berg" and a stray ISO code ("KN"→Saint Kitts, "MO"→Macao) becomes the only
+  // match. The resolver applies these per-gazetteer at index + compare time
+  // (normalizeForGazetteer); the per-source rules were lost when the merge emitted
+  // the synthetic gazetteer without a `normalize` field.
+  const mergedNormalize = (() => {
+    const suf = new Set<string>(), pre = new Set<string>(), pat = new Set<string>();
+    for (const g of dataGazetteers) {
+      const n = g.normalize;
+      if (!n) continue;
+      n.stripSuffixes?.forEach(s => suf.add(s));
+      n.stripPrefixes?.forEach(s => pre.add(s));
+      n.stripPatterns?.forEach(s => pat.add(s));
+    }
+    if (suf.size === 0 && pre.size === 0 && pat.size === 0) return undefined;
+    return {
+      ...(suf.size ? { stripSuffixes: [...suf] } : {}),
+      ...(pre.size ? { stripPrefixes: [...pre] } : {}),
+      ...(pat.size ? { stripPatterns: [...pat] } : {}),
+    };
+  })();
+
   // Single root case: one merged gazetteer. Multi-root case: expose all via `allRoots`.
   const primary = roots[0];
   const result: Gazetteer = {
@@ -300,6 +324,7 @@ export function loadGazetteers(
     name: 'Merged hierarchy',
     locale: 'mul',
     root: primary,
+    ...(mergedNormalize ? { normalize: mergedNormalize } : {}),
   };
   if (roots.length > 1) {
     (result as Gazetteer & { allRoots?: GazetteerNode[] }).allRoots = roots;
