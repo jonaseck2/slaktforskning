@@ -883,7 +883,9 @@ export function resolvePlace(
   return {
     lat: deepestNode.lat,
     lon: deepestNode.lon,
-    matchedPath: candidate.matched,
+    // Copy: `candidate.matched` is the cache's readonly pathNames array; hand
+    // callers their own mutable array so they can't corrupt the index cache.
+    matchedPath: [...candidate.matched],
     matchedNodes: candidate.path,
     matchDepth: candidate.depth,
     matchQuality,
@@ -972,7 +974,8 @@ export function resolveBoundary(
 
   return {
     geometry: deepestNode.geometry,
-    matchedPath: chosen.matched,
+    // Copy the cache's readonly pathNames into a fresh mutable array (see resolvePlace).
+    matchedPath: [...chosen.matched],
     matchQuality,
     nodeType: deepestNode.type,
   };
