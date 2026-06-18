@@ -25,6 +25,10 @@ const CASES = [
   'Spanien',
   'Barcelona, Spanien',
   'Genève, Schweiz',
+  // Second batch — merged-normalize follow-up
+  'Ängby, Stockholms kn',
+  'Mo, Bergs kn',
+  'Boston, USA',
 ];
 
 for (const name of CASES) {
