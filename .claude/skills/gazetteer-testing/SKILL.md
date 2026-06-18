@@ -99,9 +99,17 @@ Three scoring rules changed; check them before re-debugging a known bucket:
   Senegal/Belarus. To add/remove an ISO collision, edit the country gazetteer's
   aliases, not the resolver.
 
+The merged `__merged__` gazetteer carries the **union** of every source's
+`normalize` rules (suffix/prefix/pattern stripping), set in `loadGazetteers` and
+pre-compiled once per gazetteer via `getNormRules`. Before 2026-06-18 it had
+`normalize: undefined`, so suffix-laden inputs ("Stockholms kn") never reduced in
+the merged tree and fell through to ISO-code matches — a regression here
+resurfaces that class. (The per-gazetteer rule cache is also why a large union
+rule set no longer blows up index build.)
+
 Historical-gazetteer junk aliases are stripped at build time by
 `scripts/clean-historical-aliases.ts` (folded into `build-world-historical.ts`
-+ `build-lang-world-historical.ts`). The reusable real-DB harness for the 15
++ `build-lang-world-historical.ts`). The reusable real-DB harness for the
 reported cases is `scripts/check-reported-places.ts`.
 
 ## Workflow when a user reports a bad pin
