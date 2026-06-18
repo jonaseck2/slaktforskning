@@ -23,7 +23,7 @@ describe('place resolution accuracy — reported corpus', () => {
   const path = (name: string) => resolve(name)?.matchedPath ?? [];
   const quality = (name: string) => resolve(name)?.matchQuality ?? 'null';
 
-  it('Swedish places do not land in Africa/Belarus/Faroe (RC3/RC4)', () => {
+  it('ISO country codes (sn/by/Tun) do not pull Swedish places abroad (RC3)', () => {
     expect(path('Västra Vingåkers sn')).toContain('Sweden');
     expect(path('Västra Vingåkers sn')).not.toContain('Senegal');
     expect(path('Torsvi by, Torsvi (C)')).toContain('Sweden');
@@ -31,7 +31,6 @@ describe('place resolution accuracy — reported corpus', () => {
     expect(path('Tun, Lidköpings kn (R)')).toContain('Sweden');
     expect(path('Tun, Lidköpings kn (R)')).not.toContain('Tunisia');
     expect(path('Tun, Lindköpings kn (R)')).toContain('Sweden');
-    expect(path('Kärret, Hov')).not.toContain('Faroe Islands');
   });
 
   it('modern places do not land in historical empires (RC1)', () => {
@@ -52,6 +51,15 @@ describe('place resolution accuracy — reported corpus', () => {
     expect(quality('Barcelona, Spanien')).not.toBe('ambiguous');
     expect(quality('Genève, Schweiz')).not.toBe('ambiguous');
     expect(quality('Warszawa, Polen')).not.toBe('ambiguous');
+  });
+
+  it('a genuine multi-place namesake with no country hint is flagged ambiguous (RC4)', () => {
+    // "Kärret, Hov": real Hov localities exist in Sweden (Gävleborg, Skåne,
+    // Jämtland) AND the Faroe Islands. With no country/län hint in the string,
+    // the resolver cannot honestly pick one (forcing Sweden would be inference,
+    // forbidden by the Prime Directive). The correct behaviour is to SIGNAL the
+    // ambiguity so the user resolves it — not to confidently pin the Faroes.
+    expect(quality('Kärret, Hov')).toBe('ambiguous');
   });
 
   it('correct places still resolve to the right country (RC2 guard)', () => {

@@ -118,7 +118,7 @@ interface MatchCandidate {
 // inner loop reads from normPath only — it never touches live GazetteerNode
 // fields during a cache hit. The index is per-gazetteer because each
 // gazetteer carries its own suffix/prefix vocabulary.
-type NormPathEntry = { name: string; aliases: Set<string> };
+type NormPathEntry = { name: string; aliases: Set<string>; codeAliases: Set<string> };
 type NodeEntry = {
   node: GazetteerNode;
   ancestors: GazetteerNode[];
@@ -126,6 +126,14 @@ type NodeEntry = {
   normName: string;
   /** Pre-normalized aliases as a Set for O(1) membership tests. */
   normAliases: Set<string>;
+  /**
+   * Normalized forms of aliases whose RAW source was a 2–3 letter ISO code
+   * (e.g. "SN", "BY", "TUN"). Kept separate from `normAliases` so they only
+   * match a whole comma-component, never a token-scan sub-token — "sn"
+   * (socken) must not match Senegal's "SN", "by" (village) must not match
+   * Belarus's "BY". See findMatches.
+   */
+  normCodeAliases: Set<string>;
   /**
    * Pre-normalized [...ancestors, node] in path order. findMatches walks
    * this instead of building a per-anchor list from live node fields, so
@@ -154,13 +162,18 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
     const nodeName = node.name;
     const normName = normalizeForGazetteer(nodeName, gaz);
     const normAliases = new Set<string>();
+    const normCodeAliases = new Set<string>();
     if (node.aliases) {
       for (const alias of node.aliases) {
         const na = normalizeForGazetteer(alias, gaz);
-        if (na) normAliases.add(na);
+        if (!na) continue;
+        // A 2–3 letter all-caps RAW alias is an ISO country code. Route it to
+        // codeAliases (whole-component-only match) instead of normAliases.
+        if (/^[A-Z]{2,3}$/.test(alias.trim())) normCodeAliases.add(na);
+        else normAliases.add(na);
       }
     }
-    const selfNorm: NormPathEntry = { name: normName, aliases: normAliases };
+    const selfNorm: NormPathEntry = { name: normName, aliases: normAliases, codeAliases: normCodeAliases };
     const normPath = [...ancestorsNorm, selfNorm];
     const pathNames = [...ancestorNames, nodeName];
     const entry: NodeEntry = {
@@ -168,6 +181,7 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
       ancestors,
       normName,
       normAliases,
+      normCodeAliases,
       normPath,
       pathNames,
     };
@@ -175,6 +189,14 @@ function getNameIndex(gaz: Gazetteer): Map<string, NodeEntry[]> {
     index.get(normName)!.push(entry);
     for (const na of normAliases) {
       if (na === normName) continue;
+      if (!index.has(na)) index.set(na, []);
+      index.get(na)!.push(entry);
+    }
+    // Code aliases ARE indexed (so a whole-component "SN" can still anchor
+    // Senegal), but the per-component matcher only accepts them when the
+    // matched form is the whole component — see findMatches.
+    for (const na of normCodeAliases) {
+      if (na === normName || normAliases.has(na)) continue;
       if (!index.has(na)) index.set(na, []);
       index.get(na)!.push(entry);
     }
@@ -276,13 +298,21 @@ function findMatches(
         // distinct path node (this is the whole point of the token-scan).
         let matched = false;
         for (const form of forms) {
+          const isWhole = form === whole;
           for (let pi = 0; pi < normPath.length; pi++) {
             if (usedPathIndices.has(pi)) continue;
             const np = normPath[pi];
-            if (np.name === form || np.aliases.has(form)) {
+            // ISO code aliases ("SN", "BY", "TUN") match only when `form` is
+            // the whole comma-component — never a token-scan sub-token. This
+            // stops "Västra Vingåkers sn" → Senegal and "Torsvi by" → Belarus.
+            const hit =
+              np.name === form ||
+              np.aliases.has(form) ||
+              (isWhole && np.codeAliases.has(form));
+            if (hit) {
               usedPathIndices.add(pi);
               matched = true;
-              if (form === whole) break; // whole-component match: stop, don't double-count tokens
+              if (isWhole) break; // whole-component match: stop, don't double-count tokens
               // For token matches, keep scanning forms so a second token in the
               // same component can match a different path node.
               break;
