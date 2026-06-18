@@ -75,6 +75,35 @@ After any fix:
 2. Run the relevant unit test: `npx vitest run tests/unit/gazetteers.test.ts`.
 3. If the fix touches `normalize()` or scoring, add a test case to `tests/unit/resolver.test.ts` (or wherever the resolver tests live) reproducing the original wrong match.
 
+## Resolver behaviour reference (2026-06-18 place-resolution-accuracy plan)
+
+Three scoring rules changed; check them before re-debugging a known bucket:
+
+- **Ambiguity = different *places*, not different coords.** `pickBest` flags
+  `ambiguous` only when a runner-up ties `best` on the semantic signals
+  (contradictions, unmatched, lastComponentMatched, pathNodesMatched, **and**
+  the historical-alias signal), is the same granularity (`depth` within 1 — a
+  country vs a hamlet is a decisive scope win, not a tie), and is a genuinely
+  different place (neither path a prefix of the other; not within ~5 km of the
+  other = same pin from a point + boundary gazetteer). So `Voss`,
+  `Barcelona, Spanien`, `Genève, Schweiz`, `Turkiet` resolve clean; a true
+  multi-place namesake with no country hint (`Kärret, Hov`) still flags.
+- **Modern beats alias-only historical.** A candidate under `World (Historical)`
+  that matched only via a modern-exonym alias is down-ranked below any modern
+  match (`isBetterCandidate` / `pickBest` step 0, keyed on
+  `isHistorical` + `matchedHistoricalByOwnName`). Typing the historical entity's
+  *own* name still resolves to it.
+- **ISO codes match whole-components only.** 2–3 all-caps raw aliases (`SN`,
+  `BY`, `TUN`) route to `normCodeAliases` and match only a whole comma-component,
+  never a token-scan sub-token — so `sn` (socken)/`by` (village) don't anchor
+  Senegal/Belarus. To add/remove an ISO collision, edit the country gazetteer's
+  aliases, not the resolver.
+
+Historical-gazetteer junk aliases are stripped at build time by
+`scripts/clean-historical-aliases.ts` (folded into `build-world-historical.ts`
++ `build-lang-world-historical.ts`). The reusable real-DB harness for the 15
+reported cases is `scripts/check-reported-places.ts`.
+
 ## Workflow when a user reports a bad pin
 
 1. **Reproduce** — open the place panel; the "Resolved via" row shows the gazetteer + match quality.
@@ -87,5 +116,5 @@ After any fix:
 
 - The script auto-bumps the resolver's WeakMap caches by re-creating the gazetteer set per run. If you're iterating quickly, expect ~1–2s startup as `getNameIndex` builds.
 - `gazetteer_config` may be missing on new databases — fall back to enabling all bundled IDs (the resolver doesn't care).
-- Many "ambiguous" markings are cosmetic, not bugs — `California, USA` matching both `world-admin1` and `us-all-states` to the same lat/lon is fine. Filter them out of the report unless investigating ambiguity itself.
+- Since the 2026-06-18 plan, an `ambiguous` mark is meaningful, not cosmetic: the same place from two gazetteers (e.g. `California, USA` via `world-admin1` + `us-all-states` at the same lat/lon) is collapsed and resolves clean. An `ambiguous` result now means two genuinely different places the resolver can't rank — investigate it, don't filter it out.
 - The map UI surfaces gazetteer ID + match quality in two places: the marker popup ([MapView.vue](../../src/renderer/views/MapView.vue) `popup-resolved` block) and the place panel ([PlacePanel.vue](../../src/renderer/components/PlacePanel.vue) `resolved-field` block). When debugging, read those before opening the script.
