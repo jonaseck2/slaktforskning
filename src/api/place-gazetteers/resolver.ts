@@ -21,25 +21,49 @@ function normalizeUniversal(s: string): string {
 }
 
 /**
+ * Pre-normalized / pre-compiled form of a gazetteer's `normalize` rules, built
+ * once per gazetteer and cached. Without this, `normalizeForGazetteer` re-ran
+ * `normalizeUniversal(suf)` for every suffix and recompiled every `stripPattern`
+ * regex on every node at index time — O(rules × nodes) regex work that turns a
+ * large (merged, all-locale) rule set into a multi-second index build.
+ */
+type PreparedNormRules = { sufs: string[]; pres: string[]; pats: RegExp[] };
+const normRulesCache = new WeakMap<Gazetteer, PreparedNormRules>();
+
+function getNormRules(gaz: Gazetteer): PreparedNormRules {
+  const cached = normRulesCache.get(gaz);
+  if (cached) return cached;
+  const rules = gaz.normalize;
+  const sufs = (rules?.stripSuffixes ?? []).map(s => normalizeUniversal(s)).filter(Boolean);
+  const pres = (rules?.stripPrefixes ?? []).map(s => normalizeUniversal(s)).filter(Boolean);
+  const pats: RegExp[] = [];
+  for (const p of rules?.stripPatterns ?? []) {
+    try { pats.push(new RegExp(p, 'i')); } catch { /* skip invalid regex — gazetteer data is untrusted */ }
+  }
+  const prepared: PreparedNormRules = { sufs, pres, pats };
+  normRulesCache.set(gaz, prepared);
+  return prepared;
+}
+
+/**
  * Per-gazetteer normalization. Runs `normalizeUniversal` first, then strips
  * suffixes / prefixes / patterns declared on the gazetteer itself. Used for
  * both indexing the gazetteer's nodes and for comparing input components.
+ * Rules are pre-normalized once via `getNormRules` (see its note).
  */
 function normalizeForGazetteer(s: string, gaz: Gazetteer): string {
   let out = normalizeUniversal(s);
-  const rules = gaz.normalize;
-  if (!rules) return out;
+  if (!gaz.normalize) return out;
+  const { sufs, pres, pats } = getNormRules(gaz);
 
-  if (rules.stripSuffixes && rules.stripSuffixes.length > 0) {
+  if (sufs.length > 0) {
     // Strip any trailing whitespace-separated suffix in the list (case-
     // insensitive — the input is already lowercased by normalizeUniversal).
     // Loop because legitimate inputs sometimes stack two ("Roskilde sogn kn").
     let changed = true;
     while (changed) {
       changed = false;
-      for (const suf of rules.stripSuffixes) {
-        const sufNorm = normalizeUniversal(suf);
-        if (!sufNorm) continue;
+      for (const sufNorm of sufs) {
         if (out === sufNorm) continue; // never strip the whole string
         if (out.endsWith(' ' + sufNorm)) {
           out = out.slice(0, -1 - sufNorm.length).trim();
@@ -50,24 +74,15 @@ function normalizeForGazetteer(s: string, gaz: Gazetteer): string {
     }
   }
 
-  if (rules.stripPatterns && rules.stripPatterns.length > 0) {
-    for (const pat of rules.stripPatterns) {
-      try {
-        const re = new RegExp(pat, 'i');
-        out = out.replace(re, '').replace(/\s+/g, ' ').trim();
-      } catch {
-        // Skip invalid regex sources rather than throw — gazetteer data is untrusted.
-      }
-    }
+  for (const re of pats) {
+    out = out.replace(re, '').replace(/\s+/g, ' ').trim();
   }
 
-  if (rules.stripPrefixes && rules.stripPrefixes.length > 0) {
+  if (pres.length > 0) {
     let changed = true;
     while (changed) {
       changed = false;
-      for (const pre of rules.stripPrefixes) {
-        const preNorm = normalizeUniversal(pre);
-        if (!preNorm) continue;
+      for (const preNorm of pres) {
         if (out === preNorm) continue;
         if (out.startsWith(preNorm + ' ')) {
           out = out.slice(preNorm.length + 1).trim();
