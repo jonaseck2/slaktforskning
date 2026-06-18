@@ -110,6 +110,16 @@ interface MatchCandidate {
    * consumed multiple input tokens over a shallow root-only candidate.
    */
   pathNodesMatched: number;
+  /** True when this candidate's root is the "World (Historical)" tree. */
+  isHistorical: boolean;
+  /**
+   * True when a node on a historical path matched on its OWN name (not via a
+   * modern-exonym alias). Lets a candidate the user explicitly named (e.g.
+   * "Qajar Iran") survive the modern-beats-historical down-rank, while a
+   * historical node that only matched a modern alias (Qajar Iran via "Iran")
+   * loses to the modern country.
+   */
+  matchedHistoricalByOwnName: boolean;
 }
 
 // Name index: maps gazetteer-normalized name → list of entries. Each entry
@@ -282,6 +292,9 @@ function findMatches(
 
       const usedPathIndices = new Set<number>();
       const matchedInputIndices = new Set<number>();
+      // Did any input form match a path node by its OWN name (not an alias)?
+      // Used for the modern-vs-historical down-rank — see candidate push below.
+      let matchedOwnName = false;
       for (let ci = 0; ci < components.length; ci++) {
         // Build a candidate list of forms for this component: the whole
         // component first (preferred — exact comma-component match), then
@@ -312,6 +325,7 @@ function findMatches(
             if (hit) {
               usedPathIndices.add(pi);
               matched = true;
+              if (np.name === form) matchedOwnName = true;
               if (isWhole) break; // whole-component match: stop, don't double-count tokens
               // For token matches, keep scanning forms so a second token in the
               // same component can match a different path node.
@@ -335,6 +349,7 @@ function findMatches(
         }
       }
 
+      const isHistorical = fullPath[0]?.name === 'World (Historical)';
       candidates.push({
         path: fullPath,
         matched: entry.pathNames,
@@ -343,6 +358,8 @@ function findMatches(
         contradictions,
         lastComponentMatched: matchedInputIndices.has(lastIndex),
         pathNodesMatched: usedPathIndices.size,
+        isHistorical,
+        matchedHistoricalByOwnName: isHistorical && matchedOwnName,
       });
     }
   }
@@ -360,6 +377,12 @@ function pickBest(candidates: MatchCandidate[]): { best: MatchCandidate; ambiguo
   // strongest signal for picking the right gazetteer (the contradiction
   // count is then the depth-weighted global score from `resolvePlace`).
   candidates.sort((a, b) => {
+    // 0. Modern beats historical unless the historical node was named by its own
+    //    name (not a modern-exonym alias). The merged tree is one gazetteer, so
+    //    modern and historical candidates are compared here. See isBetterCandidate.
+    const aHistAlias = a.isHistorical && !a.matchedHistoricalByOwnName;
+    const bHistAlias = b.isHistorical && !b.matchedHistoricalByOwnName;
+    if (aHistAlias !== bHistAlias) return aHistAlias ? 1 : -1;
     // 1. Fewer contradictions first (unmatched components that exist elsewhere)
     if (a.contradictions !== b.contradictions) return a.contradictions - b.contradictions;
     // 2. Prefer candidates where the last input component matched (geographic anchor)
@@ -674,6 +697,14 @@ export function searchGazetteer(
 }
 
 function isBetterCandidate(a: MatchCandidate, b: MatchCandidate): boolean {
+  // 0. Modern beats historical UNLESS the historical one was matched by its own
+  //    name (the user explicitly named the historical entity). A modern match
+  //    must never lose to a historical node that only matched a modern-exonym
+  //    alias — "New York" → United States, not "Estado Novo" (alias "New");
+  //    "Rasht, Iran" → Iran, not "Qajar Iran" (alias "Iran").
+  const aHistAlias = a.isHistorical && !a.matchedHistoricalByOwnName;
+  const bHistAlias = b.isHistorical && !b.matchedHistoricalByOwnName;
+  if (aHistAlias !== bHistAlias) return !aHistAlias;
   // 1. Last component = broadest geographic scope (country/region) — strongest signal.
   //    "Pitcairn, Skottland" matching Scotland beats matching Pitcairn, PA.
   if (a.lastComponentMatched !== b.lastComponentMatched) return a.lastComponentMatched;
