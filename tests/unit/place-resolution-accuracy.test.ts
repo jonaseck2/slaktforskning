@@ -69,4 +69,20 @@ describe('place resolution accuracy — reported corpus', () => {
     expect(path('Genève, Schweiz')).toContain('Switzerland');
     expect(path('Warszawa, Polen')).toContain('Poland');
   });
+
+  it('suffix/genitive Swedish strings resolve to Sweden, not an ISO-coded country (merged normalize)', () => {
+    // The merged tree must carry the per-source normalize vocabulary, or
+    // "Stockholms kn" / "Bergs kn" never reduce to Stockholm / Berg and a stray
+    // ISO code ("KN"→Saint Kitts, "MO"→Macao) becomes the only match.
+    expect(path('Ängby, Stockholms kn')).toContain('Sweden');
+    expect(path('Ängby, Stockholms kn')).not.toContain('Saint Kitts and Nevis');
+    expect(path('Mo, Bergs kn')).toContain('Sweden');
+    expect(path('Mo, Bergs kn')).not.toContain('Macao');
+  });
+
+  it('Boston, USA stays in the United States (no Boston, MA in bundled data — coverage gap)', () => {
+    // We cannot pin Massachusetts without city-level data; the honest guard is
+    // that it stays in the US rather than landing abroad. Documents the gap.
+    expect(path('Boston, USA')).toContain('United States');
+  });
 });
