@@ -10,7 +10,9 @@ This file lists what's **planned**. Two states only: planned (here) or done (arc
 
 Active plan files under `docs/plans/`. Each entry links the plan and states the user goal it delivers.
 
-_None currently planned._
+### Incomplete & edge-case date handling _(design — Bengt 107/108/109)_
+
+Spec: [`docs/plans/2026-06-18-incomplete-date-handling-design.md`](plans/2026-06-18-incomplete-date-handling-design.md). **User goal:** a researcher can record a date at any precision and across any GEDCOM-expressible year (pre-1000, BCE), and it sorts correctly on the Timeline — year-only death after the year's dated events, burial after death; future years warn but don't block. Design lands first; implementation plan to follow.
 
 ---
 
