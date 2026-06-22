@@ -49,7 +49,7 @@ jobs:
       version: ${{ steps.read.outputs.version }}
       should-release: ${{ steps.check.outputs.should-release }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # workflow_run runs against the default branch's SHA by default;
           # pin to the exact SHA the upstream CI run validated, so the bundle
@@ -100,7 +100,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
