@@ -147,7 +147,7 @@ jobs:
         run: npm run build:mcp-sidecar
 
       - name: Build, sign, and publish
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # linuxdeploy + its plugins are AppImages; ubuntu-24.04 has no libfuse2,
