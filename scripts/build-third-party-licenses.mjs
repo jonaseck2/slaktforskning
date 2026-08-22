@@ -72,14 +72,29 @@ const KNOWN_LICENSE_HINTS = new Map([
 
 // Package names whose entire subtree is build-time tooling, pruned from the
 // production license walk. These reach `npm ls --omit=dev --all` only as an
-// OPTIONAL peer dependency of a real prod dep — vue-router 5.1+ lists `vite` as
-// an optional peer for its typed-routing plugin, which drags vite → esbuild →
-// rollup and their platform binaries into the tree. None of it is bundled into
-// the shipped app, and the platform-binary packages (`@esbuild/<plat>`,
-// `@rollup/rollup-<plat>`) ship no LICENSE file at all. We prune the subtree
-// here explicitly and log each prune (per the no-silent-skip rule) rather than
-// fabricating license resolution for tooling that never ships.
-const BUILD_ONLY_SUBTREES = new Set(['vite']);
+// OPTIONAL peer dependency of a real prod dep. Two such entry points exist:
+// vue-router 5.1+ lists `vite` as an optional peer for its typed-routing
+// plugin, and vue-router 5.2+ depends on `unplugin`, which declares every
+// bundler it can host (`esbuild`, `rollup`, `vite`, `webpack`, …) as an
+// optional peer. Both paths drag the bundlers and their platform binaries into
+// the tree. None of it is bundled into the shipped app, and the platform-binary
+// packages (`@esbuild/<plat>`, `@rollup/rollup-<plat>`) ship no LICENSE file at
+// all. Each bundler is listed here by name so a new optional-peer path cannot
+// route around the prune — `vite` alone stopped being sufficient when
+// `unplugin` arrived. We prune the subtree explicitly and log each prune (per
+// the no-silent-skip rule) rather than fabricating license resolution for
+// tooling that never ships. `unplugin` itself is a real (non-optional)
+// dependency of vue-router, so it stays in the license list.
+const BUILD_ONLY_SUBTREES = new Set([
+  'vite',
+  'esbuild',
+  'rollup',
+  'rolldown',
+  'webpack',
+  'unloader',
+  '@farmfe/core',
+  '@rspack/core',
+]);
 
 /**
  * Run `npm ls <args> --json` and return the parsed JSON tree.
