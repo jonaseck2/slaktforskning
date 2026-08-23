@@ -193,10 +193,16 @@ Inlining the 6 steps in every plan is duplication; the `/close-out` skill is the
 
 ## Lifecycle hygiene
 
-A plan file in `docs/plans/` is in one of two states. There is no third state.
+A file in `docs/plans/` is in one of three states.
 
-- **Active:** at least one `[ ]` checkbox exists in the file. The plan is in flight.
-- **Done:** every checkbox is `[x]`. The plan MUST be in `docs/plans/archive/`, not `docs/plans/`.
+- **Design spec:** no checkboxes at all. Describes intent; delivers nothing on its own.
+  Lives in `docs/plans/` until **every** part of it has shipped, then archives alongside
+  the last implementation plan that delivered a part of it. A spec whose Parts 1-3 shipped
+  and whose Parts 4-5 have not is **not** ready to archive — archiving it makes "archived"
+  read as "finished", which is the exact misreading the archive entry has to spend a
+  paragraph undoing.
+- **Active plan:** at least one `[ ]` checkbox exists. In flight.
+- **Done plan:** every checkbox is `[x]`. MUST be in `docs/plans/archive/`, not `docs/plans/`.
 
 If the last `[ ]` flips to `[x]` and the file still lives in `docs/plans/`, that is a **lifecycle violation**. The fix is not a TODO, not a comment, not "we'll archive it next time" — the fix is to invoke the `close-out` skill, which walks CLAUDE.md "Finishing a plan" in order and refuses partial work.
 
@@ -204,11 +210,25 @@ If the last `[ ]` flips to `[x]` and the file still lives in `docs/plans/`, that
 
 ```bash
 for f in docs/plans/*.md; do
-  [ -f "$f" ] && grep -q '\[ \]' "$f" || echo "DRIFT: $f has no [ ] but is not archived"
+  [ -f "$f" ] || continue
+  # A file with no checkboxes at all is a design spec, not a finished plan.
+  grep -q '^- \[' "$f" || continue
+  grep -q '\[ \]' "$f" || echo "DRIFT: $f has no [ ] but is not archived"
 done
 ```
 
-Any non-archive output is a drift violation. The `close-out` skill is the canonical fix; manually moving the file without walking the 6 steps is also a violation (skips version bump, CHANGELOG, PLAN.md sync, archive PLAN.md append, and Step 7 post-close hygiene).
+Any output is a drift violation.
+
+**Why the `grep -q '^- \['` guard exists.** Without it the check flags every design spec,
+because a spec has no `[ ]` and therefore "has no unchecked boxes". On 2026-08-23 it
+reported 6 of 6 files in `docs/plans/` as drift, every one a false positive. A check that
+fires on everything is a check nobody reads — and it hid the one real finding underneath,
+that two of those specs were half-delivered with no plan filed for the remaining parts.
+
+**A design spec needs its own tracking, because the mechanical check cannot help.** When
+an implementation plan archives and its spec has parts left, the close-out records which
+parts remain and which plan owns them — in the archive entry and, if no plan owns them
+yet, by filing one. The `close-out` skill is the canonical fix; manually moving the file without walking the 6 steps is also a violation (skips version bump, CHANGELOG, PLAN.md sync, archive PLAN.md append, and Step 7 post-close hygiene).
 
 **Why this is a rule, not a guideline:** through 2026-04 and -05 the project accumulated four checked-but-unarchived plans from 2026-05-14. The drift was structural: no rule said "this state is illegal," and no skill enforced the close-out as a single command. This rule + the `close-out` skill close the loop.
 
