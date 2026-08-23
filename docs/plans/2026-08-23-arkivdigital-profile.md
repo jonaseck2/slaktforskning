@@ -94,7 +94,7 @@ Each group ends green and shippable. Stopping after A or after B leaves a cohere
 **Interfaces:**
 - Produces: `isArkivDigital(tree: GedcomNode[]): boolean`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-profile.test.ts
@@ -131,12 +131,12 @@ describe('isArkivDigital', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/import-arkivdigital-profile.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/import/gedcom/profiles/arkivdigital.ts
@@ -167,11 +167,11 @@ export function isArkivDigital(tree: GedcomNode[]): boolean {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/profiles/arkivdigital.ts tests/unit/import-arkivdigital-profile.test.ts
@@ -194,7 +194,7 @@ git commit -m "feat(import): detect ArkivDigital GEDCOM files"
   ```
   Returns outermost-first (`country` through `locality`), or `null` when the PLAC has no `_ADPL`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/import-arkivdigital-profile.test.ts
@@ -251,11 +251,11 @@ describe('parseAdpl', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — `parseAdpl is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // append to src/import/gedcom/profiles/arkivdigital.ts
@@ -297,11 +297,11 @@ export function parseAdpl(placNode: GedcomNode): PlaceLevel[] | null {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 5 new tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/profiles/arkivdigital.ts tests/unit/import-arkivdigital-profile.test.ts
@@ -327,7 +327,7 @@ git commit -m "feat(import): parse the ArkivDigital _ADPL place hierarchy"
 
 **Performance contract.** `.claude/rules/performance.md`. Resolve level by level: all countries in one round, then all counties, then parishes, then localities. Four rounds regardless of place count. Never one query per chain.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/places-hierarchy.test.ts
@@ -395,21 +395,21 @@ describe('bulkResolveHierarchy', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Resolve level by level. For each level index `i`, collect every distinct `(parentId, name, externalId)` at that depth across all chains, issue one chunked `SELECT` for the existing rows and one bulk `INSERT` for the missing ones, then use the resulting ids as the parents for level `i + 1`. Identity at a level is `(parent_place_id, normalized_name, externalId ?? '')` — the `externalId` term is what keeps two same-named parishes in different counties apart. Reuse the `CHUNK = 800` bind-limit pattern from `bulkResolvePlaces` in `src/api/places.ts:45`.
 
 The `externalId` is persisted via Task 5's `external_identifiers`; until that exists, return it to the caller alongside the resolved place so Task 6 can flush it. Keep map insertion in chain input order so the result is stable.
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 5 tests, including the query-count assertion.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/places_hierarchy.ts tests/unit/places-hierarchy.test.ts
@@ -430,7 +430,7 @@ git commit -m "feat(api): bulk hierarchical place resolution, four rounds not N 
 
 Keying by the display string is what makes this change local. `event-importer.ts` still calls `resolvePlaceFn(db, placeName)` with the PLAC value and still gets a `Map.get` hit — it never learns the hierarchy exists.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-places.test.ts
@@ -509,11 +509,11 @@ describe('ArkivDigital place hierarchy', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL on the first test — six place names expected, two found (the flat display strings).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Add `isArkivDigital: boolean` to `ImportContext` in `import-types.ts` and set it in `createImportContext` from `isArkivDigital(tree)` in `import-core.ts:110-118`, beside `isGenney` and `isHolger`.
 
@@ -521,16 +521,16 @@ In `phasePrepPlaces`, branch before the existing walk: when `ctx.isArkivDigital`
 
 Leave the `if (ctx.isGenney) return;` guard as is.
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Confirm the accounting gate still passes**
+- [x] **Step 5: Confirm the accounting gate still passes**
 
 Run: `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/import-tag-accounting.test.ts`
 Expected: PASS — the `_ADPL` entries are still declared. Deleting them is Task 6, once the ids are stored too.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/import/gedcom/phases/prep-places.ts src/import/gedcom/import-core.ts src/import/gedcom/import-types.ts tests/unit/import-arkivdigital-places.test.ts
@@ -557,7 +557,7 @@ git commit -m "feat(import): build the ArkivDigital place hierarchy at prep time
 
 **Why this table exists is round-trip, not dedup.** Under the registry contract a representable value cannot be declared `excluded`, and `_AID` is a plain custom tag. It must be stored to round-trip. The precedent is `person_identifiers`, which exists for exactly this reason.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/external-identifiers.test.ts
@@ -615,11 +615,11 @@ describe('external_identifiers', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Add the table to `src/api/schema.ts`**
+- [x] **Step 3: Add the table to `src/api/schema.ts`**
 
 Inside the main `CREATE TABLE IF NOT EXISTS` block, beside `person_identifiers`:
 
@@ -639,11 +639,11 @@ CREATE INDEX IF NOT EXISTS idx_external_identifiers_lookup ON external_identifie
 
 No `REFERENCES` clause — the table spans five entity types and SQLite has no polymorphic foreign key. The lookup index is what makes exact dedup a single indexed scan when Parts 4-5 need it.
 
-- [ ] **Step 4: Implement `src/api/external_identifiers.ts`**
+- [x] **Step 4: Implement `src/api/external_identifiers.ts`**
 
 `bulkAddExternalIdentifiers` uses `INSERT OR IGNORE` with multi-row VALUES, chunked to stay under the 999-bind cap — the same shape as `bulkCreateSources`. `getExternalIdentifiers` is a single indexed `SELECT`.
 
-- [ ] **Step 5: Add registry entries**
+- [x] **Step 5: Add registry entries**
 
 In `src/api/gedcom_fidelity_registry.ts`, beside the `person_identifiers` block:
 
@@ -658,12 +658,12 @@ In `src/api/gedcom_fidelity_registry.ts`, beside the `person_identifiers` block:
 
 These are `lossless` only once Task 6 emits and re-reads them. Write the entries here and let the per-field test fail until Task 6 lands — that failure is the reminder, not a bug.
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run the new test plus `tests/unit/gedcom-fidelity-registry-coverage.test.ts`.
 Expected: the new test PASSES, coverage PASSES, and `gedcom-fidelity-per-field.test.ts` FAILS on the new columns until Task 6.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/api/schema.ts src/api/external_identifiers.ts src/api/gedcom_fidelity_registry.ts tests/unit/external-identifiers.test.ts
@@ -682,7 +682,7 @@ git commit -m "feat(api): external_identifiers table for source and place archiv
 - Consumes: Task 5's `bulkAddExternalIdentifiers`, Task 3's chain resolution.
 - Produces: no new exports. Removes 8 entries from `DECLARED_UNMAPPED` — `SOUR._AID`, `*.SOUR._AID`, and the six `_ADPL` paths other than `._JUDICIAL`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-identifiers.test.ts
@@ -757,32 +757,32 @@ describe('ArkivDigital archive pointers', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — `external_identifiers` is empty.
 
-- [ ] **Step 3: Store on import**
+- [x] **Step 3: Store on import**
 
 `phaseSources`: read `_AID` off each SOUR node and collect `{ entity_type: 'source', entity_id, system: 'arkivdigital', value }`, flushed with one `bulkAddExternalIdentifiers` after the bulk source insert — the same collect-then-flush shape as `repoLinks`.
 
 `phasePrepPlaces` AD branch: collect the parish-level `externalId` from each chain and flush once with `system: 'arkivdigital.parish'`.
 
-- [ ] **Step 4: Re-emit on export**
+- [x] **Step 4: Re-emit on export**
 
 In the SOUR emitter at `src/gedcom/exporter.ts:340`, beside `_URL` and `_STYPE`, emit `1 _AID <value>` for the `arkivdigital` identifier. Prefetch identifiers by entity into a Map before the loop — `.claude/rules/performance.md` forbids a per-source fetch here. Extend `ExportPrefetch` in `src/gedcom/export-prefetch.ts` with `externalIdentifiersByEntity` rather than adding a per-entity query, and add its query-count assertion to `tests/unit/export-perf.test.ts`.
 
 Reconstruct the `_ADPL` block when emitting PLAC: walk `parent_place_id` up from the event's place, map the levels back to `_LOCALITY` / `_PARISH` / `_COUNTY` / `_COUNTRY`, and attach `_PARISH_AID` from the parish's identifier. This is deterministic derivation from stored values, not inference.
 
-- [ ] **Step 5: Delete the 8 declared entries**
+- [x] **Step 5: Delete the 8 declared entries**
 
 Remove `SOUR._AID`, `*.SOUR._AID`, `*.PLAC._ADPL`, `._LOCALITY`, `._PARISH`, `._PARISH_AID`, `._COUNTY`, `._COUNTRY` from `DECLARED_UNMAPPED`. Leave `._JUDICIAL` for Task 7.
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run the new test, `import-tag-accounting.test.ts`, `gedcom-fidelity-per-field.test.ts` and `export-perf.test.ts`.
 Expected: all PASS. The accounting gate passing with those 8 entries gone is the proof the mapping is complete.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/import/gedcom/ src/gedcom/ tests/unit/import-arkivdigital-identifiers.test.ts
@@ -801,7 +801,7 @@ git commit -m "feat(import): round-trip ArkivDigital archive pointers"
 
 `_JUDICIAL` is the härad (judicial district) of a probate. It is an attribute of the parish, not a container. It goes in `places.notes` on the parish row, prefixed `Härad: `, because `places` has no dedicated column and adding one for eight occurrences across four files is not warranted.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/import-arkivdigital-places.test.ts
@@ -826,19 +826,19 @@ it('records the härad on the parish', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — notes is the empty string.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Return the `_JUDICIAL` value from the profile, set it on the parish row during resolution, and emit `4 _JUDICIAL <value>` when reconstructing `_ADPL` on export. Delete `*.PLAC._ADPL._JUDICIAL` from `DECLARED_UNMAPPED`.
 
-- [ ] **Step 4: Run the tests and the gate**
+- [x] **Step 4: Run the tests and the gate**
 
 Expected: PASS, both.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/ src/gedcom/exporter.ts tests/unit/import-arkivdigital-places.test.ts
@@ -857,7 +857,7 @@ git commit -m "feat(import): keep the härad from ArkivDigital probate places"
 
 `citations.date_accessed` already exists and is empty on every imported row. `SOUR.DATA.DATE` is the date the researcher looked at the record — 6147 occurrences across the four files.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-citations.test.ts
@@ -913,21 +913,21 @@ describe('ArkivDigital citations', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — `date_accessed` is the empty string.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In the citation builder in `event-importer.ts`, read `DATA > DATE` into `date_accessed` and the citation-level `_AID` into an `external_identifiers` row with `system: 'arkivdigital.image'`. Collect and flush in bulk with the citations, never per citation.
 
 Delete `*.SOUR.DATA.DATE` from `DECLARED_UNMAPPED`.
 
-- [ ] **Step 4: Run the tests and the gate**
+- [x] **Step 4: Run the tests and the gate**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/ tests/unit/import-arkivdigital-citations.test.ts
@@ -946,7 +946,7 @@ git commit -m "feat(import): keep citation access dates and image pointers"
 
 `_DESC` is the researcher's own words — `Trolovningsbarn`, `Felaktigt födelseår i källan`, `Fade enl. muntl. erkännande inför dopförättaren Karl Petrus Lundberg`. 900 occurrences. This is the tag whose silent loss made the whole accounting effort necessary.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-annotations.test.ts
@@ -1001,21 +1001,21 @@ describe('ArkivDigital annotations', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — event notes are empty.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `collectEventNode`, append every `_DESC` child's value to the event's note parts, joined on newline so a second `_DESC` cannot overwrite the first. In `phaseIndividuals`, map a level-1 `_TITLE` to an occupation event with the value set, and drop `_TITLE` from the skipped-tag path since it is now handled.
 
 Delete `*._DESC` and `*._TITLE` from `DECLARED_UNMAPPED`.
 
-- [ ] **Step 4: Run the tests and the gate**
+- [x] **Step 4: Run the tests and the gate**
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/ tests/unit/import-arkivdigital-annotations.test.ts
@@ -1035,7 +1035,7 @@ git commit -m "feat(import): keep ArkivDigital event annotations and titles"
 
 Removes the remaining 11 declared entries.
 
-- [ ] **Step 1: Write the failing test for the relation mapper**
+- [x] **Step 1: Write the failing test for the relation mapper**
 
 ```ts
 // append to tests/unit/import-arkivdigital-profile.test.ts
@@ -1056,30 +1056,30 @@ describe('adParentRelSubtype', () => {
 });
 ```
 
-- [ ] **Step 2: Write the failing media test**
+- [x] **Step 2: Write the failing media test**
 
 Create `tests/unit/import-arkivdigital-media.test.ts` asserting, against a fixture carrying `_FOFN` / `_SIZE` / `_OWN` / `_CAPT` / `_PRIM` / `_POS`, that each value lands in a column that exists on `media` or `media_regions`. **First read the two table definitions and write assertions only against real columns.** Any field with no home is handled in Step 4, not by inventing a column.
 
-- [ ] **Step 3: Run and watch them fail**
+- [x] **Step 3: Run and watch them fail**
 
-- [ ] **Step 4: Implement, deleting each declared entry as its tag lands**
+- [x] **Step 4: Implement, deleting each declared entry as its tag lands**
 
 Work one tag at a time, re-running `import-tag-accounting.test.ts` after each deletion. A tag whose entry is deleted before it is modelled fails the gate immediately, which is the intended feedback.
 
 For any OBJE field with no column to hold it, do **not** add a column for a handful of occurrences — change its reason to `excluded:not-relevant — <why>` with the occurrence count. Deleting an entry is not the only correct outcome; converting `unmapped:pending-` to a permanent `excluded:` reason is equally valid and must be a deliberate, written call.
 
-- [ ] **Step 5: Confirm no pending entries remain**
+- [x] **Step 5: Confirm no pending entries remain**
 
 ```bash
 grep -c "unmapped:pending-arkivdigital-profile" src/import/gedcom/accounting-declared.ts
 ```
 Expected: `0`.
 
-- [ ] **Step 6: Run the full suite**
+- [x] **Step 6: Run the full suite**
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/import/gedcom/ tests/unit/
@@ -1092,20 +1092,20 @@ git commit -m "feat(import): parent relation types, note labels and media metada
 
 **Files:** none created — measurement against gitignored local data plus the running app.
 
-- [ ] **Step 1: Import all four real files and assert the numbers**
+- [x] **Step 1: Import all four real files and assert the numbers**
 
 Reuse `scripts/import-row-counts.ts`, extended to print the place-hierarchy depth histogram, `external_identifiers` counts by system, the `date_accessed` fill rate, and the count of events carrying `_DESC` text.
 
 Expected: ~1737 places with `parent_place_id` non-null on all but 6; ~9046 `external_identifiers`; ~6147 `date_accessed`; ~900 events with annotation text; **zero** places whose name contains a comma.
 
-- [ ] **Step 2: Confirm the two same-named parishes are distinct**
+- [x] **Step 2: Confirm the two same-named parishes are distinct**
 
 ```sql
 SELECT name, COUNT(*) FROM places WHERE place_type = 'parish' GROUP BY name HAVING COUNT(*) > 1;
 ```
 Expected: exactly the parish name that has two `_PARISH_AID` values, with count 2. This is the case the display string cannot express.
 
-- [ ] **Step 3: Verify the Places tree in the running app**
+- [x] **Step 3: Verify the Places tree in the running app**
 
 Per the user-goal-falsifiability check. Switch to a scratch database, import one AD file, open the Places view, and confirm the tree renders as a tree — `Sverige` expandable to counties, counties to parishes, parishes to localities.
 
@@ -1113,11 +1113,11 @@ Per the user-goal-falsifiability check. Switch to a scratch database, import one
 
 **Restore the original database afterwards.**
 
-- [ ] **Step 4: Query-count check on import**
+- [x] **Step 4: Query-count check on import**
 
 Extend the `export-perf.test.ts` spy pattern to the import path with a 5000-place synthetic AD file and assert the budget holds.
 
-- [ ] **Step 5: Record all output for the close-out commit**
+- [x] **Step 5: Record all output for the close-out commit**
 
 ---
 
@@ -1129,25 +1129,25 @@ Extend the `export-perf.test.ts` spy pattern to the import path with a 5000-plac
 
 `_SEPR`, `_DOMESTIC_PARTNERSHIP` and `_DATE_TEXT` are documented by ArkivDigital and occur zero times in the four real exports. Per the Scope deviation they are not implemented — but they must be visible.
 
-- [ ] **Step 1: Add all three to the synthetic fixture**
+- [x] **Step 1: Add all three to the synthetic fixture**
 
 A `_SEPR` event on the FAM, a `_DOMESTIC_PARTNERSHIP` event, and a `_DATE_TEXT` under a DATE.
 
-- [ ] **Step 2: Run the gate and watch it fail**
+- [x] **Step 2: Run the gate and watch it fail**
 
 Expected: FAIL, naming the three new paths. That failure is the mechanism working.
 
-- [ ] **Step 3: Declare them**
+- [x] **Step 3: Declare them**
 
 Reason: `unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape`.
 
 Note in the follow-up plan that these are events and a date qualifier, so `external_identifiers` is not their home. Until verbatim capture ships they are named and discarded; after it ships they are named and preserved. Neither state is the same as modelled, which is what the follow-up delivers once a real sample exists.
 
-- [ ] **Step 4: File `docs/plans/2026-08-23-ad-unsampled-tags.md`**
+- [x] **Step 4: File `docs/plans/2026-08-23-ad-unsampled-tags.md`**
 
 So no `pending-` reason points at a plan that does not exist. It should say what sample would unblock it: an ArkivDigital export containing a separation, a cohabitation, or a free-text date.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/fixtures/gedcom/dialects/arkivdigital.ged src/import/gedcom/accounting-declared.ts docs/plans/2026-08-23-ad-unsampled-tags.md
@@ -1158,19 +1158,19 @@ git commit -m "test(import): make the unsampled ArkivDigital tags visible"
 
 ### Task 13 (Tier 1): Close out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence.
+- [x] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence.
 
 ---
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] `grep -c "unmapped:pending-arkivdigital-profile" src/import/gedcom/accounting-declared.ts` returns 0.
-- [ ] Every `unmapped:pending-<plan>` reason still in the file names a plan that exists.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, and no `unmapped_data` table — the parallel session owns both.
-- [ ] Registry entries exist for every `external_identifiers` column and the per-field test passes.
-- [ ] Import and export query counts are O(tables), not O(places).
-- [ ] `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [x] Every task has a tier tag.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] `grep -c "unmapped:pending-arkivdigital-profile" src/import/gedcom/accounting-declared.ts` returns 0.
+- [x] Every `unmapped:pending-<plan>` reason still in the file names a plan that exists.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, and no `unmapped_data` table — the parallel session owns both.
+- [x] Registry entries exist for every `external_identifiers` column and the per-field test passes.
+- [x] Import and export query counts are O(tables), not O(places).
+- [x] `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e:full` green with output captured.
