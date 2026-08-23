@@ -8,7 +8,42 @@
 
 **Tech Stack:** TypeScript, Vitest, node-sqlite3-wasm, Vue 3.
 
-**Spec:** [docs/plans/2026-08-23-arkivdigital-import-design.md](docs/plans/2026-08-23-arkivdigital-import-design.md) — Part 0.
+**Spec:** [docs/plans/2026-08-23-arkivdigital-import-design.md](../2026-08-23-arkivdigital-import-design.md) — Part 0, written before the wider spec below existed.
+
+**Superseding spec:** [docs/plans/2026-08-23-import-tag-accounting-design.md](../2026-08-23-import-tag-accounting-design.md) — "Nothing Is Silently Dropped", six steps across all five importers. It was written in a parallel session while this plan was being executed. This plan turned out to be its steps 1, 3 and 6.
+
+## What this plan delivered, and what it did not
+
+The two documents were written independently and converged on the same mechanism. Mapping
+this plan onto the superseding spec's six steps, so nobody reads "archived" as "finished":
+
+| Step in the superseding spec | Status |
+|---|---|
+| 1 — marking, node-utils, raw traversal sites | **shipped here**, minus the lint rule that spec calls for |
+| 2 — normalize-boundary accounting, parser malformed-line counter | **not shipped.** `*.NAME.GIVN`, `*.NAME.SURN`, `HEAD.GEDC` and `HEAD.CHAR` are consumed before the session opens, so this plan *declared* them `excluded:redundant` / `excluded:structural` rather than accounting for them. Owned by [2026-08-23-unmapped-capture-design.md](../2026-08-23-unmapped-capture-design.md), which makes the hole a capture prerequisite. |
+| 3 — declared registry + corpus accounting test | **shipped here** as `accounting-declared.ts` plus a gate over all 20 committed fixtures. The real-world corpus is a non-CI script, because `export-import/samples/` is gitignored and absent on a clean checkout. |
+| 4 — `unmapped_data` table, verbatim capture, exporter re-emission | **not shipped.** This is the step that makes unmapped non-destructive. Owned by [2026-08-23-unmapped-capture-design.md](../2026-08-23-unmapped-capture-design.md). |
+| 5 — closed-schema coverage for RootsMagic, Genney, Gramps | **not shipped.** Those importers read SQLite / XML / Derby, not a GEDCOM node tree, so this mechanism does not reach them. |
+| 6 — import-report UI | **shipped here.** |
+
+**The honest summary: this plan made the report true. It did not make the data survive.**
+The superseding spec's own words — "reporting a drop is weaker than not dropping". A tag
+named in the report is still a tag the database does not hold.
+
+Two implementation details differ from the superseding spec and are worth knowing before
+step 4 builds on them:
+
+- It specifies a `WeakSet`; this shipped a module-scoped `Set` that is created and
+  discarded per import, with re-entry throwing. Same effect, and the explicit
+  begin/end is what lets `collectUnaccounted` stay a pure function.
+- It counts 34 raw traversal sites. This found ~20 that matter: the seven in
+  `previewGedcomImport` are on the preview path, which never opens a session, and
+  `normalize.ts` and `detect.ts` run before the session by construction.
+
+The remaining follow-ups this plan filed on its own account are
+[2026-08-23-dialect-tag-review.md](../2026-08-23-dialect-tag-review.md) — the 13 dialect
+tags declared `unmapped:pending-dialect-tag-review`, plus the 742 undeclared paths the
+real-world corpus surfaced.
 
 ## Global Constraints
 
