@@ -65,8 +65,71 @@ function capitalizeFirst(s: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
+/**
+ * Emit the `_ADPL` hierarchy block reconstructed from `parent_place_id`.
+ *
+ * Without this the export emits only the leaf name, and a place stored as
+ * Sverige > Gävleborgs län > Valbo > Bäck comes back from a re-import as a
+ * single row named 'Bäck' — measured: four rows collapse to one. Rebuilding the
+ * block from stored parent links is deterministic derivation, not inference.
+ *
+ * ArkivDigital-shaped on purpose: `_ADPL` is where the levels came from and
+ * where the importer reads them back. Nothing else consumes them.
+ */
+function emitAdplBlock(
+  lines: string[],
+  place: Place,
+  subLevel: number,
+  placeById: Map<string, Place>,
+  externalIdsByEntity: Map<string, Array<{ system: string; value: string }>>,
+): void {
+  const TAG_BY_TYPE: Record<string, string> = {
+    country: '_COUNTRY',
+    admin1: '_COUNTY',
+    parish: '_PARISH',
+    locality: '_LOCALITY',
+  };
+
+  // Walk leaf → root, guarding against a cycle in parent_place_id.
+  const chain: Place[] = [];
+  const seen = new Set<string>();
+  let cur: Place | undefined = place;
+  while (cur && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    chain.push(cur);
+    cur = cur.parent_place_id ? placeById.get(cur.parent_place_id) : undefined;
+  }
+  const typed = chain.filter(p => p.place_type && TAG_BY_TYPE[p.place_type]);
+  if (typed.length === 0) return;
+
+  lines.push(`${subLevel} _ADPL`);
+  // Emit leaf → root, matching the order ArkivDigital writes.
+  for (const node of typed) {
+    const tag = TAG_BY_TYPE[node.place_type!];
+    lines.push(`${subLevel + 1} ${tag} ${node.name}`);
+    if (node.place_type === 'parish') {
+      // mediaEntityKey joins with a NUL byte, not a space — hand-building the
+      // key here silently never matched.
+      const parishId = (externalIdsByEntity.get(mediaEntityKey('place', node.id)) ?? [])
+        .find(e => e.system === 'arkivdigital.parish');
+      if (parishId) lines.push(`${subLevel + 1} _PARISH_AID ${parishId.value}`);
+      const harad = /^Härad: (.+)$/m.exec(node.notes ?? '');
+      if (harad) lines.push(`${subLevel + 1} _JUDICIAL ${harad[1]}`);
+    }
+  }
+}
+
 /** Emit MAP/ADDR/custom sub-tags under a PLAC tag. subLevel = level of the sub-tags (PLAC_level + 1). */
-function emitPlaceSubTags(lines: string[], place: Place, subLevel: number): void {
+function emitPlaceSubTags(
+  lines: string[],
+  place: Place,
+  subLevel: number,
+  placeById?: Map<string, Place>,
+  externalIdsByEntity?: Map<string, Array<{ system: string; value: string }>>,
+): void {
+  if (placeById && externalIdsByEntity && place.parent_place_id) {
+    emitAdplBlock(lines, place, subLevel, placeById, externalIdsByEntity);
+  }
   if (place.latitude != null && place.longitude != null) {
     const latDir = place.latitude >= 0 ? 'N' : 'S';
     const lonDir = place.longitude >= 0 ? 'E' : 'W';
@@ -338,6 +401,12 @@ export async function exportGedcom(
     // T02: legacy `sources.repository` free-text column was dropped — REPO
     // structures are emitted below via structured `source_repositories` joins.
     if (src.url) lines.push(`1 _URL ${src.url}`);
+    // ArkivDigital archive pointer. Round-trip only — the app never reads this
+    // to make a decision; the importer stores what the file said and the
+    // exporter writes it back so the researcher keeps their route to the image.
+    for (const ident of pre.externalIdsByEntity.get(mediaEntityKey('source', src.id)) ?? []) {
+      if (ident.system === 'arkivdigital') lines.push(`1 _AID ${ident.value}`);
+    }
     // source_type is exported as a raw enum string via the custom _STYPE sub-tag.
     // Lossless under both 5.5.1 and 7.0 — the importer reads _STYPE back verbatim,
     // and unknown enum values (e.g. future additions like passenger_list,
@@ -628,7 +697,7 @@ export async function exportGedcom(
         const place = pre.placeById.get(ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
-          emitPlaceSubTags(lines, place, 3);
+          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
           await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;
@@ -899,7 +968,7 @@ export async function exportGedcom(
         const place = pre.placeById.get(ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
-          emitPlaceSubTags(lines, place, 3);
+          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
           await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;

@@ -1,6 +1,7 @@
 // ── Phase 0.3: pre-resolve places ──────────────────────────────────────────
 
 import { runBatch } from '../../../api/db';
+import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
 import { bulkResolvePlaces } from '../../../api/places';
 import { bulkResolveHierarchy, type HierarchyLevel } from '../../../api/places_hierarchy';
 import type { GedcomNode } from '../../../gedcom/parser';
@@ -48,8 +49,13 @@ export async function phasePrepPlaces(ctx: ImportContext): Promise<void> {
   const placeMap = new Map<string, Awaited<ReturnType<typeof bulkResolvePlaces>> extends Map<string, infer P> ? P : never>();
 
   // ── ArkivDigital: resolve the explicit _ADPL hierarchy first ─────────────
+  // Tag-driven, not vendor-driven: any PLAC carrying an _ADPL block takes the
+  // hierarchy path. That includes this app's own exports, which reconstruct the
+  // block from stored parent links — without it the hierarchy would not survive
+  // a round-trip through our own exporter.
   const flatNodes: GedcomNode[] = [];
-  if (ctx.isArkivDigital) {
+  const anyAdpl = placNodes.some(n => n.children.some(c => c.tag === '_ADPL'));
+  if (ctx.isArkivDigital || anyAdpl) {
     const chains: HierarchyLevel[][] = [];
     const displayByChainKey = new Map<string, string[]>();
     const judicialByChainKey = new Map<string, string>();
@@ -78,6 +84,13 @@ export async function phasePrepPlaces(ctx: ImportContext): Promise<void> {
         externalIds.push(...chain.externalIds);
       }
       ctx.placeExternalIds = externalIds;
+      // `_PARISH_AID` — round-trip only, flushed once for the whole tree.
+      if (externalIds.length > 0) {
+        await bulkAddExternalIdentifiers(ctx.db, externalIds.map(e => ({
+          entity_type: 'place', entity_id: e.placeId,
+          system: 'arkivdigital.parish', value: e.externalId,
+        })));
+      }
 
       // _JUDICIAL is the härad of a probate — an attribute of the parish, not a
       // container it sits inside. `places` has no column for it and eight
@@ -111,7 +124,7 @@ export async function phasePrepPlaces(ctx: ImportContext): Promise<void> {
   // ── Everything else: the flat display-string path ────────────────────────
   const names: string[] = [];
   const seen = new Set<string>();
-  for (const n of (ctx.isArkivDigital ? flatNodes : placNodes)) {
+  for (const n of ((ctx.isArkivDigital || anyAdpl) ? flatNodes : placNodes)) {
     const trimmed = n.value.trim();
     if (trimmed && !seen.has(trimmed)) { seen.add(trimmed); names.push(trimmed); }
   }

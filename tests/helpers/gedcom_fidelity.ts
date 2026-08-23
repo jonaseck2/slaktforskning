@@ -60,6 +60,9 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   'person_names.name_type': 'married',
   'person_names.name_qualifier': 'patronymic',
   'person_identifiers.identifier_type': 'familysearch',
+  // CHECK-constrained; 'place' is valid and has no emitting tag when the row's
+  // entity_id points at a source, which is what makes the column lossy.
+  'external_identifiers.entity_type': 'place',
   'relationships.type': 'sibling',
   'events.date_type': 'about',
   'group_links.entity_type': 'place',
@@ -146,6 +149,34 @@ export function seedRowWithColumn(
 }
 
 // ── Per-table seeders ────────────────────────────────────────────────────────
+
+/**
+ * external_identifiers — hangs off a source, the entity type that has an
+ * emitting tag. A sentinel `system` has no tag to travel in, which is why the
+ * registry declares these columns lossy → null rather than lossless.
+ */
+function seedExternalIdentifiers(db: Database, col: string, value: unknown): string {
+  const sourceId = crypto.randomUUID();
+  runSql(db, 'INSERT INTO sources (id, title) VALUES (?, ?)', [sourceId, 'Fidelity Source']);
+  const id = col === 'id' ? String(value) : crypto.randomUUID();
+  const row: Record<string, unknown> = {
+    id,
+    entity_type: 'source',
+    entity_id: sourceId,
+    system: 'arkivdigital',
+    value: 'v100001',
+  };
+  if (col !== 'id') row[col] = value;
+  // entity_id must stay a real FK target even when it is the column under test.
+  if (col === 'entity_id') row.entity_id = sourceId;
+  const cols = Object.keys(row);
+  runSql(
+    db,
+    `INSERT INTO external_identifiers (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    cols.map(c => row[c]),
+  );
+  return id;
+}
 
 /**
  * Helper: insert a person + a default name so the person survives GEDCOM
@@ -977,6 +1008,7 @@ function seedByTable(db: Database, table: string, col: string, value: unknown): 
     case 'name_translations': return seedNameTranslations(db, col, value);
     case 'place_translations': return seedPlaceTranslations(db, col, value);
     case 'source_coverage_events': return seedSourceCoverageEvents(db, col, value);
+    case 'external_identifiers': return seedExternalIdentifiers(db, col, value);
     default:
       throw new Error(
         `seedRowWithColumn: no seeder for table=${table} (col=${col})`,

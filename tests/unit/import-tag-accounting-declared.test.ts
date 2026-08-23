@@ -6,13 +6,14 @@ import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accoun
 
 describe('declared unmapped tags', () => {
   it('matches an exact path', () => {
-    expect(matchDeclared('SOUR._AID')?.reason).toMatch(/arkivdigital/i);
+    // SOUR._AID used to live here; the arkivdigital profile maps it now.
+    expect(matchDeclared('INDI._LIVING')?.reason).toMatch(/dialect-tag-review/i);
   });
 
   it('matches a leading wildcard suffix under any parent event', () => {
-    expect(matchDeclared('INDI.BIRT.PLAC._ADPL._PARISH')).toBeDefined();
-    expect(matchDeclared('INDI.RESI.PLAC._ADPL._PARISH')).toBeDefined();
-    expect(matchDeclared('FAM.MARR.PLAC._ADPL._PARISH')).toBeDefined();
+    expect(matchDeclared('INDI.BIRT._DESC')).toBeDefined();
+    expect(matchDeclared('INDI.RESI._DESC')).toBeDefined();
+    expect(matchDeclared('FAM.MARR._DESC')).toBeDefined();
   });
 
   it('returns undefined for an undeclared path', () => {

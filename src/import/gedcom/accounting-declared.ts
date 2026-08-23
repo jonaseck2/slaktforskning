@@ -40,17 +40,10 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI.FAMS',      reason: 'excluded:redundant — the couple link is read from the FAM record HUSB/WIFE' },
   { path: 'INDI.FAMC',      reason: 'excluded:redundant — the parent link is read from the FAM record CHIL' },
 
+  { path: '*.SOUR._AID',              reason: 'unmapped:pending-arkivdigital-profile — image pointer on the citation, Task 8' },
+
   // ── ArkivDigital — mapped by the arkivdigital profile in the next plan ────
   // docs/plans/2026-08-23-arkivdigital-import-design.md Parts 1-3.
-  { path: 'SOUR._AID',                reason: 'unmapped:pending-arkivdigital-profile — archive volume pointer, needs external_identifiers' },
-  { path: '*.SOUR._AID',              reason: 'unmapped:pending-arkivdigital-profile — image pointer on the citation' },
-  { path: '*.PLAC._ADPL',             reason: 'unmapped:pending-arkivdigital-profile — place hierarchy block' },
-  { path: '*.PLAC._ADPL._LOCALITY',   reason: 'unmapped:pending-arkivdigital-profile — locality, the leaf place name' },
-  { path: '*.PLAC._ADPL._PARISH',     reason: 'unmapped:pending-arkivdigital-profile — parish (församling)' },
-  { path: '*.PLAC._ADPL._PARISH_AID', reason: 'unmapped:pending-arkivdigital-profile — parish id; 335 distinct ids for 333 names, so the name alone cannot identify a parish' },
-  { path: '*.PLAC._ADPL._COUNTY',     reason: 'unmapped:pending-arkivdigital-profile — county (län)' },
-  { path: '*.PLAC._ADPL._COUNTRY',    reason: 'unmapped:pending-arkivdigital-profile — country' },
-  { path: '*.PLAC._ADPL._JUDICIAL',   reason: 'unmapped:pending-arkivdigital-profile — härad; AD documents _JUDICIAL_DISTRICT but 5.5.1 caps tags at 15 chars' },
   { path: '*.SOUR.DATA.DATE',         reason: 'unmapped:pending-arkivdigital-profile — date the researcher consulted the record; citations.date_accessed exists and is empty' },
   { path: '*._DESC',                  reason: 'unmapped:pending-arkivdigital-profile — researcher annotation on an event' },
   { path: '*._TITLE',                 reason: 'unmapped:pending-arkivdigital-profile — occupation or title' },

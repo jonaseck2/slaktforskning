@@ -51,15 +51,30 @@ const AD_SHAPED = `0 HEAD
 `;
 
 describe('import tag accounting', () => {
-  it('names the ArkivDigital tags the importer does not read', async () => {
+  // The arkivdigital profile (docs/plans/2026-08-23-arkivdigital-profile.md) has
+  // since mapped the place hierarchy and the source-level _AID, so those tags
+  // are now read rather than reported. What remains unread is listed below and
+  // is the honest state of the importer, not an oversight.
+  it('names the ArkivDigital tags the importer still does not read', async () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
     const paths = new Map((report.unaccountedFor ?? []).map(u => [u.path, u.count]));
-    expect(paths.get('SOUR._AID')).toBe(1);
-    expect(paths.get('INDI.BIRT.PLAC._ADPL._PARISH')).toBe(1);
-    expect(paths.get('INDI.BIRT.PLAC._ADPL._PARISH_AID')).toBe(1);
     expect(paths.get('INDI.BIRT._DESC')).toBe(1);
     expect(paths.get('INDI.BIRT.SOUR.DATA.DATE')).toBe(1);
     expect(paths.get('INDI.BIRT.SOUR._AID')).toBe(1);
+  });
+
+  it('no longer reports the tags the arkivdigital profile now maps', async () => {
+    const report = await importGedcom(db, parseGedcom(AD_SHAPED));
+    const paths = new Set((report.unaccountedFor ?? []).map(u => u.path));
+    for (const p of ['SOUR._AID',
+                     'INDI.BIRT.PLAC._ADPL',
+                     'INDI.BIRT.PLAC._ADPL._PARISH',
+                     'INDI.BIRT.PLAC._ADPL._PARISH_AID',
+                     'INDI.BIRT.PLAC._ADPL._COUNTY',
+                     'INDI.BIRT.PLAC._ADPL._COUNTRY',
+                     'INDI.BIRT.PLAC._ADPL._LOCALITY']) {
+      expect(paths, `${p} is mapped now and should not be reported`).not.toContain(p);
+    }
   });
 
   it('does not report tags the importer does read', async () => {

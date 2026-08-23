@@ -1,6 +1,7 @@
 // ── Phase 1: SOUR records ──────────────────────────────────────────────────
 
 import { v4 as uuid } from 'uuid';
+import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
 import { bulkCreateSources } from '../../../api/sources';
 import { createRepository, linkSourceRepository } from '../../../api/repositories';
 import { addMediaLink } from '../../../api/media';
@@ -37,6 +38,8 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
   // repoLinks collect-then-flush. The OBJE / prep-inline-media phases ran
   // before this one, so ctx.objeMap + ctx.inlineMediaMap are populated.
   const mediaLinkPairs: Array<{ media_id: string; entity_id: string }> = [];
+  // ArkivDigital source ids, flushed after the bulk source insert.
+  const externalIdRows: Array<{ entity_type: string; entity_id: string; system: string; value: string }> = [];
   for (let i = 0; i < total; i++) {
     const node = sourNodes[i];
     const id = uuid();
@@ -51,6 +54,10 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
       abstract: getChild(node, '_ABSTRACT')?.value ?? null,
       call_number: getChild(node, '_CALL')?.value ?? null,
     };
+    const aid = getChild(node, '_AID')?.value?.trim();
+    if (aid) {
+      externalIdRows.push({ entity_type: 'source', entity_id: id, system: 'arkivdigital', value: aid });
+    }
     const repoVal = getChild(node, 'REPO')?.value ?? '';
     if (repoVal.startsWith('@')) {
       repoLinks.push({ sourceId: id, repoXref: repoVal });
@@ -69,6 +76,12 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
   }
   ctx.options?.onProgress?.(`Sparar ${total} källor…`);
   await bulkCreateSources(ctx.db, rows);
+
+  // ArkivDigital `_AID` — the archive pointer for the volume. Collected during
+  // the parse pass above and flushed once, never per source.
+  if (externalIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
+  }
 
   // Flush media→source links (rapport 104, framing B) now the source rows exist.
   for (const { media_id, entity_id } of mediaLinkPairs) {

@@ -17,6 +17,7 @@
  * ArkivDigital decisions stay testable without a database.
  */
 import type { GedcomNode } from '../../../gedcom/parser';
+import { markConsumed } from '../tag-accounting';
 
 /** Matches 'Arkiv_Digital', 'ArkivDigital', any case or separator. */
 export function isArkivDigital(tree: GedcomNode[]): boolean {
@@ -32,7 +33,11 @@ export interface PlaceLevel {
 }
 
 function adplBlock(placNode: GedcomNode): GedcomNode | undefined {
-  return placNode.children.find(c => c.tag === '_ADPL');
+  const node = placNode.children.find(c => c.tag === '_ADPL');
+  // Direct .children access bypasses the marking in node-utils, so mark here.
+  // Prime Directive (cont.) clause 1: a node a phase reads must be accounted for.
+  if (node) markConsumed(node);
+  return node;
 }
 
 /**
@@ -50,7 +55,11 @@ export function parseAdpl(placNode: GedcomNode): PlaceLevel[] | null {
   const adpl = adplBlock(placNode);
   if (!adpl) return null;
 
-  const val = (tag: string): string => adpl.children.find(c => c.tag === tag)?.value?.trim() ?? '';
+  const val = (tag: string): string => {
+    const node = adpl.children.find(c => c.tag === tag);
+    if (node) markConsumed(node);
+    return node?.value?.trim() ?? '';
+  };
   const country = val('_COUNTRY');
   const county = val('_COUNTY');
   const parish = val('_PARISH');
@@ -81,6 +90,7 @@ export function parseAdplJudicial(placNode: GedcomNode): string | null {
   const adpl = adplBlock(placNode);
   if (!adpl) return null;
   const node = adpl.children.find(c => c.tag === '_JUDICIAL' || c.tag === '_JUDICIAL_DISTRICT');
+  if (node) markConsumed(node);
   const value = node?.value?.trim() ?? '';
   return value || null;
 }

@@ -240,22 +240,30 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'person_identifiers.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
   // ----- external_identifiers -----
-  // Round-trip storage for source-format ids. ArkivDigital's _AID is emitted
-  // back onto the SOUR record and _PARISH_AID back into the _ADPL block, so the
-  // pair (system, value) survives. entity_type is implied by which record the
-  // tag is emitted under, and recovered on re-import from the same position.
+  // Round-trip storage for source-format ids. Only two (entity_type, system)
+  // pairs have a tag to travel in today: a source's `arkivdigital` id becomes
+  // `1 _AID` on the SOUR record, and a place's `arkivdigital.parish` id becomes
+  // `_PARISH_AID` inside the reconstructed `_ADPL` block. Both are verified by
+  // tests/unit/import-arkivdigital-identifiers.test.ts.
+  //
+  // Declared `lossy` rather than `lossless` because the columns are generic: a
+  // row with any other system — a Gramps handle, a Genney RID — has no tag to
+  // carry it yet and does not come back. Claiming lossless here would be an
+  // overclaim the per-field test correctly refuses.
   'external_identifiers.id':          { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'external_identifiers.entity_id':   { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'external_identifiers.entity_type': {
-    v551: { kind: 'lossless-via', mechanism: 'implied by the record the tag is emitted under' },
-    v70:  { kind: 'lossless-via', mechanism: 'implied by the record the tag is emitted under' },
+    v551: { kind: 'lossy', reason: 'only source + place rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
+    v70:  { kind: 'lossy', reason: 'only source + place rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'external_identifiers.system': {
-    v551: { kind: 'lossless-via', mechanism: 'implied by the tag name (_AID / _PARISH_AID)' },
-    v70:  { kind: 'lossless-via', mechanism: 'implied by the tag name (_AID / _PARISH_AID)' },
+    v551: { kind: 'lossy', reason: 'only the arkivdigital and arkivdigital.parish systems have an emitting tag', expectedAfterRoundTrip: () => null },
+    v70:  { kind: 'lossy', reason: 'only the arkivdigital and arkivdigital.parish systems have an emitting tag', expectedAfterRoundTrip: () => null },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
+  // The value itself round-trips: it is the payload of `_AID` / `_PARISH_AID`.
+  // What is lossy is which (entity_type, system) pairs have a tag at all.
   'external_identifiers.value': {
     v551: { kind: 'lossless' },
     v70:  { kind: 'lossless' },

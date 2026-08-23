@@ -67,9 +67,29 @@ describe('ArkivDigital place hierarchy', () => {
     ]);
   });
 
-  it('leaves non-ArkivDigital files on the flat resolver', async () => {
-    const plain = AD.replace('1 SOUR Arkiv_Digital', '1 SOUR SomeOtherApp');
-    await importGedcom(db, parseGedcom(plain));
+  // The hierarchy branch is tag-driven, not vendor-driven: any PLAC carrying an
+  // _ADPL block takes it, whoever wrote the file. That is what lets this app's
+  // own export — which reconstructs _ADPL from stored parent links — round-trip
+  // the hierarchy back in.
+  it('takes the hierarchy path for any file carrying _ADPL, whatever the vendor', async () => {
+    const otherVendor = AD.replace('1 SOUR Arkiv_Digital', '1 SOUR SomeOtherApp');
+    await importGedcom(db, parseGedcom(otherVendor));
+    const flat = await queryAll(db, "SELECT id FROM places WHERE name LIKE '%,%'");
+    expect(flat, 'an _ADPL block should build a hierarchy regardless of HEAD.SOUR').toHaveLength(0);
+  });
+
+  it('leaves a file with no _ADPL on the flat resolver', async () => {
+    const noAdpl = `0 HEAD
+1 SOUR SomeOtherApp
+1 GEDC
+2 VERS 5.5.1
+0 @I1@ INDI
+1 NAME Erik /Hedqvist/
+1 BIRT
+2 PLAC Bäck, Valbo, Gävleborgs län, Sverige
+0 TRLR
+`;
+    await importGedcom(db, parseGedcom(noAdpl));
     const flat = await queryAll(db, "SELECT id FROM places WHERE name LIKE '%,%'");
     expect(flat.length, 'plain GEDCOM should still store the display string').toBeGreaterThan(0);
   });
