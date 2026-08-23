@@ -26,10 +26,10 @@
 // script joins this list, add it explicitly + give it a brief reason
 // why it's CI-safe.
 
-import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { describe, it, expect } from 'vitest';
 
 const ROOT = join(__dirname, '..', '..');
 
@@ -46,6 +46,7 @@ const CI_SAFE_SCRIPTS = [
 
 // Scripts we INTENTIONALLY skip + the one-line reason.
 const SKIPPED_WITH_REASON: Record<string, string> = {
+  typecheck: 'vue-tsc over the whole project — minutes of wall clock; the build job type-checks',
   start: 'long-lived dev server (tauri dev) — not CI-safe',
   dev: 'alias for start',
   build: 'full Tauri release bundle (.app/.dmg/.exe/.AppImage) — runs in dedicated CI job',

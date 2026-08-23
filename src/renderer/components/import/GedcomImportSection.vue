@@ -80,6 +80,13 @@
           <li v-for="s in importReport.skipped" :key="s.tag">{{ s.tag }}: {{ s.count }}</li>
         </ul>
       </div>
+      <div v-if="importReport.unaccountedFor && importReport.unaccountedFor.length > 0" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.importReportUnaccounted') }}</p>
+        <p class="report-hint">{{ $t('importExport.importReportUnaccountedHint') }}</p>
+        <ul>
+          <li v-for="u in importReport.unaccountedFor" :key="u.path">{{ u.path }}: {{ u.count }}</li>
+        </ul>
+      </div>
       <div v-if="importReport.rawCounts" class="report-section">
         <p class="report-section-label">{{ $t('importExport.importReportRawCounts') }}</p>
         <ul class="report-counts">
@@ -157,6 +164,7 @@ const importReport = ref<{
   sources: number; places: number; citations: number;
   repositories: number; groups: number; researchTasks: number;
   skipped: { tag: string; count: number }[];
+  unaccountedFor?: { path: string; count: number }[];
   warnings: string[];
   rawCounts?: {
     individuals: number; families: number; sources: number;
@@ -282,6 +290,7 @@ async function proceedImport() {
         places: number;
         citations: number;
         skipped: { tag: string; count: number }[];
+        unaccountedFor?: { path: string; count: number }[];
         warnings: string[];
       };
     };

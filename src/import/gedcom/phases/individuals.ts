@@ -15,8 +15,8 @@ import { getChild, getChildren, resolveNote } from '../node-utils';
 import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
-import { PERSON_EVENT_TAGS } from './shared';
 import { markConsumed } from '../tag-accounting';
+import { PERSON_EVENT_TAGS } from './shared';
 
 const KNOWN_INDI_TAGS = new Set([
   'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',

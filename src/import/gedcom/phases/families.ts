@@ -11,8 +11,8 @@ import { getChild, getChildren } from '../node-utils';
 import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
-import { FAMILY_EVENT_TAGS } from './shared';
 import { markConsumed } from '../tag-accounting';
+import { FAMILY_EVENT_TAGS } from './shared';
 
 const KNOWN_FAM_TAGS = new Set([
   'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
