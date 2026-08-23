@@ -399,4 +399,42 @@ describe('tauri-window-api Rust command dispatch', () => {
     expect(r.success).toBe(true);
     expect(r.report?.persons).toBe(1);
   });
+  // ---------------------------------------------------------------------
+  // Cancel is not failure.
+  //
+  // Every dialog-fronted binding must distinguish three outcomes: the user
+  // dismissed the dialog, the operation succeeded, the operation failed.
+  // `api.backup.backup` / `.restore` encoded a dismissed dialog as
+  // `{ success: false, error: 'Cancelled' }`, so the only way to tell it from
+  // a real failure was to match that string. Consumers guarded on `success`
+  // alone and therefore swallowed genuine errors rather than speak on every
+  // cancel. These assert the `canceled` flag those consumers now branch on.
+  // ---------------------------------------------------------------------
+
+  it('backup.backup reports a dismissed dialog as canceled, not a bare failure', async () => {
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'db_current_path') return Promise.resolve('/tmp/family.db');
+      if (cmd === 'dialog_pick') return Promise.resolve({ canceled: true });
+      return Promise.resolve(undefined);
+    });
+    const { api } = mountWindowApi(stubDb);
+    const r = (await (api.backup as unknown as {
+      backup: () => Promise<{ canceled?: boolean; success?: boolean }>;
+    }).backup());
+    expect(r.canceled).toBe(true);
+    expect(r.success).toBe(false);
+  });
+
+  it('backup.restore reports a dismissed dialog as canceled, not a bare failure', async () => {
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'dialog_pick') return Promise.resolve({ canceled: true });
+      return Promise.resolve(undefined);
+    });
+    const { api } = mountWindowApi(stubDb);
+    const r = (await (api.backup as unknown as {
+      restore: () => Promise<{ canceled?: boolean; success?: boolean }>;
+    }).restore());
+    expect(r.canceled).toBe(true);
+    expect(r.success).toBe(false);
+  });
 });

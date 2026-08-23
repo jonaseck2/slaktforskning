@@ -981,6 +981,8 @@ export default {
     backupSaved: 'Backup saved: {path}',
     confirmRestore: 'Restore database from backup? The active database will be closed.',
     restoreSuccess: 'Database restored.',
+    backupFailed: 'Backup failed.',
+    restoreFailed: 'Restore failed.',
     treeSubject: 'Tree subject',
     treeSubjectHint: 'The tree subject when opening the database. Exported as GEDCOM SUBM.',
     treeSubjectNone: 'No tree subject set.',
@@ -1708,6 +1710,7 @@ export default {
     exporting: 'Exporting…',
     exportedTo: 'Exported to',
     bundleMissing: 'Website bundle not built. Run "npm run build:static" in the project directory first.',
+    exportFailed: 'Export failed:',
     preview: {
       loading: 'Building preview…',
       refreshing: 'Refreshing…',
@@ -1848,6 +1851,7 @@ export default {
   },
   errors: {
     saveFailed: 'Could not save. Please try again.',
+    openFileFailed: 'Could not open the file.',
     deleteFailed: 'Could not delete. Please try again.',
     loadFailed: 'Could not load data. Please try again.',
   },

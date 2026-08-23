@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.271.6 — 2026-08-23
+
+- fix: importing a .zip archive shows its report and refreshes the app — it imported silently and left every list stale
+- fix: a failed GEDCOM export, archive export, or website export now says so instead of looking like nothing happened
+- fix: a failed database backup or restore now reports the failure; cancelling the file dialog stays quiet
+- fix: media that cannot be opened in an external app reports why instead of doing nothing
+
 ## 0.271.5 — 2026-08-23
 
 - fix: importing a standard GEDCOM works again — picking a file showed no preview, no error, and nothing in the log
@@ -45,10 +52,6 @@
 ## 0.270.4 — 2026-06-14
 
 - fix: the map in the Place Chronicle report no longer shows a dead blank box — it resolves the place location from the gazetteer (the same path the Places map uses) and always renders, centering a single place at a readable zoom
-
-## 0.270.3 — 2026-06-14
-
-- fix: searching the person list down to zero matches keeps the search box and shows a "no matches" message instead of the welcome screen, so you can refine or clear the search
 
 ---
 

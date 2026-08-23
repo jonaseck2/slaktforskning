@@ -93,7 +93,7 @@
       <button @click="restore">{{ $t('database.restoreButton') }}</button>
     </section>
 
-    <div v-if="backupStatus" class="db-status">{{ backupStatus }}</div>
+    <div v-if="backupStatus" class="db-status" :class="{ 'is-error': backupStatusError }">{{ backupStatus }}</div>
     <div v-if="statusMsg" class="db-status">{{ statusMsg }}</div>
   </div>
 </template>
@@ -112,6 +112,7 @@ const current = ref<DbEntry | null>(null);
 const recent = ref<DbEntry[]>([]);
 const statusMsg = ref('');
 const backupStatus = ref('');
+const backupStatusError = ref(false);
 const treeSubjectId = ref<string | null>(null);
 const researcherName = ref<string>('');
 const researcherAddress = ref<string>('');
@@ -188,20 +189,36 @@ async function openExisting() {
   }
 }
 
+// The backup bindings report failure as `{ success: false, error }` rather than
+// rejecting, so a guard on `success` alone silently swallowed every failure —
+// a failed backup or restore left the surface unchanged. `canceled` marks a
+// dismissed dialog, which stays quiet.
+function setBackupStatus(msg: string, isError = false) {
+  backupStatus.value = msg;
+  backupStatusError.value = isError;
+  setTimeout(() => { backupStatus.value = ''; backupStatusError.value = false; }, 5000);
+}
+
 async function backup() {
   const result = await window.api.backup.backup();
+  if (result.canceled) return;
   if (result.success && result.path) {
-    backupStatus.value = t('database.backupSaved', { path: result.path });
-    setTimeout(() => { backupStatus.value = ''; }, 5000);
+    setBackupStatus(t('database.backupSaved', { path: result.path }));
+  } else {
+    setBackupStatus(t('database.backupFailed'), true);
+    console.error('[Database] backup failed:', result.error ?? result);
   }
 }
 
 async function restore() {
   if (!confirm(t('database.confirmRestore'))) return;
   const result = await window.api.backup.restore();
+  if (result.canceled) return;
   if (result.success) {
-    backupStatus.value = t('database.restoreSuccess');
-    setTimeout(() => { backupStatus.value = ''; }, 5000);
+    setBackupStatus(t('database.restoreSuccess'));
+  } else {
+    setBackupStatus(t('database.restoreFailed'), true);
+    console.error('[Database] restore failed:', result.error ?? result);
   }
 }
 
@@ -348,5 +365,10 @@ h2 {
   border-radius: 4px;
   font-size: var(--font-base);
   color: var(--color-text);
+}
+
+.db-status.is-error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 </style>

@@ -104,6 +104,9 @@
       <p v-if="bundleMissing" class="panel-error-hint">
         {{ $t('htmlSite.bundleMissing') }}
       </p>
+      <p v-else-if="exportError" class="panel-error-hint">
+        {{ $t('htmlSite.exportFailed') }} <code>{{ exportError }}</code>
+      </p>
     </div>
   </EntityPanel>
 </template>
@@ -130,9 +133,11 @@ withDefaults(defineProps<{
   exportProgress?: string;
   lastOutput: string | null;
   bundleMissing: boolean;
+  exportError?: string | null;
   mediaCount?: number | null;
 }>(), {
   exportProgress: '',
+  exportError: null,
   mediaCount: null,
 });
 

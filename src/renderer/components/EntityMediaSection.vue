@@ -88,6 +88,8 @@ import MediaAddRow from './MediaAddRow.vue';
 import { useDeleteConfirm } from '../composables/useDeleteConfirm';
 import IconUnlink from './ui/IconUnlink.vue';
 import Coachmark from './ui/Coachmark.vue';
+import { useI18n } from 'vue-i18n';
+import { useToast } from '../composables/useToast';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -111,6 +113,8 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { t } = useI18n();
+const toast = useToast();
 const media = ref<MediaItem[]>([]);
 const showAddRow = ref(false);
 const thumbnails = ref<Record<string, string>>({});
@@ -173,7 +177,14 @@ async function onCommitted({ mediaId }: { mediaId: string }) {
 }
 
 async function openFile(id: string) {
-  await window.api.media.openFile(id);
+  // The binding returns `{ success: false, error }` when the row has no
+  // file_ref, no DB is open, or the shell hand-off fails. Dropping it left the
+  // user with a menu item that did nothing and no way to find out why.
+  const result = (await window.api.media.openFile(id)) as { success?: boolean; error?: string };
+  if (result && result.success === false) {
+    console.error('[EntityMedia] open file failed:', result.error ?? result);
+    toast.error(t('errors.openFileFailed'));
+  }
 }
 
 const del = useDeleteConfirm<string>(async (linkId) => {
