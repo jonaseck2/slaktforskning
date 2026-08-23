@@ -1,8 +1,9 @@
 # ArkivDigital Import and Multi-File Merge — Design Spec
 
 **Date:** 2026-08-23
-**Status:** Design approved. Two implementation plans to follow — Parts 1-3 (profile,
-storage, round-trip) and Parts 4-5 (multi-file queue, consolidation review).
+**Status:** Design approved. Three implementation plans to follow — Part 0 (tag
+accounting), Parts 1-3 (profile, storage, round-trip), Parts 4-5 (multi-file queue,
+consolidation review). Part 0 lands first.
 
 ## User goal
 
@@ -60,9 +61,11 @@ Every other phase reads a fixed allowlist and discards the remainder silently.
 only when it sits at level 1 of an INDI or FAM record, which is why `INDI._TITLE`
 appears in the report and `INDI.RESI._DESC` does not.
 
-Generalising that disclosure to every record type is worth doing and is **out of scope
-here** — see Scope deviations. This spec fixes ArkivDigital by mapping its tags, using
-the census above as the completeness check.
+Generalising that disclosure is **Part 0 of this spec**, and it lands before the profile.
+The reason is not tidiness. Until the report is honest, no one — reviewer or user — can
+tell whether the ArkivDigital profile is complete, and every future format inherits the
+same blindness. `CLAUDE.md` Prime Directive (cont.) clause 1 was strengthened alongside
+this spec to give the import side the mechanical contract the export side already had.
 
 ### Two structural mismatches, measured
 
@@ -124,6 +127,31 @@ occurrences. GEDCOM 5.5.1 caps tags at 15 characters, so the documented name can
 written. Read `_JUDICIAL`, accept `_JUDICIAL_DISTRICT` as an alias.
 
 ## Scope
+
+### Part 0 — tag accounting (lands first)
+
+The importer accounts for every node in the parsed tree. A node is accounted for when a
+phase reads it, or when the report names it with its full tag path and count.
+
+- `getChild` / `getChildren` in `src/import/gedcom/node-utils.ts` mark the nodes they
+  return. After all phases run, walk the tree and collect the unmarked.
+- The report gains an `unaccountedFor: { path, count }[]` field, replacing `skipped` as
+  the honest surface. `skipped` stays as a deprecated alias so existing report consumers
+  and tests keep working.
+- Structural nodes that carry no data of their own — `CONT`, `CONC`, `TRLR`, xref
+  plumbing — are marked by the parser, not by phases, and never appear in the report.
+- `tests/unit/import-tag-accounting.test.ts` imports every fixture under
+  `tests/fixtures/gedcom/` and asserts `unaccountedFor` is empty, or matches a declared
+  allowlist with a reason per entry.
+
+Existing formats will fail that test on first run. That is the point — the failures are
+the drops nobody could see. Each becomes either a mapping or a declared entry with a
+reason. Part 0 is done when every shipped fixture is clean.
+
+**Why generic marking and not per-phase allowlists.** A phase written next year without
+its own allowlist is silently blind again, which is the exact failure being repaired.
+Marking on read cannot be forgotten, because not reading a node is what makes it
+unaccounted for.
 
 ### Part 1 — `arkivdigital` import profile
 
@@ -225,12 +253,6 @@ records import as 2776, and the review step is where anything merges.
 
 ### Scope deviations
 
-- **Generic tag accounting is excluded.** Replacing every phase's allowlist with
-  consumed-node marking would make the import report honest for all formats and is the
-  right long-term fix for the disclosure gap documented above. It is a separate plan
-  because this one does not need it: the 168-path census is the completeness check for
-  ArkivDigital, and the round-trip tests are the ongoing guard. File it before this
-  plan archives.
 - **Genney, Holger, Gramps and RootsMagic get the `identityKeys` hook but no keys.**
   Gramps carries `handle` and `gramps_id` on every source and place, Genney carries
   internal RIDs, and neither is persisted today. Wiring them is mechanical once the
@@ -249,9 +271,10 @@ records import as 2776, and the review step is where anything merges.
    the consolidation review.** Assert 822 persons, 2776 sources before approval and
    1496 after, 1737 place nodes with `parent_place_id` set, 900 `_DESC` values
    present as notes, 6147 `citations.date_accessed` populated, 9046 `_AID` values stored.
-2. **Tag census is empty.** Re-run the 168-path census against the four files after
-   import and assert every path is either mapped or declared in the fidelity registry.
-   No path is unaccounted for.
+2. **Tag accounting is empty, for every format.** `import-tag-accounting.test.ts`
+   asserts `unaccountedFor` is empty across every fixture, the four AD files included.
+   Independently cross-checked against the standalone 168-path census, so the test and
+   the measurement cannot drift into agreeing with each other while both being wrong.
 3. **Round-trip.** Export the merged DB, re-import it, assert DB equivalence including
    `external_identifiers` rows and the place hierarchy. Per-field round-trip test for
    every new column under both 5.5.1 and 7.0.
@@ -285,7 +308,9 @@ finish the review has not merged their trees. Item 6 must therefore assert
 
 ## Follow-up plans
 
-Each is a separate spec. None blocks this one.
+Each is a separate spec. Neither blocks this one. Tag accounting was a follow-up in an
+earlier draft and is now Part 0 — the report has to be honest before anything built on
+top of it can be trusted.
 
 ### F1 — `_PARISH_AID` → gazetteer crosswalk *(investigation first)*
 
@@ -330,15 +355,33 @@ into the user's database would be exactly the inference the Prime Directive forb
 Spike, not a build. Output is an answer and a coverage number, then a plan if the
 number justifies one.
 
-### F2 — Generic importer tag accounting
-
-Replace the per-phase allowlists with consumed-node marking, so the import report is
-honest for every format rather than for level-1 INDI and FAM tags. See "Why the report
-is blind" above. Motivated by this investigation, not required by it.
-
-### F3 — Identity keys for the other importers
+### F2 — Align external identifier storage across every format *(one plan, not one per format)*
 
 Gramps carries `handle` and `gramps_id` on every source and place. Genney carries
-internal RIDs. Neither is persisted. Once `external_identifiers` and the `identityKeys`
-hook exist, wiring them is mechanical — one plan per format, each with its own fixture
-and round-trip test.
+internal RIDs. RootsMagic carries its own row ids. None is persisted. Once
+`external_identifiers` and the `identityKeys` hook exist, wiring each is mechanical.
+
+**One plan covering all formats at once, deliberately.** Doing them one at a time is
+itself the drift: the second format invents a system-naming convention that does not
+match the first, and by the fourth there is no convention left to follow. Everything AD
+established — key shape, system naming, exporter emission, registry entry, round-trip
+test — becomes the template applied to all of them in one pass.
+
+The anti-drift artefact is a **registered system-name list**, in the same spirit as the
+fidelity registry:
+
+| System name | Issued by | Entity types | Round-trips as |
+|---|---|---|---|
+| `arkivdigital` | ArkivDigital | source | `1 _AID` on SOUR |
+| `arkivdigital.parish` | ArkivDigital | place | `_ADPL._PARISH_AID` |
+| `arkivdigital.image` | ArkivDigital | citation | `3 _AID` on the citation |
+| `gramps.handle` | Gramps | source, place, media, repository | `_HANDLE` |
+| `gramps.id` | Gramps | source, place, media, repository | `REFN` with `TYPE` |
+| `genney.rid` | Genney | source, place | `_RID` |
+
+A unit test asserts every `external_identifiers.system` value in a DB appears in that
+list, so a format cannot quietly introduce a seventh naming style. Same enforcement shape
+as the fidelity registry's column-coverage test: adding an unregistered system breaks CI
+by design.
+
+Sequenced after Parts 1-3, since AD is where the template gets proven.

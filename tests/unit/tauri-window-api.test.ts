@@ -50,6 +50,7 @@ const stubDb = {} as unknown as import('node-sqlite3-wasm').Database;
 
 // IMPORT after mocks so the polyfill module picks up the mocked invoke.
 import { mountWindowApi } from '../../src/renderer/tauri-window-api';
+import { createTestDb } from './helpers';
 
 describe('tauri-window-api mountWindowApi shape', () => {
   beforeEach(() => {
@@ -315,5 +316,87 @@ describe('tauri-window-api Rust command dispatch', () => {
     }));
     expect(r.bundleMissing).toBe(true);
     vi.doUnmock('../../src/api/html_site/snapshot');
+  });
+  // ---------------------------------------------------------------------
+  // GEDCOM preview / import envelopes.
+  //
+  // The renderer component (GedcomImportSection.vue) reads
+  // `{ canceled, filePath, preview }` from preview and
+  // `{ success, report, error }` from import — the envelopes the Electron
+  // worker channels returned. The Tauri port returned the bare
+  // `ImportPreview` / `ValidationReport` instead, so both of the component's
+  // guards fell through to a silent `return`: no modal, no status line, no
+  // console error. These two tests pin the envelope on the binding side.
+  // ---------------------------------------------------------------------
+
+  const TINY_GED = [
+    '0 HEAD',
+    '1 GEDC',
+    '2 VERS 5.5.1',
+    '1 CHAR UTF-8',
+    '0 @I1@ INDI',
+    '1 NAME Karin /Karlsson/',
+    '1 SEX F',
+    '0 TRLR',
+    '',
+  ].join('\n');
+
+  function mockGedRead(text = TINY_GED) {
+    const b64 = Buffer.from(text, 'utf-8').toString('base64');
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'fs_read_bytes_base64') return Promise.resolve(b64);
+      return Promise.resolve(undefined);
+    });
+  }
+
+  it('gedcom.preview returns the { canceled, filePath, preview } envelope', async () => {
+    mockGedRead();
+    const { api } = mountWindowApi(stubDb);
+    const r = (await api.gedcom.preview({ filePath: '/tmp/tree.ged' })) as {
+      canceled?: boolean;
+      filePath?: string;
+      preview?: { personCount: number };
+    };
+    expect(r.canceled).toBe(false);
+    expect(r.filePath).toBe('/tmp/tree.ged');
+    expect(r.preview?.personCount).toBe(1);
+  });
+
+  it('gedcom.preview unwraps a .zip and previews the .ged inside', async () => {
+    // `gedcom.selectFile` offers .zip, so both bindings must unwrap one. The
+    // Electron worker extracted it to a tmp dir with node fs; the renderer has
+    // the bytes already and unzips in memory.
+    const { zipSync, strToU8 } = await import('fflate');
+    const zipped = zipSync({
+      'readme.txt': strToU8('not a gedcom'),
+      'tree.ged': strToU8(TINY_GED),
+    });
+    invokeSpy.mockImplementation((cmd: string) => {
+      if (cmd === 'fs_read_bytes_base64') {
+        return Promise.resolve(Buffer.from(zipped).toString('base64'));
+      }
+      return Promise.resolve(undefined);
+    });
+    const { api } = mountWindowApi(stubDb);
+    const r = (await api.gedcom.preview({ filePath: '/tmp/tree.zip' })) as {
+      canceled?: boolean;
+      preview?: { personCount: number };
+    };
+    expect(r.canceled).toBe(false);
+    expect(r.preview?.personCount).toBe(1);
+  });
+
+  it('gedcom.import returns the { success, report } envelope', async () => {
+    mockGedRead();
+    const db = await createTestDb();
+    const { api } = mountWindowApi(db as unknown as import('node-sqlite3-wasm').Database);
+    const r = (await api.gedcom.import({ filePath: '/tmp/tree.ged' })) as {
+      success?: boolean;
+      error?: string;
+      report?: { persons: number };
+    };
+    expect(r.error).toBeUndefined();
+    expect(r.success).toBe(true);
+    expect(r.report?.persons).toBe(1);
   });
 });

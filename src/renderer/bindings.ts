@@ -47,6 +47,20 @@ export const commands = {
 	 */
 	dbCurrentPath: () => __TAURI_INVOKE<string | null>("db_current_path"),
 	/**
+	 *  Returns the `SLAKTFORSKNING_DB` path override if this process was started
+	 *  with one, else None.
+	 * 
+	 *  `default_db_path` already honours the same variable, but it sits *below*
+	 *  the renderer's persisted `slaktforskning-last-db-path` in the boot
+	 *  resolution order — so a machine that has ever opened a real database
+	 *  reopens it and the override never applies. That made e2e runs against the
+	 *  raw `build:e2e` binary (which shares WebKit localStorage with the dev app)
+	 *  silently operate on the developer's own tree instead of the temp DB the
+	 *  fixture passed in. Exposing the override separately lets the renderer put
+	 *  an explicit process-level directive ahead of persisted user state.
+	 */
+	dbPathOverride: () => __TAURI_INVOKE<string | null>("db_path_override"),
+	/**
 	 *  Show a native open-file dialog for picking a .db file. Returns the chosen
 	 *  absolute path, or None if the user cancelled. The renderer then re-opens
 	 *  the shim against this path. Backs `window.api.db.openExisting()`.

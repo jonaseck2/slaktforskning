@@ -79,7 +79,32 @@ This app uses a GEDCOM-X-inspired model. Here is how GEDCOM 5.5.1 maps to it:
 | `DATE` | `events.date_type` + `date_value` + `date_original` | See date table below |
 | `NOTE` | `persons.notes`, `events.description` | Concatenate CONT/CONC lines |
 
-### What is dropped (not in app model)
+### Tag accounting — read it or report it
+
+Per `CLAUDE.md` Prime Directive (cont.) clause 1, the importer accounts for **every node
+in the parsed tree**. Not every record type. Not every level-1 tag. Every node.
+
+A node is accounted for when a phase reads it, or when the import report names it with
+its full tag path (`INDI.RESI.PLAC._ADPL._PARISH`) and occurrence count. The app does not
+have to model a tag — it has to say it didn't.
+
+**Writing a `getChild(node, 'X')` allowlist without a matching accounting path is the
+failure this rule exists to prevent.** `phaseSources` reading `TITL / AUTH / PUBL / _URL /
+_STYPE / _ABSTRACT / _CALL / REPO / OBJE` and discarding everything else is a silent drop,
+even though each of those reads is correct.
+
+**Measured, 2026-08-23.** Four ArkivDigital exports carry 43 199 custom-tag occurrences
+across 168 paths. 2 763 consumed, 143 disclosed, **40 293 dropped with no report entry** —
+including 9 046 `_AID` (the ArkivDigital archive pointer), the entire `_ADPL` place
+hierarchy, and 900 `_DESC` values holding the researcher's own annotations. This table
+previously claimed custom tags were "never silently dropped". It was false. Do not
+re-introduce a guarantee that no test enforces.
+
+### What is deliberately not modelled (declared, not dropped)
+
+Every row below is *reported* by the importer. Not modelling a tag is a decision. Not
+reporting it is a bug.
+
 
 | GEDCOM tag | Reason |
 |---|---|
@@ -91,7 +116,7 @@ This app uses a GEDCOM-X-inspired model. Here is how GEDCOM 5.5.1 maps to it:
 | LDS ordinances (`BAPL`, `SLGC`, `CONL`, `ENDL`, `SLGS`) | Not relevant for Swedish genealogy |
 | `ANCI`/`DESI` | Researcher flags — no equivalent |
 | `AFN`/`RFN` | Rarely used in Swedish trees |
-| `_` prefixed custom tags | Reported in `skipped` (never silently dropped — see data integrity rule) |
+| `_` prefixed custom tags | **Must be accounted for — read by a phase, or named in the import report with full tag path + count.** See the tag-accounting contract below. |
 
 ## GEDCOM-X vs GEDCOM 5.5.1 gaps (what the app model doesn't cover)
 
@@ -116,7 +141,9 @@ From the GEDCOM-X spec, these are gaps in the current data model beyond what v0.
 
 Major genealogy apps emit GEDCOM with their own dialect quirks. The repo carries two layers of test coverage to keep the GEDCOM importer honest about them:
 
-**Synthetic dialect fixtures** at `tests/fixtures/gedcom/dialects/` — one minimal `.ged` per app (RootsMagic, Gramps, Family Tree Maker, Legacy, MacFamilyTree, Family Historian, MyHeritage, PAF, Holger, Genney) carrying that app's `1 SOUR` signature plus characteristic custom tags. `tests/unit/import-gedcom-dialects.test.ts` asserts each imports without crashing and that no *core* GEDCOM tag (NAME, INDI, FAM, BIRT, DEAT, MARR, SEX, …) ends up in the report's skipped list.
+**Synthetic dialect fixtures** at `tests/fixtures/gedcom/dialects/` — one minimal `.ged` per app (RootsMagic, Gramps, Family Tree Maker, Legacy, MacFamilyTree, Family Historian, MyHeritage, PAF, Holger, ArkivDigital, Genney) carrying that app's `1 SOUR` signature plus characteristic custom tags. `tests/unit/import-gedcom-dialects.test.ts` asserts each imports without crashing and that no *core* GEDCOM tag (NAME, INDI, FAM, BIRT, DEAT, MARR, SEX, …) ends up in the report's skipped list.
+
+That core-tag assertion is deliberately weak and **cannot catch a silent drop** — it says nothing about custom tags or about anything below level 1. The accounting test is the one that does: it asserts the unaccounted-for set is empty for every fixture. Both are required.
 
 **Real-world samples (gitignored)** at `export-import/samples/`:
 - `familysearch-gedcom7/` — official FamilySearch GEDCOM 7.0 reference test files (24 files; download via `https://raw.githubusercontent.com/FamilySearch/GEDCOM.io/main/testfiles/gedcom70/<name>.ged`)
@@ -124,7 +151,7 @@ Major genealogy apps emit GEDCOM with their own dialect quirks. The repo carries
 - `heiner-torture/allged.ged` — Heiner Eichmann's GEDCOM 5.5 torture test
 - `d-jeffrey/` — 12 real exports tagged by source app (RootsMagic 8 Queen 4683 persons; FTM 20 Habsburg 34020 persons; PAF 2.2 royal92; Legacy ivar/tudor; FamilyOrigins washington; ANCESTRIS bourbon/kennedy)
 
-The diagnostic loop when adding new tag handling: walk all 36 samples through the importer, eyeball the per-file skipped-tag list, decide for each tag whether it's a real loss to fix (e.g. `_UID`/`AFN`/`SSN`/`FSID` → person identifiers, `CREM`/`BARM`/`ANUL`/`MARL`/`_SEPR` → new event types) or an intentional drop (LDS ordinances, app-internal flags like `_UPD` / `_PHOTO` / `_PPEXCLUDE`).
+The diagnostic loop when adding new tag handling: walk all 36 samples through the importer, read the per-file **unaccounted-for** list (not the legacy `skipped` list, which only ever covered level-1 INDI/FAM tags), decide for each tag whether it's a real loss to fix (e.g. `_UID`/`AFN`/`SSN`/`FSID` → person identifiers, `CREM`/`BARM`/`ANUL`/`MARL`/`_SEPR` → new event types) or an intentional drop (LDS ordinances, app-internal flags like `_UPD` / `_PHOTO` / `_PPEXCLUDE`).
 
 After every importer change, the canonical "did anything break" check is: rerun the dialect tests + walk the real samples once more. If a previously-handled tag falls into the skipped list on a real sample, that's a regression.
 

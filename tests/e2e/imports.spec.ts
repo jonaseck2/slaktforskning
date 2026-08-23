@@ -252,22 +252,23 @@ for (const c of CASES) {
       );
       expect(beforeCount, 'fresh e2e DB unexpectedly has persons').toBe(0);
 
-      // Run the import. The Tauri shim returns either the report payload
-      // (success) or `{ success: false, error }` (failure); both shapes are
-      // serialised back from /eval.
+      // Run the import. Every importer binding in tauri-window-api.ts returns
+      // the same envelope — `{ success: true, report | summary }` or
+      // `{ success: false, error }` — so require `success === true` rather than
+      // merely tolerating a missing field. The older "throw only if success ===
+      // false" check passed a bare report payload, which is how `gedcom.import`
+      // shipped returning the raw ValidationReport: the renderer's
+      // `if (result.success)` guard failed on every successful import and this
+      // suite stayed green.
       const absPath = path.join(PROJECT_ROOT, c.fixture);
       const args = c.buildArgs(absPath);
       const result = await driver.executeJs<{ success?: boolean; error?: string } | unknown>(
         `window.api.${c.apiCall}(${JSON.stringify(args)})`,
       );
-      if (
-        result &&
-        typeof result === 'object' &&
-        'success' in result &&
-        (result as { success?: boolean }).success === false
-      ) {
+      const envelope = (result ?? {}) as { success?: boolean; error?: string };
+      if (envelope.success !== true) {
         throw new Error(
-          `import returned failure envelope: ${(result as { error?: string }).error ?? 'unknown'}`,
+          `${c.apiCall} did not return { success: true, … }: ${JSON.stringify(result)}`,
         );
       }
 

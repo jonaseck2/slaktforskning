@@ -196,6 +196,10 @@ api.import.<format>Run = async (opts: unknown) => {
 
 ## Step 7: verification before claiming done
 
+- **Tag accounting is empty.** Every field the source format carries is either read by
+  the transform or named in the import report. Run the accounting test against your
+  fixture and assert nothing is unaccounted for. Per `CLAUDE.md` Prime Directive (cont.)
+  clause 1 — you don't have to model a field, you have to say you didn't.
 - All three coverage tests green.
 - `npm run lint` 0 errors.
 - The `<format>-transform.test.ts` real-sample suite green and prints sensible counts.
@@ -204,6 +208,18 @@ api.import.<format>Run = async (opts: unknown) => {
 
 ## Anti-patterns from prior attempts
 
+- **Reading an allowlist and discarding the rest.** `getChild(node, 'TITL')`,
+  `getChild(node, 'AUTH')`, … and everything else falls on the floor unreported. Each
+  read is correct and the aggregate is a silent drop. This shipped in `phaseSources` and
+  cost 40 293 unreported tag occurrences on four ArkivDigital files. Every allowlist
+  needs a matching accounting path.
+- **Documenting a guarantee no test enforces.** The `gedcom` skill claimed custom tags
+  were "never silently dropped" while the importer dropped 99.7 % of them unreported.
+  If a doc states a fidelity guarantee, name the test that proves it or delete the claim.
+- **Persisting the source's internal ids nowhere.** Gramps `handle` / `gramps_id`,
+  Genney RIDs, ArkivDigital `_AID` — these are authored file content and must round-trip.
+  They go in `external_identifiers`, with the system name registered in the shared
+  convention list. See the format-alignment plan.
 - **Guessing the schema instead of inspecting the real sample.** Got bitten on the RootsMagic date format (`D.+19551002..+00000000..` — the qualifier suffix is 2 chars, not 1). Always derive from real bytes.
 - **Splitting the work across many tiny commits.** Foundation + wire-up is fine as 2 commits; further splitting just creates broken intermediate states the user has to step over.
 - **Forgetting `allowNameless: true` on `createPerson`.** It throws otherwise, because every native importer adds names in a later phase.

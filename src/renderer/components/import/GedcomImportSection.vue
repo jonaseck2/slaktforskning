@@ -227,6 +227,7 @@ async function handlePreviewGedcom() {
     const result = (await window.api.gedcom.preview({ filePath: picked.path })) as {
       canceled?: boolean;
       filePath?: string;
+      error?: string;
       preview?: {
         personCount: number; relationshipCount: number; eventCount: number;
         sourceCount: number; placeCount: number; repositoryCount: number;
@@ -238,6 +239,14 @@ async function handlePreviewGedcom() {
       previewData.value = result.preview;
       previewFilePath.value = result.filePath ?? null;
       showPreview.value = true;
+    } else {
+      // Anything that is neither a user cancel nor a preview is a failure the
+      // user must see. Falling through silently here is what made a binding
+      // envelope mismatch look like a dead button: no modal, no status line,
+      // nothing in the console.
+      setStatus(t('importExport.importError'), 'error');
+      console.error('[ImportExport] GEDCOM preview returned no preview:', result.error ?? result);
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');

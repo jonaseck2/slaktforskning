@@ -40,6 +40,18 @@ Two CI tests enforce it:
 
 `EXEMPT_TABLES` in `tests/helpers/gedcom_fidelity.ts` is render-only / cache-only tables (`gazetteers`, `db_settings`, `ignored_duplicates`). Don't add to it without a CLAUDE.md-cited justification.
 
+### The registry is the export half only
+
+The registry is keyed on `(table, column)` — it answers "does what the DB holds survive
+DB → GEDCOM → DB". It cannot answer "did what the file held reach the DB at all", because
+a tag that no phase reads produces no column to key on.
+
+That is clause 1's job, and it has its own test: the importer accounts for every node in
+the parsed tree, read or reported. A tag can pass the registry perfectly and still be
+silently lost on import — that is exactly what happened with ArkivDigital's `_AID` and
+`_ADPL` on 2026-08-23. **When adding format support, satisfy both halves.** Registry green
+is not evidence the import is complete.
+
 ## The four status kinds
 
 ### `{ kind: 'lossless' }`
@@ -123,6 +135,9 @@ What `excluded` does **NOT** mean (per CLAUDE.md):
 - **Marking everything `excluded` to silence CI.** Defeats the safety net. The reviewer should question any new `excluded` entry that isn't audit metadata or genuinely unrepresentable.
 - **Same kind for v551 and v70 by reflex.** Most authored fields differ — 5.5.1's tag set is narrower. Think through each version separately.
 - **`expectedAfterRoundTrip: () => seeded`.** Means lossless — switch the kind. The per-field test will pass either way; future readers won't.
+- **Treating registry-green as import-complete.** The registry starts at the column. A
+  field the importer never reads has no column and no entry, so CI stays green while the
+  data is gone. Check the accounting test too.
 - **Forgetting `ownedBy`.** When the per-field test fails, the failure points at the registry entry — `ownedBy` is what tells you which exporter/importer file is responsible.
 
 ## Past failures this rule was written against
