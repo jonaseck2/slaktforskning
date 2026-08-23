@@ -59,7 +59,6 @@ describe('import tag accounting', () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
     const paths = new Map((report.unaccountedFor ?? []).map(u => [u.path, u.count]));
     expect(paths.get('INDI.BIRT._DESC')).toBe(1);
-    expect(paths.get('INDI.BIRT.SOUR.DATA.DATE')).toBe(1);
     expect(paths.get('INDI.BIRT.SOUR._AID')).toBe(1);
   });
 
@@ -72,7 +71,8 @@ describe('import tag accounting', () => {
                      'INDI.BIRT.PLAC._ADPL._PARISH_AID',
                      'INDI.BIRT.PLAC._ADPL._COUNTY',
                      'INDI.BIRT.PLAC._ADPL._COUNTRY',
-                     'INDI.BIRT.PLAC._ADPL._LOCALITY']) {
+                     'INDI.BIRT.PLAC._ADPL._LOCALITY',
+                     'INDI.BIRT.SOUR.DATA.DATE']) {
       expect(paths, `${p} is mapped now and should not be reported`).not.toContain(p);
     }
   });

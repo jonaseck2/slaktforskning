@@ -138,7 +138,12 @@ export async function importEventNode(
       const dataNode = getChild(sour, 'DATA');
       const transcription = dataNode ? getChild(dataNode, 'TEXT')?.value ?? '' : '';
       const notes = getChild(sour, 'NOTE')?.value ?? '';
-      const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+      // `_ACCESSED` is this app's own tag. ArkivDigital writes the date the
+      // researcher consulted the record as `DATA > DATE` instead — 6147
+      // occurrences across four real exports, previously dropped while
+      // citations.date_accessed sat empty on every row.
+      const date_accessed = getChild(sour, '_ACCESSED')?.value
+        ?? (dataNode ? getChild(dataNode, 'DATE')?.value ?? '' : '');
       await createCitation(db, {
         source_id: srcId,
         event_id: event.id,
@@ -292,7 +297,12 @@ export async function collectEventNode(
       const dataNode = getChild(sour, 'DATA');
       const transcription = dataNode ? getChild(dataNode, 'TEXT')?.value ?? '' : '';
       const citNotes = getChild(sour, 'NOTE')?.value ?? '';
-      const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
+      // `_ACCESSED` is this app's own tag. ArkivDigital writes the date the
+      // researcher consulted the record as `DATA > DATE` instead — 6147
+      // occurrences across four real exports, previously dropped while
+      // citations.date_accessed sat empty on every row.
+      const date_accessed = getChild(sour, '_ACCESSED')?.value
+        ?? (dataNode ? getChild(dataNode, 'DATE')?.value ?? '' : '');
       citationRows.push({
         source_id: srcId,
         event_id: eventId,
