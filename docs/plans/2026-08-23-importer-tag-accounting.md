@@ -94,7 +94,7 @@ Session state lives in `tag-accounting.ts` and nowhere else. The walk is pure so
 - Consumes: `GedcomNode` from `src/gedcom/parser`.
 - Produces: `beginAccounting(): void`, `endAccounting(): Set<GedcomNode>`, `markConsumed(node: GedcomNode): void`, `isAccounting(): boolean`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-tag-accounting-session.test.ts
@@ -137,12 +137,12 @@ describe('tag accounting session', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-session.test.ts`
 Expected: FAIL — `Cannot find module '../../src/import/gedcom/tag-accounting'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/import/gedcom/tag-accounting.ts
@@ -192,12 +192,12 @@ export function markConsumed(node: GedcomNode): void {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-session.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/tag-accounting.ts tests/unit/import-tag-accounting-session.test.ts
@@ -218,7 +218,7 @@ git commit -m "feat(import): tag accounting session"
 
 Pure function. Takes the set as an argument rather than reading the session, so it can be tested without an import and reused by the samples script.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-tag-accounting-walk.test.ts
@@ -290,12 +290,12 @@ describe('collectUnaccounted', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-walk.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/import/gedcom/accounting-walk.ts
@@ -340,12 +340,12 @@ export function collectUnaccounted(
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-walk.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/accounting-walk.ts tests/unit/import-tag-accounting-walk.test.ts
@@ -365,7 +365,7 @@ git commit -m "feat(import): collectUnaccounted tree walk"
 - Consumes: Task 1's `beginAccounting` / `endAccounting`, Task 2's `collectUnaccounted`.
 - Produces: `ImportReport.unaccountedFor: UnaccountedTag[]` and `ValidationReport.unaccountedFor`. `skipped` is unchanged and still populated.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-tag-accounting.test.ts
@@ -440,12 +440,12 @@ describe('import tag accounting', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts`
 Expected: FAIL — `report.unaccountedFor` is `undefined`, so `paths.get(...)` returns `undefined` and the first assertion fails with `expected undefined to be 1`.
 
-- [ ] **Step 3: Mark on read**
+- [x] **Step 3: Mark on read**
 
 ```ts
 // src/import/gedcom/node-utils.ts — replace the two accessors
@@ -464,7 +464,7 @@ export function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
 }
 ```
 
-- [ ] **Step 4: Open the session around the phase run**
+- [x] **Step 4: Open the session around the phase run**
 
 In `src/import/gedcom/import-core.ts`, at the call site around line 444-450 where `normalizedTree` is built and `doImportGedcom` is invoked:
 
@@ -500,17 +500,17 @@ export interface ImportReport {
 
 and include it in the returned object alongside `skipped: partial.skipped`.
 
-- [ ] **Step 5: Run the test and watch it pass**
+- [x] **Step 5: Run the test and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts`
 Expected: PASS, 3 tests.
 
-- [ ] **Step 6: Prove no stored data changed**
+- [x] **Step 6: Prove no stored data changed**
 
 Run: `npx vitest run tests/unit/`
 Expected: PASS. Any failure here means marking changed behaviour, which it must not — `getChild` still returns exactly what it returned before.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/import/gedcom/node-utils.ts src/import/gedcom/import-core.ts tests/unit/import-tag-accounting.test.ts
@@ -533,7 +533,7 @@ Phases that walk `node.children` directly bypass Task 3's marking, so nodes they
 
 `normalize.ts` and `detect.ts` need no marking — both run before `beginAccounting()`, so their reads are outside the session by construction.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/import-tag-accounting.test.ts
@@ -577,12 +577,12 @@ it('does not report core tags that direct-traversal phases consume', async () =>
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts -t 'direct-traversal'`
 Expected: FAIL, listing the paths still reported. That list is the work.
 
-- [ ] **Step 3: Mark at each direct-traversal site**
+- [x] **Step 3: Mark at each direct-traversal site**
 
 The full set of `.children` traversals inside the session, from a repo-wide grep.
 `normalize.ts` (11 sites) and `detect.ts` (2 sites) are **excluded** — both run before
@@ -618,12 +618,12 @@ for (const n of ctx.tree) if (n.tag === 'SOUR' && n.xref) { markConsumed(n); sou
 
 Work through the failing paths from Step 2 one at a time, re-running the test after each. Do not add a blanket "mark everything" walk — that would make the test pass while destroying its value.
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Re-measure against the real AD files**
+- [x] **Step 5: Re-measure against the real AD files**
 
 The four AD files are gitignored local data — this is a measurement, not a test.
 
@@ -648,7 +648,7 @@ console.log('total unaccounted across four files:', n);
 
 Expected: the top entries are `_AID`, the `_ADPL` subtree, `_TITLE`, `_DESC` and `SOUR.DATA.DATE` — and **no** core tags (`INDI`, `FAM`, `SOUR`, `NAME.GIVN`, `FAMS`, `FAMC`). Record the total in the commit message.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/import/gedcom/
@@ -667,7 +667,7 @@ git commit -m "feat(import): mark direct-traversal reads for tag accounting"
 - Produces: `interface DeclaredUnmapped { path: string; reason: string }`, `DECLARED_UNMAPPED: DeclaredUnmapped[]`, and `matchDeclared(path: string): DeclaredUnmapped | undefined`.
 - `path` supports a single trailing `*` wildcard and a leading `*.` wildcard, nothing more. `*.PLAC._ADPL._PARISH` matches that suffix under any event. `INDI.BIRT.*` matches any descendant of that prefix. Deliberately weak so nobody writes `*` and declares everything.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-tag-accounting-declared.test.ts
@@ -703,12 +703,12 @@ describe('declared unmapped tags', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-declared.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/import/gedcom/accounting-declared.ts
@@ -767,12 +767,12 @@ export function matchDeclared(path: string): DeclaredUnmapped | undefined {
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting-declared.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/import/gedcom/accounting-declared.ts tests/unit/import-tag-accounting-declared.test.ts
@@ -793,7 +793,7 @@ git commit -m "feat(import): declared-unmapped tag list"
 
 This is where the existing fixtures get triaged. Expect failures on first run — each is a drop nobody could previously see. For each, decide: map it (out of scope here, so file it), or declare it with a reason.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/import-tag-accounting.test.ts
@@ -830,12 +830,12 @@ describe('every shipped fixture is fully accounted for', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and read the failures**
+- [x] **Step 2: Run it and read the failures**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts`
 Expected: FAIL on several fixtures. Each failure message lists the undeclared paths and counts. This list is the previously invisible drop set — read it before touching anything.
 
-- [ ] **Step 3: Triage each undeclared path**
+- [x] **Step 3: Triage each undeclared path**
 
 For each path in the failure output, add an entry to `DECLARED_UNMAPPED` with a reason from this vocabulary:
 
@@ -845,17 +845,17 @@ For each path in the failure output, add an entry to `DECLARED_UNMAPPED` with a 
 
 If a path holds authored research data and you cannot name a plan for it, stop and surface to the user rather than declaring it.
 
-- [ ] **Step 4: Run the test and watch it pass**
+- [x] **Step 4: Run the test and watch it pass**
 
 Run: `npx vitest run tests/unit/import-tag-accounting.test.ts`
 Expected: PASS, all fixtures.
 
-- [ ] **Step 5: Run the full suite**
+- [x] **Step 5: Run the full suite**
 
 Run: `npm test`
 Expected: PASS. Record the summary line.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/unit/import-tag-accounting.test.ts src/import/gedcom/accounting-declared.ts
@@ -876,7 +876,7 @@ git commit -m "test(import): gate every fixture on tag accounting"
 
 Synthetic names and places only. The four real files are gitignored local data and must not be copied here.
 
-- [ ] **Step 1: Write the fixture**
+- [x] **Step 1: Write the fixture**
 
 ```
 0 HEAD
@@ -970,27 +970,27 @@ Synthetic names and places only. The four real files are gitignored local data a
 0 TRLR
 ```
 
-- [ ] **Step 2: Register it in the dialect test**
+- [x] **Step 2: Register it in the dialect test**
 
 Add `'arkivdigital'` to the dialect list in `tests/unit/import-gedcom-dialects.test.ts` alongside the existing ten.
 
-- [ ] **Step 3: Run both tests and watch accounting fail**
+- [x] **Step 3: Run both tests and watch accounting fail**
 
 Run: `npx vitest run tests/unit/import-gedcom-dialects.test.ts tests/unit/import-tag-accounting.test.ts`
 Expected: the dialect test PASSES (no core tag in `skipped`). The accounting test FAILS on the new fixture, listing AD tags not yet in `DECLARED_UNMAPPED` — likely `INDI.OBJE._POS`, `INDI.OBJE._PRIM`, `OBJE._FOFN`, `OBJE._SIZE`, `OBJE._OWN`, `OBJE._CAPT`, `INDI.NOTE._TAG`, `INDI.NOTE._TAG.TYPE`, `FAM.CHIL._FREL`, `FAM.CHIL._MREL`.
 
 That contrast is the point: the dialect test passing while the accounting test fails is exactly the blindness this plan removes.
 
-- [ ] **Step 4: Declare the remaining AD tags**
+- [x] **Step 4: Declare the remaining AD tags**
 
 Add entries for each, reason `unmapped:pending-arkivdigital-profile` plus what the tag holds.
 
-- [ ] **Step 5: Run and watch both pass**
+- [x] **Step 5: Run and watch both pass**
 
 Run: `npx vitest run tests/unit/import-gedcom-dialects.test.ts tests/unit/import-tag-accounting.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/fixtures/gedcom/dialects/arkivdigital.ged tests/unit/import-gedcom-dialects.test.ts src/import/gedcom/accounting-declared.ts
@@ -1010,7 +1010,7 @@ git commit -m "test(import): synthetic ArkivDigital dialect fixture"
 - Consumes: `ImportReport.unaccountedFor`.
 - Produces: a rendered report section. No new exports.
 
-- [ ] **Step 1: Add the i18n keys**
+- [x] **Step 1: Add the i18n keys**
 
 Keys live under the `importExport` namespace, beside `importReportSkipped` at
 `src/renderer/i18n/en.ts:1602` and `sv.ts:1602`. Match that convention — a flat
@@ -1028,7 +1028,7 @@ importReportUnaccounted: 'Taggar som inte lästes in:',
 importReportUnaccountedHint: 'De fanns i filen men hanteras inte av appen. Din fil är oförändrad.',
 ```
 
-- [ ] **Step 2: Render the section**
+- [x] **Step 2: Render the section**
 
 Directly after the existing `skipped` block at `GedcomImportSection.vue:77-83`, matching
 its markup exactly — `<p class="report-section-label">`, not a heading, and `$t` with the
@@ -1053,7 +1053,7 @@ the template:
 unaccountedFor?: { path: string; count: number }[];
 ```
 
-- [ ] **Step 3: Verify in the running app**
+- [x] **Step 3: Verify in the running app**
 
 Launch with `npm start`, import `tests/fixtures/gedcom/dialects/arkivdigital.ged`, and
 capture the report with dev MCP `ui_screenshot`. Confirm the section renders with the AD
@@ -1064,7 +1064,7 @@ Note `GedcomImportSection.vue` was repaired in `5e80291d` after the Tauri port r
 the wrong envelope shapes. `tests/components/GedcomImportSection-flow.test.ts` now covers
 that flow — run it and keep it green.
 
-- [ ] **Step 4: Write the samples script**
+- [x] **Step 4: Write the samples script**
 
 ```ts
 // scripts/accounting-over-samples.ts
@@ -1133,12 +1133,12 @@ await main();
 
 Exit 0 always — it reports, it does not gate.
 
-- [ ] **Step 5: Run it and record the output**
+- [x] **Step 5: Run it and record the output**
 
 Run: `npx tsx scripts/accounting-over-samples.ts`
 Expected: a per-file list. Paste the totals into the commit message. If a real sample drops something the synthetic fixtures miss, add it to `DECLARED_UNMAPPED` with a reason.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/import/GedcomImportSection.vue src/renderer/i18n/ scripts/accounting-over-samples.ts src/import/gedcom/accounting-declared.ts
@@ -1158,7 +1158,7 @@ Verification §4. Marking must be inert with respect to what the importer stores
 of the same script — one on the merge-base, one on this branch — must print identical
 counts. A script rather than an ad-hoc snippet so both runs are provably the same code.
 
-- [ ] **Step 1: Write the counting script**
+- [x] **Step 1: Write the counting script**
 
 ```ts
 // scripts/import-row-counts.ts
@@ -1206,19 +1206,19 @@ async function main(): Promise<void> {
 await main();
 ```
 
-- [ ] **Step 2: Commit the script before measuring**
+- [x] **Step 2: Commit the script before measuring**
 
 ```bash
 git add scripts/import-row-counts.ts
 git commit -m "chore(scripts): row-count tool for proving importer changes inert"
 ```
 
-- [ ] **Step 3: Run it on this branch**
+- [x] **Step 3: Run it on this branch**
 
 Run: `npx tsx scripts/import-row-counts.ts "export-import/min släkt" | tee /tmp/counts-after.txt`
 Expected: `persons 822`, `events 5025`, `places 1617`, `sources 2776`, `citations 6752`, `relationships 1306`.
 
-- [ ] **Step 4: Run it on the merge-base**
+- [x] **Step 4: Run it on the merge-base**
 
 ```bash
 git worktree add /tmp/acct-baseline "$(git merge-base HEAD main)"
@@ -1231,7 +1231,7 @@ npm --prefix /tmp/acct-baseline exec -- tsx /tmp/acct-baseline/scripts/import-ro
 The script is copied in rather than committed to the baseline, because the baseline
 predates it. Symlinking `node_modules` avoids a full reinstall.
 
-- [ ] **Step 5: Diff**
+- [x] **Step 5: Diff**
 
 Run: `diff /tmp/counts-before.txt /tmp/counts-after.txt && echo "IDENTICAL — marking is inert"`
 Expected: no output from `diff`, then `IDENTICAL — marking is inert`.
@@ -1239,7 +1239,7 @@ Expected: no output from `diff`, then `IDENTICAL — marking is inert`.
 If they differ, marking changed behaviour. Stop and find out why — most likely a
 `markConsumed` call added inside a conditional that also altered control flow.
 
-- [ ] **Step 6: Clean up and record**
+- [x] **Step 6: Clean up and record**
 
 ```bash
 rm -f /tmp/acct-baseline/node_modules /tmp/acct-baseline/export-import
@@ -1252,18 +1252,18 @@ Paste both count blocks and the `diff` result into the close-out commit.
 
 ### Task 10 (Tier 1): Close out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence.
+- [x] **T-final (Tier 1)** — Invoke `/close-out` skill. The skill walks the 6+1 steps, refuses partial, captures evidence.
 
 ---
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag.
-- [ ] No task is self-referential (no "write this plan", no "mark everything complete").
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No task bundles more than one user-observable verb.
-- [ ] `skipped` still populated, `GedcomImportSection.vue:77` still renders, dialect tests unchanged.
-- [ ] No file from `export-import/` committed. `git log --stat` shows only synthetic fixtures.
-- [ ] Every `DECLARED_UNMAPPED` entry with reason `unmapped:pending-<plan>` has a real plan filed.
-- [ ] Verification §1-§5 each have captured output in the close-out commit.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npx playwright test` green.
+- [x] Every task has a tier tag.
+- [x] No task is self-referential (no "write this plan", no "mark everything complete").
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No task bundles more than one user-observable verb.
+- [x] `skipped` still populated, `GedcomImportSection.vue:77` still renders, dialect tests unchanged.
+- [x] No file from `export-import/` committed. `git log --stat` shows only synthetic fixtures.
+- [x] Every `DECLARED_UNMAPPED` entry with reason `unmapped:pending-<plan>` has a real plan filed.
+- [x] Verification §1-§5 each have captured output in the close-out commit.
+- [x] `npm test`, `npm run lint`, `npm run build`, `npx playwright test` green.
