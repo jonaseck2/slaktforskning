@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.271.5 — 2026-08-23
+
+- fix: importing a standard GEDCOM works again — picking a file showed no preview, no error, and nothing in the log
+- fix: a successful GEDCOM import no longer reports itself as failed
+- fix: GEDCOM import accepts a .zip containing a .ged again, and files media into the database's media folder
+- test: the end-to-end suite runs the build you just made instead of whichever bundle was built last
+- test: end-to-end runs use their own throwaway database again instead of the last one you opened
+
 ## 0.271.4 — 2026-08-22
 
 - chore: Pinia, Vue Router and Vue I18n updated, with security patches for bundled libraries
@@ -41,13 +49,6 @@
 ## 0.270.3 — 2026-06-14
 
 - fix: searching the person list down to zero matches keeps the search box and shows a "no matches" message instead of the welcome screen, so you can refine or clear the search
-
-## 0.270.2 — 2026-06-10
-
-- perf: GEDCOM export fetches each table once instead of one query per person, event, and source
-- fix: GEDCOM import no longer silently swallows real errors when linking associations and groups
-- fix: media reorder and place photo buttons gain screen-reader labels; name badges now translatable
-- test: the Repositories e2e suite is wired into the full tier (it was defined but never ran)
 
 ---
 

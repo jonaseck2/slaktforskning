@@ -33,10 +33,20 @@ Applies to: import paths, MCP tools, IPC handlers, Vue components, AI agents, sc
 **Every authored field must survive a GEDCOM 5.5.1 *or* 7.0 round-trip — or be explicitly, justifiably excluded.**
 
 Lifecycle: GEDCOM → DB → user edits → DB → GEDCOM. Two enforcement mechanisms under one directive:
-1. The importer discloses anything it cannot model (`unmappedData` / import-report mechanism).
+1. The importer accounts for every tag in the file — read it, or report it. Mechanically guarded by the tag-accounting contract below.
 2. The DB → GEDCOM → DB round-trip is mechanically guarded by the registry below.
 
-**Mechanical contract:**
+**Mechanical contract — import side (clause 1):**
+- The importer accounts for **every node in the parsed tree**. A node is accounted for when a phase reads it, or when the import report names it with its full tag path and occurrence count.
+- Accounting is **per node**, not per record type and not per level. A tag at level 4 under `PLAC` carries the same obligation as a tag at level 1 under `INDI`.
+- Accounting is **measured, not asserted**. A unit test parses every fixture, imports it, and asserts the unaccounted-for set is empty. A new phase that reads an allowlist and discards the rest fails that test by design.
+- The app does not have to *model* every tag. It has to *say* what it didn't model. Declaring a tag unmapped, with a reason, discharges the obligation in full.
+
+**Silent drop is what clause 1 exists to prevent.** Reading a fixed allowlist and discarding the remainder is a silent drop — whether or not the discarded tag is one anyone currently cares about. If a tag cannot be named in the report, it has not been disclosed. Never write a `getChild(node, 'X')` allowlist without a matching accounting path.
+
+**Past failure this contract was written against (2026-08-23).** `ctx.skippedTags` was written in exactly two places — unrecognised level-1 tags on `INDI` and on `FAM` — and every other phase read an allowlist and discarded the rest. Measured against four ArkivDigital exports: 43 199 custom-tag occurrences across 168 paths, of which 2 763 were consumed, **143 were disclosed, and 40 293 were dropped without appearing in any report.** The `gedcom` skill simultaneously documented the guarantee "`_` prefixed custom tags — reported in `skipped` (never silently dropped)", which was false by four orders of magnitude. Documentation asserting a guarantee that no test enforces is how this happened.
+
+**Mechanical contract — export side (clause 2):**
 - Every `(table, column)` pair has an entry in `src/api/gedcom_fidelity_registry.ts` declaring round-trip status under both 5.5.1 and 7.0.
 - Status values: `lossless` | `lossless-via:<mechanism>` | `lossy:<reason>` | `excluded:<reason>`.
 - Schema-introspection unit test asserts every column has an entry. Adding a column without a registry entry breaks CI by design.
@@ -52,6 +62,11 @@ Lifecycle: GEDCOM → DB → user edits → DB → GEDCOM. Two enforcement mecha
 - "Hard to round-trip." Hard ≠ excluded. `lossy` is fine if recorded; silent drop is not.
 - "We don't use this field much." Authored data is authored data.
 - "5.5.1 can't carry it but 7.0 can." That's `lossy:5.5.1-spec-limit` for v551 and `lossless` for v70.
+
+**Unmapped-on-import does NOT mean:**
+- "It's a vendor custom tag." Vendor tags are where the authored research lives. ArkivDigital's `_DESC` carries the researcher's own words.
+- "No phase happens to read it." That is the definition of the failure, not a justification for it.
+- "It's deep in the tree." Depth is not a reason. See the per-node rule above.
 
 **Applies to:** schema migrations, importer (`src/import/gedcom/`, `src/gedcom/importer.ts`), exporter (`src/gedcom/exporter.ts`), MCP tools that mutate persisted state, any new entity. Render-only and gazetteer-only code is exempt. Archive (`.zip`) export/import is conceptually in-scope; mechanical enforcement ships in a follow-up plan.
 

@@ -95,6 +95,25 @@ export interface AppInstance {
 }
 
 /**
+ * Of the given paths, return the one that exists and was modified most
+ * recently, or null if none exist. Used to pick between a bundled app and a
+ * raw `--no-bundle` binary so the e2e suite always runs the newest build.
+ */
+function newestExisting(paths: string[]): string | null {
+  let best: string | null = null;
+  let bestMtime = -Infinity;
+  for (const p of paths) {
+    if (!fs.existsSync(p)) continue;
+    const mtime = fs.statSync(p).mtimeMs;
+    if (mtime > bestMtime) {
+      bestMtime = mtime;
+      best = p;
+    }
+  }
+  return best;
+}
+
+/**
  * Resolve the path to the packaged Tauri binary for the current platform.
  * Throws with a helpful message if the binary is missing — the e2e script is
  * expected to run `npm run tauri:build` (or the test-friendly
@@ -106,35 +125,40 @@ export function packagedBinaryPath(): string {
 
   let binary: string;
   if (platform === 'darwin') {
-    // `build:e2e` runs `tauri build --no-bundle`, so the `.app` wrapper isn't
-    // produced — only the raw binary at `target/release/slaktforskning`. Fall
-    // back to the bundled `.app` if it happens to be present (e.g. after a
-    // full `npm run build`); otherwise use the raw binary. The previous
-    // hardcoded `Släktforskning (Tauri).app` path rotted when commit ca50d226
-    // dropped the "(Tauri)" suffix from `productName`, and again when the
-    // `--no-bundle` switch landed (390d3fc0).
-    const bundlePath = path.join(
-      targetDir, 'bundle', 'macos',
-      'Släktforskning.app', 'Contents', 'MacOS', 'slaktforskning',
-    );
-    binary = fs.existsSync(bundlePath)
-      ? bundlePath
-      : path.join(targetDir, 'slaktforskning');
+    // Two candidates: the bundled `.app` from a full `npm run build`, and the
+    // raw binary from `build:e2e` (`tauri build --no-bundle`, which produces no
+    // `.app`). Pick whichever was written most recently.
+    //
+    // Preferring the `.app` unconditionally — as this did until 2026-08-23 —
+    // silently pinned every e2e run to whatever bundle was last built. A
+    // `.app` from 2026-06-17 shadowed fresh `build:e2e` binaries for two
+    // months, so the suite kept reporting green against stale renderer code
+    // and could not have caught a renderer regression at all.
+    //
+    // (The earlier hardcoded `Släktforskning (Tauri).app` path rotted when
+    // ca50d226 dropped the "(Tauri)" suffix from `productName`, and again when
+    // the `--no-bundle` switch landed in 390d3fc0.)
+    binary = newestExisting([
+      path.join(targetDir, 'slaktforskning'),
+      path.join(
+        targetDir, 'bundle', 'macos',
+        'Släktforskning.app', 'Contents', 'MacOS', 'slaktforskning',
+      ),
+    ]) ?? path.join(targetDir, 'slaktforskning');
   } else if (platform === 'linux') {
     // Linux ships AppImage. Look at the appimage dir; fall back to the raw
     // binary in `target/release/` if the AppImage hasn't been built yet
     // (handy for `cargo build --release` runs).
+    // Same newest-wins rule as darwin: a stale AppImage must not shadow a
+    // freshly built raw binary.
     const appimageDir = path.join(targetDir, 'bundle', 'appimage');
+    const candidates = [path.join(targetDir, 'slaktforskning')];
     if (fs.existsSync(appimageDir)) {
-      const entries = fs.readdirSync(appimageDir).filter(f => f.endsWith('.AppImage'));
-      if (entries.length > 0) {
-        binary = path.join(appimageDir, entries[0]);
-      } else {
-        binary = path.join(targetDir, 'slaktforskning');
+      for (const f of fs.readdirSync(appimageDir)) {
+        if (f.endsWith('.AppImage')) candidates.push(path.join(appimageDir, f));
       }
-    } else {
-      binary = path.join(targetDir, 'slaktforskning');
     }
+    binary = newestExisting(candidates) ?? path.join(targetDir, 'slaktforskning');
   } else if (platform === 'win32') {
     binary = path.join(targetDir, 'slaktforskning.exe');
   } else {

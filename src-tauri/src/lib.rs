@@ -234,6 +234,26 @@ fn db_current_path() -> Option<String> {
     db::current_path()
 }
 
+/// Returns the `SLAKTFORSKNING_DB` path override if this process was started
+/// with one, else None.
+///
+/// `default_db_path` already honours the same variable, but it sits *below*
+/// the renderer's persisted `slaktforskning-last-db-path` in the boot
+/// resolution order — so a machine that has ever opened a real database
+/// reopens it and the override never applies. That made e2e runs against the
+/// raw `build:e2e` binary (which shares WebKit localStorage with the dev app)
+/// silently operate on the developer's own tree instead of the temp DB the
+/// fixture passed in. Exposing the override separately lets the renderer put
+/// an explicit process-level directive ahead of persisted user state.
+#[specta::specta]
+#[tauri::command]
+fn db_path_override() -> Option<String> {
+    match std::env::var("SLAKTFORSKNING_DB") {
+        Ok(p) if !p.is_empty() => Some(p),
+        _ => None,
+    }
+}
+
 /// Show a native open-file dialog for picking a .db file. Returns the chosen
 /// absolute path, or None if the user cancelled. The renderer then re-opens
 /// the shim against this path. Backs `window.api.db.openExisting()`.
@@ -818,6 +838,7 @@ pub fn specta_builder() -> tauri_specta::Builder<tauri::Wry> {
             db_all,
             default_db_path,
             db_current_path,
+            db_path_override,
             db_pick_existing,
             db_pick_new,
             media_pick_and_copy,

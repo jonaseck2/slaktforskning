@@ -801,10 +801,32 @@ export function mountWindowApi(db: Database): MountResult {
   if (!api.gedcom) api.gedcom = {};
   api.gedcom.selectFile = () => pickFile('Select GEDCOM File', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
 
+  // `selectFile` accepts .zip, so both preview and import must unwrap one.
+  // The Electron worker channel extracted the largest .ged into a tmp dir with
+  // node fs; the renderer has the bytes already, so fflate unzips in memory and
+  // no temp file is involved. A .zip carrying no .ged throws — the caller's
+  // catch turns that into a `{ success: false, error }` the UI can show.
+  const readGedcomBytes = async (filePath: string): Promise<Uint8Array> => {
+    const b64 = await unwrap(commands.fsReadBytesBase64(filePath));
+    const bytes = base64ToUint8Array(b64);
+    if (!/\.zip$/i.test(filePath)) return bytes;
+    const { unzipSync } = await import('fflate');
+    const entries = Object.entries(unzipSync(bytes))
+      .filter(([name]) => name.toLowerCase().endsWith('.ged'))
+      .sort(([, a], [, b]) => b.length - a.length);
+    if (entries.length === 0) throw new Error('No .ged file found inside zip archive.');
+    return entries[0][1];
+  };
+
   // GEDCOM import: read bytes via Rust, decode encoding-aware in JS, parse +
   // import via the existing api/ functions. The Electron build's worker
   // handler does the same flow but with sync fs.readFileSync; the renderer
   // can't use fs so it goes through `commands.fsReadBytesBase64` (generated).
+  //
+  // Returns the `withImportLifecycle` envelope `{ success, report, error }` —
+  // the shape GedcomImportSection.vue reads and every sibling importer binding
+  // (holgerRun / genneyRun / grampsRun) returns. Returning the bare report here
+  // made the component take its failure branch on every successful import.
   api.gedcom.import = async (opts: unknown) => {
     const o = opts as { filePath?: string; mediaDir?: string; profile?: 'standard' | 'minimal' } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
@@ -815,8 +837,7 @@ export function mountWindowApi(db: Database): MountResult {
         import('../gedcom/parser'),
         import('../import/gedcom'),
       ]);
-      const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
-      const bytes = base64ToUint8Array(b64);
+      const bytes = await readGedcomBytes(o.filePath);
       const text = enc.decodeGedcomBytes(bytes);
       const tree = parserMod.parseGedcom(text);
       const report = await importerMod.importGedcom(getDb(), tree, {
@@ -824,8 +845,17 @@ export function mountWindowApi(db: Database): MountResult {
         profile: o.profile,
         onProgress: (m) => fireProgress('genney', m),
       });
+      // OBJE FILE refs land in the DB as whatever path the file carried;
+      // `.claude/rules/media.md` requires every import path to consolidate them
+      // into `<dbname>-media/` with relative refs. Mirrors the holgerRun flow.
+      try {
+        const cur = await commands.dbCurrentPath();
+        if (cur) await unwrap(commands.holgerConsolidateMedia(cur, o.mediaDir ?? null));
+      } catch (e) {
+        console.warn(`[gedcom] consolidate_media failed: ${(e as Error)?.message ?? e}`);
+      }
       fireDataChanged();
-      return report;
+      return { success: true, report };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
     } finally {
@@ -833,7 +863,11 @@ export function mountWindowApi(db: Database): MountResult {
     }
   };
 
-  // GEDCOM preview: same shape, returns a count summary without inserting.
+  // GEDCOM preview: counts only, no DB writes. Returns the
+  // `{ canceled, filePath, preview }` envelope the Electron worker channel
+  // returned and GedcomImportSection.vue reads — a bare ImportPreview made the
+  // component's `if (result.preview)` guard fall through to a silent return,
+  // so clicking Import produced no modal and no error.
   api.gedcom.preview = async (opts: unknown) => {
     const o = opts as { filePath?: string } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
@@ -843,11 +877,10 @@ export function mountWindowApi(db: Database): MountResult {
         import('../gedcom/parser'),
         import('../import/gedcom'),
       ]);
-      const b64 = await unwrap(commands.fsReadBytesBase64(o.filePath));
-      const bytes = base64ToUint8Array(b64);
+      const bytes = await readGedcomBytes(o.filePath);
       const text = enc.decodeGedcomBytes(bytes);
       const tree = parserMod.parseGedcom(text);
-      return importerMod.previewGedcomImport(tree);
+      return { canceled: false, filePath: o.filePath, preview: importerMod.previewGedcomImport(tree) };
     } catch (e) {
       return { success: false, error: String((e as Error)?.message || e) };
     }

@@ -70,17 +70,31 @@ if ('__TAURI_INTERNALS__' in window) {
     // user's switch, leaving a divergence where MCP / sqlite3 see one DB
     // and the renderer sees another.
     // Resolution order across an app restart:
-    //   1. `db::CURRENT_PATH` (Rust in-memory) — survives a renderer reload
+    //   1. `SLAKTFORSKNING_DB` — an explicit process-level override (e2e
+    //      fixtures, scripted runs). Outranks persisted state by design: a
+    //      caller who names the DB on the command line means it. Without this
+    //      rung the override sat below (3) and never applied on any machine
+    //      that had opened a real DB once, so e2e runs against the raw
+    //      `build:e2e` binary quietly used the developer's own tree.
+    //   2. `db::CURRENT_PATH` (Rust in-memory) — survives a renderer reload
     //      but is reset on a full process restart. Honours window.api.db.switchTo
     //      done since the process started.
-    //   2. `localStorage["slaktforskning-last-db-path"]` — written by switchDbTo
+    //   3. `localStorage["slaktforskning-last-db-path"]` — written by switchDbTo
     //      so the app reopens whatever DB the user was last using. Falls
-    //      through to (3) if the file no longer exists on disk.
-    //   3. `default_db_path()` — bundled `family.db` (portable or app data dir).
-    const currentPath = await coreMod.invoke<string | null>('db_current_path');
+    //      through to (4) if the file no longer exists on disk.
+    //   4. `default_db_path()` — bundled `family.db` (portable or app data dir).
+    const overridePath = await coreMod
+      .invoke<string | null>('db_path_override')
+      .catch(() => null);
+    const currentPath = overridePath
+      ? null
+      : await coreMod.invoke<string | null>('db_current_path');
     let lastDbPath: string | null = null;
-    let lastDbSource: 'rust' | 'localStorage' | 'default' = 'default';
-    if (currentPath) {
+    let lastDbSource: 'override' | 'rust' | 'localStorage' | 'default' = 'default';
+    if (overridePath) {
+      lastDbPath = overridePath;
+      lastDbSource = 'override';
+    } else if (currentPath) {
       lastDbPath = currentPath;
       lastDbSource = 'rust';
     } else {

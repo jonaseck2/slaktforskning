@@ -2,6 +2,13 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.270.2 — 2026-06-10
+
+- perf: GEDCOM export fetches each table once instead of one query per person, event, and source
+- fix: GEDCOM import no longer silently swallows real errors when linking associations and groups
+- fix: media reorder and place photo buttons gain screen-reader labels; name badges now translatable
+- test: the Repositories e2e suite is wired into the full tier (it was defined but never ran)
+
 ## 0.270.1 — 2026-06-07
 
 - fix(gedcom): export no longer stalls or eats tens of GB of RAM on large trees (cubic inner loops replaced with O(N) lookup maps)
