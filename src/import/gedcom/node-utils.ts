@@ -3,13 +3,23 @@
  */
 
 import type { GedcomNode } from '../../gedcom/parser';
+import { markConsumed } from './tag-accounting';
+
+// Both accessors mark what they return. `CLAUDE.md` Prime Directive (cont.)
+// clause 1 — marking on read is what makes accounting impossible to forget:
+// not reading a node is precisely what makes it unaccounted for. `markConsumed`
+// is a no-op outside an accounting session, so these stay usable everywhere.
 
 export function getChild(node: GedcomNode, tag: string): GedcomNode | undefined {
-  return node.children.find(c => c.tag === tag);
+  const found = node.children.find(c => c.tag === tag);
+  if (found) markConsumed(found);
+  return found;
 }
 
 export function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
-  return node.children.filter(c => c.tag === tag);
+  const found = node.children.filter(c => c.tag === tag);
+  for (const child of found) markConsumed(child);
+  return found;
 }
 
 /**
