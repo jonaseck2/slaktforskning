@@ -83,6 +83,13 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI._WEBTAG',      reason: 'unmapped:pending-dialect-tag-review — Family Historian web link' },
   { path: 'INDI._CUSTOM',      reason: 'unmapped:pending-dialect-tag-review — unrecognised vendor tag in the non-standard fixture' },
 
+  // ── ArkivDigital tags documented but never observed ──────────────────────
+  // In the synthetic fixture so the gate reports them, deliberately not
+  // modelled. See docs/plans/2026-08-23-ad-unsampled-tags.md.
+  { path: 'FAM._DOMESTIC_PARTNERSHIP',            reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (cohabitation event)' },
+  { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE',       reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (its date)' },
+  { path: '*._DATE_TEXT',                         reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (a date with no valid GEDCOM form)' },
+
   // ── LDS ordinances — already summarised in unmappedData, declared for parity
   { path: 'INDI.BAPL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },
   { path: 'INDI.CONL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },
