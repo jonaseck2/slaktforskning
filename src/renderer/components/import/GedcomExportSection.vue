@@ -105,6 +105,7 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
       exported?: boolean;
       canceled?: boolean;
       filePath?: string;
+      error?: string;
       report?: {
         persons: number;
         families: number;
@@ -119,6 +120,13 @@ async function handleExportGedcom(version: '5.5.1' | '7.0') {
         exportReport.value = result.report;
         showExportReport.value = true;
       }
+    } else if (!result.canceled) {
+      // The binding reports failure as `{ canceled: false, error }` rather than
+      // rejecting, so without this branch an export error produced no status
+      // line and nothing in the console. A user-cancel stays quiet.
+      setStatus(t('importExport.exportError'), 'error');
+      console.error('[ImportExport] GEDCOM export failed:', result.error ?? result);
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.exportError'), 'error');

@@ -981,6 +981,8 @@ export default {
     backupSaved: 'Säkerhetskopia sparad: {path}',
     confirmRestore: 'Återställ databasen från säkerhetskopian? Den aktiva databasen stängs.',
     restoreSuccess: 'Databas återställd.',
+    backupFailed: 'Säkerhetskopieringen misslyckades.',
+    restoreFailed: 'Återställningen misslyckades.',
     treeSubject: 'Trädets huvudperson',
     treeSubjectHint: 'Trädsubjektet när databasen öppnas. Exporteras som GEDCOM SUBM.',
     treeSubjectNone: 'Ingen huvudperson vald.',
@@ -1708,6 +1710,7 @@ export default {
     exporting: 'Exporterar…',
     exportedTo: 'Exporterades till',
     bundleMissing: 'Webbplatsen är inte byggt. Kör "npm run build:static" i projektmappen först.',
+    exportFailed: 'Exporten misslyckades:',
     preview: {
       loading: 'Bygger förhandsvisning…',
       refreshing: 'Uppdaterar…',
@@ -1848,6 +1851,7 @@ export default {
   },
   errors: {
     saveFailed: 'Det gick inte att spara. Försök igen.',
+    openFileFailed: 'Kunde inte öppna filen.',
     deleteFailed: 'Det gick inte att ta bort. Försök igen.',
     loadFailed: 'Det gick inte att ladda data. Försök igen.',
   },

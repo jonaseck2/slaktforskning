@@ -38,6 +38,7 @@
           :media-count="mediaCount"
           :last-output="lastOutput"
           :bundle-missing="bundleMissing"
+          :export-error="exportError"
           @export="exportSite"
           @close="closePanel"
         />
@@ -71,6 +72,7 @@ const exporting = ref(false);
 const exportProgress = ref('');
 const lastOutput = ref<string | null>(null);
 const bundleMissing = ref(false);
+const exportError = ref<string | null>(null);
 
 const snapshot = ref<PreviewSnapshot | null>(null);
 const mediaCount = computed(() => snapshot.value?.totals?.media ?? null);
@@ -220,6 +222,7 @@ async function exportSite() {
   exportProgress.value = '';
   lastOutput.value = null;
   bundleMissing.value = false;
+  exportError.value = null;
   try {
     const res = await window.api.website.export({
       siteTitle: siteTitle.value,
@@ -233,13 +236,25 @@ async function exportSite() {
         redactLiving: redactLiving.value,
         mediaPersonOnly: mediaPersonOnly.value,
       },
-    }) as { canceled?: boolean; outputDir?: string; bundleMissing?: boolean } | null;
+    }) as {
+      canceled?: boolean;
+      outputDir?: string;
+      bundleMissing?: boolean;
+      error?: string;
+    } | null;
     if (res?.bundleMissing) {
       bundleMissing.value = true;
     } else if (res && !res.canceled && res.outputDir) {
       lastOutput.value = res.outputDir;
+    } else if (res && !res.canceled) {
+      // The binding signals failure as `{ canceled: false, error }`, which
+      // carries no outputDir and so matched no branch here — a failed export
+      // left the panel exactly as it was, with nothing in the console either.
+      exportError.value = res.error ?? 'unknown error';
+      console.error('[WebsiteExport] export failed:', res.error ?? res);
     }
   } catch (e) {
+    exportError.value = String((e as Error)?.message ?? e);
     console.error('Export failed', e);
   } finally {
     exporting.value = false;

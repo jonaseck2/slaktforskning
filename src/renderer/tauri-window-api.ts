@@ -1534,7 +1534,11 @@ export function mountWindowApi(db: Database): MountResult {
       const today = new Date().toISOString().slice(0, 10);
       const defaultName = `${base}-backup-${today}.db`;
       const r = await saveFile('Spara säkerhetskopia', defaultName, ['db'], 'SQLite Database');
-      if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
+      // `canceled` alongside `success: false` so callers can tell a dismissed
+      // dialog from a genuine failure. Matching on the 'Cancelled' string was
+      // the only way before, so consumers guarded on `success` alone and
+      // swallowed real errors to avoid speaking on every cancel.
+      if (r.canceled || !r.path) return { canceled: true, success: false, error: 'Cancelled' };
       await unwrap(commands.fsCopyFile(currentPath, r.path));
       return { success: true, path: r.path };
     } catch (e) {
@@ -1544,7 +1548,9 @@ export function mountWindowApi(db: Database): MountResult {
   api.backup.restore = async () => {
     try {
       const r = await pickFile('Välj säkerhetskopia', ['db'], 'SQLite Database');
-      if (r.canceled || !r.path) return { success: false, error: 'Cancelled' };
+      // See the note in api.backup.backup — `canceled` separates a dismissed
+      // dialog from a failure.
+      if (r.canceled || !r.path) return { canceled: true, success: false, error: 'Cancelled' };
       await switchDbTo(r.path, /* createSchema */ false);
       return { success: true, path: r.path };
     } catch (e) {

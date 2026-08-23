@@ -223,6 +223,7 @@ async function handleExport() {
       exported?: boolean;
       canceled?: boolean;
       filePath?: string;
+      error?: string;
       report?: ExportReport;
     };
     if (result.exported) {
@@ -231,6 +232,13 @@ async function handleExport() {
         exportReportData.value = result.report;
         showExportReport.value = true;
       }
+    } else if (!result.canceled) {
+      // The failure return is `{ canceled: false, error }`, which matched no
+      // branch here — export errors produced no status line and no console
+      // entry. A user-cancel keeps the surface quiet.
+      setStatus(t('importExport.archiveExportError'), 'error');
+      console.error('[Archive] export failed:', result.error ?? result);
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.archiveExportError'), 'error');
@@ -246,33 +254,33 @@ async function handleImport() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
-    // archive:import now runs in the worker thread and returns the
-    // withImportLifecycle envelope: { success, report, error }. The cancel
-    // path stays as { canceled: true } because the file dialog runs on the
-    // main-thread shim before the worker call.
-    const result = (await window.api.archive.import()) as
-      | { canceled: true }
-      | {
-          success: true;
-          report: { imported?: boolean; filePath?: string; report?: ImportReport };
-        }
-      | { success: false; error: string };
-    if ('canceled' in result && result.canceled) return;
-    if ('success' in result && !result.success) {
+    // `api.archive.import` returns a flat envelope: `{ canceled: true }` when
+    // the user dismisses the file dialog, `{ imported: true, filePath, report }`
+    // on success, and `{ canceled: false, error }` on failure. This handler used
+    // to destructure a nested `{ success, report: { imported, report } }` shape
+    // left over from the Electron worker channel, so `inner.imported` was always
+    // undefined and the entire success block — including the `data-imported`
+    // event the rest of the UI refreshes on — never ran.
+    const result = (await window.api.archive.import()) as {
+      canceled?: boolean;
+      imported?: boolean;
+      filePath?: string;
+      error?: string;
+      report?: ImportReport;
+    };
+    if (result.canceled) return;
+    if (!result.imported) {
       setStatus(t('importExport.archiveImportError'), 'error');
-      console.error('[Archive] import failed:', result.error);
+      console.error('[Archive] import failed:', result.error ?? result);
       toast.error(t('errors.saveFailed'));
       return;
     }
-    const inner = result.report;
-    if (inner.imported) {
-      window.dispatchEvent(new CustomEvent('data-imported'));
-      if (inner.report) {
-        importReportData.value = inner.report;
-        showImportReport.value = true;
-      } else {
-        setStatus(t('importExport.archiveImportSuccess'));
-      }
+    window.dispatchEvent(new CustomEvent('data-imported'));
+    if (result.report) {
+      importReportData.value = result.report;
+      showImportReport.value = true;
+    } else {
+      setStatus(t('importExport.archiveImportSuccess'));
     }
   } catch (err) {
     setStatus(t('importExport.archiveImportError'), 'error');
