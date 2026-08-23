@@ -1602,6 +1602,8 @@ export default {
     importReportMedia: '{n} media',
     rootsmagicReportParentChild: '{n} förälder–barn-länkar',
     importReportSkipped: 'Okända taggar:',
+    importReportUnaccounted: 'Taggar som inte lästes in:',
+    importReportUnaccountedHint: 'De fanns i filen men hanteras inte av appen. Din fil är oförändrad.',
     importReportWarnings: 'Varningar:',
     importReportVersionUnknown: 'GEDCOM (okänd version)',
     importReportClose: 'Stäng',
