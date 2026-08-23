@@ -1,0 +1,89 @@
+0 HEAD
+1 SOUR Arkiv_Digital
+2 NAME AD Family tree
+2 CORP Arkiv Digital
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @S1@ SOUR
+1 TITL ArkivDigital: Testby (X) C:1 (1800-1810)
+1 _AID v100001
+1 _URL https://www.arkivdigital.se/aid/show/v100001.b10.s5
+0 @O1@ OBJE
+1 FILE testbild.jpg
+1 _FOFN original.jpg
+1 _SIZE 12345
+1 _OWN Testagare
+1 _CAPT 1905
+0 @I1@ INDI
+1 NAME Anna* Testdotter /Testsson/
+2 GIVN Anna* Testdotter
+2 SURN Testsson
+1 SEX F
+1 _TITLE Soldathustru
+1 BIRT
+2 DATE 01 JAN 1850
+2 PLAC Testtorpet, Testby, Testlands län, Sverige
+3 MAP
+4 LATI N60.000000
+4 LONG E17.000000
+3 _ADPL
+4 _LOCALITY Testtorpet
+4 _PARISH_AID a9001
+4 _PARISH Testby
+4 _COUNTY Testlands län
+4 _COUNTRY Sverige
+2 SOUR @S1@
+3 PAGE 5
+3 DATA
+4 DATE 18 JAN 2022
+4 TEXT ArkivDigital: Testby (X) C:1 Bild 10 / sid 5
+3 _AID v100001.b10.s5
+2 _DESC Trolovningsbarn
+1 RESI
+2 DATE ABT 1870
+2 PLAC Testgården, Testby, Testlands län, Sverige
+3 _ADPL
+4 _LOCALITY Testgården
+4 _PARISH_AID a9001
+4 _PARISH Testby
+4 _COUNTY Testlands län
+4 _COUNTRY Sverige
+1 PROB
+2 DATE 1900
+2 PLAC Testby, Testlands län, Sverige
+3 _ADPL
+4 _PARISH Testby
+4 _COUNTY Testlands län
+4 _JUDICIAL Testlands häradsrätt
+4 _COUNTRY Sverige
+1 OBJE @O1@
+2 _POS 10,20,30,40
+2 _PRIM Y
+1 NOTE En anteckning
+2 _TITLE Rubrik
+2 _TAG Etikett
+3 TYPE label
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Erik /Testsson/
+1 SEX M
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Barn /Testsson/
+1 SEX M
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I1@
+1 CHIL @I3@
+2 _FREL Biological
+2 _MREL Biological
+1 MARR
+2 DATE 1875
+2 PLAC Testby, Testlands län, Sverige
+3 _ADPL
+4 _PARISH Testby
+4 _COUNTRY Sverige
+0 TRLR

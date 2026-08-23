@@ -9,7 +9,8 @@ import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { createTestDb } from './helpers';
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
@@ -128,7 +129,15 @@ describe('import tag accounting', () => {
 // path is either mapped by a phase or declared with a reason. A new phase that
 // reads an allowlist without marking fails here by design.
 
-const FIXTURE_DIRS = ['tests/fixtures/gedcom', 'tests/fixtures/gedcom/dialects'];
+// Resolved from this file, not from cwd. A cwd-relative path would enumerate
+// zero fixtures under a different working directory and the gate would pass
+// vacuously — precisely the "guarantee no test enforces" shape this plan exists
+// to remove. The count assertion below is the backstop.
+const HERE = fileURLToPath(new URL('.', import.meta.url));
+const FIXTURE_DIRS = [
+  join(HERE, '../fixtures/gedcom'),
+  join(HERE, '../fixtures/gedcom/dialects'),
+];
 
 function fixtureFiles(): string[] {
   const out: string[] = [];
@@ -141,14 +150,20 @@ function fixtureFiles(): string[] {
 }
 
 describe('every shipped fixture is fully accounted for', () => {
+  it('finds the fixtures at all — guards against a vacuous pass', () => {
+    const files = fixtureFiles();
+    expect(files.length, 'fixture enumeration found nothing').toBeGreaterThanOrEqual(19);
+    expect(files.some(f => f.endsWith('arkivdigital.ged'))).toBe(true);
+  });
+
   for (const file of fixtureFiles()) {
-    it(`${file} — no undeclared unaccounted tags`, async () => {
+    it(`${relative(HERE, file)} — no undeclared unaccounted tags`, async () => {
       const freshDb = await createTestDb();
       const report = await importGedcom(freshDb, parseGedcom(readFileSync(file, 'utf-8')));
       const undeclared = (report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path));
       expect(
         undeclared,
-        `${file} drops these without a declaration — map them, or add an entry with a ` +
+        `${relative(HERE, file)} drops these without a declaration — map them, or add an entry with a ` +
         `reason to src/import/gedcom/accounting-declared.ts:\n` +
         undeclared.map(u => `  ${String(u.count).padStart(5)}  ${u.path}`).join('\n'),
       ).toEqual([]);
