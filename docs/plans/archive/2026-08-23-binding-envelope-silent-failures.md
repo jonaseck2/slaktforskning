@@ -116,6 +116,12 @@ npm run build:e2e     Finished release profile in 40.17s
 
 ## Known unrelated flake
 
+> **Superseded 2026-08-23.** The attribution below is wrong: the e2e DB holds
+> eight rows and there is no expensive scan, and the failure is deterministic
+> rather than flaky. The real cause is the eval bridge dropping a reply it could
+> not JSON-encode. See
+> [eval-bridge-drops-unserializable-results](2026-08-23-eval-bridge-drops-unserializable-results.md).
+
 `[duplicates] four-tab duplicates view` fails on first attempt and passes on
 retry, with `executeJs: renderer script timed out`. The failing call is the
 *first* eval after navigating to `/duplicates` (`duplicates.spec.ts:95`), and

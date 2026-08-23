@@ -92,7 +92,14 @@ test('four-tab duplicates view: seed, switch tab, merge, gone', async () => {
   ): Promise<void> {
     // Click the FilterChips tab. The chips render text from i18n; fall back
     // to setting the route query if the localized label varies.
-    await app.executeJs(`window.__vue_router.replace({ path: '/duplicates', query: { tab: ${JSON.stringify(tab)} } })`);
+    //
+    // Discard the navigation result rather than returning it. Replacing with
+    // the tab already active resolves with a vue-router NavigationFailure,
+    // whose from/to route records are cyclic and so cannot cross the eval
+    // bridge's JSON boundary. The bridge now answers with a descriptor instead
+    // of dropping the reply, but the descriptor is still an error to
+    // executeJs — and this call only needs the navigation to happen.
+    await app.executeJs(`window.__vue_router.replace({ path: '/duplicates', query: { tab: ${JSON.stringify(tab)} } }).then(() => null)`);
     await app.settle(150);
 
     const before = await app.executeJs<number>(`(async () => { const r = await ${findCall}; return Array.isArray(r) ? r.length : (r?.length ?? 0); })()`);
