@@ -21,15 +21,21 @@ import type { ImportContext } from '../import-types';
 import { createNote, linkNoteToEntity } from '../../../api/notes';
 import type { NoteEntityType } from '../../../api/types';
 import type { GedcomNode } from '../../../gedcom/parser';
+import { markConsumed } from '../tag-accounting';
 
+// Local copy of node-utils' getChildren. Marks like the shared one does —
+// a shadowing helper that skipped marking would be a silent accounting hole.
 function getChildren(node: GedcomNode, tag: string): GedcomNode[] {
-  return node.children.filter(c => c.tag === tag);
+  const found = node.children.filter(c => c.tag === tag);
+  for (const child of found) markConsumed(child);
+  return found;
 }
 
 export async function phaseNotes(ctx: ImportContext): Promise<void> {
   // Legacy noteMap: top-level NOTE records → xref → text.
   for (const node of ctx.tree) {
     if (node.tag !== 'NOTE' || !node.xref) continue;
+    markConsumed(node);
     ctx.noteMap.set(node.xref, node.value ?? '');
   }
   // T04: top-level SNOTE records → notes table row + noteIdMap entry.
@@ -38,8 +44,9 @@ export async function phaseNotes(ctx: ImportContext): Promise<void> {
   const source = ctx.originalTree ?? ctx.tree;
   for (const node of source) {
     if (node.tag !== 'SNOTE' || !node.xref) continue;
-    const lang = node.children.find(c => c.tag === 'LANG')?.value ?? '';
-    const note = await createNote(ctx.db, { text: node.value ?? '', language: lang });
+    const lang = node.children.find(c => c.tag === 'LANG');
+    if (lang) markConsumed(lang);
+    const note = await createNote(ctx.db, { text: node.value ?? '', language: lang?.value ?? '' });
     ctx.noteIdMap.set(node.xref, note.id);
   }
 }

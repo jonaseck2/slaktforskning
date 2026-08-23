@@ -12,6 +12,7 @@
  */
 
 import type { GedcomNode } from '../../../gedcom/parser';
+import { markConsumed } from '../tag-accounting';
 
 /**
  * Maps a Holger ENGA TYPE value to an app couple subtype.
@@ -19,6 +20,7 @@ import type { GedcomNode } from '../../../gedcom/parser';
  */
 export function holgerEngaSubtype(engaNode: GedcomNode): string {
   const typeNode = engaNode.children.find(c => c.tag === 'TYPE');
+  if (typeNode) markConsumed(typeNode);
   const type = typeNode?.value?.trim() ?? '';
   // 'Parter' (Swedish: "parties in a relationship") is a distinct Holger type, not a typo of 'Partner'
   if (['Sambo', 'Partner', 'Parter', 'Särbo'].includes(type)) return 'cohabitation';
@@ -36,8 +38,11 @@ export function parseHolgerAdoptionSubtypes(
 ): Map<string, string> {
   const result = new Map<string, string>();
   for (const adopNode of indiNode.children.filter(c => c.tag === 'ADOP')) {
+    markConsumed(adopNode);
     const famcNode = adopNode.children.find(c => c.tag === 'FAMC');
+    if (famcNode) markConsumed(famcNode);
     const typeNode = adopNode.children.find(c => c.tag === 'TYPE');
+    if (typeNode) markConsumed(typeNode);
     if (!famcNode) continue;
     const raw = typeNode?.value?.trim() ?? '';
     const subtype =

@@ -70,4 +70,52 @@ describe('import tag accounting', () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
     expect(Array.isArray(report.skipped)).toBe(true);
   });
+
+  // ── Task 4: phases that walk node.children directly bypass the marking in
+  // getChild/getChildren, so nodes they genuinely read get reported as dropped.
+  const CORE_TAGS = `0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @S1@ SOUR
+1 TITL A source
+0 @I1@ INDI
+1 NAME Erik /Hedqvist/
+2 GIVN Erik
+2 SURN Hedqvist
+1 SEX M
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Anna /Ersdotter/
+2 GIVN Anna
+2 SURN Ersdotter
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Barn /Hedqvist/
+1 FAMC @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+0 TRLR
+`;
+
+  // The plan's original list included GIVN/SURN/FAMS/FAMC/TRLR. Investigation
+  // during Task 4 showed those are not read by any phase:
+  //   • GIVN/SURN — folded into the NAME value by normalize.ts, which runs
+  //     before the session, so no phase ever reads the nodes.
+  //   • FAMS/FAMC — genuinely never read. The family link is built from the FAM
+  //     record's HUSB/WIFE/CHIL. Verified: no getChild/getChildren for either tag.
+  //   • TRLR, HEAD.CHAR, HEAD.GEDC — structure and pre-session reads.
+  // Reporting them is correct. They belong in DECLARED_UNMAPPED (Task 5), not here.
+  it('does not report record-level tags that phases claim', async () => {
+    const report = await importGedcom(db, parseGedcom(CORE_TAGS));
+    const paths = new Set((report.unaccountedFor ?? []).map(u => u.path));
+    for (const p of ['INDI', 'FAM', 'SOUR', 'HEAD',
+                     'FAM.HUSB', 'FAM.WIFE', 'FAM.CHIL',
+                     'INDI.NAME', 'INDI.SEX', 'SOUR.TITL']) {
+      expect(paths, `${p} is consumed but reported as unaccounted`).not.toContain(p);
+    }
+  });
 });

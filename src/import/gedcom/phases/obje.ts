@@ -5,13 +5,14 @@ import { bulkCreateMedia } from '../../../api/media';
 import type { ImportContext } from '../import-types';
 import { getChild } from '../node-utils';
 import { remapHolgerMediaPath } from '../obje-importer';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseObje(ctx: ImportContext): Promise<void> {
   // Two-pass: parse + collect; bulk INSERT once at the end. The Tauri
   // build pays one IPC per `createMedia` call; for a Holger import with
   // 22k OBJE records that's 22k IPC. Batched INSERT is one call.
   const objeNodes: typeof ctx.tree = [];
-  for (const n of ctx.tree) if (n.tag === 'OBJE' && n.xref) objeNodes.push(n);
+  for (const n of ctx.tree) if (n.tag === 'OBJE' && n.xref) { markConsumed(n); objeNodes.push(n); }
   const total = objeNodes.length;
   if (total === 0) return;
 

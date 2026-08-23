@@ -25,6 +25,7 @@ import { getPlace } from '../../../api/places';
 import { createGroup, addGroupLink } from '../../../api/groups';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren, resolveNote } from '../node-utils';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseGroupRecords(ctx: ImportContext): Promise<void> {
   // Build a local xref → DB place_id map by walking every _PLAC record.
@@ -35,6 +36,7 @@ export async function phaseGroupRecords(ctx: ImportContext): Promise<void> {
   const placeXrefToId = new Map<string, string>();
   for (const node of ctx.tree) {
     if (node.tag !== '_PLAC' || !node.xref) continue;
+    markConsumed(node);
     const oldPlaceId = getChild(node, '_PLAC_ID')?.value;
     if (!oldPlaceId) continue;
     // Try the placeIdMap first (set by phasePlaceCitations); fall back to a

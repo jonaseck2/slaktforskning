@@ -12,6 +12,7 @@ import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
 import { FAMILY_EVENT_TAGS } from './shared';
+import { markConsumed } from '../tag-accounting';
 
 const KNOWN_FAM_TAGS = new Set([
   'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
@@ -35,7 +36,7 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
   // each that's ~50-100k IPC under Tauri. All collapsed to a small constant
   // by the bulk flushes at the end.
   const famNodes: typeof ctx.tree = [];
-  for (const n of ctx.tree) if (n.tag === 'FAM') famNodes.push(n);
+  for (const n of ctx.tree) if (n.tag === 'FAM') { markConsumed(n); famNodes.push(n); }
   const famTotal = famNodes.length;
   if (famTotal === 0) return;
   ctx.options?.onProgress?.(`Importerar familjer (0 / ${famTotal})`);

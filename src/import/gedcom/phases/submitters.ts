@@ -11,10 +11,12 @@
 
 import type { ImportContext } from '../import-types';
 import { getChild } from '../node-utils';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseSubmitters(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'SUBM') continue;
+    markConsumed(node);
     const name = getChild(node, 'NAME')?.value;
     if (!name) continue;
     ctx.submitterNames.push(name.trim());

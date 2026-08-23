@@ -3,10 +3,12 @@
 import { createRepository } from '../../../api/repositories';
 import type { ImportContext } from '../import-types';
 import { getChild, resolveNote } from '../node-utils';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseRepo(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== 'REPO' || !node.xref) continue;
+    markConsumed(node);
     const addrNode = getChild(node, 'ADDR');
     const addrValue = addrNode
       ? (getChild(addrNode, 'ADR1')?.value ?? addrNode.value ?? undefined)
