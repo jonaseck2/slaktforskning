@@ -212,7 +212,7 @@ Measured against the shipped branch:
 | Unaccounted-for report, per path with counts | **shipped** — `accounting-walk.ts` + import-report UI |
 | Declared-not-modelled registry | **shipped** — `accounting-declared.ts`, 56 paths, reason prefixes enforced by test |
 | Corpus gate test | **shipped** — over 19 fixtures, plus a synthetic ArkivDigital fixture |
-| Account across the normalize boundary | **not shipped** — `inlineSnotes` discarding SNOTE children stays invisible |
+| Account across the normalize boundary | **not shipped — demonstrated hole**, see below |
 | Parser malformed-line counter | **not shipped** |
 | `no-restricted-syntax` lint rule on `.children` | **not shipped** — the anti-drift half; nothing stops the 35th raw traversal |
 | Closed-schema coverage (RootsMagic, Genney, Gramps) | **not shipped** |
@@ -221,6 +221,37 @@ Measured against the shipped branch:
 Running the new gate over the 19 shipped fixtures surfaced 20 undeclared paths, 13 of
 which hold authored data. Those became `unmapped:pending-dialect-tag-review`, and that
 plan is filed.
+
+### The normalize-boundary hole is real, and measured
+
+`import-core.ts:467` calls `collectUnaccounted(normalizedTree, endAccounting())` — the gate
+walks the tree *after* `normalize.ts` has rewritten it. `inlineSnotes` still rebuilds each
+shared note as `{ tag: 'NOTE', …, children: [] }`, so a GEDCOM 7.0 `SNOTE`'s sub-tags are
+gone before the gate can see them.
+
+Probed on this branch with a minimal 7.0 file:
+
+```
+0 @N1@ SNOTE Anteckning om Anna
+1 LANG sv
+1 TRAN Note about Anna
+2 LANG en
+```
+
+```
+unaccountedFor: [{"path":"HEAD.GEDC"},{"path":"HEAD.GEDC.VERS"},{"path":"TRLR"}]
+  SNOTE.LANG reported? NO
+  SNOTE.TRAN reported? NO
+```
+
+A shared note's language and its translation are discarded, and the gate that exists to
+make exactly this impossible reports nothing. Not a regression — `inlineSnotes` predates
+this work — but it is a silent drop surviving inside the mechanism built to end silent
+drops, so it should not stay unfiled.
+
+The fix is ordering, not capture: accounting must straddle the normalize boundary, with
+every pre-normalize node either present afterwards or covered by a declared
+transformation.
 
 ### The capture decision did not survive the gap
 

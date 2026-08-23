@@ -1,7 +1,8 @@
 # Unmapped Capture — Design Spec
 
 **Date:** 2026-08-23
-**Status:** Filed, not started. Depends on `feat/importer-tag-accounting` landing.
+**Status:** Filed, not started. Depends on `feat/importer-tag-accounting` landing **and**
+on normalize-boundary accounting, which is a prerequisite rather than a sibling — see Wiring.
 **Parent:** `2026-08-23-import-tag-accounting-design.md` — this is the half of it that
 did not ship.
 
@@ -76,6 +77,17 @@ does not yet model, not a permanent parallel store.
 The accounting walk already computes the unaccounted set. Capture is a consumer of that
 same set, so it adds no second traversal: where `accounting-walk.ts` reports a node,
 capture also serialises it against its owning entity.
+
+**Capture inherits the gate's blind spot, and cannot fix it.** The walk runs on the
+*post-normalize* tree (`import-core.ts:467`), and `normalize.ts` drops nodes before that:
+`inlineSnotes` rebuilds every GEDCOM 7.0 `SNOTE` with `children: []`, so its `LANG` and
+`TRAN` sub-tags are gone. Probed on `feat/importer-tag-accounting`, neither is reported as
+unaccounted — and neither would be captured, because capture reads the same set.
+
+Normalize-boundary accounting is therefore a **prerequisite**, not a parallel nicety. It
+belongs to the parent spec's unshipped Part A and must land before this plan's
+Verification 2 can mean anything: a corpus round-trip diff that never sees the dropped
+node cannot fail on it.
 
 ### Export
 
