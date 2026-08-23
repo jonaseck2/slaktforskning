@@ -35,6 +35,7 @@ describe('GEDCOM dialect coverage', async () => {
 
   it('lists every expected dialect', () => {
     expect(fixtureFiles).toEqual([
+      'arkivdigital.ged',
       'family-historian.ged',
       'family-tree-maker.ged',
       'genney.ged',
