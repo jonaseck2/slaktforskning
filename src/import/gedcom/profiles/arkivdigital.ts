@@ -94,3 +94,21 @@ export function parseAdplJudicial(placNode: GedcomNode): string | null {
   const value = node?.value?.trim() ?? '';
   return value || null;
 }
+
+/**
+ * `_FREL` / `_MREL` — the child's relation to the father and to the mother.
+ *
+ * Maps onto the `parent_child` subtypes the app already models, the same set
+ * Holger's `ADOP TYPE` uses. An unrecognised value falls back to 'biological'
+ * rather than throwing: an import must not fail on a vendor value nobody has
+ * seen yet, and the raw tag is still named in the import report.
+ */
+export function adParentRelSubtype(value: string): string {
+  switch (value.trim().toLowerCase()) {
+    case 'adopted': return 'adopted';
+    case 'foster': return 'foster';
+    case 'step': return 'step';
+    case 'biological': return 'biological';
+    default: return 'biological';
+  }
+}

@@ -44,18 +44,16 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
 
   // ── ArkivDigital — mapped by the arkivdigital profile in the next plan ────
   // docs/plans/2026-08-23-arkivdigital-import-design.md Parts 1-3.
-  { path: '*.OBJE._POS',              reason: 'unmapped:pending-arkivdigital-profile — profile-picture crop position' },
-  { path: '*.OBJE._PRIM',             reason: 'unmapped:pending-arkivdigital-profile — primary-photo flag' },
-  { path: 'OBJE._FOFN',               reason: 'unmapped:pending-arkivdigital-profile — original filename' },
-  { path: 'OBJE._SIZE',               reason: 'unmapped:pending-arkivdigital-profile — file size' },
-  { path: 'OBJE._OWN',                reason: 'unmapped:pending-arkivdigital-profile — owner of the original media' },
-  { path: 'OBJE._CAPT',               reason: 'unmapped:pending-arkivdigital-profile — capture date of the photograph' },
-  { path: 'OBJE._DESC',               reason: 'unmapped:pending-arkivdigital-profile — media description' },
-  { path: '*.NOTE._TITLE',            reason: 'unmapped:pending-arkivdigital-profile — a title on a NOTE, not on an event; belongs with the note-label work' },
-  { path: '*._TAG',                   reason: 'unmapped:pending-arkivdigital-profile — note label' },
-  { path: '*._TAG.TYPE',              reason: 'unmapped:pending-arkivdigital-profile — note label type' },
-  { path: 'FAM.CHIL._FREL',           reason: 'unmapped:pending-arkivdigital-profile — father relation, maps to a parent_child subtype' },
-  { path: 'FAM.CHIL._MREL',           reason: 'unmapped:pending-arkivdigital-profile — mother relation, maps to a parent_child subtype' },
+  { path: '*.OBJE._POS', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (profile-picture crop position)' },
+  { path: '*.OBJE._PRIM', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (primary-photo flag)' },
+  { path: 'OBJE._FOFN', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (original filename)' },
+  { path: 'OBJE._SIZE', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (file size)' },
+  { path: 'OBJE._OWN', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (owner of the original media)' },
+  { path: 'OBJE._CAPT', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (capture date of the photograph)' },
+  { path: 'OBJE._DESC', reason: 'unmapped:pending-unmapped-capture — no column on media/media_regions to hold it, and 32 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it. (media description)' },
+  { path: '*.NOTE._TITLE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
+  { path: '*._TAG', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
+  { path: '*._TAG.TYPE', reason: 'unmapped:pending-unmapped-capture — a label on a NOTE. The notes table has text and language, no label column, and ~20 occurrences across four real exports do not warrant one. Verbatim capture makes it non-destructive without modelling it.' },
 
   // ── HEAD metadata about the export itself, not about the family ──────────
   { path: 'HEAD.DATE',      reason: 'excluded:not-relevant — when the exporting program ran, not a fact about the tree' },

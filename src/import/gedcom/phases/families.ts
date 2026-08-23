@@ -12,6 +12,7 @@ import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
 import { markConsumed } from '../tag-accounting';
+import { adParentRelSubtype } from '../profiles/arkivdigital';
 import { FAMILY_EVENT_TAGS } from './shared';
 
 const KNOWN_FAM_TAGS = new Set([
@@ -124,8 +125,14 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
         const adopSubtype = ctx.holgerAdoptionMap.get(chil.value)?.get(node.xref ?? '');
         if (adopSubtype) childSubtype = adopSubtype;
       }
-      if (person1Id) parentChildRows.push({ type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: childSubtype });
-      if (person2Id) parentChildRows.push({ type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: childSubtype });
+      // ArkivDigital states the relation to each parent separately, so the
+      // father row and the mother row can carry different subtypes.
+      const frel = getChild(chil, '_FREL')?.value;
+      const mrel = getChild(chil, '_MREL')?.value;
+      const fatherSubtype = frel ? adParentRelSubtype(frel) : childSubtype;
+      const motherSubtype = mrel ? adParentRelSubtype(mrel) : childSubtype;
+      if (person1Id) parentChildRows.push({ type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: fatherSubtype });
+      if (person2Id) parentChildRows.push({ type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: motherSubtype });
     }
 
     // Family-level citations (SOUR directly on FAM).
