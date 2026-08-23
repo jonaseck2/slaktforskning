@@ -2,6 +2,14 @@
 
 Release notes trimmed out of the top-level [CHANGELOG.md](../../../CHANGELOG.md) under the "last 10 versions" rule. New entries are appended at the top as the rolling CHANGELOG ages out; pre-launch entries (≤ 0.215.x) live at the bottom. The companion [PLAN.md](PLAN.md) holds richer per-milestone prose (design rationale, RCA write-ups); git log holds the commit-level detail.
 
+## 0.270.6 — 2026-06-17
+
+- perf: editing data (a name, a date, a place) now updates the family-tree chart, lists, and panels right away even on databases with tens of thousands of people — the sidebar Quality and Duplicates badge counts no longer trigger a full-database scan on every edit (they refresh when you open those pages). Previously a single edit could take ~5 seconds to show up in the chart on a large tree.
+
+## 0.270.5 — 2026-06-17
+
+- fix: the search box no longer loses focus after each letter you type — you can type a query straight through without re-clicking the field
+
 ## 0.270.4 — 2026-06-14
 
 - fix: the map in the Place Chronicle report no longer shows a dead blank box — it resolves the place location from the gazetteer (the same path the Places map uses) and always renders, centering a single place at a readable zoom

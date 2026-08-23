@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.273.0 — 2026-08-23
+
+- feat: places from an ArkivDigital export now sit in their real parish and county instead of one flat row per address line — Högnäs under Hedesunda under Gävleborgs län under Sverige
+- feat: two parishes that share a name are kept apart, so Viby in Örebro is no longer merged with Viby in Östergötland
+- feat: your own notes on an event survive the import — 900 of them were being discarded silently
+- feat: the date you consulted each record is kept, on all 6147 citations that carried one
+- feat: a person's title, and whether a child is adopted or biological to each parent separately, are both kept
+- feat: the ArkivDigital archive link for each source survives an export and re-import, so your route back to the image is not lost
+
 ## 0.272.0 — 2026-08-23
 
 - feat: the GEDCOM import report now lists every tag the app did not read, with its path and a count — it previously named 143 of more than 40 000 discarded occurrences
@@ -49,14 +58,6 @@
 - feat: exporting (GEDCOM, website, or archive) now shows a live progress line while it runs, so a large export no longer looks frozen
 - perf: GEDCOM export of large trees no longer runs a separate database query per person and event for notes, associations, and name/place translations — they are fetched in bulk up front (on a 22 000-person tree this removes ~150 000 tiny queries)
 - fix: exporting GEDCOM from the app now respects the GEDCOM 7.0 choice and your export options, which were previously ignored
-
-## 0.270.6 — 2026-06-17
-
-- perf: editing data (a name, a date, a place) now updates the family-tree chart, lists, and panels right away even on databases with tens of thousands of people — the sidebar Quality and Duplicates badge counts no longer trigger a full-database scan on every edit (they refresh when you open those pages). Previously a single edit could take ~5 seconds to show up in the chart on a large tree.
-
-## 0.270.5 — 2026-06-17
-
-- fix: the search box no longer loses focus after each letter you type — you can type a query straight through without re-clicking the field
 
 ---
 
