@@ -8,6 +8,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { createTestDb } from './helpers';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });
@@ -118,4 +121,37 @@ describe('import tag accounting', () => {
       expect(paths, `${p} is consumed but reported as unaccounted`).not.toContain(p);
     }
   });
+});
+
+// ── Task 6: the gate ────────────────────────────────────────────────────────
+// Every fixture the repo ships must be fully accounted for: each unaccounted
+// path is either mapped by a phase or declared with a reason. A new phase that
+// reads an allowlist without marking fails here by design.
+
+const FIXTURE_DIRS = ['tests/fixtures/gedcom', 'tests/fixtures/gedcom/dialects'];
+
+function fixtureFiles(): string[] {
+  const out: string[] = [];
+  for (const dir of FIXTURE_DIRS) {
+    for (const f of readdirSync(dir, { withFileTypes: true })) {
+      if (f.isFile() && f.name.endsWith('.ged')) out.push(join(dir, f.name));
+    }
+  }
+  return out.sort();
+}
+
+describe('every shipped fixture is fully accounted for', () => {
+  for (const file of fixtureFiles()) {
+    it(`${file} — no undeclared unaccounted tags`, async () => {
+      const freshDb = await createTestDb();
+      const report = await importGedcom(freshDb, parseGedcom(readFileSync(file, 'utf-8')));
+      const undeclared = (report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path));
+      expect(
+        undeclared,
+        `${file} drops these without a declaration — map them, or add an entry with a ` +
+        `reason to src/import/gedcom/accounting-declared.ts:\n` +
+        undeclared.map(u => `  ${String(u.count).padStart(5)}  ${u.path}`).join('\n'),
+      ).toEqual([]);
+    });
+  }
 });

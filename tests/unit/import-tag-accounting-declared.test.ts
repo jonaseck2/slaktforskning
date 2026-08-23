@@ -35,7 +35,7 @@ describe('declared unmapped tags', () => {
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason, `unrecognised reason prefix on ${d.path}`)
-        .toMatch(/^(excluded:not-relevant|excluded:structural|excluded:redundant|unmapped:pending-)/);
+        .toMatch(/^(excluded:not-relevant|excluded:structural|excluded:redundant|excluded:profile-gated|unmapped:pending-)/);
     }
   });
 });

@@ -13,6 +13,7 @@
  *   excluded:not-relevant   no app concept, and none wanted
  *   excluded:structural     GEDCOM plumbing carrying no authored value
  *   excluded:redundant      the same value is read from somewhere else
+ *   excluded:profile-gated  read, but only when a specific import profile is active
  *   unmapped:pending-<plan> real authored data we intend to map — needs a filed plan
  *
  * Pattern syntax, deliberately minimal so nobody can declare everything:
@@ -64,6 +65,34 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: '*._TAG.TYPE',              reason: 'unmapped:pending-arkivdigital-profile — note label type' },
   { path: 'FAM.CHIL._FREL',           reason: 'unmapped:pending-arkivdigital-profile — father relation, maps to a parent_child subtype' },
   { path: 'FAM.CHIL._MREL',           reason: 'unmapped:pending-arkivdigital-profile — mother relation, maps to a parent_child subtype' },
+
+  // ── HEAD metadata about the export itself, not about the family ──────────
+  { path: 'HEAD.DATE',      reason: 'excluded:not-relevant — when the exporting program ran, not a fact about the tree' },
+  { path: 'HEAD.DATE.TIME', reason: 'excluded:not-relevant — clock time of the export run' },
+  { path: 'HEAD.DEST',      reason: 'excluded:not-relevant — the system the file was addressed to' },
+  { path: 'HEAD.FILE',      reason: 'excluded:not-relevant — the exporting program\'s own filename for the file' },
+  { path: 'HEAD.SUBM',      reason: 'excluded:redundant — xref pointer to a SUBM record, which phaseSubmitters reads directly' },
+
+  // ── Profile-gated reads ──────────────────────────────────────────────────
+  { path: '*.NAME.FORE', reason: 'excluded:profile-gated — read as a preferred-name fallback when profile===\'holger\' (individuals.ts:170-173); genuinely unread otherwise' },
+
+  // ── Dialect tags holding authored data — see the dialect-tag review plan ──
+  // docs/plans/2026-08-23-dialect-tag-review.md. Each of these was invisible
+  // before tag accounting existed; _LIVING is the sharpest example, sitting in
+  // KNOWN_INDI_TAGS (so never in `skipped`) while no phase ever read it.
+  { path: 'INDI._LIVING',      reason: 'unmapped:pending-dialect-tag-review — Legacy living flag; in KNOWN_INDI_TAGS but never read' },
+  { path: 'INDI._FLGS',        reason: 'unmapped:pending-dialect-tag-review — Family Historian flag block' },
+  { path: 'INDI._FLGS._LIVING', reason: 'unmapped:pending-dialect-tag-review — Family Historian living flag' },
+  { path: 'INDI._FREL',        reason: 'unmapped:pending-dialect-tag-review — FTM/PAF father relation; maps to a parent_child subtype' },
+  { path: 'INDI._MREL',        reason: 'unmapped:pending-dialect-tag-review — FTM/PAF mother relation; maps to a parent_child subtype' },
+  { path: 'INDI._FREL._MREL',  reason: 'unmapped:pending-dialect-tag-review — FTM nests _MREL under _FREL' },
+  { path: 'INDI._HDP',         reason: 'unmapped:pending-dialect-tag-review — Holger; counted for a warning at import-core.ts:594 but the value is not stored' },
+  { path: '*.PARI',            reason: 'unmapped:pending-dialect-tag-review — Holger parish on an event; a real place component, currently dropped' },
+  { path: 'INDI.ASSO.SOUR',    reason: 'unmapped:pending-dialect-tag-review — RootsMagic citation on an association; asso.ts reads ROLE/RELA/_EVID/NOTE but not SOUR' },
+  { path: 'INDI._PHOTO',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage primary-photo pointer' },
+  { path: 'INDI._MTTAG',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage tag pointer' },
+  { path: 'INDI._WEBTAG',      reason: 'unmapped:pending-dialect-tag-review — Family Historian web link' },
+  { path: 'INDI._CUSTOM',      reason: 'unmapped:pending-dialect-tag-review — unrecognised vendor tag in the non-standard fixture' },
 
   // ── LDS ordinances — already summarised in unmappedData, declared for parity
   { path: 'INDI.BAPL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },
