@@ -39,6 +39,47 @@ test('packaged app launches and Vue mounts', async () => {
   }
 });
 
+// Boot #1b: the eval bridge answers even when the script's result cannot be
+// JSON-encoded.
+//
+// `ui_eval_response` serialises its payload as JSON. A cyclic result (a
+// vue-router NavigationFailure carries `from`/`to` route objects that
+// reference each other) makes that throw, and the renderer used to swallow the
+// rejection into a console.error — so no response was ever sent and the caller
+// sat out the full 15 s EVAL_TIMEOUT before reporting "renderer script timed
+// out". Nothing had timed out; the reply was dropped.
+//
+// This cost a deterministic 15 s stall in duplicates.spec.ts and read as a
+// flaky test for months. The bridge must answer with a descriptor instead.
+test('eval bridge answers promptly when the result is not serializable', async () => {
+  const UI_PORT = 19205;
+  let instance: AppInstance | undefined;
+  try {
+    instance = await startApp(UI_PORT, 'boot-cyclic');
+    const started = Date.now();
+    const res = await fetch(`http://127.0.0.1:${UI_PORT}/eval`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Smallest possible cyclic value: an object referencing itself.
+      body: JSON.stringify({ script: '(() => { const a = {}; a.self = a; return a; })()' }),
+    });
+    const body = (await res.json()) as { __error?: string; error?: string };
+    const elapsed = Date.now() - started;
+
+    // Well under the 15 s EVAL_TIMEOUT in src-tauri/src/ui_server.rs.
+    expect(elapsed, `bridge took ${elapsed}ms — it waited out the eval timeout`).toBeLessThan(10_000);
+    expect(body?.error, 'bridge reported a timeout instead of the real reason').not.toBe(
+      'renderer script timed out',
+    );
+    expect(
+      JSON.stringify(body),
+      'bridge should name the serialization failure',
+    ).toMatch(/serializ/i);
+  } finally {
+    await teardownApp(instance);
+  }
+});
+
 // Boot #2: prod MCP server stdio handshake.
 // Proves: MCP entry point + api/ wiring still loads.
 test('MCP server starts and responds', async () => {

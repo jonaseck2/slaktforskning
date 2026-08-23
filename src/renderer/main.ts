@@ -43,6 +43,7 @@ import App from './App.vue';
 import { vNarrate } from './directives/narrate';
 import { installComponentInspector } from './dev/component-inspector';
 import { STORAGE_KEYS } from './utils/storage-keys';
+import { encodeEvalResult } from './ui-bridge-response';
 bootLog('static imports done');
 
 // Tauri-only: when running in a Tauri webview, mount window.api by walking
@@ -114,9 +115,17 @@ if ('__TAURI_INTERNALS__' in window) {
     // UI-server callback bridge for the dev MCP. Rust sends scripts via the
     // webview that end with window.__taurisUiCallback(id, value), routing the
     // value back to a pending oneshot on the Rust side.
+    //
+    // The payload is JSON-encoded on the way to Rust, so a cyclic result makes
+    // `invoke` reject. Dropping the reply there left the caller waiting out
+    // EVAL_TIMEOUT and being told "renderer script timed out" — a misreport,
+    // since nothing timed out. `encodeEvalResult` substitutes a descriptor so
+    // a reply always goes back; the trailing `.catch` is the last resort for a
+    // transport failure, where there is genuinely nothing left to send.
     (window as Window & { __taurisUiCallback?: (id: string, value: unknown) => void }).__taurisUiCallback =
       (id: string, value: unknown) => {
-        coreMod.invoke('ui_eval_response', { id, value }).catch((e: unknown) => console.error('[ui-callback]', e));
+        coreMod.invoke('ui_eval_response', { id, value: encodeEvalResult(value) })
+          .catch((e: unknown) => console.error('[ui-callback]', e));
       };
     const db = new Database(dbPath);
     await db.opened;

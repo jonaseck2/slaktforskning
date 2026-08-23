@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.271.7 — 2026-08-23
+
+- fix: the developer UI bridge answers instead of stalling 15 seconds when a script returns a value it cannot encode
+
 ## 0.271.6 — 2026-08-23
 
 - fix: importing a .zip archive shows its report and refreshes the app — it imported silently and left every list stale
@@ -48,10 +52,6 @@
 ## 0.270.5 — 2026-06-17
 
 - fix: the search box no longer loses focus after each letter you type — you can type a query straight through without re-clicking the field
-
-## 0.270.4 — 2026-06-14
-
-- fix: the map in the Place Chronicle report no longer shows a dead blank box — it resolves the place location from the gazetteer (the same path the Places map uses) and always renders, centering a single place at a readable zoom
 
 ---
 
