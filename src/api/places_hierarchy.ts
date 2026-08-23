@@ -37,6 +37,8 @@ export interface ResolvedChain {
   place: Place;
   /** Every (place, externalId) pair in the chain, for the caller to persist. */
   externalIds: Array<{ placeId: string; externalId: string }>;
+  /** The resolved place id at each depth, aligned with the input chain. */
+  placeIdsByDepth: Array<string | null>;
 }
 
 function normalize(name: string): string {
@@ -208,7 +210,11 @@ export async function bulkResolveHierarchy(
       const placeId = resolvedIds[ci][depth];
       if (id && placeId) externalIds.push({ placeId, externalId: id });
     }
-    result.set(chain.map(l => l.name).join(' > '), { place, externalIds });
+    result.set(chain.map(l => l.name).join(' > '), {
+      place,
+      externalIds,
+      placeIdsByDepth: resolvedIds[ci].slice(0, chain.length),
+    });
   }
   return result;
 }

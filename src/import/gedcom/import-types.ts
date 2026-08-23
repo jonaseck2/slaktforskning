@@ -24,6 +24,11 @@ export interface ImportContext {
   options: ImportOptions | undefined;
   isGenney: boolean;
   isHolger: boolean;
+  isArkivDigital: boolean;
+  /** ArkivDigital `_PARISH_AID` values collected by phasePrepPlaces, flushed to
+   *  `external_identifiers` once the table exists. Round-trip only — nothing in
+   *  the app reads these to make a decision. */
+  placeExternalIds?: Array<{ placeId: string; externalId: string }>;
   resolvePlaceFn: (db: Database, name: string) => Promise<Place>;
   /** Pre-resolved place map (set by phasePrepPlaces). Keyed by normalized
    *  name. Replaces the per-event IPC roundtrip of `findOrCreatePlace`

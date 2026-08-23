@@ -31,6 +31,7 @@ import { normalizeForImport } from './normalize';
 import { beginAccounting, endAccounting } from './tag-accounting';
 import { collectUnaccounted, type UnaccountedTag } from './accounting-walk';
 import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
+import { isArkivDigital } from './profiles/arkivdigital';
 import type { ImportContext } from './import-types';
 import {
   PERSON_EVENT_TAGS, FAMILY_EVENT_TAGS,
@@ -48,7 +49,7 @@ import {
 export interface ImportOptions {
   /** Import profile. 'genney' enables Genney 4.1-specific extensions:
    *  Swedish hierarchical places, patronymic detection, _UID/_YHAPLOGROUP/_MHAPLOGROUP tags. */
-  profile?: 'genney' | 'holger';
+  profile?: 'genney' | 'holger' | 'arkivdigital';
   /** Local directory for remapping Windows-style OBJE FILE paths (Holger exports).
    *  e.g. 'C:\\OurKind\\Media\\P12\\photo.jpg' -> '{mediaDir}/P12/photo.jpg' */
   mediaDir?: string;
@@ -115,6 +116,7 @@ export interface ValidationReport extends ImportReport {
 function createImportContext(db: Database, tree: GedcomNode[], options?: ImportOptions, originalTree?: GedcomNode[]): ImportContext {
   const isGenney = options?.profile === 'genney';
   const isHolger = options?.profile === 'holger';
+  const isAd = options?.profile === 'arkivdigital' || isArkivDigital(tree);
   const resolvePlaceFn = isGenney ? genneyResolvePlaceFn : findOrCreatePlace;
 
   return {
@@ -124,6 +126,7 @@ function createImportContext(db: Database, tree: GedcomNode[], options?: ImportO
     options,
     isGenney,
     isHolger,
+    isArkivDigital: isAd,
     resolvePlaceFn,
 
     noteMap: new Map(),
