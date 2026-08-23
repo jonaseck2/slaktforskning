@@ -28,6 +28,8 @@ import { queryOne, queryAll, runSql } from '../../api/db';
 import { detectGedcomVersion } from './detect';
 import type { GedcomVersion } from './detect';
 import { normalizeForImport } from './normalize';
+import { beginAccounting, endAccounting } from './tag-accounting';
+import { collectUnaccounted, type UnaccountedTag } from './accounting-walk';
 import { resolvePlaceFn as genneyResolvePlaceFn } from './profiles/genney';
 import type { ImportContext } from './import-types';
 import {
@@ -68,7 +70,11 @@ export interface ImportReport {
   repositories: number;
   groups: number;
   researchTasks: number;
-  skipped: { tag: string; count: number }[];  // unrecognised level-1 INDI/FAM tags (alias for tagStats)
+  /** @deprecated Narrow — covers unrecognised level-1 INDI/FAM tags only. Use `unaccountedFor`. */
+  skipped: { tag: string; count: number }[];
+  /** Every tag path in the file that no phase read, with its occurrence count.
+   *  `CLAUDE.md` Prime Directive (cont.) clause 1 — read it, or report it. */
+  unaccountedFor: UnaccountedTag[];
   warnings: string[];                          // e.g. "12 OBJE records skipped"
   /** DB id of the tree subject, if auto-matched from SUBM or first INDI. */
   defaultPersonId?: string;
@@ -444,6 +450,11 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
   const normalizedTree = normalizeForImport(tree, version);
 
   const { proxy: cachedDb, finalize: finalizeCache } = withStatementCache(db);
+  // Accounting spans the whole phase run. Opened here and closed in the `finally`
+  // below so a throwing phase cannot strand the session and make the *next*
+  // import fail with "a session is already active".
+  let unaccountedFor: UnaccountedTag[] = [];
+  beginAccounting();
   await runSql(db, 'BEGIN');
   let partial: { skipped: { tag: string; count: number }[]; warnings: string[]; ldsCount: number; tranCount: number; noCount: number; assoDrop: number; holgerRemarkCount: number; namelessPersonCount: number; firstPersonId: string | null; submitterNames: string[]; submitterContact: { address?: string; phone?: string; email?: string } | null; groupLinkWarnings: string[] };
   try {
@@ -453,6 +464,7 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
     await runSql(db, 'ROLLBACK');
     throw err;
   } finally {
+    unaccountedFor = collectUnaccounted(normalizedTree, endAccounting());
     finalizeCache(); // free all compiled statements from the WASM heap
     await runSql(db, 'PRAGMA shrink_memory'); // release SQLite page cache back to WASM heap
   }
@@ -614,6 +626,7 @@ export async function importGedcom(db: Database, tree: GedcomNode[], options?: I
     groups:        groupsAfter        - groupsBefore,
     researchTasks: researchTasksAfter - researchTasksBefore,
     skipped:       partial.skipped,
+    unaccountedFor,
     warnings:      partial.warnings,
     rawCounts,
     tagStats,
