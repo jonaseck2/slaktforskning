@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.272.0 — 2026-08-23
+
+- feat: the GEDCOM import report now lists every tag the app did not read, with its path and a count — it previously named 143 of more than 40 000 discarded occurrences
+- feat: tags the app deliberately does not model are declared with a written reason, so "not imported" is a visible decision instead of a silent drop
+
 ## 0.271.7 — 2026-08-23
 
 - fix: the developer UI bridge answers instead of stalling 15 seconds when a script returns a value it cannot encode
