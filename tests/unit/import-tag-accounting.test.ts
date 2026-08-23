@@ -58,7 +58,8 @@ describe('import tag accounting', () => {
   it('names the ArkivDigital tags the importer still does not read', async () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
     const paths = new Map((report.unaccountedFor ?? []).map(u => [u.path, u.count]));
-    expect(paths.get('INDI.BIRT._DESC')).toBe(1);
+    // All that remains unread on this fixture is the citation-level _AID; the
+    // rest is mapped by the arkivdigital profile.
     expect(paths.get('INDI.BIRT.SOUR._AID')).toBe(1);
   });
 
@@ -72,7 +73,8 @@ describe('import tag accounting', () => {
                      'INDI.BIRT.PLAC._ADPL._COUNTY',
                      'INDI.BIRT.PLAC._ADPL._COUNTRY',
                      'INDI.BIRT.PLAC._ADPL._LOCALITY',
-                     'INDI.BIRT.SOUR.DATA.DATE']) {
+                     'INDI.BIRT.SOUR.DATA.DATE',
+                     'INDI.BIRT._DESC']) {
       expect(paths, `${p} is mapped now and should not be reported`).not.toContain(p);
     }
   });

@@ -25,6 +25,11 @@ export const PERSON_EVENT_TAGS: Record<string, string> = {
   // TITL routes through its own event_type rather than the legacy
   // TITL→occupation conversion so round-trip preserves the original tag.
   TITL: 'title', RELI: 'religion', DSCR: 'description', FACT: 'fact',
+  // ArkivDigital writes the person's title ('Soldat') as _TITLE rather than
+  // TITL. Same concept, so it takes the same event type. On export it is
+  // emitted as the standard TITL — the authored value survives, the vendor
+  // spelling of the tag does not.
+  _TITLE: 'title',
   EVEN: 'other',
 };
 

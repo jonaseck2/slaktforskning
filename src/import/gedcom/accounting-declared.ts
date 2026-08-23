@@ -44,8 +44,6 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
 
   // ── ArkivDigital — mapped by the arkivdigital profile in the next plan ────
   // docs/plans/2026-08-23-arkivdigital-import-design.md Parts 1-3.
-  { path: '*._DESC',                  reason: 'unmapped:pending-arkivdigital-profile — researcher annotation on an event' },
-  { path: '*._TITLE',                 reason: 'unmapped:pending-arkivdigital-profile — occupation or title' },
   { path: '*.OBJE._POS',              reason: 'unmapped:pending-arkivdigital-profile — profile-picture crop position' },
   { path: '*.OBJE._PRIM',             reason: 'unmapped:pending-arkivdigital-profile — primary-photo flag' },
   { path: 'OBJE._FOFN',               reason: 'unmapped:pending-arkivdigital-profile — original filename' },
@@ -53,6 +51,7 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'OBJE._OWN',                reason: 'unmapped:pending-arkivdigital-profile — owner of the original media' },
   { path: 'OBJE._CAPT',               reason: 'unmapped:pending-arkivdigital-profile — capture date of the photograph' },
   { path: 'OBJE._DESC',               reason: 'unmapped:pending-arkivdigital-profile — media description' },
+  { path: '*.NOTE._TITLE',            reason: 'unmapped:pending-arkivdigital-profile — a title on a NOTE, not on an event; belongs with the note-label work' },
   { path: '*._TAG',                   reason: 'unmapped:pending-arkivdigital-profile — note label' },
   { path: '*._TAG.TYPE',              reason: 'unmapped:pending-arkivdigital-profile — note label type' },
   { path: 'FAM.CHIL._FREL',           reason: 'unmapped:pending-arkivdigital-profile — father relation, maps to a parent_child subtype' },

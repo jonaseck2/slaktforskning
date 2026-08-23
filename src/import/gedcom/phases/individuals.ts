@@ -27,7 +27,7 @@ const KNOWN_INDI_TAGS = new Set([
   'BIRT', 'DEAT', 'CHR', 'BURI', 'BAPM', 'CONF', 'OCCU', 'RESI', 'EDUC',
   'EMIG', 'IMMI', 'NATU', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI', 'ENGA', 'ADOP', 'EVEN',
   'CREM', 'BARM', 'BASM', 'ORDN', '_MILT',
-  'TITL', 'RELI', 'DSCR', 'FACT', 'OBJE',
+  'TITL', '_TITLE', 'RELI', 'DSCR', 'FACT', 'OBJE',
   // T06: NO X negative-assertion blocks — imported by phaseNegations.
   'NO',
   // Holger custom tags imported as notes:

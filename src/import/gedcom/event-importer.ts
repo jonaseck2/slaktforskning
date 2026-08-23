@@ -93,6 +93,21 @@ export async function importEventNode(
     noteParts.push(`TYPE: ${typeValue}`);
   }
   if (noteRaw) noteParts.push(noteRaw);
+  // ArkivDigital `_DESC` — the researcher's own annotation on the event
+  // ('Trolovningsbarn', 'Felaktigt födelseår i källan'). Every occurrence is
+  // kept: an event can carry more than one, and taking only the first silently
+  // discarded the rest.
+  for (const desc of getChildren(evNode, '_DESC')) {
+    const v = desc.value?.trim();
+    if (v) noteParts.push(v);
+  }
+  // Event-level _TITLE. 2081 occurrences across four real exports, the large
+  // majority with an empty value — those carry nothing and are read but not
+  // stored. The few that carry text are the researcher's own label.
+  for (const t of getChildren(evNode, '_TITLE')) {
+    const v = t.value?.trim();
+    if (v) noteParts.push(v);
+  }
   if (!isFactTag && lineValue) {
     noteParts.push(`[unmapped line value: ${lineValue}]`);
   }
@@ -275,6 +290,21 @@ export async function collectEventNode(
   const noteParts: string[] = [];
   if (typeValue) noteParts.push(`TYPE: ${typeValue}`);
   if (noteRaw) noteParts.push(noteRaw);
+  // ArkivDigital `_DESC` — the researcher's own annotation on the event
+  // ('Trolovningsbarn', 'Felaktigt födelseår i källan'). Every occurrence is
+  // kept: an event can carry more than one, and taking only the first silently
+  // discarded the rest.
+  for (const desc of getChildren(evNode, '_DESC')) {
+    const v = desc.value?.trim();
+    if (v) noteParts.push(v);
+  }
+  // Event-level _TITLE. 2081 occurrences across four real exports, the large
+  // majority with an empty value — those carry nothing and are read but not
+  // stored. The few that carry text are the researcher's own label.
+  for (const t of getChildren(evNode, '_TITLE')) {
+    const v = t.value?.trim();
+    if (v) noteParts.push(v);
+  }
   if (!isFactTag && lineValue) noteParts.push(`[unmapped line value: ${lineValue}]`);
   const notes = noteParts.join('\n\n') || '';
 

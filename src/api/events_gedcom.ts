@@ -21,6 +21,9 @@ export const EVENT_TYPE_TO_GEDCOM_TAG: Record<string, string> = {
 // Events whose tag is NOT in this set should not have a non-empty line value.
 export const FACT_VALUE_GEDCOM_TAGS = new Set<string>([
   'OCCU', 'RELI', 'EDUC', 'TITL', 'PROP', 'NATI',
+  // ArkivDigital's spelling of TITL. Its line value is the title itself
+  // ('Soldat'), so it belongs here or the value is parsed and discarded.
+  '_TITLE',
   'NCHI', 'NMR', 'SSN', 'IDNO', 'CAST', 'DSCR',
   'FACT', 'EVEN',
 ]);
