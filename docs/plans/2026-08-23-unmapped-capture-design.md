@@ -87,7 +87,9 @@ unaccounted — and neither would be captured, because capture reads the same se
 Normalize-boundary accounting is therefore a **prerequisite**, not a parallel nicety. It
 belongs to the parent spec's unshipped Part A and must land before this plan's
 Verification 2 can mean anything: a corpus round-trip diff that never sees the dropped
-node cannot fail on it.
+node cannot fail on it. Specified in
+`2026-08-23-normalize-boundary-accounting-design.md`, which also records that the gate has
+never once run with normalize active — all 20 gated fixtures are 5.5.1.
 
 ### Export
 
