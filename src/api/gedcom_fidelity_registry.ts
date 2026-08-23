@@ -239,6 +239,30 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   },
   'person_identifiers.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
+  // ----- external_identifiers -----
+  // Round-trip storage for source-format ids. ArkivDigital's _AID is emitted
+  // back onto the SOUR record and _PARISH_AID back into the _ADPL block, so the
+  // pair (system, value) survives. entity_type is implied by which record the
+  // tag is emitted under, and recovered on re-import from the same position.
+  'external_identifiers.id':          { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
+  'external_identifiers.entity_id':   { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
+  'external_identifiers.entity_type': {
+    v551: { kind: 'lossless-via', mechanism: 'implied by the record the tag is emitted under' },
+    v70:  { kind: 'lossless-via', mechanism: 'implied by the record the tag is emitted under' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
+  },
+  'external_identifiers.system': {
+    v551: { kind: 'lossless-via', mechanism: 'implied by the tag name (_AID / _PARISH_AID)' },
+    v70:  { kind: 'lossless-via', mechanism: 'implied by the tag name (_AID / _PARISH_AID)' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
+  },
+  'external_identifiers.value': {
+    v551: { kind: 'lossless' },
+    v70:  { kind: 'lossless' },
+    ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
+  },
+  'external_identifiers.created_at':  { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
+
   // ----- relationships -----
   'relationships.id': { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'relationships.type': {

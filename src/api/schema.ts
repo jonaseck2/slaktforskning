@@ -51,6 +51,22 @@ export async function initializeSchema(db: Database): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_person_identifiers_person_id ON person_identifiers(person_id);
 
+    -- External identifiers for non-person entities. Round-trip storage for
+    -- source-format ids (ArkivDigital _AID / _PARISH_AID, Gramps handles,
+    -- Genney RIDs). No REFERENCES: five entity types, no polymorphic FK in
+    -- SQLite. Nothing reads these to make a decision.
+    CREATE TABLE IF NOT EXISTS external_identifiers (
+      id          TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL CHECK(entity_type IN ('source','place','citation','media','repository')),
+      entity_id   TEXT NOT NULL,
+      system      TEXT NOT NULL,
+      value       TEXT NOT NULL,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(entity_type, entity_id, system, value)
+    );
+    CREATE INDEX IF NOT EXISTS idx_external_identifiers_entity ON external_identifiers(entity_type, entity_id);
+    CREATE INDEX IF NOT EXISTS idx_external_identifiers_lookup ON external_identifiers(system, value);
+
     CREATE TABLE IF NOT EXISTS relationships (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL CHECK(type IN ('couple', 'parent_child', 'sibling', 'godparent', 'other')),
