@@ -59,7 +59,10 @@ gate iterates is 5.5.1 or 5.5:
 | containing `TRAN` | **0** |
 
 So all seven transformations are untested by the accounting gate, and the declared list's
-completeness claim is silently scoped to 5.5.1. The gate's own "guards against a vacuous
+completeness claim is silently scoped to 5.5.1. For scale: `scripts/accounting-over-samples.ts`
+run over the 36 gitignored real-world files in `export-import/samples/` surfaces **742
+distinct undeclared paths** with 0 import failures, against 20 from the committed corpus —
+and that script is deliberately non-CI, because those samples are not in the repository. The gate's own "guards against a vacuous
 pass" test checks that fixtures were *found*; it does not check that they *reach* the code
 under test.
 
@@ -125,6 +128,28 @@ precisely what makes `SNOTE.LANG` surface.
 Normalize stops being a privileged pre-pass and becomes another reader under the same
 contract.
 
+### Six declarations exist only because the session opens too late
+
+`accounting-declared.ts` already records the symptom, in its own reason strings:
+
+| Path | Declared reason |
+|---|---|
+| `HEAD.GEDC` | `excluded:structural — version envelope, read by detect.ts before the session opens` |
+| `HEAD.GEDC.VERS` | `excluded:structural — read by detect.ts before the session opens` |
+| `HEAD.GEDC.FORM` | `excluded:structural — always LINEAGE-LINKED in 5.5.1` |
+| `HEAD.CHAR` | `excluded:structural — character set, applied at decode time before parsing` |
+| `*.NAME.GIVN` | `excluded:redundant — folded into the NAME value by normalize.ts before the session` |
+| `*.NAME.SURN` | `excluded:redundant — folded into the NAME value by normalize.ts before the session` |
+
+Four of the six say *"before the session"* outright. These are not tags the app declines to
+model — they are tags it **does** read, declared `excluded` because the reader runs outside
+the accounting window. That is the same defect as the `SNOTE` loss wearing a different hat:
+one produces a false `excluded`, the other a silent drop.
+
+Moving `beginAccounting()` ahead of `detectGedcomVersion` and `normalizeForImport` makes
+those reads markable, and the declarations become unnecessary. That is a falsifiable
+outcome, not a hope — see Verification 6.
+
 ### Expected new findings
 
 Once Part 1 runs against Parts 2–3, these should appear as unaccounted and need a decision:
@@ -163,6 +188,18 @@ Once Part 1 runs against Parts 2–3, these should appear as unaccounted and nee
    `provenance.set`.
 5. **Canary.** Delete one `provenance.set` call and assert Verification 4 fails. A guard
    that cannot fail is not a guard.
+6. **Declarations shrink, specifically.** After the fix:
+   - `HEAD.GEDC` and `HEAD.GEDC.VERS` are genuinely marked by `detect.ts` and their
+     declarations are **deleted**. Assert the gate stays green without them.
+   - `HEAD.CHAR` stays declared — the character set is applied at *decode* time, before a
+     tree exists to mark — but its reason changes from "before the session" to the
+     accurate "consumed before parsing".
+   - `*.NAME.GIVN` / `*.NAME.SURN` stay declared, because a single `GIVN` is read by
+     nobody, but the reason stops claiming normalize folds them into the `NAME` value. It
+     does not: `mergeMultipleGivnSurn` merges multiple `GIVN` into one `GIVN`.
+
+   A declaration that disappears because the code got honest is the cleanest evidence this
+   plan worked.
 
 **User-goal-falsifiability check:** if all five pass, can the goal be unmet? Yes, in one
 way — a 7.0 file using a transformation the single fixture does not exercise could still
@@ -178,6 +215,11 @@ and by the failure direction: a missed case reports loudly rather than vanishing
 - **Two identity spaces with no test across the seam.** `phaseNotes` and
   `phaseTranslations` read the original tree by design and mark nodes nobody walks. Only
   invisible because no 7.0 fixture exists.
+- **Declaring a tag `excluded` to work around a mechanism limit.** Six entries say a
+  reader runs "before the session" and are marked `excluded` for it. `excluded` is
+  supposed to mean the app chose not to model the tag, not that the plumbing could not
+  observe the read. The declared list stayed green while describing the tool's own
+  blind spot as a property of the data.
 - **Fixing the instance instead of the class.** Making `inlineSnotes` carry its children
   would fix the probe and leave `convertExidToRefn` and `mergeMultipleGivnSurn` dropping
   silently. Rejected for that reason.
