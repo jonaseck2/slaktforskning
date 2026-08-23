@@ -10,10 +10,11 @@ describe('declared unmapped tags', () => {
     expect(matchDeclared('INDI._LIVING')?.reason).toMatch(/dialect-tag-review/i);
   });
 
-  it('matches a leading wildcard suffix under any parent event', () => {
-    expect(matchDeclared('INDI.BIRT._DESC')).toBeDefined();
-    expect(matchDeclared('INDI.RESI._DESC')).toBeDefined();
-    expect(matchDeclared('FAM.MARR._DESC')).toBeDefined();
+  it('matches a leading wildcard suffix under any parent', () => {
+    // _DESC used to be the example here; the arkivdigital profile maps it now.
+    expect(matchDeclared('INDI.OBJE._POS')).toBeDefined();
+    expect(matchDeclared('FAM.OBJE._POS')).toBeDefined();
+    expect(matchDeclared('INDI.NOTE._TAG')).toBeDefined();
   });
 
   it('returns undefined for an undeclared path', () => {
