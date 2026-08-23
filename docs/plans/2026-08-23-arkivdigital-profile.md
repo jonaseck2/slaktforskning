@@ -19,6 +19,7 @@
 - `.claude/rules/performance.md`: no per-entity query inside a loop over a DB-scale array. The place hierarchy is resolved in **four bulk rounds**, one per admin level, never one query per place.
 - The four ArkivDigital files under `export-import/min släkt/` are a real person's family data. `/export-import/` is gitignored. **Never commit them.** All committed fixtures are synthetic.
 - A parallel session owns `docs/unmapped-capture` — the `unmapped_data` verbatim-capture table and normalize-boundary accounting. **Do not touch `normalize.ts`, and do not create an `unmapped_data` table.** This plan removes tags from the unmapped set by modelling them; that plan catches whatever remains. Rebase before every commit.
+- **What "declared unmapped" means depends on whether capture has shipped.** Today a declared tag is *named and discarded*. Once `unmapped_data` lands, a declared tag is *named and preserved verbatim*, and re-emitted on export. That applies to every tag left in `DECLARED_UNMAPPED`, not only the three unsampled ones. It does **not** apply to `external_identifiers`, which holds identifiers — `_AID`, `_PARISH_AID` — and is the wrong home for an event or a date qualifier. If capture lands before this plan finishes, nothing here changes: modelling a tag is still strictly better than capturing it, because a captured tag is a blob the app cannot search, display or reason about.
 - Working in a worktree: `git -C <path>`, `npm --prefix <path>`, `npm --prefix <path> run typecheck`, and **vitest needs `--root <abs-worktree-path>`**. See `.claude/rules/worktrees.md`.
 
 ---
@@ -47,7 +48,7 @@ Each group ends green and shippable. Stopping after A or after B leaves a cohere
 
 ### Scope deviations
 
-- **`_SEPR`, `_DOMESTIC_PARTNERSHIP`, `_DATE_TEXT` are not implemented.** ArkivDigital documents them; they occur zero times across the four real exports. Implementing against documentation with no sample risks modelling a shape that does not exist. Task 12 adds them to the synthetic fixture and declares them `unmapped:pending-ad-unsampled-tags` with that reasoning, so they are visible rather than assumed absent.
+- **`_SEPR`, `_DOMESTIC_PARTNERSHIP`, `_DATE_TEXT` are not implemented.** ArkivDigital documents them; they occur zero times across the four real exports. Implementing against documentation with no sample risks modelling a shape that does not exist. Task 12 adds them to the synthetic fixture and declares them `unmapped:pending-ad-unsampled-tags`, so they are visible rather than assumed absent. They are **not** candidates for `external_identifiers` — an event and a date qualifier are not identifiers. Verbatim capture is what makes them non-destructive, and that is the parallel session's plan, not this one.
 - **The consolidation review and multi-file import are not here.** Parts 4-5 of the spec, their own plan. This plan imports one file at a time and leaves the 2776-to-1496 source collapse untouched — sources still import 1:1, which is the design's explicit choice.
 - **`person_identifiers` is not folded into `external_identifiers`.** Reasoning in the design spec: it carries a CHECK-validated type list, working call sites, MCP tools and an exporter switch, and ArkivDigital adds nothing to it.
 - **The `_PARISH_AID` to gazetteer crosswalk is not here.** Follow-up F1 in the design spec, a spike first.
@@ -1139,6 +1140,8 @@ Expected: FAIL, naming the three new paths. That failure is the mechanism workin
 - [ ] **Step 3: Declare them**
 
 Reason: `unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape`.
+
+Note in the follow-up plan that these are events and a date qualifier, so `external_identifiers` is not their home. Until verbatim capture ships they are named and discarded; after it ships they are named and preserved. Neither state is the same as modelled, which is what the follow-up delivers once a real sample exists.
 
 - [ ] **Step 4: File `docs/plans/2026-08-23-ad-unsampled-tags.md`**
 
