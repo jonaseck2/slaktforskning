@@ -121,7 +121,7 @@ The commit stages exactly the close-out artifacts:
 - `package.json` → bumped (if applicable)
 - `CHANGELOG.md` → new block (if applicable)
 
-No unrelated changes ride along. If the working tree has unrelated WIP, the skill stages by path, not `git add -A`.
+No unrelated changes ride along. The skill stages by explicit path — `git add -A` is forbidden unconditionally, see the `commit` skill's "Stage by explicit path, always" rule and the 2026-08-23 incident behind it.
 
 ## Step 7 — Post-close hygiene (Tier 1 mandate)
 

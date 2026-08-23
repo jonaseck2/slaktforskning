@@ -9,7 +9,9 @@ description: Stage the files belonging to the current concern and create a git c
 
 When asked to commit, or when a commit is appropriate after completing work:
 
-1. **Stage by concern, not by tree.** Run `git status` first. If everything in the tree belongs to the current change, `git add -A` is fine. If the tree contains unrelated WIP from a previous session (different feature, different fix, different file family), stage explicitly by path: `git add <file1> <file2> ...`. Inside the same concern, never selectively skip a file — bundle every file your change touched (sources, tests, CHANGELOG, package.json, CLAUDE.md, docs). If unsure whether a modified file belongs to your concern, ask the user before committing.
+1. **Stage by explicit path. `git add -A` is FORBIDDEN — no exceptions, no conditions.** Run `git status`, then `git add <file1> <file2> ...` naming every file in your concern. Inside the same concern, never selectively skip a file — bundle every file your change touched (sources, tests, CHANGELOG, package.json, CLAUDE.md, docs). If unsure whether a modified file belongs to your concern, ask the user before committing.
+
+   The same ban covers `git add .`, `git add -u`, `git add :/`, and `git commit -a`/`-am`. Anything that stages by tree shape instead of by name is the forbidden pattern, whatever it is spelled.
 2. Run `git status` to review what will be committed.
 3. Run `git diff --cached --stat` to see a summary of changes.
 4. **Bump only what changed** (see Version bumping). Bumped manifests + a `## X.Y.Z — YYYY-MM-DD` CHANGELOG block ship in the same commit. No `## Unreleased`. CI auto-publishes a GH release at `vX.Y.Z` (keyed on `package.json` today) once a bumped commit hits `main`.
@@ -56,12 +58,15 @@ cd /Users/jonasahnstedt/git/slaktforskning/.worktrees/feature-x && git commit -m
 
 ```bash
 # REQUIRED
-git -C /abs/path/to/worktree add -A
+git -C /abs/path/to/worktree add src/foo.ts tests/unit/foo.test.ts
 git -C /abs/path/to/worktree commit -m "summary"
 git -C /abs/path/to/worktree status
 
-# FORBIDDEN
-cd /abs/path/to/worktree && git add -A && git commit -m "summary" && git status
+# FORBIDDEN — the cd-compound (permission friction)
+cd /abs/path/to/worktree && git add src/foo.ts && git commit -m "summary"
+
+# FORBIDDEN — staging by tree shape (steals parallel work)
+git -C /abs/path/to/worktree add -A
 ```
 
 **Why this is strict:** the user explicitly flagged the `cd`-compound pattern as a workflow blocker — every compound variation needs its own permission approval, and the resulting prompt spam breaks concentration. `git -C` eliminates the need for `cd` entirely.
@@ -92,10 +97,15 @@ Run `npm test` and `npm run lint` on the merged index before completing the merg
 
 ## Rules
 
-- **Stage by concern.** If the tree is clean of unrelated WIP, `git add -A` is the default. If unrelated WIP is present, `git add <path> <path> ...` for the files in your concern only. Inside one concern, every file gets committed — sources, tests, CHANGELOG, package.json, CLAUDE.md, docs. Never selectively skip a file inside the same concern.
+- **Stage by explicit path, always.** `git add <path> <path> ...` naming each file. Never `git add -A` / `.` / `-u` / `:/` / `commit -a`. Inside one concern, every file gets committed — sources, tests, CHANGELOG, package.json, CLAUDE.md, docs. Never selectively skip a file inside the same concern.
+
+  **Why unconditional.** The old rule allowed `git add -A` "if the tree is clean of unrelated WIP". That condition is evaluated when you read `git status` and applied when you run `git add` — and in this repo the user commits, switches branches and merges PRs in between. A rule whose safety depends on the tree not changing between two commands is not a rule.
+
+  **The incident that made it unconditional (2026-08-23).** Two `git add -A` calls in one session, both after a `git status` that looked clean. The first swept nine files of the user's in-flight binding-envelope work — `lib.rs`, `bindings.ts`, `tauri-window-api.ts`, `main.ts`, `GedcomImportSection.vue`, two e2e files and two new test files — into a commit titled "docs: make importer tag accounting a mechanical contract". It reached `origin/main` via a PR merge before anyone noticed. Nothing was lost, but a docs commit now carries source changes its message never mentions, and the history is wrong forever because rewriting merged history costs more than it fixes. The second, on a `--amend`, swept in `ArchiveSection-flow.test.ts`; that commit was still local, so it was repaired. **The branch itself changed under the session** — `main` at the start, a feature branch by the end.
 - **Ship the obvious fix first; queue the speculative one separately.** When investigating a single symptom uncovers two independent root causes, don't bundle them. The bigger fix blocks validation of the small risk-free one and pollutes blast-radius diagnosis. CHANGELOG entries for unverified fixes are premature too.
 - **`git status` before every non-trivial commit.** The user often commits in parallel during multi-hour sessions (gazetteer/import work, prose sweeps). Symptoms: `fatal: Exiting because of an unresolved conflict` on `git add`; `D` + `A` instead of `R` after a `git mv` you did at the start; a file you `Write`'d silently disappears because a merge dropped staged-but-not-committed content. Always `git status` + `git diff --cached` before committing to confirm the staged shape matches intent. If a merge wiped a file you wrote, recreate it from context.
-- **NEVER amend** unless explicitly asked — always create a new commit
+- **NEVER amend** unless explicitly asked — always create a new commit. When an amend *is* asked for, re-stage by explicit path: `--amend` re-reads the index, so a stray file staged since the original commit rides along silently.
+- **Re-run `git status` immediately before `git commit`, not just before `git add`.** The tree can change between the two. If anything appeared that you did not stage yourself, unstage it before committing.
 - **NEVER skip hooks** (no `--no-verify`)
 - **Run lint and tests BEFORE committing** — `npm run lint && npm test`. Never commit first and test after. If lint or tests fail, fix them before committing. If the commit removes an import (refactor, rename, dead-code), also `NODE_OPTIONS=--max-old-space-size=8192 npx vue-tsc --noEmit --ignoreDeprecations 6.0` — a removed-but-still-referenced symbol is a runtime ReferenceError, not a lint error, and `npm run lint` won't catch it.
 - **Verify UI changes in the running app BEFORE committing** — if the change involves Vue components, modals, or visual behavior, confirm it works via the UI server (`curl -s http://127.0.0.1:19241/status`) or Chrome DevTools MCP. Take a screenshot (`POST /screenshot`) and verify visually. Never commit UI changes based solely on unit tests passing — they don't cover the rendering stack. See the `/electron-dev` skill for the full verification workflow.
