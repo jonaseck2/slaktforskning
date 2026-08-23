@@ -1012,28 +1012,57 @@ git commit -m "test(import): synthetic ArkivDigital dialect fixture"
 
 - [ ] **Step 1: Add the i18n keys**
 
-`sv.ts`: `importUnaccounted: 'Taggar som inte lästes in'`, `importUnaccountedHint: 'Dessa fanns i filen men hanteras inte av appen. Inget har ändrats i din fil.'`
-`en.ts`: `importUnaccounted: 'Tags not imported'`, `importUnaccountedHint: 'These were present in the file but the app does not handle them. Your file is unchanged.'`
+Keys live under the `importExport` namespace, beside `importReportSkipped` at
+`src/renderer/i18n/en.ts:1602` and `sv.ts:1602`. Match that convention — a flat
+top-level key will not resolve.
+
+`en.ts`:
+```ts
+importReportUnaccounted: 'Tags not imported:',
+importReportUnaccountedHint: 'These were in the file but the app does not handle them. Your file is unchanged.',
+```
+
+`sv.ts`:
+```ts
+importReportUnaccounted: 'Taggar som inte lästes in:',
+importReportUnaccountedHint: 'De fanns i filen men hanteras inte av appen. Din fil är oförändrad.',
+```
 
 - [ ] **Step 2: Render the section**
 
-Alongside the existing `skipped` block at `GedcomImportSection.vue:77`, following the same markup shape:
+Directly after the existing `skipped` block at `GedcomImportSection.vue:77-83`, matching
+its markup exactly — `<p class="report-section-label">`, not a heading, and `$t` with the
+namespaced key:
 
 ```vue
 <div v-if="importReport.unaccountedFor && importReport.unaccountedFor.length > 0" class="report-section">
-  <h4>{{ t('importUnaccounted') }}</h4>
-  <p class="report-hint">{{ t('importUnaccountedHint') }}</p>
+  <p class="report-section-label">{{ $t('importExport.importReportUnaccounted') }}</p>
+  <p class="report-hint">{{ $t('importExport.importReportUnaccountedHint') }}</p>
   <ul>
     <li v-for="u in importReport.unaccountedFor" :key="u.path">{{ u.path }}: {{ u.count }}</li>
   </ul>
 </div>
 ```
 
-Add `unaccountedFor?: { path: string; count: number }[]` to the local report type at `GedcomImportSection.vue:159`.
+**Two type declarations need the field, not one.** The component declares the report shape
+twice — the component-level type at line 159, and an inline `result.report` type at line
+284 inside the import handler. Add to both, or the field is typed away before it reaches
+the template:
+
+```ts
+unaccountedFor?: { path: string; count: number }[];
+```
 
 - [ ] **Step 3: Verify in the running app**
 
-Launch with `npm start`, import the synthetic AD fixture, and capture the report with dev MCP `ui_screenshot`. Confirm the section renders with the AD paths listed. A component test is not sufficient here — Verification §3 requires seeing it.
+Launch with `npm start`, import `tests/fixtures/gedcom/dialects/arkivdigital.ged`, and
+capture the report with dev MCP `ui_screenshot`. Confirm the section renders with the AD
+paths listed under the existing "Unrecognised tags" block. A component test is not
+sufficient — Verification §3 requires seeing it.
+
+Note `GedcomImportSection.vue` was repaired in `5e80291d` after the Tauri port returned
+the wrong envelope shapes. `tests/components/GedcomImportSection-flow.test.ts` now covers
+that flow — run it and keep it green.
 
 - [ ] **Step 4: Write the samples script**
 
