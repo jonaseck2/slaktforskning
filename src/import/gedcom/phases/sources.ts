@@ -51,7 +51,10 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
       publication_info: getChild(node, 'PUBL')?.value ?? '',
       url: getChild(node, '_URL')?.value ?? '',
       source_type: getChild(node, '_STYPE')?.value ?? '',
-      abstract: getChild(node, '_ABSTRACT')?.value ?? null,
+      // ArkivDigital writes a source-level description as _DESC; this app's own
+      // tag is _ABSTRACT. Same concept, same column — the value survives, the
+      // vendor spelling of the tag does not.
+      abstract: getChild(node, '_ABSTRACT')?.value ?? getChild(node, '_DESC')?.value ?? null,
       call_number: getChild(node, '_CALL')?.value ?? null,
     };
     const aid = getChild(node, '_AID')?.value?.trim();

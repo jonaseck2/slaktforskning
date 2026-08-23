@@ -90,6 +90,21 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE',       reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (its date)' },
   { path: '*._DATE_TEXT',                         reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (a date with no valid GEDCOM form)' },
 
+  // ── Surfaced by running the accounting over the four real ArkivDigital
+  // exports. Not AD-specific and not in this plan's scope; named here so the
+  // real corpus is clean rather than quietly undeclared.
+  { path: 'OBJE.FILE.FORM',      reason: 'unmapped:pending-dialect-tag-review — standard media format sub-tag; media.format holds one value and the FORM/TYPE pair is richer' },
+  { path: 'OBJE.FILE.FORM.TYPE', reason: 'unmapped:pending-dialect-tag-review — media type qualifier under FORM' },
+  { path: 'OBJE.FILE.TITL',      reason: 'unmapped:pending-dialect-tag-review — per-file title; media.title is per-record, not per-file' },
+  { path: 'OBJE.REFN',           reason: 'unmapped:pending-dialect-tag-review — media reference number; no identifier storage for media yet' },
+  { path: 'OBJE.REFN.TYPE',      reason: 'unmapped:pending-dialect-tag-review — qualifier on the media reference number' },
+  { path: 'OBJE.RIN',            reason: 'unmapped:pending-dialect-tag-review — media record id number' },
+  { path: 'SOUR.ABBR',           reason: 'unmapped:pending-dialect-tag-review — short form of the source title; no column on sources' },
+  { path: 'SUBN',                reason: 'excluded:not-relevant — GEDCOM 5.5.1 submission record, metadata about the transmission rather than the family' },
+  { path: '*.FAMS._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a spouse-family pointer, not on the person or the event' },
+  { path: '*.FAMC._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a child-family pointer' },
+  { path: '*.SOUR._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a citation, not on the event' },
+
   // ── LDS ordinances — already summarised in unmappedData, declared for parity
   { path: 'INDI.BAPL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },
   { path: 'INDI.CONL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },
