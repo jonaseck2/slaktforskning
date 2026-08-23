@@ -7,11 +7,12 @@ import { addMediaLink } from '../../../api/media';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren } from '../node-utils';
 import { importObjeNode } from '../obje-importer';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseSources(ctx: ImportContext): Promise<void> {
   // Two-pass: parse + collect; bulk INSERT once; then per-row repo links.
   const sourNodes: typeof ctx.tree = [];
-  for (const n of ctx.tree) if (n.tag === 'SOUR' && n.xref) sourNodes.push(n);
+  for (const n of ctx.tree) if (n.tag === 'SOUR' && n.xref) { markConsumed(n); sourNodes.push(n); }
   const total = sourNodes.length;
   if (total === 0) return;
 

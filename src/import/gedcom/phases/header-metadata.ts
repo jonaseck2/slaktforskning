@@ -20,6 +20,7 @@
 import type { ImportContext } from '../import-types';
 import { getChild } from '../node-utils';
 import { setDbSetting } from '../../../api/db_settings';
+import { markConsumed } from '../tag-accounting';
 
 export interface HeaderMetadata {
   /** HEAD.SOUR value — e.g. "FOO" or "Ancestry.com" (a free-form code). */
@@ -40,6 +41,7 @@ export async function phaseHeaderMetadata(ctx: ImportContext): Promise<void> {
   // The parser's tree may include a HEAD node at level 0. Find the first
   // (there should only ever be one per GEDCOM file).
   const head = ctx.tree.find(n => n.tag === 'HEAD');
+  if (head) markConsumed(head);
   if (!head) return;
 
   // T09 round-trip path: if a prior export wrote `1 _ORIG_SOUR <json>` (the

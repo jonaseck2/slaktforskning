@@ -4,10 +4,12 @@ import { createCitation } from '../../../api/sources';
 import { getPlace } from '../../../api/places';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren } from '../node-utils';
+import { markConsumed } from '../tag-accounting';
 
 export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
   for (const node of ctx.tree) {
     if (node.tag !== '_PLAC') continue;
+    markConsumed(node);
     const oldPlaceId = getChild(node, '_PLAC_ID')?.value;
     if (!oldPlaceId) continue;
 

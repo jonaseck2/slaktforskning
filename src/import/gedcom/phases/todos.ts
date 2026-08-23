@@ -3,11 +3,13 @@
 import { createResearchTask, addTaskLink } from '../../../api/research_tasks';
 import type { ImportContext } from '../import-types';
 import { getChild, resolveNote } from '../node-utils';
+import { markConsumed } from '../tag-accounting';
 
 export async function phaseTodos(ctx: ImportContext): Promise<void> {
   if (!ctx.isGenney) return;
   for (const node of ctx.tree) {
     if (node.tag !== '_TODO') continue;
+    markConsumed(node);
     const targXref = getChild(node, '_TARG')?.value ?? '';
     const person_id = ctx.personMap.get(targXref) ?? null;
     const statVal = getChild(node, '_STAT')?.value ?? '0';

@@ -16,6 +16,7 @@ import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
 import { PERSON_EVENT_TAGS } from './shared';
+import { markConsumed } from '../tag-accounting';
 
 const KNOWN_INDI_TAGS = new Set([
   'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
@@ -42,7 +43,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   // Pass 2 then handles per-row work that's hard to batch (event chains,
   // citations, media links, ASSO collection, tag counts).
   const indiNodes: typeof ctx.tree = [];
-  for (const n of ctx.tree) if (n.tag === 'INDI' && n.xref) indiNodes.push(n);
+  for (const n of ctx.tree) if (n.tag === 'INDI' && n.xref) { markConsumed(n); indiNodes.push(n); }
   const total = indiNodes.length;
   if (total === 0) return;
 
@@ -113,6 +114,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
       const extras: string[] = [];
       for (const child of node.children) {
         if (child.tag === 'REMA' || child.tag === 'MISC') {
+          markConsumed(child);
           const val = child.value?.trim();
           if (val) extras.push(val);
         }
