@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/no-tree-staging.sh\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/git-safety.sh\"",
             "if": "Bash(git *)",
             "timeout": 10,
             "statusMessage": "Checking staging shape"
