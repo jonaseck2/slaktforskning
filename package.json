@@ -57,7 +57,7 @@
     "mapshaper": "^0.7.48",
     "playwright": "^1.62.0",
     "rollup-plugin-visualizer": "^7.0.1",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "vite": "^8.1.5",
     "vite-plugin-node-polyfills": "^0.28.0",
