@@ -1,7 +1,11 @@
 # Nothing Is Silently Dropped — Import Accounting Design Spec
 
 **Date:** 2026-08-23
-**Status:** Design written; awaiting review.
+**Status:** Superseded in part. Approved 2026-08-23, then implemented independently
+on `feat/importer-tag-accounting` by a parallel session that never saw this file — it
+was orphaned on an unlanded branch. Both arrived at the same mechanism. See
+"What actually shipped" below for the reconciliation, and
+`2026-08-23-unmapped-capture-design.md` for the half that did not.
 **Repairs:** `CLAUDE.md` Prime Directive (cont.) clause 1, which had no mechanical
 enforcement and was false in practice.
 
@@ -190,6 +194,88 @@ user sees the decision.
   `CLAUDE.md`: conceptually in scope, mechanically enforced later.
 - **`skipped` stays as a deprecated alias** for `unaccountedFor` so existing report
   consumers and tests keep working. Removal is a follow-up.
+
+## What actually shipped (reconciliation, 2026-08-23)
+
+This spec was approved and then orphaned: it sat on `fix/binding-envelope-silent-failures`,
+an unlanded branch, while a parallel session wrote its own plan
+(`2026-08-23-importer-tag-accounting.md`) and implemented it. Neither read the other. The
+mechanisms converged — identity-based marking of consumed nodes, a declared-exception list
+with mandatory reasons, a gate test over every fixture — which is some evidence the design
+was the obvious one rather than a clever one.
+
+Measured against the shipped branch:
+
+| Spec part | Status |
+|---|---|
+| Marking on value extraction, not traversal | **shipped** — `Set<GedcomNode>` passed as an argument to a pure walk in `accounting-walk.ts`, equivalent to the `WeakSet` this spec proposed |
+| Unaccounted-for report, per path with counts | **shipped** — `accounting-walk.ts` + import-report UI |
+| Declared-not-modelled registry | **shipped** — `accounting-declared.ts`, 56 paths, reason prefixes enforced by test |
+| Corpus gate test | **shipped** — over 19 fixtures, plus a synthetic ArkivDigital fixture |
+| Account across the normalize boundary | **not shipped — demonstrated hole**, see below |
+| Parser malformed-line counter | **not shipped** |
+| `no-restricted-syntax` lint rule on `.children` | **not shipped** — the anti-drift half; nothing stops the 35th raw traversal |
+| Closed-schema coverage (RootsMagic, Genney, Gramps) | **not shipped** |
+| Verbatim capture in `unmapped_data` | **not shipped** — see below |
+
+Running the new gate over the 19 shipped fixtures surfaced 20 undeclared paths, 13 of
+which hold authored data. Those became `unmapped:pending-dialect-tag-review`, and that
+plan is filed.
+
+### The normalize-boundary hole is real, and measured
+
+`import-core.ts:467` calls `collectUnaccounted(normalizedTree, endAccounting())` — the gate
+walks the tree *after* `normalize.ts` has rewritten it. `inlineSnotes` still rebuilds each
+shared note as `{ tag: 'NOTE', …, children: [] }`, so a GEDCOM 7.0 `SNOTE`'s sub-tags are
+gone before the gate can see them.
+
+Probed on this branch with a minimal 7.0 file:
+
+```
+0 @N1@ SNOTE Anteckning om Anna
+1 LANG sv
+1 TRAN Note about Anna
+2 LANG en
+```
+
+```
+unaccountedFor: [{"path":"HEAD.GEDC"},{"path":"HEAD.GEDC.VERS"},{"path":"TRLR"}]
+  SNOTE.LANG reported? NO
+  SNOTE.TRAN reported? NO
+```
+
+A shared note's language and its translation are discarded, and the gate that exists to
+make exactly this impossible reports nothing. Not a regression — `inlineSnotes` predates
+this work — but it is a silent drop surviving inside the mechanism built to end silent
+drops, so it should not stay unfiled.
+
+The fix is ordering, not capture: accounting must straddle the normalize boundary, with
+every pre-normalize node either present afterwards or covered by a declared
+transformation.
+
+### The capture decision did not survive the gap
+
+The approved answer to "what happens to a tag the importer does not model" was **capture
+verbatim so it round-trips**, not **report only**. Reporting satisfies the letter of
+clause 1 and still loses the researcher's words — this spec records that as a failure mode
+of its own first draft, and the shipped branch is report-only.
+
+Measured on the four ArkivDigital files, the 36 paths now declared `unmapped:pending-*`
+cover **46 267 occurrences across 166 concrete paths** — `SOUR._AID` 9 046,
+`SOUR.DATA.DATE` 6 147, the `_ADPL` hierarchy 23 000-odd, `_TITLE` 2 259, `_DESC` 898.
+That data is now honestly *named* and still discarded.
+
+This is defensible sequencing, not a mistake: report-first makes the loss visible and
+sizes the problem, and `unmapped:pending-<plan>` is exactly the right hook to hang capture
+on. It does mean Verification §3 below — the ArkivDigital files round-tripping through
+`unmapped_data` alone, before any profile exists — cannot pass yet. Capture is specified
+separately in `2026-08-23-unmapped-capture-design.md`.
+
+**Capture is orthogonal to declaration, not a later stage of it.** Declaring a tag says
+"we know we skipped this". Capturing it says "we kept it anyway". A tag can be both, and
+capture also covers tags nobody has declared — a vendor the app has never seen. Mapping
+plans like `pending-arkivdigital-profile` shrink the declared list; they do not remove the
+need for the net.
 
 ## Implementation sequencing
 
