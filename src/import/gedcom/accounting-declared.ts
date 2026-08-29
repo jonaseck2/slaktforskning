@@ -72,7 +72,6 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI._FLGS',        reason: 'excluded:redundant — Family Historian flag block; its only observed child is _LIVING, see INDI._LIVING. Zero occurrences across the 36 sample files; fixture-only (family-historian.ged).' },
   { path: 'INDI._FLGS._LIVING', reason: 'excluded:redundant — Family Historian living flag, same derivation as INDI._LIVING' },
   { path: 'INDI._HDP',         reason: 'unmapped:pending-dialect-tag-review — Holger; counted for a warning at import-core.ts:594 but the value is not stored' },
-  { path: '*.PARI',            reason: 'unmapped:pending-dialect-tag-review — Holger parish on an event; a real place component, currently dropped' },
   { path: 'INDI.ASSO.SOUR',    reason: 'unmapped:pending-dialect-tag-review — RootsMagic citation on an association; asso.ts reads ROLE/RELA/_EVID/NOTE but not SOUR' },
   { path: 'INDI._PHOTO',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage primary-photo pointer' },
   { path: 'INDI._MTTAG',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage tag pointer' },

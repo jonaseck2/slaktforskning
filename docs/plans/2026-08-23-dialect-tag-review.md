@@ -626,7 +626,7 @@ The choice: build the chain `PLAC > PARI`, because it is right for every case ob
 
 **Unblocking measurement, to run when a real Holger export arrives:** count records where the `PARI` value contains the `PLAC` value as a substring versus the reverse. If the reverse dominates, flip the chain and ship a migration.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-holger-parish.test.ts
@@ -679,9 +679,9 @@ describe('Holger PARI', () => {
 });
 ```
 
-- [ ] **Step 2: Run — confirm it fails.** No parish place exists; `PARI` is dropped.
+- [x] **Step 2: Run — confirm it fails.** No parish place exists; `PARI` is dropped.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 **`PARI` is a sibling of `PLAC`, not a child of it** — and `GedcomNode` has no `parent`
 field (`src/gedcom/parser.ts`: `level`, `xref`, `tag`, `value`, `children`). The existing
@@ -764,14 +764,25 @@ shape `bulkResolveHierarchy` already consumes:
 
 **One ordering trap.** The ArkivDigital branch runs first and is tag-driven (`ctx.isArkivDigital || anyAdpl`). A Holger file has no `_ADPL`, so the branches never both fire — but write the Holger branch as `else if` on the same chain anyway, so a future file carrying both cannot resolve the same PLAC twice.
 
-- [ ] **Step 4: Delete the declaration** — remove `{ path: '*.PARI', … }`.
+- [x] **Step 4: Delete the declaration** — remove `{ path: '*.PARI', … }`.
 
-- [ ] **Step 5: Verify**
+> **Deviation, measured.** `ctx.isHolger` is set only by `options.profile ===
+> 'holger'` (import-core.ts:118), and the accounting gate imports every fixture
+> with no options at all — so a profile-gated branch would leave `*.PARI`
+> undeclared and red for exactly the import most users perform. The branch keys
+> on the tag instead, `ctx.isHolger || anyPari`, which is the rule the
+> ArkivDigital branch beside it already states for `_ADPL`.
+>
+> The PLAC level is written with `type: null`, not `'locality'`. `PLAC
+> Stockholm` states a name, not a kind, and `'locality'` is not in the
+> `PlaceType` union the column is typed against.
+
+- [x] **Step 5: Verify**
   - New suite green.
   - `npm test -- import-tag-accounting` green with `*.PARI` gone.
   - `npm test -- export-perf` green — the new branch is one `bulkResolveHierarchy` call for the whole tree, matching the ArkivDigital branch. If it added a per-event query, that is a `.claude/rules/performance.md` violation and the task is not done.
 
-- [ ] **Step 6: Commit** — `feat(import): a Holger parish becomes a place, not a dropped line`
+- [x] **Step 6: Commit** — `feat(import): a Holger parish becomes a place, not a dropped line`
 
 ---
 
