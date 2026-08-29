@@ -987,9 +987,17 @@ Four fixture-declared paths and five corpus families. None holds authored geneal
 
 The census's biggest finding is not a dialect finding: 110 of 165 visible paths have a standard GEDCOM leaf tag. Those need a plan of their own, and the `unmapped:pending-<plan>` reasons written in Tasks 8, 9 and 10 need it to exist — `.claude/rules/plans.md`: a reason naming a plan that is not on disk is the violation caught on 2026-08-23.
 
-- [ ] **Step 1: Produce the classified list** from the Task 1 census: every path whose leaf tag has no leading underscore, with its count and the programs that write it.
+- [x] **Step 1: Produce the classified list** from the Task 1 census: every path whose leaf tag has no leading underscore, with its count and the programs that write it.
 
-- [ ] **Step 2: Write the plan** at `docs/plans/2026-08-28-standard-tag-gaps.md`, following `.claude/rules/plans.md` — User goal, Scope with every path enumerated, Verification, then tasks. Group by concept, not by tag:
+> **Re-measured after Tasks 2-10 shipped: 700 distinct paths, 10 207
+> occurrences — 613 with a standard leaf tag (3 357 occurrences) and 87 with an
+> underscore leaf (6 850).** The preamble's "110 of 165 visible" came from the
+> truncated sweep and understated the path count by a factor of four. The filed
+> plan carries the census numbers, grouped by concept, and states its own title
+> is imperfect for the same reason this one's is: the single largest undeclared
+> block, `_EVENT_DEFN` at 1 717 occurrences, has an underscore root.
+
+- [x] **Step 2: Write the plan** at `docs/plans/2026-08-28-standard-tag-gaps.md`, following `.claude/rules/plans.md` — User goal, Scope with every path enumerated, Verification, then tasks. Group by concept, not by tag:
   - **Citation media** — `*.SOUR.OBJE`, 282 occurrences across three hosts. `citations` has no media link.
   - **Name parts** — `INDI.NAME.SPFX`, 156. `person_names` has `name_prefix`; check whether SPFX belongs there or is a distinct surname particle, given `name_qualifier` already has `'particle'`.
   - **Source text** — `SOUR.TEXT` (56) and `SOUR.NOTE` (108).
@@ -997,11 +1005,11 @@ The census's biggest finding is not a dialect finding: 110 of 165 visible paths 
   - **Submitter** — `SUBM.LANG`, 89.
   - **LDS ordinance dates** — `INDI.ENDL.DATE`, `INDI.SLGC.DATE`, `FAM.SLGS.DATE`, `FAM.CHIL.SLGC`, ~950. The ordinances themselves are already declared `excluded:not-relevant`; their children inherit that reason and this is a declaration task, not a mapping one.
 
-- [ ] **Step 3: Commit the plan immediately** — `.claude/rules/plans.md` "Commit plans and specs immediately". `git add docs/plans/2026-08-28-standard-tag-gaps.md && git commit -m "docs(plan): standard GEDCOM tags the importer does not read"`.
+- [x] **Step 3: Commit the plan immediately** — `.claude/rules/plans.md` "Commit plans and specs immediately". `git add docs/plans/2026-08-28-standard-tag-gaps.md && git commit -m "docs(plan): standard GEDCOM tags the importer does not read"`.
 
-- [ ] **Step 4: Point the pending reasons at it** — replace every `pending-standard-tag-gaps` placeholder written in Tasks 8–10 with the real slug.
+- [x] **Step 4: Point the pending reasons at it** — replace every `pending-standard-tag-gaps` placeholder written in Tasks 8–10 with the real slug.
 
-- [ ] **Step 5: Verify** — `grep -rn "pending-dialect-tag-review" src/ tests/` returns nothing. That is this plan's completion condition.
+- [x] **Step 5: Verify** — `grep -rn "pending-dialect-tag-review" src/ tests/` returns nothing. That is this plan's completion condition.
 
 ---
 
@@ -1013,16 +1021,16 @@ The census's biggest finding is not a dialect finding: 110 of 165 visible paths 
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, no `unmapped_data` table.
-- [ ] Zero `unmapped:pending-dialect-tag-review` entries remain in `accounting-declared.ts`.
-- [ ] Every declaration written in this plan carries a measured count, not an adjective.
-- [ ] No unrecognised relation word is stored as `biological`.
-- [ ] No foreign program's derived flag is stored.
-- [ ] The Holger parish hierarchy direction is stated as a risk in the code comment, not only here.
+- [x] Every task has a tier tag.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, no `unmapped_data` table.
+- [x] Zero `unmapped:pending-dialect-tag-review` entries remain in `accounting-declared.ts`.
+- [x] Every declaration written in this plan carries a measured count, not an adjective.
+- [x] No unrecognised relation word is stored as `biological`.
+- [x] No foreign program's derived flag is stored.
+- [x] The Holger parish hierarchy direction is stated as a risk in the code comment, not only here.
 - [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
 - [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
 

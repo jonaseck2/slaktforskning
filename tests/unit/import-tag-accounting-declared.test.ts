@@ -1,6 +1,8 @@
 // The declared-unmapped list is how a tag stops being a silent drop and becomes
 // a decision. See docs/plans/2026-08-23-importer-tag-accounting.md Task 5.
 
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accounting-declared';
 
@@ -63,6 +65,23 @@ describe('declared unmapped tags', () => {
   it('an exact path still beats a wildcard that would also cover it', () => {
     expect(matchDeclared('OBJE.RIN')?.path).toBe('OBJE.RIN');
     expect(matchDeclared('INDI.BIRT.RIN')?.path).toBe('*.RIN');
+  });
+
+  // ── The dialect-tag-review plan's completion condition ────────────────────
+  it('no entry still points at the dialect-tag-review plan', () => {
+    // Every path that plan owned is now mapped, declared with a reason of its
+    // own, or handed to a named follow-up plan.
+    const stragglers = DECLARED_UNMAPPED.filter(d => d.reason.includes('pending-dialect-tag-review'));
+    expect(stragglers.map(d => d.path)).toEqual([]);
+  });
+
+  it('the plan those reasons were handed to exists on disk', () => {
+    // `.claude/rules/plans.md`: a reason naming a plan that is not on disk is
+    // the violation caught on 2026-08-23. 11 entries point here.
+    const handed = DECLARED_UNMAPPED.filter(d => d.reason.includes('pending-standard-tag-gaps'));
+    expect(handed.length, 'nothing points at the follow-up plan — did the slug change?').toBeGreaterThan(0);
+    const plan = fileURLToPath(new URL('../../docs/plans/2026-08-28-standard-tag-gaps.md', import.meta.url));
+    expect(existsSync(plan), `${plan} does not exist`).toBe(true);
   });
 
   it('every entry carries a non-empty reason', () => {
