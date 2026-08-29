@@ -31,11 +31,6 @@ interface MockApi {
   offDataChanged?: (cb: () => void) => void;
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var window: { api?: MockApi } & typeof globalThis;
-}
-
 function buildApi(): MockApi {
   return {
     duplicates: {
