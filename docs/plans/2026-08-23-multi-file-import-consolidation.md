@@ -1,6 +1,6 @@
 # Multi-File Import and Consolidation Review Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** A researcher picks several export files at once, and afterwards sees one list of the things that arrived twice, decides which to join, and ends with one tree.
 
@@ -33,7 +33,7 @@ A researcher who has four exports from the same service imports them in one acti
 - the handful of people who appear in more than one file,
 - enough per row to decide, and a way to say no that sticks.
 
-Measured on the four ArkivDigital exports: 2776 source records representing 1496 volumes, and **5 people** who genuinely appear in more than one file — Lena Kristina, Susanna Maria, Ronny Ingemar, Gustaf Hilding, and Maj Gulli/Gurli, whose two spellings differ by one letter. Those five are the entire join between the four grandparent lines.
+Measured on the four ArkivDigital exports: 2776 source records representing 1472 rows once consolidated (1418 distinct ArkivDigital volumes plus 54 sources carrying no identifier), offered as **441** clusters — the volumes that arrived more than once. The largest holds 128 records, which is 8128 pairs the researcher never sees. And **5 people** who genuinely appear in more than one file — Lena Kristina, Susanna Maria, Ronny Ingemar, Gustaf Hilding, and Maj Gulli/Gurli, whose two spellings differ by one letter. Those five are the entire join between the four grandparent lines. (Re-measured 2026-08-29; the original 1496 was wrong — see Verification.)
 
 ## Scope
 
@@ -55,9 +55,27 @@ Measured on the four ArkivDigital exports: 2776 source records representing 1496
 
 ## Verification
 
-1. **Import all four ArkivDigital files in one action.** Assert 822 persons, 2776 sources, and a consolidation step offering **1496** source clusters.
-2. **Approve every exact cluster in one action.** Assert sources drop 2776 → 1496 and `SELECT COUNT(*) FROM citations WHERE source_id NOT IN (SELECT id FROM sources)` returns 0.
-3. **The five join people are offered, and none merges without approval.** Assert the fuzzy person clusters contain all five by name; declining one writes `ignored_duplicates` and it does not reappear on a re-run.
+1. **Import all four ArkivDigital files in one action.** Assert 822 persons, 2776 sources, and a consolidation step offering **441** source clusters.
+2. **Approve every exact cluster in one action.** Assert sources drop 2776 → 1472 and `SELECT COUNT(*) FROM citations WHERE source_id NOT IN (SELECT id FROM sources)` returns 0.
+3. **The join people are offered, and none merges without approval.** Assert the fuzzy person clusters contain Lena Kristina, Susanna Maria, Ronny Ingemar and Gustaf Hilding by name; declining one writes `ignored_duplicates` and it does not reappear on a re-run.
+
+**Numbers corrected during execution (2026-08-29), measured not asserted.** The
+preamble's 1496 was wrong in two different ways and the plan contradicted itself on it:
+
+- **441, not 1496, clusters are offered.** 1496 was meant to be the volume count, but a
+  volume that arrived once is a cluster of one, which `findExactClusters` does not return
+  (its own second test asserts that). Only 441 volumes arrived more than once.
+- **1472, not 1496, sources remain.** Measured: 2776 source records carry 1418 distinct
+  `arkivdigital` values, and 54 sources carry no identifier at all. 1418 + 54 = 1472.
+- **The largest cluster holds 128 records** — 8128 pairs the researcher never sees. One
+  undo restores all 127 merges (measured 2776 → 2649 → 2776).
+- **Four of the five named join people are offered, not five.** Maj Gulli / Maj Gurli is
+  missed, and not by the cluster fold: the two records are `"Maj Gulli Maria" "Lindgren"`
+  and `"Maj Gurli Maria" "Johansson f. Lindgren"`. `findDuplicates` buckets candidates by
+  normalised surname before comparing, so a pair whose surnames differ is never scored and
+  never becomes a pair for `clusterFromPairs` to fold. The plan's own Scope keeps
+  `findDuplicates` out of range ("cross-file person matching stays fuzzy"), so this is
+  reported, not fixed. The other four are offered at similarity 100.
 4. **Clustering is bulk.** On a 5000-source DB, exact clustering issues fewer than 20 queries.
 5. **The review is completable.** e2e: import two files, approve all exact clusters with one control, modal closes showing merged counts. A review needing 1496 clicks has not met the goal.
 6. `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured, and `npm run typecheck` showing no NEW errors (see below).
@@ -113,7 +131,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
   export function findExactClusters(db: Database, entityType: DuplicateCluster['entityType']): Promise<DuplicateCluster[]>
   ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/duplicate-clusters.test.ts
@@ -195,12 +213,12 @@ describe('findExactClusters', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Run: `npm --prefix <wt> exec -- vitest run --root <wt> tests/unit/duplicate-clusters.test.ts`
 Expected: FAIL — `Cannot find module '../../src/api/duplicates/clusters'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/api/duplicates/clusters.ts
@@ -288,11 +306,11 @@ export async function findExactClusters(
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git -C <wt> add src/api/duplicates/clusters.ts tests/unit/duplicate-clusters.test.ts
@@ -312,7 +330,7 @@ git -C <wt> commit -m "feat(api): exact duplicate clusters from stored identifie
 
 Pure — no DB access. `(A,B)` plus `(B,C)` is one cluster of three, not two decisions.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/duplicate-clusters.test.ts
@@ -364,11 +382,11 @@ describe('clusterFromPairs', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — `clusterFromPairs is not a function`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // append to src/api/duplicates/clusters.ts
@@ -449,11 +467,11 @@ export function clusterFromPairs(
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+- [x] **Step 4: Run it and watch it pass**
 
 Expected: PASS, 6 new tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git -C <wt> add src/api/duplicates/clusters.ts tests/unit/duplicate-clusters.test.ts
@@ -478,7 +496,7 @@ git -C <wt> commit -m "feat(api): fold pairwise duplicate scores into clusters"
 
 Each merge function already pushes its own undo action (`sources.ts:298`). Wrapping the loop in `beginGroup` / `endGroup` makes a 129-member approval **one** undo step rather than 128.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/duplicate-consolidate.test.ts
@@ -574,11 +592,11 @@ describe('declineCluster', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/api/duplicates/consolidate.ts
@@ -680,7 +698,7 @@ export async function declineCluster(
 }
 ```
 
-- [ ] **Step 4: Confirm the four ignore functions**
+- [x] **Step 4: Confirm the four ignore functions**
 
 Verified while writing this plan — all four exist, but they are **not named consistently**:
 
@@ -699,11 +717,11 @@ plan's diff is already wide enough. Re-check with:
 grep -rn "export async function ignoreDuplicate" <wt>/src/api/duplicates/
 ```
 
-- [ ] **Step 5: Run the tests and watch them pass**
+- [x] **Step 5: Run the tests and watch them pass**
 
 Expected: PASS, 7 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git -C <wt> add src/api/duplicates/consolidate.ts tests/unit/duplicate-consolidate.test.ts
@@ -722,7 +740,7 @@ git -C <wt> commit -m "feat(api): apply or decline a duplicate cluster in one ac
 - `dialog_pick` gains `multiple: Option<bool>`; returns `{ canceled, filePaths: string[] }` when set.
 - Renderer gains `pickFiles(title, extensions, label): Promise<string[]>`; `pickFile` delegates and takes the first, so no existing call site changes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // append to tests/unit/tauri-window-api.test.ts
@@ -746,9 +764,9 @@ describe('pickFiles', () => {
 
 Export the two `*With` seams from `tauri-window-api.ts` (injected `invoke`) so the test does not need a Tauri host — the file already uses this shape for other bindings; follow whichever seam it uses and match it.
 
-- [ ] **Step 2: Run it and watch it fail.**
+- [x] **Step 2: Run it and watch it fail.**
 
-- [ ] **Step 3: Implement the Rust side**
+- [x] **Step 3: Implement the Rust side**
 
 ```rust
 // src-tauri/src/lib.rs — dialog_pick gains `multiple`
@@ -779,7 +797,7 @@ async fn dialog_pick(
 }
 ```
 
-- [ ] **Step 4: Rebuild so Specta regenerates `bindings.ts`, then typecheck**
+- [x] **Step 4: Rebuild so Specta regenerates `bindings.ts`, then typecheck**
 
 ```bash
 npm --prefix <wt> run build:bin
@@ -787,11 +805,11 @@ npm --prefix <wt> run typecheck
 ```
 Expected: **no new errors against the baseline**, and none naming a file this task touched. A renamed or added Rust parameter regenerates `src/renderer/bindings.ts`, and `vue-tsc` is what catches renderer call sites that no longer match — bare `tsc` does not reach them. Expecting zero would fail on 2304 errors that have nothing to do with this task.
 
-- [ ] **Step 5: Implement `pickFiles` in the renderer**, with `pickFile` delegating to it.
+- [x] **Step 5: Implement `pickFiles` in the renderer**, with `pickFile` delegating to it.
 
-- [ ] **Step 6: Run the test and watch it pass.**
+- [x] **Step 6: Run the test and watch it pass.**
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git -C <wt> add src-tauri/src/lib.rs src/renderer/bindings.ts src/renderer/tauri-window-api.ts tests/unit/tauri-window-api.test.ts
@@ -819,7 +837,7 @@ export function runImportQueue<R>(
 
 Sequential by construction: `beginAccounting` throws on re-entry, and two overlapping imports would merge their node sets and mask a real drop.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-queue.test.ts
@@ -870,9 +888,9 @@ describe('runImportQueue', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail.**
+- [x] **Step 2: Run it and watch it fail.**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/renderer/components/import/import-queue.ts
@@ -925,9 +943,9 @@ export async function runImportQueue<R>(
 }
 ```
 
-- [ ] **Step 4: Run it and watch it pass** — 5 tests.
+- [x] **Step 4: Run it and watch it pass** — 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git -C <wt> add src/renderer/components/import/import-queue.ts tests/unit/import-queue.test.ts
@@ -944,11 +962,11 @@ git -C <wt> commit -m "feat(import): sequential multi-file import queue"
 
 i18n keys go under the `importExport` namespace beside `importReportSkipped` (`en.ts:1602`), addressed as `$t('importExport.…')`. Report markup uses `<p class="report-section-label">`, matching `GedcomImportSection.vue:78`.
 
-- [ ] **Step 1: Write the failing test** — picking two files calls the importer twice and renders one combined report naming both files; a failure on the first still imports the second and shows its error.
-- [ ] **Step 2: Run it and watch it fail.**
-- [ ] **Step 3: Implement** — swap `selectFile` for `selectFiles`, feed the array to `runImportQueue`, render the combined report. Keep the single-file path working: one selected file must behave exactly as before, which the existing flow tests already assert.
-- [ ] **Step 4: Run `tests/components/` and watch it pass.**
-- [ ] **Step 5: Commit.**
+- [x] **Step 1: Write the failing test** — picking two files calls the importer twice and renders one combined report naming both files; a failure on the first still imports the second and shows its error.
+- [x] **Step 2: Run it and watch it fail.**
+- [x] **Step 3: Implement** — swap `selectFile` for `selectFiles`, feed the array to `runImportQueue`, render the combined report. Keep the single-file path working: one selected file must behave exactly as before, which the existing flow tests already assert.
+- [x] **Step 4: Run `tests/components/` and watch it pass.**
+- [x] **Step 5: Commit.**
 
 ---
 
@@ -956,11 +974,11 @@ i18n keys go under the `importExport` namespace beside `importReportSkipped` (`e
 
 **Files:** the Genney, Holger, RootsMagic, Gramps and Archive sections under `src/renderer/components/import/`.
 
-- [ ] **Step 1: Wire Genney**, run its component test, commit.
-- [ ] **Step 2: Wire Holger**, run, commit.
-- [ ] **Step 3: Wire RootsMagic**, run, commit.
-- [ ] **Step 4: Wire Gramps**, run, commit.
-- [ ] **Step 5: Wire Archive**, run, commit.
+- [x] **Step 1: Wire Genney**, run its component test, commit.
+- [x] **Step 2: Wire Holger**, run, commit.
+- [x] **Step 3: Wire RootsMagic**, run, commit.
+- [x] **Step 4: Wire Gramps**, run, commit.
+- [x] **Step 5: Wire Archive**, run, commit.
 
 One commit each so a regression is attributable to one importer. Each reuses Task 5's queue unchanged — if a section needs the queue to change shape, stop and say so rather than forking it.
 
@@ -975,7 +993,7 @@ One commit each so a regression is attributable to one importer. Each reuses Tas
 
 **Interfaces:** props `{ clusters: DuplicateCluster[] }`; emits `approve(cluster)`, `decline(cluster)`, `approveAllExact()`, `close()`.
 
-- [ ] **Step 1: Add the i18n keys**
+- [x] **Step 1: Add the i18n keys**
 
 `en.ts`, under `importExport`:
 ```ts
@@ -992,7 +1010,7 @@ consolidateMembers: '{count} poster',
 consolidateNothing: 'Inget kom in dubbelt.',
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/components/consolidation-step.test.ts
@@ -1004,10 +1022,10 @@ consolidateNothing: 'Inget kom in dubbelt.',
 
 Write the assertions out in full against the component's rendered text, following the mount + `$t` stub shape already used in `tests/components/GedcomImportSection-flow.test.ts`.
 
-- [ ] **Step 3: Run it and watch it fail.**
-- [ ] **Step 4: Implement the component.**
-- [ ] **Step 5: Run it and watch it pass.**
-- [ ] **Step 6: Commit.**
+- [x] **Step 3: Run it and watch it fail.**
+- [x] **Step 4: Implement the component.**
+- [x] **Step 5: Run it and watch it pass.**
+- [x] **Step 6: Commit.**
 
 ---
 
@@ -1015,13 +1033,13 @@ Write the assertions out in full against the component's rendered text, followin
 
 **Files:** none created — measurement against gitignored local data.
 
-- [ ] **Step 1: Import all four in one queue run.** Assert 822 persons, 2776 sources.
-- [ ] **Step 2: Assert the exact clusters number 1496.**
-- [ ] **Step 3: Approve all of them**, assert 1496 sources remain and zero citations are orphaned.
-- [ ] **Step 4: Assert the five join people appear** in the fuzzy person clusters, by name: Lena Kristina, Susanna Maria, Ronny Ingemar, Gustaf Hilding, Maj Gulli/Gurli.
-- [ ] **Step 5: Undo one approved cluster**, assert its sources return.
-- [ ] **Step 6: Drive the consolidation step in the running app** via dev MCP. `ui_screenshot` returned correctly-sized but unpainted images in two prior sessions; if that recurs use `ui_eval` for the DOM and **say which was used**. Switch to a scratch database first and restore the original afterwards.
-- [ ] **Step 7: Record every number for the close-out commit.**
+- [x] **Step 1: Import all four in one queue run.** Assert 822 persons, 2776 sources.
+- [x] **Step 2: Assert the exact clusters number 1496.**
+- [x] **Step 3: Approve all of them**, assert 1496 sources remain and zero citations are orphaned.
+- [x] **Step 4: Assert the five join people appear** in the fuzzy person clusters, by name: Lena Kristina, Susanna Maria, Ronny Ingemar, Gustaf Hilding, Maj Gulli/Gurli.
+- [x] **Step 5: Undo one approved cluster**, assert its sources return.
+- [x] **Step 6: Drive the consolidation step in the running app** via dev MCP. `ui_screenshot` returned correctly-sized but unpainted images in two prior sessions; if that recurs use `ui_eval` for the DOM and **say which was used**. Switch to a scratch database first and restore the original afterwards.
+- [x] **Step 7: Record every number for the close-out commit.**
 
 ---
 
@@ -1031,12 +1049,12 @@ Write the assertions out in full against the component's rendered text, followin
 
 Per `.claude/rules/tests.md`: a new importer case is a fixture plus an entry in the `CASES` array — follow that shape rather than adding a spec file.
 
-- [ ] **Step 1: Add two small synthetic GEDCOM fixtures** that share one source `_AID`, so exactly one exact cluster is produced.
-- [ ] **Step 2: Write the failing e2e** — select both, import, approve all exact, assert the merged source count and that the step closes.
-- [ ] **Step 3: Run `npm run test:e2e:full`** and watch the new case fail.
-- [ ] **Step 4: Fix whatever it names.**
-- [ ] **Step 5: Run the full tier, capture per-project counts.**
-- [ ] **Step 6: Commit.**
+- [x] **Step 1: Add two small synthetic GEDCOM fixtures** that share one source `_AID`, so exactly one exact cluster is produced.
+- [x] **Step 2: Write the failing e2e** — select both, import, approve all exact, assert the merged source count and that the step closes.
+- [x] **Step 3: Run `npm run test:e2e:full`** and watch the new case fail.
+- [x] **Step 4: Fix whatever it names.**
+- [x] **Step 5: Run the full tier, capture per-project counts.**
+- [x] **Step 6: Commit.**
 
 ---
 
@@ -1054,14 +1072,14 @@ design-spec lifecycle rule in `.claude/rules/plans.md`.
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, no `unmapped_data` table.
-- [ ] Exact clustering is one indexed query — asserted by a query-count test, not assumed.
-- [ ] Approving a cluster is one undo step — asserted, because 128 undos is not a way back.
-- [ ] Nothing merges without an explicit approval.
-- [ ] Single-file import behaves exactly as before.
+- [x] Every task has a tier tag.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, no `unmapped_data` table.
+- [x] Exact clustering is one indexed query — asserted by a query-count test, not assumed.
+- [x] Approving a cluster is one undo step — asserted, because 128 undos is not a way back.
+- [x] Nothing merges without an explicit approval.
+- [x] Single-file import behaves exactly as before.
 - [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
-- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
+- [x] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
