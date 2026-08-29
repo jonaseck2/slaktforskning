@@ -53,6 +53,14 @@
  *  - `lossy`        — column does not survive verbatim. `expectedAfterRoundTrip`
  *                     must return the value that *will* be present after
  *                     round-trip; the per-field test asserts equality.
+ *                     One exception to "identity expectation means lossless":
+ *                     a generic table whose row survives or dies as a whole
+ *                     depending on its *other* columns. There the per-field
+ *                     driver seeds one point in that space and the identity
+ *                     expectation describes that point honestly, while the
+ *                     status still discloses the points that lose the row.
+ *                     `external_identifiers` is the case; its block comment
+ *                     names the two.
  *  - `excluded`     — out of scope on purpose (audit metadata, derived columns).
  *                     Reason must explain why the column has no GEDCOM analog.
  */
@@ -115,6 +123,19 @@ const UUID_FK_VIA_XREF: FidelityStatus = {
 
 const EXPORTER = 'src/gedcom/exporter.ts';
 const IMPORTER_PHASES = 'src/import/gedcom/phases.ts';
+
+/**
+ * The two `external_identifiers` cells with no carrier, stated once so the
+ * three column entries below cannot drift apart from each other. Both are
+ * whole-row losses on a place; the design spec
+ * `docs/plans/2026-08-29-external-identifier-roundtrip-design.md` carries the
+ * full reasoning and the matrix test asserts each one.
+ */
+const UNCOVERED_PLACE_CELLS =
+  'a place reachable only as an `_ADPL` ancestor carries one identifier slot, which '
+  + '`places_hierarchy.ts:70` spends on disambiguation rather than round-trip, so a second '
+  + 'system on such a place has no carrier — and a place that no event and no place-level '
+  + 'citation reaches is not exported at all';
 const IMPORTER_EVENTS = 'src/import/gedcom/event-importer.ts';
 const IMPORTER_PLACE = 'src/import/gedcom/place-resolver.ts';
 const IMPORTER_OBJE = 'src/import/gedcom/obje-importer.ts';
@@ -240,34 +261,94 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'person_identifiers.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
   // ----- external_identifiers -----
-  // Round-trip storage for source-format ids. Three (entity_type, system) pairs
-  // have a tag to travel in today:
+  // Round-trip storage for source-format ids. Every entity type has a carrier;
+  // three (entity_type, system) pairs keep a vendor-shaped tag instead of the
+  // generic one, so an ArkivDigital file still reads back in ArkivDigital:
   //   source   + arkivdigital        → `1 _AID` on the SOUR record
   //   place    + arkivdigital.parish → `_PARISH_AID` inside the rebuilt _ADPL block
   //   citation + arkivdigital.image  → `_AID` inside the citation's SOUR block
-  // All three are verified by tests/unit/import-arkivdigital-identifiers.test.ts.
+  // Everything else rides `REFN` (5.5.1) / `EXID` (7.0) on the SOUR, REPO and
+  // OBJE records, and `_EXID` inside a citation's SOUR block, a `PLAC` block
+  // and a top-level `_PLAC` record — none of which has a `REFN` slot in either
+  // specification. Carriers and vendor overrides: `src/gedcom/external-id-tags.ts`.
+  // The whole space is enumerated cell by cell in
+  // tests/unit/external-identifier-roundtrip.test.ts.
   //
-  // Declared `lossy` rather than `lossless` because the columns are generic: a
-  // row with any other system — a Gramps handle, a Genney RID — has no tag to
-  // carry it yet and does not come back. Claiming lossless here would be an
-  // overclaim the per-field test correctly refuses.
+  // Still `lossy`, on two named cells rather than on "most pairs have no tag":
+  //
+  //   1. A non-`arkivdigital.parish` identifier on a place that is only ever an
+  //      `_ADPL` ancestor. Such a place reaches the file as a level inside the
+  //      chain, and a level's identifier slot is `HierarchyLevel.externalId` —
+  //      one string, which `places_hierarchy.ts:70` uses to keep two same-named
+  //      parishes apart. It is load-bearing for disambiguation, not only for
+  //      round-trip, so widening it to a list of typed identifiers changes what
+  //      "the same place" means. That is a places-hierarchy question.
+  //   2. Any identifier on a place that no event AND no place-level citation
+  //      reaches. That place is not exported at all, so its `name` and
+  //      `place_type` are lost with it; `places.parent_place_id` is already
+  //      declared lossy on the same grounds. A place reached only by a citation
+  //      IS covered — the `_PLAC` record carries its identifiers — so this cell
+  //      is exactly its sentence and nothing wider.
+  //
+  // Both are whole-row losses, not per-column degradations, so the three
+  // expectations below are identity for the pair the per-field driver seeds.
+  // See the `lossy` note in the authoring guidance at the top of this file for
+  // why that is not a mislabelled `lossless`. Matrix cells 12 and 13 assert the
+  // two losses, and the both-arms test at the foot of the same file asserts the
+  // seeder can still produce one — which is the guard that was missing when
+  // `value` stood as `lossless` through two releases.
   'external_identifiers.id':          { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'external_identifiers.entity_id':   { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'external_identifiers.entity_type': {
-    v551: { kind: 'lossy', reason: 'only source, place and citation rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
-    v70:  { kind: 'lossy', reason: 'only source, place and citation rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
+    v551: {
+      kind: 'lossy',
+      reason: `all five entity types have a carrier, so the value survives wherever the row does — but ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => seeded,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: `all five entity types have a carrier, so the value survives wherever the row does — but ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => seeded,
+    },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'external_identifiers.system': {
-    v551: { kind: 'lossy', reason: 'only the arkivdigital, arkivdigital.parish and arkivdigital.image systems have an emitting tag', expectedAfterRoundTrip: () => null },
-    v70:  { kind: 'lossy', reason: 'only the arkivdigital, arkivdigital.parish and arkivdigital.image systems have an emitting tag', expectedAfterRoundTrip: () => null },
+    // 5.5.1 keeps the case. `normalizeForImport` returns the tree untouched
+    // for every version but 7.0 (`normalize.ts:208`), so `lowercaseTypeValues`
+    // never runs. Measured 2026-08-29: `S_external_identifiers_system_x9` came
+    // back verbatim under 5.5.1 and as `s_…` under 7.0.
+    v551: {
+      kind: 'lossy',
+      reason: `carried verbatim by the generic tag's TYPE sub-tag — but ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => seeded,
+    },
+    // 7.0 folds it. `lowercaseTypeValues` (`normalize.ts:109`) lowercases every
+    // TYPE value in the tree, and the generic carrier states the system in a
+    // TYPE sub-tag, so an uppercase character in `system` does not come back.
+    // The three vendor pairs are unaffected: their tags carry no TYPE and the
+    // importer reconstructs the system as a lowercase literal.
+    v70: {
+      kind: 'lossy',
+      reason: `7.0 import lowercases every TYPE value (normalize.ts:109), so an uppercase character in the system is folded; and ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => (typeof seeded === 'string' ? seeded.toLowerCase() : seeded),
+    },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
-  // The value itself round-trips: it is the payload of `_AID` / `_PARISH_AID`.
-  // What is lossy is which (entity_type, system) pairs have a tag at all.
+  // Was `lossless` for two releases while the comment beside it correctly said
+  // only three pairs had a tag. The per-field seeder could not disagree — it
+  // hardcoded the one working pair — which is the failure `.claude/rules/
+  // evidence.md` calls "a query that cannot return zero".
   'external_identifiers.value': {
-    v551: { kind: 'lossless' },
-    v70:  { kind: 'lossless' },
+    v551: {
+      kind: 'lossy',
+      reason: `the payload of every carrier, so it survives wherever the row does — but ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => seeded,
+    },
+    v70: {
+      kind: 'lossy',
+      reason: `the payload of every carrier, so it survives wherever the row does — but ${UNCOVERED_PLACE_CELLS}`,
+      expectedAfterRoundTrip: seeded => seeded,
+    },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'external_identifiers.created_at':  { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
