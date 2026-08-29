@@ -191,7 +191,7 @@ npx tsx src/mcp/server.ts  # Run MCP server standalone (Node-host, for non-Tauri
 
 Rust core: ~3 s incremental recompile on `src-tauri/` changes. Renderer changes: instant via Vite HMR. Cold `target/` cache: 5–10 min.
 
-**Specta coupling is enforced by `vue-tsc`, not bare `tsc`.** Renaming a Rust command parameter regenerates `src/renderer/bindings.ts` on next `cargo build`. `npx vue-tsc --noEmit --ignoreDeprecations 6.0` flags renderer call sites that no longer match. Bare `npx tsc --noEmit` doesn't reach call sites because `@types/node` lib types fail to parse — CI uses `vue-tsc`.
+**Specta coupling is enforced by `vue-tsc`, not bare `tsc`.** Renaming a Rust command parameter regenerates `src/renderer/bindings.ts` on next `cargo build`. `npm run typecheck` (`vue-tsc --noEmit`) flags renderer call sites that no longer match. Bare `npx tsc --noEmit` doesn't reach call sites because `@types/node` lib types fail to parse. **It is not clean — 2501 pre-existing errors — so the check is "no new errors against a baseline", never "zero". See `.claude/rules/build.md`.** CI does not currently run it.
 
 Reference docs (load on demand): `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/MCP.md`, `docs/IPC_REFERENCE.md`.
 

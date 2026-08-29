@@ -48,16 +48,24 @@ Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFi
 ## Type checking
 
 - `npx tsc --noEmit` errors are mostly in `node_modules`. Filter with `grep "^src/"` to find actual source errors.
-- `npm run typecheck` is `vue-tsc --noEmit --ignoreDeprecations 6.0`. If it OOMs on the
-  default 4 GB Node heap, prefix `NODE_OPTIONS="--max-old-space-size=8192"` — it completed
-  without the flag in both the main tree and a fresh worktree on 2026-08-29, so treat the
-  flag as a fallback rather than a default.
+- **`npm run typecheck` is `vue-tsc --noEmit`.** It works as of 2026-08-29 and did not
+  before: `vue-tsc` was never a declared dependency (the script exited 127,
+  `command not found`), and the script's `--ignoreDeprecations 6.0` is rejected by
+  TypeScript 5.9.3 as `TS5103` and **aborts the whole run**, so even with the binary
+  present it would have reported one config error and checked nothing. Added as a
+  devDependency and the flag removed. CI still does not invoke it — `ci.yml` runs lint,
+  audit, test, e2e, build.
 
-  **It is not clean and never has been. Measured 2026-08-29: 2304 errors in a fresh
-  worktree.** Pre-existing errors live in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`,
-  `src/api/places.ts`, `src/api/undo.ts`, `src/api/gedcom_fidelity_registry.ts`,
-  `src/renderer/tauri-window-api.ts`, plus `import.meta.env` / api-shape errors throughout
-  views and every `vite.*.config.ts`.
+  **`tsconfig.json` had no `exclude` and `allowJs: true`,** so the run type-checked every
+  `.js` under `src-tauri/target/release/**` — Rust codegen assets, thousands of parse
+  errors, and a count that differed by tree (5840 in the main tree, 2304 in a fresh
+  worktree with no `target/`). An `exclude` for build outputs now makes the number mean
+  something and makes it the same everywhere.
+
+  **It is not clean: 2501 errors on a clean checkout.** Concentrated in `scripts/*.ts`
+  gazetteer builders, `src/api/db.ts`, `src/api/places.ts`, `src/api/undo.ts`,
+  `src/renderer/tauri-window-api.ts`, and `import.meta.env` / api-shape errors across the
+  views.
 
   **So "typecheck clean" is never the check — "no NEW errors" is.** Take a baseline before
   you claim anything:
@@ -70,9 +78,6 @@ Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFi
   npm --prefix <wt> run typecheck 2>&1 | grep '<file you touched>'   # must be empty
   ```
 
-  **Take the baseline in the worktree, never in the main tree.** A main-tree run is swamped
-  by `src-tauri/target/release/**` build artifacts and reports a different, useless number —
-  5840 against the worktree's 2304 on the same commit.
-
   Writing "vue-tsc clean" into a plan's verification section makes that step unpassable.
-  Three plans carried it before this rule existed; all three were reworded on 2026-08-29.
+  Three plans carried it before this rule existed; all three were reworded on 2026-08-29,
+  the same day a subagent discovered the script had never run at all.

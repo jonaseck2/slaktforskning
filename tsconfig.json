@@ -11,5 +11,15 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "coverage",
+    "dist",
+    "dist-static",
+    "dist-mcp",
+    "out",
+    ".worktrees",
+    "src-tauri/target"
+  ]
 }

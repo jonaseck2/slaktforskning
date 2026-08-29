@@ -26,7 +26,7 @@
     "build:mcp-sidecar": "node scripts/build-mcp-sidecar.mjs",
     "build:genney-sidecar": "node scripts/build-genney-sidecar.mjs",
     "tauri": "tauri",
-    "typecheck": "vue-tsc --noEmit --ignoreDeprecations 6.0"
+    "typecheck": "vue-tsc --noEmit"
   },
   "keywords": [],
   "author": {
@@ -62,7 +62,8 @@
     "vite": "^8.1.5",
     "vite-plugin-node-polyfills": "^0.28.0",
     "vite-plugin-singlefile": "^2.3.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "vue-tsc": "^3.3.11"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
