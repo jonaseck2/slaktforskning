@@ -195,7 +195,7 @@ describe('_SEPR', () => {
 
 `cohabitation` as an event type sits beside `cohabitation` as a couple subtype deliberately — the same pairing `marriage` and `engagement` already have. One word, two columns, one concept.
 
-- [ ] **Step 1: Add the block to the fixture**
+- [x] **Step 1: Add the block to the fixture**
 
 The fixture already declares `FAM._DOMESTIC_PARTNERSHIP` and `FAM._DOMESTIC_PARTNERSHIP.DATE`, so the lines exist. Confirm they sit on a FAM with **no `MARR`** — otherwise `hasMarr` wins the subtype and the test proves nothing. Add a second FAM if needed:
 
@@ -207,7 +207,7 @@ The fixture already declares `FAM._DOMESTIC_PARTNERSHIP` and `FAM._DOMESTIC_PART
 2 DATE 1 JUN 1975
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 describe('_DOMESTIC_PARTNERSHIP', () => {
@@ -274,9 +274,9 @@ describe('_DOMESTIC_PARTNERSHIP', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.** The couple comes back `unknown` and no event exists.
+- [x] **Step 3: Run — confirm it fails.** The couple comes back `unknown` and no event exists.
 
-- [ ] **Step 4: Implement — the seven registration points**
+- [x] **Step 4: Implement — the seven registration points**
 
 ```ts
 // src/import/gedcom/phases/shared.ts
@@ -338,7 +338,7 @@ The remaining four:
 // src/renderer/i18n/en.ts   cohabitation: 'Cohabitation',
 ```
 
-- [ ] **Step 5: Delete the two declarations**
+- [x] **Step 5: Delete the two declarations**
 
 ```ts
   // removed — mapped by this plan:
@@ -346,7 +346,7 @@ The remaining four:
   { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE', reason: 'unmapped:pending-ad-unsampled-tags — …' },
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
   - New tests green.
   - `npm test -- import-tag-accounting` green — both paths gone from the declared list and not reported.
   - `npm run typecheck` shows **no new errors** — the event-type union widened, so a
@@ -354,7 +354,7 @@ The remaining four:
     carries 2304 pre-existing errors and "clean" is not the check.
   - A component test or `ui_aria_list` check that the new type appears in the relationship event picker with its Swedish label. **A type registered in the constants but missing from an i18n file renders as a raw key** — check both locales, not one.
 
-- [ ] **Step 7: Commit** — `feat(import): an ArkivDigital sambo couple is a cohabitation`
+- [x] **Step 7: Commit** — `feat(import): an ArkivDigital sambo couple is a cohabitation`
 
 ---
 

@@ -83,10 +83,9 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI._CUSTOM',      reason: 'unmapped:pending-dialect-tag-review — unrecognised vendor tag in the non-standard fixture' },
 
   // ── ArkivDigital tags documented but never observed ──────────────────────
-  // In the synthetic fixture so the gate reports them, deliberately not
-  // modelled. See docs/plans/2026-08-23-ad-unsampled-tags.md.
-  { path: 'FAM._DOMESTIC_PARTNERSHIP',            reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (cohabitation event)' },
-  { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE',       reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (its date)' },
+  // `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` used to sit here. Both are
+  // mapped now — the couple reads as a cohabitation and the event carries the
+  // date. See docs/plans/2026-08-23-ad-unsampled-tags.md Task 2.
   { path: '*._DATE_TEXT',                         reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (a date with no valid GEDCOM form)' },
 
   // ── Surfaced by running the accounting over the four real ArkivDigital

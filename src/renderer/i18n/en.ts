@@ -604,6 +604,7 @@ export default {
     annulment: 'Annulment',
     separation: 'Separation',
     marriage_license: 'Marriage license',
+    cohabitation: 'Cohabitation',
     other: 'Other',
   },
   timelineLabels: {

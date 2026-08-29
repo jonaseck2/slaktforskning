@@ -18,6 +18,9 @@ export const EVENT_TYPE_VALUES = [
   // widely-emitted FAM event for separation (FTM, RootsMagic).
   'cremation', 'bar_mitzvah', 'bas_mitzvah',
   'annulment', 'separation', 'marriage_license',
+  // ArkivDigital's sambohändelse (`_DOMESTIC_PARTNERSHIP`). A relationship
+  // event, so it belongs in the relationship picker and out of the person one.
+  'cohabitation',
   'other',
 ] as const;
 
@@ -36,11 +39,11 @@ export function isSpanEventType(type: string): type is SpanEventType {
 }
 
 export const PERSON_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter(
-  (t) => !['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license'].includes(t),
+  (t) => !['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license', 'cohabitation'].includes(t),
 );
 
 export const RELATIONSHIP_EVENT_TYPE_VALUES = EVENT_TYPE_VALUES.filter((t) =>
-  ['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license', 'census', 'other'].includes(t),
+  ['marriage', 'divorce', 'wedding', 'annulment', 'separation', 'marriage_license', 'cohabitation', 'census', 'other'].includes(t),
 );
 
 export const DATE_TYPE_VALUES = [

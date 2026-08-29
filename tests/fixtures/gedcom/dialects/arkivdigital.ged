@@ -74,6 +74,14 @@
 1 NAME Barn /Testsson/
 1 SEX M
 1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Sambo /Testsson/
+1 SEX M
+1 FAMS @F2@
+0 @I5@ INDI
+1 NAME Sambo /Testdotter/
+1 SEX F
+1 FAMS @F2@
 0 @F1@ FAM
 1 HUSB @I2@
 1 WIFE @I1@
@@ -89,7 +97,10 @@
 1 _SEPR
 2 DATE 1880
 2 PLAC Testby, Testlands län, Sverige
+0 @F2@ FAM
+1 HUSB @I4@
+1 WIFE @I5@
 1 _DOMESTIC_PARTNERSHIP
-2 DATE 1873
-2 _DATE_TEXT nagon gang pa 1870-talet
+2 DATE 1 JUN 1975
+2 _DATE_TEXT någon gång på sommaren 1975
 0 TRLR

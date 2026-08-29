@@ -604,6 +604,7 @@ export default {
     annulment: 'Annullering',
     separation: 'Hemskillnad',
     marriage_license: 'Lysning',
+    cohabitation: 'Sammanboende',
     other: 'Övrigt',
   },
   timelineLabels: {

@@ -39,5 +39,8 @@ export const FAMILY_EVENT_TAGS: Record<string, string> = {
   // non-standard _SEPR for separation. Real-world: FTM Habsburg has 18 ANULs
   // and 7 _SEPRs that were silently dropped before.
   ANUL: 'annulment', MARL: 'marriage_license', _SEPR: 'separation',
+  // ArkivDigital's sambohändelse. Pairs with the `cohabitation` couple
+  // subtype the same way MARR pairs with `marriage` — one word, two columns.
+  _DOMESTIC_PARTNERSHIP: 'cohabitation',
   EVEN: 'other',
 };
