@@ -48,6 +48,7 @@ describe('GedcomImportSection — pick → preview → import', () => {
     (window as unknown as { api: unknown }).api = {
       gedcom: {
         selectFile: vi.fn().mockResolvedValue({ canceled: false, path: '/tmp/tree.ged' }),
+        selectFiles: vi.fn().mockResolvedValue(['/tmp/tree.ged']),
         preview: vi.fn().mockResolvedValue({
           canceled: false,
           filePath: '/tmp/tree.ged',

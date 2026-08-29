@@ -26,6 +26,7 @@ describe('GedcomImportSection — unaccounted-for tags in the report', () => {
     (window as unknown as { api: unknown }).api = {
       gedcom: {
         selectFile: vi.fn().mockResolvedValue({ canceled: false, path: '/tmp/ad.ged' }),
+        selectFiles: vi.fn().mockResolvedValue(['/tmp/ad.ged']),
         preview: vi.fn().mockResolvedValue({ canceled: false, filePath: '/tmp/ad.ged', preview: PREVIEW }),
         import: vi.fn().mockResolvedValue({ success: true, report }),
       },

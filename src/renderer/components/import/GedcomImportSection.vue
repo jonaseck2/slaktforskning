@@ -19,6 +19,12 @@
       @save="proceedImport"
     >
       <div class="report-body">
+        <div v-if="previewFilePaths.length > 1" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: previewFilePaths.length }) }}</p>
+          <ul>
+            <li v-for="f in previewFilePaths" :key="f">{{ baseName(f) }}</li>
+          </ul>
+        </div>
         <p>{{ $t('gedcom.willImport') }}</p>
         <ul class="report-counts">
           <li>{{ $t('gedcom.previewPersons', { n: previewData.personCount }) }}</li>
@@ -51,6 +57,15 @@
       @close="showImportReport = false"
     >
       <div class="report-body">
+      <div v-if="queueOutcomes.length > 1" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: queueOutcomes.length }) }}</p>
+        <ul>
+          <li v-for="o in queueOutcomes" :key="o.file">
+            <template v-if="o.error">{{ $t('importExport.queueFileFailed', { file: baseName(o.file), error: o.error }) }}</template>
+            <template v-else>{{ baseName(o.file) }}</template>
+          </li>
+        </ul>
+      </div>
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
@@ -140,6 +155,7 @@ import PersonPicker from '../PersonPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
+import { runImportQueue } from './import-queue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -153,6 +169,14 @@ const statusType = ref<'success' | 'error'>('success');
 const showImportReport = ref(false);
 const showPreview = ref(false);
 const previewFilePath = ref<string | null>(null);
+// Every path the researcher picked, in pick order. One file leaves the
+// existing single-file flow byte-identical; the queue is what more than one
+// file adds.
+const previewFilePaths = ref<string[]>([]);
+// Per-file outcome of the last queue run — rendered under the combined report
+// so a failure names the file it belongs to rather than vanishing.
+const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 const previewData = ref<{
   personCount: number; relationshipCount: number; eventCount: number;
   sourceCount: number; placeCount: number; repositoryCount: number;
@@ -220,42 +244,74 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
   setTimeout(() => { statusMessage.value = ''; }, 4000);
 }
 
+type GedcomPreview = {
+  personCount: number; relationshipCount: number; eventCount: number;
+  sourceCount: number; placeCount: number; repositoryCount: number;
+  warnings: string[]; estimatedSize: 'small' | 'medium' | 'large';
+};
+
+/**
+ * Sum the per-file previews into the one set of counts the researcher
+ * confirms. Four exports are one decision, not four modals — the largest
+ * estimatedSize wins because it is what drives the slow-import warning.
+ */
+function sumPreviews(previews: GedcomPreview[]): GedcomPreview {
+  const rank = { small: 0, medium: 1, large: 2 } as const;
+  return previews.reduce((acc, p) => ({
+    personCount: acc.personCount + p.personCount,
+    relationshipCount: acc.relationshipCount + p.relationshipCount,
+    eventCount: acc.eventCount + p.eventCount,
+    sourceCount: acc.sourceCount + p.sourceCount,
+    placeCount: acc.placeCount + p.placeCount,
+    repositoryCount: acc.repositoryCount + p.repositoryCount,
+    warnings: [...acc.warnings, ...p.warnings],
+    estimatedSize: rank[p.estimatedSize] > rank[acc.estimatedSize] ? p.estimatedSize : acc.estimatedSize,
+  }));
+}
+
 async function handlePreviewGedcom() {
   if (!window.api || busy.value) return;
   busy.value = true;
   try {
     // The inline-dialog fallback inside gedcom:preview was removed when the
     // handler moved to the worker thread (so the main thread stays responsive
-    // for big imports). Pair with gedcom:selectFile here — the documented flow.
-    const picked = (await window.api.gedcom.selectFile()) as {
-      canceled?: boolean;
-      path?: string;
-    };
-    if (picked.canceled || !picked.path) return;
-    const result = (await window.api.gedcom.preview({ filePath: picked.path })) as {
-      canceled?: boolean;
-      filePath?: string;
-      error?: string;
-      preview?: {
-        personCount: number; relationshipCount: number; eventCount: number;
-        sourceCount: number; placeCount: number; repositoryCount: number;
-        warnings: string[]; estimatedSize: 'small' | 'medium' | 'large';
+    // for big imports). Pair with gedcom:selectFiles here — the documented flow.
+    const paths = (await window.api.gedcom.selectFiles()) as string[];
+    if (!paths || paths.length === 0) return;
+
+    // Preview every picked file BEFORE asking the user to proceed. Previewing
+    // is what makes the confirmation informed; skipping it for the multi-file
+    // case would make "import four" the less safe path than "import one".
+    const previews: GedcomPreview[] = [];
+    const accepted: string[] = [];
+    for (const filePath of paths) {
+      const result = (await window.api.gedcom.preview({ filePath })) as {
+        canceled?: boolean;
+        filePath?: string;
+        error?: string;
+        preview?: GedcomPreview;
       };
-    };
-    if (result.canceled) return;
-    if (result.preview) {
-      previewData.value = result.preview;
-      previewFilePath.value = result.filePath ?? null;
-      showPreview.value = true;
-    } else {
-      // Anything that is neither a user cancel nor a preview is a failure the
-      // user must see. Falling through silently here is what made a binding
-      // envelope mismatch look like a dead button: no modal, no status line,
-      // nothing in the console.
-      setStatus(t('importExport.importError'), 'error');
-      console.error('[ImportExport] GEDCOM preview returned no preview:', result.error ?? result);
-      toast.error(t('errors.saveFailed'));
+      if (result.canceled) continue;
+      if (result.preview) {
+        previews.push(result.preview);
+        accepted.push(result.filePath ?? filePath);
+      } else {
+        // Anything that is neither a user cancel nor a preview is a failure the
+        // user must see. Falling through silently here is what made a binding
+        // envelope mismatch look like a dead button: no modal, no status line,
+        // nothing in the console.
+        setStatus(t('importExport.importError'), 'error');
+        console.error('[ImportExport] GEDCOM preview returned no preview:', result.error ?? result);
+        toast.error(t('errors.saveFailed'));
+        return;
+      }
     }
+    if (accepted.length === 0) return;
+
+    previewData.value = sumPreviews(previews);
+    previewFilePaths.value = accepted;
+    previewFilePath.value = accepted[0];
+    showPreview.value = true;
   } catch (err) {
     setStatus(t('importExport.importError'), 'error');
     console.error('[ImportExport] GEDCOM preview failed:', err);
@@ -269,41 +325,80 @@ function cancelImport() {
   showPreview.value = false;
   previewData.value = null;
   previewFilePath.value = null;
+  previewFilePaths.value = [];
+}
+
+type GedcomReport = NonNullable<typeof importReport.value>;
+
+/**
+ * One report out of N. The researcher asked one question — "what came in?" —
+ * so they get one answer, with per-file detail underneath rather than N
+ * modals to dismiss.
+ */
+function sumReports(reports: GedcomReport[]): GedcomReport {
+  return reports.reduce((acc, r) => {
+    const events: Record<string, number> = { ...acc.events };
+    for (const [type, n] of Object.entries(r.events)) events[type] = (events[type] ?? 0) + n;
+    return {
+      ...acc,
+      version: acc.version && acc.version !== 'unknown' ? acc.version : r.version,
+      persons: acc.persons + r.persons,
+      families: acc.families + r.families,
+      events,
+      sources: acc.sources + r.sources,
+      places: acc.places + r.places,
+      citations: acc.citations + r.citations,
+      repositories: acc.repositories + r.repositories,
+      groups: acc.groups + r.groups,
+      researchTasks: acc.researchTasks + r.researchTasks,
+      skipped: [...acc.skipped, ...r.skipped],
+      unaccountedFor: [...(acc.unaccountedFor ?? []), ...(r.unaccountedFor ?? [])],
+      warnings: [...acc.warnings, ...r.warnings],
+      submitterName: acc.submitterName ?? r.submitterName,
+    };
+  });
 }
 
 async function proceedImport() {
-  if (!window.api || busy.value || !previewFilePath.value) return;
+  if (!window.api || busy.value || previewFilePaths.value.length === 0) return;
+  const files = [...previewFilePaths.value];
   showPreview.value = false;
   busy.value = true;
+  queueOutcomes.value = [];
   try {
-    // gedcom:import now runs in the worker thread and returns the
-    // withImportLifecycle envelope: { success, report, error }.
-    const result = (await window.api.gedcom.import({ filePath: previewFilePath.value })) as {
-      success?: boolean;
-      error?: string;
-      report?: {
-        version?: string;
-        persons: number;
-        families: number;
-        events: Record<string, number>;
-        sources: number;
-        places: number;
-        citations: number;
-        skipped: { tag: string; count: number }[];
-        unaccountedFor?: { path: string; count: number }[];
-        warnings: string[];
+    // Sequential by construction — see import-queue.ts. One bad file must not
+    // cost the researcher the other three.
+    const queue = await runImportQueue<GedcomReport | null>(files, async (filePath) => {
+      const result = (await window.api.gedcom.import({ filePath })) as {
+        success?: boolean;
+        error?: string;
+        report?: GedcomReport;
       };
-    };
-    if (result.success && result.report) {
-      window.dispatchEvent(new CustomEvent('data-imported'));
-      importReport.value = result.report;
+      // A rejected file that does not throw still has to reach the report.
+      if (!result.success) throw new Error(result.error ?? t('importExport.importError'));
+      return result.report ?? null;
+    });
+
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+
+    if (queue.succeeded > 0) window.dispatchEvent(new CustomEvent('data-imported'));
+
+    const reports = queue.results
+      .map(r => r.report)
+      .filter((r): r is GedcomReport => r !== null && r !== undefined);
+
+    if (reports.length > 0) {
+      importReport.value = sumReports(reports);
       showImportReport.value = true;
-    } else if (result.success) {
+      if (queue.failed > 0) {
+        setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
+      }
+    } else if (queue.failed === 0) {
       window.dispatchEvent(new CustomEvent('data-imported'));
-      setStatus(t('importExport.importSuccess', { file: previewFilePath.value }));
+      setStatus(t('importExport.importSuccess', { file: files.join(', ') }));
     } else {
       setStatus(t('importExport.importError'), 'error');
-      console.error('[ImportExport] GEDCOM import failed:', result.error);
+      console.error('[ImportExport] GEDCOM import failed:', queue.results.map(r => r.error).filter(Boolean));
       toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
@@ -314,6 +409,7 @@ async function proceedImport() {
     busy.value = false;
     previewData.value = null;
     previewFilePath.value = null;
+    previewFilePaths.value = [];
   }
 }
 </script>
