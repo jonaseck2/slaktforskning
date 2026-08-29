@@ -8,6 +8,7 @@ import type { Place, Citation, Repository, Media } from '../api/types';
 // couples / sources loops are IPC round-trips through the Tauri db-shim and
 // are banned by .claude/rules/performance.md.
 import { prefetchExportData, mediaEntityKey, type ExportPrefetch } from './export-prefetch';
+import type { ExternalIdentifier } from '../api/external_identifiers';
 import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
@@ -180,6 +181,7 @@ function emitCitationBlock(
   baseLevel: number,
   version: '5.5.1' | '7.0',
   hostKind: 'event' | 'name' | 'person' | 'relationship' | 'place',
+  externalIds: ExternalIdentifier[] = [],
 ): void {
   lines.push(`${baseLevel} SOUR ${srcXr}`);
   if (cit.page) lines.push(`${baseLevel + 1} PAGE ${cit.page}`);
@@ -204,6 +206,14 @@ function emitCitationBlock(
   }
   if (cit.notes) lines.push(`${baseLevel + 1} NOTE ${cit.notes}`);
   if (cit.date_accessed) lines.push(`${baseLevel + 1} _ACCESSED ${cit.date_accessed}`);
+  // ArkivDigital's image pointer. Round-trip only — written back exactly as it
+  // arrived so the researcher keeps their route to the image. Sub-tag order
+  // inside a SOUR block is not significant in either GEDCOM version.
+  for (const ident of externalIds) {
+    if (ident.system === 'arkivdigital.image') {
+      lines.push(`${baseLevel + 1} _AID ${ident.value}`);
+    }
+  }
 }
 
 /** Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for INDI/FAM, 2 for events. */
@@ -637,7 +647,8 @@ export async function exportGedcom(
         const nameCitations = pre.citationsByPersonNameId.get(n.id) ?? [];
         for (const cit of nameCitations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name');
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'name',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
         }
       }
       // T07 — NAME TRAN: 7.0 lossless; 5.5.1 degrades to additional 1 NAME blocks (handled inside emitter).
@@ -720,7 +731,8 @@ export async function exportGedcom(
         const citations = pre.citationsByEventId.get(ev.id) ?? [];
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
         }
       }
       if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
@@ -823,7 +835,8 @@ export async function exportGedcom(
       const personCitations = pre.citationsByPersonId.get(p.id) ?? [];
       for (const cit of personCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'person');
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'person',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
       }
     }
 
@@ -988,7 +1001,8 @@ export async function exportGedcom(
         const citations = pre.citationsByEventId.get(ev.id) ?? [];
         for (const cit of citations) {
           const srcXr = sourceXref.get(cit.source_id);
-          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event');
+          if (srcXr) emitCitationBlock(lines, cit, srcXr, 2, version, 'event',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
         }
       }
       if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
@@ -1001,7 +1015,8 @@ export async function exportGedcom(
       const relCitations = pre.citationsByRelationshipId.get(rel.id) ?? [];
       for (const cit of relCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'relationship');
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'relationship',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
       }
     }
 
@@ -1088,7 +1103,8 @@ export async function exportGedcom(
       lines.push(`1 _PLAC_ID ${place.id}`);
       for (const cit of placeCitations) {
         const srcXr = sourceXref.get(cit.source_id);
-        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'place');
+        if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'place',
+            pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
       }
     }
   }

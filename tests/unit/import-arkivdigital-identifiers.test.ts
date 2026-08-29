@@ -231,3 +231,52 @@ describe('image pointer on non-event citation hosts', () => {
     expect(undeclared).toEqual([]);
   });
 });
+
+describe('citation-level _AID export', () => {
+  it('emits the image pointer under the citation, inside its SOUR block', async () => {
+    await importGedcom(db, parseGedcom(AD));
+    const { ged } = await exportGedcom(db, '5.5.1');
+    const lines = ged.split('\n');
+    const i = lines.findIndex(l => l.trim() === '3 _AID v191316.b580.s52');
+    expect(i, 'citation-level _AID missing from the export').toBeGreaterThan(-1);
+    // It must sit inside the `2 SOUR` block, not float at the wrong level.
+    const owner = [...lines.slice(0, i)].reverse().find(l => /^[0-2] /.test(l.trim()));
+    expect(owner?.trim().startsWith('2 SOUR')).toBe(true);
+  });
+
+  it('keeps the volume pointer on the SOUR record', async () => {
+    await importGedcom(db, parseGedcom(AD));
+    const { ged } = await exportGedcom(db, '5.5.1');
+    expect(ged).toMatch(/^1 _AID v191316$/m);
+  });
+
+  it('emits nothing for a citation with no identifier', async () => {
+    await importGedcom(db, parseGedcom(`0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @S1@ SOUR
+1 TITL Plain
+0 @I1@ INDI
+1 NAME A /B/
+1 SOUR @S1@
+2 PAGE x
+0 TRLR
+`));
+    const { ged } = await exportGedcom(db, '5.5.1');
+    expect(ged).not.toContain('_AID');
+  });
+
+  it('round-trips the image pointer under both versions', async () => {
+    for (const version of ['5.5.1', '7.0'] as const) {
+      const fresh = await createTestDb();
+      await importGedcom(fresh, parseGedcom(AD));
+      const { ged } = await exportGedcom(fresh, version);
+      const back = await createTestDb();
+      await importGedcom(back, parseGedcom(ged));
+      const idents = await identsFor(back, 'citation');
+      expect(idents.map(i => i.value), `lost under ${version}`).toEqual(['v191316.b580.s52']);
+      expect(idents[0].system).toBe('arkivdigital.image');
+    }
+  });
+});
