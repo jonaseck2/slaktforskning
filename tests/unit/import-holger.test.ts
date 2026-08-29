@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
-import { createTestDb } from './helpers';
+import { createTestDb, readDialect } from './helpers';
 
 const HOLGER_SAMBO_GED = `
 0 HEAD
@@ -295,5 +295,19 @@ describe('holger profile — ImportReport structure', async () => {
     const row = stmt.get([]) as { file_ref: string } | undefined;
     (stmt as unknown as { finalize(): void }).finalize();
     expect(row).toBeDefined();
+  });
+});
+
+// A disclosure nobody sees is the failure this whole line of work exists to
+// end. The `_HDP` declaration in accounting-declared.ts defers to this report
+// line, so the report line has to still fire — measured against the shipped
+// fixture, not only against an inline string.
+describe('the _HDP disclosure still reaches the user', () => {
+  it('names the category when holger.ged is imported with the profile', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(readDialect('holger.ged')), { profile: 'holger' });
+    const entry = report.unmappedData?.find(u => u.category.includes('_HDP'));
+    expect(entry, 'the _HDP / _H8P category vanished from the import report').toBeDefined();
+    expect(entry!.count).toBe(2);
   });
 });

@@ -32,6 +32,17 @@ describe('declared unmapped tags', () => {
     }
   });
 
+  // ── Task 7: two shipped code paths said different things about _HDP ───────
+  // import-core.ts told the user "_HDP / _H8P — Holger internal metadata …
+  // nothing was lost", while the declared list called it real authored data
+  // awaiting a mapping. A user reading both got no answer. The disclosure is
+  // the right one, and the declaration now says so and names it.
+  it('_HDP is declared consistently with what the import report already tells the user', () => {
+    const d = matchDeclared('INDI._HDP');
+    expect(d?.reason).toMatch(/^excluded:not-relevant/);
+    expect(d?.reason).toContain('import-core.ts');
+  });
+
   it('every entry carries a non-empty reason', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason.trim().length, `empty reason for ${d.path}`).toBeGreaterThan(0);

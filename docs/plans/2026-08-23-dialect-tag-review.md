@@ -800,7 +800,7 @@ while `accounting-declared.ts:78` says it is real authored data awaiting a mappi
 
 The disclosure is right: `_HDP 12345` is Holger's internal row id, and `person_identifiers` would round-trip it as `1 REFN 12345 / 2 TYPE Other`, which is not `1 _HDP 12345` — storing it would change the file on export while adding nothing the researcher authored.
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ts
   it('_HDP is declared consistently with what the import report already tells the user', () => {
@@ -810,17 +810,17 @@ The disclosure is right: `_HDP 12345` is Holger's internal row id, and `person_i
   });
 ```
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 ```ts
   { path: 'INDI._HDP', reason: 'excluded:not-relevant — Holger\'s internal row id, not authored research. The import report already discloses it (import-core.ts, the _HDP / _H8P unmappedData category). Storing it in person_identifiers would re-emit it as REFN + TYPE Other, changing the file on export while adding nothing the researcher wrote.' },
 ```
 
-- [ ] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green. Confirm `import-core.ts`'s `unmappedData` category still fires: a Holger import with `_HDP` still shows the user that line. The two now agree.
+- [x] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green. Confirm `import-core.ts`'s `unmappedData` category still fires: a Holger import with `_HDP` still shows the user that line. The two now agree.
 
 > If the count that drives that disclosure reads `partial.skipped` and `_HDP` has since stopped landing there, the disclosure is silently dead. Check it by importing `holger.ged` with `{ profile: 'holger' }` and asserting the category appears in the report. Fix it here if it does not — a disclosure nobody sees is the failure this whole line of work exists to end.
 
-- [ ] **Step 4: Commit** — `docs(import): _HDP is Holger bookkeeping, and the report already said so`
+- [x] **Step 4: Commit** — `docs(import): _HDP is Holger bookkeeping, and the report already said so`
 
 ---
 
