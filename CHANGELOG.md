@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.275.0 — 2026-08-29
+
+- feat: pick several export files at once and import them in one action — every importer, not just GEDCOM
+- feat: afterwards, a review step groups what arrived more than once: one row per archive volume instead of thousands of pairs, and nothing merges until you approve it
+- feat: approving a group is a single undo away, however many records it held
+- feat: a child recorded as adopted, step or foster keeps that relation — and one the file left unstated is no longer recorded as biological
+- feat: a married name imported from RootsMagic stays a married name
+- feat: a parish written beside a place by Holger becomes a real place instead of a dropped line
+- feat: a photograph's format and per-file title survive the import instead of falling back to the filename
+- feat: a couple recorded as sambo reads as a cohabitation, with the date it started
+- feat: a date typed in free text appears on the event where it was written, unparsed
+- fix: an archive identifier now follows the surviving record through a merge, so an approved group stops reappearing
+
 ## 0.274.0 — 2026-08-29
 
 - feat: a citation from an ArkivDigital import now offers "Öppna arkivbild", opening the exact archive image that citation was taken from
@@ -52,8 +65,3 @@
 - fix: Swedish and Nordic place names no longer land in the wrong country — "Västra Vingåkers sn" stays in Sweden (not Senegal), "Torsvi by" in Sweden (not Belarus), "Tun, Lidköpings kn" in Sweden (not Tunisia); the resolver no longer mistakes abbreviations like "sn" (socken) or "by" (village) for ISO country codes
 - fix: modern places no longer resolve to historical empires — "New York" → United States, "Rasht, Iran" → Iran, "Spanien" → Spain, "Edum" → Sweden, instead of Estado Novo / Qajar Iran / Spanish Empire / Edom
 - fix: a place that resolves to one clear location is no longer wrongly flagged "ambiguous" — Turkiet, Voss, Barcelona, and Genève now show a clean match; a genuine multi-place namesake with no country hint (e.g. "Kärret, Hov") is still flagged so you can choose
-
-## 0.271.1 — 2026-06-17
-
-- perf: exporting a 20 000+ person tree to GEDCOM now finishes in about a second instead of minutes
-- perf: actions that load the whole person list on a large tree are fast again, not multi-second

@@ -576,7 +576,7 @@ branch, so it loses nothing.
 
 ### T-final (Tier 1): close out
 
-- [ ] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence. Record Task 5's outcome explicitly.
+- [x] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence. Record Task 5's outcome explicitly.
 
 ---
 
@@ -590,7 +590,7 @@ branch, so it loses nothing.
 - [x] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
 - [x] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files. **Eight, not seven** — `src/gedcom/exporters/negation-emitter.ts` carries its own copy of `EVENT_TYPE_TO_TAG` and `_SEPR` is in both, so leaving cohabitation out of one would have made `NO _DOMESTIC_PARTNERSHIP` export as `NO EVEN`. Counted mechanically, one occurrence at each site.
 - [x] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. **Three of four done; `test:e2e:full` outstanding for close-out.**
+- [x] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. * **`npm run test:e2e:full` → 178 passed (2.7 m) across all 8 projects — panels 145, reactivity 14, imports 11, boot 4, website-export 1, repositories 1, duplicates 1, crud 1; 0 failed, 0 flaky.**
   - `npm test` → `Test Files 325 passed (325)` / `Tests 4654 passed (4654)` in 47.62s, exit 0.
   - `npm run lint` → `✖ 49 problems (0 errors, 49 warnings)`, exit 0. The warning set is byte-identical to the branch point's, compared by re-linting `68ccdc89`'s `src` and `tests`: 49 before, 49 after, `diff` of the two sorted warning lists empty.
   - `npm run build` → `✓ built in 764ms` (renderer), `Finished \`release\` profile [optimized] target(s) in 1m 26s`, two bundles emitted, exit 0.

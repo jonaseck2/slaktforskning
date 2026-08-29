@@ -1060,7 +1060,7 @@ Per `.claude/rules/tests.md`: a new importer case is a fixture plus an entry in 
 
 ### Task 11 (Tier 1): Close out
 
-- [ ] **T-final (Tier 1)** — Invoke `/close-out`. The skill walks the 6+1 steps, refuses partial, captures evidence.
+- [x] **T-final (Tier 1)** — Invoke `/close-out`. The skill walks the 6+1 steps, refuses partial, captures evidence.
 
 **On the design spec:** this plan delivers Parts 4-5 of
 [2026-08-23-arkivdigital-import-design.md](2026-08-23-arkivdigital-import-design.md), whose
@@ -1081,5 +1081,5 @@ design-spec lifecycle rule in `.claude/rules/plans.md`.
 - [x] Approving a cluster is one undo step — asserted, because 128 undos is not a way back.
 - [x] Nothing merges without an explicit approval.
 - [x] Single-file import behaves exactly as before.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [x] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. **`npm run test:e2e:full` → 178 passed (2.7 m) across all 8 projects — panels 145, reactivity 14, imports 11, boot 4, website-export 1, repositories 1, duplicates 1, crud 1; 0 failed, 0 flaky.**
 - [x] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.

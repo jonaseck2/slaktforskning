@@ -1015,7 +1015,7 @@ The census's biggest finding is not a dialect finding: 110 of 165 visible paths 
 
 ### T-final (Tier 1): close out
 
-- [ ] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence.
+- [x] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence.
 
 ---
 
@@ -1031,7 +1031,7 @@ The census's biggest finding is not a dialect finding: 110 of 165 visible paths 
 - [x] No unrecognised relation word is stored as `biological`.
 - [x] No foreign program's derived flag is stored.
 - [x] The Holger parish hierarchy direction is stated as a risk in the code comment, not only here.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. *(Three of four done: `npm test` 4698 passed / 329 files; `npm run lint` exit 0, 0 errors; `npm run build` exit 0, bundled 0.274.0. `test:e2e:full` remains — it is the close-out's.)*
+- [x] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. **`npm run test:e2e:full` → 178 passed (2.7 m) across all 8 projects — panels 145, reactivity 14, imports 11, boot 4, website-export 1, repositories 1, duplicates 1, crud 1; 0 failed, 0 flaky.**
 - [x] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file. *(2502 at 68ccdc89, 2502 at HEAD, per-file error sets diff clean. Measured by invoking `vue-tsc --noEmit -p tsconfig.json` directly: the `npm run typecheck` script itself exits 2 on `tsconfig.json(2,3): error TS5103: Invalid value for '--ignoreDeprecations'` before checking a single file, at the branch point as well as here, so it reports 1 error whatever the code says and does not produce the plan's 2304.)*
 
 ## Failure modes / RCA reference
