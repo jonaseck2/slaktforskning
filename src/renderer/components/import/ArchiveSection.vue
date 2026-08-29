@@ -72,6 +72,15 @@
       @close="showImportReport = false"
     >
       <div class="report-body">
+      <div v-if="queueOutcomes.length > 1" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: queueOutcomes.length }) }}</p>
+        <ul>
+          <li v-for="o in queueOutcomes" :key="o.file">
+            <template v-if="o.error">{{ $t('importExport.queueFileFailed', { file: baseName(o.file), error: o.error }) }}</template>
+            <template v-else>{{ baseName(o.file) }}</template>
+          </li>
+        </ul>
+      </div>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReportData.gedcomReport.persons }) }}</li>
         <li>{{ $t('importExport.importReportFamilies', { n: importReportData.gedcomReport.families }) }}</li>
@@ -122,6 +131,7 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
 import BaseSubPanel from '../modals/BaseSubPanel.vue';
+import { runImportQueue } from './import-queue';
 import PersonPicker from '../PersonPicker.vue';
 
 declare const window: Window & {
@@ -166,6 +176,8 @@ const showExportReport = ref(false);
 const exportReportData = ref<ExportReport | null>(null);
 const showImportReport = ref(false);
 const importReportData = ref<ImportReport | null>(null);
+const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 const matchedPersonName = ref<string | null>(null);
 const manualTreeSubjectId = ref<string | null>(null);
 const resolvedTreeSubjectId = ref<string | null>(null);
@@ -250,37 +262,78 @@ async function handleExport() {
   }
 }
 
+/** One report out of N — the researcher asked one question. */
+function sumReports(reports: ImportReport[]): ImportReport {
+  return reports.reduce((acc, r) => {
+    const events: Record<string, number> = { ...acc.gedcomReport.events };
+    for (const [type, n] of Object.entries(r.gedcomReport.events)) {
+      events[type] = (events[type] ?? 0) + n;
+    }
+    return {
+      gedcomReport: {
+        persons: acc.gedcomReport.persons + r.gedcomReport.persons,
+        families: acc.gedcomReport.families + r.gedcomReport.families,
+        events,
+        sources: acc.gedcomReport.sources + r.gedcomReport.sources,
+        places: acc.gedcomReport.places + r.gedcomReport.places,
+        citations: acc.gedcomReport.citations + r.gedcomReport.citations,
+        warnings: [...acc.gedcomReport.warnings, ...r.gedcomReport.warnings],
+        defaultPersonId: acc.gedcomReport.defaultPersonId ?? r.gedcomReport.defaultPersonId,
+        submitterName: acc.gedcomReport.submitterName ?? r.gedcomReport.submitterName,
+      },
+      mediaImported: acc.mediaImported + r.mediaImported,
+      mediaSkipped: [...acc.mediaSkipped, ...r.mediaSkipped],
+    };
+  });
+}
+
 async function handleImport() {
   if (!window.api || busy.value) return;
+  const files = (await window.api.archive.selectFiles()) as string[];
+  if (!files || files.length === 0) return;
   busy.value = true;
+  queueOutcomes.value = [];
   try {
-    // `api.archive.import` returns a flat envelope: `{ canceled: true }` when
-    // the user dismisses the file dialog, `{ imported: true, filePath, report }`
-    // on success, and `{ canceled: false, error }` on failure. This handler used
-    // to destructure a nested `{ success, report: { imported, report } }` shape
-    // left over from the Electron worker channel, so `inner.imported` was always
-    // undefined and the entire success block — including the `data-imported`
-    // event the rest of the UI refreshes on — never ran.
-    const result = (await window.api.archive.import()) as {
-      canceled?: boolean;
-      imported?: boolean;
-      filePath?: string;
-      error?: string;
-      report?: ImportReport;
-    };
-    if (result.canceled) return;
-    if (!result.imported) {
-      setStatus(t('importExport.archiveImportError'), 'error');
-      console.error('[Archive] import failed:', result.error ?? result);
-      toast.error(t('errors.saveFailed'));
-      return;
-    }
-    window.dispatchEvent(new CustomEvent('data-imported'));
-    if (result.report) {
-      importReportData.value = result.report;
+    // `api.archive.import(filePath)` returns a flat envelope:
+    // `{ imported: true, filePath, report }` on success and
+    // `{ canceled: false, error }` on failure. This handler used to destructure
+    // a nested `{ success, report: { imported, report } }` shape left over from
+    // the Electron worker channel, so `inner.imported` was always undefined and
+    // the entire success block — including the `data-imported` event the rest
+    // of the UI refreshes on — never ran.
+    const queue = await runImportQueue<ImportReport | null>(files, async (filePath) => {
+      const result = (await window.api.archive.import(filePath)) as {
+        canceled?: boolean;
+        imported?: boolean;
+        filePath?: string;
+        error?: string;
+        report?: ImportReport;
+      };
+      if (!result.imported) {
+        throw new Error(result.error ?? t('importExport.archiveImportError'));
+      }
+      return result.report ?? null;
+    });
+
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+    if (queue.succeeded > 0) window.dispatchEvent(new CustomEvent('data-imported'));
+
+    const reports = queue.results
+      .map(r => r.report)
+      .filter((r): r is ImportReport => r !== null && r !== undefined);
+
+    if (reports.length > 0) {
+      importReportData.value = sumReports(reports);
       showImportReport.value = true;
-    } else {
+      if (queue.failed > 0) {
+        setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
+      }
+    } else if (queue.failed === 0) {
       setStatus(t('importExport.archiveImportSuccess'));
+    } else {
+      setStatus(t('importExport.archiveImportError'), 'error');
+      console.error('[Archive] import failed:', queue.results.map(r => r.error).filter(Boolean));
+      toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
     setStatus(t('importExport.archiveImportError'), 'error');
@@ -290,6 +343,7 @@ async function handleImport() {
     busy.value = false;
   }
 }
+
 </script>
 
 <style scoped>

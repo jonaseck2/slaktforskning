@@ -36,6 +36,7 @@ describe('ArchiveSection — import and export flows', () => {
   };
 
   let importFn: ReturnType<typeof vi.fn>;
+  let selectFiles: ReturnType<typeof vi.fn>;
   let exportFn: ReturnType<typeof vi.fn>;
   let dataImported: ReturnType<typeof vi.fn>;
 
@@ -50,8 +51,11 @@ describe('ArchiveSection — import and export flows', () => {
       filePath: '/tmp/tree.zip',
       report: EXPORT_REPORT,
     });
+    // The section now picks first and imports per path — cancelling is an
+    // empty pick, not a canceled import.
+    selectFiles = vi.fn().mockResolvedValue(['/tmp/tree.zip']);
     (window as unknown as { api: unknown }).api = {
-      archive: { import: importFn, export: exportFn },
+      archive: { import: importFn, export: exportFn, selectFiles },
       export: { onProgress: vi.fn() },
       db: { getSetting: vi.fn().mockResolvedValue(null), setSetting: vi.fn() },
       persons: { getNames: vi.fn().mockResolvedValue([]) },
@@ -103,7 +107,7 @@ describe('ArchiveSection — import and export flows', () => {
   });
 
   it('stays quiet when the user cancels the import', async () => {
-    importFn.mockResolvedValue({ canceled: true });
+    selectFiles.mockResolvedValue([]);
     const wrapper = mountSection();
     await importBtn(wrapper).trigger('click');
     await flushPromises();

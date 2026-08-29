@@ -1329,9 +1329,17 @@ export function mountWindowApi(db: Database): MountResult {
   // using `fs_write_bytes_base64`. Mirrors archive:_importRun.
   api.archive.selectFiles = () => pickFiles('Import Archives', ['zip'], 'Zip Archive');
 
-  api.archive.import = async () => {
-    const r = await pickFile('Import Archive', ['zip'], 'Zip Archive');
-    if (r.canceled || !r.path) return { canceled: true };
+  // `filePath` optional: given one, the picker is skipped so the import queue
+  // can drive this per file. Called with no argument it picks, exactly as
+  // before, so the single-archive call site is unchanged.
+  api.archive.import = async (filePathArg?: unknown) => {
+    let chosen = typeof filePathArg === 'string' ? filePathArg : null;
+    if (!chosen) {
+      const r = await pickFile('Import Archive', ['zip'], 'Zip Archive');
+      if (r.canceled || !r.path) return { canceled: true };
+      chosen = r.path;
+    }
+    const r = { canceled: false, path: chosen };
     try {
       const archiveMod = await import('../api/archive_import');
       const cur = await commands.dbCurrentPath();
