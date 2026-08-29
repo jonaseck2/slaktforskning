@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.276.0 — 2026-08-29
+
+- feat: an archive identifier written by any program now survives an export and re-import, whatever it was attached to — sources, repositories, photographs, citations and places, not only the three ArkivDigital cases that worked before
+- feat: seven identifiers in the four real ArkivDigital exports were being dropped on every export and are now kept
+- feat: a parish recorded without a county above it keeps its ArkivDigital parish id instead of losing it
+- feat: a place recorded only against a source citation, with no event naming it, keeps its identifiers
+- fix: an identifier from a program this app has never heard of — a Gramps handle, a RootsMagic id — is written back out instead of discarded
+
 ## 0.275.0 — 2026-08-29
 
 - feat: pick several export files at once and import them in one action — every importer, not just GEDCOM
@@ -59,9 +67,3 @@
 ## 0.271.3 — 2026-06-18
 
 - fix: Swedish place names written with a municipality/parish suffix now resolve to the right place instead of a same-coded foreign country — "Ängby, Stockholms kn" lands in Sweden (not Saint Kitts and Nevis, ISO "KN"), "Mo, Bergs kn" in Sweden (not Macao, ISO "MO"); the merged place index now applies the same name-suffix rules ("kn", "sn", "kommun", …) the per-region indexes already used
-
-## 0.271.2 — 2026-06-18
-
-- fix: Swedish and Nordic place names no longer land in the wrong country — "Västra Vingåkers sn" stays in Sweden (not Senegal), "Torsvi by" in Sweden (not Belarus), "Tun, Lidköpings kn" in Sweden (not Tunisia); the resolver no longer mistakes abbreviations like "sn" (socken) or "by" (village) for ISO country codes
-- fix: modern places no longer resolve to historical empires — "New York" → United States, "Rasht, Iran" → Iran, "Spanien" → Spain, "Edum" → Sweden, instead of Estado Novo / Qajar Iran / Spanish Empire / Edom
-- fix: a place that resolves to one clear location is no longer wrongly flagged "ambiguous" — Turkiet, Voss, Barcelona, and Genève now show a clean match; a genuine multi-place namesake with no country hint (e.g. "Kärret, Hov") is still flagged so you can choose

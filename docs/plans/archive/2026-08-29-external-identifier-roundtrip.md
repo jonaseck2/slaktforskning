@@ -1,6 +1,6 @@
 # Every Imported Identifier Comes Back
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Spec:** [`2026-08-29-external-identifier-roundtrip-design.md`](2026-08-29-external-identifier-roundtrip-design.md). Read it before T01 — it holds the carrier table, the two uncovered cells, and why the carrier is an existing block rather than a new record.
 
@@ -182,12 +182,12 @@ export function readExternalIds(
 import cycle with `src/import/`. Confirm the real signatures in
 `src/import/gedcom/node-utils.ts` before writing the calls and match them exactly.
 
-- [ ] Write `src/gedcom/external-id-tags.ts`.
-- [ ] Write `tests/unit/external-id-tags.test.ts`: vendor systems are filtered out of both
+- [x] Write `src/gedcom/external-id-tags.ts`.
+- [x] Write `tests/unit/external-id-tags.test.ts`: vendor systems are filtered out of both
       emitters, `UNTYPED_SYSTEM` emits no `TYPE`, an untyped `REFN` reads back as `refn`, a
       `TYPE`-carrying `EXID` reads back with that system, `7.0` emits `EXID` and `5.5.1` emits
       `REFN`.
-- [ ] `npm test -- external-id-tags` green. Commit.
+- [x] `npm test -- external-id-tags` green. Commit.
 
 ### T02 (Tier 1): the matrix test, written red
 
@@ -243,8 +243,8 @@ The two expected-loss cells assert the row is absent **and** carry a comment nam
 section that explains why. An expected-loss assertion with no reason is indistinguishable from
 a bug someone forgot to fix.
 
-- [ ] Write the test. Cells 1, 7, 9 pass on current `main`. Cells 2–6, 8, 10, 11 fail.
-- [ ] Record the exact pass/fail split in the commit message. Commit red, deliberately —
+- [x] Write the test. Cells 1, 7, 9 pass on current `main`. Cells 2–6, 8, 10, 11 fail.
+- [x] Record the exact pass/fail split in the commit message. Commit red, deliberately —
       `git commit` with `[red]` in the subject so the bisect story is readable.
 
 ### T03 (Tier 1): SOUR and REPO records carry the generic tag
@@ -283,10 +283,10 @@ a second flush:
 `src/import/gedcom/phases/repo.ts` has no accumulator. Add one, and flush once after the loop
 that creates the repositories. `createRepository` returns the row, so the id is in hand.
 
-- [ ] Exporter: both call sites.
-- [ ] Importer: `sources.ts` and `repo.ts`.
-- [ ] Matrix cells 2, 3, 4 green under both versions.
-- [ ] `npm test` green. Commit.
+- [x] Exporter: both call sites.
+- [x] Importer: `sources.ts` and `repo.ts`.
+- [x] Matrix cells 2, 3, 4 green under both versions.
+- [x] `npm test` green. Commit.
 
 ### T04 (Tier 1): OBJE blocks carry the generic tag
 
@@ -323,10 +323,10 @@ Watch the early returns in `importObjeNode`: the `@`-pointer branch (`:71`) and 
 people gets twelve identical write attempts. `INSERT OR IGNORE` would absorb them, but the
 writes are still wasted.
 
-- [ ] Exporter: `emitMediaBlocks` signature + five call sites + top-level record.
-- [ ] Importer: `obje.ts` and `obje-importer.ts`.
-- [ ] Matrix cells 5, 6 green under both versions.
-- [ ] `npm test` green. Commit.
+- [x] Exporter: `emitMediaBlocks` signature + five call sites + top-level record.
+- [x] Importer: `obje.ts` and `obje-importer.ts`.
+- [x] Matrix cells 5, 6 green under both versions.
+- [x] `npm test` green. Commit.
 
 ### T05 (Tier 1): citations carry the generic tag
 
@@ -354,11 +354,11 @@ beside each `_AID` read and push into the same buffer.
 at all today. It calls `createCitation` per row (`:37`), so the citation id is in hand. Read
 `_EXID` there too and write with `bulkAddExternalIdentifiers` after the loop.
 
-- [ ] Exporter: one line in `emitCitationBlock`.
-- [ ] Importer: five citation-host sites.
-- [ ] Matrix cell 8 green under both versions. Cell 7 still green — assert the emitted text
+- [x] Exporter: one line in `emitCitationBlock`.
+- [x] Importer: five citation-host sites.
+- [x] Matrix cell 8 green under both versions. Cell 7 still green — assert the emitted text
       still says `_AID` and not `_EXID`.
-- [ ] `npm test` green. Commit.
+- [x] `npm test` green. Commit.
 
 ### T06 (Tier 1): places — the root-parish fix and the leaf carrier
 
@@ -404,10 +404,10 @@ Run the full suite and read the failures rather than assuming there are none. If
 round-trip test moves, decide whether the new output is more correct before touching the
 fixture.
 
-- [ ] Exporter: guard removal, leaf carrier, parameter type widened.
-- [ ] Importer: `prep-places.ts`.
-- [ ] Matrix cells 10, 11 green under both versions. Cell 9 still green.
-- [ ] `npm test` green, with any fixture movement explained in the commit. Commit.
+- [x] Exporter: guard removal, leaf carrier, parameter type widened.
+- [x] Importer: `prep-places.ts`.
+- [x] Matrix cells 10, 11 green under both versions. Cell 9 still green.
+- [x] `npm test` green, with any fixture movement explained in the commit. Commit.
 
 ### T07 (Tier 1): make the per-field seeder capable of disagreeing
 
@@ -418,9 +418,9 @@ Parametrise the pair. The per-field driver keeps calling it with the source pair
 matrix test from T02 becomes its second caller with the other nine. The helper must no longer
 be able to pass for a pair nobody exercised.
 
-- [ ] `seedExternalIdentifiers(db, col, value, pair?)` with the source pair as the default.
-- [ ] `tests/unit/gedcom-fidelity-per-field.test.ts` still green.
-- [ ] Commit.
+- [x] `seedExternalIdentifiers(db, col, value, pair?)` with the source pair as the default.
+- [x] `tests/unit/gedcom-fidelity-per-field.test.ts` still green.
+- [x] Commit.
 
 ### T08 (Tier 1): narrow the registry reasons to the two uncovered cells
 
@@ -444,9 +444,9 @@ expectation has to be "the value" for that pair, not `null`. If the driver canno
 "lossless for the seeded pair, lossy for two named cells", say so in the task report rather
 than weakening the test to fit.
 
-- [ ] Three reasons rewritten, block comment rewritten.
-- [ ] `tests/unit/gedcom-fidelity-registry-coverage.test.ts` and the per-field test green.
-- [ ] Commit.
+- [x] Three reasons rewritten, block comment rewritten.
+- [x] `tests/unit/gedcom-fidelity-registry-coverage.test.ts` and the per-field test green.
+- [x] Commit.
 
 ### T09 (Tier 1): a guard so the uncovered cells cannot silently grow
 
@@ -480,10 +480,10 @@ known-positive string and decline three known-negative ones, a floor on the numb
 the walk found, and a floor on the number of distinct entity types `readExternalIds` is called
 for.
 
-- [ ] Write the guard.
-- [ ] Prove it fails: add a throwaway second place system in a scratch edit, watch it go red,
+- [x] Write the guard.
+- [x] Prove it fails: add a throwaway second place system in a scratch edit, watch it go red,
       revert. Paste both outcomes in the commit.
-- [ ] Commit.
+- [x] Commit.
 
 ### T10 (Tier 1): prove the matrix can fail, and diff the real corpus
 
@@ -507,41 +507,41 @@ diff /tmp/before-<n>.ged /tmp/after-<n>.ged | wc -l
 Check whether such a harness script already exists before writing one. A non-empty diff means
 the vendor-override rule leaked and T03–T06 need re-reading — it is not a fixture to update.
 
-- [ ] Guard-bites evidence captured.
-- [ ] Four diffs, each with its line count. Commit.
+- [x] Guard-bites evidence captured.
+- [x] Four diffs, each with its line count. Commit.
 
 ### T11 (Tier 1): full verification evidence
 
 Per `.claude/rules/plans.md` "Verification discipline at close-out", assertions are not
 evidence. Capture actual output.
 
-- [ ] `npm test` → paste the `N passed (Xs)` summary line.
-- [ ] `npm run lint` → 0 errors.
-- [ ] `npm run typecheck` → count against the 2461 baseline. Fewer or equal, never more.
+- [x] `npm test` → paste the `N passed (Xs)` summary line.
+- [x] `npm run lint` → 0 errors.
+- [x] `npm run typecheck` → count against the 2461 baseline. Fewer or equal, never more.
       `.claude/rules/build.md` first — a config error makes `vue-tsc` abort and report almost
       nothing, which reads as success.
-- [ ] `npm run build` → paste the tail line and exit code.
-- [ ] `npm run test:e2e` → 4 Tier 1 projects. The importer is in scope but no panel or modal
+- [x] `npm run build` → paste the tail line and exit code.
+- [x] `npm run test:e2e` → 4 Tier 1 projects. The importer is in scope but no panel or modal
       is, so the full tier is not required. If any import-facing e2e moves, run
       `npm run test:e2e:full` and paste that instead.
 
 ### T-final (Tier 1): close out
 
-- [ ] Invoke `/close-out`. The skill walks the 6+1 steps, refuses partial, captures evidence.
+- [x] Invoke `/close-out`. The skill walks the 6+1 steps, refuses partial, captures evidence.
 
 ---
 
 ## Self-review checklist
 
-- [ ] Every task produced a commit, and no task bundled more than one user-observable verb.
-- [ ] No task took the plan's word for a symbol, signature or line number without opening the
+- [x] Every task produced a commit, and no task bundled more than one user-observable verb.
+- [x] No task took the plan's word for a symbol, signature or line number without opening the
       file. The plan that preceded this one asserted seven symbols that did not exist.
-- [ ] The two uncovered cells are asserted as losses with reasons, not omitted.
-- [ ] No new per-entity DB fetch inside a DB-scale loop. `pre.externalIdsByEntity` is the only
+- [x] The two uncovered cells are asserted as losses with reasons, not omitted.
+- [x] No new per-entity DB fetch inside a DB-scale loop. `pre.externalIdsByEntity` is the only
       export-side source, and import-side writes are buffered and flushed once per phase — with
       the one documented exception in T04.
-- [ ] `src/import/gedcom/normalize.ts` is unchanged and no `unmapped_data` table exists.
-- [ ] `git diff --stat main` contains no file under `/export-import/` and no new fixture copied
+- [x] `src/import/gedcom/normalize.ts` is unchanged and no `unmapped_data` table exists.
+- [x] `git diff --stat main` contains no file under `/export-import/` and no new fixture copied
       from it.
 
 ## Failure modes / RCA reference
