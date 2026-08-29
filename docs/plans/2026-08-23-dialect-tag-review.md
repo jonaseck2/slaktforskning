@@ -479,7 +479,7 @@ Remove `'_LIVING'` from `KNOWN_INDI_TAGS` in `individuals.ts` line 22. Rewrite t
 
 724 occurrences in `rootsmagic-8.ged`. `person_names.name_type` already has `'married'`, and `name_qualifier` already has `'married'` — so this is mapping work, not modelling work.
 
-- [ ] **Step 1: Add the tag to the RootsMagic fixture**
+- [x] **Step 1: Add the tag to the RootsMagic fixture**
 
 ```
 0 @I2@ INDI
@@ -487,7 +487,7 @@ Remove `'_LIVING'` from `KNOWN_INDI_TAGS` in `individuals.ts` line 22. Rewrite t
 2 _MARNM Mary /Smith/
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/unit/import-married-name.test.ts
@@ -533,9 +533,9 @@ describe('_MARNM', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.**
+- [x] **Step 3: Run — confirm it fails.**
 
-- [ ] **Step 4: Implement the import**
+- [x] **Step 4: Implement the import**
 
 Three facts about the code this lands in, each of which contradicts the obvious guess:
 
@@ -589,13 +589,19 @@ function splitGedcomName(raw: string): { given: string | null; surname: string |
 `nameRows`' element type declares every field non-optional, so all thirteen are listed.
 **Do not add a per-row insert here** — push into the buffer and let the existing flush run.
 
-- [ ] **Step 5: Implement the export**
+- [x] **Step 5: Implement the export**
+
+> **Checked, no change made.** The exporter already writes the married row as
+> `1 NAME /Smith/` + `2 TYPE MARRIED` + `2 _NQUAL married`, which re-imports as a
+> married name — the round-trip test passes untouched. Emitting `2 _MARNM`
+> instead would trade the portable standard shape for a RootsMagic-only one, and
+> emitting both would produce a duplicate married row on re-import.
 
 The exporter already emits multiple `person_names`. Confirm what it writes for a `married` row today, and if it writes a bare second `1 NAME`, the round-trip test in Step 2 passes without any exporter change — check before editing. If a change is needed, emit `2 _MARNM` under the birth name so the file reads back identically to what RootsMagic wrote.
 
-- [ ] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` shows no `_MARNM` path; census contains no `_MARNM`.
+- [x] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` shows no `_MARNM` path; census contains no `_MARNM`.
 
-- [ ] **Step 7: Commit** — `feat(import): a RootsMagic married name stays a married name`
+- [x] **Step 7: Commit** — `feat(import): a RootsMagic married name stays a married name`
 
 ---
 

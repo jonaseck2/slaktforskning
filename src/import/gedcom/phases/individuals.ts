@@ -35,6 +35,36 @@ const KNOWN_INDI_TAGS = new Set([
   'REMA', 'MISC',
 ]);
 
+/**
+ * Split a GEDCOM NAME payload — `Mary /Jones/` — into its given and surname
+ * halves. Extracted from the inline match phaseIndividuals used, so the
+ * married-name reader below shares one regex instead of inventing a second.
+ */
+function splitGedcomName(raw: string): { given: string | null; surname: string | null } {
+  const m = raw.match(/^(.*?)\/(.+?)\/(.*)$/);
+  return {
+    given: (m ? m[1] : raw).trim() || null,
+    surname: m ? m[2].trim() || null : null,
+  };
+}
+
+/**
+ * Split a `_MARNM` payload.
+ *
+ * RootsMagic writes a **bare surname**, not a NAME payload: `2 _MARNM
+ * Gascoigne`, `2 _MARNM De Brittany`. Measured 2026-08-29 over the 36 real
+ * .ged files in export-import/samples — 724 occurrences, 0 of them carrying a
+ * slash. Passing those through `splitGedcomName` would file every married
+ * surname in the corpus as a *given* name.
+ *
+ * The slash-delimited form is still honoured, because other programs write it
+ * and the whole point of reading this tag is not to mis-store the value.
+ */
+function splitMarriedName(raw: string): { given: string | null; surname: string | null } {
+  if (raw.includes('/')) return splitGedcomName(raw);
+  return { given: null, surname: raw.trim() || null };
+}
+
 export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   // Two-pass collect-then-flush. The Tauri build pays ~1 ms IPC per
   // singular createPerson / addPersonName / addPersonIdentifier; for a
@@ -140,9 +170,9 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
     const parsedNames: ParsedName[] = [];
     for (const nameNode of nameNodes) {
       const raw = nameNode.value ?? '';
-      const surnameMatch = raw.match(/^(.*?)\/(.+?)\/(.*)$/);
-      let given = (surnameMatch ? surnameMatch[1] : raw).trim() || null;
-      const surname = surnameMatch ? surnameMatch[2].trim() || null : null;
+      const split = splitGedcomName(raw);
+      let given = split.given;
+      const surname = split.surname;
       const prefix = getChild(nameNode, 'NPFX')?.value ?? null;
       const suffix = getChild(nameNode, 'NSFX')?.value ?? null;
       const rawType = getChild(nameNode, 'TYPE')?.value?.toUpperCase();
@@ -205,6 +235,32 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         date_from: parsed.date_from,
         date_to: parsed.date_to,
       });
+
+      // RootsMagic writes the married name as a sub-tag of the birth NAME.
+      // 724 occurrences in the sample corpus, all bare surnames. person_names
+      // already models it: name_type 'married' plus the matching
+      // name_qualifier. No sort_order — bulkAddPersonNames assigns a dense
+      // per-person order when the field is absent, so a row pushed after the
+      // birth name lands after it.
+      const marnm = getChild(nameNode, '_MARNM')?.value?.trim();
+      if (marnm) {
+        const { given: mGiven, surname: mSurname } = splitMarriedName(marnm);
+        nameRows.push({
+          id: uuid(),
+          person_id: personId,
+          given_name: mGiven,
+          surname: mSurname,
+          name_prefix: null,
+          name_suffix: null,
+          name_type: 'married',
+          patronymic_base: null,
+          preferred_name: null,
+          nickname: null,
+          name_qualifier: 'married',
+          date_from: null,
+          date_to: null,
+        });
+      }
     }
     parsedNamesByXref.set(xref, parsedNames);
 
