@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import RootsMagicImportSection from '../../src/renderer/components/import/RootsMagicImportSection.vue';
+import GrampsImportSection from '../../src/renderer/components/import/GrampsImportSection.vue';
 import { i18n } from './setup';
 
 /**
- * The RootsMagic section reuses the same queue as the GEDCOM one: pick many,
+ * The Gramps section reuses the same queue as the GEDCOM one: pick many,
  * import in one action, see one report.
  */
-describe('RootsMagicImportSection — many files, one action', () => {
+describe('GrampsImportSection — many files, one action', () => {
   const summary = (n: number) => ({
     persons: n, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: n * 2, citations: 0, media: 0,
@@ -18,22 +18,22 @@ describe('RootsMagicImportSection — many files, one action', () => {
   let runSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    selectFiles = vi.fn().mockResolvedValue(['/tmp/a.rmtree', '/tmp/b.rmtree']);
+    selectFiles = vi.fn().mockResolvedValue(['/tmp/a.gramps', '/tmp/b.gramps']);
     runSpy = vi.fn(async ({ sourcePath }: { sourcePath: string }) => ({
       imported: true, summary: summary(sourcePath.includes('/a.') ? 100 : 23),
     }));
     (window as unknown as { api: unknown }).api = {
       import: {
-        rootsmagicSelectFile: vi.fn(),
-        rootsmagicSelectFiles: selectFiles,
-        rootsmagicRun: runSpy,
-        onRootsmagicProgress: vi.fn(),
+        grampsSelectFile: vi.fn(),
+        grampsSelectFiles: selectFiles,
+        grampsRun: runSpy,
+        onGrampsProgress: vi.fn(),
       },
     };
   });
 
   function mountSection() {
-    return mount(RootsMagicImportSection, {
+    return mount(GrampsImportSection, {
       global: {
         plugins: [i18n],
         stubs: {
@@ -59,8 +59,8 @@ describe('RootsMagicImportSection — many files, one action', () => {
   it('imports every picked file from one click', async () => {
     await pickThenImport();
     expect(runSpy).toHaveBeenCalledTimes(2);
-    expect(runSpy).toHaveBeenNthCalledWith(1, { sourcePath: '/tmp/a.rmtree' });
-    expect(runSpy).toHaveBeenNthCalledWith(2, { sourcePath: '/tmp/b.rmtree' });
+    expect(runSpy).toHaveBeenNthCalledWith(1, { sourcePath: '/tmp/a.gramps' });
+    expect(runSpy).toHaveBeenNthCalledWith(2, { sourcePath: '/tmp/b.gramps' });
   });
 
   it('shows one report with the summed counts', async () => {
