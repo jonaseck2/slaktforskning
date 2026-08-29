@@ -40,7 +40,6 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI.FAMS',      reason: 'excluded:redundant — the couple link is read from the FAM record HUSB/WIFE' },
   { path: 'INDI.FAMC',      reason: 'excluded:redundant — the parent link is read from the FAM record CHIL' },
 
-  { path: '*.SOUR._AID',              reason: 'unmapped:pending-ad-citation-aid — image pointer on the citation. Storing it needs a citation id at collect time, and bulkCreateCitations generates ids internally and returns void; changing that signature reaches every caller and is wider than this plan. Verbatim capture preserves it meanwhile.' },
 
   // ── ArkivDigital — mapped by the arkivdigital profile in the next plan ────
   // docs/plans/2026-08-23-arkivdigital-import-design.md Parts 1-3.

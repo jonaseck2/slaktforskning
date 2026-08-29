@@ -240,11 +240,12 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'person_identifiers.created_at': { v551: AUDIT_TS_EXCLUDED, v70: AUDIT_TS_EXCLUDED },
 
   // ----- external_identifiers -----
-  // Round-trip storage for source-format ids. Only two (entity_type, system)
-  // pairs have a tag to travel in today: a source's `arkivdigital` id becomes
-  // `1 _AID` on the SOUR record, and a place's `arkivdigital.parish` id becomes
-  // `_PARISH_AID` inside the reconstructed `_ADPL` block. Both are verified by
-  // tests/unit/import-arkivdigital-identifiers.test.ts.
+  // Round-trip storage for source-format ids. Three (entity_type, system) pairs
+  // have a tag to travel in today:
+  //   source   + arkivdigital        → `1 _AID` on the SOUR record
+  //   place    + arkivdigital.parish → `_PARISH_AID` inside the rebuilt _ADPL block
+  //   citation + arkivdigital.image  → `_AID` inside the citation's SOUR block
+  // All three are verified by tests/unit/import-arkivdigital-identifiers.test.ts.
   //
   // Declared `lossy` rather than `lossless` because the columns are generic: a
   // row with any other system — a Gramps handle, a Genney RID — has no tag to
@@ -253,13 +254,13 @@ export const GEDCOM_FIDELITY: Record<string, FieldFidelity> = {
   'external_identifiers.id':          { v551: UUID_PK_VIA_XREF, v70: UUID_PK_VIA_XREF },
   'external_identifiers.entity_id':   { v551: UUID_FK_VIA_XREF, v70: UUID_FK_VIA_XREF },
   'external_identifiers.entity_type': {
-    v551: { kind: 'lossy', reason: 'only source + place rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
-    v70:  { kind: 'lossy', reason: 'only source + place rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
+    v551: { kind: 'lossy', reason: 'only source, place and citation rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
+    v70:  { kind: 'lossy', reason: 'only source, place and citation rows have an emitting tag; other entity types are dropped', expectedAfterRoundTrip: () => null },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   'external_identifiers.system': {
-    v551: { kind: 'lossy', reason: 'only the arkivdigital and arkivdigital.parish systems have an emitting tag', expectedAfterRoundTrip: () => null },
-    v70:  { kind: 'lossy', reason: 'only the arkivdigital and arkivdigital.parish systems have an emitting tag', expectedAfterRoundTrip: () => null },
+    v551: { kind: 'lossy', reason: 'only the arkivdigital, arkivdigital.parish and arkivdigital.image systems have an emitting tag', expectedAfterRoundTrip: () => null },
+    v70:  { kind: 'lossy', reason: 'only the arkivdigital, arkivdigital.parish and arkivdigital.image systems have an emitting tag', expectedAfterRoundTrip: () => null },
     ownedBy: { exporter: EXPORTER, importer: IMPORTER_PHASES },
   },
   // The value itself round-trips: it is the payload of `_AID` / `_PARISH_AID`.
