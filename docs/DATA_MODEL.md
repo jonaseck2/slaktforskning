@@ -77,7 +77,7 @@ External IDs linking a person record to identifiers in other systems. Populated 
 ### external_identifiers
 The non-person sibling of `person_identifiers`: source-format ids for sources, places, citations, media and repositories. **Exists for round-trip, not for deduplication.** Nothing in the app reads these values to make a decision — the importer stores what the file said and the exporter writes it back. A render layer may turn one into a clickable archive link (`src/api/external_identifier_links.ts`), but that resolution happens at display time and is never persisted.
 
-No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQLite has no polymorphic foreign key. The owning entity's delete path cleans up, exactly as with `note_links` and `group_links`.
+No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQLite has no polymorphic foreign key, so the owning entity's delete path is responsible for cleanup. **Three merge paths repoint their rows (v0.275.0); five `delete*` paths still orphan them** — measured 2026-08-29, census of 8 paths. Do not read the sentence above as a description of what the code does.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -89,7 +89,19 @@ No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQL
 | created_at | TEXT | datetime |
 | UNIQUE | | (entity_type, entity_id, system, value) |
 
-Three (entity_type, system) pairs have a GEDCOM tag to travel in today, all ArkivDigital: a source's volume id as `1 _AID`, a place's parish id as `_PARISH_AID` inside the reconstructed `_ADPL` block, and a citation's image id as `_AID` inside its `SOUR` block. Any other system round-trips as `lossy` — see `src/api/gedcom_fidelity_registry.ts`.
+Every row has a GEDCOM carrier (v0.276.0). Each entity type rides the block its own columns already travel in:
+
+| entity_type | carrier | 5.5.1 | 7.0 |
+|---|---|---|---|
+| `source` | `0 @Sn@ SOUR` record | `1 REFN` + `2 TYPE` | `1 EXID` + `2 TYPE` |
+| `repository` | `0 @Rn@ REPO` record | `1 REFN` + `2 TYPE` | `1 EXID` + `2 TYPE` |
+| `media` | `OBJE` block, inline and top-level | `REFN` + `TYPE` | `EXID` + `TYPE` |
+| `citation` | `SOUR` substructure | `_EXID` + `TYPE` | `_EXID` + `TYPE` |
+| `place` | `PLAC` block, or its `_PLAC` record | `_EXID` + `TYPE` | `_EXID` + `TYPE` |
+
+`TYPE` carries `system` verbatim. Three ArkivDigital pairs keep a vendor-shaped tag instead, and that tag is their **only** carrier so an AD file still reads as one: a source's volume id as `1 _AID`, a place's parish id as `_PARISH_AID` inside the reconstructed `_ADPL` block, a citation's image id as `_AID` inside its `SOUR` block. A `REFN`/`EXID` with no `TYPE` reads as system `refn` and is written back untyped.
+
+Two cells stay `lossy` and are named in `src/api/gedcom_fidelity_registry.ts`: a non-ArkivDigital identifier on a place reachable only as an `_ADPL` ancestor, and any identifier on a place no event and no citation reaches. Under 7.0 only, an uppercase character in `system` is folded to lowercase by `normalize.ts`.
 
 ### relationships
 **Replaces `families` + `person_family_links`.** A relationship is a typed, sourced connection between two persons. This is the GEDCOM-X model — there is no "Family" entity, only relationships between individuals.

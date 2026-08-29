@@ -82,13 +82,23 @@ Add a `## X.Y.Z — YYYY-MM-DD` block at the top of `CHANGELOG.md` summarizing w
 
 - Remove the plan's entry from "Planned".
 - If the plan was the only entry under "Blocked" → "Considered, not now" → another section, update.
-- `docs/PLAN.md` MUST contain zero references to archived plan files. Greppable check:
+- `docs/PLAN.md` MUST contain zero **active-list** references to archived plan files. A
+  deliberate cross-link into `plans/archive/` from "Considered, not now" (with a reopen
+  trigger) is correct and not drift. Greppable check:
   ```bash
   for f in docs/plans/archive/*.md; do
     base=$(basename "$f" .md)
-    grep -l "$base" docs/PLAN.md && echo "DRIFT: $base still referenced in PLAN.md"
+    case "$base" in PLAN|CHANGELOG) continue;; esac          # not plan files
+    grep -n "$base" docs/PLAN.md | grep -v 'plans/archive/' \
+      && echo "DRIFT: $base referenced outside an archive link"
   done
   ```
+  **Why the two filters exist.** Run on 2026-08-29 the unfiltered loop reported two hits,
+  both false: `CHANGELOG` (a real file in `archive/`, matching the word "CHANGELOG"
+  anywhere in PLAN.md) and `2026-05-31-media-citations-design` (a deliberate
+  `plans/archive/…` link documenting a reopen trigger). A check that fires on
+  correct state is a check nobody reads — the same lesson `.claude/rules/plans.md`
+  records for the lifecycle check that once flagged 6 of 6 files.
 
 ### Step 5 — Append to `docs/plans/archive/PLAN.md`
 

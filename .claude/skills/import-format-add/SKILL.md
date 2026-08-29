@@ -219,7 +219,13 @@ api.import.<format>Run = async (opts: unknown) => {
 - **Persisting the source's internal ids nowhere.** Gramps `handle` / `gramps_id`,
   Genney RIDs, ArkivDigital `_AID` — these are authored file content and must round-trip.
   They go in `external_identifiers`, with the system name registered in the shared
-  convention list. See the format-alignment plan.
+  convention list. Since v0.276.0 **any** system round-trips: the exporter carries
+  unrecognised ones on `REFN`/`EXID` + `TYPE` (records) or `_EXID` + `TYPE`
+  (substructures), so a new importer gets round-trip for free by writing the row.
+  A place identifier is the exception — see the two `lossy` cells in
+  `gedcom_fidelity_registry.ts` and the census guard in
+  `tests/unit/external-identifier-roundtrip.test.ts`, which fails if a new importer
+  writes a place system other than `arkivdigital.parish`.
 - **Guessing the schema instead of inspecting the real sample.** Got bitten on the RootsMagic date format (`D.+19551002..+00000000..` — the qualifier suffix is 2 chars, not 1). Always derive from real bytes.
 - **Splitting the work across many tiny commits.** Foundation + wire-up is fine as 2 commits; further splitting just creates broken intermediate states the user has to step over.
 - **Forgetting `allowNameless: true` on `createPerson`.** It throws otherwise, because every native importer adds names in a later phase.
