@@ -61,13 +61,16 @@ describe('static API parity', () => {
       'csv:export',
       'backup:backup', 'backup:restore',
       // gedcom dialog + export
-      'gedcom:selectFile', 'gedcom:export',
+      'gedcom:selectFile', 'gedcom:selectFiles', 'gedcom:export',
       // genney + holger import file pickers
       'import:genneyCheckDocker', 'import:genneySelectDerby', 'import:genneySelectArchive',
       'import:genneySelectMedia',
       'import:holgerSelectFile', 'import:holgerSelectMedia',
+      // multi-select pickers — a researcher with four exports picks them once
+      'import:genneySelectArchives', 'import:holgerSelectFiles',
+      'import:rootsmagicSelectFiles', 'import:grampsSelectFiles',
       // archive
-      'archive:export', 'archive:import',
+      'archive:export', 'archive:import', 'archive:selectFiles',
       // website
       'website:export',
       // chart

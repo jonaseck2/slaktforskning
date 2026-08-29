@@ -338,6 +338,11 @@ async fn media_pick_and_copy(app: tauri::AppHandle) -> Result<JsonValueWire, Str
 
 /// Generic file/folder picker. The renderer-side polyfill uses this to back
 /// every Electron `dialog.showOpenDialog` / `showSaveDialog` call site.
+///
+/// With `multiple = Some(true)` the reply carries `filePaths: [..]` instead of
+/// `path`, so a researcher with four exports from the same service picks them
+/// in one action. Multi-select is `openFile`-only: there is no multiple form of
+/// `pick_folder` or `save_file`.
 #[specta::specta]
 #[tauri::command]
 async fn dialog_pick(
@@ -347,9 +352,9 @@ async fn dialog_pick(
     extensions: Option<Vec<String>>,
     extension_label: Option<String>,
     default_name: Option<String>,
+    multiple: Option<bool>,
 ) -> Result<JsonValueWire, String> {
     use tauri_plugin_dialog::DialogExt;
-    let (tx, rx) = tokio::sync::oneshot::channel();
     let mut builder = app.dialog().file();
     if let Some(t) = title { builder = builder.set_title(t); }
     if let Some(name) = default_name { builder = builder.set_file_name(name); }
@@ -358,6 +363,25 @@ async fn dialog_pick(
         let refs: Vec<&str> = exts.iter().map(|s| s.as_str()).collect();
         builder = builder.add_filter(&label, &refs);
     }
+
+    if multiple.unwrap_or(false) {
+        if kind.as_str() != "openFile" {
+            return Err(format!("multiple is only supported for openFile, got: {kind}"));
+        }
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        builder.pick_files(move |chosen| {
+            let _ = tx.send(chosen.map(|ps| {
+                ps.iter().map(|p| p.to_string()).collect::<Vec<String>>()
+            }));
+        });
+        let chosen = rx.await.map_err(|e| format!("dialog: {e}"))?;
+        return Ok(JsonValueWire(serde_json::json!({
+            "canceled": chosen.is_none(),
+            "filePaths": chosen.unwrap_or_default(),
+        })));
+    }
+
+    let (tx, rx) = tokio::sync::oneshot::channel();
     match kind.as_str() {
         "openFile" => {
             builder.pick_file(move |chosen| { let _ = tx.send(chosen.map(|p| p.to_string())); });

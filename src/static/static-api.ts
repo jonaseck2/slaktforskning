@@ -793,15 +793,19 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     findSources: async () => [], countSources: async () => 0, ignoreSource: noop, mergeSources: noop,
     findMedia: async () => [], countMedia: async () => 0, ignoreMedia: noop, mergeMedia: noop,
   };
-  const gedcom = { selectFile: noop, preview: noop, import: noop, export: noop };
+  const gedcom = { selectFile: noop, selectFiles: async () => [], preview: noop, import: noop, export: noop };
   const importApi = {
     genneyCheckDocker: async () => false, genneySelectDerby: noop, genneySelectArchive: noop,
+    genneySelectArchives: async () => [],
     genneySelectMedia: noop, genneyDiscover: noop, genneyRun: noop, onProgress: () => {},
-    holgerSelectFile: noop, holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
-    rootsmagicSelectFile: noop, rootsmagicRun: noop, onRootsmagicProgress: () => {},
-    grampsSelectFile: noop, grampsRun: noop, onGrampsProgress: () => {},
+    holgerSelectFile: noop, holgerSelectFiles: async () => [],
+    holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
+    rootsmagicSelectFile: noop, rootsmagicSelectFiles: async () => [],
+    rootsmagicRun: noop, onRootsmagicProgress: () => {},
+    grampsSelectFile: noop, grampsSelectFiles: async () => [],
+    grampsRun: noop, onGrampsProgress: () => {},
   };
-  const archive = { export: noop, import: noop };
+  const archive = { export: noop, import: noop, selectFiles: async () => [] };
   const website = { export: noop, previewSnapshot: noop };
   const chart = {
     saveSvg: noop, savePdf: noop,

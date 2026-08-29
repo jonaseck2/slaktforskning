@@ -90,8 +90,13 @@ export const commands = {
 	/**
 	 *  Generic file/folder picker. The renderer-side polyfill uses this to back
 	 *  every Electron `dialog.showOpenDialog` / `showSaveDialog` call site.
+	 * 
+	 *  With `multiple = Some(true)` the reply carries `filePaths: [..]` instead of
+	 *  `path`, so a researcher with four exports from the same service picks them
+	 *  in one action. Multi-select is `openFile`-only: there is no multiple form of
+	 *  `pick_folder` or `save_file`.
 	 */
-	dialogPick: (kind: string, title: string | null, extensions: string[] | null, extensionLabel: string | null, defaultName: string | null) => typedError<Record<string, never>, string>(__TAURI_INVOKE("dialog_pick", { kind, title, extensions, extensionLabel, defaultName })),
+	dialogPick: (kind: string, title: string | null, extensions: string[] | null, extensionLabel: string | null, defaultName: string | null, multiple: boolean | null) => typedError<Record<string, never>, string>(__TAURI_INVOKE("dialog_pick", { kind, title, extensions, extensionLabel, defaultName, multiple })),
 	/**
 	 *  Read a file as utf-8 text. Used by import flows that need to feed the
 	 *  chosen file's contents to a JS parser running in the renderer.

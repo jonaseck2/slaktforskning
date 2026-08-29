@@ -213,7 +213,51 @@ describe('tauri-window-api Rust command dispatch', () => {
       extensions: ['ged', 'gedcom', 'zip'],
       extensionLabel: 'GEDCOM Files',
       defaultName: null,
+      multiple: null,
     });
+  });
+
+  it('gedcom.selectFiles asks the dialog for multiple and returns every path', async () => {
+    invokeSpy.mockResolvedValueOnce({ canceled: false, filePaths: ['/a.ged', '/b.ged'] });
+    const { api } = mountWindowApi(stubDb);
+    const paths = await (api.gedcom as unknown as { selectFiles: () => Promise<string[]> }).selectFiles();
+    expect(invokeSpy).toHaveBeenCalledWith('dialog_pick', {
+      kind: 'openFile',
+      title: 'Select GEDCOM Files',
+      extensions: ['ged', 'gedcom', 'zip'],
+      extensionLabel: 'GEDCOM Files',
+      defaultName: null,
+      multiple: true,
+    });
+    expect(paths).toEqual(['/a.ged', '/b.ged']);
+  });
+
+  it('gedcom.selectFiles returns an empty array on cancel, never [undefined]', async () => {
+    invokeSpy.mockResolvedValueOnce({ canceled: true });
+    const { api } = mountWindowApi(stubDb);
+    const paths = await (api.gedcom as unknown as { selectFiles: () => Promise<string[]> }).selectFiles();
+    expect(paths).toEqual([]);
+  });
+
+  it('gedcom.selectFile still single-selects, so no existing call site changes', async () => {
+    invokeSpy.mockResolvedValueOnce({ canceled: false, path: '/a.ged' });
+    const { api } = mountWindowApi(stubDb);
+    const picked = await api.gedcom.selectFile() as { canceled: boolean; path?: string };
+    // multiple: null — routing the single picker through a multi-select dialog
+    // would let a user pick four files in a flow that reads one.
+    expect(invokeSpy).toHaveBeenCalledWith('dialog_pick', expect.objectContaining({ multiple: null }));
+    expect(picked.path).toBe('/a.ged');
+  });
+
+  it('every importer offers a multi-select picker, not just GEDCOM', async () => {
+    const { api } = mountWindowApi(stubDb);
+    const importApi = api.import as unknown as Record<string, unknown>;
+    expect(typeof (api.gedcom as unknown as Record<string, unknown>).selectFiles).toBe('function');
+    expect(typeof importApi.genneySelectArchives).toBe('function');
+    expect(typeof importApi.holgerSelectFiles).toBe('function');
+    expect(typeof importApi.rootsmagicSelectFiles).toBe('function');
+    expect(typeof importApi.grampsSelectFiles).toBe('function');
+    expect(typeof (api.archive as unknown as Record<string, unknown>).selectFiles).toBe('function');
   });
 
   it('import.holgerSelectFile opens dialog with .ged + .zip', async () => {
@@ -226,6 +270,7 @@ describe('tauri-window-api Rust command dispatch', () => {
       extensions: ['ged', 'zip'],
       extensionLabel: 'GEDCOM / Zip',
       defaultName: null,
+      multiple: null,
     });
   });
 

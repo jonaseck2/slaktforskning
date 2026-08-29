@@ -799,15 +799,36 @@ export function mountWindowApi(db: Database): MountResult {
   // File-dialog wrappers (Electron used dialog.showOpenDialog/SaveDialog on the
   // main thread; Tauri uses tauri-plugin-dialog via a generic Rust command).
   type Pick = { canceled: boolean; path?: string };
+  type PickMany = { canceled: boolean; filePaths?: string[] };
   const pickFile = (title: string, exts?: string[], extLabel?: string): Promise<Pick> =>
-    unwrapAs<Pick>(commands.dialogPick('openFile', title, exts ?? null, extLabel ?? null, null));
+    unwrapAs<Pick>(commands.dialogPick('openFile', title, exts ?? null, extLabel ?? null, null, null));
   const pickFolder = (title: string): Promise<Pick> =>
-    unwrapAs<Pick>(commands.dialogPick('openDirectory', title, null, null, null));
+    unwrapAs<Pick>(commands.dialogPick('openDirectory', title, null, null, null, null));
   const saveFile = (title: string, defaultName: string, exts?: string[], extLabel?: string): Promise<Pick> =>
-    unwrapAs<Pick>(commands.dialogPick('saveFile', title, exts ?? null, extLabel ?? null, defaultName));
+    unwrapAs<Pick>(commands.dialogPick('saveFile', title, exts ?? null, extLabel ?? null, defaultName, null));
+
+  /**
+   * Multi-select sibling of `pickFile`, for the researcher who has four
+   * exports from the same service and imports them in one action.
+   *
+   * `pickFile` deliberately does NOT delegate here. Routing it through a
+   * multi-select dialog would let a user select four files in a picker whose
+   * caller reads one — the "pick a backup to restore" dialog silently
+   * discarding three choices is a worse failure than the duplication.
+   *
+   * Returns a plain array: `[]` on cancel, never `[undefined]`.
+   */
+  const pickFiles = async (title: string, exts?: string[], extLabel?: string): Promise<string[]> => {
+    const r = await unwrapAs<PickMany>(
+      commands.dialogPick('openFile', title, exts ?? null, extLabel ?? null, null, true),
+    );
+    if (r.canceled) return [];
+    return (r.filePaths ?? []).filter((p): p is string => typeof p === 'string' && p.length > 0);
+  };
 
   if (!api.gedcom) api.gedcom = {};
   api.gedcom.selectFile = () => pickFile('Select GEDCOM File', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
+  api.gedcom.selectFiles = () => pickFiles('Select GEDCOM Files', ['ged', 'gedcom', 'zip'], 'GEDCOM Files');
 
   // `selectFile` accepts .zip, so both preview and import must unwrap one.
   // The Electron worker channel extracted the largest .ged into a tmp dir with
@@ -964,11 +985,15 @@ export function mountWindowApi(db: Database): MountResult {
   api.import.genneyCheckDocker = async () => ({ available: false });
   api.import.genneySelectDerby = () => pickFolder('Välj Genney Derby-databasmapp');
   api.import.genneySelectArchive = () => pickFile('Välj Genney-arkivfil (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
+  api.import.genneySelectArchives = () => pickFiles('Välj Genney-arkivfiler (.gcc, .backup)', ['gcc', 'backup', 'zip'], 'Genney-arkiv');
   api.import.genneySelectMedia = () => pickFolder('Select Genney media folder (optional)');
   api.import.holgerSelectFile = () => pickFile('Select Holger GEDCOM export', ['ged', 'zip'], 'GEDCOM / Zip');
+  api.import.holgerSelectFiles = () => pickFiles('Select Holger GEDCOM exports', ['ged', 'zip'], 'GEDCOM / Zip');
   api.import.holgerSelectMedia = () => pickFolder('Select OurKind Media folder (optional)');
   api.import.rootsmagicSelectFile = () => pickFile('Välj RootsMagic-databasfil', ['rmtree', 'rmgc'], 'RootsMagic-databas');
+  api.import.rootsmagicSelectFiles = () => pickFiles('Välj RootsMagic-databasfiler', ['rmtree', 'rmgc'], 'RootsMagic-databas');
   api.import.grampsSelectFile = () => pickFile('Välj Gramps-databasfil', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
+  api.import.grampsSelectFiles = () => pickFiles('Välj Gramps-databasfiler', ['gramps', 'xml', 'gpkg'], 'Gramps-databas');
   api.import.grampsRun = async (opts: unknown) => {
     const o = opts as { filePath?: string } | undefined;
     if (!o?.filePath) return { success: false, error: 'filePath is required' };
@@ -1302,6 +1327,8 @@ export function mountWindowApi(db: Database): MountResult {
   // `importArchiveFromBytes` helper. Each media entry is written through
   // a writer that resolves into the active DB's `<dbname>-media/` folder
   // using `fs_write_bytes_base64`. Mirrors archive:_importRun.
+  api.archive.selectFiles = () => pickFiles('Import Archives', ['zip'], 'Zip Archive');
+
   api.archive.import = async () => {
     const r = await pickFile('Import Archive', ['zip'], 'Zip Archive');
     if (r.canceled || !r.path) return { canceled: true };
