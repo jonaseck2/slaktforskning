@@ -32,6 +32,7 @@ const TAG_TO_EVENT_TYPE: Record<string, string> = {
   MARR: 'marriage', DIV: 'divorce', ENGA: 'engagement', ADOP: 'adoption',
   CREM: 'cremation', BARM: 'bar_mitzvah', BASM: 'bas_mitzvah',
   ANUL: 'annulment', MARL: 'marriage_license', _SEPR: 'separation',
+  _DOMESTIC_PARTNERSHIP: 'cohabitation',
   ORDN: 'ordination', _MILT: 'military',
   TITL: 'title', RELI: 'religion', DSCR: 'description', FACT: 'fact',
   EVEN: 'other',

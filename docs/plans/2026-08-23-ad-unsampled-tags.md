@@ -131,7 +131,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
 - Test: `tests/unit/import-arkivdigital-relations.test.ts` (extend)
 - Fixture: `tests/fixtures/gedcom/dialects/arkivdigital.ged`
 
-- [ ] **Step 1: Add a `_SEPR` block to the ArkivDigital fixture**
+- [x] **Step 1: Add a `_SEPR` block to the ArkivDigital fixture**
 
 ```
 1 _SEPR
@@ -141,7 +141,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
 
 on the existing `@F1@` FAM record.
 
-- [ ] **Step 2: Write the test**
+- [x] **Step 2: Write the test**
 
 ```ts
 describe('_SEPR', () => {
@@ -172,11 +172,11 @@ describe('_SEPR', () => {
 });
 ```
 
-- [ ] **Step 3: Run — this should pass immediately.** That is the point: the design spec asserted `_SEPR` was unhandled and nothing in the suite disagreed. If it fails, the spec was right and this task becomes a mapping task — say so in the commit either way.
+- [x] **Step 3: Run — this should pass immediately.** That is the point: the design spec asserted `_SEPR` was unhandled and nothing in the suite disagreed. If it fails, the spec was right and this task becomes a mapping task — say so in the commit either way.
 
-- [ ] **Step 4: Verify** — `npm test -- import-arkivdigital-relations import-tag-accounting` green. The fixture gained tags; the gate must still report zero undeclared paths for it.
+- [x] **Step 4: Verify** — `npm test -- import-arkivdigital-relations import-tag-accounting` green. The fixture gained tags; the gate must still report zero undeclared paths for it.
 
-- [ ] **Step 5: Commit** — `test(import): pin _SEPR round-trip, which no test covered`
+- [x] **Step 5: Commit** — `test(import): pin _SEPR round-trip, which no test covered`
 
 ---
 
@@ -195,7 +195,7 @@ describe('_SEPR', () => {
 
 `cohabitation` as an event type sits beside `cohabitation` as a couple subtype deliberately — the same pairing `marriage` and `engagement` already have. One word, two columns, one concept.
 
-- [ ] **Step 1: Add the block to the fixture**
+- [x] **Step 1: Add the block to the fixture**
 
 The fixture already declares `FAM._DOMESTIC_PARTNERSHIP` and `FAM._DOMESTIC_PARTNERSHIP.DATE`, so the lines exist. Confirm they sit on a FAM with **no `MARR`** — otherwise `hasMarr` wins the subtype and the test proves nothing. Add a second FAM if needed:
 
@@ -207,7 +207,7 @@ The fixture already declares `FAM._DOMESTIC_PARTNERSHIP` and `FAM._DOMESTIC_PART
 2 DATE 1 JUN 1975
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 describe('_DOMESTIC_PARTNERSHIP', () => {
@@ -274,9 +274,9 @@ describe('_DOMESTIC_PARTNERSHIP', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.** The couple comes back `unknown` and no event exists.
+- [x] **Step 3: Run — confirm it fails.** The couple comes back `unknown` and no event exists.
 
-- [ ] **Step 4: Implement — the seven registration points**
+- [x] **Step 4: Implement — the seven registration points**
 
 ```ts
 // src/import/gedcom/phases/shared.ts
@@ -338,7 +338,7 @@ The remaining four:
 // src/renderer/i18n/en.ts   cohabitation: 'Cohabitation',
 ```
 
-- [ ] **Step 5: Delete the two declarations**
+- [x] **Step 5: Delete the two declarations**
 
 ```ts
   // removed — mapped by this plan:
@@ -346,7 +346,7 @@ The remaining four:
   { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE', reason: 'unmapped:pending-ad-unsampled-tags — …' },
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
   - New tests green.
   - `npm test -- import-tag-accounting` green — both paths gone from the declared list and not reported.
   - `npm run typecheck` shows **no new errors** — the event-type union widened, so a
@@ -354,7 +354,7 @@ The remaining four:
     carries 2304 pre-existing errors and "clean" is not the check.
   - A component test or `ui_aria_list` check that the new type appears in the relationship event picker with its Swedish label. **A type registered in the constants but missing from an i18n file renders as a raw key** — check both locales, not one.
 
-- [ ] **Step 7: Commit** — `feat(import): an ArkivDigital sambo couple is a cohabitation`
+- [x] **Step 7: Commit** — `feat(import): an ArkivDigital sambo couple is a cohabitation`
 
 ---
 
@@ -368,7 +368,7 @@ The remaining four:
 
 ArkivDigital's own description is *"datum utan giltigt GEDCOM-format"*. The app already has the column for exactly that: `date_original` holds the authored text, `date_value` holds the parsed form, and `date_type: 'unknown'` is what an unparsed date already produces.
 
-- [ ] **Step 1: Add to the fixture** — an event with `_DATE_TEXT` and no `DATE`:
+- [x] **Step 1: Add to the fixture** — an event with `_DATE_TEXT` and no `DATE`:
 
 ```
 1 EVEN
@@ -377,7 +377,7 @@ ArkivDigital's own description is *"datum utan giltigt GEDCOM-format"*. The app 
 2 PLAC Testby, Testlands län, Sverige
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/unit/import-date-text.test.ts
@@ -450,9 +450,9 @@ describe('_DATE_TEXT', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.**
+- [x] **Step 3: Run — confirm it fails.**
 
-- [ ] **Step 4: Implement the import**
+- [x] **Step 4: Implement the import**
 
 Both `importEventNode` and `collectEventNode` build `parsed` the same way. Extend both:
 
@@ -473,9 +473,29 @@ Both `importEventNode` and `collectEventNode` build `parsed` the same way. Exten
 
 **Call `getChild` unconditionally**, before the ternary, so the node is marked consumed even on the branch that ignores it — an unread node is an unaccounted node, and reading it inside a conditional would report the tag only sometimes.
 
-- [ ] **Step 5: Implement the export**
+- [x] **Step 5: Implement the export**
 
-The exporter emits `date_original` today when there is no parseable `date_value`; confirm what it writes for a `date_type: 'unknown'` event before editing. If it emits nothing, add:
+**Executed: no exporter change. The check the step asks for said don't.** The
+exporter already emits `date_original` for a `date_type: 'unknown'` event, via
+`formatGedcomDate`'s `if (date_original) return date_original`. Measured on the
+fixture's `1 EVEN / 2 _DATE_TEXT vid midsommar 1872`:
+
+```
+5.5.1                     7.0
+1 EVEN                    1 EVEN
+2 TYPE Flyttning          2 TYPE Flyttning
+2 DATE vid midsommar 1872 2 DATE
+                          3 PHRASE vid midsommar 1872
+```
+
+Both re-import to `date_original = 'vid midsommar 1872'`, `date_value = null` —
+asserted by the round-trip test above. Adding the block below would emit the
+value twice, which is the double-emission the step's own last line warns about.
+The vendor tag becomes the standard slot on the way out and the authored value
+survives, the same trade `_TITLE` → `TITL` already makes (`shared.ts`).
+7.0's `DATE`+`PHRASE` is the spec-sanctioned form, so no `_DATE_TEXT` is needed
+there either and the registry's `events.date_original` entry already names both
+mechanisms. The block the plan drafted, not applied:
 
 ```ts
     // Re-emit an unparseable authored date as _DATE_TEXT, the tag it arrived
@@ -490,9 +510,9 @@ The exporter emits `date_original` today when there is no parseable `date_value`
 
 Guard against a double emission: if the exporter already writes `date_original` through another path, this would produce both. Check first.
 
-- [ ] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` green; the per-field round-trip test for `events.date_original` still green, and the fidelity registry entry for it still describes what happens.
+- [x] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` green; the per-field round-trip test for `events.date_original` still green, and the fidelity registry entry for it still describes what happens.
 
-- [ ] **Step 7: Commit** — `feat(import): a free-text ArkivDigital date is the authored date`
+- [x] **Step 7: Commit** — `feat(import): a free-text ArkivDigital date is the authored date`
 
 ---
 
@@ -504,13 +524,13 @@ Guard against a double emission: if the exporter already writes `date_original` 
 
 Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already occupied by the DATE value and there is nowhere to put the text that is not a guess about which of the two the researcher meant. Tier 2 because the executor records the judgement and proceeds rather than asking.
 
-- [ ] **Step 1: Rewrite the declaration** to name only what remains:
+- [x] **Step 1: Rewrite the declaration** to name only what remains:
 
 ```ts
   { path: '*._DATE_TEXT', reason: 'unmapped:pending-ad-unsampled-tags — mapped to date_original when the node has no DATE sibling (see docs/plans/2026-08-23-ad-unsampled-tags.md Task 3). Not mapped when a DATE is also present: date_original already holds the DATE value, and whether ArkivDigital means the two as alternatives or as complements is what a real sample answers and the documentation does not. Zero occurrences across the four real exports.' },
 ```
 
-- [ ] **Step 2: Add the test that keeps the declaration honest**
+- [x] **Step 2: Add the test that keeps the declaration honest**
 
 ```ts
   it('_DATE_TEXT is declared only for the branch that is genuinely open', () => {
@@ -520,9 +540,9 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
   });
 ```
 
-- [ ] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green.
+- [x] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green.
 
-- [ ] **Step 4: Commit** — `docs(import): declare only the _DATE_TEXT branch a sample has to settle`
+- [x] **Step 4: Commit** — `docs(import): declare only the _DATE_TEXT branch a sample has to settle`
 
 ---
 
@@ -532,9 +552,25 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
 
 **What is needed:** one ArkivDigital export containing an event where the researcher typed a date in free text *and* the exporter also wrote a `DATE` line. The friend whose four trees drove the profile is the nearest source; Bengt and Ben are the two beta testers who might have one.
 
-- [ ] **Degraded outcome if no sample arrives** — and this is the expected case, so plan for it: Tasks 1–4 ship without it. The plan closes with `*._DATE_TEXT` declared for one branch, which is a complete and honest state: the tag is read where reading it is unambiguous, reported where it is not, and preserved either way once verbatim capture lands. **Verification §1 loses nothing** — it never claimed the with-DATE branch. Do not hold the plan open waiting; record in the close-out that Task 5 went unanswered and what that leaves declared.
+- [x] **Degraded outcome if no sample arrives** — and this is the expected case, so plan for it: Tasks 1–4 ship without it. The plan closes with `*._DATE_TEXT` declared for one branch, which is a complete and honest state: the tag is read where reading it is unambiguous, reported where it is not, and preserved either way once verbatim capture lands. **Verification §1 loses nothing** — it never claimed the with-DATE branch. Do not hold the plan open waiting; record in the close-out that Task 5 went unanswered and what that leaves declared.
 
-- [ ] **Escalation, if a sample does arrive:** re-open this task as its own plan rather than extending this one. By then the declared reason names the question precisely enough to answer in an afternoon.
+- [x] **Escalation, if a sample does arrive:** re-open this task as its own plan rather than extending this one. By then the declared reason names the question precisely enough to answer in an afternoon. *(Recorded as the standing instruction. No sample arrived; nothing was escalated.)*
+
+**Outcome, 2026-08-29: unanswered, degraded path taken.** No ArkivDigital
+export containing `_DATE_TEXT` alongside a `DATE` exists anywhere the executor
+can reach. Re-measured rather than inherited: across the four real exports in
+the gitignored corpus — 124 878 lines — there are 0 lines matching
+`_DATE_TEXT` and 0 matching `_DOMESTIC_PARTNERSHIP`. Tasks 1-4 shipped without
+it.
+
+What that leaves declared, in full: one entry, `*._DATE_TEXT`, covering one
+branch of one tag — a `_DATE_TEXT` on a node that also carries a `DATE`. Every
+other occurrence is read. The branch is not silently dropped: the importer
+deliberately leaves that node unread so the import report names it, and
+`import-date-text.test.ts` asserts both halves — that
+`FAM._DOMESTIC_PARTNERSHIP._DATE_TEXT` appears in the report and that
+`INDI.EVEN._DATE_TEXT` does not. Verification §1 never claimed the with-DATE
+branch, so it loses nothing.
 
 ---
 
@@ -546,16 +582,27 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag; the Tier 4 task carries its degraded outcome.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, no `unmapped_data` table.
-- [ ] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
-- [ ] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files.
-- [ ] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
-- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
+- [x] Every task has a tier tag; the Tier 4 task carries its degraded outcome.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, no `unmapped_data` table.
+- [x] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
+- [x] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files. **Eight, not seven** — `src/gedcom/exporters/negation-emitter.ts` carries its own copy of `EVENT_TYPE_TO_TAG` and `_SEPR` is in both, so leaving cohabitation out of one would have made `NO _DOMESTIC_PARTNERSHIP` export as `NO EVEN`. Counted mechanically, one occurrence at each site.
+- [x] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
+- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. **Three of four done; `test:e2e:full` outstanding for close-out.**
+  - `npm test` → `Test Files 325 passed (325)` / `Tests 4654 passed (4654)` in 47.62s, exit 0.
+  - `npm run lint` → `✖ 49 problems (0 errors, 49 warnings)`, exit 0. The warning set is byte-identical to the branch point's, compared by re-linting `68ccdc89`'s `src` and `tests`: 49 before, 49 after, `diff` of the two sorted warning lists empty.
+  - `npm run build` → `✓ built in 764ms` (renderer), `Finished \`release\` profile [optimized] target(s) in 1m 26s`, two bundles emitted, exit 0.
+  - `npm run test:e2e:full` — not run. The user goal touches an importer, so this tier is required at close-out.
+- [x] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file. **The script itself cannot run** — `vue-tsc` is not a declared dependency of this repo and is installed in neither the main tree nor the worktree, so `npm run typecheck` exits 127 with `sh: vue-tsc: command not found`. CI never invokes it either (`ci.yml` runs lint, audit, test, e2e, build). The plan's "2304 pre-existing errors" therefore came from a dependency set this repo does not have.
+
+  Measured instead with `vue-tsc@3.1.1` + `typescript@5.9.3` installed outside the repo, run against the worktree's `tsconfig.json` with `src-tauri/**` excluded and `typeRoots` pointed at the worktree's `@types`. Both exclusions are load-bearing: without the first, 484 errors come from `target/release` codegen assets (the pollution the plan warns about); without the second, 99 spurious `Cannot find module 'node:fs'`.
+
+  - Branch point `68ccdc89`: **2483** errors. Working tree: **2483**. Zero new.
+  - Errors in each of the 15 files this plan touched: **0**, counted per file.
+  - Negative control — the check can fail. Annotating `dateText` as `number` in `event-importer.ts` produced `error TS2322: Type 'string' is not assignable to type 'number'` at line 48. Reverted.
+  - The repo's script also passes `--ignoreDeprecations 6.0`, which `typescript@5.9.3` rejects with `TS5103: Invalid value`. The script is stale in more than one way; fixing it is out of this plan's scope.
 
 ## Failure modes / RCA reference
 

@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 import type { Database } from 'node-sqlite3-wasm';
 import type { GedcomNode } from '../../gedcom/parser';
 import type { Place, GenealogyEvent } from '../../api/types';
-import { parseGedcomDate } from '../../gedcom/date';
+import { parseGedcomDate, type ParsedDate } from '../../gedcom/date';
 import { createEvent } from '../../api/events';
 import { createCitation } from '../../api/sources';
 import type { ExternalIdentifierInput } from '../../api/external_identifiers';
@@ -18,6 +18,41 @@ import type { ImportOptions } from './import-core';
 import { getChild, getChildren, resolveNote } from './node-utils';
 import { resolvePlace } from './place-resolver';
 import { importObjeNode } from './obje-importer';
+
+/**
+ * The event's date, from `DATE` or from ArkivDigital's `_DATE_TEXT`.
+ *
+ * `_DATE_TEXT` is the tag ArkivDigital documents as "datum utan giltigt
+ * GEDCOM-format" — a date the researcher typed that GEDCOM cannot express.
+ * With no `DATE` sibling it IS the authored date, and that is exactly what
+ * `date_original` holds: the text as written, `date_value` null,
+ * `date_type: 'unknown'`. The shipped semantics for an unparseable date, no
+ * new column.
+ *
+ * It is never handed to `parseGedcomDate`. The file's own claim about the
+ * value is that it does not parse, so any date derived from it is a guess —
+ * and writing a guess to the DB is the Prime Directive violation. A
+ * `_DATE_TEXT` that happens to read as a year is still not parsed.
+ *
+ * When a `DATE` is present the `_DATE_TEXT` is deliberately left unread.
+ * `date_original` already holds the DATE value, and whether ArkivDigital
+ * means the two as alternatives or as complements is what a real sample has
+ * to settle — see `accounting-declared.ts`, `*._DATE_TEXT`. Not reading the
+ * node is what puts it in the import report: Prime Directive (cont.) clause 1
+ * says a tag the report cannot name has not been disclosed, so consuming it
+ * here to keep the accounting tidy would turn a declared gap into a silent
+ * drop.
+ */
+function parseEventDate(evNode: GedcomNode, dateNode: GedcomNode | undefined): ParsedDate {
+  if (dateNode) return parseGedcomDate(dateNode.value);
+  const dateText = getChild(evNode, '_DATE_TEXT')?.value?.trim();
+  return {
+    date_type: 'unknown',
+    date_value: null,
+    date_value_end: null,
+    date_original: dateText ?? '',
+  };
+}
 
 export async function importEventNode(
   db: Database,
@@ -35,9 +70,7 @@ export async function importEventNode(
 ) {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
-  const parsed = dateNode
-    ? parseGedcomDate(dateNode.value)
-    : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
+  const parsed = parseEventDate(evNode, dateNode);
   let place = placNode ? await resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
 
   // Standard GEDCOM 5.5.1: ADDR can appear directly on the event node (not under PLAC).
@@ -260,9 +293,7 @@ export async function collectEventNode(
 ): Promise<EventCollectResult> {
   const dateNode = getChild(evNode, 'DATE');
   const placNode = getChild(evNode, 'PLAC');
-  const parsed = dateNode
-    ? parseGedcomDate(dateNode.value)
-    : { date_type: 'unknown' as const, date_value: null, date_value_end: null, date_original: '' };
+  const parsed = parseEventDate(evNode, dateNode);
   let place = placNode ? await resolvePlace(db, placNode, resolvePlaceFn, placeIdMap) : null;
 
   const evAddrNode = getChild(evNode, 'ADDR');

@@ -20,7 +20,7 @@ const KNOWN_FAM_TAGS = new Set([
   'HUSB', 'WIFE', 'CHIL', 'SOUR', 'NOTE', '_SUBTYPE', '_RELNOTES', 'CHAN',
   // FAMILY_EVENT_TAGS keys:
   'MARR', 'DIV', 'CENS', 'ENGA', 'EVEN',
-  'ANUL', 'MARL', '_SEPR',
+  'ANUL', 'MARL', '_SEPR', '_DOMESTIC_PARTNERSHIP',
   'OBJE',
   // T06: NO X negative-assertion blocks — imported by phaseNegations.
   'NO',
@@ -87,11 +87,19 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
 
     const extSubtype = getChild(node, '_SUBTYPE')?.value;
     const hasMarr = getChildren(node, 'MARR').length > 0;
+    // ArkivDigital records a sambo couple as a `_DOMESTIC_PARTNERSHIP` family
+    // event. Without this the couple imports as `unknown` and the researcher
+    // loses the one fact the record states about the relationship.
+    const hasDomesticPartnership = getChildren(node, '_DOMESTIC_PARTNERSHIP').length > 0;
     let coupleSubtype: string;
     if (extSubtype) {
       coupleSubtype = extSubtype;
     } else if (hasMarr) {
+      // An explicit marriage wins: a couple who cohabited and then married is
+      // a marriage, and both events are kept regardless.
       coupleSubtype = 'marriage';
+    } else if (hasDomesticPartnership) {
+      coupleSubtype = 'cohabitation';
     } else if (ctx.isHolger) {
       const engaNodes = getChildren(node, 'ENGA');
       coupleSubtype = engaNodes.length > 0 ? holgerEngaSubtype(engaNodes[0]) : 'unknown';

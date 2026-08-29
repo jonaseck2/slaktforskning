@@ -79,11 +79,10 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI._CUSTOM',      reason: 'excluded:not-relevant — the non_standard_tags fixture\'s deliberate stand-in for a vendor tag nobody has seen. 0 occurrences across the 36 sample files, and unmappable by definition: it exists to prove the accounting names a tag it cannot interpret.' },
 
   // ── ArkivDigital tags documented but never observed ──────────────────────
-  // In the synthetic fixture so the gate reports them, deliberately not
-  // modelled. See docs/plans/2026-08-23-ad-unsampled-tags.md.
-  { path: 'FAM._DOMESTIC_PARTNERSHIP',            reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (cohabitation event)' },
-  { path: 'FAM._DOMESTIC_PARTNERSHIP.DATE',       reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (its date)' },
-  { path: '*._DATE_TEXT',                         reason: 'unmapped:pending-ad-unsampled-tags — documented by ArkivDigital, zero occurrences across the four real exports; modelling against documentation with no sample risks the wrong shape (a date with no valid GEDCOM form)' },
+  // `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` used to sit here. Both are
+  // mapped now — the couple reads as a cohabitation and the event carries the
+  // date. See docs/plans/2026-08-23-ad-unsampled-tags.md Task 2.
+  { path: '*._DATE_TEXT',                         reason: 'unmapped:pending-ad-unsampled-tags — mapped to date_original when the node has no DATE sibling (see docs/plans/2026-08-23-ad-unsampled-tags.md Task 3). Not mapped when a DATE is also present: date_original already holds the DATE value, and whether ArkivDigital means the two as alternatives or as complements is what a real sample answers and the documentation does not. Zero occurrences across the four real exports (measured 2026-08-29: 0 in 124878 lines).' },
 
   // ── Surfaced by running the accounting over the four real ArkivDigital
   // exports. Not AD-specific and not in this plan's scope; named here so the

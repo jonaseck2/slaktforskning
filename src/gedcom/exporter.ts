@@ -56,6 +56,7 @@ const EVENT_TYPE_TO_TAG: Record<string, string> = {
   // widely emitted (FTM, RootsMagic).
   cremation: 'CREM', bar_mitzvah: 'BARM', bas_mitzvah: 'BASM',
   annulment: 'ANUL', marriage_license: 'MARL', separation: '_SEPR',
+  cohabitation: '_DOMESTIC_PARTNERSHIP',
   ordination: 'ORDN', military: '_MILT',
   // Fact-shaped event types — line value is emitted on the same line as the tag.
   title: 'TITL', religion: 'RELI', description: 'DSCR', fact: 'FACT',
