@@ -6,9 +6,9 @@
     <div class="section-buttons">
       <button @click="holgerPickFile" :disabled="busy">{{ $t('importExport.holgerPickFile') }}</button>
       <button @click="holgerPickMedia" :disabled="busy">{{ $t('importExport.holgerPickMedia') }}</button>
-      <button @click="handleImportFromHolger" :disabled="busy || !holgerSourcePath">{{ $t('importExport.holgerImport') }}</button>
+      <button @click="handleImportFromHolger" :disabled="busy || holgerSourcePaths.length === 0">{{ $t('importExport.holgerImport') }}</button>
     </div>
-    <p v-if="holgerSourcePath" class="section-instructions">{{ holgerSourcePath }}<span v-if="holgerMediaDir"> + {{ holgerMediaDir }}</span></p>
+    <p v-for="p in holgerSourcePaths" :key="p" class="section-instructions">{{ p }}<span v-if="holgerMediaDir"> + {{ holgerMediaDir }}</span></p>
     <p v-if="holgerProgress" class="section-progress">{{ holgerProgress }}</p>
 
     <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
@@ -25,6 +25,15 @@
       @close="closeReportAndNavigate"
     >
       <div class="report-body">
+      <div v-if="queueOutcomes.length > 1" class="report-section">
+        <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: queueOutcomes.length }) }}</p>
+        <ul>
+          <li v-for="o in queueOutcomes" :key="o.file">
+            <template v-if="o.error">{{ $t('importExport.queueFileFailed', { file: baseName(o.file), error: o.error }) }}</template>
+            <template v-else>{{ baseName(o.file) }}</template>
+          </li>
+        </ul>
+      </div>
       <p class="report-version">{{ importReport.version && importReport.version !== 'unknown' ? 'GEDCOM ' + importReport.version : $t('importExport.importReportVersionUnknown') }}</p>
       <ul class="report-counts">
         <li>{{ $t('importExport.importReportPersons', { n: importReport.persons }) }}</li>
@@ -78,6 +87,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import BaseSubPanel from '../modals/BaseSubPanel.vue';
+import { runImportQueue } from './import-queue';
 import PersonPicker from '../PersonPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
@@ -94,7 +104,10 @@ const router = useRouter();
 const busy = ref(false);
 const statusMessage = ref('');
 const statusType = ref<'success' | 'error'>('success');
-const holgerSourcePath = ref('');
+// Every picked path, in pick order. One file behaves exactly as before.
+const holgerSourcePaths = ref<string[]>([]);
+const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 const holgerMediaDir = ref('');
 const holgerProgress = ref('');
 const showImportReport = ref(false);
@@ -164,8 +177,8 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
 }
 
 async function holgerPickFile() {
-  const r = await window.api.import.holgerSelectFile() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) holgerSourcePath.value = r.path;
+  const picked = await window.api.import.holgerSelectFiles() as string[];
+  if (picked && picked.length > 0) holgerSourcePaths.value = picked;
 }
 
 async function holgerPickMedia() {
@@ -184,9 +197,34 @@ function parseCounts(msg: string): { current?: number; total?: number } {
   return { current: parseInt(m[1], 10), total: parseInt(m[2], 10) };
 }
 
+type HolgerReport = NonNullable<typeof importReport.value>;
+
+/** One report out of N — the researcher asked one question. */
+function sumReports(reports: HolgerReport[]): HolgerReport {
+  return reports.reduce((acc, r) => {
+    const events: Record<string, number> = { ...acc.events };
+    for (const [type, n] of Object.entries(r.events)) events[type] = (events[type] ?? 0) + n;
+    return {
+      ...acc,
+      version: acc.version && acc.version !== 'unknown' ? acc.version : r.version,
+      persons: acc.persons + r.persons,
+      families: acc.families + r.families,
+      events,
+      sources: acc.sources + r.sources,
+      places: acc.places + r.places,
+      citations: acc.citations + r.citations,
+      skipped: [...acc.skipped, ...r.skipped],
+      warnings: [...acc.warnings, ...r.warnings],
+      defaultPersonId: acc.defaultPersonId ?? r.defaultPersonId,
+    };
+  });
+}
+
 async function handleImportFromHolger() {
-  if (!holgerSourcePath.value) return;
+  if (holgerSourcePaths.value.length === 0) return;
+  const files = [...holgerSourcePaths.value];
   busy.value = true;
+  queueOutcomes.value = [];
   holgerProgress.value = t('importExport.holgerRunning');
   toast.progress(PROGRESS_TOAST_ID, t('importExport.holgerRunning'));
   window.api.import.onHolgerProgress((msg: string) => {
@@ -195,31 +233,36 @@ async function handleImportFromHolger() {
     toast.progress(PROGRESS_TOAST_ID, msg, current, total);
   });
   try {
-    const result = await window.api.import.holgerRun({
-      sourcePath: holgerSourcePath.value,
-      mediaDir: holgerMediaDir.value || undefined,
-    }) as {
-      success: boolean;
-      report?: {
-        version?: string;
-        persons: number; families: number; events: Record<string, number>;
-        sources: number; places: number; citations: number;
-        skipped: { tag: string; count: number }[];
-        warnings: string[];
-        defaultPersonId?: string;
-      };
-      error?: string;
-    };
-    if (result.success && result.report) {
-      importReport.value = result.report;
+    const queue = await runImportQueue<HolgerReport>(files, async (sourcePath) => {
+      const result = await window.api.import.holgerRun({
+        sourcePath,
+        mediaDir: holgerMediaDir.value || undefined,
+      }) as { success: boolean; report?: HolgerReport; error?: string };
+      if (!result.success || !result.report) {
+        throw new Error(result.error ?? 'Unknown error');
+      }
+      return result.report;
+    });
+
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+    const reports = queue.results
+      .map(r => r.report)
+      .filter((r): r is HolgerReport => r !== null);
+
+    if (reports.length > 0) {
+      importReport.value = sumReports(reports);
       showImportReport.value = true;
       // Stash the tree-subject id so we can route there once the user has
       // closed the report. Routing immediately would unmount this view and
       // destroy the report modal before it can be read.
-      pendingNavigatePersonId.value = result.report.defaultPersonId ?? null;
+      pendingNavigatePersonId.value = importReport.value.defaultPersonId ?? null;
       window.dispatchEvent(new CustomEvent('data-imported'));
+      if (queue.failed > 0) {
+        setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
+      }
     } else {
-      setStatus(t('importExport.holgerError', { error: result.error ?? 'Unknown error' }), 'error');
+      const first = queue.results.find(r => r.error)?.error ?? 'Unknown error';
+      setStatus(t('importExport.holgerError', { error: first }), 'error');
     }
   } catch (err) {
     setStatus(t('importExport.holgerError', { error: err instanceof Error ? err.message : String(err) }), 'error');
