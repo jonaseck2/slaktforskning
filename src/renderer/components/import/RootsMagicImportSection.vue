@@ -5,9 +5,9 @@
       <p class="section-desc">{{ $t('importExport.rootsmagicDesc') }}</p>
       <div class="section-buttons">
         <button @click="pickFile" :disabled="busy">{{ $t('importExport.rootsmagicPickFile') }}</button>
-        <button @click="handleImport" :disabled="busy || !sourcePath">{{ $t('importExport.rootsmagicImport') }}</button>
+        <button @click="handleImport" :disabled="busy || sourcePaths.length === 0">{{ $t('importExport.rootsmagicImport') }}</button>
       </div>
-      <p v-if="sourcePath" class="section-instructions">{{ sourcePath }}</p>
+      <p v-for="p in sourcePaths" :key="p" class="section-instructions">{{ p }}</p>
       <p v-if="progress" class="section-progress">{{ progress }}</p>
 
       <p v-if="statusMessage" :class="['status', statusType]">{{ statusMessage }}</p>
@@ -24,6 +24,15 @@
         @close="showReport = false"
       >
         <div class="report-body">
+          <div v-if="queueOutcomes.length > 1" class="report-section">
+            <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: queueOutcomes.length }) }}</p>
+            <ul>
+              <li v-for="o in queueOutcomes" :key="o.file">
+                <template v-if="o.error">{{ $t('importExport.queueFileFailed', { file: baseName(o.file), error: o.error }) }}</template>
+                <template v-else>{{ baseName(o.file) }}</template>
+              </li>
+            </ul>
+          </div>
           <ul class="report-counts">
             <li>{{ $t('importExport.importReportPersons', { n: summary.persons }) }}</li>
             <li>{{ $t('importExport.importReportFamilies', { n: summary.coupleRelationships }) }}</li>
@@ -51,6 +60,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from '../modals/BaseSubPanel.vue';
+import { runImportQueue } from './import-queue';
 
 interface RootsMagicSummary {
   persons: number;
@@ -68,7 +78,10 @@ interface RootsMagicSummary {
 const { t } = useI18n();
 const toast = useToast();
 
-const sourcePath = ref('');
+// Every picked path, in pick order. One file behaves exactly as before.
+const sourcePaths = ref<string[]>([]);
+const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 const busy = ref(false);
 const progress = ref('');
 const statusMessage = ref('');
@@ -83,28 +96,62 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
 }
 
 async function pickFile() {
-  const r = await window.api.import.rootsmagicSelectFile() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) sourcePath.value = r.path;
+  const picked = await window.api.import.rootsmagicSelectFiles() as string[];
+  if (picked && picked.length > 0) sourcePaths.value = picked;
+}
+
+/** One report out of N — the researcher asked one question. */
+function sumSummaries(list: RootsMagicSummary[]): RootsMagicSummary {
+  return list.reduce((acc, s) => ({
+    persons: acc.persons + s.persons,
+    coupleRelationships: acc.coupleRelationships + s.coupleRelationships,
+    parentChildRelationships: acc.parentChildRelationships + s.parentChildRelationships,
+    events: acc.events + s.events,
+    places: acc.places + s.places,
+    sources: acc.sources + s.sources,
+    citations: acc.citations + s.citations,
+    media: acc.media + s.media,
+    warnings: [...acc.warnings, ...s.warnings],
+    skipped: [...acc.skipped, ...s.skipped],
+  }));
 }
 
 async function handleImport() {
-  if (!sourcePath.value) return;
+  if (sourcePaths.value.length === 0) return;
+  const files = [...sourcePaths.value];
   busy.value = true;
+  queueOutcomes.value = [];
   progress.value = t('importExport.rootsmagicRunning');
   window.api.import.onRootsmagicProgress((msg: string) => { progress.value = msg; });
   try {
-    const result = await window.api.import.rootsmagicRun({ sourcePath: sourcePath.value }) as {
-      success?: boolean;
-      imported?: boolean;
-      summary?: RootsMagicSummary;
-      error?: string;
-    };
-    if (result.imported && result.summary) {
-      summary.value = result.summary;
+    const queue = await runImportQueue<RootsMagicSummary>(files, async (sourcePath) => {
+      const result = await window.api.import.rootsmagicRun({ sourcePath }) as {
+        success?: boolean;
+        imported?: boolean;
+        summary?: RootsMagicSummary;
+        error?: string;
+      };
+      if (!result.imported || !result.summary) {
+        throw new Error(result.error ?? 'Unknown error');
+      }
+      return result.summary;
+    });
+
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+    const summaries = queue.results
+      .map(r => r.report)
+      .filter((r): r is RootsMagicSummary => r !== null);
+
+    if (summaries.length > 0) {
+      summary.value = sumSummaries(summaries);
       showReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
+      if (queue.failed > 0) {
+        setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
+      }
     } else {
-      setStatus(t('importExport.rootsmagicError', { error: result.error ?? 'Unknown error' }), 'error');
+      const first = queue.results.find(r => r.error)?.error ?? 'Unknown error';
+      setStatus(t('importExport.rootsmagicError', { error: first }), 'error');
     }
   } catch (err) {
     setStatus(t('importExport.rootsmagicError', { error: err instanceof Error ? err.message : String(err) }), 'error');
