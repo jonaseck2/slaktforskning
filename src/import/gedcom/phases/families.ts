@@ -3,6 +3,7 @@
 import { v4 as uuid } from 'uuid';
 import { bulkCreateRelationships } from '../../../api/relationships';
 import { bulkCreateCitations } from '../../../api/sources';
+import { bulkAddExternalIdentifiers, type ExternalIdentifierInput } from '../../../api/external_identifiers';
 import { bulkAddMediaLinks } from '../../../api/media';
 import { bulkCreateEvents } from '../../../api/events';
 import { holgerEngaSubtype } from '../profiles/holger';
@@ -51,6 +52,7 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
   }> = [];
   const eventRowBuffer: EventCollectResult['eventRow'][] = [];
   const citationBuffer: Array<{
+    id?: string;
     source_id: string;
     event_id?: string | null;
     person_id?: string | null;
@@ -63,6 +65,9 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
     notes?: string;
     date_accessed?: string;
   }> = [];
+  // Citation-level ArkivDigital image pointers collected alongside the
+  // citations they belong to, flushed once for the whole pass.
+  const citationExternalIdBuffer: ExternalIdentifierInput[] = [];
   const mediaLinkBuffer: Array<{
     media_id: string;
     entity_type: 'relationship' | 'event' | 'person' | 'place' | 'source';
@@ -111,6 +116,7 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
         const collected = await collectEventNode(ctx.db, evNode, appType, ctx.sourceMap, { relationship_id: coupleId }, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
         eventRowBuffer.push(collected.eventRow);
         citationBuffer.push(...collected.citationRows);
+        citationExternalIdBuffer.push(...collected.citationExternalIds);
         mediaLinkBuffer.push(...collected.mediaLinkRows);
       }
     }
@@ -195,6 +201,11 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
   if (citationBuffer.length > 0) {
     ctx.options?.onProgress?.(`Skriver ${citationBuffer.length} familje-källhänvisningar (1 / 1)…`);
     await bulkCreateCitations(ctx.db, citationBuffer);
+  }
+  // One bulk call for the whole pass — `.claude/rules/performance.md`, never
+  // per citation.
+  if (citationExternalIdBuffer.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, citationExternalIdBuffer);
   }
   if (mediaLinkBuffer.length > 0) {
     ctx.options?.onProgress?.(`Skriver ${mediaLinkBuffer.length} familje-medialänkar (1 / 1)…`);

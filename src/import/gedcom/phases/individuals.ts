@@ -5,6 +5,7 @@ import type { PersonIdentifier } from '../../../api/types';
 import { bulkCreatePersons, bulkAddPersonNames, bulkAddPersonIdentifiers } from '../../../api/persons';
 import { bulkAddEventParticipants } from '../../../api/relationships';
 import { bulkCreateCitations } from '../../../api/sources';
+import { bulkAddExternalIdentifiers, type ExternalIdentifierInput } from '../../../api/external_identifiers';
 import { bulkAddMediaLinks } from '../../../api/media';
 import { bulkCreateEvents } from '../../../api/events';
 import { addGroupLink } from '../../../api/groups';
@@ -266,6 +267,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   // into ~4 bulk calls total.
   const eventRowBuffer: EventCollectResult['eventRow'][] = [];
   const citationBuffer: Array<{
+    id?: string;
     source_id: string;
     event_id?: string | null;
     person_id?: string | null;
@@ -278,6 +280,9 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
     notes?: string;
     date_accessed?: string;
   }> = [];
+  // Citation-level ArkivDigital image pointers collected alongside the
+  // citations they belong to, flushed once for the whole pass.
+  const citationExternalIdBuffer: ExternalIdentifierInput[] = [];
   const participantBuffer: Array<{ event_id: string; person_id: string; role?: 'primary' }> = [];
   const mediaLinkBuffer: Array<{
     media_id: string;
@@ -326,6 +331,7 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const collected = await collectEventNode(ctx.db, evNode, appType, ctx.sourceMap, {}, ctx.resolvePlaceFn, ctx.placeIdMap, ctx.eventIdMap, ctx.noteMap, ctx.objeMap, ctx.options, ctx.inlineMediaMap);
         eventRowBuffer.push(collected.eventRow);
         citationBuffer.push(...collected.citationRows);
+        citationExternalIdBuffer.push(...collected.citationExternalIds);
         mediaLinkBuffer.push(...collected.mediaLinkRows);
         participantBuffer.push({ event_id: collected.eventRow.id, person_id: personId, role: 'primary' });
       }
@@ -415,6 +421,11 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
   if (citationBuffer.length > 0) {
     ctx.options?.onProgress?.(`Skriver ${citationBuffer.length} källhänvisningar (1 / 1)…`);
     await bulkCreateCitations(ctx.db, citationBuffer);
+  }
+  // One bulk call for the whole pass — `.claude/rules/performance.md`, never
+  // per citation.
+  if (citationExternalIdBuffer.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, citationExternalIdBuffer);
   }
   if (participantBuffer.length > 0) {
     ctx.options?.onProgress?.(`Skriver ${participantBuffer.length} deltagare (1 / 1)…`);

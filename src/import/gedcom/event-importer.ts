@@ -9,6 +9,7 @@ import type { Place, GenealogyEvent } from '../../api/types';
 import { parseGedcomDate } from '../../gedcom/date';
 import { createEvent } from '../../api/events';
 import { createCitation } from '../../api/sources';
+import type { ExternalIdentifierInput } from '../../api/external_identifiers';
 import { updatePlace } from '../../api/places';
 import { addMediaLink } from '../../api/media';
 import { FACT_VALUE_GEDCOM_TAGS } from '../../api/events_gedcom';
@@ -216,6 +217,7 @@ export interface EventCollectResult {
     notes: string;
   };
   citationRows: Array<{
+    id: string;
     source_id: string;
     event_id: string;
     page: string;
@@ -224,6 +226,16 @@ export interface EventCollectResult {
     notes?: string;
     date_accessed?: string;
   }>;
+  /**
+   * ArkivDigital's image pointer, `3 _AID v191316.b580.s52`, keyed to the
+   * citation ids above. The SOUR record's `1 _AID` names the volume; this one
+   * names the image and page inside it.
+   *
+   * Round-trip only — nothing in the app reads it to make a decision. A render
+   * layer turns it into an archive link at display time and never persists the
+   * resolved URL.
+   */
+  citationExternalIds: ExternalIdentifierInput[];
   mediaLinkRows: Array<{
     media_id: string;
     entity_type: 'event';
@@ -319,6 +331,7 @@ export async function collectEventNode(
   if (oldEvid) eventIdMap.set(oldEvid, eventId);
 
   const citationRows: EventCollectResult['citationRows'] = [];
+  const citationExternalIds: EventCollectResult['citationExternalIds'] = [];
   for (const sour of getChildren(evNode, 'SOUR')) {
     const srcId = sourceMap.get(sour.value) ?? sourceMap.get(sour.xref ?? '');
     if (srcId) {
@@ -333,7 +346,9 @@ export async function collectEventNode(
       // citations.date_accessed sat empty on every row.
       const date_accessed = getChild(sour, '_ACCESSED')?.value
         ?? (dataNode ? getChild(dataNode, 'DATE')?.value ?? '' : '');
+      const citationId = uuid();
       citationRows.push({
+        id: citationId,
         source_id: srcId,
         event_id: eventId,
         page,
@@ -342,6 +357,18 @@ export async function collectEventNode(
         notes: citNotes || undefined,
         date_accessed: date_accessed || undefined,
       });
+      // ArkivDigital's image pointer. The SOUR record's `1 _AID` names the
+      // volume; this names the image and page inside it. 6324 occurrences
+      // across four real exports, every one under an event citation.
+      const imageAid = getChild(sour, '_AID')?.value?.trim();
+      if (imageAid) {
+        citationExternalIds.push({
+          entity_type: 'citation',
+          entity_id: citationId,
+          system: 'arkivdigital.image',
+          value: imageAid,
+        });
+      }
     }
   }
 
@@ -371,6 +398,7 @@ export async function collectEventNode(
       notes,
     },
     citationRows,
+    citationExternalIds,
     mediaLinkRows,
   };
 }

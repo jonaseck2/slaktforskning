@@ -55,18 +55,21 @@ describe('import tag accounting', () => {
   // since mapped the place hierarchy and the source-level _AID, so those tags
   // are now read rather than reported. What remains unread is listed below and
   // is the honest state of the importer, not an oversight.
-  it('names the ArkivDigital tags the importer still does not read', async () => {
+  it('reports nothing unaccounted for on an ArkivDigital-shaped file', async () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
-    const paths = new Map((report.unaccountedFor ?? []).map(u => [u.path, u.count]));
-    // All that remains unread on this fixture is the citation-level _AID; the
-    // rest is mapped by the arkivdigital profile.
-    expect(paths.get('INDI.BIRT.SOUR._AID')).toBe(1);
+    const undeclared = (report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path));
+    expect(
+      undeclared,
+      'every tag in AD_SHAPED is now either read or declared:\n' +
+      undeclared.map(u => `  ${u.count}  ${u.path}`).join('\n'),
+    ).toEqual([]);
   });
 
   it('no longer reports the tags the arkivdigital profile now maps', async () => {
     const report = await importGedcom(db, parseGedcom(AD_SHAPED));
     const paths = new Set((report.unaccountedFor ?? []).map(u => u.path));
     for (const p of ['SOUR._AID',
+                     'INDI.BIRT.SOUR._AID',
                      'INDI.BIRT.PLAC._ADPL',
                      'INDI.BIRT.PLAC._ADPL._PARISH',
                      'INDI.BIRT.PLAC._ADPL._PARISH_AID',

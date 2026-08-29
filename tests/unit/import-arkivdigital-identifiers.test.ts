@@ -3,11 +3,16 @@
 //
 // These are round-trip only. Nothing in the app reads them to make a decision.
 
+import type { Database } from 'node-sqlite3-wasm';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { queryAll } from '../../src/api/db';
+import {
+  getExternalIdentifiersByEntityType,
+  type ExternalIdentifier,
+} from '../../src/api/external_identifiers';
 import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
@@ -104,5 +109,59 @@ describe('place hierarchy round-trip', () => {
       `SELECT ei.value, p.name FROM external_identifiers ei
        JOIN places p ON p.id = ei.entity_id WHERE ei.entity_type = 'place'`);
     expect(rows, '_PARISH_AID did not survive the round-trip').toEqual([{ value: 'a3134', name: 'Valbo' }]);
+  });
+});
+
+// ── Citation-level image pointer ────────────────────────────────────────────
+// The SOUR record's `1 _AID` names the volume. This one names the image and
+// page inside it: 6324 occurrences across the four real exports, every one
+// under an event citation. See docs/plans/2026-08-23-ad-citation-aid.md.
+
+/** getExternalIdentifiersByEntityType returns Map<entity_id, X[]>, not an array. */
+async function identsFor(database: Database, type: string): Promise<ExternalIdentifier[]> {
+  return [...(await getExternalIdentifiersByEntityType(database, type)).values()].flat();
+}
+
+describe('citation-level image pointer', () => {
+  it('stores the image _AID against the citation it sits under', async () => {
+    await importGedcom(db, parseGedcom(AD));
+
+    const idents = await identsFor(db, 'citation');
+    expect(idents).toHaveLength(1);
+    expect(idents[0].system).toBe('arkivdigital.image');
+    expect(idents[0].value).toBe('v191316.b580.s52');
+
+    // entity_id points at a real citation, and that citation is the one on the
+    // BIRT event — not the source-level row, not some other citation.
+    const cit = await queryAll<{ id: string; page: string; event_id: string | null }>(
+      db, 'SELECT id, page, event_id FROM citations WHERE id = ?', [idents[0].entity_id]);
+    expect(cit).toHaveLength(1);
+    expect(cit[0].page).toBe('52');
+    expect(cit[0].event_id).not.toBeNull();
+  });
+
+  it('leaves the volume pointer on the source, distinct from the image pointer', async () => {
+    await importGedcom(db, parseGedcom(AD));
+    const onSource = await identsFor(db, 'source');
+    expect(onSource.map(i => [i.system, i.value])).toContainEqual(['arkivdigital', 'v191316']);
+  });
+
+  it('does not invent a row when the citation has no _AID', async () => {
+    await importGedcom(db, parseGedcom(`0 HEAD
+1 SOUR Arkiv_Digital
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @S1@ SOUR
+1 TITL Plain source
+0 @I1@ INDI
+1 NAME A /B/
+1 BIRT
+2 DATE 1880
+2 SOUR @S1@
+3 PAGE 7
+0 TRLR
+`));
+    expect(await identsFor(db, 'citation')).toEqual([]);
   });
 });
