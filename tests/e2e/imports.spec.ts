@@ -338,3 +338,134 @@ for (const c of CASES) {
     }
   });
 }
+
+/**
+ * Multi-file import + consolidation review.
+ *
+ * USER GOAL: "I have four exports from the same service. I import them in one
+ *             action and I am then shown, in one place, the archive volumes
+ *             that arrived more than once — one row per volume, not one per
+ *             pair — with a way to join them all at once and a way to say no."
+ *
+ * Two fixtures carry different pages of the SAME ArkivDigital volume
+ * (`_AID v25161`), so importing both produces exactly one exact cluster of two.
+ * Measured on the four real exports the plan was written from: 2776 source
+ * records collapse to 1472 through 441 cluster decisions, the largest cluster
+ * holding 128 records — 8128 pairs the researcher never sees.
+ *
+ * The native multi-select dialog itself is not driven here: it is an OS
+ * dialog, outside Playwright's reach against a packaged Tauri binary. What is
+ * driven is everything behind it — the sequential queue, the clustering, the
+ * approval, and the referential integrity afterwards.
+ */
+const MULTIFILE = ['multifile-a.ged', 'multifile-b.ged'];
+
+async function importBothFixtures(driver: AppDriver): Promise<void> {
+  // Sequential by construction — beginAccounting throws on re-entry, so two
+  // overlapping imports would merge their consumed-node sets and mask a real
+  // drop.
+  for (const f of MULTIFILE) {
+    const abs = path.join(PROJECT_ROOT, 'tests/e2e/fixtures/imports', f);
+    const envelope = await driver.executeJs<{ success?: boolean; error?: string }>(
+      `window.api.gedcom.import(${JSON.stringify({ filePath: abs })})`,
+    );
+    if (envelope?.success !== true) {
+      throw new Error(`import of ${f} failed: ${JSON.stringify(envelope)}`);
+    }
+  }
+}
+
+const sourceCount = (driver: AppDriver): Promise<number> =>
+  driver.executeJs<number>(`(async () => (await window.api.sources.list()).length)()`);
+
+/** Citations still reachable from a surviving source, summed over all sources. */
+const reachableCitations = (driver: AppDriver): Promise<number> =>
+  driver.executeJs<number>(`(async () => {
+    const srcs = await window.api.sources.list();
+    let n = 0;
+    for (const s of srcs) n += (await window.api.citations.forSource(s.id)).length;
+    return n;
+  })()`);
+
+test('imports: two files sharing a volume offer one cluster, joined in one action', async () => {
+  let app: AppInstance | undefined;
+  try {
+    app = await startApp(PORT, 'multifile-consolidation');
+    const driver = new AppDriver(PORT);
+    await driver.setLocale('en');
+
+    await importBothFixtures(driver);
+
+    expect(await sourceCount(driver), 'both source records must land').toBe(2);
+    expect(await reachableCitations(driver), 'both citations must land').toBe(2);
+
+    // ONE row for the volume, not one per pair.
+    const clusters = await driver.executeJs<
+      Array<{ memberIds: string[]; representativeId: string; reason: string; kind: string }>
+    >(`window.api.duplicates.findExactClusters('source')`);
+    expect(clusters, 'the shared volume must be offered as exactly one cluster').toHaveLength(1);
+    expect(clusters[0].memberIds).toHaveLength(2);
+    expect(clusters[0].kind).toBe('exact');
+    expect(clusters[0].reason).toContain('v25161');
+
+    // Nothing has merged yet — the review only offers.
+    expect(await sourceCount(driver), 'a review must not merge on its own').toBe(2);
+
+    // Approve. One action for the whole cluster.
+    const applied = await driver.executeJs<{ merged: number }>(
+      `window.api.duplicates.applyCluster(${JSON.stringify(clusters[0])})`,
+    );
+    expect(applied.merged).toBe(1);
+
+    expect(await sourceCount(driver), 'the two records must become one').toBe(1);
+    expect(
+      await reachableCitations(driver),
+      'both citations must survive the merge, reachable from the surviving source',
+    ).toBe(2);
+
+    // The step closes: nothing is offered on a re-run.
+    const after = await driver.executeJs<unknown[]>(
+      `window.api.duplicates.findExactClusters('source')`,
+    );
+    expect(after, 'an approved cluster must not be offered again').toHaveLength(0);
+  } finally {
+    await teardownApp(app);
+  }
+});
+
+/**
+ * Declining is a "no" that sticks: the cluster is recorded as N-1 ignored
+ * pairs against the representative rather than N(N-1)/2, and nothing merges.
+ */
+test('imports: declining a cluster merges nothing and is recorded', async () => {
+  let app: AppInstance | undefined;
+  try {
+    app = await startApp(PORT, 'multifile-decline');
+    const driver = new AppDriver(PORT);
+    await driver.setLocale('en');
+
+    await importBothFixtures(driver);
+
+    const clusters = await driver.executeJs<Array<{ memberIds: string[] }>>(
+      `window.api.duplicates.findExactClusters('source')`,
+    );
+    expect(clusters).toHaveLength(1);
+
+    const declined = await driver.executeJs<{ ignored: number }>(
+      `window.api.duplicates.declineCluster(${JSON.stringify(clusters[0])})`,
+    );
+    expect(declined.ignored, 'N-1 pairs against the representative, not every combination')
+      .toBe(clusters[0].memberIds.length - 1);
+
+    expect(await sourceCount(driver), 'a decline must merge nothing').toBe(2);
+
+    // The fuzzy source finder must not offer the declined pair again — that is
+    // what makes the no stick.
+    const fuzzy = await driver.executeJs<unknown[]>(
+      `window.api.duplicates.findFuzzyClusters('source')`,
+    );
+    expect(fuzzy, 'a declined pair must not come back as a fuzzy suggestion').toHaveLength(0);
+  } finally {
+    await teardownApp(app);
+  }
+});

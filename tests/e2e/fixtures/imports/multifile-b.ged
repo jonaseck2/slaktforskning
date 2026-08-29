@@ -1,0 +1,19 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+1 SOUR ArkivDigital
+0 @I1@ INDI
+1 NAME Bo /Bengtsson/
+2 GIVN Bo
+2 SURN Bengtsson
+1 SEX M
+1 BIRT
+2 DATE 4 JUL 1828
+2 SOUR @S1@
+3 PAGE Bild 291 sida 556
+0 @S1@ SOUR
+1 TITL ArkivDigital: Dagsberg (E) AI:7 (1825-1830), bild 291
+1 _AID v25161
+1 _URL https://www.arkivdigital.se/aid/show/v25161.b291.s556
+0 TRLR

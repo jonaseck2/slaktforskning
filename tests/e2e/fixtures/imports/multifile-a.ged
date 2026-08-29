@@ -1,0 +1,19 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+1 SOUR ArkivDigital
+0 @I1@ INDI
+1 NAME Anna /Andersson/
+2 GIVN Anna
+2 SURN Andersson
+1 SEX F
+1 BIRT
+2 DATE 12 MAR 1826
+2 SOUR @S1@
+3 PAGE Bild 276 sida 528
+0 @S1@ SOUR
+1 TITL ArkivDigital: Dagsberg (E) AI:7 (1825-1830), bild 276
+1 _AID v25161
+1 _URL https://www.arkivdigital.se/aid/show/v25161.b276.s528
+0 TRLR
