@@ -97,3 +97,82 @@ export async function findExactClusters(
   }
   return clusters;
 }
+
+export interface ScoredPair {
+  aId: string;
+  bId: string;
+  score: number;
+  reason?: string;
+}
+
+/**
+ * Connected components over a pair list.
+ *
+ * The existing scorers answer "do these two look alike". Three pairs (A,B),
+ * (B,C), (A,C) describe one group of three, and presenting them as three rows
+ * asks the researcher the same question three times.
+ *
+ * Union-find with path compression. Pure: the caller supplies the pairs, so
+ * this is testable without a database and reusable by every entity type.
+ */
+export function clusterFromPairs(
+  entityType: DuplicateCluster['entityType'],
+  pairs: ScoredPair[],
+): DuplicateCluster[] {
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    let root = parent.get(x) ?? x;
+    if (root !== x) {
+      root = find(root);
+      parent.set(x, root);
+    }
+    return root;
+  };
+  const union = (a: string, b: string): void => {
+    const ra = find(a), rb = find(b);
+    if (ra === rb) return;
+    // Lexicographic root keeps the outcome independent of pair order.
+    if (ra < rb) parent.set(rb, ra);
+    else parent.set(ra, rb);
+  };
+
+  for (const p of pairs) {
+    if (p.aId === p.bId) continue;
+    if (!parent.has(p.aId)) parent.set(p.aId, p.aId);
+    if (!parent.has(p.bId)) parent.set(p.bId, p.bId);
+    union(p.aId, p.bId);
+  }
+
+  const groups = new Map<string, Set<string>>();
+  for (const id of [...parent.keys()]) {
+    const root = find(id);
+    const set = groups.get(root) ?? new Set<string>();
+    set.add(id);
+    groups.set(root, set);
+  }
+
+  const bestScore = new Map<string, number>();
+  for (const p of pairs) {
+    if (p.aId === p.bId) continue;
+    const root = find(p.aId);
+    bestScore.set(root, Math.max(bestScore.get(root) ?? 0, p.score));
+  }
+
+  const clusters: DuplicateCluster[] = [];
+  for (const [root, set] of groups) {
+    if (set.size < 2) continue;
+    const memberIds = [...set].sort();
+    clusters.push({
+      entityType,
+      memberIds,
+      representativeId: memberIds[0],
+      // A machine key, not prose — matching the `reasons` convention in
+      // sources.ts ('same_normalized_title', 'levenshtein_2'). The renderer
+      // localises it; a Swedish string written here would reach an English
+      // user untranslated.
+      reason: `similarity_${bestScore.get(root) ?? 0}`,
+      kind: 'fuzzy',
+    });
+  }
+  return clusters.sort((a, b) => a.representativeId.localeCompare(b.representativeId));
+}
