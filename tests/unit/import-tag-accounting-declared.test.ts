@@ -2,7 +2,7 @@
 // a decision. See docs/plans/2026-08-23-importer-tag-accounting.md Task 5.
 
 import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accounting-declared';
 
@@ -80,7 +80,7 @@ describe('declared unmapped tags', () => {
     // the violation caught on 2026-08-23. 11 entries point here.
     const handed = DECLARED_UNMAPPED.filter(d => d.reason.includes('pending-standard-tag-gaps'));
     expect(handed.length, 'nothing points at the follow-up plan — did the slug change?').toBeGreaterThan(0);
-    const plan = fileURLToPath(new URL('../../docs/plans/2026-08-28-standard-tag-gaps.md', import.meta.url));
+    const plan = join(__dirname, '../../docs/plans/2026-08-28-standard-tag-gaps.md');
     expect(existsSync(plan), `${plan} does not exist`).toBe(true);
   });
 

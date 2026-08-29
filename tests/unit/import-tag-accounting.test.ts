@@ -217,7 +217,7 @@ describe('a foreign program\'s living flag', () => {
   it('is no longer in the known-tag allowlist', () => {
     // An allowlist entry with no reader is what made this invisible for months.
     const src = readFileSync(
-      new URL('../../src/import/gedcom/phases/individuals.ts', import.meta.url), 'utf-8');
+      join(__dirname, '../../src/import/gedcom/phases/individuals.ts'), 'utf-8');
     const allowlist = /const KNOWN_INDI_TAGS = new Set\(\[([\s\S]*?)\]\)/.exec(src)?.[1] ?? '';
     expect(allowlist.length, 'allowlist regex matched nothing — the test is vacuous').toBeGreaterThan(0);
     expect(allowlist).not.toContain("'_LIVING'");
