@@ -47,7 +47,7 @@ describe('citation archive link', () => {
     await settle();
     expect(citations.value).toHaveLength(1);
     expect(citations.value[0].archiveUrl)
-      .toBe('https://app.arkivdigital.se/volume/v191316?image=580');
+      .toBe('https://www.arkivdigital.se/aid/show/v191316.b580.s52');
   });
 
   it('offers no link for a system with no URL shape', async () => {
@@ -92,6 +92,6 @@ describe('citation archive link', () => {
     await reload();
     await settle();
     expect(allCitationRows.value[0].archiveUrl)
-      .toBe('https://app.arkivdigital.se/volume/v1?image=2');
+      .toBe('https://www.arkivdigital.se/aid/show/v1.b2');
   });
 });

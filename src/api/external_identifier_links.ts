@@ -6,26 +6,32 @@
  * nothing else. If ArkivDigital changes its URL shape, this function changes
  * and every stored pointer resolves correctly the next time it is drawn.
  *
- * Anchored patterns only: the value is a field, not prose. `src/api/link-rules/`
- * is the free-text linkifier, a different mechanism with different risks — its
+ * **The shape is the vendor's own, measured, not guessed.** Across the four
+ * real ArkivDigital exports, 2726 of 2762 `_URL` values (98.7 %) are
+ * `arkivdigital.se/aid/show/<aid>` — the remainder are Riksarkivet links and
+ * one typo. **Zero** use `app.arkivdigital.se/volume/…?image=…`, which is the
+ * form the free-text rule in `src/api/link-rules/sv.ts` produces. That form
+ * also discards the `.sNN` page part; `aid/show` carries the whole pointer.
+ *
+ * Anchored patterns only: the value is a field, not prose. `link-rules/` is the
+ * free-text linkifier, a different mechanism with different risks — its
  * ArkivDigital rule requires a literal `AID:` prefix and matches inside running
  * text, which is wrong for a stored identifier.
+ *
+ * The volume-level `arkivdigital` system is deliberately **not** resolved. A
+ * bare `v191316` in `aid/show` is unattested in the corpus, and the source row
+ * already carries the researcher's own authored `_URL` in `sources.url`, so a
+ * synthesised volume link would add an unverified guess beside a real value.
  */
 
-/** `v<volume>.b<image>` with an optional `.s<page>` the URL does not carry. */
-const AD_IMAGE = /^v(\d+)\.b(\d+)(?:\.s\d+)?$/;
-const AD_VOLUME = /^v(\d+)$/;
+/** `v<volume>.b<image>` with an optional `.s<page>`, all of which the URL carries. */
+const AD_IMAGE = /^v\d+\.b\d+(?:\.s\d+)?$/;
 
 export function resolveExternalIdentifierUrl(system: string, value: string): string | null {
   const v = value.trim();
   if (!v) return null;
   if (system === 'arkivdigital.image') {
-    const m = AD_IMAGE.exec(v);
-    return m ? `https://app.arkivdigital.se/volume/v${m[1]}?image=${m[2]}` : null;
-  }
-  if (system === 'arkivdigital') {
-    const m = AD_VOLUME.exec(v);
-    return m ? `https://app.arkivdigital.se/volume/v${m[1]}` : null;
+    return AD_IMAGE.test(v) ? `https://www.arkivdigital.se/aid/show/${v}` : null;
   }
   return null;
 }
