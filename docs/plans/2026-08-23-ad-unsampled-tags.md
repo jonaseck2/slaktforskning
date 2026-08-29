@@ -524,13 +524,13 @@ Guard against a double emission: if the exporter already writes `date_original` 
 
 Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already occupied by the DATE value and there is nowhere to put the text that is not a guess about which of the two the researcher meant. Tier 2 because the executor records the judgement and proceeds rather than asking.
 
-- [ ] **Step 1: Rewrite the declaration** to name only what remains:
+- [x] **Step 1: Rewrite the declaration** to name only what remains:
 
 ```ts
   { path: '*._DATE_TEXT', reason: 'unmapped:pending-ad-unsampled-tags — mapped to date_original when the node has no DATE sibling (see docs/plans/2026-08-23-ad-unsampled-tags.md Task 3). Not mapped when a DATE is also present: date_original already holds the DATE value, and whether ArkivDigital means the two as alternatives or as complements is what a real sample answers and the documentation does not. Zero occurrences across the four real exports.' },
 ```
 
-- [ ] **Step 2: Add the test that keeps the declaration honest**
+- [x] **Step 2: Add the test that keeps the declaration honest**
 
 ```ts
   it('_DATE_TEXT is declared only for the branch that is genuinely open', () => {
@@ -540,9 +540,9 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
   });
 ```
 
-- [ ] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green.
+- [x] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green.
 
-- [ ] **Step 4: Commit** — `docs(import): declare only the _DATE_TEXT branch a sample has to settle`
+- [x] **Step 4: Commit** — `docs(import): declare only the _DATE_TEXT branch a sample has to settle`
 
 ---
 

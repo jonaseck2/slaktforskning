@@ -34,6 +34,20 @@ describe('declared unmapped tags', () => {
     }
   });
 
+  // A whole-tag declaration reads as "we don't handle this". `_DATE_TEXT` is
+  // handled — for the branch where handling it is unambiguous. The declaration
+  // has to say which branch is still open, or it is a shrug again.
+  it('_DATE_TEXT is declared only for the branch that is genuinely open', () => {
+    const d = matchDeclared('INDI.BIRT._DATE_TEXT');
+    expect(d?.reason).toMatch(/^unmapped:pending-ad-unsampled-tags/);
+    expect(d?.reason).toContain('no DATE sibling');
+  });
+
+  it('the tags Task 2 mapped are no longer declared', () => {
+    expect(matchDeclared('FAM._DOMESTIC_PARTNERSHIP')).toBeUndefined();
+    expect(matchDeclared('FAM._DOMESTIC_PARTNERSHIP.DATE')).toBeUndefined();
+  });
+
   it('every reason uses a recognised prefix, so nobody can shrug in prose', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason, `unrecognised reason prefix on ${d.path}`)
