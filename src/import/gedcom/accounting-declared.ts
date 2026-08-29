@@ -73,10 +73,10 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: 'INDI._FLGS._LIVING', reason: 'excluded:redundant — Family Historian living flag, same derivation as INDI._LIVING' },
   { path: 'INDI._HDP',         reason: 'excluded:not-relevant — Holger\'s internal row id, not authored research. The import report already discloses it (import-core.ts, the _HDP / _H8P unmappedData category, asserted live in tests/unit/import-holger.test.ts). Storing it in person_identifiers would re-emit it as REFN + TYPE Other, changing the file on export while adding nothing the researcher wrote.' },
   { path: 'INDI.ASSO.SOUR',    reason: 'unmapped:pending-standard-tag-gaps — mapped when the ASSO creates a relationships row (citations.relationship_id); asso.ts reads it there. Not mapped for the person_associations branch: citations has no person_association_id column, and adding one is schema work that belongs with the other citation-shaped gaps in docs/plans/2026-08-28-standard-tag-gaps.md. 0 occurrences of INDI.ASSO.SOUR across the 36 sample files; 2 of FAM.ASSO.SOUR, and FAM-level ASSO is read by no phase at all.' },
-  { path: 'INDI._PHOTO',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage primary-photo pointer' },
-  { path: 'INDI._MTTAG',       reason: 'unmapped:pending-dialect-tag-review — MyHeritage tag pointer' },
-  { path: 'INDI._WEBTAG',      reason: 'unmapped:pending-dialect-tag-review — Family Historian web link' },
-  { path: 'INDI._CUSTOM',      reason: 'unmapped:pending-dialect-tag-review — unrecognised vendor tag in the non-standard fixture' },
+  { path: 'INDI._PHOTO',       reason: 'excluded:redundant — MyHeritage primary-photo pointer. 0 occurrences across the 36 sample files; fixture-only (myheritage.ged). The media link already carries the person↔photo association and media_links.sort_order already carries primacy, so the pointer restates two things the DB holds.' },
+  { path: 'INDI._MTTAG',       reason: 'unmapped:pending-standard-tag-gaps — MyHeritage tag pointer into a tag record. 0 occurrences across the 36 sample files; fixture-only (myheritage.ged). The app has `groups`, so this may well map — but the target record is not modelled either, and deciding both together is the follow-up plan\'s job.' },
+  { path: 'INDI._WEBTAG',      reason: 'unmapped:pending-standard-tag-gaps — Family Historian web link on a person. 0 occurrences across the 36 sample files; fixture-only (non_standard_tags.ged). No column holds a URL on a person; `sources` has one, a person does not.' },
+  { path: 'INDI._CUSTOM',      reason: 'excluded:not-relevant — the non_standard_tags fixture\'s deliberate stand-in for a vendor tag nobody has seen. 0 occurrences across the 36 sample files, and unmappable by definition: it exists to prove the accounting names a tag it cannot interpret.' },
 
   // ── ArkivDigital tags documented but never observed ──────────────────────
   // In the synthetic fixture so the gate reports them, deliberately not
@@ -102,6 +102,20 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   { path: '*.FAMS._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a spouse-family pointer, not on the person or the event' },
   { path: '*.FAMC._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a child-family pointer' },
   { path: '*.SOUR._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a citation, not on the event' },
+
+  // ── Vendor and app bookkeeping surfaced by the real corpus ───────────────
+  // Counts measured 2026-08-29 over the 36 .ged files in export-import/samples,
+  // read from the census `scripts/accounting-over-samples.ts --out` writes.
+  // None of these holds authored genealogy; each gets a reason, not a mapping.
+  { path: 'INDI._UPD',          reason: 'excluded:not-relevant — RootsMagic last-updated timestamp, 4683 occurrences. When the exporting program last touched the row, not a fact about the person. The same class as CHAN below.' },
+  { path: 'INDI._PPEXCLUDE',    reason: 'excluded:not-relevant — Legacy report-exclusion flag, 347 occurrences. A setting in Legacy\'s own report generator, not research about the person.' },
+  { path: 'INDI._SOSADABOVILLE', reason: 'unmapped:pending-standard-tag-gaps — Ancestris Sosa-Stradonitz number, 203 occurrences. A real research artefact, but the numbering is relative to a root person the file never names, so importing the number without the root would store a value nobody can interpret. Needs the root-person question answered first.' },
+  { path: '*._UID',             reason: 'unmapped:pending-standard-tag-gaps — event-level identifier, 14485 occurrences across 10 paths (INDI.DEAT._UID 4542, INDI.BIRT._UID 4478, FAM._UID 2877, FAM.MARR._UID 2503, and six smaller). `person_identifiers` covers persons only; events, families and the header have no identifier storage. INDI._UID itself is read into person_identifiers and never reaches here.' },
+  { path: '*.RIN',              reason: 'unmapped:pending-standard-tag-gaps — event-level record id number, 14478 occurrences across 10 paths (INDI.DEAT.RIN 4542, INDI.BIRT.RIN 4478, FAM.RIN 2863, FAM.MARR.RIN 2503, and six smaller). Same missing identifier storage as *._UID. INDI.RIN is read into person_identifiers; OBJE.RIN has its own entry above and wins on first match.' },
+  { path: '*.CHAN',             reason: 'excluded:not-relevant — when the exporting program last touched the record, 1476 occurrences across 8 record types. Metadata about the other program\'s editing session, not about the family.' },
+  { path: '*.CHAN.DATE',        reason: 'excluded:not-relevant — the date of that edit, 1476 occurrences. See *.CHAN.' },
+  { path: '*.CHAN.DATE.TIME',   reason: 'excluded:not-relevant — the clock time of that edit, 1476 occurrences. See *.CHAN.' },
+  { path: '*.CHAN.NOTE',        reason: 'excluded:not-relevant — a note the exporting program attached to its own edit record, 16 occurrences. See *.CHAN.' },
 
   // ── LDS ordinances — already summarised in unmappedData, declared for parity
   { path: 'INDI.BAPL', reason: 'excluded:not-relevant — LDS ordinance, no app concept' },

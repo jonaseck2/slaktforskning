@@ -43,6 +43,28 @@ describe('declared unmapped tags', () => {
     expect(d?.reason).toContain('import-core.ts');
   });
 
+  // ── Task 10: the remaining vendor tags, each with its measured count ──────
+  // "This holds nothing the researcher wrote" is a judgement, and a judgement
+  // with no denominator is a shrug — `.claude/rules/evidence.md`. Every one of
+  // these declarations names the program and the count it was measured at.
+  it('every vendor-tag declaration names an occurrence count', () => {
+    for (const p of ['INDI._PHOTO', 'INDI._MTTAG', 'INDI._WEBTAG', 'INDI._CUSTOM',
+                     'INDI._UPD', 'INDI._PPEXCLUDE', 'INDI._SOSADABOVILLE',
+                     'INDI.BIRT._UID', 'INDI.DEAT.RIN',
+                     'INDI.CHAN', 'FAM.CHAN.DATE', 'SOUR.CHAN.DATE.TIME', 'OBJE.CHAN.NOTE']) {
+      const d = matchDeclared(p);
+      expect(d, `${p} is undeclared`).toBeDefined();
+      expect(d!.reason, `${p} has no count in its reason`).toMatch(/\d+ occurrence/);
+    }
+  });
+
+  // `*.RIN` covers the event-level identifiers, but OBJE.RIN is a media record
+  // id with its own reason. First match wins, so ordering is load-bearing.
+  it('an exact path still beats a wildcard that would also cover it', () => {
+    expect(matchDeclared('OBJE.RIN')?.path).toBe('OBJE.RIN');
+    expect(matchDeclared('INDI.BIRT.RIN')?.path).toBe('*.RIN');
+  });
+
   it('every entry carries a non-empty reason', () => {
     for (const d of DECLARED_UNMAPPED) {
       expect(d.reason.trim().length, `empty reason for ${d.path}`).toBeGreaterThan(0);

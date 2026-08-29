@@ -959,13 +959,23 @@ Four fixture-declared paths and five corpus families. None holds authored geneal
 | `*._UID` / `*.RIN` on events | FTM | 28 786 | `unmapped:pending-<plan>` — event-level identifiers; `person_identifiers` covers persons only |
 | `*.CHAN(.DATE(.TIME))` | several | 2740 | `excluded:not-relevant` — when the exporting program last touched the record |
 
-- [ ] **Step 1: Verify each count against the Task 1 census** before writing it into a reason. A count copied from this table without re-measuring is the failure mode `.claude/rules/evidence.md` names.
+- [x] **Step 1: Verify each count against the Task 1 census** before writing it into a reason. A count copied from this table without re-measuring is the failure mode `.claude/rules/evidence.md` names.
 
-- [ ] **Step 2: Write the declarations**, each naming the program and the count.
+> **Re-measured 2026-08-29 against a census taken after Tasks 2-9 (750 distinct
+> paths).** Four of the table's counts needed correcting or splitting:
+> `*._UID` is 14 485 across 10 paths and `*.RIN` is 14 478 across 10 — the
+> table's single `28 786` was close to their sum (28 963) but is two different
+> tags with two different reasons. `*.CHAN` is 1 476 per level, not 2 740 for
+> the family, plus 16 `*.CHAN.NOTE`; the matcher has no `X.*` form that reaches
+> a suffix, so each level needs its own pattern. `INDI._UPD` 4683,
+> `INDI._PPEXCLUDE` 347 and `INDI._SOSADABOVILLE` 203 confirmed as written.
+> `INDI._PHOTO`, `INDI._MTTAG`, `INDI._WEBTAG` and `INDI._CUSTOM` confirmed at 0.
 
-- [ ] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green; no entry carries `pending-dialect-tag-review`.
+- [x] **Step 2: Write the declarations**, each naming the program and the count.
 
-- [ ] **Step 4: Commit** — `docs(import): classify the remaining vendor tags with their counts`
+- [x] **Step 3: Verify** — `npm test -- import-tag-accounting-declared` green; no entry carries `pending-dialect-tag-review`.
+
+- [x] **Step 4: Commit** — `docs(import): classify the remaining vendor tags with their counts`
 
 ---
 
