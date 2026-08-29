@@ -23,14 +23,29 @@
 import type { Relationship, RelationshipType, EventParticipantRole, PersonAssociationRole } from '../../../api/types';
 import { createRelationship, addEventParticipant, getRelationshipsOfPerson } from '../../../api/relationships';
 import { createPersonAssociation, getAssociationsForPerson } from '../../../api/person_associations';
+import { bulkCreateCitations } from '../../../api/sources';
 import type { ImportContext } from '../import-types';
-import { getChild } from '../node-utils';
+import { getChild, getChildren } from '../node-utils';
 
 const PERSON_ASSOC_ROLES: ReadonlySet<PersonAssociationRole> = new Set([
   'godparent', 'friend', 'colleague', 'enemy', 'neighbor', 'other',
 ]);
 
 export async function phaseAsso(ctx: ImportContext): Promise<void> {
+  // Citations on an ASSO attach to the `relationships` row the third branch
+  // creates. Buffered and flushed once: `ctx.assoData` is bounded by ASSO count
+  // rather than person count, but a tree with thousands of associations would
+  // otherwise pay one IPC round-trip per citation — `.claude/rules/performance.md`.
+  const citationBuffer: Array<{
+    source_id: string;
+    relationship_id: string;
+    page?: string;
+    confidence?: number;
+    notes?: string;
+    transcription?: string;
+    date_accessed?: string;
+  }> = [];
+
   for (const { personId, assoNode } of ctx.assoData) {
     const otherPersonXref = assoNode.value;
     const otherPersonId = ctx.personMap.get(otherPersonXref);
@@ -106,15 +121,37 @@ export async function phaseAsso(ctx: ImportContext): Promise<void> {
         // notes (with embedded newlines) survive end-to-end. Couples ride
         // _RELNOTES on FAM; this is the non-couple carrier.
         const notes = getChild(assoNode, '_RELA_NOTE')?.value ?? '';
-        await createRelationship(ctx.db, {
+        const created = await createRelationship(ctx.db, {
           type: relType,
           person1_id: personId,
           person2_id: otherPersonId,
           notes,
         });
+        // The source backing the association. This is the only branch where a
+        // citation has somewhere to go: `citations.relationship_id` exists and
+        // the row was just created. Same sub-tag reading as the FAM-level
+        // citations in phases/families.ts.
+        for (const sour of getChildren(assoNode, 'SOUR')) {
+          const srcId = ctx.sourceMap.get(sour.value) ?? ctx.sourceMap.get(sour.xref ?? '');
+          if (!srcId) continue;
+          const quay = parseInt(getChild(sour, 'QUAY')?.value ?? '2', 10);
+          citationBuffer.push({
+            source_id: srcId,
+            relationship_id: created.id,
+            page: getChild(sour, 'PAGE')?.value ?? '',
+            confidence: Math.min(3, Math.max(0, quay)),
+            notes: getChild(sour, 'NOTE')?.value || undefined,
+            transcription: getChild(sour, '_TRANS')?.value || undefined,
+            date_accessed: getChild(sour, '_ACCESSED')?.value || undefined,
+          });
+        }
       }
     } else {
       ctx.assoDropCount++;
     }
+  }
+
+  if (citationBuffer.length > 0) {
+    await bulkCreateCitations(ctx.db, citationBuffer);
   }
 }

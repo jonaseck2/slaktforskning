@@ -844,9 +844,9 @@ Where the citation can attach depends on which branch the ASSO takes:
 
 The rootsmagic fixture's `2 RELA Witness` falls into the fourth branch — the ASSO itself is dropped today, so its citation has nowhere to go regardless.
 
-- [ ] **Step 1: Decide and record the split.** Map the third branch (a `relationships` row exists, the FK exists). Declare the second: adding a `person_association_id` column to `citations` is schema work whose only driver is one fixture, and it belongs in the standard-tag plan Task 11 files, alongside `*.SOUR.OBJE` and the other citation-shaped gaps. Write that reasoning into the declaration, not just into this plan.
+- [x] **Step 1: Decide and record the split.** Map the third branch (a `relationships` row exists, the FK exists). Declare the second: adding a `person_association_id` column to `citations` is schema work whose only driver is one fixture, and it belongs in the standard-tag plan Task 11 files, alongside `*.SOUR.OBJE` and the other citation-shaped gaps. Write that reasoning into the declaration, not just into this plan.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/unit/import-asso-citation.test.ts
@@ -885,11 +885,11 @@ describe('citation on an association', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.**
+- [x] **Step 3: Run — confirm it fails.**
 
-- [ ] **Step 4: Implement** — in the capitalised-`RELA` branch of `asso.ts`, after `createRelationship` returns, read `SOUR` children and create citations against `relationship_id`. `phaseAsso` iterates `ctx.assoData`, which is bounded by ASSO count, not person count — but if a tree has thousands of ASSOs this becomes per-row IPC. Buffer the citation rows and flush once with `bulkCreateCitations` after the loop, matching `individuals.ts`.
+- [x] **Step 4: Implement** — in the capitalised-`RELA` branch of `asso.ts`, after `createRelationship` returns, read `SOUR` children and create citations against `relationship_id`. `phaseAsso` iterates `ctx.assoData`, which is bounded by ASSO count, not person count — but if a tree has thousands of ASSOs this becomes per-row IPC. Buffer the citation rows and flush once with `bulkCreateCitations` after the loop, matching `individuals.ts`.
 
-- [ ] **Step 5: Rewrite the declaration** to cover only what remains:
+- [x] **Step 5: Rewrite the declaration** to cover only what remains:
 
 ```ts
   { path: 'INDI.ASSO.SOUR', reason: 'unmapped:pending-standard-tag-gaps — mapped when the ASSO creates a relationships row (citations.relationship_id). Not mapped for the person_associations branch: citations has no person_association_id column, and adding one is schema work that belongs with the other citation-shaped gaps.' },
@@ -897,9 +897,9 @@ describe('citation on an association', () => {
 
 Replace `pending-standard-tag-gaps` with the actual plan slug Task 11 files.
 
-- [ ] **Step 6: Verify** — new suite green, accounting gate green.
+- [x] **Step 6: Verify** — new suite green, accounting gate green.
 
-- [ ] **Step 7: Commit** — `feat(import): keep the citation on an association`
+- [x] **Step 7: Commit** — `feat(import): keep the citation on an association`
 
 ---
 
