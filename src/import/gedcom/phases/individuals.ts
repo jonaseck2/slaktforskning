@@ -311,7 +311,9 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const dataNode = getChild(sour, 'DATA');
         const transcription = dataNode ? (getChild(dataNode, 'TEXT')?.value ?? '') : '';
+        const citationId = uuid();
         citationBuffer.push({
+          id: citationId,
           source_id: srcId,
           person_name_id: pn.id,
           page,
@@ -320,6 +322,17 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
           transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
+        // ArkivDigital's image pointer on this citation. Zero occurrences
+        // across the four real exports at this host, but `*.SOUR._AID` is a
+        // wildcard declaration: reading it on one host and not the others
+        // would re-open the silent drop.
+        const imageAid = getChild(sour, '_AID')?.value?.trim();
+        if (imageAid) {
+          citationExternalIdBuffer.push({
+            entity_type: 'citation', entity_id: citationId,
+            system: 'arkivdigital.image', value: imageAid,
+          });
+        }
       }
     }
 
@@ -348,7 +361,9 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
+        const citationId = uuid();
         citationBuffer.push({
+          id: citationId,
           source_id: srcId,
           person_id: personId,
           page,
@@ -357,6 +372,17 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
           transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
+        // ArkivDigital's image pointer on this citation. Zero occurrences
+        // across the four real exports at this host, but `*.SOUR._AID` is a
+        // wildcard declaration: reading it on one host and not the others
+        // would re-open the silent drop.
+        const imageAid = getChild(sour, '_AID')?.value?.trim();
+        if (imageAid) {
+          citationExternalIdBuffer.push({
+            entity_type: 'citation', entity_id: citationId,
+            system: 'arkivdigital.image', value: imageAid,
+          });
+        }
       }
     }
 

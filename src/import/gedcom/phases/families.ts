@@ -150,7 +150,9 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
         const citNotes = getChild(sour, 'NOTE')?.value ?? '';
         const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
         const transcription = getChild(sour, '_TRANS')?.value ?? '';
+        const citationId = uuid();
         citationBuffer.push({
+          id: citationId,
           source_id: srcId,
           relationship_id: coupleId,
           page,
@@ -159,6 +161,17 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
           transcription: transcription || undefined,
           date_accessed: date_accessed || undefined,
         });
+        // ArkivDigital's image pointer on this citation. Zero occurrences
+        // across the four real exports at this host, but `*.SOUR._AID` is a
+        // wildcard declaration: reading it on one host and not the others
+        // would re-open the silent drop.
+        const imageAid = getChild(sour, '_AID')?.value?.trim();
+        if (imageAid) {
+          citationExternalIdBuffer.push({
+            entity_type: 'citation', entity_id: citationId,
+            system: 'arkivdigital.image', value: imageAid,
+          });
+        }
       }
     }
 

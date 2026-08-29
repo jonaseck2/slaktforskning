@@ -13,6 +13,7 @@ import {
   getExternalIdentifiersByEntityType,
   type ExternalIdentifier,
 } from '../../src/api/external_identifiers';
+import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
 import { createTestDb } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
@@ -163,5 +164,70 @@ describe('citation-level image pointer', () => {
 0 TRLR
 `));
     expect(await identsFor(db, 'citation')).toEqual([]);
+  });
+});
+
+// Zero of the 6324 real occurrences sit on a name, person, or family citation.
+// They are handled anyway because Task 6 deletes a *wildcard* declaration —
+// `*.SOUR._AID` covers every host, and removing it for one host while leaving
+// three unread would re-open the silent drop the accounting contract closes.
+const NON_EVENT_HOSTS = `0 HEAD
+1 SOUR Arkiv_Digital
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @S1@ SOUR
+1 TITL A source
+1 _AID v900
+0 @I1@ INDI
+1 NAME Erik /Hedqvist/
+2 SOUR @S1@
+3 PAGE n1
+3 _AID v900.b1.s1
+1 SOUR @S1@
+2 PAGE p1
+2 _AID v900.b2.s2
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Anna /Ersdotter/
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 SOUR @S1@
+2 PAGE f1
+2 _AID v900.b3.s3
+0 TRLR
+`;
+
+describe('image pointer on non-event citation hosts', () => {
+  it('stores one row per host, each against its own citation', async () => {
+    await importGedcom(db, parseGedcom(NON_EVENT_HOSTS));
+    const idents = await identsFor(db, 'citation');
+    expect(idents.map(i => i.value).sort())
+      .toEqual(['v900.b1.s1', 'v900.b2.s2', 'v900.b3.s3']);
+
+    const byId = new Map(
+      (await queryAll<{
+        id: string; page: string; person_id: string | null;
+        person_name_id: string | null; relationship_id: string | null;
+      }>(db, `SELECT id, page, person_id, person_name_id, relationship_id FROM citations`))
+        .map(c => [c.id, c]));
+    const rowFor = (v: string): NonNullable<ReturnType<typeof byId.get>> =>
+      byId.get(idents.find(i => i.value === v)!.entity_id)!;
+
+    expect(rowFor('v900.b1.s1').page).toBe('n1');
+    expect(rowFor('v900.b2.s2').page).toBe('p1');
+    expect(rowFor('v900.b3.s3').page).toBe('f1');
+
+    expect(rowFor('v900.b1.s1').person_name_id).not.toBeNull();
+    expect(rowFor('v900.b2.s2').person_id).not.toBeNull();
+    expect(rowFor('v900.b3.s3').relationship_id).not.toBeNull();
+  });
+
+  it('reports nothing unaccounted for this file', async () => {
+    const report = await importGedcom(db, parseGedcom(NON_EVENT_HOSTS));
+    const undeclared = (report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path));
+    expect(undeclared).toEqual([]);
   });
 });
