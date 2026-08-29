@@ -23,6 +23,40 @@ export function remapHolgerMediaPath(winPath: string, mediaDir: string): string 
 }
 
 /**
+ * `FORM` and `TITL` for a media object, read at either level GEDCOM puts them.
+ *
+ * 5.5.1's original shape hangs both directly off OBJE; 5.5.1's later form and
+ * 7.0 hang them off the FILE instead:
+ *
+ *   1 OBJE                 1 OBJE
+ *   2 FORM jpeg            2 FILE photo.jpg
+ *   2 FILE photo.jpg       3 FORM image/jpeg
+ *                          3 TITL Bröllopet 1928
+ *
+ * The importer read only the first. Measured 2026-08-29 over the 36 real .ged
+ * files in export-import/samples: 199 `OBJE.FILE.FORM` and 175
+ * `OBJE.FILE.TITL` against **0** of either at OBJE level — so `media.format`
+ * was null for every top-level OBJE in the corpus, and `media.title` fell back
+ * to the file's basename on all 174 records that stated a title.
+ *
+ * The OBJE-level value wins when both are present: it describes the record,
+ * and the per-file one describes one of its files. An OBJE with several FILEs
+ * each carrying a title collapses to the first — `media.title` is per record.
+ * 2 of 174 such records in the corpus have more than one FILE.
+ */
+export function readObjeFormAndTitle(
+  objeNode: GedcomNode,
+  fileNode: GedcomNode | undefined,
+): { form: string | null; title: string | null } {
+  const at = (node: GedcomNode | undefined, tag: string): string | null =>
+    (node ? getChild(node, tag)?.value ?? null : null);
+  return {
+    form: at(objeNode, 'FORM') ?? at(fileNode, 'FORM'),
+    title: at(objeNode, 'TITL') ?? at(fileNode, 'TITL'),
+  };
+}
+
+/**
  * Import a single OBJE node (inline or top-level reference) and return the media UUID.
  * Returns null if the node cannot be resolved.
  */
@@ -44,12 +78,12 @@ export async function importObjeNode(
     if (cached) return cached;
   }
   // Inline embedded OBJE
-  let file = getChild(objeNode, 'FILE')?.value ?? '';
+  const fileNode = getChild(objeNode, 'FILE');
+  let file = fileNode?.value ?? '';
   if (file && options?.mediaDir) {
     file = remapHolgerMediaPath(file, options.mediaDir);
   }
-  const form = getChild(objeNode, 'FORM')?.value ?? null;
-  const titl = getChild(objeNode, 'TITL')?.value ?? null;
+  const { form, title: titl } = readObjeFormAndTitle(objeNode, fileNode);
   const note = getChild(objeNode, 'NOTE')?.value ?? '';
   const media = await createMedia(db, {
     file_ref: file || null,

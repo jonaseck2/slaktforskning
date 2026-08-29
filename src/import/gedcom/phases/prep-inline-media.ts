@@ -4,7 +4,7 @@ import { basename } from 'path';
 import { bulkCreateMedia } from '../../../api/media';
 import type { ImportContext } from '../import-types';
 import { getChild } from '../node-utils';
-import { remapHolgerMediaPath } from '../obje-importer';
+import { readObjeFormAndTitle, remapHolgerMediaPath } from '../obje-importer';
 
 /**
  * Walk the tree, find every *inline* OBJE node (i.e. OBJE without an xref
@@ -46,12 +46,12 @@ export async function phasePrepInlineMedia(ctx: ImportContext): Promise<void> {
   }> = new Array(inlineNodes.length);
   for (let i = 0; i < inlineNodes.length; i++) {
     const node = inlineNodes[i];
-    let file = getChild(node, 'FILE')?.value ?? '';
+    const fileNode = getChild(node, 'FILE');
+    let file = fileNode?.value ?? '';
     if (file && mediaDir) {
       file = remapHolgerMediaPath(file, mediaDir);
     }
-    const form = getChild(node, 'FORM')?.value ?? null;
-    const titl = getChild(node, 'TITL')?.value ?? null;
+    const { form, title: titl } = readObjeFormAndTitle(node, fileNode);
     const noteVal = getChild(node, 'NOTE')?.value ?? '';
     const id = crypto.randomUUID();
     inlineMediaMap.set(node, id);

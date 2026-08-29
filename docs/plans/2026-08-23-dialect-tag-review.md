@@ -912,20 +912,31 @@ Replace `pending-standard-tag-gaps` with the actual plan slug Task 11 files.
 
 Seven entries, all currently `unmapped:pending-dialect-tag-review`: `OBJE.FILE.FORM`, `OBJE.FILE.FORM.TYPE`, `OBJE.FILE.TITL`, `OBJE.REFN`, `OBJE.REFN.TYPE`, `OBJE.RIN`, `SOUR.ABBR`.
 
-- [ ] **Step 1: Measure before deciding.** For each of the seven, get the occurrence count from the Task 1 census and note which programs write it. `OBJE.FILE.FORM` shows 199 in the corpus and 49 + 56 under `INDI.OBJE.FILE.FORM` in two files — a real, standard tag. Record the counts in the commit; a classification with no denominator is a shrug.
+- [x] **Step 1: Measure before deciding.** For each of the seven, get the occurrence count from the Task 1 census and note which programs write it. `OBJE.FILE.FORM` shows 199 in the corpus and 49 + 56 under `INDI.OBJE.FILE.FORM` in two files — a real, standard tag. Record the counts in the commit; a classification with no denominator is a shrug.
 
-- [ ] **Step 2: Classify each one** into exactly one of:
+- [x] **Step 2: Classify each one** into exactly one of:
+
+> **Both of the plan's guesses were wrong, measured.** `OBJE.FILE.FORM` is not
+> redundant with `media.format`: the importer read `FORM` only as a direct child
+> of `OBJE`, and the corpus writes it there **0** times against 199 under `FILE`.
+> `OBJE.FILE.TITL` is not a genuinely different value either: **0** of the 174
+> OBJE records carrying it also carry a level-1 `TITL`, so `media.title` fell
+> back to `basename(file)` on every one. Both are *map*, not *declare*.
+>
+> Measured counts: `OBJE.FILE.FORM` 199 · `OBJE.FILE.TITL` 175 · `SOUR.ABBR` 22
+> · `OBJE.REFN` 2 · `OBJE.REFN.TYPE` 2 · `OBJE.RIN` 0 · `OBJE.FILE.FORM.TYPE` 0
+> (the corpus writes `OBJE.FILE.FORM.MEDI`, 8, at that position instead).
   - **map** — the column exists. `OBJE.FILE.TITL` against `media.title` is the likely candidate; check whether `media.title` is already fed from `OBJE.TITL` one level up, in which case the per-file title is a genuinely different value and the classification is *declare*.
   - **declare `excluded:redundant`** — the value is read from elsewhere. `OBJE.FILE.FORM` against `media.format` is the likely candidate; verify the importer reads `FORM` at the level it actually appears before declaring redundancy.
   - **declare `unmapped:pending-<plan>`** — real data, no column, needs the follow-up plan.
 
-- [ ] **Step 3: Implement whichever mappings Step 2 chose**, each with a fixture line and a test asserting the value lands and survives a round-trip.
+- [x] **Step 3: Implement whichever mappings Step 2 chose**, each with a fixture line and a test asserting the value lands and survives a round-trip.
 
-- [ ] **Step 4: Rewrite the remaining declarations** with the measured count and the classification reason. No entry keeps `pending-dialect-tag-review`.
+- [x] **Step 4: Rewrite the remaining declarations** with the measured count and the classification reason. No entry keeps `pending-dialect-tag-review`.
 
-- [ ] **Step 5: Verify** — accounting gate green; census shows the mapped paths gone.
+- [x] **Step 5: Verify** — accounting gate green; census shows the mapped paths gone.
 
-- [ ] **Step 6: Commit** — `feat(import): classify the media and source sub-tags, map what has a column`
+- [x] **Step 6: Commit** — `feat(import): classify the media and source sub-tags, map what has a column`
 
 ---
 

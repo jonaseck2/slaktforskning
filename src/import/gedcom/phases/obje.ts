@@ -4,7 +4,7 @@ import { basename } from 'path';
 import { bulkCreateMedia } from '../../../api/media';
 import type { ImportContext } from '../import-types';
 import { getChild } from '../node-utils';
-import { remapHolgerMediaPath } from '../obje-importer';
+import { readObjeFormAndTitle, remapHolgerMediaPath } from '../obje-importer';
 import { markConsumed } from '../tag-accounting';
 
 export async function phaseObje(ctx: ImportContext): Promise<void> {
@@ -21,13 +21,13 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
   let withFile = 0;
   for (let i = 0; i < total; i++) {
     const node = objeNodes[i];
-    let file = getChild(node, 'FILE')?.value ?? '';
+    const fileNode = getChild(node, 'FILE');
+    let file = fileNode?.value ?? '';
     if (file && ctx.options?.mediaDir) {
       file = remapHolgerMediaPath(file, ctx.options.mediaDir);
     }
     if (file) withFile++;
-    const form = getChild(node, 'FORM')?.value ?? null;
-    const titl = getChild(node, 'TITL')?.value ?? null;
+    const { form, title: titl } = readObjeFormAndTitle(node, fileNode);
     const note = getChild(node, 'NOTE')?.value ?? '';
     const id = crypto.randomUUID();
     ctx.objeMap.set(node.xref!, id);

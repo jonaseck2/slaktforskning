@@ -88,13 +88,16 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   // ── Surfaced by running the accounting over the four real ArkivDigital
   // exports. Not AD-specific and not in this plan's scope; named here so the
   // real corpus is clean rather than quietly undeclared.
-  { path: 'OBJE.FILE.FORM',      reason: 'unmapped:pending-dialect-tag-review — standard media format sub-tag; media.format holds one value and the FORM/TYPE pair is richer' },
-  { path: 'OBJE.FILE.FORM.TYPE', reason: 'unmapped:pending-dialect-tag-review — media type qualifier under FORM' },
-  { path: 'OBJE.FILE.TITL',      reason: 'unmapped:pending-dialect-tag-review — per-file title; media.title is per-record, not per-file' },
-  { path: 'OBJE.REFN',           reason: 'unmapped:pending-dialect-tag-review — media reference number; no identifier storage for media yet' },
-  { path: 'OBJE.REFN.TYPE',      reason: 'unmapped:pending-dialect-tag-review — qualifier on the media reference number' },
-  { path: 'OBJE.RIN',            reason: 'unmapped:pending-dialect-tag-review — media record id number' },
-  { path: 'SOUR.ABBR',           reason: 'unmapped:pending-dialect-tag-review — short form of the source title; no column on sources' },
+  // OBJE.FILE.FORM (199 occurrences) and OBJE.FILE.TITL (175) are read now —
+  // see readObjeFormAndTitle in obje-importer.ts. What is left needs a column
+  // that does not exist, so each one carries its measured count and the plan
+  // that owns it. Counts measured 2026-08-29 over the 36 .ged files in
+  // export-import/samples.
+  { path: 'OBJE.FILE.FORM.TYPE', reason: 'unmapped:pending-standard-tag-gaps — media type qualifier under FORM. 0 occurrences across the 36 sample files; what the corpus writes at that position is OBJE.FILE.FORM.MEDI (8 occurrences), GEDCOM 7.0\'s media-type qualifier. `media` has one `format` column and no room for a second qualifier, so this is modelling work.' },
+  { path: 'OBJE.REFN',           reason: 'unmapped:pending-standard-tag-gaps — media reference number, 2 occurrences across the 36 sample files. `external_identifiers` does accept entity_type \'media\', but a bare GEDCOM REFN has no system name to file it under and the exporter has no path back out to `1 REFN`; both belong with the other identifier-shaped gaps.' },
+  { path: 'OBJE.REFN.TYPE',      reason: 'unmapped:pending-standard-tag-gaps — qualifier on the media reference number, 2 occurrences across the 36 sample files. Blocked on the same decision as OBJE.REFN.' },
+  { path: 'OBJE.RIN',            reason: 'unmapped:pending-standard-tag-gaps — media record id number. 0 occurrences across the 36 sample files; declared because the tag is standard and a file may carry it. Same identifier-storage gap as OBJE.REFN.' },
+  { path: 'SOUR.ABBR',           reason: 'unmapped:pending-standard-tag-gaps — short form of the source title, 22 occurrences across the 36 sample files. `sources` has title, author, publication_info, url and source_type; a short title is a sixth column, which is modelling work rather than mapping work.' },
   { path: 'SUBN',                reason: 'excluded:not-relevant — GEDCOM 5.5.1 submission record, metadata about the transmission rather than the family' },
   { path: '*.FAMS._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a spouse-family pointer, not on the person or the event' },
   { path: '*.FAMC._TITLE',       reason: 'unmapped:pending-unmapped-capture — a title on a child-family pointer' },
