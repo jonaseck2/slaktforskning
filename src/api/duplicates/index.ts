@@ -7,3 +7,5 @@ export * from './places';
 export * from './sources';
 export * from './media';
 export * from './shared';
+export * from './clusters';
+export * from './consolidate';
