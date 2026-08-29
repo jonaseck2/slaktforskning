@@ -74,6 +74,23 @@ External IDs linking a person record to identifiers in other systems. Populated 
 | created_at | TEXT | datetime |
 | UNIQUE | | (person_id, identifier_type, identifier_value) |
 
+### external_identifiers
+The non-person sibling of `person_identifiers`: source-format ids for sources, places, citations, media and repositories. **Exists for round-trip, not for deduplication.** Nothing in the app reads these values to make a decision — the importer stores what the file said and the exporter writes it back. A render layer may turn one into a clickable archive link (`src/api/external_identifier_links.ts`), but that resolution happens at display time and is never persisted.
+
+No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQLite has no polymorphic foreign key. The owning entity's delete path cleans up, exactly as with `note_links` and `group_links`.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | TEXT PK | UUID v4 |
+| entity_type | TEXT | CHECK 'source' \| 'place' \| 'citation' \| 'media' \| 'repository' |
+| entity_id | TEXT | Polymorphic; no FK |
+| system | TEXT | Namespaced, e.g. `arkivdigital`, `arkivdigital.parish`, `arkivdigital.image` |
+| value | TEXT | The identifier as the source file wrote it |
+| created_at | TEXT | datetime |
+| UNIQUE | | (entity_type, entity_id, system, value) |
+
+Three (entity_type, system) pairs have a GEDCOM tag to travel in today, all ArkivDigital: a source's volume id as `1 _AID`, a place's parish id as `_PARISH_AID` inside the reconstructed `_ADPL` block, and a citation's image id as `_AID` inside its `SOUR` block. Any other system round-trips as `lossy` — see `src/api/gedcom_fidelity_registry.ts`.
+
 ### relationships
 **Replaces `families` + `person_family_links`.** A relationship is a typed, sourced connection between two persons. This is the GEDCOM-X model — there is no "Family" entity, only relationships between individuals.
 

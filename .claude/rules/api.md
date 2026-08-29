@@ -14,6 +14,7 @@ Loads when working in `src/api/` or unit tests. `src/api/` is runtime-neutral Ty
 Person              { id, sex: 'M'|'F'|'U'|'X', living: boolean, notes, created_at, updated_at }
 PersonName          { id, person_id, given_name, surname, name_type: 'birth'|'married'|'alias'|'aka', date_from?, date_to?, sort_order, name_prefix?, name_suffix?, patronymic_base?, name_qualifier?, preferred_name?, nickname? }
 PersonIdentifier    { id, person_id, identifier_type: 'familysearch'|'ancestry'|'riksarkivet'|'personnummer'|'refn'|'rin'|'other', identifier_value, created_at }
+ExternalIdentifier  { id, entity_type: 'source'|'place'|'citation'|'media'|'repository', entity_id, system, value, created_at }
 Relationship        { id, type: 'couple'|'parent_child'|'sibling'|'godparent'|'other', person1_id?, person2_id?, subtype?, notes, created_at, updated_at }
 PersonAssociation   { id, person_id, related_person_id, role: 'godparent'|'friend'|'colleague'|'enemy'|'neighbor'|'other', notes, created_at }
 EventParticipant    { id, event_id, person_id, role: 'primary'|'spouse'|'parent'|'child'|'witness'|'godparent'|'officiant'|'other' }
@@ -70,6 +71,7 @@ MediaRegion         { id, media_id, person_id?, x: number, y: number, width: num
 | `media` | file_ref, title, format, notes, is_printable | — |
 | `media_links` | media_id, entity_type, entity_id, link_type, sort_order | media → CASCADE |
 | `media_regions` | media_id, person_id, x, y, width, height, label | media → CASCADE, person → SET NULL |
+| `external_identifiers` | entity_type ∈ {source\|place\|citation\|media\|repository}, entity_id, system, value (UNIQUE on the four) — round-trip only, never read to decide anything | none; entity_id polymorphic |
 | `gazetteers` | id, name, locale, description, source_json, data (BLOB), created_at | — |
 
 Tables added in T02 (v0.262.0): `person_associations`, `notes`, `note_links`, `name_translations`, `place_translations`, `source_coverage_events`. Columns added to `events`: `is_negation`, `negation_event_type`. `persons.sex` CHECK extended to accept `'X'`. Column dropped: `sources.repository`.
