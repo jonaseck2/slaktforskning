@@ -17,8 +17,10 @@ handles even though this app has never heard of Gramps handles.
 ## Scope
 
 Every one of the five `entity_type` values `external_identifiers` accepts, crossed with a
-vendor system and an unknown system. Ten cells. Eight are covered by this plan, one already
-worked, and two are declared uncovered with a reason and a test that says so.
+vendor system and an unknown system. `place` splits into four rows because a place reaches the
+exported file by four different routes and each route offers a different carrier. Eight rows,
+sixteen cells: twelve are covered by this plan, two already worked, and two are declared
+uncovered with a reason and a test that says so.
 
 | entity_type | vendor system | unknown system |
 |---|---|---|
@@ -27,8 +29,16 @@ worked, and two are declared uncovered with a reason and a test that says so.
 | `media` | T04 | T04 |
 | `citation` | already works (`_AID` in `SOUR`) | T05 |
 | `place`, event's own place | T06 (root-parish fix) | T06 |
+| `place`, reachable only through a place-level citation | T-new (`_EXID` on the `_PLAC` record) | T-new |
 | `place`, `_ADPL` ancestor only | already works | **uncovered — T09 declares it** |
 | `place`, unreachable from any event or citation | **uncovered** | **uncovered — T09 declares it** |
+
+**T-new was found by probe, not by the design.** After cells 1-13 went green, a place carrying
+a place-level citation and named by no event was measured: it gets a `0 @Pn@ _PLAC` record with
+`NAME`, `_PLAC_ID` and `SOUR`, `emitPlaceSubTags` is never called on it, and both a seeded
+`arkivdigital.parish` and a seeded `gramps.handle` were lost. It sits between the two rows
+below it — the place *is* exported, unlike the last row, and it has no `_ADPL` slot competing
+for it, unlike the row after this one.
 
 ### Scope deviations
 

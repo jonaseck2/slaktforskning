@@ -11,10 +11,11 @@ import { readExternalIds } from '../../../gedcom/external-id-tags';
 import { markConsumed } from '../tag-accounting';
 
 export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
-  // Source-format ids on the place-level citations this phase creates. One
-  // array for the whole phase, flushed once after the tree walk —
-  // `.claude/rules/performance.md`. The `createCitation` call in the loop is
-  // already per-row and predates this work; the identifier write adds no second.
+  // Source-format ids on the place-level citations this phase creates, and on
+  // the places those citations hang off. One array for the whole phase,
+  // flushed once after the tree walk — `.claude/rules/performance.md`. The
+  // `createCitation` call in the loop is already per-row and predates this
+  // work; the identifier write adds no second.
   const externalIdRows: ExternalIdentifierInput[] = [];
   for (const node of ctx.tree) {
     if (node.tag !== '_PLAC') continue;
@@ -33,6 +34,15 @@ export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
       place = await ctx.resolvePlaceFn(ctx.db, placeName);
       ctx.placeIdMap.set(oldPlaceId, place.id);
     }
+
+    // The place's own ids. A place reachable only through a place-level
+    // citation gets no `PLAC` block anywhere in the file, so `prep-places.ts`
+    // never sees it and the `_PLAC` record is its only carrier. The exporter
+    // writes every system here, `arkivdigital.parish` included, because this
+    // record emits no `_ADPL` block for `_PARISH_AID` to live in.
+    externalIdRows.push(
+      ...readExternalIds(node, ['_EXID'], 'place', place.id, getChild, getChildren),
+    );
 
     for (const sour of getChildren(node, 'SOUR')) {
       const srcId = ctx.sourceMap.get(sour.value);

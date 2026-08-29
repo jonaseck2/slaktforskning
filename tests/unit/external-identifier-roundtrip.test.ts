@@ -115,6 +115,17 @@ async function seedEventCitation(db: Database, sourceId: string, eventId: string
   return id;
 }
 
+/** A citation whose only host is a place — the shape that produces a `_PLAC` record. */
+async function seedPlaceCitation(db: Database, sourceId: string, placeId: string): Promise<string> {
+  const id = crypto.randomUUID();
+  await runSql(
+    db,
+    'INSERT INTO citations (id, source_id, place_id, page, confidence) VALUES (?,?,?,?,3)',
+    [id, sourceId, placeId, 'fol. 3'],
+  );
+  return id;
+}
+
 async function seedPlace(
   db: Database, name: string, placeType: string, parentId: string | null = null,
 ): Promise<string> {
@@ -313,6 +324,59 @@ describe('external_identifiers round-trip matrix', () => {
         await expectHostSurvived(fresh, 'places');
         expect(ged).toMatch(/_EXID g-plac-0004/);
         expectIdentifier(await identifiersIn(fresh), 'place', 'gramps.handle', 'g-plac-0004');
+      });
+
+      it('cell 14: place reachable only through a place-level citation keeps both systems', async () => {
+        // Found by probe on 2026-08-29, after cells 1-13 were green. No event
+        // names this place, so `emitPlaceSubTags` is never called on it and
+        // `prep-places.ts` never sees a `PLAC` node for it. Its only appearance
+        // in the file is the `0 @Pn@ _PLAC` record the place-level citation
+        // forces, which carried `NAME`, `_PLAC_ID` and the citation and nothing
+        // else. Both systems were lost — it falls between cell 12 (`_ADPL`
+        // ancestor only) and cell 13 (no event AND no citation).
+        //
+        // `arkivdigital.parish` rides `_EXID` here rather than `_PARISH_AID`
+        // because this record emits no `_ADPL` block for the vendor tag to sit
+        // in. `_PLAC` is a custom level-0 record ArkivDigital never writes and
+        // skips on read, so the vendor-override rule is not weakened by it.
+        const db = await createTestDb();
+        const sid = await seedSource(db);
+        const parish = await seedPlace(db, 'Döderhult', 'parish', null);
+        await seedPlaceCitation(db, sid, parish);
+        await addExternalId(db, 'place', parish, 'arkivdigital.parish', 'ad-parish-601');
+        await addExternalId(db, 'place', parish, 'gramps.handle', 'g-plac-0601');
+        await seedPersonEventAtPlace(db, null); // something must exist to export
+        const { ged, fresh } = await roundTrip(db, version);
+        // Control: the place reaches the file as a `_PLAC` record, and no
+        // event-borne `PLAC` block exists for it. A red assertion below is
+        // therefore a missing carrier, not a missing place.
+        expect(ged).toMatch(/^0 @P1@ _PLAC$/m);
+        expect(ged).not.toMatch(/^\s*\d+ PLAC Döderhult$/m);
+        await expectHostSurvived(fresh, 'places');
+        const rows = await identifiersIn(fresh);
+        expectIdentifier(rows, 'place', 'arkivdigital.parish', 'ad-parish-601');
+        expectIdentifier(rows, 'place', 'gramps.handle', 'g-plac-0601');
+      });
+
+      it('cell 14 gate: a place that is both an event place and a citation host carries each id once', async () => {
+        // The `_PLAC` emitter is skipped for a place whose `PLAC` block already
+        // stated its identifiers. Without the skip the file would carry two
+        // carriers for one row — `_PARISH_AID` under the event and `_EXID`
+        // under the record — and a re-export would not be stable.
+        const db = await createTestDb();
+        const sid = await seedSource(db);
+        const parish = await seedPlace(db, 'Döderhult', 'parish', null);
+        await addExternalId(db, 'place', parish, 'arkivdigital.parish', 'ad-parish-602');
+        await addExternalId(db, 'place', parish, 'gramps.handle', 'g-plac-0602');
+        await seedPlaceCitation(db, sid, parish);
+        await seedPersonEventAtPlace(db, parish);
+        const { ged, fresh } = await roundTrip(db, version);
+        expect(ged).toMatch(/^0 @P1@ _PLAC$/m);
+        expect(ged.match(/ad-parish-602/g) ?? []).toHaveLength(1);
+        expect(ged.match(/g-plac-0602/g) ?? []).toHaveLength(1);
+        const rows = await identifiersIn(fresh);
+        expectIdentifier(rows, 'place', 'arkivdigital.parish', 'ad-parish-602');
+        expectIdentifier(rows, 'place', 'gramps.handle', 'g-plac-0602');
       });
 
       // ── the two declared losses ─────────────────────────────────────────

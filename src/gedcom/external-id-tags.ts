@@ -95,13 +95,42 @@ export function emitRecordExternalIds(
  * substructure and a PLAC block is a substructure — neither has a `REFN` slot
  * in either specification, so the tag is custom and identical under both
  * versions.
+ *
+ * Vendor-carried pairs are left to their vendor tag. Use
+ * {@link emitAllSubstructureExternalIds} where no vendor tag is emitted for
+ * the same entity.
  */
 export function emitSubstructureExternalIds(
   lines: string[],
   idents: readonly ExternalIdentifier[],
   level: number,
 ): void {
-  for (const i of generic(idents)) {
+  emitAllSubstructureExternalIds(lines, generic(idents), level);
+}
+
+/**
+ * The same `_EXID` shape, emitting **every** row handed to it — vendor-carried
+ * pairs included.
+ *
+ * Correct only where the caller emits no vendor tag for that entity anywhere
+ * in the file, because then `generic()` is not keeping two carriers apart, it
+ * is deleting the only one. Today that is one site: the top-level `0 @Pn@
+ * _PLAC` record, which carries `NAME`, `_PLAC_ID` and the place's citations
+ * and no `_ADPL` block, so a parish reachable only through a place-level
+ * citation had nowhere to put its `_PARISH_AID` and lost it. Measured
+ * 2026-08-29: both `arkivdigital.parish` and `gramps.handle` were dropped.
+ *
+ * `_PLAC` is a custom level-0 record that ArkivDigital never writes and skips
+ * on read, so carrying its vendor pair in `_EXID` here cannot change what
+ * ArkivDigital reads back — which is the whole reason the vendor-override rule
+ * exists.
+ */
+export function emitAllSubstructureExternalIds(
+  lines: string[],
+  idents: readonly ExternalIdentifier[],
+  level: number,
+): void {
+  for (const i of idents) {
     lines.push(`${level} _EXID ${i.value}`);
     if (i.system !== UNTYPED_SYSTEM) lines.push(`${level + 1} TYPE ${i.system}`);
   }

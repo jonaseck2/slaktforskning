@@ -15,7 +15,9 @@ import { getDbSetting } from '../api/db_settings';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
 // The two tag shapes that carry an external_identifiers row. Nothing in this
 // file emits or parses them by hand.
-import { emitRecordExternalIds, emitSubstructureExternalIds } from './external-id-tags';
+import {
+  emitAllSubstructureExternalIds, emitRecordExternalIds, emitSubstructureExternalIds,
+} from './external-id-tags';
 // T02 GEDCOM-alignment per-concept emitters (stubs; filled by Phase 2 tasks).
 // Wired here so the orchestration surface exists — Phase 2 fills function
 // bodies without re-touching exporter.ts.
@@ -131,7 +133,16 @@ function emitPlaceSubTags(
   subLevel: number,
   placeById?: Map<string, Place>,
   externalIdsByEntity?: Map<string, ExternalIdentifier[]>,
+  /**
+   * Collects every place whose sub-tag block was emitted, so the `_PLAC`
+   * record loop below can tell a place that already stated its identifiers
+   * from one that has not. Recorded inside the function rather than at the
+   * two call sites: a third call site added later is then covered by
+   * construction.
+   */
+  emitted?: Set<string>,
 ): void {
+  emitted?.add(place.id);
   // `emitAdplBlock` returns early when the typed chain is empty, which is the
   // condition that actually matters. `parent_place_id` was a proxy for it and
   // dropped a root-level parish's `_PARISH_AID` on the floor —
@@ -321,6 +332,11 @@ export async function exportGedcom(
   onProgress?: ExportProgressFn,
 ): Promise<{ ged: string; report: ExportReport }> {
   const lines: string[] = [];
+
+  // Every place that got a `PLAC` sub-tag block, filled by `emitPlaceSubTags`.
+  // The `_PLAC` record loop reads it so a place already carrying its
+  // identifiers under an event does not carry them a second time.
+  const placesWithSubTagsEmitted = new Set<string>();
 
   // Resolve export options into a filtered dataset descriptor
   const filterResult = exportOptions ? await applyExportOptions(db, exportOptions) : null;
@@ -759,7 +775,8 @@ export async function exportGedcom(
         const place = pre.placeById.get(ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
-          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity);
+          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity,
+            placesWithSubTagsEmitted);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
           await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;
@@ -1032,7 +1049,8 @@ export async function exportGedcom(
         const place = pre.placeById.get(ev.place_id);
         if (place) {
           lines.push(`2 PLAC ${place.name}`);
-          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity);
+          emitPlaceSubTags(lines, place, 3, pre.placeById, pre.externalIdsByEntity,
+            placesWithSubTagsEmitted);
           // T07 — PLAC TRAN: 7.0 lossless; 5.5.1 drops + warns (no PLAC TRAN slot).
           await emitPlaceTranslations(db, place.id, 3, version, lines, { warnings }, pre.placeTranslationsByPlaceId.get(place.id) ?? []);
           emittedPlac = true;
@@ -1152,6 +1170,18 @@ export async function exportGedcom(
       // NAME allows the importer to create the place by name when UUID lookup fails (cross-DB import)
       lines.push(`1 NAME ${place.name}`);
       lines.push(`1 _PLAC_ID ${place.id}`);
+      // The place's own source-format ids, for a place no event names. This
+      // record emits no `_ADPL` block, so `_PARISH_AID` has no home here and
+      // the vendor filter would delete the row rather than defer it — hence
+      // `emitAll…`, not `emitSubstructure…`. Skipped when an event already
+      // emitted this place's `PLAC` block: that block states the same
+      // identifiers, and emitting them twice would put a second carrier in the
+      // file for one row.
+      if (!placesWithSubTagsEmitted.has(place.id)) {
+        emitAllSubstructureExternalIds(
+          lines, pre.externalIdsByEntity.get(mediaEntityKey('place', place.id)) ?? [], 1,
+        );
+      }
       for (const cit of placeCitations) {
         const srcXr = sourceXref.get(cit.source_id);
         if (srcXr) emitCitationBlock(lines, cit, srcXr, 1, version, 'place',

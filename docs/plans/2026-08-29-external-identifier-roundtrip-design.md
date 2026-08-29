@@ -80,6 +80,7 @@ The identifier rides there too. No new record type is invented.
 | `media` | `OBJE` block, inline and top-level | `REFN` + `TYPE` | `EXID` + `TYPE` | none |
 | `citation` | `SOUR` substructure | `_EXID` + `TYPE` | `_EXID` + `TYPE` | `arkivdigital.image` → `_AID` |
 | `place`, as an event's own place | `PLAC` sub-tag block | `_EXID` + `TYPE` | `_EXID` + `TYPE` | `arkivdigital.parish` → `_PARISH_AID` |
+| `place`, reached only by a place-level citation | `0 @Pn@ _PLAC` record | `_EXID` + `TYPE` | `_EXID` + `TYPE` | none — see below |
 
 `TYPE` carries the `system` column verbatim. The host record or block carries `entity_type`.
 Together they reconstruct the row.
@@ -87,6 +88,26 @@ Together they reconstruct the row.
 A `REFN` or `EXID` with no `TYPE` imports as system `refn`, and a row with system `refn`
 exports as a bare `REFN` or `EXID` with no `TYPE`. Symmetric, so a file that already carried
 untyped references keeps its exact bytes.
+
+### The `_PLAC` record is the one place the vendor override does not apply
+
+Found by probe on 2026-08-29, after the first thirteen matrix cells were green. A place that
+carries a place-level citation and that no event names reaches the file only as its own
+`0 @Pn@ _PLAC` record. `emitPlaceSubTags` is never called on it, so there is no `PLAC` block
+and no `_ADPL` block — and `_PARISH_AID` lives inside `_ADPL`. Measured: both a seeded
+`arkivdigital.parish` and a seeded `gramps.handle` were lost.
+
+Applying the vendor override here would delete the row rather than defer it, because the tag
+it defers to is not emitted. So this one site emits **every** system as `_EXID`,
+`arkivdigital.parish` included. That does not weaken the override rule: `_PLAC` is a custom
+level-0 record ArkivDigital never writes and skips on read, so nothing here changes what
+ArkivDigital reads back — which is the only thing the rule protects.
+
+The emit is skipped when an event already emitted the place's `PLAC` block. Without that gate
+a place that is both an event place and a citation host would carry two carriers for one row —
+`_PARISH_AID` under the event and `_EXID` under the record — and the second export would not be
+stable. `emitPlaceSubTags` records every place it emits, so the gate is exact rather than
+inferred.
 
 ### Why the carrier is the existing block and not a new record
 
@@ -136,8 +157,8 @@ which is why it needs a round-trip test rather than an assertion.
 
 ### What the registry becomes
 
-Twenty-four of the twenty-five `(entity_type × system-kind)` cells gain a carrier. One does
-not, and it is named precisely rather than covered by a vague reason.
+Fourteen of the sixteen `(route × system-kind)` cells in the plan's scope table gain a
+carrier. Two do not, and they are named precisely rather than covered by a vague reason.
 
 **Uncovered cell 1: a non-ArkivDigital identifier on a place that is never an event's own
 place.** Such a place reaches the file only as a level inside an `_ADPL` chain, and that
@@ -150,10 +171,18 @@ place" means, which is a places-hierarchy user goal and not this one.
 **Uncovered cell 2: any identifier on a place that no event and no citation reaches.** That
 place is not exported at all, so nothing hangs off it. See the Scope deviation below.
 
-No importer can currently produce cell 1. `prep-places.ts:133` is the only writer of a
-place identifier in the codebase and it writes `arkivdigital.parish` and nothing else. The
-cell is therefore unreachable today, and a test asserts it stays that way — so a future
-importer that writes a second place system fails CI instead of losing data quietly.
+The middle ground between the two — a place no event names but a place-level citation does
+reach — was silently lost until the `_PLAC` record gained its own carrier, and is now covered.
+Uncovered cell 2 is therefore exactly what its sentence says and nothing wider: no event **and**
+no citation.
+
+No importer can currently produce cell 1. Three sites in the codebase write a place
+identifier: `prep-places.ts` writes the literal `arkivdigital.parish` off a resolved `_ADPL`
+chain, and `prep-places.ts` and `place-citations.ts` each read an arbitrary system out of an
+`_EXID` tag — but both of those attach it to a *leaf* place, the one an event's `PLAC` names or
+the one a `_PLAC` record is about, never to an ancestor-only level. A census of those three
+sites is asserted as an exact set, so a fourth writer fails CI and its author has to classify
+it instead of losing data quietly.
 
 `entity_type`, `system` and `value` therefore stay `lossy`, with the reason narrowed from
 "only three pairs have an emitting tag" to that single cell. Declaring them `lossless` while a
