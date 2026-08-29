@@ -49,23 +49,28 @@ Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFi
 
 - `npx tsc --noEmit` errors are mostly in `node_modules`. Filter with `grep "^src/"` to find actual source errors.
 - **`npm run typecheck` is `vue-tsc --noEmit`.** It works as of 2026-08-29 and did not
-  before: `vue-tsc` was never a declared dependency (the script exited 127,
-  `command not found`), and the script's `--ignoreDeprecations 6.0` is rejected by
-  TypeScript 5.9.3 as `TS5103` and **aborts the whole run**, so even with the binary
-  present it would have reported one config error and checked nothing. Added as a
-  devDependency and the flag removed. CI still does not invoke it — `ci.yml` runs lint,
-  audit, test, e2e, build.
+  before. Three separate faults, each of which alone made it useless:
 
-  **`tsconfig.json` had no `exclude` and `allowJs: true`,** so the run type-checked every
-  `.js` under `src-tauri/target/release/**` — Rust codegen assets, thousands of parse
-  errors, and a count that differed by tree (5840 in the main tree, 2304 in a fresh
-  worktree with no `target/`). An `exclude` for build outputs now makes the number mean
-  something and makes it the same everywhere.
+  1. `vue-tsc` was never a declared dependency — the script exited 127, `command not found`.
+  2. `--ignoreDeprecations 6.0` is rejected by TypeScript 5.9.3 as `TS5103`.
+  3. `tsconfig.json` said `"module": "commonjs"` for a codebase that is ESM throughout —
+     Vite, Vitest, `import.meta.env` in the renderer, `import.meta.url` in tests and
+     scripts — so `TS1343` fired on every one of those. It also had no `exclude` with
+     `allowJs: true`, so the run type-checked Rust codegen assets under
+     `src-tauri/target/release/**` and the count depended on whether that tree had been
+     built (5840 in the main tree, 2304 in a fresh worktree, same commit).
 
-  **It is not clean: 2501 errors on a clean checkout.** Concentrated in `scripts/*.ts`
-  gazetteer builders, `src/api/db.ts`, `src/api/places.ts`, `src/api/undo.ts`,
-  `src/renderer/tauri-window-api.ts`, and `import.meta.env` / api-shape errors across the
-  views.
+  All three fixed. CI still does not invoke it — `ci.yml` is lint, audit, test, e2e, build.
+
+  **⚠️ A config-level error makes `vue-tsc` abort before checking anything, and the
+  near-zero result looks like success.** `TS5103` (bad flag) and `TS2688` (missing type
+  package) both do this. In one session this trap produced three different confident
+  wrong answers — "1 error", "3 errors", and an aborted run reported as a baseline — from
+  two different agents. **Before trusting a low count, check the output is not one config
+  error.** A real run names files.
+
+  **It is not clean: 2461 errors on a clean checkout**, concentrated in `tests/**`,
+  `scripts/*.ts` gazetteer builders, `src/renderer/views`, and `src/api/{db,places,undo}.ts`.
 
   **So "typecheck clean" is never the check — "no NEW errors" is.** Take a baseline before
   you claim anything:

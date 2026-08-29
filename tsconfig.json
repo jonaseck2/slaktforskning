@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    // The whole codebase is ESM — Vite, Vitest, `import.meta.env` in the
+    // renderer, `import.meta.url` in tests and scripts. `module: commonjs`
+    // was reporting TS1343 on every one of those and made `npm run typecheck`
+    // useless: 2501 errors, essentially all of them this one misconfiguration.
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -9,9 +14,12 @@
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "node",
     "resolveJsonModule": true
   },
+  // Without an explicit `exclude`, `allowJs` pulls in every .js under
+  // src-tauri/target/release/** — Rust codegen assets — so the error count
+  // depended on whether a Rust build had run in that tree (5840 in the main
+  // tree, 2304 in a fresh worktree, on the same commit).
   "exclude": [
     "node_modules",
     "coverage",
