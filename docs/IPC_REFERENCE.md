@@ -54,6 +54,11 @@ window.api.citations.forRelationship(relId)        // → Citation[]
 window.api.citations.forPlace(placeId)             // → Citation[]
 window.api.citations.delete(id)                    // → boolean
 
+// Round-trip identifiers written by importers (ArkivDigital volume/image
+// pointers). Read-only — nothing in the app authors these, and the archive
+// URL is resolved from them at render time, never stored.
+window.api.externalIdentifiers.forEntity(type, id) // → ExternalIdentifier[]
+
 window.api.places.create(data)                     // → Place
 window.api.places.get(id)                          // → Place | null
 window.api.places.list()                           // → Place[]

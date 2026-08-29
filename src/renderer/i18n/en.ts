@@ -512,6 +512,7 @@ export default {
     addTitle: 'Add Citation',
     editTitle: 'Edit citation',
     noPage: '(no page)',
+    openArchiveImage: 'Open archive image',
     titleFor: '{title} for {name}',
     source: 'Source',
     selectSource: 'Select a source\u2026',

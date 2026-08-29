@@ -32,12 +32,19 @@
  * useEventSave, an explicit `removePending`, or the modal closing).
  */
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
+import { resolveExternalIdentifierUrl } from '../../api/external_identifier_links';
 
 export interface CitationRow {
   id: string;
   sourceTitle: string;
   page: string | null;
   confidence: number | null;
+  /**
+   * Archive URL resolved from this citation's `external_identifiers` row, or
+   * null when it has none. PRIME DIRECTIVE: derived on every load, never
+   * stored — the DB holds the pointer the import file carried and nothing else.
+   */
+  archiveUrl: string | null;
 }
 
 // Mirrors DeferredCitationPayload exported by CitationModal.vue. Duplicated
@@ -54,6 +61,8 @@ export interface PendingCitationPayload {
 }
 
 export interface MergedCitationRow {
+  /** See CitationRow.archiveUrl. Always null for a pending (unsaved) row. */
+  archiveUrl?: string | null;
   key: string;
   id: string;
   isPending: boolean;
@@ -87,6 +96,12 @@ declare const window: Window & {
     sources?: {
       get?: (id: string) => Promise<{ title: string } | null>;
     };
+    externalIdentifiers?: {
+      forEntity?: (
+        entityType: string,
+        entityId: string,
+      ) => Promise<Array<{ system: string; value: string }>>;
+    };
   };
 };
 
@@ -115,6 +130,7 @@ export function useEventCitations(
     }
     const forEvent = window.api?.citations?.forEvent;
     const sourceGet = window.api?.sources?.get;
+    const identsFor = window.api?.externalIdentifiers?.forEntity;
     if (!forEvent) return;
     loading.value = true;
     try {
@@ -130,11 +146,27 @@ export function useEventCitations(
             /* keep fallback */
           }
         }
+        // Archive link, resolved from the stored identifier at render time.
+        // Bounded per event — a handful of citations, not a DB-scale array. If
+        // this shape is ever reused over a list of events, add a bulk getter
+        // first (.claude/rules/performance.md).
+        let archiveUrl: string | null = null;
+        if (identsFor) {
+          try {
+            for (const ident of await identsFor('citation', c.id)) {
+              archiveUrl = resolveExternalIdentifierUrl(ident.system, ident.value);
+              if (archiveUrl) break;
+            }
+          } catch {
+            /* no link is a fine outcome; never block the citation list */
+          }
+        }
         rows.push({
           id: c.id,
           sourceTitle: title,
           page: c.page,
           confidence: c.confidence,
+          archiveUrl,
         });
       }
       citations.value = rows;
@@ -165,6 +197,7 @@ export function useEventCitations(
       sourceTitle: c.sourceTitle,
       page: c.page,
       confidence: c.confidence,
+      archiveUrl: c.archiveUrl,
     }));
     const pending = pendingCitations.value.map((c): MergedCitationRow => ({
       key: 'pending:' + (c.tempId ?? ''),

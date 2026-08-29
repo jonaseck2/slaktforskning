@@ -512,6 +512,7 @@ export default {
     addTitle: 'Lägg till källhänvisning',
     editTitle: 'Redigera källhänvisning',
     noPage: '(ingen sida)',
+    openArchiveImage: 'Öppna arkivbild',
     titleFor: '{title} – {name}',
     source: 'Källa',
     selectSource: 'Välj en källa\u2026',

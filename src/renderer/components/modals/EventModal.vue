@@ -227,7 +227,20 @@
             <LinkedText v-if="cit.page" :text="cit.page" class="ep-cit-page" />
             <span v-else class="ep-cit-page">{{ $t('citations.noPage') }}</span>
           </div>
-          <div class="ep-entity-sub">{{ cit.sourceTitle }}</div>
+          <div class="ep-entity-sub">
+            {{ cit.sourceTitle }}
+            <!-- Archive link resolved at render time from the citation's
+                 external_identifiers row. Explicit text, not an icon — the
+                 reader may be using large text or a screen reader. -->
+            <a
+              v-if="cit.archiveUrl"
+              :href="cit.archiveUrl"
+              target="_blank"
+              rel="noopener"
+              class="ep-cit-archive"
+              @click.stop
+            >{{ $t('citations.openArchiveImage') }}</a>
+          </div>
         </div>
         <button
           type="button"
@@ -1179,6 +1192,11 @@ async function onParticipantSaveConfirm() {
 }
 /* Citation row visuals — keep page + confidence visible together so each row
    reads as a citation, not a source. */
+.ep-cit-archive {
+  margin-left: 8px;
+  font-size: var(--font-xs);
+  white-space: nowrap;
+}
 .ep-cit-page {
   font-size: var(--font-xs);
   color: var(--text-primary);

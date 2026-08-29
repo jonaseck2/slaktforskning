@@ -26,6 +26,7 @@ import * as persons from '../api/persons';
 import * as places from '../api/places';
 import * as events from '../api/events';
 import * as sources from '../api/sources';
+import * as externalIdentifiers from '../api/external_identifiers';
 import * as relationships from '../api/relationships';
 import * as personAssociations from '../api/person_associations';
 import * as groups from '../api/groups';
@@ -287,6 +288,13 @@ export function mountWindowApi(db: Database): MountResult {
     update: mutating((db, id: string, data: Parameters<typeof sources.updateSource>[2]) => uw.updateSourceUndo(db, id, data)),
     delete: mutating((db, id: string) => uw.deleteSourceUndo(db, id)),
     search: readOnly((db, query: string) => sources.searchSources(db, query)),
+  } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+
+  // Round-trip identifiers (ArkivDigital volume / image pointers, and any
+  // future source-format id). Read-only: they are written by importers only.
+  api.externalIdentifiers = {
+    forEntity: readOnly((db, entityType: string, entityId: string) =>
+      externalIdentifiers.getExternalIdentifiers(db, entityType, entityId)),
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
 
   api.citations = {
