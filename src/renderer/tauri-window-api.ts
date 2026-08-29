@@ -465,6 +465,39 @@ export function mountWindowApi(db: Database): MountResult {
     findMedia: readOnly((db, limit?: number, offset?: number) => duplicates.findDuplicateMedia(db, limit, offset)),
     countMedia: readOnly((db) => duplicates.countDuplicateMedia(db)),
     ignoreMedia: mutating((db, mediaAId: string, mediaBId: string) => duplicates.ignoreDuplicateMedia(db, mediaAId, mediaBId)),
+    // Cluster review — the import consolidation step. Clusters group rather
+    // than pair: 129 copies of one volume is 8256 pairs and one decision.
+    findExactClusters: readOnly((db, entityType: duplicates.DuplicateCluster['entityType']) =>
+      duplicates.findExactClusters(db, entityType)),
+    findFuzzyClusters: readOnly(async (db, entityType: duplicates.DuplicateCluster['entityType'], limit?: number) => {
+      const cap = limit ?? Number.MAX_SAFE_INTEGER;
+      switch (entityType) {
+        case 'person': {
+          const pairs = await duplicates.findDuplicates(db, cap);
+          return duplicates.clusterFromPairs('person',
+            pairs.map(p => ({ aId: p.person1_id, bId: p.person2_id, score: p.score })));
+        }
+        case 'place': {
+          const pairs = await duplicates.findDuplicatePlaces(db, cap, 0);
+          return duplicates.clusterFromPairs('place',
+            pairs.map(p => ({ aId: p.place1_id, bId: p.place2_id, score: p.score })));
+        }
+        case 'source': {
+          const pairs = await duplicates.findDuplicateSources(db, cap, 0);
+          return duplicates.clusterFromPairs('source',
+            pairs.map(p => ({ aId: p.source1_id, bId: p.source2_id, score: p.score })));
+        }
+        case 'media': {
+          const pairs = await duplicates.findDuplicateMedia(db, cap, 0);
+          return duplicates.clusterFromPairs('media',
+            pairs.map(p => ({ aId: p.media1_id, bId: p.media2_id, score: p.score })));
+        }
+      }
+    }),
+    declineCluster: mutating((db, cluster: duplicates.DuplicateCluster) =>
+      duplicates.declineCluster(db, cluster)),
+    // applyCluster is wired below with the other fs-touching shims — a media
+    // cluster needs the active DB path so mergeMedia can resolve file_ref.
     // mergeMedia is wired below — it needs the active DB path for the file
     // snapshot + delete and lives next to the other fs-touching shims.
   } as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
@@ -712,6 +745,18 @@ export function mountWindowApi(db: Database): MountResult {
     const dbPath = await commands.dbCurrentPath();
     if (!dbPath) throw new Error('duplicates.mergeMedia: no database open');
     const result = await duplicates.mergeMedia(getDb(), targetIdArg, sourceIdArg, keepFileArg, { dbPath });
+    fireDataChanged();
+    return result;
+  };
+
+  api.duplicates.applyCluster = async (clusterArg: unknown) => {
+    const cluster = clusterArg as duplicates.DuplicateCluster;
+    // Only a media cluster needs the path; asking for it unconditionally would
+    // make the step fail before any DB is open in the static build.
+    const dbPath = cluster?.entityType === 'media'
+      ? (await commands.dbCurrentPath()) ?? undefined
+      : undefined;
+    const result = await duplicates.applyCluster(getDb(), cluster, { dbPath });
     fireDataChanged();
     return result;
   };

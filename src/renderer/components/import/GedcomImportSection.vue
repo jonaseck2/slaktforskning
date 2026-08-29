@@ -124,6 +124,15 @@
           <li v-for="(lim, i) in importReport.modelLimitations" :key="i">{{ lim }}</li>
         </ul>
       </div>
+      <div v-if="clusters.length > 0" class="report-section">
+        <ConsolidationStep
+          :clusters="clusters"
+          @approve="onApproveCluster"
+          @decline="onDeclineCluster"
+          @approve-all-exact="onApproveAllExact"
+          @close="clusters = []"
+        />
+      </div>
       <div v-if="importReport.submitterName" class="report-section">
         <p class="report-section-label">{{ $t('importExport.treeSubject') }}</p>
         <p class="subm-name">{{ $t('importExport.submitterFound', { name: importReport.submitterName }) }}</p>
@@ -156,6 +165,8 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import { resetDefaultPersonId } from '../../composables/useDefaultPerson';
 import { runImportQueue } from './import-queue';
+import ConsolidationStep from './ConsolidationStep.vue';
+import type { DuplicateCluster } from '../../../api/duplicates/clusters';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -176,6 +187,9 @@ const previewFilePaths = ref<string[]>([]);
 // Per-file outcome of the last queue run — rendered under the combined report
 // so a failure names the file it belongs to rather than vanishing.
 const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+// What arrived more than once. Populated after the queue finishes; empty until
+// then, and empty again once the researcher is done with it.
+const clusters = ref<DuplicateCluster[]>([]);
 const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 const previewData = ref<{
   personCount: number; relationshipCount: number; eventCount: number;
@@ -359,6 +373,56 @@ function sumReports(reports: GedcomReport[]): GedcomReport {
   });
 }
 
+/**
+ * What arrived more than once, grouped.
+ *
+ * Exact clusters come from the identifiers the files themselves stated — zero
+ * judgement. Fuzzy person clusters are the handful of people who appear in
+ * more than one file; on the four ArkivDigital exports that is five people,
+ * and they are the entire join between the four grandparent lines.
+ *
+ * This only offers. Nothing merges until the researcher approves.
+ */
+async function loadClusters(): Promise<void> {
+  clusters.value = [];
+  try {
+    const exact = await window.api.duplicates.findExactClusters('source') as DuplicateCluster[];
+    const fuzzy = await window.api.duplicates.findFuzzyClusters('person') as DuplicateCluster[];
+    clusters.value = [...exact, ...fuzzy];
+  } catch (err) {
+    // A failed review must not swallow a successful import — the data landed.
+    console.error('[ImportExport] consolidation review failed:', err);
+  }
+}
+
+async function onApproveCluster(cluster: DuplicateCluster): Promise<void> {
+  try {
+    await window.api.duplicates.applyCluster(cluster);
+    window.dispatchEvent(new CustomEvent('data-imported'));
+  } catch (err) {
+    console.error('[ImportExport] merge failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
+async function onDeclineCluster(cluster: DuplicateCluster): Promise<void> {
+  try {
+    await window.api.duplicates.declineCluster(cluster);
+  } catch (err) {
+    console.error('[ImportExport] decline failed:', err);
+    toast.error(t('errors.saveFailed'));
+  }
+}
+
+async function onApproveAllExact(): Promise<void> {
+  const exact = clusters.value.filter(c => c.kind === 'exact');
+  for (const c of exact) {
+    await onApproveCluster(c);
+  }
+  // Keep the fuzzy rows: they still need a human to look at them.
+  clusters.value = clusters.value.filter(c => c.kind !== 'exact');
+}
+
 async function proceedImport() {
   if (!window.api || busy.value || previewFilePaths.value.length === 0) return;
   const files = [...previewFilePaths.value];
@@ -390,6 +454,7 @@ async function proceedImport() {
     if (reports.length > 0) {
       importReport.value = sumReports(reports);
       showImportReport.value = true;
+      await loadClusters();
       if (queue.failed > 0) {
         setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
       }

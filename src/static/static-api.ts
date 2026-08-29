@@ -792,6 +792,8 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     findPlaces: async () => [], countPlaces: async () => 0, ignorePlace: noop, mergePlaces: noop,
     findSources: async () => [], countSources: async () => 0, ignoreSource: noop, mergeSources: noop,
     findMedia: async () => [], countMedia: async () => 0, ignoreMedia: noop, mergeMedia: noop,
+    findExactClusters: async () => [], findFuzzyClusters: async () => [],
+    applyCluster: noop, declineCluster: noop,
   };
   const gedcom = { selectFile: noop, selectFiles: async () => [], preview: noop, import: noop, export: noop };
   const importApi = {

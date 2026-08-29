@@ -27,6 +27,10 @@ describe('GedcomImportSection — many files, one action', () => {
   let selectFiles: ReturnType<typeof vi.fn>;
   let previewSpy: ReturnType<typeof vi.fn>;
   let importSpy: ReturnType<typeof vi.fn>;
+  let findExactClusters: ReturnType<typeof vi.fn>;
+  let findFuzzyClusters: ReturnType<typeof vi.fn>;
+  let applyCluster: ReturnType<typeof vi.fn>;
+  let declineCluster: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     selectFiles = vi.fn().mockResolvedValue(['/tmp/a.ged', '/tmp/b.ged']);
@@ -36,10 +40,15 @@ describe('GedcomImportSection — many files, one action', () => {
     importSpy = vi.fn(async ({ filePath }: { filePath: string }) => ({
       success: true, report: report(filePath.includes('a') ? 100 : 23),
     }));
+    findExactClusters = vi.fn().mockResolvedValue([]);
+    findFuzzyClusters = vi.fn().mockResolvedValue([]);
+    applyCluster = vi.fn().mockResolvedValue({ merged: 0 });
+    declineCluster = vi.fn().mockResolvedValue({ ignored: 0 });
     (window as unknown as { api: unknown }).api = {
       gedcom: { selectFile: vi.fn(), selectFiles, preview: previewSpy, import: importSpy },
       db: { getSetting: vi.fn().mockResolvedValue(null), setSetting: vi.fn() },
       persons: { getNames: vi.fn().mockResolvedValue([]) },
+      duplicates: { findExactClusters, findFuzzyClusters, applyCluster, declineCluster },
     };
   });
 
@@ -139,5 +148,109 @@ describe('GedcomImportSection — many files, one action', () => {
     await flushPromises();
     expect(previewSpy).not.toHaveBeenCalled();
     expect(wrapper.find('.sub-panel').exists()).toBe(false);
+  });
+});
+
+describe('GedcomImportSection — the consolidation step', () => {
+  const preview = { personCount: 1, relationshipCount: 0, eventCount: 0,
+    sourceCount: 1, placeCount: 0, repositoryCount: 0,
+    warnings: [], estimatedSize: 'small' as const };
+  const report = { version: '5.5.1', persons: 1, families: 0, events: {},
+    sources: 1, places: 0, citations: 0, repositories: 0, groups: 0,
+    researchTasks: 0, skipped: [], warnings: [] };
+
+  const cluster = (n: number, id: string) => ({
+    entityType: 'source' as const,
+    memberIds: Array.from({ length: n }, (_, i) => `${id}-${i}`),
+    representativeId: `${id}-0`,
+    reason: `arkivdigital ${id}`,
+    kind: 'exact' as const,
+  });
+
+  let applyCluster: ReturnType<typeof vi.fn>;
+  let declineCluster: ReturnType<typeof vi.fn>;
+  let findExactClusters: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    applyCluster = vi.fn().mockResolvedValue({ merged: 1 });
+    declineCluster = vi.fn().mockResolvedValue({ ignored: 1 });
+    findExactClusters = vi.fn(async (t: string) =>
+      t === 'source' ? [cluster(129, 'v191316'), cluster(2, 'v135435')] : []);
+    (window as unknown as { api: unknown }).api = {
+      gedcom: {
+        selectFile: vi.fn(),
+        selectFiles: vi.fn().mockResolvedValue(['/tmp/a.ged', '/tmp/b.ged']),
+        preview: vi.fn(async ({ filePath }: { filePath: string }) => ({ canceled: false, filePath, preview })),
+        import: vi.fn().mockResolvedValue({ success: true, report }),
+      },
+      db: { getSetting: vi.fn().mockResolvedValue(null), setSetting: vi.fn() },
+      persons: { getNames: vi.fn().mockResolvedValue([]) },
+      duplicates: {
+        findExactClusters,
+        findFuzzyClusters: vi.fn().mockResolvedValue([]),
+        applyCluster,
+        declineCluster,
+      },
+    };
+  });
+
+  function mountSection() {
+    return mount(GedcomImportSection, {
+      global: {
+        plugins: [i18n],
+        stubs: {
+          PersonPicker: true,
+          BaseSubPanel: {
+            props: ['title', 'saveLabel'],
+            emits: ['save', 'cancel', 'close'],
+            template: '<div class="sub-panel"><h4>{{ title }}</h4><slot /><button class="sp-save" @click="$emit(\'save\')">{{ saveLabel }}</button></div>',
+          },
+        },
+      },
+    });
+  }
+
+  async function importThen() {
+    const wrapper = mountSection();
+    await wrapper.find('button').trigger('click');
+    await flushPromises();
+    await wrapper.find('.sp-save').trigger('click');
+    await flushPromises();
+    return wrapper;
+  }
+
+  it('offers the review after the import, grouped one row per volume', async () => {
+    const wrapper = await importThen();
+    expect(findExactClusters).toHaveBeenCalledWith('source');
+    // 129 copies of one volume is 8256 pairs and exactly one row.
+    expect(wrapper.findAll('.cluster-row')).toHaveLength(2);
+  });
+
+  it('nothing merges without an approval', async () => {
+    await importThen();
+    expect(applyCluster).not.toHaveBeenCalled();
+    expect(declineCluster).not.toHaveBeenCalled();
+  });
+
+  it('joins every exact cluster from one control', async () => {
+    const wrapper = await importThen();
+    await wrapper.find('.approve-all-exact').trigger('click');
+    await flushPromises();
+    expect(applyCluster).toHaveBeenCalledTimes(2);
+  });
+
+  it('declining one cluster records it and merges nothing', async () => {
+    const wrapper = await importThen();
+    await wrapper.findAll('.cluster-decline')[0].trigger('click');
+    await flushPromises();
+    expect(declineCluster).toHaveBeenCalledTimes(1);
+    expect(applyCluster).not.toHaveBeenCalled();
+  });
+
+  it('does not show the review when nothing arrived twice', async () => {
+    findExactClusters.mockResolvedValue([]);
+    const wrapper = await importThen();
+    expect(wrapper.findAll('.cluster-row')).toHaveLength(0);
+    expect(wrapper.find('.consolidate').exists()).toBe(false);
   });
 });
