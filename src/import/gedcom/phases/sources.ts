@@ -7,6 +7,7 @@ import { createRepository, linkSourceRepository } from '../../../api/repositorie
 import { addMediaLink } from '../../../api/media';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren } from '../node-utils';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import { importObjeNode } from '../obje-importer';
 import { markConsumed } from '../tag-accounting';
 
@@ -38,7 +39,8 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
   // repoLinks collect-then-flush. The OBJE / prep-inline-media phases ran
   // before this one, so ctx.objeMap + ctx.inlineMediaMap are populated.
   const mediaLinkPairs: Array<{ media_id: string; entity_id: string }> = [];
-  // ArkivDigital source ids, flushed after the bulk source insert.
+  // Source-format ids — the ArkivDigital `_AID` and every generic
+  // `REFN`/`EXID`. One array, flushed once after the bulk source insert.
   const externalIdRows: Array<{ entity_type: string; entity_id: string; system: string; value: string }> = [];
   for (let i = 0; i < total; i++) {
     const node = sourNodes[i];
@@ -61,6 +63,11 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
     if (aid) {
       externalIdRows.push({ entity_type: 'source', entity_id: id, system: 'arkivdigital', value: aid });
     }
+    // Everything the vendor tag does not carry. `getChildren` marks the nodes
+    // consumed, so these tags cannot show up in `unaccountedFor`.
+    externalIdRows.push(
+      ...readExternalIds(node, ['REFN', 'EXID'], 'source', id, getChild, getChildren),
+    );
     const repoVal = getChild(node, 'REPO')?.value ?? '';
     if (repoVal.startsWith('@')) {
       repoLinks.push({ sourceId: id, repoXref: repoVal });
@@ -80,8 +87,7 @@ export async function phaseSources(ctx: ImportContext): Promise<void> {
   ctx.options?.onProgress?.(`Sparar ${total} källor…`);
   await bulkCreateSources(ctx.db, rows);
 
-  // ArkivDigital `_AID` — the archive pointer for the volume. Collected during
-  // the parse pass above and flushed once, never per source.
+  // Collected during the parse pass above and flushed once, never per source.
   if (externalIdRows.length > 0) {
     await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
   }

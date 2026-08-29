@@ -26,21 +26,32 @@ import type { ExternalIdentifier, ExternalIdentifierInput } from '../api/externa
 import type { GedcomNode } from './parser';
 
 /**
- * Systems that already have a vendor-shaped tag. A row whose system is in this
- * set is emitted by its vendor emitter and by nothing else — emitting it twice
- * would put a `REFN` next to a `_AID` in an ArkivDigital file and change what
- * ArkivDigital reads back.
+ * The `(entity_type, system)` pairs that already have a vendor-shaped tag. A
+ * row matching a pair is emitted by its vendor emitter and by nothing else —
+ * emitting it twice would put a `REFN` next to a `_AID` in an ArkivDigital
+ * file and change what ArkivDigital reads back.
  *
- * Each entry names its emit site, verified 2026-08-29:
- *   `arkivdigital`        → `exporter.ts:418`, `1 _AID` on the SOUR record
- *   `arkivdigital.parish` → `exporter.ts:115`, `_PARISH_AID` in the _ADPL block
- *   `arkivdigital.image`  → `exporter.ts:213`, `_AID` in the citation SOUR block
+ * **The override is a property of the pair, not of the system.** The design
+ * spec's carrier table gives `repository` and `media` a vendor override of
+ * "none", so an `arkivdigital` row on a repository and an
+ * `arkivdigital.image` row on a media both ride the generic tag. Keying this
+ * set on the system alone silently dropped those two cells.
+ *
+ * Each entry names its emit site, verified 2026-08-29 against the file:
+ *   `source`   + `arkivdigital`        → `exporter.ts:427`, `1 _AID` on SOUR
+ *   `place`    + `arkivdigital.parish` → `exporter.ts:119`, `_PARISH_AID` in _ADPL
+ *   `citation` + `arkivdigital.image`  → `exporter.ts:213`, `_AID` in the SOUR block
  */
-export const VENDOR_CARRIED_SYSTEMS: ReadonlySet<string> = new Set([
-  'arkivdigital',
-  'arkivdigital.parish',
-  'arkivdigital.image',
+export const VENDOR_CARRIED_PAIRS: ReadonlySet<string> = new Set([
+  vendorPairKey('source', 'arkivdigital'),
+  vendorPairKey('place', 'arkivdigital.parish'),
+  vendorPairKey('citation', 'arkivdigital.image'),
 ]);
+
+/** Key shape for {@link VENDOR_CARRIED_PAIRS}. */
+export function vendorPairKey(entityType: string, system: string): string {
+  return `${entityType}\u0000${system}`;
+}
 
 /**
  * A `REFN`/`EXID`/`_EXID` with no `TYPE` reads back as this system, and a row
@@ -53,9 +64,13 @@ export const UNTYPED_SYSTEM = 'refn';
 /**
  * The rows a generic emitter is responsible for: everything a vendor tag does
  * not already carry.
+ *
+ * The row carries its own `entity_type`, so no caller has to restate where the
+ * identifier is attached — which is what keeps the pair rule from drifting
+ * apart across the five emit sites.
  */
 export function generic(idents: readonly ExternalIdentifier[]): ExternalIdentifier[] {
-  return idents.filter(i => !VENDOR_CARRIED_SYSTEMS.has(i.system));
+  return idents.filter(i => !VENDOR_CARRIED_PAIRS.has(vendorPairKey(i.entity_type, i.system)));
 }
 
 /**

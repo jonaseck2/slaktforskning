@@ -1,11 +1,18 @@
 // ── Phase 0.7: REPO records ────────────────────────────────────────────────
 
+import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
+import type { ExternalIdentifierInput } from '../../../api/external_identifiers';
 import { createRepository } from '../../../api/repositories';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import type { ImportContext } from '../import-types';
-import { getChild, resolveNote } from '../node-utils';
+import { getChild, getChildren, resolveNote } from '../node-utils';
 import { markConsumed } from '../tag-accounting';
 
 export async function phaseRepo(ctx: ImportContext): Promise<void> {
+  // Source-format ids on the repository record. Accumulated across the loop
+  // and flushed once — never one write per repository
+  // (`.claude/rules/performance.md`).
+  const externalIdRows: ExternalIdentifierInput[] = [];
   for (const node of ctx.tree) {
     if (node.tag !== 'REPO' || !node.xref) continue;
     markConsumed(node);
@@ -28,5 +35,14 @@ export async function phaseRepo(ctx: ImportContext): Promise<void> {
       notes: resolveNote(node, ctx.noteMap) || undefined,
     });
     ctx.repoMap.set(node.xref, repo.id);
+    // No vendor tag exists for a repository, so every system arrives on the
+    // standard reference tag. `getChildren` marks the nodes consumed, which is
+    // what keeps them out of `unaccountedFor`.
+    externalIdRows.push(
+      ...readExternalIds(node, ['REFN', 'EXID'], 'repository', repo.id, getChild, getChildren),
+    );
+  }
+  if (externalIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
   }
 }

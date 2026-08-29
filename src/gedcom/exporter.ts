@@ -13,6 +13,9 @@ import type { ExportOptions } from '../api/export_options';
 import { applyExportOptions } from '../api/export_options';
 import { getDbSetting } from '../api/db_settings';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
+// The two tag shapes that carry an external_identifiers row. Nothing in this
+// file emits or parses them by hand.
+import { emitRecordExternalIds } from './external-id-tags';
 // T02 GEDCOM-alignment per-concept emitters (stubs; filled by Phase 2 tasks).
 // Wired here so the orchestration surface exists — Phase 2 fills function
 // bodies without re-touching exporter.ts.
@@ -392,6 +395,11 @@ export async function exportGedcom(
     if (repo.email) lines.push(`1 EMAIL ${repo.email}`);
     if (repo.web) lines.push(`1 WWW ${repo.web}`);
     if (repo.notes) lines.push(`1 NOTE ${repo.notes}`);
+    // Source-format ids for the repository. No vendor tag exists for this
+    // entity type (design spec, carrier table: "none"), so every system —
+    // `arkivdigital` included — rides the standard reference tag.
+    emitRecordExternalIds(lines,
+      pre.externalIdsByEntity.get(mediaEntityKey('repository', repo.id)) ?? [], 1, version);
     // T04: shared notes attached to this repository
     if (includeNotes) await emitNotesForEntity(db, 'repository', repo.id, 1, version, lines, pre.notesByEntity.get(mediaEntityKey('repository', repo.id)) ?? []);
   }
@@ -418,6 +426,11 @@ export async function exportGedcom(
     for (const ident of pre.externalIdsByEntity.get(mediaEntityKey('source', src.id)) ?? []) {
       if (ident.system === 'arkivdigital') lines.push(`1 _AID ${ident.value}`);
     }
+    // Every other system rides the standard reference tag — REFN under 5.5.1,
+    // EXID under 7.0. `emitRecordExternalIds` filters out the vendor-carried
+    // systems above, so `arkivdigital` is never emitted twice.
+    emitRecordExternalIds(lines,
+      pre.externalIdsByEntity.get(mediaEntityKey('source', src.id)) ?? [], 1, version);
     // source_type is exported as a raw enum string via the custom _STYPE sub-tag.
     // Lossless under both 5.5.1 and 7.0 — the importer reads _STYPE back verbatim,
     // and unknown enum values (e.g. future additions like passenger_list,
