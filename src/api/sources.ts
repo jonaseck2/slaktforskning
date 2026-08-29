@@ -185,10 +185,16 @@ export async function createCitation(
  * Bulk-insert citations rows. One batched INSERT for N rows — used by the
  * GEDCOM importer to collapse per-event / per-name / per-person SOUR loop
  * IPC into one call.
+ *
+ * Accepts a caller-supplied `id` and returns the ids used, per the bulk
+ * contract in `.claude/rules/api.md`. The importer needs the id before the
+ * flush so it can collect rows that point at the citation — an ArkivDigital
+ * image pointer, for one — without a read-back query.
  */
 export async function bulkCreateCitations(
   db: Database,
   rows: Array<{
+    id?: string;
     source_id: string;
     event_id?: string | null;
     person_id?: string | null;
@@ -201,13 +207,16 @@ export async function bulkCreateCitations(
     notes?: string;
     date_accessed?: string;
   }>,
-): Promise<void> {
-  if (rows.length === 0) return;
+): Promise<string[]> {
+  if (rows.length === 0) return [];
+  const ids: string[] = new Array(rows.length);
   const params: unknown[][] = new Array(rows.length);
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
+    const id = r.id ?? uuid();
+    ids[i] = id;
     params[i] = [
-      uuid(),
+      id,
       r.source_id,
       r.page ?? '',
       r.date_accessed ?? '',
@@ -226,6 +235,7 @@ export async function bulkCreateCitations(
     'INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     params,
   );
+  return ids;
 }
 
 export async function getCitation(db: Database, id: string): Promise<Citation | null> {
