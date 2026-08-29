@@ -1,12 +1,15 @@
 // ── Phase 0.3: pre-resolve places ──────────────────────────────────────────
 
 import { runBatch } from '../../../api/db';
-import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
+import {
+  bulkAddExternalIdentifiers, type ExternalIdentifierInput,
+} from '../../../api/external_identifiers';
 import { bulkResolvePlaces } from '../../../api/places';
 import { bulkResolveHierarchy, type HierarchyLevel } from '../../../api/places_hierarchy';
 import type { GedcomNode } from '../../../gedcom/parser';
 import type { ImportContext } from '../import-types';
-import { getChild } from '../node-utils';
+import { getChild, getChildren } from '../node-utils';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import { parseAdpl, parseAdplJudicial } from '../profiles/arkivdigital';
 
 function normalize(name: string): string {
@@ -235,6 +238,32 @@ export async function phasePrepPlaces(ctx: ImportContext): Promise<void> {
     const flatMap = await bulkResolvePlaces(ctx.db, names);
     for (const [k, v] of flatMap) placeMap.set(k, v);
     console.log(`[import-timing]     phasePrepPlaces: resolved ${names.length} unique places`);
+  }
+
+  // ── Leaf-place source-format ids ─────────────────────────────────────────
+  // `_EXID` directly under a PLAC node, resolved against the place that node
+  // maps to. `_PARISH_AID` is handled by the _ADPL branch above and never
+  // reaches this tag — the exporter's `generic()` keeps the two apart.
+  //
+  // Deduplicated before the write: one place name appears under every event
+  // that happened there, each copy carrying the same `_EXID`. The UNIQUE index
+  // would absorb the repeats, but a 22k-person tree would hand the batch
+  // writer tens of thousands of rows to discard.
+  const leafIdRows: ExternalIdentifierInput[] = [];
+  const leafIdSeen = new Set<string>();
+  for (const node of placNodes) {
+    const place = placeMap.get(normalize(node.value.trim()));
+    if (!place) continue;
+    for (const row of readExternalIds(node, ['_EXID'], 'place', place.id, getChild, getChildren)) {
+      const key = `${row.entity_id}\u0000${row.system}\u0000${row.value}`;
+      if (leafIdSeen.has(key)) continue;
+      leafIdSeen.add(key);
+      leafIdRows.push(row);
+    }
+  }
+  // One call for the whole tree, matching the `_PARISH_AID` flush above.
+  if (leafIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, leafIdRows);
   }
 
   if (placeMap.size === 0) return;

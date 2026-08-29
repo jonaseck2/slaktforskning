@@ -86,7 +86,7 @@ function emitAdplBlock(
   place: Place,
   subLevel: number,
   placeById: Map<string, Place>,
-  externalIdsByEntity: Map<string, Array<{ system: string; value: string }>>,
+  externalIdsByEntity: Map<string, ExternalIdentifier[]>,
 ): void {
   const TAG_BY_TYPE: Record<string, string> = {
     country: '_COUNTRY',
@@ -130,9 +130,14 @@ function emitPlaceSubTags(
   place: Place,
   subLevel: number,
   placeById?: Map<string, Place>,
-  externalIdsByEntity?: Map<string, Array<{ system: string; value: string }>>,
+  externalIdsByEntity?: Map<string, ExternalIdentifier[]>,
 ): void {
-  if (placeById && externalIdsByEntity && place.parent_place_id) {
+  // `emitAdplBlock` returns early when the typed chain is empty, which is the
+  // condition that actually matters. `parent_place_id` was a proxy for it and
+  // dropped a root-level parish's `_PARISH_AID` on the floor —
+  // `parent_place_id` is ON DELETE SET NULL, so deleting a county disarms
+  // every parish under it.
+  if (placeById && externalIdsByEntity) {
     emitAdplBlock(lines, place, subLevel, placeById, externalIdsByEntity);
   }
   if (place.latitude != null && place.longitude != null) {
@@ -153,6 +158,19 @@ function emitPlaceSubTags(
   if (place.notes) lines.push(`${subLevel} _PNOTES ${place.notes}`);
   if (place.date_from) lines.push(`${subLevel} _DATE_FROM ${place.date_from}`);
   if (place.date_to) lines.push(`${subLevel} _DATE_TO ${place.date_to}`);
+  // The leaf place's own source-format ids. A PLAC block is a substructure with
+  // no REFN slot in either specification, so the carrier is the custom `_EXID`.
+  // `generic()` leaves `arkivdigital.parish` to `_PARISH_AID` inside the _ADPL
+  // block above, so the two never both fire for one row.
+  //
+  // Grouped with the other custom place sub-tags rather than immediately after
+  // MAP as the plan wrote it — that would have split MAP from ADDR. Sub-tag
+  // order inside a PLAC block is not significant in either version, and no real
+  // ArkivDigital export carries a non-vendor place system, so no emitted byte
+  // moves.
+  emitSubstructureExternalIds(
+    lines, externalIdsByEntity?.get(mediaEntityKey('place', place.id)) ?? [], subLevel,
+  );
   // Always write _PLAC_ID so the importer can deduplicate on re-import
   lines.push(`${subLevel} _PLAC_ID ${place.id}`);
 }
