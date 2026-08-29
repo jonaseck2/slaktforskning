@@ -15,10 +15,10 @@
       <div class="section-buttons">
         <button @click="pickGcc" :disabled="busy">{{ $t('importExport.genneyGccPickFile') }}</button>
         <button @click="pickGccMedia" :disabled="busy">{{ $t('importExport.genneyPickMedia') }}</button>
-        <button @click="importGcc" :disabled="busy || !gccPath">{{ $t('importExport.genneyImport') }}</button>
+        <button @click="importGcc" :disabled="busy || gccPaths.length === 0">{{ $t('importExport.genneyImport') }}</button>
       </div>
-      <p v-if="gccPath || gccMediaDir" class="section-instructions">
-        {{ gccPath }}<span v-if="gccMediaDir"> + {{ gccMediaDir }}</span>
+      <p v-if="gccPaths.length > 0 || gccMediaDir" class="section-instructions">
+        {{ gccPaths.join(', ') }}<span v-if="gccMediaDir"> + {{ gccMediaDir }}</span>
       </p>
     </div>
 
@@ -29,10 +29,10 @@
       <div class="section-buttons">
         <button @click="pickGedFile" :disabled="busy">{{ $t('importExport.genneyGedPickFile') }}</button>
         <button @click="pickGedMedia" :disabled="busy">{{ $t('importExport.genneyPickMedia') }}</button>
-        <button @click="importGed" :disabled="busy || !gedPath">{{ $t('importExport.genneyImport') }}</button>
+        <button @click="importGed" :disabled="busy || gedPaths.length === 0">{{ $t('importExport.genneyImport') }}</button>
       </div>
-      <p v-if="gedPath || gedMediaDir" class="section-instructions">
-        {{ gedPath }}<span v-if="gedMediaDir"> + {{ gedMediaDir }}</span>
+      <p v-if="gedPaths.length > 0 || gedMediaDir" class="section-instructions">
+        {{ gedPaths.join(', ') }}<span v-if="gedMediaDir"> + {{ gedMediaDir }}</span>
       </p>
     </div>
 
@@ -53,6 +53,15 @@
       @close="showGenneyReport = false"
     >
       <div class="report-body">
+        <div v-if="queueOutcomes.length > 1" class="report-section">
+          <p class="report-section-label">{{ $t('importExport.queueFilesLabel', { count: queueOutcomes.length }) }}</p>
+          <ul>
+            <li v-for="o in queueOutcomes" :key="o.file">
+              <template v-if="o.error">{{ $t('importExport.queueFileFailed', { file: baseName(o.file), error: o.error }) }}</template>
+              <template v-else>{{ baseName(o.file) }}</template>
+            </li>
+          </ul>
+        </div>
         <ul class="report-counts">
           <li>{{ $t('importExport.genneyReportPersons', { n: genneyReport.persons }) }}</li>
           <li>{{ $t('importExport.genneyReportCoupleRels', { n: genneyReport.coupleRelationships }) }}</li>
@@ -87,6 +96,7 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from '../../composables/useToast';
 import BaseSubPanel from '../modals/BaseSubPanel.vue';
 import type { ImportSummary } from '../../../import/genney/transform';
+import { runImportQueue } from './import-queue';
 
 declare const window: Window & {
   api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>;
@@ -101,11 +111,14 @@ const genneyProgress = ref('');
 const showGenneyReport = ref(false);
 const genneyReport = ref<ImportSummary | null>(null);
 
-// Per-box state
-const gccPath = ref('');
+// Per-box state. Paths are arrays: a researcher with four exports picks them
+// in one action. A single pick behaves exactly as before.
+const gccPaths = ref<string[]>([]);
 const gccMediaDir = ref('');
-const gedPath = ref('');
+const gedPaths = ref<string[]>([]);
 const gedMediaDir = ref('');
+const queueOutcomes = ref<{ file: string; error: string | null }[]>([]);
+const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 
 // Register progress listener once — shared by all Derby import flows
 window.api.import.onProgress((msg: string) => { genneyProgress.value = msg; });
@@ -125,8 +138,8 @@ function setStatus(msg: string, type: 'success' | 'error' = 'success') {
 // wired. Just run the import and let it report what failed.
 
 async function pickGcc() {
-  const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) gccPath.value = r.path;
+  const picked = await window.api.import.genneySelectArchives() as string[];
+  if (picked && picked.length > 0) gccPaths.value = picked;
 }
 
 async function pickGccMedia() {
@@ -135,8 +148,8 @@ async function pickGccMedia() {
 }
 
 async function pickGedFile() {
-  const r = await window.api.gedcom.selectFile() as { canceled: boolean; path?: string };
-  if (!r.canceled && r.path) gedPath.value = r.path;
+  const picked = await window.api.gedcom.selectFiles() as string[];
+  if (picked && picked.length > 0) gedPaths.value = picked;
 }
 
 async function pickGedMedia() {
@@ -144,31 +157,66 @@ async function pickGedMedia() {
   if (!r.canceled && r.path) gedMediaDir.value = r.path;
 }
 
-async function runDerbyImport(sourcePath: string, mediaDir?: string) {
+/** One report out of N — the researcher asked one question. */
+function sumSummaries(list: ImportSummary[]): ImportSummary {
+  return list.reduce((acc, s) => ({
+    persons: acc.persons + s.persons,
+    coupleRelationships: acc.coupleRelationships + s.coupleRelationships,
+    parentChildRelationships: acc.parentChildRelationships + s.parentChildRelationships,
+    events: acc.events + s.events,
+    places: acc.places + s.places,
+    sources: acc.sources + s.sources,
+    citations: acc.citations + s.citations,
+    groups: acc.groups + s.groups,
+    repositories: acc.repositories + s.repositories,
+    researchTasks: acc.researchTasks + s.researchTasks,
+    media: acc.media + s.media,
+    warnings: [...acc.warnings, ...s.warnings],
+    skipped: [...acc.skipped, ...s.skipped],
+  }));
+}
+
+async function runDerbyImports(files: string[], mediaDir?: string) {
+  if (files.length === 0) return;
   busy.value = true;
+  queueOutcomes.value = [];
   genneyProgress.value = t('importExport.genneyDerbyRunning');
   try {
     // import:genneyRun runs in the worker thread and returns the
     // withImportLifecycle envelope: { success, report, error }.
     // The inner report shape: { imported: true, summary } on success,
     // { gedcomFallback: true, gedcomPath } when the .gcc archive is encrypted.
-    const result = await window.api.import.genneyRun({ sourcePath, mediaDir }) as {
-      success?: boolean;
-      error?: string;
-      report?: {
-        imported?: boolean;
-        gedcomFallback?: boolean;
-        summary?: ImportSummary;
+    const queue = await runImportQueue<ImportSummary>(files, async (sourcePath) => {
+      const result = await window.api.import.genneyRun({ sourcePath, mediaDir }) as {
+        success?: boolean;
+        error?: string;
+        report?: {
+          imported?: boolean;
+          gedcomFallback?: boolean;
+          summary?: ImportSummary;
+        };
       };
-    };
-    if (!result.success) {
-      setStatus(t('importExport.genneyDerbyError', { error: result.error ?? 'unknown' }), 'error');
-    } else if (result.report?.imported && result.report.summary) {
-      genneyReport.value = result.report.summary;
+      if (!result.success) throw new Error(result.error ?? 'unknown');
+      if (result.report?.gedcomFallback) throw new Error(t('importExport.genneyDerbyFallback'));
+      if (!result.report?.imported || !result.report.summary) throw new Error('unknown');
+      return result.report.summary;
+    });
+
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+    const summaries = queue.results
+      .map(r => r.report)
+      .filter((r): r is ImportSummary => r !== null);
+
+    if (summaries.length > 0) {
+      genneyReport.value = sumSummaries(summaries);
       showGenneyReport.value = true;
       window.dispatchEvent(new CustomEvent('data-imported'));
-    } else if (result.report?.gedcomFallback) {
-      setStatus(t('importExport.genneyDerbyFallback'), 'error');
+      if (queue.failed > 0) {
+        setStatus(t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length }), 'error');
+      }
+    } else {
+      const first = queue.results.find(r => r.error)?.error ?? 'unknown';
+      setStatus(t('importExport.genneyDerbyError', { error: first }), 'error');
     }
   } catch (err) {
     setStatus(t('importExport.genneyDerbyError', { error: err instanceof Error ? err.message : String(err) }), 'error');
@@ -180,33 +228,43 @@ async function runDerbyImport(sourcePath: string, mediaDir?: string) {
 
 async function pickAndImportBackup() {
   if (busy.value) return;
-  const r = await window.api.import.genneySelectArchive() as { canceled: boolean; path?: string };
-  if (r.canceled || !r.path) return;
-  await runDerbyImport(r.path);
+  const picked = await window.api.import.genneySelectArchives() as string[];
+  if (!picked || picked.length === 0) return;
+  await runDerbyImports(picked);
 }
 
 async function importGcc() {
-  if (!gccPath.value || busy.value) return;
-  await runDerbyImport(gccPath.value, gccMediaDir.value || undefined);
+  if (gccPaths.value.length === 0 || busy.value) return;
+  await runDerbyImports([...gccPaths.value], gccMediaDir.value || undefined);
 }
 
 async function importGed() {
-  if (!gedPath.value || busy.value) return;
+  if (gedPaths.value.length === 0 || busy.value) return;
+  const files = [...gedPaths.value];
   busy.value = true;
+  queueOutcomes.value = [];
   try {
     // gedcom:import runs in the worker thread and returns the
     // withImportLifecycle envelope: { success, report, error }.
-    const result = await window.api.gedcom.import({
-      profile: 'genney',
-      filePath: gedPath.value,
-      mediaDir: gedMediaDir.value || undefined,
-    }) as { success?: boolean; error?: string };
-    if (result.success) {
-      setStatus(t('importExport.importSuccess', { file: gedPath.value }));
+    const queue = await runImportQueue<true>(files, async (filePath) => {
+      const result = await window.api.gedcom.import({
+        profile: 'genney',
+        filePath,
+        mediaDir: gedMediaDir.value || undefined,
+      }) as { success?: boolean; error?: string };
+      if (!result.success) throw new Error(result.error ?? 'unknown');
+      return true;
+    });
+    queueOutcomes.value = queue.results.map(r => ({ file: r.file, error: r.error }));
+    if (queue.succeeded > 0) {
       window.dispatchEvent(new CustomEvent('data-imported'));
+      setStatus(queue.failed > 0
+        ? t('importExport.queueSummary', { succeeded: queue.succeeded, total: files.length })
+        : t('importExport.importSuccess', { file: files.join(', ') }),
+      queue.failed > 0 ? 'error' : 'success');
     } else {
       setStatus(t('importExport.importError'), 'error');
-      console.error('[GenneyImport] .ged import failed:', result.error);
+      console.error('[GenneyImport] .ged import failed:', queue.results.map(r => r.error).filter(Boolean));
       toast.error(t('errors.saveFailed'));
     }
   } catch (err) {
@@ -217,5 +275,6 @@ async function importGed() {
     busy.value = false;
   }
 }
+
 </script>
 
