@@ -1,9 +1,12 @@
 // ── Phase 0.4: pre-resolve inline OBJE (media inside INDI/FAM/events) ──────
 
 import { basename } from 'path';
+import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
+import type { ExternalIdentifierInput } from '../../../api/external_identifiers';
 import { bulkCreateMedia } from '../../../api/media';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import type { ImportContext } from '../import-types';
-import { getChild } from '../node-utils';
+import { getChild, getChildren } from '../node-utils';
 import { readObjeFormAndTitle, remapHolgerMediaPath } from '../obje-importer';
 
 /**
@@ -40,6 +43,14 @@ export async function phasePrepInlineMedia(ctx: ImportContext): Promise<void> {
 
   ctx.options?.onProgress?.(`Förbereder inbäddade media (0 / ${inlineNodes.length})`);
   const mediaDir = ctx.options?.mediaDir;
+  // Source-format ids on the inline OBJE block. This phase — not
+  // `importObjeNode` — is where they are read, because this phase is what
+  // actually creates the row: it walks the whole tree up front and populates
+  // `inlineMediaMap`, so `importObjeNode` returns from its cache on every
+  // call and its inline-creation branch never runs. Measured 2026-08-29 with
+  // a console probe on both branches over the full unit suite: cache-hit 4,
+  // inline-create 0.
+  const externalIdRows: ExternalIdentifierInput[] = [];
   const rows: Array<{
     id: string; file_ref: string | null; title: string; format: string | null;
     notes: string; is_printable: boolean; is_missing: boolean;
@@ -55,6 +66,9 @@ export async function phasePrepInlineMedia(ctx: ImportContext): Promise<void> {
     const noteVal = getChild(node, 'NOTE')?.value ?? '';
     const id = crypto.randomUUID();
     inlineMediaMap.set(node, id);
+    externalIdRows.push(
+      ...readExternalIds(node, ['REFN', 'EXID'], 'media', id, getChild, getChildren),
+    );
     rows[i] = {
       id,
       file_ref: file || null,
@@ -70,5 +84,9 @@ export async function phasePrepInlineMedia(ctx: ImportContext): Promise<void> {
   }
   ctx.options?.onProgress?.(`Sparar ${rows.length} inbäddade mediaposter (1 / 1)…`);
   await bulkCreateMedia(ctx.db, rows);
+  // Buffered across the walk and flushed once, never one write per media.
+  if (externalIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
+  }
   console.log(`[import-timing]     phasePrepInlineMedia: resolved ${inlineNodes.length} inline OBJE`);
 }

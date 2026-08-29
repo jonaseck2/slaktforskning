@@ -59,6 +59,21 @@ export function readObjeFormAndTitle(
 /**
  * Import a single OBJE node (inline or top-level reference) and return the media UUID.
  * Returns null if the node cannot be resolved.
+ *
+ * **This function does not read `external_identifiers`, deliberately.** Both
+ * branches that return here hand back a media row somebody else created:
+ * `phaseObje` for the `@`-pointer branch, `phasePrepInlineMedia` for the
+ * cache-hit branch. Those two phases read the identifiers, buffered and
+ * flushed once each. Reading them here as well would re-write the same rows
+ * once per link — a media on twelve people, twelve times.
+ *
+ * The inline-creation branch below looks like the remaining gap, but it is
+ * unreachable through `import-core`: `phasePrepInlineMedia` runs third, walks
+ * the whole tree, and populates `inlineMediaMap` for every inline OBJE, so the
+ * cache hit above always wins. Measured 2026-08-29 with a console probe on
+ * both branches across the full unit suite — cache-hit 4, inline-create 0.
+ * If a future caller reaches it, the identifiers are read by neither path and
+ * that caller needs its own accumulator.
  */
 export async function importObjeNode(
   db: Database,

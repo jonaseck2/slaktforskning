@@ -220,8 +220,15 @@ function emitCitationBlock(
   }
 }
 
-/** Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for INDI/FAM, 2 for events. */
-function emitMediaBlocks(lines: string[], pre: ExportPrefetch, entityType: 'person' | 'relationship' | 'event' | 'source', entityId: string, baseLevel: number): void {
+/**
+ * Emit inline OBJE blocks for all media linked to an entity. baseLevel = 1 for
+ * INDI/FAM, 2 for events.
+ *
+ * `version` is here only so the media's source-format ids pick the right
+ * reference tag — `REFN` under 5.5.1, `EXID` under 7.0. The rest of the block
+ * is version-independent.
+ */
+function emitMediaBlocks(lines: string[], pre: ExportPrefetch, entityType: 'person' | 'relationship' | 'event' | 'source', entityId: string, baseLevel: number, version: '5.5.1' | '7.0'): void {
   const mediaItems = pre.mediaByEntity.get(mediaEntityKey(entityType, entityId)) ?? [];
   for (const m of mediaItems) {
     lines.push(`${baseLevel} OBJE`);
@@ -229,6 +236,13 @@ function emitMediaBlocks(lines: string[], pre: ExportPrefetch, entityType: 'pers
     if (m.file_ref) lines.push(`${baseLevel + 1} FILE ${m.file_ref}`);
     if (m.title) lines.push(`${baseLevel + 1} TITL ${m.title}`);
     if (m.notes) lines.push(`${baseLevel + 1} NOTE ${m.notes}`);
+    // No vendor tag exists for a media (design spec, carrier table: "none"),
+    // so every system rides the generic reference tag. The inline block is the
+    // carrier rather than a new top-level OBJE record: emitting a media both
+    // ways produces two media rows on re-import, and the `_OBJE_ID` dedup the
+    // comment further down claims exists is a comment and nothing else.
+    emitRecordExternalIds(lines,
+      pre.externalIdsByEntity.get(mediaEntityKey('media', m.id)) ?? [], baseLevel + 1, version);
   }
 }
 
@@ -467,7 +481,7 @@ export async function exportGedcom(
     await emitSourceCoverageEvents(db, src.id, 1, version, lines, pre.coverageBySourceId.get(src.id) ?? [], pre.placeById);
     // Rapport 104 (framing B): emit OBJE under SOUR for media→source links so
     // they round-trip. `OBJE` under SOURCE_RECORD is spec-legal in 5.5.1 and 7.0.
-    if (includeMedia) emitMediaBlocks(lines, pre, 'source', src.id, 1);
+    if (includeMedia) emitMediaBlocks(lines, pre, 'source', src.id, 1, version);
   }
 
   // T04: reset the SNOTE xref allocator at the top of every export so
@@ -749,7 +763,7 @@ export async function exportGedcom(
             pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
         }
       }
-      if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
+      if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2, version);
       // T04: shared notes attached to this event
       if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines, pre.notesByEntity.get(mediaEntityKey('event', ev.id)) ?? []);
       // Collect ASSO blocks for non-primary participants in this event
@@ -855,7 +869,7 @@ export async function exportGedcom(
     }
 
     // Person-level media
-    if (includeMedia) emitMediaBlocks(lines, pre, 'person', p.id, 1);
+    if (includeMedia) emitMediaBlocks(lines, pre, 'person', p.id, 1, version);
 
     // T02 per-concept emitter hooks (stubs until Phase 2). The orchestration
     // surface exists so T04–T07 can fill the bodies without re-touching the
@@ -1019,7 +1033,7 @@ export async function exportGedcom(
             pre.externalIdsByEntity.get(mediaEntityKey('citation', cit.id)) ?? []);
         }
       }
-      if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2);
+      if (includeMedia) emitMediaBlocks(lines, pre, 'event', ev.id, 2, version);
       // T04: shared notes attached to this family event
       if (includeNotes) await emitNotesForEntity(db, 'event', ev.id, 2, version, lines, pre.notesByEntity.get(mediaEntityKey('event', ev.id)) ?? []);
     }
@@ -1035,7 +1049,7 @@ export async function exportGedcom(
     }
 
     // Relationship-level media
-    if (includeMedia) emitMediaBlocks(lines, pre, 'relationship', rel.id, 1);
+    if (includeMedia) emitMediaBlocks(lines, pre, 'relationship', rel.id, 1, version);
 
     // T02 per-concept emitter hooks — relationship-level notes + negations
     // (stubs until T04 / T06).
@@ -1142,6 +1156,10 @@ export async function exportGedcom(
       if (m.file_ref) lines.push(`1 FILE ${m.file_ref}`);
       if (m.title) lines.push(`1 TITL ${m.title}`);
       if (m.notes) lines.push(`1 NOTE ${m.notes}`);
+      // Same carrier as the inline block above — a media reached only through
+      // a group link still keeps its source-format ids.
+      emitRecordExternalIds(lines,
+        pre.externalIdsByEntity.get(mediaEntityKey('media', m.id)) ?? [], 1, version);
     }
   }
 

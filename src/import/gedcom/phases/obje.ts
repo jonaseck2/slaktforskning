@@ -1,9 +1,12 @@
 // ── Phase 0.5: OBJE top-level records ──────────────────────────────────────
 
 import { basename } from 'path';
+import { bulkAddExternalIdentifiers } from '../../../api/external_identifiers';
+import type { ExternalIdentifierInput } from '../../../api/external_identifiers';
 import { bulkCreateMedia } from '../../../api/media';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import type { ImportContext } from '../import-types';
-import { getChild } from '../node-utils';
+import { getChild, getChildren } from '../node-utils';
 import { readObjeFormAndTitle, remapHolgerMediaPath } from '../obje-importer';
 import { markConsumed } from '../tag-accounting';
 
@@ -19,6 +22,9 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
   ctx.options?.onProgress?.(`Importerar media (0 / ${total})`);
   const rows: Array<{ id: string; file_ref: string | null; title: string; format: string | null; notes: string; is_printable: boolean; is_missing: boolean }> = new Array(total);
   let withFile = 0;
+  // Source-format ids on the top-level OBJE record, buffered across the loop
+  // and flushed once after the bulk media insert.
+  const externalIdRows: ExternalIdentifierInput[] = [];
   for (let i = 0; i < total; i++) {
     const node = objeNodes[i];
     const fileNode = getChild(node, 'FILE');
@@ -31,6 +37,9 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
     const note = getChild(node, 'NOTE')?.value ?? '';
     const id = crypto.randomUUID();
     ctx.objeMap.set(node.xref!, id);
+    externalIdRows.push(
+      ...readExternalIds(node, ['REFN', 'EXID'], 'media', id, getChild, getChildren),
+    );
     // is_missing is the inverse of "we have a file_ref"; whether that file
     // is actually on disk is decided later by consolidateMediaFolder via a
     // single recursive readdir of the dest folder.
@@ -49,5 +58,8 @@ export async function phaseObje(ctx: ImportContext): Promise<void> {
   }
   ctx.options?.onProgress?.(`Sparar ${total} mediaposter…`);
   await bulkCreateMedia(ctx.db, rows);
+  if (externalIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
+  }
   console.log(`[import-timing]     phaseObje: total=${total} withFile=${withFile}`);
 }
