@@ -6,23 +6,27 @@ import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { queryAll } from '../../src/api/db';
 import { createTestDb } from './helpers';
-import { adParentRelSubtype } from '../../src/import/gedcom/profiles/arkivdigital';
+import { parentRelSubtype } from '../../src/import/gedcom/profiles/arkivdigital';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });
 
-describe('adParentRelSubtype', () => {
+describe('parentRelSubtype', () => {
   it('maps the values ArkivDigital emits', () => {
-    expect(adParentRelSubtype('Biological')).toBe('biological');
-    expect(adParentRelSubtype('Adopted')).toBe('adopted');
-    expect(adParentRelSubtype('Foster')).toBe('foster');
-    expect(adParentRelSubtype('Step')).toBe('step');
+    expect(parentRelSubtype('Biological')).toBe('biological');
+    expect(parentRelSubtype('Adopted')).toBe('adopted');
+    expect(parentRelSubtype('Foster')).toBe('foster');
+    expect(parentRelSubtype('Step')).toBe('step');
   });
   it('is case-insensitive', () => {
-    expect(adParentRelSubtype('adopted')).toBe('adopted');
+    expect(parentRelSubtype('adopted')).toBe('adopted');
   });
-  it('falls back to biological rather than failing the import', () => {
-    expect(adParentRelSubtype('Something Nobody Has Seen')).toBe('biological');
+  it('answers unknown, not biological, for a value nobody has seen', () => {
+    // Was `toBe('biological')`. That default was the Prime Directive violation
+    // Task 3 of docs/plans/2026-08-23-dialect-tag-review.md removed: an
+    // unrecognised word became a claim of biological parentage the file never
+    // made. An unseen value still cannot fail the import — it lands on unknown.
+    expect(parentRelSubtype('Something Nobody Has Seen')).toBe('unknown');
   });
 });
 

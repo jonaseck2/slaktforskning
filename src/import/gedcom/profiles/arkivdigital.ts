@@ -11,11 +11,12 @@
  *  - _AID          archive pointer, volume-level on SOUR, image-level on the citation
  *  - _DESC         the researcher's own annotation on an event
  *  - _TITLE        occupation or title
- *  - _FREL/_MREL   parent relation type
+ *  - _FREL/_MREL   parent relation type (via the shared `parentRelSubtype`)
  *
  * Everything here is a pure function. DB access lives in `src/api/` so the
  * ArkivDigital decisions stay testable without a database.
  */
+import type { ParentChildSubtype } from '../../../api/types';
 import type { GedcomNode } from '../../../gedcom/parser';
 import { markConsumed } from '../tag-accounting';
 
@@ -96,19 +97,32 @@ export function parseAdplJudicial(placNode: GedcomNode): string | null {
 }
 
 /**
- * `_FREL` / `_MREL` — the child's relation to the father and to the mother.
+ * A parent-relation word → `ParentChildSubtype`.
  *
- * Maps onto the `parent_child` subtypes the app already models, the same set
- * Holger's `ADOP TYPE` uses. An unrecognised value falls back to 'biological'
- * rather than throwing: an import must not fail on a vendor value nobody has
- * seen yet, and the raw tag is still named in the import report.
+ * Shared vocabulary, not an ArkivDigital one. ArkivDigital writes lowercase
+ * `adopted`; Family Tree Maker and PAF write capitalised `Natural`, `Step`,
+ * `Adopted`, `Unknown`, `Private` at the same `FAM.CHIL` position; standard
+ * `PEDI` writes `birth` / `adopted` / `foster` / `sealing`. All three arrive
+ * here.
+ *
+ * **Unrecognised input answers `unknown`, never `biological`.** Prime
+ * Directive: a relation the file declined to state is not a relation the DB
+ * gets to assert. The previous `default: 'biological'` stored a biological
+ * parent for 35 rows across the sample corpus whose files said otherwise —
+ * 34 `Unknown` and 1 `Private`, measured 2026-08-29 over the 36 .ged files in
+ * export-import/samples.
+ *
+ * An unseen vendor word still cannot fail the import; it lands on `unknown`,
+ * and the raw tag is named in the import report either way.
  */
-export function adParentRelSubtype(value: string): string {
+export function parentRelSubtype(value: string): ParentChildSubtype {
   switch (value.trim().toLowerCase()) {
-    case 'adopted': return 'adopted';
-    case 'foster': return 'foster';
-    case 'step': return 'step';
+    case 'adopted':    return 'adopted';
+    case 'foster':     return 'foster';
+    case 'step':       return 'step';
+    case 'natural':
+    case 'birth':
     case 'biological': return 'biological';
-    default: return 'biological';
+    default:           return 'unknown';
   }
 }

@@ -306,7 +306,7 @@ PAF takes the same shape. Delete the level-1 `_FREL` / `_MREL` lines from the IN
 
 This is a Prime Directive violation, not a gap: `default: return 'biological'` writes a relation the file did not state. 35 rows across the corpus.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-parent-relation-subtype.test.ts
@@ -365,9 +365,9 @@ Plus an end-to-end assertion in `import-gedcom-dialects.test.ts`:
   });
 ```
 
-- [ ] **Step 2: Run — confirm it fails.** `Unknown` currently returns `biological`.
+- [x] **Step 2: Run — confirm it fails.** `Unknown` currently returns `biological`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/import/gedcom/profiles/arkivdigital.ts
@@ -400,7 +400,7 @@ export const adParentRelSubtype = parentRelSubtype;
 
 Import `ParentChildSubtype` from `../../../api/types`. Update the two call sites in `phases/families.ts` to the new name and delete the alias in the same commit if nothing else references it — `grep -rn adParentRelSubtype src/ tests/` decides.
 
-- [ ] **Step 4: Check the `PEDI` path for the same bug.** `families.ts` also derives `childSubtype` from `PEDI`:
+- [x] **Step 4: Check the `PEDI` path for the same bug.** `families.ts` also derives `childSubtype` from `PEDI`:
 
 ```ts
       let childSubtype = pedi ? (pedi === 'birth' ? 'biological' : pedi) : 'biological';
@@ -408,9 +408,9 @@ Import `ParentChildSubtype` from `../../../api/types`. Update the two call sites
 
 An unrecognised `PEDI` value is written straight into `subtype` with no vocabulary check, and a missing `PEDI` yields `biological`. Route it through `parentRelSubtype` too, mapping GEDCOM's `birth` to `biological`, and record in the commit what the vocabulary check changed. **A missing `PEDI` staying `biological` is the correct default** — GEDCOM 5.5.1 §PEDI names `birth` as the assumed value — so keep that branch and say so in a comment.
 
-- [ ] **Step 5: Verify** — the new suite plus `import-gedcom-dialects`, `import-arkivdigital-relations` green.
+- [x] **Step 5: Verify** — the new suite plus `import-gedcom-dialects`, `import-arkivdigital-relations` green.
 
-- [ ] **Step 6: Commit** — `fix(import): an unstated parent relation is unknown, not biological`
+- [x] **Step 6: Commit** — `fix(import): an unstated parent relation is unknown, not biological`
 
 ---
 

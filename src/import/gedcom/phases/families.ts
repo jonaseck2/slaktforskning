@@ -13,7 +13,7 @@ import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
 import { markConsumed } from '../tag-accounting';
-import { adParentRelSubtype } from '../profiles/arkivdigital';
+import { parentRelSubtype } from '../profiles/arkivdigital';
 import { FAMILY_EVENT_TAGS } from './shared';
 
 const KNOWN_FAM_TAGS = new Set([
@@ -125,8 +125,13 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
     for (const chil of getChildren(node, 'CHIL')) {
       const childId = ctx.personMap.get(chil.value);
       if (!childId) continue;
+      // A missing PEDI stays biological: GEDCOM 5.5.1 §PEDI names `birth` as
+      // the assumed value, so that is the file's statement, not our guess.
+      // A PEDI that IS present goes through the vocabulary check — it used to
+      // be written into `subtype` verbatim, which put SEALING, OTHER, _ENUMVAL
+      // and _ENUM2 (all present in the sample corpus) into the column.
       const pedi = getChild(chil, 'PEDI')?.value;
-      let childSubtype = pedi ? (pedi === 'birth' ? 'biological' : pedi) : 'biological';
+      let childSubtype: string = pedi ? parentRelSubtype(pedi) : 'biological';
       if (ctx.isHolger) {
         const adopSubtype = ctx.holgerAdoptionMap.get(chil.value)?.get(node.xref ?? '');
         if (adopSubtype) childSubtype = adopSubtype;
@@ -135,8 +140,8 @@ export async function phaseFamilies(ctx: ImportContext): Promise<void> {
       // father row and the mother row can carry different subtypes.
       const frel = getChild(chil, '_FREL')?.value;
       const mrel = getChild(chil, '_MREL')?.value;
-      const fatherSubtype = frel ? adParentRelSubtype(frel) : childSubtype;
-      const motherSubtype = mrel ? adParentRelSubtype(mrel) : childSubtype;
+      const fatherSubtype = frel ? parentRelSubtype(frel) : childSubtype;
+      const motherSubtype = mrel ? parentRelSubtype(mrel) : childSubtype;
       if (person1Id) parentChildRows.push({ type: 'parent_child', person1_id: person1Id, person2_id: childId, subtype: fatherSubtype });
       if (person2Id) parentChildRows.push({ type: 'parent_child', person1_id: person2Id, person2_id: childId, subtype: motherSubtype });
     }
