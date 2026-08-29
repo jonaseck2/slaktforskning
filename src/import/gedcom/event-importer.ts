@@ -10,6 +10,7 @@ import { parseGedcomDate, type ParsedDate } from '../../gedcom/date';
 import { createEvent } from '../../api/events';
 import { createCitation } from '../../api/sources';
 import type { ExternalIdentifierInput } from '../../api/external_identifiers';
+import { readExternalIds } from '../../gedcom/external-id-tags';
 import { updatePlace } from '../../api/places';
 import { addMediaLink } from '../../api/media';
 import { FACT_VALUE_GEDCOM_TAGS } from '../../api/events_gedcom';
@@ -400,6 +401,12 @@ export async function collectEventNode(
           value: imageAid,
         });
       }
+      // Every system the vendor tag above does not carry, written by this
+      // app's own exporter as `_EXID` + `TYPE`. Same buffer, same single
+      // flush — `.claude/rules/performance.md`.
+      citationExternalIds.push(
+        ...readExternalIds(sour, ['_EXID'], 'citation', citationId, getChild, getChildren),
+      );
     }
   }
 

@@ -15,7 +15,7 @@ import { getDbSetting } from '../api/db_settings';
 import { formatGedcomDate, isStandardGedcomDate } from './date';
 // The two tag shapes that carry an external_identifiers row. Nothing in this
 // file emits or parses them by hand.
-import { emitRecordExternalIds } from './external-id-tags';
+import { emitRecordExternalIds, emitSubstructureExternalIds } from './external-id-tags';
 // T02 GEDCOM-alignment per-concept emitters (stubs; filled by Phase 2 tasks).
 // Wired here so the orchestration surface exists — Phase 2 fills function
 // bodies without re-touching exporter.ts.
@@ -218,6 +218,11 @@ function emitCitationBlock(
       lines.push(`${baseLevel + 1} _AID ${ident.value}`);
     }
   }
+  // Everything the vendor tag above does not carry. A citation is a SOUR
+  // pointer substructure, which has no REFN slot in either specification, so
+  // the carrier is the custom `_EXID` under both versions. `generic()` drops
+  // the `arkivdigital.image` rows the loop above already emitted.
+  emitSubstructureExternalIds(lines, externalIds, baseLevel + 1);
 }
 
 /**

@@ -2,11 +2,20 @@
 
 import { createCitation } from '../../../api/sources';
 import { getPlace } from '../../../api/places';
+import {
+  bulkAddExternalIdentifiers, type ExternalIdentifierInput,
+} from '../../../api/external_identifiers';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren } from '../node-utils';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import { markConsumed } from '../tag-accounting';
 
 export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
+  // Source-format ids on the place-level citations this phase creates. One
+  // array for the whole phase, flushed once after the tree walk —
+  // `.claude/rules/performance.md`. The `createCitation` call in the loop is
+  // already per-row and predates this work; the identifier write adds no second.
+  const externalIdRows: ExternalIdentifierInput[] = [];
   for (const node of ctx.tree) {
     if (node.tag !== '_PLAC') continue;
     markConsumed(node);
@@ -34,7 +43,7 @@ export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
       const date_accessed = getChild(sour, '_ACCESSED')?.value ?? '';
       // _TRANS carrier — see person-level citation block in phaseIndividuals.
       const transcription = getChild(sour, '_TRANS')?.value ?? '';
-      await createCitation(ctx.db, {
+      const cit = await createCitation(ctx.db, {
         source_id: srcId,
         place_id: place.id,
         page,
@@ -43,6 +52,16 @@ export async function phasePlaceCitations(ctx: ImportContext): Promise<void> {
         transcription: transcription || undefined,
         date_accessed: date_accessed || undefined,
       });
+      // This host reads no `_AID` — an ArkivDigital file has no place-level
+      // citation — so `_EXID` is the only carrier here. Without this read the
+      // tag would land in `unaccountedFor` on a re-import of our own export.
+      externalIdRows.push(
+        ...readExternalIds(sour, ['_EXID'], 'citation', cit.id, getChild, getChildren),
+      );
     }
+  }
+
+  if (externalIdRows.length > 0) {
+    await bulkAddExternalIdentifiers(ctx.db, externalIdRows);
   }
 }

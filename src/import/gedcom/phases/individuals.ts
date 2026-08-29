@@ -13,6 +13,7 @@ import { getPatronymicBase } from '../profiles/genney';
 import { parseHolgerAdoptionSubtypes } from '../profiles/holger';
 import type { ImportContext } from '../import-types';
 import { getChild, getChildren, resolveNote } from '../node-utils';
+import { readExternalIds } from '../../../gedcom/external-id-tags';
 import { importObjeNode } from '../obje-importer';
 import { collectEventNode } from '../event-importer';
 import type { EventCollectResult } from '../event-importer';
@@ -389,6 +390,11 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
             system: 'arkivdigital.image', value: imageAid,
           });
         }
+        // Every system the vendor tag above does not carry, written by this
+        // app's own exporter as `_EXID` + `TYPE`. Same buffer, one flush.
+        citationExternalIdBuffer.push(
+          ...readExternalIds(sour, ['_EXID'], 'citation', citationId, getChild, getChildren),
+        );
       }
     }
 
@@ -439,6 +445,11 @@ export async function phaseIndividuals(ctx: ImportContext): Promise<void> {
             system: 'arkivdigital.image', value: imageAid,
           });
         }
+        // Every system the vendor tag above does not carry, written by this
+        // app's own exporter as `_EXID` + `TYPE`. Same buffer, one flush.
+        citationExternalIdBuffer.push(
+          ...readExternalIds(sour, ['_EXID'], 'citation', citationId, getChild, getChildren),
+        );
       }
     }
 
