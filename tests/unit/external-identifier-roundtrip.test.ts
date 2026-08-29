@@ -26,6 +26,12 @@ import { queryAll, runSql } from '../../src/api/db';
 import { exportGedcom } from '../../src/gedcom/exporter';
 import { importGedcom } from '../../src/gedcom/importer';
 import { parseGedcom } from '../../src/gedcom/parser';
+import {
+  DEFAULT_EXTERNAL_ID_PAIR,
+  readColumnFromOnlyRow,
+  roundTrip as fidelityRoundTrip,
+  seedExternalIdentifiers,
+} from '../helpers/gedcom_fidelity';
 import { createTestDb } from './helpers';
 
 type Version = '5.5.1' | '7.0';
@@ -444,3 +450,40 @@ async function seedPersonForMedia(db: Database): Promise<string> {
   );
   return pid;
 }
+
+/**
+ * The per-field driver's seeder, exercised on both arms.
+ *
+ * `seedExternalIdentifiers` used to hardcode `source` + `arkivdigital`, the one
+ * pair that has always had an emitting tag. A seeder that can only produce a
+ * surviving row cannot return zero, so it was not evidence about
+ * `external_identifiers.value` — which is how `value: lossless` stood through
+ * two releases while the comment beside it correctly said only three pairs had
+ * a tag (`.claude/rules/evidence.md`, "a query that cannot return zero").
+ *
+ * These two tests are the denominator. One arm survives, one arm loses. If the
+ * losing arm ever starts surviving, the registry's `lossy` declarations have
+ * become an underclaim and need rewriting — the same obligation in the other
+ * direction.
+ */
+describe('the per-field seeder can produce both a surviving and a losing pair', () => {
+  it('surviving arm: the default source pair round-trips its value', async () => {
+    const db = await createTestDb();
+    seedExternalIdentifiers(db, 'value', 'S_probe_survives', DEFAULT_EXTERNAL_ID_PAIR);
+    const fresh = await fidelityRoundTrip(db, 'v551');
+    expect(await readColumnFromOnlyRow(fresh, 'external_identifiers', 'value'))
+      .toEqual('S_probe_survives');
+  });
+
+  it('losing arm: a place no event and no citation reaches loses its value', async () => {
+    // Uncovered cell 2 of the design spec, reached through the per-field
+    // seeder rather than through a hand-written seed — which is what makes the
+    // seeder capable of disagreeing with a `lossless` declaration.
+    const db = await createTestDb();
+    seedExternalIdentifiers(db, 'value', 'S_probe_lost',
+      { entity_type: 'place', system: 'gramps.handle', unreferenced: true });
+    await seedPersonEventAtPlace(db, null); // something must exist to export
+    const fresh = await fidelityRoundTrip(db, 'v551');
+    expect(await readColumnFromOnlyRow(fresh, 'external_identifiers', 'value')).toBeNull();
+  });
+});

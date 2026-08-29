@@ -60,8 +60,8 @@ const CONSTRAINED_SENTINELS: Record<string, unknown> = {
   'person_names.name_type': 'married',
   'person_names.name_qualifier': 'patronymic',
   'person_identifiers.identifier_type': 'familysearch',
-  // CHECK-constrained; 'place' is valid and has no emitting tag when the row's
-  // entity_id points at a source, which is what makes the column lossy.
+  // CHECK-constrained. `seedExternalIdentifiers` builds the host to match this
+  // value, so the row hangs off a real place rather than off a source's id.
   'external_identifiers.entity_type': 'place',
   'relationships.type': 'sibling',
   'events.date_type': 'about',
@@ -151,24 +151,147 @@ export function seedRowWithColumn(
 // ── Per-table seeders ────────────────────────────────────────────────────────
 
 /**
- * external_identifiers — hangs off a source, the entity type that has an
- * emitting tag. A sentinel `system` has no tag to travel in, which is why the
- * registry declares these columns lossy → null rather than lossless.
+ * The `(entity_type, system)` pair a seeded `external_identifiers` row hangs
+ * off, and how reachable its host is from the exported file.
+ *
+ * Parametrised because the seeder used to hardcode `source` + `arkivdigital`
+ * — the one pair that has always had an emitting tag. A test that only ever
+ * seeds the working pair cannot return zero for the other nine, which is why
+ * `external_identifiers.value` stood as `lossless` through two releases while
+ * the comment beside it correctly said only three pairs had a tag. Same shape
+ * as `ctx.skippedTags` disclosing 143 of 40 436 drops (`CLAUDE.md`,
+ * 2026-08-23) and as `git log | grep | head -3` read as prevalence
+ * (`.claude/rules/evidence.md`).
  */
-function seedExternalIdentifiers(db: Database, col: string, value: unknown): string {
-  const sourceId = crypto.randomUUID();
-  runSql(db, 'INSERT INTO sources (id, title) VALUES (?, ?)', [sourceId, 'Fidelity Source']);
+export interface ExternalIdSeedPair {
+  entity_type: 'source' | 'repository' | 'media' | 'citation' | 'place';
+  system: string;
+  /**
+   * `place` only. When true the place gets no event and no place-level
+   * citation, so the exporter emits nothing for it at all — uncovered cell 2
+   * of the design spec. This is the arm that lets the seeder produce a loss.
+   */
+  unreferenced?: boolean;
+}
+
+export const DEFAULT_EXTERNAL_ID_PAIR: ExternalIdSeedPair = {
+  entity_type: 'source',
+  system: 'arkivdigital',
+};
+
+/**
+ * Create a host of the given kind, reachable from the exported file, and
+ * return its id. Each shape matches the one the round-trip matrix uses for
+ * that entity type: a repository reaches the file only through a source that
+ * links to it, a media only through a `media_links` row, and so on.
+ */
+function seedExternalIdHost(db: Database, pair: ExternalIdSeedPair): string {
+  switch (pair.entity_type) {
+    case 'source': {
+      const sourceId = crypto.randomUUID();
+      runSql(db, 'INSERT INTO sources (id, title) VALUES (?, ?)', [sourceId, 'Fidelity Source']);
+      return sourceId;
+    }
+    case 'repository': {
+      const sourceId = crypto.randomUUID();
+      const repoId = crypto.randomUUID();
+      runSql(db, 'INSERT INTO sources (id, title) VALUES (?, ?)', [sourceId, 'Fidelity Source']);
+      runSql(db, 'INSERT INTO repositories (id, name, notes) VALUES (?, ?, ?)',
+        [repoId, 'Fidelity Repo', '']);
+      runSql(db, 'INSERT INTO source_repositories (source_id, repository_id) VALUES (?, ?)',
+        [sourceId, repoId]);
+      // A citation so the source is not dropped as an orphan.
+      runSql(db, 'INSERT INTO citations (id, source_id, person_id) VALUES (?, ?, ?)',
+        [crypto.randomUUID(), sourceId, insertPersonWithDefaultName(db)]);
+      return repoId;
+    }
+    case 'media': {
+      const mediaId = crypto.randomUUID();
+      runSql(
+        db,
+        `INSERT INTO media (id, file_ref, title, notes, is_printable, is_missing)
+         VALUES (?, 'media/fidelity.jpg', 'Fidelity Media', '', 0, 0)`,
+        [mediaId],
+      );
+      runSql(
+        db,
+        `INSERT INTO media_links (id, media_id, entity_type, entity_id, sort_order)
+         VALUES (?, ?, 'person', ?, 0)`,
+        [crypto.randomUUID(), mediaId, insertPersonWithDefaultName(db)],
+      );
+      return mediaId;
+    }
+    case 'citation': {
+      const sourceId = crypto.randomUUID();
+      runSql(db, 'INSERT INTO sources (id, title) VALUES (?, ?)', [sourceId, 'Fidelity Source']);
+      const eventId = crypto.randomUUID();
+      runSql(
+        db,
+        `INSERT INTO events (id, event_type, date_type, date_original, notes)
+         VALUES (?, 'birth', 'unknown', '', '')`,
+        [eventId],
+      );
+      runSql(db, `INSERT INTO event_participants (id, event_id, person_id, role)
+                  VALUES (?, ?, ?, 'primary')`,
+        [crypto.randomUUID(), eventId, insertPersonWithDefaultName(db)]);
+      const citationId = crypto.randomUUID();
+      runSql(db, 'INSERT INTO citations (id, source_id, event_id) VALUES (?, ?, ?)',
+        [citationId, sourceId, eventId]);
+      return citationId;
+    }
+    case 'place': {
+      const placeId = crypto.randomUUID();
+      runSql(
+        db,
+        'INSERT INTO places (id, name, normalized_name, notes) VALUES (?, ?, ?, ?)',
+        [placeId, 'Sentinelby', 'sentinelby', ''],
+      );
+      if (pair.unreferenced) return placeId;
+      const eventId = crypto.randomUUID();
+      runSql(
+        db,
+        `INSERT INTO events (id, event_type, place_id, date_type, date_original, notes)
+         VALUES (?, 'birth', ?, 'unknown', '', '')`,
+        [eventId, placeId],
+      );
+      runSql(db, `INSERT INTO event_participants (id, event_id, person_id, role)
+                  VALUES (?, ?, ?, 'primary')`,
+        [crypto.randomUUID(), eventId, insertPersonWithDefaultName(db)]);
+      return placeId;
+    }
+  }
+}
+
+/**
+ * external_identifiers — one row on a host of the requested kind.
+ *
+ * `entity_type` is the one column whose sentinel *is* the host kind, so when
+ * it is the column under test the host is built to match it. It used to be
+ * seeded as `'place'` against a source's id, which made the row unreachable by
+ * construction and the `lossy → null` declaration true only because the seed
+ * was rigged. The rig is what this parameter removes.
+ */
+export function seedExternalIdentifiers(
+  db: Database,
+  col: string,
+  value: unknown,
+  pair: ExternalIdSeedPair = DEFAULT_EXTERNAL_ID_PAIR,
+): string {
+  const effective: ExternalIdSeedPair = col === 'entity_type'
+    ? { ...pair, entity_type: String(value) as ExternalIdSeedPair['entity_type'] }
+    : pair;
+  const hostId = seedExternalIdHost(db, effective);
   const id = col === 'id' ? String(value) : crypto.randomUUID();
   const row: Record<string, unknown> = {
     id,
-    entity_type: 'source',
-    entity_id: sourceId,
-    system: 'arkivdigital',
+    entity_type: effective.entity_type,
+    entity_id: hostId,
+    system: effective.system,
     value: 'v100001',
   };
   if (col !== 'id') row[col] = value;
   // entity_id must stay a real FK target even when it is the column under test.
-  if (col === 'entity_id') row.entity_id = sourceId;
+  if (col === 'entity_id') row.entity_id = hostId;
   const cols = Object.keys(row);
   runSql(
     db,
