@@ -1,6 +1,6 @@
 # Citation-Level ArkivDigital Image Pointer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** A researcher who imported from ArkivDigital can open the exact archive image a citation came from, and that pointer survives an export and re-import.
 
@@ -126,7 +126,7 @@ Every one of the 6324 occurrences is under an **event** citation. Not one sits o
 
 `.claude/rules/api.md` states the contract for bulk variants: *"Return `Promise<string[]>` of assigned ids"* and *"Accept caller-supplied `id`"*. `bulkCreateCitations` is the one bulk function in `src/api/` that does neither.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/citations-bulk-ids.test.ts
@@ -195,11 +195,11 @@ describe('bulkCreateCitations id contract', () => {
 > `helpers.ts` exposes no query counter and does not need one — `vi.spyOn(db, 'prepare')`
 > is the idiom already in use, and `vi` is in the import list above.
 
-- [ ] **Step 2: Run the test — confirm it fails**
+- [x] **Step 2: Run the test — confirm it fails**
 
 `npm test -- citations-bulk-ids` → the first test fails on `expect(ids).toHaveLength(3)` because the function returns `undefined`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/api/sources.ts — replace the existing bulkCreateCitations
@@ -261,12 +261,12 @@ export async function bulkCreateCitations(
 }
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
   - `npm test -- citations-bulk-ids` green.
   - `npx vue-tsc --noEmit --ignoreDeprecations 6.0` clean — proves the three existing call sites still compile against the widened signature.
   - `npm test -- import-batching` green.
 
-- [ ] **Step 5: Commit** — `feat(api): bulkCreateCitations accepts and returns ids`
+- [x] **Step 5: Commit** — `feat(api): bulkCreateCitations accepts and returns ids`
 
 ---
 
@@ -284,7 +284,7 @@ export async function bulkCreateCitations(
 
 `getChild` marks the node consumed (`node-utils.ts`), so reading `_AID` here is what removes it from the unaccounted set. That is the whole mechanism — no separate bookkeeping call.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-identifiers.test.ts — append
@@ -353,11 +353,11 @@ describe('citation-level image pointer', () => {
 > **`getExternalIdentifiersByEntityType` returns `Map<entity_id, ExternalIdentifier[]>`,
 > not an array.** The `identsFor` helper above flattens it; every test below uses that.
 
-- [ ] **Step 2: Run the test — confirm it fails**
+- [x] **Step 2: Run the test — confirm it fails**
 
 `npm test -- import-arkivdigital-identifiers` → `expect(idents).toHaveLength(1)` receives `0`.
 
-- [ ] **Step 3: Implement — `event-importer.ts`**
+- [x] **Step 3: Implement — `event-importer.ts`**
 
 ```ts
 // src/import/gedcom/event-importer.ts — EventCollectResult
@@ -429,7 +429,7 @@ export interface EventCollectResult {
 
 Add `citationExternalIds` to the returned object alongside `citationRows`.
 
-- [ ] **Step 4: Implement — thread the buffer through both phases**
+- [x] **Step 4: Implement — thread the buffer through both phases**
 
 In `src/import/gedcom/phases/individuals.ts`, beside `citationBuffer`:
 
@@ -462,12 +462,12 @@ Apply the identical three edits in `src/import/gedcom/phases/families.ts`.
 
 Widen `citationBuffer`'s inline row type in both files with `id?: string;` so the spread from `collected.citationRows` type-checks.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - `npm test -- import-arkivdigital-identifiers` green.
   - `npm test -- import-batching` green — the two new `bulkAddExternalIdentifiers` calls are one each per phase, not per citation.
   - `npm test -- import-arkivdigital` (all five AD suites) green.
 
-- [ ] **Step 6: Commit** — `feat(import): map the ArkivDigital citation-level image pointer`
+- [x] **Step 6: Commit** — `feat(import): map the ArkivDigital citation-level image pointer`
 
 ---
 
@@ -480,7 +480,7 @@ Widen `citationBuffer`'s inline row type in both files with `id?: string;` so th
 
 Zero of the 6324 real occurrences sit here. This task exists because Task 6 deletes a **wildcard** declaration: `*.SOUR._AID` covers every host, and leaving three hosts unread while deleting the declaration that named them re-opens the silent drop.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-arkivdigital-identifiers.test.ts — append
@@ -545,11 +545,11 @@ describe('image pointer on non-event citation hosts', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test — confirm it fails**
+- [x] **Step 2: Run the test — confirm it fails**
 
 Three `_AID` values expected, zero found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 The same three-line shape at each of the three sites. Name-level, in `individuals.ts`:
 
@@ -576,9 +576,9 @@ The same three-line shape at each of the three sites. Name-level, in `individual
 
 Person-level in `individuals.ts` and family-level in `families.ts` take the same edit, differing only in which owner column the row sets (`person_id` / `relationship_id`).
 
-- [ ] **Step 4: Verify** — `npm test -- import-arkivdigital-identifiers` green; `npm test -- import-gedcom` green.
+- [x] **Step 4: Verify** — `npm test -- import-arkivdigital-identifiers` green; `npm test -- import-gedcom` green.
 
-- [ ] **Step 5: Commit** — `feat(import): read the image pointer on every citation host`
+- [x] **Step 5: Commit** — `feat(import): read the image pointer on every citation host`
 
 ---
 
@@ -594,7 +594,7 @@ Person-level in `individuals.ts` and family-level in `families.ts` take the same
 
 `mediaEntityKey` joins with a NUL byte, not the space its doc comment shows. **Call the function; never hand-build the key.** That mistake silently dropped `_PARISH_AID` from the export once already.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // export side
@@ -629,9 +629,9 @@ describe('citation-level _AID export', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test — confirm it fails** (the `3 _AID` line is absent).
+- [x] **Step 2: Run the test — confirm it fails** (the `3 _AID` line is absent).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `exporter.ts` imports `Place, Citation, Repository, Media` from `../api/types` but not
 `ExternalIdentifier` — add it to the existing import from `../api/external_identifiers`.
@@ -671,11 +671,11 @@ Then each of the six call sites — lines 640, 723, 826, 991, 1004, 1091 in the 
           );
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
   - New export tests green.
   - `npm test -- export-perf` green — `externalIdsByEntity` is already prefetched in one query (`export-prefetch.ts:240`), so the query budget is unchanged. Confirm the assertion still holds rather than assuming it.
 
-- [ ] **Step 5: Commit** — `feat(export): re-emit the ArkivDigital image pointer under its citation`
+- [x] **Step 5: Commit** — `feat(export): re-emit the ArkivDigital image pointer under its citation`
 
 ---
 
@@ -687,7 +687,7 @@ Then each of the six call sites — lines 640, 723, 826, 991, 1004, 1091 in the 
 
 The three `external_identifiers` reasons currently enumerate two (entity_type, system) pairs. A third now exists, and a reason that lists the wrong set is the shrug the registry exists to prevent.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 it('a citation image pointer survives DB → GEDCOM → DB', async () => {
@@ -717,9 +717,9 @@ it('a citation image pointer survives DB → GEDCOM → DB', async () => {
 
 > The re-import only reaches `collectEventNode` if the exported file is detected as ArkivDigital-shaped or the tag read is unconditional. **It is unconditional** — Task 2 reads `_AID` in `collectEventNode` with no profile gate, the same way the source-level `_AID` is read in `phases/sources.ts`. If this test fails because a profile gate was added, remove the gate rather than the test: an app-produced export does not carry `1 SOUR Arkiv_Digital` in its header.
 
-- [ ] **Step 2: Run the test — confirm it fails**, then implement.
+- [x] **Step 2: Run the test — confirm it fails**, then implement.
 
-- [ ] **Step 3: Update the registry reasons**
+- [x] **Step 3: Update the registry reasons**
 
 ```ts
   // ----- external_identifiers -----
@@ -748,9 +748,9 @@ it('a citation image pointer survives DB → GEDCOM → DB', async () => {
 
 `external_identifiers.value` stays `lossless` — it is the payload of all three tags.
 
-- [ ] **Step 4: Verify** — the registry schema-introspection test and the per-field round-trip suite both green. `tests/helpers/gedcom_fidelity.ts` needs no change: its seeder builds a `source` row and the `entity_type` sentinel is `'place'`, both still valid.
+- [x] **Step 4: Verify** — the registry schema-introspection test and the per-field round-trip suite both green. `tests/helpers/gedcom_fidelity.ts` needs no change: its seeder builds a `source` row and the `entity_type` sentinel is `'place'`, both still valid.
 
-- [ ] **Step 5: Commit** — `test(gedcom): round-trip the citation image pointer, correct the registry reasons`
+- [x] **Step 5: Commit** — `test(gedcom): round-trip the citation image pointer, correct the registry reasons`
 
 ---
 
@@ -760,7 +760,7 @@ it('a citation image pointer survives DB → GEDCOM → DB', async () => {
 - Modify: `src/import/gedcom/accounting-declared.ts`
 - Modify: `tests/unit/import-tag-accounting.test.ts`
 
-- [ ] **Step 1: Flip the gate test first**
+- [x] **Step 1: Flip the gate test first**
 
 In `import-tag-accounting.test.ts`, the assertion
 
@@ -784,9 +784,9 @@ moves into the *not-reported* list in the test below it, and its enclosing `it` 
 
 and add `'INDI.BIRT.SOUR._AID'` to the existing "no longer reports the tags the arkivdigital profile now maps" array.
 
-- [ ] **Step 2: Run — confirm it fails** while the declaration still exists (the path is declared, so `undeclared` is empty and the *first* form passes vacuously; the added entry in the not-reported list is what fails, because the tag is reported until Task 2 landed). If Tasks 2–3 are already in, this step is the confirmation that the declaration is now dead weight.
+- [x] **Step 2: Run — confirm it fails** while the declaration still exists (the path is declared, so `undeclared` is empty and the *first* form passes vacuously; the added entry in the not-reported list is what fails, because the tag is reported until Task 2 landed). If Tasks 2–3 are already in, this step is the confirmation that the declaration is now dead weight.
 
-- [ ] **Step 3: Delete the declaration**
+- [x] **Step 3: Delete the declaration**
 
 Remove from `DECLARED_UNMAPPED`:
 
@@ -794,12 +794,12 @@ Remove from `DECLARED_UNMAPPED`:
   { path: '*.SOUR._AID',              reason: 'unmapped:pending-ad-citation-aid — …' },
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
   - `npm test -- import-tag-accounting` green, including the per-fixture gate over all 19+ fixtures.
   - `npm test -- import-tag-accounting-declared` green — the `unmapped:pending-` prefix test no longer has an entry naming this plan.
   - Grep the repo for `pending-ad-citation-aid`: zero hits outside `docs/plans/archive/`.
 
-- [ ] **Step 5: Commit** — `feat(import): the citation image pointer is mapped, not declared`
+- [x] **Step 5: Commit** — `feat(import): the citation image pointer is mapped, not declared`
 
 ---
 
@@ -816,7 +816,7 @@ Remove from `DECLARED_UNMAPPED`:
 
 The existing `arkivdigital-aid` rule in `src/api/link-rules/sv.ts` does **not** apply: its pattern requires the literal `AID:` prefix (`'AID:\\s*v(\\d+)\\.b(\\d+)(?:\\.s\\d+)?'`) and matches inside free text. A stored identifier value is a bare `v191316.b580.s52`, and it is a field, not prose. Widening the free-text rule to match bare `v…b…` strings would linkify unrelated text; a field resolver is the correct shape.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/external-identifier-links.test.ts
@@ -854,9 +854,9 @@ describe('resolveExternalIdentifierUrl', () => {
 });
 ```
 
-- [ ] **Step 2: Run — confirm it fails** (module does not exist).
+- [x] **Step 2: Run — confirm it fails** (module does not exist).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 // src/api/external_identifier_links.ts
@@ -890,7 +890,7 @@ export function resolveExternalIdentifierUrl(system: string, value: string): str
 }
 ```
 
-- [ ] **Step 4: Surface it on the event citation**
+- [x] **Step 4: Surface it on the event citation**
 
 `useEventCitations.ts` already loads a display row per citation from `citations.forEvent` + `sources.get`. Extend that row with the resolved link:
 
@@ -938,12 +938,12 @@ i18n keys, both locales — per the product principle *"prefers explicit text to
 // sv.ts   citations: { …, openArchiveImage: 'Öppna arkivbild' }
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
   - `npm test -- external-identifier-links` green.
   - A component test mounts the citation row with an `arkivdigital.image` identifier and asserts an anchor with the expected `href`; and with a `gramps.handle` identifier asserts no anchor.
   - **(Tier 4 — human-required):** open the app, import an ArkivDigital file, click one link, confirm ArkivDigital serves that image. *Alternative agent-completable path: none — the target is a paid third-party service behind a login the agent cannot reach. Degraded outcome if skipped: ship it, and change Verification §1 from "the link opens the image" to "the link resolves to the URL shape ArkivDigital's own `_URL` values use", which the unit test already asserts against `v25161.b276.s528`-style real values. Record in the commit which of the two happened.*
 
-- [ ] **Step 6: Commit** — `feat(ui): link a citation to its ArkivDigital image`
+- [x] **Step 6: Commit** — `feat(ui): link a citation to its ArkivDigital image`
 
 ---
 
@@ -951,9 +951,9 @@ i18n keys, both locales — per the product principle *"prefers explicit text to
 
 **Files:** none committed. This task produces evidence for the close-out.
 
-- [ ] **Step 1: Import each of the four real exports into a scratch DB** (`export-import/min släkt/*.ged`, gitignored — never copy into `tests/`).
+- [x] **Step 1: Import each of the four real exports into a scratch DB** (`export-import/min släkt/*.ged`, gitignored — never copy into `tests/`).
 
-- [ ] **Step 2: Record the counts**
+- [x] **Step 2: Record the counts**
 
 ```sql
 SELECT system, COUNT(*) FROM external_identifiers GROUP BY system;
@@ -969,32 +969,79 @@ SELECT COUNT(*) FROM external_identifiers
 -- expect: 0 — no orphan
 ```
 
-- [ ] **Step 3: Re-run the corpus sweep** — `npx tsx scripts/accounting-over-samples.ts "export-import/min släkt"` and confirm no `*.SOUR._AID` path appears.
+- [x] **Step 3: Re-run the corpus sweep** — `npx tsx scripts/accounting-over-samples.ts "export-import/min släkt"` and confirm no `*.SOUR._AID` path appears.
 
-- [ ] **Step 4: Paste the numbers into the close-out commit message.** Assertions are not evidence — `.claude/rules/plans.md` "Verification discipline at close-out".
+- [x] **Step 4: Paste the numbers into the close-out commit message.** Assertions are not evidence — `.claude/rules/plans.md` "Verification discipline at close-out".
 
 ---
 
 ### T-final (Tier 1): close out
 
-- [ ] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence.
+- [x] **Invoke the `/close-out` skill.** It walks the 6+1 steps, refuses partial work, and captures evidence.
 
 ---
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag; the one Tier 4 step carries its degraded outcome.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, no `unmapped_data` table.
-- [ ] The resolved URL is never written to the DB.
-- [ ] `bulkCreateCitations` still issues one batched INSERT — asserted, not assumed.
-- [ ] `*.SOUR._AID` is gone from `DECLARED_UNMAPPED` and no test references `pending-ad-citation-aid`.
-- [ ] `npm test`, `npm run lint`, `npx vue-tsc --noEmit --ignoreDeprecations 6.0`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [x] Every task has a tier tag; the one Tier 4 step carries its degraded outcome.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, no `unmapped_data` table.
+- [x] The resolved URL is never written to the DB.
+- [x] `bulkCreateCitations` still issues one batched INSERT — asserted, not assumed.
+- [x] `*.SOUR._AID` is gone from `DECLARED_UNMAPPED` and no test references `pending-ad-citation-aid`.
+- [x] `npm test`, `npm run lint`, `npx vue-tsc --noEmit --ignoreDeprecations 6.0`, `npm run build`, `npm run test:e2e:full` green with output captured.
 
 ## Failure modes / RCA reference
 
 - **The reason that named this plan pointed at a plan that did not exist.** `unmapped:pending-ad-citation-aid` was written into `accounting-declared.ts` before the file it names was filed — caught by post-close hygiene on 2026-08-23, fixed by commit `00c13144`. The `unmapped:pending-<plan>` prefix is only honest if the plan is on disk.
 - **`mediaEntityKey` joins with a NUL byte, not the space its doc comment shows.** Hand-building the key silently dropped `_PARISH_AID` from the export during the arkivdigital profile work. Task 4 calls the function.
 - **Reading a report and calling it coverage.** The 2026-08-23 breach was `ctx.skippedTags` read as if it were a census. Task 8's counts are a census over the whole corpus, not the top of a list.
+
+---
+
+## What execution changed
+
+Recorded at close-out. Four claims in the plan above did not survive contact; the
+checkboxes are ticked against what was actually done, not what was written.
+
+**1. The URL template was wrong, and the plan's own falsifiability note is what caught it.**
+The resolver copied `https://app.arkivdigital.se/volume/v$1?image=$2` from the free-text
+rule in `src/api/link-rules/sv.ts`. Measured across the four real exports: that form
+appears **zero** times. 2726 of 2762 `_URL` values ArkivDigital's own exporter writes are
+`arkivdigital.se/aid/show/<aid>`. The vendor's form also carries the whole pointer —
+`v25161.b276.s528` keeps its page, where the volume-and-image form discarded `.s528`.
+Fixed in `2019433d`. The plan named this as the one residual risk items 2–6 could not
+catch; it was real, and evidence closed it without the Tier 4 click.
+
+**2. The volume-level system is not resolved at all.** A bare `v191316` under `aid/show`
+is unattested, and `sources.url` already holds the researcher's own authored `_URL`. A
+synthesised volume link would be a guess standing beside a real value.
+
+**3. `useEventCitations` does not take its fetchers by injection.** Task 7 said it did.
+It reads `window.api` with optional chaining, so the identifier lookup does the same and
+degrades to no-link on a build without the domain — covered by a test.
+
+**4. "`vue-tsc` clean" is not achievable and never was.** The repo carries 2304
+pre-existing type errors. The meaningful check, used throughout, is *no new errors*:
+2304 before the branch, 2304 after, and none in any touched file.
+
+**Not needed:** the `readDialect` helper the Tasks preamble prescribes. The existing
+`import-arkivdigital-identifiers.test.ts` already carries an `AD` fixture with a
+citation-level `_AID`, so the tests use the file's own idiom and no new helper shipped.
+
+**Measured on the four real exports** (gitignored; nothing copied into the repo):
+
+```
+external_identifiers by system      arkivdigital.image 6324
+                                    arkivdigital        2722
+                                    arkivdigital.parish  335
+image pointers resolving to a real citation   6324 of 6324
+orphan image pointers                            0
+distinct image values                         3182
+citations 6752 | sources 2776 | persons 822 | places 1786 | events 5168
+
+accounting-over-samples over all four files:
+  0 distinct undeclared paths, 0 files failed to import
+```
