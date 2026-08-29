@@ -513,7 +513,8 @@ describe('_MARNM', () => {
     const db = await createTestDb();
     await importGedcom(db, parseGedcom(readDialect('rootsmagic.ged')));
     const back = await createTestDb();
-    await importGedcom(back, parseGedcom(await exportGedcom(db, { version: '5.5.1' })));
+    const { ged } = await exportGedcom(db, '5.5.1');
+    await importGedcom(back, parseGedcom(ged));
     const n = await queryAll(back, `SELECT id FROM person_names WHERE name_type = 'married'`);
     expect(n).toHaveLength(1);
   });
@@ -524,28 +525,57 @@ describe('_MARNM', () => {
 
 - [ ] **Step 4: Implement the import**
 
-In `individuals.ts`, where each `NAME` node is parsed into a `person_names` row, read `_MARNM` off the same node and emit a second row. The value uses GEDCOM name syntax (`Given /Surname/`), so reuse whatever splits the `NAME` value rather than writing a second parser — find it and call it.
+Three facts about the code this lands in, each of which contradicts the obvious guess:
+
+1. **There is no name-parsing helper.** `individuals.ts:142` splits the `NAME` value inline
+   with `const surnameMatch = raw.match(/^(.*?)\/(.+?)\/(.*)$/)`. Extract that into a
+   local function and call it from both places rather than writing a second regex.
+2. **The buffer is `nameRows`** (declared at line 67, flushed at line 254 by
+   `bulkAddPersonNames`), not `nameRowBuffer`, and it lives in **Pass 1** — where `nameNode`
+   is in scope. Not Pass 2.
+3. **Do not set `sort_order`.** `bulkAddPersonNames` assigns a dense per-person order when
+   the field is absent, so a row pushed after the birth name lands after it. Setting it by
+   hand fights a mechanism that already works.
 
 ```ts
+// src/import/gedcom/phases/individuals.ts — extracted from the inline match at line 142
+function splitGedcomName(raw: string): { given: string | null; surname: string | null } {
+  const m = raw.match(/^(.*?)\/(.+?)\/(.*)$/);
+  return {
+    given: (m ? m[1] : raw).trim() || null,
+    surname: m ? m[2].trim() || null : null,
+  };
+}
+```
+
+```ts
+// …in Pass 1, immediately after nameRows.push({ … }) for the birth name
       // RootsMagic writes the married name as a sub-tag of the birth NAME.
       // 724 occurrences in the sample corpus. person_names already models it:
-      // name_type 'married', ordered after the name it hangs off.
-      const marnm = getChild(pn.nameNode, '_MARNM')?.value?.trim();
+      // name_type 'married' plus the matching name_qualifier.
+      const marnm = getChild(nameNode, '_MARNM')?.value?.trim();
       if (marnm) {
-        const parts = parseGedcomNameValue(marnm);
-        nameRowBuffer.push({
+        const { given: mGiven, surname: mSurname } = splitGedcomName(marnm);
+        nameRows.push({
           id: uuid(),
           person_id: personId,
-          given_name: parts.given || null,
-          surname: parts.surname || null,
+          given_name: mGiven,
+          surname: mSurname,
+          name_prefix: null,
+          name_suffix: null,
           name_type: 'married',
+          patronymic_base: null,
+          preferred_name: null,
+          nickname: null,
           name_qualifier: 'married',
-          sort_order: nextSortOrder++,
+          date_from: null,
+          date_to: null,
         });
       }
 ```
 
-**Do not add a per-row insert here.** `individuals.ts` buffers names and flushes with `bulkAddPersonNames`; push into that buffer.
+`nameRows`' element type declares every field non-optional, so all thirteen are listed.
+**Do not add a per-row insert here** — push into the buffer and let the existing flush run.
 
 - [ ] **Step 5: Implement the export**
 
@@ -635,25 +665,86 @@ describe('Holger PARI', () => {
 
 - [ ] **Step 3: Implement**
 
-`prep-places.ts` already has the branch that turns typed levels into a hierarchy via `bulkResolveHierarchy`. Add a Holger branch beside the ArkivDigital one, building the same `HierarchyLevel[]` shape from `PLAC` + `PARI`:
+**`PARI` is a sibling of `PLAC`, not a child of it** — and `GedcomNode` has no `parent`
+field (`src/gedcom/parser.ts`: `level`, `xref`, `tag`, `value`, `children`). The existing
+`collectPlacNodes` walker at `prep-places.ts:16` returns bare `PLAC` nodes and throws the
+owning event away, so it cannot reach the parish. A second collector is needed — the walker
+holds the owner while it recurses, so pairing is free:
 
 ```ts
-  // Holger writes the parish as a sibling of PLAC on the event, not inside it.
-  // Two levels: the PLAC value, then the parish it contains.
+// src/import/gedcom/phases/prep-places.ts, beside collectPlacNodes
+/**
+ * Every PLAC node together with the PARI sibling on its owner, in document
+ * order. Holger writes the parish beside the place rather than inside it:
+ *
+ *   1 BIRT
+ *   2 PLAC Stockholm
+ *   2 PARI Stockholms domkyrkoförsamling (A)
+ *
+ * `GedcomNode` carries no parent pointer, so the pairing has to happen during
+ * the walk — the owner is in hand exactly once, here.
+ */
+function collectPlacWithParish(
+  nodes: GedcomNode[],
+  out: Array<{ placNode: GedcomNode; parish: string | null }> = [],
+): Array<{ placNode: GedcomNode; parish: string | null }> {
+  for (const owner of nodes) {
+    for (const child of owner.children) {
+      if (child.tag === 'PLAC' && child.value) {
+        // getChild marks the node consumed — that is what removes PARI from
+        // the unaccounted set. A raw children.find() would leave it reported.
+        out.push({ placNode: child, parish: getChild(owner, 'PARI')?.value?.trim() || null });
+      }
+    }
+    if (owner.children.length > 0) collectPlacWithParish(owner.children, out);
+  }
+  return out;
+}
+```
+
+> The nested loop plus the recursive call visits each node twice. That is a tree walk over
+> parsed nodes, not a DB query, and `collectPlacNodes` already walks the same tree — so it
+> costs nothing measurable. Do not restructure it into something clever.
+
+Then a Holger branch beside the ArkivDigital one, building the same `HierarchyLevel[]`
+shape `bulkResolveHierarchy` already consumes:
+
+```ts
+  // ── Holger: PLAC + its PARI sibling become a two-level chain ─────────────
   if (ctx.isHolger) {
-    for (const node of placNodes) {
-      const pari = getChild(node.parent ?? node, 'PARI')?.value?.trim();
-      // …build [{ name: node.value, type: 'locality' }, { name: pari, type: 'parish' }]
-      //   and key the display string to the resolved leaf, exactly as the
-      //   ArkivDigital branch does with displayByChainKey.
+    const chains: HierarchyLevel[][] = [];
+    const displayByChainKey = new Map<string, string[]>();
+    for (const { placNode, parish } of collectPlacWithParish(ctx.tree)) {
+      if (!parish) { flatNodes.push(placNode); continue; }
+      const levels: HierarchyLevel[] = [
+        { name: placNode.value.trim(), type: 'locality' },
+        { name: parish,                type: 'parish'   },
+      ];
+      const key = levels.map(l => l.name).join(' > ');
+      if (!displayByChainKey.has(key)) {
+        chains.push(levels);
+        displayByChainKey.set(key, []);
+      }
+      displayByChainKey.get(key)!.push(placNode.value.trim());
+    }
+    if (chains.length > 0) {
+      const resolved = await bulkResolveHierarchy(ctx.db, chains);
+      for (const [key, chain] of resolved) {
+        for (const display of displayByChainKey.get(key) ?? []) {
+          // Key by the PLAC display string so event-importer.ts needs no
+          // change: it still calls resolvePlaceFn(db, placValue), still gets a
+          // Map.get hit, and never learns the hierarchy exists. Same trick the
+          // ArkivDigital branch uses.
+          placeMap.set(normalize(display), chain.place);
+        }
+      }
     }
   }
 ```
 
-Two details the ArkivDigital branch already settled, which this branch must reuse rather than re-invent:
+`getChild` is not currently imported into `prep-places.ts` — add it from `../node-utils`.
 
-1. **Key the resolved chain by the PLAC display string**, so `event-importer.ts` needs no change — the same trick the ArkivDigital branch uses (`placeMap.set(normalize(display), chain.place)`).
-2. **`PARI` is a child of the event node, not of the `PLAC` node.** The AD block reads `_ADPL` from inside `PLAC`; here the sibling relationship means the walk needs the event node. Thread it, or collect `(placValue, pariValue)` pairs in the phase that already walks events. Whichever route, **call `getChild`** so the node is marked consumed — that is what removes the path from the report.
+**One ordering trap.** The ArkivDigital branch runs first and is tag-driven (`ctx.isArkivDigital || anyAdpl`). A Holger file has no `_ADPL`, so the branches never both fire — but write the Holger branch as `else if` on the same chain anyway, so a future file carrying both cannot resolve the same PLAC twice.
 
 - [ ] **Step 4: Delete the declaration** — remove `{ path: '*.PARI', … }`.
 

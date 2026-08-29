@@ -147,7 +147,7 @@ describe('_SEPR', () => {
     for (const version of ['5.5.1', '7.0'] as const) {
       const db = await createTestDb();
       await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
-      const ged = await exportGedcom(db, { version });
+      const { ged } = await exportGedcom(db, version);
       expect(ged, version).toContain('1 _SEPR');
       const back = await createTestDb();
       await importGedcom(back, parseGedcom(ged));
@@ -252,7 +252,8 @@ describe('_DOMESTIC_PARTNERSHIP', () => {
       const db = await createTestDb();
       await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
       const back = await createTestDb();
-      await importGedcom(back, parseGedcom(await exportGedcom(db, { version })));
+      const { ged } = await exportGedcom(db, version);
+      await importGedcom(back, parseGedcom(ged));
       const couples = await queryAll<{ subtype: string }>(
         back, `SELECT subtype FROM relationships WHERE type = 'couple'`);
       expect(couples.map(c => c.subtype), version).toContain('cohabitation');
@@ -424,7 +425,7 @@ describe('_DATE_TEXT', () => {
     for (const version of ['5.5.1', '7.0'] as const) {
       const db = await createTestDb();
       await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
-      const ged = await exportGedcom(db, { version });
+      const { ged } = await exportGedcom(db, version);
       const back = await createTestDb();
       await importGedcom(back, parseGedcom(ged));
       const ev = await queryAll(

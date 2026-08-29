@@ -130,7 +130,7 @@ Every one of the 6324 occurrences is under an **event** citation. Not one sits o
 
 ```ts
 // tests/unit/citations-bulk-ids.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { bulkCreateCitations, createSource, getCitation } from '../../src/api/sources';
 import { queryAll } from '../../src/api/db';
 import { createTestDb } from './helpers';
@@ -179,17 +179,21 @@ describe('bulkCreateCitations id contract', () => {
   it('still inserts in one batch, not per row', async () => {
     const src = await createSource(db, { title: 'S' });
     const rows = Array.from({ length: 500 }, (_, i) => ({ source_id: src.id, page: `p${i}` }));
-    const before = db.prepareCallCount ?? 0;
-    await bulkCreateCitations(db, rows);
-    expect((await queryAll(db, 'SELECT id FROM citations')).length).toBe(500);
     // Guard against a regression to a per-row loop: 500 rows must not cost
-    // 500 statement preparations. `helpers.ts` counts them.
-    expect((db.prepareCallCount ?? 0) - before).toBeLessThan(20);
+    // 500 statement preparations. Same spy `tests/unit/export-perf.test.ts:133`
+    // uses — `db.prepare` is the single primitive every query goes through.
+    const prepareSpy = vi.spyOn(db, 'prepare');
+    await bulkCreateCitations(db, rows);
+    const queryCount = prepareSpy.mock.calls.length;
+    prepareSpy.mockRestore();
+    expect((await queryAll(db, 'SELECT id FROM citations')).length).toBe(500);
+    expect(queryCount).toBeLessThan(20);
   });
 });
 ```
 
-> If `helpers.ts` does not expose `prepareCallCount`, add it there the way `tests/unit/export-perf.test.ts` spies on `db.prepare`, rather than dropping the assertion.
+> `helpers.ts` exposes no query counter and does not need one — `vi.spyOn(db, 'prepare')`
+> is the idiom already in use, and `vi` is in the import list above.
 
 - [ ] **Step 2: Run the test — confirm it fails**
 
@@ -285,14 +289,21 @@ export async function bulkCreateCitations(
 ```ts
 // tests/unit/import-arkivdigital-identifiers.test.ts — append
 import { getExternalIdentifiersByEntityType } from '../../src/api/external_identifiers';
+import type { ExternalIdentifier } from '../../src/api/external_identifiers';
+
+// getExternalIdentifiersByEntityType returns Map<entity_id, ExternalIdentifier[]>,
+// not a flat array. Flatten once here rather than at every call site.
+async function identsFor(db: Parameters<typeof getExternalIdentifiersByEntityType>[0], type: string): Promise<ExternalIdentifier[]> {
+  return [...(await getExternalIdentifiersByEntityType(db, type)).values()].flat();
+}
 import { queryAll } from '../../src/api/db';
 
 describe('citation-level image pointer', () => {
   it('stores the image _AID against the citation it sits under', async () => {
     const db = await createTestDb();
-    await importGedcom(db, parseGedcom(readFixture('arkivdigital.ged')));
+    await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
 
-    const idents = await getExternalIdentifiersByEntityType(db, 'citation');
+    const idents = await identsFor(db, 'citation');
     expect(idents).toHaveLength(1);
     expect(idents[0].system).toBe('arkivdigital.image');
     expect(idents[0].value).toBe('v100001.b10.s5');
@@ -308,8 +319,8 @@ describe('citation-level image pointer', () => {
 
   it('leaves the volume pointer on the source, distinct from the image pointer', async () => {
     const db = await createTestDb();
-    await importGedcom(db, parseGedcom(readFixture('arkivdigital.ged')));
-    const onSource = await getExternalIdentifiersByEntityType(db, 'source');
+    await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
+    const onSource = await identsFor(db, 'source');
     expect(onSource.map(i => [i.system, i.value])).toContainEqual(['arkivdigital', 'v100001']);
   });
 
@@ -331,12 +342,16 @@ describe('citation-level image pointer', () => {
 3 PAGE 7
 0 TRLR
 `));
-    expect(await getExternalIdentifiersByEntityType(db, 'citation')).toEqual([]);
+    expect(await identsFor(db, 'citation')).toEqual([]);
   });
 });
 ```
 
-> `readFixture` already exists in this file; reuse it rather than re-reading the path.
+> `readDialect` is the helper defined at the top of this Tasks section. `arkivdigital.ged`
+> lives under `tests/fixtures/gedcom/dialects/`.
+>
+> **`getExternalIdentifiersByEntityType` returns `Map<entity_id, ExternalIdentifier[]>`,
+> not an array.** The `identsFor` helper above flattens it; every test below uses that.
 
 - [ ] **Step 2: Run the test — confirm it fails**
 
@@ -503,7 +518,7 @@ describe('image pointer on non-event citation hosts', () => {
   it('stores one row per host, each against its own citation', async () => {
     const db = await createTestDb();
     await importGedcom(db, parseGedcom(NON_EVENT_HOSTS));
-    const idents = await getExternalIdentifiersByEntityType(db, 'citation');
+    const idents = await identsFor(db, 'citation');
     expect(idents.map(i => i.value).sort())
       .toEqual(['v900.b1.s1', 'v900.b2.s2', 'v900.b3.s3']);
 
@@ -571,7 +586,7 @@ Person-level in `individuals.ts` and family-level in `families.ts` take the same
 
 **Files:**
 - Modify: `src/gedcom/exporter.ts`
-- Test: `tests/unit/export-arkivdigital.test.ts` (extend, or the file the source-level `_AID` export test already lives in)
+- Test: `tests/unit/import-arkivdigital-identifiers.test.ts` (extend — the source-level `_AID` export tests already live there; there is no `export-arkivdigital.test.ts`)
 
 **Interfaces:**
 - `emitCitationBlock` gains a seventh parameter `externalIds: ExternalIdentifier[] = []`.
@@ -586,8 +601,8 @@ Person-level in `individuals.ts` and family-level in `families.ts` take the same
 describe('citation-level _AID export', () => {
   it('emits the image pointer under the citation, one level below SOUR', async () => {
     const db = await createTestDb();
-    await importGedcom(db, parseGedcom(readFixture('arkivdigital.ged')));
-    const ged = await exportGedcom(db, { version: '5.5.1' });
+    await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
+    const { ged } = await exportGedcom(db, '5.5.1');
     const lines = ged.split('\n');
     const i = lines.findIndex(l => l.trim() === '3 _AID v100001.b10.s5');
     expect(i, 'citation-level _AID missing from the export').toBeGreaterThan(-1);
@@ -598,8 +613,8 @@ describe('citation-level _AID export', () => {
 
   it('keeps the volume pointer on the SOUR record', async () => {
     const db = await createTestDb();
-    await importGedcom(db, parseGedcom(readFixture('arkivdigital.ged')));
-    const ged = await exportGedcom(db, { version: '5.5.1' });
+    await importGedcom(db, parseGedcom(readDialect('arkivdigital.ged')));
+    const { ged } = await exportGedcom(db, '5.5.1');
     expect(ged).toContain('\n1 _AID v100001\n');
   });
 
@@ -608,7 +623,7 @@ describe('citation-level _AID export', () => {
     const src = await createSource(db, { title: 'S' });
     const p = await createPerson(db, {});
     await bulkCreateCitations(db, [{ source_id: src.id, person_id: p.id, page: 'x' }]);
-    const ged = await exportGedcom(db, { version: '5.5.1' });
+    const { ged } = await exportGedcom(db, '5.5.1');
     expect(ged).not.toContain('_AID');
   });
 });
@@ -618,8 +633,13 @@ describe('citation-level _AID export', () => {
 
 - [ ] **Step 3: Implement**
 
+`exporter.ts` imports `Place, Citation, Repository, Media` from `../api/types` but not
+`ExternalIdentifier` — add it to the existing import from `../api/external_identifiers`.
+
 ```ts
 // src/gedcom/exporter.ts
+import type { ExternalIdentifier } from '../api/external_identifiers';
+
 function emitCitationBlock(
   lines: string[],
   cit: Citation,
@@ -684,11 +704,11 @@ it('a citation image pointer survives DB → GEDCOM → DB', async () => {
       { entity_type: 'citation', entity_id: citId, system: 'arkivdigital.image', value: 'v191316.b580.s52' },
     ]);
 
-    const ged = await exportGedcom(db, { version });
+    const { ged } = await exportGedcom(db, version);
     const back = await createTestDb();
     await importGedcom(back, parseGedcom(ged));
 
-    const idents = await getExternalIdentifiersByEntityType(back, 'citation');
+    const idents = await identsFor(back, 'citation');
     expect(idents.map(i => i.value), `lost under ${version}`).toEqual(['v191316.b580.s52']);
     expect(idents[0].system).toBe('arkivdigital.image');
   }
@@ -881,10 +901,23 @@ export function resolveExternalIdentifierUrl(system: string, value: string): str
     .find(x => x.url !== null);
 ```
 
-Two things the executor must not skip:
+Three things the executor must not skip:
 
-1. **`window.api.externalIdentifiers` may not exist yet.** Check `src/renderer/tauri-window-api.ts`; if there is no `externalIdentifiers` domain, add one binding `forEntity` to `getExternalIdentifiers` from `src/api/external_identifiers.ts`, in the same `readOnly(...)` shape as `citations.forEvent` at line 296.
-2. **Do not fetch per citation in a loop over a DB-scale array.** An event has a handful of citations, so per-citation is bounded here — but if the same display shape is later reused on a list of events, add a bulk getter first. Record which choice was made in the commit.
+1. **`window.api.externalIdentifiers` does not exist.** Verified — `tauri-window-api.ts` has
+   no such domain. Add one beside `api.citations` (line 292), binding `forEntity` to
+   `getExternalIdentifiers` from `src/api/external_identifiers.ts` in the same
+   `readOnly(...)` shape as `citations.forEvent` (line 296). That is a new IPC surface, so
+   it also needs its entry in `docs/IPC_REFERENCE.md`.
+2. **`useEventCitations` takes its fetchers by injection.** It already receives a
+   `sourceGet`-style dependency and hydrates `CitationRow.sourceTitle` through it (around
+   line 127). Add the identifier fetcher the same way — as an injected function — rather
+   than reaching for `window.api` inside the composable, which would break its tests.
+   `CitationRow` (line 36) is the interface that gains the field; `MergedCitationRow`
+   (line 56) carries it through to the template.
+3. **Do not fetch per citation in a loop over a DB-scale array.** An event has a handful of
+   citations, so per-citation is bounded here — but if the same display shape is later
+   reused on a list of events, add a bulk getter first. Record which choice was made in the
+   commit.
 
 In `EventModal.vue`, render the link beside the citation's page, label from i18n:
 
