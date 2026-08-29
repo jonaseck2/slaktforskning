@@ -78,6 +78,14 @@
 1 NAME Sambo /Testsson/
 1 SEX M
 1 FAMS @F2@
+1 EVEN
+2 TYPE Flyttning
+2 _DATE_TEXT vid midsommar 1872
+2 PLAC Testby, Testlands län, Sverige
+3 _ADPL
+4 _PARISH Testby
+4 _COUNTY Testlands län
+4 _COUNTRY Sverige
 0 @I5@ INDI
 1 NAME Sambo /Testdotter/
 1 SEX F
@@ -97,6 +105,10 @@
 1 _SEPR
 2 DATE 1880
 2 PLAC Testby, Testlands län, Sverige
+3 _ADPL
+4 _PARISH Testby
+4 _COUNTY Testlands län
+4 _COUNTRY Sverige
 0 @F2@ FAM
 1 HUSB @I4@
 1 WIFE @I5@

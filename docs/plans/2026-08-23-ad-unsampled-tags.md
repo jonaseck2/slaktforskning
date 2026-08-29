@@ -368,7 +368,7 @@ The remaining four:
 
 ArkivDigital's own description is *"datum utan giltigt GEDCOM-format"*. The app already has the column for exactly that: `date_original` holds the authored text, `date_value` holds the parsed form, and `date_type: 'unknown'` is what an unparsed date already produces.
 
-- [ ] **Step 1: Add to the fixture** — an event with `_DATE_TEXT` and no `DATE`:
+- [x] **Step 1: Add to the fixture** — an event with `_DATE_TEXT` and no `DATE`:
 
 ```
 1 EVEN
@@ -377,7 +377,7 @@ ArkivDigital's own description is *"datum utan giltigt GEDCOM-format"*. The app 
 2 PLAC Testby, Testlands län, Sverige
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```ts
 // tests/unit/import-date-text.test.ts
@@ -450,9 +450,9 @@ describe('_DATE_TEXT', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm it fails.**
+- [x] **Step 3: Run — confirm it fails.**
 
-- [ ] **Step 4: Implement the import**
+- [x] **Step 4: Implement the import**
 
 Both `importEventNode` and `collectEventNode` build `parsed` the same way. Extend both:
 
@@ -473,9 +473,29 @@ Both `importEventNode` and `collectEventNode` build `parsed` the same way. Exten
 
 **Call `getChild` unconditionally**, before the ternary, so the node is marked consumed even on the branch that ignores it — an unread node is an unaccounted node, and reading it inside a conditional would report the tag only sometimes.
 
-- [ ] **Step 5: Implement the export**
+- [x] **Step 5: Implement the export**
 
-The exporter emits `date_original` today when there is no parseable `date_value`; confirm what it writes for a `date_type: 'unknown'` event before editing. If it emits nothing, add:
+**Executed: no exporter change. The check the step asks for said don't.** The
+exporter already emits `date_original` for a `date_type: 'unknown'` event, via
+`formatGedcomDate`'s `if (date_original) return date_original`. Measured on the
+fixture's `1 EVEN / 2 _DATE_TEXT vid midsommar 1872`:
+
+```
+5.5.1                     7.0
+1 EVEN                    1 EVEN
+2 TYPE Flyttning          2 TYPE Flyttning
+2 DATE vid midsommar 1872 2 DATE
+                          3 PHRASE vid midsommar 1872
+```
+
+Both re-import to `date_original = 'vid midsommar 1872'`, `date_value = null` —
+asserted by the round-trip test above. Adding the block below would emit the
+value twice, which is the double-emission the step's own last line warns about.
+The vendor tag becomes the standard slot on the way out and the authored value
+survives, the same trade `_TITLE` → `TITL` already makes (`shared.ts`).
+7.0's `DATE`+`PHRASE` is the spec-sanctioned form, so no `_DATE_TEXT` is needed
+there either and the registry's `events.date_original` entry already names both
+mechanisms. The block the plan drafted, not applied:
 
 ```ts
     // Re-emit an unparseable authored date as _DATE_TEXT, the tag it arrived
@@ -490,9 +510,9 @@ The exporter emits `date_original` today when there is no parseable `date_value`
 
 Guard against a double emission: if the exporter already writes `date_original` through another path, this would produce both. Check first.
 
-- [ ] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` green; the per-field round-trip test for `events.date_original` still green, and the fidelity registry entry for it still describes what happens.
+- [x] **Step 6: Verify** — new suite green; `npm test -- import-tag-accounting` green; the per-field round-trip test for `events.date_original` still green, and the fidelity registry entry for it still describes what happens.
 
-- [ ] **Step 7: Commit** — `feat(import): a free-text ArkivDigital date is the authored date`
+- [x] **Step 7: Commit** — `feat(import): a free-text ArkivDigital date is the authored date`
 
 ---
 
