@@ -236,7 +236,7 @@ Parse `--out` from `process.argv` alongside the existing positional `dir`.
 
 `INDI._FREL` was never a mapping gap. It was a fixture that did not match its program.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // tests/unit/import-gedcom-dialects.test.ts
@@ -260,9 +260,9 @@ describe('FTM / PAF parent relation', () => {
 });
 ```
 
-- [ ] **Step 2: Run — confirm it fails.** With the INDI-level fixture there is no `FAM.CHIL._FREL`, so both children come back `biological`.
+- [x] **Step 2: Run — confirm it fails.** With the INDI-level fixture there is no `FAM.CHIL._FREL`, so both children come back `biological`.
 
-- [ ] **Step 3: Rewrite the two fixture FAM records**
+- [x] **Step 3: Rewrite the two fixture FAM records**
 
 Real FTM, verbatim shape from `export-import/samples/d-jeffrey/family-tree-maker-pres2020.ged:46409`:
 
@@ -282,7 +282,7 @@ PAF takes the same shape. Delete the level-1 `_FREL` / `_MREL` lines from the IN
 
 > Add a second child to each fixture if it has only one, so the test can assert two different subtypes and prove the value is read rather than defaulted.
 
-- [ ] **Step 4: Delete three declarations**
+- [x] **Step 4: Delete three declarations**
 
 ```ts
   // removed — a fixture invention, never a real shape:
@@ -291,9 +291,9 @@ PAF takes the same shape. Delete the level-1 `_FREL` / `_MREL` lines from the IN
   { path: 'INDI._FREL._MREL',  reason: 'unmapped:pending-dialect-tag-review — …' },
 ```
 
-- [ ] **Step 5: Verify** — `npm test -- import-gedcom-dialects import-tag-accounting` green.
+- [x] **Step 5: Verify** — `npm test -- import-gedcom-dialects import-tag-accounting` green.
 
-- [ ] **Step 6: Commit** — `test(import): FTM and PAF fixtures use the shape real files write`
+- [x] **Step 6: Commit** — `test(import): FTM and PAF fixtures use the shape real files write`
 
 ---
 

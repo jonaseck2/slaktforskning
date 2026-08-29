@@ -36,15 +36,24 @@
 0 @I3@ INDI
 1 NAME George /Brown/
 1 SEX M
-1 _FREL @I1@
-2 _MREL Adopted
 1 BIRT
 2 DATE 11 JUL 1932
+1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Alice /Brown/
+1 SEX F
+1 BIRT
+2 DATE 2 MAR 1935
 1 FAMC @F1@
 0 @F1@ FAM
 1 HUSB @I1@
 1 WIFE @I2@
 1 CHIL @I3@
+2 _FREL Adopted
+2 _MREL Adopted
+1 CHIL @I4@
+2 _FREL Natural
+2 _MREL Natural
 1 MARR
 2 DATE 14 APR 1928
 2 PLAC London, England

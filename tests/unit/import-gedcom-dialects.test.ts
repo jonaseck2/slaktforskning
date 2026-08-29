@@ -17,9 +17,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { queryAll } from '../../src/api/db';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
-import { createTestDb } from './helpers';
+import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
+import { createTestDb, readDialect } from './helpers';
 
 const DIALECTS_DIR = join(__dirname, '../fixtures/gedcom/dialects');
 
@@ -80,4 +82,36 @@ describe('GEDCOM dialect coverage', async () => {
       });
     });
   }
+});
+
+// ── Parent relation: FTM and PAF write _FREL / _MREL at level 2 under FAM.CHIL.
+// Measured 2026-08-29 over the 36 real .ged files in export-import/samples:
+// 45 996 occurrences, every one at level 2, zero at level 1 under INDI. The
+// INDI-level shape the fixtures used to carry was a fixture invention, and a
+// fixture that does not match the program it is named after tests nothing.
+describe('FTM / PAF parent relation', () => {
+  it('reads _FREL and _MREL where real files put them — under FAM.CHIL', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(readDialect('family-tree-maker.ged')));
+    const pc = await queryAll<{ person1_id: string; person2_id: string; subtype: string }>(
+      db, `SELECT person1_id, person2_id, subtype FROM relationships WHERE type = 'parent_child'`);
+    expect(pc.map(r => r.subtype).sort()).toEqual(['adopted', 'adopted', 'biological', 'biological']);
+  });
+
+  it('reads both parents of a PAF adopted child', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(readDialect('paf.ged')));
+    const pc = await queryAll<{ subtype: string }>(
+      db, `SELECT subtype FROM relationships WHERE type = 'parent_child'`);
+    expect(pc.map(r => r.subtype).sort()).toEqual(['adopted', 'adopted', 'biological', 'biological']);
+  });
+
+  it('reports nothing unaccounted for either fixture', async () => {
+    for (const f of ['family-tree-maker.ged', 'paf.ged']) {
+      const db = await createTestDb();
+      const report = await importGedcom(db, parseGedcom(readDialect(f)));
+      const undeclared = (report.unaccountedFor ?? []).filter(u => !matchDeclared(u.path));
+      expect(undeclared, `${f}`).toEqual([]);
+    }
+  });
 });
