@@ -2,6 +2,11 @@ import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne, runSql, runSqlChanges } from '../db';
 import { undoManager } from '../undo';
 import type { Source } from '../types';
+import {
+  repointExternalIdentifiers,
+  restoreExternalIdentifiers,
+  type ExternalIdentifierMove,
+} from '../external_identifiers';
 import { levenshtein } from './shared';
 
 // ---------------------------------------------------------------------------
@@ -221,6 +226,8 @@ export async function mergeSources(
     sort_order: number; created_at: string;
   }> = [];
   const updatedMediaLinks: string[] = [];
+  // Identifiers follow the survivor — see repointExternalIdentifiers.
+  let identifierMove: ExternalIdentifierMove = { movedIds: [], deleted: [] };
 
   await runSql(db, 'BEGIN IMMEDIATE');
   try {
@@ -283,7 +290,13 @@ export async function mergeSources(
     );
     moved.ignored_duplicates = ignoredRows.length;
 
-    // 5. Delete the source source-row.
+    // 6. external_identifiers — repoint onto the survivor, dropping rows it
+    // already carries. Left behind they orphan against a deleted entity_id
+    // and the consolidation review re-offers the cluster forever.
+    identifierMove = await repointExternalIdentifiers(db, 'source', sourceId, targetId);
+    moved.external_identifiers = identifierMove.movedIds.length;
+
+    // 7. Delete the source source-row.
     await runSql(db, 'DELETE FROM sources WHERE id = ?', [sourceId]);
 
     await runSql(db, 'COMMIT');
@@ -341,6 +354,8 @@ export async function mergeSources(
             VALUES (?, ?, 'source', ?, ?, ?, ?)
           `, [ml.id, ml.media_id, sourceSnapshot.id, ml.link_type, ml.sort_order, ml.created_at]);
         }
+        // Put the identifiers back on the restored source row.
+        await restoreExternalIdentifiers(db, sourceSnapshot.id, identifierMove);
         // Restore ignored_duplicates rows
         for (const ig of ignoredRows) {
           await runSql(db,

@@ -1,5 +1,5 @@
 import { Database } from 'node-sqlite3-wasm';
-import { queryAll, runBatch } from './db';
+import { queryAll, queryOne, runBatch, runSql } from './db';
 
 /**
  * External identifiers for non-person entities.
@@ -104,4 +104,85 @@ export async function getExternalIdentifiersByEntityType(
     byEntity.set(row.entity_id, list);
   }
   return byEntity;
+}
+
+/**
+ * Rows moved off a merged-away entity, plus the ones dropped as duplicates of
+ * an identifier the survivor already carried. Enough to undo the move exactly.
+ */
+export interface ExternalIdentifierMove {
+  /** Row ids whose `entity_id` was repointed at the survivor. */
+  movedIds: string[];
+  /** Whole rows deleted because the survivor already stated the same value. */
+  deleted: ExternalIdentifier[];
+}
+
+/**
+ * Repoint one entity's identifiers onto another, ahead of deleting it.
+ *
+ * A merge that leaves these rows behind orphans them against a deleted
+ * `entity_id`, and the consolidation review then re-offers the cluster it just
+ * merged, forever. Measured on 2026-08-29: none of the merge or delete paths
+ * touched this table, though the table's own comment says the owning entity's
+ * delete path is responsible.
+ *
+ * Repoint rather than delete: an identifier only the merged-away entity carried
+ * is authored data, and the Prime Directive does not let a merge discard it by
+ * side effect. A row the survivor already carries is a true duplicate under the
+ * UNIQUE index and is dropped — the same dedupe-on-move shape `mergeSources`
+ * already uses for `source_repositories` and `media_links`.
+ *
+ * The caller holds the transaction.
+ */
+export async function repointExternalIdentifiers(
+  db: Database,
+  entityType: string,
+  fromId: string,
+  toId: string,
+): Promise<ExternalIdentifierMove> {
+  const rows = await queryAll<ExternalIdentifier>(
+    db,
+    'SELECT * FROM external_identifiers WHERE entity_type = ? AND entity_id = ?',
+    [entityType, fromId],
+  );
+  const movedIds: string[] = [];
+  const deleted: ExternalIdentifier[] = [];
+  for (const row of rows) {
+    const clash = await queryOne<{ id: string }>(
+      db,
+      `SELECT id FROM external_identifiers
+        WHERE entity_type = ? AND entity_id = ? AND system = ? AND value = ?`,
+      [entityType, toId, row.system, row.value],
+    );
+    if (clash) {
+      deleted.push(row);
+      await runSql(db, 'DELETE FROM external_identifiers WHERE id = ?', [row.id]);
+    } else {
+      await runSql(db, 'UPDATE external_identifiers SET entity_id = ? WHERE id = ?', [toId, row.id]);
+      movedIds.push(row.id);
+    }
+  }
+  return { movedIds, deleted };
+}
+
+/**
+ * Put a `repointExternalIdentifiers` move back. Undo half of the pair; the
+ * caller holds the transaction.
+ */
+export async function restoreExternalIdentifiers(
+  db: Database,
+  fromId: string,
+  move: ExternalIdentifierMove,
+): Promise<void> {
+  for (const id of move.movedIds) {
+    await runSql(db, 'UPDATE external_identifiers SET entity_id = ? WHERE id = ?', [fromId, id]);
+  }
+  for (const row of move.deleted) {
+    await runSql(
+      db,
+      `INSERT OR IGNORE INTO external_identifiers (id, entity_type, entity_id, system, value, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [row.id, row.entity_type, row.entity_id, row.system, row.value, row.created_at],
+    );
+  }
 }

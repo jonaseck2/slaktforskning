@@ -1,6 +1,11 @@
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne, runSql, runSqlChanges } from '../db';
 import { undoManager } from '../undo';
+import {
+  repointExternalIdentifiers,
+  restoreExternalIdentifiers,
+  type ExternalIdentifierMove,
+} from '../external_identifiers';
 import type { Place } from '../types';
 import { levenshtein } from './shared';
 
@@ -237,6 +242,8 @@ export async function mergePlaces(
   }> = [];
   const updatedMediaLinks: string[] = [];
 
+  let identifierMove: ExternalIdentifierMove = { movedIds: [], deleted: [] };
+
   await runSql(db, 'BEGIN IMMEDIATE');
   try {
     // 1. events.place_id
@@ -347,6 +354,12 @@ export async function mergePlaces(
     );
     moved.ignored_duplicates = ignoredRows.length;
 
+    // external_identifiers — repoint onto the survivor, dropping rows it
+    // already carries. Left behind they orphan against a deleted entity_id
+    // and the consolidation review re-offers the cluster forever.
+    identifierMove = await repointExternalIdentifiers(db, 'place', sourceId, targetId);
+    moved.external_identifiers = identifierMove.movedIds.length;
+
     // 8. Delete the source place
     await runSql(db, 'DELETE FROM places WHERE id = ?', [sourceId]);
 
@@ -378,6 +391,8 @@ export async function mergePlaces(
           sourceSnapshot.city, sourceSnapshot.country,
         ]);
 
+        // Put the identifiers back on the restored place row.
+        await restoreExternalIdentifiers(db, sourceSnapshot.id, identifierMove);
         // Revert events.place_id
         for (const e of eventsTouched) {
           await runSql(db, 'UPDATE events SET place_id = ? WHERE id = ?', [e.place_id, e.id]);

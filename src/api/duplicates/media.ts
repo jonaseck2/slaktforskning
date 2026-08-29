@@ -3,6 +3,11 @@ import * as path from 'path';
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, queryOne, runSql, runSqlChanges } from '../db';
 import { undoManager } from '../undo';
+import {
+  repointExternalIdentifiers,
+  restoreExternalIdentifiers,
+  type ExternalIdentifierMove,
+} from '../external_identifiers';
 import type { Media } from '../types';
 import { levenshtein } from './shared';
 
@@ -290,6 +295,8 @@ export async function mergeMedia(
   // Snapshot target's current file_ref for undo when keepFile='source'.
   const targetFileRefBeforeMerge = target.file_ref;
 
+  let identifierMove: ExternalIdentifierMove = { movedIds: [], deleted: [] };
+
   await runSql(db, 'BEGIN IMMEDIATE');
   try {
     // 0. If keepFile='source', rewrite target's file_ref to source's value
@@ -331,6 +338,12 @@ export async function mergeMedia(
       [sourceId, sourceId]
     );
     moved.ignored_duplicates = ignoredRows.length;
+
+    // external_identifiers — repoint onto the survivor, dropping rows it
+    // already carries. Left behind they orphan against a deleted entity_id
+    // and the consolidation review re-offers the cluster forever.
+    identifierMove = await repointExternalIdentifiers(db, 'media', sourceId, targetId);
+    moved.external_identifiers = identifierMove.movedIds.length;
 
     // 4. Delete the source media row. CASCADE handles any remaining FK-bound
     // child rows (defensively — by step 1 and 2 we've moved them all).
@@ -379,6 +392,8 @@ export async function mergeMedia(
           sourceSnapshot.created_at,
         ]);
 
+        // Put the identifiers back on the restored media row.
+        await restoreExternalIdentifiers(db, sourceSnapshot.id, identifierMove);
         // If we rewrote target.file_ref (keepFile='source'), revert it.
         if (keepFile === 'source') {
           await runSql(db, 'UPDATE media SET file_ref = ? WHERE id = ?', [targetFileRefBeforeMerge, targetId]);
