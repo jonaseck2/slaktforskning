@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.274.0 — 2026-08-29
+
+- feat: a citation from an ArkivDigital import now offers "Öppna arkivbild", opening the exact archive image that citation was taken from
+- feat: that pointer survives an export and re-import, so merging trees no longer loses the route back to the image — 6324 of them across the four test exports, 1764 reachable no other way once duplicate sources are folded together
+
 ## 0.273.0 — 2026-08-23
 
 - feat: places from an ArkivDigital export now sit in their real parish and county instead of one flat row per address line — Högnäs under Hedesunda under Gävleborgs län under Sverige
@@ -52,13 +57,3 @@
 
 - perf: exporting a 20 000+ person tree to GEDCOM now finishes in about a second instead of minutes
 - perf: actions that load the whole person list on a large tree are fast again, not multi-second
-
-## 0.271.0 — 2026-06-17
-
-- feat: exporting (GEDCOM, website, or archive) now shows a live progress line while it runs, so a large export no longer looks frozen
-- perf: GEDCOM export of large trees no longer runs a separate database query per person and event for notes, associations, and name/place translations — they are fetched in bulk up front (on a 22 000-person tree this removes ~150 000 tiny queries)
-- fix: exporting GEDCOM from the app now respects the GEDCOM 7.0 choice and your export options, which were previously ignored
-
----
-
-*Earlier release notes archived. See [docs/plans/archive/CHANGELOG.md](docs/plans/archive/CHANGELOG.md) for older entries; the complete per-milestone development history (commit-level detail, RCA write-ups, design rationale) lives in [docs/plans/archive/PLAN.md](docs/plans/archive/PLAN.md) and the git log.*
