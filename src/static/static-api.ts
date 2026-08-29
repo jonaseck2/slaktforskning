@@ -565,19 +565,19 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     }),
     get: async (id: string) => snapshot.relationships.find(r => r.id === id) ?? null,
     getForPerson: async (personId: string) => idx.relationshipsByPerson.get(personId) ?? [],
-    search: async () => [],
+    search: async (): Promise<never[]> => [],
     create: noop, update: noop, delete: noopFalse,
   };
 
   const groups = {
-    list: async () => [],
+    list: async (): Promise<never[]> => [],
     get: noop,
-    getMembers: async () => [],
-    forPerson: async () => [],
-    forPlace: async () => [],
-    forMedia: async () => [],
+    getMembers: async (): Promise<never[]> => [],
+    forPerson: async (): Promise<never[]> => [],
+    forPlace: async (): Promise<never[]> => [],
+    forMedia: async (): Promise<never[]> => [],
     create: noop, update: noop, delete: noopFalse, addMember: noop, removeMember: noopFalse,
-    addLink: noop, removeLink: noopFalse, removeLinkByEntity: noopFalse, getLinks: async () => [],
+    addLink: noop, removeLink: noopFalse, removeLinkByEntity: noopFalse, getLinks: async (): Promise<never[]> => [],
   };
 
   const repositories = {
@@ -652,13 +652,13 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   };
 
   const researchTasks = {
-    list: async () => [],
+    list: async (): Promise<never[]> => [],
     get: noop,
-    forPerson: async () => [],
-    forPlace: async () => [],
-    forMedia: async () => [],
+    forPerson: async (): Promise<never[]> => [],
+    forPlace: async (): Promise<never[]> => [],
+    forMedia: async (): Promise<never[]> => [],
     create: noop, update: noop, delete: noopFalse,
-    addLink: noop, removeLink: noopFalse, getLinks: async () => [],
+    addLink: noop, removeLink: noopFalse, getLinks: async (): Promise<never[]> => [],
   };
 
   const reports = {
@@ -673,10 +673,10 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
 
   const checks = {
     runAll: async () => null,
-    forPerson: async () => [],
-    forPlace: async () => [],
-    forMedia: async () => [],
-    runForEvent: async () => [],
+    forPerson: async (): Promise<never[]> => [],
+    forPlace: async (): Promise<never[]> => [],
+    forMedia: async (): Promise<never[]> => [],
+    runForEvent: async (): Promise<never[]> => [],
   };
 
   const media = {
@@ -745,7 +745,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
       }
       return out;
     },
-    getTimeline: async () => [],
+    getTimeline: async (): Promise<never[]> => [],
     create: noop, update: noop, delete: noopFalse,
     addLink: noop, removeLink: noopFalse, reorder: noopVoid, attach: noop, createFromFile: noop, openFile: noopVoid,
   };
@@ -762,7 +762,7 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
     deleteSetting: noopVoid,
     onSwitched: () => {},
     getCurrent: async () => null,
-    getRecent: async () => [],
+    getRecent: async (): Promise<never[]> => [],
     createNew: noop, openExisting: noop, switchTo: noop,
   };
 
@@ -783,31 +783,31 @@ export function buildStaticApi(snapshot: Snapshot): Record<string, any> {
   const csv = { export: noop };
   const backup = { backup: noop, restore: noop };
   const gazetteers = {
-    list: async () => [], import: noop, export: noop, delete: noopFalse,
-    getImported: async () => [], getSchema: async () => null, getBundled: async () => [],
+    list: async (): Promise<never[]> => [], import: noop, export: noop, delete: noopFalse,
+    getImported: async (): Promise<never[]> => [], getSchema: async () => null, getBundled: async (): Promise<never[]> => [],
   };
   const duplicates = {
-    find: async () => [], findPage: async () => ({ items: [], total: 0 }), count: async () => 0,
+    find: async (): Promise<never[]> => [], findPage: async () => ({ items: [], total: 0 }), count: async () => 0,
     merge: noop, ignore: noop,
-    findPlaces: async () => [], countPlaces: async () => 0, ignorePlace: noop, mergePlaces: noop,
-    findSources: async () => [], countSources: async () => 0, ignoreSource: noop, mergeSources: noop,
-    findMedia: async () => [], countMedia: async () => 0, ignoreMedia: noop, mergeMedia: noop,
-    findExactClusters: async () => [], findFuzzyClusters: async () => [],
+    findPlaces: async (): Promise<never[]> => [], countPlaces: async () => 0, ignorePlace: noop, mergePlaces: noop,
+    findSources: async (): Promise<never[]> => [], countSources: async () => 0, ignoreSource: noop, mergeSources: noop,
+    findMedia: async (): Promise<never[]> => [], countMedia: async () => 0, ignoreMedia: noop, mergeMedia: noop,
+    findExactClusters: async (): Promise<never[]> => [], findFuzzyClusters: async (): Promise<never[]> => [],
     applyCluster: noop, declineCluster: noop,
   };
-  const gedcom = { selectFile: noop, selectFiles: async () => [], preview: noop, import: noop, export: noop };
+  const gedcom = { selectFile: noop, selectFiles: async (): Promise<never[]> => [], preview: noop, import: noop, export: noop };
   const importApi = {
     genneyCheckDocker: async () => false, genneySelectDerby: noop, genneySelectArchive: noop,
-    genneySelectArchives: async () => [],
+    genneySelectArchives: async (): Promise<never[]> => [],
     genneySelectMedia: noop, genneyDiscover: noop, genneyRun: noop, onProgress: () => {},
-    holgerSelectFile: noop, holgerSelectFiles: async () => [],
+    holgerSelectFile: noop, holgerSelectFiles: async (): Promise<never[]> => [],
     holgerSelectMedia: noop, holgerRun: noop, onHolgerProgress: () => {},
-    rootsmagicSelectFile: noop, rootsmagicSelectFiles: async () => [],
+    rootsmagicSelectFile: noop, rootsmagicSelectFiles: async (): Promise<never[]> => [],
     rootsmagicRun: noop, onRootsmagicProgress: () => {},
-    grampsSelectFile: noop, grampsSelectFiles: async () => [],
+    grampsSelectFile: noop, grampsSelectFiles: async (): Promise<never[]> => [],
     grampsRun: noop, onGrampsProgress: () => {},
   };
-  const archive = { export: noop, import: noop, selectFiles: async () => [] };
+  const archive = { export: noop, import: noop, selectFiles: async (): Promise<never[]> => [] };
   const website = { export: noop, previewSnapshot: noop };
   const chart = {
     saveSvg: noop, savePdf: noop,

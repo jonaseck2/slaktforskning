@@ -10,7 +10,7 @@ import { i18n } from './setup';
 describe('HolgerImportSection — many files, one action', () => {
   const report = (n: number) => ({
     version: '5.5.1', persons: n, families: 0, events: {},
-    sources: n * 2, places: 0, citations: 0, skipped: [], warnings: [],
+    sources: n * 2, places: 0, citations: 0, skipped: [] as string[], warnings: [] as string[],
   });
 
   let selectFiles: ReturnType<typeof vi.fn>;

@@ -15,13 +15,13 @@ describe('GedcomImportSection — many files, one action', () => {
   const preview = (n: number) => ({
     personCount: n, relationshipCount: 0, eventCount: 0,
     sourceCount: n * 2, placeCount: 0, repositoryCount: 0,
-    warnings: [], estimatedSize: 'small' as const,
+    warnings: [] as string[], estimatedSize: 'small' as const,
   });
   const report = (n: number) => ({
     version: '5.5.1', persons: n, families: 0, events: {},
     sources: n * 2, places: 0, citations: 0,
     repositories: 0, groups: 0, researchTasks: 0,
-    skipped: [], warnings: [],
+    skipped: [] as string[], warnings: [] as string[],
   });
 
   let selectFiles: ReturnType<typeof vi.fn>;
@@ -154,10 +154,10 @@ describe('GedcomImportSection — many files, one action', () => {
 describe('GedcomImportSection — the consolidation step', () => {
   const preview = { personCount: 1, relationshipCount: 0, eventCount: 0,
     sourceCount: 1, placeCount: 0, repositoryCount: 0,
-    warnings: [], estimatedSize: 'small' as const };
+    warnings: [] as string[], estimatedSize: 'small' as const };
   const report = { version: '5.5.1', persons: 1, families: 0, events: {},
     sources: 1, places: 0, citations: 0, repositories: 0, groups: 0,
-    researchTasks: 0, skipped: [], warnings: [] };
+    researchTasks: 0, skipped: [] as string[], warnings: [] as string[] };
 
   const cluster = (n: number, id: string) => ({
     entityType: 'source' as const,

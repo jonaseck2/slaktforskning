@@ -180,12 +180,15 @@ declare global {
         update: (id: string, updates: Partial<Omit<Citation, 'id' | 'source_id' | 'created_at'>>) => Promise<Citation | null>;
       };
       gedcom: {
-        import: (opts?: { profile?: string }) => Promise<{
+        import: (opts?: { profile?: string; filePath?: string }) => Promise<{
           imported: number;
           skipped: number;
           errors: string[];
           warnings: string[];
         } | null>;
+        /** Multi-select. Empty array when the user cancels. */
+        selectFiles: () => Promise<string[]>;
+        preview: (filePath: string) => Promise<Record<string, unknown>>;
         export: () => Promise<{ path: string } | null>;
       };
       export: {
@@ -207,6 +210,13 @@ declare global {
         holgerEdbSelectDir: () => Promise<string | null>;
         holgerEdbRun: (opts: Record<string, unknown>) => Promise<{ imported: number; errors: string[] }>;
         onHolgerProgress: (cb: (msg: string) => void) => void;
+        // Multi-select siblings of the single-file pickers above. Each returns
+        // an empty array when the user cancels.
+        genneySelectArchives: () => Promise<string[]>;
+        genneySelectMedia: () => Promise<string | null>;
+        holgerSelectFiles: () => Promise<string[]>;
+        rootsmagicSelectFiles: () => Promise<string[]>;
+        grampsSelectFiles: () => Promise<string[]>;
       };
       db: {
         getCurrent: () => Promise<{ path: string; name: string }>;

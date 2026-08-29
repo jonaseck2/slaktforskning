@@ -11,7 +11,7 @@ describe('RootsMagicImportSection — many files, one action', () => {
   const summary = (n: number) => ({
     persons: n, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: n * 2, citations: 0, media: 0,
-    warnings: [], skipped: [],
+    warnings: [] as string[], skipped: [] as string[],
   });
 
   let selectFiles: ReturnType<typeof vi.fn>;

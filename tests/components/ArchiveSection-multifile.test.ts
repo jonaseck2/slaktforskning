@@ -11,9 +11,9 @@ describe('ArchiveSection — many archives, one action', () => {
   const report = (n: number) => ({
     gedcomReport: {
       persons: n, families: 0, events: {}, sources: n * 2,
-      places: 0, citations: 0, warnings: [],
+      places: 0, citations: 0, warnings: [] as string[],
     },
-    mediaImported: n, mediaSkipped: [],
+    mediaImported: n, mediaSkipped: [] as string[],
   });
 
   let selectFiles: ReturnType<typeof vi.fn>;

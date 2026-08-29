@@ -12,7 +12,7 @@ describe('GenneyImportSection — many files, one action', () => {
     persons: n, coupleRelationships: 0, parentChildRelationships: 0,
     events: 0, places: 0, sources: n * 2, citations: 0,
     groups: 0, repositories: 0, researchTasks: 0, media: 0,
-    warnings: [], skipped: [],
+    warnings: [] as string[], skipped: [] as string[],
   });
 
   let selectArchives: ReturnType<typeof vi.fn>;
