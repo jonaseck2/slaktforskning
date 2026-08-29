@@ -162,7 +162,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
 
 **Interfaces:** the script gains an output-file argument. Console output stays a summary; the file is the census.
 
-- [ ] **Step 1: Record the before state**
+- [x] **Step 1: Record the before state**
 
 ```
 $ npx tsx scripts/accounting-over-samples.ts
@@ -172,7 +172,7 @@ $ npx tsx scripts/accounting-over-samples.ts
 
 755 distinct, 30 printed. Paste this into the commit message — it is the reason the change exists.
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 ```ts
 // scripts/accounting-over-samples.ts
@@ -217,12 +217,12 @@ import { writeFileSync } from 'node:fs';
 
 Parse `--out` from `process.argv` alongside the existing positional `dir`.
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
   - `npx tsx scripts/accounting-over-samples.ts export-import/samples --out /tmp/census.txt`
   - `wc -l /tmp/census.txt` equals the reported distinct-path count. **This is the assertion** — a census whose line count disagrees with its own header is the bug all over again.
   - Without `--out`, the summary states how many paths were not printed.
 
-- [ ] **Step 4: Commit** — `fix(scripts): the sample sweep reports every path, not the first thirty`
+- [x] **Step 4: Commit** — `fix(scripts): the sample sweep reports every path, not the first thirty`
 
 ---
 
