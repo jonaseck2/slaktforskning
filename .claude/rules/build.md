@@ -48,4 +48,31 @@ Any `*.replace(pattern, …)` against build output (Vite / Rollup / viteSingleFi
 ## Type checking
 
 - `npx tsc --noEmit` errors are mostly in `node_modules`. Filter with `grep "^src/"` to find actual source errors.
-- `npx vue-tsc --noEmit` OOMs on the default 4 GB Node heap. Run with `NODE_OPTIONS="--max-old-space-size=8192" npx vue-tsc --noEmit --ignoreDeprecations 6.0`. There is no `typecheck` script in `package.json` — `vue-tsc` isn't part of the normal workflow. Pre-existing errors live in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`, `src/api/places.ts`, `src/api/undo.ts`, plus `import.meta.env` / api-shape errors throughout views — these are real but not introduced by recent edits; ignore unless they're in your touched files.
+- `npm run typecheck` is `vue-tsc --noEmit --ignoreDeprecations 6.0`. If it OOMs on the
+  default 4 GB Node heap, prefix `NODE_OPTIONS="--max-old-space-size=8192"` — it completed
+  without the flag in both the main tree and a fresh worktree on 2026-08-29, so treat the
+  flag as a fallback rather than a default.
+
+  **It is not clean and never has been. Measured 2026-08-29: 2304 errors in a fresh
+  worktree.** Pre-existing errors live in `src/api/db.ts`, `src/api/place-gazetteers/merge.ts`,
+  `src/api/places.ts`, `src/api/undo.ts`, `src/api/gedcom_fidelity_registry.ts`,
+  `src/renderer/tauri-window-api.ts`, plus `import.meta.env` / api-shape errors throughout
+  views and every `vite.*.config.ts`.
+
+  **So "typecheck clean" is never the check — "no NEW errors" is.** Take a baseline before
+  you claim anything:
+
+  ```bash
+  git -C <wt> stash -u
+  npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # baseline
+  git -C <wt> stash pop
+  npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # must equal it
+  npm --prefix <wt> run typecheck 2>&1 | grep '<file you touched>'   # must be empty
+  ```
+
+  **Take the baseline in the worktree, never in the main tree.** A main-tree run is swamped
+  by `src-tauri/target/release/**` build artifacts and reports a different, useless number —
+  5840 against the worktree's 2304 on the same commit.
+
+  Writing "vue-tsc clean" into a plan's verification section makes that step unpassable.
+  Three plans carried it before this rule existed; all three were reworded on 2026-08-29.

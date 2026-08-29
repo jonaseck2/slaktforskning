@@ -121,6 +121,18 @@ Of the 165 paths the sweep prints, **110 have a standard leaf tag and 55 are `_`
 
 **User-goal-falsifiability check.** If 1–5 pass, can the goal still be unmet? Yes, in one way: the Holger parish hierarchy direction (Task 6) is a judgement no available evidence settles, and a wrong direction is user-visible. That is why Task 6 carries an explicit risk statement and a named unblocking measurement rather than a silent choice.
 
+**Type-checking, measured not asserted.** `npm run typecheck` (`vue-tsc --noEmit --ignoreDeprecations 6.0`) **is not clean on this repo and never has been — 2304 pre-existing errors.** The check is *no new errors*, measured against a baseline taken on the branch point:
+
+```bash
+git -C <wt> stash -u
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # baseline
+git -C <wt> stash pop
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # must equal the baseline
+npm --prefix <wt> run typecheck 2>&1 | grep '<file you touched>'   # must be empty
+```
+
+Do not run it in the main tree for a baseline: that run is swamped by `src-tauri/target/release/**` build artifacts and reports a different, useless number (5840 when the worktree reported 2304).
+
 ---
 
 ## Tasks
@@ -973,7 +985,8 @@ The census's biggest finding is not a dialect finding: 110 of 165 visible paths 
 - [ ] No unrecognised relation word is stored as `biological`.
 - [ ] No foreign program's derived flag is stored.
 - [ ] The Holger parish hierarchy direction is stated as a risk in the code comment, not only here.
-- [ ] `npm test`, `npm run lint`, `npx vue-tsc --noEmit --ignoreDeprecations 6.0`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
 
 ## Failure modes / RCA reference
 

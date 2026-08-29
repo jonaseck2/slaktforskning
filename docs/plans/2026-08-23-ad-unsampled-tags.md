@@ -91,6 +91,18 @@ The residual risk is that a real file puts it somewhere else entirely. The cost 
 
 **User-goal-falsifiability check.** If 1–5 pass, can the goal still be unmet? Yes, once: if a real ArkivDigital file puts `_DOMESTIC_PARTNERSHIP` somewhere other than FAM, the mapping never fires and the couple still reads as unknown. The accounting gate makes that visible — the tag appears in the import report at its real path, undeclared — rather than silent. That is the trade this plan takes knowingly.
 
+**Type-checking, measured not asserted.** `npm run typecheck` (`vue-tsc --noEmit --ignoreDeprecations 6.0`) **is not clean on this repo and never has been — 2304 pre-existing errors.** The check is *no new errors*, measured against a baseline taken on the branch point:
+
+```bash
+git -C <wt> stash -u
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # baseline
+git -C <wt> stash pop
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # must equal the baseline
+npm --prefix <wt> run typecheck 2>&1 | grep '<file you touched>'   # must be empty
+```
+
+Do not run it in the main tree for a baseline: that run is swamped by `src-tauri/target/release/**` build artifacts and reports a different, useless number (5840 when the worktree reported 2304).
+
 ---
 
 ## Tasks
@@ -337,7 +349,9 @@ The remaining four:
 - [ ] **Step 6: Verify**
   - New tests green.
   - `npm test -- import-tag-accounting` green — both paths gone from the declared list and not reported.
-  - `npx vue-tsc --noEmit --ignoreDeprecations 6.0` clean — the event-type union widened.
+  - `npm run typecheck` shows **no new errors** — the event-type union widened, so a
+    missed registration site surfaces here. See the note under Verification: the repo
+    carries 2304 pre-existing errors and "clean" is not the check.
   - A component test or `ui_aria_list` check that the new type appears in the relationship event picker with its Swedish label. **A type registered in the constants but missing from an i18n file renders as a raw key** — check both locales, not one.
 
 - [ ] **Step 7: Commit** — `feat(import): an ArkivDigital sambo couple is a cohabitation`
@@ -540,7 +554,8 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
 - [ ] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
 - [ ] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files.
 - [ ] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
-- [ ] `npm test`, `npm run lint`, `npx vue-tsc --noEmit --ignoreDeprecations 6.0`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
 
 ## Failure modes / RCA reference
 

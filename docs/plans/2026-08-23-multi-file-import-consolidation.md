@@ -60,7 +60,7 @@ Measured on the four ArkivDigital exports: 2776 source records representing 1496
 3. **The five join people are offered, and none merges without approval.** Assert the fuzzy person clusters contain all five by name; declining one writes `ignored_duplicates` and it does not reappear on a re-run.
 4. **Clustering is bulk.** On a 5000-source DB, exact clustering issues fewer than 20 queries.
 5. **The review is completable.** e2e: import two files, approve all exact clusters with one control, modal closes showing merged counts. A review needing 1496 clicks has not met the goal.
-6. `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e:full` green with output captured.
+6. `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured, and `npm run typecheck` showing no NEW errors (see below).
 
 **User-goal-falsifiability check:** if 1-6 pass, can the goal be unmet? Yes — the researcher could approve a cluster that merges two genuinely different volumes and have no way back. Task 3 puts each cluster merge in one undo group so a mistaken approval is one action to reverse, which is why item 2 alone is insufficient.
 
@@ -76,6 +76,18 @@ Measured on the four ArkivDigital exports: 2776 source records representing 1496
 | `src/renderer/tauri-window-api.ts` *(modify)* | `pickFiles`; six `selectFiles` variants. |
 | `src/renderer/components/import/GedcomImportSection.vue` *(modify)* | Queue + consolidation step wiring. |
 | `tests/e2e/imports.spec.ts` *(modify)* | Multi-file + consolidation case. |
+
+**Type-checking, measured not asserted.** `npm run typecheck` (`vue-tsc --noEmit --ignoreDeprecations 6.0`) **is not clean on this repo and never has been — 2304 pre-existing errors.** The check is *no new errors*, measured against a baseline taken on the branch point:
+
+```bash
+git -C <wt> stash -u
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # baseline
+git -C <wt> stash pop
+npm --prefix <wt> run typecheck 2>&1 | grep -c 'error TS'   # must equal the baseline
+npm --prefix <wt> run typecheck 2>&1 | grep '<file you touched>'   # must be empty
+```
+
+Do not run it in the main tree for a baseline: that run is swamped by `src-tauri/target/release/**` build artifacts and reports a different, useless number (5840 when the worktree reported 2304).
 
 ---
 
@@ -773,7 +785,7 @@ async fn dialog_pick(
 npm --prefix <wt> run build:bin
 npm --prefix <wt> run typecheck
 ```
-Expected: 0 errors. A renamed or added Rust parameter regenerates `src/renderer/bindings.ts`, and `vue-tsc` is what catches renderer call sites that no longer match — bare `tsc` does not reach them.
+Expected: **no new errors against the baseline**, and none naming a file this task touched. A renamed or added Rust parameter regenerates `src/renderer/bindings.ts`, and `vue-tsc` is what catches renderer call sites that no longer match — bare `tsc` does not reach them. Expecting zero would fail on 2304 errors that have nothing to do with this task.
 
 - [ ] **Step 5: Implement `pickFiles` in the renderer**, with `pickFile` delegating to it.
 
@@ -1051,4 +1063,5 @@ design-spec lifecycle rule in `.claude/rules/plans.md`.
 - [ ] Approving a cluster is one undo step — asserted, because 128 undos is not a way back.
 - [ ] Nothing merges without an explicit approval.
 - [ ] Single-file import behaves exactly as before.
-- [ ] `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
+- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
