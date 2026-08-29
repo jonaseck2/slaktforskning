@@ -20,7 +20,7 @@ import { markConsumed } from '../tag-accounting';
 import { PERSON_EVENT_TAGS } from './shared';
 
 const KNOWN_INDI_TAGS = new Set([
-  'NAME', 'SEX', '_LIVING', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
+  'NAME', 'SEX', 'NOTE', 'SOUR', 'ASSO', 'REFN', 'RIN',
   'AFN', 'SSN', 'FSID',
   '_UID', 'UID', '_FSI', '_ANID', '_RAID', '_PNUMMER', '_YHAPLOGROUP', '_MHAPLOGROUP', '_GRP',
   'FAMC', 'FAMS', 'CHAN',

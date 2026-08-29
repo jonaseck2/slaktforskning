@@ -7,7 +7,11 @@ import { DECLARED_UNMAPPED, matchDeclared } from '../../src/import/gedcom/accoun
 describe('declared unmapped tags', () => {
   it('matches an exact path', () => {
     // SOUR._AID used to live here; the arkivdigital profile maps it now.
-    expect(matchDeclared('INDI._LIVING')?.reason).toMatch(/dialect-tag-review/i);
+    // INDI._LIVING is an exact-path entry: it must resolve to its own row, not
+    // to some wildcard that happens to cover it.
+    const d = matchDeclared('INDI._LIVING');
+    expect(d?.path).toBe('INDI._LIVING');
+    expect(d?.reason).toMatch(/^excluded:redundant/);
   });
 
   it('matches a leading wildcard suffix under any parent', () => {

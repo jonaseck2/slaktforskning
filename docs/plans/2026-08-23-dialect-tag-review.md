@@ -425,7 +425,7 @@ An unrecognised `PEDI` value is written straight into `subtype` with no vocabula
 
 The right answer is **not** to store it. `src/api/html_site/` derives living-ness at render time (`isLivingDerived`), and `persons` has no living column by design. Legacy's `_LIVING N` is Legacy's own derivation, not authored research. Storing another program's inference is the Prime Directive violation this app exists to avoid.
 
-- [ ] **Step 1: Write the test that pins the decision**
+- [x] **Step 1: Write the test that pins the decision**
 
 ```ts
   it('does not store a foreign living flag', async () => {
@@ -450,9 +450,9 @@ The right answer is **not** to store it. `src/api/html_site/` derives living-nes
   });
 ```
 
-- [ ] **Step 2: Run — confirm the second and third fail.**
+- [x] **Step 2: Run — confirm the second and third fail.**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Remove `'_LIVING'` from `KNOWN_INDI_TAGS` in `individuals.ts` line 22. Rewrite the three declarations:
 
@@ -462,9 +462,9 @@ Remove `'_LIVING'` from `KNOWN_INDI_TAGS` in `individuals.ts` line 22. Rewrite t
   { path: 'INDI._FLGS._LIVING', reason: 'excluded:redundant — Family Historian living flag, same derivation as INDI._LIVING' },
 ```
 
-- [ ] **Step 4: Verify** — `npm test -- import-tag-accounting import-gedcom-dialects` green; the `legacy.ged` and `family-historian.ged` gate entries still pass because the paths are declared, not silently allowed.
+- [x] **Step 4: Verify** — `npm test -- import-tag-accounting import-gedcom-dialects` green; the `legacy.ged` and `family-historian.ged` gate entries still pass because the paths are declared, not silently allowed.
 
-- [ ] **Step 5: Commit** — `fix(import): the living flag is derived, not imported`
+- [x] **Step 5: Commit** — `fix(import): the living flag is derived, not imported`
 
 ---
 

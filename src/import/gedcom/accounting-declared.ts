@@ -68,9 +68,9 @@ export const DECLARED_UNMAPPED: DeclaredUnmapped[] = [
   // docs/plans/2026-08-23-dialect-tag-review.md. Each of these was invisible
   // before tag accounting existed; _LIVING is the sharpest example, sitting in
   // KNOWN_INDI_TAGS (so never in `skipped`) while no phase ever read it.
-  { path: 'INDI._LIVING',      reason: 'unmapped:pending-dialect-tag-review — Legacy living flag; in KNOWN_INDI_TAGS but never read' },
-  { path: 'INDI._FLGS',        reason: 'unmapped:pending-dialect-tag-review — Family Historian flag block' },
-  { path: 'INDI._FLGS._LIVING', reason: 'unmapped:pending-dialect-tag-review — Family Historian living flag' },
+  { path: 'INDI._LIVING',      reason: 'excluded:redundant — the app derives living-ness at render time from dates (isLivingDerived in src/api/personLiving.ts, consumed by html_site, persons.ts and the reports) and persons has no living column by design. Legacy writes its own derived flag; storing another program\'s inference is what the Prime Directive forbids. Zero occurrences across the 36 sample files; fixture-only (legacy.ged).' },
+  { path: 'INDI._FLGS',        reason: 'excluded:redundant — Family Historian flag block; its only observed child is _LIVING, see INDI._LIVING. Zero occurrences across the 36 sample files; fixture-only (family-historian.ged).' },
+  { path: 'INDI._FLGS._LIVING', reason: 'excluded:redundant — Family Historian living flag, same derivation as INDI._LIVING' },
   { path: 'INDI._HDP',         reason: 'unmapped:pending-dialect-tag-review — Holger; counted for a warning at import-core.ts:594 but the value is not stored' },
   { path: '*.PARI',            reason: 'unmapped:pending-dialect-tag-review — Holger parish on an event; a real place component, currently dropped' },
   { path: 'INDI.ASSO.SOUR',    reason: 'unmapped:pending-dialect-tag-review — RootsMagic citation on an association; asso.ts reads ROLE/RELA/_EVID/NOTE but not SOUR' },

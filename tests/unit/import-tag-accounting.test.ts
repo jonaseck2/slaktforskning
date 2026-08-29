@@ -11,7 +11,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { matchDeclared } from '../../src/import/gedcom/accounting-declared';
-import { createTestDb } from './helpers';
+import { queryAll } from '../../src/api/db';
+import { createTestDb, readDialect } from './helpers';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
 beforeEach(async () => { db = await createTestDb(); });
@@ -189,4 +190,43 @@ describe('every shipped fixture is fully accounted for', () => {
       ).toEqual([]);
     });
   }
+});
+
+// ── Task 4: the living flag is derived, so it is declared, not read ─────────
+// `INDI._LIVING` sat in KNOWN_INDI_TAGS, so it never appeared in `skipped`,
+// while no phase ever read it — an allowlist entry that looks like handling
+// and is not. The right answer is not to store it: `persons` has no living
+// column, `isLivingDerived` (src/api/personLiving.ts) computes it at render
+// time, and Legacy's `_LIVING N` is Legacy's own derivation. Storing another
+// program's inference is the Prime Directive violation this app exists to
+// avoid.
+describe('a foreign program\'s living flag', () => {
+  it('is not stored', async () => {
+    const db = await createTestDb();
+    await importGedcom(db, parseGedcom(readDialect('legacy.ged')));
+    const cols = await queryAll<{ name: string }>(db, `PRAGMA table_info(persons)`);
+    expect(cols.map(c => c.name)).not.toContain('living');
+  });
+
+  it('is declared rather than pretended-to-be-read', () => {
+    for (const p of ['INDI._LIVING', 'INDI._FLGS', 'INDI._FLGS._LIVING']) {
+      expect(matchDeclared(p)?.reason, p).toMatch(/^excluded:redundant/);
+    }
+  });
+
+  it('is no longer in the known-tag allowlist', () => {
+    // An allowlist entry with no reader is what made this invisible for months.
+    const src = readFileSync(
+      new URL('../../src/import/gedcom/phases/individuals.ts', import.meta.url), 'utf-8');
+    const allowlist = /const KNOWN_INDI_TAGS = new Set\(\[([\s\S]*?)\]\)/.exec(src)?.[1] ?? '';
+    expect(allowlist.length, 'allowlist regex matched nothing — the test is vacuous').toBeGreaterThan(0);
+    expect(allowlist).not.toContain("'_LIVING'");
+  });
+
+  it('still reaches the user, now through the declared path', async () => {
+    const db = await createTestDb();
+    const report = await importGedcom(db, parseGedcom(readDialect('legacy.ged')));
+    const paths = (report.unaccountedFor ?? []).map(u => u.path);
+    expect(paths, 'the drop has to be named somewhere').toContain('INDI._LIVING');
+  });
 });
