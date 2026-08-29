@@ -5,7 +5,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseGedcom } from '../../src/gedcom/parser';
 import { importGedcom } from '../../src/import/gedcom';
 import { queryAll } from '../../src/api/db';
-import { createTestDb } from './helpers';
+import { exportGedcom } from '../../src/gedcom/exporter';
+import { createTestDb, readDialect } from './helpers';
 import { adParentRelSubtype } from '../../src/import/gedcom/profiles/arkivdigital';
 
 let db: Awaited<ReturnType<typeof createTestDb>>;
@@ -73,5 +74,36 @@ describe('ArkivDigital parent relations', () => {
     const rows = await queryAll<{ subtype: string }>(db,
       "SELECT subtype FROM relationships WHERE type = 'parent_child'");
     expect(rows.map(r => r.subtype)).toEqual(['biological', 'biological']);
+  });
+});
+
+// `_SEPR` is mapped end to end — FAMILY_EVENT_TAGS, KNOWN_FAM_TAGS, negations,
+// EVENT_TYPE_TO_TAG, the UI event-type list and both i18n files. No test said
+// so, which is how the design spec for this plan came to list it as a gap.
+// These two are the regression guard that claim went unchecked for want of.
+describe('_SEPR', () => {
+  it('imports as a separation event on the couple', async () => {
+    const fresh = await createTestDb();
+    await importGedcom(fresh, parseGedcom(readDialect('arkivdigital.ged')));
+    const rows = await queryAll<{ event_type: string; date_original: string; relationship_id: string | null }>(
+      fresh, `SELECT event_type, date_original, relationship_id FROM events WHERE event_type = 'separation'`);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].relationship_id).not.toBeNull();
+    expect(rows[0].date_original).toContain('1880');
+  });
+
+  it('round-trips as _SEPR under both versions', async () => {
+    for (const version of ['5.5.1', '7.0'] as const) {
+      const fresh = await createTestDb();
+      await importGedcom(fresh, parseGedcom(readDialect('arkivdigital.ged')));
+      const { ged } = await exportGedcom(fresh, version);
+      expect(ged, version).toContain('1 _SEPR');
+      const back = await createTestDb();
+      await importGedcom(back, parseGedcom(ged));
+      expect(
+        await queryAll(back, `SELECT id FROM events WHERE event_type = 'separation'`),
+        version,
+      ).toHaveLength(1);
+    }
   });
 });

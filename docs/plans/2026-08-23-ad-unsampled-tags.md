@@ -131,7 +131,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
 - Test: `tests/unit/import-arkivdigital-relations.test.ts` (extend)
 - Fixture: `tests/fixtures/gedcom/dialects/arkivdigital.ged`
 
-- [ ] **Step 1: Add a `_SEPR` block to the ArkivDigital fixture**
+- [x] **Step 1: Add a `_SEPR` block to the ArkivDigital fixture**
 
 ```
 1 _SEPR
@@ -141,7 +141,7 @@ Do not run it in the main tree for a baseline: that run is swamped by `src-tauri
 
 on the existing `@F1@` FAM record.
 
-- [ ] **Step 2: Write the test**
+- [x] **Step 2: Write the test**
 
 ```ts
 describe('_SEPR', () => {
@@ -172,11 +172,11 @@ describe('_SEPR', () => {
 });
 ```
 
-- [ ] **Step 3: Run — this should pass immediately.** That is the point: the design spec asserted `_SEPR` was unhandled and nothing in the suite disagreed. If it fails, the spec was right and this task becomes a mapping task — say so in the commit either way.
+- [x] **Step 3: Run — this should pass immediately.** That is the point: the design spec asserted `_SEPR` was unhandled and nothing in the suite disagreed. If it fails, the spec was right and this task becomes a mapping task — say so in the commit either way.
 
-- [ ] **Step 4: Verify** — `npm test -- import-arkivdigital-relations import-tag-accounting` green. The fixture gained tags; the gate must still report zero undeclared paths for it.
+- [x] **Step 4: Verify** — `npm test -- import-arkivdigital-relations import-tag-accounting` green. The fixture gained tags; the gate must still report zero undeclared paths for it.
 
-- [ ] **Step 5: Commit** — `test(import): pin _SEPR round-trip, which no test covered`
+- [x] **Step 5: Commit** — `test(import): pin _SEPR round-trip, which no test covered`
 
 ---
 
