@@ -20,6 +20,9 @@
  * Written before the emitters, deliberately red. See the commit that introduced
  * it for the measured pass/fail split on the pre-emitter tree.
  */
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import type { Database } from 'node-sqlite3-wasm';
 import { queryAll, runSql } from '../../src/api/db';
@@ -485,5 +488,118 @@ describe('the per-field seeder can produce both a surviving and a losing pair', 
     await seedPersonEventAtPlace(db, null); // something must exist to export
     const fresh = await fidelityRoundTrip(db, 'v551');
     expect(await readColumnFromOnlyRow(fresh, 'external_identifiers', 'value')).toBeNull();
+  });
+});
+
+// ── The uncovered-cell-1 guard ──────────────────────────────────────────────
+
+const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const SRC_ROOT = join(REPO_ROOT, 'src');
+
+interface PlaceIdWriteSite { file: string; how: string }
+
+/** Every `.ts` and `.vue` file under `src/`, recursively. */
+function listSourceFiles(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) listSourceFiles(full, out);
+    else if (entry.name.endsWith('.ts') || entry.name.endsWith('.vue')) out.push(full);
+  }
+  return out;
+}
+
+/**
+ * The two shapes a place identifier can be written in.
+ *
+ * Run over whitespace-normalised text so a call split across lines still
+ * matches — `place-citations.ts` writes one, and a regex anchored to a single
+ * line would miss it and report a smaller census than the truth.
+ */
+function findPlaceIdWriteSites(file: string, text: string): PlaceIdWriteSite[] {
+  const flat = text.replace(/\s+/g, ' ');
+  const sites: PlaceIdWriteSite[] = [];
+  // An object literal naming both the entity type and a hardcoded system.
+  for (const m of flat.matchAll(/entity_type: *'place'[^;]{0,300}?system: *'([^']*)'/g)) {
+    sites.push({ file, how: `literal '${m[1]}'` });
+  }
+  // A system read out of the file being imported.
+  for (const m of flat.matchAll(/readExternalIds\( *[^,]+, *\[([^\]]*)\] *, *'place'/g)) {
+    const tags = m[1].replace(/['\s]/g, '');
+    sites.push({ file, how: `readExternalIds [${tags}]` });
+  }
+  return sites;
+}
+
+/** Every `readExternalIds` call site's entity-type argument, place or not. */
+function findAnyReadSites(text: string): string[] {
+  const flat = text.replace(/\s+/g, ' ');
+  return [...flat.matchAll(/readExternalIds\( *[^,]+, *\[[^\]]*\] *, *'([a-z._]+)'/g)].map(m => m[1]);
+}
+
+describe('uncovered cell 1 stays unreachable', () => {
+  // Uncovered cell 1 is a non-`arkivdigital.parish` identifier on a place that
+  // is only ever an `_ADPL` ancestor. It is unreachable only while no writer
+  // puts a second system on such a place — a fact about today's code, not a
+  // property of the design, which is why it needs a test.
+  //
+  // The census reads the source files rather than importing them. A runtime
+  // check can only see a writer some fixture exercises, and a writer no fixture
+  // exercises is exactly the one that would slip through.
+
+  it('the regexes can find a place write and can decline to', () => {
+    // The arm that makes the census evidence rather than confirmation. A regex
+    // that matches nothing would report an empty census and pass by accident —
+    // `.claude/rules/evidence.md`, "a query that cannot return zero".
+    expect(findPlaceIdWriteSites('probe.ts',
+      "readExternalIds(node, ['_EXID'], 'place', id, getChild, getChildren)")).toHaveLength(1);
+    expect(findPlaceIdWriteSites('probe.ts',
+      "bulk(rows.map(e => ({ entity_type: 'place', entity_id: e.id, system: 'x.y' })))"))
+      .toEqual([{ file: 'probe.ts', how: "literal 'x.y'" }]);
+    expect(findPlaceIdWriteSites('probe.ts',
+      "readExternalIds(node, ['REFN', 'EXID'], 'source', id, getChild, getChildren)"))
+      .toHaveLength(0);
+    expect(findPlaceIdWriteSites('probe.ts',
+      "await window.api.media.addLink({ media_id: m, entity_type: 'place', entity_id: p });"))
+      .toHaveLength(0);
+  });
+
+  it('every place-identifier write site in src/ is one of the three known shapes', () => {
+    const files = listSourceFiles(SRC_ROOT);
+    const sites: PlaceIdWriteSite[] = [];
+    const anyReadEntityTypes: string[] = [];
+    for (const full of files) {
+      const text = readFileSync(full, 'utf8');
+      sites.push(...findPlaceIdWriteSites(relative(REPO_ROOT, full).replace(/\\/g, '/'), text));
+      anyReadEntityTypes.push(...findAnyReadSites(text));
+    }
+
+    // The scan reached the tree and the regex family works on it. Without
+    // these two the census below could pass on an empty result set.
+    expect(files.length, 'the walk found no source files under src/').toBeGreaterThan(100);
+    expect(new Set(anyReadEntityTypes).size,
+      'readExternalIds is called for more than one entity type; a census that sees fewer has a broken regex')
+      .toBeGreaterThan(3);
+
+    // The census. A fourth writer changes this set, and its author then has to
+    // say which of the two it is: a leaf place, which has a carrier, or an
+    // ancestor-only place, which does not and needs `HierarchyLevel.externalId`
+    // widened or a documented loss.
+    const sorted = [...sites].sort((a, b) => (a.file + a.how).localeCompare(b.file + b.how));
+    expect(sorted).toEqual([
+      // The place a `_PLAC` record is about. Carrier: `_EXID` on that record.
+      { file: 'src/import/gedcom/phases/place-citations.ts', how: 'readExternalIds [_EXID]' },
+      // The `_PARISH_AID` off a resolved `_ADPL` chain — the one hardcoded
+      // system, and the one an ancestor level can carry.
+      { file: 'src/import/gedcom/phases/prep-places.ts', how: "literal 'arkivdigital.parish'" },
+      // The leaf place an event's `PLAC` names. Carrier: `_EXID` in that block.
+      { file: 'src/import/gedcom/phases/prep-places.ts', how: 'readExternalIds [_EXID]' },
+    ]);
+
+    // Stated separately because it is the claim uncovered cell 1 rests on: no
+    // second system is hardcoded onto a place anywhere.
+    const literalSystems = sites
+      .filter(s => s.how.startsWith('literal '))
+      .map(s => s.how.slice("literal '".length, -1));
+    expect(literalSystems).toEqual(['arkivdigital.parish']);
   });
 });

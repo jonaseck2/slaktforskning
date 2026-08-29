@@ -450,27 +450,35 @@ than weakening the test to fit.
 
 ### T09 (Tier 1): a guard so the uncovered cells cannot silently grow
 
-Uncovered cell 1 is unreachable today because `prep-places.ts:133` is the only writer of a
-place identifier and it writes `arkivdigital.parish` and nothing else. That is a fact about
-today's code, not a property of the design, so it needs a test.
+Uncovered cell 1 is unreachable today because no writer puts a second *hardcoded* system on a
+place. That is a fact about today's code, not a property of the design, so it needs a test.
+
+**The premise as first written was already stale.** It said `prep-places.ts:133` is the only
+writer of a place identifier. T06 added a second (`_EXID` under a `PLAC` node) and T-new a
+third (`_EXID` on a `_PLAC` record), and both read an *arbitrary* system out of the file. The
+census therefore states three sites, classified by shape, rather than one system:
+
+| site | shape | which place it attaches to |
+|---|---|---|
+| `prep-places.ts` | literal `arkivdigital.parish` | any level of a resolved `_ADPL` chain |
+| `prep-places.ts` | `readExternalIds ['_EXID']` | the leaf place an event's `PLAC` names |
+| `place-citations.ts` | `readExternalIds ['_EXID']` | the place a `_PLAC` record is about |
+
+The two `readExternalIds` sites cannot reach cell 1: both attach to a place that has its own
+carrier by construction. Only a hardcoded system can land on an ancestor-only level, and there
+is exactly one.
 
 Add to `tests/unit/external-identifier-roundtrip.test.ts`:
 
-```ts
-it('no importer writes a place identifier with a system other than arkivdigital.parish', () => {
-  // Uncovered cell 1 in the design spec is unreachable only while this holds.
-  // A new importer that writes a second place system must either extend
-  // HierarchyLevel or accept a documented loss — this test forces the choice.
-  const writers = /* grep src/ for `entity_type: 'place'` external-id writes */;
-  expect(writers).toEqual(['arkivdigital.parish']);
-});
-```
-
 Implement the census by reading the source files, not by importing them — a runtime check
-cannot see a writer that no fixture exercises. `import.meta.glob` or `fs.readdirSync` over
-`src/import/` with a regex is fine, and the test must fail if the regex matches zero files
-(otherwise it is a query that cannot return zero, which is the failure this whole plan is
-about).
+cannot see a writer that no fixture exercises. `fs.readdirSync` over **`src/`**, not
+`src/import/`: the exporter and the api layer can write one too, and a census scoped to where
+the writers happen to live today cannot report a writer that moves. The test must fail if the
+regex matches zero files, otherwise it is a query that cannot return zero — the failure this
+whole plan is about. Three zero-guards ship with it: a self-check that the regexes match a
+known-positive string and decline three known-negative ones, a floor on the number of files
+the walk found, and a floor on the number of distinct entity types `readExternalIds` is called
+for.
 
 - [ ] Write the guard.
 - [ ] Prove it fails: add a throwaway second place system in a scratch edit, watch it go red,
