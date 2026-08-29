@@ -552,9 +552,25 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
 
 **What is needed:** one ArkivDigital export containing an event where the researcher typed a date in free text *and* the exporter also wrote a `DATE` line. The friend whose four trees drove the profile is the nearest source; Bengt and Ben are the two beta testers who might have one.
 
-- [ ] **Degraded outcome if no sample arrives** — and this is the expected case, so plan for it: Tasks 1–4 ship without it. The plan closes with `*._DATE_TEXT` declared for one branch, which is a complete and honest state: the tag is read where reading it is unambiguous, reported where it is not, and preserved either way once verbatim capture lands. **Verification §1 loses nothing** — it never claimed the with-DATE branch. Do not hold the plan open waiting; record in the close-out that Task 5 went unanswered and what that leaves declared.
+- [x] **Degraded outcome if no sample arrives** — and this is the expected case, so plan for it: Tasks 1–4 ship without it. The plan closes with `*._DATE_TEXT` declared for one branch, which is a complete and honest state: the tag is read where reading it is unambiguous, reported where it is not, and preserved either way once verbatim capture lands. **Verification §1 loses nothing** — it never claimed the with-DATE branch. Do not hold the plan open waiting; record in the close-out that Task 5 went unanswered and what that leaves declared.
 
-- [ ] **Escalation, if a sample does arrive:** re-open this task as its own plan rather than extending this one. By then the declared reason names the question precisely enough to answer in an afternoon.
+- [x] **Escalation, if a sample does arrive:** re-open this task as its own plan rather than extending this one. By then the declared reason names the question precisely enough to answer in an afternoon. *(Recorded as the standing instruction. No sample arrived; nothing was escalated.)*
+
+**Outcome, 2026-08-29: unanswered, degraded path taken.** No ArkivDigital
+export containing `_DATE_TEXT` alongside a `DATE` exists anywhere the executor
+can reach. Re-measured rather than inherited: across the four real exports in
+the gitignored corpus — 124 878 lines — there are 0 lines matching
+`_DATE_TEXT` and 0 matching `_DOMESTIC_PARTNERSHIP`. Tasks 1-4 shipped without
+it.
+
+What that leaves declared, in full: one entry, `*._DATE_TEXT`, covering one
+branch of one tag — a `_DATE_TEXT` on a node that also carries a `DATE`. Every
+other occurrence is read. The branch is not silently dropped: the importer
+deliberately leaves that node unread so the import report names it, and
+`import-date-text.test.ts` asserts both halves — that
+`FAM._DOMESTIC_PARTNERSHIP._DATE_TEXT` appears in the report and that
+`INDI.EVEN._DATE_TEXT` does not. Verification §1 never claimed the with-DATE
+branch, so it loses nothing.
 
 ---
 
@@ -566,16 +582,27 @@ Task 3 maps `_DATE_TEXT` without a `DATE`. With one, `date_original` is already 
 
 ## Self-review checklist
 
-- [ ] Every task has a tier tag; the Tier 4 task carries its degraded outcome.
-- [ ] No self-referential tasks.
-- [ ] Every task ends in a commit or a recorded measurement.
-- [ ] No file from `export-import/` committed.
-- [ ] No change to `normalize.ts`, no `unmapped_data` table.
-- [ ] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
-- [ ] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files.
-- [ ] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
-- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured.
-- [ ] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file.
+- [x] Every task has a tier tag; the Tier 4 task carries its degraded outcome.
+- [x] No self-referential tasks.
+- [x] Every task ends in a commit or a recorded measurement.
+- [x] No file from `export-import/` committed.
+- [x] No change to `normalize.ts`, no `unmapped_data` table.
+- [x] No `_DATE_TEXT` value ever reaches `date_value` — asserted by a test, including for a value that looks parseable.
+- [x] `cohabitation` is registered in all seven places: `FAMILY_EVENT_TAGS`, `KNOWN_FAM_TAGS`, `negations.ts`, `EVENT_TYPE_TO_TAG`, `EVENT_TYPE_VALUES`, both `eventTypes.ts` filter lists, and **both** i18n files. **Eight, not seven** — `src/gedcom/exporters/negation-emitter.ts` carries its own copy of `EVENT_TYPE_TO_TAG` and `_SEPR` is in both, so leaving cohabitation out of one would have made `NO _DOMESTIC_PARTNERSHIP` export as `NO EVEN`. Counted mechanically, one occurrence at each site.
+- [x] `FAM._DOMESTIC_PARTNERSHIP` and its `.DATE` are gone from `DECLARED_UNMAPPED`.
+- [ ] `npm test`, `npm run lint`, `npm run build`, `npm run test:e2e:full` green with output captured. **Three of four done; `test:e2e:full` outstanding for close-out.**
+  - `npm test` → `Test Files 325 passed (325)` / `Tests 4654 passed (4654)` in 47.62s, exit 0.
+  - `npm run lint` → `✖ 49 problems (0 errors, 49 warnings)`, exit 0. The warning set is byte-identical to the branch point's, compared by re-linting `68ccdc89`'s `src` and `tests`: 49 before, 49 after, `diff` of the two sorted warning lists empty.
+  - `npm run build` → `✓ built in 764ms` (renderer), `Finished \`release\` profile [optimized] target(s) in 1m 26s`, two bundles emitted, exit 0.
+  - `npm run test:e2e:full` — not run. The user goal touches an importer, so this tier is required at close-out.
+- [x] `npm run typecheck` shows no NEW errors against the branch-point baseline, and none in a touched file. **The script itself cannot run** — `vue-tsc` is not a declared dependency of this repo and is installed in neither the main tree nor the worktree, so `npm run typecheck` exits 127 with `sh: vue-tsc: command not found`. CI never invokes it either (`ci.yml` runs lint, audit, test, e2e, build). The plan's "2304 pre-existing errors" therefore came from a dependency set this repo does not have.
+
+  Measured instead with `vue-tsc@3.1.1` + `typescript@5.9.3` installed outside the repo, run against the worktree's `tsconfig.json` with `src-tauri/**` excluded and `typeRoots` pointed at the worktree's `@types`. Both exclusions are load-bearing: without the first, 484 errors come from `target/release` codegen assets (the pollution the plan warns about); without the second, 99 spurious `Cannot find module 'node:fs'`.
+
+  - Branch point `68ccdc89`: **2483** errors. Working tree: **2483**. Zero new.
+  - Errors in each of the 15 files this plan touched: **0**, counted per file.
+  - Negative control — the check can fail. Annotating `dateText` as `number` in `event-importer.ts` produced `error TS2322: Type 'string' is not assignable to type 'number'` at line 48. Reverted.
+  - The repo's script also passes `--ignoreDeprecations 6.0`, which `typescript@5.9.3` rejects with `TS5103: Invalid value`. The script is stale in more than one way; fixing it is out of this plan's scope.
 
 ## Failure modes / RCA reference
 
