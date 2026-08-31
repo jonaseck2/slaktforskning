@@ -37,7 +37,46 @@ Import a GEDCOM written by any program and:
 
 ## What the census says
 
-Measured 2026-08-29 with `npx tsx scripts/accounting-over-samples.ts export-import/samples --out census.txt`, against the 36 real `.ged` files in that directory, after the dialect-tag review shipped.
+**The plan's original census measured the wrong directory.** It ran against
+`export-import/samples`, which holds third-party and synthetic test files. Re-measured
+2026-08-29 against *both* denominators, after the dialect review, the AD profile, the
+citation `_AID` and the external-identifier round-trip all shipped:
+
+| Denominator | Paths | Occurrences |
+|---|---:|---:|
+| `export-import/samples` — the original scope | 690 | 10 187 |
+| `export-import` — every real `.ged`, including the researcher's own files | **747** | **145 964** |
+
+The original number (700 / 10 207) reproduces almost exactly on its own denominator, so
+the measurement was competent and the *scope* was wrong. 57 paths worth **128 728
+occurrences — 88 % of the real drop volume — never appear in `samples/` at all**, because
+they live in the Holger export and the four ArkivDigital files the researcher actually
+uses. `INDI.NOTE`, which T04 already targets, is 19 occurrences in `samples/` and **6 568**
+in the real corpus: a 346× under-count that would have made T04 look like a rounding error.
+
+Regenerate with:
+
+```bash
+npx tsx scripts/accounting-over-samples.ts export-import --out /tmp/census.txt
+```
+
+### What only the real files show
+
+| Path | Occurrences | What it is |
+|---|---:|---|
+| `INDI._H8P` | 44 466 | Holger 8's internal row id — the sibling of `_HDP`, which **is** declared |
+| `INDI.OBJE._HDM` | 23 964 | Holger's media bookkeeping |
+| `INDI.OBJE.DATA` | 23 964 | the standard `OBJE.DATA` wrapper Holger writes around it |
+| `INDI.REMA` | 13 146 | Holger's free-text remark — authored research |
+| `FAM.MARR._HDV` / `._H8V` | 6 688 each | Holger marriage bookkeeping |
+| `FAM.MARR.PARI` | 2 008 | the parish of a marriage |
+| `INDI.RESI._PLC` / `.BIRT._PLC` / `.DEAT._PLC` | 2 191 | Holger place pointers |
+| `INDI._GRP` | 945 | in `KNOWN_INDI_TAGS` yet still reported — allowlisted, never consumed |
+| `_PLC` + children | 2 308 | Holger's top-level place-definition record |
+
+Only `INDI._HDP` carries a declaration. `_H8P` — 44 466 occurrences, the same concept from
+Holger 8 — has none. That single missing line is 30 % of the corpus's entire undeclared
+volume.
 
 **700 distinct undeclared paths, 10 207 occurrences.** Split by leaf tag:
 
@@ -84,6 +123,14 @@ Enumerating 700 paths one per bullet would be a wall nobody reads, and the list 
 | `_PLAC_DEFN` — Legacy's place-definition record | 40 | 4 | T13 (declare) |
 | Citation presentation — `*.SOUR._LINK` / `._FOOT` | 4 314 | ~20 | T14 (declare) |
 | Preference flags — `FAM.HUSB._PREF` and siblings | 416 | 3 | T14 (declare) |
+| **Holger row ids — `INDI._H8P`** | **44 466** | **1** | **T16 (declare)** |
+| **Holger media bookkeeping — `INDI.OBJE._HDM`** | **23 964** | **1** | **T16 (declare)** |
+| **`OBJE.DATA` wrapper and its children** | **23 964** | **~3** | **T17 (map)** |
+| **`INDI.REMA` — Holger's free-text remark** | **13 146** | **1** | **T18 (map)** |
+| **`FAM.MARR._HDV` / `._H8V`** | **13 376** | **2** | **T16 (declare)** |
+| **`FAM.MARR.PARI` and the other `PARI`** | **2 502** | **4** | **T19 (map)** |
+| **`_PLC` record + `*._PLC` pointers** | **4 499** | **~10** | **T20 (map or declare — decide by probe)** |
+| **`INDI._GRP` — allowlisted, never consumed** | **945** | **1** | **T21 (fix the allowlist lie)** |
 | Everything not named above | remainder | remainder | T15 (sweep) |
 
 T15 exists because the groups above are hand-drawn and the census is not. Its job is to re-run the census and account for whatever the earlier tasks did not reach — the same "did I get them all?" the truncating sweep used to make unanswerable.
@@ -94,12 +141,14 @@ T15 exists because the groups above are hand-drawn and the census is not. Its jo
 - **`_EVENT_DEFN` and `_PLAC_DEFN` are declared, not mapped.** They are Legacy's *definitions* of its own custom event and place types — the sentence templates it uses to render a narrative (`_SEN1` … `_SEN6`), not facts about anybody's family. The events defined by them arrive separately as ordinary event records.
 - **`*.SOUR._LINK` / `._FOOT` are declared, not mapped.** 4 314 occurrences, and every one is presentation: a hyperlink and a footnote-number the exporting program computed for its own report. The citation they hang off is already imported.
 - **Archive (`.zip`) and the non-GEDCOM importers are out of scope.** This plan is the GEDCOM tag-accounting list and nothing else.
+- **`INDI.REMA` is mapped, not declared, and that is a reversal of the original scope.** It was invisible to the `samples/` census. 13 146 free-text remarks a researcher typed are authored research by the same argument that made `_DESC` load-bearing in the ArkivDigital work — `.claude/rules/evidence.md` and the Prime Directive both point the same way.
+- **`_H8P` / `_HDM` / `_HDV` / `_H8V` are declared, not mapped.** They are Holger's internal row ids and media bookkeeping. `INDI._HDP` already carries `excluded:not-relevant` with a written reason; these inherit it verbatim. 82 494 occurrences discharged by four lines, which is what declaration is for.
 
 ## Verification
 
 1. **User-observable:** import a file carrying a photograph on a birth citation and the photograph appears on that citation in the app, not only on the person. Import a name written `2 SPFX van` and the app shows *van Dijk*, one name, not *Dijk* with the particle lost. Import a source with `1 TEXT` and the transcript is on the source. Import an event with `2 AGE 42y` and the record's stated age is visible on the event and is not turned into a birth date.
 2. `npm test -- import-tag-accounting` green, with **zero** entries carrying `unmapped:pending-standard-tag-gaps` in `src/import/gedcom/accounting-declared.ts`. That is this plan's completion condition, asserted by a test rather than by a grep.
-3. The census, re-run at close-out, contains no path from a group T02–T11 claims to have mapped. Its own distinct-path total is quoted in the close-out commit against the 700 recorded here.
+3. The census, re-run at close-out, contains no path from a group T02–T11 claims to have mapped. Its own distinct-path total is quoted in the close-out commit against the **747 / 145 964** recorded here, on the `export-import` denominator — not the `samples/` one the plan first used.
 4. Every new column has a `src/api/gedcom_fidelity_registry.ts` entry and a per-field round-trip test that seeds the column, exports, re-imports and asserts the value survives.
 5. A test asserts an imported `AGE` is stored as the record's own string and that **no** birth date was derived from it — the Prime Directive check, because the failure mode here is a helpful inference rather than a missing value.
 
@@ -248,6 +297,8 @@ One synthetic file carrying a citation with `OBJE`, a `NAME` with `SPFX`, a `SOU
 
 ### T15 (Tier 1): re-run the census and account for the remainder
 
+Run on `export-import`, not `export-import/samples`. The whole point of the correction above is that the sample directory hides 88 % of the volume.
+
 **Files:** `accounting-declared.ts`.
 
 The groups above were drawn by hand; the census is not. Whatever T02–T14 did not reach is still a silent drop until it is named.
@@ -255,6 +306,121 @@ The groups above were drawn by hand; the census is not. Whatever T02–T14 did n
 - [ ] Re-run `npx tsx scripts/accounting-over-samples.ts export-import/samples --out census.txt`.
 - [ ] Every remaining path is mapped or declared. Quote the before (700) and after distinct-path totals in the commit.
 - [ ] Commit — `docs(import): account for the tail of the census`.
+
+
+### T16 (Tier 1): declare Holger's bookkeeping — 82 494 occurrences, four lines
+
+`INDI._HDP` already carries a written reason in `src/import/gedcom/accounting-declared.ts`.
+Its siblings have none, which is why the corpus reports 82 494 undeclared occurrences of
+data nobody wants imported. Add four entries beside it, each with its own reason — a
+shared reason string is how a declaration list stops being read.
+
+```ts
+{ path: 'INDI._H8P', reason: "excluded:not-relevant — Holger 8's internal row id, the same concept as _HDP under a later schema version. Storing it would re-emit it as REFN + TYPE Other, changing the file on export while adding nothing the researcher wrote. 44 466 occurrences." },
+{ path: 'INDI.OBJE._HDM', reason: 'excluded:not-relevant — Holger media bookkeeping; the media row itself imports through OBJE.FILE. 23 964 occurrences.' },
+{ path: 'FAM.MARR._HDV', reason: 'excluded:not-relevant — Holger marriage bookkeeping, no authored content. 6 688 occurrences.' },
+{ path: 'FAM.MARR._H8V', reason: 'excluded:not-relevant — Holger 8 marriage bookkeeping, the _HDV sibling. 6 688 occurrences.' },
+```
+
+Before writing each one, open a real Holger file and read three occurrences. A declaration
+is a claim about content, and `excluded:not-relevant` asserted without looking is the
+overclaim this whole effort exists to remove. If any of the four turns out to carry
+authored text, it becomes a mapping task and this one shrinks.
+
+- [ ] Read three real occurrences of each of the four tags. Paste them in the commit.
+- [ ] Add the four entries.
+- [ ] Re-census: total occurrences drop by ~82 494. Quote before and after.
+- [ ] `npm test -- import-tag-accounting` green. Commit.
+
+### T17 (Tier 1): the `OBJE.DATA` wrapper — 23 964 occurrences
+
+Holger wraps every media reference in `2 OBJE` / `3 DATA` and hangs its own `_HDM` beneath.
+`DATA` is standard GEDCOM 5.5.1 and the importer reads straight past it.
+
+Probe first: does `OBJE.DATA` carry anything but `_HDM`? If it is a bare wrapper, the entry
+is `excluded:structural — a container tag with no value of its own; its children are
+accounted for individually`. If it carries `FILE` or `FORM` children the importer is
+missing, it is a mapping task. **Decide from the file, not from this paragraph.**
+
+- [ ] Census the children of `OBJE.DATA` across the corpus, with counts.
+- [ ] Map or declare per what the census shows, and say which in the commit.
+- [ ] Commit.
+
+### T18 (Tier 1): `INDI.REMA` — 13 146 remarks a researcher typed
+
+Holger's free-text remark on a person. Same shape as ArkivDigital's `_DESC`, which the
+profile work established is authored research and must be kept.
+
+`persons.notes` already exists and is the right home — a remark is a note about the person.
+Append rather than overwrite: `INDI.NOTE` (T04) targets the same column and both can be
+present.
+
+```ts
+// individuals.ts, beside the NOTE read
+const rema = getChild(node, 'REMA')?.value?.trim();
+// notes is TEXT NOT NULL DEFAULT '' — join, never clobber. The order is the
+// file's order, so a re-export is stable.
+const noteParts = [existingNote, rema].filter(Boolean);
+personRow.notes = noteParts.join('\n\n');
+```
+
+Add `'REMA'` to `KNOWN_INDI_TAGS`. Registry: `persons.notes` already has an entry — check
+whether it still describes reality once two tags feed it, and correct it if not.
+
+- [ ] Read ten real `REMA` values first and quote three in the commit. If they are
+      bookkeeping rather than prose, this becomes a declaration and the plan says so.
+- [ ] Map, with a round-trip test: `REMA` in → `persons.notes` → export → re-import.
+- [ ] Commit.
+
+### T19 (Tier 1): `PARI` — the parish of an event, 2 502 occurrences
+
+`FAM.MARR.PARI` (2 008), `INDI.BIRT.PARI` (334), `INDI.DEAT.PARI` (160). A parish is a
+place, and `places` already models parishes with `place_type = 'parish'` — the ArkivDigital
+work built the whole hierarchy on it.
+
+The event already resolves a `PLAC`. `PARI` names the parish that `PLAC` sits in. Resolve
+it as the parent place, exactly as `_ADPL` does, and reuse `bulkResolveHierarchy` rather
+than writing a second path.
+
+**Do not invent a hierarchy the file did not state.** If `PLAC` and `PARI` disagree, keep
+both as authored: the parish becomes the parent only when the file's own structure says so.
+Probe ten real cases before choosing the shape.
+
+- [ ] Census: how often does an event carry both `PLAC` and `PARI`, and do they agree?
+- [ ] Implement per the census. Round-trip test.
+- [ ] Commit.
+
+### T20 (Tier 1): the `_PLC` record and its pointers — 4 499 occurrences
+
+`_PLC` is a top-level Holger place-definition record (432 each of `_PLC`, `.NAME`, `.FORM`,
+`.TYPE`, 424 `._PLP`), and `INDI.*._PLC` (2 191) are pointers into it. This is Holger's
+equivalent of the `_PLAC` record this app writes itself.
+
+If the pointers resolve to definitions carrying names the flat `PLAC` string does not, this
+is real place data and maps to `places`. If every `_PLC` definition duplicates the `PLAC`
+already imported, it is `excluded:redundant` with the measurement as the reason.
+
+The dialect review got exactly this classification backwards twice — `OBJE.FILE.FORM` and
+`OBJE.FILE.TITL` were both called redundant and both were dropping data. **Measure the
+overlap, do not reason about it.**
+
+- [ ] Census the overlap: of N `_PLC` definitions, how many names appear in no `PLAC`?
+- [ ] Map or declare per the number. Quote it in the commit either way.
+- [ ] Commit.
+
+### T21 (Tier 1): `INDI._GRP` is allowlisted but never consumed
+
+`_GRP` sits in `KNOWN_INDI_TAGS` (`individuals.ts:28`) yet the census reports 945
+undeclared occurrences of `INDI._GRP`. An allowlist entry that no phase reads is precisely
+the silent-drop shape clause 1 exists to prevent: the tag looks handled to anyone reading
+the code and is not.
+
+- [ ] Determine which it is: a tag that should map to `groups` / `group_links`, or one that
+      should be declared. Read the real values.
+- [ ] Fix the code so the allowlist and the behaviour agree, whichever way.
+- [ ] Add a test that fails if a `KNOWN_INDI_TAGS` entry is neither consumed nor declared —
+      the general form of this bug, so the 946th occurrence cannot hide the same way.
+- [ ] Commit.
 
 ### T-final (Tier 1): close out
 
