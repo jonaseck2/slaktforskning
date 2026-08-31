@@ -337,3 +337,378 @@ Item 3 is what proves nothing was lost.
 - **Reporting instead of preserving.** The first draft of this design reported unmapped
   tags and discarded them. Disclosure satisfies the letter of clause 1 and still loses
   the researcher's words. Capture is the correction.
+
+---
+
+## The two unshipped parts, inlined
+
+These were separate spec files recovered from an unlanded branch on 2026-08-29. They are
+not separate designs — they are this spec's own Part A and Part C, which the reconciliation
+table above lists as not shipped. Keeping them as standalone files made `docs/plans/` read
+as five open designs when there are three. Inlined here, verbatim, so this spec is the
+single referent for what remains.
+
+
+---
+
+# Part A (unshipped): Accounting across the normalize boundary
+
+## User goal
+
+A researcher importing a GEDCOM 7.0 file is told what the app did not read — the same
+promise 5.5.1 importers already get. Today the import report is silent about anything
+the 7.0 normalization layer removes before the report is computed.
+
+## Why this exists
+
+Tag accounting shipped a gate that reports every node no phase read. It runs on the
+*post-normalize* tree:
+
+```ts
+// import-core.ts
+const normalizedTree = normalizeForImport(tree, version);   // ← before the window
+beginAccounting();
+…
+unaccountedFor = collectUnaccounted(normalizedTree, endAccounting());
+```
+
+`normalize.ts` rewrites the tree first, and several of its transformations discard nodes.
+Those nodes are gone before the gate can count them.
+
+### Measured, not assumed
+
+Probed on `feat/importer-tag-accounting` with a minimal 7.0 file:
+
+```
+0 @N1@ SNOTE Anteckning om Anna
+1 LANG sv
+1 TRAN Note about Anna
+2 LANG en
+```
+```
+unaccountedFor: [{"path":"HEAD.GEDC"},{"path":"HEAD.GEDC.VERS"},{"path":"TRLR"}]
+  SNOTE.LANG reported? NO
+  SNOTE.TRAN reported? NO
+```
+
+`buildSnoteMap` reads only the record's `.value`; the top-level filter then removes the
+record entirely. A shared note's language and its translation are discarded, and the
+mechanism built to make exactly this impossible reports nothing.
+
+### The larger finding: the gate has never run with normalize active
+
+`normalizeForImport` opens with `if (version !== '7.0') return nodes;`. Every fixture the
+gate iterates is 5.5.1 or 5.5:
+
+| Fixtures gated | 20 |
+|---|---|
+| GEDCOM 7.0 | **0** |
+| containing `SNOTE` | **0** |
+| containing `TRAN` | **0** |
+
+So all seven transformations are untested by the accounting gate, and the declared list's
+completeness claim is silently scoped to 5.5.1. For scale: `scripts/accounting-over-samples.ts`
+run over the 36 gitignored real-world files in `export-import/samples/` surfaces **742
+distinct undeclared paths** with 0 import failures, against 20 from the committed corpus —
+and that script is deliberately non-CI, because those samples are not in the repository. The gate's own "guards against a vacuous
+pass" test checks that fixtures were *found*; it does not check that they *reach* the code
+under test.
+
+### Two identity spaces, one walked
+
+`normalize.ts` rebuilds nodes with `{ ...node, children }`, so a node that survives
+normalization is a different object before and after. Meanwhile `phaseNotes` and
+`phaseTranslations` deliberately read `ctx.originalTree` — the pre-normalize tree — so
+their `getChild` calls mark **original** nodes while the gate walks **normalized** ones.
+Those marks match nothing and are silently discarded.
+
+This has never surfaced because the 7.0 paths never fire on a 5.5.1 corpus.
+
+### What each transformation discards
+
+| Transformation | Discards |
+|---|---|
+| top-level `filter(n => n.tag !== 'SNOTE')` + `buildSnoteMap` | the SNOTE record's children — `LANG`, `TRAN`, and `TRAN`'s own `LANG` |
+| `inlineSnotes` | the pointer node's children (`children: []`); normally empty in valid 7.0 |
+| `convertExidToRefn` | every `EXID` child except `TYPE` |
+| `mergeMultipleGivnSurn` | duplicate `GIVN`/`SURN` nodes — values are joined, the nodes and any children are not |
+| `dropConcNodes` | `CONC` stragglers — benign, the parser already folds them |
+| `applyDatePhrase` | nothing (spread keeps `children`), but skips recursion on the branch it rewrites |
+
+## Scope
+
+### Part 1 — a GEDCOM 7.0 fixture, first
+
+Nothing else here is verifiable without one. `tests/fixtures/gedcom/gedcom7.ged`
+exercising, at minimum: a top-level `SNOTE` record with `LANG` and `TRAN` (with its own
+`LANG`) plus a pointer to it; `NAME/TRAN`; `PLAC/TRAN`; `EXID` with `TYPE` and one
+non-`TYPE` child; a `NAME` with two `GIVN` and two `SURN`; `DATE` with `PHRASE`.
+
+It fails the gate on the first run. That is the deliverable of this part — a red test that
+names what is being lost.
+
+### Part 2 — one identity space, anchored on the parsed tree
+
+The directive says the importer accounts for every node in the **parsed** tree. Accounting
+therefore anchors pre-normalize.
+
+- `normalize.ts` records provenance for every node it derives from an existing one:
+  `provenance.set(newNode, originNode)` in a `WeakMap` owned by the accounting session.
+- `markConsumed(node)` walks the provenance chain and marks each ancestor origin, so a
+  phase marking a normalized node marks the original it came from.
+- `collectUnaccounted` runs on the **original** tree.
+
+This also repairs the `originalTree` split at no extra cost: `phaseNotes` and
+`phaseTranslations` already mark original nodes, which is now the walked space.
+
+**Failure direction inverts, and that is the point.** A transformation that forgets to
+record provenance leaves its origin unmarked, so the origin reports as unaccounted — a
+loud false positive on a green corpus. The same mistake today is a silent drop. Prefer the
+alarm.
+
+### Part 3 — normalize plays by the same rule
+
+`normalize.ts` carries private copies of `getChild` / `getChildren` (lines 16–22) that do
+not mark. Delete them and use the marking ones from `node-utils`. `buildSnoteMap` reads
+`node.value` directly, so it marks the record explicitly — and not its children, which is
+precisely what makes `SNOTE.LANG` surface.
+
+Normalize stops being a privileged pre-pass and becomes another reader under the same
+contract.
+
+### Six declarations exist only because the session opens too late
+
+`accounting-declared.ts` already records the symptom, in its own reason strings:
+
+| Path | Declared reason |
+|---|---|
+| `HEAD.GEDC` | `excluded:structural — version envelope, read by detect.ts before the session opens` |
+| `HEAD.GEDC.VERS` | `excluded:structural — read by detect.ts before the session opens` |
+| `HEAD.GEDC.FORM` | `excluded:structural — always LINEAGE-LINKED in 5.5.1` |
+| `HEAD.CHAR` | `excluded:structural — character set, applied at decode time before parsing` |
+| `*.NAME.GIVN` | `excluded:redundant — folded into the NAME value by normalize.ts before the session` |
+| `*.NAME.SURN` | `excluded:redundant — folded into the NAME value by normalize.ts before the session` |
+
+Four of the six say *"before the session"* outright. These are not tags the app declines to
+model — they are tags it **does** read, declared `excluded` because the reader runs outside
+the accounting window. That is the same defect as the `SNOTE` loss wearing a different hat:
+one produces a false `excluded`, the other a silent drop.
+
+Moving `beginAccounting()` ahead of `detectGedcomVersion` and `normalizeForImport` makes
+those reads markable, and the declarations become unnecessary. That is a falsifiable
+outcome, not a hope — see Verification 6.
+
+### Expected new findings
+
+Once Part 1 runs against Parts 2–3, these should appear as unaccounted and need a decision:
+
+- `SNOTE.LANG`, `SNOTE.TRAN`, `SNOTE.TRAN.LANG` — the app models `name_translations` and
+  `place_translations` but has no note-translation equivalent. Real authored data;
+  expected disposition `unmapped:pending-<plan>`, not `excluded`.
+- `INDI.EXID.*` other than `TYPE`.
+- Children of dropped duplicate `GIVN` / `SURN` nodes.
+
+### Scope deviations
+
+- **Capture is not in scope.** This plan makes the losses *visible*; keeping them is
+  `2026-08-23-unmapped-capture-design.md`, which depends on this landing.
+- **Modelling shared-note translations is not in scope.** This plan surfaces and declares
+  them; mapping them is a separate plan.
+- **One inaccurate reason string, fixed in passing.** `accounting-declared.ts` says
+  `'*.NAME.GIVN' — folded into the NAME value by normalize.ts before the session`.
+  normalize does not fold `GIVN` into the `NAME` value — `mergeMultipleGivnSurn` merges
+  multiple `GIVN` into one `GIVN`. The conclusion (not read; `individuals.ts` parses the
+  `NAME` value) is right, the stated mechanism is wrong. A reason field exists to be a
+  decision, so it should be accurate.
+
+## Verification
+
+1. **The probe becomes a test.** The `SNOTE` case above, as a unit test, asserting
+   `SNOTE.LANG` and `SNOTE.TRAN` appear in `unaccountedFor`. Locked red before the fix.
+2. **The gate reaches normalize.** A test asserts the gated corpus contains at least one
+   fixture whose `GEDC.VERS` is `7.0` — the missing half of the existing vacuous-pass
+   guard.
+3. **5.5.1 is byte-identical.** Import each of the 20 existing fixtures before and after;
+   assert `unaccountedFor` is unchanged for every one. Normalize is a no-op there, so any
+   difference is a regression introduced by the provenance plumbing.
+4. **Provenance is complete.** With the 7.0 fixture, assert every node the phases genuinely
+   read is marked in the original tree — no false positives from a missed
+   `provenance.set`.
+5. **Canary.** Delete one `provenance.set` call and assert Verification 4 fails. A guard
+   that cannot fail is not a guard.
+6. **Declarations shrink, specifically.** After the fix:
+   - `HEAD.GEDC` and `HEAD.GEDC.VERS` are genuinely marked by `detect.ts` and their
+     declarations are **deleted**. Assert the gate stays green without them.
+   - `HEAD.CHAR` stays declared — the character set is applied at *decode* time, before a
+     tree exists to mark — but its reason changes from "before the session" to the
+     accurate "consumed before parsing".
+   - `*.NAME.GIVN` / `*.NAME.SURN` stay declared, because a single `GIVN` is read by
+     nobody, but the reason stops claiming normalize folds them into the `NAME` value. It
+     does not: `mergeMultipleGivnSurn` merges multiple `GIVN` into one `GIVN`.
+
+   A declaration that disappears because the code got honest is the cleanest evidence this
+   plan worked.
+
+**User-goal-falsifiability check:** if all five pass, can the goal be unmet? Yes, in one
+way — a 7.0 file using a transformation the single fixture does not exercise could still
+lose nodes. Mitigated by Verification 4 covering all seven transformations in one fixture,
+and by the failure direction: a missed case reports loudly rather than vanishing.
+
+## Failure modes / RCA reference
+
+- **A gate whose corpus never reaches the code under test.** The proximate cause. The
+  existing vacuous-pass guard checks fixtures were found, not that they exercise the
+  branch. Verification 2 closes it for `7.0` specifically; the general lesson is that
+  "the test passes" and "the test ran the code" are different claims.
+- **Two identity spaces with no test across the seam.** `phaseNotes` and
+  `phaseTranslations` read the original tree by design and mark nodes nobody walks. Only
+  invisible because no 7.0 fixture exists.
+- **Declaring a tag `excluded` to work around a mechanism limit.** Six entries say a
+  reader runs "before the session" and are marked `excluded` for it. `excluded` is
+  supposed to mean the app chose not to model the tag, not that the plumbing could not
+  observe the read. The declared list stayed green while describing the tool's own
+  blind spot as a property of the data.
+- **Fixing the instance instead of the class.** Making `inlineSnotes` carry its children
+  would fix the probe and leave `convertExidToRefn` and `mergeMultipleGivnSurn` dropping
+  silently. Rejected for that reason.
+
+
+---
+
+# Part C (unshipped): Verbatim capture in unmapped_data
+
+## User goal
+
+A researcher keeps what they wrote even when this app does not understand it. Importing a
+file from a program the app has never seen, exporting it again, and re-importing returns
+the same information — including the tags the report listed as "not imported".
+
+## Why this exists
+
+Tag accounting made the importer *name* what it drops. Naming is not keeping.
+
+Measured on the four ArkivDigital exports in `export-import/min släkt/`, the 36 paths
+declared `unmapped:pending-*` cover **46 267 occurrences across 166 concrete paths**:
+
+| Path | Occurrences | What it holds |
+|---|---|---|
+| `SOUR._AID` | 9 046 | ArkivDigital archive pointer — the stable image reference |
+| `*.SOUR.DATA.DATE` | 6 147 | date the researcher consulted the record |
+| `*.PLAC._ADPL` + children | 23 000-odd | country / county / parish / locality hierarchy |
+| `*._TITLE` | 2 259 | occupation or title |
+| `*._DESC` | 898 | the researcher's own annotations |
+
+`_DESC` is the clearest case. `Trolovningsbarn`, `Felaktigt födelseår i källan`,
+`Fade enl. muntl. erkännande inför dopförättaren Karl Petrus Lundberg` — these are
+sentences a person typed about their own family. The importer now tells them it discarded
+898 of them. That is an improvement over discarding them silently and it is not the goal.
+
+**Capture is orthogonal to declaration.** Declaring says "we know we skipped this".
+Capturing says "we kept it anyway". Mapping plans (`pending-arkivdigital-profile`,
+`pending-dialect-tag-review`) shrink the declared list one vendor at a time; they never
+remove the need for the net, because the next vendor's tags are not in it yet.
+
+## Scope
+
+### Storage
+
+```sql
+CREATE TABLE unmapped_data (
+  id            TEXT PRIMARY KEY,
+  entity_type   TEXT NOT NULL,   -- person | family | source | place | event | media | file
+  entity_id     TEXT NOT NULL,
+  source_format TEXT NOT NULL,   -- gedcom | rootsmagic | gramps | genney
+  path          TEXT NOT NULL,   -- 'INDI.BIRT._DESC'
+  ordinal       INTEGER NOT NULL DEFAULT 0,
+  fragment      TEXT NOT NULL,   -- verbatim source fragment, relative level
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_unmapped_data_entity ON unmapped_data(entity_type, entity_id);
+```
+
+GEDCOM's unit is a subtree, not a scalar — `_ADPL` carries five children. `fragment` holds
+the verbatim lines at relative level, re-emitted under the correct parent at
+`parentLevel + 1`. `ordinal` preserves sibling order so re-emission is stable.
+
+**Ownership rule.** An unmapped node belongs to the nearest ancestor that became a DB
+entity. `INDI.BIRT.PLAC._ADPL._PARISH` is owned by the *event* — not the person, and not
+the place, because a place row is shared across events and re-emitting there would
+duplicate the tag onto every event using it. Records that become no entity (`HEAD`,
+`SUBN`) use `entity_type = 'file'` with the import batch id, and re-emit into the header.
+
+**Prime Directive.** `unmapped_data` stores what was in the imported file, verbatim.
+Nothing is computed, guessed or normalised.
+
+**The table shrinks as format support improves.** Once the ArkivDigital profile maps
+`_AID` and `_DESC`, those rows stop being created. Capture is a net sized by what the app
+does not yet model, not a permanent parallel store.
+
+### Wiring
+
+The accounting walk already computes the unaccounted set. Capture is a consumer of that
+same set, so it adds no second traversal: where `accounting-walk.ts` reports a node,
+capture also serialises it against its owning entity.
+
+**Capture inherits the gate's blind spot, and cannot fix it.** The walk runs on the
+*post-normalize* tree (`import-core.ts:467`), and `normalize.ts` drops nodes before that:
+`inlineSnotes` rebuilds every GEDCOM 7.0 `SNOTE` with `children: []`, so its `LANG` and
+`TRAN` sub-tags are gone. Probed on `feat/importer-tag-accounting`, neither is reported as
+unaccounted — and neither would be captured, because capture reads the same set.
+
+Normalize-boundary accounting is therefore a **prerequisite**, not a parallel nicety. It
+belongs to the parent spec's unshipped Part A and must land before this plan's
+Verification 2 can mean anything: a corpus round-trip diff that never sees the dropped
+node cannot fail on it. Specified in
+`2026-08-23-normalize-boundary-accounting-design.md`, which also records that the gate has
+never once run with normalize active — all 20 gated fixtures are 5.5.1.
+
+### Export
+
+The exporter re-emits each fragment under its owning entity at the recorded path and
+ordinal. Registry entries: `fragment`, `path`, `ordinal` are `lossless` under both
+versions for `source_format = 'gedcom'`, and `excluded:no-export-target` for the native
+formats — this app writes no `.rmtree`, `.gramps` or Genney file to round-trip them
+through.
+
+### Scope deviations
+
+- **Surfacing captured data in the UI is out of scope.** The import report names the
+  paths; the entity panels do not show the fragments. Preservation first, visibility
+  second. Named so it is a decision rather than an oversight.
+- **Native-format capture stores but cannot round-trip.** See the export asymmetry above.
+- **The four unshipped Part A items** — normalize-boundary accounting, the parser
+  malformed-line counter, the `.children` lint rule, closed-schema coverage — belong to
+  the parent spec, not here. Listed in its reconciliation table.
+
+## Verification
+
+1. **The four ArkivDigital files round-trip with no profile.** Import, export, re-import.
+   Assert the 898 `_DESC` values and 9 046 `_AID` values are present after the second
+   import, carried by `unmapped_data` alone. This is the test the parent spec named and
+   the shipped branch cannot pass.
+2. **Corpus round-trip diff.** For every fixture: parse, import, export, parse, diff the
+   tag-path multiset. Any path in the original and absent from the export fails, unless
+   `accounting-declared.ts` marks it `excluded:*`. `unmapped:pending-*` paths must now
+   survive — that is the difference this plan makes.
+3. **Capture adds no traversal.** Assert the import issues the same number of tree walks
+   as before, per `.claude/rules/performance.md`.
+4. **Volume is bounded.** Importing the four ArkivDigital files creates ~46 000
+   `unmapped_data` rows. Assert import wall-clock stays within the existing budget and the
+   row count drops to near-zero once a mapping profile covers those paths.
+5. **Regression canary.** Delete one capture call and assert Verification 1 fails. A guard
+   that cannot fail is not a guard.
+
+**User-goal-falsifiability check:** if all five pass, can the goal be unmet? Yes, in one
+way — a researcher cannot *see* the captured fragments in the app, only in an export. That
+is the deliberate scope deviation above. It does not compromise preservation.
+
+## Failure modes / RCA reference
+
+- **Reporting mistaken for keeping.** The parent spec's first draft reported unmapped tags
+  and discarded them; the approved answer was capture. The approval did not reach the
+  implementing session because the spec was orphaned on an unlanded branch. Process
+  lesson, already actioned: `.claude/rules/plans.md` requires specs to be committed
+  immediately, and committed is not enough — they must be on a branch the implementer will
+  actually branch from.
+- **Treating capture as a later stage of declaration.** It is orthogonal. A declared list
+  covers vendors someone has already studied; capture covers the ones nobody has.
