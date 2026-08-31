@@ -3,6 +3,7 @@ import { Place } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { displayedNameIdSql } from './persons';
 import { deleteIgnoredDuplicatesForPlace } from './duplicates';
+import { deleteExternalIdentifiersFor } from './external_identifiers';
 
 function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -249,6 +250,8 @@ export async function deletePlace(db: Database, id: string): Promise<boolean> {
   // so a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
   // Mirrors the pattern in deletePerson.
   await deleteIgnoredDuplicatesForPlace(db, id);
+  // The table spans five entity types with no FK, so nothing cascades for us.
+  await deleteExternalIdentifiersFor(db, 'place', id);
   return (await runSqlChanges(db, 'DELETE FROM places WHERE id = ?', [id])) > 0;
 }
 

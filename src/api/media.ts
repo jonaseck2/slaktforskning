@@ -3,6 +3,7 @@ import type { Database } from 'node-sqlite3-wasm';
 import type { Media, MediaLink, MediaLinkEntityType } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { deleteIgnoredDuplicatesForMedia } from './duplicates';
+import { deleteExternalIdentifiersFor } from './external_identifiers';
 
 /** Folder name convention: `foo.db` -> `foo-media`. Pure function of dbPath. */
 export function getMediaFolderName(dbPath: string): string {
@@ -197,6 +198,8 @@ export async function deleteMedia(db: Database, id: string): Promise<boolean> {
   // a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
   // Mirrors deletePerson / deletePlace / deleteSource.
   await deleteIgnoredDuplicatesForMedia(db, id);
+  // The table spans five entity types with no FK, so nothing cascades for us.
+  await deleteExternalIdentifiersFor(db, 'media', id);
   return (await runSqlChanges(db, 'DELETE FROM media WHERE id = ?', [id])) > 0;
 }
 

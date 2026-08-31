@@ -4,6 +4,7 @@ import type { Source, Citation } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges, runBatch } from './db';
 import { getCitationsByOwner } from './links';
 import { deleteIgnoredDuplicatesForSource } from './duplicates';
+import { deleteExternalIdentifiersFor } from './external_identifiers';
 
 export async function createSource(
   db: Database,
@@ -150,6 +151,12 @@ export async function deleteSource(db: Database, id: string): Promise<boolean> {
   // so a tombstoned id doesn't keep an "ignored" entry pointing at nothing.
   // Mirrors the pattern in deletePerson / deletePlace.
   await deleteIgnoredDuplicatesForSource(db, id);
+  // `citations.source_id` is ON DELETE CASCADE, so the citation rows go with
+  // the source and would strand their own identifiers. Clear those first.
+  const citationIds = await queryAll<{ id: string }>(
+    db, 'SELECT id FROM citations WHERE source_id = ?', [id]);
+  for (const c of citationIds) await deleteExternalIdentifiersFor(db, 'citation', c.id);
+  await deleteExternalIdentifiersFor(db, 'source', id);
   return (await runSqlChanges(db, `DELETE FROM sources WHERE id = ?`, [id])) > 0;
 }
 
@@ -267,6 +274,8 @@ export async function getCitationsForPersonName(db: Database, personNameId: stri
 }
 
 export async function deleteCitation(db: Database, id: string): Promise<boolean> {
+  // The table spans five entity types with no FK, so nothing cascades for us.
+  await deleteExternalIdentifiersFor(db, 'citation', id);
   return (await runSqlChanges(db, `DELETE FROM citations WHERE id = ?`, [id])) > 0;
 }
 

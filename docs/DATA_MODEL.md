@@ -77,7 +77,7 @@ External IDs linking a person record to identifiers in other systems. Populated 
 ### external_identifiers
 The non-person sibling of `person_identifiers`: source-format ids for sources, places, citations, media and repositories. **Exists for round-trip, not for deduplication.** Nothing in the app reads these values to make a decision — the importer stores what the file said and the exporter writes it back. A render layer may turn one into a clickable archive link (`src/api/external_identifier_links.ts`), but that resolution happens at display time and is never persisted.
 
-No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQLite has no polymorphic foreign key, so the owning entity's delete path is responsible for cleanup. **Three merge paths repoint their rows (v0.275.0); five `delete*` paths still orphan them** — measured 2026-08-29, census of 8 paths. Do not read the sentence above as a description of what the code does.
+No `REFERENCES` clause on `entity_id`: the table spans five entity types and SQLite has no polymorphic foreign key, so the owning entity's delete path is responsible for cleanup. All 8 such paths now do it — 3 merges repoint their rows (v0.275.0), 5 deletes remove them (v0.276.1), and `deleteSource` also clears the identifiers of the citations that cascade with it. Undoing a delete puts them back with their original ids. `tests/unit/external-identifier-delete.test.ts` censuses the source files, so a ninth path cannot leak quietly.
 
 | Column | Type | Notes |
 |--------|------|-------|

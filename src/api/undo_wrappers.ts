@@ -12,6 +12,7 @@ import * as sources from './sources';
 import { createPersonWithEventWorkflow, type CreatePersonWithEventArgs, type CreatePersonWithEventResult } from './persons_workflows';
 import { queryOne, runSql } from './db';
 import { undoManager } from './undo';
+import { getExternalIdentifiers, reinsertExternalIdentifiers, type ExternalIdentifier } from './external_identifiers';
 
 // ---- Person ----
 
@@ -448,6 +449,12 @@ export async function deleteSourceUndo(
   const old = await sources.getSource(db, id);
   if (!old) return false;
   const citations = await sources.getCitationsForSource(db, id);
+  // Snapshot before the delete: `deleteSource` now clears the source's own
+  // identifiers and its cascaded citations'. Undo has to bring them back, or
+  // undoing the delete silently keeps the loss.
+  const sourceIdents = await getExternalIdentifiers(db, 'source', id);
+  const citationIdents: ExternalIdentifier[] = [];
+  for (const c of citations) citationIdents.push(...await getExternalIdentifiers(db, 'citation', c.id));
   const result = await sources.deleteSource(db, id);
   if (!result) return false;
   undoManager.push({
@@ -463,6 +470,8 @@ export async function deleteSourceUndo(
           [c.id, c.source_id, c.page, c.date_accessed, c.confidence, c.transcription, c.notes, c.event_id, c.person_id, c.relationship_id, c.place_id]
         );
       }
+      await reinsertExternalIdentifiers(db, sourceIdents);
+      await reinsertExternalIdentifiers(db, citationIdents);
     },
     redo: async () => { await sources.deleteSource(db, id); },
   });
@@ -513,6 +522,8 @@ export async function deleteCitationUndo(
 ): Promise<boolean> {
   const old = await sources.getCitation(db, id);
   if (!old) return false;
+  // Snapshot before the delete — `deleteCitation` clears these now.
+  const idents = await getExternalIdentifiers(db, 'citation', id);
   const result = await sources.deleteCitation(db, id);
   if (!result) return false;
   undoManager.push({
@@ -522,6 +533,7 @@ export async function deleteCitationUndo(
         `INSERT INTO citations (id, source_id, page, date_accessed, confidence, transcription, notes, event_id, person_id, relationship_id, place_id, person_name_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [old.id, old.source_id, old.page, old.date_accessed, old.confidence, old.transcription, old.notes, old.event_id, old.person_id, old.relationship_id, old.place_id, old.person_name_id]
       );
+      await reinsertExternalIdentifiers(db, idents);
     },
     redo: async () => { await sources.deleteCitation(db, id); },
   });

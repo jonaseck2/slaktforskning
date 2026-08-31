@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.276.1 — 2026-08-29
+
+- fix: deleting a source, citation, place, photograph or repository now removes its archive identifiers too, instead of leaving rows behind that made an approved duplicate group reappear on every review
+- fix: undoing such a delete brings those identifiers back, with their original ids
+
 ## 0.276.0 — 2026-08-29
 
 - feat: an archive identifier written by any program now survives an export and re-import, whatever it was attached to — sources, repositories, photographs, citations and places, not only the three ArkivDigital cases that worked before
@@ -63,7 +68,3 @@
 
 - chore: Pinia, Vue Router and Vue I18n updated, with security patches for bundled libraries
 - fix: the bundled third-party license list builds again after the Vue Router update
-
-## 0.271.3 — 2026-06-18
-
-- fix: Swedish place names written with a municipality/parish suffix now resolve to the right place instead of a same-coded foreign country — "Ängby, Stockholms kn" lands in Sweden (not Saint Kitts and Nevis, ISO "KN"), "Mo, Bergs kn" in Sweden (not Macao, ISO "MO"); the merged place index now applies the same name-suffix rules ("kn", "sn", "kommun", …) the per-region indexes already used

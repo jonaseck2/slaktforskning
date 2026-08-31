@@ -18,7 +18,9 @@ import { queryAll, queryOne, runBatch, runSql } from './db';
  *
  * No `REFERENCES` clause on `entity_id`: the table spans five entity types and
  * SQLite has no polymorphic foreign key. The owning entity's delete path is
- * responsible for cleanup, exactly as with `note_links` and `group_links`.
+ * responsible for cleanup, exactly as with `note_links` and `group_links` — and
+ * as of v0.276.1 all 8 such paths actually do it, which this comment asserted
+ * without being true for three releases.
  */
 
 export interface ExternalIdentifier {
@@ -163,6 +165,59 @@ export async function repointExternalIdentifiers(
     }
   }
   return { movedIds, deleted };
+}
+
+/**
+ * Every identifier row an entity carries, removed with it.
+ *
+ * Returns what it deleted so an undo wrapper can put the rows back without
+ * taking its own snapshot — one call, so the delete and the snapshot cannot
+ * drift apart. `deleteSource` must also call this for each of its citations:
+ * `citations.source_id` is `ON DELETE CASCADE`, so the citation rows vanish
+ * with the source and would strand their identifiers.
+ *
+ * Measured 2026-08-29: of the 8 paths that delete an entity this table spans,
+ * the 3 merge paths repoint (v0.275.0) and these 5 leaked, against the table's
+ * own comment saying the owning entity's delete path is responsible.
+ *
+ * The caller holds the transaction.
+ */
+export async function deleteExternalIdentifiersFor(
+  db: Database,
+  entityType: string,
+  entityId: string,
+): Promise<ExternalIdentifier[]> {
+  const rows = await queryAll<ExternalIdentifier>(
+    db,
+    'SELECT * FROM external_identifiers WHERE entity_type = ? AND entity_id = ?',
+    [entityType, entityId],
+  );
+  if (rows.length === 0) return [];
+  await runSql(db, 'DELETE FROM external_identifiers WHERE entity_type = ? AND entity_id = ?',
+    [entityType, entityId]);
+  return rows;
+}
+
+/**
+ * Put back rows a `deleteExternalIdentifiersFor` removed, ids and timestamps
+ * intact. Deleting an entity is an explicit human action and may take its
+ * identifiers with it — undoing that action must bring them back, or the undo
+ * silently keeps the loss.
+ *
+ * The caller holds the transaction.
+ */
+export async function reinsertExternalIdentifiers(
+  db: Database,
+  rows: readonly ExternalIdentifier[],
+): Promise<void> {
+  for (const row of rows) {
+    await runSql(
+      db,
+      `INSERT OR IGNORE INTO external_identifiers (id, entity_type, entity_id, system, value, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [row.id, row.entity_type, row.entity_id, row.system, row.value, row.created_at],
+    );
+  }
 }
 
 /**

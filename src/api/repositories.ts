@@ -1,6 +1,7 @@
 import type { Database } from 'node-sqlite3-wasm';
 import type { Repository } from './types';
 import { queryOne, queryAll, runSql, runSqlChanges } from './db';
+import { deleteExternalIdentifiersFor } from './external_identifiers';
 
 export async function createRepository(db: Database, data: {
   name: string;
@@ -51,6 +52,8 @@ export async function updateRepository(db: Database, id: string, data: Partial<O
 }
 
 export async function deleteRepository(db: Database, id: string): Promise<boolean> {
+  // The table spans five entity types with no FK, so nothing cascades for us.
+  await deleteExternalIdentifiersFor(db, 'repository', id);
   return (await runSqlChanges(db, 'DELETE FROM repositories WHERE id = ?', [id])) > 0;
 }
 
