@@ -181,9 +181,11 @@ describe('every shipped fixture is fully accounted for', () => {
   // be GEDCOM 7.0, or normalize.ts is never exercised by this suite. Uses a local
   // parse of the declared VERS until T04 adds gedcomMajor.
   it('the corpus contains a GEDCOM 7 fixture, so the gate reaches normalize', () => {
+    // HEAD > GEDC > VERS only. A bare level-2 VERS also matches SOUR.VERS.
     const major = (file: string): number => {
-      const m = /^2 VERS\s+(\d+)/m.exec(readFileSync(file, 'utf-8'));
-      return m ? parseInt(m[1], 10) : NaN;
+      const head = parseGedcom(readFileSync(file, 'utf-8')).find(n => n.tag === 'HEAD');
+      const vers = head?.children.find(n => n.tag === 'GEDC')?.children.find(n => n.tag === 'VERS');
+      return vers ? parseInt(vers.value, 10) : NaN;
     };
     expect(fixtureFiles().some(f => major(f) === 7)).toBe(true);
   });
