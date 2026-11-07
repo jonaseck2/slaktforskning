@@ -74,7 +74,7 @@
     "leaflet": "^1.9.4",
     "lunr": "^2.3.9",
     "nanotar": "^0.3.0",
-    "node-sqlite3-wasm": "^0.8.58",
+    "node-sqlite3-wasm": "^0.8.60",
     "pinia": "^4.0.2",
     "uuid": "^13.0.0",
     "vue": "^3.5.30",
