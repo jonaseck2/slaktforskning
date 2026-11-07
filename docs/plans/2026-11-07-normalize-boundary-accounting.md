@@ -62,7 +62,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - **Verbatim capture (spec Part C) is out of scope.** It depends on this plan, because capture reads the same unaccounted set. Owner: a plan written from Part C after this one archives.
 - **Modelling shared-note translations is out of scope.** `SNOTE.TRAN` is declared `unmapped:pending-unmapped-capture`, the existing home for authored data awaiting capture. A `note_translations` table would be a separate plan with its own registry entries.
-- **`detect.ts` rejects `VERS 7.0.x` — in scope, fixed in T04.** A file saying `7.0.13` was never normalized, so its SNOTE pointers were not inlined. The user decided the rule (2026-11-07, semver): `7.0.x` is a backwards-compatible patch of 7.0, `7.1` is a minor that extends 7, `8` is not backwards compatible. `detectGedcomVersion` therefore returns `'7.0'` for every `7.<minor>[.<patch>]` and `'unknown'` for major 8 and above. Tags that 7.1+ adds and the importer does not read reach the accounting report, so a minor-version extension is named and not dropped. The fix changes DB output for `family-historian.ged` and any real 7.0.1+ file. T04 records that import-output diff in its commit.
+- **`detect.ts` rejects `VERS 7.0.x` — in scope, fixed in T04.** A file saying `7.0.13` was never normalized, so its SNOTE pointers were not inlined. The user decided the rule (2026-11-07, semver): `7.0.x` is a backwards-compatible patch of 7.0, `7.1` is a minor that extends 7, `8` is not backwards compatible. `detectGedcomVersion` applies that rule to every version it recognises: any `7.<minor>[.<patch>]` returns `'7.0'`, any `5.<minor>[.<patch>]` takes the 5.5.1 path, and every other major returns `'unknown'`. Before this plan only the exact strings `7.0`, `5.5`, `5.5.1` and `5.5.5` matched. Tags that 7.1+ adds and the importer does not read reach the accounting report, so a minor-version extension is named and not dropped. The fix changes DB output for `family-historian.ged` and any real 7.0.1+ file. T04 records that import-output diff in its commit.
 - **Closed-schema coverage, the parser malformed-line counter and the `.children` lint rule** (spec Part A items not listed in the spec's "Part 1-3") stay unshipped. They are in the spec's reconciliation table and need their own plan.
 
 ## Verification
@@ -99,7 +99,7 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
 
 - Modify `src/import/gedcom/tag-accounting.ts`: provenance map, `recordOrigin`, chain-following `markConsumed`.
 - Modify `src/import/gedcom/normalize.ts`: remove the private `getChild`/`getChildren`, add `derive`, record provenance in every rebuild.
-- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, and treat every `7.<minor>[.<patch>]` as `'7.0'`.
+- Modify `src/import/gedcom/detect.ts`: read through `node-utils`, and treat every `7.<minor>[.<patch>]` as `'7.0'` and `5.<minor>[.<patch>]` as 5.5.1 (semver by major).
 - Modify `src/import/gedcom/import-core.ts` (about line 452-472): open the session earlier, walk the original tree.
 - Modify `src/import/gedcom/phases/notes.ts:46-50`: mark the SNOTE record.
 - Modify `src/import/gedcom/accounting-declared.ts`: declarations.
@@ -205,14 +205,14 @@ Other readers outside the phases: `detect.ts` (reads `HEAD.GEDC.VERS` with raw `
   - `dangling SNOTE pointer imports without a crash` (Review Focus 3).
   - `event-level and FAM-level SNOTE pointers are marked or reported, never silent` on the T01 fixture (Review Focus 5). The assertion lists the actual outcome per path once measured. Record the measured result in the test comment.
   - `7.0 fixture: every node a phase reads is marked` (Verification 4): `unaccountedFor` on the fixture, minus the declared paths, equals the explicit list measured in step 4.
-  - `detectGedcomVersion follows semver` in `import-normalize-accounting.test.ts`, table-driven on `GEDC.VERS`: `7.0`, `7.0.1`, `7.0.13`, `7.1`, `7.2.3` return `'7.0'`. `8.0`, `8.1.2`, `10.0` return `'unknown'`. `7`, `7.`, `7.x` and `70.0` return `'unknown'`. `5.5`, `5.5.1`, `5.5.5` keep their current results.
+  - `detectGedcomVersion follows semver` in `import-normalize-accounting.test.ts`, table-driven on `GEDC.VERS`. Major 7: `7.0`, `7.0.1`, `7.0.13`, `7.1`, `7.2.3` return `'7.0'`. Major 5: `5.5`, `5.5.1`, `5.5.2`, `5.6`, `5.0` return `'5.5.1'`, and `5.5.5` returns `'5.5.5'`. Any other major returns `'unknown'`: `4.0`, `6.0`, `8.0`, `8.1.2`, `10.0`. A malformed string returns `'unknown'`: `7`, `7.`, `7.x`, `70.0`, `5.5.5.1`, empty.
   - `family-historian.ged detects as 7.0` replaces the T01 pinned-behaviour test.
 
 - [ ] **Step 2: Run to confirm failure.**
 
 - [ ] **Step 3: Implement.**
   - `import-core.ts`: call `beginAccounting()` first, inside the `try` that already ends in `finally { endAccounting() }`, so `detectGedcomVersion` and `normalizeForImport` run inside the session. Compute `collectUnaccounted(tree, …)` on the parsed `tree`.
-  - `detect.ts`: replace the three raw `.find` calls with `getChild` from `./node-utils`. Replace `v === '7.0'` with `/^7\.\d+(\.\d+)?$/.test(v)`. The return type `GedcomVersion` is unchanged: every 7.x file takes the `'7.0'` path. Major 8 and above falls through to `'unknown'`. Add a comment citing the semver rule.
+  - `detect.ts`: replace the three raw `.find` calls with `getChild` from `./node-utils`. Replace the four exact-string comparisons with one parse: `/^(\d+)\.(\d+)(?:\.(\d+))?$/` giving major, minor, patch. Major 7 returns `'7.0'`. Major 5 returns `'5.5.5'` when minor and patch are both 5, otherwise `'5.5.1'`. Every other major, and every string the regex rejects, returns `'unknown'`. The return type `GedcomVersion` is unchanged. `'5.5.5'` stays a separate label only because the import report already shows it. No importer code branches on it (grep of `src/` found none), so 5.5.5 behaves exactly as 5.5.1. Add a comment citing the semver rule: same major is compatible, a new major is not.
   - Update the T01 baseline expectation for `dialects/family-historian.ged`. It now normalizes, so its raw `unaccountedFor` differs from the pinned baseline. Verification 3 compares the other 19 fixtures to the baseline and compares this one to a new pinned list taken after the fix.
   - Import `family-historian.ged` before and after the `detect.ts` change. Paste the row-count diff per table into the T04 commit message.
   - `notes.ts`: `markConsumed(node)` for the SNOTE record in the loop at line 46.
